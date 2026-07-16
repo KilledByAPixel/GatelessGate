@@ -1,9 +1,11 @@
 import * as THREE from '../../lib/three.module.js';
+import { INK, hexToRgb } from '../palette.js';
 
 // Painted wash blobs instead of shadow maps: soft ink ellipses on the ground.
 
 export function blobPixels(size = 64) {
   const data = new Uint8Array(size * size * 4);
+  const [r, g, b] = hexToRgb(INK);
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const nx = ((x + 0.5) / size) * 2 - 1;
@@ -12,7 +14,7 @@ export function blobPixels(size = 64) {
       let a = Math.max(0, 1 - d);
       a = a * a * (3 - 2 * a); // smooth falloff
       const i = (y * size + x) * 4;
-      data[i] = 30; data[i + 1] = 30; data[i + 2] = 36; // ink RGB
+      data[i] = r; data[i + 1] = g; data[i + 2] = b; // ink RGB
       data[i + 3] = Math.round(a * 255);
     }
   }

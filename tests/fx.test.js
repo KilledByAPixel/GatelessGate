@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { blobPixels } from '../src/render/blobshadow.js';
 import { grainPixels } from '../src/render/grain.js';
+import { INK, hexToRgb } from '../src/palette.js';
 
 test('blobPixels: opaque center, transparent corners, smooth falloff', () => {
   const size = 64;
@@ -14,6 +15,11 @@ test('blobPixels: opaque center, transparent corners, smooth falloff', () => {
   assert.ok(center > 200, `center alpha ${center}`);
   assert.ok(mid > 0 && mid < center, `mid alpha ${mid}`);
   assert.equal(corner, 0);
+  const [r, g, b] = hexToRgb(INK);
+  const center4 = (32 * size + 32) * 4;
+  assert.equal(px[center4], r);
+  assert.equal(px[center4 + 1], g);
+  assert.equal(px[center4 + 2], b);
 });
 
 test('grainPixels: near-white, varied, deterministic', () => {
@@ -31,4 +37,19 @@ test('grainPixels: near-white, varied, deterministic', () => {
   }
   assert.ok(min >= 225, `too dark: ${min}`);
   assert.ok(max <= 255 && max > min, `no variation: ${min}..${max}`);
+});
+
+test('grain fibers run horizontally (slow variation along x, fast along y)', () => {
+  const size = 64;
+  const a = grainPixels(size, 42);
+  const at = (x, y) => a[(y * size + x) * 4];
+  let dx = 0, dy = 0, n = 0;
+  for (let y = 1; y < size - 1; y += 2) {
+    for (let x = 1; x < size - 1; x += 2) {
+      dx += Math.abs(at(x + 1, y) - at(x, y));
+      dy += Math.abs(at(x, y + 1) - at(x, y));
+      n++;
+    }
+  }
+  assert.ok(dx / n < dy / n, `horizontal fibers need dx (${(dx / n).toFixed(3)}) < dy (${(dy / n).toFixed(3)})`);
 });
