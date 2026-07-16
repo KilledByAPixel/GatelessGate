@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeIsland } from '../src/kit/island.js';
 import { makeMonk } from '../src/kit/monk.js';
+import { makeTree } from '../src/kit/tree.js';
+import { makeGate } from '../src/kit/gate.js';
 
 function rimRadii(mesh, nominal) {
   const pos = mesh.geometry.attributes.position;
@@ -52,4 +54,28 @@ test('monk options: no hat, stout build', () => {
   const wThin = new THREE.Box3().setFromObject(thin).max.x;
   const wStout = new THREE.Box3().setFromObject(stout).max.x;
   assert.ok(wStout > wThin, 'stout should be wider');
+});
+
+test('tree: trunk + 3 canopy blobs, deterministic by seed', () => {
+  const t = makeTree({ height: 3.2, seed: 5 });
+  assert.equal(t.name, 'tree');
+  assert.equal(t.children.filter((c) => c.name === 'trunk').length, 1);
+  assert.equal(t.children.filter((c) => c.name === 'canopy').length, 3);
+  const t2 = makeTree({ height: 3.2, seed: 5 });
+  const t3 = makeTree({ height: 3.2, seed: 6 });
+  const posOf = (tree) => tree.children.filter((c) => c.name === 'canopy').map((c) => c.position.toArray()).flat();
+  assert.deepEqual(posOf(t), posOf(t2));
+  assert.notDeepEqual(posOf(t), posOf(t3));
+  const box = new THREE.Box3().setFromObject(t);
+  assert.ok(box.max.y > 3.2 * 0.6, `tree too short: ${box.max.y}`);
+});
+
+test('gate: two posts, two beams, top beam overhangs', () => {
+  const g = makeGate({ width: 2.4, height: 2.6 });
+  assert.equal(g.name, 'gate');
+  assert.equal(g.children.length, 4);
+  const box = new THREE.Box3().setFromObject(g);
+  assert.ok(box.max.x - box.min.x > 2.4, 'beam should overhang the posts');
+  assert.ok(box.max.y >= 2.6, `gate too short: ${box.max.y}`);
+  assert.ok(box.min.y > -0.01, 'gate should stand on y=0');
 });
