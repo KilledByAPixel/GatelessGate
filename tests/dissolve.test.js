@@ -41,3 +41,17 @@ test('deterministic: same update sequence gives same t', () => {
   for (let i = 0; i < 20; i++) { a.update(DT); b.update(DT); }
   assert.equal(a.t, b.t);
 });
+
+test('interrupting an active tween settles the superseded promise', async () => {
+  const d = makeDissolve();
+  const first = d.dissolveIn(1.0);
+  let firstResolved = false;
+  first.then(() => { firstResolved = true; });
+  for (let i = 0; i < 6; i++) d.update(DT); // partway through
+  const second = d.dissolveOut(0.5);
+  await Promise.resolve();
+  assert.equal(firstResolved, true, 'superseded promise must settle');
+  for (let i = 0; i < 40; i++) d.update(DT);
+  assert.equal(d.t, 0);
+  await second;
+});

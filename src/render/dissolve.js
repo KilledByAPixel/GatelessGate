@@ -83,7 +83,10 @@ export function makeDissolve() {
     },
     setAspect(a) { mat.uniforms.uAspect.value = a; },
     animateTo(to, dur = 0.8) {
-      return new Promise((res) => { anim = { from: api.t, to, dur, el: 0, res }; });
+      return new Promise((res) => {
+        if (anim) anim.res(); // superseded tween settles immediately
+        anim = { from: api.t, to, dur, el: 0, res };
+      });
     },
     dissolveIn(dur = 0.8) { return api.animateTo(1, dur); },
     dissolveOut(dur = 0.8) { return api.animateTo(0, dur); },
