@@ -19,9 +19,9 @@ export function makeMonk({ height = 1.6, stout = 1, color = INK, hat = true } = 
   head.position.y = bodyH + headR * 0.9;
   g.add(body, head);
   if (hat) {
-    const cone = new THREE.Mesh(new THREE.ConeGeometry(headR * 1.7, headR * 1.1, 14), mat);
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(headR * 1.9, headR * 1.35, 14), mat);
     cone.name = 'hat';
-    cone.position.y = bodyH + headR * 1.6;
+    cone.position.y = bodyH + headR * 1.85;
     g.add(cone);
   }
   return g;

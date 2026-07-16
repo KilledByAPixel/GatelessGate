@@ -14,7 +14,7 @@ document.body.appendChild(renderer.domElement);
 
 const { scene, flag, update } = buildScene();
 const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 100);
-const rig = makeCameraRig(camera, renderer.domElement);
+const rig = makeCameraRig(camera, renderer.domElement, { distance: 10.8, target: [0.2, 0.9, 0], polar: 1.18 });
 const dissolve = makeDissolve();
 dissolve.setAspect(innerWidth / innerHeight);
 scene.add(dissolve.mesh);

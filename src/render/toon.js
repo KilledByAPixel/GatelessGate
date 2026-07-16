@@ -22,9 +22,9 @@ export function toonMaterial({ color = '#ffffff', flat = false, side = THREE.Fro
 export function makeLights() {
   const g = new THREE.Group();
   g.name = 'lights';
-  const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+  const sun = new THREE.DirectionalLight(0xffffff, 2.0);
   sun.position.set(4, 7, 3);
-  const amb = new THREE.AmbientLight(0xffffff, 0.55);
+  const amb = new THREE.AmbientLight(0xffffff, 0.38);
   g.add(sun, amb);
   return g;
 }

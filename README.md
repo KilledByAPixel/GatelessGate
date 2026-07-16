@@ -7,11 +7,18 @@ Design doc: `docs/gateless-gate-design-doc.md`.
 
 ## Run
 
-    npx serve -l 8103 .
+    npx -y http-server -p 8105 -c-1 .
 
-Then visit http://localhost:8103
+Then visit http://localhost:8105
 
 ## Develop
 
 - `npm test` — runs `node --test` over `tests/` (Node 20+)
+- `window.gate` — headless hooks: `step(n)` (advance n fixed 60 Hz ticks + render),
+  `state()` (`{ simTime, drawCalls, triangles, fps, clothEnergy, dissolveT, camera }`),
+  `dissolve('in'|'out', seconds?)` (returns a Promise)
+- Deterministic sim: seeded noise everywhere, no `Math.random` — same steps, same state
+- Screenshots while the preview panel is hidden: start launch config `gate-shots`
+  (`node scripts/dev/shot-server.js`, port 8106), then POST a `canvas.toDataURL(...)`
+  string to `http://localhost:8106/<name>` — files land in `shots/` (gitignored)
 - Three.js is vendored in `lib/` (see `lib/THREE_VERSION.txt`). No build step.

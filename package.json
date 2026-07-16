@@ -4,6 +4,6 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "start": "npx serve -l 8103 ."
+    "start": "npx -y http-server -p 8105 -c-1 ."
   }
 }

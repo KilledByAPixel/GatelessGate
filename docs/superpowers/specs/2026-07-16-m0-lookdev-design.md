@@ -27,7 +27,7 @@ One scene that validates or kills the sumi-e art direction before anything else 
 | Location | `C:\dev\claude\gateless_gate`, git on `master` | new repo |
 | Build | **None.** Native ES modules, `import` maps not needed, dynamic `import()` later for lazy koans | Deviation from parent doc (§11 says Vite). Agreed 2026-07-16: zen_temple's no-build pattern is proven; Vite can be added at M2/M5 if the PWA/size budget wants it, with zero refactoring since it ingests vanilla ESM. |
 | Three.js | Vendored `lib/three.module.js`, **r0.185.1** (same revision as zen_temple) | `lib/THREE_VERSION.txt` records it |
-| Serve | Static: `npx serve -l 8103 .`; `.claude/launch.json` entry named `gate` | 8103 is next free port in the workspace lineup |
+| Serve | Static: `npx -y http-server -p 8105 -c-1 .`; `.claude/launch.json` entry named `gate` (also registered in the workspace-level `C:\dev\claude\.claude\launch.json`, which is what the preview panel reads) | Originally 8103, but roll_call had claimed it; moved to 8105 and standardized on the workspace's http-server convention (2026-07-16, Task 14) |
 | Tests | `node --test`, files under `tests/` | Node 20+ |
 | Palette | Paper `#F3EDDF`, ink `#1E1E24` + two grays; accent `#C73E3A` (vermillion) on the flag only | Per parent doc §3 |
 

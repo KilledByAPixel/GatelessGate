@@ -4,8 +4,8 @@
     {
       "name": "gate",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-l", "8103", "."],
-      "port": 8103
+      "runtimeArgs": ["-y", "http-server", "-p", "8105", "-c-1", "."],
+      "port": 8105
     }
   ]
 }

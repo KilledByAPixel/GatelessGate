@@ -13,13 +13,13 @@ import { makeBlobShadow } from './render/blobshadow.js';
 export function buildScene() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
-  scene.fog = new THREE.FogExp2(PAPER, 0.05);
+  scene.fog = new THREE.FogExp2(PAPER, 0.058);
   scene.add(makeLights());
 
   scene.add(makeIsland({ radius: 6, seed: 3 }));
 
   const monk = makeMonk({});
-  monk.position.set(0.6, 0, 0.4);
+  monk.position.set(-0.3, 0, 0.9);
   monk.rotation.y = -0.5;
 
   const tree = makeTree({ seed: 5 });
@@ -35,10 +35,10 @@ export function buildScene() {
   scene.add(monk, tree, gate, flag.group);
 
   const shadowSpecs = [
-    [monk.position, 0.65, 0.5, 0.3],
-    [tree.position, 1.6, 1.3, 0.26],
-    [gate.position, 1.7, 0.7, 0.22],
-    [flag.group.position, 0.5, 0.4, 0.26],
+    [monk.position, 0.7, 0.55, 0.42],
+    [tree.position, 1.7, 1.4, 0.36],
+    [gate.position, 1.8, 0.75, 0.32],
+    [flag.group.position, 0.55, 0.45, 0.36],
   ];
   for (const [p, rx, rz, op] of shadowSpecs) {
     const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
@@ -47,7 +47,7 @@ export function buildScene() {
     scene.add(s);
   }
 
-  addOutlines(scene, { width: 0.022, wobble: 0.7 });
+  addOutlines(scene, { width: 0.035, wobble: 0.7 });
 
   const update = (dt, simTime) => {
     flag.update(dt, simTime);
