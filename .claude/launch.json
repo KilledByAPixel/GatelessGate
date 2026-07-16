@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "gate",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "8103", "."],
+      "port": 8103
+    }
+  ]
+}
