@@ -1,6 +1,5 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import * as THREE from '../lib/three.module.js';
 import { buildScene } from '../src/scene_m0.js';
 
 test('buildScene composes the look-dev island', () => {

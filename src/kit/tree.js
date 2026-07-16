@@ -3,7 +3,7 @@ import { hash1 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
 import { GRAY_DARK } from '../palette.js';
 
-// A simple ink tree: tapered trunk, 2-3 flattened faceted canopy washes.
+// A simple ink tree: tapered trunk, 3 flattened faceted canopy washes.
 // Not the hero tree (cases 5/37) — set dressing for M0.
 export function makeTree({ height = 3.2, seed = 2, trunkColor = GRAY_DARK, canopyColor = '#3B3B45' } = {}) {
   const g = new THREE.Group();

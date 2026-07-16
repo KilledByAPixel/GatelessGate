@@ -27,4 +27,4 @@ http.createServer((req, res) => {
     fs.writeFileSync(path.join(dir, name), Buffer.from(m[2], 'base64'));
     res.end(name);
   });
-}).listen(8106, () => console.log(`shot server on 8106 -> ${dir}`));
+}).listen(8106, '127.0.0.1', () => console.log(`shot server on 8106 -> ${dir}`));

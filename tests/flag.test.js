@@ -1,6 +1,5 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import * as THREE from '../lib/three.module.js';
 import { makeFlag } from '../src/kit/flag.js';
 
 const DT = 1 / 60;
