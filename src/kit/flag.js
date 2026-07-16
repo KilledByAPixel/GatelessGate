@@ -41,14 +41,16 @@ export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed 
   copyPositions();
 
   const update = (dt, simTime) => {
-    const t = simTime * 0.35;
+    const t = simTime * 0.9;
     stepCloth(cloth, dt, {
       gravity: [0, -3.5, 0],
       iterations: 4,
+      damping: 0.99,
       force: (x, y, z, i) => {
-        const gust = 2.2 + 2.5 * noise3(x * 0.4 + t, y * 0.4, t * 0.7, seed);
-        const fz = (noise3(x * 0.8, y * 0.8 + t, t, seed + 4) - 0.5) * 2.6;
-        return [gust, 0, fz];
+        const gust = 1.8 + 3.4 * noise3(x * 0.5 + t, y * 0.5, t * 0.8, seed);
+        const flap = (noise3(x * 1.3, y * 1.3 + t * 1.4, t * 1.2, seed + 4) - 0.5) * 7.0;
+        const lift = (noise3(x * 0.7 + 9, t * 0.6, y * 0.7, seed + 9) - 0.5) * 2.0;
+        return [gust, lift, flap];
       },
     });
     copyPositions();
