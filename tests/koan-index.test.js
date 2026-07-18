@@ -25,8 +25,10 @@ test('byId / bySlug', () => {
   assert.equal(bySlug('nope'), null);
 });
 
-test('registration table (k29 load verified in Task 13)', async () => {
+test('case 29 loads via the registry', async () => {
   assert.equal(isRegistered('not-the-wind-not-the-flag'), true);
   assert.equal(isRegistered('joshu-s-dog'), false);
+  const mod = await loadKoan('not-the-wind-not-the-flag');
+  assert.equal(mod.id, 29);
   assert.equal(await loadKoan('joshu-s-dog'), null);
 });
