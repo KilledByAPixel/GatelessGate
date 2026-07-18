@@ -5,7 +5,7 @@ export function chunkSentences(text) {
 
 // Pick the least-robotic English voice from a speechSynthesis voice list.
 // Pure so it can be tested; the browser passes speechSynthesis.getVoices().
-const GOOD = [/natural/i, /google.*english/i, /\bSamantha\b/, /\bAva\b/, /\bAllison\b/, /\bSerena\b/, /\bDaniel\b/, /\bKaren\b/, /\bMoira\b/, /\bTessa\b/, /\bFiona\b/, /\bAlex\b/];
+const GOOD = [/natural/i, /online/i, /google.*english/i, /\bSamantha\b/, /\bAva\b/, /\bAllison\b/, /\bSerena\b/, /\bJenny\b/, /\bAria\b/, /\bDaniel\b/, /\bKaren\b/, /\bMoira\b/, /\bTessa\b/, /\bFiona\b/, /\bAlex\b/];
 const BAD = [/david/i, /zira/i, /\bmark\b/i, /desktop/i, /espeak/i, /\bpico\b/i, /compact/i];
 
 export function chooseVoice(voices) {
@@ -36,17 +36,22 @@ export function createNarration() {
   let speaking = false;
   let voice = null;
 
-  function refreshVoice() { voice = chooseVoice(synth.getVoices()) || voice; }
+  // Re-pick from the CURRENT voice list. Chrome invalidates voice objects when
+  // the async list finishes loading, so a voice cached once at startup gets
+  // silently ignored and playback falls back to the robotic default — picking
+  // fresh per utterance keeps the object current.
+  function refreshVoice() { const v = chooseVoice(synth.getVoices()); if (v) voice = v; }
   refreshVoice();
   if (typeof synth.addEventListener === 'function') synth.addEventListener('voiceschanged', refreshVoice);
 
   function next(myGen, onEnd) {
     if (myGen !== gen) return;               // superseded by a newer speak()/stop()
     if (!queue.length) { speaking = false; onEnd && onEnd(); return; }
+    refreshVoice();
     const { text, rate } = queue.shift();
     const u = new SpeechSynthesisUtterance(text);
     u.rate = rate;
-    if (voice) u.voice = voice;
+    if (voice) { u.voice = voice; u.lang = voice.lang; }
     u.onend = () => next(myGen, onEnd);
     u.onerror = () => next(myGen, onEnd);
     synth.speak(u);

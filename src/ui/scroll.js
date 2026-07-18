@@ -36,6 +36,9 @@ export function makeScroll({ id, title, text, accent = '#C73E3A', onSpeak, onSpe
   head.append(seal, h2, playAll);
   el.appendChild(head);
 
+  // reflect play/stop state on the button so there's always a way to stop
+  function setReading(on) { playAll.textContent = on ? '■ Stop' : '▶ Read aloud'; }
+
   const sectionEls = {};
   for (const key of SECTIONS) {
     if (!text[key] || !text[key].trim()) continue;
@@ -62,6 +65,7 @@ export function makeScroll({ id, title, text, accent = '#C73E3A', onSpeak, onSpe
   return {
     el,
     queue: () => narrationQueue(text),
+    setReading,
     highlight(section) {
       for (const key of Object.keys(sectionEls)) sectionEls[key].classList.toggle('speaking', key === section);
     },

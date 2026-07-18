@@ -139,8 +139,16 @@ async function enter(slug) {
       menu.close();
       scroll = makeScroll({
         id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
-        onSpeak: (key) => { scroll.highlight(key); narration.speak(mod.text[key], { onEnd: () => scroll.highlight(null) }); },
-        onSpeakAll: () => speakAll(mod.text),
+        onSpeak: (key) => {
+          if (narration.isSpeaking()) { narration.stop(); scroll.highlight(null); scroll.setReading(false); return; }
+          scroll.highlight(key); scroll.setReading(true);
+          narration.speak(mod.text[key], { onEnd: () => { scroll.highlight(null); scroll.setReading(false); } });
+        },
+        onSpeakAll: () => {
+          if (narration.isSpeaking()) { narration.stop(); scroll.highlight(null); scroll.setReading(false); return; }
+          scroll.setReading(true);
+          speakAll(mod.text);
+        },
         onBack: () => exit(),
         onSit: () => startSit(),
       });
@@ -177,7 +185,7 @@ function speakAll(text) {
   const order = scroll.queue();
   let i = 0;
   const step = () => {
-    if (i >= order.length) { scroll.highlight(null); return; }
+    if (i >= order.length) { scroll.highlight(null); scroll.setReading(false); return; }
     const key = order[i++];
     scroll.highlight(key);
     narration.speak(text[key], { onEnd: step });
@@ -261,6 +269,8 @@ window.gate = {
   markRead(slug) { save.markRead(slug); menu.refresh(save.state()); },
   markSat(slug) { save.markSat(slug); menu.refresh(save.state()); },
   setSound(on) { audio.setSound(on); setSoundLabel(); },
+  voice() { return narration.voiceName(); },
+  voices() { return (window.speechSynthesis.getVoices() || []).map((v) => v.name + ' [' + v.lang + ']'); },
 };
 
 dissolve.set(1);
