@@ -119,7 +119,7 @@ async function enter(slug) {
     koan = built;
     built.onEnter && built.onEnter();
     save.markRead(slug);
-    rig = makeRig({ distance: 10.8, target: [0.2, 0.9, 0], polar: 1.18 });
+    rig = makeRig({ distance: 11, target: [1.2, 1.05, 0.3], azimuth: 0.55, polar: 1.16 });
     // scroll UI
     scroll = makeScroll({
       id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,

@@ -27,21 +27,23 @@ export default {
     scene.add(makeIsland({ radius: 6, seed: 3 }));
 
     const gate = makeGate({});
-    gate.position.set(2.6, 0, -2.2);
+    gate.position.set(2.3, 0, -2.3);
     gate.rotation.y = 0.35;
     scene.add(gate);
 
     const flag = makeFlag({ seed: 11 });
-    flag.group.position.set(3.6, 0, -1.4);
+    flag.group.position.set(3.0, 0, -0.7);
     scene.add(flag.group);
 
-    // two monks facing each other, arguing about the flag; one points up at it
+    // two monks in dialogue about the flag; one points up at it (case 29:
+    // "the flag moves" / "the wind moves"). Staged forward and grouped with the
+    // flag so the eye reads monk → monk → flag across the frame.
     const monkA = makeMonk({ pose: 'point' });
-    monkA.position.set(1.1, 0, 0.6);
-    monkA.rotation.y = 0.5;                 // faces +x toward the flag / monkB
+    monkA.position.set(1.7, 0, 1.3);
+    monkA.rotation.y = 0.35;                // angled at the flag, arm raised toward it
     const monkB = makeMonk({});
-    monkB.position.set(-0.5, 0, 1.2);
-    monkB.rotation.y = 2.3;                 // faces back toward monkA
+    monkB.position.set(0.35, 0, 1.7);
+    monkB.rotation.y = 1.75;               // turned toward monkA
     scene.add(monkA, monkB);
 
     for (const [p, rx, rz, op] of [
