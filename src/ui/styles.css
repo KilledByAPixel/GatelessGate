@@ -83,4 +83,6 @@
   width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--ink);
   animation: gg-breathe 6s ease-in-out infinite;
 }
+.gg-sit-pop { position: absolute; top: 110%; left: 0; display: flex; gap: 4px; background: var(--paper); padding: 4px; border: 1px solid rgba(30,30,36,0.2); border-radius: 3px; }
+.gg-sit-pop.hidden { display: none; }
 @keyframes gg-breathe { 0%,100% { transform: scale(0.7); opacity: 0.5; } 50% { transform: scale(1); opacity: 1; } }

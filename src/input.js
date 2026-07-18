@@ -38,6 +38,7 @@ export function makeInput(el) {
       const hits = ray.intersectObjects(objects, false);
       return hits.length ? hits[0] : null;
     },
+    clear() { tapCbs.length = 0; hoverCbs.length = 0; },
     dispose() {
       el.removeEventListener('pointerdown', onDown);
       el.removeEventListener('pointerup', onUp);
