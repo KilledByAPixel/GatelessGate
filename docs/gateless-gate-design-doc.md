@@ -15,6 +15,10 @@ This is an **interactive book — a guided tour of the Mumonkan** — not a game
 2. **Navigation is menu-first.** An easy menu lists all cases; read in any order; check off the ones you've done; next/prev for linear reading. The garden hub shrinks to a short, click-to-skippable gate intro (the book's cover) — don't waste people's time. A walkable garden remains a possible later ambience, not core navigation.
 3. **Progress is a simple check-off** (rendered tastefully — a vermillion seal, not a gamey badge). The v0.1 "lanterns, not checkmarks" stance is softened: checkmarks are the point; lanterns are decoration if the garden ever returns.
 4. **Audio is minimal and chill: no singing bowl (too on-the-nose), no crickets.** Bells are welcome — e.g. a temple bell when the meditation timer starts and ends. Wind is worth experimenting with, kept subtle.
+5. *(2026-07-17)* **Every case should ship with at least one small touch response** — a bell to ring, a flag to poke, wind to toggle — still never required, never hinted as a task. And the reuse rule is absolute: monks, flags, temples, bells are kit builders shared by all 48 cases.
+6. *(2026-07-17)* **Text source resolved:** Frank supplied the Senzaki–Reps 1934 rendering (US public domain per its provenance header, lightly modernized) as `local/gateless-gate.txt`; a converter script generates the app's text data, including the traditional 49th addendum (Amban). §8's verify-or-retell contingency is closed.
+
+**The pitch, in one line:** a slightly interactive, modernized, web-first Gateless Gate — an illustrated book you can wander.
 
 ---
 

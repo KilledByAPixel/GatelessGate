@@ -1,7 +1,7 @@
 # M1 — Vertical Slice: Design Spec (v2, the book model)
 
 **Project:** The Gateless Gate (working title)
-**Date:** 2026-07-16 (v2 — supersedes the same-day v1 after Frank's direction correction; see parent doc Revision 0.2)
+**Date:** 2026-07-16 (v2 — supersedes the same-day v1 after Frank's direction correction; see parent doc Revision 0.2). **Amended 2026-07-17:** text pipeline from Frank's reference file; ≥1 touch response per case as a content goal.
 **Status:** Approved direction; spec pending Frank's read
 **Parent doc:** [../../gateless-gate-design-doc.md](../../gateless-gate-design-doc.md) (v0.2 — Revision note governs)
 **Builds on:** M0 (merged to master, tag `m0-lookdev-done`)
@@ -22,7 +22,9 @@ The "is it actually good?" milestone for the **interactive book**: a short skipp
 | Progress | localStorage: auto `visited` dot + manual `done` check (vermillion seal toggle in the menu) | First persistence in the project |
 | Case 29 scene | **Two monks** facing each other by the gate, arguing about the waving flag; ambient wind (M0's lively tuning); optional bonus: tap the flag → a gust ripples through (2 s decay). No stillness system. No hints | Depicts the actual story |
 | Audio | Wind (subtle, experimental) + **temple bell** for timer start/end. **No singing bowl. No crickets.** Sound-on prompt at the intro; toggle in HUD | Parent doc Revision 0.2 |
-| Case 29 text | Senzaki–Reps intended; **Frank pastes it** into `koans/text/k29.js` over a clearly-marked plain-language retelling that ships in the meantime | Copyright check remains pre-M3 |
+| Text source | **`local/gateless-gate.txt`** (gitignored), supplied by Frank: Senzaki–Reps 1934, lightly modernized — its provenance header states the 1934 printing is US public domain (copyright not renewed). A rerunnable converter script turns it into a committed data module for all 48 cases + the traditional 49th addendum (Amban, flagged `extra`) | Rights/credits line ships on the About page (M5) |
+| Interactivity goal | **Every case ships with at least one small touch response** — a bell to ring, a flag to poke — never required, never hinted as a task. M1 proves the pattern on case 29: **tap the flag → the wind dies; tap again → it returns** (smooth ~2 s ramps). Experiments welcome per case | Frank, 2026-07-17 |
+| Reuse rule | Anything visual built for a case must be a kit builder (or a parametrization of one) — the same monks/flags/temples/bells serve all 48 | Doc §7 is the production strategy |
 | Narration | `speechSynthesis`, rate 0.85, sentence-chunked, per-section highlight; default voice | Unchanged from v1 |
 | M0 leftovers | `src/scene_m0.js` + `tests/scene.test.js` deleted; modules live on via the kit facade | |
 
@@ -37,14 +39,22 @@ export default {
   slug: 'wind-flag',
   title: 'Not the Wind, Not the Flag',
   accent: '#C73E3A',
-  tier: 2,                       // optional touch response (tap-gust)
-  text: { case, comment, verse },   // strings from koans/text/k29.js
+  tier: 2,                       // optional touch response (tap toggles the wind)
+  text: { case, comment, verse },   // looked up by id from the generated text module
   ambience: ['wind:0.25'],
   build(ctx) { /* returns { update(dt, simTime), onEnter(), onExit(), dispose() } */ }
 }
 ```
 
-`ctx = { scene, kit, audio, input, accent, quality }`. `src/koans/registry.js` maps slug → lazy `import()`; `src/koans/index.js` is the static table of all 48 `{ id, slug, title }` (titles from the parent doc §6) used by the menu — only registered slugs are enterable, the rest render greyed as "not yet".
+`ctx = { scene, kit, audio, input, accent, quality }`. `src/koans/registry.js` maps slug → lazy `import()`; `src/koans/index.js` is the static table of all 49 `{ id, slug, title, extra? }` (48 cases + Amban's Addition flagged `extra`) used by the menu — only registered slugs are enterable, the rest render greyed as "not yet".
+
+### Text pipeline (`scripts/build-text.js`)
+
+A rerunnable Node script: reads `local/gateless-gate.txt` → writes `src/koans/text/mumonkan.js` (a committed, generated ES module: `export default { 1: { title, case, comment, verse }, …, 49: { …, extra: true } }`).
+
+Parse rules: case headers match `^\d{1,2}\. Title`; the comment starts at the `Mumon's comment:` marker (`Amban's comment:` for 49); the **final paragraph of each case is the unlabeled capping verse**; everything between marker and verse is the comment (may span paragraphs); everything before the marker is the case. Front matter before case 1 is captured as `about` (provenance/credits for the M5 About page).
+
+The script validates and refuses to write on failure: exactly 49 entries; every entry has non-empty title/case/comment/verse; it prints a per-case length table for eyeball review. Parser lives in a pure module (`scripts/lib/parse-mumonkan.js`) tested against an embedded fixture; a second test validates the **committed artifact** (49 complete entries) so a fresh clone without `local/` still tests green.
 
 ### SceneManager (`src/scene/manager.js`)
 
@@ -64,7 +74,7 @@ Tiny injectable-storage module: `load()/save()` of `{ visited: {slug:true}, done
 step(n), state(), enter(slug), exit(), menu(open?), skipIntro(),
 dissolve(dir, dur?), sit(minutes), endSit(), markDone(slug, on), setSound(on)
 ```
-`state()` → `{ mode: 'intro'|'menu'|'koan'|'sit', simTime, drawCalls, triangles, fps, dissolveT, camera, progress: { visited, done }, koan?: <module fragment> }`. k29's fragment: `{ clothEnergy, gustT }`.
+`state()` → `{ mode: 'intro'|'menu'|'koan'|'sit', simTime, drawCalls, triangles, fps, dissolveT, camera, progress: { visited, done }, koan?: <module fragment> }`. k29's fragment: `{ windOn, windLevel, clothEnergy }`.
 
 ## The intro (`src/intro.js`)
 
@@ -85,7 +95,7 @@ Menu logic (selection, states, continue target) is a pure module (`src/ui/menu_s
 
 Diorama: island + temple gate + flag (M0 kit, accent from module) + **two monks** placed facing each other near the flagpole, slight lean-in, one gesturing up at the flag (arm pose = simple cone/cylinder addition to the monk builder or rotation of the existing rig — builder gains an optional `pose: 'point'` that raises one arm; keep it minimal). Ambient wind uses the M0 lively tuning as-is.
 
-**Optional bonus (tier 2):** tapping the flag cloth (raycast) kicks a gust — wind force multiplier eases 1 → 2.2 → 1 over ~2 s (`gustT` in the state fragment). No visual hint, no sound sting (the wind synth naturally swells with the gust). Stumbled upon or never found — both fine.
+**Optional touch response (tier 2, Frank's pick):** tapping the flag cloth (raycast) **toggles the wind** — off: forces ramp to a gravity-only hang over ~2 s and the wind synth fades with it; on: both return the same way. `{ windOn, windLevel }` in the state fragment. Directly thematic (wind, flag, mind moving) without asking anything of the reader: stumbled upon or never found — both fine. No hint, no cursor change.
 
 ## Sit timer (`src/sit.js`)
 
@@ -107,7 +117,7 @@ Unchanged from v1: kakemono panel (right side ≥ 900 px, bottom sheet below), t
 
 ## Testing
 
-- Pure Node tests: intro rails (continuity, clamp, determinism), menu state machine (visited/done/continue), save module (fake storage round-trip, corrupt-JSON tolerance), koan index (48 entries, unique ids/slugs), registry + k29 contract shape, gust envelope math, synth param tables (ranges; bell partial/decay tables), scroll section state machine, SceneManager disposal bookkeeping (disposed > 0, ramp untouched, no double-dispose).
+- Pure Node tests: text parser (embedded fixture) + committed text artifact (49 complete entries), intro rails (continuity, clamp, determinism), menu state machine (visited/done/continue), save module (fake storage round-trip, corrupt-JSON tolerance), koan index (49 entries, unique ids/slugs), registry + k29 contract shape, wind-toggle envelope math, synth param tables (ranges; bell partial/decay tables), scroll section state machine, SceneManager disposal bookkeeping (disposed > 0, ramp untouched, no double-dispose).
 - Browser verification (main session): full flow — intro (and skip), sound prompt, menu jump, case 29 text/narration/wind, flag-tap gust via synthetic event, done check-off persists across reload, sit timer bell — via hooks + shot server.
 - Suite target: ~60 tests total.
 
@@ -119,5 +129,5 @@ Garden/stations/day-cycle, router/deep links, settings beyond the sound toggle, 
 
 - **Tone of the menu** — it must feel like a table of contents; typography does the work. This is the new "does it sing" surface.
 - **speechSynthesis** quality varies by platform (default voice in M1; baked Opus post-launch).
-- **Senzaki–Reps paste pending** — retelling ships until Frank pastes; rights check stays pre-M3.
+- **Parser edge cases** — the "final paragraph = verse" rule needs the validation table eyeballed once across all 49; any oddball case gets a manual override map in the script, not a cleverer parser.
 - **Two-monk staging** — the monk rig has no faces or arms yet; a minimal `pose: 'point'` arm must read clearly at ink-silhouette level or the argument won't stage. Fallback: leaning postures only, which already read as conversation.
