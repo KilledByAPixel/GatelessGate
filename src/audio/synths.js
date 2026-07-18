@@ -3,7 +3,7 @@
 
 export function windParams(level) {
   const l = Math.max(0, Math.min(1, level));
-  return { gain: 0.08 + 0.22 * l, cutoff: 400 + 1000 * l, lfoDepth: 0.3 + 0.5 * l };
+  return { gain: (0.08 + 0.22 * l) * Math.min(1, l / 0.05), cutoff: 400 + 1000 * l, lfoDepth: 0.3 + 0.5 * l };
 }
 
 export function bellPartials(f0 = 62) {

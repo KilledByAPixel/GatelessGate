@@ -12,6 +12,7 @@
   border: 1px solid rgba(30,30,36,0.25); border-radius: 4px; padding: 16px 20px;
   font-family: Georgia, serif; box-shadow: 0 6px 24px rgba(30,30,36,0.15);
 }
+.gg-onboard { z-index: 60; }
 .gg-sound-card { bottom: 32px; left: 50%; transform: translateX(-50%); text-align: center; }
 .gg-sound-card button, .gg-onboard button, .gg-hud button, .gg-menu button, .gg-sit button {
   font-family: Georgia, serif; background: none; border: 1px solid rgba(30,30,36,0.3);

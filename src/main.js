@@ -123,7 +123,7 @@ async function enter(slug) {
     // scroll UI
     scroll = makeScroll({
       id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
-      onSpeak: (key) => narration.speak(mod.text[key], { onEnd: () => scroll.highlight(null) }),
+      onSpeak: (key) => { scroll.highlight(key); narration.speak(mod.text[key], { onEnd: () => scroll.highlight(null) }); },
       onSpeakAll: () => speakAll(mod.text),
     });
     document.body.appendChild(scroll.el);
