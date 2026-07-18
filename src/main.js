@@ -2,7 +2,7 @@ import * as THREE from '../lib/three.module.js';
 import { makeCameraRig } from './camera.js';
 import { makeDissolve } from './render/dissolve.js';
 import { installGrain } from './render/grain.js';
-import { makeSceneManager } from './scene/manager.js';
+import { makeSceneManager, disposeRoot } from './scene/manager.js';
 import { makeInput } from './input.js';
 import { createSave } from './save.js';
 import { createAudio } from './audio/engine.js';
@@ -13,20 +13,24 @@ import { buildHub, makeIntro } from './intro.js';
 import { makeMenu } from './ui/menu.js';
 import { makeOnboarding } from './ui/onboarding.js';
 import { makeScroll } from './ui/scroll.js';
-import { makeHud } from './ui/hud.js';
 import { makeSit } from './sit.js';
 
 const STEP = 1 / 60;
 
+const panel = document.getElementById('gg-panel');
+const stage = document.getElementById('gg-stage');
+const stageSize = () => ({ w: stage.clientWidth || innerWidth, h: stage.clientHeight || innerHeight });
+
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight);
-document.body.appendChild(renderer.domElement);
-installGrain(document);
+{ const { w, h } = stageSize(); renderer.setSize(w, h); }
+stage.appendChild(renderer.domElement);
+installGrain(document, { mount: stage });
 
-const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 100);
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+{ const { w, h } = stageSize(); camera.aspect = w / h; camera.updateProjectionMatrix(); }
 const dissolve = makeDissolve();
-dissolve.setAspect(innerWidth / innerHeight);
+dissolve.setAspect(camera.aspect);
 const scenes = makeSceneManager(renderer, dissolve);
 const input = makeInput(renderer.domElement);
 const save = createSave(window.localStorage);
@@ -38,101 +42,135 @@ scenes.setActive(hub);
 
 let mode = 'intro';
 let simTime = 0;
-let rig = null;           // camera rig for menu/koan
-let koan = null;         // current koan root
-let scroll = null;       // current scroll UI
+let rig = null;
+let koan = null;
+let koanSlug = null;
+let scroll = null;
 let intro = null;
 let entering = false;
 
-// ---- UI singletons ----
+// ---- panel views ----
+function showView(el) {
+  for (const v of panel.querySelectorAll('.gg-view')) v.classList.toggle('hidden', v !== el);
+  if (el) el.classList.remove('hidden');
+}
+
 const menu = makeMenu({
   cases: CASES, progress: save.state(), isRegistered,
   onSelect: (slug) => enter(slug),
   onHelp: () => onboarding.show(),
 });
-document.body.appendChild(menu.el);
+panel.appendChild(menu.el);
 
 const onboarding = makeOnboarding({ onDismiss: () => {} });
 document.body.appendChild(onboarding.el);
 
 const sit = makeSit({
   audio,
-  onComplete: () => { if (koanSlug) { save.markSat(koanSlug); menu.refresh(save.state()); } resumeKoanChrome(); },
-  onExit: () => resumeKoanChrome(),
+  onComplete: () => { if (koanSlug) { save.markSat(koanSlug); menu.refresh(save.state()); } resumeKoan(); },
+  onExit: () => resumeKoan(),
 });
 document.body.appendChild(sit.el);
 
-const hud = makeHud({
-  soundOn: save.state().soundOn,
-  onSound: () => { audio.setSound(!audio.isSoundOn()); hud.setSound(audio.isSoundOn()); },
-  onSit: (m) => startSit(m),
-  onMenu: () => exit(),
-});
-document.body.appendChild(hud.el);
-document.body.appendChild(hud.ensoEl);
-hud.setVisible(false);
+// ---- stage-corner controls (over the 3D, never over the text) ----
+const controls = document.createElement('div');
+controls.className = 'gg-stage-controls';
+const soundBtn = document.createElement('button');
+const setSoundLabel = () => { soundBtn.textContent = audio.isSoundOn() ? '♪ sound' : '⊘ sound'; };
+setSoundLabel();
+soundBtn.onclick = () => { audio.unlock(); audio.setSound(!audio.isSoundOn()); setSoundLabel(); };
+controls.appendChild(soundBtn);
+stage.appendChild(controls);
 
-let koanSlug = null;
-
-// ---- mode transitions ----
-function setMode(m) { mode = m; }
+// ---- transitions: ink COVERS the stage before anything changes, then reveals ----
+async function transition(apply) {
+  panel.classList.add('fading');          // panel fades out (cosmetic, not awaited)
+  await dissolve.dissolveOut(0.7);        // stage covered with ink before the change
+  apply();                                 // swap scene + panel content under cover
+  panel.classList.remove('fading');
+  await dissolve.dissolveIn(0.7);         // reveal
+}
 
 function makeRig(opts) {
   if (rig && rig.dispose) rig.dispose();
   return makeCameraRig(camera, renderer.domElement, opts);
 }
 
+// ---- modes ----
 function startIntro() {
-  setMode('intro');
-  hud.setVisible(false);
-  menu.close();
+  mode = 'intro';
   intro = makeIntro(camera, {
-    onSound: (on) => { audio.unlock(); audio.setSound(on); hud.setSound(on); },
+    onSound: (on) => { audio.unlock(); audio.setSound(on); setSoundLabel(); },
     onDone: () => openMenu(),
   });
+  panel.appendChild(intro.el);
+  showView(intro.el);
 }
 
-function openMenu() {
-  setMode('menu');
-  intro = null;
-  hud.setVisible(false);
-  rig = makeRig({ distance: 12, target: [0, 1.2, -1], polar: 1.15 });
-  menu.refresh(save.state());
-  menu.open();
-  if (!save.state().onboarded) { onboarding.show(); save.setOnboarded(); }
+async function openMenu() {
+  const first = mode === 'intro';
+  await transition(() => {
+    if (intro) { intro.dispose(); intro = null; }
+    mode = 'menu';
+    rig = makeRig({ distance: 13, target: [0, 1.2, -0.5], azimuth: 0.5, polar: 1.15 });
+    menu.refresh(save.state());
+    menu.open();
+    showView(menu.el);
+  });
+  if (first && !save.state().onboarded) { onboarding.show(); save.setOnboarded(); }
 }
 
 async function enter(slug) {
-  if (!isRegistered(slug)) return;
-  if (entering) return;
+  if (!isRegistered(slug) || entering) return;
   entering = true;
   try {
     const mod = await loadKoan(slug);
     if (!mod) return;
-    menu.close();
-    audio.unlock();
-    koanSlug = slug;
-    const built = mod.build({ scene: null, kit: null, audio, input, accent: mod.accent, quality: 'high' });
-    built.setCamera && built.setCamera(camera);
-    await scenes.swapTo(built, { disposePrev: hub !== scenes.active() });
-    // keep hub cached: only dispose a previous koan, never the hub
-    koan = built;
-    built.onEnter && built.onEnter();
-    save.markRead(slug);
-    rig = makeRig({ distance: 11, target: [1.2, 1.05, 0.3], azimuth: 0.55, polar: 1.16 });
-    // scroll UI
-    scroll = makeScroll({
-      id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
-      onSpeak: (key) => { scroll.highlight(key); narration.speak(mod.text[key], { onEnd: () => scroll.highlight(null) }); },
-      onSpeakAll: () => speakAll(mod.text),
+    await transition(() => {
+      const built = mod.build({ scene: null, kit: null, audio, input, accent: mod.accent, quality: 'high' });
+      built.setCamera && built.setCamera(camera);
+      const prev = scenes.active();
+      scenes.setActive(built);
+      if (prev && prev !== hub) { disposeRoot(prev); prev.dispose && prev.dispose(); }
+      koan = built; koanSlug = slug;
+      built.onEnter && built.onEnter();
+      save.markRead(slug);
+      rig = makeRig({ distance: 11, target: [1.2, 1.05, 0.3], azimuth: 0.55, polar: 1.16 });
+      menu.close();
+      scroll = makeScroll({
+        id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
+        onSpeak: (key) => { scroll.highlight(key); narration.speak(mod.text[key], { onEnd: () => scroll.highlight(null) }); },
+        onSpeakAll: () => speakAll(mod.text),
+        onBack: () => exit(),
+        onSit: () => startSit(),
+      });
+      panel.appendChild(scroll.el);
+      showView(scroll.el);
+      mode = 'koan';
     });
-    document.body.appendChild(scroll.el);
-    menu.close();
-    hud.setVisible(true);
-    setMode('koan');
   } finally {
     entering = false;
   }
+}
+
+async function exit() {
+  if (mode === 'sit') { sit.end(); return; }
+  if (mode !== 'koan') { menu.open(); showView(menu.el); return; }
+  narration.stop();
+  input.clear();
+  koan && koan.onExit && koan.onExit();
+  await transition(() => {
+    const prev = scenes.active();
+    scenes.setActive(hub);
+    if (prev && prev !== hub) { disposeRoot(prev); prev.dispose && prev.dispose(); }
+    koan = null; koanSlug = null;
+    if (scroll) { scroll.dispose(); scroll = null; }
+    mode = 'menu';
+    rig = makeRig({ distance: 13, target: [0, 1.2, -0.5], azimuth: 0.5, polar: 1.15 });
+    menu.refresh(save.state());
+    menu.open();
+    showView(menu.el);
+  });
 }
 
 function speakAll(text) {
@@ -147,41 +185,25 @@ function speakAll(text) {
   step();
 }
 
-function resumeKoanChrome() {
-  if (scroll) scroll.untuck();
-  hud.setVisible(true);
-  setMode('koan');
+function startSit() {
+  if (mode !== 'koan') return;
+  mode = 'sit';
+  narration.stop();
+  panel.classList.add('fading');   // the text recedes while sitting
+  sit.start(sitMinutes);
 }
 
-async function exit() {
-  if (mode === 'sit') { sit.end(); return; }
-  if (mode === 'koan') {
-    narration.stop();
-    if (scroll) { scroll.dispose(); scroll = null; }
-    hud.setVisible(false);
-    koan && koan.onExit && koan.onExit();
-    input.clear();
-    await scenes.swapTo(hub, { disposePrev: true });
-    koan = null;
-    koanSlug = null;
-    openMenu();
-  } else {
-    menu.open();
-  }
+let sitMinutes = 10;
+function resumeKoan() {
+  panel.classList.remove('fading');
+  mode = 'koan';
 }
 
-function startSit(minutes) {
-  setMode('sit');
-  if (scroll) scroll.tuck();
-  hud.setVisible(false);
-  sit.start(minutes);
-}
-
-// ---- skip intro on any input ----
+// ---- input / keys ----
 function skipIntro() { if (mode === 'intro' && intro) intro.skip(); }
 addEventListener('keydown', (e) => {
   if (mode === 'intro') { skipIntro(); return; }
-  if (e.key === 'Escape') { if (mode === 'sit') sit.end(); else exit(); }
+  if (e.key === 'Escape') { if (mode === 'sit') sit.end(); else if (mode === 'koan') exit(); }
 });
 renderer.domElement.addEventListener('pointerdown', () => { if (mode === 'intro') skipIntro(); });
 
@@ -208,8 +230,9 @@ function frame(now) {
 }
 
 addEventListener('resize', () => {
-  renderer.setSize(innerWidth, innerHeight);
-  camera.aspect = innerWidth / innerHeight;
+  const { w, h } = stageSize();
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
   camera.updateProjectionMatrix();
   dissolve.setAspect(camera.aspect);
 });
@@ -230,16 +253,16 @@ window.gate = {
   },
   enter(slug) { return enter(slug); },
   exit() { return exit(); },
-  menu(open) { if (open === false) menu.close(); else menu.open(); },
+  menu(open) { if (open === false) { menu.close(); } else { menu.open(); showView(menu.el); } },
   skipIntro,
   dissolve(dir = 'in', dur) { return dir === 'in' ? dissolve.dissolveIn(dur) : dissolve.dissolveOut(dur); },
-  sit(minutes) { startSit(minutes); },
+  sit(minutes) { sitMinutes = minutes; startSit(); },
   endSit() { sit.end(); },
   markRead(slug) { save.markRead(slug); menu.refresh(save.state()); },
   markSat(slug) { save.markSat(slug); menu.refresh(save.state()); },
-  setSound(on) { audio.setSound(on); hud.setSound(audio.isSoundOn()); },
+  setSound(on) { audio.setSound(on); setSoundLabel(); },
 };
 
-dissolve.set(1);      // start revealed; intro dolly runs over the hub
+dissolve.set(1);
 startIntro();
 requestAnimationFrame(frame);

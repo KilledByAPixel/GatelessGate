@@ -1,43 +1,47 @@
 import { buildRows, continueTarget } from './menu_state.js';
 
-// The table of contents. Reads as a book's contents, not a level select.
+// The table of contents — a left-panel view over the idling stage scene.
+// Reads as a book's contents, not a level select.
 export function makeMenu({ cases, progress, isRegistered, onSelect, onHelp } = {}) {
   const el = document.createElement('div');
-  el.className = 'gg-menu hidden';
+  el.className = 'gg-view gg-menu hidden';
 
   const h1 = document.createElement('h1');
   h1.textContent = 'The Gateless Gate';
-  el.appendChild(h1);
+  const lede = document.createElement('p');
+  lede.className = 'lede';
+  lede.textContent = 'The Mumonkan — read any case, in any order.';
 
   const help = document.createElement('button');
-  help.textContent = '?';
   help.className = 'gg-help';
+  help.textContent = '?';
+  help.title = 'About';
   help.onclick = () => onHelp && onHelp();
-  el.appendChild(help);
 
   const cont = document.createElement('div');
   cont.className = 'gg-continue';
-  el.appendChild(cont);
-
   const list = document.createElement('ol');
-  el.appendChild(list);
+  el.append(h1, lede, help, cont, list);
 
   function render(prog) {
     list.innerHTML = '';
-    const rows = buildRows(cases, prog, isRegistered);
-    for (const r of rows) {
+    for (const r of buildRows(cases, prog, isRegistered)) {
       const li = document.createElement('li');
       li.className = r.registered ? 'registered' : 'locked';
-      const mark = r.sat ? '<span class="mark stamp">◉</span>'
-        : r.read ? '<span class="mark dot"></span>' : '<span class="mark"></span>';
-      li.innerHTML = `<span class="num">${r.id}</span><span class="ttl">${r.title}</span>${mark}`;
-      if (r.registered) li.querySelector('.ttl').onclick = () => onSelect && onSelect(r.slug);
+      const num = document.createElement('span'); num.className = 'num'; num.textContent = String(r.id);
+      const ttl = document.createElement('span'); ttl.className = 'ttl'; ttl.textContent = r.title;
+      if (r.registered) ttl.onclick = () => onSelect && onSelect(r.slug);
+      const mark = document.createElement('span');
+      mark.className = 'mark ' + (r.sat ? 'stamp' : r.read ? 'dot' : '');
+      mark.textContent = r.sat ? '◉' : '';
+      li.append(num, ttl, mark);
       list.appendChild(li);
     }
-    const tgt = continueTarget(cases, prog, prog.lastSlug);
     cont.innerHTML = '';
+    const tgt = continueTarget(cases, prog, prog.lastSlug);
     if (tgt && isRegistered(tgt)) {
       const b = document.createElement('button');
+      b.className = 'gg-btn';
       b.textContent = 'Continue';
       b.onclick = () => onSelect && onSelect(tgt);
       cont.appendChild(b);

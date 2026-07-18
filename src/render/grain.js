@@ -19,16 +19,21 @@ export function grainPixels(size = 256, seed = 42) {
   return data;
 }
 
-export function installGrain(doc, { size = 256, seed = 42, vignette = 0.22 } = {}) {
+export function installGrain(doc, { size = 256, seed = 42, vignette = 0.22, mount = null } = {}) {
   const canvas = doc.createElement('canvas');
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d');
   ctx.putImageData(new ImageData(grainPixels(size, seed), size, size), 0, 0);
 
+  // Confine the grain/vignette to a container (the 3D stage) when given one,
+  // so it never multiplies over the text panel.
+  const pos = mount ? 'absolute' : 'fixed';
+  const host = mount || doc.body;
+
   const overlay = doc.createElement('div');
   overlay.id = 'grain';
   Object.assign(overlay.style, {
-    position: 'fixed', inset: '0', pointerEvents: 'none', zIndex: '10',
+    position: pos, inset: '0', pointerEvents: 'none', zIndex: '3',
     backgroundImage: `url(${canvas.toDataURL()})`,
     backgroundRepeat: 'repeat',
     mixBlendMode: 'multiply',
@@ -38,12 +43,12 @@ export function installGrain(doc, { size = 256, seed = 42, vignette = 0.22 } = {
   const vig = doc.createElement('div');
   vig.id = 'vignette';
   Object.assign(vig.style, {
-    position: 'fixed', inset: '0', pointerEvents: 'none', zIndex: '11',
+    position: pos, inset: '0', pointerEvents: 'none', zIndex: '4',
     background: `radial-gradient(ellipse at center, rgba(${ir},${ig},${ib},0) 55%, rgba(${ir},${ig},${ib},${vignette}) 135%)`,
     mixBlendMode: 'multiply',
   });
 
-  doc.body.appendChild(overlay);
-  doc.body.appendChild(vig);
+  host.appendChild(overlay);
+  host.appendChild(vig);
   return { overlay, vignette: vig };
 }
