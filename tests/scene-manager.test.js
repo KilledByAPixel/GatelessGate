@@ -18,7 +18,8 @@ test('disposeRoot frees geometry + own textures but not the shared ramp', () => 
   const counts = disposeRoot({ scene }, disposed);
   assert.ok(counts.geometries >= 2, `geometries ${counts.geometries}`);
   assert.ok(counts.textures >= 1, `expected the blob texture disposed, got ${counts.textures}`);
-  assert.equal(disposed.has(toonRamp().id), false, 'shared ramp must not be disposed');
+  assert.equal(disposed.has('t' + toonRamp().id), false, 'shared ramp must not be disposed');
+  assert.ok(counts.materials >= 2, 'both non-shared materials disposed (id-collision regression)');
 });
 
 test('disposeRoot does not double-dispose shared geometry', () => {

@@ -3,19 +3,19 @@ import * as THREE from '../../lib/three.module.js';
 function disposeMaterial(mat, disposed, counts) {
   for (const key of ['map', 'gradientMap', 'alphaMap']) {
     const tex = mat[key];
-    if (tex && !tex.userData?.shared && !disposed.has(tex.id)) {
-      disposed.add(tex.id); tex.dispose(); counts.textures++;
+    if (tex && !tex.userData?.shared && !disposed.has('t' + tex.id)) {
+      disposed.add('t' + tex.id); tex.dispose(); counts.textures++;
     }
   }
-  if (!disposed.has(mat.id)) { disposed.add(mat.id); mat.dispose(); counts.materials++; }
+  if (!disposed.has('m' + mat.id)) { disposed.add('m' + mat.id); mat.dispose(); counts.materials++; }
 }
 
 export function disposeRoot(root, disposed = new Set()) {
   const counts = { geometries: 0, materials: 0, textures: 0 };
   root.scene.traverse((o) => {
     if (!o.isMesh) return;
-    if (o.geometry && !disposed.has(o.geometry.id)) {
-      disposed.add(o.geometry.id); o.geometry.dispose(); counts.geometries++;
+    if (o.geometry && !disposed.has('g' + o.geometry.id)) {
+      disposed.add('g' + o.geometry.id); o.geometry.dispose(); counts.geometries++;
     }
     const mats = Array.isArray(o.material) ? o.material : [o.material];
     for (const m of mats) if (m) disposeMaterial(m, disposed, counts);
@@ -32,8 +32,8 @@ export function makeSceneManager(renderer, dissolve) {
     if (current) renderer.render(current.scene, camera);
     if (dissolve.t < 1) {
       renderer.autoClear = false;
-      renderer.render(dissolveScene, camera);
-      renderer.autoClear = true;
+      try { renderer.render(dissolveScene, camera); }
+      finally { renderer.autoClear = true; }
     }
   }
 
