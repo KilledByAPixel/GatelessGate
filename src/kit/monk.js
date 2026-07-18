@@ -4,7 +4,8 @@ import { INK } from '../palette.js';
 
 // The kit monk, first pass: capsule body, sphere head, cone hat.
 // Featureless by design — ink figures have no faces (a smile is an event).
-export function makeMonk({ height = 1.6, stout = 1, color = INK, hat = true } = {}) {
+// pose 'point' raises one arm (used to stage arguments, e.g. case 29).
+export function makeMonk({ height = 1.6, stout = 1, color = INK, hat = true, pose = 'stand' } = {}) {
   const g = new THREE.Group();
   g.name = 'monk';
   const mat = toonMaterial({ color });
@@ -23,6 +24,16 @@ export function makeMonk({ height = 1.6, stout = 1, color = INK, hat = true } = 
     cone.name = 'hat';
     cone.position.y = bodyH + headR * 1.85;
     g.add(cone);
+  }
+  if (pose === 'point') {
+    const armLen = height * 0.4;
+    const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.035 * height, armLen, 3, 8), mat);
+    arm.name = 'arm';
+    // shoulder near the top of the body, arm angled up-and-forward (+x)
+    arm.position.set(bodyR * 0.7, bodyH * 0.86, 0);
+    arm.rotation.z = -1.15; // rotate the vertical capsule toward +x and up
+    arm.translateY(armLen / 2); // pivot from the shoulder end
+    g.add(arm);
   }
   return g;
 }
