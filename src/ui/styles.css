@@ -1,0 +1,83 @@
+:root {
+  --paper: #F3EDDF; --ink: #1E1E24; --gray: #55555E; --accent: #C73E3A;
+}
+.gg-title {
+  position: fixed; top: 22%; left: 0; right: 0; text-align: center;
+  font-family: Georgia, 'Times New Roman', serif; font-size: clamp(28px, 6vw, 64px);
+  color: var(--ink); letter-spacing: 0.04em; pointer-events: none; z-index: 30;
+  transition: opacity 0.4s;
+}
+.gg-sound-card, .gg-onboard {
+  position: fixed; z-index: 40; background: var(--paper); color: var(--ink);
+  border: 1px solid rgba(30,30,36,0.25); border-radius: 4px; padding: 16px 20px;
+  font-family: Georgia, serif; box-shadow: 0 6px 24px rgba(30,30,36,0.15);
+}
+.gg-sound-card { bottom: 32px; left: 50%; transform: translateX(-50%); text-align: center; }
+.gg-sound-card button, .gg-onboard button, .gg-hud button, .gg-menu button, .gg-sit button {
+  font-family: Georgia, serif; background: none; border: 1px solid rgba(30,30,36,0.3);
+  color: var(--ink); padding: 6px 14px; margin: 6px 4px 0; border-radius: 3px; cursor: pointer;
+}
+.gg-scroll {
+  position: fixed; top: 0; right: 0; height: 100%; width: min(420px, 40vw);
+  background: rgba(243,237,223,0.92); color: var(--ink); z-index: 20;
+  font-family: Georgia, 'Times New Roman', serif; overflow-y: auto;
+  transition: transform 0.5s ease; box-shadow: -4px 0 24px rgba(30,30,36,0.1);
+}
+.gg-scroll.tucked { transform: translateX(calc(100% - 40px)); }
+.gg-scroll-tab {
+  position: absolute; left: 0; top: 24px; width: 40px; height: 40px;
+  background: var(--accent); color: var(--paper); border: none; cursor: pointer;
+  font-family: Georgia, serif; border-radius: 3px 0 0 3px;
+}
+.gg-scroll-body { padding: 28px 32px 80px 52px; }
+.gg-scroll-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.gg-scroll-head h2 { font-weight: normal; font-size: 26px; margin: 0; flex: 1; }
+.gg-seal {
+  display: inline-grid; place-items: center; width: 34px; height: 34px;
+  background: var(--accent); color: var(--paper); border-radius: 3px; font-size: 18px;
+}
+.gg-play-all { margin-top: 8px; }
+.gg-section { margin-top: 26px; }
+.gg-section-label {
+  font-variant: small-caps; letter-spacing: 0.08em; color: var(--gray);
+  font-size: 14px; display: flex; align-items: center; gap: 8px;
+}
+.gg-speak { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 15px; }
+.gg-section-text { margin-top: 8px; line-height: 1.7; white-space: pre-wrap; }
+.gg-section.speaking .gg-section-text { background: rgba(199,62,58,0.08); }
+@media (max-width: 900px) {
+  .gg-scroll { top: auto; bottom: 0; right: 0; left: 0; width: 100%; height: 55%; }
+  .gg-scroll.tucked { transform: translateY(calc(100% - 40px)); }
+  .gg-scroll-tab { left: 24px; top: 0; border-radius: 0 0 3px 3px; }
+}
+.gg-hud { position: fixed; top: 16px; left: 16px; z-index: 25; display: flex; gap: 8px; }
+.gg-enso {
+  position: fixed; top: 16px; right: 16px; z-index: 25; width: 44px; height: 44px;
+  border-radius: 50%; border: 2px solid var(--ink); background: rgba(243,237,223,0.6);
+  cursor: pointer; color: var(--ink); font-size: 20px;
+}
+.gg-menu {
+  position: fixed; inset: 0; z-index: 50; background: var(--paper); color: var(--ink);
+  font-family: Georgia, serif; overflow-y: auto; padding: 6vh 8vw;
+}
+.gg-menu.hidden { display: none; }
+.gg-menu h1 { font-weight: normal; letter-spacing: 0.04em; }
+.gg-menu ol { list-style: none; padding: 0; margin: 24px 0; max-width: 640px; }
+.gg-menu li { display: flex; align-items: baseline; gap: 14px; padding: 10px 0; border-bottom: 1px solid rgba(30,30,36,0.08); }
+.gg-menu li .num { font-size: 14px; color: var(--gray); width: 28px; text-align: right; }
+.gg-menu li .ttl { flex: 1; font-size: 19px; }
+.gg-menu li.locked .ttl { color: rgba(30,30,36,0.35); }
+.gg-menu li.registered .ttl { cursor: pointer; }
+.gg-menu li .mark { width: 20px; text-align: center; }
+.gg-menu li .dot::before { content: '·'; color: var(--gray); }
+.gg-menu li .stamp { color: var(--accent); }
+.gg-sit {
+  position: fixed; inset: 0; z-index: 45; display: grid; place-items: center;
+  background: rgba(243,237,223,0.55); color: var(--ink); font-family: Georgia, serif;
+}
+.gg-sit.hidden { display: none; }
+.gg-enso-breath {
+  width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--ink);
+  animation: gg-breathe 6s ease-in-out infinite;
+}
+@keyframes gg-breathe { 0%,100% { transform: scale(0.7); opacity: 0.5; } 50% { transform: scale(1); opacity: 1; } }
