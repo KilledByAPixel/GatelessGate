@@ -2,8 +2,19 @@
 *Working title. An interactive sumi-e reading of the Mumonkan, in the browser.*
 
 **Format:** Web (desktop + mobile), PWA, Three.js
-**Version:** 0.1 — first full design pass
-**Scope:** All 48 cases of the Mumonkan, each with text, narration, and a 3D diorama; a subset with bespoke interactions at launch.
+**Version:** 0.2 — revised after M0 (see revision note)
+**Scope:** All 48 cases of the Mumonkan, each with text, narration, and a 3D diorama; some with optional touch responses.
+
+---
+
+## Revision 0.2 (2026-07-16, Frank's direction after M0)
+
+This is an **interactive book — a guided tour of the Mumonkan** — not a game. The changes below override anything they contradict elsewhere in this document:
+
+1. **Dioramas are ambient scenes to chill with.** Nothing is ever asked of the reader — no goals, no puzzles, no "figure out the gesture." Where a diorama has a touch response (tap something, get a little feedback), it is an optional stumbled-upon delight, never a gate. The v0.1 "hero mechanic" concept (e.g. case 29's stillness-stills-the-flag) is dead; the §6 matrix's interaction column now describes *optional bonus ideas*, many of which may ship as pure tableaux.
+2. **Navigation is menu-first.** An easy menu lists all cases; read in any order; check off the ones you've done; next/prev for linear reading. The garden hub shrinks to a short, click-to-skippable gate intro (the book's cover) — don't waste people's time. A walkable garden remains a possible later ambience, not core navigation.
+3. **Progress is a simple check-off** (rendered tastefully — a vermillion seal, not a gamey badge). The v0.1 "lanterns, not checkmarks" stance is softened: checkmarks are the point; lanterns are decoration if the garden ever returns.
+4. **Audio is minimal and chill: no singing bowl (too on-the-nose), no crickets.** Bells are welcome — e.g. a temple bell when the meditation timer starts and ends. Wind is worth experimenting with, kept subtle.
 
 ---
 
@@ -15,7 +26,7 @@ The goal is a piece beautiful enough to pull in people who have never heard of a
 
 ## 2. Design Pillars
 
-**The interaction *is* the koan.** Wherever possible, the mechanic embodies the point rather than illustrating the story. The flag stills when *you* still. The ox's tail never passes. The only answer available is Mu. When a bespoke mechanic isn't feasible, the diorama stays ambient and the text carries the case — never a forced minigame.
+**The diorama is the illustration; interaction is garnish.** *(Rewritten in v0.2.)* Every case is an ambient scene that illustrates the story — read, listen, look, chill. Optional touch responses are discovered delights, never requirements. The text carries the koan; the scene sets the room it happens in.
 
 **Ink and paper.** One coherent visual language across all 48 scenes: ink values on warm paper, fog instead of horizons, torn-paper island edges, a single accent color per koan. Low-poly primitives, flat shading, no textures beyond paper grain and brush alphas.
 
@@ -185,13 +196,12 @@ The Mumonkan repeats itself, which is the entire production strategy.
 
 ## 9. Audio & Speech
 
-**Ambience — fully procedural (Web Audio).** A small synth kit, all math, no samples:
+**Ambience — fully procedural (Web Audio).** A small synth kit, all math, no samples. *(v0.2: no singing bowl — too on-the-nose — and no crickets/cicadas. Minimal and chill.)*
 
-- *Singing bowl:* 4–6 detuned inharmonic partials with slow amplitude beating and a 20–30 s decay. Used for meditation start/end and koan entry.
-- *Temple bell:* deeper partial stack, faster strike transient (cases 13, 16, hub).
-- *Wind:* filtered noise with slow LFO on cutoff and gain; intensity is a parameter the flag koan drives directly.
+- *Temple bell:* partial stack with a strike transient; used for the meditation timer start/end (and cases 13, 16 later).
+- *Wind:* filtered noise with slow LFO on cutoff and gain; subtle; worth experimenting with per scene.
 - *Water:* filtered noise bed + randomized sine-blip drips (7, 30, 39, 40).
-- *Mokugyo (wood block), bamboo knock, cicadas, night crickets* round out the palette.
+- *Mokugyo (wood block), bamboo knock* round out the palette.
 
 Each koan module declares an ambience recipe (`['wind:0.3','crickets','bell:rare']`). Master audio starts muted until first user gesture (autoplay policy) with a tasteful "sound on?" prompt at the gate.
 
@@ -205,7 +215,7 @@ Each koan module declares an ambience recipe (`['wind:0.3','crickets','bell:rare
 
 **The log.** localStorage records per-koan visited state, per-koan sit time, total sit time, and session count. No cloud, no accounts; an export/import button (JSON) for people who care.
 
-**Lanterns, not checkmarks.** Each hub station has a stone lantern: dark when unvisited, a faint ember once read, fully lit once sat with (any sit ≥ 2 minutes at that koan). As lanterns accumulate, the hub's day-cycle sky deepens slightly toward evening so the light matters more. Forty-eight lit lanterns in a night garden is the end state — and the only "reward" is that it's beautiful. One small delight moment when the last lantern lights (fireflies? the gate itself glows?) — deliberately left open for now.
+**Check-off, kept tasteful.** *(Rewritten in v0.2.)* The menu carries the progress: each case can be checked off once you've done it, rendered as a small vermillion seal beside the title — a reader's checklist, not a score. Visited cases get a subtle dot automatically. If the garden ambience ever returns, lanterns can mirror this state as decoration.
 
 ## 11. Technical Architecture
 

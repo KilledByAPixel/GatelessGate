@@ -1,35 +1,34 @@
-# M1 — Vertical Slice: Design Spec
+# M1 — Vertical Slice: Design Spec (v2, the book model)
 
 **Project:** The Gateless Gate (working title)
-**Date:** 2026-07-16
-**Status:** Approved by Frank (design conversation, this date)
-**Parent doc:** [../../gateless-gate-design-doc.md](../../gateless-gate-design-doc.md) (§13, M1)
+**Date:** 2026-07-16 (v2 — supersedes the same-day v1 after Frank's direction correction; see parent doc Revision 0.2)
+**Status:** Approved direction; spec pending Frank's read
+**Parent doc:** [../../gateless-gate-design-doc.md](../../gateless-gate-design-doc.md) (v0.2 — Revision note governs)
 **Builds on:** M0 (merged to master, tag `m0-lookdev-done`)
 
 ## Purpose
 
-The "is it actually good?" milestone: load → title gate → glide through → station → case 29, complete end-to-end — scroll UI with real text, narration, procedural ambience, the stillness mechanic, sit mode — all in the M0 art direction. Desktop-first; mobile tuning is M5.
+The "is it actually good?" milestone for the **interactive book**: a short skippable gate intro (the cover) → the menu (the table of contents) → case 29 as a complete book page — ambient two-monk diorama, full text, narration, subtle wind, meditation timer with a bell — with check-off progress that persists. No goals, no puzzles, nothing asked of the reader.
 
-**Milestone gate:** Frank plays the whole flow and judges it. Objective gates: 60 fps desktop, < 150 draw calls in every scene, `node --test` green, sim/rails/transition determinism preserved under `step(n)`.
+**Milestone gate:** Frank reads case 29 like a book page and it feels right. Objective gates: 60 fps desktop, < 150 draw calls per scene, `node --test` green, sim/intro/transition determinism preserved under `step(n)`.
 
 ## Locked decisions
 
 | Decision | Choice | Notes |
 |---|---|---|
-| Hub movement | **On-rails glide** along a fixed spline; wheel / drag / arrow keys / tap all advance the dolly | Doc's lean; free-walk shelved (revisitable post-M2) |
-| Case 29 text | **Senzaki–Reps (1934)** is the intended M1 text; **Frank pastes it in** (see Text handling below) | Copyright verification stays a pre-M3 gate per doc §14 |
-| Narration | `speechSynthesis`, rate 0.85, sentence-chunked | Per doc §9; baked Opus is post-launch |
-| Persistence | **None in M1** — no localStorage, no lanterns, no saved settings | All M2 |
-| Audio unlock | "sound on?" card at the gate approach, first user gesture starts the context | Wording placeholder-free: "Sound on?" [Yes] [Not now] |
-| M0 leftovers | `src/scene_m0.js` and `tests/scene.test.js` are deleted; their modules live on via the kit | k29 tests replace scene test coverage |
-
-### Text handling (Senzaki–Reps)
-
-The koan module treats text as data: `koans/k29.js` imports its three strings from `koans/text/k29.js`. That file ships with a **clearly-marked plain-language retelling** (written fresh for this project, no rights question) and a comment block telling Frank exactly where to paste the Senzaki–Reps case/comment/verse over it. Claude does not transcribe the 1934 translation itself: its rights status is the very thing the doc says to verify, and a from-memory transcription could corrupt the text anyway. Swap is a 30-second paste; nothing downstream cares which text is present.
+| Model | Interactive book / guided tour; dioramas are ambient; touch responses are optional bonuses, never goals | Parent doc Revision 0.2 |
+| Intro | One short on-rails dolly through the gate (~6–8 s), **any click/key skips it**; ends at the menu | "Let's not waste people's time" |
+| Navigation | **Menu-first**: full list of all 48 cases, jump anywhere, check-off; next/prev chevrons inside koans (disabled while only one koan exists) | Garden/stations shelved |
+| Progress | localStorage: auto `visited` dot + manual `done` check (vermillion seal toggle in the menu) | First persistence in the project |
+| Case 29 scene | **Two monks** facing each other by the gate, arguing about the waving flag; ambient wind (M0's lively tuning); optional bonus: tap the flag → a gust ripples through (2 s decay). No stillness system. No hints | Depicts the actual story |
+| Audio | Wind (subtle, experimental) + **temple bell** for timer start/end. **No singing bowl. No crickets.** Sound-on prompt at the intro; toggle in HUD | Parent doc Revision 0.2 |
+| Case 29 text | Senzaki–Reps intended; **Frank pastes it** into `koans/text/k29.js` over a clearly-marked plain-language retelling that ships in the meantime | Copyright check remains pre-M3 |
+| Narration | `speechSynthesis`, rate 0.85, sentence-chunked, per-section highlight; default voice | Unchanged from v1 |
+| M0 leftovers | `src/scene_m0.js` + `tests/scene.test.js` deleted; modules live on via the kit facade | |
 
 ## Architecture
 
-### Koan module contract (doc §11, adopted verbatim)
+### Koan module contract (unchanged from doc §11)
 
 ```js
 // koans/k29.js
@@ -38,93 +37,87 @@ export default {
   slug: 'wind-flag',
   title: 'Not the Wind, Not the Flag',
   accent: '#C73E3A',
-  tier: 1,
-  text: { case, comment, verse },      // plain strings from koans/text/k29.js
-  ambience: ['wind:flag', 'crickets:0.2'],
+  tier: 2,                       // optional touch response (tap-gust)
+  text: { case, comment, verse },   // strings from koans/text/k29.js
+  ambience: ['wind:0.25'],
   build(ctx) { /* returns { update(dt, simTime), onEnter(), onExit(), dispose() } */ }
 }
 ```
 
-`ctx = { scene, kit, audio, input, accent, quality }`. `kit` is a facade module (`src/kit/index.js`) re-exporting the M0 builders. A tiny registry (`src/koans/registry.js`) maps slug → lazy `import()`; M1 registers only `k29`.
+`ctx = { scene, kit, audio, input, accent, quality }`. `src/koans/registry.js` maps slug → lazy `import()`; `src/koans/index.js` is the static table of all 48 `{ id, slug, title }` (titles from the parent doc §6) used by the menu — only registered slugs are enterable, the rest render greyed as "not yet".
 
 ### SceneManager (`src/scene/manager.js`)
 
-One renderer; owns the current root (hub or koan) and the swap:
-`swapTo(buildFn)` → dissolve out → dispose old root → build new → dissolve in. Returns a promise.
+As v1: one renderer; `swapTo(builder)` = dissolve out → dispose outgoing root (traverse; `geometry.dispose()` + `material.dispose()`; never the shared toon ramp or `userData.shared` textures; guard double-dispose via a `Set`) → build → dissolve in. `addOutlines` switches to one shared outline material per root.
 
-**Disposal rules (from M0 final review):** traverse the outgoing root; `geometry.dispose()` and `material.dispose()` for every mesh; never dispose the shared toon ramp texture or any texture flagged `userData.shared`. Outline shells share their source geometry — guard against double-dispose (track a `Set` of disposed ids). `addOutlines` switches to **one shared outline material per root** (same width/wobble scene-wide), disposed with the root.
+### Input (`src/input.js`)
 
-### Input verbs (`src/input.js`)
+Pointer/orbit stay with the camera rig. `input.onTap(cb)` — click/tap with < 6 px drift, used by the menu, intro skip, and the flag-tap bonus (raycast). **No stillness clock** (v1's is deleted from the design).
 
-- Pointer/look stay with the camera rig (unchanged).
-- **Stillness clock:** `input.stillness()` → seconds since the last input event (pointermove > 2 px, pointerdown, wheel, key, touch). The clock advances on sim ticks, not wall time, so `step(n)` tests behave; `input.setStillness(s)` overrides it for tests/hooks.
-- `input.onTap(cb)` — tap/click with < 6 px drift (hub station selection).
+### Save (`src/save.js`)
+
+Tiny injectable-storage module: `load()/save()` of `{ visited: {slug:true}, done: {slug:true}, soundOn, lastSlug }` under one key `gateless-gate-v1`. Pure logic tested with a fake storage object.
 
 ### window.gate hooks v2
 
 ```
-step(n), state(), enter(slug), exit(), dissolve(dir, dur?),
-sit(minutes), endSit(), setStillness(seconds), setSound(on)
+step(n), state(), enter(slug), exit(), menu(open?), skipIntro(),
+dissolve(dir, dur?), sit(minutes), endSit(), markDone(slug, on), setSound(on)
 ```
-`state()` → `{ mode: 'hub'|'koan'|'sit', simTime, drawCalls, triangles, fps, dissolveT, camera, hub?: { u }, koan?: <module fragment> }`. Modules supply their own fragment (k29: `{ windIntensity, clothEnergy, stillness }`) — no scene-specific knowledge in `main.js`.
+`state()` → `{ mode: 'intro'|'menu'|'koan'|'sit', simTime, drawCalls, triangles, fps, dissolveT, camera, progress: { visited, done }, koan?: <module fragment> }`. k29's fragment: `{ clothEnergy, gustT }`.
 
-## The hub (`src/hub/`)
+## The intro (`src/intro.js`)
 
-**Frontispiece.** A long path island in the M0 language (torn rim, fog-to-paper): path → the freestanding hero gate → short region stub with **one station** (plinth + stone lantern, both new kit props) marking case 29. Composition beats: start in emptiness, gate at spline midpoint, station at the end.
+The book's cover: paper void, path island, the hero gate; a fixed dolly (Catmull-Rom through ~4 points, pure math in `src/intro_rails.js`, tested) carries the camera through the gate over ~6–8 s with title text ("The Gateless Gate", DOM, quiet serif) fading over it. The "Sound on?" card appears near the start ([Yes] / [Not now]; either way the glide continues). **Any click or key skips straight to the menu.** Natural completion also lands in the menu. On later launches the intro still plays (it's short and skippable; a "skip immediately if visited before" refinement can wait for M2 taste).
 
-**Rails (`src/hub/rails.js`, pure + tested).** Catmull-Rom spline through ~6 control points; dolly state `{ u, v }`; inputs add velocity (wheel ±, drag ±, ArrowUp/Down, tap = nudge forward); damping ~2.5/s; `u` clamped [0,1]. Camera positions at `spline(u) + eye offset`, looks toward `spline(u + lookAhead)`. Deterministic given an input sequence.
+## The menu (`src/ui/menu.js`)
 
-**Sound prompt.** First time `u` crosses ~0.35 (approaching the gate): the "Sound on?" card. [Yes] → `audio.unlock()`; [Not now] → dismissed, HUD toggle remains. Either way the glide continues uninterrupted.
+Full-screen overlay over the idling backdrop scene, opened by the ensō button (top corner, always present outside the intro):
 
-**Station → koan.** At `u ≥ 0.97` a subtle "enter" affordance appears on the station; tap/Enter → `SceneManager.swapTo(k29)`. `Esc` inside a koan returns to the hub at the station.
+- Scrollable list of all 48: seal-styled case number, title; registered cases are live, others greyed.
+- Per-case state: subtle dot = visited (automatic on entry); vermillion seal = done (manual toggle, clickable directly in the list).
+- "Continue" row at top (last visited case) when it exists.
+- Typography rule: it must read as a book's table of contents, not a level select — serif, ink on paper, generous leading, no thumbnails in M1.
+
+Menu logic (selection, states, continue target) is a pure module (`src/ui/menu_state.js`, tested).
 
 ## Case 29 (`src/koans/k29.js`)
 
-Diorama: reuse the M0 composition (island, gate, flag; monk under the tree) built through `ctx.kit` with the accent flowing from the module's `accent` field.
+Diorama: island + temple gate + flag (M0 kit, accent from module) + **two monks** placed facing each other near the flagpole, slight lean-in, one gesturing up at the flag (arm pose = simple cone/cylinder addition to the monk builder or rotation of the existing rig — builder gains an optional `pose: 'point'` that raises one arm; keep it minimal). Ambient wind uses the M0 lively tuning as-is.
 
-**The mechanic.** One scalar `windIntensity ∈ [0,1]` owned by the module:
-- `stillness < 3 s` → target 1; `stillness ≥ 3 s` → target ramps to 0 with smoothstep over the next 4 s.
-- `windIntensity` eases toward target (~1.5 s time constant).
-- It scales the cloth wind forces (gust variance and flutter; a small constant gravity sag remains) **and** the wind synth's gain/cutoff — sight and sound still together.
-- Any input snaps the target back to 1 (the flag wakes).
-- **No hint, ever** (doc: discovering stillness is the verb *is* the joke). The doc's 10 s glyph pulse explicitly does not apply to case 29.
+**Optional bonus (tier 2):** tapping the flag cloth (raycast) kicks a gust — wind force multiplier eases 1 → 2.2 → 1 over ~2 s (`gustT` in the state fragment). No visual hint, no sound sting (the wind synth naturally swells with the gust). Stumbled upon or never found — both fine.
 
-`state()` fragment: `{ windIntensity, clothEnergy, stillness }`.
+## Sit timer (`src/sit.js`)
+
+From a koan: "Sit" control → presets 2/5/10/20 min → UI and scroll fade, camera at slowest drift, ensō SVG breathing guide (6 s cycle), **temple bell strike at start and end** (no bowl), `Esc`/tap ends early, wake-lock in try/catch. Returns to the koan with UI restored. No logging.
 
 ## Audio (`src/audio/`)
 
-**engine.js** — context creation, `unlock()` (resume on gesture), master gain, `setSound(on)`, ambience recipe parser (`'wind:flag'` → wind synth with external intensity control; `'crickets:0.2'` → crickets at level 0.2).
+- **engine.js** — context + `unlock()` on gesture, master gain, `setSound(on)` (persisted via save.js), recipe parser (`'wind:0.25'`).
+- **synths.js** — pure param-table functions + thin node builders:
+  - *Wind:* filtered noise, lowpass ~400–1400 Hz, slow LFO on cutoff/gain; base level from the recipe; gust multiplier input (flag bonus drives it).
+  - *Temple bell:* 4 partials, strike transient, ~8–12 s decay, deeper stack than a bowl; used only for sit start/end in M1.
+- **narration.js** — as v1: `speak(text, { rate: 0.85, onEnd })`, `stop()`, sentence-chunked, `.speaking` highlight class.
 
-**synths.js** — all-procedural, param tables as **pure exported functions** (Node-testable):
-- *Wind:* filtered noise (lowpass ~400–1400 Hz), slow LFO on cutoff + gain; `setIntensity(0..1)` maps to gain/cutoff/LFO-depth curves.
-- *Crickets:* sparse seeded chirp scheduler (band-passed ~4.2 kHz pulses in short trains); density parameter.
-- *Singing bowl:* 5 detuned inharmonic partials (beating pairs), strike envelope with 20–30 s decay; used on koan entry and sit start/end.
+Audio exempt from determinism; everything else is not.
 
-**narration.js** — `speak(sectionText, { rate = 0.85, onEnd })`, `stop()`; sentence-chunking (split on `.!?` boundaries, queue utterances) to dodge Chrome's long-utterance stall; currently-speaking section gets a `.speaking` class for the highlight. Voice picker is M2 — default voice only.
+## Scroll UI (`src/ui/scroll.js`)
 
-Audio is exempt from determinism guarantees; everything else is not.
-
-## UI (`src/ui/`)
-
-**scroll.js** — the kakemono: fixed right-side panel ≥ 900 px wide viewports, bottom sheet below; three progressive sections (THE CASE / MUMON'S COMMENT / THE VERSE) in a quiet serif, ink on paper, case number as a vermillion seal block; per-section speak buttons + one master play (reads all three in order); tuck/untuck toggle (tucked = just the seal tab). Section reveal state machine is a pure module (`scroll_state.js`, tested).
-
-**hud.js** — three quiet corner controls only: sound toggle, "Sit" , back-to-hub (only inside a koan). No ensō menu in M1.
-
-**sit.js** — Sit flow: presets 2/5/10/20 min → UI fades out, scroll tucks, camera drops to slowest drift, ensō SVG breathing guide pulses on a 6 s cycle, bowl at start and end, `Esc`/tap ends early, `navigator.wakeLock` requested in a try/catch (failure is fine). Ends back in the koan with UI restored. No logging (M2).
+Unchanged from v1: kakemono panel (right side ≥ 900 px, bottom sheet below), three progressive sections (THE CASE / MUMON'S COMMENT / THE VERSE), per-section speak buttons + master play, tuck/untuck, case number as vermillion seal. Section state machine pure (`scroll_state.js`, tested). Next/prev chevrons live in this panel's footer (disabled in M1).
 
 ## Testing
 
-- Pure Node tests: rails (spline continuity, clamping, determinism), stillness envelope + wind-intensity mapping (exact ramp numbers above), scroll section state machine, synth param tables (ranges, monotonic intensity curves), koan registry + k29 contract shape (`text` strings non-empty, `build` returns the four methods), SceneManager disposal bookkeeping (disposed-count > 0 after swap; shared ramp untouched; no double-dispose).
-- Browser verification (main session): full flow via hooks + shot server; `setStillness(10)` stills the flag headlessly; narration/audio smoke-checked by ear and via console.
-- Suite target: M0's 36 tests minus the deleted scene test, plus ~25 new.
+- Pure Node tests: intro rails (continuity, clamp, determinism), menu state machine (visited/done/continue), save module (fake storage round-trip, corrupt-JSON tolerance), koan index (48 entries, unique ids/slugs), registry + k29 contract shape, gust envelope math, synth param tables (ranges; bell partial/decay tables), scroll section state machine, SceneManager disposal bookkeeping (disposed > 0, ramp untouched, no double-dispose).
+- Browser verification (main session): full flow — intro (and skip), sound prompt, menu jump, case 29 text/narration/wind, flag-tap gust via synthetic event, done check-off persists across reload, sit timer bell — via hooks + shot server.
+- Suite target: ~60 tests total.
 
 ## Out of scope (M2+)
 
-Menu/ensō overlay, router/deep links, settings, save state/lanterns/log, reading mode, PWA/offline, voice picker, other koans, mic verb, gyro, mobile perf tuning, region lazy-loading.
+Garden/stations/day-cycle, router/deep links, settings beyond the sound toggle, reading mode, PWA/offline, voice picker, other koans' content, mic/gyro verbs, mobile tuning, "skip intro when returning" refinement, export/import of progress.
 
 ## Risks
 
-- **Stillness feel** — the 3 s + 4 s envelope is a starting point; expect tuning in the verification pass. The mechanic failing to feel like "getting the joke" is an art-direction risk, not an engineering one.
-- **speechSynthesis quality** varies wildly by platform; M1 accepts the default voice (doc's post-launch Opus plan is the real fix).
-- **Senzaki–Reps paste pending** — until Frank pastes it, builds carry the marked retelling; the copyright check remains a pre-M3 gate.
-- **Hub scope creep** — the region stub is one station. Six regions, 48 stations, day-cycle sky: all later.
+- **Tone of the menu** — it must feel like a table of contents; typography does the work. This is the new "does it sing" surface.
+- **speechSynthesis** quality varies by platform (default voice in M1; baked Opus post-launch).
+- **Senzaki–Reps paste pending** — retelling ships until Frank pastes; rights check stays pre-M3.
+- **Two-monk staging** — the monk rig has no faces or arms yet; a minimal `pose: 'point'` arm must read clearly at ink-silhouette level or the argument won't stage. Fallback: leaning postures only, which already read as conversation.
