@@ -14,14 +14,19 @@ export function makeSit({ audio, onComplete, onExit } = {}) {
   hint.textContent = 'tap to end';
   el.appendChild(hint);
 
-  let running = false, elapsed = 0, duration = 0, wake = null;
+  let running = false, elapsed = 0, duration = 0, wake = null, wakeGen = 0;
 
   el.addEventListener('pointerdown', () => { if (running) finish('early'); });
 
   async function acquireWake() {
-    try { wake = await navigator.wakeLock.request('screen'); } catch { wake = null; }
+    const myGen = ++wakeGen;
+    try {
+      const lock = await navigator.wakeLock.request('screen');
+      if (myGen !== wakeGen || !running) { try { lock.release(); } catch {} return; }
+      wake = lock;
+    } catch { wake = null; }
   }
-  function releaseWake() { try { wake && wake.release(); } catch {} wake = null; }
+  function releaseWake() { wakeGen++; try { wake && wake.release(); } catch {} wake = null; }
 
   function finish(kind) {
     if (!running) return;
