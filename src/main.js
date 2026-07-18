@@ -127,6 +127,10 @@ async function enter(slug) {
     const mod = await loadKoan(slug);
     if (!mod) return;
     await transition(() => {
+      // tear down any outgoing koan (e.g. re-entering without an exit())
+      if (koan && koan.onExit) koan.onExit();
+      input.clear();
+      if (scroll) { scroll.dispose(); scroll = null; }
       const built = mod.build({ scene: null, kit: null, audio, input, accent: mod.accent, quality: 'high' });
       built.setCamera && built.setCamera(camera);
       const prev = scenes.active();
@@ -150,7 +154,7 @@ async function enter(slug) {
           speakAll(mod.text);
         },
         onBack: () => exit(),
-        onSit: () => startSit(),
+        onSit: (m) => startSit(m),
       });
       panel.appendChild(scroll.el);
       showView(scroll.el);
@@ -162,6 +166,7 @@ async function enter(slug) {
 }
 
 async function exit() {
+  if (mode === 'intro') { skipIntro(); return; }
   if (mode === 'sit') { sit.end(); return; }
   if (mode !== 'koan') { menu.open(); showView(menu.el); return; }
   narration.stop();
@@ -193,15 +198,14 @@ function speakAll(text) {
   step();
 }
 
-function startSit() {
+function startSit(minutes = 10) {
   if (mode !== 'koan') return;
   mode = 'sit';
   narration.stop();
+  if (scroll) scroll.setReading(false);
   panel.classList.add('fading');   // the text recedes while sitting
-  sit.start(sitMinutes);
+  sit.start(minutes);
 }
-
-let sitMinutes = 10;
 function resumeKoan() {
   panel.classList.remove('fading');
   mode = 'koan';
@@ -261,10 +265,10 @@ window.gate = {
   },
   enter(slug) { return enter(slug); },
   exit() { return exit(); },
-  menu(open) { if (open === false) { menu.close(); } else { menu.open(); showView(menu.el); } },
+  menu(open) { if (open === false) { if (mode !== 'menu') menu.close(); } else { menu.open(); showView(menu.el); } },
   skipIntro,
   dissolve(dir = 'in', dur) { return dir === 'in' ? dissolve.dissolveIn(dur) : dissolve.dissolveOut(dur); },
-  sit(minutes) { sitMinutes = minutes; startSit(); },
+  sit(minutes) { startSit(minutes); },
   endSit() { sit.end(); },
   markRead(slug) { save.markRead(slug); menu.refresh(save.state()); },
   markSat(slug) { save.markSat(slug); menu.refresh(save.state()); },

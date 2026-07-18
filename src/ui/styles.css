@@ -81,8 +81,10 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
   font-family: Georgia, serif; background: rgba(243,237,223,0.7); border: 1px solid rgba(30,30,36,0.25);
   color: var(--ink); padding: 5px 12px; border-radius: 3px; cursor: pointer; backdrop-filter: blur(2px);
 }
-.gg-sit-pop { position: absolute; bottom: 110%; left: 0; display: none; gap: 4px; background: var(--paper); padding: 4px; border: 1px solid rgba(30,30,36,0.2); border-radius: 3px; }
+.gg-sit-wrap { position: relative; display: inline-block; }
+.gg-sit-pop { position: absolute; top: 112%; right: 0; display: none; gap: 4px; z-index: 6; background: var(--paper); padding: 4px; border: 1px solid rgba(30,30,36,0.2); border-radius: 3px; box-shadow: 0 4px 14px rgba(30,30,36,0.14); }
 .gg-sit-pop.open { display: flex; }
+.gg-sit-pop button { padding: 4px 8px; }
 
 /* ---- onboarding (first run) + sit overlay: over everything ---- */
 .gg-onboard {

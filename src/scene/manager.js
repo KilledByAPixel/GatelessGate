@@ -37,16 +37,11 @@ export function makeSceneManager(renderer, dissolve) {
     }
   }
 
+  // The app orchestrates transitions (ink cover → setActive+disposeRoot → reveal);
+  // the manager just holds the active root and renders it under the dissolve.
   return {
     setActive(root) { current = root; },
     active() { return current; },
     render,
-    async swapTo(root, { disposePrev = true, dur = 0.8 } = {}) {
-      await dissolve.dissolveOut(dur);       // cover with paper
-      const prev = current;
-      current = root;
-      if (prev && disposePrev) { disposeRoot(prev); prev.dispose && prev.dispose(); }
-      await dissolve.dissolveIn(dur);        // reveal the new root
-    },
   };
 }

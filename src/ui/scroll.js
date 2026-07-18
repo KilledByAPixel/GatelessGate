@@ -15,11 +15,22 @@ export function makeScroll({ id, title, text, accent = '#C73E3A', onSpeak, onSpe
   back.onclick = () => onBack && onBack();
   const spacer = document.createElement('span');
   spacer.className = 'spacer';
+  const sitWrap = document.createElement('span');
+  sitWrap.className = 'gg-sit-wrap';
   const sit = document.createElement('button');
   sit.className = 'gg-btn';
   sit.textContent = 'Sit';
-  sit.onclick = () => onSit && onSit();
-  bar.append(back, spacer, sit);
+  const pop = document.createElement('span');
+  pop.className = 'gg-sit-pop';
+  for (const m of [2, 5, 10, 20]) {
+    const b = document.createElement('button');
+    b.textContent = m + 'm';
+    b.onclick = () => { pop.classList.remove('open'); onSit && onSit(m); };
+    pop.appendChild(b);
+  }
+  sit.onclick = () => pop.classList.toggle('open');
+  sitWrap.append(sit, pop);
+  bar.append(back, spacer, sitWrap);
   el.appendChild(bar);
 
   const head = document.createElement('div');
