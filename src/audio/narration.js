@@ -4,30 +4,34 @@ export function chunkSentences(text) {
 }
 
 // Browser-only speechSynthesis wrapper. Sentence-chunked to dodge Chrome's
-// long-utterance stall. Never a stopgap — this is the narration plan.
+// long-utterance stall. A generation counter neutralizes stale async callbacks
+// fired by cancel(), so stop()/rapid re-speak() never resurrect old narration.
 export function createNarration() {
   const synth = window.speechSynthesis;
   let queue = [];
+  let gen = 0;
   let speaking = false;
 
-  function next(onEnd) {
+  function next(myGen, onEnd) {
+    if (myGen !== gen) return;               // superseded by a newer speak()/stop()
     if (!queue.length) { speaking = false; onEnd && onEnd(); return; }
     const { text, rate } = queue.shift();
     const u = new SpeechSynthesisUtterance(text);
     u.rate = rate;
-    u.onend = () => next(onEnd);
-    u.onerror = () => next(onEnd);
+    u.onend = () => next(myGen, onEnd);
+    u.onerror = () => next(myGen, onEnd);
     synth.speak(u);
   }
 
   return {
     speak(text, { rate = 0.85, onEnd } = {}) {
+      const myGen = ++gen;                     // invalidate any in-flight callbacks
       synth.cancel();
       queue = chunkSentences(text).map((t) => ({ text: t, rate }));
       speaking = true;
-      next(onEnd);
+      next(myGen, onEnd);
     },
-    stop() { queue = []; speaking = false; synth.cancel(); },
+    stop() { gen++; queue = []; speaking = false; synth.cancel(); },
     isSpeaking() { return speaking; },
   };
 }
