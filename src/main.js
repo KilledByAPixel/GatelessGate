@@ -7,7 +7,7 @@ import { makeInput } from './input.js';
 import { createSave } from './save.js';
 import { createAudio } from './audio/engine.js';
 import { createNarration } from './audio/narration.js';
-import { CASES, bySlug } from './koans/index.js';
+import { CASES } from './koans/index.js';
 import { isRegistered, loadKoan } from './koans/registry.js';
 import { buildHub, makeIntro } from './intro.js';
 import { makeMenu } from './ui/menu.js';
@@ -42,6 +42,7 @@ let rig = null;           // camera rig for menu/koan
 let koan = null;         // current koan root
 let scroll = null;       // current scroll UI
 let intro = null;
+let entering = false;
 
 // ---- UI singletons ----
 const menu = makeMenu({
@@ -56,8 +57,8 @@ document.body.appendChild(onboarding.el);
 
 const sit = makeSit({
   audio,
-  onComplete: () => { if (koanSlug) { save.markSat(koanSlug); menu.refresh(save.state()); } setMode('koan'); },
-  onExit: () => setMode('koan'),
+  onComplete: () => { if (koanSlug) { save.markSat(koanSlug); menu.refresh(save.state()); } resumeKoanChrome(); },
+  onExit: () => resumeKoanChrome(),
 });
 document.body.appendChild(sit.el);
 
@@ -77,6 +78,7 @@ let koanSlug = null;
 function setMode(m) { mode = m; }
 
 function makeRig(opts) {
+  if (rig && rig.dispose) rig.dispose();
   return makeCameraRig(camera, renderer.domElement, opts);
 }
 
@@ -102,28 +104,35 @@ function openMenu() {
 
 async function enter(slug) {
   if (!isRegistered(slug)) return;
-  const mod = await loadKoan(slug);
-  if (!mod) return;
-  menu.close();
-  audio.unlock();
-  koanSlug = slug;
-  const built = mod.build({ scene: null, kit: null, audio, input, accent: mod.accent, quality: 'high' });
-  built.setCamera && built.setCamera(camera);
-  await scenes.swapTo(built, { disposePrev: hub !== scenes.active() });
-  // keep hub cached: only dispose a previous koan, never the hub
-  koan = built;
-  built.onEnter && built.onEnter();
-  save.markRead(slug);
-  rig = makeRig({ distance: 10.8, target: [0.2, 0.9, 0], polar: 1.18 });
-  // scroll UI
-  scroll = makeScroll({
-    id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
-    onSpeak: (key) => narration.speak(mod.text[key], { onEnd: () => scroll.highlight(null) }),
-    onSpeakAll: () => speakAll(mod.text),
-  });
-  document.body.appendChild(scroll.el);
-  hud.setVisible(true);
-  setMode('koan');
+  if (entering) return;
+  entering = true;
+  try {
+    const mod = await loadKoan(slug);
+    if (!mod) return;
+    menu.close();
+    audio.unlock();
+    koanSlug = slug;
+    const built = mod.build({ scene: null, kit: null, audio, input, accent: mod.accent, quality: 'high' });
+    built.setCamera && built.setCamera(camera);
+    await scenes.swapTo(built, { disposePrev: hub !== scenes.active() });
+    // keep hub cached: only dispose a previous koan, never the hub
+    koan = built;
+    built.onEnter && built.onEnter();
+    save.markRead(slug);
+    rig = makeRig({ distance: 10.8, target: [0.2, 0.9, 0], polar: 1.18 });
+    // scroll UI
+    scroll = makeScroll({
+      id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
+      onSpeak: (key) => narration.speak(mod.text[key], { onEnd: () => scroll.highlight(null) }),
+      onSpeakAll: () => speakAll(mod.text),
+    });
+    document.body.appendChild(scroll.el);
+    menu.close();
+    hud.setVisible(true);
+    setMode('koan');
+  } finally {
+    entering = false;
+  }
 }
 
 function speakAll(text) {
@@ -138,8 +147,15 @@ function speakAll(text) {
   step();
 }
 
+function resumeKoanChrome() {
+  if (scroll) scroll.untuck();
+  hud.setVisible(true);
+  setMode('koan');
+}
+
 async function exit() {
-  if (mode === 'koan' || mode === 'sit') {
+  if (mode === 'sit') { sit.end(); return; }
+  if (mode === 'koan') {
     narration.stop();
     if (scroll) { scroll.dispose(); scroll = null; }
     hud.setVisible(false);
@@ -165,7 +181,7 @@ function startSit(minutes) {
 function skipIntro() { if (mode === 'intro' && intro) intro.skip(); }
 addEventListener('keydown', (e) => {
   if (mode === 'intro') { skipIntro(); return; }
-  if (e.key === 'Escape') exit();
+  if (e.key === 'Escape') { if (mode === 'sit') sit.end(); else exit(); }
 });
 renderer.domElement.addEventListener('pointerdown', () => { if (mode === 'intro') skipIntro(); });
 
