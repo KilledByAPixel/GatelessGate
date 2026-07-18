@@ -62,12 +62,14 @@ export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed 
         const gust = (1.8 + 3.4 * noise3(x * 0.5 + t, y * 0.5, t * 0.8, seed)) * windLevel;
         const flap = (noise3(x * 1.3, y * 1.3 + t * 1.4, t * 1.2, seed + 4) - 0.5) * 7.0 * windLevel;
         const lift = (noise3(x * 0.7 + 9, t * 0.6, y * 0.7, seed + 9) - 0.5) * 2.0 * windLevel;
+        // hover puffs: the tiniest brush of extra motion, and only while the
+        // wind is alive — a stilled flag ignores the cursor entirely.
         let pz = 0, py = 0;
         for (const pf of puffs) {
           const dx = x - pf.x, dy = y - pf.y;
           const fall = Math.exp(-(dx * dx + dy * dy) / (PUFF_RADIUS * PUFF_RADIUS)) * (1 - pf.age / PUFF_LIFE);
-          pz += fall * 18.0;
-          py += fall * 4.5;
+          pz += fall * 3.5 * windLevel;
+          py += fall * 0.9 * windLevel;
         }
         return [gust, lift + py, flap + pz];
       },
@@ -84,6 +86,11 @@ export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed 
     toggleWind() { windTarget = windTarget < 0.5 ? 1 : 0; return windTarget >= 0.5; },
     isWindOn() { return windTarget >= 0.5; },
     windLevel() { return windLevel; },
-    hoverAt(lx, ly) { puffs.push({ x: lx, y: ly, age: 0 }); if (puffs.length > 8) puffs.shift(); },
+    hoverAt(lx, ly) {
+      if (windTarget < 0.5) return false;    // stilled flag: no mouse response at all
+      puffs.push({ x: lx, y: ly, age: 0 });
+      if (puffs.length > 8) puffs.shift();
+      return true;
+    },
   };
 }

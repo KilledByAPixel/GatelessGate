@@ -2,7 +2,8 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER } from '../palette.js';
 import {
-  makeIsland, makeMonk, makeGate, makeFlag, makeLights, makeBlobShadow, addOutlines,
+  makeGround, makeMountains, makeForest, makeMonk, makeTree, makeGate, makeFlag,
+  makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 import { clothEnergy } from '../sim/verlet.js';
 
@@ -22,9 +23,20 @@ export default {
     const { audio, input } = ctx;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(PAPER);
-    scene.fog = new THREE.FogExp2(PAPER, 0.058);
+    scene.fog = new THREE.FogExp2(PAPER, 0.03);
     scene.add(makeLights());
-    scene.add(makeIsland({ radius: 6, seed: 3 }));
+
+    // a little world: rolling ground running into the fog, mountains and
+    // forest in the distance — the temple gate stands at its center
+    scene.add(makeGround({ seed: 21 }));
+    scene.add(makeMountains({ count: 8, distance: 52, arcSpan: 3.6, seed: 31, color: '#C9C4B5' }));
+    scene.add(makeMountains({ count: 5, distance: 33, arcSpan: 2.4, seed: 32, color: '#B4AF9F', hScale: 0.65 }));
+    scene.add(makeForest({ count: 55, center: [-19, 0, -27], spread: 13, seed: 41 }));
+    scene.add(makeForest({ count: 40, center: [16, 0, -31], spread: 14, seed: 42, color: '#757464' }));
+
+    const nearTree = makeTree({ seed: 5 });
+    nearTree.position.set(-4.6, 0, -3.2);
+    scene.add(nearTree);
 
     const gate = makeGate({});
     gate.position.set(2.3, 0, -2.3);
@@ -51,6 +63,7 @@ export default {
       [monkB.position, 0.7, 0.55, 0.42],
       [gate.position, 1.8, 0.75, 0.32],
       [flag.group.position, 0.55, 0.45, 0.36],
+      [nearTree.position, 1.6, 1.3, 0.3],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = p.x; s.position.z = p.z;

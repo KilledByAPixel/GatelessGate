@@ -28,14 +28,22 @@ test('toggleWind flips the target and reports it', () => {
   assert.equal(f.isWindOn(), true);
 });
 
-test('hoverAt injects energy into a still flag', () => {
-  const f = makeFlag({ seed: 11 });
-  f.setWindTarget(0);
-  run(f, 300);
-  const before = clothEnergy(f.cloth);
-  f.hoverAt(0.75, -0.6); // middle-ish of the cloth (local coords)
-  run(f, 8, 5);
-  assert.ok(clothEnergy(f.cloth) > before, `hover should stir the cloth: ${before} -> ${clothEnergy(f.cloth)}`);
+test('hover is accepted while flying, ignored while stilled', () => {
+  const flying = makeFlag({ seed: 11 });
+  assert.equal(flying.hoverAt(0.75, -0.6), true, 'flying flag accepts hover');
+  const stilled = makeFlag({ seed: 11 });
+  stilled.setWindTarget(0);
+  assert.equal(stilled.hoverAt(0.75, -0.6), false, 'stilled flag refuses hover');
+});
+
+test('hover while stilled changes nothing (bit-identical to no hover)', () => {
+  const a = makeFlag({ seed: 11 });
+  const b = makeFlag({ seed: 11 });
+  a.setWindTarget(0); b.setWindTarget(0);
+  run(a, 300); run(b, 300);
+  a.hoverAt(0.75, -0.6);   // refused — must leave no trace
+  run(a, 30, 5); run(b, 30, 5);
+  assert.deepEqual(Array.from(a.cloth.positions), Array.from(b.cloth.positions));
 });
 
 test('cloth mesh is exposed for raycasting', () => {

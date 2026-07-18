@@ -1,21 +1,30 @@
 import * as THREE from '../lib/three.module.js';
 import { PAPER } from './palette.js';
-import { makeIsland, makeGate, makeMonk, makeFlag, makeTree, makeLights, addOutlines, makeBlobShadow } from './kit/index.js';
+import {
+  makeGround, makeMountains, makeForest, makeGate, makeMonk, makeFlag, makeTree,
+  makeLights, addOutlines, makeBlobShadow,
+} from './kit/index.js';
 import { introPath } from './intro_rails.js';
 
 // The idling stage scene behind the title and the table of contents — a small
-// garden that gathers elements from the koans (gate, a monk, a flag, a tree).
+// world gathering elements from the koans: the gate at its center, a monk, a
+// flag, trees, with mountains and forest dissolving into the fog beyond.
 export function buildHub() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
-  scene.fog = new THREE.FogExp2(PAPER, 0.05);
+  scene.fog = new THREE.FogExp2(PAPER, 0.03);
   scene.add(makeLights());
-  scene.add(makeIsland({ radius: 8, seed: 7 }));
+
+  scene.add(makeGround({ seed: 7 }));
+  scene.add(makeMountains({ count: 9, distance: 55, arcSpan: 3.8, seed: 71, color: '#C9C4B5' }));
+  scene.add(makeMountains({ count: 5, distance: 35, arcSpan: 2.6, seed: 72, color: '#B4AF9F', hScale: 0.7 }));
+  scene.add(makeForest({ count: 55, center: [-18, 0, -26], spread: 13, seed: 73 }));
+  scene.add(makeForest({ count: 45, center: [20, 0, -30], spread: 14, seed: 74, color: '#757464' }));
 
   const gate = makeGate({ width: 3.0, height: 3.4 });
   gate.position.set(0, 0, -1.2);
   const tree = makeTree({ seed: 5 });
-  tree.position.set(-3.4, 0, -1.6);
+  tree.position.set(-3.6, 0, -2.2);
   const monk = makeMonk({});
   monk.position.set(-1.2, 0, 1.0);
   monk.rotation.y = 0.7;

@@ -112,7 +112,7 @@ async function openMenu() {
   await transition(() => {
     if (intro) { intro.dispose(); intro = null; }
     mode = 'menu';
-    rig = makeRig({ distance: 13, target: [0, 1.2, -0.5], azimuth: 0.5, polar: 1.15 });
+    rig = makeRig({ distance: 14, target: [0, 1.7, -2], azimuth: 0.5, polar: 1.3 });
     menu.refresh(save.state());
     menu.open();
     showView(menu.el);
@@ -139,7 +139,7 @@ async function enter(slug) {
       koan = built; koanSlug = slug;
       built.onEnter && built.onEnter();
       save.markRead(slug);
-      rig = makeRig({ distance: 11, target: [1.2, 1.05, 0.3], azimuth: 0.55, polar: 1.16 });
+      rig = makeRig({ distance: 11.5, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27 });
       menu.close();
       scroll = makeScroll({
         id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
@@ -179,7 +179,7 @@ async function exit() {
     koan = null; koanSlug = null;
     if (scroll) { scroll.dispose(); scroll = null; }
     mode = 'menu';
-    rig = makeRig({ distance: 13, target: [0, 1.2, -0.5], azimuth: 0.5, polar: 1.15 });
+    rig = makeRig({ distance: 14, target: [0, 1.7, -2], azimuth: 0.5, polar: 1.3 });
     menu.refresh(save.state());
     menu.open();
     showView(menu.el);
