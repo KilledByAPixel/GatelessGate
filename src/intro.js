@@ -15,23 +15,28 @@ export function buildHub() {
   scene.fog = new THREE.FogExp2(PAPER, 0.03);
   scene.add(makeLights());
 
+  // the intro dolly rides straight down the road (kept near x=0); the gate
+  // straddles it and the lanterns flank it, all placed via path.sample
+  const path = makePath({ from: [0, 14], to: [0, -36], width: 2.0, seed: 93, groundSeed: 7, wander: 1.0 });
+  scene.add(path);
+
+  const gp = path.sample(0.4);
   const gate = makeGate({ width: 3.0, height: 3.4 });
-  gate.position.set(0, 0, -1.2);
+  gate.position.set(gp.x, 0, gp.z);
+  gate.rotation.y = gp.heading;
   scene.add(gate);
 
-  // the intro dolly rides this line: the path runs straight through the gate
-  scene.add(makePath({ from: [0, 14], to: [0.8, -36], width: 1.9, seed: 93, groundSeed: 7, wander: 1.2 }));
-
+  const lw = 2.0;
   const lanternA = makeLantern({});
-  lanternA.position.set(-1.9, 0, -1.6);
-  lanternA.rotation.y = 0.3;
+  lanternA.position.set(gp.x + gp.perp.x * lw, 0, gp.z + gp.perp.z * lw);
+  lanternA.rotation.y = gp.heading;
   const lanternB = makeLantern({ height: 1.0 });
-  lanternB.position.set(1.9, 0, -0.8);
-  lanternB.rotation.y = -0.5;
+  lanternB.position.set(gp.x - gp.perp.x * lw, 0, gp.z - gp.perp.z * lw);
+  lanternB.rotation.y = gp.heading;
   scene.add(lanternA, lanternB);
 
   const monk = makeMonk({});
-  monk.position.set(-1.5, 0, 1.6);
+  monk.position.set(-2.0, 0, 1.6);
   monk.rotation.y = 0.7;
   const flag = makeFlag({ seed: 11 });
   flag.group.position.set(3.1, 0, -0.4);
@@ -41,11 +46,11 @@ export function buildHub() {
     seed: 7,
     groundSeed: 7,
     keepout: [
-      { x: 0, z: -1.2, r: 3.8 },   // gate + lanterns
-      { x: -1.5, z: 1.6, r: 1.6 }, // monk
-      { x: 3.1, z: -0.4, r: 1.4 }, // flag
-      { x: 0.3, z: -14, r: 3.4 },  // path into the fog
-      { x: 0, z: 8, r: 3.2 },      // path toward the camera (the dolly's lane)
+      { x: gp.x, z: gp.z, r: 4.2 },  // gate + lanterns
+      { x: -2.0, z: 1.6, r: 1.6 },   // monk
+      { x: 3.1, z: -0.4, r: 1.4 },   // flag
+      { x: 0, z: -14, r: 3.6 },      // path into the fog
+      { x: 0, z: 8, r: 3.4 },        // path toward the camera (the dolly's lane)
     ],
     mountains: [
       { count: 9, distance: 55, arcSpan: 3.8, color: '#C9C4B5' },

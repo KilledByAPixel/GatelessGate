@@ -79,13 +79,21 @@ export function makeBushes({ count = 9, seed = 61, groundSeed = 21, keepout = []
 
 export function makeGrass({ count = 150, seed = 81, groundSeed = 21, keepout = [], rMin = 1.5, rMax = 20, color = '#AFAA90' } = {}) {
   const pts = scatterPoints({ count, rMin, rMax, seed, keepout });
-  // one tuft = three thin crossed blades, merged into a single geometry
-  const blade = new THREE.ConeGeometry(0.035, 0.42, 3);
-  blade.translate(0, 0.21, 0);
-  const g0 = blade;
-  const g1 = blade.clone(); g1.rotateY(2.1); g1.rotateZ(0.22); g1.translate(0.05, 0, 0);
-  const g2 = blade.clone(); g2.rotateY(4.2); g2.rotateZ(-0.2); g2.translate(-0.04, 0, 0.03);
-  const merged = mergeSimple([g0, g1, g2]);
+  // one tuft = blades splaying OUTWARD from a shared base (a patch, not a teepee).
+  // each blade pivots at its base (y=0) and leans away from center.
+  const blades = [];
+  const N = 6;
+  for (let i = 0; i < N; i++) {
+    const b = new THREE.ConeGeometry(0.03, 0.34, 3, 1, true); // open-ended: no base cap
+    b.translate(0, 0.17, 0);                 // base at origin so rotation pivots there
+    b.rotateZ(0.55 + 0.2 * ((i * 5) % 3));    // tilt away from vertical (~31–43°)
+    b.rotateY((i / N) * Math.PI * 2 + 0.4);   // spread the lean around the compass
+    blades.push(b);
+  }
+  const stub = new THREE.ConeGeometry(0.03, 0.3, 3, 1, true);
+  stub.translate(0, 0.15, 0); stub.rotateZ(0.1); // one near-upright blade at the middle
+  blades.push(stub);
+  const merged = mergeSimple(blades);
   const mesh = instanced(merged, color, pts, {
     yOf: (pt) => groundHeight(pt.x, pt.z, { seed: groundSeed }),
     scaleOf: (u) => 0.6 + 0.9 * u,

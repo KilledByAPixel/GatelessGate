@@ -56,11 +56,19 @@ test('monk options: no hat, stout build', () => {
   assert.ok(wStout > wThin, 'stout should be wider');
 });
 
-test('tree: trunk + 3 canopy blobs, deterministic by seed', () => {
+test('tree: trunk + canopy cluster, connected and deterministic by seed', () => {
   const t = makeTree({ height: 3.2, seed: 5 });
   assert.equal(t.name, 'tree');
   assert.equal(t.children.filter((c) => c.name === 'trunk').length, 1);
-  assert.equal(t.children.filter((c) => c.name === 'canopy').length, 3);
+  const canopy = t.children.filter((c) => c.name === 'canopy');
+  assert.ok(canopy.length >= 4, `fuller canopy, got ${canopy.length}`);
+  // the anchor blob is centered on the trunk (no lateral gap) and its underside
+  // reaches below the trunk top, so the crown never floats free
+  const trunkTop = 3.2 * 0.5;
+  const anchor = canopy[0];
+  assert.ok(Math.hypot(anchor.position.x, anchor.position.z) < 0.01, 'anchor blob centered on trunk');
+  const anchorBottom = new THREE.Box3().setFromObject(anchor).min.y;
+  assert.ok(anchorBottom < trunkTop, `canopy must overlap trunk top ${trunkTop}, got underside ${anchorBottom}`);
   const t2 = makeTree({ height: 3.2, seed: 5 });
   const t3 = makeTree({ height: 3.2, seed: 6 });
   const posOf = (tree) => tree.children.filter((c) => c.name === 'canopy').map((c) => c.position.toArray()).flat();

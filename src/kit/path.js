@@ -49,5 +49,27 @@ export function makePath({
   const mesh = new THREE.Mesh(geo, mat);
   mesh.name = 'path';
   mesh.userData.noOutline = true; // a worn track, not a contour
+
+  // sample the centerline at t∈[0,1] so props (gate, lanterns) sit ON the path.
+  // `heading` is a rotation.y that aligns a gate's opening along the trail;
+  // `perp` is the unit left-vector across the path for flanking things.
+  mesh.sample = (t) => {
+    const f = Math.max(0, Math.min(1, t)) * samples;
+    const i = Math.min(Math.floor(f), samples - 1);
+    const frac = f - i;
+    const [x0, z0] = pts[i];
+    const [x1, z1] = pts[i + 1];
+    const x = x0 + (x1 - x0) * frac;
+    const z = z0 + (z1 - z0) * frac;
+    let dx = x1 - x0, dz = z1 - z0;
+    const len = Math.hypot(dx, dz) || 1;
+    dx /= len; dz /= len;
+    return {
+      x, z,
+      y: groundHeight(x, z, { seed: groundSeed }),
+      heading: Math.atan2(dx, dz),      // gate.rotation.y so you pass through it
+      perp: { x: -dz, z: dx },          // unit across-path (left) for flanking
+    };
+  };
   return mesh;
 }

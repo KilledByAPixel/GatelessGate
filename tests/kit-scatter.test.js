@@ -68,6 +68,21 @@ test('path is a draped ribbon from A to B', () => {
   assert.ok(up > nor.count * 0.9, `normals should face up: ${up}/${nor.count}`);
 });
 
+test('path.sample gives centerline point, heading, and across-path vector', () => {
+  const p = makePath({ from: [0, 8], to: [0, -30], width: 1.6, seed: 91, groundSeed: 21, wander: 0 });
+  const s = p.sample(0.5);
+  // straight path with no wander runs along -z at x≈0
+  assert.ok(Math.abs(s.x) < 0.01, `centerline x≈0, got ${s.x}`);
+  assert.ok(s.z < 8 && s.z > -30, `z within span, got ${s.z}`);
+  // heading points down the road (-z): rotation.y = atan2(0,-1) = ±π
+  assert.ok(Math.abs(Math.abs(s.heading) - Math.PI) < 0.05, `heading down -z, got ${s.heading}`);
+  // perp is unit and across the path (has x component for a -z road)
+  assert.ok(Math.abs(Math.hypot(s.perp.x, s.perp.z) - 1) < 1e-6, 'perp is unit');
+  assert.ok(Math.abs(s.perp.x) > 0.9, `perp runs across (x), got ${s.perp.x}`);
+  // sits on the ground
+  assert.ok(Math.abs(s.y - groundHeight(s.x, s.z, { seed: 21 })) < 1e-6, 'y on ground');
+});
+
 test('composeWorld fills a scene deterministically and honors keepouts', () => {
   const a = new THREE.Scene();
   const b = new THREE.Scene();

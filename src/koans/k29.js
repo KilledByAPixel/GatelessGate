@@ -26,35 +26,43 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.03);
     scene.add(makeLights());
 
-    // the road to the temple: two monks argue on the path where it passes the
-    // gate and its flag ("the flag moves" / "the wind moves")
+    // the road to the temple runs from the foreground into the fog; everything
+    // is placed ON it via path.sample so the gate spans the trail and the
+    // lanterns flank it. The two monks argue on the road ("the flag moves" /
+    // "the wind moves").
+    const path = makePath({ from: [1.4, 9], to: [1.4, -34], width: 1.8, seed: 91, groundSeed: 21, wander: 1.3 });
+    scene.add(path);
+
+    // the gate straddles the path a little way up the road
+    const gp = path.sample(0.27);
     const gate = makeGate({});
-    gate.position.set(2.3, 0, -2.3);
-    gate.rotation.y = 0.35;
+    gate.position.set(gp.x, 0, gp.z);
+    gate.rotation.y = gp.heading;
     scene.add(gate);
 
-    // the path runs from the foreground, under the gate, off into the fog
-    scene.add(makePath({ from: [0.6, 9], to: [3.4, -34], width: 1.7, seed: 91, groundSeed: 21 }));
-
-    // stone lanterns flank the gate
+    // stone lanterns flank the gate, just outside the posts, square to the path
+    const lw = 1.55;
     const lanternA = makeLantern({});
-    lanternA.position.set(0.9, 0, -2.9);
-    lanternA.rotation.y = 0.4;
+    lanternA.position.set(gp.x + gp.perp.x * lw, 0, gp.z + gp.perp.z * lw);
+    lanternA.rotation.y = gp.heading;
     const lanternB = makeLantern({ height: 1.0 });
-    lanternB.position.set(4.4, 0, -3.4);
-    lanternB.rotation.y = -0.3;
+    lanternB.position.set(gp.x - gp.perp.x * lw, 0, gp.z - gp.perp.z * lw);
+    lanternB.rotation.y = gp.heading;
     scene.add(lanternA, lanternB);
 
+    // the flag stands just off the road beside the gate
     const flag = makeFlag({ seed: 11 });
-    flag.group.position.set(4.8, 0, 0.4);
+    flag.group.position.set(gp.x - gp.perp.x * 2.6, 0, gp.z - gp.perp.z * 2.6 + 0.9);
     scene.add(flag.group);
 
+    // the monks meet on the road closer to the camera, facing each other
+    const mp = path.sample(0.17);
     const monkA = makeMonk({ pose: 'point' });
-    monkA.position.set(1.7, 0, 1.3);
-    monkA.rotation.y = 0.35;                // angled at the flag, sleeve raised toward it
+    monkA.position.set(mp.x + gp.perp.x * 0.5, 0, mp.z + gp.perp.z * 0.5);
+    monkA.rotation.y = gp.heading + 1.3;      // faces across the road, sleeve toward the flag
     const monkB = makeMonk({ stout: 1.12 });
-    monkB.position.set(0.35, 0, 1.7);
-    monkB.rotation.y = 1.75;               // turned toward monkA
+    monkB.position.set(mp.x - gp.perp.x * 0.5, 0, mp.z - gp.perp.z * 0.5);
+    monkB.rotation.y = gp.heading - 1.3;      // faces monkA
     scene.add(monkA, monkB);
 
     // the rest of the world: mountains, forest, midground trees, scatter —
@@ -63,11 +71,11 @@ export default {
       seed: 29,
       groundSeed: 21,
       keepout: [
-        { x: 1, z: 1.4, r: 3.2 },     // the monks' argument
-        { x: 2.3, z: -2.3, r: 3.4 },  // gate + lanterns
-        { x: 4.8, z: 0.4, r: 1.4 },   // flag
-        { x: 2, z: -12, r: 3.2 },     // the path's run to the fog
-        { x: 1.4, z: 5.5, r: 2.6 },   // path foreground
+        { x: mp.x, z: mp.z, r: 3.0 },          // the monks' argument
+        { x: gp.x, z: gp.z, r: 3.6 },          // gate + lanterns
+        { x: flag.group.position.x, z: flag.group.position.z, r: 1.4 },
+        { x: 1.4, z: -12, r: 3.4 },            // the path's run to the fog
+        { x: 1.4, z: 6, r: 2.8 },              // path foreground
       ],
     });
 
