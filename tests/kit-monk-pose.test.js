@@ -38,7 +38,11 @@ test('makeMonk pose:sit is seated (shorter) and keeps its five parts', () => {
   assert.ok(new THREE.Box3().setFromObject(sit).min.y > -0.02, 'seated on ground');
 });
 
-test('makeMonk elder adds a staff', () => {
+test('makeMonk elder adds a grounded staff, and options compose', () => {
   const elder = makeMonk({ elder: true });
   assert.equal(elder.children.filter((c) => c.name === 'staff').length, 1);
+  assert.ok(new THREE.Box3().setFromObject(elder).min.y > -0.02, 'staff stands on the ground');
+  const sage = makeMonk({ pose: 'sit', elder: true });
+  assert.ok(sage.children.some((c) => c.name === 'staff'), 'sit + elder compose');
+  assert.ok(new THREE.Box3().setFromObject(sage).min.y > -0.02, 'seated elder grounded');
 });

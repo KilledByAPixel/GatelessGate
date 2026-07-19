@@ -22,7 +22,7 @@ export function makeMonk({ height = 1.6, stout = 1, color = INK, hat = true, pos
     [0.20, 0.28], [0.165, 0.36], [0.15, 0.42], [0.07, 0.46],
   ];
   const profile = (seated ? sitProfile : standProfile)
-    .map(([r, y]) => new THREE.Vector2(r * s * height, y * height));
+    .map(([r, y], i) => new THREE.Vector2((i === 0 ? r : r * s) * height, y * height));
   const body = new THREE.Mesh(new THREE.LatheGeometry(profile, 10), mat);
   body.name = 'body';
   g.add(body);
@@ -58,10 +58,12 @@ export function makeMonk({ height = 1.6, stout = 1, color = INK, hat = true, pos
   }
 
   if (elder) {
-    const staff = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.018 * height, 0.018 * height, (seated ? 0.7 : 1.2) * height, 6), mat);
+    const staffLen = (seated ? 0.7 : 1.2) * height;
+    const staffGeo = new THREE.CylinderGeometry(0.018 * height, 0.018 * height, staffLen, 6);
+    staffGeo.translate(0, staffLen / 2, 0);   // base at the local origin -> stands on the ground
+    const staff = new THREE.Mesh(staffGeo, mat);
     staff.name = 'staff';
-    staff.position.set(0.26 * s * height, (seated ? 0.30 : 0.55) * height, 0.06 * height);
+    staff.position.set(0.26 * s * height, 0, 0.06 * height);
     staff.rotation.z = 0.08;
     g.add(staff);
   }
