@@ -22,11 +22,11 @@ export function makeCameraRig(camera, el, {
   const mouse = { x: 0, y: 0 };
   let dragging = false, px = 0, py = 0;
 
-  el.addEventListener('pointerdown', (e) => {
+  const onPointerDown = (e) => {
     dragging = true;
     px = e.clientX; py = e.clientY;
-  });
-  el.addEventListener('pointermove', (e) => {
+  };
+  const onPointerMove = (e) => {
     const w = el.clientWidth || 1, h = el.clientHeight || 1;
     mouse.x = clamp((e.clientX / w) * 2 - 1, -1, 1);
     mouse.y = clamp((e.clientY / h) * 2 - 1, -1, 1);
@@ -35,13 +35,18 @@ export function makeCameraRig(camera, el, {
       goal.polar = clamp(goal.polar - (e.clientY - py) * 0.005, minPolar, maxPolar);
       px = e.clientX; py = e.clientY;
     }
-  });
-  el.addEventListener('pointerup', () => { dragging = false; });
-  el.addEventListener('pointerleave', () => { dragging = false; });
-  el.addEventListener('wheel', (e) => {
+  };
+  const onPointerUp = () => { dragging = false; };
+  const onPointerLeave = () => { dragging = false; };
+  const onWheel = (e) => {
     e.preventDefault?.();
     goal.distance = clamp(goal.distance + e.deltaY * 0.01, minDist, maxDist);
-  });
+  };
+  el.addEventListener('pointerdown', onPointerDown);
+  el.addEventListener('pointermove', onPointerMove);
+  el.addEventListener('pointerup', onPointerUp);
+  el.addEventListener('pointerleave', onPointerLeave);
+  el.addEventListener('wheel', onWheel);
 
   function update(dt) {
     const k = 1 - Math.exp(-damping * dt);
@@ -60,5 +65,13 @@ export function makeCameraRig(camera, el, {
 
   const state = () => ({ azimuth: cur.azimuth, polar: cur.polar, distance: cur.distance });
 
-  return { update, state, goal };
+  function dispose() {
+    el.removeEventListener?.('pointerdown', onPointerDown);
+    el.removeEventListener?.('pointermove', onPointerMove);
+    el.removeEventListener?.('pointerup', onPointerUp);
+    el.removeEventListener?.('pointerleave', onPointerLeave);
+    el.removeEventListener?.('wheel', onWheel);
+  }
+
+  return { update, state, goal, dispose };
 }

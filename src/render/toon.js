@@ -9,6 +9,7 @@ export function toonRamp() {
     ramp.minFilter = THREE.NearestFilter;
     ramp.magFilter = THREE.NearestFilter;
     ramp.needsUpdate = true;
+    ramp.userData = { shared: true };
   }
   return ramp;
 }

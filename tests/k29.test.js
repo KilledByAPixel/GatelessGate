@@ -1,0 +1,60 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import * as THREE from '../lib/three.module.js';
+import k29 from '../src/koans/k29.js';
+import { clothEnergy } from '../src/sim/verlet.js';
+
+function fakeCtx() {
+  const taps = [], hovers = [];
+  return {
+    accent: k29.accent,
+    quality: 'high',
+    audio: { setWindLevel() {}, startAmbience() {}, stopAmbience() {}, bell() {} },
+    input: {
+      onTap: (cb) => taps.push(cb),
+      onHover: (cb) => hovers.push(cb),
+      raycastFirst: () => null, // no hit by default
+      pointer: () => ({ x: 0, y: 0 }),
+    },
+    _taps: taps, _hovers: hovers,
+  };
+}
+
+test('module shape matches the koan contract', () => {
+  assert.equal(k29.id, 29);
+  assert.equal(k29.slug, 'not-the-wind-not-the-flag');
+  assert.equal(k29.tier, 2);
+  for (const f of ['case', 'comment', 'verse']) {
+    assert.ok(k29.text[f] && k29.text[f].trim().length > 0, `text.${f} empty`);
+  }
+  assert.equal(typeof k29.build, 'function');
+});
+
+test('build returns a root with a two-monk diorama and lifecycle', () => {
+  const root = k29.build(fakeCtx());
+  assert.ok(root.scene instanceof THREE.Scene);
+  for (const fn of ['update', 'onEnter', 'onExit', 'dispose', 'fragment']) {
+    assert.equal(typeof root[fn], 'function', `root.${fn} missing`);
+  }
+  const monks = [];
+  root.scene.traverse((o) => { if (o.name === 'monk') monks.push(o); });
+  assert.equal(monks.length, 2, 'two monks argue about the flag');
+  assert.ok(root.scene.getObjectByName('flag'), 'flag present');
+  const frag = root.fragment();
+  assert.equal(typeof frag.windLevel, 'number');
+  assert.equal(frag.windOn, true);
+});
+
+test('update advances the cloth; tap toggles the wind off', () => {
+  const ctx = fakeCtx();
+  const root = k29.build(ctx);
+  const flagGroup = root.scene.getObjectByName('flag');
+  const cloth = root.scene.getObjectByName('cloth');
+  for (let i = 1; i <= 30; i++) root.update(1 / 60, i / 60);
+  assert.ok(root.fragment().clothEnergy >= 0);
+  // simulate a tap on the cloth by making raycastFirst return a hit
+  root.setCamera(new THREE.PerspectiveCamera());
+  ctx.input.raycastFirst = () => ({ object: cloth, point: new THREE.Vector3(0, 3, 0) });
+  ctx._taps.forEach((cb) => cb(400, 300));
+  assert.equal(root.fragment().windOn, false, 'tapping the flag toggles the wind off');
+});

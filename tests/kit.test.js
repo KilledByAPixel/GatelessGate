@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeIsland } from '../src/kit/island.js';
-import { makeMonk } from '../src/kit/monk.js';
+import { makeMonk, aimMonk } from '../src/kit/monk.js';
 import { makeTree } from '../src/kit/tree.js';
 import { makeGate } from '../src/kit/gate.js';
 
@@ -35,11 +35,11 @@ test('island top surface sits at y=0', () => {
   assert.ok(box.min.y < -0.4, `bottom at ${box.min.y}`);
 });
 
-test('monk has named parts and stands on y=0', () => {
+test('monk has named parts (robe, sleeves, head, hat) and stands on y=0', () => {
   const m = makeMonk({ height: 1.6 });
   assert.equal(m.name, 'monk');
   const names = m.children.map((c) => c.name).sort();
-  assert.deepEqual(names, ['body', 'hat', 'head']);
+  assert.deepEqual(names, ['arm', 'arm', 'body', 'hat', 'head']);
   const box = new THREE.Box3().setFromObject(m);
   assert.ok(box.min.y > -0.01, `feet at ${box.min.y}`);
   const h = box.max.y - box.min.y;
@@ -48,7 +48,7 @@ test('monk has named parts and stands on y=0', () => {
 
 test('monk options: no hat, stout build', () => {
   const bare = makeMonk({ hat: false });
-  assert.deepEqual(bare.children.map((c) => c.name).sort(), ['body', 'head']);
+  assert.deepEqual(bare.children.map((c) => c.name).sort(), ['arm', 'arm', 'body', 'head']);
   const thin = makeMonk({ stout: 0.8 });
   const stout = makeMonk({ stout: 1.4 });
   const wThin = new THREE.Box3().setFromObject(thin).max.x;
@@ -56,11 +56,42 @@ test('monk options: no hat, stout build', () => {
   assert.ok(wStout > wThin, 'stout should be wider');
 });
 
-test('tree: trunk + 3 canopy blobs, deterministic by seed', () => {
+test('aimMonk turns the pointing sleeve toward a target', () => {
+  // convention: local +x is the point axis, so rotation.y = atan2(-dz, dx)
+  const m0 = makeMonk({ pose: 'point' });
+  aimMonk(m0, { x: 1, z: 0 });
+  assert.ok(Math.abs(m0.rotation.y) < 1e-6, `+x → 0, got ${m0.rotation.y}`);
+  aimMonk(m0, { x: 0, z: -1 });
+  assert.ok(Math.abs(m0.rotation.y - Math.PI / 2) < 1e-6, `-z → π/2, got ${m0.rotation.y}`);
+
+  // and the raised sleeve really points at the target in world space
+  const target = { x: 4, z: 3 };
+  const monk = makeMonk({ pose: 'point' });
+  aimMonk(monk, target);
+  monk.updateMatrixWorld(true);
+  const arms = monk.children.filter((c) => c.name === 'arm');
+  const dir = (arm) => new THREE.Vector3(0, -1, 0)
+    .applyQuaternion(arm.getWorldQuaternion(new THREE.Quaternion()));
+  const [dA, dB] = arms.map(dir);
+  const raised = dA.y > dB.y ? dA : dB;   // the raised sleeve points upward
+  const want = new THREE.Vector2(target.x, target.z).normalize();
+  const got = new THREE.Vector2(raised.x, raised.z).normalize();
+  assert.ok(want.dot(got) > 0.6, `sleeve bearing aligns with target: dot=${want.dot(got)}`);
+});
+
+test('tree: trunk + canopy cluster, connected and deterministic by seed', () => {
   const t = makeTree({ height: 3.2, seed: 5 });
   assert.equal(t.name, 'tree');
   assert.equal(t.children.filter((c) => c.name === 'trunk').length, 1);
-  assert.equal(t.children.filter((c) => c.name === 'canopy').length, 3);
+  const canopy = t.children.filter((c) => c.name === 'canopy');
+  assert.ok(canopy.length >= 4, `fuller canopy, got ${canopy.length}`);
+  // the anchor blob is centered on the trunk (no lateral gap) and its underside
+  // reaches below the trunk top, so the crown never floats free
+  const trunkTop = 3.2 * 0.5;
+  const anchor = canopy[0];
+  assert.ok(Math.hypot(anchor.position.x, anchor.position.z) < 0.01, 'anchor blob centered on trunk');
+  const anchorBottom = new THREE.Box3().setFromObject(anchor).min.y;
+  assert.ok(anchorBottom < trunkTop, `canopy must overlap trunk top ${trunkTop}, got underside ${anchorBottom}`);
   const t2 = makeTree({ height: 3.2, seed: 5 });
   const t3 = makeTree({ height: 3.2, seed: 6 });
   const posOf = (tree) => tree.children.filter((c) => c.name === 'canopy').map((c) => c.position.toArray()).flat();
