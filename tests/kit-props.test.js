@@ -5,6 +5,7 @@ import { makeFlower } from '../src/kit/flower.js';
 import { makeBowl } from '../src/kit/bowl.js';
 import { makeWater } from '../src/kit/water.js';
 import { makeHut } from '../src/kit/hut.js';
+import { makeLattice } from '../src/kit/lattice.js';
 
 test('makeFlower has petals and can drop them one by one', () => {
   const f = makeFlower({ petals: 6 });
@@ -52,4 +53,14 @@ test('makeHut is a roofed threshold on the ground', () => {
   const box = new THREE.Box3().setFromObject(hut);
   assert.ok(box.min.y > -0.02, 'on the ground');
   assert.ok(roof.position.y > 2.0, 'roof up top');
+});
+
+test('makeLattice is a framed bar grid on the ground', () => {
+  const l = makeLattice({ width: 2.2, height: 2.0, bars: 5 });
+  assert.equal(l.name, 'lattice');
+  assert.equal(l.children.filter((c) => c.name === 'rail').length, 4, 'a four-sided frame');
+  assert.ok(l.children.filter((c) => c.name === 'bar').length >= 5, 'has bars');
+  const box = new THREE.Box3().setFromObject(l);
+  assert.ok(box.min.y > -0.02, 'on the ground');
+  assert.ok(box.max.y >= 2.0 - 0.05, 'full height');
 });
