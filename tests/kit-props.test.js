@@ -21,6 +21,18 @@ test('makeFlower has petals and can drop them one by one', () => {
   assert.equal(f.dropPetal(), null, 'null when empty');
 });
 
+test('dropPetal returns the petal at its world position (for reparenting)', () => {
+  const f = makeFlower({ petals: 6 });
+  const holder = new THREE.Group();
+  holder.position.set(2, 1, -3);
+  holder.add(f);
+  f.position.set(0.5, 0, 0);
+  holder.updateWorldMatrix(true, true);
+  const before = f.children.find((c) => c.name === 'petal').getWorldPosition(new THREE.Vector3());
+  const petal = f.dropPetal();
+  assert.ok(petal.position.distanceTo(before) < 1e-6, 'petal keeps its world position after detaching');
+});
+
 test('makeBowl is an open bowl standing on the ground', () => {
   const b = makeBowl({ radius: 0.22 });
   assert.equal(b.name, 'bowl');
