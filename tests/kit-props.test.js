@@ -4,6 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import { makeFlower } from '../src/kit/flower.js';
 import { makeBowl } from '../src/kit/bowl.js';
 import { makeWater } from '../src/kit/water.js';
+import { makeHut } from '../src/kit/hut.js';
 
 test('makeFlower has petals and can drop them one by one', () => {
   const f = makeFlower({ petals: 6 });
@@ -40,4 +41,15 @@ test('makeWater is a flat surface that ripples on demand', () => {
   assert.equal(w.rippleCount(), 1, 'a ring appears');
   for (let i = 0; i < 240; i++) w.update(1 / 60, i / 60);
   assert.equal(w.rippleCount(), 0, 'the ring expires');
+});
+
+test('makeHut is a roofed threshold on the ground', () => {
+  const hut = makeHut({ width: 2.4, height: 2.2, depth: 2.0 });
+  assert.equal(hut.name, 'hut');
+  assert.equal(hut.children.filter((c) => c.name === 'post').length, 4, 'four posts');
+  const roof = hut.children.find((c) => c.name === 'roof');
+  assert.ok(roof, 'has a roof');
+  const box = new THREE.Box3().setFromObject(hut);
+  assert.ok(box.min.y > -0.02, 'on the ground');
+  assert.ok(roof.position.y > 2.0, 'roof up top');
 });
