@@ -106,7 +106,7 @@ export function makeGrass({ count = 150, seed = 81, groundSeed = 21, keepout = [
 
 // Minimal non-indexed geometry merge (position + normal only) — enough for
 // toon-shaded props without pulling in the BufferGeometryUtils addon.
-function mergeSimple(geos) {
+export function mergeSimple(geos) {
   const nonIndexed = geos.map((g) => g.toNonIndexed());
   let total = 0;
   for (const g of nonIndexed) total += g.attributes.position.count;
