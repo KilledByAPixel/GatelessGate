@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER } from '../palette.js';
 import {
-  makeGround, makeMountains, makeForest, makeMonk, makeTree, makeGate, makeFlag,
+  composeWorld, makePath, makeLantern, makeMonk, makeGate, makeFlag,
   makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 import { clothEnergy } from '../sim/verlet.js';
@@ -26,44 +26,58 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.03);
     scene.add(makeLights());
 
-    // a little world: rolling ground running into the fog, mountains and
-    // forest in the distance — the temple gate stands at its center
-    scene.add(makeGround({ seed: 21 }));
-    scene.add(makeMountains({ count: 8, distance: 52, arcSpan: 3.6, seed: 31, color: '#C9C4B5' }));
-    scene.add(makeMountains({ count: 5, distance: 33, arcSpan: 2.4, seed: 32, color: '#B4AF9F', hScale: 0.65 }));
-    scene.add(makeForest({ count: 55, center: [-19, 0, -27], spread: 13, seed: 41 }));
-    scene.add(makeForest({ count: 40, center: [16, 0, -31], spread: 14, seed: 42, color: '#757464' }));
-
-    const nearTree = makeTree({ seed: 5 });
-    nearTree.position.set(-4.6, 0, -3.2);
-    scene.add(nearTree);
-
+    // the road to the temple: two monks argue on the path where it passes the
+    // gate and its flag ("the flag moves" / "the wind moves")
     const gate = makeGate({});
     gate.position.set(2.3, 0, -2.3);
     gate.rotation.y = 0.35;
     scene.add(gate);
 
+    // the path runs from the foreground, under the gate, off into the fog
+    scene.add(makePath({ from: [0.6, 9], to: [3.4, -34], width: 1.7, seed: 91, groundSeed: 21 }));
+
+    // stone lanterns flank the gate
+    const lanternA = makeLantern({});
+    lanternA.position.set(0.9, 0, -2.9);
+    lanternA.rotation.y = 0.4;
+    const lanternB = makeLantern({ height: 1.0 });
+    lanternB.position.set(4.4, 0, -3.4);
+    lanternB.rotation.y = -0.3;
+    scene.add(lanternA, lanternB);
+
     const flag = makeFlag({ seed: 11 });
-    flag.group.position.set(3.0, 0, -0.7);
+    flag.group.position.set(4.8, 0, 0.4);
     scene.add(flag.group);
 
-    // two monks in dialogue about the flag; one points up at it (case 29:
-    // "the flag moves" / "the wind moves"). Staged forward and grouped with the
-    // flag so the eye reads monk → monk → flag across the frame.
     const monkA = makeMonk({ pose: 'point' });
     monkA.position.set(1.7, 0, 1.3);
-    monkA.rotation.y = 0.35;                // angled at the flag, arm raised toward it
-    const monkB = makeMonk({});
+    monkA.rotation.y = 0.35;                // angled at the flag, sleeve raised toward it
+    const monkB = makeMonk({ stout: 1.12 });
     monkB.position.set(0.35, 0, 1.7);
     monkB.rotation.y = 1.75;               // turned toward monkA
     scene.add(monkA, monkB);
+
+    // the rest of the world: mountains, forest, midground trees, scatter —
+    // shared grammar, kept off the staging and the path by keepouts
+    composeWorld(scene, {
+      seed: 29,
+      groundSeed: 21,
+      keepout: [
+        { x: 1, z: 1.4, r: 3.2 },     // the monks' argument
+        { x: 2.3, z: -2.3, r: 3.4 },  // gate + lanterns
+        { x: 4.8, z: 0.4, r: 1.4 },   // flag
+        { x: 2, z: -12, r: 3.2 },     // the path's run to the fog
+        { x: 1.4, z: 5.5, r: 2.6 },   // path foreground
+      ],
+    });
 
     for (const [p, rx, rz, op] of [
       [monkA.position, 0.7, 0.55, 0.42],
       [monkB.position, 0.7, 0.55, 0.42],
       [gate.position, 1.8, 0.75, 0.32],
       [flag.group.position, 0.55, 0.45, 0.36],
-      [nearTree.position, 1.6, 1.3, 0.3],
+      [lanternA.position, 0.35, 0.3, 0.3],
+      [lanternB.position, 0.35, 0.3, 0.3],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = p.x; s.position.z = p.z;

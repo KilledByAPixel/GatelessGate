@@ -24,6 +24,8 @@ This is an **interactive book — a guided tour of the Mumonkan** — not a game
 10. *(2026-07-18)* **Staging revised: little worlds, not floating islands.** The v0.1 "torn-paper island against bare paper" staging read as plain and boring in practice. Each case is now a small grounded world: the diorama on gently rolling ground, with **distant mountains and forest** (and whatever else fits the case) dissolving into the paper fog — still simple, still orbitable, but a *place*. Reusable world kit: `makeGround` / `makeMountains` / `makeForest` dress every case; `makeIsland` is retired from default staging.
 11. *(2026-07-18)* **Flag feel:** hover gives the *tiniest* ruffle, and **only while the flag is flying**; click toggles flying ↔ stilled; a stilled flag ignores the mouse entirely. This restraint is the model for all touch responses.
 
+12. *(2026-07-18)* **Quality bar raised: cool, vibey scenes.** Low-poly-*ish* stays the style, but scenes must read as rich little places, not empty platforms — a few times more geometric investment where it earns its keep. Concretely: the monk is a lathed robe with sleeves and a sedge hat (not a capsule); every case's midground is dressed (a worn path, stone lanterns, scatter trees, rocks, bushes, grass tufts) from the reusable kit; and scene assembly goes through the shared `composeWorld` grammar (ground + mountains + forest + seeded scatter with keepouts) so richness is cheap to repeat across all 48 cases.
+
 **The pitch, in one line:** a slightly interactive, modernized, web-first Gateless Gate — an illustrated book you can wander.
 
 ---

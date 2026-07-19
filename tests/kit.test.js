@@ -35,11 +35,11 @@ test('island top surface sits at y=0', () => {
   assert.ok(box.min.y < -0.4, `bottom at ${box.min.y}`);
 });
 
-test('monk has named parts and stands on y=0', () => {
+test('monk has named parts (robe, sleeves, head, hat) and stands on y=0', () => {
   const m = makeMonk({ height: 1.6 });
   assert.equal(m.name, 'monk');
   const names = m.children.map((c) => c.name).sort();
-  assert.deepEqual(names, ['body', 'hat', 'head']);
+  assert.deepEqual(names, ['arm', 'arm', 'body', 'hat', 'head']);
   const box = new THREE.Box3().setFromObject(m);
   assert.ok(box.min.y > -0.01, `feet at ${box.min.y}`);
   const h = box.max.y - box.min.y;
@@ -48,7 +48,7 @@ test('monk has named parts and stands on y=0', () => {
 
 test('monk options: no hat, stout build', () => {
   const bare = makeMonk({ hat: false });
-  assert.deepEqual(bare.children.map((c) => c.name).sort(), ['body', 'head']);
+  assert.deepEqual(bare.children.map((c) => c.name).sort(), ['arm', 'arm', 'body', 'head']);
   const thin = makeMonk({ stout: 0.8 });
   const stout = makeMonk({ stout: 1.4 });
   const wThin = new THREE.Box3().setFromObject(thin).max.x;

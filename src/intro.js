@@ -1,42 +1,64 @@
 import * as THREE from '../lib/three.module.js';
 import { PAPER } from './palette.js';
 import {
-  makeGround, makeMountains, makeForest, makeGate, makeMonk, makeFlag, makeTree,
+  composeWorld, makePath, makeLantern, makeGate, makeMonk, makeFlag,
   makeLights, addOutlines, makeBlobShadow,
 } from './kit/index.js';
 import { introPath } from './intro_rails.js';
 
 // The idling stage scene behind the title and the table of contents — a small
-// world gathering elements from the koans: the gate at its center, a monk, a
-// flag, trees, with mountains and forest dissolving into the fog beyond.
+// world gathering elements from the koans: a path through the freestanding
+// gate, lanterns, a monk on the way, mountains and forest in the fog beyond.
 export function buildHub() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.03);
   scene.add(makeLights());
 
-  scene.add(makeGround({ seed: 7 }));
-  scene.add(makeMountains({ count: 9, distance: 55, arcSpan: 3.8, seed: 71, color: '#C9C4B5' }));
-  scene.add(makeMountains({ count: 5, distance: 35, arcSpan: 2.6, seed: 72, color: '#B4AF9F', hScale: 0.7 }));
-  scene.add(makeForest({ count: 55, center: [-18, 0, -26], spread: 13, seed: 73 }));
-  scene.add(makeForest({ count: 45, center: [20, 0, -30], spread: 14, seed: 74, color: '#757464' }));
-
   const gate = makeGate({ width: 3.0, height: 3.4 });
   gate.position.set(0, 0, -1.2);
-  const tree = makeTree({ seed: 5 });
-  tree.position.set(-3.6, 0, -2.2);
+  scene.add(gate);
+
+  // the intro dolly rides this line: the path runs straight through the gate
+  scene.add(makePath({ from: [0, 14], to: [0.8, -36], width: 1.9, seed: 93, groundSeed: 7, wander: 1.2 }));
+
+  const lanternA = makeLantern({});
+  lanternA.position.set(-1.9, 0, -1.6);
+  lanternA.rotation.y = 0.3;
+  const lanternB = makeLantern({ height: 1.0 });
+  lanternB.position.set(1.9, 0, -0.8);
+  lanternB.rotation.y = -0.5;
+  scene.add(lanternA, lanternB);
+
   const monk = makeMonk({});
-  monk.position.set(-1.2, 0, 1.0);
+  monk.position.set(-1.5, 0, 1.6);
   monk.rotation.y = 0.7;
   const flag = makeFlag({ seed: 11 });
-  flag.group.position.set(2.9, 0, -0.2);
-  scene.add(gate, tree, monk, flag.group);
+  flag.group.position.set(3.1, 0, -0.4);
+  scene.add(monk, flag.group);
+
+  composeWorld(scene, {
+    seed: 7,
+    groundSeed: 7,
+    keepout: [
+      { x: 0, z: -1.2, r: 3.8 },   // gate + lanterns
+      { x: -1.5, z: 1.6, r: 1.6 }, // monk
+      { x: 3.1, z: -0.4, r: 1.4 }, // flag
+      { x: 0.3, z: -14, r: 3.4 },  // path into the fog
+      { x: 0, z: 8, r: 3.2 },      // path toward the camera (the dolly's lane)
+    ],
+    mountains: [
+      { count: 9, distance: 55, arcSpan: 3.8, color: '#C9C4B5' },
+      { count: 5, distance: 35, arcSpan: 2.6, color: '#B4AF9F', hScale: 0.7 },
+    ],
+  });
 
   for (const [p, rx, rz, op] of [
     [gate.position, 2.2, 0.9, 0.3],
-    [tree.position, 1.7, 1.4, 0.34],
     [monk.position, 0.7, 0.55, 0.4],
     [flag.group.position, 0.55, 0.45, 0.34],
+    [lanternA.position, 0.35, 0.3, 0.3],
+    [lanternB.position, 0.35, 0.3, 0.3],
   ]) {
     const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
     s.position.x = p.x; s.position.z = p.z;

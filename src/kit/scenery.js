@@ -1,0 +1,57 @@
+import { makeGround } from './ground.js';
+import { makeMountains } from './mountains.js';
+import { makeForest } from './forest.js';
+import { makeRocks, makeBushes, makeGrass } from './scatter.js';
+import { makeTree } from './tree.js';
+import { hash1 } from '../util/noise.js';
+
+// The shared scene grammar: every case sits in the same kind of world —
+// rolling ground, mountains and forest in the fog, and a dressed midground
+// (scatter trees, rocks, bushes, grass). Foreground staging stays per-koan.
+// `keepout` circles ({x, z, r}) protect staging and paths from scatter.
+export function composeWorld(scene, {
+  seed = 1,
+  groundSeed = 21,
+  keepout = [],
+  trees = 5,
+  treeRing = [7, 20],
+  rocks = 12,
+  bushes = 9,
+  grass = 220,
+  forests = [
+    { center: [-19, 0, -27], spread: 13, count: 55 },
+    { center: [16, 0, -31], spread: 14, count: 40, color: '#757464' },
+  ],
+  mountains = [
+    { count: 8, distance: 52, arcSpan: 3.6, color: '#C9C4B5' },
+    { count: 5, distance: 33, arcSpan: 2.4, color: '#B4AF9F', hScale: 0.65 },
+  ],
+} = {}) {
+  scene.add(makeGround({ seed: groundSeed }));
+  mountains.forEach((m, i) => scene.add(makeMountains({ seed: seed * 31 + i * 7, ...m })));
+  forests.forEach((f, i) => scene.add(makeForest({ seed: seed * 41 + i * 11, ...f })));
+
+  // midground trees: real kit trees on a ring, avoiding keepouts
+  const sceneTrees = [];
+  let placed = 0, tries = 0;
+  while (placed < trees && tries < trees * 14) {
+    tries++;
+    const a = hash1(tries * 5 + 2, seed * 17) * Math.PI * 2;
+    const r = treeRing[0] + hash1(tries * 5 + 3, seed * 17) * (treeRing[1] - treeRing[0]);
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (z > 6) continue; // keep the near-camera foreground open
+    if (keepout.some((k) => Math.hypot(x - k.x, z - k.z) < k.r)) continue;
+    const t = makeTree({ seed: seed * 100 + placed, height: 2.6 + hash1(tries * 5 + 4, seed) * 1.6 });
+    t.position.set(x, 0, z);
+    t.rotation.y = hash1(tries * 5 + 5, seed) * Math.PI * 2;
+    scene.add(t);
+    sceneTrees.push(t);
+    placed++;
+  }
+
+  scene.add(makeRocks({ count: rocks, seed: seed * 51, groundSeed, keepout }));
+  scene.add(makeBushes({ count: bushes, seed: seed * 61, groundSeed, keepout }));
+  scene.add(makeGrass({ count: grass, seed: seed * 81, groundSeed, keepout }));
+
+  return { trees: sceneTrees };
+}
