@@ -78,7 +78,7 @@ verification. All moment animation is driven by `simTime` and seeded noise — n
 - **New kit:** `makeBowl`, `makeWater` (stylized — a paper-tinted translucent plane with a
   faint idle shimmer and a `ripple(x, z)` expanding ring; no real reflection),
   `makeHut`/threshold.
-- **Music:** Glass Rain Garden.
+- **Music:** Stone Mistress (shared with Buddha's Flower — both gentle/reverent).
 
 ### 37 — The Buffalo — the tail that cannot pass
 - **Scene:** a water-buffalo halfway through a lattice window/fence — horns, head, hooves
@@ -129,9 +129,10 @@ The kit facade (`src/kit/index.js`) re-exports all of them. `composeWorld` / `gr
   `src/audio/**` (determinism-exempt).
 - **Track metadata (pure, tested):** `TRACKS = { id: { file, loopStart, loopEnd, gain } }`.
 - **Mapping (pure, tested):** a scene declares `music` (a trackId); otherwise it defaults
-  by tier via `TIER_MUSIC`. The menu is pinned to `glass-rain-garden` in `main.js`. On
-  enter → `music.play(koan.music || tierMusic(koan.tier))`; on menu/exit →
-  `glass-rain-garden`.
+  by tier via `TIER_MUSIC`. On enter → `music.play(koan.music || tierMusic(koan.tier))`;
+  on menu/exit → `glass-rain-garden`. **Glass Rain Garden is the menu bed only** — it is
+  never a scene or tier bed; `TIER_MUSIC` maps solely to the three case tracks
+  (Temple Ruin, Stone Mistress, Slow Stone Breath Flute).
 - **UI:** a `♪` mute toggle beside the existing stage-corner sound control; persisted in
   `localStorage` (like the voice pin). Music is additionally gated by the overall *Sound?*
   choice.
@@ -181,9 +182,8 @@ The kit facade (`src/kit/index.js`) re-exports all of them. `composeWorld` / `gr
 
 ## Open questions / risks
 
-- **Merge M1 first?** M1 (`m1-vertical-slice`) is unmerged. Recommend merging M1 to master
-  at Frank's gate, then branching `m2-first-chapter` — or continuing on the existing branch
-  for one big gate. (Process decision for Frank.)
+- **Merge M1 first — decided (2026-07-19):** merge `m1-vertical-slice` to master, then
+  branch `m2-first-chapter` for the M2 work.
 - Draw-call budget with the seated assembly → mitigated by instancing.
 - The buffalo is the biggest art risk (a bulky quadruped at the quality bar); budget extra tuning.
 - Asset size/decode: four MP3s (~8–12 MB total), lazy-decoded; acceptable.
