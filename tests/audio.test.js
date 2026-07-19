@@ -20,6 +20,20 @@ test('chooseVoice prefers a good English voice over robotic defaults', () => {
   assert.equal(chooseVoice([]), null);
 });
 
+test('chooseVoice honors a pinned preference (exact then fuzzy)', () => {
+  const voices = [
+    { name: 'Google US English', lang: 'en-US', localService: false },
+    { name: 'Microsoft Aria Online (Natural)', lang: 'en-US', localService: false },
+    { name: 'Daniel', lang: 'en-GB', localService: true },
+  ];
+  // an exact pin wins over the heuristic's favorite
+  assert.equal(chooseVoice(voices, 'Daniel').name, 'Daniel');
+  // fuzzy substring match too
+  assert.equal(chooseVoice(voices, 'aria').name, 'Microsoft Aria Online (Natural)');
+  // an unavailable pin falls back to the heuristic instead of returning null
+  assert.equal(chooseVoice(voices, 'Siri').name, 'Google US English');
+});
+
 test('windParams monotonic and bounded', () => {
   const lo = windParams(0), hi = windParams(1);
   assert.ok(hi.gain > lo.gain && hi.cutoff > lo.cutoff);

@@ -35,7 +35,9 @@ const scenes = makeSceneManager(renderer, dissolve);
 const input = makeInput(renderer.domElement);
 const save = createSave(window.localStorage);
 const audio = createAudio(save);
-const narration = createNarration();
+const VOICE_KEY = 'gateless-gate-voice';
+const pinnedVoice = (() => { try { return window.localStorage.getItem(VOICE_KEY); } catch { return null; } })();
+const narration = createNarration({ preferredName: pinnedVoice });
 
 const hub = buildHub();
 scenes.setActive(hub);
@@ -274,8 +276,28 @@ window.gate = {
   markSat(slug) { save.markSat(slug); menu.refresh(save.state()); },
   setSound(on) { audio.setSound(on); setSoundLabel(); },
   voice() { return narration.voiceName(); },
-  voices() { return (window.speechSynthesis.getVoices() || []).map((v) => v.name + ' [' + v.lang + ']'); },
+  // numbered list of English voices (☁ = cloud/online, usually the nicer ones)
+  voices() { return narration.listVoices().map((v, i) => i + ': ' + v.name + ' [' + v.lang + ']' + (v.cloud ? ' ☁' : '')); },
+  // audition a voice by index or name without changing the pinned choice
+  sampleVoice(sel, text) { return narration.sample(voiceNameFor(sel), text); },
+  // pin a voice as the default (persists); pass null/'' to fall back to the heuristic
+  setVoice(sel) {
+    const name = sel == null || sel === '' ? null : voiceNameFor(sel);
+    const applied = narration.setPreferred(name);
+    try { name ? window.localStorage.setItem(VOICE_KEY, name) : window.localStorage.removeItem(VOICE_KEY); } catch {}
+    return applied;
+  },
 };
+
+// resolve a voice selector (index into voices(), or an exact/fuzzy name) to a name
+function voiceNameFor(sel) {
+  if (typeof sel === 'number' || (typeof sel === 'string' && /^\d+$/.test(sel))) {
+    const list = narration.listVoices();
+    const v = list[+sel];
+    return v ? v.name : null;
+  }
+  return sel;
+}
 
 dissolve.set(1);
 startIntro();
