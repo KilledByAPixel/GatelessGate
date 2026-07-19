@@ -7,7 +7,7 @@ export { makeRocks, makeBushes, makeGrass, scatterPoints } from './scatter.js';
 export { makeLantern } from './lantern.js';
 export { makePath } from './path.js';
 export { composeWorld } from './scenery.js';
-export { makeMonk } from './monk.js';
+export { makeMonk, aimMonk } from './monk.js';
 export { makeTree } from './tree.js';
 export { makeGate } from './gate.js';
 export { makeFlag } from './flag.js';

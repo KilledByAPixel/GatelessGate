@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER } from '../palette.js';
 import {
-  composeWorld, makePath, makeLantern, makeMonk, makeGate, makeFlag,
+  composeWorld, makePath, makeLantern, makeMonk, aimMonk, makeGate, makeFlag,
   makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 import { clothEnergy } from '../sim/verlet.js';
@@ -50,19 +50,22 @@ export default {
     lanternB.rotation.y = gp.heading;
     scene.add(lanternA, lanternB);
 
-    // the flag stands just off the road beside the gate
+    // the monks meet on the road near the camera. the flag stands on its own
+    // pole out to monkA's side and a little forward, so monkA — the one who
+    // insists "the flag moves" — points clearly across at it and monkB, arguing
+    // "no, the wind," is on the far side and never blocks the line.
+    const mp = path.sample(0.17);
+
     const flag = makeFlag({ seed: 11 });
-    flag.group.position.set(gp.x - gp.perp.x * 2.6, 0, gp.z - gp.perp.z * 2.6 + 0.9);
+    flag.group.position.set(mp.x + mp.perp.x * 2.4, 0, mp.z + mp.perp.z * 2.4 + 0.6);
     scene.add(flag.group);
 
-    // the monks meet on the road closer to the camera, facing each other
-    const mp = path.sample(0.17);
     const monkA = makeMonk({ pose: 'point' });
-    monkA.position.set(mp.x + gp.perp.x * 0.5, 0, mp.z + gp.perp.z * 0.5);
-    monkA.rotation.y = gp.heading + 1.3;      // faces across the road, sleeve toward the flag
+    monkA.position.set(mp.x + mp.perp.x * 0.6, 0, mp.z + mp.perp.z * 0.6);
+    aimMonk(monkA, flag.group.position);      // raised sleeve aims at the flag
     const monkB = makeMonk({ stout: 1.12 });
-    monkB.position.set(mp.x - gp.perp.x * 0.5, 0, mp.z - gp.perp.z * 0.5);
-    monkB.rotation.y = gp.heading - 1.3;      // faces monkA
+    monkB.position.set(mp.x - mp.perp.x * 0.8, 0, mp.z - mp.perp.z * 0.8);
+    aimMonk(monkB, monkA.position);           // turns toward monkA — the argument
     scene.add(monkA, monkB);
 
     // the rest of the world: mountains, forest, midground trees, scatter —

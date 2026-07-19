@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeIsland } from '../src/kit/island.js';
-import { makeMonk } from '../src/kit/monk.js';
+import { makeMonk, aimMonk } from '../src/kit/monk.js';
 import { makeTree } from '../src/kit/tree.js';
 import { makeGate } from '../src/kit/gate.js';
 
@@ -54,6 +54,29 @@ test('monk options: no hat, stout build', () => {
   const wThin = new THREE.Box3().setFromObject(thin).max.x;
   const wStout = new THREE.Box3().setFromObject(stout).max.x;
   assert.ok(wStout > wThin, 'stout should be wider');
+});
+
+test('aimMonk turns the pointing sleeve toward a target', () => {
+  // convention: local +x is the point axis, so rotation.y = atan2(-dz, dx)
+  const m0 = makeMonk({ pose: 'point' });
+  aimMonk(m0, { x: 1, z: 0 });
+  assert.ok(Math.abs(m0.rotation.y) < 1e-6, `+x → 0, got ${m0.rotation.y}`);
+  aimMonk(m0, { x: 0, z: -1 });
+  assert.ok(Math.abs(m0.rotation.y - Math.PI / 2) < 1e-6, `-z → π/2, got ${m0.rotation.y}`);
+
+  // and the raised sleeve really points at the target in world space
+  const target = { x: 4, z: 3 };
+  const monk = makeMonk({ pose: 'point' });
+  aimMonk(monk, target);
+  monk.updateMatrixWorld(true);
+  const arms = monk.children.filter((c) => c.name === 'arm');
+  const dir = (arm) => new THREE.Vector3(0, -1, 0)
+    .applyQuaternion(arm.getWorldQuaternion(new THREE.Quaternion()));
+  const [dA, dB] = arms.map(dir);
+  const raised = dA.y > dB.y ? dA : dB;   // the raised sleeve points upward
+  const want = new THREE.Vector2(target.x, target.z).normalize();
+  const got = new THREE.Vector2(raised.x, raised.z).normalize();
+  assert.ok(want.dot(got) > 0.6, `sleeve bearing aligns with target: dot=${want.dot(got)}`);
 });
 
 test('tree: trunk + canopy cluster, connected and deterministic by seed', () => {

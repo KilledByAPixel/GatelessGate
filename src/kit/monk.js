@@ -53,3 +53,13 @@ export function makeMonk({ height = 1.6, stout = 1, color = INK, hat = true, pos
   }
   return g;
 }
+
+// Turn a monk so its pointing sleeve (local +x, raised by pose:'point') aims at
+// a target {x,z} in the monk's parent space. rotation.y = atan2(-dz, dx) maps
+// local +x → the world direction (cos, 0, -sin) onto the target bearing.
+export function aimMonk(monk, target) {
+  const dx = target.x - monk.position.x;
+  const dz = target.z - monk.position.z;
+  monk.rotation.y = Math.atan2(-dz, dx);
+  return monk;
+}
