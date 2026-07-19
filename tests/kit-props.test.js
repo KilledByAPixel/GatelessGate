@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeFlower } from '../src/kit/flower.js';
 import { makeBowl } from '../src/kit/bowl.js';
+import { makeWater } from '../src/kit/water.js';
 
 test('makeFlower has petals and can drop them one by one', () => {
   const f = makeFlower({ petals: 6 });
@@ -25,4 +26,18 @@ test('makeBowl is an open bowl standing on the ground', () => {
   const box = new THREE.Box3().setFromObject(b);
   assert.ok(box.min.y > -0.01, `on the ground: ${box.min.y}`);
   assert.ok(box.max.y > 0.1 && box.max.y < 0.4, `bowl height: ${box.max.y}`);
+});
+
+test('makeWater is a flat surface that ripples on demand', () => {
+  const w = makeWater({ size: 2 });
+  assert.equal(w.group.name, 'water');
+  const surface = w.group.children.find((c) => c.name === 'surface');
+  assert.ok(surface && surface.userData.noOutline, 'surface skips outlines');
+  const box = new THREE.Box3().setFromObject(surface);
+  assert.ok(Math.abs(box.max.y) < 0.05 && Math.abs(box.min.y) < 0.05, 'flat at y=0');
+  assert.equal(w.rippleCount(), 0);
+  w.ripple(0, 0);
+  assert.equal(w.rippleCount(), 1, 'a ring appears');
+  for (let i = 0; i < 240; i++) w.update(1 / 60, i / 60);
+  assert.equal(w.rippleCount(), 0, 'the ring expires');
 });
