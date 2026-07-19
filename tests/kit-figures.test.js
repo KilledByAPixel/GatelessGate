@@ -29,3 +29,7 @@ test('makeAssembly is one instanced, grounded, deterministic crowd', () => {
   const m2 = new THREE.Matrix4(); b.getMatrixAt(0, m2);
   assert.deepEqual([...m.elements], [...m2.elements]);
 });
+
+test('makeAssembly accepts a THREE.Color for color (contract parity with siblings)', () => {
+  assert.doesNotThrow(() => makeAssembly({ count: 4, color: new THREE.Color(0x336699) }));
+});

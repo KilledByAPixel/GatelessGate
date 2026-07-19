@@ -14,7 +14,7 @@ export function makeBowl({ radius = 0.22, color = '#6E6A62' } = {}) {
     [R * 0.96, 0.30], [R * 0.9, 0.06], [0.04, 0.06],
   ].map(([r, y]) => new THREE.Vector2(r, y));
   const shell = new THREE.Mesh(new THREE.LatheGeometry(prof, 20), mat);
-  shell.name = 'bowl';
+  shell.name = 'shell';
   g.add(shell);
 
   const foot = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.42, R * 0.5, 0.03, 14), mat);

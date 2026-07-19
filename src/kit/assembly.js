@@ -35,7 +35,7 @@ export function makeAssembly({ count = 8, radius = 3.0, center = [0, 0], facing 
       new THREE.Vector3(sc, sc, sc),
     );
     mesh.setMatrixAt(i, m);
-    col.setStyle(color).offsetHSL(0, 0, (hash1(i * 2 + 3, seed) - 0.5) * 0.1);
+    col.set(color).offsetHSL(0, 0, (hash1(i * 2 + 3, seed) - 0.5) * 0.1);
     mesh.setColorAt(i, col);
   }
   mesh.instanceMatrix.needsUpdate = true;

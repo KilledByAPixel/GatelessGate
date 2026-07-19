@@ -37,6 +37,7 @@ test('makeBowl is an open bowl standing on the ground', () => {
   const b = makeBowl({ radius: 0.22 });
   assert.equal(b.name, 'bowl');
   assert.ok(b.children.some((c) => c.name === 'foot'));
+  assert.ok(b.children.some((c) => c.name === 'shell'), 'shell child name is distinct from the group');
   const box = new THREE.Box3().setFromObject(b);
   assert.ok(box.min.y > -0.01, `on the ground: ${box.min.y}`);
   assert.ok(box.max.y > 0.1 && box.max.y < 0.4, `bowl height: ${box.max.y}`);
