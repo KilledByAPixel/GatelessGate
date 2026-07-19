@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeDog } from '../src/kit/dog.js';
 import { makeTail } from '../src/kit/tail.js';
+import { makeBuffalo } from '../src/kit/buffalo.js';
 
 test('makeDog is a grounded quadruped with named parts', () => {
   const d = makeDog({ height: 0.5 });
@@ -29,4 +30,18 @@ test('makeTail hangs, swishes on impulse, and settles', () => {
   const p = t.group.userData.cloth.positions;
   const tipY = p[(7 - 1) * 3 + 1];
   assert.ok(tipY < -0.3, `tip hangs below root: ${tipY}`);
+});
+
+test('makeBuffalo is a grounded beast with horns and a live tail', () => {
+  const b = makeBuffalo({ height: 1.4 });
+  assert.equal(b.group.name, 'buffalo');
+  const names = b.group.children.map((c) => c.name);
+  assert.equal(names.filter((n) => n === 'leg').length, 4, 'four legs');
+  assert.equal(names.filter((n) => n === 'horn').length, 2, 'two horns');
+  assert.ok(names.includes('body') && names.includes('head') && names.includes('tail'));
+  assert.ok(new THREE.Box3().setFromObject(b.group).min.y > -0.03, 'on the ground');
+  for (let i = 0; i < 30; i++) b.update(1 / 60, i / 60);
+  const rest = b.tail.energy();
+  b.tail.impulse(1); b.update(1 / 60, 1);
+  assert.ok(b.tail.energy() > rest, 'tail responds to impulse');
 });
