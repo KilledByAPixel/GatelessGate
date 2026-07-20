@@ -18,9 +18,32 @@ export function makeMountains({
     const h = (9 + 13 * hash1(i * 5 + 3, seed)) * hScale;
     const r = h * (0.9 + 0.7 * hash1(i * 5 + 4, seed));
     const sides = 5 + Math.floor(hash1(i * 5 + 5, seed) * 3);
-    const m = new THREE.Mesh(new THREE.ConeGeometry(r, h, sides), mat);
+    const geo = new THREE.ConeGeometry(r, h, sides, 3);
+
+    // Push the slopes in and out per facet-column so the silhouette breaks into
+    // ridges and gullies instead of reading as a perfect cone. The displacement
+    // fades to nothing at the base and the apex, so peaks stay sharp and the
+    // mountain still sits flat on the ground.
+    const pos = geo.attributes.position;
+    for (let vi = 0; vi < pos.count; vi++) {
+      const x = pos.getX(vi), y = pos.getY(vi), z = pos.getZ(vi);
+      const rad = Math.hypot(x, z);
+      if (rad < 1e-4) continue;                                  // leave the apex alone
+      const t = (y + h / 2) / h;                                 // 0 at the base, 1 at the apex
+      const ang = Math.atan2(z, x);
+      const colIdx = Math.round(((ang + Math.PI) / (2 * Math.PI)) * sides) % sides;
+      const ring = Math.round(t * 3);
+      const n = hash1(colIdx * 17 + ring * 5 + i * 101, seed) - 0.5;
+      const k = 1 + n * 0.38 * Math.sin(Math.PI * t);
+      pos.setX(vi, x * k);
+      pos.setZ(vi, z * k);
+    }
+    geo.computeVertexNormals();
+
+    const m = new THREE.Mesh(geo, mat);
     m.position.set(Math.sin(a) * d, h / 2 - 1.5, -Math.cos(a) * d); // base sunk below the ground roll
     m.rotation.y = hash1(i * 7 + 6, seed) * Math.PI;
+    m.rotation.z = (hash1(i * 7 + 8, seed) - 0.5) * 0.10;          // no peak stands perfectly plumb
     m.name = 'mountain';
     m.userData.noOutline = true; // silhouettes are washes, not contours
     g.add(m);
