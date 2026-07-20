@@ -1,14 +1,12 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER } from '../palette.js';
+import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makeBuffalo, makeLattice, makeMonk, aimMonk,
   makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
 const ID = 37;
-const ACCENT = '#8A6A3B';
-
 export default {
   id: ID,
   slug: 'a-buffalo-passes-through-the-enclosure',

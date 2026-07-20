@@ -1,8 +1,9 @@
+import { ACCENT } from '../palette.js';
 import { SECTIONS, LABELS, narrationQueue } from './scroll_state.js';
 
 // The koan text panel (left column). Solid, always shown — no close/tuck control.
 // A quiet toolbar carries "Contents" (back) and "Sit"; the case seal appears once.
-export function makeScroll({ id, title, text, accent = '#C73E3A', onSpeak, onSpeakAll, onBack, onSit } = {}) {
+export function makeScroll({ id, title, text, accent = ACCENT, onSpeak, onSpeakAll, onBack, onSit } = {}) {
   const el = document.createElement('div');
   el.className = 'gg-view gg-scroll';
   el.style.setProperty('--accent', accent);

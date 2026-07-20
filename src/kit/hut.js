@@ -1,9 +1,10 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
+import { WASH } from '../palette.js';
 
 // A small post-and-beam shelter used as a monastery threshold (case 7). Four
 // posts, a low pyramidal roof, a threshold sill across the open front.
-export function makeHut({ width = 2.4, height = 2.2, depth = 2.0, color = '#4A4038' } = {}) {
+export function makeHut({ width = 2.4, height = 2.2, depth = 2.0, color = WASH.dark } = {}) {
   const g = new THREE.Group();
   g.name = 'hut';
   const mat = toonMaterial({ color });

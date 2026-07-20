@@ -1,13 +1,14 @@
 import * as THREE from '../../lib/three.module.js';
 import { hash1 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
+import { WASH } from '../palette.js';
 
 // Distant mountains: an arc of big faceted cones behind the scene, washed by
 // the fog into layered ink silhouettes. Call twice (far light band, nearer
 // darker band) for depth. Faces the -z direction the compositions look toward.
 export function makeMountains({
   count = 7, distance = 46, arcCenter = 0, arcSpan = 2.8, seed = 31,
-  color = '#B9B4A6', hScale = 1,
+  color = WASH.mist, hScale = 1,
 } = {}) {
   const g = new THREE.Group();
   g.name = 'mountains';

@@ -1,9 +1,10 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
+import { WASH } from '../palette.js';
 
 // A standing lattice panel: a frame with vertical and horizontal bars. Reusable
 // as a window/fence/screen; case 37's enclosure. Stands from y=0 to height.
-export function makeLattice({ width = 2.2, height = 2.0, bars = 5, color = '#4A4038' } = {}) {
+export function makeLattice({ width = 2.2, height = 2.0, bars = 5, color = WASH.dark } = {}) {
   const g = new THREE.Group();
   g.name = 'lattice';
   const mat = toonMaterial({ color, flat: true });

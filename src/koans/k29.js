@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER } from '../palette.js';
+import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeLantern, makeMonk, aimMonk, makeGate, makeFlag,
   makeLights, makeBlobShadow, addOutlines,
@@ -8,7 +8,6 @@ import {
 import { clothEnergy } from '../sim/verlet.js';
 
 const ID = 29;
-const ACCENT = '#C73E3A';
 
 export default {
   id: ID,

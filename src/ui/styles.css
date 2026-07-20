@@ -81,6 +81,29 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
   font-family: Georgia, serif; background: rgba(243,237,223,0.7); border: 1px solid rgba(30,30,36,0.25);
   color: var(--ink); padding: 5px 12px; border-radius: 3px; cursor: pointer; backdrop-filter: blur(2px);
 }
+/* ---- debug workbench: toolbar button top-right + panel sliding under it ---- */
+.gg-debug-toggle {
+  position: absolute; top: 14px; right: 14px; z-index: 9;
+  width: 30px; height: 30px; line-height: 1; font-size: 15px; cursor: pointer;
+  background: rgba(243,237,223,0.82); border: 1px solid rgba(30,30,36,0.28);
+  color: var(--ink); border-radius: 3px; backdrop-filter: blur(2px);
+}
+.gg-debug-toggle.active { background: var(--ink); color: var(--paper); }
+.gg-debug {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 232px; z-index: 8;
+  transform: translateX(100%); transition: transform 160ms ease;
+  background: rgba(243,237,223,0.94); border-left: 1px solid rgba(30,30,36,0.22);
+  padding: 52px 12px 14px; overflow-y: auto; backdrop-filter: blur(3px);
+  font: 11px/1.5 ui-monospace, Menlo, Consolas, monospace; color: var(--ink);
+}
+.gg-debug.open { transform: translateX(0); }
+.gg-debug-readout { opacity: 0.7; margin-bottom: 10px; }
+.gg-debug-group { margin: 12px 0 4px; font-weight: 700; opacity: 0.55; text-transform: uppercase; letter-spacing: 0.06em; }
+.gg-debug-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px; padding: 2px 0; cursor: pointer; }
+.gg-debug-row em { font-style: normal; opacity: 0.6; }
+.gg-debug-row input[type=range] { grid-column: 1 / -1; width: 100%; height: 14px; }
+.gg-debug-reset { margin-top: 14px; width: 100%; cursor: pointer; font: inherit; padding: 4px; background: none; border: 1px solid rgba(30,30,36,0.25); border-radius: 3px; color: var(--ink); }
+
 .gg-sit-wrap { position: relative; display: inline-block; }
 .gg-sit-pop { position: absolute; top: 112%; right: 0; display: none; gap: 4px; z-index: 6; background: var(--paper); padding: 4px; border: 1px solid rgba(30,30,36,0.2); border-radius: 3px; box-shadow: 0 4px 14px rgba(30,30,36,0.14); }
 .gg-sit-pop.open { display: flex; }

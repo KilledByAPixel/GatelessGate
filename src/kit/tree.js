@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { hash1 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
 import { mergeSimple } from './scatter.js';
-import { GRAY_DARK } from '../palette.js';
+import { GRAY_DARK, WASH } from '../palette.js';
 
 // A deciduous ink tree grown recursively: the trunk forks into limbs, those
 // fork again, and foliage sits at the branch tips. The whole skeleton is merged
@@ -12,7 +12,7 @@ import { GRAY_DARK } from '../palette.js';
 //
 // Everything derives from hash1(seed), so a given seed always grows the same tree.
 export function makeTree({
-  height = 3.2, seed = 2, trunkColor = GRAY_DARK, canopyColor = '#3B3B45', depth = 3,
+  height = 3.2, seed = 2, trunkColor = GRAY_DARK, canopyColor = WASH.deep, depth = 3,
 } = {}) {
   const g = new THREE.Group();
   g.name = 'tree';

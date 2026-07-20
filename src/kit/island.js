@@ -1,10 +1,11 @@
 import * as THREE from '../../lib/three.module.js';
 import { noise2 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
+import { WASH } from '../palette.js';
 
 // A floating slab of ground with a torn-paper rim.
 // Rim noise is sampled on a circle in 2D noise space so it wraps seamlessly.
-export function makeIsland({ radius = 6, thickness = 0.55, seed = 1, segments = 96, tear = 0.5, color = '#CDC6B5' } = {}) {
+export function makeIsland({ radius = 6, thickness = 0.55, seed = 1, segments = 96, tear = 0.5, color = WASH.ground } = {}) {
   const geo = new THREE.CylinderGeometry(radius, radius * 0.92, thickness, segments, 1);
   const pos = geo.attributes.position;
   const v = new THREE.Vector3();

@@ -1,9 +1,10 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
+import { WASH } from '../palette.js';
 
 // A rice bowl (case 7): a lathed shell (outside up, over the rim, back down the
 // inside) on a small foot. Opening upward.
-export function makeBowl({ radius = 0.22, color = '#6E6A62' } = {}) {
+export function makeBowl({ radius = 0.22, color = WASH.mid } = {}) {
   const g = new THREE.Group();
   g.name = 'bowl';
   const mat = toonMaterial({ color, side: THREE.DoubleSide });

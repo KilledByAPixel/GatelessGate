@@ -1,5 +1,5 @@
 import * as THREE from '../lib/three.module.js';
-import { PAPER } from './palette.js';
+import { PAPER, wash } from './palette.js';
 import {
   composeWorld, makePath, makeLantern, makeGate, makeMonk, makeFlag,
   makeLights, addOutlines, makeBlobShadow,
@@ -52,8 +52,8 @@ export function buildHub() {
     ],
     grassKeepout: path.keepout(26, 1.15),   // only the lane clears grass
     mountains: [
-      { count: 9, distance: 55, arcSpan: 3.8, color: '#C9C4B5' },
-      { count: 5, distance: 35, arcSpan: 2.6, color: '#B4AF9F', hScale: 0.7 },
+      { count: 9, distance: 55, arcSpan: 3.8, color: wash(0.16) },
+      { count: 5, distance: 35, arcSpan: 2.6, color: wash(0.28), hScale: 0.7 },
     ],
   });
 

@@ -1,8 +1,9 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
+import { INK } from '../palette.js';
 
 // A freestanding gate with no door. Two posts, double lintel.
-export function makeGate({ width = 2.4, height = 2.6, color = '#2A2A32' } = {}) {
+export function makeGate({ width = 2.4, height = 2.6, color = INK } = {}) {
   const g = new THREE.Group();
   g.name = 'gate';
   const mat = toonMaterial({ color });

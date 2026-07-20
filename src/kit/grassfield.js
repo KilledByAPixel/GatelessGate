@@ -1,5 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
+import { WASH } from '../palette.js';
 import { groundHeight } from './ground.js';
 import { hash1 } from '../util/noise.js';
 
@@ -18,8 +19,8 @@ export function makeGrassField({
   count = 52000, radius = 20, inner = 0, seed = 5, groundSeed = 21,
   // an ash-olive, not a green: the rest of the palette (bushes #4E4F49, forest
   // #66655A, ground #CDC6B5) is desaturated, and a saturated field fights it
-  color = '#8E8B76', height = 0.34, width = 0.05, wind = 1,
-  windDir = [1, 0.35], keepout = [],
+  color = WASH.dry, height = 0.34, width = 0.05, wind = 1,
+  windDir = [1, 0.35], gustScale = 0.055, gustSpeed = 2.4, keepout = [],
 } = {}) {
   // one blade: a tapered strip, origin at the base, segmented so it can curve
   const SEG = 5;
@@ -36,27 +37,51 @@ export function makeGrassField({
     uTime: { value: 0 },
     uWind: { value: wind },
     uWindDir: { value: new THREE.Vector2(windDir[0], windDir[1]).normalize() },
+    uGustScale: { value: gustScale },   // world units per noise cell — gust patch size
+    uGustSpeed: { value: gustSpeed },   // how fast the field drifts downwind
   };
 
   const mat = toonMaterial({ color, side: THREE.DoubleSide });
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
-    shader.vertexShader =
-      'uniform float uTime;\nuniform float uWind;\nuniform vec2 uWindDir;\n' +
+    shader.vertexShader = `
+      uniform float uTime;
+      uniform float uWind;
+      uniform vec2 uWindDir;
+      uniform float uGustScale;
+      uniform float uGustSpeed;
+
+      // Cheap 2D value noise. A sine of dot(pos, windDir) is a PLANE WAVE: every
+      // blade the same distance along the wind axis moves identically, which
+      // reads as a bar sweeping the field. Sampling a noise field that drifts
+      // downwind instead gives patchy gusts and lulls in both dimensions.
+      float ggHash(vec2 p) {
+        p = fract(p * vec2(123.34, 456.21));
+        p += dot(p, p + 45.32);
+        return fract(p.x * p.y);
+      }
+      float ggNoise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(ggHash(i), ggHash(i + vec2(1.0, 0.0)), f.x),
+                   mix(ggHash(i + vec2(0.0, 1.0)), ggHash(i + vec2(1.0, 1.0)), f.x), f.y);
+      }
+      ` +
       shader.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
       #ifdef USE_INSTANCING
         vec3 iPos = instanceMatrix[3].xyz;
         float H = ${height.toFixed(4)};
         float s = clamp(transformed.y, 0.0, H);        // arclength from the base
 
-        // gusts travel along the wind axis so the wave crosses the meadow
-        float travel = dot(iPos.xz, uWindDir);
-        float gust = sin(travel * 0.30 - uTime * 1.25)
-                   + 0.45 * sin(travel * 0.85 - uTime * 2.05 + iPos.x * 0.35);
+        // the whole noise field slides downwind, so gusts arrive and pass
+        vec2 flow = iPos.xz * uGustScale - uWindDir * (uTime * uGustSpeed * uGustScale);
+        float gust = ggNoise(flow) * 0.70 + ggNoise(flow * 2.7 + 19.3) * 0.30;   // 0..1
 
         // per-blade stiffness: neighbours must not move in lockstep
         float stiff = 0.65 + 0.7 * fract(sin(dot(iPos.xz, vec2(12.9898, 78.233))) * 43758.5453);
-        float thetaWind = uWind * (0.30 + 0.26 * gust) * stiff;
+        // strength never goes negative — grass does not lean into the wind
+        float thetaWind = uWind * (0.12 + 0.40 * gust) * stiff;
         float droop = 0.24 * stiff;   // a real blade is never straight, even at rest
 
         // resolve the world wind direction into this blade's local frame, so every
@@ -89,6 +114,7 @@ export function makeGrassField({
   const mesh = new THREE.InstancedMesh(geo, mat, count);
   mesh.name = 'grassfield';
   mesh.userData.noOutline = true;   // an inverted hull on a blade is noise
+  mesh.userData.uniforms = uniforms; // so the debug panel can reach the wind live
   mesh.castShadow = false;
   mesh.receiveShadow = true;
 
@@ -151,6 +177,10 @@ export function makeGrassField({
     get blades() { return mesh.count; },
     setWind(w) { uniforms.uWind.value = w; },
     setWindDir(x, z) { uniforms.uWindDir.value.set(x, z).normalize(); },
+    setGust(scale, speed) {
+      if (scale !== undefined) uniforms.uGustScale.value = scale;
+      if (speed !== undefined) uniforms.uGustSpeed.value = speed;
+    },
     update(dt, simTime) { uniforms.uTime.value = simTime; },
   };
 }

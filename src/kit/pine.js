@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { hash1 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
+import { WASH } from '../palette.js';
 import { mergeSimple } from './scatter.js';
 
 // A conifer built from a bare trunk and a stack of tiered skirts that narrow
@@ -32,7 +33,7 @@ export function pineGeometry({ height = 4, tiers = 5, seed = 3 } = {}) {
   return mergeSimple(parts);
 }
 
-export function makePine({ height = 4, tiers = 5, seed = 3, color = '#4C5247' } = {}) {
+export function makePine({ height = 4, tiers = 5, seed = 3, color = WASH.dark } = {}) {
   const mesh = new THREE.Mesh(pineGeometry({ height, tiers, seed }), toonMaterial({ color, flat: true }));
   mesh.name = 'pine';
   return mesh;

@@ -1,5 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
+import { WASH, PAPER } from '../palette.js';
 import { noise2 } from '../util/noise.js';
 
 const RING_LIFE = 2.2;
@@ -7,7 +8,7 @@ const POOL = 6;
 
 // A stylized water surface (case 7): a translucent paper-tinted plane with a
 // faint idle shimmer and expanding ripple rings. No real reflection by design.
-export function makeWater({ size = 2.0, color = '#AEB8B4', seed = 7 } = {}) {
+export function makeWater({ size = 2.0, color = WASH.ground, seed = 7 } = {}) {
   const group = new THREE.Group();
   group.name = 'water';
 
@@ -20,7 +21,7 @@ export function makeWater({ size = 2.0, color = '#AEB8B4', seed = 7 } = {}) {
   surface.userData.noOutline = true;
   group.add(surface);
 
-  const ringMat = toonMaterial({ color: '#F4F1E8', side: THREE.DoubleSide });
+  const ringMat = toonMaterial({ color: PAPER, side: THREE.DoubleSide });
   ringMat.transparent = true;
   const rings = [];
   for (let i = 0; i < POOL; i++) {

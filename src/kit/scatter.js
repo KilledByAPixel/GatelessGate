@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { hash1 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
+import { WASH } from '../palette.js';
 import { groundHeight } from './ground.js';
 
 // Ground dressing, each kind as ONE InstancedMesh (a single draw call):
@@ -85,7 +86,7 @@ function bushGeometry(seed = 1) {
   return mergeSimple(parts);
 }
 
-export function makeRocks({ count = 12, seed = 51, groundSeed = 21, keepout = [], rMin = 4, rMax = 24, color = '#A8A296' } = {}) {
+export function makeRocks({ count = 12, seed = 51, groundSeed = 21, keepout = [], rMin = 4, rMax = 24, color = WASH.stone } = {}) {
   const pts = scatterPoints({ count, rMin, rMax, seed, keepout });
   const geo = rockGeometry(seed);
   const mesh = instanced(geo, color, pts, {
@@ -97,7 +98,7 @@ export function makeRocks({ count = 12, seed = 51, groundSeed = 21, keepout = []
   return mesh;
 }
 
-export function makeBushes({ count = 9, seed = 61, groundSeed = 21, keepout = [], rMin = 4, rMax = 22, color = '#4E4F49' } = {}) {
+export function makeBushes({ count = 9, seed = 61, groundSeed = 21, keepout = [], rMin = 4, rMax = 22, color = WASH.dark } = {}) {
   const pts = scatterPoints({ count, rMin, rMax, seed, keepout });
   const geo = bushGeometry(seed);
   const mesh = instanced(geo, color, pts, {
@@ -110,7 +111,7 @@ export function makeBushes({ count = 9, seed = 61, groundSeed = 21, keepout = []
   return mesh;
 }
 
-export function makeGrass({ count = 150, seed = 81, groundSeed = 21, keepout = [], rMin = 1.5, rMax = 20, color = '#AFAA90' } = {}) {
+export function makeGrass({ count = 150, seed = 81, groundSeed = 21, keepout = [], rMin = 1.5, rMax = 20, color = WASH.dry } = {}) {
   const pts = scatterPoints({ count, rMin, rMax, seed, keepout });
   // one tuft = blades splaying OUTWARD from a shared base (a patch, not a teepee).
   // each blade pivots at its base (y=0) and leans away from center.

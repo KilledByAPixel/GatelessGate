@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { hash1 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
+import { WASH } from '../palette.js';
 import { pineGeometry } from './pine.js';
 
 // A distant stand of trees as one InstancedMesh (a single draw call), read as
@@ -9,7 +10,7 @@ import { pineGeometry } from './pine.js';
 // silhouette instead of a field of identical smooth cones.
 export function makeForest({
   count = 50, center = [0, 0, -28], spread = 16, seed = 41,
-  color = '#66655A', treeH = 2.8,
+  color = WASH.mid, treeH = 2.8,
 } = {}) {
   const geo = pineGeometry({ height: treeH, tiers: 5, seed });
   const mat = toonMaterial({ color, flat: true });

@@ -3,6 +3,7 @@ import { makeCameraRig } from './camera.js';
 import { makeDissolve } from './render/dissolve.js';
 import { installGrain } from './render/grain.js';
 import { makeSceneManager, disposeRoot } from './scene/manager.js';
+import { makeDebug } from './ui/debug.js';
 import { makeInput } from './input.js';
 import { createSave } from './save.js';
 import { createAudio } from './audio/engine.js';
@@ -25,7 +26,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 { const { w, h } = stageSize(); renderer.setSize(w, h); }
 stage.appendChild(renderer.domElement);
-installGrain(document, { mount: stage });
+const grain = installGrain(document, { mount: stage });
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
 { const { w, h } = stageSize(); camera.aspect = w / h; camera.updateProjectionMatrix(); }
@@ -84,6 +85,18 @@ soundBtn.onclick = () => { audio.unlock(); audio.setSound(!audio.isSoundOn()); s
 controls.appendChild(soundBtn);
 stage.appendChild(controls);
 
+// ---- debug workbench (top-right of the stage) ----
+const debug = makeDebug({
+  renderer,
+  getScene: () => { const a = scenes.active(); return a && a.scene; },
+  audio,
+  grainEls: [grain.overlay, grain.vignette],
+  onSound: () => setSoundLabel(),
+});
+debug.mount(stage);
+// every scene swap builds fresh objects, so the workbench must re-apply to them
+const debugApply = () => debug.apply();
+
 // ---- transitions: ink COVERS the stage before anything changes, then reveals ----
 async function transition(apply) {
   panel.classList.add('fading');          // panel fades out (cosmetic, not awaited)
@@ -137,6 +150,7 @@ async function enter(slug) {
       built.setCamera && built.setCamera(camera);
       const prev = scenes.active();
       scenes.setActive(built);
+      debugApply();
       if (prev && prev !== hub) { disposeRoot(prev); prev.dispose && prev.dispose(); }
       koan = built; koanSlug = slug;
       built.onEnter && built.onEnter();
@@ -177,6 +191,7 @@ async function exit() {
   await transition(() => {
     const prev = scenes.active();
     scenes.setActive(hub);
+    debugApply();
     if (prev && prev !== hub) { disposeRoot(prev); prev.dispose && prev.dispose(); }
     koan = null; koanSlug = null;
     if (scroll) { scroll.dispose(); scroll = null; }
@@ -238,6 +253,7 @@ function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
   if (dt > 0) fps = fps * 0.95 + (1 / dt) * 0.05;
+  debug.tick(fps);
   acc += dt;
   while (acc >= STEP) { acc -= STEP; tick(); }
   scenes.render(camera);

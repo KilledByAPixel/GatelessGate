@@ -1,14 +1,12 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER } from '../palette.js';
+import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeBowl, makeWater, makeMonk, aimMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
 const ID = 7;
-const ACCENT = '#6E8FA6';   // the water's cool note
-
 export default {
   id: ID,
   slug: 'joshu-washes-the-bowl',
@@ -41,12 +39,12 @@ export default {
     const BASIN_H = 0.62;
     const basin = new THREE.Mesh(
       new THREE.CylinderGeometry(0.50, 0.56, BASIN_H, 12),
-      toonMaterial({ color: '#8F8A7E', flat: true }));
+      toonMaterial({ color: WASH.stone, flat: true }));
     basin.name = 'basin';
     basin.position.set(2.15, BASIN_H / 2, 0.9);
     scene.add(basin);
 
-    const water = makeWater({ size: 0.86, color: '#9DAAA8' });
+    const water = makeWater({ size: 0.86, color: WASH.ground });
     water.group.position.set(2.15, BASIN_H - 0.04, 0.9);   // sunk just inside the rim
     scene.add(water.group);
 

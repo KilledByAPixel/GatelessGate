@@ -4,8 +4,9 @@
 export function windParams(level) {
   const l = Math.max(0, Math.min(1, level));
   return {
-    // quieter than the first pass: this is a bed, not a feature
-    gain: (0.05 + 0.13 * l) * Math.min(1, l / 0.05),   // reaches true silence at level 0
+    // A bed, not a feature. Note the gust LFOs ride ON TOP of this, so the true
+    // peak is roughly gain * 1.7 — the ceiling has to leave room for that.
+    gain: (0.03 + 0.07 * l) * Math.min(1, l / 0.05),   // reaches true silence at level 0
     cutoff: 320 + 700 * l,
     gust: 0.35 + 0.45 * l,                              // how far the breeze swings
   };
@@ -71,8 +72,10 @@ export function makeWind(ctx, dest) {
       const t = ctx.currentTime;
       g.gain.setTargetAtTime(p.gain, t, 0.4);
       lp.frequency.setTargetAtTime(p.cutoff, t, 0.4);
-      // depths stay under the base so a trough thins the breeze but never inverts it
-      gustGain.gain.setTargetAtTime(p.gain * p.gust * 0.6, t, 0.4);
+      // Depths stay well under the base so a trough thins the breeze without
+      // inverting it, and a crest doesn't spike. Two LFOs sum, so the real swing
+      // is twice each depth.
+      gustGain.gain.setTargetAtTime(p.gain * p.gust * 0.42, t, 0.4);
       gustCut.gain.setTargetAtTime(p.cutoff * p.gust * 0.5, t, 0.4);
     },
     stop() {

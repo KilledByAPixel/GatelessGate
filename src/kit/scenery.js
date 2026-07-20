@@ -5,6 +5,7 @@ import { makeRocks, makeBushes } from './scatter.js';
 import { makeGrassField } from './grassfield.js';
 import { makeTree } from './tree.js';
 import { hash1 } from '../util/noise.js';
+import { wash } from '../palette.js';
 
 // The shared scene grammar: every case sits in the same kind of world —
 // rolling ground, mountains and forest in the fog, and a dressed midground
@@ -27,11 +28,11 @@ export function composeWorld(scene, {
   grass = 52000,   // blades in the instanced field, not clumps
   forests = [
     { center: [-19, 0, -27], spread: 13, count: 55 },
-    { center: [16, 0, -31], spread: 14, count: 40, color: '#757464' },
+    { center: [16, 0, -31], spread: 14, count: 40, color: wash(0.55) },
   ],
   mountains = [
-    { count: 8, distance: 52, arcSpan: 3.6, color: '#C9C4B5' },
-    { count: 5, distance: 33, arcSpan: 2.4, color: '#B4AF9F', hScale: 0.65 },
+    { count: 8, distance: 52, arcSpan: 3.6, color: wash(0.16) },   // farthest band
+    { count: 5, distance: 33, arcSpan: 2.4, color: wash(0.28), hScale: 0.65 },
   ],
 } = {}) {
   scene.add(makeGround({ seed: groundSeed }));

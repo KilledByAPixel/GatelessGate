@@ -1,14 +1,14 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, INK } from '../palette.js';
+
 import {
   composeWorld, makeBuddha, makeMonk, aimMonk, makeFlower, makeAssembly,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 import { hash1 } from '../util/noise.js';
+import { PAPER, ACCENT, WASH } from '../palette.js';
 
 const ID = 6;
-const ACCENT = '#D9A441';   // the flower's gold heart — the only warm note
 
 const PETAL_FALL = 5.0;     // seconds for a petal to reach the ground
 const SMILE_IN = 1.4;
@@ -33,7 +33,7 @@ export default {
     // Vulture Peak: the Buddha raised on a low stone, the assembly below him.
     const seat = new THREE.Mesh(
       new THREE.CylinderGeometry(1.5, 1.7, 0.34, 9),
-      toonMaterial({ color: '#9B968A', flat: true }));
+      toonMaterial({ color: WASH.stone, flat: true }));
     seat.name = 'seat';
     const SEAT_Z = -5.0;                  // far enough back that the assembly can sit between
     seat.position.set(1.2, 0.17, SEAT_Z);

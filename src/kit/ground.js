@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { noise2 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
+import { WASH } from '../palette.js';
 
 // Gently rolling ground that runs out into the fog — the paper takes over
 // before any horizon appears. Flat near the center so staging stays level.
@@ -18,7 +19,7 @@ export function groundHeight(x, z, { seed = 21, roll = 1.1, flatRadius = 9 } = {
   return (broad * roll * 2.2 + fine * roll) * ease;
 }
 
-export function makeGround({ size = 150, seed = 21, roll = 1.1, flatRadius = 9, color = '#CDC6B5', segments = 96 } = {}) {
+export function makeGround({ size = 150, seed = 21, roll = 1.1, flatRadius = 9, color = WASH.ground, segments = 96 } = {}) {
   const geo = new THREE.PlaneGeometry(size, size, segments, segments);
   geo.rotateX(-Math.PI / 2);
   const pos = geo.attributes.position;

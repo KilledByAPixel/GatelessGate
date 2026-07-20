@@ -1,14 +1,12 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER } from '../palette.js';
+import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, aimMonk, makeDog,
   makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
 const ID = 1;
-const ACCENT = '#C73E3A';
-
 const FOG_BASE = 0.030;
 const FOG_MU = 0.235;    // thick enough to swallow the world whole
 const MU_DUR = 4.4;      // seconds for the full breath

@@ -1,11 +1,12 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
+import { WASH } from '../palette.js';
 import { makeTail } from './tail.js';
 
 // A water buffalo (case 37). Bulky body, heavy horned head; the tail is a
 // verlet strand at the rump. Faces +z (head forward). Returns a handle so the
 // koan can tap the tail. Proportions tuned in the Phase 3 browser pass.
-export function makeBuffalo({ height = 1.4, color = '#3A3A40', seed = 37 } = {}) {
+export function makeBuffalo({ height = 1.4, color = WASH.deep, seed = 37 } = {}) {
   const group = new THREE.Group();
   group.name = 'buffalo';
   const mat = toonMaterial({ color, flat: true });

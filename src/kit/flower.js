@@ -1,10 +1,10 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
-import { INK } from '../palette.js';
+import { INK, PAPER, ACCENT } from '../palette.js';
 
 // A single held flower (case 6). Stem, a small center, and petals arranged in a
 // ring. dropPetal() detaches one petal for the scene to drift downward.
-export function makeFlower({ height = 0.6, petals = 6, color = '#EED9E2', seed = 6 } = {}) {
+export function makeFlower({ height = 0.6, petals = 6, color = PAPER, seed = 6 } = {}) {
   void seed;
   const g = new THREE.Group();
   g.name = 'flower';
@@ -17,7 +17,7 @@ export function makeFlower({ height = 0.6, petals = 6, color = '#EED9E2', seed =
   stem.position.y = height / 2;
   g.add(stem);
 
-  const center = new THREE.Mesh(new THREE.SphereGeometry(0.05 * height, 10, 8), toonMaterial({ color: '#E4B33E', flat: true }));
+  const center = new THREE.Mesh(new THREE.SphereGeometry(0.05 * height, 10, 8), toonMaterial({ color: ACCENT, flat: true }));
   center.name = 'center';
   center.position.y = height;
   g.add(center);
