@@ -6,16 +6,34 @@ import { clothEnergy } from '../src/sim/verlet.js';
 const DT = 1 / 60;
 const run = (f, n, t0 = 0) => { for (let i = 1; i <= n; i++) f.update(DT, t0 + i * DT); };
 
+test('cloth is warmed up at build time so it never snaps into shape on spawn', () => {
+  const maxAbsZ = (f) => {
+    const p = f.cloth.positions;
+    let m = 0;
+    for (let i = 0; i < p.length; i += 3) m = Math.max(m, Math.abs(p[i + 2]));
+    return m;
+  };
+  // the grid is authored planar (z = 0 everywhere); after warm-up wind has shaped it
+  const warm = makeFlag({ seed: 11 });
+  assert.ok(maxAbsZ(warm) > 0.05, `warm cloth already shaped, got ${maxAbsZ(warm)}`);
+  assert.ok(clothEnergy(warm.cloth) > 0, 'warm cloth already carries motion');
+
+  // with the warm-up skipped it spawns flat and frozen — the snap we are avoiding
+  const cold = makeFlag({ seed: 11, warmup: 0 });
+  assert.ok(maxAbsZ(cold) < 1e-9, 'cold cloth is still the flat authored grid');
+  assert.equal(clothEnergy(cold.cloth), 0, 'cold cloth is motionless until first update');
+});
+
 test('wind off settles the cloth; wind on revives it', () => {
   const f = makeFlag({ seed: 11 });
   assert.equal(f.isWindOn(), true);
   f.setWindTarget(0);
-  run(f, 240);
+  run(f, 480);   // 8s — at 4s the cloth is still swinging, so the baseline was not a baseline
   assert.ok(f.windLevel() < 0.05, `windLevel ${f.windLevel()}`);
   const still = clothEnergy(f.cloth);
-  assert.ok(still < 0.01, `settled energy ${still}`);
+  assert.ok(still < 5e-3, `settled energy ${still}`);
   f.setWindTarget(1);
-  run(f, 240, 4);
+  run(f, 240, 8);
   assert.ok(f.windLevel() > 0.9, `windLevel ${f.windLevel()}`);
   assert.ok(clothEnergy(f.cloth) > still * 2, 'wind should re-energize the cloth');
 });

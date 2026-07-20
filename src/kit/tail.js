@@ -6,7 +6,7 @@ import { INK } from '../palette.js';
 
 // A hanging tail: the verlet cloth as a 1-column strand, pinned at the root.
 // Reused by the buffalo (case 37). A tap swishes it; it never breaks free.
-export function makeTail({ segments = 7, length = 1.0, thickness = 0.06, color = INK, seed = 3 } = {}) {
+export function makeTail({ segments = 7, length = 1.0, thickness = 0.06, color = INK, seed = 3, warmup = 90 } = {}) {
   const spacing = length / (segments - 1);
   const cloth = createCloth(1, segments, spacing, (c, r) => r === 0); // pin the top node
   const group = new THREE.Group();
@@ -43,22 +43,29 @@ export function makeTail({ segments = 7, length = 1.0, thickness = 0.06, color =
   }
   layout();
 
+  function update(dt, simTime) {
+    const t = simTime * 0.8;
+    stepCloth(cloth, dt, {
+      gravity: [0, -6.0, 0],
+      iterations: 5,
+      damping: 0.98,
+      force: (x, y, z, i) => {
+        // a barely-there idle sway so the tail is never dead
+        const s = (noise3(y * 0.6 + t, i * 0.3, t * 0.7, seed) - 0.5) * 1.2;
+        return [s, 0, s * 0.6];
+      },
+    });
+    layout();
+  }
+
+  // Settle before the tail is ever seen. A freshly built strand is motionless
+  // and perfectly straight, so its first visible frames would be a drop into
+  // place. Deterministic: fixed dt over a fixed simTime ramp.
+  for (let i = 0; i < warmup; i++) update(1 / 60, i / 60);
+
   return {
     group,
-    update(dt, simTime) {
-      const t = simTime * 0.8;
-      stepCloth(cloth, dt, {
-        gravity: [0, -6.0, 0],
-        iterations: 5,
-        damping: 0.98,
-        force: (x, y, z, i) => {
-          // a barely-there idle sway so the tail is never dead
-          const s = (noise3(y * 0.6 + t, i * 0.3, t * 0.7, seed) - 0.5) * 1.2;
-          return [s, 0, s * 0.6];
-        },
-      });
-      layout();
-    },
+    update,
     impulse(strength = 1) {
       const p = cloth.positions;
       const tip = segments - 1;

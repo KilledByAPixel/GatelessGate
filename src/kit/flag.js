@@ -10,7 +10,7 @@ const WIND_TAU = 0.7;      // ~2 s to full
 const PUFF_RADIUS = 0.4;
 const PUFF_LIFE = 0.6;
 
-export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed = 11, color = ACCENT } = {}) {
+export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed = 11, color = ACCENT, warmup = 90 } = {}) {
   const group = new THREE.Group();
   group.name = 'flag';
 
@@ -76,6 +76,12 @@ export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed 
     });
     copyPositions();
   };
+
+  // Settle the cloth before it is ever seen. A freshly built grid is flat and
+  // motionless, so its first visible frames would be a violent snap into shape
+  // as gravity and wind hit at once. Deterministic: fixed dt over a fixed
+  // simTime ramp, so the spawned pose is identical every run.
+  for (let i = 0; i < warmup; i++) update(1 / 60, i / 60);
 
   return {
     group,

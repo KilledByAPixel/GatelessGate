@@ -16,6 +16,22 @@ test('makeDog is a grounded quadruped with named parts', () => {
   assert.ok(box.max.y > 0.3 && box.max.y < 0.9, `dog-sized: ${box.max.y}`);
 });
 
+test('tail is warmed up at build time so it does not drop into place on spawn', () => {
+  const lateral = (t) => {
+    const p = t.group.userData.cloth.positions;
+    let m = 0;
+    for (let i = 0; i < p.length; i += 3) m = Math.max(m, Math.abs(p[i]), Math.abs(p[i + 2]));
+    return m;
+  };
+  const warm = makeTail({ segments: 7, length: 1.0 });
+  assert.ok(lateral(warm) > 1e-4, 'warm strand has settled into a live pose');
+  assert.ok(warm.energy() < 1e-2, `settled, not thrashing: ${warm.energy()}`);
+
+  const cold = makeTail({ segments: 7, length: 1.0, warmup: 0 });
+  assert.ok(lateral(cold) < 1e-9, 'cold strand is the straight authored line');
+  assert.equal(cold.energy(), 0, 'cold strand is motionless until first update');
+});
+
 test('makeTail hangs, swishes on impulse, and settles', () => {
   const t = makeTail({ segments: 7, length: 1.0 });
   assert.equal(t.group.name, 'tail');
