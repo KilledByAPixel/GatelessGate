@@ -4,17 +4,22 @@ import { groundHeight } from '../src/kit/ground.js';
 import { hash1 } from '../src/util/noise.js';
 
 // Dense wind-blown grass. Thousands of tapered blades in ONE InstancedMesh,
-// bent entirely in the vertex shader from a single uTime uniform — so the wind
-// costs no per-frame CPU work and no extra draw calls. The base stays planted
-// (bend scales with t^2 up the blade) so it reads as grass, not as sliding cards.
+// bent entirely in the vertex shader from a single uTime uniform.
+//
+// The blade bends along a CIRCULAR ARC rather than being displaced sideways:
+// a lateral offset shears the blade and visibly stretches it, which reads as
+// rubber. Arc bending is length-preserving, so the blade curves over the way a
+// real one does. Wind arrives as a wave travelling along the wind axis, so it
+// blows THROUGH the field instead of every blade oscillating in place.
 const UP = new THREE.Vector3(0, 1, 0);
 
 export function makeGrassField({
-  count = 7000, radius = 26, inner = 0, seed = 5, groundSeed = 21,
-  color = '#8C8B6A', height = 0.42, width = 0.055, wind = 1, keepout = [],
+  count = 44000, radius = 17, inner = 0, seed = 5, groundSeed = 21,
+  color = '#84875F', height = 0.34, width = 0.05, wind = 1,
+  windDir = [1, 0.35], keepout = [],
 } = {}) {
   // one blade: a tapered strip, origin at the base, segmented so it can curve
-  const SEG = 4;
+  const SEG = 5;
   const geo = new THREE.PlaneGeometry(width, height, 1, SEG);
   geo.translate(0, height / 2, 0);              // base at the origin
   const pos = geo.attributes.position;
@@ -24,65 +29,111 @@ export function makeGrassField({
   }
   geo.computeVertexNormals();
 
-  const uniforms = { uTime: { value: 0 }, uWind: { value: wind } };
+  const dir = new THREE.Vector2(windDir[0], windDir[1]).normalize();
+  const uniforms = {
+    uTime: { value: 0 },
+    uWind: { value: wind },
+    uWindDir: { value: dir },
+  };
 
   const mat = toonMaterial({ color, side: THREE.DoubleSide });
   mat.onBeforeCompile = (shader) => {
-    shader.uniforms.uTime = uniforms.uTime;
-    shader.uniforms.uWind = uniforms.uWind;
-    shader.vertexShader = 'uniform float uTime;\nuniform float uWind;\n' +
+    Object.assign(shader.uniforms, uniforms);
+    shader.vertexShader =
+      'uniform float uTime;\nuniform float uWind;\nuniform vec2 uWindDir;\n' +
       shader.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
       #ifdef USE_INSTANCING
-        vec3 iOrigin = instanceMatrix[3].xyz;              // where this blade is planted
-        float t = clamp(transformed.y / ${height.toFixed(4)}, 0.0, 1.0);
-        // two offset waves so the field ripples instead of pulsing in unison
-        float sway = sin(uTime * 1.5 + iOrigin.x * 0.65 + iOrigin.z * 0.5)
-                   + 0.45 * sin(uTime * 3.3 + iOrigin.x * 1.9 - iOrigin.z * 1.3);
-        float bend = uWind * sway * t * t;                 // planted base, mobile tip
-        transformed.x += bend * 0.30;
-        transformed.z += bend * 0.18;
-        transformed.y -= abs(bend) * 0.06;                 // shortens slightly as it leans
+        vec3 iPos = instanceMatrix[3].xyz;
+        float H = ${height.toFixed(4)};
+        float s = clamp(transformed.y, 0.0, H);        // arclength from the base
+
+        // gusts travel along the wind axis so the wave crosses the meadow
+        float travel = dot(iPos.xz, uWindDir);
+        float gust = sin(travel * 0.30 - uTime * 1.25)
+                   + 0.45 * sin(travel * 0.85 - uTime * 2.05 + iPos.x * 0.35);
+
+        // per-blade stiffness: neighbours must not move in lockstep
+        float stiff = 0.65 + 0.7 * fract(sin(dot(iPos.xz, vec2(12.9898, 78.233))) * 43758.5453);
+        float thetaWind = uWind * (0.30 + 0.26 * gust) * stiff;
+        float droop = 0.24 * stiff;   // a real blade is never straight, even at rest
+
+        // resolve the world wind direction into this blade's local frame, so every
+        // blade leans the same way in world space despite its random yaw
+        vec2 ix = normalize(vec2(instanceMatrix[0].x, instanceMatrix[0].z) + vec2(1e-6));
+        vec2 iz = normalize(vec2(instanceMatrix[2].x, instanceMatrix[2].z) + vec2(1e-6));
+
+        // wind (a shared world direction) plus the blade's own resting lean (local
+        // +z, so calm grass leans every which way instead of all one way)
+        vec2 bendVec = vec2(dot(ix, uWindDir), dot(iz, uWindDir)) * thetaWind
+                     + vec2(0.0, 1.0) * droop;
+        float theta = length(bendVec);
+        vec2 bendDir = theta > 1e-5 ? bendVec / theta : vec2(0.0, 1.0);
+
+        // circular arc: constant curvature k over arclength s. Length-preserving,
+        // so the blade curves instead of stretching.
+        float k = theta / H;
+        float arcY, arcOff;
+        if (abs(k) < 1e-4) { arcY = s; arcOff = 0.0; }
+        else { arcY = sin(k * s) / k; arcOff = (1.0 - cos(k * s)) / k; }
+
+        transformed.y = arcY;
+        transformed.x += bendDir.x * arcOff;
+        transformed.z += bendDir.y * arcOff;
       #endif
       `);
   };
-  // onBeforeCompile-patched materials need a distinct cache key
-  mat.customProgramCacheKey = () => 'grassfield';
+  mat.customProgramCacheKey = () => 'grassfield-arc';
 
   const mesh = new THREE.InstancedMesh(geo, mat, count);
   mesh.name = 'grassfield';
   mesh.userData.noOutline = true;   // an inverted hull on a blade is noise
-  mesh.castShadow = false;          // blades casting is costly and reads as dirt
+  mesh.castShadow = false;
   mesh.receiveShadow = true;
 
   const m = new THREE.Matrix4();
   const q = new THREE.Quaternion();
   const v = new THREE.Vector3();
-  const s = new THREE.Vector3();
+  const sc3 = new THREE.Vector3();
   let n = 0;
   for (let i = 0; n < count && i < count * 4; i++) {
     const a = hash1(i * 4 + 1, seed) * Math.PI * 2;
     const rr = inner + Math.sqrt(hash1(i * 4 + 2, seed)) * (radius - inner); // even area density
     const x = Math.cos(a) * rr;
     const z = Math.sin(a) * rr;
+
+    // thin toward the outer rim so the field dissolves into fog instead of
+    // ending on a visible circle
+    const rimT = (rr - radius * 0.72) / (radius * 0.28);
+    if (rimT > 0 && hash1(i * 4 + 13, seed) < rimT) continue;
+
+    // keepouts are FEATHERED: a hard cut reads as a bald circle stamped in the turf
     let blocked = false;
-    for (const k of keepout) {
-      if (Math.hypot(x - k.x, z - k.z) < k.r) { blocked = true; break; }
+    for (const kp of keepout) {
+      const d = Math.hypot(x - kp.x, z - kp.z);
+      if (d < kp.r) { blocked = true; break; }
+      if (d < kp.r * 1.5) {
+        const f = (d - kp.r) / (kp.r * 0.5);            // 0 at the edge .. 1 at feather end
+        if (hash1(i * 4 + 11, seed) > f) { blocked = true; break; }
+      }
     }
     if (blocked) continue;
-    const sc = 0.65 + 0.8 * hash1(i * 4 + 5, seed);
+
+    const tall = 0.65 + 0.8 * hash1(i * 4 + 5, seed);
     v.set(x, groundHeight(x, z, { seed: groundSeed }), z);
     q.setFromAxisAngle(UP, hash1(i * 4 + 7, seed) * Math.PI * 2);
-    s.set(0.8 + 0.5 * hash1(i * 4 + 9, seed), sc, 1);
-    m.compose(v, q, s);
+    sc3.set(0.8 + 0.5 * hash1(i * 4 + 9, seed), tall, 1);
+    m.compose(v, q, sc3);
     mesh.setMatrixAt(n++, m);
   }
   mesh.count = n;
   mesh.instanceMatrix.needsUpdate = true;
+  mesh.computeBoundingSphere();
 
   return {
     mesh,
-    blades: n,
+    get blades() { return mesh.count; },
     setWind(w) { uniforms.uWind.value = w; },
+    setWindDir(x, z) { uniforms.uWindDir.value.set(x, z).normalize(); },
     update(dt, simTime) { uniforms.uTime.value = simTime; },
   };
 }

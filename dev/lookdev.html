@@ -71,16 +71,14 @@
     // the new dense field, staged alongside the authored clump tufts so we can A/B.
     // The road is a ribbon, so mask it with a chain of circles sampled along it —
     // otherwise grass grows straight through the trail.
+    // ONLY the worn trail masks the grass. Circles around props (flagpole, monks,
+    // gate) stamped obvious bald patches in the turf — grass grows right up to a
+    // pole in life, so let it.
     const grassKeepout = [];
     for (let i = 0; i <= 26; i++) {
       const sp = path.sample(i / 26);
-      grassKeepout.push({ x: sp.x, z: sp.z, r: 1.35 });
+      grassKeepout.push({ x: sp.x, z: sp.z, r: 1.15 });
     }
-    grassKeepout.push(
-      { x: mp.x, z: mp.z, r: 1.6 },                                        // the monks
-      { x: gp.x, z: gp.z, r: 1.9 },                                        // gate + lanterns
-      { x: flag.group.position.x, z: flag.group.position.z, r: 0.8 },      // flag pole
-    );
     const grass = makeGrassField({
       count: 44000, radius: 17, height: 0.34, width: 0.05,
       color: '#84875F', seed: 5, groundSeed: 21, keepout: grassKeepout,
@@ -286,7 +284,7 @@
     view(7.2, 4.6, 9.4, 1.2, 1.35, 0.3);   // the koan framing
     useGrassField(true);                    // show the new field on load
     treatment('ink');
-    shadows(true);
+    shadows(false);   // the 2k map is too coarse against ink — [s] to compare
     let t0 = performance.now();
     (function loop(now) {
       requestAnimationFrame(loop);
