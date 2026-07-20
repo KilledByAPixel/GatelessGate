@@ -13,11 +13,19 @@ export function makeBuffalo({ height = 1.4, color = '#3A3A40', seed = 37 } = {})
   const legH = 0.5 * h;
   const backY = legH + 0.5 * h;
 
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.5 * h, 1.1 * h, 5, 10), mat);
+  // few segments so flatShading facets it — a smooth capsule reads as a lozenge
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.5 * h, 1.05 * h, 3, 7), mat);
   body.name = 'body';
   body.rotation.x = Math.PI / 2;
   body.position.set(0, backY, 0);
   group.add(body);
+
+  // the shoulder hump, which is most of what makes a buffalo a buffalo
+  const hump = new THREE.Mesh(new THREE.SphereGeometry(0.42 * h, 7, 5), mat);
+  hump.name = 'hump';
+  hump.scale.set(1, 0.7, 1.25);
+  hump.position.set(0, backY + 0.3 * h, 0.42 * h);
+  group.add(hump);
 
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
     const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.1 * h, 0.09 * h, legH, 7), mat);

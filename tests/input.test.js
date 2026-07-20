@@ -18,6 +18,20 @@ function fakeEl() {
   };
 }
 
+test('a tap sets the pointer even with no pointermove first (touch devices)', () => {
+  const el = fakeEl();
+  const input = makeInput(el);
+  // a touch tap arrives as down/up with no move; the raycast pointer must follow
+  // it, not stay at the centre where it was initialised
+  assert.deepEqual(input.pointer(), { x: 0, y: 0 });
+  el.h.pointerdown({ clientX: 600, clientY: 150 });
+  const afterDown = input.pointer();
+  assert.ok(Math.abs(afterDown.x - 0.5) < 1e-9, `ndc x from the tap, got ${afterDown.x}`);
+  assert.ok(Math.abs(afterDown.y - 0.5) < 1e-9, `ndc y from the tap, got ${afterDown.y}`);
+  el.h.pointerup({ clientX: 600, clientY: 150 });
+  assert.deepEqual(input.pointer(), afterDown, 'release keeps the pointer where it was tapped');
+});
+
 test('onTap fires only for low-drift press/release', () => {
   const el = fakeEl();
   const input = makeInput(el);
