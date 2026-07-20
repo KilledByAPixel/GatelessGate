@@ -58,6 +58,9 @@ export default {
         { x: 1.0, z: 0.6, r: 2.4 },       // the buffalo's body
         { x: 4.5, z: 0.4, r: 1.1 },       // the monk
       ],
+      // nothing here covers the ground — grass grows through a fence and around
+      // hooves in life, so let it
+      grassKeepout: [],
     });
 
     for (const [p, rx, rz, op] of [

@@ -85,6 +85,8 @@ export default {
         { x: 1.2, z: -2.2, r: 4.0 },     // the assembly
         { x: 3.05, z: -0.7, r: 1.2 },    // Kasyapa
       ],
+      // only the stone platform covers ground; the assembly sits in the grass
+      grassKeepout: [{ x: 1.2, z: SEAT_Z, r: 1.6 }],
     });
 
     for (const [p, rx, rz, op] of [

@@ -78,6 +78,9 @@ export default {
         { x: mp.x, z: mp.z, r: 3.0 },          // the monks' argument
         { x: gp.x, z: gp.z, r: 3.6 },          // gate + lanterns
       ],
+      // grass grows around the monks' feet and up to the gate posts; only the
+      // trodden road actually clears it
+      grassKeepout: path.keepout(26, 1.05),
     });
 
     for (const [p, rx, rz, op] of [

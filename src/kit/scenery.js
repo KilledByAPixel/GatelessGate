@@ -14,6 +14,12 @@ export function composeWorld(scene, {
   seed = 1,
   groundSeed = 21,
   keepout = [],
+  // Grass wants a DIFFERENT mask from props. A rock must not spawn inside a
+  // monk, but grass should grow right up around his feet — clearing a wide
+  // circle around every figure is what makes a meadow look staged. Pass only
+  // what genuinely covers the ground here (a worn trail, a stone base).
+  // Defaults to `keepout` so existing callers keep their old behaviour.
+  grassKeepout = null,
   trees = 5,
   treeRing = [7, 20],
   rocks = 12,
@@ -55,7 +61,10 @@ export function composeWorld(scene, {
 
   // the meadow: one instanced field, wind animated in the vertex shader. The
   // caller must drive world.update(dt, simTime) or the wind stands still.
-  const field = makeGrassField({ count: grass, seed: seed * 81, groundSeed, keepout });
+  const field = makeGrassField({
+    count: grass, seed: seed * 81, groundSeed,
+    keepout: grassKeepout || keepout,
+  });
   scene.add(field.mesh);
 
   return {

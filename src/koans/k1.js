@@ -65,6 +65,7 @@ export default {
         { x: mp.x, z: mp.z, r: 2.6 },
         { x: dog.position.x, z: dog.position.z, r: 1.0 },
       ],
+      grassKeepout: path.keepout(26, 1.0),   // Joshu and the dog sit in the grass
     });
 
     for (const [p, rx, rz, op] of [

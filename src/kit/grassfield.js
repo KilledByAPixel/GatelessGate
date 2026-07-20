@@ -16,7 +16,9 @@ const UP = new THREE.Vector3(0, 1, 0);
 
 export function makeGrassField({
   count = 52000, radius = 20, inner = 0, seed = 5, groundSeed = 21,
-  color = '#84875F', height = 0.34, width = 0.05, wind = 1,
+  // an ash-olive, not a green: the rest of the palette (bushes #4E4F49, forest
+  // #66655A, ground #CDC6B5) is desaturated, and a saturated field fights it
+  color = '#8E8B76', height = 0.34, width = 0.05, wind = 1,
   windDir = [1, 0.35], keepout = [],
 } = {}) {
   // one blade: a tapered strip, origin at the base, segmented so it can curve
@@ -108,13 +110,15 @@ export function makeGrassField({
     const rimT = (rr - radius * 0.62) / (radius * 0.38);
     if (rimT > 0 && hash1(i * 4 + 13, seed) < rimT) continue;
 
-    // keepouts are FEATHERED: a hard cut reads as a bald circle stamped in the turf
+    // Keepouts are FEATHERED, and the band is tight: grass should stop only where
+    // something genuinely covers the ground (a worn trail, a stone base). Figures
+    // stand IN grass — clearing a wide circle around them reads as fake.
     let blocked = false;
     for (const kp of keepout) {
       const d = Math.hypot(x - kp.x, z - kp.z);
       if (d < kp.r) { blocked = true; break; }
-      if (d < kp.r * 1.5) {
-        const f = (d - kp.r) / (kp.r * 0.5);            // 0 at the edge .. 1 at feather end
+      if (d < kp.r * 1.25) {
+        const f = (d - kp.r) / (kp.r * 0.25);           // 0 at the edge .. 1 at feather end
         if (hash1(i * 4 + 11, seed) > f) { blocked = true; break; }
       }
     }
@@ -128,9 +132,10 @@ export function makeGrassField({
     mesh.setMatrixAt(n, m);
 
     // a little tonal drift blade to blade so the field isn't one flat wash
+    // drift mostly in tone, barely in hue/saturation — colour noise reads as fake
     col.copy(base).offsetHSL(
-      (hash1(i * 4 + 15, seed) - 0.5) * 0.04,
-      (hash1(i * 4 + 17, seed) - 0.5) * 0.10,
+      (hash1(i * 4 + 15, seed) - 0.5) * 0.02,
+      (hash1(i * 4 + 17, seed) - 0.5) * 0.05,
       (hash1(i * 4 + 19, seed) - 0.5) * 0.16,
     );
     mesh.setColorAt(n, col);

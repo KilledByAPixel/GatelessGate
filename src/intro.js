@@ -50,6 +50,7 @@ export function buildHub() {
       { x: gp.x, z: gp.z, r: 4.2 },  // gate + lanterns
       { x: -2.0, z: 1.6, r: 1.6 },   // monk
     ],
+    grassKeepout: path.keepout(26, 1.15),   // only the lane clears grass
     mountains: [
       { count: 9, distance: 55, arcSpan: 3.8, color: '#C9C4B5' },
       { count: 5, distance: 35, arcSpan: 2.6, color: '#B4AF9F', hScale: 0.7 },

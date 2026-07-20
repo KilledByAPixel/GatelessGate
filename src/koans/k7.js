@@ -71,6 +71,13 @@ export default {
         { x: 2.15, z: 0.9, r: 1.5 },    // basin + bowl
         { x: 0.55, z: 1.75, r: 1.1 },   // the monk
       ],
+      // the trail, the hut's footprint and the basin's stone cover ground;
+      // the monk stands in the grass like anyone would
+      grassKeepout: [
+        ...path.keepout(24, 0.95),
+        { x: -0.4, z: -4.2, r: 1.9 },
+        { x: 2.15, z: 0.9, r: 0.62 },
+      ],
     });
 
     for (const [p, rx, rz, op] of [
