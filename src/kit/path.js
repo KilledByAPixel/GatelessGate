@@ -71,5 +71,17 @@ export function makePath({
       perp: { x: -dz, z: dx },          // unit across-path (left) for flanking
     };
   };
+  // A chain of keepout circles following the trail, for scatter/grass masks.
+  // A path is a ribbon, so a couple of circles cannot mask it — without this,
+  // grass grows straight through the road.
+  mesh.keepout = (count = 24, r = width * 0.8) => {
+    const out = [];
+    for (let i = 0; i <= count; i++) {
+      const p = mesh.sample(i / count);
+      out.push({ x: p.x, z: p.z, r });
+    }
+    return out;
+  };
+
   return mesh;
 }

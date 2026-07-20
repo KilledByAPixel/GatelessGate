@@ -5,6 +5,7 @@ import { makeRocks, makeBushes, makeGrass, scatterPoints } from '../src/kit/scat
 import { makeLantern } from '../src/kit/lantern.js';
 import { makePath } from '../src/kit/path.js';
 import { composeWorld } from '../src/kit/scenery.js';
+import { makeGrassField } from '../src/kit/grassfield.js';
 import { groundHeight } from '../src/kit/ground.js';
 
 test('scatterPoints respects keepouts and stays in the annulus', () => {
@@ -83,16 +84,40 @@ test('path.sample gives centerline point, heading, and across-path vector', () =
   assert.ok(Math.abs(s.y - groundHeight(s.x, s.z, { seed: 21 })) < 1e-6, 'y on ground');
 });
 
+test('makeGrassField: one instanced meadow, masked and ground-conforming', () => {
+  const keepout = [{ x: 0, z: 0, r: 4 }];
+  const f = makeGrassField({ count: 3000, radius: 14, seed: 5, groundSeed: 21, keepout });
+  assert.equal(f.mesh.name, 'grassfield');
+  assert.ok(f.mesh.isInstancedMesh, 'one instanced mesh = one draw call');
+  assert.equal(f.mesh.userData.noOutline, true);
+  assert.ok(f.blades > 500, `placed blades, got ${f.blades}`);
+
+  const m4 = new THREE.Matrix4();
+  const p = new THREE.Vector3();
+  for (let i = 0; i < f.blades; i++) {
+    f.mesh.getMatrixAt(i, m4);
+    p.setFromMatrixPosition(m4);
+    assert.ok(Math.hypot(p.x, p.z) >= 4, 'no blade grows inside the keepout');
+    assert.ok(Math.abs(p.y - groundHeight(p.x, p.z, { seed: 21 })) < 1e-6, 'blades sit on the ground');
+  }
+  // deterministic, and the wind is a uniform write (no per-frame CPU work)
+  assert.equal(makeGrassField({ count: 3000, radius: 14, seed: 5, groundSeed: 21, keepout }).blades, f.blades);
+  assert.doesNotThrow(() => f.update(1 / 60, 1.5));
+});
+
 test('composeWorld fills a scene deterministically and honors keepouts', () => {
   const a = new THREE.Scene();
   const b = new THREE.Scene();
-  const opts = { seed: 3, groundSeed: 21, keepout: [{ x: 0, z: 0, r: 5 }] };
-  composeWorld(a, opts);
+  const opts = { seed: 3, groundSeed: 21, grass: 2000, keepout: [{ x: 0, z: 0, r: 5 }] };
+  const worldA = composeWorld(a, opts);
   composeWorld(b, opts);
   const names = (s) => { const n = {}; s.traverse((o) => { if (o.name) n[o.name] = (n[o.name] || 0) + 1; }); return n; };
   const na = names(a);
   assert.ok(na.ground === 1 && na.mountains === 2 && na.forest === 2, JSON.stringify(na));
-  assert.ok(na.rocks === 1 && na.bushes === 1 && na.grass === 1, 'scatter present');
+  assert.ok(na.rocks === 1 && na.bushes === 1 && na.grassfield === 1, 'scatter + meadow present');
+  // the meadow is animated, so the world hands back a per-frame driver
+  assert.equal(typeof worldA.update, 'function', 'composeWorld returns an update hook');
+  assert.ok(worldA.grass.blades > 0, 'field actually placed blades');
   assert.ok((na.tree || 0) >= 3, `midground trees placed, got ${na.tree}`);
   assert.deepEqual(na, names(b), 'deterministic composition');
   // trees respect the keepout

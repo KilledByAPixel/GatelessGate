@@ -42,15 +42,13 @@ export function buildHub() {
   flag.group.position.set(3.1, 0, -0.4);
   scene.add(monk, flag.group);
 
-  composeWorld(scene, {
+  const world = composeWorld(scene, {
     seed: 7,
     groundSeed: 7,
     keepout: [
+      ...path.keepout(26, 1.3),      // the dolly's lane, masked along its whole run
       { x: gp.x, z: gp.z, r: 4.2 },  // gate + lanterns
       { x: -2.0, z: 1.6, r: 1.6 },   // monk
-      { x: 3.1, z: -0.4, r: 1.4 },   // flag
-      { x: 0, z: -14, r: 3.6 },      // path into the fog
-      { x: 0, z: 8, r: 3.4 },        // path toward the camera (the dolly's lane)
     ],
     mountains: [
       { count: 9, distance: 55, arcSpan: 3.8, color: '#C9C4B5' },
@@ -71,8 +69,12 @@ export function buildHub() {
   }
 
   addOutlines(scene, { width: 0.035, wobble: 0.7 });
-  // the flag drifts gently so the idling scene is never quite static
-  return { scene, update: (dt, t) => flag.update(dt, t), dispose() {} };
+  // the flag drifts and the meadow breathes, so the idling scene is never static
+  return {
+    scene,
+    update: (dt, t) => { flag.update(dt, t); world.update(dt, t); },
+    dispose() {},
+  };
 }
 
 const INTRO_SECONDS = 7;

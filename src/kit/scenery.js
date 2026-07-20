@@ -1,7 +1,8 @@
 import { makeGround } from './ground.js';
 import { makeMountains } from './mountains.js';
 import { makeForest } from './forest.js';
-import { makeRocks, makeBushes, makeGrass } from './scatter.js';
+import { makeRocks, makeBushes } from './scatter.js';
+import { makeGrassField } from './grassfield.js';
 import { makeTree } from './tree.js';
 import { hash1 } from '../util/noise.js';
 
@@ -17,7 +18,7 @@ export function composeWorld(scene, {
   treeRing = [7, 20],
   rocks = 12,
   bushes = 9,
-  grass = 220,
+  grass = 52000,   // blades in the instanced field, not clumps
   forests = [
     { center: [-19, 0, -27], spread: 13, count: 55 },
     { center: [16, 0, -31], spread: 14, count: 40, color: '#757464' },
@@ -51,7 +52,15 @@ export function composeWorld(scene, {
 
   scene.add(makeRocks({ count: rocks, seed: seed * 51, groundSeed, keepout }));
   scene.add(makeBushes({ count: bushes, seed: seed * 61, groundSeed, keepout }));
-  scene.add(makeGrass({ count: grass, seed: seed * 81, groundSeed, keepout }));
 
-  return { trees: sceneTrees };
+  // the meadow: one instanced field, wind animated in the vertex shader. The
+  // caller must drive world.update(dt, simTime) or the wind stands still.
+  const field = makeGrassField({ count: grass, seed: seed * 81, groundSeed, keepout });
+  scene.add(field.mesh);
+
+  return {
+    trees: sceneTrees,
+    grass: field,
+    update(dt, simTime) { field.update(dt, simTime); },
+  };
 }
