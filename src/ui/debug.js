@@ -1,4 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
+import { setGrassPatchiness } from '../kit/grassfield.js';
 
 // A workbench: a toolbar button top-right of the stage, and a plain panel that
 // slides out under it. Deliberately unstyled beyond the minimum — this is for
@@ -14,6 +15,7 @@ const CONTROLS = [
   { group: 'Scene' },
   { key: 'grass', label: 'Grass field', type: 'bool', def: true },
   { key: 'grassWind', label: 'Grass wind', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
+  { key: 'grassPatch', label: 'Grass patch (re-enter)', type: 'range', def: 0.42, min: 0, max: 0.8, step: 0.02 },
   { key: 'gustScale', label: 'Gust patch', type: 'range', def: 0.055, min: 0.01, max: 0.25, step: 0.005 },
   { key: 'gustSpeed', label: 'Gust drift', type: 'range', def: 2.4, min: 0, max: 12, step: 0.1 },
   { key: 'trees', label: 'Trees', type: 'bool', def: true },
@@ -21,6 +23,9 @@ const CONTROLS = [
   { key: 'mountains', label: 'Mountains', type: 'bool', def: true },
   { key: 'scatter', label: 'Rocks & bushes', type: 'bool', def: true },
   { key: 'path', label: 'Path', type: 'bool', def: true },
+
+  { group: 'Camera' },
+  { key: 'lens', label: 'Lens (fov°)', type: 'range', def: 38, min: 16, max: 50, step: 1 },
 
   { group: 'Render' },
   { key: 'toon', label: 'Toon shader', type: 'bool', def: true },
@@ -49,7 +54,7 @@ function load() {
   } catch { return defaults(); }
 }
 
-export function makeDebug({ renderer, getScene, audio, grainEls = [], onSound }) {
+export function makeDebug({ renderer, getScene, audio, grainEls = [], onSound, onLens }) {
   const state = load();
   const inputs = {};
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* private mode */ } };
@@ -210,6 +215,8 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], onSound })
       }
     }
 
+    setGrassPatchiness(state.grassPatch);
+    onLens && onLens(state.lens);
     renderer.shadowMap.enabled = state.shadows;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     for (const el of grainEls) if (el) el.style.display = state.grain ? '' : 'none';

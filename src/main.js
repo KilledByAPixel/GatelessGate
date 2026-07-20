@@ -20,7 +20,13 @@ const STEP = 1 / 60;
 
 const panel = document.getElementById('gg-panel');
 const stage = document.getElementById('gg-stage');
-const stageSize = () => ({ w: stage.clientWidth || innerWidth, h: stage.clientHeight || innerHeight });
+// Never report zero: if a resize fires while the stage is hidden or collapsed,
+// setSize(0,0) leaves the drawing buffer at 0x0 and the canvas renders nothing
+// until some later resize happens to rescue it.
+const stageSize = () => ({
+  w: Math.max(1, stage.clientWidth || innerWidth || 1),
+  h: Math.max(1, stage.clientHeight || innerHeight || 1),
+});
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -92,6 +98,7 @@ const debug = makeDebug({
   audio,
   grainEls: [grain.overlay, grain.vignette],
   onSound: () => setSoundLabel(),
+  onLens: (fov) => applyLens(fov),
 });
 debug.mount(stage);
 // every scene swap builds fresh objects, so the workbench must re-apply to them
@@ -106,9 +113,27 @@ async function transition(apply) {
   await dissolve.dissolveIn(0.7);         // reveal
 }
 
+// A longer lens compresses depth and reads as a miniature. Pulling the camera
+// back by the tangent ratio keeps the subject the same size on screen, so the
+// slider changes compression WITHOUT re-framing every diorama.
+const LENS_BASE = 38;
+let rigBaseDistance = 11.5;
+function applyLens(fov = (debug && debug.state.lens) || LENS_BASE) {
+  camera.fov = fov;
+  camera.updateProjectionMatrix();
+  if (rig && rig.goal) {
+    const t = (d) => Math.tan((d * Math.PI) / 360);
+    rig.goal.distance = rigBaseDistance * (t(LENS_BASE) / t(fov));
+  }
+}
+
 function makeRig(opts) {
   if (rig && rig.dispose) rig.dispose();
-  return makeCameraRig(camera, renderer.domElement, opts);
+  rigBaseDistance = opts.distance;
+  const r = makeCameraRig(camera, renderer.domElement, opts);
+  rig = r;
+  applyLens();
+  return r;
 }
 
 // ---- modes ----
@@ -127,7 +152,7 @@ async function openMenu() {
   await transition(() => {
     if (intro) { intro.dispose(); intro = null; }
     mode = 'menu';
-    rig = makeRig({ distance: 14, target: [0, 1.7, -2], azimuth: 0.5, polar: 1.3 });
+    makeRig({ distance: 14, target: [0, 1.7, -2], azimuth: 0.5, polar: 1.3 });
     menu.refresh(save.state());
     menu.open();
     showView(menu.el);
@@ -155,7 +180,7 @@ async function enter(slug) {
       koan = built; koanSlug = slug;
       built.onEnter && built.onEnter();
       save.markRead(slug);
-      rig = makeRig({ distance: 11.5, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27 });
+      makeRig({ distance: 11.5, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27 });
       menu.close();
       scroll = makeScroll({
         id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
@@ -196,7 +221,7 @@ async function exit() {
     koan = null; koanSlug = null;
     if (scroll) { scroll.dispose(); scroll = null; }
     mode = 'menu';
-    rig = makeRig({ distance: 14, target: [0, 1.7, -2], azimuth: 0.5, polar: 1.3 });
+    makeRig({ distance: 14, target: [0, 1.7, -2], azimuth: 0.5, polar: 1.3 });
     menu.refresh(save.state());
     menu.open();
     showView(menu.el);

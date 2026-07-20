@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { WASH } from '../palette.js';
 import { groundHeight } from './ground.js';
-import { hash1 } from '../util/noise.js';
+import { hash1, noise2 } from '../util/noise.js';
 
 // Dense wind-blown grass: thousands of tapered blades in ONE InstancedMesh,
 // bent entirely in the vertex shader from a single uTime uniform, so the wind
@@ -15,12 +15,20 @@ import { hash1 } from '../util/noise.js';
 // of every blade oscillating in place.
 const UP = new THREE.Vector3(0, 1, 0);
 
+// Placement is baked when the field is built, so the debug panel cannot change
+// patchiness live — it sets the default here and the change lands the next time
+// a scene is composed.
+let defaultPatchiness = 0.42;
+export function setGrassPatchiness(v) { defaultPatchiness = v; }
+
 export function makeGrassField({
   count = 52000, radius = 20, inner = 0, seed = 5, groundSeed = 21,
   // an ash-olive, not a green: the rest of the palette (bushes #4E4F49, forest
   // #66655A, ground #CDC6B5) is desaturated, and a saturated field fights it
   color = WASH.dry, height = 0.34, width = 0.05, wind = 1,
-  windDir = [1, 0.35], gustScale = 0.055, gustSpeed = 2.4, keepout = [],
+  windDir = [1, 0.35], gustScale = 0.055, gustSpeed = 2.4,
+  patchiness = defaultPatchiness,   // 0 = wall-to-wall turf; higher opens bare ground
+  keepout = [],
 } = {}) {
   // one blade: a tapered strip, origin at the base, segmented so it can curve
   const SEG = 5;
@@ -135,6 +143,15 @@ export function makeGrassField({
     // ending on a visible circle
     const rimT = (rr - radius * 0.62) / (radius * 0.38);
     if (rimT > 0 && hash1(i * 4 + 13, seed) < rimT) continue;
+
+    // Large-scale patchiness: bare ground and dense stands rather than uniform
+    // coverage. Wall-to-wall grass leaves the eye nowhere to rest, which is what
+    // made the meadow read as busy instead of calm.
+    if (patchiness > 0) {
+      const patch = noise2(x * 0.085, z * 0.085, seed + 7);        // ~12-unit stands
+      const density = Math.max(0, patch - patchiness) / (1 - patchiness);
+      if (hash1(i * 4 + 21, seed) > density) continue;
+    }
 
     // Keepouts are FEATHERED, and the band is tight: grass should stop only where
     // something genuinely covers the ground (a worn trail, a stone base). Figures
