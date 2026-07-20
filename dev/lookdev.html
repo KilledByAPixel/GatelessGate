@@ -213,15 +213,35 @@
       return shadowsOn;
     }
 
+    // --- self-diagnostics: prove which build is running and surface any GL error ---
+    const BUILD = 'grass-v2';
+    const GPU = (() => {
+      try {
+        const gl = renderer.getContext();
+        const ext = gl.getExtension('WEBGL_debug_renderer_info');
+        return String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)).slice(0, 60);
+      } catch { return 'unknown'; }
+    })();
+    let lastError = '';
+    addEventListener('error', (e) => { lastError = String(e.message).slice(0, 200); updateHud(); });
+    const _consoleError = console.error;
+    console.error = (...a) => {          // three.js reports shader compile failures here
+      lastError = String(a[0]).slice(0, 200);
+      _consoleError.apply(console, a);
+      try { updateHud(); } catch {}
+    };
+
     function updateHud() {
       const outlinesOn = (() => {
         let v = false; scene.traverse((o) => { if (o.userData.isOutline && o.visible) v = true; }); return v;
       })();
       document.getElementById('hud').innerHTML =
         `treatment <b>${current}</b> · shadows <b>${shadowsOn ? 'on' : 'off'}</b>` +
-        ` · grass <b>${grass.mesh.visible ? `field (${grass.blades})` : 'tufts'}</b>` +
+        ` · grass <b>${grass.mesh.visible ? `field (${grass.mesh.count})` : 'tufts'}</b>` +
         ` · outlines <b>${outlinesOn ? 'on' : 'off'}</b>\n` +
-        `[t] treatment   [s] shadows   [g] grass   [o] outlines   [w] wind`;
+        `[t] treatment   [s] shadows   [g] grass   [o] outlines   [w] wind\n` +
+        `build <b>${BUILD}</b> · gpu ${GPU}` +
+        (lastError ? `\n<b style="color:#a33">ERROR:</b> ${lastError}` : '');
     }
 
     let simTime = 0;
