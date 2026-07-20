@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Kit Preview — The Gateless Gate</title>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #EDE7D8; }
+    #hud { position: fixed; top: 8px; left: 10px; font: 12px/1.4 system-ui, sans-serif; color: #3a352c; white-space: pre; }
+  </style>
+</head>
+<body>
+  <div id="hud">kit preview — window.kp.step(n) / kp.view(name) / kp.shot('name')</div>
+  <script type="module">
+    import * as THREE from '../lib/three.module.js';
+    import { PAPER, INK } from '../src/palette.js';
+    import {
+      makeDog, makeBuffalo, makeBuddha, makeMonk, makeFlower, makeBowl,
+      makeWater, makeHut, makeLattice, makeAssembly, makeLights, addOutlines,
+      toonMaterial,
+    } from '../src/kit/index.js';
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+    renderer.setSize(innerWidth, innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(PAPER);
+    scene.fog = new THREE.FogExp2(PAPER, 0.012);
+    scene.add(makeLights());
+
+    // flat ground so every piece is judged against y=0
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(80, 80),
+      toonMaterial({ color: '#CFC7B2' }));
+    ground.rotation.x = -Math.PI / 2;
+    ground.userData.noOutline = true;
+    scene.add(ground);
+
+    const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 200);
+
+    // place a piece at (x,z); accepts a Group/Mesh or a {group} handle
+    const animated = [];
+    function place(thing, x, z, ry = 0) {
+      const obj = thing.isObject3D ? thing : thing.group;
+      obj.position.set(x, 0, z);
+      obj.rotation.y = ry;
+      scene.add(obj);
+      if (thing.update) animated.push(thing);
+      return thing;
+    }
+
+    // row A — creatures & figures (front)
+    place(makeDog({}), -11, 0, 0.6);
+    const buffalo = place(makeBuffalo({}), -6.2, 0.2, 0.5);
+    place(makeBuddha({}), -1.2, 0, 0);
+    place(makeMonk({ pose: 'sit' }), 2.4, 0, 0);
+    place(makeMonk({ pose: 'sit', elder: true }), 4.6, 0, -0.2);
+    place(makeMonk({ pose: 'point' }), 6.8, 0, -0.3);      // reference standing monk
+    place(makeAssembly({ count: 8, radius: 2.2, center: [11, -1.5], facing: [11, 3] }), 0, 0);
+
+    // row B — props (back)
+    place(makeFlower({}), -11, 5, 0);
+    place(makeBowl({}), -8, 5, 0);
+    const water = place(makeWater({ size: 2.4 }), -4.6, 5.4, 0);
+    place(makeHut({}), 0.5, 6.5, 0);
+    place(makeLattice({}), 5.5, 5.5, 0.15);
+
+    addOutlines(scene, { width: 0.035, wobble: 0.7 });
+
+    const VIEWS = {
+      wide:    { p: [1, 9, 20], t: [-1, 1.2, 1] },
+      rowA:    { p: [-2, 4.5, 12], t: [-2, 1.1, 0] },
+      rowB:    { p: [-3, 4.5, 14], t: [-3, 1.1, 5.5] },
+      buffalo: { p: [-6.2, 3.2, 4], t: [-6.2, 1.4, 0.2] },
+      dog:     { p: [-11, 2.2, 4.5], t: [-11, 0.6, 0] },
+      buddha:  { p: [-1.2, 3.2, 5], t: [-1.2, 1.4, 0] },
+      figures: { p: [3.5, 3.4, 8], t: [3.5, 1.2, -0.1] },
+      water:   { p: [-4.6, 3.2, 9.5], t: [-4.6, 0.4, 5.4] },
+      hut:     { p: [0.5, 4.2, 11.5], t: [0.5, 1.5, 6.5] },
+    };
+    let simTime = 0;
+    function setView(name) {
+      const v = VIEWS[name] || VIEWS.wide;
+      camera.position.set(...v.p);
+      camera.lookAt(...v.t);
+      render();
+    }
+    function render() { renderer.render(scene, camera); }
+    function step(n = 1) {
+      for (let i = 0; i < n; i++) {
+        simTime += 1 / 60;
+        for (const a of animated) a.update(1 / 60, simTime);
+        if (i % 90 === 0 && water.ripple) water.ripple((Math.sin(i) * 0.5), (Math.cos(i) * 0.5));
+      }
+      render();
+    }
+    async function shot(name = 'kit') {
+      const url = renderer.domElement.toDataURL('image/jpeg', 0.85);
+      try {
+        const r = await fetch('http://localhost:8106/' + name, { method: 'POST', body: url });
+        return await r.text();
+      } catch (e) { return 'post-failed: ' + e.message; }
+    }
+
+    window.kp = { renderer, scene, camera, render, step, shot, view: setView, buffalo, water, THREE };
+
+    // real-browser convenience: gentle auto-orbit (paused in headless previews, which is fine)
+    let t0 = performance.now();
+    function loop(now) {
+      requestAnimationFrame(loop);
+      const dt = Math.min(0.05, (now - t0) / 1000); t0 = now;
+      simTime += dt;
+      for (const a of animated) a.update(dt, simTime);
+      render();
+    }
+    setView('wide');
+    requestAnimationFrame(loop);
+    addEventListener('resize', () => {
+      renderer.setSize(innerWidth, innerHeight);
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+    });
+  </script>
+</body>
+</html>
