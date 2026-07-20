@@ -50,10 +50,44 @@ function instanced(geo, color, pts, { yOf, scaleOf, tintSpread = 0.06, sink = 0 
   return mesh;
 }
 
+// A boulder is a few lumps grown together, not one smooth blob. Merged, so the
+// whole scatter is still a single instanced draw.
+function rockGeometry(seed = 1) {
+  const parts = [];
+  for (let i = 0; i < 3; i++) {
+    const d = new THREE.DodecahedronGeometry(0.45 * (0.58 + 0.5 * hash1(i * 7 + 1, seed)), 0);
+    d.scale(1, 0.62 + 0.32 * hash1(i * 7 + 2, seed), 1);
+    d.rotateY(hash1(i * 7 + 3, seed) * Math.PI);
+    d.rotateZ((hash1(i * 7 + 4, seed) - 0.5) * 0.7);
+    d.translate(
+      (hash1(i * 7 + 5, seed) - 0.5) * 0.48,
+      hash1(i * 7 + 6, seed) * 0.10,
+      (hash1(i * 7 + 7, seed) - 0.5) * 0.48,
+    );
+    parts.push(d);
+  }
+  return mergeSimple(parts);
+}
+
+// A shrub is a cluster of lobes around a centre, so it breaks the silhouette
+// instead of reading as one squashed sphere.
+function bushGeometry(seed = 1) {
+  const parts = [];
+  const N = 5;
+  for (let i = 0; i < N; i++) {
+    const d = new THREE.DodecahedronGeometry(0.30 * (0.7 + 0.6 * hash1(i * 6 + 1, seed)), 0);
+    d.scale(1.12, 0.82, 1.12);
+    const a = (i / N) * Math.PI * 2 + hash1(i * 6 + 2, seed) * 1.2;
+    const rad = i === 0 ? 0 : 0.30 * (0.5 + hash1(i * 6 + 3, seed));
+    d.translate(Math.cos(a) * rad, 0.16 + 0.24 * hash1(i * 6 + 4, seed), Math.sin(a) * rad);
+    parts.push(d);
+  }
+  return mergeSimple(parts);
+}
+
 export function makeRocks({ count = 12, seed = 51, groundSeed = 21, keepout = [], rMin = 4, rMax = 24, color = '#A8A296' } = {}) {
   const pts = scatterPoints({ count, rMin, rMax, seed, keepout });
-  const geo = new THREE.DodecahedronGeometry(0.45, 0);
-  geo.scale(1, 0.7, 1);
+  const geo = rockGeometry(seed);
   const mesh = instanced(geo, color, pts, {
     yOf: (pt) => groundHeight(pt.x, pt.z, { seed: groundSeed }),
     scaleOf: (u) => 0.35 + 1.1 * u * u,   // many small, a few boulders
@@ -65,8 +99,7 @@ export function makeRocks({ count = 12, seed = 51, groundSeed = 21, keepout = []
 
 export function makeBushes({ count = 9, seed = 61, groundSeed = 21, keepout = [], rMin = 4, rMax = 22, color = '#4E4F49' } = {}) {
   const pts = scatterPoints({ count, rMin, rMax, seed, keepout });
-  const geo = new THREE.DodecahedronGeometry(0.55, 0);
-  geo.scale(1.25, 0.62, 1);
+  const geo = bushGeometry(seed);
   const mesh = instanced(geo, color, pts, {
     yOf: (pt) => groundHeight(pt.x, pt.z, { seed: groundSeed }),
     scaleOf: (u) => 0.55 + 0.8 * u,
