@@ -9,6 +9,7 @@ export { makePath } from './path.js';
 export { composeWorld } from './scenery.js';
 export { makeMonk, aimMonk } from './monk.js';
 export { makeTree } from './tree.js';
+export { makePine, pineGeometry } from './pine.js';
 export { makeGate } from './gate.js';
 export { makeFlag } from './flag.js';
 export { makeBlobShadow } from '../render/blobshadow.js';

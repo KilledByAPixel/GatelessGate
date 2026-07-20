@@ -4,6 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import { makeIsland } from '../src/kit/island.js';
 import { makeMonk, aimMonk } from '../src/kit/monk.js';
 import { makeTree } from '../src/kit/tree.js';
+import { makePine, pineGeometry } from '../src/kit/pine.js';
 import { makeGate } from '../src/kit/gate.js';
 
 function rimRadii(mesh, nominal) {
@@ -79,26 +80,55 @@ test('aimMonk turns the pointing sleeve toward a target', () => {
   assert.ok(want.dot(got) > 0.6, `sleeve bearing aligns with target: dot=${want.dot(got)}`);
 });
 
-test('tree: trunk + canopy cluster, connected and deterministic by seed', () => {
+test('tree: recursive branch skeleton + canopy, connected and deterministic by seed', () => {
   const t = makeTree({ height: 3.2, seed: 5 });
   assert.equal(t.name, 'tree');
-  assert.equal(t.children.filter((c) => c.name === 'trunk').length, 1);
-  const canopy = t.children.filter((c) => c.name === 'canopy');
-  assert.ok(canopy.length >= 4, `fuller canopy, got ${canopy.length}`);
-  // the anchor blob is centered on the trunk (no lateral gap) and its underside
-  // reaches below the trunk top, so the crown never floats free
-  const trunkTop = 3.2 * 0.5;
-  const anchor = canopy[0];
-  assert.ok(Math.hypot(anchor.position.x, anchor.position.z) < 0.01, 'anchor blob centered on trunk');
-  const anchorBottom = new THREE.Box3().setFromObject(anchor).min.y;
-  assert.ok(anchorBottom < trunkTop, `canopy must overlap trunk top ${trunkTop}, got underside ${anchorBottom}`);
-  const t2 = makeTree({ height: 3.2, seed: 5 });
-  const t3 = makeTree({ height: 3.2, seed: 6 });
-  const posOf = (tree) => tree.children.filter((c) => c.name === 'canopy').map((c) => c.position.toArray()).flat();
-  assert.deepEqual(posOf(t), posOf(t2));
-  assert.notDeepEqual(posOf(t), posOf(t3));
+  const trunk = t.children.find((c) => c.name === 'trunk');
+  const canopy = t.children.find((c) => c.name === 'canopy');
+  assert.ok(trunk && canopy, 'a merged branch mesh and a merged canopy mesh');
+
+  // it genuinely forked: limbs reach sideways far beyond a bare trunk
+  const tb = new THREE.Box3().setFromObject(trunk);
+  assert.ok(tb.max.x - tb.min.x > 3.2 * 0.25, `limbs should spread, got ${tb.max.x - tb.min.x}`);
+  assert.ok(trunk.geometry.attributes.position.count > 200, 'many limb segments merged into one mesh');
+
+  // the crown overlaps the skeleton instead of floating above it
+  const cb = new THREE.Box3().setFromObject(canopy);
+  assert.ok(cb.min.y < tb.max.y, `canopy must overlap the limbs (canopy ${cb.min.y} vs limbs ${tb.max.y})`);
+
   const box = new THREE.Box3().setFromObject(t);
+  assert.ok(box.min.y > -0.02, `sits on the ground, got ${box.min.y}`);
   assert.ok(box.max.y > 3.2 * 0.6, `tree too short: ${box.max.y}`);
+
+  const leafVerts = (tree) => Array.from(
+    tree.children.find((c) => c.name === 'canopy').geometry.attributes.position.array.slice(0, 60));
+  assert.deepEqual(leafVerts(t), leafVerts(makeTree({ height: 3.2, seed: 5 })));
+  assert.notDeepEqual(leafVerts(t), leafVerts(makeTree({ height: 3.2, seed: 6 })));
+});
+
+test('pine: tiered skirts on a trunk, grounded and deterministic', () => {
+  const p = makePine({ height: 4, tiers: 5, seed: 3 });
+  assert.equal(p.name, 'pine');
+  const box = new THREE.Box3().setFromObject(p);
+  assert.ok(box.min.y > -0.02, `sits on the ground, got ${box.min.y}`);
+  assert.ok(box.max.y > 4 * 0.7 && box.max.y < 4 * 1.15, `pine height, got ${box.max.y}`);
+  // more than a single cone: trunk + 5 skirts merged
+  assert.ok(p.geometry.attributes.position.count > 100, 'tiered, not one smooth cone');
+  // the crown is narrower than the lowest skirt
+  const g = pineGeometry({ height: 4, tiers: 5, seed: 3 });
+  const pos = g.attributes.position;
+  let lowWidth = 0, highWidth = 0;
+  for (let i = 0; i < pos.count; i++) {
+    const r = Math.hypot(pos.getX(i), pos.getZ(i));
+    if (pos.getY(i) < 4 * 0.35) lowWidth = Math.max(lowWidth, r);
+    if (pos.getY(i) > 4 * 0.72) highWidth = Math.max(highWidth, r);
+  }
+  assert.ok(highWidth < lowWidth, `tapers upward: crown ${highWidth} vs base ${lowWidth}`);
+  // compare the whole buffer: the leading vertices are the trunk, which is
+  // seed-invariant, so a short prefix would look identical for every seed
+  const verts = (s) => Array.from(pineGeometry({ height: 4, tiers: 5, seed: s }).attributes.position.array);
+  assert.deepEqual(verts(3), verts(3));
+  assert.notDeepEqual(verts(3), verts(9));
 });
 
 test('gate: two posts, two beams, top beam overhangs', () => {

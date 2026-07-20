@@ -1,41 +1,63 @@
 import * as THREE from '../../lib/three.module.js';
 import { hash1 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
+import { mergeSimple } from './scatter.js';
 import { GRAY_DARK } from '../palette.js';
 
-// A simple ink tree: tapered trunk with a cluster of faceted canopy blobs that
-// always overlap the trunk top (one blob is centered on the trunk so the crown
-// never floats free of it). Set dressing — not the hero tree (cases 5/37).
-export function makeTree({ height = 3.2, seed = 2, trunkColor = GRAY_DARK, canopyColor = '#3B3B45' } = {}) {
+// A deciduous ink tree grown recursively: the trunk forks into limbs, those
+// fork again, and foliage sits at the branch tips. The whole skeleton is merged
+// into ONE mesh and all the foliage into another, so a tree with ~25 limbs and
+// ~15 leaf clusters still costs two draw calls (four with outlines) — the same
+// as the old five-blob version it replaces.
+//
+// Everything derives from hash1(seed), so a given seed always grows the same tree.
+export function makeTree({
+  height = 3.2, seed = 2, trunkColor = GRAY_DARK, canopyColor = '#3B3B45', depth = 3,
+} = {}) {
   const g = new THREE.Group();
   g.name = 'tree';
-  const trunkH = height * 0.5;
-  const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.05 * height, 0.09 * height, trunkH, 7),
-    toonMaterial({ color: trunkColor, flat: true })
-  );
-  trunk.name = 'trunk';
-  trunk.position.y = trunkH / 2;
-  trunk.rotation.z = 0.05;
-  g.add(trunk);
 
-  const canopyMat = toonMaterial({ color: canopyColor, flat: true });
-  const blobs = 5;
-  for (let i = 0; i < blobs; i++) {
-    const centered = i === 0; // the anchor blob sits on the trunk, connecting the crown
-    const a = hash1(i * 4 + 1, seed) * Math.PI * 2;
-    const r = centered ? 0 : height * (0.06 + 0.09 * hash1(i * 4 + 2, seed));
-    const blobR = height * (centered ? 0.25 : 0.16 + 0.07 * hash1(i * 4 + 3, seed));
-    // anchor blob straddles the trunk top; the rest cluster tightly above it
-    const y = centered
-      ? trunkH * 0.96 + blobR * 0.25
-      : trunkH + height * (0.04 + 0.16 * hash1(i * 4 + 4, seed));
-    const blob = new THREE.Mesh(new THREE.DodecahedronGeometry(blobR, 0), canopyMat);
-    blob.name = 'canopy';
-    blob.position.set(Math.cos(a) * r, y, Math.sin(a) * r * 0.85);
-    blob.rotation.set(hash1(i * 7 + 5, seed) * 3, hash1(i * 7 + 6, seed) * 3, 0);
-    blob.scale.y = 0.82;
-    g.add(blob);
+  const wood = [];
+  const leaves = [];
+  let draw = 0;
+  const rnd = () => hash1(draw++, seed);   // one deterministic stream for the whole tree
+
+  const T = (x, y, z) => new THREE.Matrix4().makeTranslation(x, y, z);
+  const RY = (a) => new THREE.Matrix4().makeRotationY(a);
+  const RZ = (a) => new THREE.Matrix4().makeRotationZ(a);
+
+  function grow(m, len, rad, level) {
+    const seg = new THREE.CylinderGeometry(rad * 0.68, rad, len, 5);
+    seg.translate(0, len / 2, 0);          // grow upward from the joint
+    seg.applyMatrix4(m);
+    wood.push(seg);
+
+    const tip = m.clone().multiply(T(0, len, 0));
+
+    if (level >= depth) {
+      const r = height * (0.115 + 0.055 * rnd());
+      const blob = new THREE.DodecahedronGeometry(r, 0);
+      blob.scale(1, 0.78, 1);              // squash: crowns spread wider than they are tall
+      blob.applyMatrix4(tip);
+      leaves.push(blob);
+      return;
+    }
+
+    const kids = rnd() > 0.45 ? 3 : 2;
+    for (let i = 0; i < kids; i++) {
+      const azimuth = (i / kids) * Math.PI * 2 + rnd() * 1.1;
+      const spread = 0.34 + 0.34 * rnd();  // lean away from the parent limb
+      const child = tip.clone().multiply(RY(azimuth)).multiply(RZ(spread));
+      grow(child, len * (0.64 + 0.14 * rnd()), rad * 0.66, level + 1);
+    }
   }
+
+  grow(new THREE.Matrix4(), height * 0.36, height * 0.045, 0);
+
+  const trunk = new THREE.Mesh(mergeSimple(wood), toonMaterial({ color: trunkColor, flat: true }));
+  trunk.name = 'trunk';
+  const canopy = new THREE.Mesh(mergeSimple(leaves), toonMaterial({ color: canopyColor, flat: true }));
+  canopy.name = 'canopy';
+  g.add(trunk, canopy);
   return g;
 }
