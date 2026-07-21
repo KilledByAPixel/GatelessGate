@@ -48,7 +48,11 @@ export default {
   // Framed low and a little left: aimed at the gap between the fox and the
   // monks rather than at anybody's head, and pitched so all four figures still
   // hold the frame at both ends of the drag the rig allows.
-  camera: { distance: 10.0, target: [-0.1, 0.75, -2.4], azimuth: 0.55, polar: 1.24 },
+  // Pulled back and lifted. At distance 10 with the target down at 0.75 the lens
+  // sat almost on the fox: the rock mass filled the top of the frame, Hyakujo was
+  // cropped at the edge, and the encounter — a fox and a master regarding each
+  // other — had no room to read as an encounter at all.
+  camera: { distance: 14.5, target: [0.1, 1.35, -2.2], azimuth: 0.55, polar: 1.30 },
 
   build(ctx) {
     const { audio, input } = ctx;

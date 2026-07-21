@@ -31,7 +31,10 @@ export default {
   // Framed from inside the hall, low and nearly square to the bay: the reveal
   // only reads if the eye can travel THROUGH the opening to the far mountains,
   // and a high three-quarter shot looks down into the grass instead.
-  camera: { distance: 10.5, target: [0, 1.35, -0.3], azimuth: 0.28, polar: 1.37 },
+  // Sat back off the veranda. At 10.5 the lens was inside the bay with the eave
+  // cutting the top of frame — and this case only works if you can see the screen
+  // AND the country it is shutting out, because the reveal is the whole payoff.
+  camera: { distance: 14.0, target: [0, 1.55, -0.6], azimuth: 0.28, polar: 1.33 },
 
   build(ctx) {
     const { audio, input } = ctx;
