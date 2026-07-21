@@ -9,7 +9,10 @@ import { setGrassPatchiness } from '../kit/grassfield.js';
 // Everything here is applied to whatever scene is CURRENTLY active and re-applied
 // after every scene swap, so settings survive moving between cases.
 
-const KEY = 'gateless-gate-debug';
+// Defaults are the INK & SEAL preset: no toon banding, no inverted-hull
+// outlines, depth-driven ink, real contact shadows, paper pass at full grain,
+// no quantisation. One red seal per koan.
+const KEY = 'gateless-gate-debug-v2';
 
 const CONTROLS = [
   { group: 'Scene' },
@@ -28,11 +31,11 @@ const CONTROLS = [
   { key: 'lens', label: 'Lens (fov°)', type: 'range', def: 38, min: 16, max: 50, step: 1 },
 
   { group: 'Render' },
-  { key: 'toon', label: 'Toon shader', type: 'bool', def: true },
-  { key: 'outlines', label: 'Ink outlines', type: 'bool', def: true },
+  { key: 'toon', label: 'Toon shader', type: 'bool', def: false },
+  { key: 'outlines', label: 'Ink outlines (hull)', type: 'bool', def: false },
   { key: 'grain', label: 'Paper grain', type: 'bool', def: true },
-  { key: 'blobs', label: 'Blob shadows', type: 'bool', def: true },
-  { key: 'shadows', label: 'Real shadows', type: 'bool', def: false },
+  { key: 'blobs', label: 'Blob shadows', type: 'bool', def: false },
+  { key: 'shadows', label: 'Real shadows', type: 'bool', def: true },
   { key: 'fogMul', label: 'Fog ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
   { key: 'sunMul', label: 'Sun ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
   { key: 'ambMul', label: 'Ambient ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
@@ -41,12 +44,12 @@ const CONTROLS = [
   { key: 'pQuant', label: 'Quantise', type: 'bool', def: false },
   { key: 'quantSteps', label: '· steps', type: 'range', def: 10, min: 3, max: 24, step: 1 },
   { key: 'quantAmt', label: '· amount', type: 'range', def: 0.7, min: 0, max: 1, step: 0.05 },
-  { key: 'pInk', label: 'Ink (depth edges)', type: 'bool', def: false },
+  { key: 'pInk', label: 'Ink (depth edges)', type: 'bool', def: true },
   { key: 'inkStrength', label: '· strength', type: 'range', def: 0.85, min: 0, max: 1, step: 0.05 },
   { key: 'inkThresh', label: '· threshold', type: 'range', def: 0.06, min: 0.01, max: 0.4, step: 0.01 },
   { key: 'inkFade', label: '· distance fade', type: 'range', def: 0.45, min: 0.05, max: 1, step: 0.05 },
-  { key: 'pPaper', label: 'Paper pass', type: 'bool', def: false },
-  { key: 'paperAmt', label: '· grain', type: 'range', def: 0.55, min: 0, max: 1, step: 0.05 },
+  { key: 'pPaper', label: 'Paper pass', type: 'bool', def: true },
+  { key: 'paperAmt', label: '· grain', type: 'range', def: 1.0, min: 0, max: 1, step: 0.05 },
   { key: 'paperVig', label: '· vignette', type: 'range', def: 0.7, min: 0, max: 1.5, step: 0.05 },
 
   { group: 'Audio' },

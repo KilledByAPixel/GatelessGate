@@ -49,7 +49,7 @@ export default {
     scene.add(water.group);
 
     // the bowl, set down beside the basin where he left it
-    const bowl = makeBowl({ radius: 0.19 });
+    const bowl = makeBowl({ radius: 0.19, color: ACCENT });   // the seal of this koan
     bowl.position.set(1.42, 0, 1.5);
     scene.add(bowl);
 

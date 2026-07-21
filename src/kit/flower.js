@@ -4,13 +4,12 @@ import { INK, PAPER, ACCENT } from '../palette.js';
 
 // A single held flower (case 6). Stem, a small center, and petals arranged in a
 // ring. dropPetal() detaches one petal for the scene to drift downward.
-export function makeFlower({ height = 0.6, petals = 6, color = PAPER, seed = 6 } = {}) {
+export function makeFlower({ height = 0.6, petals = 6, color = ACCENT, seed = 6 } = {}) {
   void seed;
   const g = new THREE.Group();
   g.name = 'flower';
   const stemMat = toonMaterial({ color: INK, flat: true });
   const petalMat = toonMaterial({ color, flat: true });
-  petalMat.fog = false;                          // the bloom stays bright like the seal accent
 
   const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.012 * height, 0.02 * height, height, 6), stemMat);
   stem.name = 'stem';

@@ -34,7 +34,7 @@ export default {
 
     // The buffalo, caught halfway: horns, head and hooves already through the
     // far side, body and tail still on this one.
-    const buffalo = makeBuffalo({ height: 1.35 });
+    const buffalo = makeBuffalo({ height: 1.35, tailColor: ACCENT });   // the tail is the koan
     buffalo.group.position.set(1.0, 0, FENCE_Z + 0.72);
     // angled rather than square to the fence, so the stuck tail stays visible on
     // the near side instead of hiding behind the body

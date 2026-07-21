@@ -29,7 +29,8 @@ export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed 
 
   const geo = new THREE.PlaneGeometry(width, clothH, cols - 1, rows - 1);
   const mesh = new THREE.Mesh(geo, toonMaterial({ color, side: THREE.DoubleSide }));
-  mesh.material.fog = false; // the accent is a seal stamp: printed over the wash, never diluted by it
+  // The seal sits IN the wash, not on top of it. Excluding it from fog made it
+  // the brightest thing in frame and read as a sticker rather than pigment.
   mesh.name = 'cloth';
   mesh.userData.noOutline = true; // inverted hull doesn't suit an open surface
   mesh.position.set(0.045, poleH - 0.06, 0);

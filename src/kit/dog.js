@@ -10,43 +10,51 @@ export function makeDog({ height = 0.5, color = INK, seed = 1 } = {}) {
   g.name = 'dog';
   const mat = toonMaterial({ color, flat: true });
   const h = height;
-  const legH = 0.42 * h;
+  // Taller legs and a slimmer barrel: the first pass was short-legged and
+  // fat-bodied, which reads as a pig rather than a dog.
+  const legH = 0.52 * h;
+  const bodyR = 0.22 * h;
+  const bodyY = legH + 0.16 * h;
 
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.28 * h, 0.7 * h, 4, 8), mat);
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(bodyR, 0.72 * h, 4, 8), mat);
   body.name = 'body';
   body.rotation.x = Math.PI / 2;                 // lie along z
-  body.position.set(0, legH + 0.26 * h, 0);
+  body.position.set(0, bodyY, 0);
   g.add(body);
 
+  // Legs run PAST the belly rather than stopping at it. A capsule narrows toward
+  // its sides, so legs set at the old width ended below the body surface at that
+  // x and left a visible gap between foot and barrel.
+  const legTop = legH + 0.14 * h;
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * h, 0.05 * h, legH, 6), mat);
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.055 * h, 0.045 * h, legTop, 6), mat);
     leg.name = 'leg';
-    leg.position.set(sx * 0.16 * h, legH / 2, sz * 0.34 * h);
+    leg.position.set(sx * 0.13 * h, legTop / 2, sz * 0.32 * h);
     g.add(leg);
   }
 
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.24 * h, 12, 10), mat);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.20 * h, 12, 10), mat);
   head.name = 'head';
-  head.position.set(0, legH + 0.42 * h, 0.6 * h);
+  head.position.set(0, bodyY + 0.22 * h, 0.56 * h);
   g.add(head);
 
-  const snout = new THREE.Mesh(new THREE.CylinderGeometry(0.07 * h, 0.11 * h, 0.22 * h, 7), mat);
+  const snout = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * h, 0.10 * h, 0.20 * h, 7), mat);
   snout.name = 'snout';
   snout.rotation.x = Math.PI / 2;
-  snout.position.set(0, legH + 0.36 * h, 0.82 * h);
+  snout.position.set(0, bodyY + 0.16 * h, 0.76 * h);
   g.add(snout);
 
   for (const sx of [-1, 1]) {
-    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.09 * h, 0.18 * h, 5), mat);
+    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.075 * h, 0.16 * h, 5), mat);
     ear.name = 'ear';
-    ear.position.set(sx * 0.12 * h, legH + 0.6 * h, 0.55 * h);
+    ear.position.set(sx * 0.11 * h, bodyY + 0.36 * h, 0.52 * h);
     g.add(ear);
   }
 
-  const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.03 * h, 0.055 * h, 0.4 * h, 6), mat);
+  const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.025 * h, 0.05 * h, 0.38 * h, 6), mat);
   tail.name = 'tail';
-  tail.position.set(0, legH + 0.42 * h, -0.5 * h);
-  tail.rotation.x = -0.9;                          // cocked up and back
+  tail.position.set(0, bodyY + 0.10 * h, -0.44 * h);
+  tail.rotation.x = -1.0;                          // cocked up and back
   g.add(tail);
 
   return g;
