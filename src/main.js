@@ -219,7 +219,7 @@ async function openMenu() {
   await transition(() => {
     if (intro) { intro.dispose(); intro = null; }
     mode = 'menu';
-    makeRig({ distance: 14, target: [0, 1.7, -2], azimuth: 0.5, polar: 1.3 });
+    makeRig({ distance: 14, target: hub.gateTarget, azimuth: 0.5, polar: 1.3 });
     menu.refresh(save.state());
     menu.open();
     showView(menu.el);
@@ -291,7 +291,7 @@ async function exit() {
     koan = null; koanSlug = null;
     if (scroll) { scroll.dispose(); scroll = null; }
     mode = 'menu';
-    makeRig({ distance: 14, target: [0, 1.7, -2], azimuth: 0.5, polar: 1.3 });
+    makeRig({ distance: 14, target: hub.gateTarget, azimuth: 0.5, polar: 1.3 });
     menu.refresh(save.state());
     menu.open();
     showView(menu.el);

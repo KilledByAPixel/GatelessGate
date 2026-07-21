@@ -1,7 +1,7 @@
 import * as THREE from '../lib/three.module.js';
 import { PAPER, ACCENT_DEEP, wash } from './palette.js';
 import {
-  composeWorld, makePath, makeLantern, makeGate, makeMonk, makeFlag,
+  composeWorld, makePath, makeLantern, makeGate, makeMonk,
   makeLights, addOutlines, makeBlobShadow,
 } from './kit/index.js';
 import { introPath } from './intro_rails.js';
@@ -40,12 +40,15 @@ export function buildHub() {
   lanternB.rotation.y = gp.heading;
   scene.add(lanternA, lanternB);
 
+  // One monk, nearly at the gate, walking toward it. The flag that used to
+  // stand across the road is gone: once the gate went red it became the seal of
+  // this scene, and a second red thing beside it split the focus — the title
+  // screen is ABOUT the gate, so the gate stands alone.
+  const mp = path.sample(0.32);
   const monk = makeMonk({});
-  monk.position.set(-2.0, 0, 1.6);
-  monk.rotation.y = 0.7;
-  const flag = makeFlag({ seed: 11 });
-  flag.group.position.set(3.1, 0, -0.4);
-  scene.add(monk, flag.group);
+  monk.position.set(mp.x + mp.perp.x * 1.1, 0, mp.z + mp.perp.z * 1.1);
+  monk.rotation.y = mp.heading;                  // facing through, like the dolly
+  scene.add(monk);
 
   const world = composeWorld(scene, {
     seed: 7,
@@ -53,7 +56,7 @@ export function buildHub() {
     keepout: [
       ...path.keepout(26, 1.3),      // the dolly's lane, masked along its whole run
       { x: gp.x, z: gp.z, r: 4.2 },  // gate + lanterns
-      { x: -2.0, z: 1.6, r: 1.6 },   // monk
+      { x: monk.position.x, z: monk.position.z, r: 1.6 },
     ],
     grassKeepout: path.keepout(26, 1.15),   // only the lane clears grass
     mountains: [
@@ -65,7 +68,6 @@ export function buildHub() {
   for (const [p, rx, rz, op] of [
     [gate.position, 2.2, 0.9, 0.3],
     [monk.position, 0.7, 0.55, 0.4],
-    [flag.group.position, 0.55, 0.45, 0.34],
     [lanternA.position, 0.35, 0.3, 0.3],
     [lanternB.position, 0.35, 0.3, 0.3],
   ]) {
@@ -75,10 +77,14 @@ export function buildHub() {
   }
 
   addOutlines(scene, { width: 0.035, wobble: 0.7 });
-  // the flag drifts and the meadow breathes, so the idling scene is never static
+  // the meadow breathes, so the idling scene is never static
   return {
     scene,
-    update: (dt, t) => { flag.update(dt, t); world.update(dt, t); },
+    // where the menu camera should centre: the gate is the subject of this
+    // scene, and the old hardcoded target sat four units in front of it, so the
+    // orbit swung around empty road while the gate drifted off-axis
+    gateTarget: [gp.x, 1.9, gp.z],
+    update: (dt, t) => { world.update(dt, t); },
     dispose() {},
   };
 }
