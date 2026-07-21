@@ -158,6 +158,11 @@ export function makePost(renderer, width, height) {
     uInk: { value: new THREE.Color(INK) },
   });
 
+  // a plain pass-through, used when the chain is asked for its output but no
+  // stylising pass is enabled
+  const copyMat = mk('uniform sampler2D tDiffuse; varying vec2 vUv;\n'
+    + 'void main() { gl_FragColor = texture2D(tDiffuse, vUv); }', { tDiffuse: { value: null } });
+
   const stats = { calls: 0, triangles: 0 };
 
   // order matters: flatten tone, ink the forms, then lay paper over everything
@@ -193,8 +198,15 @@ export function makePost(renderer, width, height) {
       const p = passes.find((x) => x.key === key);
       if (p && p.mat.uniforms[name]) p.mat.uniforms[name].value = value;
     },
-    // renders the scene through the enabled passes, leaving the result on screen
-    render(sceneToRender, camera) {
+    // The render targets the chain hands around, so a caller can build one that
+    // matches (see makeFreeze). Getting the colour-space tagging wrong here is
+    // invisible until a captured frame sits a shade off the live scene.
+    targetOptions() { return { ...opts, colorSpace: THREE.SRGBColorSpace }; },
+
+    // Renders the scene through the enabled passes. Leaves the result on screen,
+    // or in `out` if one is given — the transition captures a finished frame that
+    // way rather than scraping it back off the front buffer.
+    render(sceneToRender, camera, out = null) {
       inkMat.uniforms.uNear.value = camera.near;
       inkMat.uniforms.uFar.value = camera.far;
       renderer.setRenderTarget(scene);
@@ -210,9 +222,11 @@ export function makePost(renderer, width, height) {
       let ping = a, pong = b;
       for (let i = 0; i < on.length; i++) {
         const last = i === on.length - 1;
-        blit(on[i].mat, src, last ? null : ping);
+        blit(on[i].mat, src, last ? out : ping);
         if (!last) { src = ping.texture; const t = ping; ping = pong; pong = t; }
       }
+      // no passes enabled: the scene target IS the finished frame, so hand it on
+      if (!on.length && out) blit(copyMat, scene.texture, out);
       renderer.setRenderTarget(null);
     },
     dispose() {

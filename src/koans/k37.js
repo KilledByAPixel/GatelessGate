@@ -24,28 +24,21 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
     scene.add(makeLights());
 
-    // The enclosure. Three walls of lattice and one side standing wide open —
-    // the buffalo could simply walk out. Instead it has forced itself through
-    // the bars, and now cannot get its tail through. The open gate has to be in
-    // frame or the joke doesn't land.
-    const PEN = { x: 1.0, z: -2.3, size: 4.6 };
+    // The enclosure. Three walls of lattice and one side standing wide open.
+    const PEN = { x: 1.0, z: -2.3, size: 5.4 };   // room to stand, not a crate
     const pen = makePen({ size: PEN.size, height: 1.9, open: '+x', panelsPerSide: 2 });
     pen.position.set(PEN.x, 0, PEN.z);
     scene.add(pen);
-    const NEAR_WALL_Z = PEN.z + PEN.size / 2;      // the wall it came through
 
-    // Head, horns, shoulders and hooves are already out on this side; the tail
-    // is still back among the bars. Red, because the buffalo IS this koan —
+    // He stands in the middle of his own pen, facing the side that is standing
+    // open. Nothing is holding him. Red, because the buffalo IS this koan —
     // deepened, since full accent across an animal this size reads as glare.
-    // Placed so the BODY STRADDLES the wall: the tail root has to end up behind
-    // the lattice or the whole thing reads as an animal standing beside a fence.
-    // A lattice is mostly holes, which is what lets the overlap read as passing
-    // through rather than as clipping.
     const buffalo = makeBuffalo({ height: 1.5, color: ACCENT_DEEP, tailColor: ACCENT });
-    buffalo.group.position.set(0.5, 0, NEAR_WALL_Z + 0.55);
-    // turned off-square so we get the hump in profile and the tail stays clear
-    // of the body instead of hiding behind it
-    buffalo.group.rotation.y = 0.34;
+    buffalo.group.position.set(PEN.x, 0, PEN.z);
+    // +z is his forward, so +PI/2 turns him to face +x — the opening. Backed off
+    // a little from square so the camera gets his hump and horns in three-quarter
+    // instead of a flat profile, and the tail stays clear of the body.
+    buffalo.group.rotation.y = Math.PI / 2 - 0.42;
     scene.add(buffalo.group);
 
     // a monk watching the impossible thing, set back so he doesn't fill the lens
@@ -60,7 +53,7 @@ export default {
       trees: 4,
       keepout: [
         ...pen.footprint(1.0),                              // the three standing walls
-        { x: buffalo.group.position.x, z: buffalo.group.position.z, r: 2.2 },
+        { x: PEN.x, z: PEN.z, r: PEN.size * 0.5 },          // nothing clutters the pen floor
         { x: monk.position.x, z: monk.position.z, r: 1.1 },
       ],
       // nothing here covers the ground — grass grows through a fence and around

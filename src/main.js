@@ -3,6 +3,7 @@ import { makeCameraRig } from './camera.js';
 import { makeDissolve } from './render/dissolve.js';
 import { installGrain } from './render/grain.js';
 import { makePost } from './render/post.js';
+import { makeFreeze } from './render/freeze.js';
 import { makeSceneManager, disposeRoot } from './scene/manager.js';
 import { makeDebug } from './ui/debug.js';
 import { makeInput } from './input.js';
@@ -40,7 +41,8 @@ const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
 const dissolve = makeDissolve();
 dissolve.setAspect(camera.aspect);
 const post = (() => { const { w, h } = stageSize(); return makePost(renderer, w, h); })();
-const scenes = makeSceneManager(renderer, dissolve, post);
+const freeze = (() => { const { w, h } = stageSize(); return makeFreeze(renderer, post, w, h); })();
+const scenes = makeSceneManager(renderer, dissolve, post, freeze);
 const input = makeInput(renderer.domElement);
 const save = createSave(window.localStorage);
 const audio = createAudio(save);
@@ -108,12 +110,23 @@ debug.mount(stage);
 const debugApply = () => debug.apply();
 
 // ---- transitions: ink COVERS the stage before anything changes, then reveals ----
+// Cut from one diorama to the next without ever showing blank paper: hold a
+// still of the outgoing frame, rebuild the world behind it, fade the still off.
+// The ink dissolve is kept for the intro, where there is no previous frame to
+// hold and the curtain is the point.
 async function transition(apply) {
   panel.classList.add('fading');          // panel fades out (cosmetic, not awaited)
-  await dissolve.dissolveOut(0.7);        // stage covered with ink before the change
-  apply();                                 // swap scene + panel content under cover
+  const active = scenes.active();
+  const frozen = active ? freeze.capture(active.scene, camera) : false;
+  if (!frozen) await dissolve.dissolveOut(0.5);   // nothing to hold — fall back to the curtain
+  apply();                                 // swap scene + panel content under the still
   panel.classList.remove('fading');
-  await dissolve.dissolveIn(0.7);         // reveal
+  if (frozen) {
+    dissolve.set(1);                       // the curtain plays no part in this one
+    await freeze.release(0.75);
+  } else {
+    await dissolve.dissolveIn(0.5);
+  }
 }
 
 // A longer lens compresses depth and reads as a miniature. Pulling the camera
@@ -273,6 +286,7 @@ function tick() {
   if (active && active.update) active.update(STEP, simTime);
   if (mode === 'sit') sit.update(STEP);
   dissolve.update(STEP);
+  freeze.update(STEP);
 }
 
 let acc = 0, last = performance.now(), fps = 60;
@@ -294,6 +308,8 @@ addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   dissolve.setAspect(camera.aspect);
   post.setSize(w, h);
+  freeze.setSize(w, h);
+  freeze.clear();     // a held frame at the old aspect would stretch
 });
 
 // ---- headless hooks ----
@@ -304,6 +320,7 @@ window.gate = {
       mode, simTime: +simTime.toFixed(4),
       drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
       fps: Math.round(fps), dissolveT: +dissolve.t.toFixed(4),
+      freeze: { active: freeze.active, opacity: +freeze.opacity.toFixed(4) },
       camera: rig ? rig.state() : null,
       progress: { read: { ...save.state().read }, sat: { ...save.state().sat } },
     };
@@ -315,6 +332,12 @@ window.gate = {
   menu(open) { if (open === false) { if (mode !== 'menu') menu.close(); } else { menu.open(); showView(menu.el); } },
   skipIntro,
   dissolve(dir = 'in', dur) { return dir === 'in' ? dissolve.dissolveIn(dur) : dissolve.dissolveOut(dur); },
+  // held-frame transition, exposed so it can be driven and inspected headlessly
+  freeze: {
+    hold() { const a = scenes.active(); return a ? freeze.capture(a.scene, camera) : false; },
+    release(dur) { return freeze.release(dur); },
+    clear() { freeze.clear(); },
+  },
   sit(minutes) { startSit(minutes); },
   endSit() { sit.end(); },
   markRead(slug) { save.markRead(slug); menu.refresh(save.state()); },
