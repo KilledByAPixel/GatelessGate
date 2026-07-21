@@ -63,6 +63,63 @@ export function patchDensity(x, z, seed = 5, patchiness = defaultPatchiness) {
   return PATCH_FLOOR + (1 - PATCH_FLOOR) * ramp;
 }
 
+// Where the grass goes — shared by BOTH grass renderers (the per-blade field
+// below and the billboard tuft field in tuftfield.js), so the placement rules
+// that were argued over one at a time — even area density, rim thinning into
+// the fog, fbm patchiness with a floor, tight feathered keepouts — exist once.
+// A renderer decides what a grass thing LOOKS like; this decides where grass IS.
+export function grassPlacements({
+  count, radius = 20, inner = 0, seed = 5, groundSeed = 21,
+  patchiness = defaultPatchiness, keepout = [],
+} = {}) {
+  const out = [];
+  for (let i = 0; out.length < count && i < count * 4; i++) {
+    const a = hash1(i * 4 + 1, seed) * Math.PI * 2;
+    const rr = inner + Math.sqrt(hash1(i * 4 + 2, seed)) * (radius - inner); // even area density
+    const x = Math.cos(a) * rr;
+    const z = Math.sin(a) * rr;
+
+    // thin toward the outer rim so the field dissolves into fog instead of
+    // ending on a visible circle
+    const rimT = (rr - radius * 0.62) / (radius * 0.38);
+    if (rimT > 0 && hash1(i * 4 + 13, seed) < rimT) continue;
+
+    // Large-scale patchiness: bare ground and dense stands rather than uniform
+    // coverage. Wall-to-wall grass leaves the eye nowhere to rest.
+    if (patchiness > 0 && hash1(i * 4 + 21, seed) > patchDensity(x, z, seed, patchiness)) continue;
+
+    // Keepouts are FEATHERED, and the band is tight: grass should stop only where
+    // something genuinely covers the ground (a worn trail, a stone base). Figures
+    // stand IN grass — clearing a wide circle around them reads as fake.
+    let blocked = false;
+    for (const kp of keepout) {
+      const d = Math.hypot(x - kp.x, z - kp.z);
+      if (d < kp.r) { blocked = true; break; }
+      if (d < kp.r * 1.25) {
+        const f = (d - kp.r) / (kp.r * 0.25);           // 0 at the edge .. 1 at feather end
+        if (hash1(i * 4 + 11, seed) > f) { blocked = true; break; }
+      }
+    }
+    if (blocked) continue;
+
+    out.push({
+      x, z,
+      y: groundHeight(x, z, { seed: groundSeed }),
+      yaw: hash1(i * 4 + 7, seed) * Math.PI * 2,
+      wide: 0.8 + 0.5 * hash1(i * 4 + 9, seed),
+      tall: 0.65 + 0.8 * hash1(i * 4 + 5, seed),
+      // tonal drift, blade to blade — mostly tone, barely hue/saturation;
+      // colour noise reads as fake
+      tint: [
+        (hash1(i * 4 + 15, seed) - 0.5) * 0.02,
+        (hash1(i * 4 + 17, seed) - 0.5) * 0.05,
+        (hash1(i * 4 + 19, seed) - 0.5) * 0.16,
+      ],
+    });
+  }
+  return out;
+}
+
 export function makeGrassField({
   count = 52000, radius = 20, inner = 0, seed = 5, groundSeed = 21,
   // an ash-olive, not a green: the rest of the palette (bushes #4E4F49, forest
@@ -183,51 +240,15 @@ export function makeGrassField({
   const sc3 = new THREE.Vector3();
   const base = new THREE.Color(color);
   const col = new THREE.Color();
+  const spots = grassPlacements({ count, radius, inner, seed, groundSeed, patchiness, keepout });
   let n = 0;
-  for (let i = 0; n < count && i < count * 4; i++) {
-    const a = hash1(i * 4 + 1, seed) * Math.PI * 2;
-    const rr = inner + Math.sqrt(hash1(i * 4 + 2, seed)) * (radius - inner); // even area density
-    const x = Math.cos(a) * rr;
-    const z = Math.sin(a) * rr;
-
-    // thin toward the outer rim so the field dissolves into fog instead of
-    // ending on a visible circle
-    const rimT = (rr - radius * 0.62) / (radius * 0.38);
-    if (rimT > 0 && hash1(i * 4 + 13, seed) < rimT) continue;
-
-    // Large-scale patchiness: bare ground and dense stands rather than uniform
-    // coverage. Wall-to-wall grass leaves the eye nowhere to rest, which is what
-    // made the meadow read as busy instead of calm.
-    if (patchiness > 0 && hash1(i * 4 + 21, seed) > patchDensity(x, z, seed, patchiness)) continue;
-
-    // Keepouts are FEATHERED, and the band is tight: grass should stop only where
-    // something genuinely covers the ground (a worn trail, a stone base). Figures
-    // stand IN grass — clearing a wide circle around them reads as fake.
-    let blocked = false;
-    for (const kp of keepout) {
-      const d = Math.hypot(x - kp.x, z - kp.z);
-      if (d < kp.r) { blocked = true; break; }
-      if (d < kp.r * 1.25) {
-        const f = (d - kp.r) / (kp.r * 0.25);           // 0 at the edge .. 1 at feather end
-        if (hash1(i * 4 + 11, seed) > f) { blocked = true; break; }
-      }
-    }
-    if (blocked) continue;
-
-    const tall = 0.65 + 0.8 * hash1(i * 4 + 5, seed);
-    v.set(x, groundHeight(x, z, { seed: groundSeed }), z);
-    q.setFromAxisAngle(UP, hash1(i * 4 + 7, seed) * Math.PI * 2);
-    sc3.set(0.8 + 0.5 * hash1(i * 4 + 9, seed), tall, 1);
+  for (const p of spots) {
+    v.set(p.x, p.y, p.z);
+    q.setFromAxisAngle(UP, p.yaw);
+    sc3.set(p.wide, p.tall, 1);
     m.compose(v, q, sc3);
     mesh.setMatrixAt(n, m);
-
-    // a little tonal drift blade to blade so the field isn't one flat wash
-    // drift mostly in tone, barely in hue/saturation — colour noise reads as fake
-    col.copy(base).offsetHSL(
-      (hash1(i * 4 + 15, seed) - 0.5) * 0.02,
-      (hash1(i * 4 + 17, seed) - 0.5) * 0.05,
-      (hash1(i * 4 + 19, seed) - 0.5) * 0.16,
-    );
+    col.copy(base).offsetHSL(p.tint[0], p.tint[1], p.tint[2]);
     mesh.setColorAt(n, col);
     n++;
   }

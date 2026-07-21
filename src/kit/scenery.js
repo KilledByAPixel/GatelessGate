@@ -3,6 +3,16 @@ import { makeMountains } from './mountains.js';
 import { makeForest } from './forest.js';
 import { makeRocks, makeBushes } from './scatter.js';
 import { makeGrassField } from './grassfield.js';
+import { makeTuftField } from './tuftfield.js';
+
+// Which grass renderer composeWorld builds. Both share grassPlacements and the
+// same wind uniforms; they differ only in what a grass plant IS — a geometric
+// blade, or a camera-facing card carrying a whole baked tuft. Tufts are the
+// default (Frank's idea: several times the apparent grass for a third of the
+// instances at two triangles each); blades stay as the fallback, one toggle
+// away in the debug panel.
+let grassStyle = 'tufts';
+export function setGrassStyle(v) { grassStyle = v === 'blades' ? 'blades' : 'tufts'; }
 import { makeTree } from './tree.js';
 import { hash1 } from '../util/noise.js';
 import { wash } from '../palette.js';
@@ -65,10 +75,17 @@ export function composeWorld(scene, {
 
   // the meadow: one instanced field, wind animated in the vertex shader. The
   // caller must drive world.update(dt, simTime) or the wind stands still.
-  const field = makeGrassField({
-    count: grass, seed: seed * 81, groundSeed,
-    keepout: grassKeepout || keepout,
-  });
+  // `grass` is a blade budget; a tuft card shows several blades, so the tuft
+  // field spends a third as many instances for more apparent grass.
+  const field = grassStyle === 'tufts'
+    ? makeTuftField({
+      count: Math.round(grass / 3), seed: seed * 81, groundSeed,
+      keepout: grassKeepout || keepout,
+    })
+    : makeGrassField({
+      count: grass, seed: seed * 81, groundSeed,
+      keepout: grassKeepout || keepout,
+    });
   scene.add(field.mesh);
 
   return {

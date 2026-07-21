@@ -1,5 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { setGrassPatchiness } from '../kit/grassfield.js';
+import { setGrassStyle } from '../kit/scenery.js';
 
 // A workbench: a toolbar button top-right of the stage, and a plain panel that
 // slides out under it. Deliberately unstyled beyond the minimum — this is for
@@ -17,6 +18,7 @@ const KEY = 'gateless-gate-debug-v2';
 const CONTROLS = [
   { group: 'Scene' },
   { key: 'grass', label: 'Grass field', type: 'bool', def: true },
+  { key: 'grassTufts', label: 'Grass tufts (re-enter)', type: 'bool', def: true },
   { key: 'grassWind', label: 'Grass wind', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
   { key: 'grassPatch', label: 'Grass patch (re-enter)', type: 'range', def: 0.42, min: 0, max: 0.8, step: 0.02 },
   { key: 'gustScale', label: 'Gust patch', type: 'range', def: 0.055, min: 0.01, max: 0.25, step: 0.005 },
@@ -246,6 +248,7 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     }
 
     setGrassPatchiness(state.grassPatch);
+    setGrassStyle(state.grassTufts ? 'tufts' : 'blades');
     onLens && onLens(state.lens);
     renderer.shadowMap.enabled = state.shadows;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
