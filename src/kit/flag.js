@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { createCloth, stepCloth } from '../sim/verlet.js';
 import { noise3 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
-import { ACCENT, INK } from '../palette.js';
+import { ACCENT_DEEP, INK } from '../palette.js';
 
 // Case 29's flag. Wind is a controllable [0..1] level (click toggles it, ~2 s ramp);
 // hover injects decaying localized puffs. These behaviors travel with the component.
@@ -10,7 +10,9 @@ const WIND_TAU = 0.7;      // ~2 s to full
 const PUFF_RADIUS = 0.4;
 const PUFF_LIFE = 0.6;
 
-export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed = 11, color = ACCENT, warmup = 90 } = {}) {
+// ACCENT_DEEP, not ACCENT: a flag is a big lit surface, and at full strength the
+// red glared against the paper instead of sitting on it as the seal.
+export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed = 11, color = ACCENT_DEEP, warmup = 90 } = {}) {
   const group = new THREE.Group();
   group.name = 'flag';
 

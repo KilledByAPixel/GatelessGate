@@ -7,16 +7,29 @@ import { makeWater } from '../src/kit/water.js';
 import { makeHut } from '../src/kit/hut.js';
 import { makeLattice } from '../src/kit/lattice.js';
 
-test('makeFlower has petals and can drop them one by one', () => {
-  const f = makeFlower({ petals: 6 });
+test('makeFlower is a two-ring lotus and can drop petals one by one', () => {
+  // `petals` is the OUTER ring; the inner ring is two fewer. The layering is
+  // what reads as a lotus rather than a daisy, so it is worth asserting.
+  const f = makeFlower({ petals: 7 });
   assert.equal(f.name, 'flower');
   const count = () => f.children.filter((c) => c.name === 'petal').length;
   assert.ok(f.children.some((c) => c.name === 'stem'));
-  assert.equal(count(), 6);
+  assert.ok(f.children.some((c) => c.name === 'pod'), 'a seed pod at the heart');
+  const TOTAL = 7 + 5;
+  assert.equal(count(), TOTAL);
+
+  // the outer ring opens out further than the inner one
+  const tilts = f.children.filter((c) => c.name === 'petal').map((p) => {
+    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(p.quaternion);
+    return Math.acos(Math.max(-1, Math.min(1, up.y)));   // radians from vertical
+  }).sort((a, b) => a - b);
+  assert.ok(tilts[0] < 0.8, `inner ring still cupped: ${tilts[0].toFixed(2)}`);
+  assert.ok(tilts[TOTAL - 1] > 1.0, `outer ring opened out: ${tilts[TOTAL - 1].toFixed(2)}`);
+
   const p = f.dropPetal();
   assert.ok(p && p.isMesh, 'returns a detached mesh');
-  assert.equal(count(), 5, 'one fewer petal on the flower');
-  for (let i = 0; i < 5; i++) f.dropPetal();
+  assert.equal(count(), TOTAL - 1, 'one fewer petal on the flower');
+  for (let i = 0; i < TOTAL - 1; i++) f.dropPetal();
   assert.equal(count(), 0);
   assert.equal(f.dropPetal(), null, 'null when empty');
 });

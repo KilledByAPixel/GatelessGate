@@ -25,7 +25,10 @@ export function composeWorld(scene, {
   treeRing = [7, 20],
   rocks = 12,
   bushes = 9,
-  grass = 52000,   // blades in the instanced field, not clumps
+  // Blades in the instanced field, not clumps. This used to be 52000 back when
+  // patchiness threw half of them away; once the field stopped cutting holes in
+  // itself every one of them got placed and the meadow turned into a mat.
+  grass = 34000,
   forests = [
     { center: [-19, 0, -27], spread: 13, count: 55 },
     { center: [16, 0, -31], spread: 14, count: 40, color: wash(0.55) },

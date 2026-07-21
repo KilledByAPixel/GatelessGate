@@ -24,5 +24,6 @@ export { makeFlower } from './flower.js';
 export { makeBowl } from './bowl.js';
 export { makeWater } from './water.js';
 export { makeHut } from './hut.js';
-export { makeLattice } from './lattice.js';
+export { makeLattice, makePen } from './lattice.js';
+export { makeQuadruped } from './quadruped.js';
 export { makeAssembly } from './assembly.js';

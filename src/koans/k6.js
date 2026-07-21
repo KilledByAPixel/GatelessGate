@@ -43,10 +43,14 @@ export default {
     buddha.position.set(1.2, 0.34, SEAT_Z);
     scene.add(buddha);
 
-    // the held flower
-    const flower = makeFlower({ height: 0.62, petals: 6 });
-    flower.position.set(1.72, 1.30, SEAT_Z + 0.44);
-    flower.rotation.z = -0.22;
+    // The lotus, held at his waist on the centre line — the one thing in the
+    // case that actually happens, so it sits dead centre of him and is big
+    // enough to read from the back of the scene.
+    // Sized against his HEAD, not against a real lotus: the case is staged wide,
+    // and at this distance anything smaller than the skull is a red dot.
+    const flower = makeFlower({ height: 0.42, bloom: 0.52, petals: 7 });
+    flower.position.set(1.2, 0.52, SEAT_Z + 1.02);   // waist height, clear of the lap
+    flower.rotation.z = -0.14;
     scene.add(flower);
 
     // Mahakasyapa sits nearest, apart from the rest — the one who understands.
@@ -137,6 +141,10 @@ export default {
       onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         world.update(dt, simTime);
+
+        // he twirls it. The case is named for the gesture, and it is the only
+        // motion in the scene besides the grass.
+        flower.rotation.y = simTime * 0.32;
 
         sinceAuto += dt;
         if (sinceAuto > AUTO_EVERY) { sinceAuto = 0; releasePetal(); }

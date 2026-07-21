@@ -23,6 +23,16 @@ export function mixHex(a, b, t) {
 
 export const wash = (t) => mixHex(PAPER, INK, t);
 
+// The red seal, one per koan, always on the thing the case turns on: Joshu's
+// dog, Buddha's flower, the washed bowl, the flag, the buffalo.
+//
+// Area matters more than hue here. Full ACCENT is right for something small and
+// held — a bowl, a lotus. Spread across a big mass (a flag in the wind, a whole
+// animal) the same red stops reading as a seal and starts reading as glare, so
+// large accents take a deeper mix: same hue, less light, still unmistakably the
+// one warm note on the page.
+export const ACCENT_DEEP = mixHex(ACCENT, INK, 0.30);
+
 export const WASH = {
   mist: wash(0.10),     // farthest peaks, barely there
   ground: wash(0.22),   // the earth underfoot

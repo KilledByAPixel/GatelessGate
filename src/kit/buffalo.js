@@ -1,56 +1,32 @@
-import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
 import { WASH } from '../palette.js';
-import { makeTail } from './tail.js';
+import { makeQuadruped } from './quadruped.js';
 
-// A water buffalo (case 37). Bulky body, heavy horned head; the tail is a
-// verlet strand at the rump. Faces +z (head forward). Returns a handle so the
-// koan can tap the tail. Proportions tuned in the Phase 3 browser pass.
+// A water buffalo (case 37): the dog's body plan, run heavy. Bulky barrel, the
+// shoulder hump that makes a buffalo a buffalo, a blunt box head with swept
+// horns, and a verlet strand for the tail — the one part of him that will not
+// pass through the enclosure.
+//
+// Returns a handle so the koan can tug the tail.
 export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color, seed = 37 } = {}) {
-  const group = new THREE.Group();
+  // Three things carry the silhouette, and the first pass had none of them: the
+  // shoulder hump must stand CLEAR of the back line (not sit flush in it), the
+  // head must hang LOW — a buffalo carries its skull below the shoulder, which
+  // is most of what separates it from a hippo — and the horns must sweep wide
+  // enough to be read at distance. The back then slopes hump-down-to-rump on its
+  // own, because the hump is set forward.
+  const { group, tail } = makeQuadruped({
+    height, color, seed,
+    // few segments so flatShading facets it — a smooth capsule reads as a lozenge
+    bodyR: 0.40, bodyLen: 0.86, bodyDrop: 0.36,
+    legH: 0.46, legR: 0.125, hipX: 0.24, hipZ: 0.34,
+    hump: { r: 0.40, scaleY: 0.86, scaleZ: 1.00, up: 0.24, fwd: 0.24 },
+    // a compact wedge rather than a long slab: the head sat so far forward it
+    // read as a snout on a crocodile
+    head: { shape: 'box', w: 0.36, hh: 0.32, d: 0.52, fwd: 0.74, up: -0.18, tilt: 0.42 },
+    horns: { r: 0.05, len: 0.42, x: 0.18, up: 0.02, fwd: 0.62, sweep: 1.05, back: 0.22 },
+    tail: { kind: 'strand', segments: 7, length: 0.74, thickness: 0.05, up: 0.16, back: 0.62, color: tailColor },
+  });
   group.name = 'buffalo';
-  const mat = toonMaterial({ color, flat: true });
-  const h = height;
-  const legH = 0.5 * h;
-  const backY = legH + 0.5 * h;
-
-  // few segments so flatShading facets it — a smooth capsule reads as a lozenge
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.5 * h, 1.05 * h, 3, 7), mat);
-  body.name = 'body';
-  body.rotation.x = Math.PI / 2;
-  body.position.set(0, backY, 0);
-  group.add(body);
-
-  // the shoulder hump, which is most of what makes a buffalo a buffalo
-  const hump = new THREE.Mesh(new THREE.SphereGeometry(0.42 * h, 7, 5), mat);
-  hump.name = 'hump';
-  hump.scale.set(1, 0.7, 1.25);
-  hump.position.set(0, backY + 0.3 * h, 0.42 * h);
-  group.add(hump);
-
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.1 * h, 0.09 * h, legH, 7), mat);
-    leg.name = 'leg';
-    leg.position.set(sx * 0.3 * h, legH / 2, sz * 0.5 * h);
-    group.add(leg);
-  }
-
-  const head = new THREE.Mesh(new THREE.BoxGeometry(0.55 * h, 0.5 * h, 0.6 * h), mat);
-  head.name = 'head';
-  head.position.set(0, backY - 0.05 * h, 0.95 * h);
-  group.add(head);
-
-  for (const sx of [-1, 1]) {
-    const horn = new THREE.Mesh(new THREE.ConeGeometry(0.07 * h, 0.5 * h, 6), mat);
-    horn.name = 'horn';
-    horn.position.set(sx * 0.28 * h, backY + 0.28 * h, 1.0 * h);
-    horn.rotation.z = sx * 1.1;                    // sweep outward
-    group.add(horn);
-  }
-
-  const tail = makeTail({ segments: 7, length: 0.8 * h, thickness: 0.05 * h, color: tailColor, seed });
-  tail.group.position.set(0, backY + 0.1 * h, -0.75 * h);
-  group.add(tail.group);
 
   return {
     group,

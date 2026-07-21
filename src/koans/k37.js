@@ -1,8 +1,8 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT } from '../palette.js';
+import { PAPER, ACCENT, ACCENT_DEEP } from '../palette.js';
 import {
-  composeWorld, makeBuffalo, makeLattice, makeMonk, aimMonk,
+  composeWorld, makeBuffalo, makePen, makeMonk, aimMonk,
   makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
@@ -24,26 +24,33 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
     scene.add(makeLights());
 
-    // the enclosure: a lattice fence running across the view
-    const FENCE_Z = -0.6;
-    for (let i = -1; i <= 1; i++) {
-      const panel = makeLattice({ width: 2.6, height: 2.1, bars: 5 });
-      panel.position.set(1.2 + i * 2.6, 0, FENCE_Z);
-      scene.add(panel);
-    }
+    // The enclosure. Three walls of lattice and one side standing wide open —
+    // the buffalo could simply walk out. Instead it has forced itself through
+    // the bars, and now cannot get its tail through. The open gate has to be in
+    // frame or the joke doesn't land.
+    const PEN = { x: 1.0, z: -2.3, size: 4.6 };
+    const pen = makePen({ size: PEN.size, height: 1.9, open: '+x', panelsPerSide: 2 });
+    pen.position.set(PEN.x, 0, PEN.z);
+    scene.add(pen);
+    const NEAR_WALL_Z = PEN.z + PEN.size / 2;      // the wall it came through
 
-    // The buffalo, caught halfway: horns, head and hooves already through the
-    // far side, body and tail still on this one.
-    const buffalo = makeBuffalo({ height: 1.35, tailColor: ACCENT });   // the tail is the koan
-    buffalo.group.position.set(1.0, 0, FENCE_Z + 0.72);
-    // angled rather than square to the fence, so the stuck tail stays visible on
-    // the near side instead of hiding behind the body
-    buffalo.group.rotation.y = Math.PI - 0.42;
+    // Head, horns, shoulders and hooves are already out on this side; the tail
+    // is still back among the bars. Red, because the buffalo IS this koan —
+    // deepened, since full accent across an animal this size reads as glare.
+    // Placed so the BODY STRADDLES the wall: the tail root has to end up behind
+    // the lattice or the whole thing reads as an animal standing beside a fence.
+    // A lattice is mostly holes, which is what lets the overlap read as passing
+    // through rather than as clipping.
+    const buffalo = makeBuffalo({ height: 1.5, color: ACCENT_DEEP, tailColor: ACCENT });
+    buffalo.group.position.set(0.5, 0, NEAR_WALL_Z + 0.55);
+    // turned off-square so we get the hump in profile and the tail stays clear
+    // of the body instead of hiding behind it
+    buffalo.group.rotation.y = 0.34;
     scene.add(buffalo.group);
 
     // a monk watching the impossible thing, set back so he doesn't fill the lens
     const monk = makeMonk({ height: 1.6 });
-    monk.position.set(4.5, 0, 0.4);
+    monk.position.set(4.9, 0, 1.4);
     aimMonk(monk, buffalo.group.position);
     scene.add(monk);
 
@@ -52,9 +59,9 @@ export default {
       groundSeed: 21,
       trees: 4,
       keepout: [
-        { x: 1.2, z: FENCE_Z, r: 4.6 },   // the fence run
-        { x: 1.0, z: 0.6, r: 2.4 },       // the buffalo's body
-        { x: 4.5, z: 0.4, r: 1.1 },       // the monk
+        ...pen.footprint(1.0),                              // the three standing walls
+        { x: buffalo.group.position.x, z: buffalo.group.position.z, r: 2.2 },
+        { x: monk.position.x, z: monk.position.z, r: 1.1 },
       ],
       // nothing here covers the ground — grass grows through a fence and around
       // hooves in life, so let it
@@ -62,7 +69,7 @@ export default {
     });
 
     for (const [p, rx, rz, op] of [
-      [buffalo.group.position, 1.3, 0.8, 0.4],
+      [buffalo.group.position, 1.4, 0.9, 0.4],
       [monk.position, 0.65, 0.5, 0.42],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
