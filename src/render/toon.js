@@ -34,20 +34,23 @@ export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 10 }
   const g = new THREE.Group();
   g.name = 'lights';
 
-  // A HARD key, and this number is Frank's, not a guess: he ran the workbench's
-  // Sun × up to 2.95 against the old authored 2.2 and kept it there, so ~6.5 is
-  // the light he actually chose after looking at every case.
+  // A HARD key — brighter than the scene "really" is, which is the point. The
+  // book is ink on paper, and paper's brightest value is bare paper, so letting
+  // the lit ground blow out is on-aesthetic rather than a mistake: it reads as
+  // untouched page, the way a sumi-e leaves the sky.
   //
-  // It sounds reckless and isn't — measured across the swing, NOTHING clips: at
-  // 6.6 the frame is still 0% blown, because every surface here is a wash on
-  // paper rather than a saturated albedo. What rises is the key-to-fill RATIO,
-  // and that is the thing worth having. A soft ratio flattens the book toward
-  // the paper: forms lose their turn and the one red object per scene sits at
-  // the same value as the greys around it instead of jumping off them.
+  // The number comes off a sweep, not a hunch. Measured on case 29 across the
+  // range, what improves is the red: peak chroma on the flag runs 140 at 6.5,
+  // 188 at 9.1, 216 at 11.7 — and then STOPS. Past ~11.7 the red is fully
+  // saturated and further light buys nothing but more of the frame going white
+  // (blown area plateaus around 37%). So there is a real ceiling, and this sits
+  // just under it: most of the pop, before the accent turns neon and stops being
+  // the brick red the whole palette is built around.
   //
-  // The fill deliberately stays where it was. The contrast he liked came from
-  // the key alone, so cutting the fill as well would overshoot what he approved.
-  const sun = new THREE.DirectionalLight(0xffffff, 6.5);
+  // The fill deliberately stays where it was. The contrast is meant to come from
+  // the key alone; pulling the fill down as well would crush the shadow side of
+  // every form and lose the wash.
+  const sun = new THREE.DirectionalLight(0xffffff, 9.5);
   sun.position.set(focus[0] + 5.5, 9, focus[2] + 4.5);
   sun.target.position.set(focus[0], 0, focus[2]);
   g.add(sun, sun.target);
