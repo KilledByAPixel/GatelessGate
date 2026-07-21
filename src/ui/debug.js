@@ -174,6 +174,13 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
         opacity: src.opacity ?? 1,
       });
       m.fog = src.fog;
+      // Carry the seal's glow across — this clone runs on the SHIPPED default
+      // ("toon off"), so any property it drops never renders at all. That is
+      // exactly how the moon spent a week secretly lit; see keepMaterial below.
+      if (src.emissive) {
+        m.emissive.copy(src.emissive);
+        m.emissiveIntensity = src.emissiveIntensity ?? 1;
+      }
       mesh.userData._matPlain = m;
     }
     return mesh.userData._matPlain;

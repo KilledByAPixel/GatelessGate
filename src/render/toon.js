@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { PAPER, WASH } from '../palette.js';
+import { PAPER, WASH, ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../palette.js';
 
 // One shared 3-step ramp: shadow, mid, light. NearestFilter keeps the bands hard.
 let ramp = null;
@@ -15,9 +15,30 @@ export function toonRamp() {
   return ramp;
 }
 
+// THE SEAL GLOWS. Frank wants the red held at the brightness it reached under a
+// blown-out key (sun 9.5) while the rest of the scene comes back down — which
+// means the accent's brightness cannot ride on the sun at all. So every material
+// in the accent family gets an emissive term of its own colour: light the lights
+// never touch. This is also what the real pigment does — vermillion seal paste
+// sits OPAQUE on top of a sumi wash, brighter than any ink around it, and does
+// not dim with the wash.
+//
+// Detection is by colour, deliberately: cases already mark their one red thing
+// by passing an accent constant, so this is one rule in one place instead of an
+// option threaded through eleven koan files. The glow value is measured, not
+// guessed — tuned in-browser until peak red chroma under the calmer sun matched
+// what Frank approved under the hard one.
+const SEAL = new Set([ACCENT, ACCENT_DEEP, ACCENT_LIGHT]
+  .map((c) => new THREE.Color(c).getHexString()));
+const SEAL_GLOW = 0.5;
+
 export function toonMaterial({ color = '#ffffff', flat = false, side = THREE.FrontSide } = {}) {
   const m = new THREE.MeshToonMaterial({ color, gradientMap: toonRamp(), side });
   m.flatShading = flat;
+  if (SEAL.has(m.color.getHexString())) {
+    m.emissive.copy(m.color);
+    m.emissiveIntensity = SEAL_GLOW;
+  }
   return m;
 }
 
@@ -34,23 +55,23 @@ export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 10 }
   const g = new THREE.Group();
   g.name = 'lights';
 
-  // A HARD key — brighter than the scene "really" is, which is the point. The
-  // book is ink on paper, and paper's brightest value is bare paper, so letting
-  // the lit ground blow out is on-aesthetic rather than a mistake: it reads as
-  // untouched page, the way a sumi-e leaves the sky.
+  // The key sat at 9.5 for one commit, and Frank's verdict split it: the RED was
+  // right at that light, the GROUND was "basically white — you don't need any
+  // shading," and the distance washed out. He wanted the red kept and everything
+  // else back down. Those two can't share one number — so they don't. The red's
+  // extra brightness moved into the materials themselves as SEAL_GLOW above,
+  // where the sun can't take it away, and the key came back to the scene light
+  // he approved, nudged up as asked.
   //
-  // The number comes off a sweep, not a hunch. Measured on case 29 across the
-  // range, what improves is the red: peak chroma on the flag runs 140 at 6.5,
-  // 188 at 9.1, 216 at 11.7 — and then STOPS. Past ~11.7 the red is fully
-  // saturated and further light buys nothing but more of the frame going white
-  // (blown area plateaus around 37%). So there is a real ceiling, and this sits
-  // just under it: most of the pop, before the accent turns neon and stops being
-  // the brick red the whole palette is built around.
+  // Measured on case 29 (blown-white % of frame / peak red chroma):
+  //   sun 6.5 no glow: 3.5% / 140     <- "before", scene right, red weak
+  //   sun 9.5 no glow: ~26% / ~190    <- red right, ground white
+  //   sun 6.7 + glow:  ~6% / ~184     <- both, which one number never gave
   //
-  // The fill deliberately stays where it was. The contrast is meant to come from
-  // the key alone; pulling the fill down as well would crush the shadow side of
-  // every form and lose the wash.
-  const sun = new THREE.DirectionalLight(0xffffff, 9.5);
+  // The fill stays put. The contrast is meant to come from the key alone;
+  // pulling the fill down as well would crush the shadow side of every form and
+  // lose the wash.
+  const sun = new THREE.DirectionalLight(0xffffff, 6.7);
   sun.position.set(focus[0] + 5.5, 9, focus[2] + 4.5);
   sun.target.position.set(focus[0], 0, focus[2]);
   g.add(sun, sun.target);
