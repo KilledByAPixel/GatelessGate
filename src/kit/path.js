@@ -2,12 +2,13 @@ import * as THREE from '../../lib/three.module.js';
 import { noise1 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
 import { groundHeight } from './ground.js';
+import { WASH } from '../palette.js';
 
 // A dirt path: a gently wandering ribbon laid on the ground, slightly darker
 // than the soil. Draped over the rolling terrain via groundHeight.
 export function makePath({
   from = [0, 8], to = [0, -30], width = 1.4, seed = 91, groundSeed = 21,
-  wander = 1.6, samples = 26, color = '#B3A98F',
+  wander = 1.6, samples = 26, color = WASH.stone,
 } = {}) {
   const pts = [];
   for (let i = 0; i <= samples; i++) {
@@ -71,5 +72,17 @@ export function makePath({
       perp: { x: -dz, z: dx },          // unit across-path (left) for flanking
     };
   };
+  // A chain of keepout circles following the trail, for scatter/grass masks.
+  // A path is a ribbon, so a couple of circles cannot mask it — without this,
+  // grass grows straight through the road.
+  mesh.keepout = (count = 24, r = width * 0.8) => {
+    const out = [];
+    for (let i = 0; i <= count; i++) {
+      const p = mesh.sample(i / count);
+      out.push({ x: p.x, z: p.z, r });
+    }
+    return out;
+  };
+
   return mesh;
 }

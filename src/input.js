@@ -16,8 +16,12 @@ export function makeInput(el) {
     ndc.set(((cx - r.left) / r.width) * 2 - 1, -(((cy - r.top) / r.height) * 2 - 1));
   };
 
-  const onDown = (e) => { down = { x: e.clientX, y: e.clientY }; };
+  // Taps must set the pointer themselves. A touch tap produces no pointermove
+  // first, so without this the raycast would fire at wherever the pointer last
+  // was — dead centre on a device that has never moved one.
+  const onDown = (e) => { toNdc(e.clientX, e.clientY); down = { x: e.clientX, y: e.clientY }; };
   const onUp = (e) => {
+    toNdc(e.clientX, e.clientY);
     if (down && isTap(down, { x: e.clientX, y: e.clientY })) {
       for (const cb of tapCbs) cb(e.clientX, e.clientY);
     }

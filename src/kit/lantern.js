@@ -1,9 +1,10 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
+import { WASH } from '../palette.js';
 
 // A stone lantern (tōrō): base, shaft, platform, firebox, roof, knob.
 // Reused everywhere — temple gates, paths, and later the menu's progress marks.
-export function makeLantern({ height = 1.15, color = '#9B968A' } = {}) {
+export function makeLantern({ height = 1.15, color = WASH.stone } = {}) {
   const g = new THREE.Group();
   g.name = 'lantern';
   const mat = toonMaterial({ color, flat: true });

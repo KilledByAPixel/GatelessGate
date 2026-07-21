@@ -2,7 +2,10 @@ import * as THREE from '../lib/three.module.js';
 import { makeCameraRig } from './camera.js';
 import { makeDissolve } from './render/dissolve.js';
 import { installGrain } from './render/grain.js';
+import { makePost } from './render/post.js';
+import { makeFreeze } from './render/freeze.js';
 import { makeSceneManager, disposeRoot } from './scene/manager.js';
+import { makeDebug } from './ui/debug.js';
 import { makeInput } from './input.js';
 import { createSave } from './save.js';
 import { createAudio } from './audio/engine.js';
@@ -19,19 +22,28 @@ const STEP = 1 / 60;
 
 const panel = document.getElementById('gg-panel');
 const stage = document.getElementById('gg-stage');
-const stageSize = () => ({ w: stage.clientWidth || innerWidth, h: stage.clientHeight || innerHeight });
+// Never report zero: if a resize fires while the stage is hidden or collapsed,
+// setSize(0,0) leaves the drawing buffer at 0x0 and the canvas renders nothing
+// until some later resize happens to rescue it.
+const stageSize = () => ({
+  w: Math.max(1, stage.clientWidth || innerWidth || 1),
+  h: Math.max(1, stage.clientHeight || innerHeight || 1),
+});
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 { const { w, h } = stageSize(); renderer.setSize(w, h); }
 stage.appendChild(renderer.domElement);
-installGrain(document, { mount: stage });
+const grain = installGrain(document, { mount: stage });
 
 const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
 { const { w, h } = stageSize(); camera.aspect = w / h; camera.updateProjectionMatrix(); }
 const dissolve = makeDissolve();
 dissolve.setAspect(camera.aspect);
-const scenes = makeSceneManager(renderer, dissolve);
+const post = (() => { const { w, h } = stageSize(); return makePost(renderer, w, h); })();
+const freeze = (() => { const { w, h } = stageSize(); return makeFreeze(renderer, post, w, h); })();
+freeze.setAspect(camera.aspect);
+const scenes = makeSceneManager(renderer, dissolve, post, freeze);
 const input = makeInput(renderer.domElement);
 const save = createSave(window.localStorage);
 const audio = createAudio(save);
@@ -84,18 +96,61 @@ soundBtn.onclick = () => { audio.unlock(); audio.setSound(!audio.isSoundOn()); s
 controls.appendChild(soundBtn);
 stage.appendChild(controls);
 
+// ---- debug workbench (top-right of the stage) ----
+const debug = makeDebug({
+  renderer,
+  getScene: () => { const a = scenes.active(); return a && a.scene; },
+  audio,
+  grainEls: [grain.overlay, grain.vignette],
+  post,
+  onSound: () => setSoundLabel(),
+  onLens: (fov) => applyLens(fov),
+});
+debug.mount(stage);
+// every scene swap builds fresh objects, so the workbench must re-apply to them
+const debugApply = () => debug.apply();
+
 // ---- transitions: ink COVERS the stage before anything changes, then reveals ----
+// Cut from one diorama to the next without ever showing blank paper: hold a
+// still of the outgoing frame, rebuild the world behind it, fade the still off.
+// The ink dissolve is kept for the intro, where there is no previous frame to
+// hold and the curtain is the point.
 async function transition(apply) {
   panel.classList.add('fading');          // panel fades out (cosmetic, not awaited)
-  await dissolve.dissolveOut(0.7);        // stage covered with ink before the change
-  apply();                                 // swap scene + panel content under cover
+  const active = scenes.active();
+  const frozen = active ? freeze.capture(active.scene, camera) : false;
+  if (!frozen) await dissolve.dissolveOut(0.5);   // nothing to hold — fall back to the curtain
+  apply();                                 // swap scene + panel content under the still
   panel.classList.remove('fading');
-  await dissolve.dissolveIn(0.7);         // reveal
+  if (frozen) {
+    dissolve.set(1);                       // the curtain plays no part in this one
+    await freeze.release(0.9);             // the ink needs a beat longer than a plain fade did
+  } else {
+    await dissolve.dissolveIn(0.5);
+  }
+}
+
+// A longer lens compresses depth and reads as a miniature. Pulling the camera
+// back by the tangent ratio keeps the subject the same size on screen, so the
+// slider changes compression WITHOUT re-framing every diorama.
+const LENS_BASE = 38;
+let rigBaseDistance = 11.5;
+function applyLens(fov = (debug && debug.state.lens) || LENS_BASE) {
+  camera.fov = fov;
+  camera.updateProjectionMatrix();
+  if (rig && rig.goal) {
+    const t = (d) => Math.tan((d * Math.PI) / 360);
+    rig.goal.distance = rigBaseDistance * (t(LENS_BASE) / t(fov));
+  }
 }
 
 function makeRig(opts) {
   if (rig && rig.dispose) rig.dispose();
-  return makeCameraRig(camera, renderer.domElement, opts);
+  rigBaseDistance = opts.distance;
+  const r = makeCameraRig(camera, renderer.domElement, opts);
+  rig = r;
+  applyLens();
+  return r;
 }
 
 // ---- modes ----
@@ -114,7 +169,7 @@ async function openMenu() {
   await transition(() => {
     if (intro) { intro.dispose(); intro = null; }
     mode = 'menu';
-    rig = makeRig({ distance: 14, target: [0, 1.7, -2], azimuth: 0.5, polar: 1.3 });
+    makeRig({ distance: 14, target: [0, 1.7, -2], azimuth: 0.5, polar: 1.3 });
     menu.refresh(save.state());
     menu.open();
     showView(menu.el);
@@ -137,11 +192,12 @@ async function enter(slug) {
       built.setCamera && built.setCamera(camera);
       const prev = scenes.active();
       scenes.setActive(built);
+      debugApply();
       if (prev && prev !== hub) { disposeRoot(prev); prev.dispose && prev.dispose(); }
       koan = built; koanSlug = slug;
       built.onEnter && built.onEnter();
       save.markRead(slug);
-      rig = makeRig({ distance: 11.5, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27 });
+      makeRig({ distance: 11.5, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27 });
       menu.close();
       scroll = makeScroll({
         id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
@@ -177,11 +233,12 @@ async function exit() {
   await transition(() => {
     const prev = scenes.active();
     scenes.setActive(hub);
+    debugApply();
     if (prev && prev !== hub) { disposeRoot(prev); prev.dispose && prev.dispose(); }
     koan = null; koanSlug = null;
     if (scroll) { scroll.dispose(); scroll = null; }
     mode = 'menu';
-    rig = makeRig({ distance: 14, target: [0, 1.7, -2], azimuth: 0.5, polar: 1.3 });
+    makeRig({ distance: 14, target: [0, 1.7, -2], azimuth: 0.5, polar: 1.3 });
     menu.refresh(save.state());
     menu.open();
     showView(menu.el);
@@ -230,6 +287,7 @@ function tick() {
   if (active && active.update) active.update(STEP, simTime);
   if (mode === 'sit') sit.update(STEP);
   dissolve.update(STEP);
+  freeze.update(STEP);
 }
 
 let acc = 0, last = performance.now(), fps = 60;
@@ -238,6 +296,7 @@ function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
   if (dt > 0) fps = fps * 0.95 + (1 / dt) * 0.05;
+  debug.tick(fps);
   acc += dt;
   while (acc >= STEP) { acc -= STEP; tick(); }
   scenes.render(camera);
@@ -249,6 +308,10 @@ addEventListener('resize', () => {
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   dissolve.setAspect(camera.aspect);
+  post.setSize(w, h);
+  freeze.setSize(w, h);
+  freeze.setAspect(camera.aspect);
+  freeze.clear();     // a held frame at the old aspect would stretch
 });
 
 // ---- headless hooks ----
@@ -259,6 +322,7 @@ window.gate = {
       mode, simTime: +simTime.toFixed(4),
       drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
       fps: Math.round(fps), dissolveT: +dissolve.t.toFixed(4),
+      freeze: { active: freeze.active, progress: +freeze.progress.toFixed(4) },
       camera: rig ? rig.state() : null,
       progress: { read: { ...save.state().read }, sat: { ...save.state().sat } },
     };
@@ -270,6 +334,12 @@ window.gate = {
   menu(open) { if (open === false) { if (mode !== 'menu') menu.close(); } else { menu.open(); showView(menu.el); } },
   skipIntro,
   dissolve(dir = 'in', dur) { return dir === 'in' ? dissolve.dissolveIn(dur) : dissolve.dissolveOut(dur); },
+  // held-frame transition, exposed so it can be driven and inspected headlessly
+  freeze: {
+    hold() { const a = scenes.active(); return a ? freeze.capture(a.scene, camera) : false; },
+    release(dur) { return freeze.release(dur); },
+    clear() { freeze.clear(); },
+  },
   sit(minutes) { startSit(minutes); },
   endSit() { sit.end(); },
   markRead(slug) { save.markRead(slug); menu.refresh(save.state()); },

@@ -26,3 +26,23 @@ test('kit facade re-exports the builders', () => {
     assert.equal(typeof kit[fn], 'function', `kit.${fn} missing`);
   }
 });
+
+test('makeMonk pose:sit is seated (shorter) and keeps its five parts', () => {
+  const stand = makeMonk({ height: 1.6 });
+  const sit = makeMonk({ height: 1.6, pose: 'sit' });
+  assert.deepEqual(sit.children.filter((c) => c.name !== 'staff').map((c) => c.name).sort(),
+    ['arm', 'arm', 'body', 'hat', 'head']);
+  const hStand = new THREE.Box3().setFromObject(stand).max.y;
+  const hSit = new THREE.Box3().setFromObject(sit).max.y;
+  assert.ok(hSit < hStand * 0.8, `seated shorter: ${hSit} vs ${hStand}`);
+  assert.ok(new THREE.Box3().setFromObject(sit).min.y > -0.02, 'seated on ground');
+});
+
+test('makeMonk elder adds a grounded staff, and options compose', () => {
+  const elder = makeMonk({ elder: true });
+  assert.equal(elder.children.filter((c) => c.name === 'staff').length, 1);
+  assert.ok(new THREE.Box3().setFromObject(elder).min.y > -0.02, 'staff stands on the ground');
+  const sage = makeMonk({ pose: 'sit', elder: true });
+  assert.ok(sage.children.some((c) => c.name === 'staff'), 'sit + elder compose');
+  assert.ok(new THREE.Box3().setFromObject(sage).min.y > -0.02, 'seated elder grounded');
+});

@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER } from '../palette.js';
+import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeLantern, makeMonk, aimMonk, makeGate, makeFlag,
   makeLights, makeBlobShadow, addOutlines,
@@ -8,7 +8,6 @@ import {
 import { clothEnergy } from '../sim/verlet.js';
 
 const ID = 29;
-const ACCENT = '#C73E3A';
 
 export default {
   id: ID,
@@ -70,16 +69,17 @@ export default {
 
     // the rest of the world: mountains, forest, midground trees, scatter —
     // shared grammar, kept off the staging and the path by keepouts
-    composeWorld(scene, {
+    const world = composeWorld(scene, {
       seed: 29,
       groundSeed: 21,
       keepout: [
+        ...path.keepout(26, 1.15),             // the worn trail, masked along its whole run
         { x: mp.x, z: mp.z, r: 3.0 },          // the monks' argument
         { x: gp.x, z: gp.z, r: 3.6 },          // gate + lanterns
-        { x: flag.group.position.x, z: flag.group.position.z, r: 1.4 },
-        { x: 1.4, z: -12, r: 3.4 },            // the path's run to the fog
-        { x: 1.4, z: 6, r: 2.8 },              // path foreground
       ],
+      // grass grows around the monks' feet and up to the gate posts; only the
+      // trodden road actually clears it
+      grassKeepout: path.keepout(26, 1.05),
     });
 
     for (const [p, rx, rz, op] of [
@@ -125,6 +125,7 @@ export default {
       onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         flag.update(dt, simTime);
+        world.update(dt, simTime);            // drives the meadow's wind
         audio && audio.setWindLevel(flag.windLevel() * baseWind);
       },
       fragment() {

@@ -23,18 +23,26 @@ export function disposeRoot(root, disposed = new Set()) {
   return counts;
 }
 
-export function makeSceneManager(renderer, dissolve) {
+export function makeSceneManager(renderer, dissolve, post = null, freeze = null) {
   const dissolveScene = new THREE.Scene();
   dissolveScene.add(dissolve.mesh);
   let current = null;
 
   function render(camera) {
-    if (current) renderer.render(current.scene, camera);
+    // the dissolve is UI, not part of the picture: post runs on the scene, then
+    // the ink curtain draws over the finished frame
+    if (current) {
+      if (post && post.active) post.render(current.scene, camera);
+      else renderer.render(current.scene, camera);
+    }
     if (dissolve.t < 1) {
       renderer.autoClear = false;
       try { renderer.render(dissolveScene, camera); }
       finally { renderer.autoClear = true; }
     }
+    // A held frame from the outgoing scene sits above everything, curtain
+    // included — while it is up, the new world is being built underneath it.
+    if (freeze) freeze.draw();
   }
 
   // The app orchestrates transitions (ink cover → setActive+disposeRoot → reveal);

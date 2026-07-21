@@ -10,6 +10,8 @@ export function createAudio(save) {
   let ctx = null, master = null, music = null, musicGain = null;
   let wind = null;
   let soundOn = save.state().soundOn;
+  let windScale = 1;      // debug-panel multiplier over whatever a koan asks for
+  let windLevel = 0;      // last level a koan requested, so a scale change applies now
 
   function ensureCtx() {
     if (ctx) return;
@@ -39,7 +41,9 @@ export function createAudio(save) {
         if (type === 'wind' && !wind) { wind = makeWind(ctx, master); wind.setLevel(level); }
       }
     },
-    setWindLevel(v) { if (wind) wind.setLevel(v); },
+    setWindLevel(v) { windLevel = v; if (wind) wind.setLevel(v * windScale); },
+    setWindScale(s) { windScale = s; if (wind) wind.setLevel(windLevel * windScale); },
+    windScale() { return windScale; },
     stopAmbience() { if (wind) { wind.stop(); wind = null; } },
     bell(opts = {}) { ensureCtx(); strikeBell(ctx, master, opts); },
     playMusic() { /* stub: ambient generated tracks are a future experiment */ },

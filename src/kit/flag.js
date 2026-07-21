@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { createCloth, stepCloth } from '../sim/verlet.js';
 import { noise3 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
-import { ACCENT, INK } from '../palette.js';
+import { ACCENT_DEEP, INK } from '../palette.js';
 
 // Case 29's flag. Wind is a controllable [0..1] level (click toggles it, ~2 s ramp);
 // hover injects decaying localized puffs. These behaviors travel with the component.
@@ -10,7 +10,9 @@ const WIND_TAU = 0.7;      // ~2 s to full
 const PUFF_RADIUS = 0.4;
 const PUFF_LIFE = 0.6;
 
-export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed = 11, color = ACCENT } = {}) {
+// ACCENT_DEEP, not ACCENT: a flag is a big lit surface, and at full strength the
+// red glared against the paper instead of sitting on it as the seal.
+export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed = 11, color = ACCENT_DEEP, warmup = 90 } = {}) {
   const group = new THREE.Group();
   group.name = 'flag';
 
@@ -29,7 +31,8 @@ export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed 
 
   const geo = new THREE.PlaneGeometry(width, clothH, cols - 1, rows - 1);
   const mesh = new THREE.Mesh(geo, toonMaterial({ color, side: THREE.DoubleSide }));
-  mesh.material.fog = false; // the accent is a seal stamp: printed over the wash, never diluted by it
+  // The seal sits IN the wash, not on top of it. Excluding it from fog made it
+  // the brightest thing in frame and read as a sticker rather than pigment.
   mesh.name = 'cloth';
   mesh.userData.noOutline = true; // inverted hull doesn't suit an open surface
   mesh.position.set(0.045, poleH - 0.06, 0);
@@ -76,6 +79,12 @@ export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed 
     });
     copyPositions();
   };
+
+  // Settle the cloth before it is ever seen. A freshly built grid is flat and
+  // motionless, so its first visible frames would be a violent snap into shape
+  // as gravity and wind hit at once. Deterministic: fixed dt over a fixed
+  // simTime ramp, so the spawned pose is identical every run.
+  for (let i = 0; i < warmup; i++) update(1 / 60, i / 60);
 
   return {
     group,

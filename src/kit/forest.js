@@ -1,15 +1,18 @@
 import * as THREE from '../../lib/three.module.js';
 import { hash1 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
+import { WASH } from '../palette.js';
+import { pineGeometry } from './pine.js';
 
 // A distant stand of trees as one InstancedMesh (a single draw call), read as
-// a dark mass at the edge of the fog rather than individual trees.
+// a dark mass at the edge of the fog rather than individual trees. The stand
+// shares one tiered-pine geometry: still one draw call, but a ragged conifer
+// silhouette instead of a field of identical smooth cones.
 export function makeForest({
   count = 50, center = [0, 0, -28], spread = 16, seed = 41,
-  color = '#66655A', treeH = 2.8,
+  color = WASH.mid, treeH = 2.8,
 } = {}) {
-  const geo = new THREE.ConeGeometry(0.9, treeH, 6);
-  geo.translate(0, treeH / 2, 0);
+  const geo = pineGeometry({ height: treeH, tiers: 5, seed });
   const mat = toonMaterial({ color, flat: true });
   const mesh = new THREE.InstancedMesh(geo, mat, count);
   mesh.name = 'forest';
