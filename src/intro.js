@@ -1,5 +1,5 @@
 import * as THREE from '../lib/three.module.js';
-import { PAPER, wash } from './palette.js';
+import { PAPER, ACCENT_DEEP, wash } from './palette.js';
 import {
   composeWorld, makePath, makeLantern, makeGate, makeMonk, makeFlag,
   makeLights, addOutlines, makeBlobShadow,
@@ -21,7 +21,12 @@ export function buildHub() {
   scene.add(path);
 
   const gp = path.sample(0.4);
-  const gate = makeGate({ width: 3.0, height: 3.4 });
+  // THE gate. Every case marks its one red thing — the dog, the flower, the
+  // bowl, the flag, the buffalo — and the title screen had no seal at all, which
+  // left the one image the whole book is named for as the only grey subject in
+  // it. A torii is a big timber frame rather than a held object, so it takes the
+  // deep mix; full accent across those posts would glare.
+  const gate = makeGate({ width: 3.0, height: 3.4, color: ACCENT_DEEP });
   gate.position.set(gp.x, 0, gp.z);
   gate.rotation.y = gp.heading;
   scene.add(gate);

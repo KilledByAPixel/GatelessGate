@@ -386,6 +386,7 @@ window.gate = {
   exit() { return exit(); },
   menu(open) { if (open === false) { if (mode !== 'menu') menu.close(); } else { menu.open(); showView(menu.el); } },
   skipIntro,
+  scene() { const a = scenes.active(); return a && a.scene; },   // for headless inspection
   dissolve(dir = 'in', dur) { return dir === 'in' ? dissolve.dissolveIn(dur) : dissolve.dissolveOut(dur); },
   // held-frame transition, exposed so it can be driven and inspected headlessly
   freeze: {

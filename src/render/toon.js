@@ -34,7 +34,20 @@ export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 10 }
   const g = new THREE.Group();
   g.name = 'lights';
 
-  const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+  // A HARD key, and this number is Frank's, not a guess: he ran the workbench's
+  // Sun × up to 2.95 against the old authored 2.2 and kept it there, so ~6.5 is
+  // the light he actually chose after looking at every case.
+  //
+  // It sounds reckless and isn't — measured across the swing, NOTHING clips: at
+  // 6.6 the frame is still 0% blown, because every surface here is a wash on
+  // paper rather than a saturated albedo. What rises is the key-to-fill RATIO,
+  // and that is the thing worth having. A soft ratio flattens the book toward
+  // the paper: forms lose their turn and the one red object per scene sits at
+  // the same value as the greys around it instead of jumping off them.
+  //
+  // The fill deliberately stays where it was. The contrast he liked came from
+  // the key alone, so cutting the fill as well would overshoot what he approved.
+  const sun = new THREE.DirectionalLight(0xffffff, 6.5);
   sun.position.set(focus[0] + 5.5, 9, focus[2] + 4.5);
   sun.target.position.set(focus[0], 0, focus[2]);
   g.add(sun, sun.target);

@@ -210,9 +210,17 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
         if (o.isMesh && !o.userData.isOutline) {
           o.castShadow = state.shadows && o.name !== 'ground';
           o.receiveShadow = state.shadows;
-          // the grass keeps its own material: the wind bend lives in that
-          // shader, and swapping it would freeze the field mid-stride
-          if (o.name !== 'grassfield') {
+          // Some materials must survive this swap untouched — `keepMaterial`.
+          //
+          // The toon toggle rebuilds every material as a plain Lambert, which
+          // silently destroys anything the original did beyond carrying a
+          // colour: the grass's wind bend lives in its shader and would freeze
+          // mid-stride, and the moon is deliberately UNLIT — cloning it to
+          // Lambert put it under the sun, so it darkened and brightened with the
+          // lighting like any other surface. That cost an evening of arguing
+          // about the wrong cause, because the source material said Basic while
+          // the running scene said Lambert.
+          if (o.name !== 'grassfield' && !o.userData.keepMaterial) {
             if (!o.userData._matToon) o.userData._matToon = o.material;
             o.material = state.toon ? o.userData._matToon : plainMaterialFor(o);
           }

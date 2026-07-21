@@ -47,6 +47,10 @@ export function makeMoon({
   const mesh = new THREE.Mesh(geo, mat);
   mesh.name = 'moon';
   mesh.userData.noOutline = true;
+  // ...and the debug panel's toon toggle must not rebuild this as a lit Lambert,
+  // which is exactly what it used to do — see the note in ui/debug.js. Point 2
+  // above is only true if the material actually survives to render time.
+  mesh.userData.keepMaterial = true;
   mesh.position.set(Math.sin(azimuth) * distance, height, -Math.cos(azimuth) * distance);
   // face the staging, standing plumb — lookAt at its own height keeps the disc
   // vertical instead of tipping it down toward the ground plane
