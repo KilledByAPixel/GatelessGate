@@ -269,6 +269,13 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
 
   return {
     button, panel, state, apply, tick,
-    mount(host) { host.appendChild(button); host.appendChild(panel); apply(); },
+    // The panel belongs to the stage; the button belongs in the shared toolbar
+    // beside sound and fullscreen, so the three read as one row rather than the
+    // workbench floating on its own.
+    mount(host, buttonHost = host) {
+      buttonHost.appendChild(button);
+      host.appendChild(panel);
+      apply();
+    },
   };
 }

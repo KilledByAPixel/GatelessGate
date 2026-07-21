@@ -86,15 +86,65 @@ const sit = makeSit({
 });
 document.body.appendChild(sit.el);
 
-// ---- stage-corner controls (over the 3D, never over the text) ----
-const controls = document.createElement('div');
-controls.className = 'gg-stage-controls';
-const soundBtn = document.createElement('button');
-const setSoundLabel = () => { soundBtn.textContent = audio.isSoundOn() ? '♪ sound' : '⊘ sound'; };
+// ---- stage toolbar (top-right, over the 3D and never over the text) ----
+// One row of square buttons: sound, fullscreen, and the debug workbench. They
+// share a shape so the corner reads as a toolbar rather than three unrelated
+// controls scattered over the picture.
+const toolbar = document.createElement('div');
+toolbar.className = 'gg-toolbar';
+stage.appendChild(toolbar);
+
+const tool = (label, title, onClick) => {
+  const b = document.createElement('button');
+  b.className = 'gg-tool';
+  b.textContent = label;
+  b.title = title;
+  b.setAttribute('aria-label', title);
+  b.onclick = onClick;
+  toolbar.appendChild(b);
+  return b;
+};
+
+const soundBtn = tool('♪', 'Sound', () => {
+  audio.unlock();
+  audio.setSound(!audio.isSoundOn());
+  setSoundLabel();
+  debug.apply();                 // the workbench shows the same flag
+});
+const setSoundLabel = () => {
+  const on = audio.isSoundOn();
+  soundBtn.textContent = on ? '♪' : '⊘';
+  soundBtn.classList.toggle('active', on);
+  soundBtn.title = on ? 'Sound on' : 'Sound off';
+};
 setSoundLabel();
-soundBtn.onclick = () => { audio.unlock(); audio.setSound(!audio.isSoundOn()); setSoundLabel(); };
-controls.appendChild(soundBtn);
-stage.appendChild(controls);
+
+// Fullscreen. Requested on the whole document rather than the stage, so the text
+// panel comes along — this is a book, and a diorama without its koan beside it
+// is half the page. Safari still needs the webkit spelling.
+const fsEl = document.documentElement;
+const fsOn = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+const fsBtn = tool('⛶', 'Fullscreen', async () => {
+  try {
+    if (fsOn()) await (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else await (fsEl.requestFullscreen || fsEl.webkitRequestFullscreen).call(fsEl);
+  } catch { /* a browser may refuse; the button simply does nothing */ }
+});
+// Driven by the EVENT, not by the click: Escape and the browser's own chrome can
+// leave fullscreen without going through the button.
+const setFsLabel = () => {
+  const on = fsOn();
+  fsBtn.classList.toggle('active', on);
+  fsBtn.title = on ? 'Leave fullscreen' : 'Fullscreen';
+};
+for (const e of ['fullscreenchange', 'webkitfullscreenchange']) {
+  document.addEventListener(e, setFsLabel);
+}
+setFsLabel();
+// Don't offer a control that cannot work. Some embedded and managed browser
+// views expose the API, resolve the promise, and simply never go fullscreen;
+// where the browser is honest enough to say so up front, take it at its word.
+if (document.fullscreenEnabled === false) fsBtn.remove();
 
 // ---- debug workbench (top-right of the stage) ----
 const debug = makeDebug({
@@ -106,7 +156,7 @@ const debug = makeDebug({
   onSound: () => setSoundLabel(),
   onLens: (fov) => applyLens(fov),
 });
-debug.mount(stage);
+debug.mount(stage, toolbar);   // panel over the stage, button into the toolbar
 // every scene swap builds fresh objects, so the workbench must re-apply to them
 const debugApply = () => debug.apply();
 

@@ -101,20 +101,22 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
 .gg-section-text { margin-top: 8px; line-height: 1.72; white-space: pre-wrap; }
 .gg-section.speaking .gg-section-text { background: rgba(199,62,58,0.08); }
 
-/* ---- stage-corner controls (over the 3D, never over text) ---- */
-.gg-stage-controls { position: absolute; left: 16px; bottom: 16px; z-index: 5; display: flex; gap: 8px; }
-.gg-stage-controls button {
-  font-family: Georgia, serif; background: rgba(243,237,223,0.7); border: 1px solid rgba(30,30,36,0.25);
-  color: var(--ink); padding: 5px 12px; border-radius: 3px; cursor: pointer; backdrop-filter: blur(2px);
-}
-/* ---- debug workbench: toolbar button top-right + panel sliding under it ---- */
-.gg-debug-toggle {
-  position: absolute; top: 14px; right: 14px; z-index: 9;
+/* ---- stage toolbar: one row of square buttons, top-right over the 3D ----
+   Sound, fullscreen and the debug workbench share a shape so the corner reads
+   as a toolbar. It sits ABOVE the debug panel (z 9 vs 8) so every button stays
+   clickable while the panel is out — which is how you close it again. */
+.gg-toolbar { position: absolute; top: 14px; right: 14px; z-index: 9; display: flex; gap: 6px; }
+.gg-tool, .gg-debug-toggle {
   width: 30px; height: 30px; line-height: 1; font-size: 15px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-family: Georgia, serif;
   background: rgba(243,237,223,0.82); border: 1px solid rgba(30,30,36,0.28);
   color: var(--ink); border-radius: 3px; backdrop-filter: blur(2px);
+  padding: 0;
 }
-.gg-debug-toggle.active { background: var(--ink); color: var(--paper); }
+.gg-tool:hover, .gg-debug-toggle:hover { border-color: rgba(30,30,36,0.55); }
+.gg-tool.active, .gg-debug-toggle.active { background: var(--ink); color: var(--paper); }
+/* ---- debug workbench: panel sliding out under the toolbar ---- */
 .gg-debug {
   position: absolute; top: 0; right: 0; bottom: 0; width: 232px; z-index: 8;
   transform: translateX(100%); transition: transform 160ms ease;
