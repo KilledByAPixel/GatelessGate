@@ -3,14 +3,22 @@ import assert from 'node:assert/strict';
 import { bySlug } from '../src/koans/index.js';
 import { isRegistered, isStaged, loadKoan } from '../src/koans/registry.js';
 
-// The first chapter: five cases. Each must satisfy the koan module contract so
-// the app can enter it, drive it, and tear it down without special-casing.
+// The staged cases. Each must satisfy the koan module contract so the app can
+// enter it, drive it, and tear it down without special-casing. Every case that
+// gets a diorama of its own belongs in this list — that is what makes the
+// contract a contract rather than a description of whatever case 29 happens to do.
 const CHAPTER = [
   { id: 1, slug: 'joshu-s-dog' },
+  { id: 2, slug: 'hyakujo-s-fox' },
+  { id: 3, slug: 'gutei-s-finger' },
   { id: 6, slug: 'buddha-twirls-a-flower' },
   { id: 7, slug: 'joshu-washes-the-bowl' },
+  { id: 14, slug: 'nansen-cuts-the-cat-in-two' },
+  { id: 19, slug: 'everyday-life-is-the-path' },
+  { id: 26, slug: 'two-monks-roll-up-the-screen' },
   { id: 29, slug: 'not-the-wind-not-the-flag' },
   { id: 37, slug: 'a-buffalo-passes-through-the-enclosure' },
+  { id: 38, slug: 'an-oak-tree-in-the-garden' },
 ];
 
 // a minimal stand-in for the app's ctx: records the handlers a koan wires up

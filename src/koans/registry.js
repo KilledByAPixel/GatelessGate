@@ -5,10 +5,16 @@ import { makeDefaultCase } from './default-case.js';
 // the first chapter — Mu, the flower, the bowl, the buffalo, and the flag.
 const LOADERS = {
   1: () => import('./k1.js'),
+  2: () => import('./k2.js'),
+  3: () => import('./k3.js'),
   6: () => import('./k6.js'),
   7: () => import('./k7.js'),
+  14: () => import('./k14.js'),
+  19: () => import('./k19.js'),
+  26: () => import('./k26.js'),
   29: () => import('./k29.js'),
   37: () => import('./k37.js'),
+  38: () => import('./k38.js'),
 };
 
 // Whether a case has been STAGED — art of its own, rather than the default

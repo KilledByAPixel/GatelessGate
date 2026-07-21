@@ -26,4 +26,14 @@ export { makeWater } from './water.js';
 export { makeHut } from './hut.js';
 export { makeLattice, makePen } from './lattice.js';
 export { makeQuadruped } from './quadruped.js';
+// the second chapter's additions
+export { makeFox } from './fox.js';
+export { makeCat } from './cat.js';
+export { makeCave } from './cave.js';
+export { makeOak } from './oak.js';
+export { makeMoon } from './moon.js';
+export { makeWildflowers } from './wildflowers.js';
+export { makeScreen } from './screen.js';
+export { makeVeranda } from './veranda.js';
+export { makeRaisedFinger } from './finger.js';
 export { makeAssembly } from './assembly.js';
