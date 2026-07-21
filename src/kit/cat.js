@@ -44,6 +44,17 @@ const P = {
 
 const SIT_TILT = 0.80;      // radians the spine pitches up off horizontal
 const SIT_LEVEL = 0.85;     // how much of that the neck takes back out of the skull
+// Pitching the spine up about the REAR hip swings the shoulders — and the skull
+// riding on them — up and BACKWARD. Counter-rotating the skull levels its angle
+// but does not move it, so a head that sat correctly in front of the chest while
+// standing ends up sunk inside it: measured, the seated skull sat at z 0.019
+// against a body reaching z 0.167, i.e. wholly swallowed. It has to be walked
+// back out along the tilted spine as well as levelled.
+// Expressed as a WORLD-space forward offset and decomposed into the tilted
+// torso's own axes below. Nudging it along the torso's local +z instead climbs
+// the pitched spine and hoists the skull: that made the seated cat 18% taller
+// overall and its own size test caught it.
+const SIT_HEAD_FWD = 0.26;  // in heights, horizontally
 const SIT_CLEAR = 0.05;     // rump rides this far off the ground, in heights
 const SIT_REAR_Z = -0.10;   // tucked forward of the standing hip
 const SIT_REAR_X = 0.155;   // and splayed a little wider
@@ -145,6 +156,9 @@ export function makeCat({ height = 0.32, color = INK, seed = 14, pose = 'sit' } 
     torso.position.y = bodyY - drop;
     torso.rotation.x = -tilt;                 // negative pitches the front UP
     skull.rotation.x = tilt * SIT_LEVEL;      // and the neck takes most of it back
+    // ...then out of the chest, horizontally — see the note on SIT_HEAD_FWD
+    skull.position.z += SIT_HEAD_FWD * h * cosT;
+    skull.position.y -= SIT_HEAD_FWD * h * Math.sin(tilt);
 
     const seatLeg = (leg, zWorld, xWorld) => {
       const s = (zWorld + hipZ) / cosT;       // distance along the axis from the pivot

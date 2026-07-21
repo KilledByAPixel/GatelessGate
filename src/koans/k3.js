@@ -166,7 +166,7 @@ export default {
     // in a case whose entire subject is one small red gesture, nothing else gets
     // to be a vertical line next to it. He still reads as the master by size,
     // stoutness, hat and staging.
-    const gutei = makeMonk({ height: 1.66, stout: 1.1, pose: 'point' });
+    const gutei = makeMonk({ height: 1.66, stout: 1.1, pose: 'raise' });
     gutei.position.set(GUTEI.x, 0, GUTEI.z);
     gutei.rotation.y = FACING;
     scene.add(gutei);
@@ -174,7 +174,7 @@ export default {
     // The boy attendant, bare-headed — a novice has no travelling hat, and
     // without one his own finger clears the top of his head instead of
     // disappearing behind a brim.
-    const boy = makeMonk({ height: 1.10, pose: 'point', hat: false });
+    const boy = makeMonk({ height: 1.10, pose: 'raise', hat: false });
     boy.position.set(BOY.x, 0, BOY.z);
     boy.rotation.y = FACING;
     scene.add(boy);

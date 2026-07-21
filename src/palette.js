@@ -33,6 +33,14 @@ export const wash = (t) => mixHex(PAPER, INK, t);
 // one warm note on the page.
 export const ACCENT_DEEP = mixHex(ACCENT, INK, 0.30);
 
+// And the other direction, for anything that EMITS rather than reflects.
+// ACCENT is a mid-dark brick red, and the sky is nearly the lightest tone the
+// book owns. A lit object gets away with it because shading gives it highlights;
+// a flat unlit fill — a moon — has none, so at full ACCENT it reads as a dark
+// disc punched in a bright sky rather than as a light in it. Lifting toward the
+// paper keeps the hue and buys back the luminance.
+export const ACCENT_LIGHT = mixHex(ACCENT, PAPER, 0.22);
+
 export const WASH = {
   mist: wash(0.10),     // farthest peaks, barely there
   ground: wash(0.22),   // the earth underfoot

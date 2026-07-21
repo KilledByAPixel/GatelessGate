@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, ACCENT_DEEP, wash } from '../palette.js';
+import { PAPER, ACCENT, ACCENT_LIGHT, wash } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
 import { makePath } from '../kit/path.js';
 import { makeMonk, aimMonk } from '../kit/monk.js';
@@ -27,7 +27,7 @@ const BREEZE_TAU = 1.7;   // how long a crossing breath stays in the sound
 //
 // which gives the case two seals rather than one, and both of them are weather:
 // the wildflowers along the verge (ACCENT — each bloom is a few pixels) and the
-// moon over the hills (ACCENT_DEEP — a big flat disc at full strength glares).
+// moon over the hills (ACCENT_LIGHT — see the note at the moon itself).
 // Everything else stays on the grey wash, as always.
 export default {
   id: ID,
@@ -88,12 +88,13 @@ export default {
     // slider pulls the rig back as far as ~36 units when it is wound all the way
     // to a long lens. Any further and the disc starts clipping at that setting.
     const MOON_BEARING = -0.28;
-    // Full ACCENT, not ACCENT_DEEP. The large-mass rule exists because a big LIT
-    // surface glares; the moon is unlit basic material, so it doesn't glare — it
-    // just sits. And it sits on PAPER, which is nearly white, so the deep mix
-    // came out darker than the sky and read as a hole punched through it rather
-    // than a moon. Sunk toward the ridgeline too: a harvest moon is low.
-    const moon = makeMoon({ radius: 2.7, color: ACCENT, distance: 60, height: 6.4, azimuth: MOON_BEARING });
+    // ACCENT_LIGHT, and it took two goes to get here. ACCENT_DEEP read as a hole
+    // punched in the sky; full ACCENT was still a dark brick disc. The moon is
+    // the one thing in the book that EMITS, and an unlit flat fill has no
+    // highlights to carry it — so it needs a tone lifted toward the paper rather
+    // than the large-mass rule that governs everything reflective. Sunk toward
+    // the ridgeline too: a harvest moon is low.
+    const moon = makeMoon({ radius: 2.7, color: ACCENT_LIGHT, distance: 60, height: 6.4, azimuth: MOON_BEARING });
     scene.add(moon);
 
     // Wildflower drifts along the verge, plus a few out in the meadow so the

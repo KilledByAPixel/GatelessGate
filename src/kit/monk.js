@@ -36,6 +36,17 @@ export function makeMonk({ height = 1.6, stout = 1, color = INK, hat = true, pos
     arm.name = 'arm';
     arm.position.set(side * 0.115 * s * height, shoulderY, seated ? 0.03 * height : 0);
     if (pose === 'point' && side === 1) { arm.rotation.z = Math.PI - 0.95; arm.rotation.y = 0.15; }
+    // 'raise' is NOT 'point'. Point swings the sleeve up and OUT along the
+    // bearing the figure faces, which is right for indicating a thing across the
+    // scene (case 29's monk and the flag). Held up beside another person it aims
+    // at them, and a raised finger aimed at someone reads as an insult rather
+    // than a teaching — which is exactly how case 3 first came out. This holds
+    // the arm nearly vertical, a few degrees clear of the body and tipped
+    // forward, so the gesture is offered to the air instead of at anybody.
+    // Rest sits ~20 degrees off plumb rather than dead vertical so a case can
+    // still ANIMATE the lift toward vertical (k3 adds 0.24rad); starting plumb
+    // would send the arm over the top and back down the far side.
+    else if (pose === 'raise' && side === 1) { arm.rotation.z = Math.PI - 0.34; arm.rotation.x = 0.22; }
     else if (seated) { arm.rotation.x = -1.15; arm.rotation.z = side * 0.12; } // fold into the lap
     else { arm.rotation.z = side * 0.28; }
     g.add(arm);
