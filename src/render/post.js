@@ -60,7 +60,15 @@ void main() {
   float edge = length(vec2(gx, gy)) / max(0.35, here);   // scale-invariant with distance
   float ink = smoothstep(uThreshold, uThreshold * 2.6, edge) * uStrength;
   ink *= 1.0 - smoothstep(uFade * uFar, uFar, here);      // distant edges fade into the wash
-  gl_FragColor = vec4(mix(base.rgb, uInk, clamp(ink, 0.0, 1.0)), base.a);
+
+  // Sub-pixel geometry opts OUT of ink. A grass blade is thinner than a pixel at
+  // distance, so each frame a pixel's depth flips between blade and the ground
+  // metres behind it — the Sobel sees a huge edge blink in and out and the ink
+  // crawls. No resolution fixes that, so the grass marks itself in alpha and we
+  // skip it here.
+  ink *= step(0.5, base.a);
+
+  gl_FragColor = vec4(mix(base.rgb, uInk, clamp(ink, 0.0, 1.0)), 1.0);
 }`;
 
 // ---- quantise: flatten gradients into tonal masses --------------------------
@@ -110,7 +118,11 @@ function paperTexture(size = 256) {
 
 export function makePost(renderer, width, height) {
   const opts = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter };
-  const scene = new THREE.WebGLRenderTarget(width, height, opts);
+  // MSAA on the SCENE target. `antialias: true` on the renderer only applies to
+  // the default framebuffer — the moment the scene renders into a target it is
+  // gone, and thin geometry like grass shimmers. The pass targets don't need it
+  // (they're fullscreen blits, nothing to alias).
+  const scene = new THREE.WebGLRenderTarget(width, height, { ...opts, samples: 4 });
   scene.texture.colorSpace = THREE.SRGBColorSpace;
   scene.depthTexture = new THREE.DepthTexture(width, height);
   scene.depthTexture.type = THREE.UnsignedIntType;

@@ -116,6 +116,15 @@ export function makeGrassField({
         transformed.z += bendDir.y * arcOff;
       #endif
       `);
+
+    // Mark every grass fragment in the alpha channel so the ink pass can skip
+    // it. A blade is thinner than a pixel at distance, and a depth-edge filter
+    // crawls badly on sub-pixel geometry. This costs one instruction and no
+    // extra pass — the alternative is a whole ID buffer.
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <dithering_fragment>',
+      '#include <dithering_fragment>\n  gl_FragColor.a = 0.0;   // ink-mask marker',
+    );
   };
   mat.customProgramCacheKey = () => 'grassfield-arc';
 
