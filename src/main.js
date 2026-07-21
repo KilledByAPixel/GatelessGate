@@ -2,6 +2,7 @@ import * as THREE from '../lib/three.module.js';
 import { makeCameraRig } from './camera.js';
 import { makeDissolve } from './render/dissolve.js';
 import { installGrain } from './render/grain.js';
+import { makePost } from './render/post.js';
 import { makeSceneManager, disposeRoot } from './scene/manager.js';
 import { makeDebug } from './ui/debug.js';
 import { makeInput } from './input.js';
@@ -38,7 +39,8 @@ const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
 { const { w, h } = stageSize(); camera.aspect = w / h; camera.updateProjectionMatrix(); }
 const dissolve = makeDissolve();
 dissolve.setAspect(camera.aspect);
-const scenes = makeSceneManager(renderer, dissolve);
+const post = (() => { const { w, h } = stageSize(); return makePost(renderer, w, h); })();
+const scenes = makeSceneManager(renderer, dissolve, post);
 const input = makeInput(renderer.domElement);
 const save = createSave(window.localStorage);
 const audio = createAudio(save);
@@ -97,6 +99,7 @@ const debug = makeDebug({
   getScene: () => { const a = scenes.active(); return a && a.scene; },
   audio,
   grainEls: [grain.overlay, grain.vignette],
+  post,
   onSound: () => setSoundLabel(),
   onLens: (fov) => applyLens(fov),
 });
@@ -290,6 +293,7 @@ addEventListener('resize', () => {
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   dissolve.setAspect(camera.aspect);
+  post.setSize(w, h);
 });
 
 // ---- headless hooks ----

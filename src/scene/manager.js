@@ -23,13 +23,18 @@ export function disposeRoot(root, disposed = new Set()) {
   return counts;
 }
 
-export function makeSceneManager(renderer, dissolve) {
+export function makeSceneManager(renderer, dissolve, post = null) {
   const dissolveScene = new THREE.Scene();
   dissolveScene.add(dissolve.mesh);
   let current = null;
 
   function render(camera) {
-    if (current) renderer.render(current.scene, camera);
+    // the dissolve is UI, not part of the picture: post runs on the scene, then
+    // the ink curtain draws over the finished frame
+    if (current) {
+      if (post && post.active) post.render(current.scene, camera);
+      else renderer.render(current.scene, camera);
+    }
     if (dissolve.t < 1) {
       renderer.autoClear = false;
       try { renderer.render(dissolveScene, camera); }

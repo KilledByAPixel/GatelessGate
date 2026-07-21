@@ -37,6 +37,18 @@ const CONTROLS = [
   { key: 'sunMul', label: 'Sun ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
   { key: 'ambMul', label: 'Ambient ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
 
+  { group: 'Post' },
+  { key: 'pQuant', label: 'Quantise', type: 'bool', def: false },
+  { key: 'quantSteps', label: '· steps', type: 'range', def: 10, min: 3, max: 24, step: 1 },
+  { key: 'quantAmt', label: '· amount', type: 'range', def: 0.7, min: 0, max: 1, step: 0.05 },
+  { key: 'pInk', label: 'Ink (depth edges)', type: 'bool', def: false },
+  { key: 'inkStrength', label: '· strength', type: 'range', def: 0.85, min: 0, max: 1, step: 0.05 },
+  { key: 'inkThresh', label: '· threshold', type: 'range', def: 0.06, min: 0.01, max: 0.4, step: 0.01 },
+  { key: 'inkFade', label: '· distance fade', type: 'range', def: 0.45, min: 0.05, max: 1, step: 0.05 },
+  { key: 'pPaper', label: 'Paper pass', type: 'bool', def: false },
+  { key: 'paperAmt', label: '· grain', type: 'range', def: 0.55, min: 0, max: 1, step: 0.05 },
+  { key: 'paperVig', label: '· vignette', type: 'range', def: 0.7, min: 0, max: 1.5, step: 0.05 },
+
   { group: 'Audio' },
   { key: 'sound', label: 'Sound on', type: 'bool', def: false },
   { key: 'windScale', label: 'Wind ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
@@ -54,7 +66,7 @@ function load() {
   } catch { return defaults(); }
 }
 
-export function makeDebug({ renderer, getScene, audio, grainEls = [], onSound, onLens }) {
+export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens }) {
   const state = load();
   const inputs = {};
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* private mode */ } };
@@ -219,7 +231,23 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], onSound, o
     onLens && onLens(state.lens);
     renderer.shadowMap.enabled = state.shadows;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    for (const el of grainEls) if (el) el.style.display = state.grain ? '' : 'none';
+
+    if (post) {
+      post.set('quantize', state.pQuant);
+      post.set('ink', state.pInk);
+      post.set('paper', state.pPaper);
+      post.param('quantize', 'uSteps', state.quantSteps);
+      post.param('quantize', 'uAmount', state.quantAmt);
+      post.param('ink', 'uStrength', state.inkStrength);
+      post.param('ink', 'uThreshold', state.inkThresh);
+      post.param('ink', 'uFade', state.inkFade);
+      post.param('paper', 'uAmount', state.paperAmt);
+      post.param('paper', 'uVignette', state.paperVig);
+    }
+
+    // the paper PASS replaces the DOM overlay; showing both double-grains
+    const domGrain = state.grain && !(post && state.pPaper);
+    for (const el of grainEls) if (el) el.style.display = domGrain ? '' : 'none';
     if (audio) {
       // read sound rather than write it: the corner ♪ owns the same flag
       state.sound = audio.isSoundOn();
@@ -230,7 +258,8 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], onSound, o
 
   function tick(fps) {
     if (!panel.classList.contains('open')) return;
-    const r = renderer.info.render;
+    // with post on, renderer.info reports the last fullscreen quad, not the scene
+    const r = (post && post.active) ? post.stats : renderer.info.render;
     readout.textContent =
       `${Math.round(fps)} fps · ${r.calls} draws · ${(r.triangles / 1000).toFixed(0)}k tris`;
   }
