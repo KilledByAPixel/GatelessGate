@@ -1,4 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
+import { INK } from '../palette.js';
+import { INK_NOISE_GLSL, INK_DOMAIN_GLSL } from './inknoise.js';
 
 // Hold the last frame of the outgoing scene on screen, swap the world behind it,
 // then fade the still away to reveal the new one.
@@ -29,18 +31,35 @@ void main() {
   gl_Position = vec4(position.xy, 0.0, 1.0);
 }`;
 
-// Deliberately the same shape as the post chain's passes — plain sample, plain
-// write, no colorspace conversion — because the target is configured the same
-// way they are. Matching a chain that is already correct on screen beats
-// reasoning about sRGB round-trips from first principles; the failure mode is a
-// held frame sitting a shade off the live scene, which shows up as a visible
-// step the instant the fade begins.
+// The held frame does not fade — it DISSOLVES, the same wet-ink spread the intro
+// curtain uses, straight through to the scene underneath. A crossfade shows both
+// dioramas at once as a ghosted double image; discarding per-pixel means every
+// pixel is only ever one scene or the other, with an ink-stained edge crawling
+// between them.
+//
+// The sampling itself is deliberately the same shape as the post chain's passes
+// — plain sample, plain write, no colorspace conversion — because the target is
+// configured the same way theirs are. Matching a chain already correct on screen
+// beats reasoning about sRGB round-trips from first principles; the failure mode
+// is a held frame sitting a shade off the live scene, which shows as a step the
+// instant the dissolve begins.
 const FRAG = /* glsl */`
 uniform sampler2D tFrozen;
-uniform float uOpacity;
+uniform float uProgress;   // 0 held whole, 1 fully torn away
+uniform float uAspect;
+uniform vec3 uInk;
 varying vec2 vUv;
+${INK_NOISE_GLSL}
+${INK_DOMAIN_GLSL}
 void main() {
-  gl_FragColor = vec4(texture2D(tFrozen, vUv).rgb, uOpacity);
+  float n = inkFbm(inkDomain(vUv, uAspect));
+  // the threshold runs past 1 so the last stubborn blotches clear completely
+  float th = uProgress * 1.25 - 0.1;
+  if (n < th) discard;                       // torn away — the new scene is behind
+  vec3 old = texture2D(tFrozen, vUv).rgb;
+  // ink pools along the tearing edge, the way it does when it wets paper
+  float rim = 1.0 - smoothstep(th, th + INK_EDGE, n);
+  gl_FragColor = vec4(mix(old, uInk, rim * 0.72), 1.0);
 }`;
 
 export function makeFreeze(renderer, post, width, height) {
@@ -52,8 +71,15 @@ export function makeFreeze(renderer, post, width, height) {
   const material = new THREE.ShaderMaterial({
     vertexShader: VERT,
     fragmentShader: FRAG,
-    uniforms: { tFrozen: { value: target.texture }, uOpacity: { value: 1 } },
-    transparent: true,
+    uniforms: {
+      tFrozen: { value: target.texture },
+      uProgress: { value: 0 },
+      uAspect: { value: 1 },
+      uInk: { value: new THREE.Color(INK) },
+    },
+    // no blending: the shader discards rather than fading, so a pixel is only
+    // ever one scene or the other
+    transparent: false,
     depthTest: false,
     depthWrite: false,
   });
@@ -69,12 +95,18 @@ export function makeFreeze(renderer, post, width, height) {
 
   const api = {
     get active() { return held; },
-    get opacity() { return material.uniforms.uOpacity.value; },
+    // 0 = the held frame covers everything, 1 = fully dissolved away
+    get progress() { return material.uniforms.uProgress.value; },
+    setAspect(a) { material.uniforms.uAspect.value = a; },
 
     // Take the outgoing frame. Safe to call at any point in the turn — it
     // renders fresh rather than reading back what happened to be on screen.
     capture(scene, camera) {
       if (!scene) return false;
+      // A capture taken while a previous dissolve is still running would leave
+      // that tween driving the NEW frame — and when it finished it would drop
+      // the new frame instantly, mid-transition. Settle it first.
+      if (anim) { anim.res(); anim = null; }
       if (post && post.active) {
         post.render(scene, camera, target);
       } else {
@@ -83,7 +115,7 @@ export function makeFreeze(renderer, post, width, height) {
         renderer.render(scene, camera);
         renderer.setRenderTarget(null);
       }
-      material.uniforms.uOpacity.value = 1;
+      material.uniforms.uProgress.value = 0;
       held = true;
       return true;
     },
@@ -111,7 +143,7 @@ export function makeFreeze(renderer, post, width, height) {
       const pending = anim;
       held = false;
       anim = null;
-      material.uniforms.uOpacity.value = 1;
+      material.uniforms.uProgress.value = 0;
       if (pending) pending.res();
     },
 
@@ -121,7 +153,9 @@ export function makeFreeze(renderer, post, width, height) {
       if (!anim) return;
       anim.el += dt;
       const k = Math.min(1, anim.el / anim.dur);
-      material.uniforms.uOpacity.value = 1 - k * k * (3 - 2 * k);
+      // linear, not eased: the threshold already advances non-uniformly through
+      // the noise, and easing on top of that makes the tear stall mid-screen
+      material.uniforms.uProgress.value = k;
       if (k >= 1) {
         held = false;
         anim.res();

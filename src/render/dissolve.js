@@ -1,5 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { PAPER, INK } from '../palette.js';
+import { INK_NOISE_GLSL, INK_DOMAIN_GLSL } from './inknoise.js';
 
 // The one transition: wet ink spreading through paper.
 // t=0 covered (paper), t=1 revealed (quad hidden).
@@ -17,36 +18,15 @@ uniform float uProgress;
 uniform float uAspect;
 uniform vec3 uPaper;
 uniform vec3 uInk;
-float hash(vec2 p) {
-  p = fract(p * vec2(123.34, 456.21));
-  p += dot(p, p + 45.32);
-  return fract(p.x * p.y);
-}
-float vnoise(vec2 x) {
-  vec2 i = floor(x);
-  vec2 f = fract(x);
-  f = f * f * (3.0 - 2.0 * f);
-  float a = hash(i), b = hash(i + vec2(1, 0)), c = hash(i + vec2(0, 1)), d = hash(i + vec2(1, 1));
-  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-}
-float fbm(vec2 p) {
-  float s = 0.0, a = 0.5, n = 0.0;
-  for (int i = 0; i < 4; i++) {
-    s += a * vnoise(p);
-    n += a;
-    a *= 0.5;
-    p *= 2.07;
-  }
-  return s / n;
-}
+${INK_NOISE_GLSL}
+${INK_DOMAIN_GLSL}
 void main() {
   if (uProgress <= 0.0) {
     gl_FragColor = vec4(uPaper, 1.0);
     #include <colorspace_fragment>
     return;
   }
-  vec2 p = vUv * vec2(uAspect, 1.0) * 4.0;
-  float n = fbm(p);
+  float n = inkFbm(inkDomain(vUv, uAspect));
   float th = uProgress * 1.25 - 0.1;
   if (n < th) discard;
   vec3 col = mix(uInk, uPaper, smoothstep(th + 0.03, th + 0.22, n));

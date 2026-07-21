@@ -15,22 +15,23 @@ function stubRenderer() {
   };
 }
 
-test('a captured frame is held at full opacity until it is released', () => {
+// progress: 0 = the held frame covers the screen whole, 1 = fully torn away.
+test('a captured frame is held whole until it is released', () => {
   const r = stubRenderer();
   const f = makeFreeze(r, null, 640, 480);
   assert.equal(f.active, false, 'nothing held before a capture');
 
   assert.equal(f.capture({ tag: 'outgoing' }, {}), true);
   assert.equal(f.active, true);
-  assert.equal(f.opacity, 1, 'held opaque — the swap happens invisibly behind it');
+  assert.equal(f.progress, 0, 'held whole — the swap happens invisibly behind it');
 
-  // time passing on its own must NOT start the fade; only release() does
+  // time passing on its own must NOT start the dissolve; only release() does
   f.update(1.0);
-  assert.equal(f.opacity, 1);
+  assert.equal(f.progress, 0);
   assert.equal(f.active, true);
 });
 
-test('release fades to nothing and resolves once', async () => {
+test('release dissolves the held frame away and resolves once', async () => {
   const r = stubRenderer();
   const f = makeFreeze(r, null, 640, 480);
   f.capture({ tag: 'outgoing' }, {});
@@ -39,8 +40,8 @@ test('release fades to nothing and resolves once', async () => {
   const p = f.release(0.5).then(() => { done = true; });
 
   f.update(0.25);
-  assert.ok(f.opacity > 0.2 && f.opacity < 0.8, `mid-fade: ${f.opacity}`);
-  assert.equal(f.active, true, 'still drawn while fading');
+  assert.ok(f.progress > 0.2 && f.progress < 0.8, `mid-dissolve: ${f.progress}`);
+  assert.equal(f.active, true, 'still drawn while dissolving');
   assert.equal(done, false);
 
   f.update(0.25);
@@ -50,6 +51,29 @@ test('release fades to nothing and resolves once', async () => {
 
   f.update(1.0);   // further ticks must not resurrect it or throw
   assert.equal(f.active, false);
+});
+
+test('capturing during a running dissolve settles the old one first', async () => {
+  // Enter a case, then enter another before the first transition has finished.
+  // Without this, the in-flight tween keeps driving the NEW held frame and drops
+  // it the instant it completes — the second transition would flash.
+  const f = makeFreeze(stubRenderer(), null, 640, 480);
+  f.capture({ tag: 'first' }, {});
+  let firstSettled = false;
+  const p = f.release(1.0).then(() => { firstSettled = true; });
+  f.update(0.3);
+  assert.ok(f.progress > 0, 'first dissolve under way');
+
+  f.capture({ tag: 'second' }, {});
+  await p;
+  assert.equal(firstSettled, true, 'the superseded dissolve resolves rather than hanging');
+  assert.equal(f.progress, 0, 'the new frame is held whole, not part-dissolved');
+  assert.equal(f.active, true);
+
+  // and the stale tween must not still be running
+  f.update(0.8);
+  assert.equal(f.progress, 0, 'no leftover tween driving the new frame');
+  assert.equal(f.active, true);
 });
 
 test('capture with no scene is a no-op, so the caller can fall back to the curtain', () => {

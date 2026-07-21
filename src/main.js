@@ -42,6 +42,7 @@ const dissolve = makeDissolve();
 dissolve.setAspect(camera.aspect);
 const post = (() => { const { w, h } = stageSize(); return makePost(renderer, w, h); })();
 const freeze = (() => { const { w, h } = stageSize(); return makeFreeze(renderer, post, w, h); })();
+freeze.setAspect(camera.aspect);
 const scenes = makeSceneManager(renderer, dissolve, post, freeze);
 const input = makeInput(renderer.domElement);
 const save = createSave(window.localStorage);
@@ -123,7 +124,7 @@ async function transition(apply) {
   panel.classList.remove('fading');
   if (frozen) {
     dissolve.set(1);                       // the curtain plays no part in this one
-    await freeze.release(0.75);
+    await freeze.release(0.9);             // the ink needs a beat longer than a plain fade did
   } else {
     await dissolve.dissolveIn(0.5);
   }
@@ -309,6 +310,7 @@ addEventListener('resize', () => {
   dissolve.setAspect(camera.aspect);
   post.setSize(w, h);
   freeze.setSize(w, h);
+  freeze.setAspect(camera.aspect);
   freeze.clear();     // a held frame at the old aspect would stretch
 });
 
@@ -320,7 +322,7 @@ window.gate = {
       mode, simTime: +simTime.toFixed(4),
       drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
       fps: Math.round(fps), dissolveT: +dissolve.t.toFixed(4),
-      freeze: { active: freeze.active, opacity: +freeze.opacity.toFixed(4) },
+      freeze: { active: freeze.active, progress: +freeze.progress.toFixed(4) },
       camera: rig ? rig.state() : null,
       progress: { read: { ...save.state().read }, sat: { ...save.state().sat } },
     };
