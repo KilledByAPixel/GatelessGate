@@ -1,9 +1,12 @@
-export function buildRows(cases, progress, isRegistered) {
+// `staged` means the case has a diorama of its own; unstaged cases are still
+// fully readable, they just open onto the default landscape. Every row is
+// selectable — the whole book is available from the first visit.
+export function buildRows(cases, progress, isStaged) {
   const read = progress.read || {};
   const sat = progress.sat || {};
   return cases.map((c) => ({
     id: c.id, slug: c.slug, title: c.title, extra: !!c.extra,
-    registered: isRegistered(c.slug), read: !!read[c.slug], sat: !!sat[c.slug],
+    staged: isStaged(c.slug), read: !!read[c.slug], sat: !!sat[c.slug],
   }));
 }
 

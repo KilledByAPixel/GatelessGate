@@ -9,15 +9,19 @@ const CASES = [
 ];
 const reg = (slug) => slug === 'wind';
 
-test('buildRows reflects registration and progress', () => {
+test('buildRows reflects staging and progress', () => {
   const rows = buildRows(CASES, { read: { wind: true }, sat: { wind: true } }, reg);
   const wind = rows.find((r) => r.slug === 'wind');
-  assert.equal(wind.registered, true);
+  assert.equal(wind.staged, true, 'has a diorama of its own');
   assert.equal(wind.read, true);
   assert.equal(wind.sat, true);
+
+  // Unstaged rows are still ROWS the reader can open — `staged` only decides how
+  // the row is drawn. Nothing in the menu withholds a case any more.
   const a = rows.find((r) => r.slug === 'a');
-  assert.equal(a.registered, false);
+  assert.equal(a.staged, false);
   assert.equal(a.read, false);
+  assert.equal(rows.length, CASES.length, 'every case appears');
 });
 
 test('continueTarget prefers lastSlug, then first read, else null', () => {

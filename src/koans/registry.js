@@ -1,7 +1,8 @@
 import { bySlug } from './index.js';
+import { makeDefaultCase } from './default-case.js';
 
-// Lazy loaders keyed by numeric id (stable). The first chapter: Mu, the
-// flower, the bowl, the buffalo, and the flag.
+// Cases with a diorama of their own. Lazy loaders keyed by numeric id (stable):
+// the first chapter — Mu, the flower, the bowl, the buffalo, and the flag.
 const LOADERS = {
   1: () => import('./k1.js'),
   6: () => import('./k6.js'),
@@ -10,14 +11,26 @@ const LOADERS = {
   37: () => import('./k37.js'),
 };
 
-export function isRegistered(slug) {
+// Whether a case has been STAGED — art of its own, rather than the default
+// landscape. The menu uses this to show what has been built; it is no longer a
+// gate on reading, because every case in the book is readable.
+export function isStaged(slug) {
   const c = bySlug(slug);
   return !!(c && LOADERS[c.id]);
 }
 
+// Every case in the collection can be opened. Kept as its own predicate rather
+// than folded into isStaged: "can I read this" and "does this have art" are
+// different questions, and conflating them is what locked forty-four cases the
+// text was already sitting in the bundle for.
+export function isRegistered(slug) {
+  return !!bySlug(slug);
+}
+
 export async function loadKoan(slug) {
   const c = bySlug(slug);
-  const loader = c && LOADERS[c.id];
-  if (!loader) return null;
+  if (!c) return null;
+  const loader = LOADERS[c.id];
+  if (!loader) return makeDefaultCase(c.id);
   return (await loader()).default;
 }

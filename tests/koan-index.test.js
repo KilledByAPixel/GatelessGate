@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CASES, byId, bySlug, slugify } from '../src/koans/index.js';
-import { isRegistered, loadKoan } from '../src/koans/registry.js';
+import { isRegistered, isStaged, loadKoan } from '../src/koans/registry.js';
 
 test('slugify', () => {
   assert.equal(slugify('Not the Wind, Not the Flag'), 'not-the-wind-not-the-flag');
@@ -25,18 +25,43 @@ test('byId / bySlug', () => {
   assert.equal(bySlug('nope'), null);
 });
 
-test('the built chapter loads via the registry; unbuilt cases do not', async () => {
-  const BUILT = [1, 6, 7, 29, 37];
-  for (const id of BUILT) {
-    assert.equal(isRegistered(byId(id).slug), true, `case ${id} should be registered`);
-  }
-  const mod = await loadKoan('not-the-wind-not-the-flag');
-  assert.equal(mod.id, 29);
+test('every case in the book is readable, staged or not', async () => {
+  const STAGED = [1, 6, 7, 29, 37];
 
-  // a case we have not built yet stays unregistered and unloadable, so the menu
-  // can grey it out rather than entering an empty scene
-  const unbuilt = CASES.find((c) => !BUILT.includes(c.id));
-  assert.ok(unbuilt, 'there should still be unbuilt cases');
-  assert.equal(isRegistered(unbuilt.slug), false);
-  assert.equal(await loadKoan(unbuilt.slug), null);
+  // The whole collection opens. The text for all forty-nine is generated and in
+  // the bundle already; only the LOADERS table ever stood in front of it, and
+  // "has a diorama" is not a reason to withhold a koan from the reader.
+  for (const c of CASES) {
+    assert.ok(isRegistered(c.slug), `${c.slug} should be readable`);
+  }
+
+  for (const id of STAGED) {
+    assert.equal(isStaged(byId(id).slug), true, `case ${id} has its own diorama`);
+  }
+  assert.equal((await loadKoan('not-the-wind-not-the-flag')).id, 29);
+
+  // an unstaged case falls back to the default landscape, carrying its own text
+  const unstaged = CASES.find((c) => !STAGED.includes(c.id));
+  assert.ok(unstaged, 'there should still be unstaged cases');
+  assert.equal(isStaged(unstaged.slug), false);
+  const mod = await loadKoan(unstaged.slug);
+  assert.ok(mod, `${unstaged.slug} should load the default case`);
+  assert.equal(mod.id, unstaged.id);
+  assert.equal(mod.staged, false);
+  assert.equal(mod.title, unstaged.title);
+  assert.ok(mod.text.case && mod.text.comment && mod.text.verse,
+    'the default case carries the real text, which is the whole point');
+});
+
+test('all forty-nine resolve to a module with their own text', async () => {
+  const seen = new Set();
+  for (const c of CASES) {
+    const mod = await loadKoan(c.slug);
+    assert.ok(mod, `${c.slug} resolved nothing`);
+    assert.equal(mod.id, c.id);
+    assert.ok(mod.text.case.length > 20, `case ${c.id} has no case text`);
+    assert.ok(mod.text.verse.length > 10, `case ${c.id} has no verse`);
+    assert.ok(!seen.has(mod.text.case), `case ${c.id} duplicates another's text`);
+    seen.add(mod.text.case);
+  }
 });

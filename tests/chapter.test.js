@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { bySlug } from '../src/koans/index.js';
-import { isRegistered, loadKoan } from '../src/koans/registry.js';
+import { isRegistered, isStaged, loadKoan } from '../src/koans/registry.js';
 
 // The first chapter: five cases. Each must satisfy the koan module contract so
 // the app can enter it, drive it, and tear it down without special-casing.
@@ -35,7 +35,7 @@ test('every chapter slug resolves and is registered', () => {
     const entry = bySlug(c.slug);
     assert.ok(entry, `slug ${c.slug} is missing from the index`);
     assert.equal(entry.id, c.id, `${c.slug} should be case ${c.id}`);
-    assert.ok(isRegistered(c.slug), `${c.slug} is not registered in LOADERS`);
+    assert.ok(isStaged(c.slug), `${c.slug} is not registered in LOADERS`);
   }
 });
 

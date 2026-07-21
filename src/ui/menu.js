@@ -2,7 +2,7 @@ import { buildRows, continueTarget } from './menu_state.js';
 
 // The table of contents — a left-panel view over the idling stage scene.
 // Reads as a book's contents, not a level select.
-export function makeMenu({ cases, progress, isRegistered, onSelect, onHelp } = {}) {
+export function makeMenu({ cases, progress, isStaged, onSelect, onHelp } = {}) {
   const el = document.createElement('div');
   el.className = 'gg-view gg-menu hidden';
 
@@ -25,12 +25,14 @@ export function makeMenu({ cases, progress, isRegistered, onSelect, onHelp } = {
 
   function render(prog) {
     list.innerHTML = '';
-    for (const r of buildRows(cases, prog, isRegistered)) {
+    for (const r of buildRows(cases, prog, isStaged)) {
       const li = document.createElement('li');
-      li.className = r.registered ? 'registered' : 'locked';
+      // every case opens; `unstaged` only dims the row a little to show which
+      // ones are still waiting for art of their own
+      li.className = r.staged ? 'registered' : 'unstaged';
       const num = document.createElement('span'); num.className = 'num'; num.textContent = String(r.id);
       const ttl = document.createElement('span'); ttl.className = 'ttl'; ttl.textContent = r.title;
-      if (r.registered) ttl.onclick = () => onSelect && onSelect(r.slug);
+      ttl.onclick = () => onSelect && onSelect(r.slug);
       const mark = document.createElement('span');
       mark.className = 'mark ' + (r.sat ? 'stamp' : r.read ? 'dot' : '');
       mark.textContent = r.sat ? '◉' : '';
@@ -39,7 +41,7 @@ export function makeMenu({ cases, progress, isRegistered, onSelect, onHelp } = {
     }
     cont.innerHTML = '';
     const tgt = continueTarget(cases, prog, prog.lastSlug);
-    if (tgt && isRegistered(tgt)) {
+    if (tgt) {
       const b = document.createElement('button');
       b.className = 'gg-btn';
       b.textContent = 'Continue';

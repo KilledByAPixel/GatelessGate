@@ -11,7 +11,7 @@ import { createSave } from './save.js';
 import { createAudio } from './audio/engine.js';
 import { createNarration } from './audio/narration.js';
 import { CASES } from './koans/index.js';
-import { isRegistered, loadKoan } from './koans/registry.js';
+import { isStaged, isRegistered, loadKoan } from './koans/registry.js';
 import { buildHub, makeIntro } from './intro.js';
 import { makeMenu } from './ui/menu.js';
 import { makeOnboarding } from './ui/onboarding.js';
@@ -70,7 +70,7 @@ function showView(el) {
 }
 
 const menu = makeMenu({
-  cases: CASES, progress: save.state(), isRegistered,
+  cases: CASES, progress: save.state(), isStaged,
   onSelect: (slug) => enter(slug),
   onHelp: () => onboarding.show(),
 });
@@ -197,7 +197,10 @@ async function enter(slug) {
       koan = built; koanSlug = slug;
       built.onEnter && built.onEnter();
       save.markRead(slug);
-      makeRig({ distance: 11.5, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27 });
+      // A case may frame itself. Most want the standard diorama shot, but a wide
+      // establishing scene and a close one on a single figure are not the same
+      // photograph, and an unstaged landscape wants to sit back further still.
+      makeRig({ distance: 11.5, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27, ...(mod.camera || {}) });
       menu.close();
       scroll = makeScroll({
         id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,

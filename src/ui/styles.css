@@ -44,9 +44,12 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
 .gg-menu li { display: flex; align-items: baseline; gap: 12px; padding: 9px 0; border-bottom: 1px solid rgba(30,30,36,0.08); }
 .gg-menu li .num { font-size: 13px; color: var(--gray); width: 24px; text-align: right; flex: none; }
 .gg-menu li .ttl { flex: 1; font-size: 18px; }
-.gg-menu li.locked .ttl { color: rgba(30,30,36,0.32); }
-.gg-menu li.registered .ttl { cursor: pointer; }
-.gg-menu li.registered .ttl:hover { color: var(--accent); }
+/* Every case opens. `unstaged` means it has no diorama of its own yet, so it
+   sits a little back on the page — readable, clearly not withheld. It used to
+   be `locked` at 0.32 opacity, which read as unavailable. */
+.gg-menu li .ttl { cursor: pointer; }
+.gg-menu li .ttl:hover { color: var(--accent); }
+.gg-menu li.unstaged .ttl { color: rgba(30,30,36,0.62); }
 .gg-menu li .mark { width: 18px; text-align: center; flex: none; }
 .gg-menu li .dot::before { content: '·'; color: var(--gray); font-size: 22px; line-height: 0; }
 .gg-menu li .stamp { color: var(--accent); }
