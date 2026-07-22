@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { windParams, bellPartials, GUST_A, GUST_B, gustPhase } from '../src/audio/synths.js';
+import { windParams, bellPartials, chimePartials, GUST_A, GUST_B, gustPhase } from '../src/audio/synths.js';
 import { parseRecipe } from '../src/audio/engine.js';
 import { hz } from '../src/audio/tuning.js';
 
@@ -64,4 +64,21 @@ test('gustPhase is bounded, irregular, and crests at chime rate', () => {
   const gaps = hits.slice(1).map((t, i) => t - hits[i]);
   assert.ok(Math.min(...gaps) > 13, `crests too close: ${Math.min(...gaps)}`);
   assert.ok(Math.max(...gaps) < 31, `dead air: ${Math.max(...gaps)}`);
+});
+
+test('chimePartials is glass, not bronze', () => {
+  const c = chimePartials(2349);
+  assert.ok(c.length >= 3);
+  for (const x of c) assert.ok(x.freq > 0 && x.amp > 0 && x.decay > 0);
+  // inharmonic, like the bell
+  const ratios = c.map((x) => x.freq / 2349);
+  assert.ok(ratios.some((r) => Math.abs(r - Math.round(r)) > 0.05));
+  // amplitudes fall away from the fundamental
+  for (let i = 1; i < c.length; i++) assert.ok(c[i].amp < c[i - 1].amp);
+  // glass rings BRIEFLY and HIGH: a bonsho hangs on for ten seconds, this does not
+  const bell = bellPartials(62);
+  assert.ok(c[0].decay < 2, `chime decay too long: ${c[0].decay}`);
+  assert.ok(c[0].decay < bell[0].decay / 4);
+  assert.ok(c[0].freq > bell[0].freq * 10);
+  assert.ok(c.length < bell.length);
 });

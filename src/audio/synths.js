@@ -1,6 +1,8 @@
 // Procedural voices. Pure param tables are tested; the node builders are browser-only.
 // (Audio is exempt from the determinism rule — Math.random for noise is fine here.)
 
+import { hz } from './tuning.js';
+
 export function windParams(level) {
   const l = Math.max(0, Math.min(1, level));
   return {
@@ -16,6 +18,15 @@ export function bellPartials(f0 = 62) {
   return [
     [1.0, 1.0, 10], [1.5, 0.6, 8], [2.0, 0.45, 6], [2.66, 0.3, 4.5],
     [3.01, 0.22, 3], [4.13, 0.14, 2],
+  ].map(([r, a, d]) => ({ freq: f0 * r, amp: a, decay: d }));
+}
+
+// Glass, not bronze: fewer partials, much higher, gone in about a second. A
+// furin is one bright ting — a Western multi-tube chime would put far more
+// events into the air than this book can absorb.
+export function chimePartials(f0 = 2349) {
+  return [
+    [1.0, 1.0, 1.2], [2.4, 0.5, 0.8], [4.5, 0.28, 0.5], [6.8, 0.15, 0.3],
   ].map(([r, a, d]) => ({ freq: f0 * r, amp: a, decay: d }));
 }
 
@@ -96,12 +107,16 @@ export function makeWind(ctx, dest) {
   };
 }
 
-export function strikeBell(ctx, dest, { f0 = 62, gain = 1 } = {}) {
+// One struck resonator for the whole palette. Wood, glass, bronze, bamboo and
+// stone are this same function with a different partial table, decay and
+// transient — which is why generalizing it while there were two callers was
+// cheaper than doing it at six.
+export function strike(ctx, dest, { partials, gain = 1, transient = {} } = {}) {
   const t = ctx.currentTime;
   const out = ctx.createGain();
   out.gain.value = gain;
   out.connect(dest);
-  for (const p of bellPartials(f0)) {
+  for (const p of partials) {
     for (const det of [-0.35, 0.35]) {
       const osc = ctx.createOscillator();
       osc.type = 'sine';
@@ -115,13 +130,25 @@ export function strikeBell(ctx, dest, { f0 = 62, gain = 1 } = {}) {
       osc.start(t); osc.stop(t + p.decay + 0.1);
     }
   }
-  const dur = 0.08;
-  const nb = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+  // the mallet: a short filtered noise burst, the part that says what hit what
+  const { dur = 0.08, freq = 620, q = 1.2, amp = 0.25 } = transient;
+  const nb = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * dur), ctx.sampleRate);
   const nd = nb.getChannelData(0);
   for (let i = 0; i < nd.length; i++) nd[i] = (Math.random() * 2 - 1) * (1 - i / nd.length);
   const nsrc = ctx.createBufferSource(); nsrc.buffer = nb;
-  const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 620; bp.Q.value = 1.2;
-  const ng = ctx.createGain(); ng.gain.value = 0.25;
+  const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
+  const ng = ctx.createGain(); ng.gain.value = amp;
   nsrc.connect(bp); bp.connect(ng); ng.connect(out);
   nsrc.start(t);
+}
+
+export function strikeBell(ctx, dest, { f0 = 62, gain = 1 } = {}) {
+  strike(ctx, dest, { partials: bellPartials(f0), gain });
+}
+
+export function strikeChime(ctx, dest, { f0 = hz(20), gain = 1 } = {}) {
+  strike(ctx, dest, {
+    partials: chimePartials(f0), gain,
+    transient: { dur: 0.03, freq: 4200, q: 2.0, amp: 0.18 },
+  });
 }
