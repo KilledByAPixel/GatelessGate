@@ -152,3 +152,34 @@ export function strikeChime(ctx, dest, { f0 = hz(20), gain = 1 } = {}) {
     transient: { dur: 0.03, freq: 4200, q: 2.0, amp: 0.18 },
   });
 }
+
+// The drift layer's voice. Swelled, not struck: objects strike, the air breathes,
+// and the two layers must not be mistakable for each other.
+//
+// Guard the attack in review. Stretch it past half a second and this stops being
+// an ink painting and starts being a meditation app.
+export function makeSwell(ctx, dest, { freq, gain = 1, attack = 0.22, hold = 0.4, release = 6 } = {}) {
+  const t = ctx.currentTime;
+  const out = ctx.createGain();
+  out.gain.value = 0;
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = freq * 6; lp.Q.value = 0.3;
+  lp.connect(out); out.connect(dest);
+
+  const end = attack + hold + release;
+  // a detuned pair on the fundamental so it beats gently instead of sitting dead
+  for (const [mult, amp, det] of [[1, 1, -0.25], [1, 1, 0.25], [2, 0.18, 0], [3, 0.07, 0]]) {
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq * mult + det;
+    const g = ctx.createGain(); g.gain.value = amp;
+    osc.connect(g); g.connect(lp);
+    osc.start(t); osc.stop(t + end + 0.2);
+  }
+
+  const peak = gain * 0.05;
+  out.gain.setValueAtTime(0, t);
+  out.gain.linearRampToValueAtTime(peak, t + attack);
+  out.gain.setValueAtTime(peak, t + attack + hold);
+  out.gain.exponentialRampToValueAtTime(peak * 0.001, t + end);
+}

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { windParams, bellPartials, chimePartials, GUST_A, GUST_B, gustPhase } from '../src/audio/synths.js';
-import { parseRecipe } from '../src/audio/engine.js';
+import { parseRecipe, emitterCount } from '../src/audio/engine.js';
 import { hz } from '../src/audio/tuning.js';
 
 test('windParams monotonic and bounded', () => {
@@ -81,4 +81,13 @@ test('chimePartials is glass, not bronze', () => {
   assert.ok(c[0].decay < bell[0].decay / 4);
   assert.ok(c[0].freq > bell[0].freq * 10);
   assert.ok(c.length < bell.length);
+});
+
+test('emitterCount counts sound sources, not beds', () => {
+  // wind is a bed and music is the thing being thinned; neither is an emitter
+  assert.equal(emitterCount([]), 0);
+  assert.equal(emitterCount(['wind:0.25']), 0);
+  assert.equal(emitterCount(['wind:0.25', 'music']), 0);
+  assert.equal(emitterCount(['wind:0.25', 'furin:0.4', 'music']), 1);
+  assert.equal(emitterCount(['furin:0.4', 'furin:0.2']), 2);
 });

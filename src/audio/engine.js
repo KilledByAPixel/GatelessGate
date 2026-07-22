@@ -1,8 +1,17 @@
-import { makeWind, strikeBell } from './synths.js';
+import { makeWind, strikeBell, strikeChime } from './synths.js';
+import { makeMusic } from './music.js';
 
 export function parseRecipe(str) {
   const [type, arg] = str.split(':');
   return { type, level: arg !== undefined ? parseFloat(arg) : 1 };
+}
+
+// Beds are not emitters: wind is atmosphere rather than an event source, and
+// music is the thing being thinned. Everything else in a recipe is an object
+// that makes noise, and each one buys the drift layer more silence.
+const BEDS = new Set(['wind', 'music']);
+export function emitterCount(recipe = []) {
+  return recipe.filter((s) => !BEDS.has(parseRecipe(s).type)).length;
 }
 
 // Browser-only. `save` is a createSave() instance.
@@ -33,6 +42,16 @@ export function createAudio(save) {
     musicGain.connect(master);
   }
 
+  function playMusic(emitters = 0) {
+    ensureCtx();
+    if (music) { music.setEmitters(emitters); return; }
+    music = makeMusic(ctx, musicGain, { emitters });
+  }
+
+  function stopMusic() {
+    if (music) { try { music.stop(); } catch { /* already stopped */ } music = null; }
+  }
+
   return {
     get ctx() { return ctx; },
     get master() { return master; },
@@ -46,18 +65,24 @@ export function createAudio(save) {
     duck(on) { ducked = !!on; applyMaster(); },
     startAmbience(recipe = []) {
       ensureCtx();
+      const emitters = emitterCount(recipe);
       for (const item of recipe) {
         const { type, level } = parseRecipe(item);
         if (type === 'wind' && !wind) { wind = makeWind(ctx, master); wind.setLevel(level); }
+        if (type === 'music') playMusic(emitters);
       }
     },
     setWindLevel(v) { windLevel = v; if (wind) wind.setLevel(v * windScale); },
     setWindScale(s) { windScale = s; if (wind) wind.setLevel(windLevel * windScale); },
     windScale() { return windScale; },
-    stopAmbience() { if (wind) { wind.stop(); wind = null; } },
+    stopAmbience() {
+      if (wind) { wind.stop(); wind = null; }
+      stopMusic();
+    },
     bell(opts = {}) { ensureCtx(); strikeBell(ctx, master, opts); },
-    playMusic() { /* stub: ambient generated tracks are a future experiment */ },
-    stopMusic() { if (music) { try { music.stop(); } catch {} music = null; } },
+    chime(opts = {}) { ensureCtx(); strikeChime(ctx, master, opts); },
+    playMusic,
+    stopMusic,
     musicVolume(v) { if (musicGain) musicGain.gain.value = v; },
   };
 }

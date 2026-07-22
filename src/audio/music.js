@@ -1,4 +1,5 @@
-import { SCALE, DRIFT_OCTAVES } from './tuning.js';
+import { SCALE, DRIFT_OCTAVES, hz } from './tuning.js';
+import { makeSwell } from './synths.js';
 
 // The drift layer: the sparse, sourceless tones that carry the scenes with
 // nothing in them to make a noise. Everything here is pure and takes an injected
@@ -49,3 +50,31 @@ export function nextInterval(emitters, rng) {
 // kills most generative ambient — regular spacing reads as a machine no matter
 // how unpredictable the pitches are.
 export const shouldRest = (rng) => rng() < REST_CHANCE;
+
+// Browser-only. Scheduling runs on setTimeout and envelopes on ctx.currentTime —
+// both independent of the sim clock, which pauses whenever the preview panel is
+// hidden. The music should not stop just because nothing is being drawn.
+export function makeMusic(ctx, dest, { emitters = 0, rng = Math.random } = {}) {
+  let degree = 0, timer = null, stopped = false, played = 0;
+  let n = emitters;
+
+  function schedule() {
+    if (stopped) return;
+    const wait = nextInterval(n, rng) * (shouldRest(rng) ? 2 : 1);
+    timer = setTimeout(() => {
+      if (stopped) return;
+      degree = nextDegree(degree, rng);
+      makeSwell(ctx, dest, { freq: hz(degree) });
+      played++;
+      schedule();
+    }, wait * 1000);
+  }
+  schedule();
+
+  return {
+    stop() { stopped = true; if (timer) clearTimeout(timer); timer = null; },
+    setEmitters(v) { n = v; },
+    played() { return played; },
+    degree() { return degree; },
+  };
+}
