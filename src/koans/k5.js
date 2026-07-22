@@ -2,7 +2,6 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, INK, ACCENT, ACCENT_DEEP, GRAY_DARK } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
-import { makeMonk, aimMonk } from '../kit/monk.js';
 import { makeOak } from '../kit/oak.js';
 import { makeCliff } from '../kit/cliff.js';
 import { makeHangingMonk } from '../kit/hangingmonk.js';
@@ -12,14 +11,15 @@ import { addOutlines } from '../render/outlines.js';
 
 const ID = 5;
 
-// The staging. A meadow that simply stops: a broken rock lip down the west
-// side, mist where ground ought to be, and one grey oak leaning its stout
-// limb out over the nothing. From the limb, by his teeth, hangs the man —
-// vertical, arms at his sides, feet together, as composed as it is possible
-// to be while hanging from a tree by your teeth. On the safe grass below, the
-// questioner has his sleeve up: "Why did Bodhidharma come to China?" The
-// man's sedge hat sits upright at the edge of the drop where it landed.
-// Nobody answers anything.
+// The staging. A meadow that genuinely stops: the ground mesh itself is carved
+// away west of the broken rock lip (see the cut in build), falls a cliff face
+// into a mist-filled gorge, and rises again as a fogged far wall. One grey oak
+// leans its stout limb out over the drop. From the limb, by his teeth, hangs
+// the man — alone; Frank cut the questioner, and the question lives in the
+// text where it belongs — tipped back off his own bite, arms at his sides,
+// feet together, as composed as it is possible to be while hanging from a
+// tree by your teeth. His sedge hat sits upright on the grass at the edge
+// where it landed. Nobody answers anything.
 const CLIFF = { x: -3.4, z: -2.0, yaw: Math.PI / 2 };   // void faces -x
 // seed 13 at this yaw, from a scan of eighty: widest gap between the crown's
 // worst lobe and the hanging man (1.55 — he can take his fullest swing and
@@ -27,7 +27,6 @@ const CLIFF = { x: -3.4, z: -2.0, yaw: Math.PI / 2 };   // void faces -x
 // crown overhanging the lip by 1.5 so the tree itself leans out over nothing.
 const OAK = { x: -2.2, z: -2.0, height: 5.0, seed: 13, yaw: 4.9 };
 const BRANCH = { base: [-2.35, 3.34, -2.0], len: 3.9, tilt: 0.062 };
-const QUESTIONER = { x: -3.0, z: -0.4 };
 const HAT = { x: -2.55, z: -3.3 };
 
 // the branch runs from its base toward -x, drooping a little at the tip
@@ -48,17 +47,13 @@ export default {
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.24'],   // exposed height — more wind than a garden gets
 
-  // The subject is UP: the frame pivots near branch height so the dangler and
-  // the questioner below him hold the picture together, with the void taking
-  // the left of frame. Azimuth home looks northwest from the meadow side, so
-  // the man hangs against mist rather than against his own tree.
-  // Nearly due south, deliberately: the branch reaches WEST over the void, so
-  // the stock south-east azimuth looked THROUGH the canopy and the man was a
-  // red sliver at its rim. From here the composition reads left to right —
-  // void, the dangling man in profile against the mist, the limb carrying him
-  // back into the crown, the questioner below. The builder's clearance check
-  // measured mesh-to-mesh distance, not the sightline; this is the sightline.
-  camera: { distance: 13.5, target: [-3.6, 2.6, -1.6], azimuth: 0.10, polar: 1.25 },
+  // Nearly due south, deliberately: the branch reaches WEST over the gorge, so
+  // a south-east azimuth looks THROUGH the canopy and the man becomes a red
+  // sliver at its rim. From here the frame reads left to right — the gorge,
+  // the man in profile over it, the limb carrying him back into the crown —
+  // and the polar sits a touch lower than house so the cliff face below the
+  // lip is actually in shot, which is what makes the drop a drop.
+  camera: { distance: 13.5, target: [-4.0, 2.3, -1.6], azimuth: 0.10, polar: 1.30 },
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -101,18 +96,21 @@ export default {
     // the scene carries any accent at all.
     const [gx, gy] = branchAt(GRIP_ALONG);
     const gripR = 0.115 + (0.05 - 0.115) * (GRIP_ALONG / BRANCH.len);
-    const grip = [gx, gy - gripR, BRANCH.base[2]];
+    // The bite point sits at the branch's SIDE, barely below its axis — not
+    // under its belly. The mouth is the figure's origin, so from here the front
+    // of his face presses into the wood and the crown tips back behind it: a
+    // man hanging from his jaw. (Frank: "his head... biting into the branch,
+    // tilted back a little like he's dangling.")
+    const grip = [gx, gy - gripR * 0.2, BRANCH.base[2] + gripR * 0.55];
     const dangler = makeHangingMonk({ height: 1.6, color: ACCENT_DEEP, seed: ID });
     dangler.group.position.set(grip[0], grip[1], grip[2]);
-    dangler.group.rotation.y = -0.45;   // faces his questioner, for what good it does
+    dangler.group.rotation.y = -0.45;   // three-quarter to the home lens
     scene.add(dangler.group);
 
-    // ---- the questioner --------------------------------------------------
-    // On the safe ground, under the tree, sleeve up. Politely.
-    const questioner = makeMonk({ pose: 'point', height: 1.62 });
-    questioner.position.set(QUESTIONER.x, 0, QUESTIONER.z);
-    aimMonk(questioner, { x: grip[0], z: grip[2] });
-    scene.add(questioner);
+    // No questioner. Frank cut him, and the cut is right: the case's question
+    // hangs in the text beside the scene, and the picture is stronger as one
+    // man alone over the drop with nobody to answer to. The whole predicament
+    // is his.
 
     // and the hat that did not stay on, upright on the grass at the very edge
     const hat = new THREE.Mesh(
@@ -126,6 +124,20 @@ export default {
     // ---- the world -------------------------------------------------------
     // Props stay off the rock and out of the air; grass grows to the lip and
     // no further. The meadow is only on the safe side, which is the point.
+    //
+    // The GORGE region gets its own keepout grid. The ground mesh is genuinely
+    // sunk below the lip (see the cut after composeWorld), but placement math
+    // — grass, rocks, ring trees — still samples the UNSUNK groundHeight
+    // formula, so anything allowed to spawn west of the lip would hover five
+    // units over the gorge floor. Three columns of circles blanket the sunk
+    // bay; past them the recovery ramp has risen far enough that nothing reads
+    // as floating under the fog.
+    const gorgeMask = [];
+    for (const mx of [-7.1, -13.3, -19.5]) {
+      for (const mz of [-12, -7.5, -3, 1.5, 5]) {
+        gorgeMask.push({ x: mx, z: mz, r: 3.4 });
+      }
+    }
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
@@ -133,19 +145,51 @@ export default {
       keepout: [
         ...cliff.footprint(0.9),
         ...cliff.voidFootprint(0.6),
+        ...gorgeMask,
         { x: OAK.x, z: OAK.z, r: 4.6 },
-        { x: QUESTIONER.x, z: QUESTIONER.z, r: 1.2 },
         { x: HAT.x, z: HAT.z, r: 0.8 },
       ],
       grassKeepout: [
         ...cliff.footprint(0.15),
         ...cliff.voidFootprint(0.3),
+        ...gorgeMask,
         { x: HAT.x, z: HAT.z, r: 0.42 },
       ],
     });
 
-    // shadows: the tree's, the questioner's, the hat's little one. None under
-    // the hanging man — there is no ground under the hanging man.
+    // ---- the cut: the precipice is REAL ----------------------------------
+    // Frank's verdict on the painted version was flat: "there is no precipice."
+    // He wanted a cliff face with the tree at its edge and the man over the
+    // drop — so the ground itself now falls away. The case owns its scene, so
+    // it can carve its own ground mesh without touching the shared kit: every
+    // vertex west of the lip sinks on a steep smoothstep (the cliff face), runs
+    // a gorge floor, and eases back up 13-22 units out — the far wall, already
+    // deep in fog, with the mist banks lying in the chasm between. A bay window
+    // along z confines the cut to the dressed run of lip stones, so beyond them
+    // the meadow wraps around instead of tearing on an unrocked edge.
+    const groundMesh = scene.getObjectByName('ground');
+    const LIP_X = CLIFF.x - 0.35;
+    const DROP = 5;
+    const SS = (a, b, v) => {
+      const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
+      return t * t * (3 - 2 * t);
+    };
+    const gpos = groundMesh.geometry.attributes.position;
+    for (let i = 0; i < gpos.count; i++) {
+      const wx = gpos.getX(i);
+      const d = LIP_X - wx;                     // how far into the void
+      if (d <= 0) continue;
+      const wz = gpos.getZ(i);
+      const bay = SS(-14, -9, wz) * (1 - SS(2, 6, wz));
+      if (bay <= 0) continue;
+      const sink = DROP * SS(0, 1.4, d) * (1 - SS(13, 22, d)) * bay;
+      if (sink > 0) gpos.setY(i, gpos.getY(i) - sink);
+    }
+    gpos.needsUpdate = true;
+    groundMesh.geometry.computeVertexNormals();
+
+    // shadows: the tree's and the hat's little one. None under the hanging
+    // man — there is no ground under the hanging man.
     const canopyShadow = makeBlobShadow({ radiusX: 1.9, radiusZ: 1.6, opacity: 0.24 });
     canopyShadow.position.set(OAK.x - 0.35, 0.012, OAK.z - 0.45);
     scene.add(canopyShadow);
@@ -153,7 +197,6 @@ export default {
     boleShadow.position.set(OAK.x, 0.014, OAK.z);
     scene.add(boleShadow);
     for (const [x, z, rx, rz, op] of [
-      [QUESTIONER.x, QUESTIONER.z, 0.65, 0.5, 0.42],
       [HAT.x - 0.06, HAT.z - 0.05, 0.35, 0.3, 0.30],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });

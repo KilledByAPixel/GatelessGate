@@ -190,6 +190,12 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
       // designed in, emissive and visible were not): the clone must copy
       // EVERYTHING that affects rendering, not the properties someone thought of.
       m.visible = src.visible;
+      // ...and the texture. A material with a map cloned WITHOUT it renders as
+      // a bare tinted quad — the cliff's mist sprites shipped that way and
+      // nobody could tell what the pale rectangles were. (Fourth property this
+      // clone has been caught dropping.)
+      if (src.map !== undefined) m.map = src.map;
+      if (src.alphaTest) m.alphaTest = src.alphaTest;
       mesh.userData._matPlain = m;
     }
     return mesh.userData._matPlain;

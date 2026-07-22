@@ -91,7 +91,10 @@ test('makeHangingMonk hangs from its pivot — the mass is all below the teeth',
   const m = makeHangingMonk({ height: 1.6, seed: 5 });
   assert.equal(m.group.name, 'hangingmonk');
   const b = box(m.group);
-  assert.ok(b.max.y <= 0.01, `nothing rises above the grip, got ${b.max.y}`);
+  // The crown MAY rise a little past the grip now: the mouth sits on the
+  // head's upper-front surface (the bite), so the back of the skull tips up
+  // behind the branch line. Everything else stays below.
+  assert.ok(b.max.y <= 0.12, `only the tipped-back crown rises past the bite, got ${b.max.y}`);
   assert.ok(b.min.y < -1.6 * 0.85, `a whole man hangs below it, got ${b.min.y}`);
   assert.ok(Math.max(b.max.x - b.min.x, b.max.z - b.min.z) < 0.8,
     'a hanging figure, not a spread one');
@@ -166,11 +169,11 @@ test('module shape matches the koan contract', () => {
   assert.deepEqual(k5.ambience, ['wind:0.24']);
   assert.equal(k5.music, undefined, 'silence is right here');
   assert.ok(k5.camera && Number.isFinite(k5.camera.distance), 'a camera of its own');
-  assert.ok(k5.camera.target[1] >= 2.4, 'the subject is UP — the frame pivots at branch height');
+  assert.ok(k5.camera.target[1] >= 2.0, 'the subject is UP — the frame pivots near branch height');
   assert.equal(typeof k5.build, 'function');
 });
 
-test('build stages the predicament: cliff, grey oak, dangler over the drop, questioner on the grass', () => {
+test('build stages the predicament: cliff, grey oak, one man alone over a real drop', () => {
   const built = k5.build(fakeCtx());
   assert.ok(built.scene instanceof THREE.Scene);
   for (const fn of ['update', 'onEnter', 'onExit', 'dispose', 'fragment', 'setCamera']) {
@@ -184,7 +187,9 @@ test('build stages the predicament: cliff, grey oak, dangler over the drop, ques
   assert.equal(found.oak.length, 1, 'one tree at its lip');
   assert.equal(found.branch.length, 1, 'one stout limb over the drop');
   assert.equal(found.hangingmonk.length, 1, 'one man hanging by his teeth');
-  assert.equal(found.monk.length, 1, 'one questioner, nobody else about');
+  // No questioner — Frank cut him. One man, alone, and the question in the
+  // text beside the scene.
+  assert.equal(found.monk.length, 0, 'nobody else about');
   assert.equal(found.fallenhat.length, 1, 'and the hat that did not stay on');
 
   // the seal: HIS robe, deepened for a person-sized mass — and nothing else red
@@ -195,9 +200,21 @@ test('build stages the predicament: cliff, grey oak, dangler over the drop, ques
   const canopy = found.oak[0].children.find((c) => c.name === 'canopy');
   assert.equal(canopy.material.color.getHexString(), new THREE.Color(WASH.deep).getHexString(),
     'the oak stays grey — k38 owns the red tree');
-  const qBody = found.monk[0].children.find((c) => c.name === 'body');
-  assert.equal(qBody.material.color.getHexString(), new THREE.Color(INK).getHexString(),
-    'the questioner is an ink figure');
+  // the precipice is REAL: the ground mesh is carved below the lip. Sample
+  // the actual geometry west of the cliff line and it must fall away, while
+  // the meadow east of it stays put.
+  const ground = built.scene.getObjectByName('ground');
+  const gp = ground.geometry.attributes.position;
+  let gorgeMin = Infinity, safeMin = Infinity;
+  for (let i = 0; i < gp.count; i++) {
+    const x = gp.getX(i), z = gp.getZ(i), y = gp.getY(i);
+    if (z > -9 && z < 2) {
+      if (x < -7 && x > -13) gorgeMin = Math.min(gorgeMin, y);
+      if (x > -2 && x < 6) safeMin = Math.min(safeMin, y);
+    }
+  }
+  assert.ok(gorgeMin < -4, `the gorge floor is genuinely down: ${gorgeMin.toFixed(2)}`);
+  assert.ok(safeMin > -1, `the meadow side keeps its ground: ${safeMin.toFixed(2)}`);
 
   // he hangs UP at branch height, out past the lip, clear of the ground
   assert.ok(dangler.position.y > 2.8 && dangler.position.y < 3.4,

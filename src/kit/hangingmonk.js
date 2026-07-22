@@ -38,14 +38,25 @@ export function makeHangingMonk({ height = 1.6, color = INK, seed = 5 } = {}) {
   ].map(([r, y]) => new THREE.Vector2(r * h, y * h));
   const body = new THREE.Mesh(new THREE.LatheGeometry(profile, 10), mat);
   body.name = 'body';
+  // the body hangs plumb under the HEAD, not under the mouth — this backset is
+  // what draws the tipped-back dangle on a figure made of featureless solids
+  body.position.z = -0.062 * h;
   g.add(body);
 
-  // head tight under the pivot: its crown all but touches the branch the
-  // teeth are set in
+  // THE BITE. The group origin is the mouth, and the mouth is on the head's
+  // upper-front surface — so the head hangs BELOW AND BEHIND the origin,
+  // reaching up-and-forward to it, and when the case sets the origin against
+  // the branch the front of his face presses INTO the wood. Frank's note, and
+  // he's right about the physics: a man hanging by his teeth tips back, chin
+  // up, crown away — he dangles from his jaw, he doesn't stand under it.
+  // (The head is a featureless sphere, so the tilt is drawn by OFFSETS — head
+  // behind the pivot, body further behind still — rather than by rotating
+  // geometry nobody can see rotate.)
   const headR = 0.095 * h;
   const head = new THREE.Mesh(new THREE.SphereGeometry(headR, 14, 10), mat);
   head.name = 'head';
-  head.position.y = -0.115 * h;
+  // mouth = origin = head centre + (up 0.55 + forward 0.75) · headR
+  head.position.set(0, -0.55 * headR, -0.75 * headR);
   g.add(head);
 
   // sleeves hanging straight down at his sides — his hands grasp no branch
@@ -55,7 +66,7 @@ export function makeHangingMonk({ height = 1.6, color = INK, seed = 5 } = {}) {
     geo.translate(0, -sleeveL / 2, 0);
     const arm = new THREE.Mesh(geo, mat);
     arm.name = 'arm';
-    arm.position.set(side * 0.122 * h, -0.295 * h, 0);
+    arm.position.set(side * 0.122 * h, -0.295 * h, -0.062 * h);
     arm.rotation.z = side * -0.055;   // a hair clear of the robe, still plumb
     arm.rotation.x = 0.02;
     g.add(arm);
@@ -66,7 +77,7 @@ export function makeHangingMonk({ height = 1.6, color = INK, seed = 5 } = {}) {
     const foot = new THREE.Mesh(
       new THREE.CylinderGeometry(0.030 * h, 0.026 * h, 0.075 * h, 7), mat);
     foot.name = 'foot';
-    foot.position.set(side * 0.037 * h, -0.955 * h, 0.012 * h);
+    foot.position.set(side * 0.037 * h, -0.955 * h, -0.050 * h);
     g.add(foot);
   }
 

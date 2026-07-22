@@ -142,11 +142,36 @@ export function makeCliff({
   // Unlit soft sprites laid over the far ground, sunk under the lip stones and
   // rising slightly with distance. The nearest bank tucks its feathered edge in
   // UNDER the lip so no strip of meadow ever shows beyond the rock line.
+  // THE FOG FILL. The horizontal mist sprites go edge-on the moment the camera
+  // drops toward the horizon — from the case's own low south camera they were
+  // foreshortened slivers, and the gorge floor (and the tree's real shadow
+  // lying on it) showed straight through. What cannot go edge-on is a SOLID:
+  // one unlit near-paper block fills the gorge from just below the upper crags
+  // downward, so the drop reads the way an ink painter draws it — meadow,
+  // broken lip, a band of bare rock face, and then nothing but paper. Unlit
+  // and fog-free on purpose: it IS the fog, and it must not pick up the sun or
+  // dim with distance. The sprites stay as a soft lapping edge on its surface.
+  const FOG_TOP = -1.15;
+  const fill = new THREE.Mesh(
+    new THREE.BoxGeometry(width * 2.1, drop + 2, 13.5),
+    new THREE.MeshBasicMaterial({ color: wash(0.04) }));
+  fill.material.fog = false;
+  fill.name = 'fogfill';
+  fill.userData.noOutline = true;
+  // Deliberately UNLIT — it is the fog, not a surface. The debug panel's
+  // toon-off clone must not rebuild it as a Lambert: lit near-paper under the
+  // hard key comes out bright, RECEIVES the tree's shadow, and the void grows
+  // a floor again — which is exactly the artifact this block exists to kill.
+  fill.userData.keepMaterial = true;
+  fill.position.set(0, FOG_TOP - (drop + 2) / 2, -(depth * 0.5 + 13.5 / 2 - 0.4));
+  g.add(fill);
+
   const tex = mistTexture();
   const BANKS = [
-    { z: -(depth * 0.5 + 1.5), y: 0.12, sx: width * 1.35, sz: 5.0, op: 0.96 },
-    { z: -(depth * 0.5 + 3.9), y: 0.26, sx: width * 1.45, sz: 6.0, op: 0.90 },
-    { z: -(depth * 0.5 + 6.6), y: 0.42, sx: width * 1.55, sz: 7.0, op: 0.82 },
+    { z: -(depth * 0.5 + 1.4), y: FOG_TOP + 0.10, sx: width * 1.55, sz: 6.5, op: 0.95 },
+    { z: -(depth * 0.5 + 4.2), y: FOG_TOP + 0.28, sx: width * 1.70, sz: 8.0, op: 0.90 },
+    { z: -(depth * 0.5 + 7.4), y: FOG_TOP + 0.50, sx: width * 1.80, sz: 8.5, op: 0.84 },
+    { z: -(depth * 0.5 + 11.0), y: FOG_TOP + 0.85, sx: width * 1.85, sz: 9.0, op: 0.78 },
   ];
   BANKS.forEach((bank, k) => {
     const j = 4000 + k * 17;
@@ -158,6 +183,7 @@ export function makeCliff({
       }));
     mesh.name = 'mist';
     mesh.userData.noOutline = true;
+    mesh.userData.keepMaterial = true;   // unlit, textured — the clone breaks both
     mesh.rotation.x = -Math.PI / 2;
     mesh.rotation.z = (rnd(j + 2) - 0.5) * 0.4;
     mesh.scale.set(bank.sx, bank.sz, 1);
