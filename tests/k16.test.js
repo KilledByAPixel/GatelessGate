@@ -151,7 +151,7 @@ test('module shape matches the koan contract', () => {
   assert.equal(k16.accent, ACCENT);
   assert.equal(k16.tier, 1);
   assert.deepEqual(k16.ambience, ['wind:0.14']);
-  assert.equal(k16.music, undefined, 'no music field');
+  assert.ok(!k16.ambience.includes('music'), 'no drift layer');
   for (const f of ['case', 'comment', 'verse']) {
     assert.ok(k16.text[f] && k16.text[f].trim().length > 0, `text.${f} empty`);
   }

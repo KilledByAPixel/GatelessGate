@@ -167,7 +167,7 @@ test('module shape matches the koan contract', () => {
     assert.ok(k5.text[f] && k5.text[f].trim().length > 0, `text.${f} empty`);
   }
   assert.deepEqual(k5.ambience, ['wind:0.24']);
-  assert.equal(k5.music, undefined, 'silence is right here');
+  assert.ok(!k5.ambience.includes('music'), 'silence is right here');
   assert.ok(k5.camera && Number.isFinite(k5.camera.distance), 'a camera of its own');
   assert.ok(k5.camera.target[1] >= 2.0, 'the subject is UP — the frame pivots near branch height');
   assert.equal(typeof k5.build, 'function');

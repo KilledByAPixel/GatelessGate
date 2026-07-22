@@ -52,9 +52,31 @@ test('update advances the cloth; tap toggles the wind off', () => {
   const cloth = root.scene.getObjectByName('cloth');
   for (let i = 1; i <= 30; i++) root.update(1 / 60, i / 60);
   assert.ok(root.fragment().clothEnergy >= 0);
-  // simulate a tap on the cloth by making raycastFirst return a hit
+  // simulate a tap on the cloth by making raycastFirst return a hit — but only
+  // for queries that actually include the cloth, so the chime's own probe
+  // (checked first by the handler) correctly misses and falls through
   root.setCamera(new THREE.PerspectiveCamera());
-  ctx.input.raycastFirst = () => ({ object: cloth, point: new THREE.Vector3(0, 3, 0) });
+  ctx.input.raycastFirst = (cam, targets) => (
+    targets.includes(cloth) ? { object: cloth, point: new THREE.Vector3(0, 3, 0) } : null
+  );
   ctx._taps.forEach((cb) => cb(400, 300));
   assert.equal(root.fragment().windOn, false, 'tapping the flag toggles the wind off');
+});
+
+test('the furin hangs under the gate and answers the flag', async () => {
+  const rung = [];
+  const audio = {
+    startAmbience() {}, stopAmbience() {}, setWindLevel() {},
+    chime: (o) => rung.push(o.gain),
+  };
+  const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
+  const k = k29.build({ audio, input });
+
+  assert.ok(k29.ambience.includes('furin:0.4'), 'the recipe declares the chime');
+  assert.ok(k29.ambience.includes('music'), 'and asks for the drift');
+
+  for (let i = 0; i < 60 * 300; i++) k.update(1 / 60, i / 60);
+  assert.ok(rung.length > 5, `the chime never rang: ${rung.length}`);
+  assert.ok(rung.every((g) => g > 0 && g <= 1));
+  assert.ok(k.fragment().rings === rung.length);
 });

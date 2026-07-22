@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeLantern, makeMonk, aimMonk, makeGate, makeFlag,
-  makeLights, makeBlobShadow, addOutlines,
+  makeLights, makeBlobShadow, addOutlines, makeFurin,
 } from '../kit/index.js';
 import { clothEnergy } from '../sim/verlet.js';
 
@@ -16,7 +16,7 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.25'],
+  ambience: ['wind:0.25', 'furin:0.4', 'music'],
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -97,6 +97,12 @@ export default {
 
     addOutlines(scene, { width: 0.035, wobble: 0.7 });
 
+    // a furin under the lintel, off to one side. It rings on the gusts of the
+    // same wind that moves the flag — so stilling the flag stills the chime.
+    const furin = makeFurin({ seed: 29, onRing: (gain) => audio && audio.chime({ gain }) });
+    furin.group.position.set(1.2, 2.6, 0);
+    gate.add(furin.group);
+
     const baseWind = 0.25;
     let camera = null;
 
@@ -111,6 +117,8 @@ export default {
     });
     input.onTap(() => {
       if (!camera) return;
+      const chimeHit = input.raycastFirst(camera, furin.pickTargets());
+      if (chimeHit) { furin.ring(); return; }
       const hit = input.raycastFirst(camera, [flag.mesh]);
       if (hit) {
         const on = flag.toggleWind();
@@ -121,18 +129,25 @@ export default {
     return {
       scene,
       setCamera(c) { camera = c; },
-      onEnter() { audio && audio.startAmbience(['wind:' + baseWind]); },
+      // the full recipe, not just wind: 'music' starts the drift layer, and
+      // 'furin:0.4' has to be present here too so emitterCount() sees the
+      // chime and thins the drift accordingly
+      onEnter() { audio && audio.startAmbience(['wind:' + baseWind, 'furin:0.4', 'music']); },
       onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         flag.update(dt, simTime);
         world.update(dt, simTime);            // drives the meadow's wind
-        audio && audio.setWindLevel(flag.windLevel() * baseWind);
+        const level = flag.windLevel() * baseWind;
+        audio && audio.setWindLevel(level);
+        furin.setWindLevel(flag.windLevel());
+        furin.update(dt, simTime);
       },
       fragment() {
         return {
           windOn: flag.isWindOn(),
           windLevel: +flag.windLevel().toFixed(4),
           clothEnergy: +clothEnergy(flag.cloth).toFixed(6),
+          rings: furin.rings(),
         };
       },
       dispose() {},

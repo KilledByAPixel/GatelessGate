@@ -121,7 +121,7 @@ test('module shape matches the koan contract', () => {
     assert.ok(k46.text[f] && k46.text[f].trim().length > 0, `text.${f} empty`);
   }
   assert.match(k46.text.case, /hundred-foot pole/);
-  assert.equal(k46.music, undefined, 'no music field on this case');
+  assert.ok(!k46.ambience.includes('music'), 'no drift layer on this case');
   assert.ok(Array.isArray(k46.ambience) && k46.ambience.length > 0);
   assert.equal(typeof k46.build, 'function');
 

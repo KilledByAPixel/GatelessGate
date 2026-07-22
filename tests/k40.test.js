@@ -179,7 +179,7 @@ test('module shape matches the koan contract', () => {
     assert.ok(k40.text[f] && k40.text[f].trim().length > 0, `text.${f} empty`);
   }
   assert.ok(Array.isArray(k40.ambience) && k40.ambience.length > 0);
-  assert.equal('music' in k40, false, 'no music field');
+  assert.ok(!k40.ambience.includes('music'), 'no drift layer');
   assert.equal(typeof k40.build, 'function');
 });
 
