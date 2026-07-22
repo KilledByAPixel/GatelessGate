@@ -78,9 +78,10 @@ stops being an ink painting and starts being a meditation app.
 Random, but not shuffled. Four rules, all pure functions, all unit-tested with an
 injected rng:
 
-**Interval.** Next note at `t + nextInterval(...)`, drawn from 6–20 s, off the Web
-Audio clock (`ctx.currentTime`) rather than the sim clock — the sim pauses when the
-preview panel is hidden, and the music shouldn't. Nothing quantized, no beat.
+**Interval.** Next note at `t + nextInterval(...)`, drawn from 6–20 s. Scheduling
+runs on `setTimeout` and the note envelopes on `ctx.currentTime` — both independent
+of the sim clock, which pauses whenever the preview panel is hidden. The music
+should not stop just because nothing is being drawn. Nothing quantized, no beat.
 
 **Pitch.** `nextDegree(prev, rng)` is a weighted random walk over the scale, not a
 uniform pick: adjacent degree ~60%, two away ~25%, a leap of three or four ~15%,
@@ -140,10 +141,14 @@ export const gustPhase = (t) => (Math.sin(2*Math.PI*GUST_A*t) + Math.sin(2*Math.
 truth and the audible gust and the visible chime cannot drift apart. `gustPhase` is
 pure and tested.
 
-The chime rings on a **rising crossing** of a threshold (~0.55), with a refractory
-period so a jittery crest can't double-fire. Because the two rates are
-incommensurate the sum crests irregularly every 15–25 s, which is already the right
-chime rate — no extra clock needed.
+The chime rings on a **rising crossing** of a threshold, with hysteresis so a
+jittery crest can't double-fire. Because the two rates are incommensurate the sum
+crests irregularly, which is already the right chime rate — no extra clock needed.
+
+The threshold is **0.45**, measured rather than guessed: it puts crests 13.5–30 s
+apart (mean 23 s). At 0.55 the mean stretches to 27 s with a 44-second hole in it,
+which reads as a broken chime; at 0.25 they bunch to 9 s and read as a doorbell.
+Anyone changing this number should re-measure it.
 
 Two details that matter:
 
