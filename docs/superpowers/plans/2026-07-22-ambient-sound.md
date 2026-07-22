@@ -16,7 +16,8 @@
 - **Pure functions are tested; node builders are browser-only** and are not called from tests.
 - Node 20+. Run tests with `npm test`; a single file with `node --test tests/<file>.test.js`.
 - Follow the existing house style: named meshes, `toonMaterial`, colours from `WASH`/`palette.js` only, closed-form motion over `simTime`.
-- The full suite must stay green — it is at **275 passing** as of this plan.
+- The full suite must stay green — it is at **277 passing** as of the start of execution (the baked-narration work landed after this plan was written and added two).
+- **`src/audio/engine.js` and `src/audio/narration*.js` now carry the baked-narration ducking.** Do not regress `duck()`, `masterTarget()`, `applyMaster()` or the `MASTER`/`DUCKED` constants. Task 5 edits this file — read it before you touch it.
 
 ---
 
@@ -590,7 +591,15 @@ export function makeMusic(ctx, dest, { emitters = 0, rng = Math.random } = {}) {
 }
 ```
 
-Replace `src/audio/engine.js` entirely:
+`src/audio/engine.js` becomes the following. **Note what is being preserved:** the
+baked-narration work added `ducked`, `MASTER`/`DUCKED`, `masterTarget()`,
+`applyMaster()` and `duck(on)` to this file after this plan was first written. All of
+it stays exactly as it is — do not regress it. The additions here are the two
+imports, `emitterCount`, `playMusic`/`stopMusic`, the `music` branch in
+`startAmbience`, the `stopMusic()` call in `stopAmbience`, and `chime`.
+
+Routing the drift through `musicGain` (which feeds `master`) means narration ducking
+covers the music for free — the reading pulls back the whole bed, not just the wind.
 
 ```js
 import { makeWind, strikeBell, strikeChime } from './synths.js';
@@ -616,12 +625,21 @@ export function createAudio(save) {
   let soundOn = save.state().soundOn;
   let windScale = 1;      // debug-panel multiplier over whatever a koan asks for
   let windLevel = 0;      // last level a koan requested, so a scale change applies now
+  let ducked = false;     // ambience pulls back while narration is reading
+
+  // Narration plays through an <audio> element, outside this graph, so ducking the
+  // master only affects the ambience bed — which is exactly the intent.
+  const MASTER = 0.8, DUCKED = 0.32;
+  function masterTarget() { return soundOn ? (ducked ? DUCKED : MASTER) : 0; }
+  function applyMaster() {
+    if (master) master.gain.setTargetAtTime(masterTarget(), ctx.currentTime, 0.05);
+  }
 
   function ensureCtx() {
     if (ctx) return;
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     master = ctx.createGain();
-    master.gain.value = soundOn ? 0.8 : 0;
+    master.gain.value = masterTarget();
     master.connect(ctx.destination);
     musicGain = ctx.createGain();
     musicGain.gain.value = 0.5;
@@ -645,9 +663,10 @@ export function createAudio(save) {
     setSound(on) {
       soundOn = !!on;
       save.setSound(soundOn);
-      if (master) master.gain.setTargetAtTime(soundOn ? 0.8 : 0, ctx.currentTime, 0.05);
+      applyMaster();
     },
     isSoundOn() { return soundOn; },
+    duck(on) { ducked = !!on; applyMaster(); },
     startAmbience(recipe = []) {
       ensureCtx();
       const emitters = emitterCount(recipe);
