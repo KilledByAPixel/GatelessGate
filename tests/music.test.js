@@ -38,14 +38,19 @@ test('nextDegree walks mostly by step, occasionally leaps', () => {
 });
 
 test('nextDegree reflects at the edges instead of piling up', () => {
-  // pinned to the largest upward step, the walk must come back down off the top
-  const up = seq(0.999);
+  // Pinned to the largest UPWARD step (+4), so the walk is driven into the
+  // ceiling on every draw and has to bounce back down rather than clamp
+  // against it. 0.999 would select -4 and walk away from the edge instead,
+  // never reaching the branch this test exists to cover.
+  const up = seq(0.96);
   let d = DRIFT_HI;
+  const seen = new Set();
   for (let i = 0; i < 20; i++) {
     d = nextDegree(d, up);
-    assert.ok(d >= DRIFT_LO && d <= DRIFT_HI);
+    assert.ok(d >= DRIFT_LO && d <= DRIFT_HI, `out of range: ${d}`);
+    seen.add(d);
   }
-  assert.ok(d < DRIFT_HI, 'stuck at the ceiling');
+  assert.ok([...seen].some((v) => v < DRIFT_HI), 'never came off the ceiling');
 });
 
 test('nextInterval stretches as a scene gains emitters', () => {
