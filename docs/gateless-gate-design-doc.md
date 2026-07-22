@@ -26,6 +26,8 @@ This is an **interactive book — a guided tour of the Mumonkan** — not a game
 
 12. *(2026-07-18)* **Quality bar raised: cool, vibey scenes.** Low-poly-*ish* stays the style, but scenes must read as rich little places, not empty platforms — a few times more geometric investment where it earns its keep. Concretely: the monk is a lathed robe with sleeves and a sedge hat (not a capsule); every case's midground is dressed (a worn path, stone lanterns, scatter trees, rocks, bushes, grass tufts) from the reusable kit; and scene assembly goes through the shared `composeWorld` grammar (ground + mountains + forest + seeded scatter with keepouts) so richness is cheap to repeat across all 48 cases.
 
+13. *(2026-07-22)* **Sound resolved: two synthesized layers, no files.** Note 8's "maybe" is settled and the authored-track experiment is over — the Suno tracks are deleted, and no case names a track any more. Instead: **diegetic objects that sound because they exist** (first the fūrin, the glass wind bell, ringing on the wind synth's actual gust crests), plus a **sparse non-diegetic drift** of swelled tones, weighted-random and unseeded, for the scenes with nothing in them to make a noise. The two are coupled — the drift thins automatically as a scene's emitter count rises, so a scene with a chime needs no music and a bare hillside gets the drift in full. One tuning for the whole book (hirajōshi), the way there is one ink and one accent. Still no chanting, no voice, no singing bowl. Design: `docs/superpowers/specs/2026-07-22-ambient-sound-design.md`.
+
 **The pitch, in one line:** a slightly interactive, modernized, web-first Gateless Gate — an illustrated book you can wander.
 
 ---
