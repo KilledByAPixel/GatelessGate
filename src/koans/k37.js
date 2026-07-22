@@ -15,7 +15,6 @@ export default {
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.2'],
-  music: 'slow-stone-breath-flute',
   // Orbit around the BUFFALO. On the shared default target the pivot landed on
   // the middle of a fence panel, so the camera swung around a wall while the
   // subject drifted across frame — the scene appeared to rotate about nothing.

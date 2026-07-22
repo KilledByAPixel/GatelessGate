@@ -21,7 +21,6 @@ export default {
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.12'],
-  music: 'stone-mistress',
 
   build(ctx) {
     const { audio, input } = ctx;

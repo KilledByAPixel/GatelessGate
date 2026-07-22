@@ -19,7 +19,6 @@ export default {
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.18'],
-  music: 'temple-ruin',
 
   build(ctx) {
     const { audio, input } = ctx;
