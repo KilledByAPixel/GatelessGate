@@ -12,12 +12,21 @@ export function createAudio(save) {
   let soundOn = save.state().soundOn;
   let windScale = 1;      // debug-panel multiplier over whatever a koan asks for
   let windLevel = 0;      // last level a koan requested, so a scale change applies now
+  let ducked = false;     // ambience pulls back while narration is reading
+
+  // Narration plays through an <audio> element, outside this graph, so ducking the
+  // master only affects the ambience bed — which is exactly the intent.
+  const MASTER = 0.8, DUCKED = 0.32;
+  function masterTarget() { return soundOn ? (ducked ? DUCKED : MASTER) : 0; }
+  function applyMaster() {
+    if (master) master.gain.setTargetAtTime(masterTarget(), ctx.currentTime, 0.05);
+  }
 
   function ensureCtx() {
     if (ctx) return;
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     master = ctx.createGain();
-    master.gain.value = soundOn ? 0.8 : 0;
+    master.gain.value = masterTarget();
     master.connect(ctx.destination);
     musicGain = ctx.createGain();
     musicGain.gain.value = 0.5;
@@ -31,9 +40,10 @@ export function createAudio(save) {
     setSound(on) {
       soundOn = !!on;
       save.setSound(soundOn);
-      if (master) master.gain.setTargetAtTime(soundOn ? 0.8 : 0, ctx.currentTime, 0.05);
+      applyMaster();
     },
     isSoundOn() { return soundOn; },
+    duck(on) { ducked = !!on; applyMaster(); },
     startAmbience(recipe = []) {
       ensureCtx();
       for (const item of recipe) {

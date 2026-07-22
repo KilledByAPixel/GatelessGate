@@ -47,9 +47,7 @@ const scenes = makeSceneManager(renderer, dissolve, post, freeze);
 const input = makeInput(renderer.domElement);
 const save = createSave(window.localStorage);
 const audio = createAudio(save);
-const VOICE_KEY = 'gateless-gate-voice';
-const pinnedVoice = (() => { try { return window.localStorage.getItem(VOICE_KEY); } catch { return null; } })();
-const narration = createNarration({ preferredName: pinnedVoice });
+const narration = createNarration({ audio });
 
 const hub = buildHub();
 scenes.setActive(hub);
@@ -62,6 +60,7 @@ let koanSlug = null;
 let scroll = null;
 let intro = null;
 let entering = false;
+let readingAll = false;   // whether the current read is "read all" or a single section
 
 // ---- panel views ----
 function showView(el) {
@@ -254,15 +253,21 @@ async function enter(slug) {
       menu.close();
       scroll = makeScroll({
         id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
+        // Clicking the section that is currently reading stops it. Clicking a
+        // different one switches straight to it — that click means "read this
+        // instead", not "be quiet", and making it take two clicks reads as a bug.
         onSpeak: (key) => {
-          if (narration.isSpeaking()) { narration.stop(); scroll.highlight(null); scroll.setReading(false); return; }
+          const cur = narration.current();
+          if (cur && cur.section === key) { stopReading(); return; }
+          readingAll = false;
           scroll.highlight(key); scroll.setReading(true);
-          narration.speak(mod.text[key], { onEnd: () => { scroll.highlight(null); scroll.setReading(false); } });
+          narration.speak(mod.id, key, { onEnd: stopReading });
         },
         onSpeakAll: () => {
-          if (narration.isSpeaking()) { narration.stop(); scroll.highlight(null); scroll.setReading(false); return; }
+          if (readingAll) { stopReading(); return; }
+          readingAll = true;
           scroll.setReading(true);
-          speakAll(mod.text);
+          speakAll(mod.id);
         },
         onBack: () => exit(),
         onSit: (m) => startSit(m),
@@ -280,7 +285,7 @@ async function exit() {
   if (mode === 'intro') { skipIntro(); return; }
   if (mode === 'sit') { sit.end(); return; }
   if (mode !== 'koan') { menu.open(); showView(menu.el); return; }
-  narration.stop();
+  stopReading();
   input.clear();
   koan && koan.onExit && koan.onExit();
   await transition(() => {
@@ -298,14 +303,20 @@ async function exit() {
   });
 }
 
-function speakAll(text) {
+function stopReading() {
+  readingAll = false;
+  narration.stop();
+  if (scroll) { scroll.highlight(null); scroll.setReading(false); }
+}
+
+function speakAll(id) {
   const order = scroll.queue();
   let i = 0;
   const step = () => {
-    if (i >= order.length) { scroll.highlight(null); scroll.setReading(false); return; }
+    if (i >= order.length) { stopReading(); return; }
     const key = order[i++];
     scroll.highlight(key);
-    narration.speak(text[key], { onEnd: step });
+    narration.speak(id, key, { onEnd: step });
   };
   step();
 }
@@ -313,8 +324,7 @@ function speakAll(text) {
 function startSit(minutes = 10) {
   if (mode !== 'koan') return;
   mode = 'sit';
-  narration.stop();
-  if (scroll) scroll.setReading(false);
+  stopReading();
   panel.classList.add('fading');   // the text recedes while sitting
   sit.start(minutes);
 }
@@ -399,29 +409,10 @@ window.gate = {
   markRead(slug) { save.markRead(slug); menu.refresh(save.state()); },
   markSat(slug) { save.markSat(slug); menu.refresh(save.state()); },
   setSound(on) { audio.setSound(on); setSoundLabel(); },
-  voice() { return narration.voiceName(); },
-  // numbered list of English voices (☁ = cloud/online, usually the nicer ones)
-  voices() { return narration.listVoices().map((v, i) => i + ': ' + v.name + ' [' + v.lang + ']' + (v.cloud ? ' ☁' : '')); },
-  // audition a voice by index or name without changing the pinned choice
-  sampleVoice(sel, text) { return narration.sample(voiceNameFor(sel), text); },
-  // pin a voice as the default (persists); pass null/'' to fall back to the heuristic
-  setVoice(sel) {
-    const name = sel == null || sel === '' ? null : voiceNameFor(sel);
-    const applied = narration.setPreferred(name);
-    try { name ? window.localStorage.setItem(VOICE_KEY, name) : window.localStorage.removeItem(VOICE_KEY); } catch {}
-    return applied;
-  },
+  // Voice and delivery are baked, not chosen at runtime. This reports what shipped.
+  voice() { const m = narration.manifest(); return m ? `${m.voice} / ${m.preset}` : null; },
+  narrationCount() { const m = narration.manifest(); return m ? Object.keys(m.files).length : 0; },
 };
-
-// resolve a voice selector (index into voices(), or an exact/fuzzy name) to a name
-function voiceNameFor(sel) {
-  if (typeof sel === 'number' || (typeof sel === 'string' && /^\d+$/.test(sel))) {
-    const list = narration.listVoices();
-    const v = list[+sel];
-    return v ? v.name : null;
-  }
-  return sel;
-}
 
 dissolve.set(1);
 startIntro();
