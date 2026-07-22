@@ -183,6 +183,13 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
         m.emissive.copy(src.emissive);
         m.emissiveIntensity = src.emissiveIntensity ?? 1;
       }
+      // ...and visibility. Invisible tap proxies (bell-hit, screen-hit) hide at
+      // the MATERIAL level so the raycaster still sees their meshes; dropping
+      // this flag resurrected them as big white shells around the things they
+      // wrap. Third property this clone has been caught losing (flatShading was
+      // designed in, emissive and visible were not): the clone must copy
+      // EVERYTHING that affects rendering, not the properties someone thought of.
+      m.visible = src.visible;
       mesh.userData._matPlain = m;
     }
     return mesh.userData._matPlain;

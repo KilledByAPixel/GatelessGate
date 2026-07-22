@@ -11,14 +11,20 @@ const CHAPTER = [
   { id: 1, slug: 'joshu-s-dog' },
   { id: 2, slug: 'hyakujo-s-fox' },
   { id: 3, slug: 'gutei-s-finger' },
+  { id: 5, slug: 'kyogen-mounts-the-tree' },
   { id: 6, slug: 'buddha-twirls-a-flower' },
   { id: 7, slug: 'joshu-washes-the-bowl' },
   { id: 14, slug: 'nansen-cuts-the-cat-in-two' },
+  { id: 16, slug: 'bells-and-robes' },
   { id: 19, slug: 'everyday-life-is-the-path' },
+  { id: 23, slug: 'do-not-think-good-do-not-think-not-good' },
   { id: 26, slug: 'two-monks-roll-up-the-screen' },
   { id: 29, slug: 'not-the-wind-not-the-flag' },
   { id: 37, slug: 'a-buffalo-passes-through-the-enclosure' },
   { id: 38, slug: 'an-oak-tree-in-the-garden' },
+  { id: 40, slug: 'tipping-over-a-water-vase' },
+  { id: 46, slug: 'proceed-from-the-top-of-the-pole' },
+  { id: 47, slug: 'three-gates-of-tosotsu' },
 ];
 
 // a minimal stand-in for the app's ctx: records the handlers a koan wires up

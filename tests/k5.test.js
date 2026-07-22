@@ -1,0 +1,271 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import * as THREE from '../lib/three.module.js';
+import { makeCliff } from '../src/kit/cliff.js';
+import { makeHangingMonk } from '../src/kit/hangingmonk.js';
+import k5 from '../src/koans/k5.js';
+import { ACCENT, ACCENT_DEEP, INK, WASH } from '../src/palette.js';
+
+const box = (o) => new THREE.Box3().setFromObject(o);
+
+function fakeCtx() {
+  const taps = [], hovers = [];
+  return {
+    accent: k5.accent,
+    audio: null,                       // build() must survive with no audio at all
+    input: {
+      onTap: (cb) => taps.push(cb),
+      onHover: (cb) => hovers.push(cb),
+      raycastFirst: () => null,        // nothing under the cursor by default
+      pointer: () => ({ x: 0, y: 0 }),
+    },
+    _taps: taps, _hovers: hovers,
+  };
+}
+
+// ---- the cliff -----------------------------------------------------------
+
+test('makeCliff is a wide broken lip that falls away into mist', () => {
+  const cliff = makeCliff({ width: 10, drop: 5, depth: 2.2, seed: 5 });
+  assert.equal(cliff.name, 'cliff');
+
+  const names = cliff.children.map((c) => c.name);
+  assert.ok(names.includes('lip'), 'a lip course');
+  assert.ok(names.includes('face'), 'a face below it');
+  const mists = cliff.children.filter((c) => c.name === 'mist');
+  assert.ok(mists.length >= 3, 'banks of mist lie in the void');
+  for (const m of mists) {
+    assert.ok(m.material.transparent && m.userData.noOutline,
+      'mist is a soft unlit wash, not an outlined prop');
+  }
+  const skirt = cliff.children.find((c) => c.name === 'skirt');
+  assert.ok(skirt && skirt.userData.noOutline, 'the deepest row dissolves — no ink rim');
+
+  const b = box(cliff);
+  assert.ok(b.max.y > 0.1 && b.max.y < 1.4, `lip pokes modestly above the turf, got ${b.max.y}`);
+  assert.ok(b.min.y < -5 * 0.6, `the face falls away most of the drop, got ${b.min.y}`);
+  assert.ok(b.min.z < -2.2, 'the mist reaches out past the rock, into the open air');
+  assert.ok(b.max.x - b.min.x > 10 * 0.9, 'as wide as asked');
+});
+
+test('makeCliff blends into the ground at its lip and is deterministic by seed', () => {
+  // default placement samples flat staging ground: every lip vertex stays low
+  const cliff = makeCliff({ width: 10, drop: 5, seed: 7 });
+  const lip = cliff.children.find((c) => c.name === 'lip');
+  const pos = lip.geometry.attributes.position;
+  let top = -Infinity;
+  for (let i = 0; i < pos.count; i++) top = Math.max(top, pos.getY(i));
+  assert.ok(top > 0.15 && top < 1.2, `lip crowns just above the meadow, got ${top}`);
+
+  const print = (seed) => JSON.stringify(makeCliff({ width: 10, drop: 5, seed }).footprint(0.5));
+  assert.equal(print(7), print(7), 'same seed, same rock');
+  assert.notEqual(print(7), print(8), 'different seed, different rock');
+});
+
+test('makeCliff owns its ground in circles: rock for the lip, void for the air', () => {
+  const cliff = makeCliff({ width: 11, drop: 5, depth: 2.2, seed: 5 });
+  const rock = cliff.footprint(0.5);
+  const air = cliff.voidFootprint(0.5);
+  assert.ok(rock.length > 8, 'a circle per lump along the lip and face');
+  assert.ok(air.length >= 9, 'the mist field is covered without seams');
+  for (const c of [...rock, ...air]) {
+    assert.ok(Number.isFinite(c.x) && Number.isFinite(c.z) && c.r > 0.5, JSON.stringify(c));
+  }
+  // built at identity: everything the mist owns lies on the drop side
+  for (const c of air) assert.ok(c.z < 0, `void circles on the void side, got z=${c.z}`);
+  // and the rock spans the stated width
+  const xs = rock.map((c) => c.x);
+  assert.ok(Math.max(...xs) - Math.min(...xs) > 11 * 0.75, 'rock runs the length of the lip');
+
+  // footprint follows the group's placement, cave.js style
+  cliff.position.set(-3.4, 0, -2.0);
+  cliff.rotation.y = Math.PI / 2;
+  for (const c of cliff.voidFootprint(0.5)) {
+    assert.ok(c.x < -3.4, `rotated to face -x, the mist keeps to the west, got x=${c.x}`);
+  }
+});
+
+// ---- the hanging man -----------------------------------------------------
+
+test('makeHangingMonk hangs from its pivot — the mass is all below the teeth', () => {
+  const m = makeHangingMonk({ height: 1.6, seed: 5 });
+  assert.equal(m.group.name, 'hangingmonk');
+  const b = box(m.group);
+  assert.ok(b.max.y <= 0.01, `nothing rises above the grip, got ${b.max.y}`);
+  assert.ok(b.min.y < -1.6 * 0.85, `a whole man hangs below it, got ${b.min.y}`);
+  assert.ok(Math.max(b.max.x - b.min.x, b.max.z - b.min.z) < 0.8,
+    'a hanging figure, not a spread one');
+
+  const names = [];
+  m.group.traverse((o) => { if (o.isMesh) names.push(o.name); });
+  assert.ok(names.includes('head') && names.includes('body'), 'head and robe');
+  assert.equal(names.filter((n) => n === 'arm').length, 2, 'both sleeves hang');
+  assert.equal(names.filter((n) => n === 'foot').length, 2, 'feet together, resting on nothing');
+  assert.ok(!names.includes('hat'), 'the hat did not stay on');
+});
+
+test('the hanging man is nearly still until nudged, then swings and steadies', () => {
+  const m = makeHangingMonk({ height: 1.6, seed: 5 });
+  let t = 0;
+  const step = (n, out) => {
+    for (let i = 0; i < n; i++) {
+      t += 1 / 60;
+      m.update(1 / 60, t);
+      if (out) out.push(Math.abs(m.group.rotation.z));
+    }
+  };
+
+  const rest = [];
+  step(240, rest);
+  assert.ok(Math.max(...rest) < 0.03, `at rest he barely breathes, got ${Math.max(...rest)}`);
+  assert.equal(m.swinging(), false, 'stillness does not count as swinging');
+
+  m.sway(1);
+  const swung = [];
+  step(120, swung);
+  assert.ok(Math.max(...swung) > 0.06, `a nudge actually moves him, got ${Math.max(...swung)}`);
+  assert.equal(m.swinging(), true);
+
+  const early = Math.max(...swung.slice(0, 60));
+  step(60 * 14);
+  const late = [];
+  step(120, late);
+  assert.ok(Math.max(...late) < early * 0.5, 'the swing dies away');
+  assert.ok(Math.max(...late) < 0.035, 'and he is a still man in a tree again');
+  assert.equal(m.swinging(), false);
+  assert.ok(Number.isFinite(m.energy()), 'energy stays finite');
+});
+
+test('the pendulum is deterministic: same seed and taps, same swing', () => {
+  const drive = (seed) => {
+    const m = makeHangingMonk({ height: 1.6, seed });
+    const out = [];
+    for (let i = 0; i < 300; i++) {
+      if (i === 90) m.sway(1);
+      m.update(1 / 60, i / 60);
+      out.push(m.group.rotation.z);
+    }
+    return out;
+  };
+  assert.deepEqual(drive(5), drive(5));
+  const a = drive(5), b = drive(9);
+  assert.ok(a.some((v, i) => Math.abs(v - b[i]) > 1e-6), 'a different seed breathes differently');
+});
+
+// ---- the case ------------------------------------------------------------
+
+test('module shape matches the koan contract', () => {
+  assert.equal(k5.id, 5);
+  assert.equal(k5.slug, 'kyogen-mounts-the-tree');
+  assert.equal(k5.accent, ACCENT);
+  assert.equal(k5.tier, 2);
+  assert.ok(/tree/i.test(k5.title), `title comes from the text artifact: ${k5.title}`);
+  for (const f of ['case', 'comment', 'verse']) {
+    assert.ok(k5.text[f] && k5.text[f].trim().length > 0, `text.${f} empty`);
+  }
+  assert.deepEqual(k5.ambience, ['wind:0.24']);
+  assert.equal(k5.music, undefined, 'silence is right here');
+  assert.ok(k5.camera && Number.isFinite(k5.camera.distance), 'a camera of its own');
+  assert.ok(k5.camera.target[1] >= 2.4, 'the subject is UP — the frame pivots at branch height');
+  assert.equal(typeof k5.build, 'function');
+});
+
+test('build stages the predicament: cliff, grey oak, dangler over the drop, questioner on the grass', () => {
+  const built = k5.build(fakeCtx());
+  assert.ok(built.scene instanceof THREE.Scene);
+  for (const fn of ['update', 'onEnter', 'onExit', 'dispose', 'fragment', 'setCamera']) {
+    assert.equal(typeof built[fn], 'function', `root.${fn} missing`);
+  }
+  built.scene.updateMatrixWorld(true);
+
+  const found = { cliff: [], oak: [], hangingmonk: [], monk: [], fallenhat: [], branch: [] };
+  built.scene.traverse((o) => { if (found[o.name]) found[o.name].push(o); });
+  assert.equal(found.cliff.length, 1, 'one precipice');
+  assert.equal(found.oak.length, 1, 'one tree at its lip');
+  assert.equal(found.branch.length, 1, 'one stout limb over the drop');
+  assert.equal(found.hangingmonk.length, 1, 'one man hanging by his teeth');
+  assert.equal(found.monk.length, 1, 'one questioner, nobody else about');
+  assert.equal(found.fallenhat.length, 1, 'and the hat that did not stay on');
+
+  // the seal: HIS robe, deepened for a person-sized mass — and nothing else red
+  const dangler = found.hangingmonk[0];
+  const body = dangler.getObjectByName('body');
+  const deep = new THREE.Color(ACCENT_DEEP).getHexString();
+  assert.equal(body.material.color.getHexString(), deep, 'the hanging robe carries the seal');
+  const canopy = found.oak[0].children.find((c) => c.name === 'canopy');
+  assert.equal(canopy.material.color.getHexString(), new THREE.Color(WASH.deep).getHexString(),
+    'the oak stays grey — k38 owns the red tree');
+  const qBody = found.monk[0].children.find((c) => c.name === 'body');
+  assert.equal(qBody.material.color.getHexString(), new THREE.Color(INK).getHexString(),
+    'the questioner is an ink figure');
+
+  // he hangs UP at branch height, out past the lip, clear of the ground
+  assert.ok(dangler.position.y > 2.8 && dangler.position.y < 3.4,
+    `the grip is at branch height, got ${dangler.position.y}`);
+  assert.ok(dangler.position.x < -4.5, 'and out over the void, west of the lip at -3.4');
+  const db = box(dangler);
+  assert.ok(db.min.y > 1.2, `his feet dangle well clear of anything, got ${db.min.y}`);
+
+  // the crown never swallows him: no canopy vertex near his swing column
+  const pos = canopy.geometry.attributes.position;
+  const v = new THREE.Vector3();
+  let nearest = Infinity;
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    canopy.localToWorld(v);
+    if (v.y > db.min.y - 0.1 && v.y < dangler.position.y + 0.1) {
+      nearest = Math.min(nearest, Math.hypot(v.x - dangler.position.x, v.z - dangler.position.z));
+    }
+  }
+  assert.ok(nearest > 0.75, `foliage keeps clear of the swing, got ${nearest}`);
+
+  // the hat sits upright ON the safe ground, at y = 0, far below its owner
+  const hat = found.fallenhat[0];
+  hat.geometry.computeBoundingBox();
+  const hb = hat.geometry.boundingBox.clone().applyMatrix4(hat.matrixWorld);
+  assert.ok(Math.abs(hb.min.y) < 0.02, `the hat rests on the ground, got ${hb.min.y}`);
+  assert.ok(hb.max.y < 0.25, 'a hat, not a hillock');
+  assert.ok(hat.position.x > -3.4, 'on the safe side of the lip');
+});
+
+test('the scene runs without a renderer or audio, and reports a finite fragment', () => {
+  const built = k5.build(fakeCtx());
+  built.setCamera(null);
+  built.onEnter();                       // audio is null: must not throw
+  for (let i = 0; i < 120; i++) built.update(1 / 60, i / 60);
+  const frag = built.fragment();
+  assert.ok(Object.keys(frag).length > 0);
+  for (const [k, v] of Object.entries(frag)) {
+    assert.ok(Number.isFinite(v) || typeof v === 'boolean', `fragment.${k} = ${v}`);
+  }
+  built.onExit();
+  built.dispose();
+});
+
+test('tapping the hanging man sways him; he steadies; he never answers, never falls', () => {
+  const ctx = fakeCtx();
+  const built = k5.build(ctx);
+  assert.ok(ctx._taps.length > 0, 'there has to be something to find');
+  built.setCamera(new THREE.PerspectiveCamera());
+
+  let t = 0;
+  const run = (n) => { for (let i = 0; i < n; i++) { t += 1 / 60; built.update(1 / 60, t); } };
+
+  run(60);
+  assert.equal(built.fragment().sways, 0);
+  assert.equal(built.fragment().swinging, false, 'still until touched');
+
+  const dangler = built.scene.getObjectByName('hangingmonk');
+  const before = dangler.position.y;
+  ctx.input.raycastFirst = () => ({ object: dangler.children[0], point: new THREE.Vector3() });
+  ctx._taps.forEach((cb) => cb(400, 300));
+  assert.equal(built.fragment().sways, 1, 'the tap landed');
+  run(30);
+  assert.equal(built.fragment().swinging, true, 'and he swings a little');
+
+  run(60 * 18);
+  const after = built.fragment();
+  assert.equal(after.swinging, false, 'then he steadies');
+  assert.equal(after.sways, 1);
+  assert.equal(dangler.position.y, before, 'he has not fallen — that is the whole koan');
+});

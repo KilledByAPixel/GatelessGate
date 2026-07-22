@@ -1,0 +1,219 @@
+import * as THREE from '../../lib/three.module.js';
+import TEXT from './text/mumonkan.js';
+import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
+import { composeWorld } from '../kit/scenery.js';
+import { makePath } from '../kit/path.js';
+import { makeGate } from '../kit/gate.js';
+import { makeMonk } from '../kit/monk.js';
+import { groundHeight } from '../kit/ground.js';
+import { makeLights } from '../render/toon.js';
+import { makeBlobShadow } from '../render/blobshadow.js';
+import { addOutlines } from '../render/outlines.js';
+
+const ID = 47;
+const GROUND_SEED = 21;
+const BASE_WIND = 0.16;
+
+// Tosotsu's three barriers are three QUESTIONS, and this case has no object at
+// all — no dog, no flag, no bowl. What it has is the shape of the teaching:
+// one road, three gates across it, a walker between the first and the second.
+// So the diorama is almost pure composition, and the fog does the arguing.
+// Each barrier stands one state further from being graspable — the first
+// solid ink a few steps ahead, the second softening, the third almost paper —
+// which is the order of the questions themselves: your nature, your death,
+// what is after. The title screen stages ONE red gate on this same road; this
+// case is where that image comes from, three of them deep.
+//
+// The road runs much deeper than other stagings (to z=-42) because the road
+// IS the subject: the third gate has to stand ~32 units from the home camera
+// so FogExp2(0.030) washes it ~60% toward the paper. Measured at the home
+// camera below: gate washes 7% / 26% / 60%, monk 15%.
+const PATH_OPTS = { from: [1.1, 6.8], to: [-1.6, -42], width: 1.7, seed: 47, groundSeed: GROUND_SEED, wander: 0.8 };
+
+// t along the road, and a slight step DOWN in size with depth. The steps do
+// two jobs: they exaggerate the recession, and they make collapse impossible —
+// the nearest gate is always the largest on screen by construction, so at the
+// one azimuth where the three centres line up (the camera crossing the road's
+// axis) the gates nest as three distinct frames instead of merging into one
+// silhouette. Ground intervals grow with depth (9.8 then 13.7) to fight
+// perspective foreshortening; on screen the three read evenly stepped.
+//
+// The middle gate is the seal. It is the barrier the walker is approaching
+// NOW, and it takes ACCENT_DEEP exactly as the intro's gate does — a torii is
+// a big timber frame, and full ACCENT across that much area would glare. Its
+// glow is in the material (SEAL_GLOW in render/toon.js keys off the accent
+// colours); nothing here sets emissive by hand. The near barrier is near-ink,
+// the far one takes a lighter wash so tone and fog stack the same direction.
+const GATES = [
+  // ALL THREE gates carry the seal — Frank's call on reviewing the plan, and he
+  // is right that it beats the middle-only design: three red barriers on one
+  // road, and the FOG does the hierarchy the grey was doing — the near gate
+  // full-blooded, the far one a red ghost dissolving into the paper. Same deep
+  // mix as the title screen's gate, so the echo lands.
+  { t: 0.22, width: 3.2, height: 3.4, color: ACCENT_DEEP }, // where is your true nature?
+  { t: 0.42, width: 3.0, height: 3.2, color: ACCENT_DEEP }, // how will you be free of life and death?
+  { t: 0.70, width: 2.8, height: 3.0, color: ACCENT_DEEP }, // where do you go?
+];
+const MONK_T = 0.31;   // mid-journey: past the first barrier, short of the second
+
+export default {
+  id: ID,
+  slug: 'three-gates-of-tosotsu',
+  title: TEXT[ID].title,
+  accent: ACCENT,
+  tier: 1,
+  text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
+  ambience: ['wind:' + BASE_WIND],
+
+  // Low, nearly level, and close to the road's own axis, so the three gates
+  // stack up the frame — each lintel a step higher and a step washier. The
+  // target sits between the first and second barriers (the corridor's visual
+  // centre of mass): pivoting on the seal gate itself would put the lens
+  // inside the first gate at home distance. Checked numerically at home
+  // azimuth +-0.5 across aspects 1.78/0.8: all three lintels stay in frame at
+  // home, and at every angle the gates either separate (NDC centre gap up to
+  // 0.88) or nest (projected width ratios ~2.2 and ~1.9 where the centres
+  // cross near azimuth 0.07). The walker's head sits just under centre frame.
+  camera: { distance: 14.5, target: [0.1, 1.9, -9.5], azimuth: 0.32, polar: 1.395 },
+
+  build(ctx) {
+    const { audio, input } = ctx;
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(PAPER);
+    scene.fog = new THREE.FogExp2(PAPER, 0.030);
+    // The shadow frustum is pushed up the road so the second barrier still
+    // casts onto the ground it stands on; the third is past any frustum worth
+    // paying texels for, and at 60% wash a cast shadow would not read anyway —
+    // its blob does the anchoring.
+    scene.add(makeLights({ focus: [0.6, 0, -3.5], radius: 12 }));
+
+    const path = makePath(PATH_OPTS);
+    scene.add(path);
+
+    // The gates straddle the road exactly, k29's idiom three times over. The
+    // far end of the road leaves the flat staging radius, so a gate cannot
+    // assume y=0 out there: each takes the LOWEST ground under its span and
+    // sinks 6cm more, so a post plants in a rise rather than floating over a
+    // dip. (The third gate happens to stand on a rise ~1.2 up — the road
+    // climbing into the mist, which the composition gets for free.)
+    const gates = GATES.map((spec) => {
+      const gp = path.sample(spec.t);
+      const half = spec.width / 2;
+      const under = [
+        gp.y,
+        groundHeight(gp.x + gp.perp.x * half, gp.z + gp.perp.z * half, { seed: GROUND_SEED }),
+        groundHeight(gp.x - gp.perp.x * half, gp.z - gp.perp.z * half, { seed: GROUND_SEED }),
+      ];
+      const y = Math.min(...under) - 0.06;
+      const gate = makeGate({ width: spec.width, height: spec.height, color: spec.color });
+      gate.position.set(gp.x, y, gp.z);
+      gate.rotation.y = gp.heading;
+      scene.add(gate);
+      return { gate, gp, y, spec, top: Math.max(...under) };
+    });
+
+    // Invisible tap zones, shaped like the FRAME, not the doorway. A single
+    // plane across the whole opening would be simpler, but the gates spend
+    // part of the orbit nested inside one another, and a doorway-plane on the
+    // near gate would swallow every tap aimed through its arch at the two
+    // beyond. Slabs over the posts, lintel and tie make the timber generous
+    // to a fingertip while the opening stays open — a tap through the arch
+    // falls through to the barrier actually pointed at.
+    const hitSlabs = [];
+    const slabGate = new Map();
+    for (const [i, { gate, spec }] of gates.entries()) {
+      const parts = [
+        { w: 0.6, h: spec.height + 0.3, x: -spec.width / 2, y: (spec.height + 0.3) / 2 - 0.05 },
+        { w: 0.6, h: spec.height + 0.3, x: spec.width / 2, y: (spec.height + 0.3) / 2 - 0.05 },
+        { w: spec.width * 1.4 + 0.2, h: 0.7, x: 0, y: spec.height + 0.09 },
+        { w: spec.width * 1.08, h: 0.5, x: 0, y: spec.height * 0.78 },
+      ];
+      for (const p of parts) {
+        const slab = new THREE.Mesh(
+          new THREE.PlaneGeometry(p.w, p.h),
+          new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }),
+        );
+        slab.name = 'gatehit';
+        slab.visible = false;             // the raycaster still sees it; the renderer never does
+        slab.userData.noOutline = true;
+        slab.position.set(p.x, p.y, 0);
+        gate.add(slab);
+        hitSlabs.push(slab);
+        slabGate.set(slab, i);
+      }
+    }
+
+    // One monk, on the road, between the first barrier and the second, facing
+    // the way the road goes — the camera reads him from behind and a little to
+    // the side. He owns nothing else in the frame: no staff, no companion.
+    const mp = path.sample(MONK_T);
+    const monk = makeMonk({});
+    monk.position.set(mp.x + mp.perp.x * 0.22, mp.y, mp.z + mp.perp.z * 0.22);
+    monk.rotation.y = mp.heading;
+    scene.add(monk);
+
+    // The rest of the world stays out of the way: scatter counts low, the
+    // whole run of the road masked wide, only the trodden track clearing the
+    // grass. The scene is road, gates, walker, fog.
+    const world = composeWorld(scene, {
+      seed: 47,
+      groundSeed: GROUND_SEED,
+      trees: 3,
+      rocks: 6,
+      bushes: 5,
+      keepout: [
+        ...path.keepout(34, 1.3),
+        ...gates.map(({ gp }) => ({ x: gp.x, z: gp.z, r: 2.9 })),
+        { x: monk.position.x, z: monk.position.z, r: 1.6 },
+      ],
+      grassKeepout: path.keepout(34, 1.05),
+    });
+
+    // Blob shadows anchor each barrier and the walker. Out past the flat
+    // radius a blob at y=0 would sink into the rising road, so each gate's
+    // blob rides the HIGHEST ground under its span; the far one is faint —
+    // most of its darkness belongs to the fog by then.
+    for (const [i, { gp, spec, top }] of gates.entries()) {
+      const s = makeBlobShadow({
+        radiusX: 0.55 + spec.width / 2, radiusZ: 0.7, opacity: 0.30 - i * 0.05,
+      });
+      s.position.set(gp.x, top + 0.02, gp.z);
+      scene.add(s);
+    }
+    const ms = makeBlobShadow({ radiusX: 0.7, radiusZ: 0.55, opacity: 0.42 });
+    ms.position.set(monk.position.x, 0.01, monk.position.z);
+    scene.add(ms);
+
+    addOutlines(scene, { width: 0.033, wobble: 0.7 });
+
+    // ---- the moment: three notes ------------------------------------------
+    // Tap a barrier and it answers with one slow bell tone — the nearest gate
+    // the deepest. Nothing advances, nothing unlocks; each barrier simply has
+    // its own note, and the far one is a longer reach, exactly as it looks.
+    let camera = null;
+    const taps = [0, 0, 0];
+    input.onTap(() => {
+      if (!camera) return;
+      const hit = input.raycastFirst(camera, hitSlabs);
+      if (!hit) return;
+      const i = slabGate.get(hit.object);
+      if (i === undefined) return;
+      taps[i]++;
+      audio && audio.bell({ f0: 62 + 18 * i });
+    });
+
+    return {
+      scene,
+      setCamera(c) { camera = c; },
+      onEnter() { audio && audio.startAmbience(['wind:' + BASE_WIND]); },
+      onExit() { audio && audio.stopAmbience(); },
+      update(dt, simTime) {
+        world.update(dt, simTime);        // the meadow breathes; nothing else moves
+      },
+      fragment() {
+        return { taps1: taps[0], taps2: taps[1], taps3: taps[2] };
+      },
+      dispose() {},
+    };
+  },
+};

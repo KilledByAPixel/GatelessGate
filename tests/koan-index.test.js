@@ -26,7 +26,7 @@ test('byId / bySlug', () => {
 });
 
 test('every case in the book is readable, staged or not', async () => {
-  const STAGED = [1, 2, 3, 6, 7, 14, 19, 26, 29, 37, 38];
+  const STAGED = [1, 2, 3, 5, 6, 7, 14, 16, 19, 23, 26, 29, 37, 38, 40, 46, 47];
 
   // The whole collection opens. The text for all forty-nine is generated and in
   // the bundle already; only the LOADERS table ever stood in front of it, and
