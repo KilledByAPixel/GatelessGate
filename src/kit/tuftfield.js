@@ -99,7 +99,10 @@ function tuftTexture() {
 // ---- the field ------------------------------------------------------------
 export function makeTuftField({
   count = 12000, radius = 20, inner = 0, seed = 5, groundSeed = 21,
-  color = WASH.dry, width = 0.52, height = 0.44, wind = 1,
+  // width came down 0.52 -> 0.46 with the density doubling: Frank read the wide
+  // cards as "a bit thick", and narrower cards at twice the count give more
+  // plants AND more ground showing between them
+  color = WASH.dry, width = 0.46, height = 0.44, wind = 1,
   windDir = [1, 0.35], gustScale = 0.055, gustSpeed = 2.4,
   keepout = [],
 } = {}) {
@@ -188,14 +191,34 @@ export function makeTuftField({
         float gust = ggNoise(flow) * 0.70 + ggNoise(flow * 2.7 + 19.3) * 0.30;
         float stiff = 0.65 + 0.7 * ggHash(iw.xz * 1.618 + 4.2);
         float lean = (ggHash(iw.xz * 2.113 + 31.7) - 0.5) * 0.30;   // resting tilt
-        vec2 swayW = uWindDir * (uWind * (0.10 + 0.34 * gust) * stiff);
-        vec3 swayV = (viewMatrix * vec4(swayW.x, 0.0, swayW.y, 0.0)).xyz;
 
+        // SIGNED sway, centred on upright — Frank's spec after watching the
+        // first pass: "default should be center... stretch left and right also
+        // ... we'll do a negative also." The one-sided version mapped the noise
+        // to 0..max downwind, so every tuft pumped between vertical and its
+        // extreme and the field never rocked back. The drifting noise patch now
+        // swings the shear through zero; the wind slider scales its amplitude.
+        float swing = gust * 2.0 - 1.0;
+        vec2 swayW = uWindDir * (uWind * 0.26 * swing * stiff);
+
+        // ...projected onto the CARD'S OWN axis. This was the "stretchy" glitch
+        // Frank suspected was bad billboard math, and he was close: the sway was
+        // applied as a world vector, so whenever the orbit swung across the wind
+        // the card sheared in DEPTH — toward the camera — which a flat imposter
+        // renders as smearing. A billboard may only ever shear along its own
+        // right axis; that is what "left and right" means on a card.
+        float sw = dot((viewMatrix * vec4(swayW.x, 0.0, swayW.y, 0.0)).xyz, rightV) + lean;
+
+        // Bend, don't stretch: plain shear lengthens the card's diagonal by
+        // sqrt(1+s^2), which is exactly the rubbery look the blade field was
+        // cured of once already. Normalising the sheared tip back to the card's
+        // height turns the shear into a lean — same fix, imposter edition.
         float t = position.y;                    // 0 at the root, 1 at the top
+        float sw2 = sw * t * t;                  // shear grows toward the top
+        float inv = inversesqrt(1.0 + sw2 * sw2);
         vec3 p = origin.xyz
-               + rightV * (position.x * sx)
-               + upV * (position.y * sy);
-        p += (swayV + rightV * lean) * (t * t * sy);   // the shear
+               + rightV * (position.x * sx + position.y * sy * sw2 * inv)
+               + upV * (position.y * sy * inv);
         mvPosition = vec4(p, 1.0);
       }
       gl_Position = projectionMatrix * mvPosition;

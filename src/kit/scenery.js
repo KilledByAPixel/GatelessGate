@@ -75,11 +75,12 @@ export function composeWorld(scene, {
 
   // the meadow: one instanced field, wind animated in the vertex shader. The
   // caller must drive world.update(dt, simTime) or the wind stands still.
-  // `grass` is a blade budget; a tuft card shows several blades, so the tuft
-  // field spends a third as many instances for more apparent grass.
+  // `grass` is a blade budget; a tuft card shows several blades. The divisor
+  // was 3 at first; Frank asked for about twice the coverage, and at two
+  // triangles each even this is a fraction of the blade field's geometry.
   const field = grassStyle === 'tufts'
     ? makeTuftField({
-      count: Math.round(grass / 3), seed: seed * 81, groundSeed,
+      count: Math.round(grass / 1.5), seed: seed * 81, groundSeed,
       keepout: grassKeepout || keepout,
     })
     : makeGrassField({

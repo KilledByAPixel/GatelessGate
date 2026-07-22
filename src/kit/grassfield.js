@@ -73,7 +73,14 @@ export function grassPlacements({
   patchiness = defaultPatchiness, keepout = [],
 } = {}) {
   const out = [];
-  for (let i = 0; out.length < count && i < count * 4; i++) {
+  // The candidate budget is 8x the ask, and the number is load-bearing: overall
+  // acceptance is patchiness x rim x keepout, and in a keepout-heavy case (k19's
+  // road, k1's trail) it measures as low as ~17% — at the old 4x budget those
+  // cases quietly delivered two thirds of the grass they asked for and nobody
+  // could tell why one meadow was thinner than the next. 8x covers the worst
+  // measured case with margin; the loop still stops the moment count is met, so
+  // permissive cases pay nothing.
+  for (let i = 0; out.length < count && i < count * 8; i++) {
     const a = hash1(i * 4 + 1, seed) * Math.PI * 2;
     const rr = inner + Math.sqrt(hash1(i * 4 + 2, seed)) * (radius - inner); // even area density
     const x = Math.cos(a) * rr;
