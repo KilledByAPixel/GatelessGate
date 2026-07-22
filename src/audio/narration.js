@@ -7,7 +7,11 @@ import { AUDIO_BASE, narrationSrc, playableQueue } from './narration_state.js';
 //
 // Voice, pace and accent are decided at bake time (scripts/lib/narration-voice.js),
 // so there is nothing to choose at runtime.
-export function createNarration({ base = AUDIO_BASE, audio = null } = {}) {
+//
+// Ducking the ambience is deliberately NOT done here: a read-aloud pauses between
+// sections, and ducking per file would pump the wind up and down on every seam. The
+// caller owns the reading session, so the caller owns the duck.
+export function createNarration({ base = AUDIO_BASE } = {}) {
   const el = new Audio();
   el.preload = 'none';
 
@@ -26,7 +30,6 @@ export function createNarration({ base = AUDIO_BASE, audio = null } = {}) {
     if (myGen !== gen) return;
     speaking = false;
     current = null;
-    if (audio) audio.duck(false);
     onEnd && onEnd();
   }
 
@@ -44,7 +47,6 @@ export function createNarration({ base = AUDIO_BASE, audio = null } = {}) {
 
       speaking = true;
       current = { id, section };
-      if (audio) audio.duck(true);
       el.onended = () => finish(myGen, onEnd);
       el.onerror = () => finish(myGen, onEnd);
       el.src = src;
@@ -56,7 +58,6 @@ export function createNarration({ base = AUDIO_BASE, audio = null } = {}) {
       speaking = false;
       current = null;
       el.pause();
-      if (audio) audio.duck(false);
     },
 
     isSpeaking() { return speaking; },

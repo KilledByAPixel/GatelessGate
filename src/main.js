@@ -47,7 +47,7 @@ const scenes = makeSceneManager(renderer, dissolve, post, freeze);
 const input = makeInput(renderer.domElement);
 const save = createSave(window.localStorage);
 const audio = createAudio(save);
-const narration = createNarration({ audio });
+const narration = createNarration();
 
 const hub = buildHub();
 scenes.setActive(hub);
@@ -61,6 +61,7 @@ let scroll = null;
 let intro = null;
 let entering = false;
 let readingAll = false;   // whether the current read is "read all" or a single section
+let readTimer = null;     // the pause between sections of a read-all
 
 // ---- panel views ----
 function showView(el) {
@@ -259,13 +260,13 @@ async function enter(slug) {
         onSpeak: (key) => {
           const cur = narration.current();
           if (cur && cur.section === key) { stopReading(); return; }
-          readingAll = false;
+          startReading(false);
           scroll.highlight(key); scroll.setReading(true);
           narration.speak(mod.id, key, { onEnd: stopReading });
         },
         onSpeakAll: () => {
           if (readingAll) { stopReading(); return; }
-          readingAll = true;
+          startReading(true);
           scroll.setReading(true);
           speakAll(mod.id);
         },
@@ -303,9 +304,22 @@ async function exit() {
   });
 }
 
+// A beat between sections of a read-aloud. Running the case straight into Mumon's
+// comment reads as one continuous text; the pause is what says a different voice in
+// the book has taken over. Long enough to land, short enough not to feel broken.
+const SECTION_GAP_MS = 1500;
+
+function startReading(all) {
+  readingAll = all;
+  if (readTimer) { clearTimeout(readTimer); readTimer = null; }
+  audio.duck(true);
+}
+
 function stopReading() {
   readingAll = false;
+  if (readTimer) { clearTimeout(readTimer); readTimer = null; }
   narration.stop();
+  audio.duck(false);
   if (scroll) { scroll.highlight(null); scroll.setReading(false); }
 }
 
@@ -313,12 +327,19 @@ function speakAll(id) {
   const order = scroll.queue();
   let i = 0;
   const step = () => {
-    if (i >= order.length) { stopReading(); return; }
     const key = order[i++];
     scroll.highlight(key);
-    narration.speak(id, key, { onEnd: step });
+    narration.speak(id, key, {
+      onEnd: () => {
+        if (!readingAll) return;                  // stopped, or switched to one section
+        if (i >= order.length) { stopReading(); return; }
+        // The highlight stays on the section just read through the gap — clearing it
+        // would flash the panel between every part.
+        readTimer = setTimeout(() => { readTimer = null; if (readingAll) step(); }, SECTION_GAP_MS);
+      },
+    });
   };
-  step();
+  if (order.length) step(); else stopReading();
 }
 
 function startSit(minutes = 10) {
