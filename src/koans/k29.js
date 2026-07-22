@@ -95,13 +95,13 @@ export default {
       scene.add(s);
     }
 
-    addOutlines(scene, { width: 0.035, wobble: 0.7 });
-
     // a furin under the lintel, off to one side. It rings on the gusts of the
     // same wind that moves the flag — so stilling the flag stills the chime.
     const furin = makeFurin({ seed: 29, onRing: (gain) => audio && audio.chime({ gain }) });
     furin.group.position.set(1.2, 2.6, 0);
     gate.add(furin.group);
+
+    addOutlines(scene, { width: 0.035, wobble: 0.7 });
 
     const baseWind = 0.25;
     let camera = null;

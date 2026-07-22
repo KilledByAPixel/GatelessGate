@@ -9,7 +9,7 @@ function fakeCtx() {
   return {
     accent: k29.accent,
     quality: 'high',
-    audio: { setWindLevel() {}, startAmbience() {}, stopAmbience() {}, bell() {} },
+    audio: { setWindLevel() {}, startAmbience() {}, stopAmbience() {}, bell() {}, chime() {} },
     input: {
       onTap: (cb) => taps.push(cb),
       onHover: (cb) => hovers.push(cb),
