@@ -19,6 +19,17 @@ export function bellPartials(f0 = 62) {
   ].map(([r, a, d]) => ({ freq: f0 * r, amp: a, decay: d }));
 }
 
+// The gust envelope, mirrored out of the WebAudio graph so JS can read it.
+//
+// Two very slow incommensurate LFOs: the breeze rises and falls without ever
+// settling into a period you could predict. makeWind drives its graph from these
+// same two constants, so what you HEAR gusting and what you SEE ringing are the
+// same weather — that causality is the entire point of the wind chime.
+export const GUST_A = 0.043;
+export const GUST_B = 0.071;
+export const gustPhase = (t) =>
+  (Math.sin(2 * Math.PI * GUST_A * t) + Math.sin(2 * Math.PI * GUST_B * t)) / 2;
+
 export function makeWind(ctx, dest) {
   const SR = ctx.sampleRate;
   const LOOP = 10;        // a 2s loop is short enough that the ear hears it repeat
@@ -54,8 +65,8 @@ export function makeWind(ctx, dest) {
   // Gusts: two very slow LFOs at incommensurate rates, so the breeze rises and
   // falls without ever settling into a period you can predict. In raw WebAudio a
   // connection to an AudioParam SUMS with its value, so these ride the base level.
-  const lfoA = ctx.createOscillator(); lfoA.frequency.value = 0.043;
-  const lfoB = ctx.createOscillator(); lfoB.frequency.value = 0.071;
+  const lfoA = ctx.createOscillator(); lfoA.frequency.value = GUST_A;
+  const lfoB = ctx.createOscillator(); lfoB.frequency.value = GUST_B;
   const gustGain = ctx.createGain(); gustGain.gain.value = 0;
   const gustCut = ctx.createGain(); gustCut.gain.value = 0;
   lfoA.connect(gustGain); lfoB.connect(gustGain);

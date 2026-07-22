@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { windParams, bellPartials } from '../src/audio/synths.js';
+import { windParams, bellPartials, GUST_A, GUST_B, gustPhase } from '../src/audio/synths.js';
 import { parseRecipe } from '../src/audio/engine.js';
 import { hz } from '../src/audio/tuning.js';
 
@@ -40,4 +40,28 @@ test('hz maps scale degrees across octaves', () => {
   assert.ok(hz(-1) < hz(0) && hz(-1) > hz(0) / 2);
   // strictly rising, so a walk never doubles back on pitch
   for (let d = -5; d < 15; d++) assert.ok(hz(d + 1) > hz(d));
+});
+
+test('gustPhase is bounded, irregular, and crests at chime rate', () => {
+  for (let t = 0; t < 600; t += 0.37) {
+    const v = gustPhase(t);
+    assert.ok(v >= -1 && v <= 1, `out of range at ${t}: ${v}`);
+  }
+  // Two incommensurate rates: never actually periodic inside a scene's lifetime.
+  assert.ok(Math.abs(gustPhase(0) - gustPhase(120)) > 0.05);
+
+  // Rising crossings of the chime threshold land 13-31s apart: often enough to
+  // feel like weather, never a dead minute, never a double-ring.
+  const THR = 0.45;
+  const hits = [];
+  let prev = gustPhase(0);
+  for (let t = 0.05; t < 1800; t += 0.05) {
+    const v = gustPhase(t);
+    if (prev <= THR && v > THR) hits.push(t);
+    prev = v;
+  }
+  assert.ok(hits.length > 60, `too few crests: ${hits.length}`);
+  const gaps = hits.slice(1).map((t, i) => t - hits[i]);
+  assert.ok(Math.min(...gaps) > 13, `crests too close: ${Math.min(...gaps)}`);
+  assert.ok(Math.max(...gaps) < 31, `dead air: ${Math.max(...gaps)}`);
 });
