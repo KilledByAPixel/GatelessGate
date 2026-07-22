@@ -73,9 +73,9 @@ export function makeWind(ctx, dest) {
   const g = ctx.createGain();
   g.gain.value = 0;
 
-  // Gusts: two very slow LFOs at incommensurate rates, so the breeze rises and
-  // falls without ever settling into a period you can predict. In raw WebAudio a
-  // connection to an AudioParam SUMS with its value, so these ride the base level.
+  // Gusts, driven by the same two LFOs as gustPhase (see above for why the rates
+  // are what they are). In raw WebAudio a connection to an AudioParam SUMS with
+  // its value, so these ride the base level rather than overriding it.
   const lfoA = ctx.createOscillator(); lfoA.frequency.value = GUST_A;
   const lfoB = ctx.createOscillator(); lfoB.frequency.value = GUST_B;
   const gustGain = ctx.createGain(); gustGain.gain.value = 0;
@@ -177,7 +177,7 @@ export function makeSwell(ctx, dest, { freq, gain = 1, attack = 0.22, hold = 0.4
     osc.start(t); osc.stop(t + end + 0.2);
   }
 
-  const peak = gain * 0.05;
+  const peak = Math.max(1e-5, gain * 0.05);
   out.gain.setValueAtTime(0, t);
   out.gain.linearRampToValueAtTime(peak, t + attack);
   out.gain.setValueAtTime(peak, t + attack + hold);

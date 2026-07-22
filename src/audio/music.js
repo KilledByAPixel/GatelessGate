@@ -40,7 +40,10 @@ export function nextDegree(prev, rng, lo = DRIFT_LO, hi = DRIFT_HI) {
 
 // The density rule: the more a scene already sounds, the less the drift plays.
 // A scene with a chime has a pulse and needs no music; a bare hillside gets the
-// full drift. Capped, so it thins toward silence without ever stopping.
+// full drift. The multiplier is capped at 3x so density alone can't push the gap
+// to silence — but it isn't the ceiling on the gap itself: makeMusic's caller
+// doubles the result again when shouldRest fires, so the real worst case is 6x
+// base (up to 120s), not 3x.
 export function nextInterval(emitters, rng) {
   const density = Math.min(3, 1 + 0.7 * emitters);
   return (BASE_MIN + (BASE_MAX - BASE_MIN) * rng()) * density;

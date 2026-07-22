@@ -9,6 +9,17 @@ import { clothEnergy } from '../sim/verlet.js';
 
 const ID = 29;
 
+// The wind level the flag drives when its own animated level is at full — kept
+// as a single constant so the ambience recipe below and the case's runtime math
+// can never disagree about it.
+const BASE_WIND = 0.25;
+
+// The full ambience recipe, declared once. 'furin' carries no level of its own —
+// the chime's real gain comes from furin.setWindLevel(flag.windLevel()) in the
+// case's update loop — but its presence still matters: emitterCount() sees it
+// and thins the drift layer accordingly.
+const AMBIENCE = ['wind:' + BASE_WIND, 'furin', 'music'];
+
 export default {
   id: ID,
   slug: 'not-the-wind-not-the-flag',
@@ -16,7 +27,7 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.25', 'furin:0.4', 'music'],
+  ambience: AMBIENCE,
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -103,7 +114,7 @@ export default {
 
     addOutlines(scene, { width: 0.035, wobble: 0.7 });
 
-    const baseWind = 0.25;
+    const baseWind = BASE_WIND;
     let camera = null;
 
     // hover the cloth -> local puff; tap the cloth -> toggle the wind
@@ -130,9 +141,9 @@ export default {
       scene,
       setCamera(c) { camera = c; },
       // the full recipe, not just wind: 'music' starts the drift layer, and
-      // 'furin:0.4' has to be present here too so emitterCount() sees the
-      // chime and thins the drift accordingly
-      onEnter() { audio && audio.startAmbience(['wind:' + baseWind, 'furin:0.4', 'music']); },
+      // 'furin' has to be present here too so emitterCount() sees the chime
+      // and thins the drift accordingly
+      onEnter() { audio && audio.startAmbience(AMBIENCE); },
       onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         flag.update(dt, simTime);

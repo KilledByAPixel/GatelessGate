@@ -72,7 +72,7 @@ test('the furin hangs under the gate and answers the flag', async () => {
   const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
   const k = k29.build({ audio, input });
 
-  assert.ok(k29.ambience.includes('furin:0.4'), 'the recipe declares the chime');
+  assert.ok(k29.ambience.includes('furin'), 'the recipe declares the chime');
   assert.ok(k29.ambience.includes('music'), 'and asks for the drift');
 
   for (let i = 0; i < 60 * 300; i++) k.update(1 / 60, i / 60);

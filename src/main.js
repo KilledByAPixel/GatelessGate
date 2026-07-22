@@ -236,6 +236,7 @@ async function enter(slug) {
     await transition(() => {
       // tear down any outgoing koan (e.g. re-entering without an exit())
       if (koan && koan.onExit) koan.onExit();
+      stopReading();
       input.clear();
       if (scroll) { scroll.dispose(); scroll = null; }
       const built = mod.build({ scene: null, kit: null, audio, input, accent: mod.accent, quality: 'high' });
