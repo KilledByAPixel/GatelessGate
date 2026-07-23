@@ -75,7 +75,6 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
   font-size: 13px; font-style: italic; line-height: 1.45;
   color: rgba(30,30,36,0.55);
 }
-.gg-help { position: absolute; top: 32px; right: 40px; width: 32px; height: 32px; border-radius: 50%; padding: 0; }
 
 /* ---- koan text (scroll), in the left panel ---- */
 .gg-scroll { --accent: var(--accent); }
@@ -142,15 +141,7 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
 .gg-sit-pop.open { display: flex; }
 .gg-sit-pop button { padding: 4px 8px; }
 
-/* ---- onboarding (first run) + sit overlay: over everything ---- */
-.gg-onboard {
-  position: fixed; z-index: 60; top: 50%; left: 50%; transform: translate(-50%,-50%);
-  max-width: 340px; text-align: center; background: var(--paper); color: var(--ink);
-  border: 1px solid rgba(30,30,36,0.25); border-radius: 4px; padding: 20px 24px;
-  font-family: Georgia, serif; box-shadow: 0 8px 30px rgba(30,30,36,0.18);
-}
-.gg-onboard.hidden { display: none; }
-.gg-onboard button { font-family: Georgia, serif; background: none; border: 1px solid rgba(30,30,36,0.3); color: var(--ink); padding: 6px 16px; border-radius: 3px; cursor: pointer; margin-top: 12px; }
+/* ---- sit overlay: over everything ---- */
 .gg-sit {
   position: fixed; inset: 0; z-index: 55; display: grid; place-items: center;
   background: rgba(243,237,223,0.65); color: var(--ink); font-family: Georgia, serif; cursor: pointer;

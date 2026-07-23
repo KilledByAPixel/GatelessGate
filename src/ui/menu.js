@@ -3,7 +3,7 @@ import { searchCases } from './search.js';
 
 // The table of contents — a left-panel view over the idling stage scene.
 // Reads as a book's contents, not a level select.
-export function makeMenu({ cases, progress, isStaged, onSelect, onHelp } = {}) {
+export function makeMenu({ cases, progress, isStaged, onSelect } = {}) {
   const el = document.createElement('div');
   el.className = 'gg-view gg-menu hidden';
 
@@ -12,12 +12,6 @@ export function makeMenu({ cases, progress, isStaged, onSelect, onHelp } = {}) {
   const lede = document.createElement('p');
   lede.className = 'lede';
   lede.textContent = 'The Mumonkan — read any case, in any order.';
-
-  const help = document.createElement('button');
-  help.className = 'gg-help';
-  help.textContent = '?';
-  help.title = 'About';
-  help.onclick = () => onHelp && onHelp();
 
   const cont = document.createElement('div');
   cont.className = 'gg-continue';
@@ -34,7 +28,7 @@ export function makeMenu({ cases, progress, isStaged, onSelect, onHelp } = {}) {
   found.className = 'gg-found';
 
   const list = document.createElement('ol');
-  el.append(h1, lede, help, cont, find, found, list);
+  el.append(h1, lede, cont, find, found, list);
 
   let query = '';
   find.oninput = () => { query = find.value; render(lastProg); };

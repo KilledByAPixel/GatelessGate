@@ -15,7 +15,6 @@ import { CASES } from './koans/index.js';
 import { isStaged, isRegistered, loadKoan } from './koans/registry.js';
 import { buildHub, makeIntro } from './intro.js';
 import { makeMenu } from './ui/menu.js';
-import { makeOnboarding } from './ui/onboarding.js';
 import { makeScroll } from './ui/scroll.js';
 import { makeSit } from './sit.js';
 
@@ -79,12 +78,8 @@ function showView(el) {
 const menu = makeMenu({
   cases: CASES, progress: save.state(), isStaged,
   onSelect: (slug) => enter(slug),
-  onHelp: () => onboarding.show(),
 });
 panel.appendChild(menu.el);
-
-const onboarding = makeOnboarding({ onDismiss: () => {} });
-document.body.appendChild(onboarding.el);
 
 const sit = makeSit({
   audio,
@@ -232,7 +227,6 @@ function menuMusic() {
 }
 
 async function openMenu() {
-  const first = mode === 'intro';
   await transition(() => {
     if (intro) { intro.dispose(); intro = null; }
     mode = 'menu';
@@ -242,7 +236,6 @@ async function openMenu() {
     showView(menu.el);
     menuMusic();
   });
-  if (first && !save.state().onboarded) { onboarding.show(); save.setOnboarded(); }
 }
 
 async function enter(slug) {
@@ -419,7 +412,11 @@ addEventListener('keydown', (e) => {
     else if (e.key === 'ArrowLeft') { const p = neighbor(koanSlug, -1); if (p) enter(p); }
   }
 });
-renderer.domElement.addEventListener('pointerdown', () => {
+// On the WINDOW, not the canvas: during the intro the title text sits in a DOM
+// panel over the canvas, so a click on that side never reached a canvas-only
+// listener and the intro wouldn't skip (Frank). At window level a click
+// anywhere skips — and unlocks the sound — wherever it lands.
+addEventListener('pointerdown', () => {
   audio.unlock();                 // first tap starts the sound; the mute button turns it off
   if (mode === 'intro') skipIntro();
 });
