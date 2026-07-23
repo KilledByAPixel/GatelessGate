@@ -1,5 +1,5 @@
 import { SCALE, DRIFT_OCTAVES, hz } from './tuning.js';
-import { makeSwell } from './synths.js';
+import { makeSwell, strikeBar, CHIME } from './synths.js';
 
 // The drift layer: the sparse, sourceless tones that carry the scenes with
 // nothing in them to make a noise. Everything here is pure and takes an injected
@@ -57,7 +57,7 @@ export const shouldRest = (rng) => rng() < REST_CHANCE;
 // Browser-only. Scheduling runs on setTimeout and envelopes on ctx.currentTime —
 // both independent of the sim clock, which pauses whenever the preview panel is
 // hidden. The music should not stop just because nothing is being drawn.
-export function makeMusic(ctx, dest, { emitters = 0, rng = Math.random, verbIn = null } = {}) {
+export function makeMusic(ctx, dest, { emitters = 0, rng = Math.random, verbIn = null, pitch = hz, chimes = false } = {}) {
   let degree = 0, timer = null, stopped = false, played = 0;
   let n = emitters;
 
@@ -66,8 +66,21 @@ export function makeMusic(ctx, dest, { emitters = 0, rng = Math.random, verbIn =
     const wait = nextInterval(n, rng) * (shouldRest(rng) ? 2 : 1);
     timer = setTimeout(() => {
       if (stopped) return;
+      // A suspended context freezes currentTime: every note scheduled against
+      // it lands on the same instant and plays as one cluster chord on resume.
+      // The menu is reachable by skip-intro with no sound gesture, so this
+      // path is real. Skip the note, keep the clock ticking.
+      if (ctx.state !== 'running') { schedule(); return; }
       degree = nextDegree(degree, rng);
-      makeSwell(ctx, dest, verbIn, { freq: hz(degree) });
+      makeSwell(ctx, dest, verbIn, { freq: pitch(degree) });
+      // the menu's slow chime: no scene, no kit object — just an occasional
+      // soft tube note sharing the swells' room and mood
+      if (chimes && rng() < 0.35) {
+        strikeBar(ctx, dest, verbIn, {
+          f0: pitch(CHIME.degree + Math.floor(rng() * CHIME.tubes)),
+          gain: CHIME.level * 0.6,
+        });
+      }
       played++;
       schedule();
     }, wait * 1000);

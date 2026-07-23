@@ -1,7 +1,7 @@
 import { makeWind, strikeBell, strikeBar, CHIME } from './synths.js';
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
-import { hz } from './tuning.js';
+import { hz, SCALES } from './tuning.js';
 
 export function parseRecipe(str) {
   const [type, arg] = str.split(':');
@@ -24,6 +24,7 @@ export function createAudio(save) {
   let windScale = 1;      // debug-panel multiplier over whatever a koan asks for
   let windLevel = 0;      // last level a koan requested, so a scale change applies now
   let ducked = false;     // ambience pulls back while narration is reading
+  let mood = 'in';        // the case's editorial pick; every pitched voice reads it
 
   // Narration plays through an <audio> element, outside this graph, so ducking the
   // master only affects the ambience bed — which is exactly the intent.
@@ -47,10 +48,14 @@ export function createAudio(save) {
     verb = makeVerb(ctx, master, { seconds: 5 });
   }
 
-  function playMusic(emitters = 0) {
+  function playMusic(emitters = 0, opts = {}) {
     ensureCtx();
     if (music) { music.setEmitters(emitters); return; }
-    music = makeMusic(ctx, musicGain, { emitters, verbIn: verb.in });
+    // pitch is a closure over `mood`, not a snapshot — a mood change mid-play
+    // retunes from the very next note
+    music = makeMusic(ctx, musicGain, {
+      emitters, verbIn: verb.in, pitch: (d) => hz(d, mood), ...opts,
+    });
   }
 
   function stopMusic() {
@@ -68,6 +73,9 @@ export function createAudio(save) {
     },
     isSoundOn() { return soundOn; },
     duck(on) { ducked = !!on; applyMaster(); },
+    // an unknown or absent mood falls back to the default rather than detuning
+    setMood(m) { mood = SCALES[m] ? m : 'in'; },
+    mood() { return mood; },
     startAmbience(recipe = []) {
       ensureCtx();
       const emitters = emitterCount(recipe);
@@ -90,7 +98,7 @@ export function createAudio(save) {
     // never needs to know what a hertz is.
     chimeStrike({ tube = 0, force = 1 } = {}) {
       ensureCtx();
-      strikeBar(ctx, master, verb.in, { f0: hz(CHIME.degree + tube), gain: CHIME.level * force });
+      strikeBar(ctx, master, verb.in, { f0: hz(CHIME.degree + tube, mood), gain: CHIME.level * force });
     },
     playMusic,
     stopMusic,

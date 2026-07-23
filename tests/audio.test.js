@@ -61,6 +61,20 @@ test('the mood family: yo is the bright sibling on the same root', () => {
   }
 });
 
+test('the engine carries the mood without needing a browser', () => {
+  // createAudio touches no AudioContext until ensureCtx, so the mood state is
+  // testable in Node — the node graph is not
+  const save = { state: () => ({ soundOn: false }), setSound() {} };
+  const audio = createAudio(save);
+  assert.equal(audio.mood(), 'in', 'the book defaults dark');
+  audio.setMood('yo');
+  assert.equal(audio.mood(), 'yo');
+  audio.setMood(undefined);
+  assert.equal(audio.mood(), 'in', 'an absent mood falls back to the default');
+  audio.setMood('nonsense');
+  assert.equal(audio.mood(), 'in', 'an unknown mood cannot detune the book');
+});
+
 test('gustPhase is bounded, irregular, and crests at chime rate', () => {
   for (let t = 0; t < 600; t += 0.37) {
     const v = gustPhase(t);
