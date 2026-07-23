@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makeWater, makeMonk, aimMonk, makeLantern,
+  composeWorld, makeWater, makeKoi, makeMonk, aimMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 import { POND, BANK } from './k30.js';
@@ -47,6 +47,12 @@ export default {
     const water = makeWater({ size: POND.size, color: WASH.ground, seed: 30 });
     water.group.position.set(POND.x, POND.y + 0.06, POND.z);
     scene.add(water.group);
+
+    // the same pond, so the same koi: seed 30 gives case 33 the identical fish
+    // moving in the identical water — only the far bank differs
+    const koi = makeKoi({ count: 4, seed: 30, radius: POND.size * 0.32, color: WASH.mid });
+    koi.group.position.set(POND.x, POND.y + 0.04, POND.z);
+    scene.add(koi.group);
 
     // the same seat, with nobody on it
     const seat = new THREE.Mesh(
@@ -126,9 +132,10 @@ export default {
       update(dt, simTime) {
         world.update(dt, simTime);
         water.update(dt, simTime);
+        koi.update(dt, simTime);
       },
       fragment() {
-        return { rippled, ripples: water.rippleCount() };
+        return { rippled, ripples: water.rippleCount(), koi: koi.fishCount() };
       },
       dispose() {},
     };

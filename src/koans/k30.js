@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makeBuddha, makeWater, makeMonk, aimMonk, makeLantern,
+  composeWorld, makeBuddha, makeWater, makeKoi, makeMonk, aimMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -51,6 +51,13 @@ export default {
     const water = makeWater({ size: POND.size, color: WASH.ground, seed: ID });
     water.group.position.set(POND.x, POND.y + 0.06, POND.z);
     scene.add(water.group);
+
+    // koi under the surface — what turns the pale disc into water. They are
+    // wash-toned, not accent (the seal is the mat), and they read as the same
+    // pond's life in case 33, which shares this pond.
+    const koi = makeKoi({ count: 4, seed: 30, radius: POND.size * 0.32, color: WASH.mid });
+    koi.group.position.set(POND.x, POND.y + 0.04, POND.z);
+    scene.add(koi.group);
 
     // THE BUDDHA, on the far bank
     const seat = new THREE.Mesh(
@@ -152,9 +159,10 @@ export default {
       update(dt, simTime) {
         world.update(dt, simTime);
         water.update(dt, simTime);
+        koi.update(dt, simTime);
       },
       fragment() {
-        return { rippled, ripples: water.rippleCount() };
+        return { rippled, ripples: water.rippleCount(), koi: koi.fishCount() };
       },
       dispose() {},
     };

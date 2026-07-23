@@ -200,12 +200,10 @@ test('every staged interaction reaches the audio engine', async () => {
   assert.deepEqual(silent, [], `these cases answer a touch with nothing: ${silent}`);
 });
 
-// Case 37's pen is built from lattice panels — five bars per panel, two panels
-// per side, three sides — and every one of them takes an outline too. It has
-// been over budget since it was staged; merging the lattice into one geometry
-// is the fix, and it is a real change to a case Frank has already signed off,
-// so it is recorded here rather than done in passing.
-const OVER_BUDGET_BY_HISTORY = { 37: 190 };
+// Case 37's pen used to sit at 185 draws — its lattice was dozens of separate
+// bar meshes, each with its own outline. makePen now bakes each wall into one
+// merged geometry, so the whole book is under budget with no exceptions.
+const OVER_BUDGET_BY_HISTORY = {};
 
 // Accents that are deliberately not a thing sitting in the middle distance:
 // case 24's is the whole flowering meadow (an instanced field, not a mesh),

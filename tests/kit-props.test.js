@@ -81,12 +81,16 @@ test('makeHut is a roofed threshold on the ground', () => {
   assert.ok(roof.position.y > 2.0, 'roof up top');
 });
 
-test('makeLattice is a framed bar grid on the ground', () => {
+test('makeLattice is a single merged mesh, framed and full height', () => {
   const l = makeLattice({ width: 2.2, height: 2.0, bars: 5 });
   assert.equal(l.name, 'lattice');
-  assert.equal(l.children.filter((c) => c.name === 'rail').length, 4, 'a four-sided frame');
-  assert.ok(l.children.filter((c) => c.name === 'bar').length >= 5, 'has bars');
+  // one mesh, not a group of bars: an inverted-hull outline is added per mesh,
+  // so a lattice made of dozens of children costs dozens of outline draws
+  assert.ok(l.isMesh, 'merged into one mesh');
+  assert.equal(l.children.length, 0, 'no child meshes to outline separately');
+  assert.deepEqual(l.userData.lattice, { width: 2.2, height: 2.0, bars: 5 });
   const box = new THREE.Box3().setFromObject(l);
   assert.ok(box.min.y > -0.02, 'on the ground');
   assert.ok(box.max.y >= 2.0 - 0.05, 'full height');
+  assert.ok(box.max.x <= 2.2 / 2 + 0.02 && box.min.x >= -2.2 / 2 - 0.02, 'within its width');
 });

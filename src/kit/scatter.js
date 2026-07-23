@@ -141,7 +141,9 @@ export function makeGrass({ count = 150, seed = 81, groundSeed = 21, keepout = [
 // Minimal non-indexed geometry merge (position + normal only) — enough for
 // toon-shaded props without pulling in the BufferGeometryUtils addon.
 export function mergeSimple(geos) {
-  const nonIndexed = geos.map((g) => g.toNonIndexed());
+  // already-merged geometries come in non-indexed; re-converting them only logs
+  // a warning, so skip it (lattice panels merge, then walls merge those again)
+  const nonIndexed = geos.map((g) => (g.index ? g.toNonIndexed() : g));
   let total = 0;
   for (const g of nonIndexed) total += g.attributes.position.count;
   const pos = new Float32Array(total * 3);
