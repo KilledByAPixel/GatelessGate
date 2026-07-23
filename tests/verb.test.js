@@ -10,7 +10,8 @@ test('the noise source never collapses into a cycle', () => {
   const rand = mulberry32(777);
   const seen = new Set();
   for (let i = 0; i < 200000; i++) {
-    // quantize to float32-ish keys; a true cycle repeats exactly
+    // raw doubles as keys: a true cycle repeats exactly, so this is the
+    // strictest possible repetition check
     seen.add(rand());
   }
   assert.ok(seen.size > 199000, `values repeat far too often: ${seen.size} unique of 200k`);

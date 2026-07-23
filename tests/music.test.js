@@ -4,6 +4,7 @@ import {
   nextDegree, nextInterval, shouldRest,
   BASE_MIN, BASE_MAX, REST_CHANCE, DRIFT_LO, DRIFT_HI,
 } from '../src/audio/music.js';
+import { mulberry32 } from '../src/audio/verb.js';
 
 // a deterministic stand-in for Math.random: cycles a fixed list
 const seq = (...vals) => { let i = 0; return () => vals[i++ % vals.length]; };
@@ -22,7 +23,10 @@ test('nextDegree never repeats the previous note', () => {
 });
 
 test('nextDegree walks mostly by step, occasionally leaps', () => {
-  const rng = (() => { let s = 1; return () => (s = (s * 1103515245 + 12345) % 2147483648) / 2147483648; })();
+  // mulberry32, not the retired LCG: the old generator collapsed into a
+  // 10,466-value cycle, so ~70% of these 20k draws were one repeating loop —
+  // the distribution assertions were measuring the cycle, not the weights
+  const rng = mulberry32(1);
   const counts = { 1: 0, 2: 0, far: 0 };
   let prev = 5;
   for (let i = 0; i < 20000; i++) {

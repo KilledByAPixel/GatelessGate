@@ -345,6 +345,9 @@ export function strikeBar(ctx, dry, verbIn, { f0, gain = 1, decay = CHIME.decay,
 // that already works — the chime's own bar, pitched low, at a fraction of the
 // chime's loudness, almost entirely room: someone far away touched a chime.
 //
-// gain compensates the musicGain (0.5) path so it lands at the level Frank
-// approved on the audition page (0.012 straight into a 0.9 master).
-export const FARBELL = { gain: 0.027, decay: 7, bright: 0.2, verbMix: 0.92 };
+// gain calibrated to the WET path, which at verbMix 0.92 is the voice: the
+// verb send returns straight to master and never passes musicGain, so the
+// audition's 0.012 (into a 0.9 master) maps to 0.0135 here. The dry sliver
+// lands at half its audition level — inaudible at a 22% dry fraction, and a
+// first calibration to the dry path shipped the wet 6 dB hot (review catch).
+export const FARBELL = { gain: 0.0135, decay: 7, bright: 0.2, verbMix: 0.92 };
