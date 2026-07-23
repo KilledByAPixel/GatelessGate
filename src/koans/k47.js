@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
+import { PAPER, ACCENT, ACCENT_DEEP, WASH, wash } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
 import { makePath } from '../kit/path.js';
 import { makeGate } from '../kit/gate.js';
@@ -164,6 +164,19 @@ export default {
       trees: 3,
       rocks: 6,
       bushes: 5,
+      // The default mountain rings are built for dioramas that stay near the
+      // origin; this road runs 40+ units deep, straight into them — gate 3
+      // stood INSIDE a peak (Frank's free-cam find; five separate collisions
+      // by the numbers). These bands flank the corridor instead: verified
+      // against every gate and a 26-point road sample — worst gate clearance
+      // 8.3, worst road clearance 4.0. The road now climbs into a mountain
+      // GAP, which is better composition than a wall anyway.
+      mountains: [
+        { count: 4, distance: 66, arcCenter: -0.55, arcSpan: 0.7, color: wash(0.16) },
+        { count: 4, distance: 66, arcCenter: 0.55, arcSpan: 0.7, color: wash(0.16) },
+        { count: 3, distance: 40, arcCenter: -1.0, arcSpan: 0.55, hScale: 0.6, color: wash(0.28) },
+        { count: 3, distance: 40, arcCenter: 1.0, arcSpan: 0.55, hScale: 0.6, color: wash(0.28) },
+      ],
       keepout: [
         ...path.keepout(34, 1.3),
         ...gates.map(({ gp }) => ({ x: gp.x, z: gp.z, r: 2.9 })),
