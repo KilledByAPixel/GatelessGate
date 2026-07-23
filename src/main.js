@@ -1,5 +1,5 @@
 import * as THREE from '../lib/three.module.js';
-import { makeCameraRig } from './camera.js';
+import { makeCameraRig, makeFreeCam } from './camera.js';
 import { makeDissolve } from './render/dissolve.js';
 import { installGrain } from './render/grain.js';
 import { makePost } from './render/post.js';
@@ -148,6 +148,7 @@ setFsLabel();
 if (document.fullscreenEnabled === false) fsBtn.remove();
 
 // ---- debug workbench (top-right of the stage) ----
+const freeCam = makeFreeCam(camera, renderer.domElement);
 const debug = makeDebug({
   renderer,
   getScene: () => { const a = scenes.active(); return a && a.scene; },
@@ -156,6 +157,7 @@ const debug = makeDebug({
   post,
   onSound: () => setSoundLabel(),
   onLens: (fov) => applyLens(fov),
+  onFreeCam: (on) => freeCam.set(on),
 });
 debug.mount(stage, toolbar);   // panel over the stage, button into the toolbar
 // every scene swap builds fresh objects, so the workbench must re-apply to them
@@ -281,7 +283,10 @@ async function enter(slug) {
           if (cur && cur.section === key) { stopReading(); return; }
           startReading(false);
           scroll.highlight(key); scroll.setReading(true);
-          narration.speak(mod.id, key, { onEnd: stopReading });
+          // a single section that finishes on its own gets its chime too;
+          // a manual stop never does (stop bumps the narration generation,
+          // so this onEnd is never called for a cancelled read)
+          narration.speak(mod.id, key, { onEnd: () => { sectionChime(key); stopReading(); } });
         },
         onSpeakAll: () => {
           if (readingAll) { stopReading(); return; }
@@ -334,6 +339,13 @@ async function exit() {
 // the book has taken over. Long enough to land, short enough not to feel broken.
 const SECTION_GAP_MS = 1500;
 
+// Punctuation for the reading: one tube note when a section ends, descending
+// as the reading deepens — the case highest, the verse lowest. Rides the
+// case's mood; duck-compensated so it is actually audible under narration.
+const SECTION_TUBE = { case: 2, comment: 1, verse: 0 };
+const sectionChime = (key) =>
+  audio.chimeStrike({ tube: SECTION_TUBE[key] ?? 0, force: 0.8, punctuate: true });
+
 function startReading(all) {
   readingAll = all;
   if (readTimer) { clearTimeout(readTimer); readTimer = null; }
@@ -357,11 +369,7 @@ function speakAll(id) {
     narration.speak(id, key, {
       onEnd: () => {
         if (!readingAll) return;                  // stopped, or switched to one section
-        // one soft tube note marks the section's end — the audible shape of
-        // the beat before a different voice takes over. Descending through
-        // the reading: the case highest, the verse lowest. Rides the case's
-        // mood, and the duck, like everything pitched.
-        audio.chimeStrike({ tube: Math.max(0, 3 - i), force: 0.5 });
+        sectionChime(key);
         if (i >= order.length) { stopReading(); return; }
         // The highlight stays on the section just read through the gap — clearing it
         // would flash the panel between every part.
@@ -397,6 +405,7 @@ function tick() {
   simTime += STEP;
   audio.setGust(gustPhase(simTime));
   if (mode === 'intro' && intro) intro.update(STEP);
+  else if (freeCam.enabled()) freeCam.update(STEP);
   else if (rig) rig.update(STEP);
   const active = scenes.active();
   if (active && active.update) active.update(STEP, simTime);

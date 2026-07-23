@@ -105,10 +105,16 @@ export function createAudio(save) {
     },
     // tube index -> scale degree -> Hz. The engine owns the mapping so the kit
     // never needs to know what a hertz is.
-    chimeStrike({ tube = 0, force = 1 } = {}) {
+    //
+    // `punctuate` marks a strike as belonging to the READING, not the
+    // ambience: while narration ducks the bed, punctuation compensates so it
+    // lands at intended loudness — Frank could not hear the section chimes at
+    // all under the duck. Ambient strikes stay ducked with everything else.
+    chimeStrike({ tube = 0, force = 1, punctuate = false } = {}) {
       ensureCtx();
       if (ctx.state !== 'running') return;
-      strikeBar(ctx, master, verb.in, { f0: hz(CHIME.degree + tube, mood), gain: CHIME.level * force });
+      const comp = punctuate && ducked ? MASTER / DUCKED : 1;
+      strikeBar(ctx, master, verb.in, { f0: hz(CHIME.degree + tube, mood), gain: CHIME.level * force * comp });
     },
     playMusic,
     stopMusic,

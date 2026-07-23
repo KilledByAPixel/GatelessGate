@@ -31,6 +31,7 @@ const CONTROLS = [
 
   { group: 'Camera' },
   { key: 'lens', label: 'Lens (fov°)', type: 'range', def: 38, min: 16, max: 50, step: 1 },
+  { key: 'freeCam', label: 'Free cam (WASD·QE·drag)', type: 'bool', def: false },
 
   { group: 'Render' },
   { key: 'toon', label: 'Toon shader', type: 'bool', def: false },
@@ -71,7 +72,7 @@ function load() {
   } catch { return defaults(); }
 }
 
-export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens }) {
+export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens, onFreeCam }) {
   const state = load();
   const inputs = {};
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* private mode */ } };
@@ -263,6 +264,7 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     setGrassPatchiness(state.grassPatch);
     setGrassStyle(state.grassTufts ? 'tufts' : 'blades');
     onLens && onLens(state.lens);
+    onFreeCam && onFreeCam(state.freeCam);
     renderer.shadowMap.enabled = state.shadows;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
