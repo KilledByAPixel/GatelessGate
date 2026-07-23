@@ -39,3 +39,10 @@ export { makeRaisedFinger } from './finger.js';
 export { makeAssembly } from './assembly.js';
 export { makeFurin } from './furin.js';
 export { makeOdoshi } from './odoshi.js';
+// the third chapter: the objects the remaining cases turn on
+export { makeWheel } from './wheel.js';
+export { makeScale } from './scale.js';
+export { makeDrum } from './drum.js';
+export { makeRack } from './rack.js';
+export { makeBirds } from './birds.js';
+export { makeSnow } from './snowfall.js';

@@ -24,6 +24,10 @@ import { wash } from '../palette.js';
 export function composeWorld(scene, {
   seed = 1,
   groundSeed = 21,
+  // The earth's own value. Almost always WASH.ground — but a scene under snow
+  // is a scene where the ground has gone pale, and that is one parameter, not
+  // a second world grammar.
+  groundColor = null,
   keepout = [],
   // Grass wants a DIFFERENT mask from props. A rock must not spawn inside a
   // monk, but grass should grow right up around his feet — clearing a wide
@@ -48,7 +52,7 @@ export function composeWorld(scene, {
     { count: 5, distance: 33, arcSpan: 2.4, color: wash(0.28), hScale: 0.65 },
   ],
 } = {}) {
-  scene.add(makeGround({ seed: groundSeed }));
+  scene.add(makeGround({ seed: groundSeed, ...(groundColor ? { color: groundColor } : {}) }));
   mountains.forEach((m, i) => scene.add(makeMountains({ seed: seed * 31 + i * 7, ...m })));
   forests.forEach((f, i) => scene.add(makeForest({ seed: seed * 41 + i * 11, ...f })));
 
