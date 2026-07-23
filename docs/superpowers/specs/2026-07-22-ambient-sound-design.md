@@ -128,18 +128,22 @@ events into the air than this book can absorb.
 ### Ringing on the actual wind
 
 The chime must ring *on* the gusts, not merely near them, or the causality is lost
-and it's just decoration. The gust envelope in `makeWind` is two incommensurate LFOs
-at 0.043 and 0.071 Hz, living entirely in the WebAudio graph where JS can't read it.
-Rather than an `AnalyserNode`, mirror the math:
+and it's just decoration. The gust envelope is two incommensurate sine sums, pure JS
+evaluated at the sim clock — no `AnalyserNode`, no mirroring required, because the
+WebAudio graph no longer holds a copy of this math to drift out of sync with:
 
 ```js
 export const GUST_A = 0.043, GUST_B = 0.071;
 export const gustPhase = (t) => (Math.sin(2*Math.PI*GUST_A*t) + Math.sin(2*Math.PI*GUST_B*t)) / 2;
 ```
 
-`makeWind` is refactored to use the same two constants, so there is one source of
-truth and the audible gust and the visible chime cannot drift apart. `gustPhase` is
-pure and tested.
+`gustPhase` is pure and tested. `gustPhase(simTime)` is the one source of truth:
+`main.js`'s per-frame `tick()` feeds it to `wind.setGust(v)`, which writes it straight
+into `g.gain` and `lp.frequency` as `level * (1 + gust * levelGust * k)` (`k` is 0.84
+for gain, 1 for cutoff — the algebra that falls out of substituting `gustPhase` for
+the old LFO sum), and the fūrin reads the same `gustPhase(simTime + offset)` for its
+sway and ring threshold. The sim clock drives both; there is nothing left in the
+WebAudio graph that could disagree with it.
 
 The chime rings on a **rising crossing** of a threshold, with hysteresis so a
 jittery crest can't double-fire. Because the two rates are incommensurate the sum
@@ -196,7 +200,7 @@ is the existing split in `src/audio/synths.js` and nothing here departs from it.
 | File | Change |
 |---|---|
 | `src/audio/tuning.js` | **new** — `SCALE`, `ROOT_HZ`, `OCTAVES`, `hz(degree)` |
-| `src/audio/synths.js` | generalize to `strike()`; add `chimePartials`, `gustPhase`, `GUST_A/B`, `makeSwell()`; `makeWind` uses the shared gust constants |
+| `src/audio/synths.js` | generalize to `strike()`; add `chimePartials`, `gustPhase`, `GUST_A/B`, `makeSwell()`; `makeWind` exposes `setGust(v)`, driven from `gustPhase(simTime)` in `main.js` rather than its own LFOs |
 | `src/audio/music.js` | **new** — `nextInterval`, `nextDegree` (pure), `makeMusic(ctx, dest)` scheduler (browser-only) |
 | `src/audio/engine.js` | implement `playMusic`/`stopMusic` for real; `registerEmitter`/`emitterCount` for the density rule; parse `furin:` and `music` in `startAmbience` |
 | `src/kit/furin.js` | **new** kit component; exported from `src/kit/index.js` |

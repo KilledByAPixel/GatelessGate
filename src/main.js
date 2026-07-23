@@ -9,6 +9,7 @@ import { makeDebug } from './ui/debug.js';
 import { makeInput } from './input.js';
 import { createSave } from './save.js';
 import { createAudio } from './audio/engine.js';
+import { gustPhase } from './audio/synths.js';
 import { createNarration } from './audio/narration.js';
 import { CASES } from './koans/index.js';
 import { isStaged, isRegistered, loadKoan } from './koans/registry.js';
@@ -366,6 +367,7 @@ renderer.domElement.addEventListener('pointerdown', () => { if (mode === 'intro'
 // ---- loop ----
 function tick() {
   simTime += STEP;
+  audio.setGust(gustPhase(simTime));
   if (mode === 'intro' && intro) intro.update(STEP);
   else if (rig) rig.update(STEP);
   const active = scenes.active();

@@ -30,12 +30,12 @@ export function chimePartials(f0 = 2349) {
   ].map(([r, a, d]) => ({ freq: f0 * r, amp: a, decay: d }));
 }
 
-// The gust envelope, mirrored out of the WebAudio graph so JS can read it.
-//
-// Two very slow incommensurate LFOs: the breeze rises and falls without ever
-// settling into a period you could predict. makeWind drives its graph from these
-// same two constants, so what you HEAR gusting and what you SEE ringing are the
-// same weather — that causality is the entire point of the wind chime.
+// The gust envelope. Two very slow incommensurate sine sums: the breeze rises
+// and falls without ever settling into a period you could predict. This is pure
+// JS, evaluated at the sim clock — makeWind's setGust(v) and the fūrin's own
+// gustPhase read the SAME clock, so what you HEAR gusting and what you SEE
+// ringing are the same weather. That causality is the entire point of the wind
+// chime, and it only holds if there is exactly one clock driving both.
 export const GUST_A = 0.043;
 export const GUST_B = 0.071;
 export const gustPhase = (t) =>
@@ -73,35 +73,32 @@ export function makeWind(ctx, dest) {
   const g = ctx.createGain();
   g.gain.value = 0;
 
-  // Gusts, driven by the same two LFOs as gustPhase (see above for why the rates
-  // are what they are). In raw WebAudio a connection to an AudioParam SUMS with
-  // its value, so these ride the base level rather than overriding it.
-  const lfoA = ctx.createOscillator(); lfoA.frequency.value = GUST_A;
-  const lfoB = ctx.createOscillator(); lfoB.frequency.value = GUST_B;
-  const gustGain = ctx.createGain(); gustGain.gain.value = 0;
-  const gustCut = ctx.createGain(); gustCut.gain.value = 0;
-  lfoA.connect(gustGain); lfoB.connect(gustGain);
-  lfoA.connect(gustCut); lfoB.connect(gustCut);
-  gustGain.connect(g.gain);
-  gustCut.connect(lp.frequency);
-
   src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(dest);
-  src.start(); lfoA.start(); lfoB.start();
+  src.start();
+
+  // The gust is driven from gustPhase(simTime) in JS rather than from oscillators
+  // in this graph. The sim clock is then the one source of truth for both the
+  // audible wind and the fūrin's visible ring, so the two cannot drift apart —
+  // which was the whole point of pairing a chime with this synth.
+  let params = windParams(0);
+  let gust = 0;
+  function apply() {
+    const t = ctx.currentTime;
+    g.gain.setTargetAtTime(params.gain * (1 + gust * params.gust * 0.84), t, 0.4);
+    lp.frequency.setTargetAtTime(params.cutoff * (1 + gust * params.gust), t, 0.4);
+  }
 
   return {
     setLevel(v) {
-      const p = windParams(v);
-      const t = ctx.currentTime;
-      g.gain.setTargetAtTime(p.gain, t, 0.4);
-      lp.frequency.setTargetAtTime(p.cutoff, t, 0.4);
-      // Depths stay well under the base so a trough thins the breeze without
-      // inverting it, and a crest doesn't spike. Two LFOs sum, so the real swing
-      // is twice each depth.
-      gustGain.gain.setTargetAtTime(p.gain * p.gust * 0.42, t, 0.4);
-      gustCut.gain.setTargetAtTime(p.cutoff * p.gust * 0.5, t, 0.4);
+      params = windParams(v);
+      apply();
+    },
+    setGust(v) {
+      gust = v;
+      apply();
     },
     stop() {
-      for (const node of [src, lfoA, lfoB]) { try { node.stop(); } catch { /* already stopped */ } }
+      try { src.stop(); } catch { /* already stopped */ }
       g.disconnect();
     },
   };

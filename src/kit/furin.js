@@ -74,8 +74,12 @@ export function makeFurin({ size = 0.17, seed = 5, color = WASH.stone, phase = n
   swing.add(hit);
 
   // A per-instance phase offset, so two chimes in one scene never ring together.
-  // The gust is global; only where each chime sits in it differs.
-  const off = phase === null ? hash1(3, seed) * 20 : phase;
+  // The gust is global; only where each chime sits in it differs. A few seconds
+  // of spread is enough for that — physically, chimes at different points in a
+  // garden really do catch one gust at slightly different moments — while staying
+  // far short of the ~23s mean gust period, so every chime in a scene still rings
+  // inside the same audible swell as the wind synth.
+  const off = phase === null ? hash1(3, seed) * 3 : phase;
 
   let clock = 0;
   let windLevel = 1;

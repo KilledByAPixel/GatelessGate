@@ -73,6 +73,7 @@ export function createAudio(save) {
       }
     },
     setWindLevel(v) { windLevel = v; if (wind) wind.setLevel(v * windScale); },
+    setGust(v) { if (wind) wind.setGust(v); },
     setWindScale(s) { windScale = s; if (wind) wind.setLevel(windLevel * windScale); },
     windScale() { return windScale; },
     stopAmbience() {
