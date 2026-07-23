@@ -36,8 +36,12 @@ bearing: the menu is reachable via skip-intro without the sound-card gesture).
    Tests: mood getter/setter in Node.
 
 3. **Wiring and the proof case.** `main.js`: `menuMusic()` at the end of the
-   `openMenu()` and `exit()` transitions; `enter()` calls `audio.stopMusic()`
-   and `audio.setMood(mod.mood || 'in')`; the menu seams reset mood to `'in'`.
+   `openMenu()` and `exit()` transitions; `enter()` AND `exit()` both call
+   `audio.stopMusic()` defensively (playMusic reuses a live scheduler and
+   silently drops its options, so a koan that forgot stopAmbience would eat
+   the menu's chimes flag — review catch); `enter()` sets
+   `audio.setMood(mod.mood)`, whose own guard maps undefined to `'in'`; the
+   menu seams reset mood.
    `k7` (washing the bowl — bright, domestic) declares `mood: 'yo'` as the
    first editorial pick. Tests: k7's mood field; suite green.
 

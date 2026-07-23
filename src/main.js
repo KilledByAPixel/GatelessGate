@@ -304,6 +304,10 @@ async function exit() {
   stopReading();
   input.clear();
   koan && koan.onExit && koan.onExit();
+  // defense in depth, mirroring enter(): playMusic REUSES a live scheduler and
+  // silently drops its options, so if a koan's onExit ever forgets stopAmbience,
+  // menuMusic()'s chimes flag would quietly never apply. Kill it here always.
+  audio.stopMusic();
   await transition(() => {
     const prev = scenes.active();
     scenes.setActive(hub);
