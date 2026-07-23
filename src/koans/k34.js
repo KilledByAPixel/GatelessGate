@@ -36,7 +36,11 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.028);
     scene.add(makeLights());
 
-    const path = makePath({ from: [4.4, 8.2], to: [-2.2, -18], width: 1.3, seed: ID, groundSeed: 21, wander: 1.0 });
+    // THE PATH is the seal (Frank): "Learning is not the PATH" — the road is
+    // named in the case, so it is the one red thing. Routed to the right of the
+    // study so the spilled scrolls no longer sit on the road (which was also
+    // where the z-fighting came from).
+    const path = makePath({ from: [4.6, 8.2], to: [1.4, -18], width: 1.3, seed: ID, groundSeed: 21, wander: 0.8, color: ACCENT });
     scene.add(path);
 
     // the study, its door standing open because it cannot close any more
@@ -45,17 +49,20 @@ export default {
     hut.rotation.y = 0.46;
     scene.add(hut);
 
-    // the mat the overflow has reached
-    const mat = new THREE.Mesh(
-      new THREE.BoxGeometry(2.6, 0.03, 1.9),
-      toonMaterial({ color: WASH.dry, flat: true }));
+    // the mat the overflow has reached. Lifted just clear of the ground and
+    // drawn in front of it (polygonOffset) so it never z-fights the terrain or
+    // the path, and moved left off the road.
+    const matMat = toonMaterial({ color: WASH.dry, flat: true });
+    matMat.polygonOffset = true;
+    matMat.polygonOffsetFactor = -2;
+    const mat = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.03, 1.9), matMat);
     mat.name = 'mat';
-    mat.position.set(0.9, 0.015, -0.7);
+    mat.position.set(-0.1, 0.035, -0.7);
     mat.rotation.y = 0.2;
     scene.add(mat);
 
-    // THE SCROLLS. Pale rolls stacked and spilled — one of them accent, the
-    // single scroll somebody is actually reading, which is the joke.
+    // THE SCROLLS. Pale rolls stacked and spilled from the door — all the same
+    // wash now (Frank: no single red scroll; the path carries the accent).
     const scrolls = new THREE.Group();
     scrolls.name = 'scrolls';
     for (let i = 0; i < 22; i++) {
@@ -64,17 +71,17 @@ export default {
       const tone = 0.12 + hash1(i * 7 + 3, ID) * 0.14;
       const roll = new THREE.Mesh(
         new THREE.CylinderGeometry(rad, rad, len, 7),
-        toonMaterial({ color: i === 5 ? ACCENT : wash(tone), flat: true }));
-      roll.name = i === 5 ? 'read-scroll' : 'scroll';
+        toonMaterial({ color: wash(tone), flat: true }));
+      roll.name = 'scroll';
       roll.rotation.z = Math.PI / 2;
       // heaped: a rough pile near the door thinning out across the mat
       const a = hash1(i * 7 + 4, ID) * Math.PI * 2;
       const r = 0.15 + hash1(i * 7 + 5, ID) * 1.35;
       const tier = Math.floor(hash1(i * 7 + 6, ID) * 3);
       roll.position.set(
-        0.6 + Math.cos(a) * r,
-        rad + tier * rad * 1.9,
-        -0.9 + Math.sin(a) * r * 0.8,
+        -0.1 + Math.cos(a) * r,
+        0.04 + rad + tier * rad * 1.9,
+        -0.8 + Math.sin(a) * r * 0.8,
       );
       roll.rotation.y = hash1(i * 7 + 7, ID) * Math.PI;
       roll.rotation.x = (hash1(i * 7 + 8, ID) - 0.5) * 0.3;
@@ -112,7 +119,7 @@ export default {
     for (const [p, rx, rz, op] of [
       [nansen.position, 0.7, 0.54, 0.42],
       [hut.position, 2.0, 1.6, 0.30],
-      [new THREE.Vector3(0.7, 0, -0.9), 1.3, 1.0, 0.26],
+      [new THREE.Vector3(-0.1, 0, -0.8), 1.3, 1.0, 0.26],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = p.x; s.position.z = p.z;
@@ -126,7 +133,7 @@ export default {
       new THREE.MeshBasicMaterial({ visible: false }));
     hit.name = 'scrolls-hit';
     hit.userData.noOutline = true;
-    hit.position.set(0.6, 0.35, -0.9);
+    hit.position.set(-0.1, 0.35, -0.8);
     scene.add(hit);
 
     // ---- the moment: the words go up -------------------------------------

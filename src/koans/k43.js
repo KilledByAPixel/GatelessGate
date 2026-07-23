@@ -37,15 +37,34 @@ export default {
 
     // SHUZAN, holding it out. aimMonk turns local +x toward a target, so a
     // staff laid along +x is a staff offered to whoever he is facing.
-    const shuzan = makeMonk({ height: 1.68 });
+    const SH = 1.68;
+    const shuzan = makeMonk({ height: SH });
     shuzan.position.set(-1.5, 0, -1.2);
+
+    // He reaches the staff OUT — his right sleeve swings forward from the
+    // shoulder so his hand is in front of him, and the staff crosses that hand
+    // horizontally (Frank: it was floating in front of him with his arms down).
+    // The sleeve hangs from its shoulder (local -y); swinging it about x brings
+    // the hem forward.
+    const SLEEVE_L = 0.34 * SH;
+    const ARM_SWING = -1.15;                       // forward and a touch down
+    const rightArm = shuzan.children
+      .filter((c) => c.name === 'arm')
+      .sort((a, b) => b.position.x - a.position.x)[0];
+    if (rightArm) { rightArm.rotation.x = ARM_SWING; rightArm.rotation.z = 0.12; }
     scene.add(shuzan);
 
-    // The short staff itself — the seal. Held level at chest height, out in
-    // front of him, hanging in the sleeve's shadow.
+    // The staff, laid across the reached-out hand. Positioned at the sleeve's
+    // hem (shoulder + the swung sleeve) so it sits IN the hand, not adrift.
+    const shoulderX = rightArm ? rightArm.position.x : 0.115 * SH;
+    const shoulderY = rightArm ? rightArm.position.y : 0.60 * SH;
     const hold = new THREE.Group();
     hold.name = 'hold';
-    hold.position.set(0.19 * 1.68, 0.60 * 1.68, 0.03 * 1.68);
+    hold.position.set(
+      shoulderX,
+      shoulderY - SLEEVE_L * Math.cos(ARM_SWING),
+      0.03 * SH - SLEEVE_L * Math.sin(ARM_SWING),
+    );
     shuzan.add(hold);
 
     const STAFF_L = 0.78;

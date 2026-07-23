@@ -63,8 +63,12 @@ function rigCamera(mod, azimuth = null) {
 // drift, and this list is how a NEW case that forgot it still gets caught.
 const NO_DRIFT = [5, 14, 46];
 
-// The book is ink on warm paper in all forty-eight cases but one.
-const NIGHT_CASE = 28;
+// The book is ink on warm paper, with two deliberate exceptions: case 28 goes
+// to night (and darker when the candle is blown out), and case 27 experiments
+// with a red sky for the scene you erase. Both keep fog matched to the page, so
+// nothing meets a horizon. The paper post pass multiplies, so a tinted page
+// composites correctly.
+const NON_PAPER_SKY = new Set([27, 28]);
 
 const staged = [];
 for (const c of CASES) if (isStaged(c.slug)) staged.push(c);
@@ -113,20 +117,16 @@ for (const entry of staged) {
       assert.equal(typeof root[fn], 'function', `root.${fn} missing`);
     }
     assert.ok(root.scene instanceof THREE.Scene);
-    if (entry.id === NIGHT_CASE) {
-      // Case 28 is the one case staged after dark, and the only one that goes
-      // darker still: Ryutan blows the candle out and the page falls to ink so
-      // the stars can come up. The paper pass is multiplicative, so the post
-      // spine composites a dark page correctly rather than washing it back.
+    assert.ok(root.scene.fog, 'nothing may meet a horizon');
+    if (NON_PAPER_SKY.has(entry.id)) {
       const bg = root.scene.background.getHexString();
-      assert.notEqual('#' + bg, PAPER.toLowerCase(), 'the night case should not be daylight');
+      assert.notEqual('#' + bg, PAPER.toLowerCase(), 'this case deliberately tints the page');
       assert.equal('#' + root.scene.fog.color.getHexString(), '#' + bg,
         'fog must match the page, or the horizon reappears');
     } else {
       assert.equal('#' + root.scene.background.getHexString(), PAPER.toLowerCase(),
         'the page is always paper');
     }
-    assert.ok(root.scene.fog, 'nothing may meet a horizon');
 
     // the shared world grammar is present: every case is somewhere
     assert.ok(root.scene.getObjectByName('ground'), 'no ground');
@@ -205,11 +205,12 @@ test('every staged interaction reaches the audio engine', async () => {
 // merged geometry, so the whole book is under budget with no exceptions.
 const OVER_BUDGET_BY_HISTORY = {};
 
-// Accents that are deliberately not a thing sitting in the middle distance:
-// case 24's is the whole flowering meadow (an instanced field, not a mesh),
-// and 35's and 27's is the moon, which stands sixty units out beyond the
-// mountains and is framed by the sky rather than by the diorama.
-const ACCENT_NOT_IN_FRAME = [24, 27, 35];
+// Accents that are deliberately not a compact thing in the middle distance:
+// 24's is the whole flowering meadow (an instanced field); 27's and 35's is
+// the moon, sixty units out beyond the mountains; 22's and 34's is the PATH, a
+// ground-spanning ribbon whose mesh origin is not a meaningful point to project
+// (the road is inherently in frame — it is the ground you are looking at).
+const ACCENT_NOT_IN_FRAME = [22, 24, 27, 34, 35];
 
 test('the seal of each case is actually in the picture', async () => {
   // Every case puts its one accent on the thing the case turns on. If that

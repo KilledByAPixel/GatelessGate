@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT_LIGHT } from '../palette.js';
+import { PAPER, ACCENT, ACCENT_LIGHT, mixHex } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeOak, makeMoon, makeMonk, aimMonk,
   makeLights, makeBlobShadow, addOutlines,
@@ -38,8 +38,13 @@ export default {
   build(ctx) {
     const { audio, input } = ctx;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(PAPER);
-    scene.fog = new THREE.FogExp2(PAPER, 0.028);
+    // EXPERIMENT (Frank): a red sky for the erasing case. The one scene where
+    // you take the world apart until only the page is left gets a page that is
+    // already tinted — so the paper you are left with is a warm red rather than
+    // white. The paper post pass multiplies, so this composites fine.
+    const SKY = mixHex(PAPER, ACCENT, 0.42);
+    scene.background = new THREE.Color(SKY);
+    scene.fog = new THREE.FogExp2(SKY, 0.028);
     scene.add(makeLights());
 
     const path = makePath({ from: [4.6, 8.2], to: [-2.6, -18], width: 1.4, seed: ID, groundSeed: 21, wander: 0.9 });
@@ -63,7 +68,8 @@ export default {
     treeGroup.name = 'the-tree';
     const oak = makeOak({ height: 5.2, seed: ID });
     const oakRoot = oak.group || oak;
-    oakRoot.position.set(2.9, 0, -1.6);
+    const TREE = { x: 4.0, z: -2.6 };      // moved clear of the path (Frank: it stood in the road)
+    oakRoot.position.set(TREE.x, 0, TREE.z);
     treeGroup.add(oakRoot);
     scene.add(treeGroup);
 
@@ -92,7 +98,7 @@ export default {
       keepout: [
         ...path.keepout(24, 1.2),
         { x: -2.2, z: -4.4, r: 3.2 },
-        { x: 2.9, z: -1.6, r: 3.0 },
+        { x: TREE.x, z: TREE.z, r: 3.0 },
         { x: 1.0, z: 2.6, r: 1.2 },
         { x: -1.0, z: 1.2, r: 1.2 },
       ],
@@ -117,7 +123,7 @@ export default {
     hallShadow.position.set(-2.2, 0, -4.4);
     hallGroup.add(hallShadow);
     const treeShadow = makeBlobShadow({ radiusX: 1.9, radiusZ: 1.5, opacity: 0.32 });
-    treeShadow.position.set(2.9, 0, -1.6);
+    treeShadow.position.set(TREE.x, 0, TREE.z);
     treeGroup.add(treeShadow);
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
@@ -134,7 +140,7 @@ export default {
       return m;
     };
     const hallHit = mkHit('hall-hit', -2.2, 1.3, -4.4, 4.0, 2.8, 3.4, hallGroup);
-    const treeHit = mkHit('tree-hit', 2.9, 2.6, -1.6, 3.6, 5.2, 3.6, treeGroup);
+    const treeHit = mkHit('tree-hit', TREE.x, 2.6, TREE.z, 3.6, 5.2, 3.6, treeGroup);
     // the moon is 60 units out; its target is a panel hung in front of it on
     // the same bearing, sized so it covers the disc from the reachable arc
     const moonWorld = new THREE.Vector3();

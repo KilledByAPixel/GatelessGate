@@ -49,10 +49,27 @@ export default {
     const road = makePath({ from: [7.0, 6.0], to: [-6.0, -16], width: 1.7, seed: ID, groundSeed: 21, wander: 0.45 });
     scene.add(road);
 
-    // KEMBO, stick up, having just finished the stroke
-    const kembo = makeMonk({ height: 1.68, pose: 'raise', elder: true });
+    // KEMBO, raising his walking stick in the air — "Here it is." The stick is
+    // the thing (Frank), so he holds it UP in his raised hand rather than
+    // leaning on it: not an elder's side-staff but a stick continuing the line
+    // of the raised sleeve, red like the stroke it just drew.
+    const KH = 1.68;
+    const kembo = makeMonk({ height: KH, pose: 'raise' });
     kembo.position.set(-1.2, 0, -0.6);
     aimMonk(kembo, { x: 4.0, z: 2.6 });
+    const raisedArm = kembo.children
+      .filter((c) => c.name === 'arm')
+      .sort((a, b) => b.position.x - a.position.x)[0];
+    if (raisedArm) {
+      const SLEEVE_L = 0.34 * KH;
+      const STICK_L = 0.95 * KH;
+      const stick = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.023 * KH, 0.028 * KH, STICK_L, 7),
+        toonMaterial({ color: ACCENT, flat: true }));
+      stick.name = 'stick';
+      stick.position.y = -SLEEVE_L - STICK_L / 2;   // continue the raised arm's line, up and out
+      raisedArm.add(stick);
+    }
     scene.add(kembo);
 
     // THE STROKE — the figure one, hanging in the air off the stick. A flat
@@ -71,13 +88,36 @@ export default {
     stroke.rotation.z = 0.04;                     // a hand's tilt, not a ruler's
     scene.add(stroke);
 
-    // the pupil who asked
-    const pupil = makeMonk({ height: 1.58 });
+    // the other figure — Ummon, who answered the same question with a fan.
+    // He HOLDS the fan up in his hand (Frank: an old-fashioned folding fan in
+    // the other guy's hand), an open paper arc on a short handle.
+    const PH = 1.6;
+    const pupil = makeMonk({ height: PH });
     pupil.position.set(3.2, 0, 2.4);
     aimMonk(pupil, kembo.position);
+
+    const fan = new THREE.Group();
+    fan.name = 'fan';
+    const leaf = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.34, 0.34, 0.02, 14, 1, false, 0, Math.PI * 0.7),
+      toonMaterial({ color: WASH.dry, flat: true }));
+    leaf.name = 'fan-leaf';
+    leaf.rotation.x = Math.PI / 2;                 // stand the arc up, ribs fanning from the grip
+    leaf.position.y = 0.18;
+    fan.add(leaf);
+    const handle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02, 0.024, 0.2, 6),
+      toonMaterial({ color: WASH.dark, flat: true }));
+    handle.name = 'fan-handle';
+    handle.position.y = 0.02;
+    fan.add(handle);
+    // set it in his raised-ish right hand, out in front of the chest
+    fan.position.set(0.2 * PH, 0.58 * PH, 0.16 * PH);
+    fan.rotation.z = -0.5;
+    pupil.add(fan);
     scene.add(pupil);
 
-    // the stone, and Ummon's fan lying on it
+    // a roadside stone, now just scenery
     const rock = new THREE.Mesh(
       new THREE.CylinderGeometry(0.52, 0.62, 0.34, 7),
       toonMaterial({ color: WASH.stone, flat: true }));
@@ -85,14 +125,6 @@ export default {
     rock.position.set(-3.3, 0.17, 1.6);
     rock.rotation.y = 0.6;
     scene.add(rock);
-
-    const fan = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.30, 0.30, 0.022, 12, 1, false, 0, Math.PI * 0.62),
-      toonMaterial({ color: WASH.dry, flat: true }));
-    fan.name = 'fan';
-    fan.position.set(-3.3, 0.35, 1.6);
-    fan.rotation.y = 1.1;
-    scene.add(fan);
 
     const world = composeWorld(scene, {
       seed: ID,

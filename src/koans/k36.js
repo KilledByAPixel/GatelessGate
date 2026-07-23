@@ -21,7 +21,7 @@ const ID = 36;
 // touch, because a solid figure that suddenly went transparent would be a
 // trick. This one was always like that.
 
-const PASS = 3.4;         // seconds to come on, through, and out the other side
+const PASS = 17;          // seconds to come on, through, and out — a slow, dreamlike drift past (Frank: much slower)
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 export default {

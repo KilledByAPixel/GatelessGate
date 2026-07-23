@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, WASH, wash } from '../palette.js';
+import { PAPER, ACCENT, INK, WASH, wash } from '../palette.js';
 import {
   composeWorld, makeCave, makeSnow, makePine, makeMonk, aimMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
@@ -55,20 +55,40 @@ export default {
     aimMonk(bodhidharma, { x: -0.8, z: -8.0 });
     scene.add(bodhidharma);
 
-    // EKA, outside in the snow, waiting. Whole, and standing.
+    // EKA, outside in the snow — and MISSING ONE ARM. The text is what it is;
+    // the diorama shows it the gentlest way it can (Frank's staging): one
+    // sleeve simply gone from his side, and the arm itself lying in the snow a
+    // little way off, with a small red mark where it left him. No wound on the
+    // body, no gore — an absence and one seal, which is all the case needs.
     const eka = makeMonk({ height: 1.62 });
     eka.position.set(1.5, 0, -1.9);
     aimMonk(eka, cave.position);
+    // remove the arm on the side toward the cave (the hand he offered)
+    const ekaArms = eka.children.filter((c) => c.name === 'arm');
+    const goneArm = ekaArms.sort((a, b) => a.position.x - b.position.x)[0];  // his left
+    if (goneArm) eka.remove(goneArm);
     scene.add(eka);
 
-    // THE SEAL — one vermillion mark in the snow between them, and the only
-    // colour anywhere in the scene
+    // THE ARM, laid in the snow between Eka and the cave: a plain dark sleeve
+    // lying on the ground, the cut end toward the seal.
+    const arm = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.05, 0.07, 0.5, 8),
+      toonMaterial({ color: INK, flat: true }));
+    arm.name = 'severed-arm';
+    arm.rotation.z = Math.PI / 2;                 // lying flat
+    arm.rotation.y = 0.6;
+    arm.position.set(0.95, 0.07, -3.05);
+    scene.add(arm);
+
+    // THE SEAL — the one vermillion mark, at the cut end of the arm: read it as
+    // blood if you know the story, or as the painter's seal in white snow if
+    // you don't. The only colour anywhere in the scene.
     const seal = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.135, 0.135, 0.014, 4),
+      new THREE.CylinderGeometry(0.12, 0.12, 0.014, 4),
       toonMaterial({ color: ACCENT, flat: true }));
     seal.name = 'seal';
     seal.rotation.y = 0.5;
-    seal.position.set(0.75, 0.012, -3.3);
+    seal.position.set(0.72, 0.012, -3.28);
     scene.add(seal);
 
     const pine = makePine({ height: 3.8, seed: ID, color: wash(0.55) });

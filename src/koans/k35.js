@@ -145,8 +145,14 @@ export default {
           const d = (i === 0 ? 1 : -1) * sep * 3.4;
           const t = 0.5 + d * 0.055;                                 // along the road
           const p = path.sample(Math.max(0.02, Math.min(0.98, t)));
-          s.position.set(p.x, 0, p.z);
-          s.rotation.y = Math.atan2(-(i === 0 ? -p.perp.z : p.perp.z), (i === 0 ? -p.perp.x : p.perp.x));
+          // a little walk in them: a gait bob and a slight roll/yaw sway, so
+          // they read as two people walking rather than two markers sliding
+          // along a rail (Frank's note). Out of phase between the two.
+          const gait = clock * 2.3 + i * Math.PI;
+          s.position.set(p.x, Math.abs(Math.sin(gait)) * 0.035, p.z);
+          s.rotation.y = Math.atan2(-(i === 0 ? -p.perp.z : p.perp.z), (i === 0 ? -p.perp.x : p.perp.x))
+            + Math.sin(clock * 1.1 + i) * 0.06;
+          s.rotation.z = Math.sin(gait) * 0.04;
           // where they meet, the pair reads as one whole person
           const solid = 0.5 + (1 - sep) * 0.42;
           s.traverse((o) => { if (o.isMesh && o.material) o.material.opacity = solid; });

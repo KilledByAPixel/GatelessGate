@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT_DEEP } from '../palette.js';
+import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeGate, makeFlag, makeMonk, aimMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines,
@@ -23,7 +23,7 @@ export default {
   id: ID,
   slug: 'kashapa-s-preaching-sign',
   title: TEXT[ID].title,
-  accent: ACCENT_DEEP,
+  accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.30', 'flag', 'music'],
@@ -37,7 +37,10 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
     scene.add(makeLights());
 
-    const path = makePath({ from: [-3.8, 8.4], to: [2.8, -18], width: 1.5, seed: ID, groundSeed: 21, wander: 0.9 });
+    // THE PATH is the seal here (Frank's experiment): case 29 already owns the
+    // red flag, so this case keeps the flag but paints it plain, and lets the
+    // road up to the gate be the one warm thing instead.
+    const path = makePath({ from: [-3.8, 8.4], to: [1.2, -18], width: 1.5, seed: ID, groundSeed: 21, wander: 0.7, color: ACCENT });
     scene.add(path);
 
     const gate = makeGate({ width: 2.9, height: 3.1 });
@@ -45,10 +48,11 @@ export default {
     gate.rotation.y = 0.24;
     scene.add(gate);
 
-    // THE PREACHING SIGN — the banner that says whose hall this is, and the
-    // one thing in the case that is about to change hands
-    const flag = makeFlag({ seed: ID, poleH: 3.6, width: 1.6 });
-    flag.group.position.set(2.2, 0, 0.3);
+    // THE PREACHING SIGN — a plain banner now, drawn up close beside the gate
+    // where a hall's sign would actually stand. It still ruffles and stills
+    // (the flag kit carries those); it is simply no longer the red one.
+    const flag = makeFlag({ seed: ID, poleH: 3.4, width: 1.4, color: WASH.dark });
+    flag.group.position.set(1.0, 0, -2.4);
     scene.add(flag.group);
 
     // KASHAPA, who is handing it over, and ANANDA, who has just said yes
@@ -73,7 +77,7 @@ export default {
       keepout: [
         ...path.keepout(24, 1.3),
         { x: gate.position.x, z: gate.position.z, r: 2.4 },
-        { x: 2.2, z: 0.3, r: 1.6 },
+        { x: flag.group.position.x, z: flag.group.position.z, r: 1.4 },
         { x: -0.2, z: 1.5, r: 1.2 },
         { x: 1.1, z: 2.9, r: 1.2 },
         { x: -2.8, z: 0.6, r: 0.9 },
