@@ -64,15 +64,19 @@ export default {
     aimMonk(monk, basin.position);
     scene.add(monk);
 
-    // the shishi-odoshi that feeds the basin, mouth turned toward it. Its
-    // knock is the yard's clock; a tap tips it early.
+    // The shishi-odoshi, set back from the basin with its mouth turned toward
+    // it. The distance is load-bearing: the tube reaches 0.7 when it tips,
+    // and at the first placement (0.98 from the basin's axis) the mouth dipped
+    // straight through the basin's wall — Frank watched it happen. At 1.77
+    // the tipped mouth clears the stone by half a unit. Its knock is the
+    // yard's clock; a tap tips it early.
     const odoshi = makeOdoshi({
       seed: 7,
       onPour: () => audio && audio.pour(),
       onKnock: (force) => audio && audio.knock({ force }),
     });
-    odoshi.group.position.set(3.05, 0, 0.5);
-    odoshi.group.rotation.y = -2.72;
+    odoshi.group.position.set(3.75, 0, 0.15);
+    odoshi.group.rotation.y = -2.70;
     scene.add(odoshi.group);
 
     const world = composeWorld(scene, {
@@ -84,7 +88,7 @@ export default {
         { x: -0.4, z: -4.2, r: 3.0 },   // the hut
         { x: 2.15, z: 0.9, r: 1.5 },    // basin + bowl
         { x: 0.55, z: 1.75, r: 1.1 },   // the monk
-        { x: 3.05, z: 0.5, r: 1.1 },    // the deer-scarer
+        { x: 3.75, z: 0.15, r: 1.2 },   // the deer-scarer and its flume
       ],
       // the trail, the hut's footprint and the basin's stone cover ground;
       // the monk stands in the grass like anyone would
