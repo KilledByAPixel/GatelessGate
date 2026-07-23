@@ -122,7 +122,7 @@ export function makeFurin({ size = 0.17, tubes = 5, seed = 5, phase = null, coup
       const nudge = Math.exp(-(clock - nudgeAt) / NUDGE_TAU) * 0.035;
       swing.rotation.z = v * 0.16 * windLevel + nudge;
       swing.rotation.x = gustPhase(clock * 0.7 + off + 11) * 0.09 * windLevel;
-      tag.rotation.y = v * 0.25 * windLevel + 0;
+      tag.rotation.y = v * 0.25 * windLevel;
 
       // strikes follow the chime's own weather, gated by the wind existing
       const act = chimeActivity(tt);
