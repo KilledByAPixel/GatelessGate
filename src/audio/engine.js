@@ -1,4 +1,7 @@
-import { makeWind, strikeBell, strikeBar, CHIME, strikeDrip, makeWaterBed, WATER } from './synths.js';
+import {
+  makeWind, strikeBell, strikeBar, CHIME, strikeDrip, makeWaterBed, WATER,
+  strike, bambooPartials, ODOSHI, pourBurst,
+} from './synths.js';
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
 import { hz, SCALES } from './tuning.js';
@@ -147,6 +150,28 @@ export function createAudio(save) {
       ensureCtx();
       if (ctx.state !== 'running') return;
       dripNow(loud);
+    },
+    // the shishi-odoshi: the kit object fires onKnock/onPour, the case wires
+    // them here — the same indirection as the furin
+    knock({ force = 1 } = {}) {
+      ensureCtx();
+      if (ctx.state !== 'running') return;
+      const bus = ctx.createGain();
+      const dryG = ctx.createGain(); dryG.gain.value = 1 - ODOSHI.verbMix * 0.8;
+      bus.connect(dryG); dryG.connect(master);
+      const sendG = ctx.createGain(); sendG.gain.value = ODOSHI.verbMix * 1.1;
+      bus.connect(sendG); sendG.connect(verb.in);
+      // strike()'s internal 0.11 scaling is bell-sized; a knock is a THUMP
+      strike(ctx, bus, {
+        partials: bambooPartials(),
+        gain: ODOSHI.level * force * 9,
+        transient: { dur: 0.018, freq: 1100, q: 1.4, amp: 0.5 },
+      });
+    },
+    pour() {
+      ensureCtx();
+      if (ctx.state !== 'running') return;
+      pourBurst(ctx, master, {});
     },
     playMusic,
     stopMusic,

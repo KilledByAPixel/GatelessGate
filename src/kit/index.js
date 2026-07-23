@@ -38,3 +38,4 @@ export { makeVeranda } from './veranda.js';
 export { makeRaisedFinger } from './finger.js';
 export { makeAssembly } from './assembly.js';
 export { makeFurin } from './furin.js';
+export { makeOdoshi } from './odoshi.js';

@@ -80,6 +80,44 @@ export function strikeDrip(ctx, dry, verbIn, { f0, gain = WATER.level, sweep = W
   nsrc.start(t);
 }
 
+// The shishi-odoshi's knock — struck bamboo on stone: hollow, woody, dry.
+// Few, loosely-stretched partials (the knock lands on the tube's body, so the
+// series is loose), everything gone fast; the character is mostly the
+// TRANSIENT — wood on stone — with the tube's low "aw" underneath.
+// Frank's audition numbers (the "Garden clock" preset).
+export const ODOSHI = { f0: 220, level: 0.11, decay: 0.35, verbMix: 0.5, pourLevel: 0.03, period: 32 };
+
+export function bambooPartials(f0 = ODOSHI.f0, decay = ODOSHI.decay) {
+  return [
+    [1.00, 1.00], [2.28, 0.40], [3.85, 0.16], [5.10, 0.07],
+  ].map(([r, a]) => ({ freq: f0 * r, amp: a, decay: decay * Math.pow(0.5, Math.log2(r)) }));
+}
+
+// the tube emptying: a short burst of the water-static, swelling and dying
+export function pourBurst(ctx, dest, { level = ODOSHI.pourLevel, dur = 1.3 } = {}) {
+  const t0 = ctx.currentTime;
+  const n = Math.ceil(ctx.sampleRate * dur);
+  const nb = ctx.createBuffer(1, n, ctx.sampleRate);
+  const nd = nb.getChannelData(0);
+  const rand = mulberry32(60660);
+  let last = 0;
+  for (let i = 0; i < n; i++) {
+    const w = rand() * 2 - 1;
+    last = (last + 0.4 * w) / 1.4;
+    nd[i] = last * 1.2;
+  }
+  const src = ctx.createBufferSource(); src.buffer = nb;
+  const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 500;
+  const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600; lp.Q.value = 0.4;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(level, t0 + 0.25);
+  g.gain.setValueAtTime(level, t0 + dur - 0.5);
+  g.gain.linearRampToValueAtTime(0, t0 + dur);
+  src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(dest);
+  src.start(t0); src.stop(t0 + dur + 0.05);
+}
+
 // The water bed — Frank's spec, arrived at over three auditions: "like the
 // wind but a little more staticky." So it IS the wind's architecture: a LONG
 // seeded noise loop (14s — short loops are audibly periodic), wide gentle

@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeBowl, makeWater, makeMonk, aimMonk,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeOdoshi, makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
 const ID = 7;
@@ -14,10 +14,10 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  // water:0 = drips with no bed. A stone basin at rest is nearly silent — the
-  // drips are the truth of it. (The bed voice is back in audition; Frank heard
-  // a swept-resonance "wah" in the first cut.) Still an emitter either way.
-  ambience: ['wind:0.14', 'water:0', 'music'],
+  // water:0 = drips with no bed (a basin at rest is nearly silent). The
+  // shishi-odoshi is the yard's second emitter, so the swells thin further
+  // here than anywhere — this garden already keeps its own time.
+  ambience: ['wind:0.14', 'water:0', 'odoshi', 'music'],
   // the first bright case: washing a bowl is domestic, morning work — yo, not
   // hirajoshi
   mood: 'yo',
@@ -64,6 +64,17 @@ export default {
     aimMonk(monk, basin.position);
     scene.add(monk);
 
+    // the shishi-odoshi that feeds the basin, mouth turned toward it. Its
+    // knock is the yard's clock; a tap tips it early.
+    const odoshi = makeOdoshi({
+      seed: 7,
+      onPour: () => audio && audio.pour(),
+      onKnock: (force) => audio && audio.knock({ force }),
+    });
+    odoshi.group.position.set(3.05, 0, 0.5);
+    odoshi.group.rotation.y = -2.72;
+    scene.add(odoshi.group);
+
     const world = composeWorld(scene, {
       seed: 7,
       groundSeed: 21,
@@ -73,6 +84,7 @@ export default {
         { x: -0.4, z: -4.2, r: 3.0 },   // the hut
         { x: 2.15, z: 0.9, r: 1.5 },    // basin + bowl
         { x: 0.55, z: 1.75, r: 1.1 },   // the monk
+        { x: 3.05, z: 0.5, r: 1.1 },    // the deer-scarer
       ],
       // the trail, the hut's footprint and the basin's stone cover ground;
       // the monk stands in the grass like anyone would
@@ -87,6 +99,7 @@ export default {
       [monk.position, 0.65, 0.5, 0.42],
       [basin.position, 0.8, 0.6, 0.36],
       [hut.position, 2.0, 1.5, 0.3],
+      [odoshi.group.position, 0.7, 0.35, 0.32],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = p.x; s.position.z = p.z;
@@ -104,6 +117,8 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
+      // the deer-scarer first: a tap tips it without waiting out the fill
+      if (input.raycastFirst(camera, odoshi.pickTargets())) { odoshi.tip(); return; }
       // touching the water rings it where you touched; touching the bowl rings
       // the middle, as if it had been set down
       const onWater = surface ? input.raycastFirst(camera, [surface]) : null;
@@ -127,9 +142,10 @@ export default {
       update(dt, simTime) {
         world.update(dt, simTime);
         water.update(dt, simTime);
+        odoshi.update(dt, simTime);
       },
       fragment() {
-        return { ripples: water.rippleCount(), rippled };
+        return { ripples: water.rippleCount(), rippled, knocks: odoshi.knocks() };
       },
       dispose() {},
     };
