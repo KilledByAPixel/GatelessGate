@@ -80,7 +80,7 @@ test('a tap tips it without waiting out the fill', () => {
 
 test('grounded, named, and the arm actually moves through a cycle', () => {
   const o = makeOdoshi({ seed: 3, phase: 0 });
-  for (const name of ['post', 'axle', 'arm', 'tube', 'node', 'stone', 'odoshi-hit']) {
+  for (const name of ['post', 'axle', 'arm', 'tube', 'node', 'stone', 'flume', 'odoshi-hit']) {
     assert.ok(o.group.getObjectByName(name), `${name} missing`);
   }
   o.update(1 / 60, 0);                      // settle the arm into its rest pose
@@ -89,9 +89,35 @@ test('grounded, named, and the arm actually moves through a cycle', () => {
   assert.ok(box.min.y > -0.02, `digs into the ground: ${box.min.y}`);
   assert.ok(box.max.y > 0.4, 'stands at garden height');
 
+  // the fill is deliberately motionless (stillness makes the tip an event),
+  // so sample across a WHOLE cycle to see the pour and the bounce
   const arm = o.group.getObjectByName('arm');
   const angles = new Set();
-  run(o, 40);
-  for (let i = 0; i * (1 / 60) < 5; i++) { o.update(1 / 60, 40 + i / 60); angles.add(+arm.rotation.z.toFixed(3)); }
-  assert.ok(angles.size > 3, 'the arm never moves');
+  for (let i = 0; i * (1 / 60) < 45; i++) { o.update(1 / 60, i / 60); angles.add(+arm.rotation.z.toFixed(3)); }
+  assert.ok(angles.size > 10, `the arm never moves: ${angles.size} distinct poses`);
+});
+
+test('the butt rests ON the stone and the bounce never swings through it', () => {
+  const o = makeOdoshi({ seed: 3, phase: 0 });
+  const arm = o.group.getObjectByName('arm');
+  const stone = o.group.getObjectByName('stone');
+
+  // mid-fill: the arm is at contact
+  o.update(1 / 60, 1);
+  const restAngle = arm.rotation.z;
+  o.group.updateMatrixWorld(true);
+  const buttEnd = arm.localToWorld(new THREE.Vector3(0.12 - 1.15 / 2, 0, 0));
+  const stoneBox = new THREE.Box3().setFromObject(stone);
+  assert.ok(Math.abs((buttEnd.y - 0.075) - stoneBox.max.y) < 0.02,
+    `the butt floats or sinks: underside ${(buttEnd.y - 0.075).toFixed(3)} vs stone top ${stoneBox.max.y.toFixed(3)}`);
+
+  // across a full cycle the arm never rotates past contact — the stone is a
+  // wall, not a suggestion (the first cut swung through it on every bounce)
+  let maxA = -Infinity;
+  for (let i = 0; i * (1 / 60) < 45; i++) {
+    o.update(1 / 60, 1 + i / 60);
+    maxA = Math.max(maxA, arm.rotation.z);
+  }
+  assert.ok(o.knocks() >= 2, 'the cycle never completed');
+  assert.ok(maxA <= restAngle + 1e-9, `swings past contact: ${maxA} vs ${restAngle}`);
 });
