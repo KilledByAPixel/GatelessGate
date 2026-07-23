@@ -1,6 +1,8 @@
 // Procedural voices. Pure param tables are tested; the node builders are browser-only.
 // (Audio is exempt from the determinism rule — Math.random for noise is fine here.)
 
+import { mulberry32 } from './verb.js';
+
 export function windParams(level) {
   const l = Math.max(0, Math.min(1, level));
   return {
@@ -66,10 +68,9 @@ export function strikeDrip(ctx, dry, verbIn, { f0, gain = WATER.level, sweep = W
   const dur = 0.008;
   const nb = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * dur), ctx.sampleRate);
   const nd = nb.getChannelData(0);
-  let s = 4242;
+  const rand = mulberry32(4242);
   for (let i = 0; i < nd.length; i++) {
-    s = (s * 1103515245 + 12345) % 2147483648;
-    nd[i] = (s / 1073741824 - 1) * (1 - i / nd.length);
+    nd[i] = (rand() * 2 - 1) * (1 - i / nd.length);
   }
   const nsrc = ctx.createBufferSource(); nsrc.buffer = nb;
   const bp = ctx.createBiquadFilter();
@@ -88,10 +89,10 @@ export function makeWaterBed(ctx, dest) {
   const SR = ctx.sampleRate, LOOP = 8, XF = 0.4;
   const n = Math.floor(SR * LOOP), x = Math.floor(SR * XF);
   const raw = new Float32Array(n + x);
-  let s = 777, last = 0;
+  const rand = mulberry32(777);
+  let last = 0;
   for (let i = 0; i < raw.length; i++) {
-    s = (s * 1103515245 + 12345) % 2147483648;
-    const w = s / 1073741824 - 1;
+    const w = rand() * 2 - 1;
     last = (last + 0.06 * w) / 1.06;
     raw[i] = last * 3;
   }
@@ -280,10 +281,9 @@ export function strikeBar(ctx, dry, verbIn, { f0, gain = 1, decay = CHIME.decay,
   const dur = 0.02;
   const nb = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * dur), ctx.sampleRate);
   const nd = nb.getChannelData(0);
-  let s = 12345;
+  const rand = mulberry32(12345);
   for (let i = 0; i < nd.length; i++) {
-    s = (s * 1103515245 + 12345) % 2147483648;
-    nd[i] = (s / 1073741824 - 1) * (1 - i / nd.length);
+    nd[i] = (rand() * 2 - 1) * (1 - i / nd.length);
   }
   const nsrc = ctx.createBufferSource(); nsrc.buffer = nb;
   const bp = ctx.createBiquadFilter();

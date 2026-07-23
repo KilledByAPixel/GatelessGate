@@ -1,6 +1,32 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { reverbIR } from '../src/audio/verb.js';
+import { reverbIR, mulberry32 } from '../src/audio/verb.js';
+
+test('the noise source never collapses into a cycle', () => {
+  // Regression: the previous LCG's multiply overflowed 2^53, and the degraded
+  // sequence fell into ONE shared 10,466-sample cycle for every seed — at
+  // 48 kHz, a pattern repeating 4.6x/sec. Frank heard it as "wah wah wah" in
+  // every noise bed, and the room carried it as flutter-echo.
+  const rand = mulberry32(777);
+  const seen = new Set();
+  for (let i = 0; i < 200000; i++) {
+    // quantize to float32-ish keys; a true cycle repeats exactly
+    seen.add(rand());
+  }
+  assert.ok(seen.size > 199000, `values repeat far too often: ${seen.size} unique of 200k`);
+
+  // and the IR itself must not echo at the old cycle's lag: normalized
+  // autocorrelation at lag 10466 stays low for genuinely aperiodic noise
+  const ir = reverbIR(48000, 2, 1013);
+  const LAG = 10466, START = 20000, N = 40000;
+  let xy = 0, xx = 0, yy = 0;
+  for (let i = START; i < START + N; i++) {
+    const a = ir[i], b = ir[i + LAG];
+    xy += a * b; xx += a * a; yy += b * b;
+  }
+  const r = xy / Math.sqrt(xx * yy);
+  assert.ok(Math.abs(r) < 0.2, `the tail echoes itself at the old cycle lag: r=${r}`);
+});
 
 test('reverbIR is deterministic and decays to silence', () => {
   const a = reverbIR(48000, 2, 1013);
