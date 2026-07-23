@@ -75,8 +75,11 @@ test('the chime hangs under the gate and answers the flag', async () => {
   assert.ok(k29.ambience.includes('furin'), 'the recipe declares the chime');
   assert.ok(k29.ambience.includes('music'), 'and asks for the swells');
 
-  for (let i = 0; i < 60 * 600; i++) k.update(1 / 60, i / 60);
-  assert.ok(struck.length > 10, `the chime never struck: ${struck.length}`);
+  // 180s of sim, not more: this test proves WIRING (strikes reach the audio
+  // engine with valid payloads) — the pacing itself is owned by furin.test.js.
+  // Driving the whole case (cloth, meadow) for 600s cost 61s of a 66s suite.
+  for (let i = 0; i < 60 * 180; i++) k.update(1 / 60, i / 60);
+  assert.ok(struck.length > 5, `the chime never struck: ${struck.length}`);
   for (const s of struck) {
     assert.ok(Number.isInteger(s.tube) && s.tube >= 0 && s.tube < 5);
     assert.ok(s.force > 0 && s.force <= 1);

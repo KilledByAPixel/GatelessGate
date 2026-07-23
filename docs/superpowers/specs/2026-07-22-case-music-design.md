@@ -41,6 +41,13 @@ not feed the verb; the chime lives mostly *in* it; drift swells sit in the same
 room. Every pitched voice gets a dry/wet split, with the send level a per-voice
 constant, not a per-case knob.
 
+> **Deferred (recorded after the room+chime slice):** the temple bell
+> (`strikeBell` — the sit timer, k16 and friends) still plays bone dry. Its
+> level was tuned dry, so wiring it into the room is an ear decision, not a
+> mechanical one — Frank should listen for whether the roomless bonshō now
+> reads as harsh *by contrast* with the wet chime, and its send gets tuned
+> then. Until that lands, "every pitched voice" above is aspiration, not fact.
+
 ### 2. The chime replaces the fūrin's voice
 
 The fūrin *object* (kit component, gust-driven, deterministic, hang-point
