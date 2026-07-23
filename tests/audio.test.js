@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { windParams, bellPartials, chimePartials, GUST_A, GUST_B, gustPhase } from '../src/audio/synths.js';
+import { windParams, bellPartials, barPartials, GUST_A, GUST_B, gustPhase } from '../src/audio/synths.js';
 import { parseRecipe, emitterCount } from '../src/audio/engine.js';
 import { hz } from '../src/audio/tuning.js';
 
@@ -66,21 +66,19 @@ test('gustPhase is bounded, irregular, and crests at chime rate', () => {
   assert.ok(Math.max(...gaps) < 31, `dead air: ${Math.max(...gaps)}`);
 });
 
-test('chimePartials is glass, not bronze', () => {
-  const c = chimePartials(2349);
-  assert.ok(c.length >= 3);
-  for (const x of c) assert.ok(x.freq > 0 && x.amp > 0 && x.decay > 0);
-  // inharmonic, like the bell
-  const ratios = c.map((x) => x.freq / 2349);
+test('barPartials is a struck bar, not a bell', () => {
+  const c = barPartials(523, 5);
+  assert.equal(c.length, 4);
+  // the free-free bar mode series — the reason a chime does not sound like a bell
+  const ratios = c.map((x) => x.freq / 523);
+  assert.ok(Math.abs(ratios[1] - 2.756) < 1e-9);
   assert.ok(ratios.some((r) => Math.abs(r - Math.round(r)) > 0.05));
-  // amplitudes fall away from the fundamental
-  for (let i = 1; i < c.length; i++) assert.ok(c[i].amp < c[i - 1].amp);
-  // glass rings BRIEFLY and HIGH: a bonsho hangs on for ten seconds, this does not
-  const bell = bellPartials(62);
-  assert.ok(c[0].decay < 2, `chime decay too long: ${c[0].decay}`);
-  assert.ok(c[0].decay < bell[0].decay / 4);
-  assert.ok(c[0].freq > bell[0].freq * 10);
-  assert.ok(c.length < bell.length);
+  // the fundamental keeps the passed decay; upper modes die away faster
+  assert.equal(c[0].decay, 5);
+  for (let i = 1; i < c.length; i++) {
+    assert.ok(c[i].decay < c[i - 1].decay);
+    assert.ok(c[i].amp < c[i - 1].amp);
+  }
 });
 
 test('emitterCount counts sound sources, not beds', () => {

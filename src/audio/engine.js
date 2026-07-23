@@ -1,6 +1,7 @@
-import { makeWind, strikeBell, strikeChime } from './synths.js';
+import { makeWind, strikeBell, strikeBar, CHIME } from './synths.js';
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
+import { hz } from './tuning.js';
 
 export function parseRecipe(str) {
   const [type, arg] = str.split(':');
@@ -85,7 +86,12 @@ export function createAudio(save) {
       stopMusic();
     },
     bell(opts = {}) { ensureCtx(); strikeBell(ctx, master, opts); },
-    chime(opts = {}) { ensureCtx(); strikeChime(ctx, master, opts); },
+    // tube index -> scale degree -> Hz. The engine owns the mapping so the kit
+    // never needs to know what a hertz is.
+    chimeStrike({ tube = 0, force = 1 } = {}) {
+      ensureCtx();
+      strikeBar(ctx, master, verb.in, { f0: hz(CHIME.degree + tube), gain: CHIME.level * force });
+    },
     playMusic,
     stopMusic,
     musicVolume(v) { if (musicGain) musicGain.gain.value = v; },

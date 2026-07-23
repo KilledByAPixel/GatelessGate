@@ -1,8 +1,6 @@
 // Procedural voices. Pure param tables are tested; the node builders are browser-only.
 // (Audio is exempt from the determinism rule — Math.random for noise is fine here.)
 
-import { hz } from './tuning.js';
-
 export function windParams(level) {
   const l = Math.max(0, Math.min(1, level));
   return {
@@ -21,14 +19,19 @@ export function bellPartials(f0 = 62) {
   ].map(([r, a, d]) => ({ freq: f0 * r, amp: a, decay: d }));
 }
 
-// Glass, not bronze: fewer partials, much higher, gone in about a second. A
-// furin is one bright ting — a Western multi-tube chime would put far more
-// events into the air than this book can absorb.
-export function chimePartials(f0 = 2349) {
+// A chime tube is a free-free bar, whose mode series is famously inharmonic:
+// 1 : 2.756 : 5.404 : 8.933. That series is WHY a wind chime sounds like a
+// wind chime and not a bell — the first voice here used bell-ish ratios at
+// 2.3 kHz, bone dry, and Frank rightly called it an alarm. Upper modes die
+// much faster than the fundamental.
+export function barPartials(f0, decay = 5) {
   return [
-    [1.0, 1.0, 1.2], [2.4, 0.5, 0.8], [4.5, 0.28, 0.5], [6.8, 0.15, 0.3],
-  ].map(([r, a, d]) => ({ freq: f0 * r, amp: a, decay: d }));
+    [1.000, 1.00], [2.756, 0.32], [5.404, 0.11], [8.933, 0.04],
+  ].map(([r, a]) => ({ freq: f0 * r, amp: a, decay: decay * Math.pow(0.45, Math.log2(r)) }));
 }
+
+// The shipped chime — Frank's audition numbers (the "Garden" preset).
+export const CHIME = { degree: 8, tubes: 5, decay: 5, level: 0.03, bright: 0.35, verbMix: 0.7 };
 
 // The gust envelope. Two very slow incommensurate sine sums: the breeze rises
 // and falls without ever settling into a period you could predict. This is pure
@@ -143,11 +146,58 @@ export function strikeBell(ctx, dest, { f0 = 62, gain = 1 } = {}) {
   strike(ctx, dest, { partials: bellPartials(f0), gain });
 }
 
-export function strikeChime(ctx, dest, { f0 = hz(20), gain = 1 } = {}) {
-  strike(ctx, dest, {
-    partials: chimePartials(f0), gain,
-    transient: { dur: 0.03, freq: 4200, q: 2.0, amp: 0.18 },
-  });
+export function strikeBar(ctx, dry, verbIn, { f0, gain = 1, decay = CHIME.decay, bright = CHIME.bright, verbMix = CHIME.verbMix } = {}) {
+  const t = ctx.currentTime;
+  const out = ctx.createGain();
+  out.gain.value = gain;
+
+  // The ear peaks around 2-5 kHz; a gentle low-Q roll-off is the whole
+  // difference between shimmer and pierce.
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = 700 + 4200 * bright;
+  lp.Q.value = 0.2;
+  lp.connect(out);
+
+  // the chime lives mostly in the room; the beds stay dry (mud avoidance:
+  // lows dry, mids and highs carry the space)
+  const dryG = ctx.createGain(); dryG.gain.value = 1 - verbMix * 0.85;
+  out.connect(dryG); dryG.connect(dry);
+  if (verbIn) {
+    const sendG = ctx.createGain(); sendG.gain.value = verbMix * 1.4;
+    out.connect(sendG); sendG.connect(verbIn);
+  }
+
+  for (const p of barPartials(f0, decay)) {
+    for (const det of [-0.22, 0.22]) {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = p.freq + det;
+      const g = ctx.createGain();
+      const peak = p.amp / 2;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(peak, t + 0.004);
+      g.gain.exponentialRampToValueAtTime(peak * 0.0008, t + p.decay);
+      osc.connect(g); g.connect(lp);
+      osc.start(t); osc.stop(t + p.decay + 0.05);
+    }
+  }
+
+  // the mallet: a soft knock, not a click — seeded, the same knock every time
+  const dur = 0.02;
+  const nb = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * dur), ctx.sampleRate);
+  const nd = nb.getChannelData(0);
+  let s = 12345;
+  for (let i = 0; i < nd.length; i++) {
+    s = (s * 1103515245 + 12345) % 2147483648;
+    nd[i] = (s / 1073741824 - 1) * (1 - i / nd.length);
+  }
+  const nsrc = ctx.createBufferSource(); nsrc.buffer = nb;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = f0 * 1.4; bp.Q.value = 0.8;
+  const ng = ctx.createGain(); ng.gain.value = 0.05 * bright;
+  nsrc.connect(bp); bp.connect(ng); ng.connect(out);
+  nsrc.start(t);
 }
 
 // The drift layer's voice. Swelled, not struck: objects strike, the air breathes,
