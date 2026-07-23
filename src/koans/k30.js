@@ -60,8 +60,19 @@ export default {
     seat.position.set(BANK.x, 0.13, BANK.z);
     scene.add(seat);
 
+    // the seal of the pair: a vermillion mat on the stone. It is the same mat
+    // in case 33, where nobody is sitting on it — so the two scenes share not
+    // just a pond but the exact spot the answer is or is not occupying.
+    const cushion = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.62, 0.62, 0.05, 4),
+      toonMaterial({ color: ACCENT, flat: true }));
+    cushion.name = 'cushion';
+    cushion.rotation.y = Math.PI / 4;
+    cushion.position.set(BANK.x, 0.28, BANK.z);
+    scene.add(cushion);
+
     const buddha = makeBuddha({ height: 2.0 });
-    buddha.position.set(BANK.x, 0.26, BANK.z);
+    buddha.position.set(BANK.x, 0.30, BANK.z);
     scene.add(buddha);
 
     // THE REFLECTION — the same figure, laid flat in the water's plane with

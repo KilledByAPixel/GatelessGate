@@ -207,6 +207,52 @@ test('every staged interaction reaches the audio engine', async () => {
 // so it is recorded here rather than done in passing.
 const OVER_BUDGET_BY_HISTORY = { 37: 190 };
 
+// Accents that are deliberately not a thing sitting in the middle distance:
+// case 24's is the whole flowering meadow (an instanced field, not a mesh),
+// and 35's and 27's is the moon, which stands sixty units out beyond the
+// mountains and is framed by the sky rather than by the diorama.
+const ACCENT_NOT_IN_FRAME = [24, 27, 35];
+
+test('the seal of each case is actually in the picture', async () => {
+  // Every case puts its one accent on the thing the case turns on. If that
+  // object is off the edge at the home angle, the composition is aimed at the
+  // wrong place — which is exactly the failure that got case 37 its own camera
+  // block and case 47 its rebuilt mountains. Cheap to check across all of them.
+  const off = [];
+  for (const entry of staged) {
+    if (ACCENT_NOT_IN_FRAME.includes(entry.id)) continue;
+    const mod = await loadKoan(entry.slug);
+    const root = mod.build(fakeCtx());
+    root.update(1 / 60, 0);
+    root.scene.updateMatrixWorld(true);
+
+    // any of the three mixes counts: the module's `accent` names the koan's
+    // hue, and the object itself takes DEEP when it is a large mass or LIGHT
+    // when it emits (see the palette's note). Case 29's flag is the seal even
+    // though the flag is ACCENT_DEEP and the module declares ACCENT.
+    const want = new Set([ACCENT, ACCENT_DEEP, ACCENT_LIGHT]
+      .map((c) => new THREE.Color(c).getHexString()));
+    const seals = [];
+    root.scene.traverse((o) => {
+      if (!o.isMesh || o.userData.isOutline || !o.material || !o.material.color) return;
+      if (!want.has(o.material.color.getHexString())) return;
+      seals.push(o.getWorldPosition(new THREE.Vector3()));
+    });
+    if (!seals.length) { off.push([entry.id, 'no accent mesh at all']); continue; }
+
+    const cam = rigCamera(mod);
+    const inFrame = seals.some((p) => {
+      const v = p.clone().project(cam);
+      return v.z > 0 && v.z < 1 && Math.abs(v.x) < 0.85 && Math.abs(v.y) < 0.85;
+    });
+    if (!inFrame) {
+      const v = seals[0].clone().project(cam);
+      off.push([entry.id, `nearest seal projects to ${v.x.toFixed(2)}, ${v.y.toFixed(2)}`]);
+    }
+  }
+  assert.deepEqual(off, [], `the seal is out of frame: ${JSON.stringify(off)}`);
+});
+
 test('no staged scene blows the draw budget', async () => {
   // < 150 draw calls per scene, and outlines double every mesh that takes one.
   // Instanced fields (the meadow) are one call however many blades they carry.

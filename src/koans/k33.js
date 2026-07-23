@@ -56,6 +56,17 @@ export default {
     seat.position.set(BANK.x, 0.13, BANK.z);
     scene.add(seat);
 
+    // and the same vermillion mat, in the same place, bare. In case 30 it is
+    // mostly hidden under the figure sitting on it; here the whole of it shows,
+    // which is the only difference between the two pictures.
+    const cushion = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.62, 0.62, 0.05, 4),
+      toonMaterial({ color: ACCENT, flat: true }));
+    cushion.name = 'cushion';
+    cushion.rotation.y = Math.PI / 4;
+    cushion.position.set(BANK.x, 0.28, BANK.z);
+    scene.add(cushion);
+
     // and the same monk, still standing there
     const monk = makeMonk({ height: 1.58 });
     monk.position.set(3.4, 0, 2.2);
