@@ -38,7 +38,7 @@ export const CHIME = { degree: 8, tubes: 5, decay: 5, level: 0.03, bright: 0.35,
 // The shipped water — Frank's audition numbers (the "Basin" preset). Drips are
 // pitched to the scale in a high register, so every basin in the book is
 // quietly a suikinkutsu.
-export const WATER = { bedLevel: 0.022, bedFreq: 650, gap: 7, degree: 17, level: 0.05, sweep: 1.35, verbMix: 0.75 };
+export const WATER = { bedLevel: 0.022, bedTone: 2200, gap: 7, degree: 17, level: 0.05, sweep: 1.35, verbMix: 0.75 };
 
 // A drip is a detaching bubble, and a bubble's pitch RISES as it necks off
 // (Minnaert resonance) — a falling sweep reads as a laser, a rising one as
@@ -80,45 +80,51 @@ export function strikeDrip(ctx, dry, verbIn, { f0, gain = WATER.level, sweep = W
   nsrc.start(t);
 }
 
-// The water bed: a low burble — seeded noise through a wandering bandpass.
-// The wander (two incommensurate LFO nodes, fine here: the bed ties to no
-// visual, so the audio clock is the right clock) is what separates "water"
-// from "static": water's colour moves. Dry, like the wind — beds stay out of
-// the room.
+// The water bed — Frank's spec, arrived at over three auditions: "like the
+// wind but a little more staticky." So it IS the wind's architecture: a LONG
+// seeded noise loop (14s — short loops are audibly periodic), wide gentle
+// filters, and only SLOW swells (the gust idiom). Whiter noise and a higher
+// band make the static. Nothing modulates fast, nothing sweeps, nothing
+// resonates — the three lessons of the wah, in order of discovery: a swept
+// resonance is a wah pedal, a 2 Hz tremolo is a wah rhythm, and a short-cycle
+// RNG is a comb filter wearing a noise costume. Dry, like the wind — beds
+// stay out of the room.
 export function makeWaterBed(ctx, dest) {
-  const SR = ctx.sampleRate, LOOP = 8, XF = 0.4;
+  const SR = ctx.sampleRate, LOOP = 14, XF = 1.2;
   const n = Math.floor(SR * LOOP), x = Math.floor(SR * XF);
   const raw = new Float32Array(n + x);
-  const rand = mulberry32(777);
+  const rand = mulberry32(31337);
   let last = 0;
   for (let i = 0; i < raw.length; i++) {
     const w = rand() * 2 - 1;
-    last = (last + 0.06 * w) / 1.06;
-    raw[i] = last * 3;
+    last = (last + 0.35 * w) / 1.35;          // much whiter than the wind's brown
+    raw[i] = last * 1.15;
   }
   for (let i = 0; i < x; i++) { const k = i / x; raw[i] = raw[i] * k + raw[n + i] * (1 - k); }
   const buf = ctx.createBuffer(1, n, SR);
   buf.getChannelData(0).set(raw.subarray(0, n));
   const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
 
-  const bp = ctx.createBiquadFilter();
-  bp.type = 'bandpass'; bp.frequency.value = WATER.bedFreq; bp.Q.value = 0.7;
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass'; hp.frequency.value = 300;
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = WATER.bedTone; lp.Q.value = 0.4;
   const g = ctx.createGain(); g.gain.value = 0;
-  src.connect(bp); bp.connect(g); g.connect(dest);
+  src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(dest);
 
-  // connections to AudioParams SUM with their value, so these ride the bases
-  const lfoA = ctx.createOscillator(); lfoA.frequency.value = 0.23;
-  const lfoB = ctx.createOscillator(); lfoB.frequency.value = 0.37;
-  const fWob = ctx.createGain(); fWob.gain.value = WATER.bedFreq * 0.09;
+  // slow water-swells, the gust idiom: connections SUM onto the params
+  const lfoA = ctx.createOscillator(); lfoA.frequency.value = 0.053;
+  const lfoB = ctx.createOscillator(); lfoB.frequency.value = 0.083;
   const gWob = ctx.createGain(); gWob.gain.value = 0;
-  lfoA.connect(fWob); lfoB.connect(fWob); fWob.connect(bp.frequency);
+  const cWob = ctx.createGain(); cWob.gain.value = 260;
   lfoA.connect(gWob); lfoB.connect(gWob); gWob.connect(g.gain);
+  lfoA.connect(cWob); lfoB.connect(cWob); cWob.connect(lp.frequency);
   src.start(); lfoA.start(); lfoB.start();
 
   return {
     setLevel(l) {
       g.gain.setTargetAtTime(l, ctx.currentTime, 0.3);
-      gWob.gain.setTargetAtTime(l * 0.125, ctx.currentTime, 0.3);
+      gWob.gain.setTargetAtTime(l * 0.18, ctx.currentTime, 0.3);
     },
     stop() {
       for (const node of [src, lfoA, lfoB]) { try { node.stop(); } catch { /* already stopped */ } }
