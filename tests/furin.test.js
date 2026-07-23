@@ -54,6 +54,10 @@ test('no wind, no chime — and it comes back with the wind', () => {
   f.setWindLevel(0);
   let t = run(f, 600);
   assert.equal(f.strikes(), 0, 'struck in dead air');
+  const tag = f.group.getObjectByName('tag');
+  const swing = f.group.getObjectByName('swing');
+  assert.equal(tag.rotation.y, 0, 'the tag swivels in dead air');
+  assert.equal(swing.rotation.z, 0, 'the swing sways in dead air');
   f.setWindLevel(1);
   run(f, 600, t);
   assert.ok(f.strikes() > 0, 'never came back');
