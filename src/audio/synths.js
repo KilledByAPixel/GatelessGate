@@ -155,13 +155,21 @@ export function strikeChime(ctx, dest, { f0 = hz(20), gain = 1 } = {}) {
 //
 // Guard the attack in review. Stretch it past half a second and this stops being
 // an ink painting and starts being a meditation app.
-export function makeSwell(ctx, dest, { freq, gain = 1, attack = 0.22, hold = 0.4, release = 6 } = {}) {
+export function makeSwell(ctx, dry, verbIn, { freq, gain = 1, attack = 0.22, hold = 0.4, release = 6 } = {}) {
   const t = ctx.currentTime;
   const out = ctx.createGain();
   out.gain.value = 0;
   const lp = ctx.createBiquadFilter();
   lp.type = 'lowpass'; lp.frequency.value = freq * 6; lp.Q.value = 0.3;
-  lp.connect(out); out.connect(dest);
+  lp.connect(out);
+  // the swells live in the same room as the chime; without a room they sit
+  // flat on the page instead of behind it
+  const dryG = ctx.createGain(); dryG.gain.value = verbIn ? 0.5 : 1;
+  out.connect(dryG); dryG.connect(dry);
+  if (verbIn) {
+    const sendG = ctx.createGain(); sendG.gain.value = 0.9;
+    out.connect(sendG); sendG.connect(verbIn);
+  }
 
   const end = attack + hold + release;
   // a detuned pair on the fundamental so it beats gently instead of sitting dead

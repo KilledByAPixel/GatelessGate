@@ -57,7 +57,7 @@ export const shouldRest = (rng) => rng() < REST_CHANCE;
 // Browser-only. Scheduling runs on setTimeout and envelopes on ctx.currentTime —
 // both independent of the sim clock, which pauses whenever the preview panel is
 // hidden. The music should not stop just because nothing is being drawn.
-export function makeMusic(ctx, dest, { emitters = 0, rng = Math.random } = {}) {
+export function makeMusic(ctx, dest, { emitters = 0, rng = Math.random, verbIn = null } = {}) {
   let degree = 0, timer = null, stopped = false, played = 0;
   let n = emitters;
 
@@ -67,7 +67,7 @@ export function makeMusic(ctx, dest, { emitters = 0, rng = Math.random } = {}) {
     timer = setTimeout(() => {
       if (stopped) return;
       degree = nextDegree(degree, rng);
-      makeSwell(ctx, dest, { freq: hz(degree) });
+      makeSwell(ctx, dest, verbIn, { freq: hz(degree) });
       played++;
       schedule();
     }, wait * 1000);

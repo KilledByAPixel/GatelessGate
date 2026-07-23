@@ -1,5 +1,6 @@
 import { makeWind, strikeBell, strikeChime } from './synths.js';
 import { makeMusic } from './music.js';
+import { makeVerb } from './verb.js';
 
 export function parseRecipe(str) {
   const [type, arg] = str.split(':');
@@ -17,7 +18,7 @@ export function emitterCount(recipe = []) {
 // Browser-only. `save` is a createSave() instance.
 export function createAudio(save) {
   let ctx = null, master = null, music = null, musicGain = null;
-  let wind = null;
+  let wind = null, verb = null;
   let soundOn = save.state().soundOn;
   let windScale = 1;      // debug-panel multiplier over whatever a koan asks for
   let windLevel = 0;      // last level a koan requested, so a scale change applies now
@@ -40,12 +41,15 @@ export function createAudio(save) {
     musicGain = ctx.createGain();
     musicGain.gain.value = 0.5;
     musicGain.connect(master);
+    // the room: one reverb for every pitched voice. Its wet return feeds
+    // master, so narration ducking pulls the room back with everything else.
+    verb = makeVerb(ctx, master, { seconds: 5 });
   }
 
   function playMusic(emitters = 0) {
     ensureCtx();
     if (music) { music.setEmitters(emitters); return; }
-    music = makeMusic(ctx, musicGain, { emitters });
+    music = makeMusic(ctx, musicGain, { emitters, verbIn: verb.in });
   }
 
   function stopMusic() {
