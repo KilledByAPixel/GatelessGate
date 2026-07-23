@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { windParams, bellPartials, barPartials, GUST_A, GUST_B, gustPhase } from '../src/audio/synths.js';
-import { parseRecipe, emitterCount } from '../src/audio/engine.js';
-import { hz } from '../src/audio/tuning.js';
+import { parseRecipe, emitterCount, createAudio } from '../src/audio/engine.js';
+import { hz, SCALES } from '../src/audio/tuning.js';
 
 test('windParams monotonic and bounded', () => {
   const lo = windParams(0), hi = windParams(1);
@@ -40,6 +40,25 @@ test('hz maps scale degrees across octaves', () => {
   assert.ok(hz(-1) < hz(0) && hz(-1) > hz(0) / 2);
   // strictly rising, so a walk never doubles back on pitch
   for (let d = -5; d < 15; d++) assert.ok(hz(d + 1) > hz(d));
+});
+
+test('the mood family: yo is the bright sibling on the same root', () => {
+  // both moods exist, five notes each, so the drift range maths is mood-blind
+  assert.deepEqual(Object.keys(SCALES).sort(), ['in', 'yo']);
+  assert.equal(SCALES.in.length, SCALES.yo.length);
+  // the default mood IS today's behaviour — nothing already shipped moves
+  for (let d = -3; d < 12; d++) assert.equal(hz(d), hz(d, 'in'));
+  // the root does not move between moods: one root, two colours
+  assert.equal(hz(0, 'yo'), hz(0, 'in'));
+  assert.equal(hz(5, 'yo'), hz(5, 'in'));
+  // yo has no half-steps: degree 1 is a whole step, not hirajoshi's semitone
+  assert.ok(Math.abs(hz(1, 'yo') / hz(0, 'yo') - Math.pow(2, 2 / 12)) < 1e-6);
+  assert.ok(Math.abs(hz(1, 'in') / hz(0, 'in') - Math.pow(2, 1 / 12)) < 1e-6);
+  // still strictly rising in both moods
+  for (let d = -5; d < 15; d++) {
+    assert.ok(hz(d + 1, 'yo') > hz(d, 'yo'));
+    assert.ok(hz(d + 1, 'in') > hz(d, 'in'));
+  }
 });
 
 test('gustPhase is bounded, irregular, and crests at chime rate', () => {
