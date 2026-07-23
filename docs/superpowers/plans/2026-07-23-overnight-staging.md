@@ -5,6 +5,10 @@
 > commit-per-case so any verdict is one revert. Executor: this session,
 > switched to Opus after planning (Frank's call). No user gates until morning.
 
+> **DONE 2026-07-23.** All six batches shipped; 48/48 staged, suite 374 green.
+> Outcome, exceptions and review debt are recorded in `.superpowers/sdd/progress.md`
+> under "THE BOOK IS STAGED", and in design-doc revision note 16.
+
 **State at planning:** 17 of 48 staged (1,2,3,5,6,7,14,16,19,23,26,29,37,38,40,46,47).
 Suite 307 green. Remaining: 4,8,9,10,11,12,13,15,17,18,20,21,22,24,25,27,28,
 30,31,32,33,34,35,36,39,41,42,43,44,45,48.
