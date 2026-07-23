@@ -33,6 +33,99 @@ export function barPartials(f0, decay = 5) {
 // The shipped chime — Frank's audition numbers (the "Garden" preset).
 export const CHIME = { degree: 8, tubes: 5, decay: 5, level: 0.03, bright: 0.35, verbMix: 0.7 };
 
+// The shipped water — Frank's audition numbers (the "Basin" preset). Drips are
+// pitched to the scale in a high register, so every basin in the book is
+// quietly a suikinkutsu.
+export const WATER = { bedLevel: 0.022, bedFreq: 650, gap: 7, degree: 17, level: 0.05, sweep: 1.35, verbMix: 0.75 };
+
+// A drip is a detaching bubble, and a bubble's pitch RISES as it necks off
+// (Minnaert resonance) — a falling sweep reads as a laser, a rising one as
+// water. An impact tick, then the bubble speaks.
+export function strikeDrip(ctx, dry, verbIn, { f0, gain = WATER.level, sweep = WATER.sweep, verbMix = WATER.verbMix } = {}) {
+  const t = ctx.currentTime;
+  const out = ctx.createGain();
+  out.gain.value = 1;
+  const dryG = ctx.createGain(); dryG.gain.value = 1 - verbMix * 0.85;
+  out.connect(dryG); dryG.connect(dry);
+  if (verbIn) {
+    const sendG = ctx.createGain(); sendG.gain.value = verbMix * 1.4;
+    out.connect(sendG); sendG.connect(verbIn);
+  }
+
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(f0 / sweep, t);
+  osc.frequency.exponentialRampToValueAtTime(f0, t + 0.025);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(gain, t + 0.004);
+  g.gain.exponentialRampToValueAtTime(gain * 0.001, t + 0.16);
+  osc.connect(g); g.connect(out);
+  osc.start(t); osc.stop(t + 0.2);
+
+  const dur = 0.008;
+  const nb = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * dur), ctx.sampleRate);
+  const nd = nb.getChannelData(0);
+  let s = 4242;
+  for (let i = 0; i < nd.length; i++) {
+    s = (s * 1103515245 + 12345) % 2147483648;
+    nd[i] = (s / 1073741824 - 1) * (1 - i / nd.length);
+  }
+  const nsrc = ctx.createBufferSource(); nsrc.buffer = nb;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = f0 * 2.2; bp.Q.value = 1.1;
+  const ng = ctx.createGain(); ng.gain.value = gain * 0.5;
+  nsrc.connect(bp); bp.connect(ng); ng.connect(out);
+  nsrc.start(t);
+}
+
+// The water bed: a low burble — seeded noise through a wandering bandpass.
+// The wander (two incommensurate LFO nodes, fine here: the bed ties to no
+// visual, so the audio clock is the right clock) is what separates "water"
+// from "static": water's colour moves. Dry, like the wind — beds stay out of
+// the room.
+export function makeWaterBed(ctx, dest) {
+  const SR = ctx.sampleRate, LOOP = 8, XF = 0.4;
+  const n = Math.floor(SR * LOOP), x = Math.floor(SR * XF);
+  const raw = new Float32Array(n + x);
+  let s = 777, last = 0;
+  for (let i = 0; i < raw.length; i++) {
+    s = (s * 1103515245 + 12345) % 2147483648;
+    const w = s / 1073741824 - 1;
+    last = (last + 0.06 * w) / 1.06;
+    raw[i] = last * 3;
+  }
+  for (let i = 0; i < x; i++) { const k = i / x; raw[i] = raw[i] * k + raw[n + i] * (1 - k); }
+  const buf = ctx.createBuffer(1, n, SR);
+  buf.getChannelData(0).set(raw.subarray(0, n));
+  const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = WATER.bedFreq; bp.Q.value = 0.7;
+  const g = ctx.createGain(); g.gain.value = 0;
+  src.connect(bp); bp.connect(g); g.connect(dest);
+
+  // connections to AudioParams SUM with their value, so these ride the bases
+  const lfoA = ctx.createOscillator(); lfoA.frequency.value = 0.23;
+  const lfoB = ctx.createOscillator(); lfoB.frequency.value = 0.37;
+  const fWob = ctx.createGain(); fWob.gain.value = WATER.bedFreq * 0.09;
+  const gWob = ctx.createGain(); gWob.gain.value = 0;
+  lfoA.connect(fWob); lfoB.connect(fWob); fWob.connect(bp.frequency);
+  lfoA.connect(gWob); lfoB.connect(gWob); gWob.connect(g.gain);
+  src.start(); lfoA.start(); lfoB.start();
+
+  return {
+    setLevel(l) {
+      g.gain.setTargetAtTime(l, ctx.currentTime, 0.3);
+      gWob.gain.setTargetAtTime(l * 0.125, ctx.currentTime, 0.3);
+    },
+    stop() {
+      for (const node of [src, lfoA, lfoB]) { try { node.stop(); } catch { /* already stopped */ } }
+      g.disconnect();
+    },
+  };
+}
+
 // The gust envelope. Two very slow incommensurate sine sums: the breeze rises
 // and falls without ever settling into a period you could predict. This is pure
 // JS, evaluated at the sim clock — makeWind's setGust(v) and the fūrin's own

@@ -14,7 +14,8 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.14', 'music'],
+  // water is a real emitter here — the basin thins the swells around itself
+  ambience: ['wind:0.14', 'water', 'music'],
   // the first bright case: washing a bowl is domestic, morning work — yo, not
   // hirajoshi
   mood: 'yo',
@@ -107,11 +108,13 @@ export default {
       if (onWater) {
         const local = water.group.worldToLocal(onWater.point.clone());
         water.ripple(local.x, local.z);
+        audio && audio.drip({ loud: true });   // the touch you see is the drop you hear
         rippled++;
         return;
       }
       if (input.raycastFirst(camera, bowlMeshes)) {
         water.ripple(0, 0);
+        audio && audio.drip({ loud: true });
         rippled++;
       }
     });

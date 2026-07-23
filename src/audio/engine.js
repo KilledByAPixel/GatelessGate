@@ -1,4 +1,4 @@
-import { makeWind, strikeBell, strikeBar, CHIME } from './synths.js';
+import { makeWind, strikeBell, strikeBar, CHIME, strikeDrip, makeWaterBed, WATER } from './synths.js';
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
 import { hz, SCALES } from './tuning.js';
@@ -19,7 +19,7 @@ export function emitterCount(recipe = []) {
 // Browser-only. `save` is a createSave() instance.
 export function createAudio(save) {
   let ctx = null, master = null, music = null, musicGain = null;
-  let wind = null, verb = null;
+  let wind = null, verb = null, water = null, dripTimer = null;
   let soundOn = save.state().soundOn;
   let windScale = 1;      // debug-panel multiplier over whatever a koan asks for
   let windLevel = 0;      // last level a koan requested, so a scale change applies now
@@ -62,6 +62,24 @@ export function createAudio(save) {
     if (music) { try { music.stop(); } catch { /* already stopped */ } music = null; }
   }
 
+  // one drip: pitched to the scale's high register through the case's mood.
+  // Ambient drips wander a few degrees; a tap ("loud") is a touch firmer.
+  function dripNow(loud) {
+    const deg = WATER.degree + [0, 1, 2, 4][Math.floor(Math.random() * 4)];
+    strikeDrip(ctx, master, verb.in, {
+      f0: hz(deg, mood),
+      gain: WATER.level * (loud ? 1.5 : 0.7 + Math.random() * 0.5),
+    });
+  }
+
+  function scheduleDrip() {
+    dripTimer = setTimeout(() => {
+      if (!water) return;
+      if (ctx.state === 'running') dripNow(false);   // suspended: skip, keep ticking
+      scheduleDrip();
+    }, WATER.gap * (0.6 + Math.random() * 0.8) * 1000);
+  }
+
   return {
     get ctx() { return ctx; },
     get master() { return master; },
@@ -83,6 +101,11 @@ export function createAudio(save) {
         const { type, level } = parseRecipe(item);
         if (type === 'wind' && !wind) { wind = makeWind(ctx, master); wind.setLevel(level); }
         if (type === 'music') playMusic(emitters);
+        if (type === 'water' && !water) {
+          water = makeWaterBed(ctx, master);
+          water.setLevel(WATER.bedLevel * level);
+          scheduleDrip();
+        }
       }
     },
     setWindLevel(v) { windLevel = v; if (wind) wind.setLevel(v * windScale); },
@@ -91,6 +114,8 @@ export function createAudio(save) {
     windScale() { return windScale; },
     stopAmbience() {
       if (wind) { wind.stop(); wind = null; }
+      if (water) { water.stop(); water = null; }
+      if (dripTimer) { clearTimeout(dripTimer); dripTimer = null; }
       stopMusic();
     },
     // Strikes into a suspended context are DROPPED, not queued — same reason
@@ -115,6 +140,13 @@ export function createAudio(save) {
       if (ctx.state !== 'running') return;
       const comp = punctuate && ducked ? MASTER / DUCKED : 1;
       strikeBar(ctx, master, verb.in, { f0: hz(CHIME.degree + tube, mood), gain: CHIME.level * force * comp });
+    },
+    // a tap on the water (or the bowl set down in it) answers with a drip,
+    // whatever the ambient schedule is doing
+    drip({ loud = false } = {}) {
+      ensureCtx();
+      if (ctx.state !== 'running') return;
+      dripNow(loud);
     },
     playMusic,
     stopMusic,

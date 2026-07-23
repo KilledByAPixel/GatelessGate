@@ -121,4 +121,6 @@ test('emitterCount counts sound sources, not beds', () => {
   assert.equal(emitterCount(['wind:0.25', 'music']), 0);
   assert.equal(emitterCount(['wind:0.25', 'furin:0.4', 'music']), 1);
   assert.equal(emitterCount(['furin:0.4', 'furin:0.2']), 2);
+  // water is an object that makes noise, not a bed: the basin thins the swells
+  assert.equal(emitterCount(['wind:0.14', 'water', 'music']), 1);
 });
