@@ -293,41 +293,14 @@ export function strikeBar(ctx, dry, verbIn, { f0, gain = 1, decay = CHIME.decay,
   nsrc.start(t);
 }
 
-// The drift layer's voice. Swelled, not struck: objects strike, the air breathes,
-// and the two layers must not be mistakable for each other.
+// The drift layer's voice: THE FAR BELL. The original "swelled" voice — a
+// sourceless synthesized tone — was the one sound in the book with no physical
+// referent, and Frank's ears rejected it twice ("the lone notes are harsh").
+// Everything that works here is a physical event: wind, struck tubes, struck
+// bronze, falling water. So the background layer is now rebuilt from the voice
+// that already works — the chime's own bar, pitched low, at a fraction of the
+// chime's loudness, almost entirely room: someone far away touched a chime.
 //
-// Guard the attack in review. Stretch it past half a second and this stops being
-// an ink painting and starts being a meditation app.
-export function makeSwell(ctx, dry, verbIn, { freq, gain = 1, attack = 0.22, hold = 0.4, release = 6 } = {}) {
-  const t = ctx.currentTime;
-  const out = ctx.createGain();
-  out.gain.value = 0;
-  const lp = ctx.createBiquadFilter();
-  lp.type = 'lowpass'; lp.frequency.value = freq * 6; lp.Q.value = 0.3;
-  lp.connect(out);
-  // the swells live in the same room as the chime; without a room they sit
-  // flat on the page instead of behind it
-  const dryG = ctx.createGain(); dryG.gain.value = verbIn ? 0.5 : 1;
-  out.connect(dryG); dryG.connect(dry);
-  if (verbIn) {
-    const sendG = ctx.createGain(); sendG.gain.value = 0.9;
-    out.connect(sendG); sendG.connect(verbIn);
-  }
-
-  const end = attack + hold + release;
-  // a detuned pair on the fundamental so it beats gently instead of sitting dead
-  for (const [mult, amp, det] of [[1, 1, -0.25], [1, 1, 0.25], [2, 0.18, 0], [3, 0.07, 0]]) {
-    const osc = ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.value = freq * mult + det;
-    const g = ctx.createGain(); g.gain.value = amp;
-    osc.connect(g); g.connect(lp);
-    osc.start(t); osc.stop(t + end + 0.2);
-  }
-
-  const peak = Math.max(1e-5, gain * 0.05);
-  out.gain.setValueAtTime(0, t);
-  out.gain.linearRampToValueAtTime(peak, t + attack);
-  out.gain.setValueAtTime(peak, t + attack + hold);
-  out.gain.exponentialRampToValueAtTime(peak * 0.001, t + end);
-}
+// gain compensates the musicGain (0.5) path so it lands at the level Frank
+// approved on the audition page (0.012 straight into a 0.9 master).
+export const FARBELL = { gain: 0.027, decay: 7, bright: 0.2, verbMix: 0.92 };

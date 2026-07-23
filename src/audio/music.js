@@ -1,5 +1,5 @@
 import { SCALE, DRIFT_OCTAVES, hz } from './tuning.js';
-import { makeSwell, strikeBar, CHIME } from './synths.js';
+import { strikeBar, CHIME, FARBELL } from './synths.js';
 
 // The drift layer: the sparse, sourceless tones that carry the scenes with
 // nothing in them to make a noise. Everything here is pure and takes an injected
@@ -72,7 +72,7 @@ export function makeMusic(ctx, dest, { emitters = 0, rng = Math.random, verbIn =
       // path is real. Skip the note, keep the clock ticking.
       if (ctx.state !== 'running') { schedule(); return; }
       degree = nextDegree(degree, rng);
-      makeSwell(ctx, dest, verbIn, { freq: pitch(degree) });
+      strikeBar(ctx, dest, verbIn, { f0: pitch(degree), ...FARBELL });
       // the menu's slow chime: no scene, no kit object — just an occasional
       // soft tube note sharing the swells' room and mood
       if (chimes && rng() < 0.35) {

@@ -14,8 +14,10 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  // water is a real emitter here — the basin thins the swells around itself
-  ambience: ['wind:0.14', 'water', 'music'],
+  // water:0 = drips with no bed. A stone basin at rest is nearly silent — the
+  // drips are the truth of it. (The bed voice is back in audition; Frank heard
+  // a swept-resonance "wah" in the first cut.) Still an emitter either way.
+  ambience: ['wind:0.14', 'water:0', 'music'],
   // the first bright case: washing a bowl is domestic, morning work — yo, not
   // hirajoshi
   mood: 'yo',
