@@ -43,16 +43,25 @@ function monks(scene) {
 
 const shoulderY = (monk) => monk.children.find((c) => c.name === 'arm').position.y;
 
-// The two figures that raise a finger, TALLEST FIRST — so [gutei, boy].
-// This used to pick Gutei out by his staff, which coupled the test to a prop:
-// dropping the staff (it drew a grey vertical right beside the red seal and the
-// two competed) made him unfindable and broke two tests that were not about
-// staffs at all. Height is what actually distinguishes master from novice here,
-// and it is the thing the case is staged around.
-function withFingers(scene) {
-  return monks(scene)
-    .filter((m) => m.children.some((c) => c.name === 'finger'))
-    .sort((a, b) => new THREE.Box3().setFromObject(b).max.y - new THREE.Box3().setFromObject(a).max.y);
+// Gutei is the figure holding the finger; the boy is the bare-headed one whose
+// raised hand is empty (a novice travels without a hat, and it is the only
+// hatless figure in the yard, so it identifies him without coupling to a prop).
+const guteiOf = (scene) => monks(scene).find((m) => m.children.some((c) => c.name === 'finger'));
+const boyOf = (scene) => monks(scene).find((m) => !m.children.some((c) => c.name === 'hat'));
+
+// world-space top of a monk's raised sleeve, for asserting the empty hand reads
+// as held UP even though nothing is on it
+function raisedHemY(monk) {
+  monk.updateMatrixWorld(true);
+  let top = -Infinity;
+  for (const c of monk.children) {
+    if (c.name !== 'arm') continue;
+    const geo = c.geometry;
+    if (!geo.boundingBox) geo.computeBoundingBox();
+    const tip = new THREE.Vector3(0, geo.boundingBox.min.y, 0).applyMatrix4(c.matrixWorld);
+    top = Math.max(top, tip.y);
+  }
+  return top;
 }
 
 test('makeRaisedFinger is one mesh, the size it says it is, standing on its base', () => {
@@ -93,45 +102,41 @@ test('module shape matches the koan contract', () => {
 
 // THE ASSERTION THIS CASE LIVES OR DIES BY.
 //
-// One red fingertip reads as a wound. Two identical ones read as a gesture
-// being copied, which is the koan. If this ever drops to one, or if either seal
-// slides down to a hand hanging at a hip, the diorama has started telling a
-// different story than the one it is for.
-test('the yard carries exactly two accent seals, and both are raised fingers', () => {
+// Exactly one red finger — Gutei's — and the boy raises an EMPTY hand beside
+// it: the same gesture, one with the finger and one without, which is the whole
+// arc of the case (imitation, then the finger gone, then the opening). If a
+// second finger ever reappears on the boy, or the one seal slides down to a
+// hand at a hip, the diorama has started telling a different story.
+test('the yard carries one red finger, and the boy raises an empty hand', () => {
   const root = k3.build(fakeCtx());
   const seals = accentMeshes(root.scene);
-  assert.equal(seals.length, 2, `exactly two red seals, got ${seals.length}`);
+  assert.equal(seals.length, 1, `exactly one red seal, got ${seals.length}`);
 
-  for (const seal of seals) {
-    assert.equal(seal.name, 'finger');
-    const monk = seal.parent;
-    assert.equal(monk.name, 'monk', 'a finger belongs to a figure');
-    assert.ok(seal.position.y > shoulderY(monk),
-      `raised, not hanging: finger at ${seal.position.y.toFixed(3)} vs shoulder ${shoulderY(monk).toFixed(3)}`);
-    // and clear of the figure's own head, or it is not visibly held up
-    const head = monk.children.find((c) => c.name === 'head');
-    const top = new THREE.Box3().setFromObject(seal).max.y;
-    assert.ok(top > head.position.y, `tops the head: ${top.toFixed(3)} vs ${head.position.y.toFixed(3)}`);
-  }
+  const seal = seals[0];
+  assert.equal(seal.name, 'finger');
+  const gutei = seal.parent;
+  assert.equal(gutei.name, 'monk', 'a finger belongs to a figure');
+  assert.ok(seal.position.y > shoulderY(gutei), 'raised, not hanging');
+  const gHead = gutei.children.find((c) => c.name === 'head');
+  assert.ok(new THREE.Box3().setFromObject(seal).max.y > gHead.position.y, 'tops the head');
 
-  const owners = new Set(seals.map((s) => s.parent));
-  assert.equal(owners.size, 2, 'one each — the master and the boy, not two on one hand');
+  // the boy: bare-headed, no finger, but his hand is plainly held UP
+  const boy = boyOf(root.scene);
+  assert.ok(boy, 'the boy is in the yard');
+  assert.ok(!boy.children.some((c) => c.name === 'finger'), 'the boy has no finger — it is gone');
+  boy.updateMatrixWorld(true);
+  const boyHeadY = boy.children.find((c) => c.name === 'head').getWorldPosition(new THREE.Vector3()).y;
+  assert.ok(raisedHemY(boy) > boyHeadY, 'the empty hand still reads as raised above his head');
 
-  // the same gesture at two sizes: the boy is markedly the smaller figure, and
-  // his finger sits markedly lower in the world
-  const heights = [...owners].map((m) => new THREE.Box3().setFromObject(m.children.find((c) => c.name === 'body')).max.y);
-  const [lo, hi] = heights.sort((a, b) => a - b);
-  assert.ok(lo < hi * 0.75, `a boy beside a master, not two adults: ${lo.toFixed(2)} vs ${hi.toFixed(2)}`);
-
-  const worldY = seals.map((s) => s.getWorldPosition(new THREE.Vector3()).y).sort((a, b) => a - b);
-  assert.ok(worldY[1] - worldY[0] > 0.25, 'the two seals read at two clearly different heights');
+  // a boy beside a master, not two adults
+  const bodyTop = (m) => new THREE.Box3().setFromObject(m.children.find((c) => c.name === 'body')).max.y;
+  assert.ok(bodyTop(boy) < bodyTop(gutei) * 0.75, 'the boy is markedly the smaller figure');
 });
 
 test('the staging keeps the two figures apart and inside the meadow', () => {
   const root = k3.build(fakeCtx());
-  const withFinger = monks(root.scene).filter((m) => m.children.some((c) => c.name === 'finger'));
-  assert.equal(withFinger.length, 2);
-  const [a, b] = withFinger;
+  const a = guteiOf(root.scene), b = boyOf(root.scene);
+  assert.ok(a && b, 'master and boy both present');
   const gap = Math.hypot(a.position.x - b.position.x, a.position.z - b.position.z);
   assert.ok(gap > 2.0 && gap < 4.0, `a few steps apart, not a huddle or a shout: ${gap.toFixed(2)}`);
 
@@ -146,12 +151,13 @@ test('the staging keeps the two figures apart and inside the meadow', () => {
 test('touching one of them makes the other answer, a beat later', () => {
   const ctx = fakeCtx();
   const root = k3.build(ctx);
-  const [gutei] = withFingers(root.scene);
-  const boy = monks(root.scene)
-    .filter((m) => m.children.some((c) => c.name === 'finger') && m !== gutei)[0];
+  const gutei = guteiOf(root.scene);
+  const boy = boyOf(root.scene);
   const guteiBody = gutei.children.find((c) => c.name === 'body');
-  const boyFinger = boy.children.find((c) => c.name === 'finger');
-  const restY = boyFinger.position.y;
+  // the boy answers by lifting his empty hand — read it off the arm, since
+  // there is no finger to watch
+  const boyArm = boy.children.find((c) => c.name === 'arm' && c.rotation.z > 1);
+  const restZ = boyArm.rotation.z;
 
   root.setCamera(new THREE.PerspectiveCamera());
   let t = 0;
@@ -171,24 +177,25 @@ test('touching one of them makes the other answer, a beat later', () => {
 
   step(40);                                       // past the beat
   assert.ok(root.fragment().boyLift > 0, 'the boy answers');
+  assert.ok(boyArm.rotation.z > restZ, 'the empty hand actually lifts');
   assert.equal(root.fragment().answers, 1);
   assert.equal(root.fragment().mirrored, true);
 
   step(240);                                      // let both gestures finish
   assert.equal(root.fragment().masterLift, 0, 'the master settles');
   assert.equal(root.fragment().boyLift, 0, 'the boy settles');
-  assert.ok(Math.abs(boyFinger.position.y - restY) < 1e-9, 'and the finger comes back to rest');
+  assert.ok(Math.abs(boyArm.rotation.z - restZ) < 1e-9, 'and the hand comes back to rest');
 
   for (const v of Object.values(root.fragment())) {
     assert.ok(Number.isFinite(v) || typeof v === 'boolean', 'fragment stays finite');
   }
 });
 
-test('the fingers never dip below the shoulder while the gesture plays', () => {
+test('the finger never dips below the shoulder while the gesture plays', () => {
   const ctx = fakeCtx();
   const root = k3.build(ctx);
-  const seals = accentMeshes(root.scene);
-  const [gutei] = withFingers(root.scene);
+  const seals = accentMeshes(root.scene);       // just Gutei's finger now
+  const gutei = guteiOf(root.scene);
   const guteiBody = gutei.children.find((c) => c.name === 'body');
   root.setCamera(new THREE.PerspectiveCamera());
   ctx.input.raycastFirst = (cam, list) => (list.includes(guteiBody) ? { object: guteiBody, point: new THREE.Vector3() } : null);

@@ -22,10 +22,13 @@ const ID = 3;
 // this stages the moment the case hangs on: the master holding up one finger,
 // unhurried, and a few steps away a small boy doing exactly the same thing.
 //
-// Two red seals, not one, and that is the whole reason this case gets an
-// exception to the one-seal-per-koan rule. A single red fingertip reads as a
-// wound. Two identical red fingertips read as a gesture repeated — which is
-// precisely what the case is about.
+// ONE red seal — Gutei's finger — and the boy raises an EMPTY hand beside it.
+// (Frank's staging: the case ends with the boy's finger cut off, and at that
+// instant he was enlightened. So the two figures make the same gesture, one
+// with a finger and one without: the master holds up the finger, and the boy,
+// who has lost his, holds up the hand it is gone from. The absence is the
+// point, and it is gentle — no wound, no blade, just a raised hand with
+// nothing on it where the master has his one red mark.)
 
 // Both figures present their raised sleeve along this bearing. Aiming them at
 // each other was the obvious first staging and it was wrong: the case is not a
@@ -80,6 +83,7 @@ function raisedSleeve(monk) {
 // Park the finger on the hem, pushed back along the sleeve by its own width so
 // its base sits INSIDE the cuff instead of floating off the lip of it.
 function seat(f) {
+  if (!f.finger) return;      // the boy's hand is empty — nothing to seat
   const hem = sleeveHem(f.arm);
   f.finger.position.copy(hem.point).addScaledVector(hem.along, -f.radius * 1.15);
 }
@@ -91,14 +95,17 @@ function seat(f) {
 // and what Gutei holds up is a finger held UP — the whole gesture is that it is
 // vertical. The price is that it has to be re-seated whenever the arm moves,
 // which is all seat() does.
-function raiseFinger(monk, { length, radius }) {
+function raiseFinger(monk, { length, radius, withFinger = true } = {}) {
   const arm = raisedSleeve(monk);
-  const finger = makeRaisedFinger({ length, radius });
-  // Its own outline, thin, added BEFORE the scene-wide pass can claim it: the
-  // house stroke is 0.033 wide and this digit is 0.05 across, so the standard
-  // inverted hull would swallow the red completely.
-  addOutlines(finger, { width: 0.007, wobble: 0.4 });
-  monk.add(finger);
+  let finger = null;
+  if (withFinger) {
+    finger = makeRaisedFinger({ length, radius });
+    // Its own outline, thin, added BEFORE the scene-wide pass can claim it: the
+    // house stroke is 0.033 wide and this digit is 0.05 across, so the standard
+    // inverted hull would swallow the red completely.
+    addOutlines(finger, { width: 0.007, wobble: 0.4 });
+    monk.add(finger);
+  }
   const f = { monk, arm, finger, radius, restZ: arm.rotation.z, lift: 0, since: -1 };
   seat(f);
   return f;
@@ -179,11 +186,11 @@ export default {
     boy.rotation.y = FACING;
     scene.add(boy);
 
-    // the two seals. His is a little larger than the boy's, but nothing like the
-    // difference in their heights: the boy's copy has to read as the SAME thing,
-    // and a strictly proportional finger on him is a speck.
+    // the one seal — Gutei's finger — and the boy's empty raised hand beside it.
+    // Both figures lift the same arm through the same gesture; only the master
+    // has anything on the end of it.
     const master = raiseFinger(gutei, { length: 0.17, radius: 0.027 });
-    const pupil = raiseFinger(boy, { length: 0.14, radius: 0.023 });
+    const pupil = raiseFinger(boy, { withFinger: false });
 
     // whoever has just asked. Kept off to the sides: the gap between the master
     // and the boy is where both gestures live and nothing else belongs in it.

@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT } from '../palette.js';
+import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeBell, makeDrum, makeBowl,
   makeMonk, aimMonk, makeLights, makeBlobShadow, addOutlines,
@@ -40,8 +40,10 @@ export default {
     hall.rotation.y = 0.34;
     scene.add(hall);
 
-    // the bell on one side of the yard...
-    const bell = makeBell({ height: 0.95, seed: ID });
+    // the bell on one side of the yard — dark bronze, NOT the seal: the bowl
+    // Tokusan carries is the one red thing here (Frank's note: the bell was
+    // competing with it). It still swings and rings when struck.
+    const bell = makeBell({ height: 0.95, seed: ID, color: WASH.mid });
     bell.group.position.set(-3.5, 0, 0.4);
     bell.group.rotation.y = 0.7;
     scene.add(bell.group);

@@ -40,7 +40,7 @@ export default {
 
     // THE WHEEL, on its stand, turning. Its face is squared to the home camera
     // so the spokes read as spokes rather than as an edge-on line.
-    const wheel = makeWheel({ radius: 1.05, spokes: 12, naveColor: ACCENT });
+    const wheel = makeWheel({ radius: 1.05, spokes: 12, wheelColor: ACCENT });
     wheel.group.position.set(1.3, 0, 0.4);
     wheel.group.rotation.y = 0.55;
     scene.add(wheel.group);

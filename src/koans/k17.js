@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT } from '../palette.js';
+import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
   composeWorld, makeVeranda, makeMonk, aimMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
@@ -49,16 +49,19 @@ export default {
     veranda.rotation.y = 0.5;
     scene.add(veranda);
 
-    // CHU, seated on the boards, on a vermillion mat — the one warm thing in
-    // the courtyard, and the reason his end of it reads as the teaching end
-    const chu = makeMonk({ height: 1.6, pose: 'sit', elder: true });
+    // CHU, seated on the boards — HE is the seal. There was nothing else in the
+    // courtyard that wanted to be red (it is two people and a call), so the
+    // teacher on the platform takes the accent; deepened, since a whole figure
+    // at full accent glares (Frank's call).
+    const chu = makeMonk({ height: 1.6, pose: 'sit', elder: true, color: ACCENT_DEEP });
     const CHU_POS = new THREE.Vector3(-1.9, 0.34, -2.7);
     chu.position.copy(CHU_POS);
     scene.add(chu);
 
+    // a plain reed mat under him now, not a red one
     const mat = new THREE.Mesh(
       new THREE.CylinderGeometry(0.46, 0.46, 0.035, 4),
-      toonMaterial({ color: ACCENT, flat: true }));
+      toonMaterial({ color: WASH.dry, flat: true }));
     mat.name = 'mat';
     mat.rotation.y = Math.PI / 4;
     mat.position.set(CHU_POS.x, CHU_POS.y + 0.018, CHU_POS.z);

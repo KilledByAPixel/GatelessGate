@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
+import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makeMonk, aimMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
@@ -27,7 +28,7 @@ export default {
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   // nothing here makes a sound but the wind, so the drift plays in full
   ambience: ['wind:0.30', 'music'],
-  camera: { distance: 10.5, target: [0.8, 1.05, 0.2], azimuth: 0.55, polar: 1.22 },
+  camera: { distance: 10.0, target: [0.8, 0.8, 0.2], azimuth: 0.55, polar: 1.20 },
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -39,29 +40,45 @@ export default {
     // THE STICK. Dry, crooked, a hand taller than it needs to be, standing in
     // swept ground. Three tapering segments with a slight kink at each joint,
     // because a perfectly straight stick reads as a post.
-    const stick = new THREE.Group();
-    stick.name = 'stick';
+    // THE DUNG. Kanshiketsu — a little pile of it, which is the whole answer to
+    // "what is Buddha". A few tapered lumps heaped together, lying on the
+    // ground and modelled in the round: pointed at both ends, fat in the
+    // middle, tilted every which way. Bigger than a person would expect, since
+    // it is the centrepiece of the scene (Frank's note: not a flat cube).
+    const stick = new THREE.Group();      // kept the name so the interaction below reads unchanged
+    stick.name = 'dung';
     const dryMat = toonMaterial({ color: WASH.mid, flat: true });
-    const SEGS = [
-      { h: 0.30, r0: 0.055, r1: 0.048, tilt: 0.03 },
-      { h: 0.28, r0: 0.048, r1: 0.040, tilt: -0.07 },
-      { h: 0.24, r0: 0.040, r1: 0.026, tilt: 0.10 },
+
+    // one turd: a spindle lathe laid on its side, hinged so it rests ON the
+    // ground rather than through it
+    const turdGeo = (L, R) => {
+      const prof = [
+        [0.00, 0.00], [0.42, 0.10], [0.80, 0.30], [1.00, 0.52],
+        [0.86, 0.74], [0.44, 0.92], [0.00, 1.00],
+      ].map(([r, y]) => new THREE.Vector2(r * R, y * L));
+      const geo = new THREE.LatheGeometry(prof, 7);
+      geo.translate(0, -L / 2, 0);        // centre it on its long axis
+      geo.rotateZ(Math.PI / 2);           // lie along x
+      return geo;
+    };
+
+    // a heap: a base ring of lumps and a couple riding on top
+    const LUMPS = [
+      { L: 0.62, R: 0.11, x: 0.00, y: 0.11, z: 0.00, ry: 0.2, rz: 0.05 },
+      { L: 0.54, R: 0.10, x: 0.16, y: 0.10, z: 0.14, ry: 1.1, rz: -0.08 },
+      { L: 0.50, R: 0.10, x: -0.18, y: 0.10, z: 0.12, ry: 2.3, rz: 0.10 },
+      { L: 0.46, R: 0.09, x: 0.02, y: 0.10, z: -0.20, ry: -0.7, rz: 0.02 },
+      { L: 0.44, R: 0.09, x: -0.04, y: 0.26, z: 0.02, ry: 0.6, rz: 0.9 },
+      { L: 0.36, R: 0.08, x: 0.14, y: 0.28, z: -0.06, ry: 2.0, rz: -0.7 },
     ];
-    let y = 0;
-    let node = stick;
-    for (const [i, s] of SEGS.entries()) {
-      const joint = new THREE.Group();
-      joint.name = 'joint';
-      joint.position.y = i === 0 ? 0 : y;
-      joint.rotation.z = s.tilt;
-      const geo = new THREE.CylinderGeometry(s.r1, s.r0, s.h, 6);
-      geo.translate(0, s.h / 2, 0);
-      const seg = new THREE.Mesh(geo, dryMat);
-      seg.name = 'seg';
-      joint.add(seg);
-      node.add(joint);
-      node = joint;
-      y = s.h;
+    for (const [i, m] of LUMPS.entries()) {
+      const lump = new THREE.Mesh(turdGeo(m.L, m.R), dryMat);
+      lump.name = 'turd';
+      lump.position.set(m.x, m.y, m.z);
+      lump.rotation.set(0, m.ry, m.rz);
+      // a touch of per-lump wonk so the pile is not two neat tiers
+      lump.rotation.x = (hash1(i * 5 + 1, ID) - 0.5) * 0.5;
+      stick.add(lump);
     }
     stick.position.set(0.8, 0, 0.2);
     scene.add(stick);
@@ -118,11 +135,11 @@ export default {
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
     const hit = new THREE.Mesh(
-      new THREE.BoxGeometry(0.4, 1.1, 0.4),
+      new THREE.BoxGeometry(0.95, 0.6, 0.95),
       new THREE.MeshBasicMaterial({ visible: false }));
     hit.name = 'stick-hit';
     hit.userData.noOutline = true;
-    hit.position.set(0.8, 0.45, 0.2);
+    hit.position.set(0.8, 0.3, 0.2);
     scene.add(hit);
 
     // ---- the moment: it is a stick ---------------------------------------

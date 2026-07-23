@@ -78,8 +78,11 @@ export default {
     });
     scene.add(flowers.mesh);
 
-    // AND THE BIRDS
-    const birds = makeBirds({ count: 9, seed: ID, center: [0.5, -1.0], height: 6.0, spread: 5.6 });
+    // AND THE BIRDS — the seal of this case. "The birds sing among innumerable
+    // kinds of fragrant flowers": the birds are what the whole answer is, so
+    // they carry the accent. Small marks against the sky, so full accent reads
+    // as seals rather than glare.
+    const birds = makeBirds({ count: 9, seed: ID, center: [0.5, -1.0], height: 6.0, spread: 5.6, color: ACCENT });
     scene.add(birds.group);
 
     for (const [p, rx, rz, op] of [

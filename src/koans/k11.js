@@ -67,13 +67,13 @@ export default {
     // he is looking at his visitor, both times — a fist raised at nobody in
     // particular would read as a man alone rather than as an answer given
 
-    // THE FIST — the seal. The raised sleeve, and nothing else in the scene,
-    // is vermillion: it is what both visits are about and the only thing that
-    // does not change between them.
+    // THE FIST — the seal. Only the fist is vermillion; the arm stays ink, the
+    // way the boy's raised sleeve does in case 3. A whole red arm read as a
+    // banner rather than a hand (Frank's note); the red belongs on the fist,
+    // which is the thing that is identical on both of Joshu's visits.
     const raised = monk.children
       .filter((c) => c.name === 'arm')
       .find((c) => Math.abs(c.rotation.z) > 1);
-    if (raised) raised.material = toonMaterial({ color: ACCENT, flat: true });
     // Parented to the sleeve at its far end rather than positioned by eye in
     // the monk's frame: the sleeve geometry runs from 0 to -sleeveL in its own
     // local y, so this lands on the hand wherever the pose puts it.

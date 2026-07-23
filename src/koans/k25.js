@@ -144,18 +144,23 @@ export default {
     hit.position.copy(gavel.position);
     hall.add(hit);
 
-    // ---- the moment: assert something, inside a dream ---------------------
-    const BASE = 0.010;        // the rocking that never stops
+    // ---- the moment: strike the gavel, inside a dream ---------------------
+    // The dream rocks very slightly, and ONLY on its own — striking the gavel
+    // never touches the world. An earlier cut grew the wobble on every click,
+    // which read as the camera being knocked out of place the more you tapped
+    // (Frank's bug). The strike is a sound and a small LOCAL bounce of the
+    // gavel now; the world is left alone.
+    const BASE = 0.006;        // the faint rocking that never stops, unchanging
+    const GAVEL_Y = stand.position.y + 0.24;
     let camera = null;
     let clock = 0;
     let strikes = 0;
-    const hits = [];
+    let struckAt = -99;
 
     input.onTap(() => {
       if (!camera) return;
       if (!input.raycastFirst(camera, [hit])) return;
-      hits.push(clock);
-      if (hits.length > 4) hits.shift();
+      struckAt = clock;
       strikes++;
       audio && audio.knock({ force: 0.7 });
     });
@@ -167,25 +172,22 @@ export default {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
 
-        // how much of the dream is being insisted on right now
-        let heat = 0;
-        for (const t0 of hits) {
-          const t = clock - t0;
-          if (t >= 0) heat += Math.exp(-t / 2.2);
-        }
-        const amp = BASE * (1 + heat * 3.2);
-        hall.rotation.z = Math.sin(clock * 0.31) * amp;
-        hall.rotation.x = Math.sin(clock * 0.23 + 1.1) * amp * 0.8;
-        hall.position.y = Math.sin(clock * 0.19 + 2.2) * amp * 5.0;
+        // constant, click-independent dream drift — nothing here reads `strikes`
+        hall.rotation.z = Math.sin(clock * 0.31) * BASE;
+        hall.rotation.x = Math.sin(clock * 0.23 + 1.1) * BASE * 0.8;
+        hall.position.y = Math.sin(clock * 0.19 + 2.2) * BASE * 3.0;
 
-        // and the gavel itself lifts a little each time it is used
-        gavel.position.y = stand.position.y + 0.24 + Math.min(0.12, heat * 0.05);
+        // the gavel gives a small LOCAL bounce when struck — it moves, the
+        // world does not
+        const t = clock - struckAt;
+        const bounce = t >= 0 && t < 1 ? 0.12 * Math.exp(-t / 0.18) * Math.abs(Math.sin(t * 22)) : 0;
+        gavel.position.y = GAVEL_Y + bounce;
       },
       fragment() {
         return {
           strikes,
           rock: +hall.rotation.z.toFixed(5),
-          drift: +hall.position.y.toFixed(5),
+          bounce: +(gavel.position.y - GAVEL_Y).toFixed(5),
         };
       },
       dispose() {},

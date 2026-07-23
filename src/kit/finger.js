@@ -11,12 +11,12 @@ import { ACCENT } from '../palette.js';
 // raised sleeve and left pointing at the sky.
 //
 // ONE mesh, deliberately, and it matters. The finger is this koan's red seal and
-// the scene is asserted to carry exactly two accent meshes — the master's and
-// the boy's. Built from a stack of parts (shaft plus a capping sphere, the
-// obvious first draft) the count would quietly drift and the assertion that
-// keeps this case honest would stop meaning anything. A single lathe is also
-// plenty: this is a few centimetres of geometry read from six metres away, where
-// nothing survives but the silhouette.
+// the scene is asserted to carry exactly one accent mesh — Gutei's (the boy's
+// hand is empty, his finger gone). Built from a stack of parts (shaft plus a
+// capping sphere, the obvious first draft) the count would quietly drift and the
+// assertion that keeps this case honest would stop meaning anything. A single
+// lathe is also plenty: this is a few centimetres of geometry read from six
+// metres away, where nothing survives but the silhouette.
 //
 // Authored a good deal larger than an anatomical finger, for the same reason the
 // lotus in case 6 is oversized — the thing being gestured with has to carry the

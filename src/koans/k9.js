@@ -61,12 +61,14 @@ export default {
       strata.add(band);
       y += b.h;
 
-      // THE PRESENT: a seam of vermillion between the last two ages, thinner
-      // than any of them
+      // THE PRESENT: a seam between the last two ages, thinner than any of
+      // them — a slightly darker band, not the seal. The accent belongs to the
+      // Buddha here (Frank's call: the figure is what the case is about, not
+      // the ground).
       if (i === BANDS.length - 2) {
         const seam = new THREE.Mesh(
           new THREE.CylinderGeometry(b.r * 0.90, b.r * 0.93, 0.045, 11),
-          toonMaterial({ color: ACCENT_DEEP, flat: true }));
+          toonMaterial({ color: wash(0.44), flat: true }));
         seam.name = 'seam';
         seam.position.y = y + 0.0225;
         strata.add(seam);
@@ -78,8 +80,10 @@ export default {
 
     // ---- the figure -------------------------------------------------------
     // Sunk to the hips in the top terrace: he was there before the ground was.
+    // He is the seal: the one who sat ten cycles and did not become a Buddha is
+    // the whole subject, so the accent is on him.
     const SEAT_Y = y - 0.55;
-    const buddha = makeBuddha({ height: 6.2, color: wash(0.66) });
+    const buddha = makeBuddha({ height: 6.2, color: ACCENT_DEEP });
     buddha.position.set(0.4, SEAT_Y, -3.0);
     scene.add(buddha);
 

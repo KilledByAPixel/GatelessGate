@@ -39,7 +39,7 @@ import { hash1 } from '../util/noise.js';
 
 const P = {
   bodyR: 0.25, bodyLen: 0.62, bodyDrop: 0.18,
-  legH: 0.46, legR: 0.045, legTaper: 0.90, hipX: 0.13, hipZ: 0.26,
+  legH: 0.46, legR: 0.068, legTaper: 0.90, hipX: 0.13, hipZ: 0.26,
 };
 
 const SIT_TILT = 0.80;      // radians the spine pitches up off horizontal

@@ -26,8 +26,8 @@ const SPOKE_STAGGER = 0.05;   // they let go in a ripple, not a blink
 export function makeWheel({
   radius = 1.1,
   spokes = 12,
-  color = WASH.dark,
-  naveColor = ACCENT,
+  color = WASH.dark,       // the STAND — posts, axle, pad timber
+  wheelColor = ACCENT,     // everything that TURNS — rim, spokes, nave
   rate = 0.22,
 } = {}) {
   const R = radius;
@@ -37,6 +37,10 @@ export function makeWheel({
   const timber = toonMaterial({ color });
   const flat = toonMaterial({ color, flat: true });
   const stone = toonMaterial({ color: WASH.stone, flat: true });
+  // the wheel is the accent: the case is about what keeps turning when you
+  // pull the hub, so the whole turning assembly is red and only the stand
+  // holding it up stays neutral ink
+  const wheelMat = toonMaterial({ color: wheelColor, flat: true });
 
   const CY = R * 1.14;              // axle height: the rim hangs just clear of the ground
 
@@ -67,15 +71,14 @@ export function makeWheel({
   g.add(spin);
 
   // THE RIM — the pure circle, and the only thing that survives the question
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 0.062 * R, 6, 30), flat);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 0.062 * R, 6, 30), wheelMat);
   rim.name = 'rim';
   spin.add(rim);
 
-  // THE NAVE — the hub uniting the spokes; the accent, because it is what the
-  // case reaches in and removes
+  // THE NAVE — the hub uniting the spokes; what the case reaches in and removes
   const naveGeo = new THREE.CylinderGeometry(0.17 * R, 0.17 * R, 0.30 * R, 9);
   naveGeo.rotateX(Math.PI / 2);
-  const nave = new THREE.Mesh(naveGeo, toonMaterial({ color: naveColor, flat: true }));
+  const nave = new THREE.Mesh(naveGeo, wheelMat);
   nave.name = 'nave';
   spin.add(nave);
 
@@ -84,7 +87,7 @@ export function makeWheel({
   const len = outer - inner;
   for (let i = 0; i < spokes; i++) {
     const a = (i / spokes) * Math.PI * 2;
-    const s = new THREE.Mesh(new THREE.BoxGeometry(len, 0.048 * R, 0.048 * R), flat);
+    const s = new THREE.Mesh(new THREE.BoxGeometry(len, 0.048 * R, 0.048 * R), wheelMat);
     s.name = 'spoke';
     s.position.set(Math.cos(a) * (inner + len / 2), Math.sin(a) * (inner + len / 2), 0);
     s.rotation.z = a;

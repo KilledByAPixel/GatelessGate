@@ -59,6 +59,22 @@ export function makeHangingMonk({ height = 1.6, color = INK, seed = 5 } = {}) {
   head.position.set(0, -0.55 * headR, -0.75 * headR);
   g.add(head);
 
+  // A NECK, bridging the collar to the head. Featureless solids left a visible
+  // gap between the hanging robe and the sphere, so the head read as floating a
+  // little clear of the body (Frank's note). A short tapered column filling that
+  // span — thin under the skull, swelling into the collar — reads as fully
+  // connected without moving either piece. It leans back a touch to follow the
+  // head, which hangs behind the pivot.
+  const collar = new THREE.Vector3(0, -0.232 * h, -0.060 * h);
+  const nape = new THREE.Vector3(0, -0.120 * h, -0.072 * h);
+  const dir = nape.clone().sub(collar);
+  const neck = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.050 * h, 0.064 * h, dir.length() + 0.05 * h, 8), mat);
+  neck.name = 'neck';
+  neck.position.copy(collar).addScaledVector(dir, 0.5);
+  neck.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+  g.add(neck);
+
   // sleeves hanging straight down at his sides — his hands grasp no branch
   const sleeveL = 0.36 * h;
   for (const side of [-1, 1]) {
