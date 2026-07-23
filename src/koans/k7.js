@@ -14,9 +14,9 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.14'],
+  ambience: ['wind:0.14', 'music'],
   // the first bright case: washing a bowl is domestic, morning work — yo, not
-  // hirajoshi. The mood only matters once pitched voices play here (rosters).
+  // hirajoshi
   mood: 'yo',
 
   build(ctx) {
@@ -119,8 +119,6 @@ export default {
     return {
       scene,
       setCamera(c) { camera = c; },
-      onEnter() { audio && audio.startAmbience(['wind:0.14']); },
-      onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         world.update(dt, simTime);
         water.update(dt, simTime);

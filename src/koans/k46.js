@@ -212,8 +212,6 @@ export default {
     return {
       scene,
       setCamera(c) { camera = c; },
-      onEnter() { audio && audio.startAmbience(['wind:0.26']); },
-      onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         now = simTime;
         world.update(dt, simTime);

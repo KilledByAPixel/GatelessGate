@@ -20,7 +20,8 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.12'],
+  ambience: ['wind:0.12', 'music'],
+  mood: 'yo',      // the flower and the smile — the gentlest case in the book
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -136,8 +137,6 @@ export default {
     return {
       scene,
       setCamera(c) { camera = c; },
-      onEnter() { audio && audio.startAmbience(['wind:0.12']); },
-      onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         world.update(dt, simTime);
 

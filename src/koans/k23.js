@@ -63,7 +63,7 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.22'],   // high open country — more wind than the meadows
+  ambience: ['wind:0.22', 'music'],   // high open country — more wind than the meadows
 
   // Close framing for a small subject (k3's precedent): the treasure is a
   // 0.4-unit stack on a half-unit stone. Numbers baked from the staged
@@ -221,8 +221,6 @@ export default {
     return {
       scene,
       setCamera(c) { camera = c; },
-      onEnter() { audio && audio.startAmbience(['wind:0.22']); },
-      onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         world.update(dt, simTime);
         bundle.update(dt, simTime);

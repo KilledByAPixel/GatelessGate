@@ -248,9 +248,12 @@ async function enter(slug) {
       if (koan && koan.onExit) koan.onExit();
       stopReading();
       input.clear();
-      // the menu's music does not follow you in: a case whose recipe carries
-      // no 'music' is deliberately silent, and its mood is its own
-      audio.stopMusic();
+      // Ambience is main's job now, not the koans': the module's `ambience`
+      // field is the single source of truth, started below and stopped here —
+      // so a recipe can never drift from what actually plays, and the menu's
+      // music never follows you in. A lingering wind would also block the new
+      // case's level (startAmbience only creates wind when none exists).
+      audio.stopAmbience();
       audio.setMood(mod.mood);
       if (scroll) { scroll.dispose(); scroll = null; }
       const built = mod.build({ scene: null, kit: null, audio, input, accent: mod.accent, quality: 'high' });
@@ -261,6 +264,7 @@ async function enter(slug) {
       if (prev && prev !== hub) { disposeRoot(prev); prev.dispose && prev.dispose(); }
       koan = built; koanSlug = slug;
       built.onEnter && built.onEnter();
+      audio.startAmbience(mod.ambience || []);
       save.markRead(slug);
       // A case may frame itself. Most want the standard diorama shot, but a wide
       // establishing scene and a close one on a single figure are not the same
@@ -304,10 +308,11 @@ async function exit() {
   stopReading();
   input.clear();
   koan && koan.onExit && koan.onExit();
-  // defense in depth, mirroring enter(): playMusic REUSES a live scheduler and
-  // silently drops its options, so if a koan's onExit ever forgets stopAmbience,
-  // menuMusic()'s chimes flag would quietly never apply. Kill it here always.
-  audio.stopMusic();
+  // ambience is main's job (see enter()): the case's whole bed dies here, and
+  // menuMusic() below starts the menu's own with a fresh scheduler — playMusic
+  // REUSES a live one and silently drops its options, so this must be a stop,
+  // never a hand-off
+  audio.stopAmbience();
   await transition(() => {
     const prev = scenes.active();
     scenes.setActive(hub);
@@ -352,6 +357,11 @@ function speakAll(id) {
     narration.speak(id, key, {
       onEnd: () => {
         if (!readingAll) return;                  // stopped, or switched to one section
+        // one soft tube note marks the section's end — the audible shape of
+        // the beat before a different voice takes over. Descending through
+        // the reading: the case highest, the verse lowest. Rides the case's
+        // mood, and the duck, like everything pitched.
+        audio.chimeStrike({ tube: Math.max(0, 3 - i), force: 0.5 });
         if (i >= order.length) { stopReading(); return; }
         // The highlight stays on the section just read through the gap — clearing it
         // would flash the panel between every part.

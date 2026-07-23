@@ -31,7 +31,8 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.16'],
+  ambience: ['wind:0.16', 'music'],
+  mood: 'yo',      // one magnificent tree, wind through the branches
 
   // The tree is six units of the eight in frame, so this case gets a wider,
   // higher shot than the standard diorama: the crown has to fit, and the two
@@ -257,8 +258,6 @@ export default {
     return {
       scene,
       setCamera(c) { camera = c; },
-      onEnter() { audio && audio.startAmbience(['wind:0.16']); },
-      onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         world.update(dt, simTime);
 

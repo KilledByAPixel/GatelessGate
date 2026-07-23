@@ -18,7 +18,7 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.18'],
+  ambience: ['wind:0.18', 'music'],
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -100,8 +100,6 @@ export default {
     return {
       scene,
       setCamera(c) { camera = c; },
-      onEnter() { audio && audio.startAmbience(['wind:0.18']); },
-      onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         world.update(dt, simTime);
         if (muPhase >= 0) {

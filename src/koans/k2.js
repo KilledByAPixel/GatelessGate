@@ -43,7 +43,7 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.18'],
+  ambience: ['wind:0.18', 'music'],
 
   // Framed low and a little left: aimed at the gap between the fox and the
   // monks rather than at anybody's head, and pitched so all four figures still
@@ -152,8 +152,6 @@ export default {
     return {
       scene,
       setCamera(c) { camera = c; },
-      onEnter() { audio && audio.startAmbience(['wind:0.18']); },
-      onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         world.update(dt, simTime);
         fox.update(dt, simTime);

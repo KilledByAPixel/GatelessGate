@@ -128,7 +128,7 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.12'],
+  ambience: ['wind:0.12', 'music'],
   // Closer and lower than the standard diorama framing. The subject of this one
   // is two marks a few centimetres long; at the default distance they are specks
   // in a meadow. The azimuth is nudged a little off the sleeves' bearing so that
@@ -284,8 +284,6 @@ export default {
     return {
       scene,
       setCamera(c) { camera = c; },
-      onEnter() { audio && audio.startAmbience(['wind:0.12']); },
-      onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         now = simTime;
         world.update(dt, simTime);          // the meadow's wind

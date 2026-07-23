@@ -26,7 +26,8 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.14'],
+  ambience: ['wind:0.14', 'music'],
+  mood: 'yo',      // morning light through rolled blinds
 
   // Framed from inside the hall, low and nearly square to the bay: the reveal
   // only reads if the eye can travel THROUGH the opening to the far mountains,
@@ -154,8 +155,6 @@ export default {
     return {
       scene,
       setCamera(c) { camera = c; },
-      onEnter() { audio && audio.startAmbience(['wind:0.14']); },
-      onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         world.update(dt, simTime);
         screen.update(dt, simTime);

@@ -35,7 +35,9 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.14'],
+  // 'bell' names the bonsho as an emitter: it has a real voice here, so the
+  // density rule thins the swells around it without anyone mixing by hand
+  ambience: ['wind:0.14', 'bell', 'music'],
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -158,8 +160,6 @@ export default {
     return {
       scene,
       setCamera(c) { camera = c; },
-      onEnter() { audio && audio.startAmbience(['wind:0.14']); },
-      onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         world.update(dt, simTime);
         bell.update(dt, simTime);

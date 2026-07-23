@@ -4,6 +4,7 @@ import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
 import { makePath } from '../kit/path.js';
 import { makeGate } from '../kit/gate.js';
+import { makeFurin } from '../kit/furin.js';
 import { makeMonk } from '../kit/monk.js';
 import { groundHeight } from '../kit/ground.js';
 import { makeLights } from '../render/toon.js';
@@ -63,7 +64,9 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:' + BASE_WIND],
+  // the taps already ring bells; the furin is the ambient voice, and it
+  // counts as the emitter that thins the swells
+  ambience: ['wind:' + BASE_WIND, 'furin', 'music'],
 
   // Low, nearly level, and close to the road's own axis, so the three gates
   // stack up the frame — each lintel a step higher and a step washier. The
@@ -184,6 +187,12 @@ export default {
     ms.position.set(monk.position.x, 0.01, monk.position.z);
     scene.add(ms);
 
+    // a furin under the first barrier's lintel — the near gate is the one you
+    // stand before, so it is the one that carries a voice in the wind
+    const furin = makeFurin({ seed: 47, onStrike: (tube, force) => audio && audio.chimeStrike({ tube, force }) });
+    furin.group.position.set(1.2, GATES[0].height, 0);
+    gates[0].gate.add(furin.group);
+
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
     // ---- the moment: three notes ------------------------------------------
@@ -205,10 +214,9 @@ export default {
     return {
       scene,
       setCamera(c) { camera = c; },
-      onEnter() { audio && audio.startAmbience(['wind:' + BASE_WIND]); },
-      onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
-        world.update(dt, simTime);        // the meadow breathes; nothing else moves
+        world.update(dt, simTime);        // the meadow breathes
+        furin.update(dt, simTime);        // and the near gate's chime rides it
       },
       fragment() {
         return { taps1: taps[0], taps2: taps[1], taps3: taps[2] };

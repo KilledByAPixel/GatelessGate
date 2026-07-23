@@ -48,7 +48,8 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.14'],
+  ambience: ['wind:0.14', 'music'],
+  mood: 'yo',      // the kick is play, not violence
   // Closer than the standard shot: the thing this case turns on is 0.55 units
   // tall, and the courtyard framing loses it. Target height splits the
   // difference between the vase and the standing figures.
@@ -167,8 +168,6 @@ export default {
     return {
       scene,
       setCamera(c) { camera = c; },
-      onEnter() { audio && audio.startAmbience(['wind:0.14']); },
-      onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         world.update(dt, simTime);   // the meadow's wind
         vase.update(dt, simTime);    // the wobble, when there is one

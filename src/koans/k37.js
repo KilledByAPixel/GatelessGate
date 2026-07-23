@@ -14,7 +14,7 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.2'],
+  ambience: ['wind:0.2', 'music'],
   // Orbit around the BUFFALO. On the shared default target the pivot landed on
   // the middle of a fence panel, so the camera swung around a wall while the
   // subject drifted across frame — the scene appeared to rotate about nothing.
@@ -96,8 +96,6 @@ export default {
     return {
       scene,
       setCamera(c) { camera = c; },
-      onEnter() { audio && audio.startAmbience(['wind:0.2']); },
-      onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         world.update(dt, simTime);
         buffalo.update(dt, simTime);

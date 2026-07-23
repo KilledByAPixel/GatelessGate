@@ -36,7 +36,8 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.20'],
+  ambience: ['wind:0.20', 'music'],
+  mood: 'yo',      // chores in the sun; ordinary mind is the way
 
   // Wider, and lower, than the standard diorama shot. This is a landscape, not
   // a tableau: the road has to have room to run away into the hills, and the
@@ -199,8 +200,6 @@ export default {
     return {
       scene,
       setCamera(c) { camera = c; },
-      onEnter() { audio && audio.startAmbience(['wind:' + BASE_WIND]); },
-      onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         world.update(dt, simTime);           // drives the meadow's wind
         flowers.update(dt, simTime);

@@ -31,7 +31,9 @@ export function makeDefaultCase(id) {
     tier: 0,
     staged: false,          // the menu marks which cases have art of their own
     text: { case: entry.case, comment: entry.comment, verse: entry.verse },
-    ambience: ['wind:0.16'],
+    // unstaged cases are the bare hillsides the swells were designed for:
+    // zero emitters, full drift
+    ambience: ['wind:0.16', 'music'],
     // Sat back and lifted, unlike a staged case. There is no subject here to
     // close in on, and the standard diorama framing put the lens at knee height
     // in the grass with whatever tree happened to be nearest filling the frame.
@@ -76,8 +78,6 @@ export function makeDefaultCase(id) {
       return {
         scene,
         setCamera() {},
-        onEnter() { audio && audio.startAmbience(['wind:0.16']); },
-        onExit() { audio && audio.stopAmbience(); },
         update(dt, simTime) { world.update(dt, simTime); },
         fragment() { return { staged: false, id }; },
         dispose() {},

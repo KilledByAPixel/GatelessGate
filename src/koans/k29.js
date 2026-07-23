@@ -143,8 +143,6 @@ export default {
       // the full recipe, not just wind: 'music' starts the drift layer, and
       // 'furin' has to be present here too so emitterCount() sees the chime
       // and thins the drift accordingly
-      onEnter() { audio && audio.startAmbience(AMBIENCE); },
-      onExit() { audio && audio.stopAmbience(); },
       update(dt, simTime) {
         flag.update(dt, simTime);
         world.update(dt, simTime);            // drives the meadow's wind
