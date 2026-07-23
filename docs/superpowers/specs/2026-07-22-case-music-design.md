@@ -50,12 +50,21 @@ origin) stays. Its single-strike voice is replaced by a multi-tube wind chime:
   bar partials (1 : 2.756 : 5.404 : 8.933) — the series that makes a chime sound
   like a chime and not a bell — upper modes decaying much faster than the
   fundamental, soft low-passed mallet knock, detuned pairs.
-- **Excitation:** each tube has its own slow two-sine quasi-random envelope
-  (seeded, deterministic); a tube strikes when its envelope rises past a
-  threshold that *falls as the gust rises*. A swell brings a scatter of
-  overlapping strikes; a lull brings none. This replaces the one-ring-per-crest
-  hysteresis (which stays available for genuinely single-bell objects like the
-  bonshō).
+- **Excitation** *(revised across audition rounds 3–4)*: the chime is **paced by
+  its own weather, not the wind's gust.** An activity wave (periods ~21 s and
+  ~32 s, gated high) brings flurries of **3–10 s separated by 16–33 s breaks**,
+  active ~26% of the time; within a flurry each tube's own slow eddy scatters
+  the strikes. Round 3's slower wave (flurries ~40 s, holes up to ~90 s) read
+  as broken — Frank's spec is "chime for five to ten seconds, then a break." Frank tried tight gust-coupling and rejected
+  it — the soundscape breathed in lockstep and chirped constantly; untied, "your
+  brain fills in the details." A `couple` parameter (default 0) can blend back
+  toward the audible gust. The wind level still *gates* the chime (a stilled
+  scene is silent, so case 29's flag still silences it), and the visual sway
+  still follows the real gust — only the strike *pacing* is free. Deterministic
+  throughout; the one-ring-per-crest hysteresis is gone.
+- **Future knob (Frank's inverse idea, not in this pass):** heavy wind could
+  *mask* the instruments — activity scaling down as wind level rises, the way a
+  real garden's delicate sounds vanish in a storm and come forward in calm.
 - **Level discipline:** individual strikes are quiet — well under the wind bed —
   and loudness comes from overlap, never from any one strike.
 - **Final numbers** (register, tube count, decay, density, brightness, verb mix,
@@ -80,6 +89,11 @@ mood parameter on `hz`; nothing else about it changes.
 
 Mood assignment is editorial, done case-by-case as cases gain sound — not a
 mechanical mapping from the text.
+
+> **Naming:** the non-diegetic layer previously called "the drift layer" is now
+> **the swells** everywhere in docs and conversation (Frank couldn't retain the
+> old name, which means it was wrong). Code keeps `music.js` / the `'music'`
+> recipe key.
 
 ### 4. Instrument rosters (how 48 cases get sound without 48 soundtracks)
 
