@@ -203,6 +203,11 @@ export default {
     const taps = [0, 0, 0];
     input.onTap(() => {
       if (!camera) return;
+      // the chime first: its hit drum sits inside the first gate's lintel
+      // slab, and a tap aimed at a wind chime must never answer with the
+      // gate's bell. Same probe order as k29.
+      const chimeHit = input.raycastFirst(camera, furin.pickTargets());
+      if (chimeHit) { furin.ring(); return; }
       const hit = input.raycastFirst(camera, hitSlabs);
       if (!hit) return;
       const i = slabGate.get(hit.object);

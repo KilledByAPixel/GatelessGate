@@ -93,11 +93,21 @@ export function createAudio(save) {
       if (wind) { wind.stop(); wind = null; }
       stopMusic();
     },
-    bell(opts = {}) { ensureCtx(); strikeBell(ctx, master, opts); },
+    // Strikes into a suspended context are DROPPED, not queued — same reason
+    // as the scheduler's guard in music.js: a frozen currentTime stacks every
+    // one-shot onto the same instant, and unlocking sound later fires them all
+    // as one cluster. A missed strike in a scene that was silent anyway costs
+    // nothing.
+    bell(opts = {}) {
+      ensureCtx();
+      if (ctx.state !== 'running') return;
+      strikeBell(ctx, master, opts);
+    },
     // tube index -> scale degree -> Hz. The engine owns the mapping so the kit
     // never needs to know what a hertz is.
     chimeStrike({ tube = 0, force = 1 } = {}) {
       ensureCtx();
+      if (ctx.state !== 'running') return;
       strikeBar(ctx, master, verb.in, { f0: hz(CHIME.degree + tube, mood), gain: CHIME.level * force });
     },
     playMusic,

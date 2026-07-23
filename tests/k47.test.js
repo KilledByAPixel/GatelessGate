@@ -278,14 +278,40 @@ test('each barrier answers with its own note, the nearest the deepest', () => {
   assert.deepEqual(root.fragment(), { taps1: expect[0], taps2: expect[1], taps3: expect[2] });
   assert.ok(bells.includes(62) && bells.includes(80) && bells.includes(98), 'three notes, stepped');
 
-  // and with no audio at all, the counter still counts and nothing throws
+  // and with no audio at all, the counter still counts and nothing throws.
+  // Target-aware, like the loop above: the handler probes the furin first,
+  // and a mock that answers every raycast would feed the tap to the chime.
   const quiet = fakeCtx(null);
   const qroot = k47.build(quiet);
   qroot.setCamera(rigCamera());
   const qgates = gatesByDepth(qroot.scene);
-  quiet.input.raycastFirst = () => ({ object: qgates[2].children.find((c) => c.name === 'gatehit') });
+  const qhit = qgates[2].children.find((c) => c.name === 'gatehit');
+  quiet.input.raycastFirst = (cam, objs) => (objs.includes(qhit) ? { object: qhit } : null);
   quiet._taps.forEach((cb) => cb(10, 10));
   assert.equal(qroot.fragment().taps3, 1);
+});
+
+test('a furin hangs under the first barrier and its strikes reach the engine', () => {
+  const struck = [];
+  const audio = { bell() {}, chimeStrike: (o) => struck.push(o) };
+  const root = k47.build(fakeCtx(audio));
+
+  // it hangs from the FIRST gate — the one you stand before — not floating
+  // in the scene: a child of the gate group, so it inherits sink and heading
+  let furin = null, parentIsGate = false;
+  root.scene.traverse((o) => {
+    if (o.name === 'furin') { furin = o; parentIsGate = o.parent && o.parent.name === 'gate'; }
+  });
+  assert.ok(furin, 'the chime exists');
+  assert.ok(parentIsGate, 'hung from a gate, not loose in the scene');
+
+  // its own weather brings strikes without any tap
+  for (let i = 0; i * (1 / 60) < 300; i++) root.update(1 / 60, i / 60);
+  assert.ok(struck.length > 3, `the chime never spoke: ${struck.length}`);
+  for (const s of struck) {
+    assert.ok(Number.isInteger(s.tube) && s.tube >= 0 && s.tube < 5);
+    assert.ok(s.force > 0 && s.force <= 1);
+  }
 });
 
 test('the scene runs without a renderer or audio, and reports a finite fragment', () => {
