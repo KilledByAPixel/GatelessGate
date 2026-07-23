@@ -9,7 +9,7 @@ function fakeCtx() {
   return {
     accent: k29.accent,
     quality: 'high',
-    audio: { setWindLevel() {}, startAmbience() {}, stopAmbience() {}, bell() {}, chime() {} },
+    audio: { setWindLevel() {}, startAmbience() {}, stopAmbience() {}, chimeStrike() {} },
     input: {
       onTap: (cb) => taps.push(cb),
       onHover: (cb) => hovers.push(cb),
@@ -63,20 +63,23 @@ test('update advances the cloth; tap toggles the wind off', () => {
   assert.equal(root.fragment().windOn, false, 'tapping the flag toggles the wind off');
 });
 
-test('the furin hangs under the gate and answers the flag', async () => {
-  const rung = [];
+test('the chime hangs under the gate and answers the flag', async () => {
+  const struck = [];
   const audio = {
     startAmbience() {}, stopAmbience() {}, setWindLevel() {},
-    chime: (o) => rung.push(o.gain),
+    chimeStrike: (o) => struck.push(o),
   };
   const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
   const k = k29.build({ audio, input });
 
   assert.ok(k29.ambience.includes('furin'), 'the recipe declares the chime');
-  assert.ok(k29.ambience.includes('music'), 'and asks for the drift');
+  assert.ok(k29.ambience.includes('music'), 'and asks for the swells');
 
-  for (let i = 0; i < 60 * 300; i++) k.update(1 / 60, i / 60);
-  assert.ok(rung.length > 5, `the chime never rang: ${rung.length}`);
-  assert.ok(rung.every((g) => g > 0 && g <= 1));
-  assert.ok(k.fragment().rings === rung.length);
+  for (let i = 0; i < 60 * 600; i++) k.update(1 / 60, i / 60);
+  assert.ok(struck.length > 10, `the chime never struck: ${struck.length}`);
+  for (const s of struck) {
+    assert.ok(Number.isInteger(s.tube) && s.tube >= 0 && s.tube < 5);
+    assert.ok(s.force > 0 && s.force <= 1);
+  }
+  assert.equal(k.fragment().strikes, struck.length);
 });

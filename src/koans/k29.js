@@ -106,9 +106,9 @@ export default {
       scene.add(s);
     }
 
-    // a furin under the lintel, off to one side. It rings on the gusts of the
-    // same wind that moves the flag — so stilling the flag stills the chime.
-    const furin = makeFurin({ seed: 29, onRing: (gain) => audio && audio.chime({ gain }) });
+    // a wind chime under the lintel. Strikes are paced by the chime's own
+    // weather; the wind still gates it, so stilling the flag stills the chime.
+    const furin = makeFurin({ seed: 29, onStrike: (tube, force) => audio && audio.chimeStrike({ tube, force }) });
     furin.group.position.set(1.2, 2.6, 0);
     gate.add(furin.group);
 
@@ -158,7 +158,7 @@ export default {
           windOn: flag.isWindOn(),
           windLevel: +flag.windLevel().toFixed(4),
           clothEnergy: +clothEnergy(flag.cloth).toFixed(6),
-          rings: furin.rings(),
+          strikes: furin.strikes(),
         };
       },
       dispose() {},
