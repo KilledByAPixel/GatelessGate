@@ -63,6 +63,9 @@ function rigCamera(mod, azimuth = null) {
 // drift, and this list is how a NEW case that forgot it still gets caught.
 const NO_DRIFT = [5, 14, 46];
 
+// The book is ink on warm paper in all forty-eight cases but one.
+const NIGHT_CASE = 28;
+
 const staged = [];
 for (const c of CASES) if (isStaged(c.slug)) staged.push(c);
 
@@ -110,8 +113,19 @@ for (const entry of staged) {
       assert.equal(typeof root[fn], 'function', `root.${fn} missing`);
     }
     assert.ok(root.scene instanceof THREE.Scene);
-    assert.equal('#' + root.scene.background.getHexString(), PAPER.toLowerCase(),
-      'the page is always paper');
+    if (entry.id === NIGHT_CASE) {
+      // Case 28 is the one case staged after dark, and the only one that goes
+      // darker still: Ryutan blows the candle out and the page falls to ink so
+      // the stars can come up. The paper pass is multiplicative, so the post
+      // spine composites a dark page correctly rather than washing it back.
+      const bg = root.scene.background.getHexString();
+      assert.notEqual('#' + bg, PAPER.toLowerCase(), 'the night case should not be daylight');
+      assert.equal('#' + root.scene.fog.color.getHexString(), '#' + bg,
+        'fog must match the page, or the horizon reappears');
+    } else {
+      assert.equal('#' + root.scene.background.getHexString(), PAPER.toLowerCase(),
+        'the page is always paper');
+    }
     assert.ok(root.scene.fog, 'nothing may meet a horizon');
 
     // the shared world grammar is present: every case is somewhere
