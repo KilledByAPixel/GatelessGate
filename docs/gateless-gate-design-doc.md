@@ -32,6 +32,15 @@ This is an **interactive book — a guided tour of the Mumonkan** — not a game
 
 15. *(2026-07-22, evening)* **Sound direction refined after hearing the first pass.** Note 13's architecture stands (one clock, strike primitive, drift scheduler, emitter-density rule), but Frank rejected the fūrin's single-strike voice as harsh, and the design grows in four ways: a **shared synthesized reverb** (the seeded-noise convolution IR from Frank's own music projects — the missing air behind the harshness); the chime becomes a **multi-tube wind chime** (quiet overlapping strikes clustering in the gust swells, not one loud ting per crest); "one tuning" widens to a **two-mood family** — hirajōshi (dark, default) and yo (bright) on the same root, a per-case editorial pick, the major/minor axis without ever being major or minor; and cases get **instrument rosters** — diegetic objects first, quiet fill-ins from a shared pool where a scene runs thin, plus light tonal music in the menu. Design: `docs/superpowers/specs/2026-07-22-case-music-design.md`. Voice parameters await Frank's audition.
 
+16. *(2026-07-23)* **M3 reached: all forty-eight cases are staged.** The thirty-one cases that were still falling back to the default landscape now have dioramas of their own, built in one pass from the kit. Six new kit pieces carry the objects the remaining cases turn on — `makeWheel` (the nave comes out and the bare rim keeps turning), `makeScale` (always settles back to three pounds), `makeDrum`, `makeRack` (given, taken, given — it can never resolve), `makeBirds` and `makeSnow`. Case 49, Amban's addendum, keeps the default landscape on purpose: it is the traditional extra, not a forty-ninth koan.
+
+    Three decisions worth recording, because they set precedent:
+    - **Case 28 is the only case that is not ink on paper.** It is staged at night, and blowing out the candle takes the page to near-ink so the stars — present and invisible from the first frame — can come up. The paper post pass is multiplicative, so it composites a dark page correctly rather than washing it back.
+    - **Cases 30 and 33 are a built pair.** 33 imports the pond geometry, the bank position and the camera from 30, so the two scenes cannot drift apart; the only difference between the pictures is whether anyone is sitting on the vermillion mat.
+    - **Case 41 stays inside the sensitive-case rule** (§5.3): nothing is severed, nobody is wounded, and the whole of that night is carried by one vermillion seal pressed into the snow.
+
+    The staging net is `tests/staging.test.js`: it builds every staged case and holds all of them to the module contract at once — slug/accent/ambience shape, no non-finite transforms, taps safe before `setCamera` and with no audio engine, debug-panel-shaped fragments, the <150 draw budget, and that each case's seal actually projects inside its own home frame. Bespoke per-case tests remain the right tool for cases with real logic; this is the net that makes forty-eight of anything survivable.
+
 **The pitch, in one line:** a slightly interactive, modernized, web-first Gateless Gate — an illustrated book you can wander.
 
 ---
