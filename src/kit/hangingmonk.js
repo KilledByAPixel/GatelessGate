@@ -36,11 +36,18 @@ export function makeHangingMonk({ height = 1.6, color = INK, seed = 5 } = {}) {
     [0.130, -0.275],   // shoulders
     [0.055, -0.215],   // collar tucked under the head
   ].map(([r, y]) => new THREE.Vector2(r * h, y * h));
+  // The whole lower body — robe, sleeves, feet — is lifted toward the head so
+  // the collar sits just under the skull. The head can't move (its front is the
+  // bite, pinned to the branch at the origin), so closing the gap means raising
+  // the body to it, which also shortens the neck to a real neck rather than a
+  // long stalk (Frank: the neck was still too long — bring the body up).
+  const LIFT = 0.075 * h;
+
   const body = new THREE.Mesh(new THREE.LatheGeometry(profile, 10), mat);
   body.name = 'body';
   // the body hangs plumb under the HEAD, not under the mouth — this backset is
   // what draws the tipped-back dangle on a figure made of featureless solids
-  body.position.z = -0.062 * h;
+  body.position.set(0, LIFT, -0.062 * h);
   g.add(body);
 
   // THE BITE. The group origin is the mouth, and the mouth is on the head's
@@ -65,11 +72,11 @@ export function makeHangingMonk({ height = 1.6, color = INK, seed = 5 } = {}) {
   // span — thin under the skull, swelling into the collar — reads as fully
   // connected without moving either piece. It leans back a touch to follow the
   // head, which hangs behind the pivot.
-  const collar = new THREE.Vector3(0, -0.232 * h, -0.060 * h);
-  const nape = new THREE.Vector3(0, -0.120 * h, -0.072 * h);
+  const collar = new THREE.Vector3(0, -0.232 * h + LIFT, -0.060 * h);   // the lifted collar
+  const nape = new THREE.Vector3(0, -0.140 * h, -0.072 * h);            // just into the skull
   const dir = nape.clone().sub(collar);
   const neck = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.050 * h, 0.064 * h, dir.length() + 0.05 * h, 8), mat);
+    new THREE.CylinderGeometry(0.056 * h, 0.070 * h, dir.length() + 0.03 * h, 8), mat);
   neck.name = 'neck';
   neck.position.copy(collar).addScaledVector(dir, 0.5);
   neck.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
@@ -82,7 +89,7 @@ export function makeHangingMonk({ height = 1.6, color = INK, seed = 5 } = {}) {
     geo.translate(0, -sleeveL / 2, 0);
     const arm = new THREE.Mesh(geo, mat);
     arm.name = 'arm';
-    arm.position.set(side * 0.122 * h, -0.295 * h, -0.062 * h);
+    arm.position.set(side * 0.122 * h, -0.295 * h + LIFT, -0.062 * h);
     arm.rotation.z = side * -0.055;   // a hair clear of the robe, still plumb
     arm.rotation.x = 0.02;
     g.add(arm);
@@ -93,7 +100,7 @@ export function makeHangingMonk({ height = 1.6, color = INK, seed = 5 } = {}) {
     const foot = new THREE.Mesh(
       new THREE.CylinderGeometry(0.030 * h, 0.026 * h, 0.075 * h, 7), mat);
     foot.name = 'foot';
-    foot.position.set(side * 0.037 * h, -0.955 * h, -0.050 * h);
+    foot.position.set(side * 0.037 * h, -0.955 * h + LIFT, -0.050 * h);
     g.add(foot);
   }
 

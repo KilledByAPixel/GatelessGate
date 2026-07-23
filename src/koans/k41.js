@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK, WASH, wash } from '../palette.js';
+import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makeCave, makeSnow, makePine, makeMonk, aimMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
@@ -80,16 +81,26 @@ export default {
     arm.position.set(0.95, 0.07, -3.05);
     scene.add(arm);
 
-    // THE SEAL — the one vermillion mark, at the cut end of the arm: read it as
-    // blood if you know the story, or as the painter's seal in white snow if
-    // you don't. The only colour anywhere in the scene.
-    const seal = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.12, 0.12, 0.014, 4),
-      toonMaterial({ color: ACCENT, flat: true }));
-    seal.name = 'seal';
-    seal.rotation.y = 0.5;
-    seal.position.set(0.72, 0.012, -3.28);
-    scene.add(seal);
+    // THE BLOOD — the one bit of colour, right where the arm lies (Frank: it
+    // was off to the side; it should be at the arm). Not much of it: one larger
+    // pool at the cut end and a couple of small drops nearby, flat on the snow.
+    // Read it as blood if you know the story, or as the painter's seal in white
+    // if you don't.
+    const bloodMat = toonMaterial({ color: ACCENT, flat: true });
+    const blood = new THREE.Group();
+    blood.name = 'blood';
+    const drop = (x, z, r, name) => {
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.012, 5), bloodMat);
+      m.name = name;
+      m.rotation.y = hash1(Math.round(x * 97 + z * 13), ID) * Math.PI;
+      m.position.set(x, 0.011, z);
+      blood.add(m);
+    };
+    drop(0.86, -3.02, 0.115, 'seal');     // the larger pool, at the arm's cut end
+    drop(1.06, -2.86, 0.05, 'drop');
+    drop(0.70, -3.18, 0.055, 'drop');
+    drop(0.96, -3.24, 0.038, 'drop');
+    scene.add(blood);
 
     const pine = makePine({ height: 3.8, seed: ID, color: wash(0.55) });
     pine.position.set(3.6, 0, -3.4);

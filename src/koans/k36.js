@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, aimMonk, makePine,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
 const ID = 36;
@@ -55,11 +55,12 @@ export default {
     const THERE = road.sample(0.72);
     aimMonk(traveller, { x: THERE.x, z: THERE.z });
     scene.add(traveller);
-    const staff = traveller.getObjectByName('staff');
-    if (staff) staff.material = toonMaterial({ color: ACCENT, flat: true });
+    // the traveller's staff stays plain ink now (Frank: the master is the seal,
+    // not the staff)
 
-    // THE MASTER, coming the other way, half-there
-    const master = makeMonk({ height: 1.68 });
+    // THE MASTER, coming the other way, half-there and RED — he is the seal:
+    // the one you cannot face or not-face, the thing the whole case is about.
+    const master = makeMonk({ height: 1.68, color: ACCENT });
     master.name = 'master';
     master.traverse((o) => {
       if (!o.isMesh) return;

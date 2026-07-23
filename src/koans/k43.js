@@ -41,46 +41,37 @@ export default {
     const shuzan = makeMonk({ height: SH });
     shuzan.position.set(-1.5, 0, -1.2);
 
-    // He reaches the staff OUT — his right sleeve swings forward from the
-    // shoulder so his hand is in front of him, and the staff crosses that hand
-    // horizontally (Frank: it was floating in front of him with his arms down).
-    // The sleeve hangs from its shoulder (local -y); swinging it about x brings
-    // the hem forward.
+    // He raises his right arm straight out along his FACING and holds the staff
+    // continuing that line, so the long part points AWAY from him, out in front
+    // (Frank: it read as held off to the side). The arm swings about z until it
+    // is level and pointing along +x — which aimMonk then turns toward the
+    // monks — and the staff is parented to the arm so it extends past the hand.
     const SLEEVE_L = 0.34 * SH;
-    const ARM_SWING = -1.15;                       // forward and a touch down
     const rightArm = shuzan.children
       .filter((c) => c.name === 'arm')
       .sort((a, b) => b.position.x - a.position.x)[0];
-    if (rightArm) { rightArm.rotation.x = ARM_SWING; rightArm.rotation.z = 0.12; }
+    if (rightArm) rightArm.rotation.set(0, 0, 1.5);   // level, pointing forward
     scene.add(shuzan);
 
-    // The staff, laid across the reached-out hand. Positioned at the sleeve's
-    // hem (shoulder + the swung sleeve) so it sits IN the hand, not adrift.
-    const shoulderX = rightArm ? rightArm.position.x : 0.115 * SH;
-    const shoulderY = rightArm ? rightArm.position.y : 0.60 * SH;
+    // the hand is at the sleeve's hem; the staff hangs off it and keeps going
+    const STAFF_L = 0.78;
     const hold = new THREE.Group();
     hold.name = 'hold';
-    hold.position.set(
-      shoulderX,
-      shoulderY - SLEEVE_L * Math.cos(ARM_SWING),
-      0.03 * SH - SLEEVE_L * Math.sin(ARM_SWING),
-    );
-    shuzan.add(hold);
+    hold.position.y = -SLEEVE_L;                       // the hem of the raised sleeve
+    (rightArm || shuzan).add(hold);
 
-    const STAFF_L = 0.78;
-    const staffGeo = new THREE.CylinderGeometry(0.028, 0.033, STAFF_L, 8);
-    staffGeo.rotateZ(Math.PI / 2);
-    const staff = new THREE.Mesh(staffGeo, toonMaterial({ color: ACCENT, flat: true }));
+    const staff = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.028, 0.033, STAFF_L, 8),
+      toonMaterial({ color: ACCENT, flat: true }));
     staff.name = 'staff';
-    staff.position.x = STAFF_L * 0.38;
+    staff.position.y = -STAFF_L / 2;                   // continue the arm's line, out front
     hold.add(staff);
     // a bound grip where his sleeve closes on it
     const grip = new THREE.Mesh(
       new THREE.CylinderGeometry(0.038, 0.038, 0.09, 8),
       toonMaterial({ color: ACCENT, flat: true }));
     grip.name = 'grip';
-    grip.rotation.z = Math.PI / 2;
-    grip.position.x = 0.06;
+    grip.position.y = -0.05;
     hold.add(grip);
 
     // the monks it is being held out to
@@ -129,11 +120,11 @@ export default {
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
     const hit = new THREE.Mesh(
-      new THREE.BoxGeometry(STAFF_L * 1.2, 0.26, 0.26),
+      new THREE.BoxGeometry(0.26, STAFF_L * 1.2, 0.26),
       new THREE.MeshBasicMaterial({ visible: false }));
     hit.name = 'staff-hit';
     hit.userData.noOutline = true;
-    hit.position.x = STAFF_L * 0.38;
+    hit.position.y = -STAFF_L / 2;
     hold.add(hit);
 
     // ---- the moment: it is what it is ------------------------------------

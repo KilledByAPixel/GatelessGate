@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT_LIGHT } from '../palette.js';
+import { PAPER, ACCENT, wash } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeMoon, makeMonk,
   makeLights, makeBlobShadow, addOutlines,
@@ -27,7 +27,7 @@ export default {
   id: ID,
   slug: 'two-souls',
   title: TEXT[ID].title,
-  accent: ACCENT_LIGHT,
+  accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.16', 'music'],
@@ -55,16 +55,17 @@ export default {
     town.rotation.y = 0.5;
     scene.add(town);
 
-    // THE MOON, standing beyond everything
-    const moon = makeMoon({ radius: 2.9, color: ACCENT_LIGHT, distance: 62 });
+    // THE MOON, standing beyond everything — plain now, not the seal (Frank):
+    // the two souls carry the red, so the moon is just a pale disc.
+    const moon = makeMoon({ radius: 2.9, color: wash(0.30), distance: 62 });
     scene.add(moon);
 
-    // THE TWO OF HER. Identical builds, identical heights, both half-there.
-    // Neither gets to be the solid one, so the material is shared: whatever is
-    // true of one is true of the other by construction.
+    // THE TWO OF HER — the seal. Both half-there and both red: which is the
+    // true one is the case, so neither can be the solid or the coloured one
+    // alone. The material is shared by construction.
     const souls = [];
     for (let i = 0; i < 2; i++) {
-      const s = makeMonk({ height: 1.5, hat: false });
+      const s = makeMonk({ height: 1.5, hat: false, color: ACCENT });
       s.name = 'soul';
       s.traverse((o) => {
         if (!o.isMesh) return;
