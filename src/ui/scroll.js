@@ -3,7 +3,10 @@ import { SECTIONS, LABELS, narrationQueue } from './scroll_state.js';
 
 // The koan text panel (left column). Solid, always shown — no close/tuck control.
 // A quiet toolbar carries "Contents" (back) and "Sit"; the case seal appears once.
-export function makeScroll({ id, title, text, accent = ACCENT, onSpeak, onSpeakAll, onBack, onSit } = {}) {
+export function makeScroll({
+  id, title, text, accent = ACCENT, onSpeak, onSpeakAll, onBack, onSit,
+  onPrev, onNext, hasPrev = true, hasNext = true,
+} = {}) {
   const el = document.createElement('div');
   el.className = 'gg-view gg-scroll';
   el.style.setProperty('--accent', accent);
@@ -14,6 +17,27 @@ export function makeScroll({ id, title, text, accent = ACCENT, onSpeak, onSpeakA
   back.className = 'gg-back';
   back.textContent = '‹ Contents';
   back.onclick = () => onBack && onBack();
+
+  // page one case at a time, without going back to the table of contents —
+  // the Mumonkan read cover to cover (Frank). Disabled at the two ends.
+  const nav = document.createElement('span');
+  nav.className = 'gg-page-nav';
+  const prev = document.createElement('button');
+  prev.className = 'gg-page';
+  prev.textContent = '‹';
+  prev.title = 'Previous case';
+  prev.setAttribute('aria-label', 'Previous case');
+  prev.disabled = !hasPrev;
+  prev.onclick = () => onPrev && onPrev();
+  const next = document.createElement('button');
+  next.className = 'gg-page';
+  next.textContent = '›';
+  next.title = 'Next case';
+  next.setAttribute('aria-label', 'Next case');
+  next.disabled = !hasNext;
+  next.onclick = () => onNext && onNext();
+  nav.append(prev, next);
+
   const spacer = document.createElement('span');
   spacer.className = 'spacer';
   const sitWrap = document.createElement('span');
@@ -31,7 +55,7 @@ export function makeScroll({ id, title, text, accent = ACCENT, onSpeak, onSpeakA
   }
   sit.onclick = () => pop.classList.toggle('open');
   sitWrap.append(sit, pop);
-  bar.append(back, spacer, sitWrap);
+  bar.append(back, nav, spacer, sitWrap);
   el.appendChild(bar);
 
   const head = document.createElement('div');

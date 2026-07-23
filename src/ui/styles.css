@@ -34,8 +34,6 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
   line-height: 1.15; margin: 0 0 14px;
 }
 .gg-title-view .sub { color: var(--gray); font-style: italic; margin: 0 0 28px; }
-.gg-title-view .sound-q { color: var(--gray); font-size: 15px; }
-.gg-title-view .sound-q button { margin-right: 8px; margin-top: 8px; }
 
 /* ---- table of contents (menu), in the left panel ---- */
 .gg-menu h1 { font-weight: normal; letter-spacing: 0.04em; font-size: 30px; margin: 0 0 4px; }
@@ -84,6 +82,13 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
 .gg-scroll-bar { display: flex; align-items: center; gap: 10px; margin: -8px 0 18px; }
 .gg-back { border: none; color: var(--gray); padding: 4px 6px; }
 .gg-back:hover { color: var(--accent); background: none; }
+.gg-page-nav { display: inline-flex; gap: 2px; }
+.gg-page {
+  border: none; background: none; color: var(--gray);
+  font-size: 20px; line-height: 1; padding: 2px 8px; border-radius: 6px;
+}
+.gg-page:hover:not(:disabled) { color: var(--accent); background: rgba(30,30,36,0.05); }
+.gg-page:disabled { opacity: 0.28; cursor: default; }
 .gg-scroll-bar .spacer { flex: 1; }
 .gg-scroll-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .gg-scroll-head h2 { font-weight: normal; font-size: 25px; margin: 0; flex: 1 1 60%; }

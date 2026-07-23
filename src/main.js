@@ -61,6 +61,12 @@ let koanSlug = null;
 let scroll = null;
 let intro = null;
 let entering = false;
+
+// linear reading: CASES is ordered by id, so the neighbours are just the
+// entries on either side. Used by the scroll's prev/next page arrows and the
+// keyboard.
+const caseIndex = (slug) => CASES.findIndex((c) => c.slug === slug);
+const neighbor = (slug, dir) => { const c = CASES[caseIndex(slug) + dir]; return c ? c.slug : null; };
 let readingAll = false;   // whether the current read is "read all" or a single section
 let readTimer = null;     // the pause between sections of a read-all
 
@@ -296,6 +302,11 @@ async function enter(slug) {
         },
         onBack: () => exit(),
         onSit: (m) => startSit(m),
+        // page through the book one case at a time (Contents stays the way out)
+        hasPrev: caseIndex(slug) > 0,
+        hasNext: caseIndex(slug) < CASES.length - 1,
+        onPrev: () => { const p = neighbor(slug, -1); if (p) enter(p); },
+        onNext: () => { const n = neighbor(slug, +1); if (n) enter(n); },
       });
       panel.appendChild(scroll.el);
       showView(scroll.el);
@@ -395,10 +406,23 @@ function resumeKoan() {
 // ---- input / keys ----
 function skipIntro() { if (mode === 'intro' && intro) intro.skip(); }
 addEventListener('keydown', (e) => {
+  // any key is a user gesture — resume audio (sound is on by default, and there
+  // is no prompt any more to do this for us)
+  audio.unlock();
   if (mode === 'intro') { skipIntro(); return; }
-  if (e.key === 'Escape') { if (mode === 'sit') sit.end(); else if (mode === 'koan') exit(); }
+  if (e.key === 'Escape') { if (mode === 'sit') sit.end(); else if (mode === 'koan') exit(); return; }
+  // page the book with the arrow keys while reading a case
+  const t = e.target;
+  const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+  if (mode === 'koan' && koanSlug && !typing) {
+    if (e.key === 'ArrowRight') { const n = neighbor(koanSlug, +1); if (n) enter(n); }
+    else if (e.key === 'ArrowLeft') { const p = neighbor(koanSlug, -1); if (p) enter(p); }
+  }
 });
-renderer.domElement.addEventListener('pointerdown', () => { if (mode === 'intro') skipIntro(); });
+renderer.domElement.addEventListener('pointerdown', () => {
+  audio.unlock();                 // first tap starts the sound; the mute button turns it off
+  if (mode === 'intro') skipIntro();
+});
 
 // ---- loop ----
 function tick() {

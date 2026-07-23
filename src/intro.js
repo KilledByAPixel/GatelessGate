@@ -96,15 +96,13 @@ const INTRO_SECONDS = 7;
 export function makeIntro(camera, { onDone, onSound } = {}) {
   let u = 0, done = false;
 
+  // No "Sound?" prompt any more (Frank): the title just names the book. Sound
+  // is on by default and the mute button in the toolbar is always there, so
+  // there is nothing to ask. The credit/link line can grow here later.
   const el = document.createElement('div');
   el.className = 'gg-view gg-title-view';
-  el.innerHTML = '<h1>The Gateless Gate</h1><p class="sub">An interactive reading of the Mumonkan</p>';
-  const q = document.createElement('div');
-  q.className = 'sound-q';
-  q.innerHTML = '<span>Sound?</span><br><button data-yes>Yes</button><button data-no>Not now</button>';
-  el.appendChild(q);
-  q.querySelector('[data-yes]').onclick = () => { onSound && onSound(true); q.remove(); };
-  q.querySelector('[data-no]').onclick = () => { onSound && onSound(false); q.remove(); };
+  el.innerHTML = '<h1>The Gateless Gate</h1>'
+    + '<p class="sub">An interactive reading of the Mumonkan</p>';
 
   function apply() {
     const { pos, look } = introPath(u);
