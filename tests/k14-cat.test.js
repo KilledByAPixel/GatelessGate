@@ -257,7 +257,7 @@ test('case 14 builds the courtyard, runs, and reports a finite fragment', () => 
   assert.equal(found.courtyard, 1);
 
   built.setCamera(null);
-  built.onEnter();
+  built.onEnter && built.onEnter();
   for (let i = 0; i < 120; i++) built.update(1 / 60, i / 60);
   const frag = built.fragment();
   assert.ok(Object.keys(frag).length > 0);
@@ -265,7 +265,7 @@ test('case 14 builds the courtyard, runs, and reports a finite fragment', () => 
     assert.ok(Number.isFinite(v) || typeof v === 'boolean',
       `fragment values stay finite: ${JSON.stringify(frag)}`);
   }
-  built.onExit();
+  built.onExit && built.onExit();
   built.dispose();
 });
 

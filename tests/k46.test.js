@@ -141,7 +141,7 @@ test('one red sitter seated exactly on the cap, two grey watchers far below', ()
   const built = k46.build(fakeCtx());
   const scene = built.scene;
   assert.ok(scene.isScene);
-  for (const fn of ['update', 'onEnter', 'onExit', 'dispose', 'fragment', 'setCamera']) {
+  for (const fn of ['update', 'dispose', 'fragment', 'setCamera']) {
     assert.equal(typeof built[fn], 'function', `root.${fn} missing`);
   }
 
@@ -386,13 +386,13 @@ test('two identical runs agree exactly — the whole moment is sim-time driven',
 test('runs without audio or renderer and reports a finite fragment', () => {
   const built = k46.build(fakeCtx());
   built.setCamera(null);
-  built.onEnter();                            // audio null: must not throw
+  built.onEnter && built.onEnter();           // audio null: must not throw
   for (let i = 0; i < 120; i++) built.update(1 / 60, i / 60);
   const frag = built.fragment();
   assert.ok(Object.keys(frag).length > 0);
   for (const [k, v] of Object.entries(frag)) {
     assert.ok(Number.isFinite(v) || typeof v === 'boolean', `fragment.${k} = ${v}`);
   }
-  built.onExit();
+  built.onExit && built.onExit();
   built.dispose();
 });

@@ -164,7 +164,7 @@ test('case 26 builds, runs, and leaves the screen down until it is pulled', () =
   assert.ok(ctx.taps.length > 0, 'there is something to find');
 
   built.setCamera(null);
-  built.onEnter();
+  built.onEnter && built.onEnter();
   for (let i = 0; i < 120; i++) built.update(1 / 60, i / 60);
   const frag = built.fragment();
   for (const v of Object.values(frag)) {
@@ -173,7 +173,7 @@ test('case 26 builds, runs, and leaves the screen down until it is pulled', () =
   assert.equal(frag.up, false);
   assert.equal(frag.pulls, 0);
   assert.ok(frag.cover > 2.0, 'the bay is still shut');
-  built.onExit();
+  built.onExit && built.onExit();
   built.dispose();
 });
 

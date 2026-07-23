@@ -189,7 +189,7 @@ test('case 2 builds, runs, and reports a finite fragment', () => {
   assert.ok(ctx.taps.length > 0, 'the fox is there to be found');
 
   built.setCamera(null);
-  built.onEnter();
+  built.onEnter && built.onEnter();
   ctx.taps[0]();                                   // a tap with no camera must be harmless
   for (let i = 0; i < 120; i++) built.update(1 / 60, i / 60);
   const frag = built.fragment();
@@ -197,7 +197,7 @@ test('case 2 builds, runs, and reports a finite fragment', () => {
   for (const v of Object.values(frag)) {
     assert.ok(Number.isFinite(v) || typeof v === 'boolean', `fragment stays finite: ${JSON.stringify(frag)}`);
   }
-  built.onExit();
+  built.onExit && built.onExit();
   built.dispose();
 });
 

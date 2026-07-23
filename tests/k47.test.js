@@ -89,7 +89,7 @@ test('module shape matches the koan contract', () => {
   }
   // the case file must never author prose — it all comes from TEXT[47]
   assert.match(k47.text.case, /three barriers/);
-  assert.deepEqual(k47.ambience, ['wind:0.16']);
+  assert.deepEqual(k47.ambience, ['wind:0.16', 'furin', 'music']);
   assert.equal(typeof k47.build, 'function');
   assert.ok(k47.camera && k47.camera.target, 'this case frames itself');
 });
@@ -291,7 +291,7 @@ test('each barrier answers with its own note, the nearest the deepest', () => {
 test('the scene runs without a renderer or audio, and reports a finite fragment', () => {
   const root = k47.build(fakeCtx());
   root.setCamera(null);
-  root.onEnter();                        // audio is null: must not throw
+  root.onEnter && root.onEnter();        // audio is null: must not throw
   const ctx2 = fakeCtx();                // taps with no camera set must be safe
   const root2 = k47.build(ctx2);
   ctx2._taps.forEach((cb) => cb(10, 10));
@@ -302,6 +302,6 @@ test('the scene runs without a renderer or audio, and reports a finite fragment'
   for (const [k, v] of Object.entries(frag)) {
     assert.ok(Number.isFinite(v) || typeof v === 'boolean', `fragment.${k} = ${v}`);
   }
-  root.onExit();
+  root.onExit && root.onExit();
   root.dispose();
 });

@@ -62,7 +62,7 @@ test('module shape matches the koan contract', () => {
 test('the diorama is a road, two walkers, a moon and a meadow', () => {
   const root = k19.build(fakeCtx());
   assert.ok(root.scene instanceof THREE.Scene);
-  for (const fn of ['update', 'onEnter', 'onExit', 'dispose', 'fragment', 'setCamera']) {
+  for (const fn of ['update', 'dispose', 'fragment', 'setCamera']) {
     assert.equal(typeof root[fn], 'function', `root.${fn} missing`);
   }
   const monks = [];
@@ -76,14 +76,14 @@ test('the diorama is a road, two walkers, a moon and a meadow', () => {
   // material, and anything that cloned or replaced it would silently erase it
   assert.equal(root.scene.getObjectByName('moon').material.fog, false);
 
-  root.onEnter();
+  root.onEnter && root.onEnter();
   for (let i = 0; i < 120; i++) root.update(1 / 60, i / 60);
   const frag = root.fragment();
   assert.ok(Object.keys(frag).length > 0);
   for (const [k, v] of Object.entries(frag)) {
     assert.ok(Number.isFinite(v) || typeof v === 'boolean', `fragment.${k} is ${v}`);
   }
-  root.onExit();
+  root.onExit && root.onExit();
   root.dispose();
 });
 

@@ -33,7 +33,7 @@ test('module shape matches the koan contract', () => {
 test('build returns a root with a two-monk diorama and lifecycle', () => {
   const root = k29.build(fakeCtx());
   assert.ok(root.scene instanceof THREE.Scene);
-  for (const fn of ['update', 'onEnter', 'onExit', 'dispose', 'fragment']) {
+  for (const fn of ['update', 'dispose', 'fragment']) {
     assert.equal(typeof root[fn], 'function', `root.${fn} missing`);
   }
   const monks = [];

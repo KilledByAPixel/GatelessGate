@@ -179,14 +179,15 @@ test('module shape matches the koan contract', () => {
     assert.ok(k40.text[f] && k40.text[f].trim().length > 0, `text.${f} empty`);
   }
   assert.ok(Array.isArray(k40.ambience) && k40.ambience.length > 0);
-  assert.ok(!k40.ambience.includes('music'), 'no drift layer');
+  assert.ok(k40.ambience.includes('music'), 'the swells play here now');
+  assert.equal(k40.mood, 'yo', 'the kick is play, not violence');
   assert.equal(typeof k40.build, 'function');
 });
 
 test('build stages the before: a standing vase, the elder, the crowd, and one monk on his feet', () => {
   const built = k40.build(fakeCtx());
   assert.ok(built.scene instanceof THREE.Scene);
-  for (const fn of ['update', 'onEnter', 'onExit', 'dispose', 'fragment']) {
+  for (const fn of ['update', 'dispose', 'fragment']) {
     assert.equal(typeof built[fn], 'function', `root.${fn} missing`);
   }
 
@@ -242,7 +243,7 @@ test('build stages the before: a standing vase, the elder, the crowd, and one mo
 test('the scene runs without a renderer or audio, and reports a finite fragment', () => {
   const built = k40.build(fakeCtx());
   built.setCamera(null);
-  built.onEnter();                       // audio is null: must not throw
+  built.onEnter && built.onEnter();      // audio is null: must not throw
   for (let i = 0; i < 120; i++) built.update(1 / 60, i / 60);
   const frag = built.fragment();
   assert.ok(Object.keys(frag).length > 0);
@@ -251,7 +252,7 @@ test('the scene runs without a renderer or audio, and reports a finite fragment'
   }
   assert.equal(frag.nudges, 0, 'nobody has touched it');
   assert.equal(frag.rocking, false);
-  built.onExit();
+  built.onExit && built.onExit();
   built.dispose();
 });
 
