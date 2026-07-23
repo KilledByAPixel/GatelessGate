@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT_DEEP, WASH, wash } from '../palette.js';
+import { PAPER, ACCENT_DEEP, wash } from '../palette.js';
 import {
   composeWorld, makeBuddha, makeMonk, aimMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,

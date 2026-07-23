@@ -1,9 +1,9 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT_LIGHT, WASH } from '../palette.js';
+import { PAPER, ACCENT_LIGHT } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeOak, makeMoon, makeMonk, aimMonk,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
 const ID = 27;

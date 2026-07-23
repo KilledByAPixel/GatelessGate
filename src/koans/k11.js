@@ -64,6 +64,8 @@ export default {
     const monk = makeMonk({ height: 1.5, pose: 'raise', hat: false });
     monk.position.set(0.5, 0.44, -1.9);
     scene.add(monk);
+    // he is looking at his visitor, both times — a fist raised at nobody in
+    // particular would read as a man alone rather than as an answer given
 
     // THE FIST — the seal. The raised sleeve, and nothing else in the scene,
     // is vermillion: it is what both visits are about and the only thing that
@@ -84,6 +86,7 @@ export default {
 
     // JOSHU, down on the path, who will make up his mind about it
     const JOSHU = new THREE.Vector3(3.0, 0, 1.6);
+    aimMonk(monk, JOSHU);
     const joshu = makeMonk({ height: 1.64, elder: true });
     joshu.position.copy(JOSHU);
     const AT_MONK = bearing(JOSHU, monk.position);

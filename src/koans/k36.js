@@ -50,6 +50,10 @@ export default {
     const traveller = makeMonk({ height: 1.62, elder: true });
     const HERE = road.sample(0.30);
     traveller.position.set(HERE.x, 0, HERE.z);
+    // facing up the road, into the oncoming figure — he has stopped BECAUSE of
+    // the meeting, so he cannot be looking anywhere else
+    const THERE = road.sample(0.72);
+    aimMonk(traveller, { x: THERE.x, z: THERE.z });
     scene.add(traveller);
     const staff = traveller.getObjectByName('staff');
     if (staff) staff.material = toonMaterial({ color: ACCENT, flat: true });
