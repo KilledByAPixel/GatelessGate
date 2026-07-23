@@ -44,6 +44,19 @@ function stubCtx() {
   };
 }
 
+test('a declared mood is always a real scale', async () => {
+  const { SCALES } = await import('../src/audio/tuning.js');
+  for (const c of CHAPTER) {
+    const mod = await loadKoan(c.slug);
+    if (mod.mood !== undefined) {
+      assert.ok(SCALES[mod.mood], `${c.slug}: unknown mood "${mod.mood}" would silently fall back`);
+    }
+  }
+  // the first editorial pick: washing the bowl is bright, domestic work
+  const k7 = await loadKoan('joshu-washes-the-bowl');
+  assert.equal(k7.mood, 'yo');
+});
+
 test('every chapter slug resolves and is registered', () => {
   for (const c of CHAPTER) {
     const entry = bySlug(c.slug);

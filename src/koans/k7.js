@@ -15,6 +15,9 @@ export default {
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.14'],
+  // the first bright case: washing a bowl is domestic, morning work — yo, not
+  // hirajoshi. The mood only matters once pitched voices play here (rosters).
+  mood: 'yo',
 
   build(ctx) {
     const { audio, input } = ctx;

@@ -215,6 +215,14 @@ function startIntro() {
   showView(intro.el);
 }
 
+// The menu's quiet life: the swells at full drift plus an occasional soft
+// chime — the barest "scene" in the app is the one with nothing else to sound.
+// Mood resets to the book's default; a case's pick belongs to the case.
+function menuMusic() {
+  audio.setMood('in');
+  audio.playMusic(0, { chimes: true });
+}
+
 async function openMenu() {
   const first = mode === 'intro';
   await transition(() => {
@@ -224,6 +232,7 @@ async function openMenu() {
     menu.refresh(save.state());
     menu.open();
     showView(menu.el);
+    menuMusic();
   });
   if (first && !save.state().onboarded) { onboarding.show(); save.setOnboarded(); }
 }
@@ -239,6 +248,10 @@ async function enter(slug) {
       if (koan && koan.onExit) koan.onExit();
       stopReading();
       input.clear();
+      // the menu's music does not follow you in: a case whose recipe carries
+      // no 'music' is deliberately silent, and its mood is its own
+      audio.stopMusic();
+      audio.setMood(mod.mood);
       if (scroll) { scroll.dispose(); scroll = null; }
       const built = mod.build({ scene: null, kit: null, audio, input, accent: mod.accent, quality: 'high' });
       built.setCamera && built.setCamera(camera);
@@ -303,6 +316,7 @@ async function exit() {
     menu.refresh(save.state());
     menu.open();
     showView(menu.el);
+    menuMusic();
   });
 }
 
