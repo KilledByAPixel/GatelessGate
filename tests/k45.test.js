@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import k45 from '../src/koans/k45.js';
+import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../src/palette.js';
 
 const fakeCtx = () => ({ audio: null, input: { onTap() {}, onHover() {}, raycastFirst: () => null } });
 
@@ -26,16 +27,33 @@ test('the market is there: a row of stalls', () => {
   assert.equal(named(root.scene, 'stall').length, 3, 'three stalls line the lane');
 });
 
-test('the one warm mark is still the marker stone, and it stays put', () => {
+test('the horse is the one red thing, and it stands still', () => {
   const { root } = staged();
-  const cut = named(root.scene, 'cut');
-  assert.equal(cut.length, 1, 'exactly one red mark in the whole street');
-  const before = cut[0].getWorldPosition(new THREE.Vector3()).clone();
+  const horse = named(root.scene, 'horse');
+  assert.equal(horse.length, 1, 'one horse tethered by the stalls');
+  // the abstract marker stone is gone — the horse carries the accent now
+  assert.equal(named(root.scene, 'marker').length, 0, 'no marker stone any more');
+
+  // every accent-coloured mesh in the street belongs to the horse
+  const want = new Set([ACCENT, ACCENT_DEEP, ACCENT_LIGHT].map((c) => new THREE.Color(c).getHexString()));
+  const reds = [];
+  root.scene.traverse((o) => {
+    if (o.isMesh && !o.userData.isOutline && o.material && o.material.color
+        && want.has(o.material.color.getHexString())) reds.push(o);
+  });
+  assert.ok(reds.length > 0, 'the horse is red');
+  for (const m of reds) assert.ok(named(horse[0], m.name).length || horse[0] === m || isDescendant(horse[0], m),
+    'nothing red outside the horse');
+
+  const before = horse[0].position.clone();
   for (let i = 0; i < 120; i++) root.update(1 / 60, i / 60);
-  root.scene.updateMatrixWorld(true);
-  const after = cut[0].getWorldPosition(new THREE.Vector3());
-  assert.ok(before.distanceTo(after) < 1e-6, 'the marker does not drift');
+  assert.ok(before.distanceTo(horse[0].position) < 1e-6, 'the horse does not wander');
 });
+
+function isDescendant(root, node) {
+  for (let n = node; n; n = n.parent) if (n === root) return true;
+  return false;
+}
 
 test('the strollers walk the lane; the keepers and customer hold their posts', () => {
   const { root } = staged();

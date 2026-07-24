@@ -1,9 +1,9 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, WASH, wash } from '../palette.js';
+import { PAPER, ACCENT, ACCENT_DEEP, WASH, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
-  composeWorld, makePath, makeMonk, aimMonk, makeStall, makeLantern,
+  composeWorld, makePath, makeMonk, aimMonk, makeStall, makeHorse,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -51,16 +51,10 @@ export default {
     const road = makePath({ from: [5.6, 7.4], to: [-4.8, -17], width: 1.6, seed: ID, groundSeed: 21, wander: 0.6 });
     scene.add(road);
 
-    // a lantern on the road, so the street in front of you has a middle
-    const lantern = makeLantern({ height: 1.2 });
-    const lp = road.sample(0.42);
-    lantern.position.set(lp.x + lp.perp.x * 1.3, 0, lp.z + lp.perp.z * 1.3);
-    scene.add(lantern);
-
     // ---- THE MARKET -------------------------------------------------------
     // A short row of stalls down the lane, each turned to face the road, with
     // someone behind the counter. All ink and wash — the one warm mark in the
-    // whole picture is still the marker stone, so the crowd stays monochrome.
+    // whole picture is the red horse, so the crowd stays monochrome.
     const stallKeepout = [];
     const shadows = [];       // {x, z, rx, rz, op} gathered, added after composeWorld
     const stalls = [
@@ -133,21 +127,47 @@ export default {
       scene.add(w.monk);
     }
 
-    // a marker stone with a vermillion character cut into it — the one warm
-    // mark on the road, and the only thing here that will hold still
-    const stone = new THREE.Mesh(
-      new THREE.BoxGeometry(0.44, 1.0, 0.34),
-      toonMaterial({ color: WASH.stone, flat: true }));
-    stone.name = 'marker';
-    stone.position.set(-1.9, 0.5, 1.4);
-    stone.rotation.y = 0.4;
-    scene.add(stone);
-    const cut = new THREE.Mesh(
-      new THREE.BoxGeometry(0.20, 0.20, 0.02),
-      toonMaterial({ color: ACCENT, flat: true }));
-    cut.name = 'cut';
-    cut.position.set(0, 0.20, 0.18);
-    stone.add(cut);
+    // A few more people standing about the street between the stalls (Frank: it
+    // is a busy street). These are the cheap kind — a robe and a head, no arms —
+    // because a full monk is ten draws and the crowd would blow the budget; at
+    // this distance, among the stalls, two strokes read as a person.
+    const bystander = (x, z, facing, h = 1.56, tone = 0.14) => {
+      const f = new THREE.Group();
+      f.name = 'bystander';
+      const robe = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.10 * h, 0.20 * h, 0.7 * h, 7),
+        toonMaterial({ color: wash(tone), flat: true }));
+      robe.position.y = 0.35 * h;
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.095 * h, 8, 6),
+        toonMaterial({ color: WASH.deep, flat: true }));
+      head.position.y = 0.78 * h;
+      f.add(robe, head);
+      f.position.set(x, 0, z);
+      f.rotation.y = facing;
+      return f;
+    };
+    // dotted along both sides of the lane, in the gaps between the stalls
+    const crowd = [
+      bystander(road.sample(0.38).x - 1.4, road.sample(0.38).z + 0.3, 1.2, 1.6, 0.12),
+      bystander(road.sample(0.52).x + 1.5, road.sample(0.52).z - 0.2, -1.9, 1.5, 0.18),
+      bystander(road.sample(0.7).x - 1.2, road.sample(0.7).z + 0.1, 0.6, 1.62, 0.1),
+    ];
+    for (const c of crowd) scene.add(c);
+
+    // THE HORSE — the case's one red thing, standing tethered by the first
+    // stall. The verse says "Do not ride another's horse," so here is the horse
+    // you are not to ride, and it is the only warm mark in the whole street.
+    // A larger red than a held seal, so it takes the deep mix rather than
+    // glaring full accent across a whole animal.
+    const horse = makeHorse({ height: 1.5, color: ACCENT_DEEP, seed: ID });
+    const hp = road.sample(0.30);
+    const horseX = hp.x + hp.perp.x * 1.6;      // just off the road by the first stall
+    const horseZ = hp.z + hp.perp.z * 1.6;
+    horse.group.position.set(horseX, 0, horseZ);
+    horse.group.rotation.y = Math.atan2(hp.perp.x, hp.perp.z) + 0.4;   // side-on to the lane
+    scene.add(horse.group);
+    shadows.push({ x: horseX, z: horseZ, rx: 1.0, rz: 0.5, op: 0.3 });
 
     // HIM. Placed in the first frame at a plausible spot, then handed over to
     // the camera for the rest of his existence.
@@ -159,11 +179,10 @@ export default {
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
-      trees: 3,           // fewer trees — the stalls are the scene now
+      trees: 1,           // the stalls are the scene now — one tree, no more
       keepout: [
         ...road.keepout(26, 1.4),
-        { x: lantern.position.x, z: lantern.position.z, r: 0.9 },
-        { x: -1.9, z: 1.4, r: 0.9 },
+        { x: horseX, z: horseZ, r: 1.4 },
         ...stallKeepout,
       ],
       grassKeepout: [...road.keepout(28, 1.0), ...stallKeepout],
@@ -181,10 +200,6 @@ export default {
     const shadow = makeBlobShadow({ radiusX: 0.66, radiusZ: 0.5, opacity: 0.36 });
     shadow.position.y = 0.01;
     him.add(shadow);
-
-    const lanternShadow = makeBlobShadow({ radiusX: 0.4, radiusZ: 0.32, opacity: 0.34 });
-    lanternShadow.position.set(lantern.position.x, 0, lantern.position.z);
-    scene.add(lanternShadow);
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
