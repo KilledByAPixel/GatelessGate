@@ -3,7 +3,7 @@ import { searchCases } from './search.js';
 
 // The table of contents — a left-panel view over the idling stage scene.
 // Reads as a book's contents, not a level select.
-export function makeMenu({ cases, progress, isStaged, onSelect, onColophon } = {}) {
+export function makeMenu({ cases, progress, isStaged, onSelect, onAbout } = {}) {
   const el = document.createElement('div');
   el.className = 'gg-view gg-menu hidden';
 
@@ -30,16 +30,17 @@ export function makeMenu({ cases, progress, isStaged, onSelect, onColophon } = {
   const list = document.createElement('ol');
 
   // Back matter, below the list rather than in it: the contents stay exactly
-  // the forty-nine cases Mumon and Amban left, and the colophon sits under
-  // them where a printed book puts it. Hidden while searching, like Continue.
+  // the forty-nine cases Mumon and Amban left, and the about page sits under
+  // them where a printed book puts its colophon. Hidden while searching, like
+  // Continue.
   const backMatter = document.createElement('div');
   backMatter.className = 'gg-backmatter';
-  const colophon = document.createElement('button');
-  colophon.className = 'gg-colophon-link';
-  colophon.textContent = 'Colophon';
-  colophon.title = 'The translation, the lineage, and the credits';
-  colophon.onclick = () => onColophon && onColophon();
-  backMatter.appendChild(colophon);
+  const about = document.createElement('button');
+  about.className = 'gg-about-link';
+  about.textContent = 'About';
+  about.title = 'The translation, the lineage, and the credits';
+  about.onclick = () => onAbout && onAbout();
+  backMatter.appendChild(about);
 
   el.append(h1, lede, cont, find, found, list, backMatter);
 

@@ -1,4 +1,4 @@
-import { SECTIONS } from './colophon_state.js';
+import { SECTIONS } from './about_state.js';
 
 // The back matter: where the text came from, who made this, and what it was
 // made with. A printed book puts this at the end and sets it in the same type
@@ -6,11 +6,14 @@ import { SECTIONS } from './colophon_state.js';
 // gg-section) rather than inventing a credits screen. It is the one page in
 // the book with no case number and no seal.
 //
-// Glue only — every word lives in colophon_state.js, where the tests can hold
+// Called "About" rather than "Colophon" (Frank): the printer's word is the
+// precise one and precisely why it reads as jargon.
+//
+// Glue only — every word lives in about_state.js, where the tests can hold
 // its claims against the files that make them true.
-export function makeColophon({ onBack } = {}) {
+export function makeAbout({ onBack } = {}) {
   const el = document.createElement('div');
-  el.className = 'gg-view gg-scroll gg-colophon hidden';
+  el.className = 'gg-view gg-scroll gg-about hidden';
 
   const bar = document.createElement('div');
   bar.className = 'gg-scroll-bar';
@@ -26,7 +29,7 @@ export function makeColophon({ onBack } = {}) {
   const head = document.createElement('div');
   head.className = 'gg-scroll-head';
   const h2 = document.createElement('h2');
-  h2.textContent = 'Colophon';
+  h2.textContent = 'About';
   head.appendChild(h2);
   el.appendChild(head);
 

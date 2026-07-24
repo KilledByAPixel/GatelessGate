@@ -1,6 +1,6 @@
 // The back matter's content, kept apart from its DOM the same way menu_state
 // is kept apart from menu. Everything here is a checkable claim, and the tests
-// in tests/colophon.test.js hold the two that rot on their own — the Three.js
+// in tests/about.test.js hold the two that rot on their own — the Three.js
 // version and the narration model — against the files that actually set them.
 //
 // Sources: the translation and lineage facts come from the header of
