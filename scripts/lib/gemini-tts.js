@@ -1,0 +1,97 @@
+// Gemini text-to-speech adapter, shaped like openai-tts.js so the audition and bake
+// scripts can treat providers interchangeably.
+//
+// Two things differ from OpenAI and drive the design here:
+//   1. Delivery direction is not a separate parameter — it goes in the prompt, above
+//      a literal "#### TRANSCRIPT" divider that separates direction from spoken text.
+//   2. The response is raw 16-bit PCM (audio/l16), not a compressed file, so callers
+//      get WAV back and encode to mp3 downstream.
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/interactions';
+
+export const TRANSCRIPT_DIVIDER = '#### TRANSCRIPT';
+
+export function readKey() {
+  const env = process.env.GEMINI_API_KEY;
+  if (env && env.trim()) return env.trim();
+  const file = path.join(root, 'local', 'gemini-key.txt');
+  if (fs.existsSync(file)) {
+    const k = fs.readFileSync(file, 'utf8').trim();
+    if (k) return k;
+  }
+  throw new Error('No API key: set GEMINI_API_KEY or put the key in local/gemini-key.txt');
+}
+
+// 16-bit mono PCM -> a playable .wav. Written by hand so the repo stays dependency-free.
+export function wav(pcm, rate = 24000, channels = 1, bits = 16) {
+  const h = Buffer.alloc(44);
+  h.write('RIFF', 0);
+  h.writeUInt32LE(36 + pcm.length, 4);
+  h.write('WAVE', 8);
+  h.write('fmt ', 12);
+  h.writeUInt32LE(16, 16);
+  h.writeUInt16LE(1, 20);                                  // PCM
+  h.writeUInt16LE(channels, 22);
+  h.writeUInt32LE(rate, 24);
+  h.writeUInt32LE(rate * channels * bits / 8, 28);
+  h.writeUInt16LE(channels * bits / 8, 32);
+  h.writeUInt16LE(bits, 34);
+  h.write('data', 36);
+  h.writeUInt32LE(pcm.length, 40);
+  return Buffer.concat([h, pcm]);
+}
+
+// The audio lives at steps[].content[].type === 'audio'. Located by walking rather
+// than by fixed index, so an extra step or content part doesn't break the bake.
+function findAudioPart(json) {
+  for (const step of json.steps || []) {
+    for (const part of step.content || []) {
+      if (part && part.type === 'audio' && part.data) return part;
+    }
+  }
+  return null;
+}
+
+// One request -> { wav, seconds, tokens }. Retries 429 and 5xx with exponential
+// backoff; other 4xx are real mistakes and throw immediately.
+export async function speak({ key, model, prompt, voice, tries = 5 }) {
+  // Free-tier quota is per-minute, so a 429 needs to be waited out rather than
+  // retried promptly — start well above the second-scale backoff a 5xx would want.
+  let wait = 5000;
+  for (let attempt = 1; ; attempt++) {
+    const res = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        input: prompt,
+        response_format: { type: 'audio' },
+        generation_config: { speech_config: [{ voice }] },
+      }),
+    });
+
+    if (res.ok) {
+      const json = await res.json();
+      const part = findAudioPart(json);
+      if (!part) throw new Error(`no audio in response: ${JSON.stringify(json).slice(0, 300)}`);
+      const pcm = Buffer.from(part.data, 'base64');
+      const rate = part.sample_rate || 24000;
+      const channels = part.channels || 1;
+      return {
+        wav: wav(pcm, rate, channels),
+        seconds: pcm.length / (rate * channels * 2),
+        tokens: (json.usage && json.usage.total_output_tokens) || 0,
+      };
+    }
+
+    const body = await res.text().catch(() => '');
+    const retryable = res.status === 429 || res.status >= 500;
+    if (!retryable || attempt >= tries) throw new Error(`Gemini TTS ${res.status}: ${body.slice(0, 400)}`);
+    await new Promise((r) => setTimeout(r, wait));
+    wait *= 2;
+  }
+}

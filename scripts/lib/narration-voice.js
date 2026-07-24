@@ -82,3 +82,66 @@ export function instructionsFor(section, preset = PRESET) {
   if (!SECTION_NOTE[section]) throw new Error(`unknown section: ${section}`);
   return `${PRESETS[preset]}\n\n${SECTION_NOTE[section]}`;
 }
+
+// --- Gemini -----------------------------------------------------------------
+// Gemini takes no separate instructions parameter: direction and transcript go in one
+// prompt, split by a literal divider. So its presets are whole structured documents
+// rather than the instruction paragraphs above.
+
+export const GEMINI_MODEL = 'gemini-3.1-flash-tts-preview';
+
+// Voices that could plausibly read as an old teacher, spread across the descriptions
+// Google publishes. Gacrux (Mature) was auditioned first and rejected.
+export const GEMINI_CANDIDATE_VOICES = [
+  'Charon',       // Informative
+  'Algenib',      // Gravelly
+  'Sadaltager',   // Knowledgeable
+  'Enceladus',    // Breathy
+  'Schedar',      // Even
+  'Umbriel',      // Easy-going
+];
+
+// Chosen by ear from the audition: informative and level, and the one candidate that
+// never bled prompt text into the take.
+export const GEMINI_VOICE = 'Charon';
+
+// No quoted strings anywhere above the transcript divider: a quoted subtitle here read
+// as script and got spoken aloud at the top of several takes. Everything in this
+// preamble is description, never anything that looks like a line to deliver.
+const SCENE = `# AUDIO PROFILE: The Teacher
+
+## THE SCENE: A plain room, late afternoon
+An old monastery room with the light going. A few people sit on the floor. The teacher is old — past eighty — and has read these forty-eight stories aloud for fifty years. He is not performing them and he is not explaining them. He knows every turn of every one, and he is reading them to the people in front of him one more time. Nothing is urgent. There is a long day behind him and nothing scheduled after this.`;
+
+const CONTEXT = `### SAMPLE CONTEXT
+A reading of a thirteenth-century Zen koan collection for an interactive book. The listener is alone and unhurried, looking at an ink painting while the text is read to them.
+
+### CRITICAL
+Everything above the TRANSCRIPT divider is direction, not script. Speak only the words below the divider. Do not read the profile, the scene, the notes, or this instruction aloud. Do not announce a title. Begin with the first word of the transcript.`;
+
+// Director's notes. `plain` drops the accent line, so the accent can be judged as a
+// variable rather than baked into every comparison.
+const GEMINI_NOTES = {
+  plain: `### DIRECTOR'S NOTES
+Style: Level, plain and dry. Unhurried. Warm without being sweet. Lucid and kind, not frail, not solemn. Where the text is wry the humour barely surfaces — dry, never arch, never a wink. Never theatrical, never hushed-and-reverent, never "sage-like".
+Pace: Slow, around 110 words per minute. A real full stop at the end of every sentence. A longer breath at paragraph breaks. Audible, natural breathing between sentences — an old man reading aloud, not a machine. Let small silences sit.`,
+
+  japanese: `### DIRECTOR'S NOTES
+Style: Level, plain and dry. Unhurried. Warm without being sweet. Lucid and kind, not frail, not solemn. Where the text is wry the humour barely surfaces — dry, never arch, never a wink. Never theatrical, never hushed-and-reverent, never "sage-like".
+Accent: Fluent English with a subtle, natural Japanese accent. Restrained and realistic — never exaggerated, never comedic. Clear English pronunciation comes first.
+Pace: Slow, around 110 words per minute. A real full stop at the end of every sentence. A longer breath at paragraph breaks. Audible, natural breathing between sentences — an old man reading aloud, not a machine. Let small silences sit.`,
+};
+
+export const GEMINI_PRESET_NAMES = Object.keys(GEMINI_NOTES);
+
+// Assembles direction + transcript. The divider must appear exactly as written.
+export function geminiPrompt(section, preset, text) {
+  if (!GEMINI_NOTES[preset]) throw new Error(`unknown gemini preset: ${preset}`);
+  if (!SECTION_NOTE[section]) throw new Error(`unknown section: ${section}`);
+  return [
+    SCENE,
+    `${GEMINI_NOTES[preset]}\n${SECTION_NOTE[section]}`,
+    CONTEXT,
+    `#### TRANSCRIPT\n${text}`,
+  ].join('\n\n');
+}
