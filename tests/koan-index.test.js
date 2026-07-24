@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CASES, byId, bySlug, slugify } from '../src/koans/index.js';
 import { isRegistered, isStaged, loadKoan } from '../src/koans/registry.js';
+import { makeDefaultCase } from '../src/koans/default-case.js';
 
 test('slugify', () => {
   assert.equal(slugify('Not the Wind, Not the Flag'), 'not-the-wind-not-the-flag');
@@ -40,15 +41,16 @@ test('every case in the book is readable, staged or not', async () => {
   assert.equal(isStaged(byId(29).slug), true, 'the vertical-slice case is staged');
   assert.equal((await loadKoan('not-the-wind-not-the-flag')).id, 29);
 
-  // an unstaged case falls back to the default landscape, carrying its own text
-  const unstaged = CASES.find((c) => !isStaged(c.slug));
-  assert.ok(unstaged, 'there should still be unstaged cases');
-  const mod = await loadKoan(unstaged.slug);
-  assert.ok(mod, `${unstaged.slug} should load the default case`);
-  assert.equal(mod.id, unstaged.id);
-  assert.equal(mod.staged, false);
-  assert.equal(mod.title, unstaged.title);
-  assert.ok(mod.text.case && mod.text.comment && mod.text.verse,
+  // The default-landscape fallback is still the safety net for any case added
+  // without a loader, even though every case now has a diorama of its own (case
+  // 49 was the last unstaged one until it became the closing scene). Exercise it
+  // directly rather than through a real case, so staging the whole book doesn't
+  // leave this untested.
+  const fallback = makeDefaultCase(byId(1).id);
+  assert.ok(fallback, 'the default case builds');
+  assert.equal(fallback.staged, false);
+  assert.equal(fallback.id, 1);
+  assert.ok(fallback.text.case && fallback.text.comment && fallback.text.verse,
     'the default case carries the real text, which is the whole point');
 });
 

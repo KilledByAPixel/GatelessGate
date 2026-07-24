@@ -1,0 +1,101 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as THREE from '../lib/three.module.js';
+import k49 from '../src/koans/k49.js';
+import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../src/palette.js';
+
+// A ctx whose raycast can be pointed at one named hit target at a time, so a
+// test can tap the enso or the water deliberately.
+function harness() {
+  let tap = null;
+  let hitName = null;
+  const ctx = {
+    audio: null,
+    input: {
+      onTap: (cb) => { tap = cb; },
+      onHover: () => {},
+      raycastFirst: (cam, objs) =>
+        (hitName && objs.some((o) => o && o.name === hitName)
+          ? { object: objs[0], point: new THREE.Vector3(-3.7, 0.3, -1.6) }
+          : null),
+    },
+  };
+  const root = k49.build(ctx);
+  const cam = new THREE.PerspectiveCamera(38, 1.78, 0.1, 200);
+  cam.position.set(6, 5, 8); cam.lookAt(0.2, 1.5, -2.4); cam.updateMatrixWorld(true);
+  root.setCamera(cam);
+  return { root, tapAt: (name) => { hitName = name; tap(); hitName = null; } };
+}
+
+const named = (scene, name) => {
+  const out = [];
+  scene.traverse((o) => { if (o.name === name) out.push(o); });
+  return out;
+};
+
+test('the enso is the one red thing — the book\'s closing seal', () => {
+  const { root } = harness();
+  assert.equal(named(root.scene, 'enso').length, 1);
+  const want = new Set([ACCENT, ACCENT_DEEP, ACCENT_LIGHT].map((c) => new THREE.Color(c).getHexString()));
+  const reds = [];
+  root.scene.traverse((o) => {
+    if (o.isMesh && !o.userData.isOutline && o.material && o.material.color
+        && want.has(o.material.color.getHexString())) reds.push(o.name);
+  });
+  assert.deepEqual([...new Set(reds)], ['enso-ring'], 'the enso ring is the only accent mesh');
+});
+
+test('the living things are all there: water, koi, and birds', () => {
+  const { root } = harness();
+  assert.equal(named(root.scene, 'surface').length, 1, 'a pond surface');
+  assert.ok(named(root.scene, 'fish').length >= 3, 'koi in it');
+  assert.ok(named(root.scene, 'bird').length >= 6, 'birds crossing');
+});
+
+test('the koi stay under the pond surface as it moves', () => {
+  const { root } = harness();
+  const surface = named(root.scene, 'surface')[0];
+  const fish = named(root.scene, 'fish');
+  for (let i = 0; i < 300; i++) {
+    root.update(1 / 60, i / 60);
+    root.scene.updateMatrixWorld(true);
+    for (const f of fish) {
+      const c = new THREE.Box3().setFromObject(f).getCenter(new THREE.Vector3());
+      const ray = new THREE.Raycaster(new THREE.Vector3(c.x, 40, c.z), new THREE.Vector3(0, -1, 0));
+      const hit = ray.intersectObject(surface, false)[0];
+      if (hit) assert.ok(new THREE.Box3().setFromObject(f).max.y < hit.point.y, 'a fin broke the surface');
+    }
+  }
+});
+
+test('touching the circle completes it — a close, and a brief swell', () => {
+  const { root, tapAt } = harness();
+  const enso = named(root.scene, 'enso')[0];
+  root.update(1 / 60, 1.0);
+  assert.equal(enso.scale.x, 1, 'at rest the circle is its plain size');
+  tapAt('enso-hit');
+  assert.equal(root.fragment().closes, 1, 'the tap registered a close');
+  // the swell peaks in the beat after the touch, then settles
+  let peak = 1;
+  for (let i = 0; i < 90; i++) { root.update(1 / 60, 1.0 + i / 60); peak = Math.max(peak, enso.scale.x); }
+  assert.ok(peak > 1.01, 'the circle swelled');
+  assert.ok(Math.abs(enso.scale.x - 1) < 1e-3, 'and returned to rest');
+});
+
+test('touching the water rings it', () => {
+  const { root, tapAt } = harness();
+  tapAt('surface');
+  assert.equal(root.fragment().rippled, 1, 'the touch made a ripple');
+});
+
+test('nothing goes non-finite over a long run', () => {
+  const { root } = harness();
+  const movers = [];
+  root.scene.traverse((o) => { if (o.name === 'bird' || o.name === 'fish') movers.push(o); });
+  for (let i = 0; i < 60 * 30; i++) {
+    root.update(1 / 60, i / 60);
+    for (const m of movers) {
+      assert.ok(Number.isFinite(m.position.x) && Number.isFinite(m.position.y) && Number.isFinite(m.position.z));
+    }
+  }
+});

@@ -52,6 +52,7 @@ const LOADERS = {
   46: () => import('./k46.js'),
   47: () => import('./k47.js'),
   48: () => import('./k48.js'),
+  49: () => import('./k49.js'),
 };
 
 // Whether a case has been STAGED — art of its own, rather than the default
