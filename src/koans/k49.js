@@ -72,12 +72,13 @@ export default {
     const birds = makeBirds({ count: 7, seed: ID, center: [0.5, -3.0], height: 6.4, spread: 5.4 });
     scene.add(birds.group);
 
-    // ---- the traveller, stopped at the path's edge, facing the gate -------
-    // The reader, at the end. Not walking through — just standing before it, set
-    // to one side so he frames the gate rather than blocking it.
+    // ---- the traveller, PAST the gate, walking on -------------------------
+    // The reader, at the end — already through the gate, a little way down the
+    // far side, back to us, walking on into the fog. He has passed through; the
+    // book is behind him.
     const you = makeMonk({ height: 1.6, elder: true });
-    const yb = road.sample(0.30);
-    const yp = { x: yb.x + yb.perp.x * 0.8, z: yb.z + yb.perp.z * 0.8 };
+    const yb = road.sample(0.47);
+    const yp = { x: yb.x + yb.perp.x * 0.35, z: yb.z + yb.perp.z * 0.35 };
     you.position.set(yp.x, 0, yp.z);
     scene.add(you);
 
@@ -117,8 +118,10 @@ export default {
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
-    // aim the traveller up the path at the gate AFTER outlines (pure transform)
-    aimMonk(you, { x: ep.x, z: ep.z });
+    // face him on down the road, away from us — he has gone through (aimed after
+    // outlines, since it is a pure transform)
+    const away = road.sample(0.62);
+    aimMonk(you, { x: away.x, z: away.z });
 
     // ---- the moment: pass through -----------------------------------------
     // Touch the gate and a bell sounds, once, the way a temple bell marks a
