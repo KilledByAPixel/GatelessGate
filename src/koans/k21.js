@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, WASH } from '../palette.js';
+import { PAPER, ACCENT } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makeMonk, aimMonk,
@@ -12,13 +12,13 @@ const ID = 21;
 // "What is Buddha?" — "Dried dung."
 //
 // The answer is deliberately worthless, so the scene refuses to dress it up.
-// A yard swept to bare earth, one dried stick standing in the middle of it,
-// two figures, and nothing else: no lantern, no path, no hut, the trees kept
-// out at the fog line. The emptiness is the staging.
+// A yard swept to bare earth, the little pile of dung in the middle of it, two
+// figures, and nothing else: no lantern, no path, no hut, the trees kept out at
+// the fog line. The emptiness is the staging.
 //
-// The one warm mark on the page is a seal stamped in the dirt at the stick's
-// foot — the painter signing a picture of a piece of dung, which is the joke
-// Mumon is already making in the commentary.
+// The dung itself is the one warm mark on the page (Frank): a red pile in the
+// dirt, which is the whole joke — the painter has given his one seal of colour
+// to a piece of dung, exactly the joke Mumon makes in the commentary.
 export default {
   id: ID,
   slug: 'dried-dung',
@@ -47,7 +47,8 @@ export default {
     // it is the centrepiece of the scene (Frank's note: not a flat cube).
     const stick = new THREE.Group();      // kept the name so the interaction below reads unchanged
     stick.name = 'dung';
-    const dryMat = toonMaterial({ color: WASH.mid, flat: true });
+    // red — the dung IS the seal of this case now (Frank)
+    const dryMat = toonMaterial({ color: ACCENT, flat: true });
 
     // one turd: a spindle lathe laid on its side, hinged so it rests ON the
     // ground rather than through it
@@ -83,15 +84,9 @@ export default {
     stick.position.set(0.8, 0, 0.2);
     scene.add(stick);
 
-    // The seal, pressed into the dirt at its foot: a small vermillion disc,
-    // flat to the ground, the only accent in the scene.
-    const seal = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.11, 0.11, 0.012, 4),
-      toonMaterial({ color: ACCENT, flat: true }));
-    seal.name = 'seal';
-    seal.rotation.y = 0.4;
-    seal.position.set(1.15, 0.008, 0.52);
-    scene.add(seal);
+    // (There used to be a separate vermillion seal disc pressed in the dirt
+    // here. With four sides it read as a stray red square on the ground that
+    // nobody could place — Frank — so it is gone; the red dung is the seal.)
 
     // Ummon, who said it, and the monk who asked. Set well apart: the space
     // between them is doing as much work as they are.
