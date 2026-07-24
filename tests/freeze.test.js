@@ -76,6 +76,37 @@ test('capturing during a running dissolve settles the old one first', async () =
   assert.equal(f.active, true);
 });
 
+test('an interrupting capture bakes the composite: fresh scene, then the old still over it', () => {
+  // A plain capture renders the outgoing scene once. A capture taken WHILE a
+  // tear is running has to preserve what is on screen — the old still torn
+  // partway into the scene behind it — so it renders the new scene AND then
+  // composites the old still (the dissolve quad) over it, rather than snapping
+  // to a clean frame. That is the difference between paging that flows and
+  // paging that jumps (Frank). Two renders on the interrupt, one on the plain.
+  const r = stubRenderer();
+  const f = makeFreeze(r, null, 640, 480);
+
+  // a plain capture from a released (unheld) state renders the scene once
+  f.capture({ tag: 'a' }, {});
+  const done = f.release(0.5);
+  f.update(0.6);                          // tear completes → nothing held
+  assert.equal(f.active, false);
+  r.calls.length = 0;
+  f.capture({ tag: 'b' }, {});
+  let renders = r.calls.filter((c) => c[0] === 'render').length;
+  assert.equal(renders, 1, 'a capture from the unheld state renders the scene once');
+
+  // an interrupt — held, mid-tear — renders the new scene AND the old still
+  f.release(1.0);
+  f.update(0.4);
+  r.calls.length = 0;
+  f.capture({ tag: 'c' }, {});
+  renders = r.calls.filter((c) => c[0] === 'render').length;
+  assert.equal(renders, 2, 'the interrupt renders the new scene, then the held still over it');
+  assert.equal(r.autoClear, true, 'autoClear restored after the composite pass');
+  return done;
+});
+
 test('capture with no scene is a no-op, so the caller can fall back to the curtain', () => {
   const f = makeFreeze(stubRenderer(), null, 640, 480);
   assert.equal(f.capture(null, {}), false);

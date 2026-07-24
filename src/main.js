@@ -12,6 +12,7 @@ import { createAudio } from './audio/engine.js';
 import { gustPhase } from './audio/synths.js';
 import { createNarration } from './audio/narration.js';
 import { CASES } from './koans/index.js';
+import { makeNavQueue } from './nav_queue.js';
 import { isStaged, isRegistered, loadKoan } from './koans/registry.js';
 import { buildHub, makeIntro } from './intro.js';
 import { makeMenu } from './ui/menu.js';
@@ -60,7 +61,6 @@ let koan = null;
 let koanSlug = null;
 let scroll = null;
 let intro = null;
-let entering = false;
 
 // linear reading: CASES is ordered by id, so the neighbours are just the
 // entries on either side. Used by the scroll's prev/next page arrows and the
@@ -247,81 +247,104 @@ async function openMenu() {
   });
 }
 
-async function enter(slug) {
-  if (!isRegistered(slug) || entering) return;
-  entering = true;
-  try {
-    const mod = await loadKoan(slug);
-    if (!mod) return;
-    await transition(() => {
-      // tear down any outgoing koan (e.g. re-entering without an exit())
-      if (koan && koan.onExit) koan.onExit();
-      stopReading();
-      input.clear();
-      // Ambience is main's job now, not the koans': the module's `ambience`
-      // field is the single source of truth, started below and stopped here —
-      // so a recipe can never drift from what actually plays, and the menu's
-      // music never follows you in. A lingering wind would also block the new
-      // case's level (startAmbience only creates wind when none exists).
-      audio.stopAmbience();
-      audio.setMood(mod.mood);
-      if (scroll) { scroll.dispose(); scroll = null; }
-      const built = mod.build({ scene: null, kit: null, audio, input, accent: mod.accent, quality: 'high' });
-      built.setCamera && built.setCamera(camera);
-      const prev = scenes.active();
-      scenes.setActive(built);
-      debugApply();
-      if (prev && prev !== hub) { disposeRoot(prev); prev.dispose && prev.dispose(); }
-      koan = built; koanSlug = slug;
-      built.onEnter && built.onEnter();
-      audio.startAmbience(mod.ambience || []);
-      save.markRead(slug);
-      // A case may frame itself. Most want the standard diorama shot, but a wide
-      // establishing scene and a close one on a single figure are not the same
-      // photograph, and an unstaged landscape wants to sit back further still.
-      makeRig({ distance: 11.5, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27, ...(mod.camera || {}) });
-      menu.close();
-      scroll = makeScroll({
-        id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
-        // Clicking the section that is currently reading stops it. Clicking a
-        // different one switches straight to it — that click means "read this
-        // instead", not "be quiet", and making it take two clicks reads as a bug.
-        onSpeak: (key) => {
-          const cur = narration.current();
-          if (cur && cur.section === key) { stopReading(); return; }
-          startReading(false);
-          scroll.highlight(key); scroll.setReading(true);
-          // a single section that finishes on its own gets its chime too;
-          // a manual stop never does (stop bumps the narration generation,
-          // so this onEnd is never called for a cancelled read)
-          narration.speak(mod.id, key, { onEnd: () => { sectionChime(key); stopReading(); } });
-        },
-        onSpeakAll: () => {
-          if (readingAll) { stopReading(); return; }
-          startReading(true);
-          scroll.setReading(true);
-          speakAll(mod.id);
-        },
-        onBack: () => exit(),
-        onSit: (m) => startSit(m),
-        // page through the book one case at a time (Contents stays the way out)
-        hasPrev: caseIndex(slug) > 0,
-        hasNext: caseIndex(slug) < CASES.length - 1,
-        onPrev: () => { const p = neighbor(slug, -1); if (p) enter(p); },
-        onNext: () => { const n = neighbor(slug, +1); if (n) enter(n); },
-      });
-      panel.appendChild(scroll.el);
-      showView(scroll.el);
-      mode = 'koan';
-    });
-  } finally {
-    entering = false;
-  }
+// Build the koan and swap it onto the stage. Synchronous and self-contained —
+// everything from tearing down the outgoing case to framing the new one — so a
+// paging hop can call it under a held still with no async gap in the middle.
+function buildKoan(mod, slug) {
+  // tear down any outgoing koan (e.g. re-entering without an exit())
+  if (koan && koan.onExit) koan.onExit();
+  stopReading();
+  input.clear();
+  // Ambience is main's job now, not the koans': the module's `ambience`
+  // field is the single source of truth, started below and stopped here —
+  // so a recipe can never drift from what actually plays, and the menu's
+  // music never follows you in. A lingering wind would also block the new
+  // case's level (startAmbience only creates wind when none exists).
+  audio.stopAmbience();
+  audio.setMood(mod.mood);
+  if (scroll) { scroll.dispose(); scroll = null; }
+  const built = mod.build({ scene: null, kit: null, audio, input, accent: mod.accent, quality: 'high' });
+  built.setCamera && built.setCamera(camera);
+  const prev = scenes.active();
+  scenes.setActive(built);
+  debugApply();
+  if (prev && prev !== hub) { disposeRoot(prev); prev.dispose && prev.dispose(); }
+  koan = built; koanSlug = slug;
+  built.onEnter && built.onEnter();
+  audio.startAmbience(mod.ambience || []);
+  save.markRead(slug);
+  // A case may frame itself. Most want the standard diorama shot, but a wide
+  // establishing scene and a close one on a single figure are not the same
+  // photograph, and an unstaged landscape wants to sit back further still.
+  makeRig({ distance: 11.5, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27, ...(mod.camera || {}) });
+  menu.close();
+  scroll = makeScroll({
+    id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
+    // Clicking the section that is currently reading stops it. Clicking a
+    // different one switches straight to it — that click means "read this
+    // instead", not "be quiet", and making it take two clicks reads as a bug.
+    onSpeak: (key) => {
+      const cur = narration.current();
+      if (cur && cur.section === key) { stopReading(); return; }
+      startReading(false);
+      scroll.highlight(key); scroll.setReading(true);
+      // a single section that finishes on its own gets its chime too;
+      // a manual stop never does (stop bumps the narration generation,
+      // so this onEnd is never called for a cancelled read)
+      narration.speak(mod.id, key, { onEnd: () => { sectionChime(key); stopReading(); } });
+    },
+    onSpeakAll: () => {
+      if (readingAll) { stopReading(); return; }
+      startReading(true);
+      scroll.setReading(true);
+      speakAll(mod.id);
+    },
+    onBack: () => exit(),
+    onSit: (m) => startSit(m),
+    // page through the book one case at a time (Contents stays the way out)
+    hasPrev: caseIndex(slug) > 0,
+    hasNext: caseIndex(slug) < CASES.length - 1,
+    onPrev: () => { const p = neighbor(slug, -1); if (p) enter(p); },
+    onNext: () => { const n = neighbor(slug, +1); if (n) enter(n); },
+  });
+  panel.appendChild(scroll.el);
+  showView(scroll.el);
+  mode = 'koan';
+}
+
+// One paging hop, driven by the nav queue. Unlike the generic transition(), the
+// reveal is NOT awaited when there is a still to tear from — it is fired and the
+// hop resolves at once, so the queue can start the next hop immediately and let
+// freeze.capture() bake the in-flight tear into the following one. That is what
+// makes a burst of clicks read as one continuous, quickening dissolve rather
+// than a series of full ones played back to back.
+const PAGE_REVEAL = 0.55;   // quicker than the 0.9 s book-open; paging is brisk
+async function showKoan(mod, slug) {
+  panel.classList.add('fading');
+  const active = scenes.active();
+  const frozen = active ? freeze.capture(active.scene, camera) : false;
+  if (!frozen) await dissolve.dissolveOut(0.4);   // from the menu: no still to hold
+  buildKoan(mod, slug);
+  panel.classList.remove('fading');
+  if (frozen) { dissolve.set(1); freeze.release(PAGE_REVEAL); }   // fire, don't await
+  else await dissolve.dissolveIn(0.4);
+}
+
+const nav = makeNavQueue({
+  load: (slug) => loadKoan(slug),
+  show: showKoan,
+  current: () => (mode === 'koan' ? koanSlug : null),
+});
+
+function enter(slug) {
+  if (!isRegistered(slug)) return Promise.resolve();
+  return nav.go(slug);
 }
 
 async function exit() {
   if (mode === 'intro') { skipIntro(); return; }
   if (mode === 'sit') { sit.end(); return; }
+  nav.cancel();      // a queued page must not fire after we've asked for Contents
   if (mode !== 'koan') { menu.open(); showView(menu.el); return; }
   stopReading();
   input.clear();

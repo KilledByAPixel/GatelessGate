@@ -65,8 +65,17 @@ void main() {
 export function makeFreeze(renderer, post, width, height) {
   const opts = post ? post.targetOptions()
     : { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter };
-  const target = new THREE.WebGLRenderTarget(Math.max(1, width), Math.max(1, height), opts);
-  target.texture.colorSpace = THREE.SRGBColorSpace;
+  const mkTarget = () => {
+    const t = new THREE.WebGLRenderTarget(Math.max(1, width), Math.max(1, height), opts);
+    t.texture.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  };
+  // TWO targets, ping-ponged. One holds the still on screen; the other is where
+  // an INTERRUPTING capture bakes the current composite (see capture). A single
+  // target can't do that — the composite has to read the old still while
+  // writing the new one.
+  let target = mkTarget();
+  let scratch = mkTarget();
 
   const material = new THREE.ShaderMaterial({
     vertexShader: VERT,
@@ -101,20 +110,47 @@ export function makeFreeze(renderer, post, width, height) {
 
     // Take the outgoing frame. Safe to call at any point in the turn — it
     // renders fresh rather than reading back what happened to be on screen.
+    //
+    // If a dissolve is ALREADY running when this is called (an interruption —
+    // the reader paged again mid-tear), the still on screen is the old held
+    // frame torn partway into the scene behind it. Snapping to a clean render
+    // of the new scene would jump the picture. Instead we bake exactly what is
+    // on screen — old still ⊕ live scene at the current tear — into the spare
+    // target and hand THAT to the next dissolve, so the tear simply continues
+    // from where it was into the newly built world (Frank: "save off the
+    // current transition as the new frame and keep going").
     capture(scene, camera) {
       if (!scene) return false;
-      // A capture taken while a previous dissolve is still running would leave
-      // that tween driving the NEW frame — and when it finished it would drop
-      // the new frame instantly, mid-transition. Settle it first.
-      if (anim) { anim.res(); anim = null; }
+      const wasHeld = held;
+      const tornProgress = material.uniforms.uProgress.value;
+
+      // 1. render the live scene into the spare target
       if (post && post.active) {
-        post.render(scene, camera, target);
+        post.render(scene, camera, scratch);
       } else {
-        renderer.setRenderTarget(target);
+        renderer.setRenderTarget(scratch);
         renderer.clear();
         renderer.render(scene, camera);
         renderer.setRenderTarget(null);
       }
+
+      // 2. if we were mid-tear, composite the old still over it at the tear it
+      //    had reached — the quad still samples `target` (the old still) here,
+      //    discarding torn pixels so the live scene shows through exactly where
+      //    it already did
+      if (wasHeld) {
+        material.uniforms.uProgress.value = tornProgress;
+        const prevAuto = renderer.autoClear;
+        renderer.autoClear = false;
+        renderer.setRenderTarget(scratch);
+        try { renderer.render(quadScene, quadCam); }
+        finally { renderer.autoClear = prevAuto; renderer.setRenderTarget(null); }
+      }
+
+      // 3. the spare is now the still; swap it in and settle any old tween
+      const t = target; target = scratch; scratch = t;
+      material.uniforms.tFrozen.value = target.texture;
+      if (anim) { anim.res(); anim = null; }
       material.uniforms.uProgress.value = 0;
       held = true;
       return true;
@@ -147,7 +183,10 @@ export function makeFreeze(renderer, post, width, height) {
       if (pending) pending.res();
     },
 
-    setSize(w, h) { target.setSize(Math.max(1, w), Math.max(1, h)); },
+    setSize(w, h) {
+      target.setSize(Math.max(1, w), Math.max(1, h));
+      scratch.setSize(Math.max(1, w), Math.max(1, h));
+    },
 
     update(dt) {
       if (!anim) return;
@@ -165,6 +204,7 @@ export function makeFreeze(renderer, post, width, height) {
 
     dispose() {
       target.dispose();
+      scratch.dispose();
       material.dispose();
       quad.geometry.dispose();
     },
