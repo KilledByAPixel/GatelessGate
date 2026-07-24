@@ -24,7 +24,7 @@ import {
   GEMINI_MODEL, GEMINI_VOICE, geminiPrompt,
 } from './lib/narration-voice.js';
 import { readKey as openaiKey, speak as openaiSpeak, MAX_INPUT } from './lib/openai-tts.js';
-import { readKey as geminiKey, speak as geminiSpeak } from './lib/gemini-tts.js';
+import { readKey as geminiKey, speak as geminiSpeak, DailyQuotaError } from './lib/gemini-tts.js';
 import { pool } from './lib/pool.js';
 import { haveFfmpeg, toMp3, FFMPEG_HINT } from './lib/encode.js';
 
@@ -144,8 +144,10 @@ function saveManifest() {
 }
 
 let done = 0, tokens = 0;
+let quotaHit = false;
 const failed = [];
 await pool(stale.map((u) => async () => {
+  if (quotaHit) return;                          // daily cap reached — don't start more
   try {
     let bytes, seconds = null;
     if (gemini) {
@@ -177,6 +179,13 @@ await pool(stale.map((u) => async () => {
     console.log(`  [${++done}/${stale.length}] ${u.file} — ${(bytes / 1024).toFixed(0)} KB`
       + (seconds !== null ? ` — ${seconds.toFixed(1)}s` : ''));
   } catch (e) {
+    if (e instanceof DailyQuotaError) {
+      // The daily cap is a wall, not a hiccup: every remaining unit would hit it too.
+      // Stop starting new work and let the in-flight ones drain.
+      quotaHit = true;
+      console.log(`  [${++done}/${stale.length}] ${u.file} — DAILY QUOTA REACHED, stopping`);
+      return;
+    }
     // One bad unit must not abandon the rest of a long, paid run.
     failed.push({ unit: `${u.id}:${u.section}`, error: String(e.message).slice(0, 200) });
     console.log(`  [${++done}/${stale.length}] ${u.file} — FAILED`);
@@ -185,9 +194,15 @@ await pool(stale.map((u) => async () => {
 
 saveManifest();
 
+const baked = Object.keys(manifest.files).length;
 const total = Object.values(manifest.files).reduce((s, f) => s + f.bytes, 0);
-console.log(`\nBaked ${done - failed.length} file(s). Manifest holds ${Object.keys(manifest.files).length} of 147 units, ${(total / 1e6).toFixed(1)} MB.`);
-if (gemini) console.log(`${tokens} output tokens (~$${(tokens / 1e6 * 20).toFixed(2)})`);
+console.log(`\nManifest holds ${baked} of 147 units, ${(total / 1e6).toFixed(1)} MB.`);
+if (gemini) console.log(`${tokens} output tokens this run (~$${(tokens / 1e6 * 20).toFixed(2)})`);
+if (quotaHit) {
+  const left = stale.length - done;
+  console.log(`\nStopped at the daily request cap (100/day for this preview model, even on paid Tier 1).`);
+  console.log(`~${left} unit(s) still to bake. Re-run this same command after the quota resets — finished units are skipped.`);
+}
 if (failed.length) {
   console.log(`\n${failed.length} failed — re-run to retry just these:`);
   for (const f of failed) console.log(`  ${f.unit}: ${f.error}`);

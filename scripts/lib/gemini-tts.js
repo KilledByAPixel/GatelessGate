@@ -58,9 +58,15 @@ function findAudioPart(json) {
 
 // One request -> { wav, seconds, tokens }. Retries 429 and 5xx with exponential
 // backoff; other 4xx are real mistakes and throw immediately.
+// Raised so callers can tell a "come back tomorrow" cap apart from a transient
+// per-minute 429 and abort the whole run instead of retrying every unit into the wall.
+export class DailyQuotaError extends Error {
+  constructor(message) { super(message); this.name = 'DailyQuotaError'; this.daily = true; }
+}
+
 export async function speak({ key, model, prompt, voice, tries = 5 }) {
-  // Free-tier quota is per-minute, so a 429 needs to be waited out rather than
-  // retried promptly — start well above the second-scale backoff a 5xx would want.
+  // A per-minute 429 needs to be waited out rather than retried promptly — start well
+  // above the second-scale backoff a 5xx would want.
   let wait = 5000;
   for (let attempt = 1; ; attempt++) {
     const res = await fetch(ENDPOINT, {
@@ -89,6 +95,11 @@ export async function speak({ key, model, prompt, voice, tries = 5 }) {
     }
 
     const body = await res.text().catch(() => '');
+    // A daily-quota 429 will not clear for hours — retrying it just burns wall-clock,
+    // and every other unit will hit the same wall. Surface it so the run stops at once.
+    if (res.status === 429 && /per_?day|per day|requests_per_model_per_day/i.test(body)) {
+      throw new DailyQuotaError(`Gemini daily request quota reached: ${body.slice(0, 400)}`);
+    }
     const retryable = res.status === 429 || res.status >= 500;
     if (!retryable || attempt >= tries) throw new Error(`Gemini TTS ${res.status}: ${body.slice(0, 400)}`);
     await new Promise((r) => setTimeout(r, wait));
