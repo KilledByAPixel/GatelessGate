@@ -10,9 +10,9 @@ import { setGrassStyle } from '../kit/scenery.js';
 // Everything here is applied to whatever scene is CURRENTLY active and re-applied
 // after every scene swap, so settings survive moving between cases.
 
-// Defaults are the INK & SEAL preset: no toon banding, no inverted-hull
-// outlines, depth-driven ink, real contact shadows, paper pass at full grain,
-// no quantisation. One red seal per koan.
+// Defaults are the INK & SEAL preset: no toon banding, depth-driven ink, real
+// contact shadows, paper pass at full grain, no quantisation, and the
+// inverted-hull ink outlines ON (Frank). One red seal per koan.
 const KEY = 'gateless-gate-debug-v2';
 
 const CONTROLS = [
@@ -35,7 +35,7 @@ const CONTROLS = [
 
   { group: 'Render' },
   { key: 'toon', label: 'Toon shader', type: 'bool', def: false },
-  { key: 'outlines', label: 'Ink outlines (hull)', type: 'bool', def: false },
+  { key: 'outlines', label: 'Ink outlines (hull)', type: 'bool', def: true },
   { key: 'grain', label: 'Paper texture', type: 'bool', def: true },   // master: off = no paper at all
   { key: 'blobs', label: 'Blob shadows', type: 'bool', def: false },
   { key: 'shadows', label: 'Real shadows', type: 'bool', def: true },
