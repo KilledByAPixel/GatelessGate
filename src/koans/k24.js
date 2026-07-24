@@ -82,7 +82,13 @@ export default {
     // kinds of fragrant flowers": the birds are what the whole answer is, so
     // they carry the accent. Small marks against the sky, so full accent reads
     // as seals rather than glare.
-    const birds = makeBirds({ count: 9, seed: ID, center: [0.5, -1.0], height: 6.0, spread: 5.6, color: ACCENT });
+    // Some of them are down among the flowers, pecking and looking about;
+    // others are up singing. They land on open ground front-left, clear of the
+    // two figures and the road.
+    const birds = makeBirds({
+      count: 9, seed: ID, center: [0.5, -1.0], height: 6.0, spread: 5.6, color: ACCENT,
+      ground: [-1.0, -2.4], groundR: 1.9,
+    });
     scene.add(birds.group);
 
     for (const [p, rx, rz, op] of [

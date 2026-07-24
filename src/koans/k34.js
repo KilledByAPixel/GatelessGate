@@ -95,8 +95,13 @@ export default {
     aimMonk(nansen, { x: 8.0, z: 4.0 });
     scene.add(nansen);
 
-    // THE BIRDS: the words that have already left
-    const birds = makeBirds({ count: 8, seed: ID, center: [0.6, -1.2], height: 6.4, spread: 5.2 });
+    // THE BIRDS: the words that have already left — some still overhead, some
+    // come down to peck the ground front-right, well clear of the spilled
+    // scrolls and Nansen.
+    const birds = makeBirds({
+      count: 8, seed: ID, center: [0.6, -1.2], height: 6.4, spread: 5.2,
+      ground: [1.9, 0.4], groundR: 1.7,
+    });
     scene.add(birds.group);
 
     const world = composeWorld(scene, {
