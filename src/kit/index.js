@@ -53,5 +53,6 @@ export { makeDrum } from './drum.js';
 export { makeRack } from './rack.js';
 export { makeBirds } from './birds.js';
 export { makeBird } from './bird.js';
+export { makeStall } from './stall.js';
 export { makeSnow } from './snowfall.js';
 export { makeKoi } from './koi.js';

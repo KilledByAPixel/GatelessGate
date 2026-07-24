@@ -1,8 +1,9 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, WASH } from '../palette.js';
+import { PAPER, ACCENT, WASH, wash } from '../palette.js';
+import { hash1 } from '../util/noise.js';
 import {
-  composeWorld, makePath, makeMonk, makeLantern,
+  composeWorld, makePath, makeMonk, aimMonk, makeStall, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -12,9 +13,13 @@ const ID = 45;
 // Mumon says that if you realize who he is, it is like meeting your own father
 // on a busy street: you would not need to ask anyone whether you were right.
 //
-// So he is in the scene, and he is standing behind you. Not hidden somewhere
-// clever — behind the camera, continuously, wherever the camera goes. He is
-// facing the same way you are, so what there is to see is his back.
+// So the scene IS a busy street: a lane of market stalls, keepers behind their
+// counters, a customer waiting to be served, and a couple of people strolling
+// through. The crowd is the point — it is what he is lost in.
+//
+// And he is in it, standing behind you. Not hidden somewhere clever — behind
+// the camera, continuously, wherever the camera goes. He is facing the same way
+// you are, so what there is to see is his back.
 //
 // He LAGS, and that is the whole mechanic. Orbit slowly and he keeps station
 // out of frame. Swing the camera round quickly and he cannot get out of the
@@ -46,11 +51,87 @@ export default {
     const road = makePath({ from: [5.6, 7.4], to: [-4.8, -17], width: 1.6, seed: ID, groundSeed: 21, wander: 0.6 });
     scene.add(road);
 
-    // a lantern on the road, so the emptiness in front of you has a middle
+    // a lantern on the road, so the street in front of you has a middle
     const lantern = makeLantern({ height: 1.2 });
     const lp = road.sample(0.42);
     lantern.position.set(lp.x + lp.perp.x * 1.3, 0, lp.z + lp.perp.z * 1.3);
     scene.add(lantern);
+
+    // ---- THE MARKET -------------------------------------------------------
+    // A short row of stalls down the lane, each turned to face the road, with
+    // someone behind the counter. All ink and wash — the one warm mark in the
+    // whole picture is still the marker stone, so the crowd stays monochrome.
+    const stallKeepout = [];
+    const shadows = [];       // {x, z, rx, rz, op} gathered, added after composeWorld
+    const stalls = [
+      { t: 0.30, sidesign: 1, off: 2.7, w: 1.9 },
+      { t: 0.46, sidesign: -1, off: 2.7, w: 1.7 },
+      { t: 0.62, sidesign: 1, off: 2.9, w: 1.8 },
+    ];
+    const keepers = [];
+    for (let i = 0; i < stalls.length; i++) {
+      const s = stalls[i];
+      const p = road.sample(s.t);
+      const sx = p.x + p.perp.x * s.off * s.sidesign;
+      const sz = p.z + p.perp.z * s.off * s.sidesign;
+      // face the stall's front (+z) back toward the road centre
+      const faceX = p.x - sx;
+      const faceZ = p.z - sz;
+      const heading = Math.atan2(faceX, faceZ);
+
+      const stall = makeStall({
+        width: s.w, depth: 1.2, height: 2.0, seed: ID + i * 7,
+        wood: wash(0.30 + (i % 2) * 0.06), cloth: wash(0.40),
+      });
+      stall.position.set(sx, 0, sz);
+      stall.rotation.y = heading;
+      scene.add(stall);
+      stallKeepout.push({ x: sx, z: sz, r: Math.max(s.w, 1.4) });
+      shadows.push({ x: sx, z: sz, rx: s.w * 0.6, rz: 0.9, op: 0.26 });
+
+      // a keeper a step behind the counter, facing the lane — but the last
+      // stall is left unattended, which reads as a real market (and keeps the
+      // draw budget honest with a crowd still to place)
+      if (i < 2) {
+        const back = 0.5;
+        const kx = sx - faceX / Math.hypot(faceX, faceZ) * back;
+        const kz = sz - faceZ / Math.hypot(faceX, faceZ) * back;
+        const keeper = makeMonk({ height: 1.5 + hash1(i, ID) * 0.1, hat: hash1(i + 3, ID) > 0.5, stout: 1.05 });
+        keeper.position.set(kx, 0, kz);
+        aimMonk(keeper, { x: p.x, z: p.z });
+        scene.add(keeper);
+        keepers.push(keeper);
+        stallKeepout.push({ x: kx, z: kz, r: 0.7 });
+        shadows.push({ x: kx, z: kz, rx: 0.5, rz: 0.42, op: 0.34 });
+      }
+    }
+
+    // a customer waiting at the middle stall's counter, on the lane side and
+    // turned to face the stall
+    const mid = road.sample(stalls[1].t);
+    const cust = makeMonk({ height: 1.58, elder: true });
+    const cx = mid.x + mid.perp.x * (stalls[1].off - 1.5) * stalls[1].sidesign;
+    const cz = mid.z + mid.perp.z * (stalls[1].off - 1.5) * stalls[1].sidesign;
+    cust.position.set(cx, 0, cz);
+    const stallX = mid.x + mid.perp.x * stalls[1].off * stalls[1].sidesign;
+    const stallZ = mid.z + mid.perp.z * stalls[1].off * stalls[1].sidesign;
+    cust.rotation.y = Math.atan2(stallX - cx, stallZ - cz);
+    scene.add(cust);
+    stallKeepout.push({ x: cx, z: cz, r: 0.7 });
+    shadows.push({ x: cx, z: cz, rx: 0.5, rz: 0.42, op: 0.34 });
+
+    // two people strolling the lane, driven along the road in update(). Their
+    // motion is a closed form over simTime, so the street is alive but replays.
+    const walkers = [
+      { monk: makeMonk({ height: 1.6 }), t0: 0.18, t1: 0.74, rate: 0.045, phase: 0.0, dir: 1, lane: 0.55 },
+      { monk: makeMonk({ height: 1.54, elder: true }), t0: 0.20, t1: 0.70, rate: 0.037, phase: 0.5, dir: -1, lane: -0.5 },
+    ];
+    for (const w of walkers) {
+      const sh = makeBlobShadow({ radiusX: 0.5, radiusZ: 0.42, opacity: 0.34 });
+      sh.position.y = 0.01;
+      w.monk.add(sh);                 // travels with the walker
+      scene.add(w.monk);
+    }
 
     // a marker stone with a vermillion character cut into it — the one warm
     // mark on the road, and the only thing here that will hold still
@@ -78,14 +159,22 @@ export default {
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
-      trees: 5,
+      trees: 3,           // fewer trees — the stalls are the scene now
       keepout: [
         ...road.keepout(26, 1.4),
         { x: lantern.position.x, z: lantern.position.z, r: 0.9 },
         { x: -1.9, z: 1.4, r: 0.9 },
+        ...stallKeepout,
       ],
-      grassKeepout: road.keepout(28, 1.0),
+      grassKeepout: [...road.keepout(28, 1.0), ...stallKeepout],
     });
+
+    // the stall and standing-figure shadows gathered above, laid now
+    for (const s of shadows) {
+      const sh = makeBlobShadow({ radiusX: s.rx, radiusZ: s.rz, opacity: s.op });
+      sh.position.set(s.x, 0.01, s.z);
+      scene.add(sh);
+    }
 
     // his shadow travels with him, so it is parented to him rather than laid
     // on the ground where he happened to start
@@ -136,6 +225,23 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
+
+        // the strollers walk the lane back and forth — a triangle wave over t so
+        // each turns at the end and comes back rather than teleporting to start
+        for (const w of walkers) {
+          const cyc = (((clock * w.rate + w.phase) % 1) + 1) % 1;
+          const tri = cyc < 0.5 ? cyc * 2 : 2 - cyc * 2;      // 0→1→0 along the lane
+          const p = road.sample(w.t0 + (w.t1 - w.t0) * tri);
+          w.monk.position.set(
+            p.x + p.perp.x * w.lane,
+            Math.abs(Math.sin(clock * 3.2 + w.phase * 6)) * 0.03,   // a small walking bob
+            p.z + p.perp.z * w.lane);
+          // face the way they are walking: heading points along increasing t, so
+          // flip it on the return leg
+          const travel = (cyc < 0.5 ? 1 : -1) * w.dir;
+          w.monk.rotation.y = p.heading + (travel < 0 ? Math.PI : 0);
+        }
+
         if (!camera) return;
         const step = Math.max(0, dt || 0);
 
