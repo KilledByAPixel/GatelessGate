@@ -76,8 +76,23 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
   color: rgba(30,30,36,0.55);
 }
 
+/* Back matter, under the forty-nine cases. A rule and a quiet word — it is the
+   end of the contents, not another entry in them, so it never takes a number
+   and never sits in the list. */
+.gg-backmatter { margin: 18px 0 4px; padding-top: 14px; border-top: 1px solid rgba(30,30,36,0.12); }
+.gg-colophon-link {
+  background: none; border: none; padding: 0; cursor: pointer;
+  font-family: Georgia, serif; font-size: 15px; font-style: italic; color: var(--gray);
+}
+.gg-colophon-link:hover { color: var(--accent); background: none; }
+
 /* ---- koan text (scroll), in the left panel ---- */
 .gg-scroll { --accent: var(--accent); }
+/* The colophon borrows the koan page wholesale; it differs only in having no
+   seal and no case number to balance the title against. */
+.gg-colophon .gg-scroll-head h2 { flex: 1 1 100%; }
+.gg-colophon .gg-section-text a { color: var(--accent); text-decoration-color: rgba(199,62,58,0.4); }
+.gg-colophon .gg-section-text a:hover { text-decoration-color: var(--accent); }
 .gg-scroll-bar { display: flex; align-items: center; gap: 10px; margin: -8px 0 18px; }
 .gg-back { border: none; color: var(--gray); padding: 4px 6px; }
 .gg-back:hover { color: var(--accent); background: none; }

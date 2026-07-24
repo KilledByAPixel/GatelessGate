@@ -15,6 +15,7 @@ import { CASES } from './koans/index.js';
 import { isStaged, isRegistered, loadKoan } from './koans/registry.js';
 import { buildHub, makeIntro } from './intro.js';
 import { makeMenu } from './ui/menu.js';
+import { makeColophon } from './ui/colophon.js';
 import { makeScroll } from './ui/scroll.js';
 import { makeSit } from './sit.js';
 
@@ -78,8 +79,16 @@ function showView(el) {
 const menu = makeMenu({
   cases: CASES, progress: save.state(), isStaged,
   onSelect: (slug) => enter(slug),
+  onColophon: () => showView(colophon.el),
 });
 panel.appendChild(menu.el);
+
+// The back matter lives in the panel beside the contents and never touches the
+// stage: the hub scene keeps idling behind it, so reading the credits is the
+// same act as reading a case. Mode stays 'menu', which is what makes the back
+// button (and exit()) fall through to the contents with no extra state.
+const colophon = makeColophon({ onBack: () => { menu.refresh(save.state()); showView(menu.el); } });
+panel.appendChild(colophon.el);
 
 const sit = makeSit({
   audio,
