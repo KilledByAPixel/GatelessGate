@@ -132,6 +132,8 @@ export function makeWater({
   swell = 1,               // idle motion, 0 for dead-still water
   strike = 0,              // 0 scales the crest to the container; set it to keep
                            // a ripple under a rim it must not slop over
+  opacity = 0.72,          // how much the surface hides what is under it — a
+                           // pond with koi wants this lower so the fish read
 } = {}) {
   const round = shape === 'round';
   const half = size / 2;
@@ -151,7 +153,10 @@ export function makeWater({
 
   const mat = toonMaterial({ color, side: THREE.DoubleSide });
   mat.transparent = true;
-  mat.opacity = 0.72;
+  mat.opacity = opacity;
+  // when the water is see-through, stop it writing depth — otherwise the fish
+  // behind it get z-culled and the transparency shows nothing anyway
+  if (opacity < 0.85) mat.depthWrite = false;
   const surface = new THREE.Mesh(geo, mat);
   surface.name = 'surface';
   surface.userData.noOutline = true;

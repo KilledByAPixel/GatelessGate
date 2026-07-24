@@ -61,7 +61,7 @@ export default {
 
     // round, to match the stone basin it sits inside
     const water = makeWater({
-      shape: 'round', size: POND.size, color: WASH.ground, seed: ID, strike: 0.08,
+      shape: 'round', size: POND.size, color: WASH.ground, seed: ID, strike: 0.08, opacity: 0.5,
     });
     water.group.position.set(POND.x, POND.surface, POND.z);
     scene.add(water.group);

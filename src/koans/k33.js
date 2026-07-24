@@ -48,7 +48,7 @@ export default {
 
     // the same round pond as case 30, down to the seed
     const water = makeWater({
-      shape: 'round', size: POND.size, color: WASH.ground, seed: 30, strike: 0.08,
+      shape: 'round', size: POND.size, color: WASH.ground, seed: 30, strike: 0.08, opacity: 0.5,
     });
     water.group.position.set(POND.x, POND.surface, POND.z);
     scene.add(water.group);
