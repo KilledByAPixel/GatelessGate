@@ -13,9 +13,9 @@ import { hash1 } from '../util/noise.js';
 // out over the grass (Frank).
 //
 // So the surface is now a real grid whose tessellation follows the container —
-// polar for a round basin or pond, cartesian for an open square of water — and
-// the ripples are a HEIGHT FIELD evaluated on its vertices rather than separate
-// ring meshes. That fixes all three at once: the rim vertices are anchored, so
+// one uniform grid, cut to a circle for a basin or pond and left square for
+// open water — and the ripples are a HEIGHT FIELD on its vertices rather than
+// separate ring meshes. The rim vertices are anchored, so
 // nothing can travel past the wall, and the silhouette is the container's own.
 // It also costs ONE draw call instead of seven.
 //
@@ -69,31 +69,55 @@ function squareGrid(size, n) {
   return { pos, idx, edge };
 }
 
-// A disc: one centre vertex, then `rings` rings of `spokes` vertices. The
-// outermost ring lands exactly ON the circle, which is what lets the rim be
-// pinned without any clipping or stair-stepping.
-function roundGrid(radius, rings, spokes) {
-  const pos = [0, 0, 0];
-  const idx = [];
-  const edge = [radius];               // the centre is as far from the wall as it gets
-  for (let i = 1; i <= rings; i++) {
-    const r = (radius * i) / rings;
-    for (let j = 0; j < spokes; j++) {
-      const a = (j / spokes) * Math.PI * 2;
-      pos.push(Math.cos(a) * r, 0, Math.sin(a) * r);
-      edge.push(radius - r);           // exactly 0 on the outermost ring
+// A disc cut out of the SAME uniform grid, Frank's way: drop the cells that
+// fall outside the circle and pull the vertices that overhang it back onto the
+// rim.
+//
+// This started as a polar grid — rings and spokes — which has an exact rim for
+// free but crowds vertices at the hub, thins them toward the edge, and runs
+// every spoke into one shared centre vertex. The result reads as a bias at the
+// centre of the pond, and Frank spotted it on sight. A cut square grid has
+// uniform density everywhere and no singularity; the price is a few irregular
+// triangles around the rim, and those are exactly the ones pinned flat, so
+// nobody ever sees them move.
+function discGrid(radius, n) {
+  const step = (radius * 2) / n;
+  const gx = [];
+  const gz = [];
+  const over = [];                     // did this grid point overhang the circle?
+  for (let i = 0; i <= n; i++) {
+    for (let j = 0; j <= n; j++) {
+      let x = -radius + step * j;
+      let z = -radius + step * i;
+      const r = Math.hypot(x, z);
+      const out = r > radius;
+      if (out && r > 1e-12) { const k = radius / r; x *= k; z *= k; }
+      gx.push(x); gz.push(z); over.push(out);
     }
   }
-  const ringStart = (i) => 1 + (i - 1) * spokes;   // first vertex of ring i
-  for (let j = 0; j < spokes; j++) {               // the centre fan
-    idx.push(0, ringStart(1) + ((j + 1) % spokes), ringStart(1) + j);
-  }
-  for (let i = 1; i < rings; i++) {
-    const A = ringStart(i);
-    const B = ringStart(i + 1);
-    for (let j = 0; j < spokes; j++) {
-      const k = (j + 1) % spokes;
-      idx.push(A + j, B + k, B + j, A + j, A + k, B + k);
+
+  // Keep a cell if any of its corners was genuinely inside, and carry over only
+  // the vertices those cells actually use.
+  const at = (i, j) => i * (n + 1) + j;
+  const remap = new Int32Array(gx.length).fill(-1);
+  const pos = [];
+  const edge = [];
+  const idx = [];
+  const use = (o) => {
+    if (remap[o] < 0) {
+      remap[o] = pos.length / 3;
+      pos.push(gx[o], 0, gz[o]);
+      // pulled-in vertices ARE the wall, so their distance to it is exactly 0
+      edge.push(over[o] ? 0 : radius - Math.hypot(gx[o], gz[o]));
+    }
+    return remap[o];
+  };
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      const corners = [at(i, j), at(i, j + 1), at(i + 1, j), at(i + 1, j + 1)];
+      if (!corners.some((k) => !over[k])) continue;      // wholly outside
+      const [a, b, c, d] = corners.map(use);
+      idx.push(a, c, b, b, c, d);
     }
   }
   return { pos, idx, edge };
@@ -106,15 +130,15 @@ export function makeWater({
   seed = 7,
   segments = 0,            // 0 picks a sensible density for the size
   swell = 1,               // idle motion, 0 for dead-still water
+  strike = 0,              // 0 scales the crest to the container; set it to keep
+                           // a ripple under a rim it must not slop over
 } = {}) {
   const round = shape === 'round';
   const half = size / 2;
   // enough vertices that a ripple reads as a curve, capped so a big lake does
   // not cost more per frame than it is worth
   const n = segments || Math.max(12, Math.min(30, Math.round(size * 3.2)));
-  const { pos, idx, edge } = round
-    ? roundGrid(half, Math.max(6, Math.round(n / 2)), Math.max(16, n))
-    : squareGrid(size, n);
+  const { pos, idx, edge } = round ? discGrid(half, n) : squareGrid(size, n);
 
   const group = new THREE.Group();
   group.name = 'water';
@@ -164,7 +188,7 @@ export function makeWater({
   // case 7's washbasin and nearly invisible on case 39's lake — so it grows
   // with the container and then stops, because open water does not ripple
   // harder just for being wider.
-  const STRIKE = Math.min(0.10, 0.045 * half);
+  const STRIKE = strike || Math.min(0.10, 0.045 * half);
 
   const ripples = [];
   for (let i = 0; i < POOL; i++) ripples.push({ t0: -1e9, x: 0, z: 0, amp: 0 });

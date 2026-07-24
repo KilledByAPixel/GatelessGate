@@ -21,6 +21,7 @@ export { makeTail } from './tail.js';
 export { makeBuffalo } from './buffalo.js';
 export { makeBuddha } from './buddha.js';
 export { makeFlower } from './flower.js';
+export { makeBasin } from './basin.js';
 export { makeBowl } from './bowl.js';
 export { makeWater } from './water.js';
 export { makeHut } from './hut.js';

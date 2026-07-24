@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makeWater, makeKoi, makeMonk, aimMonk, makeLantern,
+  composeWorld, makeBasin, makeWater, makeKoi, makeMonk, aimMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 import { POND, BANK } from './k30.js';
@@ -37,25 +37,32 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.028);
     scene.add(makeLights());
 
-    const lip = new THREE.Mesh(
-      new THREE.CylinderGeometry(POND.size * 0.56, POND.size * 0.60, 0.14, 14),
-      toonMaterial({ color: WASH.stone, flat: true }));
+    // the same open stone basin, from the same shared dimensions
+    const lip = makeBasin({
+      inner: POND.inner, outer: POND.outer, rim: POND.rim, floor: POND.floor,
+      color: WASH.stone, segments: 20,
+    });
     lip.name = 'lip';
-    lip.position.set(POND.x, 0.07, POND.z);
+    lip.position.set(POND.x, 0, POND.z);
     scene.add(lip);
 
     // the same round pond as case 30, down to the seed
-    const water = makeWater({ shape: 'round', size: POND.size, color: WASH.ground, seed: 30 });
-    water.group.position.set(POND.x, POND.y + 0.06, POND.z);
+    const water = makeWater({
+      shape: 'round', size: POND.size, color: WASH.ground, seed: 30, strike: 0.08,
+    });
+    water.group.position.set(POND.x, POND.surface, POND.z);
     scene.add(water.group);
 
     // the same pond, so the same koi: seed 30 gives case 33 the identical fish
     // moving in the identical water — only the far bank differs
     const koi = makeKoi({
       count: 4, seed: 30, radius: POND.size * 0.32, color: WASH.mid,
+      // sized to the water they are actually in: the tail fin stands taller
+      // than the old 0.95 fish was deep, so its dorsal broke the surface
+      length: 0.7, depth: 0.19,
       surfaceAt: water.heightAt,
     });
-    koi.group.position.set(POND.x, POND.y + 0.04, POND.z);
+    koi.group.position.set(POND.x, POND.surface, POND.z);
     scene.add(koi.group);
 
     // the same seat, with nobody on it

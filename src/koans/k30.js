@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makeBuddha, makeWater, makeKoi, makeMonk, aimMonk, makeLantern,
+  composeWorld, makeBuddha, makeBasin, makeWater, makeKoi, makeMonk, aimMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -19,7 +19,15 @@ const ID = 30;
 //
 // Case 33 is this scene with the far bank empty. They are meant to be read as
 // a pair, so they share a seed, a camera and a pond.
-export const POND = { x: 0.6, z: -1.4, size: 6.4, y: 0.06 };
+//
+// The pond is a RAISED stone basin rather than a hole in the ground: the ground
+// plane is unbroken (kit/ground.js), so water sunk into it would simply be
+// hidden. `surface` sits far enough below `rim` that a ripple crest cannot slop
+// over the stone, and far enough above `floor` that the koi have room to swim.
+export const POND = {
+  x: 0.6, z: -1.4, size: 6.4,
+  inner: 3.24, outer: 3.84, rim: 0.55, floor: 0.02, surface: 0.40,
+};
 export const BANK = { x: 0.6, z: -5.6 };
 
 export default {
@@ -40,17 +48,22 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.028);
     scene.add(makeLights());
 
-    // the pond: a stone lip and a still sheet inside it
-    const lip = new THREE.Mesh(
-      new THREE.CylinderGeometry(POND.size * 0.56, POND.size * 0.60, 0.14, 14),
-      toonMaterial({ color: WASH.stone, flat: true }));
+    // the pond: an OPEN stone basin and a still sheet inside it. It used to be
+    // a solid cylinder, whose top cap sealed the water and the fish underneath
+    // it — the pond was a stone disc (Frank: "it looks like a platform").
+    const lip = makeBasin({
+      inner: POND.inner, outer: POND.outer, rim: POND.rim, floor: POND.floor,
+      color: WASH.stone, segments: 20,
+    });
     lip.name = 'lip';
-    lip.position.set(POND.x, 0.07, POND.z);
+    lip.position.set(POND.x, 0, POND.z);
     scene.add(lip);
 
-    // round, to match the stone lip it sits inside
-    const water = makeWater({ shape: 'round', size: POND.size, color: WASH.ground, seed: ID });
-    water.group.position.set(POND.x, POND.y + 0.06, POND.z);
+    // round, to match the stone basin it sits inside
+    const water = makeWater({
+      shape: 'round', size: POND.size, color: WASH.ground, seed: ID, strike: 0.08,
+    });
+    water.group.position.set(POND.x, POND.surface, POND.z);
     scene.add(water.group);
 
     // koi under the surface — what turns the pale disc into water. They are
@@ -58,9 +71,12 @@ export default {
     // pond's life in case 33, which shares this pond.
     const koi = makeKoi({
       count: 4, seed: 30, radius: POND.size * 0.32, color: WASH.mid,
+      // sized to the water they are actually in: the tail fin stands taller
+      // than the old 0.95 fish was deep, so its dorsal broke the surface
+      length: 0.7, depth: 0.19,
       surfaceAt: water.heightAt,
     });
-    koi.group.position.set(POND.x, POND.y + 0.04, POND.z);
+    koi.group.position.set(POND.x, POND.surface, POND.z);
     scene.add(koi.group);
 
     // THE BUDDHA, on the far bank
@@ -89,11 +105,12 @@ export default {
     // THE REFLECTION — the same figure, laid flat in the water's plane with
     // its head pointing away across the pond. Pale, unoutlined, and not
     // writing depth, so it composites as a wash on the surface rather than as
-    // a solid object standing in it.
+    // a solid object standing in it. It rides just clear of the highest ripple
+    // crest, so a passing wave cannot saw through it.
     const reflection = makeBuddha({ height: 2.0, color: WASH.mid });
     reflection.name = 'reflection';
     reflection.rotation.x = -Math.PI / 2;
-    reflection.position.set(BANK.x, POND.y + 0.075, BANK.z + 1.5);
+    reflection.position.set(BANK.x, POND.surface + 0.09, BANK.z + 1.5);
     reflection.traverse((o) => {
       if (!o.isMesh) return;
       o.userData.noOutline = true;

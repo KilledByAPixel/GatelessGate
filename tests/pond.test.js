@@ -1,0 +1,130 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as THREE from '../lib/three.module.js';
+
+import k7 from '../src/koans/k7.js';
+import k30, { POND } from '../src/koans/k30.js';
+import k33 from '../src/koans/k33.js';
+
+// Cases 7, 30 and 33 each held their water in a solid cylinder and set the
+// surface a couple of centimetres below its top face — so the cap covered the
+// water, and case 30's pond rendered as a bare stone disc with the sheet and
+// all four koi sealed inside it. Nothing in the suite noticed, because every
+// individual object was where its case said it should be.
+//
+// These tests assert the thing that was actually broken: that if you look down
+// into the vessel, you see water.
+
+const fakeCtx = () => ({
+  audio: null,
+  input: { onTap: () => {}, onHover: () => {}, raycastFirst: () => null },
+});
+
+function staged(mod) {
+  const root = mod.build(fakeCtx());
+  root.update(1 / 60, 0);
+  root.scene.updateMatrixWorld(true);
+  return root;
+}
+
+const boxOf = (scene, name) => {
+  let found = null;
+  scene.traverse((o) => { if (o.name === name && !found) found = o; });
+  return found ? new THREE.Box3().setFromObject(found) : null;
+};
+
+// Every real mesh in the scene, minus the inverted-hull outlines (which are
+// backface-only shells and would answer a ray from outside the object).
+function solids(scene) {
+  const out = [];
+  scene.traverse((o) => {
+    if (o.isMesh && !o.userData.isOutline) out.push(o);
+  });
+  return out;
+}
+
+function surfaceMesh(scene) {
+  let m = null;
+  scene.traverse((o) => { if (o.name === 'surface' && !m) m = o; });
+  return m;
+}
+
+// What do you see looking straight down at (x, z)?
+function lookDown(scene, x, z) {
+  const ray = new THREE.Raycaster(new THREE.Vector3(x, 40, z), new THREE.Vector3(0, -1, 0));
+  const hits = ray.intersectObjects(solids(scene), false);
+  return hits.length ? hits[0].object : null;
+}
+
+for (const [label, mod, x, z] of [
+  ['case 7 basin', k7, 2.15, 0.9],
+  ['case 30 pond', k30, POND.x, POND.z],
+  ['case 33 pond', k33, POND.x, POND.z],
+]) {
+  test(`${label}: looking down into the vessel, you see water`, () => {
+    const root = staged(mod);
+    const seen = lookDown(root.scene, x, z);
+    assert.ok(seen, 'the ray hit something at all');
+    assert.equal(seen.name, 'surface',
+      `looking into the vessel shows "${seen.name}", not the water`);
+  });
+
+  test(`${label}: the water sits inside the stone, not through it`, () => {
+    const root = staged(mod);
+    const water = boxOf(root.scene, 'surface');
+    const stone = boxOf(root.scene, label.startsWith('case 7') ? 'basin' : 'lip');
+    assert.ok(water && stone);
+    // below the rim it cannot slop over...
+    assert.ok(water.max.y < stone.max.y,
+      `water reaches ${water.max.y}, the rim is at ${stone.max.y}`);
+    // ...and inside the walls it cannot poke through
+    assert.ok(water.max.x < stone.max.x && water.min.x > stone.min.x,
+      'the sheet is narrower than the vessel holding it');
+    assert.ok(water.max.z < stone.max.z && water.min.z > stone.min.z);
+  });
+}
+
+for (const [label, mod] of [['case 30', k30], ['case 33', k33]]) {
+  test(`${label}: the koi are under the water and clear of the floor`, () => {
+    const root = staged(mod);
+    const water = boxOf(root.scene, 'surface');
+    const koi = boxOf(root.scene, 'koi');
+    assert.ok(water && koi, 'the pond has both a surface and fish');
+    assert.ok(koi.max.y < water.min.y,
+      `a fish reaches ${koi.max.y} through a surface as low as ${water.min.y}`);
+    assert.ok(koi.min.y > POND.floor,
+      `a fish reaches ${koi.min.y}, below the pond floor at ${POND.floor}`);
+  });
+
+  // They ride the ripples now, so they have to keep doing both over time — and
+  // the check has to be LOCAL. Comparing the school's highest point against the
+  // pond's lowest point compares a fish at one end with a trough at the other,
+  // which no fish ever has to swim under. What matters is the water directly
+  // above each fish, which a downward ray onto the surface gives exactly.
+  test(`${label}: the koi stay submerged while the water is moving`, () => {
+    const root = staged(mod);
+    const fish = [];
+    root.scene.traverse((o) => { if (o.name === 'fish') fish.push(o); });
+    assert.ok(fish.length > 0, 'there are fish to check');
+
+    let worstClearance = Infinity;
+    let deepest = Infinity;
+    for (let i = 0; i < 300; i++) {
+      root.update(1 / 60, i / 60);
+      root.scene.updateMatrixWorld(true);
+      for (const f of fish) {
+        const box = new THREE.Box3().setFromObject(f);
+        const c = box.getCenter(new THREE.Vector3());
+        const ray = new THREE.Raycaster(
+          new THREE.Vector3(c.x, 40, c.z), new THREE.Vector3(0, -1, 0));
+        const hit = ray.intersectObject(surfaceMesh(root.scene), false)[0];
+        if (hit) worstClearance = Math.min(worstClearance, hit.point.y - box.max.y);
+        deepest = Math.min(deepest, box.min.y);
+      }
+    }
+    assert.ok(worstClearance > 0,
+      `a fin broke the surface above it by ${-worstClearance}`);
+    assert.ok(deepest > POND.floor,
+      `a fish sank through the floor: ${deepest} vs ${POND.floor}`);
+  });
+}

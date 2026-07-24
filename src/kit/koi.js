@@ -29,6 +29,12 @@ export function makeKoi({
   // what ties the school to the water instead of leaving it swimming in a
   // separate layer. Any surface with a height field can pass this.
   surfaceAt = null,
+  // How much of the surface's motion the fish take. 1 is right for a shallow
+  // pond, where the water moves nearly as one column and a fish a hand's depth
+  // down rises with the wave above it. Anything less makes the fish lag the
+  // surface, which in a pond this shallow lets a dorsal fin cross it in a
+  // trough — the fish must never surface unasked.
+  ride = 1,
 } = {}) {
   const g = new THREE.Group();
   g.name = 'koi';
@@ -83,9 +89,8 @@ export function makeKoi({
       const x = k.cx + Math.cos(a) * k.rx;
       const z = k.cz + Math.sin(a) * k.rz;
       let y = -depth + Math.sin(clock * 0.6 + k.phase) * 0.02;
-      // ride the water overhead, damped — a fish a hand's depth down feels a
-      // ripple, it does not match it
-      if (surfaceAt) y += surfaceAt(x, z) * 0.55;
+      // rise and fall with the water directly overhead
+      if (surfaceAt) y += surfaceAt(x, z) * ride;
       k.group.position.set(x, y, z);
       // face along the tangent of the ellipse it is swimming
       const vx = -k.rx * Math.sin(a) * k.dir;

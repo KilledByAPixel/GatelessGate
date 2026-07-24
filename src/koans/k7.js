@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeHut, makeBowl, makeWater, makeMonk, aimMonk,
+  composeWorld, makePath, makeHut, makeBasin, makeBowl, makeWater, makeMonk, aimMonk,
   makeOdoshi, makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -39,20 +39,21 @@ export default {
     hut.rotation.y = 0.28;
     scene.add(hut);
 
-    // the stone basin, and the water in it
-    // taller than it is wide, or it reads as a puddle rather than a basin
+    // The stone basin, and the water in it. Taller than it is wide, or it reads
+    // as a puddle rather than a basin — and OPEN, which it was not: it was a
+    // solid cylinder whose top cap sealed the water 4cm underneath it, so there
+    // was no water to see.
     const BASIN_H = 0.62;
-    const basin = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.50, 0.56, BASIN_H, 12),
-      toonMaterial({ color: WASH.stone, flat: true }));
-    basin.name = 'basin';
-    basin.position.set(2.15, BASIN_H / 2, 0.9);
+    const basin = makeBasin({
+      inner: 0.44, outer: 0.56, rim: BASIN_H, floor: 0.30, color: WASH.stone, segments: 12,
+    });
+    basin.position.set(2.15, 0, 0.9);
     scene.add(basin);
 
-    // round, because the basin is: a square sheet used to poke its corners out
-    // through the stone
+    // round, because the basin is: a square sheet also used to poke its corners
+    // out through the stone
     const water = makeWater({ shape: 'round', size: 0.86, color: WASH.ground });
-    water.group.position.set(2.15, BASIN_H - 0.04, 0.9);   // sunk just inside the rim
+    water.group.position.set(2.15, BASIN_H - 0.10, 0.9);   // below the rim, clear of it
     scene.add(water.group);
 
     // the bowl, set down beside the basin where he left it
