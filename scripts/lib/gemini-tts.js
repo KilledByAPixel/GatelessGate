@@ -26,6 +26,22 @@ export function readKey() {
   throw new Error('No API key: set GEMINI_API_KEY or put the key in local/gemini-key.txt');
 }
 
+// Validates and reads a .wav this module wrote. Used to decide whether a cached raw
+// take can be reused instead of paying to regenerate it — so it deliberately rejects
+// anything truncated (e.g. a file half-written when a bake was killed): a declared data
+// size that overruns the actual bytes means the tail is missing.
+export function parseWav(buf) {
+  if (!buf || buf.length < 44) return { ok: false };
+  if (buf.toString('ascii', 0, 4) !== 'RIFF' || buf.toString('ascii', 8, 12) !== 'WAVE') return { ok: false };
+  const channels = buf.readUInt16LE(22);
+  const rate = buf.readUInt32LE(24);
+  const bits = buf.readUInt16LE(34);
+  const dataBytes = buf.readUInt32LE(40);
+  if (!channels || !rate || !bits) return { ok: false };
+  if (dataBytes <= 0 || 44 + dataBytes > buf.length) return { ok: false };   // truncated
+  return { ok: true, rate, channels, bits, dataBytes, seconds: dataBytes / (rate * channels * bits / 8) };
+}
+
 // 16-bit mono PCM -> a playable .wav. Written by hand so the repo stays dependency-free.
 export function wav(pcm, rate = 24000, channels = 1, bits = 16) {
   const h = Buffer.alloc(44);

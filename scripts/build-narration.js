@@ -24,7 +24,7 @@ import {
   GEMINI_MODEL, GEMINI_VOICE, geminiPrompt,
 } from './lib/narration-voice.js';
 import { readKey as openaiKey, speak as openaiSpeak, MAX_INPUT } from './lib/openai-tts.js';
-import { readKey as geminiKey, speak as geminiSpeak, DailyQuotaError } from './lib/gemini-tts.js';
+import { readKey as geminiKey, speak as geminiSpeak, parseWav, DailyQuotaError } from './lib/gemini-tts.js';
 import { pool } from './lib/pool.js';
 import { haveFfmpeg, toMp3, FFMPEG_HINT } from './lib/encode.js';
 
@@ -65,13 +65,16 @@ for (const id of Object.keys(CASES).map(Number).sort((a, b) => a - b)) {
     if (onlySection && section !== onlySection) continue;
     const text = (CASES[id][section] || '').trim();
     if (!text) continue;
-    const hash = crypto.createHash('sha1')
-      .update([text, provider, model, voice, preset, INSTRUCTIONS_VERSION, section, bitrate].join('|'))
-      .digest('hex').slice(0, 12);
+    const sha = (parts) => crypto.createHash('sha1').update(parts.join('|')).digest('hex').slice(0, 12);
+    // The raw take depends on text/voice/preset but NOT bitrate — bitrate only affects
+    // the mp3 encode. Keying the raw by its own hash means changing bitrate reuses the
+    // cached WAV (free re-encode), while changing voice correctly forces regeneration.
+    const rawHash = sha([text, provider, model, voice, preset, INSTRUCTIONS_VERSION, section]);
+    const hash = sha([rawHash, bitrate]);
     units.push({
-      id, section, text, hash,
+      id, section, text, hash, rawHash,
       file: `k${pad(id)}-${section}.mp3`,
-      raw: `k${pad(id)}-${section}.wav`,
+      raw: `k${pad(id)}-${section}.${rawHash}.wav`,
     });
   }
 }
@@ -149,19 +152,33 @@ const failed = [];
 await pool(stale.map((u) => async () => {
   if (quotaHit) return;                          // daily cap reached — don't start more
   try {
-    let bytes, seconds = null;
+    let bytes, seconds = null, reused = false;
     if (gemini) {
-      const r = await geminiSpeak({
-        key, model, voice,
-        prompt: geminiPrompt(u.section, preset, u.text),
-      });
-      fs.writeFileSync(path.join(rawDir, u.raw), r.wav);
-      seconds = r.seconds; tokens += r.tokens;
+      const rawPath = path.join(rawDir, u.raw);
+      // A valid cached raw for this exact take is money already spent — reuse it and
+      // skip the API. The rawHash in the filename guarantees it matches the current
+      // text/voice/preset; parseWav rejects anything truncated by an interrupted run.
+      let cached = null;
+      if (!force && fs.existsSync(rawPath)) {
+        const buf = fs.readFileSync(rawPath);
+        const info = parseWav(buf);
+        if (info.ok) cached = info;
+      }
+      if (cached) {
+        seconds = cached.seconds; reused = true;
+      } else {
+        const r = await geminiSpeak({
+          key, model, voice,
+          prompt: geminiPrompt(u.section, preset, u.text),
+        });
+        fs.writeFileSync(rawPath, r.wav);
+        seconds = r.seconds; tokens += r.tokens;
+      }
       if (canEncode) {
-        toMp3(path.join(rawDir, u.raw), path.join(outDir, u.file), bitrate);
+        toMp3(rawPath, path.join(outDir, u.file), bitrate);
         bytes = fs.statSync(path.join(outDir, u.file)).size;
       } else {
-        bytes = r.wav.length;
+        bytes = fs.statSync(rawPath).size;
       }
     } else {
       const mp3 = await openaiSpeak({
@@ -177,7 +194,7 @@ await pool(stale.map((u) => async () => {
     manifest.files[unitKey(u.id, u.section)] = entry;
     saveManifest();
     console.log(`  [${++done}/${stale.length}] ${u.file} — ${(bytes / 1024).toFixed(0)} KB`
-      + (seconds !== null ? ` — ${seconds.toFixed(1)}s` : ''));
+      + (seconds !== null ? ` — ${seconds.toFixed(1)}s` : '') + (reused ? ' (cached raw)' : ''));
   } catch (e) {
     if (e instanceof DailyQuotaError) {
       // The daily cap is a wall, not a hiccup: every remaining unit would hit it too.
