@@ -44,13 +44,17 @@ export default {
     lip.position.set(POND.x, 0.07, POND.z);
     scene.add(lip);
 
-    const water = makeWater({ size: POND.size, color: WASH.ground, seed: 30 });
+    // the same round pond as case 30, down to the seed
+    const water = makeWater({ shape: 'round', size: POND.size, color: WASH.ground, seed: 30 });
     water.group.position.set(POND.x, POND.y + 0.06, POND.z);
     scene.add(water.group);
 
     // the same pond, so the same koi: seed 30 gives case 33 the identical fish
     // moving in the identical water — only the far bank differs
-    const koi = makeKoi({ count: 4, seed: 30, radius: POND.size * 0.32, color: WASH.mid });
+    const koi = makeKoi({
+      count: 4, seed: 30, radius: POND.size * 0.32, color: WASH.mid,
+      surfaceAt: water.heightAt,
+    });
     koi.group.position.set(POND.x, POND.y + 0.04, POND.z);
     scene.add(koi.group);
 

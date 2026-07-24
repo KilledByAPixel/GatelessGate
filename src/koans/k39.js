@@ -46,7 +46,9 @@ export default {
 
     // dark water, wide enough that the crossing matters
     const WY = 0.10;
-    const water = makeWater({ size: 11.0, color: wash(0.72), seed: ID });
+    // open water, so a square sheet — and now the rim is pinned, so a stone
+    // dropped near the bank no longer throws its ring out over the grass
+    const water = makeWater({ shape: 'square', size: 11.0, color: wash(0.72), seed: ID });
     water.group.position.set(0.4, WY, -1.6);
     scene.add(water.group);
 

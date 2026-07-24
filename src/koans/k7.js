@@ -49,7 +49,9 @@ export default {
     basin.position.set(2.15, BASIN_H / 2, 0.9);
     scene.add(basin);
 
-    const water = makeWater({ size: 0.86, color: WASH.ground });
+    // round, because the basin is: a square sheet used to poke its corners out
+    // through the stone
+    const water = makeWater({ shape: 'round', size: 0.86, color: WASH.ground });
     water.group.position.set(2.15, BASIN_H - 0.04, 0.9);   // sunk just inside the rim
     scene.add(water.group);
 

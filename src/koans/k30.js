@@ -48,14 +48,18 @@ export default {
     lip.position.set(POND.x, 0.07, POND.z);
     scene.add(lip);
 
-    const water = makeWater({ size: POND.size, color: WASH.ground, seed: ID });
+    // round, to match the stone lip it sits inside
+    const water = makeWater({ shape: 'round', size: POND.size, color: WASH.ground, seed: ID });
     water.group.position.set(POND.x, POND.y + 0.06, POND.z);
     scene.add(water.group);
 
     // koi under the surface — what turns the pale disc into water. They are
     // wash-toned, not accent (the seal is the mat), and they read as the same
     // pond's life in case 33, which shares this pond.
-    const koi = makeKoi({ count: 4, seed: 30, radius: POND.size * 0.32, color: WASH.mid });
+    const koi = makeKoi({
+      count: 4, seed: 30, radius: POND.size * 0.32, color: WASH.mid,
+      surfaceAt: water.heightAt,
+    });
     koi.group.position.set(POND.x, POND.y + 0.04, POND.z);
     scene.add(koi.group);
 
