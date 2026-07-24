@@ -1,10 +1,10 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, ACCENT_DEEP, WASH, wash } from '../palette.js';
+import { PAPER, ACCENT, ACCENT_DEEP, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makePath, makeMonk, aimMonk, makeStall, makeHorse,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
 const ID = 45;
@@ -128,30 +128,21 @@ export default {
     }
 
     // A few more people standing about the street between the stalls (Frank: it
-    // is a busy street). These are the cheap kind — a robe and a head, no arms —
-    // because a full monk is ten draws and the crowd would blow the budget; at
-    // this distance, among the stalls, two strokes read as a person.
-    const bystander = (x, z, facing, h = 1.56, tone = 0.14) => {
-      const f = new THREE.Group();
-      f.name = 'bystander';
-      const robe = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.10 * h, 0.20 * h, 0.7 * h, 7),
-        toonMaterial({ color: wash(tone), flat: true }));
-      robe.position.y = 0.35 * h;
-      const head = new THREE.Mesh(
-        new THREE.SphereGeometry(0.095 * h, 8, 6),
-        toonMaterial({ color: WASH.deep, flat: true }));
-      head.position.y = 0.78 * h;
-      f.add(robe, head);
+    // is a busy street). They come from the same builder as every other figure,
+    // just with the cheap options — no hat, no sleeves — so they are dark robed
+    // shapes like the monks rather than a separate kind of thing, and a crowd of
+    // them still fits the draw budget.
+    const bystander = (x, z, facing, h = 1.56) => {
+      const f = makeMonk({ height: h, hat: false, arms: false });
       f.position.set(x, 0, z);
       f.rotation.y = facing;
       return f;
     };
     // dotted along both sides of the lane, in the gaps between the stalls
     const crowd = [
-      bystander(road.sample(0.38).x - 1.4, road.sample(0.38).z + 0.3, 1.2, 1.6, 0.12),
-      bystander(road.sample(0.52).x + 1.5, road.sample(0.52).z - 0.2, -1.9, 1.5, 0.18),
-      bystander(road.sample(0.7).x - 1.2, road.sample(0.7).z + 0.1, 0.6, 1.62, 0.1),
+      bystander(road.sample(0.38).x - 1.4, road.sample(0.38).z + 0.3, 1.2, 1.6),
+      bystander(road.sample(0.52).x + 1.5, road.sample(0.52).z - 0.2, -1.9, 1.5),
+      bystander(road.sample(0.7).x - 1.2, road.sample(0.7).z + 0.1, 0.6, 1.62),
     ];
     for (const c of crowd) scene.add(c);
 
@@ -161,11 +152,16 @@ export default {
     // A larger red than a held seal, so it takes the deep mix rather than
     // glaring full accent across a whole animal.
     const horse = makeHorse({ height: 1.5, color: ACCENT_DEEP, seed: ID });
-    const hp = road.sample(0.30);
-    const horseX = hp.x + hp.perp.x * 1.6;      // just off the road by the first stall
-    const horseZ = hp.z + hp.perp.z * 1.6;
+    // beside the first stall, not in front of it — pulled back along the lane so
+    // it does not block the counter, and set at the road's edge (Frank)
+    const hp = road.sample(0.24);
+    const side = stalls[0].sidesign;
+    const horseX = hp.x + hp.perp.x * 1.5 * side;
+    const horseZ = hp.z + hp.perp.z * 1.5 * side;
     horse.group.position.set(horseX, 0, horseZ);
-    horse.group.rotation.y = Math.atan2(hp.perp.x, hp.perp.z) + 0.4;   // side-on to the lane
+    // the horse faces +z; turn its head toward the road (i.e. toward -perp on
+    // the side it stands), a little angled so it reads three-quarter, not flat
+    horse.group.rotation.y = Math.atan2(-hp.perp.x * side, -hp.perp.z * side) - 0.35;
     scene.add(horse.group);
     shadows.push({ x: horseX, z: horseZ, rx: 1.0, rz: 0.5, op: 0.3 });
 

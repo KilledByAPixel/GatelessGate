@@ -2,11 +2,18 @@ import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { INK } from '../palette.js';
 
-// The kit monk, second pass: a lathed robe (narrow shoulders flaring to a wide
-// hem), sleeves with the hands hidden inside, sphere head, wide sedge hat.
-// Featureless by design — ink figures have no faces (a smile is an event).
+// The shared human plan for every figure in the book — the makeQuadruped of
+// people. A lathed robe (narrow shoulders flaring to a wide hem), sleeves with
+// the hands hidden inside, a sphere head, a wide sedge hat. Featureless by
+// design — ink figures have no faces (a smile is an event). You select what a
+// given figure has: `hat`, `elder` (a staff), `pose`, `stout`, `color`, and
+// `arms` (drop the sleeves for a cheap crowd figure — a robe and a head, which
+// is all a person in the background needs).
+//
 // Poses: 'stand' (sleeves hang), 'point' (one sleeve raised toward +x), 'sit' (seated proportions, folded sleeves).
-export function makeMonk({ height = 1.6, stout = 1, color = INK, hat = true, pose = 'stand', elder = false } = {}) {
+export function makeMonk({
+  height = 1.6, stout = 1, color = INK, hat = true, pose = 'stand', elder = false, arms = true,
+} = {}) {
   const g = new THREE.Group();
   g.name = 'monk';
   const mat = toonMaterial({ color, flat: true });
@@ -52,8 +59,12 @@ export function makeMonk({ height = 1.6, stout = 1, color = INK, hat = true, pos
     g.add(arm);
     return arm;
   };
-  makeSleeve(-1);
-  makeSleeve(1);
+  // a background figure can skip its sleeves — two fewer meshes apiece, which is
+  // what lets a crowd fit the draw budget
+  if (arms) {
+    makeSleeve(-1);
+    makeSleeve(1);
+  }
 
   const headR = 0.095 * height;
   const head = new THREE.Mesh(new THREE.SphereGeometry(headR, 14, 10), mat);

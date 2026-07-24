@@ -14,10 +14,14 @@ export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
     bodyR: 0.22, bodyLen: 0.9, bodyDrop: 0.1,
     // long, slim legs set at the corners of a deep barrel
     legH: 0.62, legR: 0.05, legTaper: 0.82, hipX: 0.14, hipZ: 0.35,
-    // a high neck up to a small head carried forward — the line that says horse
+    // a high neck up to the head — the line that says horse
     neck: { r: 0.10, len: 0.5 },
-    head: { shape: 'sphere', r: 0.145, fwd: 0.78, up: 0.52, tilt: 0.35 },
-    ears: { r: 0.028, h: 0.14, x: 0.05, up: 0.74, fwd: 0.66, tilt: 0.35 },
+    // a LONG, THIN head rather than a ball (Frank): a narrow box for the skull,
+    // nosed down, with a tapering muzzle cylinder out front for the mouth
+    head: { shape: 'box', w: 0.13, hh: 0.17, d: 0.42, fwd: 0.6, up: 0.44, tilt: 0.42 },
+    snout: { r0: 0.05, r1: 0.075, len: 0.34, fwd: 0.84, up: 0.33 },
+    // ears sitting ON the skull, not floating above it
+    ears: { r: 0.028, h: 0.15, x: 0.055, up: 0.5, fwd: 0.48, tilt: 0.35 },
     tail: { kind: 'stiff', r0: 0.055, r1: 0.02, length: 0.62, up: 0.06, back: 0.46, tilt: -0.7 },
   });
   group.name = 'horse';
