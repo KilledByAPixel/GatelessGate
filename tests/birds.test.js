@@ -23,40 +23,53 @@ test('a bird is three meshes — one merged body and two wings — with no outli
   });
 });
 
-test('the wings actually move between folded and spread', () => {
+test('the wings beat — a flap moves the wing hinges', () => {
   const b = makeBird({ size: 0.5 });
   const hinges = b.group.children.filter((c) => !c.isMesh);   // the two wing hinges
   assert.equal(hinges.length, 2);
-  b.pose({ spread: 0 });
-  const folded = hinges.map((h) => h.rotation.y);
-  b.pose({ spread: 1 });
-  const spreadY = hinges.map((h) => h.rotation.y);
-  assert.notDeepEqual(folded, spreadY, 'folding changes the wing sweep');
+  b.pose({ flap: -0.6 });
+  const down = hinges.map((h) => h.rotation.z);
+  b.pose({ flap: 0.6 });
+  const up = hinges.map((h) => h.rotation.z);
+  assert.notDeepEqual(down, up, 'the beat changes the wing angle');
 });
 
-test('the flock lives a full cycle: it reaches the ground and it reaches the sky', () => {
-  const flock = makeBirds({ count: 6, seed: 24, height: 6, ground: [0, 0], groundR: 2 });
+test('the birds stay aloft — they never come down to the ground', () => {
+  const flock = makeBirds({ count: 8, seed: 24, height: 6 });
   const nodes = birdNodes(flock);
-  assert.equal(nodes.length, 6);
-  let minY = Infinity; let maxY = -Infinity;
-  for (let i = 0; i < 60 * 30; i++) {          // a 30-second day
+  let minY = Infinity;
+  for (let i = 0; i < 60 * 30; i++) {
     flock.update(1 / 60, i / 60);
-    for (const n of nodes) { minY = Math.min(minY, n.position.y); maxY = Math.max(maxY, n.position.y); }
+    for (const n of nodes) minY = Math.min(minY, n.position.y);
   }
-  assert.ok(minY <= 0.02, `something should stand on the ground (min y ${minY})`);
-  assert.ok(maxY > 4, `something should fly (max y ${maxY})`);
+  assert.ok(minY > 2, `birds should stay well off the ground (min y ${minY})`);
 });
 
-test('a grounded bird pecks — its nose pitch swings over time', () => {
-  // one bird, no phase offset, parked at the start of its ground phase
-  const flock = makeBirds({ count: 1, seed: 5, ground: [0, 0], groundR: 0 });
+test('the birds actually travel — they do not hover in one spot', () => {
+  // follow one bird and measure how far it roams across the sky. A hovering
+  // bird barely moves; a flying one covers real ground.
+  const flock = makeBirds({ count: 1, seed: 24, center: [0, 0], height: 6, spread: 5 });
   const [node] = birdNodes(flock);
-  const pitches = new Set();
-  for (let i = 0; i < 240; i++) {
+  let minX = Infinity; let maxX = -Infinity; let minZ = Infinity; let maxZ = -Infinity;
+  for (let i = 0; i < 60 * 20; i++) {           // 20 seconds
     flock.update(1 / 60, i / 60);
-    if (node.position.y < 0.02) pitches.add(+node.rotation.x.toFixed(2));
+    minX = Math.min(minX, node.position.x); maxX = Math.max(maxX, node.position.x);
+    minZ = Math.min(minZ, node.position.z); maxZ = Math.max(maxZ, node.position.z);
   }
-  assert.ok(pitches.size > 3, 'a standing bird changes pitch as it pecks and looks');
+  assert.ok(maxX - minX > 4, `a flying bird ranges across x (spanned ${(maxX - minX).toFixed(1)})`);
+  assert.ok(maxZ - minZ > 4, `and across z (spanned ${(maxZ - minZ).toFixed(1)})`);
+});
+
+test('a bird faces the way it is going', () => {
+  // heading should keep changing as it flies the circuit, not sit fixed
+  const flock = makeBirds({ count: 1, seed: 24 });
+  const [node] = birdNodes(flock);
+  const headings = new Set();
+  for (let i = 0; i < 300; i++) {
+    flock.update(1 / 60, i / 60);
+    headings.add(+node.rotation.y.toFixed(1));
+  }
+  assert.ok(headings.size > 5, 'heading turns through the circuit');
 });
 
 test('nothing goes non-finite over a long, repeatedly scattered run', () => {
@@ -81,21 +94,20 @@ test('scatter raises the flock energy, which decays back to nothing', () => {
   assert.ok(flock.energy() < 0.05, 'and dies away on its own');
 });
 
-test('scatter lifts the flock: the birds are higher just after a scatter than just before', () => {
-  const flock = makeBirds({ count: 6, seed: 24, ground: [0, 0] });
-  // settle to a moment when the average is low (some on the ground)
+test('scatter lifts the flock higher', () => {
+  const flock = makeBirds({ count: 6, seed: 24, height: 6 });
   const nodes = birdNodes(flock);
   const avgY = () => nodes.reduce((s, n) => s + n.position.y, 0) / nodes.length;
   flock.update(1 / 60, 3);
   const before = avgY();
   flock.scatter();
   flock.update(1 / 60, 3 + 1 / 60);
-  assert.ok(avgY() > before, `the flock rises when startled (${before} -> ${avgY()})`);
+  assert.ok(avgY() > before, `the flock climbs when startled (${before} -> ${avgY()})`);
 });
 
-test('the flock is deterministic — same seed, same day', () => {
+test('the flock is deterministic — same seed, same flight', () => {
   const run = () => {
-    const f = makeBirds({ count: 5, seed: 24, ground: [0.5, -1] });
+    const f = makeBirds({ count: 5, seed: 24 });
     const nodes = birdNodes(f);
     const out = [];
     for (let i = 0; i < 300; i++) {

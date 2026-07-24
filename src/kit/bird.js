@@ -2,72 +2,61 @@ import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { mergeSimple } from './scatter.js';
 
-// One bird, posed. The flock in birds.js builds and drives a school of these;
-// this file is only the body and how it holds itself.
+// One bird, in flight. The flock in birds.js drives a school of these across
+// the sky; this file is only the body and how it beats its wings.
 //
-// The old bird was a flat four-vertex chevron — two strokes, which reads as a
-// smear the moment it is anything but tiny and dead-on (Frank: the ones in the
-// sky are hard to see, and the shape could be better). This one has a real
-// silhouette: a spindle body with a head, a beak and a tail, and two wings that
-// fold against it on the ground and sweep out to beat in the air.
+// Kept deliberately simple. An earlier pass gave it a spindle body, a head, a
+// beak, a tail and little legs, and it read as fiddly and wrong — the head too
+// big, the legs pointless on a bird that only flies, the wings too sharp
+// (Frank). The flat two-stroke chevron it replaced was almost better. So this
+// is barely more than that chevron: a small flattened body, a hint of a head,
+// a short tail, and two broad blunt wings. No legs, no beak.
 //
-// Budget is the constraint — a scene like case 34 is already near the 150-draw
-// line — so everything that never moves on its own (body, head, beak, tail, the
-// stub legs) is baked into ONE merged mesh, and only the two wings are separate.
-// Three meshes a bird, no outline (an inverted hull on a shape this small and
-// thin reads as a blot).
-//
-// The bird is authored HORIZONTAL, nose along +z, as if in level flight. To
-// stand it the flock pitches the whole group nose-up; to peck it drops that
-// pitch so the beak dips to the ground. So one small set of primitives serves
-// both the flying and the grounded life without a second model.
+// Three meshes — one merged body and two wings — no outline (an inverted hull
+// on a shape this thin reads as a blot). The body is baked into one mesh; only
+// the wings move.
 
 function bodyGeometry(s) {
   const parts = [];
 
-  // the body: a tapered spindle along z, fuller at the breast than the tail
-  const body = new THREE.CylinderGeometry(0.16 * s, 0.06 * s, 0.9 * s, 7);
-  body.rotateX(Math.PI / 2);                 // lay it along +z
-  body.scale(1, 0.82, 1);                    // a touch flatter than round
+  // the body: a short, flattened teardrop along z — full at the breast,
+  // tapering to the tail. No neck, no separate head sticking up.
+  const body = new THREE.SphereGeometry(0.16 * s, 8, 6);
+  body.scale(1, 0.7, 2.5);                   // long and flat, not a ball
   parts.push(body);
 
-  // the head, set forward and a little high
-  const head = new THREE.SphereGeometry(0.17 * s, 8, 6);
-  head.translate(0, 0.06 * s, 0.42 * s);
+  // just a suggestion of a head: a small low bump at the front, not a sphere
+  // on a neck
+  const head = new THREE.SphereGeometry(0.09 * s, 6, 5);
+  head.scale(1, 0.85, 1.1);
+  head.translate(0, 0.02 * s, 0.42 * s);
   parts.push(head);
 
-  // a short beak
-  const beak = new THREE.ConeGeometry(0.05 * s, 0.18 * s, 5);
-  beak.rotateX(Math.PI / 2);
-  beak.translate(0, 0.05 * s, 0.60 * s);
-  parts.push(beak);
-
-  // the tail: a flat wedge trailing back and slightly up
-  const tail = new THREE.ConeGeometry(0.16 * s, 0.34 * s, 3);
+  // a short tail fanned flat behind
+  const tail = new THREE.ConeGeometry(0.14 * s, 0.30 * s, 3);
   tail.rotateX(-Math.PI / 2);
-  tail.scale(1, 0.3, 1);
-  tail.translate(0, 0.05 * s, -0.62 * s);
+  tail.scale(1, 0.22, 1);
+  tail.translate(0, 0.02 * s, -0.5 * s);
   parts.push(tail);
-
-  // two stub legs — barely there, enough to plant it when it stands
-  for (const side of [-1, 1]) {
-    const leg = new THREE.CylinderGeometry(0.02 * s, 0.02 * s, 0.22 * s, 4);
-    leg.translate(side * 0.06 * s, -0.20 * s, -0.02 * s);
-    parts.push(leg);
-  }
 
   return mergeSimple(parts);
 }
 
-// a single wing: a swept triangle, hinged at its root (x = 0) so a rotation
-// about z lifts and drops it, and the flock can fold it flat to the body
+// a wing: a broad blunt paddle, hinged at the root (x = 0). Two triangles make
+// a quad with a rounded-off outer edge rather than one sharp point (Frank: the
+// wings were too pointy).
 function wingGeometry(s, side) {
   const g = new THREE.BufferGeometry();
-  const tip = 0.66 * s * side;
+  const t = side;
   const v = new Float32Array([
-    0, 0, 0.14 * s,                          // root, forward
-    0, 0, -0.20 * s,                         // root, back
-    tip, 0, -0.06 * s,                       // tip, swept back
+    // inner edge, at the body
+    0, 0, 0.16 * s,          // root front
+    0, 0, -0.20 * s,         // root back
+    0.60 * s * t, 0, -0.12 * s,   // outer back
+    // and the front half of the paddle
+    0, 0, 0.16 * s,          // root front
+    0.60 * s * t, 0, -0.12 * s,   // outer back
+    0.52 * s * t, 0, 0.08 * s,    // outer front — blunts the tip
   ]);
   g.setAttribute('position', new THREE.BufferAttribute(v, 3));
   g.computeVertexNormals();
@@ -88,7 +77,7 @@ export function makeBird({ size = 0.5, color, seed = 0 } = {}) {
   const wings = [];
   for (const side of [-1, 1]) {
     const w = new THREE.Group();                       // hinge at the shoulder
-    w.position.set(side * 0.10 * size, 0.04 * size, 0.02 * size);
+    w.position.set(side * 0.08 * size, 0.02 * size, 0.02 * size);
     const mesh = new THREE.Mesh(wingGeometry(size, side), mat);
     mesh.name = 'bird-wing';
     mesh.userData.noOutline = true;
@@ -97,18 +86,14 @@ export function makeBird({ size = 0.5, color, seed = 0 } = {}) {
     wings.push({ hinge: w, side });
   }
 
-  // Pose the bird. All inputs are plain numbers the flock computes:
-  //   spread  0 = wings folded flat along the body, 1 = held out to fly
-  //   flap    radians of up/down beat added on top of the spread
-  //   pitch   nose-up tilt of the whole bird (0 flying level, up to stand/peck)
-  //   roll    bank, for turns in the air
-  function pose({ spread = 1, flap = 0, pitch = 0, roll = 0 } = {}) {
+  // Pose the bird in flight. `flap` is the up/down beat in radians; `pitch` and
+  // `roll` tilt and bank the whole body. Wings are always out — this bird only
+  // flies — so there is no fold any more.
+  function pose({ flap = 0, pitch = 0, roll = 0 } = {}) {
     g.rotation.x = pitch;
     g.rotation.z = roll;
     for (const { hinge, side } of wings) {
-      // folded: swung back and down against the body; spread: out level, beating
-      hinge.rotation.y = (1 - spread) * side * 1.15;   // sweep back when folded
-      hinge.rotation.z = -side * (spread * 0.15 + (1 - spread) * 0.75 + flap);
+      hinge.rotation.z = -side * (0.12 + flap);        // a slight dihedral, plus the beat
     }
   }
   pose();
