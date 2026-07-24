@@ -13,7 +13,9 @@ import { setGrassStyle } from '../kit/scenery.js';
 // Defaults are the INK & SEAL preset: no toon banding, depth-driven ink, real
 // contact shadows, paper pass at full grain, no quantisation, and the
 // inverted-hull ink outlines ON (Frank). One red seal per koan.
-const KEY = 'gateless-gate-debug-v2';
+// bumped v2 → v3 when the ink outlines became a default: a stored v2 state
+// would otherwise keep outlines off and mask the change (Frank)
+const KEY = 'gateless-gate-debug-v3';
 
 const CONTROLS = [
   { group: 'Scene' },
