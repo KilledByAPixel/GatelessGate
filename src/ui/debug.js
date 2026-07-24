@@ -36,7 +36,7 @@ const CONTROLS = [
   { group: 'Render' },
   { key: 'toon', label: 'Toon shader', type: 'bool', def: false },
   { key: 'outlines', label: 'Ink outlines (hull)', type: 'bool', def: false },
-  { key: 'grain', label: 'Paper grain', type: 'bool', def: true },
+  { key: 'grain', label: 'Paper texture', type: 'bool', def: true },   // master: off = no paper at all
   { key: 'blobs', label: 'Blob shadows', type: 'bool', def: false },
   { key: 'shadows', label: 'Real shadows', type: 'bool', def: true },
   { key: 'fogMul', label: 'Fog ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
@@ -51,7 +51,7 @@ const CONTROLS = [
   { key: 'inkStrength', label: '· strength', type: 'range', def: 0.85, min: 0, max: 1, step: 0.05 },
   { key: 'inkThresh', label: '· threshold', type: 'range', def: 0.06, min: 0.01, max: 0.4, step: 0.01 },
   { key: 'inkFade', label: '· distance fade', type: 'range', def: 0.45, min: 0.05, max: 1, step: 0.05 },
-  { key: 'pPaper', label: 'Paper pass', type: 'bool', def: true },
+  { key: 'pPaper', label: 'Paper via shader', type: 'bool', def: true },
   { key: 'paperAmt', label: '· grain', type: 'range', def: 1.0, min: 0, max: 1, step: 0.05 },
   { key: 'paperVig', label: '· vignette', type: 'range', def: 0.7, min: 0, max: 1.5, step: 0.05 },
 
@@ -271,7 +271,12 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     if (post) {
       post.set('quantize', state.pQuant);
       post.set('ink', state.pInk);
-      post.set('paper', state.pPaper);
+      // `grain` is the master switch for paper of any kind; `pPaper` only picks
+      // which one draws it. Without this the two silently covered for each
+      // other — turning the paper PASS off just handed the same texture to the
+      // DOM overlay, so the button looked broken (Frank) and there was no way
+      // to get a clean look at the scene without finding and clearing both.
+      post.set('paper', state.pPaper && state.grain);
       post.param('quantize', 'uSteps', state.quantSteps);
       post.param('quantize', 'uAmount', state.quantAmt);
       post.param('ink', 'uStrength', state.inkStrength);
@@ -281,7 +286,7 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
       post.param('paper', 'uVignette', state.paperVig);
     }
 
-    // the paper PASS replaces the DOM overlay; showing both double-grains
+    // the shader pass replaces the DOM overlay; showing both double-grains
     const domGrain = state.grain && !(post && state.pPaper);
     for (const el of grainEls) if (el) el.style.display = domGrain ? '' : 'none';
     if (audio) {
