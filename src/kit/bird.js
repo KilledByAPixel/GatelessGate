@@ -32,6 +32,14 @@ function bodyGeometry(s) {
   head.translate(0, 0.02 * s, 0.42 * s);
   parts.push(head);
 
+  // a small beak — just a nub at the front of the head, back after Frank
+  // noticed it was gone. Kept tiny so it reads as a point, not the fiddly cone
+  // the earlier detailed bird had.
+  const beak = new THREE.ConeGeometry(0.035 * s, 0.13 * s, 4);
+  beak.rotateX(Math.PI / 2);
+  beak.translate(0, 0.01 * s, 0.54 * s);
+  parts.push(beak);
+
   // a short tail fanned flat behind
   const tail = new THREE.ConeGeometry(0.14 * s, 0.30 * s, 3);
   tail.rotateX(-Math.PI / 2);
