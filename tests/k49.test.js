@@ -24,7 +24,7 @@ function harness() {
   const cam = new THREE.PerspectiveCamera(38, 1.78, 0.1, 200);
   cam.position.set(6, 5, 8); cam.lookAt(0.2, 1.5, -2.4); cam.updateMatrixWorld(true);
   root.setCamera(cam);
-  return { root, tapAt: (name) => { hitName = name; tap(); hitName = null; } };
+  return { root, tapAt: (name) => { hitName = name; tap(); hitName = null; }, cam };
 }
 
 const named = (scene, name) => {
@@ -33,16 +33,19 @@ const named = (scene, name) => {
   return out;
 };
 
-test('the enso is the one red thing — the book\'s closing seal', () => {
+test('the gate is the one red thing — the book\'s closing seal', () => {
   const { root } = harness();
-  assert.equal(named(root.scene, 'enso').length, 1);
+  assert.equal(named(root.scene, 'gate').length, 1);
   const want = new Set([ACCENT, ACCENT_DEEP, ACCENT_LIGHT].map((c) => new THREE.Color(c).getHexString()));
-  const reds = [];
+  const reds = new Set();
   root.scene.traverse((o) => {
     if (o.isMesh && !o.userData.isOutline && o.material && o.material.color
-        && want.has(o.material.color.getHexString())) reds.push(o.name);
+        && want.has(o.material.color.getHexString())) reds.add(o.name);
   });
-  assert.deepEqual([...new Set(reds)], ['enso-ring'], 'the enso ring is the only accent mesh');
+  // every red mesh is a piece of the gate, and nothing else in the scene is red
+  const gateParts = new Set(['post', 'lintel', 'tie']);
+  for (const name of reds) assert.ok(gateParts.has(name), `${name} should not be red`);
+  assert.ok(reds.size > 0, 'the gate carries the accent');
 });
 
 test('the living things are all there: water, koi, and birds', () => {
@@ -68,18 +71,14 @@ test('the koi stay under the pond surface as it moves', () => {
   }
 });
 
-test('touching the circle completes it — a close, and a brief swell', () => {
+test('touching the gate rings a bell', () => {
   const { root, tapAt } = harness();
-  const enso = named(root.scene, 'enso')[0];
   root.update(1 / 60, 1.0);
-  assert.equal(enso.scale.x, 1, 'at rest the circle is its plain size');
-  tapAt('enso-hit');
-  assert.equal(root.fragment().closes, 1, 'the tap registered a close');
-  // the swell peaks in the beat after the touch, then settles
-  let peak = 1;
-  for (let i = 0; i < 90; i++) { root.update(1 / 60, 1.0 + i / 60); peak = Math.max(peak, enso.scale.x); }
-  assert.ok(peak > 1.01, 'the circle swelled');
-  assert.ok(Math.abs(enso.scale.x - 1) < 1e-3, 'and returned to rest');
+  tapAt('gate-hit');
+  assert.equal(root.fragment().rings, 1, 'the tap rang the gate');
+  // a second tap in the same instant does not double-ring (the 0.5s guard)
+  tapAt('gate-hit');
+  assert.equal(root.fragment().rings, 1, 'no double-ring on a rapid second tap');
 });
 
 test('touching the water rings it', () => {

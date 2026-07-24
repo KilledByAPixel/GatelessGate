@@ -1,9 +1,9 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, WASH } from '../palette.js';
+import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeBasin, makeWater, makeKoi, makeBirds, makeMonk, aimMonk,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeGate, makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
 const ID = 49;
@@ -72,36 +72,26 @@ export default {
     const birds = makeBirds({ count: 7, seed: ID, center: [0.5, -3.0], height: 6.4, spread: 5.4 });
     scene.add(birds.group);
 
-    // ---- the traveller, stopped at the path's edge, facing the circle -----
+    // ---- the traveller, stopped at the path's edge, facing the gate -------
     // The reader, at the end. Not walking through — just standing before it, set
-    // to one side so he frames the circle rather than blocking it.
+    // to one side so he frames the gate rather than blocking it.
     const you = makeMonk({ height: 1.6, elder: true });
     const yb = road.sample(0.30);
     const yp = { x: yb.x + yb.perp.x * 0.8, z: yb.z + yb.perp.z * 0.8 };
     you.position.set(yp.x, 0, yp.z);
     scene.add(you);
 
-    // ---- THE ENSO: Amban's little circle, at the head of the path ---------
-    // One brushed ring standing upright across the road, with the enso's open
-    // gap at the top-right. The whole book's one red thing.
-    const enso = new THREE.Group();
-    enso.name = 'enso';
-    const ER = 1.25;                 // radius of the circle
-    const ring = new THREE.Mesh(
-      // an arc, not a closed loop — the gap is what makes it an enso and not a
-      // wheel. Tube tapers are beyond a torus, so the brush is suggested by the
-      // opening alone.
-      new THREE.TorusGeometry(ER, 0.075, 8, 44, Math.PI * 1.86),
-      toonMaterial({ color: ACCENT, flat: true }));
-    ring.name = 'enso-ring';
-    ring.rotation.z = 0.6;           // roll the gap round to the upper right
-    enso.add(ring);
-    // on the path at a readable mid-distance — the path is long, so a high t
-    // buries it in the fog; this keeps the seal prominent
+    // ---- THE GATE, at the head of the path -------------------------------
+    // A red torii straddling the road, the way out of the book — and the same
+    // gate the title screen opens on, so the reader leaves through the door they
+    // came in by. It is the whole book's one red thing. Deep red rather than
+    // full accent: a big timber frame in bright vermillion would glare (the
+    // same call the intro gate makes).
+    const gate = makeGate({ width: 2.6, height: 3.0, color: ACCENT_DEEP });
     const ep = road.sample(0.38);
-    enso.position.set(ep.x, ER + 0.1, ep.z);    // standing on the road, just clear of it
-    enso.rotation.y = ep.heading;    // face square across the path, toward the camera
-    scene.add(enso);
+    gate.position.set(ep.x, 0, ep.z);
+    gate.rotation.y = ep.heading;    // its opening aligned down the path
+    scene.add(gate);
 
     const world = composeWorld(scene, {
       seed: ID,
@@ -118,7 +108,7 @@ export default {
 
     for (const [p, rx, rz, op] of [
       [you.position, 0.6, 0.48, 0.4],
-      [{ x: ep.x, z: ep.z }, 0.5, 0.35, 0.24],
+      [{ x: ep.x, z: ep.z }, 1.6, 0.4, 0.24],   // the gate straddles the road
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.set(p.x, 0.01, p.z);
@@ -127,35 +117,34 @@ export default {
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
-    // aim the traveller up the path at the circle AFTER outlines (pure transform)
+    // aim the traveller up the path at the gate AFTER outlines (pure transform)
     aimMonk(you, { x: ep.x, z: ep.z });
 
-    // ---- the moment: close the circle -------------------------------------
-    // Touch the enso and it brightens and swells for a beat, the way a drawn
-    // circle completes under the brush, with one soft bell. Touch the water and
-    // it rings where you touched. Nothing here is a puzzle; the book is over.
-    const ringHit = new THREE.Mesh(
-      new THREE.TorusGeometry(ER, 0.34, 6, 20, Math.PI * 2),
+    // ---- the moment: pass through -----------------------------------------
+    // Touch the gate and a bell sounds, once, the way a temple bell marks a
+    // threshold. Touch the water and it rings where you touched. Nothing here is
+    // a puzzle; the book is over.
+    const gateHit = new THREE.Mesh(
+      new THREE.BoxGeometry(2.9, 3.2, 0.8),
       new THREE.MeshBasicMaterial({ visible: false }));
-    ringHit.name = 'enso-hit';
-    ringHit.userData.noOutline = true;
-    ringHit.rotation.copy(ring.rotation);
-    enso.add(ringHit);
+    gateHit.name = 'gate-hit';
+    gateHit.userData.noOutline = true;
+    gateHit.position.set(ep.x, 1.6, ep.z);
+    gateHit.rotation.y = ep.heading;
+    scene.add(gateHit);
 
     const surface = water.group.children.find((c) => c.name === 'surface');
 
     let camera = null;
     let clock = 0;
-    let closes = 0;
-    let closedAt = -99;
+    let rings = 0;
+    let lastRing = -99;
     let rippled = 0;
 
     input.onTap(() => {
       if (!camera) return;
-      if (input.raycastFirst(camera, [ringHit])) {
-        closes++;
-        closedAt = clock;
-        audio && audio.bell({ f0: 210, gain: 0.5 });
+      if (input.raycastFirst(camera, [gateHit])) {
+        if (clock - lastRing > 0.5) { lastRing = clock; rings++; audio && audio.bell({ f0: 210, gain: 0.5 }); }
         return;
       }
       if (surface) {
@@ -178,13 +167,9 @@ export default {
         water.update(dt, simTime);
         koi.update(dt, simTime);
         birds.update(dt, simTime);
-        // the circle completing: a brief swell and brighten after a touch
-        const u = clock - closedAt;
-        const pulse = u >= 0 && u < 1.2 ? Math.exp(-u / 0.5) * Math.sin(Math.PI * Math.min(1, u / 1.2)) : 0;
-        enso.scale.setScalar(1 + pulse * 0.06);
       },
       fragment() {
-        return { closes, rippled, koi: koi.fishCount(), birds: birds.count() };
+        return { rings, rippled, koi: koi.fishCount(), birds: birds.count() };
       },
       dispose() {},
     };
