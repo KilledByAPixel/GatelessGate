@@ -39,16 +39,3 @@ The reading is the Nyogen Senzaki and Paul Reps English rendering, privately pri
 in Los Angeles in 1934 and in the US public domain, lightly modernized where the old
 verse forms had gone archaic. The aim is a thing beautiful enough to draw in someone
 who has never heard of a koan, and faithful enough to reward someone who has.
-
-## Running it yourself
-
-It's a static site — no build step. From the project folder:
-
-    npx -y http-server -p 8105 -c-1 .
-
-then open <http://localhost:8105>.
-
----
-
-*Working title. Design notes live in [`docs/`](docs/); this is a personal project and
-a labor of love.*
