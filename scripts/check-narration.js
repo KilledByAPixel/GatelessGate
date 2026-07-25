@@ -21,20 +21,27 @@ if (!fs.existsSync(manifestFile)) { console.error('No manifest — nothing baked
 const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
 
 // Duration is the honest metric and beats file size, which also varies with bitrate.
-// Only the Gemini path records it, so fall back to bytes for older bakes.
-const haveSeconds = Object.values(manifest.files).every((f) => typeof f.seconds === 'number');
+// Only takes recording `seconds` are audited when any exist — during a two-day bake the
+// manifest is mixed (new Charon takes have seconds, not-yet-rebaked onyx ones don't),
+// and folding two providers' byte rates into one baseline would mask real outliers.
+// A pure older bake with no seconds anywhere falls back to bytes across the board.
+const entries = Object.entries(manifest.files);
+const anySeconds = entries.some(([, f]) => typeof f.seconds === 'number');
 
 const rows = [];
 const missing = [];
-for (const [key, f] of Object.entries(manifest.files)) {
+let skipped = 0;
+for (const [key, f] of entries) {
   const [id, section] = key.split(':');
   if (!fs.existsSync(path.join(outDir, f.file))) missing.push(f.file);
+  if (anySeconds && typeof f.seconds !== 'number') { skipped++; continue; }
   rows.push({
     key, section,
     chars: (CASES[id][section] || '').trim().length,
-    metric: haveSeconds ? f.seconds : f.bytes,
+    metric: anySeconds ? f.seconds : f.bytes,
   });
 }
+const haveSeconds = anySeconds;
 
 const total = Object.values(manifest.files).reduce((s, f) => s + f.bytes, 0);
 console.log(`${rows.length} units, ${(total / 1e6).toFixed(1)} MB — ${manifest.provider || 'openai'} / ${manifest.voice} / ${manifest.preset}`);
