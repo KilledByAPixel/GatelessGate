@@ -26,20 +26,50 @@ export function readKey() {
   throw new Error('No API key: set GEMINI_API_KEY or put the key in local/gemini-key.txt');
 }
 
-// Validates and reads a .wav this module wrote. Used to decide whether a cached raw
-// take can be reused instead of paying to regenerate it — so it deliberately rejects
-// anything truncated (e.g. a file half-written when a bake was killed): a declared data
-// size that overruns the actual bytes means the tail is missing.
+// Validates and reads a .wav — both the minimal ones this module writes and the ones
+// ffmpeg produces (loudnorm output), which carry extra header chunks (fact, LIST) so
+// the audio does not sit at a fixed offset. It walks the RIFF subchunks to find `fmt `
+// and `data` rather than assuming positions. It deliberately rejects anything truncated
+// (e.g. a file half-written when a bake was killed): a declared data size that overruns
+// the actual bytes means the tail is missing.
 export function parseWav(buf) {
-  if (!buf || buf.length < 44) return { ok: false };
+  if (!buf || buf.length < 12) return { ok: false };
   if (buf.toString('ascii', 0, 4) !== 'RIFF' || buf.toString('ascii', 8, 12) !== 'WAVE') return { ok: false };
-  const channels = buf.readUInt16LE(22);
-  const rate = buf.readUInt32LE(24);
-  const bits = buf.readUInt16LE(34);
-  const dataBytes = buf.readUInt32LE(40);
-  if (!channels || !rate || !bits) return { ok: false };
-  if (dataBytes <= 0 || 44 + dataBytes > buf.length) return { ok: false };   // truncated
-  return { ok: true, rate, channels, bits, dataBytes, seconds: dataBytes / (rate * channels * bits / 8) };
+  let channels = 0, rate = 0, bits = 0, dataOffset = 0, dataBytes = 0;
+  let p = 12;
+  while (p + 8 <= buf.length) {
+    const id = buf.toString('ascii', p, p + 4);
+    const size = buf.readUInt32LE(p + 4);
+    const body = p + 8;
+    if (id === 'fmt ' && body + 16 <= buf.length) {
+      channels = buf.readUInt16LE(body + 2);
+      rate = buf.readUInt32LE(body + 4);
+      bits = buf.readUInt16LE(body + 14);
+    } else if (id === 'data') {
+      dataOffset = body;
+      dataBytes = size;
+      break;                              // audio found; no need to walk further
+    }
+    p = body + size + (size & 1);         // chunks are word-aligned
+  }
+  if (!channels || !rate || !bits || !dataOffset) return { ok: false };
+  if (dataBytes <= 0 || dataOffset + dataBytes > buf.length) return { ok: false };   // truncated
+  return { ok: true, rate, channels, bits, dataOffset, dataBytes, seconds: dataBytes / (rate * channels * bits / 8) };
+}
+
+// Butt-join several 16-bit mono WAVs into one, with a short silence at each seam.
+// Speech seams don't blend like music, so a clean cut plus a natural pause beats a
+// crossfade — and the gap doubles as the paragraph breath the split fell on anyway.
+export function concatWavs(buffers, { gapMs = 300, rate = 24000 } = {}) {
+  const gap = Buffer.alloc(Math.round(rate * gapMs / 1000) * 2);   // 16-bit mono zeros
+  const parts = [];
+  buffers.forEach((buf, i) => {
+    const info = parseWav(buf);
+    if (!info.ok) throw new Error('concatWavs: a chunk is not a valid wav');
+    parts.push(buf.subarray(info.dataOffset, info.dataOffset + info.dataBytes));
+    if (i < buffers.length - 1) parts.push(gap);
+  });
+  return wav(Buffer.concat(parts), rate, 1);
 }
 
 // 16-bit mono PCM -> a playable .wav. Written by hand so the repo stays dependency-free.
@@ -99,15 +129,23 @@ export async function speak({ key, model, prompt, voice, tries = 5 }) {
     if (res.ok) {
       const json = await res.json();
       const part = findAudioPart(json);
-      if (!part) throw new Error(`no audio in response: ${JSON.stringify(json).slice(0, 300)}`);
-      const pcm = Buffer.from(part.data, 'base64');
-      const rate = part.sample_rate || 24000;
-      const channels = part.channels || 1;
-      return {
-        wav: wav(pcm, rate, channels),
-        seconds: pcm.length / (rate * channels * 2),
-        tokens: (json.usage && json.usage.total_output_tokens) || 0,
-      };
+      if (part) {
+        const pcm = Buffer.from(part.data, 'base64');
+        const rate = part.sample_rate || 24000;
+        const channels = part.channels || 1;
+        return {
+          wav: wav(pcm, rate, channels),
+          seconds: pcm.length / (rate * channels * 2),
+          tokens: (json.usage && json.usage.total_output_tokens) || 0,
+        };
+      }
+      // Google documents that the model occasionally returns text tokens instead of
+      // audio on a small random fraction of requests — a 200 with no audio part. They
+      // recommend automated retry; treat it exactly like a transient server error.
+      if (attempt >= tries) throw new Error(`no audio in response after ${tries} tries: ${JSON.stringify(json).slice(0, 200)}`);
+      await new Promise((r) => setTimeout(r, wait));
+      wait *= 2;
+      continue;
     }
 
     const body = await res.text().catch(() => '');

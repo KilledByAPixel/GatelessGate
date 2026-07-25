@@ -27,6 +27,21 @@ export function toMp3(src, dest, bitrate = '64k') {
   ]);
 }
 
+// Loudness-normalize one WAV to a fixed target, re-emitting 24 kHz mono 16-bit so the
+// output stays byte-compatible with concatWavs. Applied per chunk before joining:
+// it evens out the level differences between independently generated chunks, which is
+// the thing most likely to make a seam audible. EBU R128 single pass — accurate enough
+// for level-matching; a two-pass measure would be overkill here.
+export function loudnormWav(src, dest, { I = -16, TP = -1.5, LRA = 11 } = {}) {
+  execFileSync(FFMPEG, [
+    '-hide_banner', '-loglevel', 'error', '-y',
+    '-i', src,
+    '-af', `loudnorm=I=${I}:TP=${TP}:LRA=${LRA}`,
+    '-ar', '24000', '-ac', '1', '-c:a', 'pcm_s16le',
+    dest,
+  ]);
+}
+
 export function toOpus(src, dest, bitrate = '24k') {
   execFileSync(FFMPEG, [
     '-hide_banner', '-loglevel', 'error', '-y',

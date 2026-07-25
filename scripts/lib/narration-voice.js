@@ -90,28 +90,34 @@ export function instructionsFor(section, preset = PRESET) {
 
 export const GEMINI_MODEL = 'gemini-3.1-flash-tts-preview';
 
-// Voices that could plausibly read as an old teacher, spread across the descriptions
-// Google publishes. Gacrux (Mature) was auditioned first and rejected.
+// Round-three candidates: clear English readers, no Asian accent, for the British and
+// American styles below. Spread across Google's published voice descriptions.
 export const GEMINI_CANDIDATE_VOICES = [
   'Charon',       // Informative
+  'Iapetus',      // Clear
+  'Rasalgethi',   // Informative
   'Algenib',      // Gravelly
-  'Sadaltager',   // Knowledgeable
-  'Enceladus',    // Breathy
-  'Schedar',      // Even
-  'Umbriel',      // Easy-going
+  'Sulafat',      // Warm
 ];
 
-// Chosen by ear from the audition: informative and level, and the one candidate that
-// never bled prompt text into the take.
+// The shipped choice. Charon read the whole book in the `japanese` style; that bake is
+// kept as the "old man" baseline while these newer styles are auditioned.
 export const GEMINI_VOICE = 'Charon';
 
 // No quoted strings anywhere above the transcript divider: a quoted subtitle here read
-// as script and got spoken aloud at the top of several takes. Everything in this
-// preamble is description, never anything that looks like a line to deliver.
-const SCENE = `# AUDIO PROFILE: The Teacher
+// as script and got spoken aloud at the top of several takes. Everything in a scene is
+// description, never anything that looks like a line to deliver.
+const SCENE_TEACHER = `# AUDIO PROFILE: The Teacher
 
 ## THE SCENE: A plain room, late afternoon
 An old monastery room with the light going. A few people sit on the floor. The teacher is old — past eighty — and has read these forty-eight stories aloud for fifty years. He is not performing them and he is not explaining them. He knows every turn of every one, and he is reading them to the people in front of him one more time. Nothing is urgent. There is a long day behind him and nothing scheduled after this.`;
+
+// A lighter scene for the clear reading styles — deliberately not aged or hushed, so
+// the "slow old man" quality doesn't leak back in through the setting.
+const SCENE_READER = `# AUDIO PROFILE: The Reader
+
+## THE SCENE: A quiet recording booth
+An experienced audiobook narrator reading a collection of short Zen stories. The reading is clear, warm and intelligent — made for a listener who wants to follow every word. At ease and engaged, unhurried but always moving forward. Not solemn, not sleepy, not performed.`;
 
 const CONTEXT = `### SAMPLE CONTEXT
 A reading of a thirteenth-century Zen koan collection for an interactive book. The listener is alone and unhurried, looking at an ink painting while the text is read to them.
@@ -119,28 +125,49 @@ A reading of a thirteenth-century Zen koan collection for an interactive book. T
 ### CRITICAL
 Everything above the TRANSCRIPT divider is direction, not script. Speak only the words below the divider. Do not read the profile, the scene, the notes, or this instruction aloud. Do not announce a title. Begin with the first word of the transcript.`;
 
-// Director's notes. `plain` drops the accent line, so the accent can be judged as a
-// variable rather than baked into every comparison.
-const GEMINI_NOTES = {
-  plain: `### DIRECTOR'S NOTES
-Style: Level, plain and dry. Unhurried. Warm without being sweet. Lucid and kind, not frail, not solemn. Where the text is wry the humour barely surfaces — dry, never arch, never a wink. Never theatrical, never hushed-and-reverent, never "sage-like".
-Pace: Slow, around 110 words per minute. A real full stop at the end of every sentence. A longer breath at paragraph breaks. Audible, natural breathing between sentences — an old man reading aloud, not a machine. Let small silences sit.`,
+// Each preset is a scene + director's notes. The old-teacher styles are kept so the
+// shipped Charon bake stays reproducible; the reader styles are round three.
+const SLIGHTLY_SLOW = `Pace: Measured and clear — a little slower than ordinary conversation, unhurried but always moving forward. A full stop at each sentence, a brief pause at paragraph breaks. Do not drag, and do not leave long silences.`;
+const NORMAL_PACE = `Pace: A natural, comfortable reading pace, like a well-read audiobook — clear articulation and natural sentence rhythm. Not rushed, not slow.`;
 
-  japanese: `### DIRECTOR'S NOTES
+const GEMINI_PRESETS = {
+  plain: { scene: SCENE_TEACHER, notes: `### DIRECTOR'S NOTES
+Style: Level, plain and dry. Unhurried. Warm without being sweet. Lucid and kind, not frail, not solemn. Where the text is wry the humour barely surfaces — dry, never arch, never a wink. Never theatrical, never hushed-and-reverent, never "sage-like".
+Pace: Slow, around 110 words per minute. A real full stop at the end of every sentence. A longer breath at paragraph breaks. Audible, natural breathing between sentences — an old man reading aloud, not a machine. Let small silences sit.` },
+
+  japanese: { scene: SCENE_TEACHER, notes: `### DIRECTOR'S NOTES
 Style: Level, plain and dry. Unhurried. Warm without being sweet. Lucid and kind, not frail, not solemn. Where the text is wry the humour barely surfaces — dry, never arch, never a wink. Never theatrical, never hushed-and-reverent, never "sage-like".
 Accent: Fluent English with a subtle, natural Japanese accent. Restrained and realistic — never exaggerated, never comedic. Clear English pronunciation comes first.
-Pace: Slow, around 110 words per minute. A real full stop at the end of every sentence. A longer breath at paragraph breaks. Audible, natural breathing between sentences — an old man reading aloud, not a machine. Let small silences sit.`,
+Pace: Slow, around 110 words per minute. A real full stop at the end of every sentence. A longer breath at paragraph breaks. Audible, natural breathing between sentences — an old man reading aloud, not a machine. Let small silences sit.` },
+
+  // Alan Watts register: cultured British, warm, lucid, lightly wry. Clear above all.
+  british: { scene: SCENE_READER, notes: `### DIRECTOR'S NOTES
+Style: A cultured British voice — a thoughtful mid-century British philosopher reading aloud, in the manner of Alan Watts: warm, articulate, lucid, lightly wry. Clear and easy to follow. Not solemn, never theatrical.
+Accent: Standard British English (Received Pronunciation), natural and unforced. Clear pronunciation above all. No other accent.
+${SLIGHTLY_SLOW}` },
+
+  american: { scene: SCENE_READER, notes: `### DIRECTOR'S NOTES
+Style: A warm, clear, intelligent American reading voice. Plain and lucid, easy to follow, lightly wry where the text is. Not solemn, never theatrical.
+Accent: Standard General American, natural and unforced. Clear pronunciation above all. No other accent.
+${SLIGHTLY_SLOW}` },
+
+  // The "try one at normal pace" probe.
+  americanNormal: { scene: SCENE_READER, notes: `### DIRECTOR'S NOTES
+Style: A warm, clear, intelligent American reading voice. Plain and lucid, easy to follow, lightly wry where the text is. Not solemn, never theatrical.
+Accent: Standard General American, natural and unforced. Clear pronunciation above all. No other accent.
+${NORMAL_PACE}` },
 };
 
-export const GEMINI_PRESET_NAMES = Object.keys(GEMINI_NOTES);
+export const GEMINI_PRESET_NAMES = Object.keys(GEMINI_PRESETS);
 
 // Assembles direction + transcript. The divider must appear exactly as written.
 export function geminiPrompt(section, preset, text) {
-  if (!GEMINI_NOTES[preset]) throw new Error(`unknown gemini preset: ${preset}`);
+  if (!GEMINI_PRESETS[preset]) throw new Error(`unknown gemini preset: ${preset}`);
   if (!SECTION_NOTE[section]) throw new Error(`unknown section: ${section}`);
+  const { scene, notes } = GEMINI_PRESETS[preset];
   return [
-    SCENE,
-    `${GEMINI_NOTES[preset]}\n${SECTION_NOTE[section]}`,
+    scene,
+    `${notes}\n${SECTION_NOTE[section]}`,
     CONTEXT,
     `#### TRANSCRIPT\n${text}`,
   ].join('\n\n');

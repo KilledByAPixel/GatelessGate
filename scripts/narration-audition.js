@@ -34,6 +34,9 @@ const PASSAGES = [
   { key: 'dialogue', label: 'Case 7 — the story (dialogue)', section: 'case', text: CASES[7].case, shipping: 'k07-case.mp3' },
   { key: 'comment', label: "Case 7 — Mumon's comment (dry)", section: 'comment', text: CASES[7].comment, shipping: 'k07-comment.mp3' },
   { key: 'verse', label: 'Case 33 — the verse', section: 'verse', text: CASES[33].verse, shipping: 'k33-verse.mp3' },
+  // The book's longest single passage (2329 chars) — the one that whisper-decayed.
+  // Use it to check whether a voice/pace holds full volume to the end.
+  { key: 'long', label: 'Case 2 — the full story (2329 chars, decay test)', section: 'case', text: CASES[2].case, shipping: 'k02-case.mp3' },
 ];
 
 const provider = value('provider') || 'openai';
@@ -130,6 +133,14 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 const clip = (label, src) => `<div class="clip"><span>${esc(label)}</span>
     <audio controls preload="none" src="${esc(src)}"></audio></div>`;
 
+// Whatever bake currently sits in audio/narration, read from its manifest, so the
+// reference row is honestly labelled rather than hardcoded to a past provider.
+let refLabel = 'current bake';
+try {
+  const m = JSON.parse(fs.readFileSync(path.join(root, 'audio', 'narration', 'manifest.json'), 'utf8'));
+  refLabel = [m.provider, m.voice, m.preset].filter(Boolean).join(' / ') || refLabel;
+} catch { /* no manifest yet */ }
+
 const html = `<!doctype html>
 <meta charset="utf-8"><title>Narration audition — ${esc(provider)}</title>
 <style>
@@ -148,7 +159,7 @@ const html = `<!doctype html>
 <p class="note">${esc(model)} — ${produced.length} clips. Same three passages for every candidate, so listen down the page and compare like with like.</p>
 
 <section class="ref">
-  <h2>currently shipping — onyx / japanese (gpt-4o-mini-tts)</h2>
+  <h2>current bake in audio/narration — ${esc(refLabel)}</h2>
   ${passages.map((p) => clip(p.label, `../../audio/narration/${p.shipping}`)).join('\n  ')}
 </section>
 

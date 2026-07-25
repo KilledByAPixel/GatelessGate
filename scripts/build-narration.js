@@ -24,9 +24,16 @@ import {
   GEMINI_MODEL, GEMINI_VOICE, geminiPrompt,
 } from './lib/narration-voice.js';
 import { readKey as openaiKey, speak as openaiSpeak, MAX_INPUT } from './lib/openai-tts.js';
-import { readKey as geminiKey, speak as geminiSpeak, parseWav, DailyQuotaError } from './lib/gemini-tts.js';
+import { readKey as geminiKey, speak as geminiSpeak, parseWav, concatWavs, DailyQuotaError } from './lib/gemini-tts.js';
 import { pool } from './lib/pool.js';
-import { haveFfmpeg, toMp3, FFMPEG_HINT } from './lib/encode.js';
+import { haveFfmpeg, toMp3, loudnormWav, FFMPEG_HINT } from './lib/encode.js';
+import { chunkText } from './lib/chunk.js';
+
+// A section longer than this is generated in paragraph-aligned pieces and stitched,
+// because Gemini's audio quality drifts (volume/whisper decay) past ~1 minute of
+// output. ~650 chars stays comfortably under that at the British reading pace.
+const CHUNK_MAX_CHARS = 650;
+const GAP_MS = 300;   // silence at each seam — also the paragraph breath
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = path.join(root, 'audio', 'narration');
@@ -66,15 +73,21 @@ for (const id of Object.keys(CASES).map(Number).sort((a, b) => a - b)) {
     const text = (CASES[id][section] || '').trim();
     if (!text) continue;
     const sha = (parts) => crypto.createHash('sha1').update(parts.join('|')).digest('hex').slice(0, 12);
-    // The raw take depends on text/voice/preset but NOT bitrate — bitrate only affects
-    // the mp3 encode. Keying the raw by its own hash means changing bitrate reuses the
-    // cached WAV (free re-encode), while changing voice correctly forces regeneration.
-    const rawHash = sha([text, provider, model, voice, preset, INSTRUCTIONS_VERSION, section]);
+    // Each chunk is its own generation, keyed by its own text — so a short section is
+    // one chunk whose hash matches the pre-chunking scheme (its cached raw still
+    // reuses), while a long section becomes several. Keyed by text/voice/preset but NOT
+    // bitrate, so changing bitrate re-encodes from cached raws for free.
+    const chunks = chunkText(text, CHUNK_MAX_CHARS).map((ct) => {
+      const h = sha([ct, provider, model, voice, preset, INSTRUCTIONS_VERSION, section]);
+      return { text: ct, hash: h, raw: `k${pad(id)}-${section}.${h}.wav` };
+    });
+    // The assembled audio's identity is the ordered list of chunk hashes plus how they
+    // are joined; the mp3's identity adds bitrate.
+    const rawHash = sha([...chunks.map((c) => c.hash), `gap${GAP_MS}`]);
     const hash = sha([rawHash, bitrate]);
     units.push({
-      id, section, text, hash, rawHash,
+      id, section, text, hash, chunks,
       file: `k${pad(id)}-${section}.mp3`,
-      raw: `k${pad(id)}-${section}.${rawHash}.wav`,
     });
   }
 }
@@ -87,7 +100,40 @@ if (tooLong.length) {
 }
 
 fs.mkdirSync(outDir, { recursive: true });
-if (gemini) fs.mkdirSync(rawDir, { recursive: true });
+const tmpDir = path.join(rawDir, '.tmp');
+if (gemini) { fs.mkdirSync(rawDir, { recursive: true }); fs.mkdirSync(tmpDir, { recursive: true }); }
+
+// Loudness-normalize each cached chunk, join them with a silence gap, and encode the
+// result. Per-chunk normalization is what evens the level across independently
+// generated pieces so the seams don't jump. No API calls — pure local assembly, so
+// both the bake and --encode-only share it.
+function assembleMp3(u, mp3Dest) {
+  const prefix = path.join(tmpDir, `${pad(u.id)}-${u.section}`);
+  const norms = u.chunks.map((ch, i) => {
+    const dest = `${prefix}.norm${i}.wav`;
+    loudnormWav(path.join(rawDir, ch.raw), dest);
+    return dest;
+  });
+  let joined = norms[0];
+  if (norms.length > 1) {
+    joined = `${prefix}.joined.wav`;
+    fs.writeFileSync(joined, concatWavs(norms.map((n) => fs.readFileSync(n)), { gapMs: GAP_MS }));
+  }
+  toMp3(joined, mp3Dest, bitrate);
+  for (const n of norms) { try { fs.unlinkSync(n); } catch {} }
+  if (norms.length > 1) { try { fs.unlinkSync(joined); } catch {} }
+  return fs.statSync(mp3Dest).size;
+}
+
+// Duration of the assembled unit: its chunks' audio plus the seam gaps between them.
+function unitSeconds(u) {
+  let s = 0;
+  for (const ch of u.chunks) {
+    const info = parseWav(fs.readFileSync(path.join(rawDir, ch.raw)));
+    s += info.ok ? info.seconds : 0;
+  }
+  return s + Math.max(0, u.chunks.length - 1) * GAP_MS / 1000;
+}
 
 const manifest = fs.existsSync(manifestFile)
   ? JSON.parse(fs.readFileSync(manifestFile, 'utf8'))
@@ -115,12 +161,13 @@ if (encodeOnly) {
   if (!haveFfmpeg()) { console.error(FFMPEG_HINT); process.exit(1); }
   let n = 0;
   for (const u of units) {
-    const src = path.join(rawDir, u.raw);
-    if (!fs.existsSync(src)) continue;
-    toMp3(src, path.join(outDir, u.file), bitrate);
-    const bytes = fs.statSync(path.join(outDir, u.file)).size;
+    if (!u.chunks.every((ch) => fs.existsSync(path.join(rawDir, ch.raw)))) continue;
+    const bytes = assembleMp3(u, path.join(outDir, u.file));
     const prev = manifest.files[unitKey(u.id, u.section)] || {};
-    manifest.files[unitKey(u.id, u.section)] = { ...prev, file: u.file, hash: u.hash, bytes };
+    manifest.files[unitKey(u.id, u.section)] = {
+      ...prev, file: u.file, hash: u.hash, bytes,
+      seconds: Number(unitSeconds(u).toFixed(2)), chunks: u.chunks.length,
+    };
     n++;
   }
   saveManifest();
@@ -154,31 +201,27 @@ await pool(stale.map((u) => async () => {
   try {
     let bytes, seconds = null, reused = false;
     if (gemini) {
-      const rawPath = path.join(rawDir, u.raw);
-      // A valid cached raw for this exact take is money already spent — reuse it and
-      // skip the API. The rawHash in the filename guarantees it matches the current
-      // text/voice/preset; parseWav rejects anything truncated by an interrupted run.
-      let cached = null;
-      if (!force && fs.existsSync(rawPath)) {
-        const buf = fs.readFileSync(rawPath);
-        const info = parseWav(buf);
-        if (info.ok) cached = info;
-      }
-      if (cached) {
-        seconds = cached.seconds; reused = true;
-      } else {
+      // Generate each chunk that isn't already cached. A valid cached raw is money
+      // already spent — its hash in the filename guarantees it matches the current
+      // text/voice/preset, and parseWav rejects anything an interrupted run truncated.
+      let newChunks = 0;
+      for (const ch of u.chunks) {
+        const rawPath = path.join(rawDir, ch.raw);
+        if (!force && fs.existsSync(rawPath) && parseWav(fs.readFileSync(rawPath)).ok) continue;
         const r = await geminiSpeak({
           key, model, voice,
-          prompt: geminiPrompt(u.section, preset, u.text),
+          prompt: geminiPrompt(u.section, preset, ch.text),
         });
         fs.writeFileSync(rawPath, r.wav);
-        seconds = r.seconds; tokens += r.tokens;
+        tokens += r.tokens;
+        newChunks++;
       }
+      reused = newChunks === 0;
+      seconds = unitSeconds(u);
       if (canEncode) {
-        toMp3(rawPath, path.join(outDir, u.file), bitrate);
-        bytes = fs.statSync(path.join(outDir, u.file)).size;
+        bytes = assembleMp3(u, path.join(outDir, u.file));
       } else {
-        bytes = fs.statSync(rawPath).size;
+        bytes = u.chunks.reduce((s, ch) => s + fs.statSync(path.join(rawDir, ch.raw)).size, 0);
       }
     } else {
       const mp3 = await openaiSpeak({
@@ -191,10 +234,13 @@ await pool(stale.map((u) => async () => {
     }
     const entry = { file: u.file, hash: u.hash, bytes };
     if (seconds !== null) entry.seconds = Number(seconds.toFixed(2));
+    if (gemini && u.chunks.length > 1) entry.chunks = u.chunks.length;
     manifest.files[unitKey(u.id, u.section)] = entry;
     saveManifest();
     console.log(`  [${++done}/${stale.length}] ${u.file} — ${(bytes / 1024).toFixed(0)} KB`
-      + (seconds !== null ? ` — ${seconds.toFixed(1)}s` : '') + (reused ? ' (cached raw)' : ''));
+      + (seconds !== null ? ` — ${seconds.toFixed(1)}s` : '')
+      + (gemini && u.chunks.length > 1 ? ` — ${u.chunks.length} chunks` : '')
+      + (reused ? ' (cached raw)' : ''));
   } catch (e) {
     if (e instanceof DailyQuotaError) {
       // The daily cap is a wall, not a hiccup: every remaining unit would hit it too.
