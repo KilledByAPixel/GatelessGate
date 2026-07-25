@@ -2,3 +2,8 @@ node_modules/
 .DS_Store
 shots/
 local/
+
+# AI tooling and planning notes — kept locally, not part of the published repo.
+# CLAUDE.md stays tracked at the root; this is the working notes around it.
+.claude/
+docs/
