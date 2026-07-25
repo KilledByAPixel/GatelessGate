@@ -39,3 +39,32 @@ The reading is the Nyogen Senzaki and Paul Reps English rendering, privately pri
 in Los Angeles in 1934 and in the US public domain, lightly modernized where the old
 verse forms had gone archaic. The aim is a thing beautiful enough to draw in someone
 who has never heard of a koan, and faithful enough to reward someone who has.
+
+## Still to come
+
+This is a living project. Some of what's ahead:
+
+- **A human reading.** Every case is read by a synthesized voice today. A real
+  reader — unhurried, warm, one person the whole way through — would be better. The
+  book is only forty-nine cases of case, commentary, and verse; a full read is within
+  one person's reach. If that could be you, see below.
+- **More languages.** The text and its reading in other tongues — and one day the
+  original Chinese beside the English.
+- **Step inside.** A VR / headset mode: sit *within* the dioramas rather than looking
+  at them through glass.
+- **Richer scenes.** Deeper art as the kit grows — more ink, more life, more of each
+  koan's particular weather.
+- **A better read.** Kinder typography and reading modes: adjustable pace, the line
+  lit as it's spoken, larger text, calmer motion, and full accessibility.
+- **Supplemental material.** Who these old masters were, a little history, a
+  pronunciation guide, where to read further — for anyone the stories send looking.
+- **Take it offline.** Installable, so the whole book travels with you with no
+  connection at all.
+- **A koan a day.** An optional gentle rhythm — one case each morning, if you'd like
+  one.
+
+## Lending a hand
+
+If you'd like to **record the readings**, or **translate** the book into another
+language, that would be a real gift — the structure is simple: forty-nine cases, each
+in three short parts. Open an issue on the repository and say hello.
