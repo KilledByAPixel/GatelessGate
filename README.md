@@ -17,8 +17,8 @@ and no score — it is a book, not a game.
 
 ## What's inside
 
-- **All forty-nine cases**, each with its own scene, the full traditional text, and
-  a spoken reading.
+- **All forty-nine cases** — Mumon's forty-eight and Amban's traditional addition —
+  each with its own scene, the full text, and a spoken reading.
 - **Touch, if you like.** Scenes answer a little to a cursor or a tap — a flag
   ruffles and stills, water rings, a bell sounds — small delights you stumble on,
   never something you have to find.
