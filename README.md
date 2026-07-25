@@ -45,9 +45,7 @@ who has never heard of a koan, and faithful enough to reward someone who has.
 This is a living project. Some of what's ahead:
 
 - **A human reading.** Every case is read by a synthesized voice today. A real
-  reader — unhurried, warm, one person the whole way through — would be better. The
-  book is only forty-nine cases of case, commentary, and verse; a full read is within
-  one person's reach. If that could be you, see below.
+  reader — unhurried, warm, one person the whole way through — would be better.
 - **More languages.** The text and its reading in other tongues — and one day the
   original Chinese beside the English.
 - **Step inside.** A VR / headset mode: sit *within* the dioramas rather than looking
@@ -62,9 +60,3 @@ This is a living project. Some of what's ahead:
   connection at all.
 - **A koan a day.** An optional gentle rhythm — one case each morning, if you'd like
   one.
-
-## Lending a hand
-
-If you'd like to **record the readings**, or **translate** the book into another
-language, that would be a real gift — the structure is simple: forty-nine cases, each
-in three short parts. Open an issue on the repository and say hello.
