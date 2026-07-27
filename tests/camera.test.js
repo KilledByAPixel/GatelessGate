@@ -1,7 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { makeCameraRig } from '../src/camera.js';
+import { makeCameraRig, wanderGoal } from '../src/camera.js';
+
+// The rig's own defaults — the envelope a reader can reach by dragging.
+const HOME = { azimuth: 0.55, polar: 1.27, distance: 11.5 };
+const BOUNDS = { azimuthRange: 0.9, minPolar: 0.9, maxPolar: 1.45, minDist: 7, maxDist: 16 };
 
 function fakeEl() {
   const handlers = {};
@@ -57,4 +61,70 @@ test('update converges toward goal and positions the camera', () => {
   assert.ok(Math.abs(s.azimuth - rig.goal.azimuth) < 0.05, `azimuth ${s.azimuth} vs goal ${rig.goal.azimuth}`);
   const dist = cam.position.distanceTo(new THREE.Vector3(0, 1.1, 0));
   assert.ok(Math.abs(dist - s.distance) < 0.01, `camera not on sphere: ${dist} vs ${s.distance}`);
+});
+
+// ---- ambient drift ----
+// The whole safety argument for ambient mode is that the drift stays inside the
+// bounds a reader can already drag to, because those were art-directed per case.
+// If it can leave them it can push the camera through a tree or under the
+// ground in any of 49 scenes, so this is the test that matters.
+
+test('the ambient drift never leaves the rig bounds', () => {
+  for (let t = 0; t < 6000; t += 0.31) {
+    const g = wanderGoal(t, HOME, BOUNDS);
+    assert.ok(Number.isFinite(g.azimuth) && Number.isFinite(g.polar) && Number.isFinite(g.distance),
+      `non-finite goal at t=${t}: ${JSON.stringify(g)}`);
+    assert.ok(g.azimuth >= HOME.azimuth - BOUNDS.azimuthRange - 1e-9
+      && g.azimuth <= HOME.azimuth + BOUNDS.azimuthRange + 1e-9, `azimuth ${g.azimuth} at t=${t}`);
+    assert.ok(g.polar >= BOUNDS.minPolar - 1e-9 && g.polar <= BOUNDS.maxPolar + 1e-9,
+      `polar ${g.polar} at t=${t}`);
+    assert.ok(g.distance >= BOUNDS.minDist - 1e-9 && g.distance <= BOUNDS.maxDist + 1e-9,
+      `distance ${g.distance} at t=${t}`);
+  }
+});
+
+test('the ambient drift is seeded, not random', () => {
+  for (const t of [0, 3.5, 97.25, 1234.75]) {
+    assert.deepEqual(wanderGoal(t, HOME, BOUNDS), wanderGoal(t, HOME, BOUNDS), `t=${t}`);
+  }
+});
+
+test('the ambient drift actually drifts, on all three axes', () => {
+  // Guards against a "wander" that clamps or averages its way into sitting
+  // still — which would pass the bounds test above perfectly.
+  const seen = { azimuth: [], polar: [], distance: [] };
+  for (let t = 0; t < 600; t += 0.5) {
+    const g = wanderGoal(t, HOME, BOUNDS);
+    for (const k of Object.keys(seen)) seen[k].push(g[k]);
+  }
+  const spread = (xs) => Math.max(...xs) - Math.min(...xs);
+  assert.ok(spread(seen.azimuth) > 0.2, `azimuth barely moves: ${spread(seen.azimuth)}`);
+  assert.ok(spread(seen.polar) > 0.05, `polar barely moves: ${spread(seen.polar)}`);
+  assert.ok(spread(seen.distance) > 1, `distance barely moves: ${spread(seen.distance)}`);
+});
+
+test('the drift stays near the case home framing, not out at the limits', () => {
+  // "A bit more movement", not a fairground ride: the average pose over a long
+  // sweep should sit close to where the case framed itself.
+  let n = 0, az = 0, po = 0, di = 0;
+  for (let t = 0; t < 3000; t += 0.5) {
+    const g = wanderGoal(t, HOME, BOUNDS);
+    az += g.azimuth; po += g.polar; di += g.distance; n++;
+  }
+  assert.ok(Math.abs(az / n - HOME.azimuth) < 0.2, `azimuth mean drifts off home: ${az / n}`);
+  assert.ok(Math.abs(po / n - HOME.polar) < 0.06, `polar mean drifts off home: ${po / n}`);
+  assert.ok(Math.abs(di / n - HOME.distance) < 1.2, `distance mean drifts off home: ${di / n}`);
+});
+
+test('a rig with wander on moves the camera over time; with it off it holds still', () => {
+  const cam = new THREE.PerspectiveCamera();
+  const rig = makeCameraRig(cam, fakeEl(), { target: [0, 1.1, 0], distance: 11.5 });
+  const start = cam.position.clone();
+  for (let i = 0; i < 600; i++) rig.update(1 / 60);
+  assert.ok(cam.position.distanceTo(start) < 1e-6, 'camera moved with wander off');
+
+  rig.setWander(true);
+  for (let i = 0; i < 600; i++) rig.update(1 / 60);
+  assert.ok(cam.position.distanceTo(start) > 0.25,
+    `camera barely drifted with wander on: ${cam.position.distanceTo(start)}`);
 });

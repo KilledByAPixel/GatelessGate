@@ -161,6 +161,26 @@ setFsLabel();
 // where the browser is honest enough to say so up front, take it at its word.
 if (document.fullscreenEnabled === false) fsBtn.remove();
 
+// ---- ambient view: just the picture ----
+// The text steps aside, the diorama takes the whole window, and the camera
+// drifts on its own. Deliberately NOT a `mode`: the reader is still in whatever
+// case they were reading, still being read to, still sitting if they were
+// sitting — only the way they are looking at it changes. A fourth mode would
+// have to be answered for in every `mode ===` check in this file and would buy
+// nothing. Composes with the fullscreen button rather than requesting it: if
+// they are already fullscreen, the whole window IS the whole screen.
+const app = document.getElementById('gg-app');
+let ambient = false;
+const ambientBtn = tool('◉', 'Ambient view', () => setAmbient(!ambient));
+function setAmbient(on) {
+  ambient = !!on;
+  app.classList.toggle('ambient', ambient);
+  ambientBtn.classList.toggle('active', ambient);
+  ambientBtn.title = ambient ? 'Leave ambient view' : 'Ambient view';
+  applyStageSize();          // the panel just left or returned; see the comment there
+  if (rig) rig.setWander(ambient);
+}
+
 // ---- debug workbench (top-right of the stage) ----
 const freeCam = makeFreeCam(camera, renderer.domElement);
 const debug = makeDebug({
@@ -207,7 +227,11 @@ function applyLens(fov = (debug && debug.state.lens) || LENS_BASE) {
   camera.updateProjectionMatrix();
   if (rig && rig.goal) {
     const t = (d) => Math.tan((d * Math.PI) / 360);
-    rig.goal.distance = rigBaseDistance * (t(LENS_BASE) / t(fov));
+    const d = rigBaseDistance * (t(LENS_BASE) / t(fov));
+    rig.goal.distance = d;
+    // home too, or the ambient drift would keep breathing around the old
+    // framing and drag the lens correction straight back out again
+    rig.home.distance = d;
   }
 }
 
@@ -217,6 +241,9 @@ function makeRig(opts) {
   const r = makeCameraRig(camera, renderer.domElement, opts);
   rig = r;
   applyLens();
+  // every scene builds a fresh rig, so an ambient view already running has to be
+  // re-applied to it — otherwise paging while ambient silently stops the drift
+  r.setWander(ambient);
   return r;
 }
 
@@ -481,7 +508,13 @@ addEventListener('keydown', (e) => {
   // is no prompt any more to do this for us)
   audio.unlock();
   if (mode === 'intro') { skipIntro(); return; }
-  if (e.key === 'Escape') { if (mode === 'sit') sit.end(); else if (mode === 'koan') exit(); return; }
+  // Ambient first: Escape should give the reader their text back, not take the
+  // case away from them. Leaving the view is the smaller undo, so it goes first.
+  if (e.key === 'Escape') {
+    if (ambient) { setAmbient(false); return; }
+    if (mode === 'sit') sit.end(); else if (mode === 'koan') exit();
+    return;
+  }
   // page the book with the arrow keys while reading a case
   const t = e.target;
   const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
@@ -525,7 +558,12 @@ function frame(now) {
   scenes.render(camera);
 }
 
-addEventListener('resize', () => {
+// Named rather than inline because the window is not the only thing that
+// resizes the stage: ambient mode hides the text panel, and since the shell is
+// a flex row that hands the stage the freed width — a layout change INSIDE the
+// page, which fires no resize event at all. Anything that changes the stage's
+// size has to call this by hand.
+function applyStageSize() {
   const { w, h } = stageSize();
   renderer.setSize(w, h);
   camera.aspect = w / h;
@@ -535,7 +573,8 @@ addEventListener('resize', () => {
   freeze.setSize(w, h);
   freeze.setAspect(camera.aspect);
   freeze.clear();     // a held frame at the old aspect would stretch
-});
+}
+addEventListener('resize', applyStageSize);
 
 // ---- headless hooks ----
 window.gate = {
@@ -569,6 +608,7 @@ window.gate = {
   markRead(slug) { save.markRead(slug); menu.refresh(save.state()); },
   markSat(slug) { save.markSat(slug); menu.refresh(save.state()); },
   setSound(on) { audio.setSound(on); setSoundLabel(); },
+  ambient(on) { setAmbient(on === undefined ? !ambient : on); return ambient; },
   // Voice and delivery are baked, not chosen at runtime. This reports what shipped.
   voice() { const m = narration.manifest(); return m ? `${m.voice} / ${m.preset}` : null; },
   narrationCount() { const m = narration.manifest(); return m ? Object.keys(m.files).length : 0; },
