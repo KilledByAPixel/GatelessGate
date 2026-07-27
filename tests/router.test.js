@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseRoute, hashFor } from '../src/router.js';
+import { parseRoute, hashFor, makeRouter } from '../src/router.js';
 import { CASES } from '../src/koans/index.js';
 
 test('a bare hash is a case number', () => {
@@ -46,4 +46,112 @@ test('every case round-trips', () => {
     const route = parseRoute(hashFor(c.slug));
     assert.deepEqual(route, { view: 'case', id: c.id, slug: c.slug }, `case ${c.id}`);
   }
+});
+
+// A stand-in for `window` with just the surface the router touches. `pushed`
+// records every history entry the router creates, however it created it —
+// assigning location.hash and calling pushState both land here, which is what
+// lets us assert "this wrote no new entry".
+function fakeWin(hash = '') {
+  let h = hash;
+  const listeners = {};
+  return {
+    pushed: [],
+    location: {
+      pathname: '/gate/', search: '',
+      get hash() { return h; },
+      set hash(v) {
+        const next = v.startsWith('#') ? v : `#${v}`;
+        if (next === h) return;              // browsers ignore a no-change write
+        h = next;
+        this.__win.pushed.push(next);
+      },
+    },
+    history: {
+      pushState(_state, _title, url) {
+        const i = url.indexOf('#');
+        h = i < 0 ? '' : url.slice(i);
+        this.__win.pushed.push(url);
+      },
+    },
+    addEventListener(type, fn) { (listeners[type] = listeners[type] || []).push(fn); },
+    removeEventListener(type, fn) {
+      listeners[type] = (listeners[type] || []).filter((f) => f !== fn);
+    },
+    fire(type) { for (const fn of [...(listeners[type] || [])]) fn(); },
+  };
+}
+
+// wire the back-references the getters above need
+function win(hash) {
+  const w = fakeWin(hash);
+  w.location.__win = w; w.history.__win = w;
+  return w;
+}
+
+test('initial() reads the route out of the address bar', () => {
+  assert.deepEqual(makeRouter({ win: win('#29') }).initial(), {
+    view: 'case', id: 29, slug: 'not-the-wind-not-the-flag',
+  });
+  assert.deepEqual(makeRouter({ win: win('') }).initial(), { view: 'contents' });
+  assert.equal(makeRouter({ win: win('#99') }).initial(), null);
+});
+
+test('set() writes a case hash and pushes one entry', () => {
+  const w = win('');
+  makeRouter({ win: w }).set({ view: 'case', slug: 'not-the-wind-not-the-flag' });
+  assert.equal(w.location.hash, '#29');
+  assert.deepEqual(w.pushed, ['#29']);
+});
+
+test('set() is a no-op when the URL already says that — this is what makes Back work', () => {
+  const w = win('#29');
+  const r = makeRouter({ win: w });
+  r.set({ view: 'case', slug: 'not-the-wind-not-the-flag' });
+  assert.deepEqual(w.pushed, [], 'must not push a second entry for the URL we are already on');
+});
+
+test('set(contents) clears to the bare URL, once', () => {
+  const w = win('#29');
+  const r = makeRouter({ win: w });
+  r.set({ view: 'contents' });
+  assert.equal(w.location.hash, '');
+  assert.deepEqual(w.pushed, ['/gate/']);
+  r.set({ view: 'contents' });
+  assert.equal(w.pushed.length, 1, 'already at Contents: nothing more to push');
+});
+
+test('a hashchange reports the new route', () => {
+  const w = win('#29');
+  const seen = [];
+  makeRouter({ win: w, onRoute: (r) => seen.push(r) });
+  w.location.hash = '#1';
+  w.fire('hashchange');
+  assert.deepEqual(seen, [{ view: 'case', id: 1, slug: 'joshu-s-dog' }]);
+});
+
+test('an unrecognised hash reports null rather than guessing', () => {
+  const w = win('#29');
+  const seen = [];
+  makeRouter({ win: w, onRoute: (r) => seen.push(r) });
+  w.location.hash = '#99';
+  w.fire('hashchange');
+  assert.deepEqual(seen, [null]);
+});
+
+test('dispose() stops listening', () => {
+  const w = win('');
+  const seen = [];
+  const r = makeRouter({ win: w, onRoute: (x) => seen.push(x) });
+  r.dispose();
+  w.location.hash = '#1';
+  w.fire('hashchange');
+  assert.deepEqual(seen, []);
+});
+
+test('with no window at all the router is inert, not broken', () => {
+  const r = makeRouter({ win: null, onRoute: () => { throw new Error('never'); } });
+  assert.equal(r.initial(), null);
+  r.set({ view: 'case', slug: 'joshu-s-dog' });   // must not throw
+  r.dispose();
 });

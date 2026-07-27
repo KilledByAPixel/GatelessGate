@@ -24,3 +24,49 @@ export function hashFor(slug) {
   const c = bySlug(slug);
   return c ? `#${c.id}` : null;
 }
+
+// The browser half. Everything that touches `location` or `history` lives
+// INSIDE this factory — never at module scope — so the tests, which run in
+// plain Node with no DOM, can import this file without it throwing.
+export function makeRouter({ onRoute, win } = {}) {
+  const w = win === undefined ? (typeof window === 'undefined' ? null : window) : win;
+  // A headless or embedded host with no window still gets a working object;
+  // navigation must never depend on the URL being writable.
+  if (!w) return { initial: () => null, set() {}, dispose() {} };
+
+  const bare = () => w.location.pathname + w.location.search;
+  const here = () => bare() + w.location.hash;
+  const urlFor = (route) => {
+    if (route && route.view === 'case') {
+      const h = hashFor(route.slug);
+      return h ? bare() + h : null;
+    }
+    return bare();
+  };
+
+  const onHash = () => { onRoute && onRoute(parseRoute(w.location.hash)); };
+  w.addEventListener('hashchange', onHash);
+
+  return {
+    initial: () => parseRoute(w.location.hash),
+    // Compare the URL we WANT to the URL that is THERE, and do nothing if they
+    // match. That single comparison is also the re-entrancy guard: after the
+    // reader presses Back the app navigates and then writes the URL it was just
+    // handed, which is a no-op — so no second history entry is pushed and no
+    // second hashchange fires. No "currently routing" flag is needed anywhere.
+    set(route) {
+      const want = urlFor(route);
+      if (!want || want === here()) return;
+      try {
+        // A case rides `location.hash`, which pushes an entry by itself.
+        // Contents needs pushState: assigning hash = '' leaves a trailing '#'.
+        if (route.view === 'case') w.location.hash = hashFor(route.slug);
+        else w.history.pushState(null, '', want);
+      } catch {
+        // Some embedded contexts refuse pushState. A URL we cannot write is a
+        // cosmetic loss; it must never take navigation down with it.
+      }
+    },
+    dispose() { w.removeEventListener('hashchange', onHash); },
+  };
+}
