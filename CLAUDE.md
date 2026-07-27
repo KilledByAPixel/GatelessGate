@@ -15,6 +15,7 @@ The design doc at `docs/gateless-gate-design-doc.md` is authoritative; its dated
 - Test one file: `node --test tests/k29.test.js`
 - Regenerate koan text after editing `local/gateless-gate.txt`: `node scripts/build-text.js` (writes `src/koans/text/`)
 - Re-bake narration after a text change: `node scripts/build-narration.js` — only units whose text/voice/preset hash changed are regenerated, so this is normally a few files and a few cents. Needs an OpenAI key in `local/openai-key.txt` or `OPENAI_API_KEY`. Use `--dry-run` to see what would bake without spending anything, and `--case N` to scope it. Voice and delivery live in `scripts/lib/narration-voice.js`; `scripts/narration-audition.js` is the bake-off for changing them.
+- Audit a bake for bad takes (no API cost): `node scripts/check-narration.js` fits duration vs character count; `node scripts/check-narration-wps.js` measures words-per-second speaking pace after crediting paragraph-break and lead-in pauses. Both flag dropouts (too short/fast) and repeats or dead air (too long/slow) by comparing each unit to its section; they normalise differently, so run both. Neither can catch a same-length garble — that still needs ears.
 - Screenshots while the preview panel is hidden: `node scripts/dev/shot-server.js` (port 8106; workspace launch config `gate-shots`), then POST a `canvas.toDataURL(...)` string to `http://localhost:8106/<name>` — files land in `shots/` (gitignored)
 
 `local/` is gitignored — it holds the source text and Frank's local notes; don't assume its contents exist in a fresh clone.
