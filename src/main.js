@@ -333,11 +333,18 @@ async function showKoan(mod, slug) {
   panel.classList.add('fading');
   const active = scenes.active();
   const frozen = active ? freeze.capture(active.scene, camera) : false;
-  if (!frozen) await dissolve.dissolveOut(0.4);   // from the menu: no still to hold
   buildKoan(mod, slug);
   panel.classList.remove('fading');
+  // No still to tear from means a COLD ARRIVAL — capture only fails when there is
+  // no active scene, and the only moment there isn't one is a deep link opening
+  // the book straight into a case. Cut, don't dissolve. A transition needs
+  // something to transition FROM, and there is nothing here but paper; playing
+  // one anyway also put the reveal directly behind buildKoan's one big
+  // synchronous allocation, so the frame after the build arrived with dt clamped
+  // to 0.1 s and the tween lurched a quarter of its length in a single frame.
+  // The front page doesn't fade in either — it is simply there.
   if (frozen) { dissolve.set(1); freeze.release(PAGE_REVEAL); }   // fire, don't await
-  else await dissolve.dissolveIn(0.4);
+  else dissolve.set(1);
 }
 
 const nav = makeNavQueue({
@@ -569,9 +576,10 @@ window.gate = {
 
 // A deep link opens the case it names — no title dolly, no Contents. A link is
 // a promise that this is the page you were sent, and seven seconds of gate
-// breaks it. The screen starts fully inked and the scene manager stays empty,
-// so showKoan takes its no-still branch and reveals with the curtain: the ink
-// holds while the case module loads, then lifts on the finished diorama.
+// breaks it. The screen starts covered so the wait on the case module is paper
+// rather than an uncleared canvas, and the scene manager stays empty, which is
+// what tells showKoan this is a cold arrival: it cuts to the finished diorama
+// instead of dissolving. There is nothing on screen to dissolve away from.
 const booted = router.initial();
 if (booted && booted.view === 'case') {
   router.set(booted, { replace: true });   // canonicalise `#029` -> `#29` without a history entry
