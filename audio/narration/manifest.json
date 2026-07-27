@@ -1,893 +1,901 @@
 {
   "model": "gemini-3.1-flash-tts-preview",
   "voice": "Charon",
-  "preset": "japanese",
+  "preset": "british",
   "instructionsVersion": 1,
   "files": {
     "1:verse": {
       "file": "k01-verse.mp3",
-      "hash": "de37493b6af6",
-      "bytes": 169389,
-      "seconds": 21.08
+      "hash": "57ebd7acdfee",
+      "bytes": 113901,
+      "seconds": 14.16
     },
     "1:case": {
       "file": "k01-case.mp3",
-      "hash": "b008bdfebc46",
-      "bytes": 239085,
-      "seconds": 29.8
+      "hash": "099f3cea3686",
+      "bytes": 145965,
+      "seconds": 18.16
     },
     "1:comment": {
       "file": "k01-comment.mp3",
-      "hash": "8c0b97f1dc1b",
-      "bytes": 1752429,
-      "seconds": 218.96,
+      "hash": "bc4ba7101e6c",
+      "bytes": 1270125,
+      "seconds": 158.68,
       "chunks": 3
     },
     "2:verse": {
       "file": "k02-verse.mp3",
-      "hash": "67c9261bb608",
-      "bytes": 216429,
-      "seconds": 26.96
+      "hash": "a17890ba9b4b",
+      "bytes": 120429,
+      "seconds": 14.96
     },
     "2:comment": {
       "file": "k02-comment.mp3",
-      "hash": "057305f5f2ec",
-      "bytes": 284781,
-      "seconds": 35.52
+      "hash": "6cf655aa76be",
+      "bytes": 181485,
+      "seconds": 22.6
     },
     "3:comment": {
       "file": "k03-comment.mp3",
-      "hash": "19221970a57a",
-      "bytes": 199725,
-      "seconds": 24.88
+      "hash": "86a6ee8066d8",
+      "bytes": 154605,
+      "seconds": 19.24
     },
     "3:verse": {
       "file": "k03-verse.mp3",
-      "hash": "506e973a1f6c",
-      "bytes": 192045,
-      "seconds": 23.92
+      "hash": "0d7635393a6f",
+      "bytes": 151149,
+      "seconds": 18.8
     },
     "4:case": {
       "file": "k04-case.mp3",
-      "hash": "6d7661924edb",
-      "bytes": 90669,
-      "seconds": 11.24
+      "hash": "31ac257e15c6",
+      "bytes": 70125,
+      "seconds": 8.68
     },
     "3:case": {
       "file": "k03-case.mp3",
-      "hash": "25f772b4097a",
-      "bytes": 689901,
-      "seconds": 86.14,
+      "hash": "7d0d8175f240",
+      "bytes": 476013,
+      "seconds": 59.42,
       "chunks": 2
     },
     "4:verse": {
       "file": "k04-verse.mp3",
-      "hash": "3541006f53d8",
-      "bytes": 162285,
-      "seconds": 20.2
+      "hash": "6cb98f86d03b",
+      "bytes": 97389,
+      "seconds": 12.08
     },
     "4:comment": {
       "file": "k04-comment.mp3",
-      "hash": "f8da9faff473",
-      "bytes": 291885,
-      "seconds": 36.4
+      "hash": "37f12107024e",
+      "bytes": 215469,
+      "seconds": 26.84
     },
     "5:case": {
       "file": "k05-case.mp3",
-      "hash": "7a5a524cdecb",
-      "bytes": 400365,
-      "seconds": 49.96
+      "hash": "72d6a9b6b700",
+      "bytes": 270189,
+      "seconds": 33.68
     },
     "5:verse": {
       "file": "k05-verse.mp3",
-      "hash": "211dcb0f74f7",
-      "bytes": 178605,
-      "seconds": 22.24
+      "hash": "3cc718abc112",
+      "bytes": 132525,
+      "seconds": 16.48
     },
     "5:comment": {
       "file": "k05-comment.mp3",
-      "hash": "8b297f154b7f",
-      "bytes": 353901,
-      "seconds": 44.16
+      "hash": "0fdde7233d64",
+      "bytes": 208365,
+      "seconds": 25.96
     },
     "6:verse": {
       "file": "k06-verse.mp3",
-      "hash": "f4886c320133",
-      "bytes": 139821,
-      "seconds": 17.4
+      "hash": "d43a6564144c",
+      "bytes": 138669,
+      "seconds": 17.24
     },
     "6:case": {
       "file": "k06-case.mp3",
-      "hash": "089a17642b01",
-      "bytes": 533229,
-      "seconds": 66.56
+      "hash": "f704f73140b1",
+      "bytes": 322605,
+      "seconds": 40.24
     },
     "6:comment": {
       "file": "k06-comment.mp3",
-      "hash": "9ead3cae85a4",
-      "bytes": 545709,
-      "seconds": 68.12
+      "hash": "ca9c5c7801b7",
+      "bytes": 312429,
+      "seconds": 38.96
     },
     "7:case": {
       "file": "k07-case.mp3",
-      "hash": "0b53d1a44734",
-      "bytes": 338541,
-      "seconds": 42.24
+      "hash": "b9d3aa8cb3be",
+      "bytes": 201645,
+      "seconds": 25.12
     },
     "7:comment": {
       "file": "k07-comment.mp3",
-      "hash": "5a5e92b52ef2",
-      "bytes": 154221,
-      "seconds": 19.2
+      "hash": "70989d2a952c",
+      "bytes": 119085,
+      "seconds": 14.8
     },
     "7:verse": {
       "file": "k07-verse.mp3",
-      "hash": "93f519e067e5",
-      "bytes": 248109,
-      "seconds": 30.92
+      "hash": "581f24529212",
+      "bytes": 139821,
+      "seconds": 17.4
     },
     "8:comment": {
       "file": "k08-comment.mp3",
-      "hash": "9f63a3f3b0ac",
-      "bytes": 136365,
-      "seconds": 16.96
+      "hash": "dfd8ef03e7d4",
+      "bytes": 79341,
+      "seconds": 9.84
     },
     "8:case": {
       "file": "k08-case.mp3",
-      "hash": "d8bf65a9b596",
-      "bytes": 262125,
-      "seconds": 32.68
+      "hash": "b52d23814a1e",
+      "bytes": 191661,
+      "seconds": 23.88
     },
     "8:verse": {
       "file": "k08-verse.mp3",
-      "hash": "a7cb5412969d",
-      "bytes": 199725,
-      "seconds": 24.88
+      "hash": "2fa7b3f1d650",
+      "bytes": 145581,
+      "seconds": 18.12
     },
     "9:comment": {
       "file": "k09-comment.mp3",
-      "hash": "a7b706942167",
-      "bytes": 166509,
-      "seconds": 20.72
+      "hash": "58c2ee636a4c",
+      "bytes": 128301,
+      "seconds": 15.96
     },
     "9:verse": {
       "file": "k09-verse.mp3",
-      "hash": "2c7c0b2bbb98",
-      "bytes": 231789,
-      "seconds": 28.88
+      "hash": "221467d95b34",
+      "bytes": 154989,
+      "seconds": 19.28
     },
     "2:case": {
       "file": "k02-case.mp3",
-      "hash": "dbefce6adbe6",
-      "bytes": 2372781,
-      "seconds": 296.52,
+      "hash": "50ef60a78b3c",
+      "bytes": 1564269,
+      "seconds": 195.44,
       "chunks": 5
     },
     "9:case": {
       "file": "k09-case.mp3",
-      "hash": "1434b5173b8d",
-      "bytes": 483309,
-      "seconds": 60.32
-    },
-    "10:comment": {
-      "file": "k10-comment.mp3",
-      "hash": "bacd45c93495",
-      "bytes": 240429,
-      "seconds": 29.96
-    },
-    "10:verse": {
-      "file": "k10-verse.mp3",
-      "hash": "a7b19805e1f6",
-      "bytes": 161901,
-      "seconds": 20.16
-    },
-    "10:case": {
-      "file": "k10-case.mp3",
-      "hash": "04e9656b988f",
-      "bytes": 347181,
-      "seconds": 43.32
-    },
-    "11:verse": {
-      "file": "k11-verse.mp3",
-      "hash": "f99b797381fa",
-      "bytes": 177645,
-      "seconds": 22.12
-    },
-    "11:case": {
-      "file": "k11-case.mp3",
-      "hash": "5284b22f074a",
-      "bytes": 525549,
-      "seconds": 65.6
-    },
-    "12:case": {
-      "file": "k12-case.mp3",
-      "hash": "731b89be2a30",
-      "bytes": 348525,
-      "seconds": 43.48
-    },
-    "11:comment": {
-      "file": "k11-comment.mp3",
-      "hash": "20f0fe3babd0",
-      "bytes": 393645,
-      "seconds": 49.12
-    },
-    "12:verse": {
-      "file": "k12-verse.mp3",
-      "hash": "2919b033a3b4",
-      "bytes": 228141,
-      "seconds": 28.44
-    },
-    "13:comment": {
-      "file": "k13-comment.mp3",
-      "hash": "cc314c26af00",
-      "bytes": 134061,
-      "seconds": 16.68
-    },
-    "12:comment": {
-      "file": "k12-comment.mp3",
-      "hash": "3a66a0539e7b",
-      "bytes": 405165,
-      "seconds": 50.56
-    },
-    "13:verse": {
-      "file": "k13-verse.mp3",
-      "hash": "01320478d73c",
-      "bytes": 170541,
-      "seconds": 21.24
-    },
-    "14:comment": {
-      "file": "k14-comment.mp3",
-      "hash": "a5d30593e95e",
-      "bytes": 169965,
-      "seconds": 21.16
-    },
-    "14:verse": {
-      "file": "k14-verse.mp3",
-      "hash": "2a7927a42e39",
-      "bytes": 145965,
-      "seconds": 18.16
-    },
-    "14:case": {
-      "file": "k14-case.mp3",
-      "hash": "86c10bea59b5",
-      "bytes": 490029,
-      "seconds": 61.16
-    },
-    "13:case": {
-      "file": "k13-case.mp3",
-      "hash": "0fb2f2aabbce",
-      "bytes": 773229,
-      "seconds": 96.56
-    },
-    "15:verse": {
-      "file": "k15-verse.mp3",
-      "hash": "e96a6f1e7020",
-      "bytes": 219309,
-      "seconds": 27.32
-    },
-    "16:case": {
-      "file": "k16-case.mp3",
-      "hash": "cbde7e17752e",
-      "bytes": 101805,
-      "seconds": 12.64
-    },
-    "15:comment": {
-      "file": "k15-comment.mp3",
-      "hash": "fcd7958eb127",
-      "bytes": 509805,
-      "seconds": 63.64
-    },
-    "16:verse": {
-      "file": "k16-verse.mp3",
-      "hash": "c2d924aec82b",
-      "bytes": 207405,
-      "seconds": 25.84
-    },
-    "15:case": {
-      "file": "k15-case.mp3",
-      "hash": "b3151fa38852",
-      "bytes": 884205,
-      "seconds": 110.44
-    },
-    "16:comment": {
-      "file": "k16-comment.mp3",
-      "hash": "a58ab5b38d48",
-      "bytes": 498669,
-      "seconds": 62.24
-    },
-    "17:case": {
-      "file": "k17-case.mp3",
-      "hash": "83489ab2848c",
-      "bytes": 427245,
-      "seconds": 53.32
-    },
-    "17:verse": {
-      "file": "k17-verse.mp3",
-      "hash": "ce2354bebc3d",
-      "bytes": 350445,
-      "seconds": 43.72
-    },
-    "18:case": {
-      "file": "k18-case.mp3",
-      "hash": "d28d17be0481",
-      "bytes": 177645,
-      "seconds": 22.12
-    },
-    "18:comment": {
-      "file": "k18-comment.mp3",
-      "hash": "b14e2c71fbeb",
-      "bytes": 184749,
-      "seconds": 23
-    },
-    "17:comment": {
-      "file": "k17-comment.mp3",
-      "hash": "65db203e604d",
-      "bytes": 552429,
-      "seconds": 68.96
-    },
-    "18:verse": {
-      "file": "k18-verse.mp3",
-      "hash": "de0299fe73c9",
-      "bytes": 219885,
-      "seconds": 27.4
-    },
-    "19:comment": {
-      "file": "k19-comment.mp3",
-      "hash": "85dad096ede6",
-      "bytes": 183981,
-      "seconds": 22.92
-    },
-    "20:case": {
-      "file": "k20-case.mp3",
-      "hash": "8efba79b89ab",
-      "bytes": 190701,
-      "seconds": 23.76
-    },
-    "19:verse": {
-      "file": "k19-verse.mp3",
-      "hash": "e8213d0de4cc",
-      "bytes": 263085,
-      "seconds": 32.8
-    },
-    "20:comment": {
-      "file": "k20-comment.mp3",
-      "hash": "ceb425128565",
-      "bytes": 220269,
-      "seconds": 27.44
-    },
-    "20:verse": {
-      "file": "k20-verse.mp3",
-      "hash": "5aad3fd19c38",
-      "bytes": 278829,
-      "seconds": 34.76
-    },
-    "21:case": {
-      "file": "k21-case.mp3",
-      "hash": "6d0e5d4100a9",
-      "bytes": 124269,
-      "seconds": 15.44
-    },
-    "19:case": {
-      "file": "k19-case.mp3",
-      "hash": "e806fec5d66d",
-      "bytes": 705069,
-      "seconds": 88.04
-    },
-    "21:verse": {
-      "file": "k21-verse.mp3",
-      "hash": "b3052d5197df",
-      "bytes": 125229,
-      "seconds": 15.56
-    },
-    "21:comment": {
-      "file": "k21-comment.mp3",
-      "hash": "f4ef89b29d8f",
-      "bytes": 233325,
-      "seconds": 29.08
-    },
-    "22:comment": {
-      "file": "k22-comment.mp3",
-      "hash": "312a7b9a0ad6",
-      "bytes": 161901,
-      "seconds": 20.16
-    },
-    "22:verse": {
-      "file": "k22-verse.mp3",
-      "hash": "11fbd8b2f6ee",
+      "hash": "99c319a3e6b4",
       "bytes": 305709,
       "seconds": 38.12
     },
-    "22:case": {
-      "file": "k22-case.mp3",
-      "hash": "ed1ba1a1159d",
-      "bytes": 322221,
-      "seconds": 40.2
+    "10:comment": {
+      "file": "k10-comment.mp3",
+      "hash": "324841b59b12",
+      "bytes": 122925,
+      "seconds": 15.28
     },
-    "23:comment": {
-      "file": "k23-comment.mp3",
-      "hash": "18a15fc6c3d6",
-      "bytes": 148461,
-      "seconds": 18.48
+    "10:verse": {
+      "file": "k10-verse.mp3",
+      "hash": "7a306825a624",
+      "bytes": 105069,
+      "seconds": 13.04
     },
-    "23:verse": {
-      "file": "k23-verse.mp3",
-      "hash": "d792b50c87c3",
-      "bytes": 238701,
-      "seconds": 29.76
+    "10:case": {
+      "file": "k10-case.mp3",
+      "hash": "76956823072b",
+      "bytes": 246765,
+      "seconds": 30.76
     },
-    "24:case": {
-      "file": "k24-case.mp3",
-      "hash": "b61f41baaac6",
-      "bytes": 293805,
-      "seconds": 36.64
+    "11:verse": {
+      "file": "k11-verse.mp3",
+      "hash": "0d4170c166c0",
+      "bytes": 117165,
+      "seconds": 14.56
     },
-    "24:comment": {
-      "file": "k24-comment.mp3",
-      "hash": "a715cb49465c",
-      "bytes": 313965,
-      "seconds": 39.16
+    "11:case": {
+      "file": "k11-case.mp3",
+      "hash": "8e15759319db",
+      "bytes": 315885,
+      "seconds": 39.4
     },
-    "24:verse": {
-      "file": "k24-verse.mp3",
-      "hash": "447b092384b9",
-      "bytes": 169965,
-      "seconds": 21.16
+    "12:case": {
+      "file": "k12-case.mp3",
+      "hash": "8d8beb40eff5",
+      "bytes": 229485,
+      "seconds": 28.6
     },
-    "25:verse": {
-      "file": "k25-verse.mp3",
-      "hash": "dd3a93406325",
-      "bytes": 169005,
-      "seconds": 21.04
+    "11:comment": {
+      "file": "k11-comment.mp3",
+      "hash": "a0a282fa72e8",
+      "bytes": 275949,
+      "seconds": 34.4
     },
-    "25:comment": {
-      "file": "k25-comment.mp3",
-      "hash": "ca2f32a01f02",
-      "bytes": 274989,
-      "seconds": 34.28
+    "12:verse": {
+      "file": "k12-verse.mp3",
+      "hash": "fcd8c728e194",
+      "bytes": 148269,
+      "seconds": 18.44
     },
-    "25:case": {
-      "file": "k25-case.mp3",
-      "hash": "6e908dce4a80",
-      "bytes": 375789,
-      "seconds": 46.88
+    "13:comment": {
+      "file": "k13-comment.mp3",
+      "hash": "76d645fd5c43",
+      "bytes": 89325,
+      "seconds": 11.08
     },
-    "26:verse": {
-      "file": "k26-verse.mp3",
-      "hash": "a887655af6be",
-      "bytes": 209709,
-      "seconds": 26.12
+    "12:comment": {
+      "file": "k12-comment.mp3",
+      "hash": "eaf1f4bb86bc",
+      "bytes": 251181,
+      "seconds": 31.32
     },
-    "26:comment": {
-      "file": "k26-comment.mp3",
-      "hash": "fdbaa4c9bc99",
-      "bytes": 201645,
-      "seconds": 25.12
+    "13:verse": {
+      "file": "k13-verse.mp3",
+      "hash": "9c7c5c7f2d54",
+      "bytes": 97005,
+      "seconds": 12.04
     },
-    "26:case": {
-      "file": "k26-case.mp3",
-      "hash": "5e7db31491ed",
-      "bytes": 330861,
-      "seconds": 41.28
+    "14:comment": {
+      "file": "k14-comment.mp3",
+      "hash": "c49d916fb7e1",
+      "bytes": 119085,
+      "seconds": 14.8
     },
-    "27:comment": {
-      "file": "k27-comment.mp3",
-      "hash": "6b38455bf27a",
-      "bytes": 83181,
-      "seconds": 10.32
+    "14:verse": {
+      "file": "k14-verse.mp3",
+      "hash": "30ba8365a753",
+      "bytes": 95085,
+      "seconds": 11.8
     },
-    "27:case": {
-      "file": "k27-case.mp3",
-      "hash": "149745f77e1c",
-      "bytes": 263661,
-      "seconds": 32.88
+    "14:case": {
+      "file": "k14-case.mp3",
+      "hash": "9f7201fc0e38",
+      "bytes": 315885,
+      "seconds": 39.4
     },
-    "27:verse": {
-      "file": "k27-verse.mp3",
-      "hash": "59fc3f1bcacf",
-      "bytes": 236589,
-      "seconds": 29.48
+    "13:case": {
+      "file": "k13-case.mp3",
+      "hash": "524325deea83",
+      "bytes": 511533,
+      "seconds": 63.86,
+      "chunks": 2
     },
-    "23:case": {
-      "file": "k23-case.mp3",
-      "hash": "24b0ed8d33bb",
-      "bytes": 1275501,
-      "seconds": 159.36
+    "15:verse": {
+      "file": "k15-verse.mp3",
+      "hash": "73fd00f2153d",
+      "bytes": 141165,
+      "seconds": 17.56
     },
-    "28:verse": {
-      "file": "k28-verse.mp3",
-      "hash": "73169e2c487b",
-      "bytes": 235821,
-      "seconds": 29.4
+    "16:case": {
+      "file": "k16-case.mp3",
+      "hash": "2f3ff3339625",
+      "bytes": 86445,
+      "seconds": 10.72
     },
-    "29:case": {
-      "file": "k29-case.mp3",
-      "hash": "c54368b56285",
-      "bytes": 216621,
-      "seconds": 27
-    },
-    "29:verse": {
-      "file": "k29-verse.mp3",
-      "hash": "eb52ae40e0dc",
-      "bytes": 130605,
-      "seconds": 16.24
-    },
-    "29:comment": {
-      "file": "k29-comment.mp3",
-      "hash": "e6f21b63878e",
+    "15:comment": {
+      "file": "k15-comment.mp3",
+      "hash": "cdac92b8cda8",
       "bytes": 331629,
       "seconds": 41.36
     },
-    "30:case": {
-      "file": "k30-case.mp3",
-      "hash": "694a677aa22c",
-      "bytes": 111405,
-      "seconds": 13.84
+    "16:verse": {
+      "file": "k16-verse.mp3",
+      "hash": "52d83d78b176",
+      "bytes": 149421,
+      "seconds": 18.6
     },
-    "30:verse": {
-      "file": "k30-verse.mp3",
-      "hash": "33f420fb35e5",
-      "bytes": 186285,
-      "seconds": 23.2
+    "15:case": {
+      "file": "k15-case.mp3",
+      "hash": "42c70ecfbbf2",
+      "bytes": 593133,
+      "seconds": 74.06,
+      "chunks": 2
     },
-    "28:comment": {
-      "file": "k28-comment.mp3",
-      "hash": "e2e3ef70746a",
-      "bytes": 970605,
-      "seconds": 121.24
+    "16:comment": {
+      "file": "k16-comment.mp3",
+      "hash": "8cce348d7901",
+      "bytes": 366189,
+      "seconds": 45.68
     },
-    "28:case": {
-      "file": "k28-case.mp3",
-      "hash": "9498520764f0",
-      "bytes": 1059309,
-      "seconds": 132.32
+    "17:case": {
+      "file": "k17-case.mp3",
+      "hash": "5013c2937000",
+      "bytes": 259245,
+      "seconds": 32.32
     },
-    "30:comment": {
-      "file": "k30-comment.mp3",
-      "hash": "236412823d7b",
-      "bytes": 407661,
-      "seconds": 50.88
+    "17:verse": {
+      "file": "k17-verse.mp3",
+      "hash": "2ca7a445283b",
+      "bytes": 226989,
+      "seconds": 28.28
     },
-    "31:verse": {
-      "file": "k31-verse.mp3",
-      "hash": "7c8f5b1bf6a8",
-      "bytes": 169005,
-      "seconds": 21.04
+    "18:case": {
+      "file": "k18-case.mp3",
+      "hash": "bd59f4ebc431",
+      "bytes": 97389,
+      "seconds": 12.08
     },
-    "31:case": {
-      "file": "k31-case.mp3",
-      "hash": "d9d51792d723",
-      "bytes": 494061,
-      "seconds": 61.68
+    "18:comment": {
+      "file": "k18-comment.mp3",
+      "hash": "e0ccdcc3738e",
+      "bytes": 111981,
+      "seconds": 13.92
     },
-    "31:comment": {
-      "file": "k31-comment.mp3",
-      "hash": "510782d7ede3",
-      "bytes": 323565,
-      "seconds": 40.36
+    "17:comment": {
+      "file": "k17-comment.mp3",
+      "hash": "c2d57ca0ef10",
+      "bytes": 324141,
+      "seconds": 40.44
     },
-    "32:case": {
-      "file": "k32-case.mp3",
-      "hash": "0daa6d8726e3",
-      "bytes": 506925,
-      "seconds": 63.28
+    "18:verse": {
+      "file": "k18-verse.mp3",
+      "hash": "bf71b7b72cf9",
+      "bytes": 166509,
+      "seconds": 20.72
     },
-    "32:comment": {
-      "file": "k32-comment.mp3",
-      "hash": "c8bf5c28eab9",
-      "bytes": 185901,
-      "seconds": 23.16
+    "19:comment": {
+      "file": "k19-comment.mp3",
+      "hash": "b5f114c4519e",
+      "bytes": 116205,
+      "seconds": 14.44
     },
-    "33:case": {
-      "file": "k33-case.mp3",
-      "hash": "7119153620f2",
-      "bytes": 105261,
-      "seconds": 13.08
+    "20:case": {
+      "file": "k20-case.mp3",
+      "hash": "bfa16deadf84",
+      "bytes": 119469,
+      "seconds": 14.84
     },
-    "32:verse": {
-      "file": "k32-verse.mp3",
-      "hash": "46ace51d116a",
-      "bytes": 211245,
-      "seconds": 26.32
+    "19:verse": {
+      "file": "k19-verse.mp3",
+      "hash": "9bd51fa18c4f",
+      "bytes": 204525,
+      "seconds": 25.48
     },
-    "33:comment": {
-      "file": "k33-comment.mp3",
-      "hash": "17b212cc0e1b",
-      "bytes": 58989,
-      "seconds": 7.28
+    "20:comment": {
+      "file": "k20-comment.mp3",
+      "hash": "a4ae10b41ee5",
+      "bytes": 130221,
+      "seconds": 16.2
     },
-    "34:case": {
-      "file": "k34-case.mp3",
-      "hash": "910a733a7e1b",
-      "bytes": 88941,
-      "seconds": 11.04
+    "20:verse": {
+      "file": "k20-verse.mp3",
+      "hash": "eaad3b4cc00f",
+      "bytes": 169965,
+      "seconds": 21.16
     },
-    "33:verse": {
-      "file": "k33-verse.mp3",
-      "hash": "c54976891254",
-      "bytes": 233325,
-      "seconds": 29.08
+    "21:case": {
+      "file": "k21-case.mp3",
+      "hash": "5c4f23116eff",
+      "bytes": 67245,
+      "seconds": 8.32
     },
-    "34:comment": {
-      "file": "k34-comment.mp3",
-      "hash": "e536dcb70a59",
-      "bytes": 183021,
-      "seconds": 22.8
+    "19:case": {
+      "file": "k19-case.mp3",
+      "hash": "fbac93ec5402",
+      "bytes": 407469,
+      "seconds": 50.84
     },
-    "34:verse": {
-      "file": "k34-verse.mp3",
-      "hash": "cb53cfe23714",
+    "21:verse": {
+      "file": "k21-verse.mp3",
+      "hash": "45f41e6baffa",
+      "bytes": 83565,
+      "seconds": 10.36
+    },
+    "21:comment": {
+      "file": "k21-comment.mp3",
+      "hash": "18d86e9ab1c7",
+      "bytes": 151725,
+      "seconds": 18.88
+    },
+    "22:comment": {
+      "file": "k22-comment.mp3",
+      "hash": "ddc0a9ffdd0a",
+      "bytes": 121581,
+      "seconds": 15.12
+    },
+    "22:verse": {
+      "file": "k22-verse.mp3",
+      "hash": "cc9c26618647",
+      "bytes": 164589,
+      "seconds": 20.48
+    },
+    "22:case": {
+      "file": "k22-case.mp3",
+      "hash": "3dc29a20f6e1",
+      "bytes": 203565,
+      "seconds": 25.36
+    },
+    "23:comment": {
+      "file": "k23-comment.mp3",
+      "hash": "c5e7242e8ad1",
+      "bytes": 117165,
+      "seconds": 14.56
+    },
+    "23:verse": {
+      "file": "k23-verse.mp3",
+      "hash": "46d779c33fee",
+      "bytes": 162285,
+      "seconds": 20.2
+    },
+    "24:case": {
+      "file": "k24-case.mp3",
+      "hash": "fe7fb5e68712",
+      "bytes": 182445,
+      "seconds": 22.72
+    },
+    "24:comment": {
+      "file": "k24-comment.mp3",
+      "hash": "0df5defb6910",
+      "bytes": 209325,
+      "seconds": 26.08
+    },
+    "24:verse": {
+      "file": "k24-verse.mp3",
+      "hash": "75d17a813f9e",
+      "bytes": 120429,
+      "seconds": 14.96
+    },
+    "25:verse": {
+      "file": "k25-verse.mp3",
+      "hash": "8045bbb4666a",
+      "bytes": 143469,
+      "seconds": 17.84
+    },
+    "25:comment": {
+      "file": "k25-comment.mp3",
+      "hash": "d227c93d8a86",
+      "bytes": 186861,
+      "seconds": 23.28
+    },
+    "25:case": {
+      "file": "k25-case.mp3",
+      "hash": "90cfa3644a7c",
       "bytes": 255405,
       "seconds": 31.84
     },
-    "35:case": {
-      "file": "k35-case.mp3",
-      "hash": "bdbdaf356ab7",
-      "bytes": 250029,
-      "seconds": 31.16
+    "26:verse": {
+      "file": "k26-verse.mp3",
+      "hash": "e5a2e7e4e6a6",
+      "bytes": 136365,
+      "seconds": 16.96
     },
-    "35:verse": {
-      "file": "k35-verse.mp3",
-      "hash": "646dcbba62bb",
-      "bytes": 215469,
-      "seconds": 26.84
+    "26:comment": {
+      "file": "k26-comment.mp3",
+      "hash": "11332195fb1c",
+      "bytes": 137901,
+      "seconds": 17.16
     },
-    "36:case": {
-      "file": "k36-case.mp3",
-      "hash": "80831cae2991",
-      "bytes": 154605,
-      "seconds": 19.24
+    "26:case": {
+      "file": "k26-case.mp3",
+      "hash": "542dc2de6276",
+      "bytes": 213549,
+      "seconds": 26.6
     },
-    "36:comment": {
-      "file": "k36-comment.mp3",
-      "hash": "b76e94c3738c",
-      "bytes": 207789,
-      "seconds": 25.88
+    "27:comment": {
+      "file": "k27-comment.mp3",
+      "hash": "1eb5a7a4cbea",
+      "bytes": 55149,
+      "seconds": 6.8
     },
-    "35:comment": {
-      "file": "k35-comment.mp3",
-      "hash": "54d6cd71ae32",
-      "bytes": 454125,
-      "seconds": 56.68
+    "27:case": {
+      "file": "k27-case.mp3",
+      "hash": "353bfb8066d5",
+      "bytes": 201645,
+      "seconds": 25.12
     },
-    "36:verse": {
-      "file": "k36-verse.mp3",
-      "hash": "02163a820020",
-      "bytes": 163629,
-      "seconds": 20.36
-    },
-    "37:case": {
-      "file": "k37-case.mp3",
-      "hash": "3ce57a27905a",
-      "bytes": 202605,
-      "seconds": 25.24
-    },
-    "38:case": {
-      "file": "k38-case.mp3",
-      "hash": "1485543033bb",
+    "27:verse": {
+      "file": "k27-verse.mp3",
+      "hash": "dcdbbc9600da",
       "bytes": 128301,
       "seconds": 15.96
     },
+    "23:case": {
+      "file": "k23-case.mp3",
+      "hash": "c594dab210fa",
+      "bytes": 1137261,
+      "seconds": 142.08,
+      "chunks": 3
+    },
+    "28:verse": {
+      "file": "k28-verse.mp3",
+      "hash": "c41cb79ade04",
+      "bytes": 148845,
+      "seconds": 18.52
+    },
+    "29:case": {
+      "file": "k29-case.mp3",
+      "hash": "69329430ccae",
+      "bytes": 183981,
+      "seconds": 22.92
+    },
+    "29:verse": {
+      "file": "k29-verse.mp3",
+      "hash": "e99c3169e5c6",
+      "bytes": 120045,
+      "seconds": 14.92
+    },
+    "29:comment": {
+      "file": "k29-comment.mp3",
+      "hash": "42f7425a42ba",
+      "bytes": 218349,
+      "seconds": 27.2
+    },
+    "30:case": {
+      "file": "k30-case.mp3",
+      "hash": "366cfcb5805f",
+      "bytes": 88941,
+      "seconds": 11.04
+    },
+    "30:verse": {
+      "file": "k30-verse.mp3",
+      "hash": "d4aeb4cadbbf",
+      "bytes": 126189,
+      "seconds": 15.68
+    },
+    "28:comment": {
+      "file": "k28-comment.mp3",
+      "hash": "2bf4d920c227",
+      "bytes": 771501,
+      "seconds": 96.36,
+      "chunks": 3
+    },
+    "28:case": {
+      "file": "k28-case.mp3",
+      "hash": "7b07fada2a84",
+      "bytes": 876909,
+      "seconds": 109.52,
+      "chunks": 3
+    },
+    "30:comment": {
+      "file": "k30-comment.mp3",
+      "hash": "a37e4fdbb6ea",
+      "bytes": 273069,
+      "seconds": 34.04
+    },
+    "31:verse": {
+      "file": "k31-verse.mp3",
+      "hash": "7ee90e886350",
+      "bytes": 131181,
+      "seconds": 16.32
+    },
+    "31:case": {
+      "file": "k31-case.mp3",
+      "hash": "f78d98b18dd9",
+      "bytes": 327981,
+      "seconds": 40.92
+    },
+    "31:comment": {
+      "file": "k31-comment.mp3",
+      "hash": "205c0aa8e4b7",
+      "bytes": 211821,
+      "seconds": 26.4
+    },
+    "32:case": {
+      "file": "k32-case.mp3",
+      "hash": "a61200afcfd1",
+      "bytes": 296301,
+      "seconds": 36.96
+    },
+    "32:comment": {
+      "file": "k32-comment.mp3",
+      "hash": "1bf1793be9af",
+      "bytes": 137901,
+      "seconds": 17.16
+    },
+    "33:case": {
+      "file": "k33-case.mp3",
+      "hash": "34d8757db49e",
+      "bytes": 73389,
+      "seconds": 9.08
+    },
+    "32:verse": {
+      "file": "k32-verse.mp3",
+      "hash": "ca8610ad4588",
+      "bytes": 139629,
+      "seconds": 17.36
+    },
+    "33:comment": {
+      "file": "k33-comment.mp3",
+      "hash": "d169c4d602ee",
+      "bytes": 54765,
+      "seconds": 6.76
+    },
+    "34:case": {
+      "file": "k34-case.mp3",
+      "hash": "66cccd575ee5",
+      "bytes": 63021,
+      "seconds": 7.8
+    },
+    "33:verse": {
+      "file": "k33-verse.mp3",
+      "hash": "3df61a0f2b58",
+      "bytes": 162285,
+      "seconds": 20.2
+    },
+    "34:comment": {
+      "file": "k34-comment.mp3",
+      "hash": "0a7c48824dc4",
+      "bytes": 112365,
+      "seconds": 13.96
+    },
+    "34:verse": {
+      "file": "k34-verse.mp3",
+      "hash": "78c83be945dd",
+      "bytes": 202989,
+      "seconds": 25.28
+    },
+    "35:case": {
+      "file": "k35-case.mp3",
+      "hash": "3a8697fb7383",
+      "bytes": 131565,
+      "seconds": 16.36
+    },
+    "35:verse": {
+      "file": "k35-verse.mp3",
+      "hash": "3c22b15825ba",
+      "bytes": 144429,
+      "seconds": 17.96
+    },
+    "36:case": {
+      "file": "k36-case.mp3",
+      "hash": "d6b3d5d32ea1",
+      "bytes": 91629,
+      "seconds": 11.36
+    },
+    "36:comment": {
+      "file": "k36-comment.mp3",
+      "hash": "bc8e09a2fe29",
+      "bytes": 104685,
+      "seconds": 13
+    },
+    "35:comment": {
+      "file": "k35-comment.mp3",
+      "hash": "ef6c516a52cd",
+      "bytes": 274029,
+      "seconds": 34.16
+    },
+    "36:verse": {
+      "file": "k36-verse.mp3",
+      "hash": "256caecba29d",
+      "bytes": 119661,
+      "seconds": 14.88
+    },
+    "37:case": {
+      "file": "k37-case.mp3",
+      "hash": "c4e596f6e21f",
+      "bytes": 126381,
+      "seconds": 15.72
+    },
+    "38:case": {
+      "file": "k38-case.mp3",
+      "hash": "939620dbf400",
+      "bytes": 105069,
+      "seconds": 13.04
+    },
     "37:verse": {
       "file": "k37-verse.mp3",
-      "hash": "857acdafddd3",
-      "bytes": 193581,
-      "seconds": 24.12
+      "hash": "b0d7d21d19a0",
+      "bytes": 116589,
+      "seconds": 14.48
     },
     "38:comment": {
       "file": "k38-comment.mp3",
-      "hash": "8af07fb3f17d",
-      "bytes": 114861,
-      "seconds": 14.28
+      "hash": "5a2048907927",
+      "bytes": 78189,
+      "seconds": 9.68
     },
     "37:comment": {
       "file": "k37-comment.mp3",
-      "hash": "6d3e70f8dbca",
-      "bytes": 267309,
-      "seconds": 33.32
+      "hash": "873abe74b24a",
+      "bytes": 175149,
+      "seconds": 21.8
     },
     "39:comment": {
       "file": "k39-comment.mp3",
-      "hash": "513947b3b91c",
-      "bytes": 210285,
-      "seconds": 26.2
+      "hash": "ce03dbd7d05c",
+      "bytes": 133485,
+      "seconds": 16.6
     },
     "38:verse": {
       "file": "k38-verse.mp3",
-      "hash": "68571cecaf9f",
-      "bytes": 302061,
-      "seconds": 37.68
+      "hash": "5a38e67fec14",
+      "bytes": 166701,
+      "seconds": 20.76
     },
     "39:case": {
       "file": "k39-case.mp3",
-      "hash": "d127b42e02c4",
-      "bytes": 397869,
-      "seconds": 49.64
+      "hash": "fcb9eaa11ccd",
+      "bytes": 246381,
+      "seconds": 30.72
     },
     "40:comment": {
       "file": "k40-comment.mp3",
-      "hash": "fc60d24a47dd",
-      "bytes": 229869,
-      "seconds": 28.64
+      "hash": "ba2f2d1beb66",
+      "bytes": 147501,
+      "seconds": 18.36
     },
     "40:verse": {
       "file": "k40-verse.mp3",
-      "hash": "fe174f5bc887",
-      "bytes": 182829,
-      "seconds": 22.76
+      "hash": "4b0d0161ab85",
+      "bytes": 114861,
+      "seconds": 14.28
     },
     "40:case": {
       "file": "k40-case.mp3",
-      "hash": "b41b810c8256",
-      "bytes": 519021,
-      "seconds": 64.8
+      "hash": "1c3e50232987",
+      "bytes": 334125,
+      "seconds": 41.68
     },
     "39:verse": {
       "file": "k39-verse.mp3",
-      "hash": "634aab5e2106",
-      "bytes": 145581,
-      "seconds": 18.12
+      "hash": "aa0c8ecc0cb2",
+      "bytes": 108909,
+      "seconds": 13.52
     },
     "41:verse": {
       "file": "k41-verse.mp3",
-      "hash": "80ca16b46fc6",
-      "bytes": 171501,
-      "seconds": 21.36
+      "hash": "022909d479dc",
+      "bytes": 110061,
+      "seconds": 13.68
     },
     "41:case": {
       "file": "k41-case.mp3",
-      "hash": "45b4b74a69f3",
-      "bytes": 447981,
-      "seconds": 55.92
+      "hash": "1cef49a21bc8",
+      "bytes": 289581,
+      "seconds": 36.12
     },
     "41:comment": {
       "file": "k41-comment.mp3",
-      "hash": "e9ef7a93bd35",
-      "bytes": 326445,
-      "seconds": 40.72
+      "hash": "b1be243625b9",
+      "bytes": 222381,
+      "seconds": 27.72
     },
     "42:verse": {
       "file": "k42-verse.mp3",
-      "hash": "7c364361e5b8",
-      "bytes": 216429,
-      "seconds": 26.96
+      "hash": "4455dcc95ec1",
+      "bytes": 154221,
+      "seconds": 19.2
     },
     "43:case": {
       "file": "k43-case.mp3",
-      "hash": "0887c431a0ab",
-      "bytes": 238509,
-      "seconds": 29.72
+      "hash": "0c28df068d04",
+      "bytes": 139629,
+      "seconds": 17.36
     },
     "42:comment": {
       "file": "k42-comment.mp3",
-      "hash": "1706891614b2",
-      "bytes": 353901,
-      "seconds": 44.16
+      "hash": "69c7c83ef989",
+      "bytes": 216429,
+      "seconds": 26.96
     },
     "43:verse": {
       "file": "k43-verse.mp3",
-      "hash": "29d6c87415e3",
-      "bytes": 156909,
-      "seconds": 19.52
+      "hash": "61adaaac5430",
+      "bytes": 150381,
+      "seconds": 18.72
     },
     "43:comment": {
       "file": "k43-comment.mp3",
-      "hash": "5f2cec113e4c",
-      "bytes": 242925,
-      "seconds": 30.28
+      "hash": "6da6d751d904",
+      "bytes": 150765,
+      "seconds": 18.76
     },
     "44:case": {
       "file": "k44-case.mp3",
-      "hash": "b86d17764264",
-      "bytes": 135789,
-      "seconds": 16.88
+      "hash": "33310e11fdaa",
+      "bytes": 94701,
+      "seconds": 11.76
     },
     "44:verse": {
       "file": "k44-verse.mp3",
-      "hash": "989745f1270a",
-      "bytes": 205869,
-      "seconds": 25.64
+      "hash": "2ef84c9e0dcd",
+      "bytes": 155949,
+      "seconds": 19.4
     },
     "44:comment": {
       "file": "k44-comment.mp3",
-      "hash": "cc3414623a9d",
-      "bytes": 251949,
-      "seconds": 31.4
+      "hash": "6d3b8b6558da",
+      "bytes": 131565,
+      "seconds": 16.36
     },
     "45:case": {
       "file": "k45-case.mp3",
-      "hash": "44d05af0030f",
-      "bytes": 113901,
-      "seconds": 14.16
+      "hash": "d59bfb0c26a1",
+      "bytes": 74349,
+      "seconds": 9.2
     },
     "45:verse": {
       "file": "k45-verse.mp3",
-      "hash": "612e443eef9b",
-      "bytes": 156525,
-      "seconds": 19.48
+      "hash": "bc24621dcbbe",
+      "bytes": 135789,
+      "seconds": 16.88
     },
     "45:comment": {
       "file": "k45-comment.mp3",
-      "hash": "193b002e8e20",
-      "bytes": 180909,
-      "seconds": 22.52
+      "hash": "318d75a9b613",
+      "bytes": 96429,
+      "seconds": 11.96
     },
     "42:case": {
       "file": "k42-case.mp3",
-      "hash": "5d4bbe7ab6d1",
-      "bytes": 1023789,
-      "seconds": 127.88
+      "hash": "6044c6123d6a",
+      "bytes": 763821,
+      "seconds": 95.38,
+      "chunks": 2
     },
     "46:case": {
       "file": "k46-case.mp3",
-      "hash": "dbe53335580e",
-      "bytes": 290925,
-      "seconds": 36.28
+      "hash": "575a03da1657",
+      "bytes": 220269,
+      "seconds": 27.44
     },
     "46:comment": {
       "file": "k46-comment.mp3",
-      "hash": "3a34805aa954",
-      "bytes": 186669,
-      "seconds": 23.24
+      "hash": "72f2df409bea",
+      "bytes": 148461,
+      "seconds": 18.48
     },
     "46:verse": {
       "file": "k46-verse.mp3",
-      "hash": "a962da3d34cd",
-      "bytes": 205485,
-      "seconds": 25.6
+      "hash": "f14e536073ff",
+      "bytes": 136941,
+      "seconds": 17.04
     },
     "47:verse": {
       "file": "k47-verse.mp3",
-      "hash": "200e97589123",
-      "bytes": 252525,
-      "seconds": 31.48
+      "hash": "aa61d5080b83",
+      "bytes": 131949,
+      "seconds": 16.4
     },
     "47:comment": {
       "file": "k47-comment.mp3",
-      "hash": "2a0ffee4847c",
-      "bytes": 254061,
-      "seconds": 31.68
+      "hash": "963af11885a0",
+      "bytes": 141165,
+      "seconds": 17.56
     },
     "47:case": {
       "file": "k47-case.mp3",
-      "hash": "d1e362c9b9b4",
-      "bytes": 540525,
-      "seconds": 67.48
+      "hash": "850de3bfdd40",
+      "bytes": 371565,
+      "seconds": 46.36
     },
     "48:verse": {
       "file": "k48-verse.mp3",
-      "hash": "29547c77e449",
-      "bytes": 297069,
-      "seconds": 37.04
+      "hash": "4ff6e607ff77",
+      "bytes": 165741,
+      "seconds": 20.64
     },
     "48:case": {
       "file": "k48-case.mp3",
-      "hash": "06ce7d8281ee",
-      "bytes": 499821,
-      "seconds": 62.4
+      "hash": "2aa639496503",
+      "bytes": 417645,
+      "seconds": 52.12
     },
     "48:comment": {
       "file": "k48-comment.mp3",
-      "hash": "a11e61106f67",
-      "bytes": 447981,
-      "seconds": 55.92
+      "hash": "98307d2c2cc1",
+      "bytes": 301869,
+      "seconds": 37.64
     },
     "49:verse": {
       "file": "k49-verse.mp3",
-      "hash": "ca574dca721f",
-      "bytes": 156909,
-      "seconds": 19.52
+      "hash": "f05721b91400",
+      "bytes": 114669,
+      "seconds": 14.24
     },
     "49:comment": {
       "file": "k49-comment.mp3",
-      "hash": "155063689b01",
-      "bytes": 677421,
-      "seconds": 84.6
+      "hash": "a2904c228791",
+      "bytes": 477741,
+      "seconds": 59.62,
+      "chunks": 2
     },
     "49:case": {
       "file": "k49-case.mp3",
-      "hash": "2bbd09f4b05c",
-      "bytes": 830829,
-      "seconds": 103.76
+      "hash": "a593e8b854f3",
+      "bytes": 574125,
+      "seconds": 71.68,
+      "chunks": 3
     }
   },
   "provider": "gemini"
