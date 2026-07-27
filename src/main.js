@@ -387,8 +387,9 @@ const router = makeRouter({
   onRoute: (route) => {
     // A hash naming nothing never yanks the reader anywhere. Correct the URL
     // back to where they actually are and carry on — honour the contract
-    // rather than obey the junk.
-    if (!route) { router.set(currentRoute()); return; }
+    // rather than obey the junk. { replace: true } because a correction is
+    // not a navigation: pushing it would make Back land back on the junk hash.
+    if (!route) { router.set(currentRoute(), { replace: true }); return; }
     // A history hop out of a case must not leave the timer running over the next one.
     if (mode === 'sit') sit.end();
     if (route.view === 'case') {
@@ -569,6 +570,11 @@ if (booted && booted.view === 'case') {
   dissolve.set(0);
   enter(booted.slug);
 } else {
+  // A bad hash (`#99`, junk) parses to null here too — router.initial() can't
+  // tell "no hash" from "a hash naming nothing". Either way Contents is where
+  // we land, so correct the bar in place: replace, not push, or Back would
+  // return the reader to the URL that never resolved to anything.
+  router.set({ view: 'contents' }, { replace: true });
   scenes.setActive(hub);
   dissolve.set(1);
   startIntro();

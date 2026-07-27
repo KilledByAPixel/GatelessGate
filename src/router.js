@@ -54,14 +54,26 @@ export function makeRouter({ onRoute, win } = {}) {
     // reader presses Back the app navigates and then writes the URL it was just
     // handed, which is a no-op — so no second history entry is pushed and no
     // second hashchange fires. No "currently routing" flag is needed anywhere.
-    set(route) {
+    set(route, { replace = false } = {}) {
       const want = urlFor(route);
       if (!want || want === here()) return;
       try {
-        // A case rides `location.hash`, which pushes an entry by itself.
-        // Contents needs pushState: assigning hash = '' leaves a trailing '#'.
-        if (route.view === 'case') w.location.hash = hashFor(route.slug);
-        else w.history.pushState(null, '', want);
+        if (replace) {
+          // A correction is not a navigation: the reader never chose this URL,
+          // the app is just repairing a bar that named nowhere real, so it must
+          // not cost a history entry. Pushing here is how a junk hash like
+          // `#99` becomes sticky on Back — the correction itself would be the
+          // thing Back returns to, which then gets corrected again. replaceState
+          // also has the useful side effect of never firing `hashchange`, so a
+          // silent fix stays silent.
+          w.history.replaceState(null, '', want);
+        } else if (route.view === 'case') {
+          // A case rides `location.hash`, which pushes an entry by itself.
+          w.location.hash = hashFor(route.slug);
+        } else {
+          // Contents needs pushState: assigning hash = '' leaves a trailing '#'.
+          w.history.pushState(null, '', want);
+        }
       } catch {
         // Some embedded contexts refuse pushState. A URL we cannot write is a
         // cosmetic loss; it must never take navigation down with it.

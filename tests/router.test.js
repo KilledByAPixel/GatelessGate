@@ -73,6 +73,12 @@ function fakeWin(hash = '') {
         h = i < 0 ? '' : url.slice(i);
         this.__win.pushed.push(url);
       },
+      // Real replaceState rewrites the current entry in place — nothing lands
+      // in the history stack, so it must not touch `pushed`.
+      replaceState(_state, _title, url) {
+        const i = url.indexOf('#');
+        h = i < 0 ? '' : url.slice(i);
+      },
     },
     addEventListener(type, fn) { (listeners[type] = listeners[type] || []).push(fn); },
     removeEventListener(type, fn) {
@@ -119,6 +125,28 @@ test('set(contents) clears to the bare URL, once', () => {
   assert.deepEqual(w.pushed, ['/gate/']);
   r.set({ view: 'contents' });
   assert.equal(w.pushed.length, 1, 'already at Contents: nothing more to push');
+});
+
+test('set(route, { replace: true }) corrects a junk hash without entering history', () => {
+  const w = win('#99');
+  const r = makeRouter({ win: w });
+  r.set({ view: 'contents' }, { replace: true });
+  assert.equal(w.location.hash, '', 'the bar lands on the right URL');
+  assert.deepEqual(w.pushed, [], 'a correction must not push — Back must not return to the junk');
+});
+
+test('set() without { replace: true } still pushes exactly one entry', () => {
+  const w = win('');
+  makeRouter({ win: w }).set({ view: 'case', slug: 'not-the-wind-not-the-flag' });
+  assert.deepEqual(w.pushed, ['#29'], 'default behaviour for existing callers is unchanged');
+});
+
+test('set(route, { replace: true }) is still a no-op when the URL already matches', () => {
+  const w = win('#29');
+  const r = makeRouter({ win: w });
+  r.set({ view: 'case', slug: 'not-the-wind-not-the-flag' }, { replace: true });
+  assert.deepEqual(w.pushed, [], 'nothing to correct: the comparison short-circuits before either write path');
+  assert.equal(w.location.hash, '#29');
 });
 
 test('a hashchange reports the new route', () => {
