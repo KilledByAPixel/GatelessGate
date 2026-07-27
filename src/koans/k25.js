@@ -119,7 +119,14 @@ export default {
     assembly.position.y = 0.34;
     hall.add(assembly);
 
-    const world = composeWorld(hall, {
+    // The surrounding world hangs off the SCENE, not the dream — deliberately.
+    // The tuft meadow derives each blade's variant, mirror, stiffness and lean
+    // from its live world XZ through a chaotic hash, which only holds still while
+    // a tuft never moves. Rocking the grass (it used to ride on `hall`) re-rolled
+    // every one of those hashes each frame and the meadow visibly re-randomised
+    // (Frank's "regenerated every frame" glitch). So the dream floats and rocks;
+    // the ground it floats above stays put.
+    const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
       trees: 2,
