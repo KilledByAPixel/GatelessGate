@@ -16,6 +16,12 @@ import { setGrassStyle } from '../kit/scenery.js';
 // bumped when a default LOOK changes, since a stored state would otherwise
 // mask it: v3 turned the ink outlines on, v4 dropped ink strength to 0.5 (Frank)
 const KEY = 'gateless-gate-debug-v4';
+// Persistence is opt-in. By default the workbench opens on the shipped defaults
+// every reload, so a quick test can never quietly leave the look changed the next
+// time round. The "Keep settings on reload" toggle (below "reset all") turns it
+// on; its own flag is the one thing always remembered, otherwise there'd be no
+// way to switch persistence on and have it survive a reload.
+const PERSIST_KEY = 'gateless-gate-debug-persist';
 
 const CONTROLS = [
   { group: 'Scene' },
@@ -68,16 +74,24 @@ function defaults() {
   return s;
 }
 
-function load() {
+function loadPersist() {
+  try { return localStorage.getItem(PERSIST_KEY) === '1'; } catch { return false; }
+}
+
+function load(persist) {
+  if (!persist) return defaults();
   try {
     return { ...defaults(), ...JSON.parse(localStorage.getItem(KEY) || '{}') };
   } catch { return defaults(); }
 }
 
 export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens, onFreeCam }) {
-  const state = load();
+  let persist = loadPersist();
+  const state = load(persist);
   const inputs = {};
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* private mode */ } };
+  // No-op while persistence is off, so every tweak stays in memory only and the
+  // next reload starts clean. The keep-saved toggle below flips `persist`.
+  const save = () => { if (!persist) return; try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* private mode */ } };
 
   // ---- chrome -------------------------------------------------------------
   const button = document.createElement('button');
@@ -159,6 +173,27 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     apply();
   };
   panel.appendChild(reset);
+
+  // Persistence toggle — sits under "reset all" because it is the same kind of
+  // whole-panel control. Off by default; checking it snapshots what's on screen
+  // now and keeps it across reloads, unchecking it forgets the stored settings
+  // again (the flag itself is always remembered).
+  const keepRow = document.createElement('label');
+  keepRow.className = 'gg-debug-row gg-debug-keep';
+  const keepName = document.createElement('span');
+  keepName.textContent = 'Keep settings on reload';
+  const keepInput = document.createElement('input');
+  keepInput.type = 'checkbox';
+  keepInput.checked = persist;
+  keepInput.onchange = () => {
+    persist = keepInput.checked;
+    try { localStorage.setItem(PERSIST_KEY, persist ? '1' : '0'); } catch { /* private mode */ }
+    if (persist) save();                                                  // snapshot the current look
+    else { try { localStorage.removeItem(KEY); } catch { /* ignore */ } } // stop keeping it
+  };
+  keepRow.appendChild(keepName);
+  keepRow.appendChild(keepInput);
+  panel.appendChild(keepRow);
 
   button.onclick = () => {
     panel.classList.toggle('open');
