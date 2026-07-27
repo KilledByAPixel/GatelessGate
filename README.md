@@ -50,12 +50,17 @@ This is a living project. Some of what's ahead:
   original Chinese beside the English.
 - **Step inside.** A VR / headset mode: sit *within* the dioramas rather than looking
   at them through glass.
+- **Just the picture.** An ambient mode: the text steps aside, the diorama takes the
+  whole screen, and the camera drifts on its own — for when you'd rather sit with the
+  image than read it.
 - **Richer scenes.** Deeper art as the kit grows — more ink, more life, more of each
   koan's particular weather.
 - **A better read.** Kinder typography and reading modes: adjustable pace, the line
   lit as it's spoken, larger text, calmer motion, and full accessibility.
 - **Supplemental material.** Who these old masters were, a little history, a
-  pronunciation guide, where to read further — for anyone the stories send looking.
+  pronunciation guide, where to read further — an index of the people the book keeps
+  returning to, each leading back into the cases they walk through, for anyone the
+  stories send looking.
 - **Take it offline.** Installable, so the whole book travels with you with no
   connection at all.
 - **A koan a day.** An optional gentle rhythm — one case each morning, if you'd like
