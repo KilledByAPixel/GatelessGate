@@ -1,6 +1,15 @@
 // Voice and delivery settings for generated narration. Shared by the audition
 // bake-off and the real bake, so the winning settings live in exactly one place.
 
+// WHAT THE BOOK ACTUALLY SHIPS. Everything below the Gemini divider is the live
+// path; the OpenAI constants just above it are the older one, kept because the
+// audition still runs on it and because switching back should not mean rewriting
+// the file. Read PROVIDER first — the names `MODEL`, `VOICE` and `PRESET` predate
+// there being two backends, and they belong to OpenAI, not to whichever one is in
+// use. audio/narration/manifest.json is the record of what a listener hears.
+export const PROVIDER = 'gemini';
+
+// ---- the OpenAI path (not currently used to bake) ----
 export const MODEL = 'gpt-4o-mini-tts';   // the only model that accepts `instructions`
 
 // Every voice the speech endpoint offers, for validating CLI input.
@@ -103,6 +112,10 @@ export const GEMINI_CANDIDATE_VOICES = [
 // The shipped choice. Charon read the whole book in the `japanese` style; that bake is
 // kept as the "old man" baseline while these newer styles are auditioned.
 export const GEMINI_VOICE = 'Charon';
+// The delivery the whole reading was baked in. Paired with GEMINI_VOICE rather
+// than left to the OpenAI PRESET above: the two backends do not share a preset
+// vocabulary, so a single default would be wrong for one of them.
+export const GEMINI_PRESET = 'british';
 
 // No quoted strings anywhere above the transcript divider: a quoted subtitle here read
 // as script and got spoken aloud at the top of several takes. Everything in a scene is

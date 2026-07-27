@@ -1,11 +1,15 @@
 // Bakes narration audio for every koan section from the same generated text the app
 // renders, so the reading can never drift from what is on screen.
 //
-//   node scripts/build-narration.js --dry-run              totals and cost, no API calls
-//   node scripts/build-narration.js --provider gemini      bake + encode everything stale
-//   node scripts/build-narration.js --provider gemini --case 1
-//   node scripts/build-narration.js --provider gemini --encode-only   re-encode from raw
-//   node scripts/build-narration.js --force                everything, changed or not
+//   node scripts/build-narration.js --dry-run     totals and cost, no API calls
+//   node scripts/build-narration.js               bake + encode everything stale
+//   node scripts/build-narration.js --case 1
+//   node scripts/build-narration.js --encode-only re-encode from raw
+//   node scripts/build-narration.js --force       everything, changed or not
+//   node scripts/build-narration.js --provider openai   the older backend
+//
+// The defaults are whatever the book currently ships (see PROVIDER in
+// lib/narration-voice.js), so a bare run with no flags bakes nothing.
 //
 // A manifest hashes text + provider + model + voice + preset + instruction version per
 // unit, so a re-run only regenerates what actually changed. Editing one koan rebakes
@@ -20,8 +24,8 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import CASES from '../src/koans/text/mumonkan.js';
 import {
-  MODEL, VOICE, PRESET, INSTRUCTIONS_VERSION, SECTIONS, instructionsFor,
-  GEMINI_MODEL, GEMINI_VOICE, geminiPrompt,
+  PROVIDER, MODEL, VOICE, PRESET, INSTRUCTIONS_VERSION, SECTIONS, instructionsFor,
+  GEMINI_MODEL, GEMINI_VOICE, GEMINI_PRESET, geminiPrompt,
 } from './lib/narration-voice.js';
 import { readKey as openaiKey, speak as openaiSpeak, MAX_INPUT } from './lib/openai-tts.js';
 import { readKey as geminiKey, speak as geminiSpeak, parseWav, concatWavs, DailyQuotaError } from './lib/gemini-tts.js';
@@ -44,13 +48,20 @@ const argv = process.argv.slice(2);
 const flag = (name) => argv.includes(`--${name}`);
 const value = (name) => { const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : null; };
 
-const provider = value('provider') || 'openai';
+// Defaulting to the provider the book is actually baked in matters more than it
+// looks: these four values are folded into every unit's hash, so a default that
+// disagrees with the manifest makes a bare `node scripts/build-narration.js`
+// consider all 147 files stale and re-bake the entire reading. With them right,
+// the bare command is a no-op — which is the only safe thing for it to be.
+const provider = value('provider') || PROVIDER;
 if (!['openai', 'gemini'].includes(provider)) throw new Error(`unknown provider: ${provider}`);
 const gemini = provider === 'gemini';
 
 const model = gemini ? GEMINI_MODEL : MODEL;
 const voice = value('voice') || (gemini ? GEMINI_VOICE : VOICE);
-const preset = value('preset') || PRESET;
+// The two backends have separate preset vocabularies, so the fallback follows
+// the provider — PRESET is an OpenAI name and would throw on the Gemini path.
+const preset = value('preset') || (gemini ? GEMINI_PRESET : PRESET);
 const bitrate = value('bitrate') || '64k';
 // Gemini's quota is per-minute and trips easily; OpenAI happily took four at once.
 const jobs = Number(value('jobs') || (gemini ? 2 : 4));
