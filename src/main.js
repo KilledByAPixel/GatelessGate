@@ -19,6 +19,7 @@ import { makeMenu } from './ui/menu.js';
 import { makeAbout } from './ui/about.js';
 import { makeScroll } from './ui/scroll.js';
 import { makeSit } from './sit.js';
+import { makeRouter } from './router.js';
 
 const STEP = 1 / 60;
 
@@ -51,8 +52,11 @@ const save = createSave(window.localStorage);
 const audio = createAudio(save);
 const narration = createNarration();
 
+// The hub is built now but NOT made active here: a deep link needs the scene
+// manager empty so the first reveal is the ink curtain rather than a torn-off
+// still of a gate that was never drawn. The boot block at the bottom of this
+// file activates it on the ordinary path.
 const hub = buildHub();
-scenes.setActive(hub);
 
 let mode = 'intro';
 let simTime = 0;
@@ -273,6 +277,7 @@ function buildKoan(mod, slug) {
   built.onEnter && built.onEnter();
   audio.startAmbience(mod.ambience || []);
   save.markRead(slug);
+  router.set({ view: 'case', slug });
   // A case may frame itself. Most want the standard diorama shot, but a wide
   // establishing scene and a close one on a single figure are not the same
   // photograph, and an unstaged landscape wants to sit back further still.
@@ -345,6 +350,7 @@ async function exit() {
   if (mode === 'intro') { skipIntro(); return; }
   if (mode === 'sit') { sit.end(); return; }
   nav.cancel();      // a queued page must not fire after we've asked for Contents
+  router.set({ view: 'contents' });   // both paths below land on Contents
   if (mode !== 'koan') { menu.open(); showView(menu.el); return; }
   stopReading();
   input.clear();
@@ -369,6 +375,31 @@ async function exit() {
     menuMusic();
   });
 }
+
+// ---- routing: the URL always names what's on screen ----
+// A case is its number (`#29`); Contents is the bare URL. Written on arrival at
+// a scene, read back when the reader uses Back, Forward, or edits the address
+// bar by hand.
+const currentRoute = () =>
+  (mode === 'koan' && koanSlug ? { view: 'case', slug: koanSlug } : { view: 'contents' });
+
+const router = makeRouter({
+  onRoute: (route) => {
+    // A hash naming nothing never yanks the reader anywhere. Correct the URL
+    // back to where they actually are and carry on — honour the contract
+    // rather than obey the junk.
+    if (!route) { router.set(currentRoute()); return; }
+    // A history hop out of a case must not leave the timer running over the next one.
+    if (mode === 'sit') sit.end();
+    if (route.view === 'case') {
+      if (mode === 'koan' && koanSlug === route.slug) return;   // already there
+      enter(route.slug);
+    } else {
+      if (mode === 'menu') return;                              // already there
+      exit();
+    }
+  },
+});
 
 // A beat between sections of a read-aloud. Running the case straight into Mumon's
 // comment reads as one continuous text; the pause is what says a different voice in
@@ -528,6 +559,18 @@ window.gate = {
   narrationCount() { const m = narration.manifest(); return m ? Object.keys(m.files).length : 0; },
 };
 
-dissolve.set(1);
-startIntro();
+// A deep link opens the case it names — no title dolly, no Contents. A link is
+// a promise that this is the page you were sent, and seven seconds of gate
+// breaks it. The screen starts fully inked and the scene manager stays empty,
+// so showKoan takes its no-still branch and reveals with the curtain: the ink
+// holds while the case module loads, then lifts on the finished diorama.
+const booted = router.initial();
+if (booted && booted.view === 'case') {
+  dissolve.set(0);
+  enter(booted.slug);
+} else {
+  scenes.setActive(hub);
+  dissolve.set(1);
+  startIntro();
+}
 requestAnimationFrame(frame);
