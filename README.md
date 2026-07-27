@@ -47,7 +47,7 @@ This is a living project. Some of what's ahead:
 - **A human reading.** Every case is read by a synthesized voice today. A real
   reader — unhurried, warm, one person the whole way through — would be better.
 - **More languages.** The text and its reading in other tongues — and one day the
-  original Chinese beside the English.
+  original Chinese beside the English, read aloud in its own voice.
 - **Step inside.** A VR / headset mode: sit *within* the dioramas rather than looking
   at them through glass.
 - **Just the picture.** An ambient mode: the text steps aside, the diorama takes the
