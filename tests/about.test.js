@@ -38,12 +38,17 @@ test('the stated Three.js version matches the vendored one', () => {
   assert.ok(flat.includes(THREE_VERSION), 'the version is stated in the prose');
 });
 
-test('the stated narration model matches the bake script', () => {
-  const src = read('scripts/lib/narration-voice.js');
-  const m = src.match(/export const MODEL\s*=\s*'([^']+)'/);
-  assert.ok(m, 'narration-voice.js still declares MODEL');
-  assert.equal(TTS_MODEL, m[1],
-    `the about page says ${TTS_MODEL} but narration-voice.js bakes with ${m[1]}`);
+// Held against the MANIFEST, not against narration-voice.js. That file's MODEL
+// is a default the bake overrides from the command line (--provider, --preset),
+// so it says what a bake WOULD use, not what shipped. This test used to read it
+// and passed happily while the page credited OpenAI for a reading baked in
+// Gemini — the guard and the error agreed with each other. The manifest is
+// written by the bake itself and is the only record of what a reader hears.
+test('the stated narration model matches what was actually baked', () => {
+  const manifest = JSON.parse(read('audio/narration/manifest.json'));
+  assert.ok(manifest.model, 'the manifest records the model it baked with');
+  assert.equal(TTS_MODEL, manifest.model,
+    `the about page says ${TTS_MODEL} but the narration was baked with ${manifest.model}`);
   assert.ok(flat.includes(TTS_MODEL), 'the model is named in the prose');
 });
 

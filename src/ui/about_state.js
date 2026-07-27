@@ -12,7 +12,12 @@ export const SOURCE_URL = 'https://sacred-texts.com/bud/glg/index.htm';
 
 // Three.js ships as 0.MINOR.PATCH and is spoken of as rMINOR: 0.185.1 is r185.
 export const THREE_VERSION = 'r185';
-export const TTS_MODEL = 'gpt-4o-mini-tts';
+// What the narration was ACTUALLY baked with, per audio/narration/manifest.json.
+// Not what scripts/lib/narration-voice.js defaults to: the bake takes --provider
+// and --preset flags, so the script's constants are only its defaults and the
+// manifest is the sole record of what shipped. The two drifted the day the whole
+// reading was re-baked in Gemini and this page went on crediting OpenAI.
+export const TTS_MODEL = 'gemini-3.1-flash-tts-preview';
 
 // A part is either a string or a [text, href] pair for the few places a link
 // earns its keep.
@@ -77,7 +82,7 @@ export const SECTIONS = [
       + 'Every sound in the book except the narration is generated at runtime with '
       + 'the Web Audio API — the wind, the bells, the knocks and the drift are '
       + 'synthesised, not sampled. The narration was baked ahead of time with '
-      + `OpenAI’s ${TTS_MODEL}. There is no build step, no framework, no `
+      + `Google’s ${TTS_MODEL}. There is no build step, no framework, no `
       + 'analytics, and nothing at all is loaded from a third party while you '
       + 'read.',
     ],
