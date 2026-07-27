@@ -643,6 +643,12 @@ if (booted && booted.view === 'case') {
   // return the reader to the URL that never resolved to anything.
   router.set({ view: 'contents' }, { replace: true });
   scenes.setActive(hub);
+  // The workbench has to meet the hub before the first frame, the way it meets
+  // every case in buildKoan and the hub again in exit(). Without this the title
+  // screen and the contents were the only two scenes in the book it never
+  // reached, so a reader's persisted settings did not take hold until they had
+  // opened a case and come back.
+  debugApply();
   dissolve.set(1);
   startIntro();
 }

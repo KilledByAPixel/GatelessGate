@@ -166,10 +166,19 @@ export function makePost(renderer, width, height) {
   const stats = { calls: 0, triangles: 0 };
 
   // order matters: flatten tone, ink the forms, then lay paper over everything
+  //
+  // These start at THE BOOK'S LOOK, not at nothing. They used to start all off,
+  // which quietly made the debug workbench the only thing that ever established
+  // the look — and since main only applies the workbench when it builds a case,
+  // the title screen and the table of contents rendered raw until you had opened
+  // one. With no paper pass toning the frame down, the ground (the largest
+  // surface facing the key) clipped to white while the darker path beside it
+  // survived, so the meadow read as snow. The workbench still overrides all of
+  // this on apply(); its defaults in ui/debug.js are meant to match these.
   const passes = [
     { key: 'quantize', mat: quantMat, on: false },
-    { key: 'ink', mat: inkMat, on: false },
-    { key: 'paper', mat: paperMat, on: false },
+    { key: 'ink', mat: inkMat, on: true },
+    { key: 'paper', mat: paperMat, on: true },
   ];
 
   function setSize(w, h) {
