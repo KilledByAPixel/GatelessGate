@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PAPER, INK, ACCENT, WASH, wash, mixHex } from '../src/palette.js';
+import { PAPER, INK, ACCENT, WASH, SNOW, wash, mixHex, hexToRgb } from '../src/palette.js';
 
 const SRC = join(fileURLToPath(new URL('../', import.meta.url)), 'src');
 
@@ -82,4 +82,19 @@ test('ACCENT is the only chromatic note in the palette', () => {
   for (const [name, hex] of Object.entries(WASH)) {
     assert.ok(chroma(hex) < 25, `WASH.${name} is too chromatic (${chroma(hex)}) — the wash must stay neutral`);
   }
+});
+
+test('SNOW sits above the ramp — that is the whole point of it', () => {
+  const lum = (hex) => {
+    const [r, g, b] = hexToRgb(hex);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  // Brighter than the page itself, or falling snow disappears into a snowed-under
+  // ground (case 41's earth is wash(0.06) — very nearly PAPER).
+  assert.ok(lum(SNOW) > lum(PAPER), `SNOW (${SNOW}) must be lighter than PAPER (${PAPER})`);
+  assert.ok(lum(SNOW) > lum(wash(0.06)), 'SNOW must out-read case 41s ground');
+  // ...but still on the page's warm axis, not a cold blue-white.
+  const [r, g, b] = hexToRgb(SNOW);
+  assert.ok(r >= g && g >= b, `SNOW (${SNOW}) has gone cold: r${r} g${g} b${b}`);
+  assert.ok(r <= 255 && b >= hexToRgb(PAPER)[2], 'SNOW should lift toward white, not away from it');
 });

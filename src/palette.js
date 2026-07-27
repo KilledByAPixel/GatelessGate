@@ -41,6 +41,18 @@ export const ACCENT_DEEP = mixHex(ACCENT, INK, 0.30);
 // paper keeps the hue and buys back the luminance.
 export const ACCENT_LIGHT = mixHex(ACCENT, PAPER, 0.22);
 
+// The one tone ABOVE the ramp, and the only thing in the book allowed up there.
+//
+// Everything else is a step between PAPER and INK because everything else
+// REFLECTS the page. Falling snow doesn't — it is the brightest thing in a
+// frame, brighter than the paper it falls past. Held at PAPER it disappeared:
+// case 41's ground is wash(0.06), so flake and earth were the same tone and the
+// snow read as tan flecks rather than weather. Same argument as ACCENT_LIGHT
+// above — a flat unlit fill has no highlights to separate it, so the luminance
+// has to be in the colour. A trace of the paper's warmth is kept so it reads as
+// white-on-a-warm-page rather than a cold blue-white punched through it.
+export const SNOW = mixHex(PAPER, '#FFFFFF', 0.85);
+
 export const WASH = {
   mist: wash(0.10),     // farthest peaks, barely there
   ground: wash(0.22),   // the earth underfoot

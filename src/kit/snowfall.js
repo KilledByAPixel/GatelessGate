@@ -1,12 +1,16 @@
 import * as THREE from '../../lib/three.module.js';
 import { hash1 } from '../util/noise.js';
-import { PAPER } from '../palette.js';
+import { SNOW } from '../palette.js';
 
 // Snow, for the night Eka stood outside Bodhidharma's cave (case 41).
 //
-// Snow in an ink painting is the paper showing through, so these flecks are
-// PAPER coloured: nearly invisible against the sky, and clearly there against
-// ink — the cave mouth, the figures, the ground. That asymmetry is the effect.
+// These flecks were PAPER coloured on the theory that snow in an ink painting is
+// the paper showing through — invisible against the sky, present against ink.
+// That works for snow LYING on the ground and not for snow in the air: the same
+// case covers its earth in wash(0.06), so falling flake and snowed-under ground
+// were the same tone and the weather simply vanished into it (Frank: "the
+// falling snow is not white, it's the same colour as the ground"). Falling snow
+// is the one thing in the book brighter than the page — see SNOW in palette.js.
 //
 // One THREE.Points, no meshes and no outlines. Each flake's fall is a closed
 // form over simTime — a wrapping descent with its own drift — so the same
@@ -20,7 +24,7 @@ export function makeSnow({
   depth = 26,
   height = 14,
   size = 0.085,
-  color = PAPER,
+  color = SNOW,
 } = {}) {
   const pos = new Float32Array(count * 3);
   const geo = new THREE.BufferGeometry();
