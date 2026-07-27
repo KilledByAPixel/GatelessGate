@@ -116,7 +116,10 @@ test('the English keeps its own line breaks', () => {
 });
 
 test('a missing piece fails loudly rather than emitting a blank page', () => {
-  const without = FIXTURE.replace('## 禪箴 — Zen Warnings', '## 禪箴 — REMOVED');
+  // Replace the whole heading, Chinese title included — changing only the
+  // English half would leave the piece perfectly findable, which is what makes
+  // this test worth having.
+  const without = FIXTURE.replace('## 禪箴 — Zen Warnings', '## 拾遺 — Something Else');
   assert.throws(() => parseMatter(without), /禪箴/);
 });
 
