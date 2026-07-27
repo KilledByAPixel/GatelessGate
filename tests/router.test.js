@@ -149,6 +149,16 @@ test('set(route, { replace: true }) is still a no-op when the URL already matche
   assert.equal(w.location.hash, '#29');
 });
 
+test('set(null) and set(undefined) do not throw and behave as a Contents write', () => {
+  for (const bad of [null, undefined]) {
+    const w = win('#29');
+    const r = makeRouter({ win: w });
+    assert.doesNotThrow(() => r.set(bad));
+    assert.equal(w.location.hash, '', `for ${JSON.stringify(bad)}`);
+    assert.deepEqual(w.pushed, ['/gate/'], `for ${JSON.stringify(bad)}`);
+  }
+});
+
 test('a hashchange reports the new route', () => {
   const w = win('#29');
   const seen = [];

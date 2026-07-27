@@ -277,6 +277,11 @@ function buildKoan(mod, slug) {
   built.onEnter && built.onEnter();
   audio.startAmbience(mod.ambience || []);
   save.markRead(slug);
+  // Safe to write here and only here: showKoan's freeze.capture is synchronous,
+  // so nothing awaits between the nav queue's load resolving and this running —
+  // no hashchange task can interleave and overtake it with a stale URL. That
+  // invariant lives in showKoan, not here, so an `await` added there ahead of
+  // buildKoan would silently break this.
   router.set({ view: 'case', slug });
   // A case may frame itself. Most want the standard diorama shot, but a wide
   // establishing scene and a close one on a single figure are not the same
@@ -379,9 +384,11 @@ async function exit() {
 // ---- routing: the URL always names what's on screen ----
 // A case is its number (`#29`); Contents is the bare URL. Written on arrival at
 // a scene, read back when the reader uses Back, Forward, or edits the address
-// bar by hand.
+// bar by hand. Covers 'sit' as well as 'koan': sitting keeps the case's hash —
+// the reader is still on that case, just not reading it.
 const currentRoute = () =>
-  (mode === 'koan' && koanSlug ? { view: 'case', slug: koanSlug } : { view: 'contents' });
+  ((mode === 'koan' || mode === 'sit') && koanSlug
+    ? { view: 'case', slug: koanSlug } : { view: 'contents' });
 
 const router = makeRouter({
   onRoute: (route) => {
@@ -567,8 +574,20 @@ window.gate = {
 // holds while the case module loads, then lifts on the finished diorama.
 const booted = router.initial();
 if (booted && booted.view === 'case') {
+  router.set(booted, { replace: true });   // canonicalise `#029` -> `#29` without a history entry
   dissolve.set(0);
-  enter(booted.slug);
+  // If the case fails to load (flaky connection, bad deploy, a chunk that
+  // fell out of the cache) there is no fallback below this line — a rejected
+  // promise here would strand the reader on inked-over paper with nothing
+  // wired to rescue them, which is the worst possible first impression of a
+  // shared link. Land exactly where the ordinary boot (the `else` branch)
+  // would have put them.
+  enter(booted.slug).catch(() => {
+    router.set({ view: 'contents' }, { replace: true });
+    scenes.setActive(hub);
+    dissolve.set(1);
+    startIntro();
+  });
 } else {
   // A bad hash (`#99`, junk) parses to null here too — router.initial() can't
   // tell "no hash" from "a hash naming nothing". Either way Contents is where

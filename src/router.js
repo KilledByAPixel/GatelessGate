@@ -67,7 +67,7 @@ export function makeRouter({ onRoute, win } = {}) {
           // also has the useful side effect of never firing `hashchange`, so a
           // silent fix stays silent.
           w.history.replaceState(null, '', want);
-        } else if (route.view === 'case') {
+        } else if (route && route.view === 'case') {
           // A case rides `location.hash`, which pushes an entry by itself.
           w.location.hash = hashFor(route.slug);
         } else {
