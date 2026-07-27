@@ -65,6 +65,16 @@ export function makeCameraRig(camera, el, {
     camera.lookAt(tx, ty, tz);
   }
 
+  // Place the camera NOW rather than leaving it wherever the last scene left it.
+  // update() is the only thing that writes camera.position, and the frame loop
+  // only ticks when it has a whole 1/60 s of time banked — so a frame shorter
+  // than that renders with the rig built but never applied. Behind a held still
+  // nobody sees it; on a cold arrival, where there is no still, it showed as one
+  // frame of the diorama viewed from the world origin. cur already starts at the
+  // goal, and dt=0 makes the damping term zero, so this is exactly the pose the
+  // first tick would have produced — just a frame earlier.
+  update(0);
+
   const state = () => ({ azimuth: cur.azimuth, polar: cur.polar, distance: cur.distance });
 
   function dispose() {

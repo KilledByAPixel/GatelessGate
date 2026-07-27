@@ -32,6 +32,19 @@ test('wheel clamps distance', () => {
   assert.equal(rig.goal.distance, 7);
 });
 
+test('a new rig has already placed the camera, before any update', () => {
+  const cam = new THREE.PerspectiveCamera();
+  cam.position.set(99, 99, 99);            // wherever the last scene left it
+  const rig = makeCameraRig(cam, fakeEl(), { target: [1, 2, 3], distance: 11.5 });
+  // No update() call: a frame short enough to bank less than one tick still
+  // renders, and it must not render from the origin (or from the old scene's
+  // camera). Deep-link boots cut straight to the diorama with no held still to
+  // hide that frame behind.
+  const dist = cam.position.distanceTo(new THREE.Vector3(1, 2, 3));
+  assert.ok(Math.abs(dist - 11.5) < 1e-6, `camera not on the sphere yet: ${dist}`);
+  assert.equal(rig.state().distance, 11.5);
+});
+
 test('update converges toward goal and positions the camera', () => {
   const el = fakeEl();
   const cam = new THREE.PerspectiveCamera();
