@@ -84,6 +84,7 @@ const SECTION_NOTE = {
   prose: 'This passage is Mumon writing in his own voice, framing the collection rather than telling a story. Direct and plain, addressed to the reader.',
   warnings: 'This passage is a series of short warnings in couplets. Each pair turns on its second line, so let the first settle before the second lands. Slower than prose. Honour the line breaks with a real pause, but do not sing it or fall into a chant rhythm.',
   amban: 'This passage is a later reader\'s letter, wry and a little mischievous, addressed to a teacher long dead. Dry humour close to the surface; the last line is a challenge, not a shout.',
+  colophon: 'This passage is a colophon — the date and the signature at the end of the writing. Read it plainly and a little slower, the way a name is signed rather than announced. No emphasis, no flourish.',
 };
 
 export const PRESET_NAMES = Object.keys(PRESETS);

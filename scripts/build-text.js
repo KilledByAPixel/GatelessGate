@@ -20,6 +20,9 @@ const outMatter = path.join(root, 'src', 'koans', 'text', 'matter.js');
 //   'all'   — every block, joined with a blank line
 //   'prose' — everything except a trailing verse block
 //   'verse' — the trailing verse block alone
+//   a number — that block alone, by index, for a piece whose verse sits in the
+//     middle. Pair it with `kind` so a reshuffled source fails loudly instead of
+//     quietly labelling prose as verse.
 // `dropLeadIn`, where present, is a paragraph that introduced the verse in
 // running prose and is replaced by the section label. It must be the LAST
 // paragraph of the prose or the build fails: a source edit that moves it is a
@@ -37,19 +40,26 @@ const MATTER_PAGES = {
     slug: 'afterword',
     title: 'Afterword',
     parts: [
-      // Mumon's verse sits MID-piece here, with his colophon after it, and the
-      // prose leads into it with "As the lines have it:". Splitting it out
-      // would strand one sentence as its own section, so this piece takes
-      // every block as one.
-      ['prose', "Mumon's Afterword", '後序', 'all'],
+      // Mumon's verse sits MID-piece here — the source parses as
+      // [prose, verse, prose] — so these are addressed by index rather than by
+      // head and tail. The third block is his colophon, and it gets a section of
+      // its own: a colophon is not the verse and it is not the argument, it is
+      // the signature at the end of the writing, and the book has room to say so.
+      ['prose', "Mumon's Afterword", '後序', 0, 'As the lines have it:'],
+      ['verse', 'The Verse', '後序', 1],
+      ['colophon', 'Colophon', '後序', 2],
       ['warnings', 'Zen Warnings', '禪箴', 'all'],
       ['amban', "Amban's Letter", '安晚居士書', 'all'],
     ],
   },
 };
 
+// What each indexed take expects to find, so a reshuffled source is caught at
+// build time rather than shipped as a mislabelled section.
+const EXPECTED_KIND = { prose: 'prose', verse: 'verse', colophon: 'prose' };
+
 // Pull the requested blocks out of a parsed piece and render them to one string.
-function sectionText(blocks, take, dropLeadIn, where) {
+function sectionText(blocks, take, dropLeadIn, where, expectKind) {
   const tailIsVerse = blocks.length > 0 && blocks[blocks.length - 1].kind === 'verse';
   let chosen;
   if (take === 'all') chosen = blocks;
@@ -60,6 +70,19 @@ function sectionText(blocks, take, dropLeadIn, where) {
       process.exit(1);
     }
     chosen = blocks.slice(-1);
+  } else if (Number.isInteger(take)) {
+    const block = blocks[take];
+    if (!block) {
+      console.error(`\nBUILD FAILED: ${where} asks for block ${take}, but the piece has only ${blocks.length}.`);
+      console.error('The translation source was reshaped — this needs a look, not a smaller index.');
+      process.exit(1);
+    }
+    if (expectKind && block.kind !== expectKind) {
+      console.error(`\nBUILD FAILED: ${where} expected block ${take} to be ${expectKind}, but it is ${block.kind}.`);
+      console.error('A reshuffled source would otherwise ship prose under a verse heading, or the reverse.');
+      process.exit(1);
+    }
+    chosen = [block];
   } else {
     console.error(`\nBUILD FAILED: ${where} has an unknown take "${take}".`);
     process.exit(1);
@@ -67,15 +90,27 @@ function sectionText(blocks, take, dropLeadIn, where) {
 
   let text = chosen.map((b) => b.text).join('\n\n');
   if (dropLeadIn) {
+    // The lead-in is whatever pointed at the verse from inside the prose; the
+    // section label says it now, so it goes. Mumon writes it two ways: a line of
+    // its own in the preface ("The verse:"), and the closing sentence of a
+    // running paragraph in the afterword ("...let yourself down. As the lines
+    // have it:"). Both are the same editorial fact, so both are handled — but a
+    // lead-in that is not at the END of the text is a source change, not a case
+    // to absorb quietly.
     const paras = text.split('\n\n');
-    if (paras[paras.length - 1].trim() !== dropLeadIn) {
+    const last = paras[paras.length - 1].trim();
+    if (last === dropLeadIn) {
+      paras.pop();
+      text = paras.join('\n\n');
+    } else if (last.endsWith(dropLeadIn)) {
+      paras[paras.length - 1] = last.slice(0, -dropLeadIn.length).trim();
+      text = paras.join('\n\n');
+    } else {
       console.error(`\nBUILD FAILED: ${where} expected its prose to end on "${dropLeadIn}", `
-        + `but it ends on "${paras[paras.length - 1].trim().slice(0, 60)}".`);
-      console.error('The section label replaces that lead-in line; if the source moved it, this needs a look.');
+        + `but it ends on "${last.slice(-60)}".`);
+      console.error('The section label replaces that lead-in; if the source moved it, this needs a look.');
       process.exit(1);
     }
-    paras.pop();
-    text = paras.join('\n\n');
   }
   return text.trim();
 }
@@ -133,7 +168,7 @@ console.log(`\nWrote ${outFile} (${ids.length} cases).`);
 // ---- the front and back matter ----
 // Its own module, never folded into mumonkan.js: build-narration.js re-bakes any
 // unit whose text hash changed, so keeping the two apart makes it impossible for
-// a preface edit to cost 147 files of TTS. The matter pages have their own five.
+// a preface edit to cost 147 files of TTS. The matter pages have their own.
 const matterText = parseMatter(fs.readFileSync(srcMatter, 'utf8'));
 const pages = {};
 for (const [key, page] of Object.entries(MATTER_PAGES)) {
@@ -152,7 +187,7 @@ for (const [key, page] of Object.entries(MATTER_PAGES)) {
       process.exit(1);
     }
     labels[k] = label;
-    text[k] = sectionText(matterText[chinese], take, dropLeadIn, `${page.slug}.${k}`);
+    text[k] = sectionText(matterText[chinese], take, dropLeadIn, `${page.slug}.${k}`, EXPECTED_KIND[k]);
   }
   pages[key] = { slug: page.slug, title: page.title, sections, labels, text };
   console.log(`${page.slug}: ${sections.map((k) => `${k} ${text[k].length}`).join(', ')}`);

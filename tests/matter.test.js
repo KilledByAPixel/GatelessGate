@@ -90,14 +90,35 @@ test('the lead-in to the verse does not survive into the prose', async () => {
 
 test('the afterword runs Mumon\'s afterword, the Zen Warnings, then Amban\'s letter, in that order', async () => {
   const mod = await loadKoan(AFTERWORD_SLUG);
-  assert.deepEqual(mod.sections, ['prose', 'warnings', 'amban']);
+  assert.deepEqual(mod.sections, ['prose', 'verse', 'colophon', 'warnings', 'amban']);
 });
 
-test('the afterword keeps its verse inline, with the colophon after it', async () => {
+test('the afterword\'s verse is a section of its own, like every other verse in the book', async () => {
+  // It sits MID-piece in the source, with the colophon after it, which is why it
+  // is addressed by block index rather than as a tail. Getting that wrong would
+  // put the colophon under a heading that calls it verse.
   const mod = await loadKoan(AFTERWORD_SLUG);
-  assert.match(mod.text.prose, /The mind of nirvana is easy enough to make out\./);
-  assert.ok(mod.text.prose.trimEnd().endsWith('eighth in descent from Yangqi.'),
-    'the colophon closes the section, so splitting the verse out would strand it');
+  const lines = mod.text.verse.split('\n');
+  assert.equal(lines.length, 4);
+  assert.match(lines[0], /^The mind of nirvana is easy enough to make out\./);
+  assert.equal(mod.labels.verse, 'The Verse');
+});
+
+test('the lead-in sentence does not survive into the afterword\'s prose', async () => {
+  // "As the lines have it:" is the closing SENTENCE of a running paragraph here,
+  // not a line of its own as in the preface. The section label says it now.
+  const mod = await loadKoan(AFTERWORD_SLUG);
+  assert.ok(!mod.text.prose.trimEnd().endsWith('As the lines have it:'));
+  assert.ok(mod.text.prose.trimEnd().endsWith('you have let yourself down.'),
+    'the prose should close on its last real sentence');
+});
+
+test('the colophon stands on its own, and it is not the verse', async () => {
+  const mod = await loadKoan(AFTERWORD_SLUG);
+  assert.equal(mod.labels.colophon, 'Colophon');
+  assert.ok(mod.text.colophon.trimEnd().endsWith('eighth in descent from Yangqi.'));
+  assert.ok(!mod.text.verse.includes('Yangqi'), 'the colophon must not ride along inside the verse');
+  assert.ok(!mod.text.prose.includes('Yangqi'), 'nor stay behind in the prose');
 });
 
 test('no page carries a rendered indent', async () => {

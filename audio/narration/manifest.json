@@ -912,10 +912,10 @@
     },
     "afterword:prose": {
       "file": "afterword-prose.mp3",
-      "hash": "062591145259",
-      "bytes": 907821,
-      "seconds": 113.4,
-      "chunks": 3
+      "hash": "857560b32ca9",
+      "bytes": 633837,
+      "seconds": 79.14,
+      "chunks": 2
     },
     "afterword:amban": {
       "file": "afterword-amban.mp3",
@@ -930,6 +930,18 @@
       "bytes": 894381,
       "seconds": 111.7,
       "chunks": 2
+    },
+    "afterword:verse": {
+      "file": "afterword-verse.mp3",
+      "hash": "af9465ef5ffd",
+      "bytes": 148845,
+      "seconds": 18.52
+    },
+    "afterword:colophon": {
+      "file": "afterword-colophon.mp3",
+      "hash": "2c1bdae838bd",
+      "bytes": 132525,
+      "seconds": 16.48
     }
   },
   "provider": "gemini"

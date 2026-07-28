@@ -21,16 +21,22 @@ export default {
     "title": "Afterword",
     "sections": [
       "prose",
+      "verse",
+      "colophon",
       "warnings",
       "amban"
     ],
     "labels": {
       "prose": "Mumon's Afterword",
+      "verse": "The Verse",
+      "colophon": "Colophon",
       "warnings": "Zen Warnings",
       "amban": "Amban's Letter"
     },
     "text": {
-      "prose": "The buddhas and the patriarchs, handing these encounters down, took the confession and closed the case. Never a word to spare. They lift the lid off your skull and let your eyes out into the daylight. What they want is for you to take hold of it here and now and not go looking for it from anybody else.\n\nAn all-round man of the first rank hears one of them raised and knows at once where it lands. There is no doorway to go in by and no stairs to climb. He walks through the checkpoint swinging his arms and never asks the man on the gate.\n\nHave you not heard what Xuansha said? No gate is the gate of release. No intent is the intent of the man of the Way. And Baiyun said: You know perfectly well it is just this. So why can't you get through?\n\nTalk like that is smearing milk on red clay. Get through the Gateless Gate and you have already made a fool of Mumon. Fail to get through it and you have let yourself down. As the lines have it:\n\nThe mind of nirvana is easy enough to make out.\nThe wisdom that tells one thing from another is hard.\nGet that wisdom clear\nand house and country come to rest of themselves.\n\nFive days before the end of the summer retreat, the year the era changed to Shaoding. Respectfully set down by the monk Ekai, called Mumon, eighth in descent from Yangqi.",
+      "prose": "The buddhas and the patriarchs, handing these encounters down, took the confession and closed the case. Never a word to spare. They lift the lid off your skull and let your eyes out into the daylight. What they want is for you to take hold of it here and now and not go looking for it from anybody else.\n\nAn all-round man of the first rank hears one of them raised and knows at once where it lands. There is no doorway to go in by and no stairs to climb. He walks through the checkpoint swinging his arms and never asks the man on the gate.\n\nHave you not heard what Xuansha said? No gate is the gate of release. No intent is the intent of the man of the Way. And Baiyun said: You know perfectly well it is just this. So why can't you get through?\n\nTalk like that is smearing milk on red clay. Get through the Gateless Gate and you have already made a fool of Mumon. Fail to get through it and you have let yourself down.",
+      "verse": "The mind of nirvana is easy enough to make out.\nThe wisdom that tells one thing from another is hard.\nGet that wisdom clear\nand house and country come to rest of themselves.",
+      "colophon": "Five days before the end of the summer retreat, the year the era changed to Shaoding. Respectfully set down by the monk Ekai, called Mumon, eighth in descent from Yangqi.",
       "warnings": "Follow the rules and hold the line:\nyou tie yourself up without a rope.\n\nRange where you like with nothing in the way:\nthe outsiders' road, the devil's army.\n\nKeep the mind clear and still:\nthe crooked Zen of silent illumination.\n\nDo as you please and drop every tie:\ndown you go into the deep pit.\n\nWide awake, never dull:\na chain on your leg and a board round your neck.\n\nThink good, think evil:\nhell and heaven.\n\nOpinions about Buddha, opinions about the teaching:\niron mountains on both sides of you.\n\nCatch each thought the moment it stirs:\na man fooling about with ghosts.\n\nSit like a stump working at your concentration:\nmaking a living in a house of ghosts.\n\nPush on and you lose the sense of it;\npull back and you break with the root.\n\nNeither on nor back:\na corpse that is still breathing.\n\nNow say: how do you actually walk it?\n\nPut your back into it. Settle it in this life.\nDon't leave the rest of it to grind on you through endless ages.",
       "amban": "Old Zen master Mumon made his remarks on forty-eight koans, passing verdict on the koans of the old worthies. It was very like a man selling fried cakes, who gets the customer to open his mouth and take one, and then the customer can neither swallow it nor spit it out.\n\nEven so. Amban would like to use the man's own stove while it is still hot, fry up one more, and round the count out to the number of the Great Expansion, then send it back to him as before. And I wonder where the old master will get his teeth in. If he takes it in one bite, light will pour out and the ground will shake. If not, then even the forty-eight already there all turn to hot sand.\n\nSay it quick. Say it quick."
     }
