@@ -107,9 +107,7 @@ export function makeScroll({
     const p = document.createElement('div');
     p.className = 'gg-section-text';
     p.textContent = text[key];
-    // An empty label would still draw its box and its rule; a single unlabelled
-    // block under the page's own title is the point on the preface page.
-    if (label.textContent || shape.showNarration) sec.appendChild(label);
+    sec.appendChild(label);
     sec.appendChild(p);
     el.appendChild(sec);
     sectionEls[key] = sec;

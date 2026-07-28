@@ -22,10 +22,25 @@ test('a numbered case keeps the shape it always had', () => {
   assert.equal(s.showNarration, true);
 });
 
-test('a page with no number shows no seal and no narration controls', () => {
+test('a page with no number shows no seal but still reads aloud', () => {
   const s = pageShape({ id: null, ...MATTER.preface });
   assert.equal(s.showSeal, false, 'the seal is a case number; this page has none');
-  assert.equal(s.showNarration, false, 'the 147 baked files are cases only');
+  assert.equal(s.showNarration, true, 'every page in the book is baked');
+});
+
+test('the narration queue accepts a page\'s own section names', () => {
+  assert.deepEqual(
+    narrationQueue(MATTER.preface.text, MATTER.preface.sections),
+    ['prose', 'verse'],
+  );
+  assert.deepEqual(
+    narrationQueue(MATTER.afterword.text, MATTER.afterword.sections),
+    ['prose', 'warnings', 'amban'],
+  );
+});
+
+test('the queue still skips a section with nothing in it', () => {
+  assert.deepEqual(narrationQueue({ prose: 'a', verse: '  ' }, ['prose', 'verse']), ['prose']);
 });
 
 test('the matter pages bring their own sections and labels', () => {
