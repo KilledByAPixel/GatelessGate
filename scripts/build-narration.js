@@ -53,7 +53,7 @@ const value = (name) => { const i = argv.indexOf(`--${name}`); return i >= 0 ? a
 // Defaulting to the provider the book is actually baked in matters more than it
 // looks: these four values are folded into every unit's hash, so a default that
 // disagrees with the manifest makes a bare `node scripts/build-narration.js`
-// consider all 147 files stale and re-bake the entire reading. With them right,
+// consider all 152 units stale and re-bake the entire reading. With them right,
 // the bare command is a no-op — which is the only safe thing for it to be.
 const provider = value('provider') || PROVIDER;
 if (!['openai', 'gemini'].includes(provider)) throw new Error(`unknown provider: ${provider}`);

@@ -10,7 +10,9 @@ import { buildHub } from '../../intro.js';
 // art: it is the picture this text describes. "No gate as the gate of the
 // teaching" — the path still runs through, the monk still walks it, the camera
 // still centres where the gate stood, and there is nothing there. It is also
-// the one page in the book with no accent, because the gate was the red thing.
+// the one scene in the book with no accent object in it, because the gate was
+// the red thing — the text panel beside it still carries the usual accent red,
+// since makeScroll defaults to it (src/ui/scroll.js).
 const page = MATTER.preface;
 
 export default {

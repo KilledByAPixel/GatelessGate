@@ -1,6 +1,6 @@
 // Pure outlier detection for a narration bake.
 //
-// Each of the 147 units is generated independently, so two failure modes can slip
+// Each of the book's units is generated independently, so two failure modes can slip
 // through silently: a take that is truncated, and a take where the model reads part of
 // the prompt aloud before the transcript. Both show up as a unit whose duration is far
 // from what its length predicts.

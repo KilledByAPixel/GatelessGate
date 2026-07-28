@@ -52,8 +52,8 @@ Dialogue: light, natural differentiation between speakers, the way anyone tellin
 Read only the text given. Add no words, titles, or commentary.`,
 
   // Accent is instructed, not a property of the voice — the model supports it directly.
-  // The risk is drift: each of the 147 files is generated independently, so a heavily
-  // instructed accent can vary in strength between sections of the same case.
+  // The risk is drift: each of the book's 152 units is generated independently, so a
+  // heavily instructed accent can vary in strength between sections of the same case.
   japanese: `Voice: an elderly Japanese man speaking fluent English, reading aloud to a small room. Warm, low, slightly weathered. Kind and wise, not frail.
 Accent: a subtle, natural Japanese accent. Restrained and realistic — never exaggerated, never comedic. Clear English pronunciation comes first.
 Pace: slow and thoughtful, roughly 110 words per minute. Gentle breathiness. A full stop at every period, a longer reflective pause at paragraph breaks.

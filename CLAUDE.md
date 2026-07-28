@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-An interactive sumi-e reading of the Mumonkan (The Gateless Gate) in the browser: all 48 koan cases staged as small low-poly ink-painting dioramas, with text, narration, ambience, and a meditation timer. It is an **interactive book, not a game** — dioramas are ambient scenes; touch responses are optional delights, never gates.
+An interactive sumi-e reading of the Mumonkan (The Gateless Gate) in the browser: all 49 koan cases staged as small low-poly ink-painting dioramas, with text, narration, ambience, and a meditation timer. It is an **interactive book, not a game** — dioramas are ambient scenes; touch responses are optional delights, never gates.
 
 The design doc at `docs/gateless-gate-design-doc.md` is authoritative; its dated revision notes **override** anything they contradict elsewhere in the doc. Milestone plans/specs live in `docs/superpowers/`.
 
@@ -14,7 +14,7 @@ The design doc at `docs/gateless-gate-design-doc.md` is authoritative; its dated
 - Test all: `npm test` (runs `node --test` over `tests/`, Node 20+)
 - Test one file: `node --test tests/k29.test.js`
 - Regenerate koan text after editing `local/gateless-gate.txt`: `node scripts/build-text.js` (writes `src/koans/text/mumonkan.js`; the same run also parses `local/mumonkan-front-and-back-matter.md` into `src/koans/text/matter.js` and exits 1 if that second file is missing — it's required, not optional)
-- Re-bake narration after a text change: `node scripts/build-narration.js` — only units whose text/voice/preset hash changed are regenerated, so this is normally a few files and a few cents. Needs an OpenAI key in `local/openai-key.txt` or `OPENAI_API_KEY`. Use `--dry-run` to see what would bake without spending anything, and `--case N` — or a matter-page slug such as `preface` — to scope it; an unrecognised value is a hard error, not a silent no-op, since it must never fall through to baking the whole book. Voice and delivery live in `scripts/lib/narration-voice.js`; `scripts/narration-audition.js` is the bake-off for changing them.
+- Re-bake narration after a text change: `node scripts/build-narration.js` — only units whose text/voice/preset hash changed are regenerated, so this is normally a few files and a few cents. Needs a Gemini key in `local/gemini-key.txt` or `GEMINI_API_KEY` (the live provider is Gemini — see `PROVIDER` in `scripts/lib/narration-voice.js`; the OpenAI path still exists for the audition bake-off and reads its own key the same way). Use `--dry-run` to see what would bake without spending anything, and `--case N` — or a matter-page slug such as `preface` — to scope it; an unrecognised value is a hard error, not a silent no-op, since it must never fall through to baking the whole book. Voice and delivery live in `scripts/lib/narration-voice.js`; `scripts/narration-audition.js` is the bake-off for changing them.
 - Audit a bake for bad takes (no API cost): `node scripts/check-narration.js` fits duration vs character count; `node scripts/check-narration-wps.js` measures words-per-second speaking pace after crediting paragraph-break and lead-in pauses. Both flag dropouts (too short/fast) and repeats or dead air (too long/slow) by comparing each unit to its section; they normalise differently, so run both. Neither can catch a same-length garble — that still needs ears.
 - Screenshots while the preview panel is hidden: `node scripts/dev/shot-server.js` (port 8106; workspace launch config `gate-shots`), then POST a `canvas.toDataURL(...)` string to `http://localhost:8106/<name>` — files land in `shots/` (gitignored)
 
@@ -44,4 +44,4 @@ Caveat: the hidden preview panel pauses `requestAnimationFrame`, so `await gate.
 - One accent hue per koan against monochrome ink + paper; fog dissolves everything before any horizon.
 - Audio is minimal and chill: no singing bowl, no crickets. Bells, wind, quiet knocks are the palette. Nothing loud by default.
 - Sensitive cases (3, 5, 14, 41) are handled through ink metaphor, never literal harm.
-- Budgets: < 150 draw calls per scene, whole app ~1.5 MB gzipped, no downloaded assets. The baked narration (~46 MB of mp3 in `audio/narration/`) is outside this budget: it is lazy-loaded per case, never bundled, so it costs nothing at first load.
+- Budgets: < 150 draw calls per scene, whole app ~1.5 MB gzipped, no downloaded assets. The baked narration (~32 MB of mp3 in `audio/narration/`, the 147 files baked today — the five matter-page units are still to come) is outside this budget: it is lazy-loaded per case, never bundled, so it costs nothing at first load.

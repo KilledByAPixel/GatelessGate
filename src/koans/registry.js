@@ -68,7 +68,7 @@ const MATTER_LOADERS = {
 // gate on reading, because every page in the book is readable. The matter pages
 // have scenes of their own, so they are staged like any case.
 export function isStaged(slug) {
-  if (MATTER_LOADERS[slug]) return true;
+  if (Object.hasOwn(MATTER_LOADERS, slug)) return true;
   const c = bySlug(slug);
   return !!(c && LOADERS[c.id]);
 }
@@ -78,11 +78,11 @@ export function isStaged(slug) {
 // different questions, and conflating them is what locked forty-four cases the
 // text was already sitting in the bundle for.
 export function isRegistered(slug) {
-  return !!MATTER_LOADERS[slug] || !!bySlug(slug);
+  return Object.hasOwn(MATTER_LOADERS, slug) || !!bySlug(slug);
 }
 
 export async function loadKoan(slug) {
-  const matter = MATTER_LOADERS[slug];
+  const matter = Object.hasOwn(MATTER_LOADERS, slug) ? MATTER_LOADERS[slug] : null;
   if (matter) return (await matter()).default;
   const c = bySlug(slug);
   if (!c) return null;
