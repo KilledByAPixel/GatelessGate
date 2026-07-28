@@ -1,13 +1,16 @@
 import MATTER from '../text/matter.js';
+import { buildHub } from '../../intro.js';
 
 // Mumon's own preface, which is where the four lines the book is named after
 // actually come from. Shaped like a koan module so it travels the same rails —
 // the nav queue, the ink transitions, the scroll — and differs only in having
-// no number, which is what turns off the seal and the narration.
+// no number, which is what turns off the seal.
 //
-// The scene is the hub: a path running through a freestanding red gate. That is
-// not a placeholder standing in for art yet to come; it is the picture this text
-// describes. A bespoke diorama may replace it, and does not have to.
+// The scene is the hub with its gate removed. That is not a scene waiting for
+// art: it is the picture this text describes. "No gate as the gate of the
+// teaching" — the path still runs through, the monk still walks it, the camera
+// still centres where the gate stood, and there is nothing there. It is also
+// the one page in the book with no accent, because the gate was the red thing.
 const page = MATTER.preface;
 
 export default {
@@ -17,11 +20,11 @@ export default {
   sections: page.sections,
   labels: page.labels,
   text: page.text,
-  accent: undefined,          // the hub carries its own accent — the gate
+  accent: undefined,
   ambience: ['wind:0.30', 'music'],
   mood: 'in',
   camera: { distance: 14, azimuth: 0.5, polar: 1.3 },
-  build(ctx) {
-    return ctx.hub;
+  build() {
+    return buildHub({ gate: false });
   },
 };

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { loadKoan, isRegistered } from '../src/koans/registry.js';
 import { CASES } from '../src/koans/index.js';
 import { PREFACE_SLUG, AFTERWORD_SLUG } from '../src/spine.js';
+import { buildHub } from '../src/intro.js';
 
 // THE MATTER NET.
 //
@@ -111,4 +112,27 @@ test('the book closes on "Say it quick. Say it quick."', async () => {
     mod.text[last].trim().endsWith('Say it quick. Say it quick.'),
     'the last section of the last page should end on the book\'s closing line',
   );
+});
+
+test('the hub keeps its gate when nobody asks otherwise', () => {
+  const hub = buildHub();
+  assert.ok(Array.isArray(hub.gateTarget) && hub.gateTarget.length === 3);
+  assert.ok(hub.gateTarget.every(Number.isFinite), 'a non-finite target would aim the camera at nothing');
+});
+
+test('a scene can be built without its gate, path, monk or lanterns', () => {
+  // The afterword empties the stage. Nothing here asserts what it LOOKS like —
+  // that is a look-dev question — only that the options are honoured and the
+  // result is still a usable scene with a finite camera target.
+  const bare = buildHub({ gate: false, path: false, monk: false, lanterns: false });
+  assert.ok(bare.scene);
+  assert.ok(bare.gateTarget.every(Number.isFinite));
+  assert.equal(typeof bare.update, 'function');
+  assert.equal(typeof bare.dispose, 'function');
+});
+
+test('the preface scene and the hub frame the same point', async () => {
+  // The gate is absent on the preface page and the camera still centres where
+  // it stood: the composition is unchanged and the subject is its absence.
+  assert.deepEqual(buildHub({ gate: false }).gateTarget, buildHub().gateTarget);
 });

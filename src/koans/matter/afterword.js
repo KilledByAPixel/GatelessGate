@@ -1,4 +1,5 @@
 import MATTER from '../text/matter.js';
+import { buildHub } from '../../intro.js';
 
 // Mumon's afterword, the Zen Warnings, and the letter that produced case 49 —
 // in that order, so the book ends on "Say it quick. Say it quick."
@@ -7,8 +8,9 @@ import MATTER from '../text/matter.js';
 // the case it introduces. That inversion is accepted: it reads as the machinery
 // shown afterwards, and the alternative is editing a case.
 //
-// Same shape as preface.js, and the same reasoning: no number, so no seal and no
-// narration; the hub for a scene until a bespoke one exists.
+// The scene is the world with everything taken out of it — no gate, no path, no
+// lanterns, no one walking. Ground, mountains, forest, and the fog. The stage
+// clears as the book closes.
 const page = MATTER.afterword;
 
 export default {
@@ -21,8 +23,8 @@ export default {
   accent: undefined,
   ambience: ['wind:0.30', 'music'],
   mood: 'in',
-  camera: { distance: 14, azimuth: 0.5, polar: 1.3 },
-  build(ctx) {
-    return ctx.hub;
+  camera: { distance: 16, azimuth: 0.5, polar: 1.3 },
+  build() {
+    return buildHub({ gate: false, path: false, monk: false, lanterns: false });
   },
 };
