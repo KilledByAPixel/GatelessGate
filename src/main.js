@@ -318,7 +318,16 @@ function buildKoan(mod, slug) {
   // A case may frame itself. Most want the standard diorama shot, but a wide
   // establishing scene and a close one on a single figure are not the same
   // photograph, and an unstaged landscape wants to sit back further still.
-  makeRig({ distance: 11.5, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27, ...(mod.camera || {}) });
+  // A scene may name its own subject. The hub does (its gate), and the front and
+  // back matter render the hub — without this they inherit the generic diorama
+  // target, which sits four units in front of the gate and swings the orbit
+  // around empty road. A case's own `camera` still overrides, so this changes
+  // nothing for the forty-nine.
+  makeRig({
+    distance: 11.5, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27,
+    ...(built.gateTarget ? { target: built.gateTarget } : {}),
+    ...(mod.camera || {}),
+  });
   menu.close();
   scroll = makeScroll({
     id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
@@ -407,13 +416,9 @@ async function exit() {
   audio.stopAmbience();
   await transition(() => {
     const prev = scenes.active();
-    // Named to match buildKoan's guard: Contents always lands on the hub, so
-    // `built` is `hub` here, but the check is written the same way in both
-    // places rather than relying on readers to know the two happen to agree.
-    const built = hub;
-    scenes.setActive(built);
+    scenes.setActive(hub);
     debugApply();
-    if (prev && prev !== hub && prev !== built) { disposeRoot(prev); prev.dispose && prev.dispose(); }
+    if (prev && prev !== hub) { disposeRoot(prev); prev.dispose && prev.dispose(); }
     koan = null; koanSlug = null;
     if (scroll) { scroll.dispose(); scroll = null; }
     mode = 'menu';
