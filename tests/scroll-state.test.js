@@ -11,6 +11,7 @@ test('narrationQueue skips empty sections, keeps order', () => {
   assert.deepEqual(narrationQueue({ case: 'a', comment: 'b', verse: 'c' }), ['case', 'comment', 'verse']);
   assert.deepEqual(narrationQueue({ case: 'a', comment: '  ', verse: 'c' }), ['case', 'verse']);
   assert.deepEqual(narrationQueue({ case: '', comment: '', verse: '' }), []);
+  assert.deepEqual(narrationQueue({ case: 'a', verse: 'c' }), ['case', 'verse']);
 });
 
 test('a numbered case keeps the shape it always had', () => {
@@ -29,12 +30,13 @@ test('a page with no number shows no seal and no narration controls', () => {
 
 test('the matter pages bring their own sections and labels', () => {
   const pre = pageShape({ id: null, ...MATTER.preface });
-  assert.deepEqual(pre.sections, ['preface']);
-  assert.equal(pre.labels.preface, '', 'the single section is deliberately unlabelled');
+  assert.deepEqual(pre.sections, ['prose', 'verse']);
+  assert.equal(pre.labels.prose, 'The Preface');
+  assert.equal(pre.labels.verse, 'The Verse');
 
   const aft = pageShape({ id: null, ...MATTER.afterword });
-  assert.deepEqual(aft.sections, ['afterword', 'warnings', 'amban']);
-  assert.equal(aft.labels.afterword, "Mumon's Afterword");
+  assert.deepEqual(aft.sections, ['prose', 'warnings', 'amban']);
+  assert.equal(aft.labels.prose, "Mumon's Afterword");
   assert.equal(aft.labels.warnings, 'Zen Warnings');
   assert.equal(aft.labels.amban, "Amban's Letter");
 });
@@ -42,9 +44,4 @@ test('the matter pages bring their own sections and labels', () => {
 test('the afterword ends the book on Amban', () => {
   assert.equal(MATTER.afterword.sections.at(-1), 'amban');
   assert.match(MATTER.afterword.text.amban, /Say it quick/);
-});
-
-test('the narration queue is empty for a page that has no narration', () => {
-  assert.deepEqual(narrationQueue(MATTER.preface.text, MATTER.preface.sections), []);
-  assert.deepEqual(narrationQueue({ case: 'a', verse: 'c' }), ['case', 'verse']);
 });

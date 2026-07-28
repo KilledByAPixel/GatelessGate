@@ -63,9 +63,45 @@ for (const { slug } of PAGES) {
   });
 }
 
+test('the preface reads as prose then its verse', async () => {
+  const mod = await loadKoan(PREFACE_SLUG);
+  assert.deepEqual(mod.sections, ['prose', 'verse']);
+  assert.equal(mod.labels.prose, 'The Preface');
+  assert.equal(mod.labels.verse, 'The Verse');
+});
+
+test('the preface verse is the four lines the book is named after', async () => {
+  const mod = await loadKoan(PREFACE_SLUG);
+  const lines = mod.text.verse.split('\n');
+  assert.equal(lines.length, 4);
+  assert.match(lines[0], /^The great road has no gate\./);
+});
+
+test('the lead-in to the verse does not survive into the prose', async () => {
+  const mod = await loadKoan(PREFACE_SLUG);
+  assert.ok(!mod.text.prose.trimEnd().endsWith('The verse:'),
+    'the section label replaces the lead-in line');
+});
+
 test('the afterword runs Mumon\'s afterword, the Zen Warnings, then Amban\'s letter, in that order', async () => {
   const mod = await loadKoan(AFTERWORD_SLUG);
-  assert.deepEqual(mod.sections, ['afterword', 'warnings', 'amban']);
+  assert.deepEqual(mod.sections, ['prose', 'warnings', 'amban']);
+});
+
+test('the afterword keeps its verse inline, with the colophon after it', async () => {
+  const mod = await loadKoan(AFTERWORD_SLUG);
+  assert.match(mod.text.prose, /The mind of nirvana is easy enough to make out\./);
+  assert.ok(mod.text.prose.trimEnd().endsWith('eighth in descent from Yangqi.'),
+    'the colophon closes the section, so splitting the verse out would strand it');
+});
+
+test('no page carries a rendered indent', async () => {
+  for (const slug of [PREFACE_SLUG, AFTERWORD_SLUG]) {
+    const mod = await loadKoan(slug);
+    for (const key of mod.sections) {
+      assert.ok(!mod.text[key].includes('　'), `${slug}.${key} still indented`);
+    }
+  }
 });
 
 test('the book closes on "Say it quick. Say it quick."', async () => {

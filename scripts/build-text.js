@@ -15,23 +15,70 @@ const outMatter = path.join(root, 'src', 'koans', 'text', 'matter.js');
 // The two pages, and which translated piece fills each section. Keyed by the
 // Chinese titles the parser returns, so re-titling a piece in English cannot
 // silently empty a section.
+//
+// `take` says which of the piece's blocks this section gets:
+//   'all'   — every block, joined with a blank line
+//   'prose' — everything except a trailing verse block
+//   'verse' — the trailing verse block alone
+// `dropLeadIn`, where present, is a paragraph that introduced the verse in
+// running prose and is replaced by the section label. It must be the LAST
+// paragraph of the prose or the build fails: a source edit that moves it is a
+// change we want to hear about, not route around.
 const MATTER_PAGES = {
   preface: {
     slug: 'preface',
     title: "Mumon's Preface",
-    // one section, deliberately unlabelled — the page title says it already
-    parts: [['preface', '', '無門關自序']],
+    parts: [
+      ['prose', 'The Preface', '無門關自序', 'prose', 'The verse:'],
+      ['verse', 'The Verse', '無門關自序', 'verse'],
+    ],
   },
   afterword: {
     slug: 'afterword',
     title: 'Afterword',
     parts: [
-      ['afterword', "Mumon's Afterword", '後序'],
-      ['warnings', 'Zen Warnings', '禪箴'],
-      ['amban', "Amban's Letter", '安晚居士書'],
+      // Mumon's verse sits MID-piece here, with his colophon after it, and the
+      // prose leads into it with "As the lines have it:". Splitting it out
+      // would strand one sentence as its own section, so this piece takes
+      // every block as one.
+      ['prose', "Mumon's Afterword", '後序', 'all'],
+      ['warnings', 'Zen Warnings', '禪箴', 'all'],
+      ['amban', "Amban's Letter", '安晚居士書', 'all'],
     ],
   },
 };
+
+// Pull the requested blocks out of a parsed piece and render them to one string.
+function sectionText(blocks, take, dropLeadIn, where) {
+  const tailIsVerse = blocks.length > 0 && blocks[blocks.length - 1].kind === 'verse';
+  let chosen;
+  if (take === 'all') chosen = blocks;
+  else if (take === 'prose') chosen = tailIsVerse ? blocks.slice(0, -1) : blocks;
+  else if (take === 'verse') {
+    if (!tailIsVerse) {
+      console.error(`\nBUILD FAILED: ${where} asks for a trailing verse block, but the piece does not end in verse.`);
+      process.exit(1);
+    }
+    chosen = blocks.slice(-1);
+  } else {
+    console.error(`\nBUILD FAILED: ${where} has an unknown take "${take}".`);
+    process.exit(1);
+  }
+
+  let text = chosen.map((b) => b.text).join('\n\n');
+  if (dropLeadIn) {
+    const paras = text.split('\n\n');
+    if (paras[paras.length - 1].trim() !== dropLeadIn) {
+      console.error(`\nBUILD FAILED: ${where} expected its prose to end on "${dropLeadIn}", `
+        + `but it ends on "${paras[paras.length - 1].trim().slice(0, 60)}".`);
+      console.error('The section label replaces that lead-in line; if the source moved it, this needs a look.');
+      process.exit(1);
+    }
+    paras.pop();
+    text = paras.join('\n\n');
+  }
+  return text.trim();
+}
 
 // Hand-fixes for any case the uniform rules misparse (id -> partial entry). Empty for now.
 const OVERRIDES = {};
@@ -85,19 +132,19 @@ console.log(`\nWrote ${outFile} (${ids.length} cases).`);
 
 // ---- the front and back matter ----
 // Its own module, never folded into mumonkan.js: build-narration.js re-bakes any
-// unit whose text hash changed, and these pages have no narration. Keeping them
-// apart makes it impossible for a preface edit to cost 147 files of TTS.
+// unit whose text hash changed, so keeping the two apart makes it impossible for
+// a preface edit to cost 147 files of TTS. The matter pages have their own five.
 const matterText = parseMatter(fs.readFileSync(srcMatter, 'utf8'));
 const pages = {};
 for (const [key, page] of Object.entries(MATTER_PAGES)) {
   const sections = page.parts.map(([k]) => k);
   const labels = {};
   const text = {};
-  for (const [k, label, chinese] of page.parts) {
+  for (const [k, label, chinese, take, dropLeadIn] of page.parts) {
     // MATTER_PAGES and parse-matter's MATTER_REQUIRED both name these four
     // titles by hand, with nothing else tying them together — a title renamed
-    // in one and not the other would otherwise surface as a bare TypeError on
-    // `undefined.length` below, instead of a message that says what's wrong.
+    // in one and not the other would otherwise surface as a bare TypeError
+    // instead of a message that says what's wrong.
     if (!MATTER_REQUIRED.includes(chinese)) {
       console.error(`\nBUILD FAILED: ${page.slug}'s "${k}" section asks for "${chinese}", `
         + `which is not in parse-matter.js's MATTER_REQUIRED (${MATTER_REQUIRED.join(', ')}).`);
@@ -105,7 +152,7 @@ for (const [key, page] of Object.entries(MATTER_PAGES)) {
       process.exit(1);
     }
     labels[k] = label;
-    text[k] = matterText[chinese];
+    text[k] = sectionText(matterText[chinese], take, dropLeadIn, `${page.slug}.${k}`);
   }
   pages[key] = { slug: page.slug, title: page.title, sections, labels, text };
   console.log(`${page.slug}: ${sections.map((k) => `${k} ${text[k].length}`).join(', ')}`);
