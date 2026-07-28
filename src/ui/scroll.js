@@ -1,12 +1,13 @@
 import { ACCENT } from '../palette.js';
-import { SECTIONS, LABELS, narrationQueue } from './scroll_state.js';
+import { pageShape, narrationQueue } from './scroll_state.js';
 
 // The koan text panel (left column). Solid, always shown — no close/tuck control.
 // A quiet toolbar carries "Contents" (back) and "Sit"; the case seal appears once.
 export function makeScroll({
-  id, title, text, accent = ACCENT, onSpeak, onSpeakAll, onBack, onSit,
+  id, title, text, sections, labels, accent = ACCENT, onSpeak, onSpeakAll, onBack, onSit,
   onPrev, onNext, hasPrev = true, hasNext = true,
 } = {}) {
+  const shape = pageShape({ id, sections, labels, text });
   const el = document.createElement('div');
   el.className = 'gg-view gg-scroll';
   el.style.setProperty('--accent', accent);
@@ -25,15 +26,15 @@ export function makeScroll({
   const prev = document.createElement('button');
   prev.className = 'gg-page';
   prev.textContent = '‹';
-  prev.title = 'Previous case';
-  prev.setAttribute('aria-label', 'Previous case');
+  prev.title = 'Previous page';
+  prev.setAttribute('aria-label', 'Previous page');
   prev.disabled = !hasPrev;
   prev.onclick = () => onPrev && onPrev();
   const next = document.createElement('button');
   next.className = 'gg-page';
   next.textContent = '›';
-  next.title = 'Next case';
-  next.setAttribute('aria-label', 'Next case');
+  next.title = 'Next page';
+  next.setAttribute('aria-label', 'Next page');
   next.disabled = !hasNext;
   next.onclick = () => onNext && onNext();
   nav.append(prev, next);
@@ -60,47 +61,63 @@ export function makeScroll({
 
   const head = document.createElement('div');
   head.className = 'gg-scroll-head';
-  const seal = document.createElement('span');
-  seal.className = 'gg-seal';
-  seal.textContent = String(id);
   const h2 = document.createElement('h2');
   h2.textContent = title;
-  const playAll = document.createElement('button');
-  playAll.className = 'gg-play-all gg-btn';
-  playAll.textContent = '▶ Read aloud';
-  playAll.onclick = () => onSpeakAll && onSpeakAll();
-  head.append(seal, h2, playAll);
+  head.appendChild(h2);
+  // The seal IS the case number. The front and back matter have none, so they
+  // get no seal, and their one red thing lives in the diorama instead.
+  if (shape.showSeal) {
+    const seal = document.createElement('span');
+    seal.className = 'gg-seal';
+    seal.textContent = String(id);
+    head.insertBefore(seal, h2);
+  }
+  let playAll = null;
+  if (shape.showNarration) {
+    playAll = document.createElement('button');
+    playAll.className = 'gg-play-all gg-btn';
+    playAll.textContent = '▶ Read aloud';
+    playAll.onclick = () => onSpeakAll && onSpeakAll();
+    head.appendChild(playAll);
+  }
   el.appendChild(head);
 
   // reflect play/stop state on the button so there's always a way to stop
-  function setReading(on) { playAll.textContent = on ? '■ Stop' : '▶ Read aloud'; }
+  function setReading(on) {
+    if (playAll) playAll.textContent = on ? '■ Stop' : '▶ Read aloud';
+  }
 
   const sectionEls = {};
-  for (const key of SECTIONS) {
+  for (const key of shape.sections) {
     if (!text[key] || !text[key].trim()) continue;
     const sec = document.createElement('section');
     sec.className = 'gg-section';
     sec.dataset.section = key;
     const label = document.createElement('div');
     label.className = 'gg-section-label';
-    label.textContent = LABELS[key];
-    const speak = document.createElement('button');
-    speak.className = 'gg-speak';
-    speak.textContent = '♪';
-    speak.title = 'Read this section';
-    speak.onclick = () => onSpeak && onSpeak(key);
-    label.appendChild(speak);
+    label.textContent = shape.labels[key] || '';
+    if (shape.showNarration) {
+      const speak = document.createElement('button');
+      speak.className = 'gg-speak';
+      speak.textContent = '♪';
+      speak.title = 'Read this section';
+      speak.onclick = () => onSpeak && onSpeak(key);
+      label.appendChild(speak);
+    }
     const p = document.createElement('div');
     p.className = 'gg-section-text';
     p.textContent = text[key];
-    sec.append(label, p);
+    // An empty label would still draw its box and its rule; a single unlabelled
+    // block under the page's own title is the point on the preface page.
+    if (label.textContent || shape.showNarration) sec.appendChild(label);
+    sec.appendChild(p);
     el.appendChild(sec);
     sectionEls[key] = sec;
   }
 
   return {
     el,
-    queue: () => narrationQueue(text),
+    queue: () => narrationQueue(text, shape.sections),
     setReading,
     highlight(section) {
       for (const key of Object.keys(sectionEls)) sectionEls[key].classList.toggle('speaking', key === section);
