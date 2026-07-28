@@ -896,6 +896,40 @@
       "bytes": 574125,
       "seconds": 71.68,
       "chunks": 3
+    },
+    "preface:verse": {
+      "file": "preface-verse.mp3",
+      "hash": "c8724e3a59c7",
+      "bytes": 126765,
+      "seconds": 15.76
+    },
+    "preface:prose": {
+      "file": "preface-prose.mp3",
+      "hash": "bee363516a2c",
+      "bytes": 928749,
+      "seconds": 116,
+      "chunks": 3
+    },
+    "afterword:prose": {
+      "file": "afterword-prose.mp3",
+      "hash": "062591145259",
+      "bytes": 907821,
+      "seconds": 113.4,
+      "chunks": 3
+    },
+    "afterword:amban": {
+      "file": "afterword-amban.mp3",
+      "hash": "ac5a2cec1684",
+      "bytes": 428973,
+      "seconds": 53.54,
+      "chunks": 2
+    },
+    "afterword:warnings": {
+      "file": "afterword-warnings.mp3",
+      "hash": "d79db43da1d0",
+      "bytes": 894381,
+      "seconds": 111.7,
+      "chunks": 2
     }
   },
   "provider": "gemini"
