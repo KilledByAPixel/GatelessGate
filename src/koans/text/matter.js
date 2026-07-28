@@ -2,13 +2,13 @@
 export default {
   "preface": {
     "slug": "preface",
-    "title": "Mumon's Preface",
+    "title": "Preface",
     "sections": [
       "prose",
       "verse"
     ],
     "labels": {
-      "prose": "The Preface",
+      "prose": "Mumon's Preface",
       "verse": "The Verse"
     },
     "text": {

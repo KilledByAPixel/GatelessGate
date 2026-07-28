@@ -27,9 +27,9 @@ const outMatter = path.join(root, 'src', 'koans', 'text', 'matter.js');
 const MATTER_PAGES = {
   preface: {
     slug: 'preface',
-    title: "Mumon's Preface",
+    title: 'Preface',
     parts: [
-      ['prose', 'The Preface', '無門關自序', 'prose', 'The verse:'],
+      ['prose', "Mumon's Preface", '無門關自序', 'prose', 'The verse:'],
       ['verse', 'The Verse', '無門關自序', 'verse'],
     ],
   },

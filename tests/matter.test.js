@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadKoan, isRegistered } from '../src/koans/registry.js';
+import { loadKoan, isRegistered, isStaged } from '../src/koans/registry.js';
 import { CASES } from '../src/koans/index.js';
 import { PREFACE_SLUG, AFTERWORD_SLUG } from '../src/spine.js';
 import { buildHub } from '../src/intro.js';
@@ -30,7 +30,11 @@ for (const { slug } of PAGES) {
     assert.ok(mod, `loadKoan(${slug}) should resolve to a module`);
   });
 
-  test(`${slug} has no number — that is what removes the seal and narration`, async () => {
+  test(`${slug} is staged — it has a scene of its own, not the default landscape`, () => {
+    assert.ok(isStaged(slug), `${slug} should be staged`);
+  });
+
+  test(`${slug} has no number — that is what removes the seal`, async () => {
     const mod = await loadKoan(slug);
     assert.equal(mod.id, null);
     assert.equal(mod.slug, slug);
@@ -67,7 +71,7 @@ for (const { slug } of PAGES) {
 test('the preface reads as prose then its verse', async () => {
   const mod = await loadKoan(PREFACE_SLUG);
   assert.deepEqual(mod.sections, ['prose', 'verse']);
-  assert.equal(mod.labels.prose, 'The Preface');
+  assert.equal(mod.labels.prose, "Mumon's Preface");
   assert.equal(mod.labels.verse, 'The Verse');
 });
 
@@ -213,4 +217,28 @@ test('turning every piece off actually removes all of them from the scene', () =
   }
   assert.ok(bare.scene.children.length < full.scene.children.length,
     'the bare scene should have strictly fewer objects than the fully-dressed one');
+});
+
+// Everything above builds buildHub() directly with hand-written options — it never
+// proves that preface.js and afterword.js actually PASS those options through. Both
+// modules call buildHub() themselves inside their own build(), so a typo'd option name
+// (`gates:` instead of `gate:`, say) would silently fall back to buildHub's defaults —
+// the gate would reappear on the preface, the whole stage would reappear on the
+// afterword — and nothing above this line would ever notice, because it never goes
+// through loadKoan or calls the module's own build(). These do.
+test('the preface\'s own build() removes the gate but keeps path, monk and lanterns', async () => {
+  const mod = await loadKoan(PREFACE_SLUG);
+  const built = mod.build();
+  assert.equal(countNamed(built.scene, 'gate'), 0, 'no gate — "no gate as the gate of the teaching"');
+  assert.equal(countNamed(built.scene, 'path'), 1);
+  assert.equal(countNamed(built.scene, 'monk'), 1);
+  assert.equal(countNamed(built.scene, 'lantern'), 2);
+});
+
+test('the afterword\'s own build() clears the whole stage', async () => {
+  const mod = await loadKoan(AFTERWORD_SLUG);
+  const built = mod.build();
+  for (const name of ['gate', 'path', 'monk', 'lantern']) {
+    assert.equal(countNamed(built.scene, name), 0, `${name} should be gone from the afterword`);
+  }
 });

@@ -46,7 +46,7 @@ test('the queue still skips a section with nothing in it', () => {
 test('the matter pages bring their own sections and labels', () => {
   const pre = pageShape({ id: null, ...MATTER.preface });
   assert.deepEqual(pre.sections, ['prose', 'verse']);
-  assert.equal(pre.labels.prose, 'The Preface');
+  assert.equal(pre.labels.prose, "Mumon's Preface");
   assert.equal(pre.labels.verse, 'The Verse');
 
   const aft = pageShape({ id: null, ...MATTER.afterword });
