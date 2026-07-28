@@ -96,6 +96,16 @@ export function parseMatter(md) {
       taking = /^###\s+English\s*$/.test(line);
       continue;
     }
+    if (/^-{3,}\s*$/.test(line)) {
+      // A horizontal rule ends the English block too. Today every `### English`
+      // is followed by a `### Notes` that would already have ended it, but the
+      // source is a hand-edited working document — the day someone deletes a
+      // trailing Notes section, this is what stops the rule itself, and the
+      // Chinese heading below it, from being captured as content.
+      flush();
+      taking = false;
+      continue;
+    }
     if (taking) buf.push(line);
   }
   flush();

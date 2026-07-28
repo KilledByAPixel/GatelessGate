@@ -80,6 +80,12 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
   color: rgba(30,30,36,0.55);
 }
 
+/* Front matter, above the forty-nine cases. The mirror of .gg-backmatter below:
+   the same quiet word and rule, but the border sits under the preface link
+   rather than over it, so the preface reads as sitting above the contents the
+   way the afterword sits below them. */
+.gg-frontmatter { margin: 4px 0 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(30,30,36,0.12); }
+
 /* Back matter, under the forty-nine cases. A rule and a quiet word — it is the
    end of the contents, not another entry in them, so it never takes a number
    and never sits in the list. */

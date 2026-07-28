@@ -97,7 +97,13 @@ panel.appendChild(about.el);
 
 const sit = makeSit({
   audio,
-  onComplete: () => { if (koanSlug) { save.markSat(koanSlug); menu.refresh(save.state()); } resumeKoan(); },
+  onComplete: () => {
+    // Mirrors the markRead guard in buildKoan: front and back matter are not
+    // counted anywhere, so a sit completed on the preface or afterword must
+    // not persist into sat either.
+    if (koanSlug && !isMatterSlug(koanSlug)) { save.markSat(koanSlug); menu.refresh(save.state()); }
+    resumeKoan();
+  },
   onExit: () => resumeKoan(),
 });
 document.body.appendChild(sit.el);

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseMumonkan } from './lib/parse-mumonkan.js';
-import { parseMatter } from './lib/parse-matter.js';
+import { parseMatter, MATTER_REQUIRED } from './lib/parse-matter.js';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const srcTxt = path.join(root, 'local', 'gateless-gate.txt');
@@ -35,6 +35,15 @@ const MATTER_PAGES = {
 
 // Hand-fixes for any case the uniform rules misparse (id -> partial entry). Empty for now.
 const OVERRIDES = {};
+
+// Checked up front, beside the other input: writing mumonkan.js and only
+// afterwards discovering the second input is missing would leave a "failed"
+// build having already written a file. A failure here must be atomic.
+if (!fs.existsSync(srcMatter)) {
+  console.error(`\nBUILD FAILED: ${srcMatter} is missing.`);
+  console.error('local/ is gitignored — a fresh clone does not have it.');
+  process.exit(1);
+}
 
 const raw = fs.readFileSync(srcTxt, 'utf8');
 const { about, cases } = parseMumonkan(raw);
@@ -78,11 +87,6 @@ console.log(`\nWrote ${outFile} (${ids.length} cases).`);
 // Its own module, never folded into mumonkan.js: build-narration.js re-bakes any
 // unit whose text hash changed, and these pages have no narration. Keeping them
 // apart makes it impossible for a preface edit to cost 147 files of TTS.
-if (!fs.existsSync(srcMatter)) {
-  console.error(`\nBUILD FAILED: ${srcMatter} is missing.`);
-  console.error('local/ is gitignored — a fresh clone does not have it.');
-  process.exit(1);
-}
 const matterText = parseMatter(fs.readFileSync(srcMatter, 'utf8'));
 const pages = {};
 for (const [key, page] of Object.entries(MATTER_PAGES)) {
@@ -90,6 +94,16 @@ for (const [key, page] of Object.entries(MATTER_PAGES)) {
   const labels = {};
   const text = {};
   for (const [k, label, chinese] of page.parts) {
+    // MATTER_PAGES and parse-matter's MATTER_REQUIRED both name these four
+    // titles by hand, with nothing else tying them together — a title renamed
+    // in one and not the other would otherwise surface as a bare TypeError on
+    // `undefined.length` below, instead of a message that says what's wrong.
+    if (!MATTER_REQUIRED.includes(chinese)) {
+      console.error(`\nBUILD FAILED: ${page.slug}'s "${k}" section asks for "${chinese}", `
+        + `which is not in parse-matter.js's MATTER_REQUIRED (${MATTER_REQUIRED.join(', ')}).`);
+      console.error('MATTER_PAGES here and MATTER_REQUIRED there must name the same four titles.');
+      process.exit(1);
+    }
     labels[k] = label;
     text[k] = matterText[chinese];
   }

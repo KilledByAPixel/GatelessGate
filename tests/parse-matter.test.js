@@ -222,6 +222,39 @@ Placeholder.
   assert.ok(!text.includes('. 　　'), 'verse should not join prose with a space');
 });
 
+test('a horizontal rule ends the English block even with no trailing Notes section', () => {
+  // Today every `### English` block is followed by `### Notes`, which already
+  // ends the block — this simulates the day someone deletes that Notes
+  // section by hand, leaving the closing `---` as the only thing between the
+  // English text and the next heading.
+  const fixture = `## 無門關自序 — Mumon's Preface
+### English
+Just the preface text.
+---
+## 後序 — Mumon's Afterword
+### English
+Placeholder.
+### Notes
+-
+---
+## 禪箴 — Zen Warnings
+### English
+Placeholder.
+### Notes
+-
+---
+## 安晚居士書 — Amban's Letter
+### English
+Placeholder.
+### Notes
+-
+---
+`;
+  const out = parseMatter(fixture);
+  assert.equal(out['無門關自序'], 'Just the preface text.');
+  assert.ok(!out['無門關自序'].includes('---'), 'the rule itself must not leak into the text');
+});
+
 test('a missing piece fails loudly rather than emitting a blank page', () => {
   // Replace the whole heading, Chinese title included — changing only the
   // English half would leave the piece perfectly findable, which is what makes
