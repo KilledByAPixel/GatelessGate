@@ -12,6 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import CASES from '../src/koans/text/mumonkan.js';
+import MATTER from '../src/koans/text/matter.js';
 import { countWords, countParagraphs, findPaceOutliers } from './lib/narration-wps.js';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -30,7 +31,14 @@ const rows = [];
 for (const [key, f] of Object.entries(manifest.files)) {
   if (typeof f.seconds !== 'number') continue;
   const [id, section] = key.split(':');
-  const text = (CASES[id][section] || '').trim();
+  // id is a case number for the 49 cases, a page slug (preface/afterword) for the
+  // matter pages — CASES has no entry for the latter, so fall back to MATTER. Grouped
+  // by section name below: a matter page's 'verse' shares a peer group with every
+  // case's 'verse' (same delivery note); 'prose'/'warnings'/'amban' are unique to the
+  // matter pages and too few in number to set their own baseline, so they're reported
+  // but not flagged, same as any other undersized group.
+  const source = CASES[id] ? CASES[id] : (MATTER[id] && MATTER[id].text);
+  const text = ((source && source[section]) || '').trim();
   if (!text) continue;
   rows.push({ key, section, words: countWords(text), paras: countParagraphs(text), seconds: f.seconds });
 }

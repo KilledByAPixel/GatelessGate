@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import CASES from '../src/koans/text/mumonkan.js';
+import MATTER from '../src/koans/text/matter.js';
 import { findOutliers } from './lib/narration-check.js';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -35,9 +36,17 @@ for (const [key, f] of entries) {
   const [id, section] = key.split(':');
   if (!fs.existsSync(path.join(outDir, f.file))) missing.push(f.file);
   if (anySeconds && typeof f.seconds !== 'number') { skipped++; continue; }
+  // id is a case number for the 49 cases, a page slug (preface/afterword) for the
+  // matter pages — CASES has no entry for the latter, so fall back to MATTER. Grouping
+  // below is by section name, not by source: a matter page's 'verse' joins the same
+  // peer group as every case's 'verse' (same delivery note, same expected pace), while
+  // 'prose'/'warnings'/'amban' are unique to the matter pages and form their own tiny
+  // groups — too few samples to set a baseline, so they're reported but never flagged,
+  // same as any other undersized group here.
+  const source = CASES[id] ? CASES[id] : (MATTER[id] && MATTER[id].text);
   rows.push({
     key, section,
-    chars: (CASES[id][section] || '').trim().length,
+    chars: ((source && source[section]) || '').trim().length,
     metric: anySeconds ? f.seconds : f.bytes,
   });
 }

@@ -297,7 +297,7 @@ saveManifest();
 
 const baked = Object.keys(manifest.files).length;
 const total = Object.values(manifest.files).reduce((s, f) => s + f.bytes, 0);
-console.log(`\nManifest holds ${baked} of 147 units, ${(total / 1e6).toFixed(1)} MB.`);
+console.log(`\nManifest holds ${baked} of ${units.length} units, ${(total / 1e6).toFixed(1)} MB.`);
 if (gemini) console.log(`${tokens} output tokens this run (~$${(tokens / 1e6 * 20).toFixed(2)})`);
 if (quotaHit) {
   const left = stale.length - done;
