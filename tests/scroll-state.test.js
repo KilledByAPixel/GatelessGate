@@ -3,6 +3,16 @@ import assert from 'node:assert/strict';
 import { pageShape, SECTIONS, LABELS, narrationQueue } from '../src/ui/scroll_state.js';
 import MATTER from '../src/koans/text/matter.js';
 
+test('sections are case, comment, verse in order', () => {
+  assert.deepEqual(SECTIONS, ['case', 'comment', 'verse']);
+});
+
+test('narrationQueue skips empty sections, keeps order', () => {
+  assert.deepEqual(narrationQueue({ case: 'a', comment: 'b', verse: 'c' }), ['case', 'comment', 'verse']);
+  assert.deepEqual(narrationQueue({ case: 'a', comment: '  ', verse: 'c' }), ['case', 'verse']);
+  assert.deepEqual(narrationQueue({ case: '', comment: '', verse: '' }), []);
+});
+
 test('a numbered case keeps the shape it always had', () => {
   const s = pageShape({ id: 29, text: { case: 'a', comment: 'b', verse: 'c' } });
   assert.deepEqual(s.sections, SECTIONS);
