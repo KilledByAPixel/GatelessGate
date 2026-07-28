@@ -136,3 +136,81 @@ test('the preface scene and the hub frame the same point', async () => {
   // it stood: the composition is unchanged and the subject is its absence.
   assert.deepEqual(buildHub({ gate: false }).gateTarget, buildHub().gateTarget);
 });
+
+// The four tests above hold for a return-value shape that a fully-dressed
+// default hub also satisfies — none of them would fail if the `if (withX)`
+// guards in buildHub were deleted and every piece went back to being built
+// unconditionally. These assert on the actual CONTENTS of the constructed
+// scene instead, keyed off the `name` every kit piece already sets on its own
+// root object (`gate.js`, `lantern.js`, `monk.js`, `path.js`) and the shared
+// `blobshadow` name every blob shadow carries (`render/blobshadow.js`) — no
+// change to buildHub's own code was needed to make its children identifiable.
+function countNamed(scene, name) {
+  return scene.children.filter((c) => c.name === name).length;
+}
+
+test('the fully-dressed hub has one each of gate, monk, path and two lanterns', () => {
+  const full = buildHub();
+  assert.equal(countNamed(full.scene, 'gate'), 1);
+  assert.equal(countNamed(full.scene, 'lantern'), 2);
+  assert.equal(countNamed(full.scene, 'monk'), 1);
+  assert.equal(countNamed(full.scene, 'path'), 1);
+  assert.equal(countNamed(full.scene, 'blobshadow'), 4, 'gate + monk + two lanterns');
+});
+
+test('gate: false removes only the gate and its own shadow', () => {
+  const full = buildHub();
+  const noGate = buildHub({ gate: false });
+  assert.equal(countNamed(noGate.scene, 'gate'), 0);
+  assert.equal(
+    countNamed(full.scene, 'blobshadow') - countNamed(noGate.scene, 'blobshadow'), 1,
+    'only the gate\'s own shadow should disappear with it',
+  );
+  // the lanterns keep the shared keepout circle alive, but the objects
+  // themselves are unaffected by the gate flag
+  assert.equal(countNamed(noGate.scene, 'lantern'), 2);
+  assert.equal(countNamed(noGate.scene, 'monk'), 1);
+  assert.equal(countNamed(noGate.scene, 'path'), 1);
+});
+
+test('lanterns: false removes both lanterns and both their shadows', () => {
+  const full = buildHub();
+  const noLanterns = buildHub({ lanterns: false });
+  assert.equal(countNamed(noLanterns.scene, 'lantern'), 0);
+  assert.equal(
+    countNamed(full.scene, 'blobshadow') - countNamed(noLanterns.scene, 'blobshadow'), 2,
+  );
+  assert.equal(countNamed(noLanterns.scene, 'gate'), 1);
+  assert.equal(countNamed(noLanterns.scene, 'monk'), 1);
+});
+
+test('monk: false removes the monk and its shadow', () => {
+  const full = buildHub();
+  const noMonk = buildHub({ monk: false });
+  assert.equal(countNamed(noMonk.scene, 'monk'), 0);
+  assert.equal(
+    countNamed(full.scene, 'blobshadow') - countNamed(noMonk.scene, 'blobshadow'), 1,
+  );
+  assert.equal(countNamed(noMonk.scene, 'gate'), 1);
+  assert.equal(countNamed(noMonk.scene, 'lantern'), 2);
+});
+
+test('path: false removes the path itself, but not what it positions', () => {
+  const noPath = buildHub({ path: false });
+  assert.equal(countNamed(noPath.scene, 'path'), 0);
+  // the gate, lanterns and monk are placed using the path's maths even when
+  // the path mesh is never added to the scene
+  assert.equal(countNamed(noPath.scene, 'gate'), 1);
+  assert.equal(countNamed(noPath.scene, 'lantern'), 2);
+  assert.equal(countNamed(noPath.scene, 'monk'), 1);
+});
+
+test('turning every piece off actually removes all of them from the scene', () => {
+  const full = buildHub();
+  const bare = buildHub({ gate: false, path: false, monk: false, lanterns: false });
+  for (const name of ['gate', 'path', 'monk', 'lantern', 'blobshadow']) {
+    assert.equal(countNamed(bare.scene, name), 0, `${name} should be gone from the bare scene`);
+  }
+  assert.ok(bare.scene.children.length < full.scene.children.length,
+    'the bare scene should have strictly fewer objects than the fully-dressed one');
+});
