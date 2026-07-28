@@ -20,7 +20,7 @@ import { makeAbout } from './ui/about.js';
 import { makeScroll } from './ui/scroll.js';
 import { makeSit } from './sit.js';
 import { makeRouter } from './router.js';
-import { readingOrder, neighborSlug } from './spine.js';
+import { readingOrder, neighborSlug, nextInLoop } from './spine.js';
 
 const STEP = 1 / 60;
 
@@ -64,6 +64,10 @@ let simTime = 0;
 let rig = null;
 let koan = null;
 let koanSlug = null;
+// What the CURRENT page's narration is keyed by — a case number or a matter
+// page's slug. buildKoan sets it; the continuous reading uses it to start the
+// page it has just turned to.
+let koanNarrationId = null;
 let scroll = null;
 let intro = null;
 
@@ -175,14 +179,58 @@ if (document.fullscreenEnabled === false) fsBtn.remove();
 // they are already fullscreen, the whole window IS the whole screen.
 const app = document.getElementById('gg-app');
 let ambient = false;
-const ambientBtn = tool('◉', 'Ambient view', () => setAmbient(!ambient));
+// Whether the ambient view is also READING — the book aloud, page after page,
+// looping at the end. Kept apart from `readingAll` because that one is cleared
+// on every page turn (stopReading runs in buildKoan) and this one has to
+// survive the turn: it is the thing that asks for the next page.
+let readingBook = false;
+const ambientBtn = tool('◉', 'Read the book', () => setAmbient(!ambient));
 function setAmbient(on) {
   ambient = !!on;
   app.classList.toggle('ambient', ambient);
   ambientBtn.classList.toggle('active', ambient);
-  ambientBtn.title = ambient ? 'Leave ambient view' : 'Ambient view';
+  ambientBtn.title = ambient ? 'Stop reading' : 'Read the book';
   applyStageSize();          // the panel just left or returned; see the comment there
   if (rig) rig.setWander(ambient);
+  if (ambient) startReadingBook(); else stopReadingBook();
+}
+
+// Hands-free reading: the text steps aside, the camera drifts, and the book
+// reads itself from wherever the reader is — through the sections of this page,
+// on to the next, and round to the preface again after the afterword. Sitting is
+// left alone: someone who asked for silence gets the picture, not a voice.
+function startReadingBook() {
+  // Sitting asks for silence, and the title screen's dolly owns the camera until
+  // it finishes — entering a page from under it would leave the intro's own
+  // update() fighting the new rig. In both, ◉ stays what it always was: a view.
+  if (mode === 'sit' || mode === 'intro') return;
+  readingBook = true;
+  // From the Contents there is no page open to read, so the book starts where a
+  // book starts. enter() brings the preface up and buildKoan starts reading it.
+  if (mode !== 'koan') { enter(SPINE[0]); return; }
+  readPageAloud();
+}
+
+function stopReadingBook() {
+  readingBook = false;
+  stopReading();
+}
+
+// Start this page's narration, if any of it is baked. Called on entering the
+// reading and again by buildKoan on every page turn.
+async function readPageAloud() {
+  if (!readingBook || !scroll || koanNarrationId === null) return;
+  const id = koanNarrationId;
+  const mine = scroll;
+  const playable = await narration.queue(id, scroll.queue());
+  // Two ways this can be stale by the time the manifest answers: the reader left
+  // the reading, or the page turned under it. Neither is an error; both mean the
+  // work this call was about no longer exists.
+  if (!readingBook || scroll !== mine) return;
+  if (!playable.length) { pageDone(); return; } // nothing baked here — turn the page anyway
+  startReading(true);
+  scroll.setReading(true);
+  speakAll(id, playable);
 }
 
 // ---- debug workbench (top-right of the stage) ----
@@ -332,7 +380,10 @@ function buildKoan(mod, slug) {
   menu.close();
   // Narration is keyed by whatever names the page: a case's number, a matter
   // page's slug. narration_state's unitKey joins it into a string either way.
+  // Held on the module too, so the continuous reading can start this page after
+  // a turn without re-deriving it from a `mod` it no longer has.
   const narrationId = mod.id === null ? mod.slug : mod.id;
+  koanNarrationId = narrationId;
   scroll = makeScroll({
     id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
     sections: mod.sections, labels: mod.labels,
@@ -376,6 +427,10 @@ function buildKoan(mod, slug) {
   panel.appendChild(scroll.el);
   showView(scroll.el);
   mode = 'koan';
+  // The continuous reading turned to this page — so read it. buildKoan's
+  // stopReading() above has already cleared `readingAll`, which is why this
+  // cannot simply carry over: every page starts its own reading.
+  if (readingBook) readPageAloud();
 }
 
 // One paging hop, driven by the nav queue. Unlike the generic transition(), the
@@ -418,6 +473,9 @@ async function exit() {
   if (mode === 'intro') { skipIntro(); return; }
   if (mode === 'sit') { sit.end(); return; }
   nav.cancel();      // a queued page must not fire after we've asked for Contents
+  // Asking for the Contents ends the continuous reading — otherwise pageDone's
+  // pending turn would drag the reader straight back into the book.
+  readingBook = false;
   router.set({ view: 'contents' });   // both paths below land on Contents
   if (mode !== 'koan') { menu.open(); showView(menu.el); return; }
   stopReading();
@@ -476,6 +534,11 @@ const router = makeRouter({
 // comment reads as one continuous text; the pause is what says a different voice in
 // the book has taken over. Long enough to land, short enough not to feel broken.
 const SECTION_GAP_MS = 1500;
+// Longer between PAGES than between sections of one page. Turning to the next
+// koan is a bigger move than turning from the case to Mumon's comment, and the
+// ink dissolve runs inside this gap — the reading should feel like a page being
+// turned, not like the tape running on.
+const PAGE_GAP_MS = 2600;
 
 // Punctuation for the reading: one tube note when a section ends, descending
 // as the reading deepens — the case highest, the verse lowest. The matter
@@ -511,19 +574,38 @@ function speakAll(id, order) {
       onEnd: () => {
         if (!readingAll) return;                  // stopped, or switched to one section
         sectionChime(key);
-        if (i >= order.length) { stopReading(); return; }
+        if (i >= order.length) { pageDone(); return; }
         // The highlight stays on the section just read through the gap — clearing it
         // would flash the panel between every part.
         readTimer = setTimeout(() => { readTimer = null; if (readingAll) step(); }, SECTION_GAP_MS);
       },
     });
   };
-  if (order.length) step(); else stopReading();
+  if (order.length) step(); else pageDone();
+}
+
+// The end of a page. On its own that is the end of the reading; under the
+// continuous reading it is a page turn, and the book keeps going.
+function pageDone() {
+  if (!readingBook) { stopReading(); return; }
+  const next = nextInLoop(SPINE, koanSlug);   // past the afterword, begin again
+  if (!next) { stopReadingBook(); return; }   // not a page of this book
+  // A beat before the turn so the last chime lands in silence rather than under
+  // the dissolve. stopReading() unducks; the next page ducks again when it starts.
+  stopReading();
+  readTimer = setTimeout(() => {
+    readTimer = null;
+    if (readingBook) enter(next);
+  }, PAGE_GAP_MS);
 }
 
 function startSit(minutes = 10) {
   if (mode !== 'koan') return;
   mode = 'sit';
+  // Sitting ends the continuous reading outright rather than pausing it: the
+  // timer is the one part of this book that asks for silence, and a voice
+  // resuming partway through it would be the worst possible interruption.
+  readingBook = false;
   stopReading();
   panel.classList.add('fading');   // the text recedes while sitting
   sit.start(minutes);
@@ -619,6 +701,7 @@ window.gate = {
       freeze: { active: freeze.active, progress: +freeze.progress.toFixed(4) },
       camera: rig ? rig.state() : null,
       progress: { read: { ...save.state().read }, sat: { ...save.state().sat } },
+      reading: { ambient, book: readingBook, all: readingAll, slug: koanSlug },
     };
     if (koan && koan.fragment) s.koan = koan.fragment();
     return s;

@@ -29,6 +29,10 @@ and no score — it is a book, not a game.
   keeps a small vermillion mark once you've sat with it.
 - **Read in any order.** A simple menu lists every case; there's no path to follow
   and nothing to unlock.
+- **Or have it read to you.** One button steps the text aside, gives the diorama the
+  whole window, and reads the book aloud — through a page, on to the next, and round
+  to the beginning again after the end. The camera drifts on its own the whole time.
+  Nothing to hold, nothing to click.
 
 It runs entirely in the browser — no install, no sign-in, nothing downloaded up
 front. Just open it and read.
@@ -50,9 +54,6 @@ This is a living project. Some of what's ahead:
   original Chinese beside the English, read aloud in its own voice.
 - **Step inside.** A VR / headset mode: sit *within* the dioramas rather than looking
   at them through glass.
-- **Just the picture.** An ambient mode: the text steps aside, the diorama takes the
-  whole screen, and the camera drifts on its own — for when you'd rather sit with the
-  image than read it.
 - **Richer scenes.** Deeper art as the kit grows — more ink, more life, more of each
   koan's particular weather.
 - **A better read.** Kinder typography and reading modes: adjustable pace, the line

@@ -35,3 +35,13 @@ export function neighborSlug(order, slug, dir) {
   if (i < 0) return null;
   return order[i + dir] || null;
 }
+
+// The next page for the CONTINUOUS reading, which does not stop at the end: the
+// afterword turns back to the preface and the book begins again. Deliberately a
+// different rule from neighborSlug — paging by hand still stops at both ends,
+// because an arrow that wrapped would lose the reader their place in the book.
+// A slug that is not in the book returns null rather than silently starting over.
+export function nextInLoop(order, slug) {
+  if (order.indexOf(slug) < 0) return null;
+  return neighborSlug(order, slug, +1) || order[0] || null;
+}
