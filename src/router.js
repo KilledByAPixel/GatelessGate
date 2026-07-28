@@ -1,4 +1,5 @@
 import { byId, bySlug } from './koans/index.js';
+import { PREFACE_SLUG, AFTERWORD_SLUG } from './spine.js';
 
 // The URL always names what's on screen.
 //
@@ -7,20 +8,29 @@ import { byId, bySlug } from './koans/index.js';
 // a link that rots is worse than one that is ugly. Contents is the bare URL: it
 // is the book's home, not a page in it.
 
+// The two pages that are not numbered. A case is its number because ids never
+// change; the front and back matter have no number to use, so they take the one
+// word that names them. Checked before the numeric branch, and lower-cased so a
+// hand-typed `#Preface` still lands.
+const NAMED = new Map([
+  [PREFACE_SLUG, PREFACE_SLUG],
+  [AFTERWORD_SLUG, AFTERWORD_SLUG],
+]);
+
 // '#29' -> { view: 'case', id: 29, slug: '…' } | { view: 'contents' } | null.
 // null means "this hash names nothing" — the caller decides what to do about it.
 export function parseRoute(hash) {
   const raw = String(hash == null ? '' : hash).trim().replace(/^#/, '').trim();
   if (raw === '') return { view: 'contents' };
-  // Digits only, deliberately: this rejects '2.5', '-3', '1e2', 'foo' and any
-  // slug-shaped input in one line, so the only thing left to check is whether
-  // the book actually has that case.
+  const named = NAMED.get(raw.toLowerCase());
+  if (named) return { view: 'case', id: null, slug: named };
   if (!/^\d+$/.test(raw)) return null;
   const c = byId(Number(raw));
   return c ? { view: 'case', id: c.id, slug: c.slug } : null;
 }
 
 export function hashFor(slug) {
+  if (NAMED.has(slug)) return `#${slug}`;
   const c = bySlug(slug);
   return c ? `#${c.id}` : null;
 }

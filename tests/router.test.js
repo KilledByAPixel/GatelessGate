@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseRoute, hashFor, makeRouter } from '../src/router.js';
 import { CASES } from '../src/koans/index.js';
+import { PREFACE_SLUG, AFTERWORD_SLUG } from '../src/spine.js';
 
 test('a bare hash is a case number', () => {
   assert.deepEqual(parseRoute('#29'), {
@@ -192,4 +193,38 @@ test('with no window at all the router is inert, not broken', () => {
   assert.equal(r.initial(), null);
   r.set({ view: 'case', slug: 'joshu-s-dog' });   // must not throw
   r.dispose();
+});
+
+test('the front and back matter have names rather than numbers', () => {
+  assert.deepEqual(parseRoute('#preface'), { view: 'case', id: null, slug: PREFACE_SLUG });
+  assert.deepEqual(parseRoute('#afterword'), { view: 'case', id: null, slug: AFTERWORD_SLUG });
+  assert.equal(hashFor(PREFACE_SLUG), '#preface');
+  assert.equal(hashFor(AFTERWORD_SLUG), '#afterword');
+});
+
+test('named routes tolerate the same sloppiness numbers do', () => {
+  assert.equal(parseRoute('  #Preface ').slug, PREFACE_SLUG);
+  assert.equal(parseRoute('AFTERWORD').slug, AFTERWORD_SLUG);
+});
+
+test('adding names did not disturb the numbers', () => {
+  assert.deepEqual(parseRoute('#29'), {
+    view: 'case', id: 29, slug: 'not-the-wind-not-the-flag',
+  });
+  assert.equal(parseRoute('#1').id, 1);
+  assert.equal(parseRoute('#49').id, 49);
+  assert.deepEqual(parseRoute(''), { view: 'contents' });
+  for (const junk of ['#0', '#50', '#foo', '#prefaces', '#after']) {
+    assert.equal(parseRoute(junk), null, `expected null for ${junk}`);
+  }
+});
+
+test('a named route round-trips through set() without pushing twice', () => {
+  const w = win('');
+  const r = makeRouter({ win: w });
+  r.set({ view: 'case', slug: PREFACE_SLUG });
+  assert.equal(w.location.hash, '#preface');
+  assert.deepEqual(w.pushed, ['#preface']);
+  r.set({ view: 'case', slug: PREFACE_SLUG });
+  assert.equal(w.pushed.length, 1, 'already there: nothing more to push');
 });
