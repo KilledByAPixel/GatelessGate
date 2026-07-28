@@ -23,6 +23,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import CASES from '../src/koans/text/mumonkan.js';
+import MATTER from '../src/koans/text/matter.js';
 import {
   PROVIDER, MODEL, VOICE, PRESET, INSTRUCTIONS_VERSION, SECTIONS, instructionsFor,
   GEMINI_MODEL, GEMINI_VOICE, GEMINI_PRESET, geminiPrompt,
@@ -103,10 +104,35 @@ for (const id of Object.keys(CASES).map(Number).sort((a, b) => a - b)) {
   }
 }
 
+// The front and back matter. Keyed by slug rather than by id — narration_state's
+// unitKey is a plain string join, so `preface:verse` is as valid a key as `29:verse`
+// and the runtime lookup needed no change at all. Skipped entirely when --case is
+// given, since these pages have no number to match.
+if (!onlyCase) {
+  for (const page of Object.values(MATTER)) {
+    for (const section of page.sections) {
+      if (onlySection && section !== onlySection) continue;
+      const text = (page.text[section] || '').trim();
+      if (!text) continue;
+      const sha = (parts) => crypto.createHash('sha1').update(parts.join('|')).digest('hex').slice(0, 12);
+      const chunks = chunkText(text, CHUNK_MAX_CHARS).map((ct) => {
+        const h = sha([ct, provider, model, voice, preset, INSTRUCTIONS_VERSION, section]);
+        return { text: ct, hash: h, raw: `${page.slug}-${section}.${h}.wav` };
+      });
+      const rawHash = sha([...chunks.map((c) => c.hash), `gap${GAP_MS}`]);
+      const hash = sha([rawHash, bitrate]);
+      units.push({
+        id: page.slug, section, text, hash, chunks,
+        file: `${page.slug}-${section}.mp3`,
+      });
+    }
+  }
+}
+
 const tooLong = units.filter((u) => u.text.length > MAX_INPUT);
 if (tooLong.length) {
   console.error(`BUILD FAILED: ${tooLong.length} unit(s) exceed ${MAX_INPUT} characters:`);
-  for (const u of tooLong) console.error(`  case ${u.id} ${u.section}: ${u.text.length}`);
+  for (const u of tooLong) console.error(`  ${typeof u.id === 'number' ? `case ${u.id}` : u.id} ${u.section}: ${u.text.length}`);
   process.exit(1);
 }
 
@@ -119,7 +145,8 @@ if (gemini) { fs.mkdirSync(rawDir, { recursive: true }); fs.mkdirSync(tmpDir, { 
 // generated pieces so the seams don't jump. No API calls — pure local assembly, so
 // both the bake and --encode-only share it.
 function assembleMp3(u, mp3Dest) {
-  const prefix = path.join(tmpDir, `${pad(u.id)}-${u.section}`);
+  // u.id is a case number or a page slug; pad() is only meaningful for the former.
+  const prefix = path.join(tmpDir, `${typeof u.id === 'number' ? pad(u.id) : u.id}-${u.section}`);
   const norms = u.chunks.map((ch, i) => {
     const dest = `${prefix}.norm${i}.wav`;
     loudnormWav(path.join(rawDir, ch.raw), dest);

@@ -81,10 +81,16 @@ const SECTION_NOTE = {
   case: 'This passage is the koan itself — an old story being recounted. Read it as a story.',
   comment: "This passage is the teacher Mumon's own commentary on the story, often needling or contrary. Slightly more conversational than the story; keep the sarcasm dry.",
   verse: 'This passage is a short verse. Slower than the prose. Honour the line breaks with a real pause at the end of each line, but do not sing it or fall into a chant rhythm.',
+  prose: 'This passage is Mumon writing in his own voice, framing the collection rather than telling a story. Direct and plain, addressed to the reader.',
+  warnings: 'This passage is a series of short warnings in couplets. Each pair turns on its second line, so let the first settle before the second lands. Slower than prose. Honour the line breaks with a real pause, but do not sing it or fall into a chant rhythm.',
+  amban: 'This passage is a later reader\'s letter, wry and a little mischievous, addressed to a teacher long dead. Dry humour close to the surface; the last line is a challenge, not a shout.',
 };
 
 export const PRESET_NAMES = Object.keys(PRESETS);
-export const SECTIONS = Object.keys(SECTION_NOTE);
+// The three parts of a numbered case, in reading order. Derived from the notes
+// above until the matter pages added notes of their own — those are sections of
+// a page, not of a case, and a case must never be iterated over them.
+export const SECTIONS = ['case', 'comment', 'verse'];
 
 export function instructionsFor(section, preset = PRESET) {
   if (!PRESETS[preset]) throw new Error(`unknown preset: ${preset}`);

@@ -330,6 +330,9 @@ function buildKoan(mod, slug) {
     ...(mod.camera || {}),
   });
   menu.close();
+  // Narration is keyed by whatever names the page: a case's number, a matter
+  // page's slug. narration_state's unitKey joins it into a string either way.
+  const narrationId = mod.id === null ? mod.slug : mod.id;
   scroll = makeScroll({
     id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
     sections: mod.sections, labels: mod.labels,
@@ -344,13 +347,13 @@ function buildKoan(mod, slug) {
       // a single section that finishes on its own gets its chime too;
       // a manual stop never does (stop bumps the narration generation,
       // so this onEnd is never called for a cancelled read)
-      narration.speak(mod.id, key, { onEnd: () => { sectionChime(key); stopReading(); } });
+      narration.speak(narrationId, key, { onEnd: () => { sectionChime(key); stopReading(); } });
     },
     onSpeakAll: () => {
       if (readingAll) { stopReading(); return; }
       startReading(true);
       scroll.setReading(true);
-      speakAll(mod.id);
+      speakAll(narrationId);
     },
     onBack: () => exit(),
     onSit: (m) => startSit(m),
@@ -465,9 +468,10 @@ const router = makeRouter({
 const SECTION_GAP_MS = 1500;
 
 // Punctuation for the reading: one tube note when a section ends, descending
-// as the reading deepens — the case highest, the verse lowest. Rides the
+// as the reading deepens — the case highest, the verse lowest. The matter
+// pages take the same descent through their own section names. Rides the
 // case's mood; duck-compensated so it is actually audible under narration.
-const SECTION_TUBE = { case: 2, comment: 1, verse: 0 };
+const SECTION_TUBE = { case: 2, comment: 1, verse: 0, prose: 2, warnings: 1, amban: 0 };
 const sectionChime = (key) =>
   audio.chimeStrike({ tube: SECTION_TUBE[key] ?? 0, force: 0.8, punctuate: true });
 
