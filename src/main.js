@@ -20,7 +20,7 @@ import { makeAbout } from './ui/about.js';
 import { makeScroll } from './ui/scroll.js';
 import { makeSit } from './sit.js';
 import { makeRouter } from './router.js';
-import { readingOrder, neighborSlug, isMatterSlug } from './spine.js';
+import { readingOrder, neighborSlug } from './spine.js';
 
 const STEP = 1 / 60;
 
@@ -98,10 +98,7 @@ panel.appendChild(about.el);
 const sit = makeSit({
   audio,
   onComplete: () => {
-    // Mirrors the markRead guard in buildKoan: front and back matter are not
-    // counted anywhere, so a sit completed on the preface or afterword must
-    // not persist into sat either.
-    if (koanSlug && !isMatterSlug(koanSlug)) { save.markSat(koanSlug); menu.refresh(save.state()); }
+    if (koanSlug) { save.markSat(koanSlug); menu.refresh(save.state()); }
     resumeKoan();
   },
   onExit: () => resumeKoan(),
@@ -312,9 +309,7 @@ function buildKoan(mod, slug) {
   koan = built; koanSlug = slug;
   built.onEnter && built.onEnter();
   audio.startAmbience(mod.ambience || []);
-  // Progress in this book means the forty-nine cases; front matter is not an
-  // achievement, and marking it would also make it the "continue" target.
-  if (!isMatterSlug(slug)) save.markRead(slug);
+  save.markRead(slug);
   // Safe to write here and only here: showKoan's freeze.capture is synchronous,
   // so nothing awaits between the nav queue's load resolving and this running —
   // no hashchange task can interleave and overtake it with a stale URL. That

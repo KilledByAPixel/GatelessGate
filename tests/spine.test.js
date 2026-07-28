@@ -1,9 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  readingOrder, neighborSlug, isMatterSlug, PREFACE_SLUG, AFTERWORD_SLUG,
+  readingOrder, readingEntries, neighborSlug, PREFACE_SLUG, AFTERWORD_SLUG,
 } from '../src/spine.js';
 import { CASES } from '../src/koans/index.js';
+import MATTER from '../src/koans/text/matter.js';
 
 const ORDER = readingOrder(CASES);
 
@@ -39,9 +40,26 @@ test('an unknown slug has no neighbours rather than throwing', () => {
   assert.equal(neighborSlug(ORDER, 'no-such-page', -1), null);
 });
 
-test('the matter slugs are recognisable without a lookup', () => {
-  assert.ok(isMatterSlug(PREFACE_SLUG));
-  assert.ok(isMatterSlug(AFTERWORD_SLUG));
-  assert.ok(!isMatterSlug(CASES[0].slug));
-  assert.ok(!isMatterSlug('no-such-page'));
+test('the reading entries carry a title and a null id for the matter pages', () => {
+  const entries = readingEntries(CASES, MATTER);
+  assert.equal(entries.length, CASES.length + 2);
+  assert.equal(entries[0].slug, PREFACE_SLUG);
+  assert.equal(entries[0].id, null);
+  assert.equal(entries[0].title, MATTER.preface.title);
+  assert.equal(entries.at(-1).slug, AFTERWORD_SLUG);
+  assert.equal(entries.at(-1).id, null);
+  assert.equal(entries.at(-1).title, MATTER.afterword.title);
+});
+
+test('the entries and the order cannot drift apart', () => {
+  // Two functions know the book's shape. This is what stops one being edited
+  // without the other.
+  assert.deepEqual(readingEntries(CASES, MATTER).map((e) => e.slug), readingOrder(CASES));
+});
+
+test('every case entry keeps its own number', () => {
+  const entries = readingEntries(CASES, MATTER);
+  const numbered = entries.filter((e) => e.id !== null);
+  assert.equal(numbered.length, 49);
+  assert.deepEqual(numbered.map((e) => e.id), CASES.map((c) => c.id));
 });

@@ -30,3 +30,22 @@ test('continueTarget prefers lastSlug, then first read, else null', () => {
   assert.equal(continueTarget(CASES, { read: {} }, null), null);
   assert.equal(continueTarget(CASES, { read: {} }, 'ghost'), null); // unknown slug ignored
 });
+
+const ENTRIES = [
+  { id: null, slug: 'preface', title: "Mumon's Preface" },
+  ...CASES,
+  { id: null, slug: 'afterword', title: 'Afterword' },
+];
+
+test('the matter pages are rows like any other', () => {
+  const rows = buildRows(ENTRIES, { read: { preface: true }, sat: {} }, reg);
+  assert.equal(rows.length, ENTRIES.length);
+  const pre = rows.find((r) => r.slug === 'preface');
+  assert.equal(pre.id, null, 'no number is what makes the number cell empty');
+  assert.equal(pre.read, true, 'a page you have read is marked, number or not');
+  assert.equal(pre.title, "Mumon's Preface");
+});
+
+test('continue can land on a matter page', () => {
+  assert.equal(continueTarget(ENTRIES, { read: {} }, 'afterword'), 'afterword');
+});

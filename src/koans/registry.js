@@ -63,10 +63,12 @@ const MATTER_LOADERS = {
   [AFTERWORD_SLUG]: () => import('./matter/afterword.js'),
 };
 
-// Whether a case has been STAGED — art of its own, rather than the default
+// Whether a page has been STAGED — art of its own, rather than the default
 // landscape. The menu uses this to show what has been built; it is no longer a
-// gate on reading, because every case in the book is readable.
+// gate on reading, because every page in the book is readable. The matter pages
+// have scenes of their own, so they are staged like any case.
 export function isStaged(slug) {
+  if (MATTER_LOADERS[slug]) return true;
   const c = bySlug(slug);
   return !!(c && LOADERS[c.id]);
 }

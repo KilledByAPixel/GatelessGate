@@ -80,23 +80,15 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
   color: rgba(30,30,36,0.55);
 }
 
-/* Front matter, above the forty-nine cases. The mirror of .gg-backmatter below:
-   the same quiet word and rule, but the border sits under the preface link
-   rather than over it, so the preface reads as sitting above the contents the
-   way the afterword sits below them. */
-.gg-frontmatter { margin: 4px 0 18px; padding-bottom: 14px; border-bottom: 1px solid rgba(30,30,36,0.12); }
-
-/* Back matter, under the forty-nine cases. A rule and a quiet word — it is the
-   end of the contents, not another entry in them, so it never takes a number
-   and never sits in the list. */
+/* Back matter, under the contents: the About link sits where a printed book
+   puts its colophon. Hidden while searching, like Continue. */
 .gg-backmatter { margin: 18px 0 4px; padding-top: 14px; border-top: 1px solid rgba(30,30,36,0.12); }
-/* the preface and the afterword: named rather than numbered, and set in the
-   same quiet register as the About link they sit beside */
-.gg-about-link, .gg-matter-link {
+/* the About link: quiet, italic, and set apart from the numbered rows */
+.gg-about-link {
   background: none; border: none; padding: 0; cursor: pointer;
   font-family: Georgia, serif; font-size: 15px; font-style: italic; color: var(--gray);
 }
-.gg-about-link:hover, .gg-matter-link:hover { color: var(--accent); background: none; }
+.gg-about-link:hover { color: var(--accent); background: none; }
 
 /* ---- koan text (scroll), in the left panel ---- */
 .gg-scroll { --accent: var(--accent); }
