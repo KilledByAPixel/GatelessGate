@@ -43,3 +43,23 @@ test('playableQueue keeps order and drops unbaked sections', () => {
   assert.deepEqual(playableQueue(null, 1, order), []);
   assert.deepEqual(playableQueue(manifest, 1, undefined), []);
 });
+
+// The 49 cases are keyed by number, but a matter page is keyed by its slug
+// (main.js's narrationId is `mod.id === null ? mod.slug : mod.id`) — this is
+// the one runtime path the paid bake actually depends on, so it needs its own
+// coverage rather than being correct only by inspection of numeric ids above.
+const matterManifest = {
+  voice: 'Charon',
+  preset: 'british',
+  files: {
+    'preface:prose': { file: 'preface-prose.mp3', bytes: 900000, hash: 'aaa111' },
+    'preface:verse': { file: 'preface-verse.mp3', bytes: 90000, hash: 'bbb222' },
+  },
+};
+
+test('unitKey and narrationSrc resolve a slug id exactly like a numeric one', () => {
+  assert.equal(unitKey('preface', 'verse'), 'preface:verse');
+  assert.equal(narrationSrc(matterManifest, 'preface', 'prose'), 'audio/narration/preface-prose.mp3');
+  assert.equal(narrationSrc(matterManifest, 'preface', 'warnings'), null, 'a section the page does not have');
+  assert.equal(narrationSrc(matterManifest, 'afterword', 'prose'), null, 'a slug not baked at all');
+});

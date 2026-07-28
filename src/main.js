@@ -339,9 +339,15 @@ function buildKoan(mod, slug) {
     // Clicking the section that is currently reading stops it. Clicking a
     // different one switches straight to it — that click means "read this
     // instead", not "be quiet", and making it take two clicks reads as a bug.
-    onSpeak: (key) => {
+    onSpeak: async (key) => {
       const cur = narration.current();
       if (cur && cur.section === key) { stopReading(); return; }
+      // Nothing baked for this section (unbaked page, or a partial bake mid-run):
+      // a genuine no-op, checked before touching any reading state at all — no
+      // chime, no highlight, no "■ Stop". narration.queue() awaits the manifest
+      // first, so this is accurate even if clicked before boot's fetch resolves.
+      const playable = await narration.queue(narrationId, [key]);
+      if (!playable.length) return;
       startReading(false);
       scroll.highlight(key); scroll.setReading(true);
       // a single section that finishes on its own gets its chime too;
@@ -349,11 +355,15 @@ function buildKoan(mod, slug) {
       // so this onEnd is never called for a cancelled read)
       narration.speak(narrationId, key, { onEnd: () => { sectionChime(key); stopReading(); } });
     },
-    onSpeakAll: () => {
+    onSpeakAll: async () => {
       if (readingAll) { stopReading(); return; }
+      // Same no-op guard as above, but for the whole page: an unbaked page (or
+      // one with nothing left to read after a partial bake) does nothing at all.
+      const order = await narration.queue(narrationId, scroll.queue());
+      if (!order.length) return;
       startReading(true);
       scroll.setReading(true);
-      speakAll(narrationId);
+      speakAll(narrationId, order);
     },
     onBack: () => exit(),
     onSit: (m) => startSit(m),
@@ -489,8 +499,7 @@ function stopReading() {
   if (scroll) { scroll.highlight(null); scroll.setReading(false); }
 }
 
-function speakAll(id) {
-  const order = scroll.queue();
+function speakAll(id, order) {
   let i = 0;
   const step = () => {
     const key = order[i++];

@@ -62,7 +62,13 @@ export function createNarration({ base = AUDIO_BASE } = {}) {
 
     isSpeaking() { return speaking; },
     current() { return current; },
-    queue(id, order) { return playableQueue(manifest, id, order); },
+    // Awaits the manifest before deciding, same as speak() does — a caller that
+    // asks before boot's fetch resolves gets the real answer a beat later rather
+    // than a premature [] that would wrongly no-op a fully-baked case.
+    async queue(id, order) {
+      if (!manifest) await ready;
+      return playableQueue(manifest, id, order);
+    },
     manifest() { return manifest; },
   };
 }

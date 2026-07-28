@@ -5,10 +5,14 @@ export const LABELS = { case: 'The Case', comment: "Mumon's Comment", verse: 'Th
 //
 // The seal IS the case number, so a page without one has no seal. Narration
 // used to follow the same fact, because the baked files were cases only — that
-// is no longer true, so the two have separated. Every page in the book has
-// audio now, and the manifest is what decides whether a given section actually
-// plays (see narration_state.js); a missing file resolves to silence, never an
-// error.
+// is no longer true, so the two have separated. showNarration is unconditionally
+// true: every page in the book gets the "Read aloud" button and the per-section
+// ♪ controls drawn, whether or not its audio is actually baked yet. This module
+// does not consult the manifest at all — that check happens where the buttons
+// are wired up (main.js's onSpeak/onSpeakAll, via narration.queue() in
+// narration.js and narration_state.js's playableQueue/hasNarration): a section
+// with nothing baked is a silent no-op there, never an error and never reached
+// by drawing the wrong shape here.
 export function pageShape({ id, sections, labels, text } = {}) {
   return {
     sections: sections || SECTIONS,
