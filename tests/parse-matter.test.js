@@ -107,12 +107,119 @@ test('the scholarly apparatus is left behind', () => {
   assert.ok(!all.includes('佛語心為宗。'), 'the Chinese block leaked in');
 });
 
-test('the English keeps its own line breaks', () => {
+test('wrapped prose becomes one paragraph', () => {
+  // Prose wrapped at 90 characters should unwrap into a single paragraph.
+  const fixture = `## 無門關自序 — Mumon's Preface
+### English
+This is a sentence
+that spans two lines and should rejoin.
+### Notes
+-
+---
+## 後序 — Mumon's Afterword
+### English
+Placeholder.
+### Notes
+-
+---
+## 禪箴 — Zen Warnings
+### English
+Placeholder.
+### Notes
+-
+---
+## 安晚居士書 — Amban's Letter
+### English
+Placeholder.
+### Notes
+-
+---
+`;
+  const out = parseMatter(fixture);
+  const text = out['無門關自序'];
+  assert.ok(text.includes('This is a sentence that spans two lines and should rejoin.'));
+  assert.ok(!text.match(/sentence\n.*should/), 'wrapped prose should not have interior newline');
+});
+
+test('blank lines survive as paragraph breaks', () => {
+  // Blank lines in the source should remain as \n\n in output.
+  const fixture = `## 無門關自序 — Mumon's Preface
+### English
+Placeholder.
+### Notes
+-
+---
+## 後序 — Mumon's Afterword
+### English
+First paragraph.
+
+Second paragraph.
+### Notes
+-
+---
+## 禪箴 — Zen Warnings
+### English
+Placeholder.
+### Notes
+-
+---
+## 安晚居士書 — Amban's Letter
+### English
+Placeholder.
+### Notes
+-
+---
+`;
+  const out = parseMatter(fixture);
+  const text = out['後序'];
+  assert.match(text, /First paragraph\.\n\nSecond paragraph\./);
+});
+
+test('verse keeps every break and every indent', () => {
   // The verses are laid out with ideographic-space indents and they must survive:
-  // reflowing them into a paragraph destroys the form.
+  // reflowing them into a paragraph destroys the form. First line must start with
+  // the indent, and each couplet line must be separated by newline.
   const warnings = parseMatter(FIXTURE)['禪箴'];
-  assert.ok(warnings.includes('\n'), 'the couplet was flattened');
+  assert.ok(warnings.startsWith('　　'), 'first line should preserve ideographic space indent');
+  assert.ok(warnings.includes('\n'), 'verse lines should be separated by newline');
   assert.match(warnings, /Follow the rules and hold the line:\n.*without a rope/s);
+});
+
+test('verse following prose does not get swallowed', () => {
+  // A verse line after prose should not join into the prose paragraph.
+  const fixture = `## 無門關自序 — Mumon's Preface
+### English
+Placeholder.
+### Notes
+-
+---
+## 後序 — Mumon's Afterword
+### English
+This is prose.
+
+　　This is verse.
+### Notes
+-
+---
+## 禪箴 — Zen Warnings
+### English
+Placeholder.
+### Notes
+-
+---
+## 安晚居士書 — Amban's Letter
+### English
+Placeholder.
+### Notes
+-
+---
+`;
+  const out = parseMatter(fixture);
+  const text = out['後序'];
+  // Verify: prose, paragraph break, then verse on its own line
+  assert.match(text, /\.\n\n　　/);
+  // Verse should not be joined to prose with a space
+  assert.ok(!text.includes('. 　　'), 'verse should not join prose with a space');
 });
 
 test('a missing piece fails loudly rather than emitting a blank page', () => {

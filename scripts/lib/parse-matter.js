@@ -14,6 +14,62 @@ export const MATTER_REQUIRED = ['無門關自序', '後序', '禪箴', '安晚�
 // source; splitting on whitespace-dash-whitespace also tolerates a hyphen.
 const chineseTitleOf = (heading) => heading.replace(/^##\s+/, '').split(/\s+[—-]\s+/)[0].trim();
 
+// Process a buffer of lines: unwrap prose, preserve verse.
+// Verse lines begin with U+3000 (ideographic space). Plain lines are wrapped
+// prose — join consecutive plain lines with single spaces. Blank lines are
+// paragraph breaks. Do not strip leading whitespace from first line; only trim
+// trailing whitespace and leading/trailing blank lines.
+const processBuf = (lines) => {
+  // Remove leading and trailing blank lines
+  while (lines.length && !lines[0].trim()) {
+    lines.shift();
+  }
+  while (lines.length && !lines[lines.length - 1].trim()) {
+    lines.pop();
+  }
+
+  if (!lines.length) return '';
+
+  const result = [];
+  let currentPara = [];
+
+  for (const line of lines) {
+    const isBlank = !line.trim();
+    const isVerse = line.startsWith('　'); // U+3000 ideographic space
+
+    if (isBlank) {
+      // Blank line: end current paragraph if any, add blank line marker
+      if (currentPara.length) {
+        result.push(currentPara.join(' '));
+        currentPara = [];
+      }
+      result.push('');
+    } else if (isVerse) {
+      // Verse line: end current paragraph if any, add verse line as-is
+      if (currentPara.length) {
+        result.push(currentPara.join(' '));
+        currentPara = [];
+      }
+      result.push(line);
+    } else {
+      // Plain prose line: accumulate with current paragraph
+      currentPara.push(line);
+    }
+  }
+
+  // Flush remaining paragraph
+  if (currentPara.length) {
+    result.push(currentPara.join(' '));
+  }
+
+  // Join with newlines. Result has '' markers where blank lines should be,
+  // which become \n\n when joined.
+  let text = result.join('\n');
+  // Remove only leading and trailing blank lines (not spaces from verse indents).
+  text = text.replace(/^\n+/, '').replace(/\n+$/, '');
+  return text;
+};
+
 export function parseMatter(md) {
   const out = {};
   const lines = String(md).split(/\r?\n/);
@@ -23,7 +79,7 @@ export function parseMatter(md) {
   let buf = [];
 
   const flush = () => {
-    if (piece && buf.length) out[piece] = buf.join('\n').trim();
+    if (piece && buf.length) out[piece] = processBuf([...buf]);
     buf = [];
   };
 
