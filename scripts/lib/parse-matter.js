@@ -14,60 +14,60 @@ export const MATTER_REQUIRED = ['無門關自序', '後序', '禪箴', '安晚�
 // source; splitting on whitespace-dash-whitespace also tolerates a hyphen.
 const chineseTitleOf = (heading) => heading.replace(/^##\s+/, '').split(/\s+[—-]\s+/)[0].trim();
 
-// Process a buffer of lines: unwrap prose, preserve verse.
-// Verse lines begin with U+3000 (ideographic space). Plain lines are wrapped
-// prose — join consecutive plain lines with single spaces. Blank lines are
-// paragraph breaks. Do not strip leading whitespace from first line; only trim
-// trailing whitespace and leading/trailing blank lines.
-const processBuf = (lines) => {
-  // Remove leading and trailing blank lines
-  while (lines.length && !lines[0].trim()) {
-    lines.shift();
-  }
-  while (lines.length && !lines[lines.length - 1].trim()) {
-    lines.pop();
-  }
+// Split a buffer of source lines into typed blocks.
+//
+// Verse lines begin with U+3000 (ideographic space) — that is the source
+// document's own convention, not a heuristic. It marks verse STRUCTURALLY: a
+// run of such lines becomes its own block and the indent is stripped, because
+// nowhere in this book does verse render indented. Everywhere else verse is a
+// labelled section, and these pages now match.
+//
+// Plain lines are prose the source wrapped at ~90 characters — consecutive
+// plain lines join with a single space. A blank line is a paragraph break.
+const VERSE_MARK = '　';
 
-  if (!lines.length) return '';
+const blocksFrom = (lines) => {
+  const blocks = [];
+  let paras = [];        // finished prose paragraphs of the block being built
+  let para = [];         // the prose paragraph being accumulated
+  let verse = [];        // the verse lines being accumulated
 
-  const result = [];
-  let currentPara = [];
+  const endPara = () => {
+    if (para.length) { paras.push(para.join(' ')); para = []; }
+  };
+  const endProse = () => {
+    endPara();
+    if (paras.length) { blocks.push({ kind: 'prose', text: paras.join('\n\n') }); paras = []; }
+  };
+  const endVerse = () => {
+    if (!verse.length) return;
+    // A stanza break at the very end of the block is trailing whitespace, not a stanza.
+    const text = verse.join('\n').replace(/\n+$/, '');
+    blocks.push({ kind: 'verse', text });
+    verse = [];
+  };
 
   for (const line of lines) {
-    const isBlank = !line.trim();
-    const isVerse = line.startsWith('　'); // U+3000 ideographic space
-
-    if (isBlank) {
-      // Blank line: end current paragraph if any, add blank line marker
-      if (currentPara.length) {
-        result.push(currentPara.join(' '));
-        currentPara = [];
-      }
-      result.push('');
-    } else if (isVerse) {
-      // Verse line: end current paragraph if any, add verse line as-is
-      if (currentPara.length) {
-        result.push(currentPara.join(' '));
-        currentPara = [];
-      }
-      result.push(line);
+    if (!line.trim()) {
+      // A blank line means different things either side of the divide. In prose
+      // it ends a paragraph. Inside verse it is a STANZA break and has to
+      // survive: the Zen Warnings are fourteen stanzas, and dropping these
+      // would run them together into one wall of lines.
+      if (verse.length) verse.push('');
+      else endPara();
+      continue;
+    }
+    if (line.startsWith(VERSE_MARK)) {
+      endProse();                                        // prose before verse closes out
+      verse.push(line.replace(/^\s+/, ''));              // the indent never ships
     } else {
-      // Plain prose line: accumulate with current paragraph
-      currentPara.push(line);
+      endVerse();                                        // verse before prose closes out
+      para.push(line.trim());
     }
   }
-
-  // Flush remaining paragraph
-  if (currentPara.length) {
-    result.push(currentPara.join(' '));
-  }
-
-  // Join with newlines. Result has '' markers where blank lines should be,
-  // which become \n\n when joined.
-  let text = result.join('\n');
-  // Remove only leading and trailing blank lines (not spaces from verse indents).
-  text = text.replace(/^\n+/, '').replace(/\n+$/, '');
-  return text;
+  endVerse();
+  endProse();
+  return blocks;
 };
 
 export function parseMatter(md) {
@@ -79,7 +79,10 @@ export function parseMatter(md) {
   let buf = [];
 
   const flush = () => {
-    if (piece && buf.length) out[piece] = processBuf([...buf]);
+    if (piece && buf.length) {
+      const blocks = blocksFrom([...buf]);
+      if (blocks.length) out[piece] = blocks;
+    }
     buf = [];
   };
 
@@ -110,7 +113,7 @@ export function parseMatter(md) {
   }
   flush();
 
-  const missing = MATTER_REQUIRED.filter((k) => !out[k] || !out[k].trim());
+  const missing = MATTER_REQUIRED.filter((k) => !out[k] || !out[k].length);
   if (missing.length) {
     throw new Error(
       `parse-matter: no English found for ${missing.join(', ')} — `

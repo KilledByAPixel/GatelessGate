@@ -89,17 +89,21 @@ Say it quick. Say it quick.
 ---
 `;
 
+// Join every block's text back together, in order — used where a test only
+// cares whether some text made it in or out, not which block it landed in.
+const flatten = (blocks) => blocks.map((b) => b.text).join('\n');
+
 test('every required piece is found, keyed by its Chinese title', () => {
   const out = parseMatter(FIXTURE);
   assert.deepEqual(Object.keys(out).sort(), [...MATTER_REQUIRED].sort());
-  assert.match(out['無門關自序'], /The Buddha's teaching|The Buddha's teaching/);
-  assert.match(out['後序'], /buddhas and the patriarchs/);
-  assert.match(out['禪箴'], /Follow the rules/);
-  assert.match(out['安晚居士書'], /Say it quick/);
+  assert.match(flatten(out['無門關自序']), /The Buddha's teaching/);
+  assert.match(flatten(out['後序']), /buddhas and the patriarchs/);
+  assert.match(flatten(out['禪箴']), /Follow the rules/);
+  assert.match(flatten(out['安晚居士書']), /Say it quick/);
 });
 
 test('the scholarly apparatus is left behind', () => {
-  const all = Object.values(parseMatter(FIXTURE)).join('\n');
+  const all = Object.values(parseMatter(FIXTURE)).map(flatten).join('\n');
   assert.ok(!all.includes('T48n2005'), 'Taishō citations leaked in');
   assert.ok(!all.includes('紹定戊子'), 'notes leaked in');
   assert.ok(!all.includes('⚑'), 'uncertainty flags leaked in');
@@ -136,9 +140,11 @@ Placeholder.
 ---
 `;
   const out = parseMatter(fixture);
-  const text = out['無門關自序'];
-  assert.ok(text.includes('This is a sentence that spans two lines and should rejoin.'));
-  assert.ok(!text.match(/sentence\n.*should/), 'wrapped prose should not have interior newline');
+  const blocks = out['無門關自序'];
+  assert.equal(blocks.length, 1);
+  assert.equal(blocks[0].kind, 'prose');
+  assert.ok(blocks[0].text.includes('This is a sentence that spans two lines and should rejoin.'));
+  assert.ok(!blocks[0].text.match(/sentence\n.*should/), 'wrapped prose should not have interior newline');
 });
 
 test('blank lines survive as paragraph breaks', () => {
@@ -171,18 +177,26 @@ Placeholder.
 ---
 `;
   const out = parseMatter(fixture);
-  const text = out['後序'];
-  assert.match(text, /First paragraph\.\n\nSecond paragraph\./);
+  const blocks = out['後序'];
+  assert.equal(blocks.length, 1);
+  assert.equal(blocks[0].kind, 'prose');
+  assert.match(blocks[0].text, /First paragraph\.\n\nSecond paragraph\./);
 });
 
-test('verse keeps every break and every indent', () => {
-  // The verses are laid out with ideographic-space indents and they must survive:
-  // reflowing them into a paragraph destroys the form. First line must start with
-  // the indent, and each couplet line must be separated by newline.
-  const warnings = parseMatter(FIXTURE)['禪箴'];
-  assert.ok(warnings.startsWith('　　'), 'first line should preserve ideographic space indent');
-  assert.ok(warnings.includes('\n'), 'verse lines should be separated by newline');
-  assert.match(warnings, /Follow the rules and hold the line:\n.*without a rope/s);
+test('verse keeps every line break and ships without its indent', () => {
+  // The verses are laid out with ideographic-space indents in the source, and
+  // reflowing them into a paragraph would still destroy the form — so they
+  // land in their own 'verse' block with couplet line breaks intact. Under
+  // the old string contract this test also asserted the indent itself
+  // *survived* in the output; under the block contract the indent is the
+  // marker that produces the block, and is deliberately stripped once it has
+  // done that job (see blocksFrom's VERSE_MARK comment) — no U+3000 ships.
+  const blocks = parseMatter(FIXTURE)['禪箴'];
+  const verse = blocks.find((b) => b.kind === 'verse');
+  assert.ok(verse, 'a verse block should be present');
+  assert.ok(!verse.text.includes('　'), 'the indent must not survive into the block text');
+  assert.ok(verse.text.includes('\n'), 'verse lines should be separated by newline');
+  assert.match(verse.text, /Follow the rules and hold the line:\n.*without a rope/s);
 });
 
 test('verse following prose does not get swallowed', () => {
@@ -215,11 +229,14 @@ Placeholder.
 ---
 `;
   const out = parseMatter(fixture);
-  const text = out['後序'];
-  // Verify: prose, paragraph break, then verse on its own line
-  assert.match(text, /\.\n\n　　/);
-  // Verse should not be joined to prose with a space
-  assert.ok(!text.includes('. 　　'), 'verse should not join prose with a space');
+  const blocks = out['後序'];
+  // Verify: prose closes out into its own block, then verse opens a new one —
+  // under the block contract "not swallowed" means "not the same block",
+  // rather than "not joined onto the same line with a space".
+  assert.deepEqual(blocks, [
+    { kind: 'prose', text: 'This is prose.' },
+    { kind: 'verse', text: 'This is verse.' },
+  ]);
 });
 
 test('a horizontal rule ends the English block even with no trailing Notes section', () => {
@@ -251,8 +268,9 @@ Placeholder.
 ---
 `;
   const out = parseMatter(fixture);
-  assert.equal(out['無門關自序'], 'Just the preface text.');
-  assert.ok(!out['無門關自序'].includes('---'), 'the rule itself must not leak into the text');
+  const blocks = out['無門關自序'];
+  assert.deepEqual(blocks, [{ kind: 'prose', text: 'Just the preface text.' }]);
+  assert.ok(!blocks[0].text.includes('---'), 'the rule itself must not leak into the text');
 });
 
 test('a missing piece fails loudly rather than emitting a blank page', () => {
@@ -269,4 +287,73 @@ test('an empty English block fails loudly too', () => {
     '\n',
   );
   assert.throws(() => parseMatter(emptied), /安晚居士書/);
+});
+
+test('a piece splits into prose and verse blocks', () => {
+  const md = [
+    '## 無門關自序 — Mumon\'s Preface',
+    '### English',
+    'A line of prose that the source',
+    'wrapped across two lines.',
+    '',
+    'The verse:',
+    '',
+    '　　The great road has no gate.',
+    '　　There are a thousand roads.',
+    '### Notes',
+    'ignored',
+    '## 後序 — Afterword',
+    '### English',
+    'x',
+    '## 禪箴 — Zen Warnings',
+    '### English',
+    '　　y',
+    '## 安晚居士書 — Amban',
+    '### English',
+    'z',
+  ].join('\n');
+  const blocks = parseMatter(md)['無門關自序'];
+  assert.deepEqual(blocks, [
+    { kind: 'prose', text: 'A line of prose that the source wrapped across two lines.\n\nThe verse:' },
+    { kind: 'verse', text: 'The great road has no gate.\nThere are a thousand roads.' },
+  ]);
+});
+
+test('a piece that is verse throughout is one verse block', () => {
+  const md = [
+    '## 無門關自序 — Preface', '### English', 'a',
+    '## 後序 — Afterword', '### English', 'b',
+    '## 禪箴 — Zen Warnings',
+    '### English',
+    '　　Follow the rules and hold the line:',
+    '　　you tie yourself up without a rope.',
+    '',
+    '　　Range where you like with nothing in the way:',
+    '　　the outsiders\' road, the devil\'s army.',
+    '## 安晚居士書 — Amban', '### English', 'c',
+  ].join('\n');
+  const blocks = parseMatter(md)['禪箴'];
+  assert.equal(blocks.length, 1, 'verse throughout is one block, not one per stanza');
+  assert.equal(blocks[0].kind, 'verse');
+  assert.ok(!blocks[0].text.includes('　'), 'the indent never ships');
+  assert.equal(blocks[0].text, [
+    'Follow the rules and hold the line:',
+    'you tie yourself up without a rope.',
+    '',
+    'Range where you like with nothing in the way:',
+    'the outsiders\' road, the devil\'s army.',
+  ].join('\n'));
+});
+
+test('a blank line inside verse is a stanza break, not the end of the block', () => {
+  // The Zen Warnings are fourteen stanzas separated by blank lines. If a blank
+  // line closed the verse block, they would arrive as fourteen sections; if it
+  // were dropped, they would arrive as one wall of lines. It is neither.
+  const md = [
+    '## 無門關自序 — Preface', '### English', 'a',
+    '## 後序 — Afterword', '### English', 'b',
+    '## 禪箴 — Warnings', '### English', '　　one', '', '　　two',
+    '## 安晚居士書 — Amban', '### English', 'c',
+  ].join('\n');
+  assert.deepEqual(parseMatter(md)['禪箴'], [{ kind: 'verse', text: 'one\n\ntwo' }]);
 });
