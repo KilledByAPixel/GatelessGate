@@ -4,6 +4,7 @@
 //   node scripts/build-narration.js --dry-run     totals and cost, no API calls
 //   node scripts/build-narration.js               bake + encode everything stale
 //   node scripts/build-narration.js --case 1
+//   node scripts/build-narration.js --case preface   a matter page, by slug
 //   node scripts/build-narration.js --encode-only re-encode from raw
 //   node scripts/build-narration.js --force       everything, changed or not
 //   node scripts/build-narration.js --provider openai   the older backend
@@ -67,7 +68,25 @@ const bitrate = value('bitrate') || '64k';
 // Gemini's quota is per-minute and trips easily; OpenAI happily took four at once.
 const jobs = Number(value('jobs') || (gemini ? 2 : 4));
 
-const onlyCase = value('case') ? Number(value('case')) : null;
+// --case accepts a numbered case (e.g. "29") or a matter-page slug (e.g. "preface") —
+// the two are told apart by whether Number() parses it AND that case actually exists.
+// An unparseable/unknown value must scope to nothing, never to everything: Number() of
+// a slug is NaN, which is falsy, so a naive `if (onlyCase && ...)` guard would silently
+// never fire and process the whole book — exactly the failure a paid bake can't afford.
+// So a bad value is a hard error instead of a quiet no-op.
+const caseArg = value('case');
+let onlyCaseId = null;      // set when --case names a numbered case
+let onlyPageSlug = null;    // set when --case names a matter page
+if (caseArg !== null) {
+  const n = Number(caseArg);
+  if (Number.isInteger(n) && CASES[n]) onlyCaseId = n;
+  else if (MATTER[caseArg]) onlyPageSlug = caseArg;
+  else {
+    console.error(`BUILD FAILED: --case ${caseArg} matches no case number and no matter page `
+      + `(pages: ${Object.keys(MATTER).join(', ')}).`);
+    process.exit(1);
+  }
+}
 const onlySection = value('section');
 const force = flag('force');
 const encodeOnly = flag('encode-only');
@@ -79,7 +98,8 @@ const unitKey = (id, section) => `${id}:${section}`;
 // silence, so the runtime's queue and the manifest agree on what exists.
 const units = [];
 for (const id of Object.keys(CASES).map(Number).sort((a, b) => a - b)) {
-  if (onlyCase && id !== onlyCase) continue;
+  // Scoping to a matter page (onlyPageSlug) means no numbered case matches at all.
+  if (onlyPageSlug || (onlyCaseId !== null && id !== onlyCaseId)) continue;
   for (const section of SECTIONS) {
     if (onlySection && section !== onlySection) continue;
     const text = (CASES[id][section] || '').trim();
@@ -106,10 +126,12 @@ for (const id of Object.keys(CASES).map(Number).sort((a, b) => a - b)) {
 
 // The front and back matter. Keyed by slug rather than by id — narration_state's
 // unitKey is a plain string join, so `preface:verse` is as valid a key as `29:verse`
-// and the runtime lookup needed no change at all. Skipped entirely when --case is
-// given, since these pages have no number to match.
-if (!onlyCase) {
+// and the runtime lookup needed no change at all. Skipped entirely when --case names
+// a numbered case, since matter pages have no number to match; scoped to just that
+// page when --case names a slug.
+if (onlyCaseId === null) {
   for (const page of Object.values(MATTER)) {
+    if (onlyPageSlug && page.slug !== onlyPageSlug) continue;
     for (const section of page.sections) {
       if (onlySection && section !== onlySection) continue;
       const text = (page.text[section] || '').trim();
