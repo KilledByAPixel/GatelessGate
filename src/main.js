@@ -20,6 +20,7 @@ import { makeAbout } from './ui/about.js';
 import { makeScroll } from './ui/scroll.js';
 import { makeSit } from './sit.js';
 import { makeRouter } from './router.js';
+import { readingOrder, neighborSlug, isMatterSlug } from './spine.js';
 
 const STEP = 1 / 60;
 
@@ -66,11 +67,11 @@ let koanSlug = null;
 let scroll = null;
 let intro = null;
 
-// linear reading: CASES is ordered by id, so the neighbours are just the
-// entries on either side. Used by the scroll's prev/next page arrows and the
-// keyboard.
-const caseIndex = (slug) => CASES.findIndex((c) => c.slug === slug);
-const neighbor = (slug, dir) => { const c = CASES[caseIndex(slug) + dir]; return c ? c.slug : null; };
+// The book's reading order: the preface, the forty-nine, the afterword. Paging
+// and the arrow keys walk this, not CASES — the matter pages are pages of the
+// book but not cases, and nothing that counts cases should see them.
+const SPINE = readingOrder(CASES);
+const neighbor = (slug, dir) => neighborSlug(SPINE, slug, dir);
 let readingAll = false;   // whether the current read is "read all" or a single section
 let readTimer = null;     // the pause between sections of a read-all
 
@@ -294,16 +295,20 @@ function buildKoan(mod, slug) {
   audio.stopAmbience();
   audio.setMood(mod.mood);
   if (scroll) { scroll.dispose(); scroll = null; }
-  const built = mod.build({ scene: null, kit: null, audio, input, accent: mod.accent, quality: 'high' });
+  const built = mod.build({
+    scene: null, kit: null, audio, input, accent: mod.accent, quality: 'high', hub,
+  });
   built.setCamera && built.setCamera(camera);
   const prev = scenes.active();
   scenes.setActive(built);
   debugApply();
-  if (prev && prev !== hub) { disposeRoot(prev); prev.dispose && prev.dispose(); }
+  if (prev && prev !== hub && prev !== built) { disposeRoot(prev); prev.dispose && prev.dispose(); }
   koan = built; koanSlug = slug;
   built.onEnter && built.onEnter();
   audio.startAmbience(mod.ambience || []);
-  save.markRead(slug);
+  // Progress in this book means the forty-nine cases; front matter is not an
+  // achievement, and marking it would also make it the "continue" target.
+  if (!isMatterSlug(slug)) save.markRead(slug);
   // Safe to write here and only here: showKoan's freeze.capture is synchronous,
   // so nothing awaits between the nav queue's load resolving and this running —
   // no hashchange task can interleave and overtake it with a stale URL. That
@@ -317,6 +322,7 @@ function buildKoan(mod, slug) {
   menu.close();
   scroll = makeScroll({
     id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
+    sections: mod.sections, labels: mod.labels,
     // Clicking the section that is currently reading stops it. Clicking a
     // different one switches straight to it — that click means "read this
     // instead", not "be quiet", and making it take two clicks reads as a bug.
@@ -339,8 +345,8 @@ function buildKoan(mod, slug) {
     onBack: () => exit(),
     onSit: (m) => startSit(m),
     // page through the book one case at a time (Contents stays the way out)
-    hasPrev: caseIndex(slug) > 0,
-    hasNext: caseIndex(slug) < CASES.length - 1,
+    hasPrev: !!neighbor(slug, -1),
+    hasNext: !!neighbor(slug, +1),
     onPrev: () => { const p = neighbor(slug, -1); if (p) enter(p); },
     onNext: () => { const n = neighbor(slug, +1); if (n) enter(n); },
   });
@@ -401,9 +407,13 @@ async function exit() {
   audio.stopAmbience();
   await transition(() => {
     const prev = scenes.active();
-    scenes.setActive(hub);
+    // Named to match buildKoan's guard: Contents always lands on the hub, so
+    // `built` is `hub` here, but the check is written the same way in both
+    // places rather than relying on readers to know the two happen to agree.
+    const built = hub;
+    scenes.setActive(built);
     debugApply();
-    if (prev && prev !== hub) { disposeRoot(prev); prev.dispose && prev.dispose(); }
+    if (prev && prev !== hub && prev !== built) { disposeRoot(prev); prev.dispose && prev.dispose(); }
     koan = null; koanSlug = null;
     if (scroll) { scroll.dispose(); scroll = null; }
     mode = 'menu';

@@ -84,11 +84,13 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
    end of the contents, not another entry in them, so it never takes a number
    and never sits in the list. */
 .gg-backmatter { margin: 18px 0 4px; padding-top: 14px; border-top: 1px solid rgba(30,30,36,0.12); }
-.gg-about-link {
+/* the preface and the afterword: named rather than numbered, and set in the
+   same quiet register as the About link they sit beside */
+.gg-about-link, .gg-matter-link {
   background: none; border: none; padding: 0; cursor: pointer;
   font-family: Georgia, serif; font-size: 15px; font-style: italic; color: var(--gray);
 }
-.gg-about-link:hover { color: var(--accent); background: none; }
+.gg-about-link:hover, .gg-matter-link:hover { color: var(--accent); background: none; }
 
 /* ---- koan text (scroll), in the left panel ---- */
 .gg-scroll { --accent: var(--accent); }

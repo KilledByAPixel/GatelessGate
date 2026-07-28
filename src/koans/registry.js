@@ -1,5 +1,6 @@
 import { bySlug } from './index.js';
 import { makeDefaultCase } from './default-case.js';
+import { PREFACE_SLUG, AFTERWORD_SLUG } from '../spine.js';
 
 // Cases with a diorama of their own. Lazy loaders keyed by numeric id (stable):
 // the first chapter — Mu, the flower, the bowl, the buffalo, and the flag.
@@ -55,6 +56,13 @@ const LOADERS = {
   49: () => import('./k49.js'),
 };
 
+// The front and back matter are not cases and have no id, so they are keyed by
+// slug rather than by number.
+const MATTER_LOADERS = {
+  [PREFACE_SLUG]: () => import('./matter/preface.js'),
+  [AFTERWORD_SLUG]: () => import('./matter/afterword.js'),
+};
+
 // Whether a case has been STAGED — art of its own, rather than the default
 // landscape. The menu uses this to show what has been built; it is no longer a
 // gate on reading, because every case in the book is readable.
@@ -68,10 +76,12 @@ export function isStaged(slug) {
 // different questions, and conflating them is what locked forty-four cases the
 // text was already sitting in the bundle for.
 export function isRegistered(slug) {
-  return !!bySlug(slug);
+  return !!MATTER_LOADERS[slug] || !!bySlug(slug);
 }
 
 export async function loadKoan(slug) {
+  const matter = MATTER_LOADERS[slug];
+  if (matter) return (await matter()).default;
   const c = bySlug(slug);
   if (!c) return null;
   const loader = LOADERS[c.id];

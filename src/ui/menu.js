@@ -1,5 +1,6 @@
 import { buildRows, continueTarget } from './menu_state.js';
 import { searchCases } from './search.js';
+import MATTER from '../koans/text/matter.js';
 
 // The table of contents — a left-panel view over the idling stage scene.
 // Reads as a book's contents, not a level select.
@@ -29,6 +30,23 @@ export function makeMenu({ cases, progress, isStaged, onSelect, onAbout } = {}) 
 
   const list = document.createElement('ol');
 
+  // The front and back matter sit AROUND the numbered list, not in it: the
+  // contents are exactly Mumon's and Amban's forty-nine, and these two are the
+  // pages a printed book puts before the contents and beside the colophon.
+  // A reader meets them by paging; these links are how someone who already knows
+  // they exist gets back to one.
+  const matterLink = (page) => {
+    const b = document.createElement('button');
+    b.className = 'gg-matter-link';
+    b.textContent = page.title;
+    b.onclick = () => onSelect && onSelect(page.slug);
+    return b;
+  };
+
+  const frontMatter = document.createElement('div');
+  frontMatter.className = 'gg-frontmatter';
+  frontMatter.appendChild(matterLink(MATTER.preface));
+
   // Back matter, below the list rather than in it: the contents stay exactly
   // the forty-nine cases Mumon and Amban left, and the about page sits under
   // them where a printed book puts its colophon. Hidden while searching, like
@@ -40,9 +58,9 @@ export function makeMenu({ cases, progress, isStaged, onSelect, onAbout } = {}) 
   about.textContent = 'About';
   about.title = 'The translation, the lineage, and the credits';
   about.onclick = () => onAbout && onAbout();
-  backMatter.appendChild(about);
+  backMatter.append(matterLink(MATTER.afterword), about);
 
-  el.append(h1, lede, cont, find, found, list, backMatter);
+  el.append(h1, lede, cont, find, found, frontMatter, list, backMatter);
 
   let query = '';
   find.oninput = () => { query = find.value; render(lastProg); };
@@ -95,6 +113,7 @@ export function makeMenu({ cases, progress, isStaged, onSelect, onAbout } = {}) 
     lastProg = prog;
     cont.style.display = query ? 'none' : '';
     backMatter.style.display = query ? 'none' : '';
+    frontMatter.style.display = query ? 'none' : '';
     if (renderResults(prog)) return;
     list.innerHTML = '';
     for (const r of buildRows(cases, prog, isStaged)) {
