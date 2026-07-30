@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import {
-  SECTIONS, SITE, SOURCE_URL, THREE_VERSION, TTS_MODEL,
+  SECTIONS, SITE, SOURCE_URL, BOOK_MD, THREE_VERSION, TTS_MODEL,
 } from '../src/ui/about_state.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -16,7 +16,12 @@ const flat = SECTIONS.map((s) =>
 
 test('the about page covers everything back matter owes the reader', () => {
   const labels = SECTIONS.map((s) => s.label);
-  for (const want of ['The translation', 'The book', 'This edition', 'Rights', 'Built with']) {
+  // 'The front and back matter' is pinned here because it is the one disclosure
+  // a reader is owed and the only one that is not self-evident from the page:
+  // the preface and the back matter are a new translation, not part of the 1934
+  // rendering that carries the cases.
+  for (const want of ['The translation', 'The front and back matter', 'The book',
+    'This edition', 'Rights', 'Built with']) {
     assert.ok(labels.includes(want), `missing section: ${want}`);
   }
 });
@@ -52,16 +57,31 @@ test('the stated narration model matches what was actually baked', () => {
   assert.ok(flat.includes(TTS_MODEL), 'the model is named in the prose');
 });
 
-test('every link is an absolute https url, and both expected links are present', () => {
+test('every link is safe, and the expected links are present', () => {
+  // Two kinds are allowed and nothing else. An OUTBOUND link must be absolute
+  // https — never http, never javascript:, and never protocol-relative, which
+  // would silently follow the page's own scheme. An IN-BOOK link must be a plain
+  // relative path: no scheme, and no leading slash, so it resolves beside
+  // index.html whether the book is served from a domain root or a subpath.
   const links = SECTIONS.flatMap((s) => s.parts.filter(Array.isArray));
-  assert.ok(links.length >= 2, 'the site and the source are both linked');
+  assert.ok(links.length >= 3, 'the site, the source and the plain text are linked');
   for (const [text, href] of links) {
     assert.ok(text && text.trim(), 'a link has visible text');
-    assert.match(href, /^https:\/\//, `${href} is absolute https`);
+    const outbound = /^https:\/\//.test(href);
+    const inBook = /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(href);
+    assert.ok(outbound || inBook, `${href} is neither absolute https nor a plain relative path`);
   }
   const hrefs = links.map((l) => l[1]);
   assert.ok(hrefs.includes(SITE), 'Frank’s site is linked');
   assert.ok(hrefs.includes(SOURCE_URL), 'the transcription source is linked');
+  assert.ok(hrefs.includes(BOOK_MD), 'the whole-text page is linked');
+});
+
+test('an in-book link points at a file that is actually there', () => {
+  // The one failure mode a relative href has that an absolute one does not:
+  // it can rot silently when the file is renamed, and nothing in the browser
+  // would say so until a reader clicked it.
+  read(BOOK_MD);
 });
 
 test('the rights line names the holder and the year', () => {

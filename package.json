@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "start": "npx -y http-server -p 8105 -c-1 ."
+    "start": "npx -y http-server -p 8105 -c-1 .",
+    "book": "node scripts/build-book.js"
   }
 }

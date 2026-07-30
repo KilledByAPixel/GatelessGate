@@ -39,6 +39,9 @@ front. Just open it and read.
 
 ## The text
 
+The whole book also sits here as a single readable page — [THE-GATELESS-GATE.md](THE-GATELESS-GATE.md) —
+generated from the same text the interactive edition reads, so the two cannot disagree.
+
 The reading is the Nyogen Senzaki and Paul Reps English rendering, privately printed
 in Los Angeles in 1934 and in the US public domain, lightly modernized where the old
 verse forms had gone archaic. The aim is a thing beautiful enough to draw in someone
