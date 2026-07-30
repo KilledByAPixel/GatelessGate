@@ -18,6 +18,7 @@ import { buildHub, makeIntro } from './intro.js';
 import { makeMenu } from './ui/menu.js';
 import { makeAbout } from './ui/about.js';
 import { makeScroll } from './ui/scroll.js';
+import { makePageCard, pageCardLabel } from './ui/page_card.js';
 import { makeSit } from './sit.js';
 import { makeRouter } from './router.js';
 import { readingOrder, neighborSlug, nextInLoop } from './spine.js';
@@ -68,6 +69,10 @@ let koanSlug = null;
 // page's slug. buildKoan sets it; the continuous reading uses it to start the
 // page it has just turned to.
 let koanNarrationId = null;
+// What the reading's title card says for the current page — its number, if it
+// has one, and its name. Built with the page so the card does not have to reach
+// back into a `mod` that is out of scope by the time it is shown.
+let koanCard = null;
 let scroll = null;
 let intro = null;
 
@@ -116,6 +121,12 @@ document.body.appendChild(sit.el);
 const toolbar = document.createElement('div');
 toolbar.className = 'gg-toolbar';
 stage.appendChild(toolbar);
+
+// The reading's title card. Lives on the stage rather than in the panel, since
+// the panel is exactly what is not there when it is wanted. Built once and
+// reused; readPageAloud is the only thing that shows it.
+const pageCard = makePageCard();
+stage.appendChild(pageCard.el);
 
 const tool = (label, title, onClick) => {
   const b = document.createElement('button');
@@ -213,6 +224,7 @@ function startReadingBook() {
 
 function stopReadingBook() {
   readingBook = false;
+  pageCard.hide();
   stopReading();
 }
 
@@ -220,6 +232,10 @@ function stopReadingBook() {
 // reading and again by buildKoan on every page turn.
 async function readPageAloud() {
   if (!readingBook || !scroll || koanNarrationId === null) return;
+  // The name goes up FIRST, before the manifest is consulted: it belongs to the
+  // page turning, not to the audio, and it should be there whether or not this
+  // page has anything baked.
+  if (koanCard) pageCard.show(koanCard);
   const id = koanNarrationId;
   const mine = scroll;
   const playable = await narration.queue(id, scroll.queue());
@@ -384,6 +400,7 @@ function buildKoan(mod, slug) {
   // a turn without re-deriving it from a `mod` it no longer has.
   const narrationId = mod.id === null ? mod.slug : mod.id;
   koanNarrationId = narrationId;
+  koanCard = pageCardLabel({ id: mod.id, title: mod.title });
   scroll = makeScroll({
     id: mod.id, title: mod.title, text: mod.text, accent: mod.accent,
     sections: mod.sections, labels: mod.labels,
@@ -476,6 +493,7 @@ async function exit() {
   // Asking for the Contents ends the continuous reading — otherwise pageDone's
   // pending turn would drag the reader straight back into the book.
   readingBook = false;
+  pageCard.hide();
   router.set({ view: 'contents' });   // both paths below land on Contents
   if (mode !== 'koan') { menu.open(); showView(menu.el); return; }
   stopReading();
@@ -606,6 +624,7 @@ function startSit(minutes = 10) {
   // timer is the one part of this book that asks for silence, and a voice
   // resuming partway through it would be the worst possible interruption.
   readingBook = false;
+  pageCard.hide();
   stopReading();
   panel.classList.add('fading');   // the text recedes while sitting
   sit.start(minutes);

@@ -124,6 +124,23 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
 .gg-section-text { margin-top: 8px; line-height: 1.72; white-space: pre-wrap; }
 .gg-section.speaking .gg-section-text { background: rgba(199,62,58,0.08); }
 
+/* ---- the reading's title card, centred over the stage ----
+   The only text on screen once the panel has stepped aside, so it is set quietly
+   and in the book's own face. pointer-events: none matters — it spans the whole
+   width of the picture and must never eat a drag. */
+.gg-page-card {
+  position: absolute; top: 8vh; left: 0; right: 0; z-index: 7;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  pointer-events: none; text-align: center; padding: 0 24px;
+  font-family: Georgia, 'Times New Roman', serif; color: var(--ink);
+  opacity: 0; transition: opacity 1.4s ease;
+}
+/* Quicker in than out: the name should arrive with the page and leave without
+   being noticed leaving. */
+.gg-page-card.show { opacity: 1; transition-duration: 0.9s; }
+.gg-page-card .num { font-size: 13px; letter-spacing: 0.24em; color: var(--gray); }
+.gg-page-card .ttl { font-size: clamp(21px, 3.1vw, 34px); letter-spacing: 0.03em; line-height: 1.2; }
+
 /* ---- stage toolbar: one row of square buttons, top-right over the 3D ----
    Sound, fullscreen and the debug workbench share a shape so the corner reads
    as a toolbar. It sits ABOVE the debug panel (z 9 vs 8) so every button stays
