@@ -44,11 +44,20 @@ const NECK_TOP = [0, 0.78, 0.44];
 
 const STIR = 2.4;                        // seconds for one whole response
 
+// A bare four-post barrel reads as a table (quadruped.js's SECOND RULE) — the
+// hind pair folds at the hock so the silhouette shows which end drives, the
+// same fix the buffalo and the horse left on the table for budget and got
+// away without (see their own headers). A fox has room: k2's scene sits well
+// under the draw cap (see the header of k2.js — no other test flags it), so
+// there is nothing stopping the fold here.
+const KNEE = 0.4;                        // rad, hind hock bend
+
 export function makeFox({ height = 0.45, color = INK, seed = 2 } = {}) {
   const { group } = makeQuadruped({
     height, color, seed,
     bodyR: BODY_R, bodyLen: BODY_LEN, bodyDrop: BODY_DROP,
     legH: LEG_H, legR: 0.062, legTaper: 0.95, hipX: 0.105, hipZ: 0.31,
+    legs: { knee: KNEE },
     neck: { r: 0.078, len: 0.30 },
     head: { shape: 'sphere', r: 0.125, fwd: 0.55, up: 0.26 },
     // long and narrow, and set a little below the head's centre — the muzzle,
@@ -57,7 +66,12 @@ export function makeFox({ height = 0.45, color = INK, seed = 2 } = {}) {
     // twice the head's radius tall: on a fox the ears are half the head
     ears: { r: 0.092, h: 0.28, x: 0.072, up: 0.33, fwd: 0.50, tilt: 0.20 },
     tail: {
-      kind: 'stiff', r0: 0.075, r1: 0.105,
+      kind: 'stiff', r0: 0.075,
+      // the root end (buried in the barrel — see THE BRUSH above) reads as
+      // "two thirds as thick as the body": r1 solved directly against
+      // BODY_R rather than left at a hand-tuned value that drifts the moment
+      // the barrel's own radius changes.
+      r1: BODY_R * 2 / 3,
       length: TAIL_LEN, up: TAIL_UP, back: TAIL_BACK, tilt: TAIL_TILT,
     },
   });
@@ -79,6 +93,17 @@ export function makeFox({ height = 0.45, color = INK, seed = 2 } = {}) {
     }
   }
   const ears = headPivot.children.filter((c) => c.name === 'ear');
+  // The ear is a 5-sided cone (quadruped.js's `spike`); its default spin
+  // leaves a flat facet pointed straight astern (-z) and nothing but an edge
+  // toward the front, so from the kit's own 3/4 camera the ear reads as a
+  // sliver rather than a shape. Spin each cone about its own axis — mirrored
+  // by side, so the pair stays symmetric — until a facet faces forward and
+  // in, toward the muzzle: the "inner face" a 3/4 view actually needs to see.
+  // Static, set once here (not in `update`), which is why it is a plain
+  // rotation.y rather than something update() would have to preserve every
+  // frame against the twitch/flick it drives on rotation.x.
+  const EAR_SPIN = 0.7;
+  for (const ear of ears) ear.rotation.y = Math.sign(ear.position.x) * EAR_SPIN;
 
   // ---- the brush, onto its own hinge -----------------------------------
   // Rotating the tail MESH about y does nothing: y is its own long axis. The
