@@ -163,8 +163,16 @@
       wide:    { p: [0, 26, 100], t: [0, 2, 9] },
       rowA:    { p: [-2, 4.5, 12], t: [-2, 1.1, 0] },
       rowB:    { p: [-3, 4.5, 14], t: [-3, 1.1, 5.5] },
-      buffalo: { p: [-6.2, 3.2, 4], t: [-6.2, 1.4, 0.2] },
-      dog:     { p: [-11, 2.2, 4.5], t: [-11, 0.6, 0] },
+      // The quadrupeds are judged on SILHOUETTE, and the first framing of these
+      // two looked steeply DOWN on them from four model-heights away: the dog
+      // filled 13% of the frame and the buffalo's legs were cropped off the
+      // bottom edge, so neither shot could show whether a leg was a leg or a
+      // table stick. Both are now a slightly-low 3/4 front view (camera just
+      // under the withers, ~37 degrees off the model's own facing), pulled in
+      // until the animal fills ~60% of the frame height. Reframed BEFORE any
+      // kit edit, and both before-shots retaken from here.
+      buffalo: { p: [-2.37, 0.85, 1.92], t: [-6.2, 1.05, 0.2] },
+      dog:     { p: [-9.66, 0.28, 0.45], t: [-11, 0.36, 0] },
       buddha:  { p: [-1.2, 3.2, 5], t: [-1.2, 1.4, 0] },
       figures: { p: [3.5, 3.4, 8], t: [3.5, 1.2, -0.1] },
       water:   { p: [-4.6, 3.2, 9.5], t: [-4.6, 0.4, 5.4] },

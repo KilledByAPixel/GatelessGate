@@ -20,6 +20,17 @@ import { makeTail } from './tail.js';
 // exactly what "its legs don't connect" looked like. That height is computed
 // here rather than hand-tuned, so no future animal can reintroduce it.
 //
+// THE SECOND RULE, which the first pass of every animal here also got wrong: a
+// barrel on four straight posts is a TABLE. Two things break that reading, and
+// both are optional so no species is forced into them:
+//
+//   `legs.knee`  — the hind pair folds. A quadruped drives from behind, and the
+//                  bend at the hock is the one asymmetry that tells a viewer
+//                  which end is the front, even in silhouette at fog distance.
+//   `haunch` / `shoulder` / `chest` — mass ON the barrel. A bare capsule is a
+//                  sack; what makes it read as a body is the lumps where the
+//                  legs drive into it and the brisket that hangs under the neck.
+//
 // Everything scales off `height` (withers height) and faces +z.
 export function makeQuadruped({
   height = 1,
@@ -28,6 +39,7 @@ export function makeQuadruped({
   bodyR = 0.22, bodyLen = 0.72, bodyDrop = 0.16,
   // legs
   legH = 0.52, legR = 0.055, legTaper = 0.82, hipX = 0.13, hipZ = 0.32,
+  legs = null,           // { knee } — radians of bend in the HIND pair; 0/absent = posts
   // head
   head = { shape: 'sphere', r: 0.20, fwd: 0.56, up: 0.22 },
   neck = null,           // { r, len, tilt } — a short column from chest to head
@@ -35,6 +47,9 @@ export function makeQuadruped({
   ears = null,           // { r, h, x, up, fwd, tilt }
   horns = null,          // { r, len, x, up, fwd, sweep }
   hump = null,           // { r, scaleY, scaleZ, up, fwd }
+  haunch = null,         // { r, scaleY, scaleZ, up, back } — the rump, over the hind legs
+  shoulder = null,       // { r, scaleY, up, fwd } — and the mass over the front pair
+  chest = null,          // { r, drop, fwd } — the brisket, hanging under the neck
   tail = null,           // { kind: 'stiff'|'strand', ... }
   seed = 1,
 } = {}) {
@@ -55,7 +70,65 @@ export function makeQuadruped({
   const hx = hipX * h;
   const belly = bodyY - Math.sqrt(Math.max(0, R * R - hx * hx));
   const legTop = belly + 0.06 * h;                 // bury the top slightly in the barrel
+  const knee = (legs && legs.knee) || 0;
+
+  // A cylinder is built centred on its own origin. For a jointed leg we want it
+  // HUNG from its top instead, so that the top stays pinned where THE LEG RULE
+  // put it while the far end swings — the same trick `spike` plays for ears.
+  const hung = (r0, r1, len, seg) => {
+    const geo = new THREE.CylinderGeometry(r0, r1, len, seg);
+    geo.translate(0, -len / 2, 0);
+    return geo;
+  };
+
+  // Share of the leg's VERTICAL run taken by the thigh; the shin has the rest.
+  // TWO THIRDS, which is not the obvious choice and is the whole trick. Splitting
+  // the leg at its middle puts the hock at mid-height — which is exactly where
+  // the haunch hangs, so the mass swallows the bend and the hind leg comes out
+  // reading as a SHORT POST rather than a folded one (shot
+  // wip-quadruped-r1-dog). A real hock sits low, around a third of the way up;
+  // put it there and the fold clears the body and shows.
+  const THIGH_RUN = 0.66;
+  // A BENT identical cylinder is still an identical cylinder — the fold alone
+  // did not stop the hind pair reading as sticks. A hind limb is broad at the
+  // hip, pinched at the hock and only then drops as a thin cannon bone, so the
+  // jointed path spends its radii that way instead of following `legTaper`.
+  // The FOOT keeps radius `legR`, unchanged, so it still matches the front feet.
+  const THIGH_SWELL = 1.35;   // x legR at the hip
+  const HOCK_PINCH = 0.85;    // x legR at the joint
+
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    // Hind legs only (the animal faces +z), and only if a knee was asked for.
+    if (knee && sz < 0) {
+      const thighDrop = THIGH_RUN * legTop;           // how far the thigh falls...
+      const thighLen = thighDrop / Math.cos(knee);    // ...and how long it is, tilted
+      const shinLen = legTop - thighDrop;             // the shin makes up the rest, plumb
+      const rHip = legR * h * THIGH_SWELL;
+      const rKnee = legR * h * HOCK_PINCH;
+      const rFoot = legR * h;
+
+      const thigh = new THREE.Mesh(hung(rHip, rKnee, thighLen, 6), mat);
+      thigh.name = 'leg';                             // still 'leg': species re-parent by name
+      thigh.position.set(sx * hx, legTop, sz * hipZ * h);
+      // Rotating +y about +x by θ sends it toward +z, so a POSITIVE angle tips
+      // the thigh's top forward and swings its lower end — the hock — BACK,
+      // which is the direction a hind leg actually folds.
+      thigh.rotation.x = knee;
+
+      // The shin hangs off the thigh rather than off the group, so the joint is
+      // a real hinge: move or re-angle the thigh and the shin follows it. It
+      // undoes the thigh's tilt to stand plumb again, and its length is solved
+      // (not tuned) so the foot lands exactly on y = 0 — THE LEG RULE, at the
+      // other end of the leg.
+      const shin = new THREE.Mesh(hung(rKnee, rFoot, shinLen, 6), mat);
+      shin.name = 'shin';
+      shin.position.y = -thighLen;                    // the hock, in the thigh's own frame
+      shin.rotation.x = -knee;
+      thigh.add(shin);
+
+      g.add(thigh);
+      continue;
+    }
     const leg = new THREE.Mesh(
       new THREE.CylinderGeometry(legR * h * legTaper, legR * h, legTop, 6), mat);
     leg.name = 'leg';
@@ -70,6 +143,27 @@ export function makeQuadruped({
     m.position.set(0, bodyY + hump.up * h, hump.fwd * h);
     g.add(m);
   }
+
+  // The three masses that turn the barrel into a body. Each is one ellipsoid
+  // placed off `bodyY`, exactly as the hump is, so it rides the barrel's own
+  // line instead of floating beside it — and each is a single centred lump, not
+  // a left/right pair: at ink-and-fog distance a body is read as weight, and a
+  // pair costs two draw calls to say the same thing.
+  const mass = (name, r, y, z, sy = 1, sz = 1) => {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r * h, 7, 5), mat);
+    m.name = name;
+    m.scale.set(1, sy, sz);
+    m.position.set(0, y, z);
+    g.add(m);
+  };
+
+  if (haunch) mass('haunch', haunch.r,
+    bodyY + (haunch.up ?? 0) * h, -(haunch.back ?? 0) * h,
+    haunch.scaleY ?? 1, haunch.scaleZ ?? 1);
+  if (shoulder) mass('shoulder', shoulder.r,
+    bodyY + (shoulder.up ?? 0) * h, (shoulder.fwd ?? 0) * h,
+    shoulder.scaleY ?? 1);
+  if (chest) mass('chest', chest.r, bodyY - chest.drop * h, chest.fwd * h);
 
   const headY = bodyY + head.up * h;
   const headZ = head.fwd * h;
