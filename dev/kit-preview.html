@@ -44,74 +44,85 @@
 
     const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 260);
 
-    // place a piece at (x,z); accepts a Group/Mesh or a {group}/{mesh} handle
+    // place a piece at (x,z); accepts a Group/Mesh or a {group}/{mesh} handle.
+    // soloKey (string or array of strings) registers the placed object under
+    // one or more VIEWS keys for kp.solo(name) — paired placements (koi +
+    // its water, the hanging monk + its oak) share a key so they solo together.
     const animated = [];
-    function place(thing, x, z, ry = 0) {
+    const allPlaced = [];
+    const soloGroups = {}; // VIEWS key -> [Object3D, ...]
+    function place(thing, x, z, ry = 0, soloKey) {
       const obj = thing.isObject3D ? thing : (thing.group || thing.mesh);
       obj.position.set(x, 0, z);
       obj.rotation.y = ry;
       scene.add(obj);
       if (thing.update) animated.push(thing);
+      allPlaced.push(obj);
+      if (soloKey) {
+        for (const k of Array.isArray(soloKey) ? soloKey : [soloKey]) {
+          (soloGroups[k] || (soloGroups[k] = [])).push(obj);
+        }
+      }
       return thing;
     }
 
     // row A — creatures & figures (front)
-    place(makeDog({}), -11, 0, 0.6);
-    const buffalo = place(makeBuffalo({}), -6.2, 0.2, 0.5);
-    place(makeBuddha({}), -1.2, 0, 0);
-    place(makeMonk({ pose: 'sit' }), 2.4, 0, 0);
-    place(makeMonk({ pose: 'sit', elder: true }), 4.6, 0, -0.2);
-    place(makeMonk({ pose: 'point' }), 6.8, 0, -0.3);      // reference standing monk
-    place(makeAssembly({ count: 8, radius: 2.2, center: [11, -1.5], facing: [11, 3] }), 0, 0);
+    place(makeDog({}), -11, 0, 0.6, 'dog');
+    const buffalo = place(makeBuffalo({}), -6.2, 0.2, 0.5, 'buffalo');
+    place(makeBuddha({}), -1.2, 0, 0, 'buddha');
+    place(makeMonk({ pose: 'sit' }), 2.4, 0, 0, 'figures');
+    place(makeMonk({ pose: 'sit', elder: true }), 4.6, 0, -0.2, 'figures');
+    place(makeMonk({ pose: 'point' }), 6.8, 0, -0.3, 'figures');      // reference standing monk
+    place(makeAssembly({ count: 8, radius: 2.2, center: [11, -1.5], facing: [11, 3] }), 0, 0, 0, 'figures');
 
     // row B — props (back)
     place(makeFlower({}), -11, 5, 0);
     place(makeBowl({}), -8, 5, 0);
-    const water = place(makeWater({ size: 2.4 }), -4.6, 5.4, 0);
-    place(makeHut({}), 0.5, 6.5, 0);
+    const water = place(makeWater({ size: 2.4 }), -4.6, 5.4, 0, 'water');
+    place(makeHut({}), 0.5, 6.5, 0, 'hut');
     place(makeLattice({}), 5.5, 5.5, 0.15);
 
     // row C — the second chapter's creatures & small figures (z ≈ -6)
-    place(makeFox({}), -16, -6, 0.5);
-    place(makeCat({}), -13, -6, -0.4);
-    place(makeHorse({}), -8, -6, 0.2);
+    place(makeFox({}), -16, -6, 0.5, 'fox');
+    place(makeCat({}), -13, -6, -0.4, 'cat');
+    place(makeHorse({}), -8, -6, 0.2, 'horse');
 
     // a small round pond so the koi have a surface to ride — lifted clear of
     // the flat preview ground (y=0), since the koi swim just BELOW the water's
     // own local surface and would otherwise sink invisibly into the ground
     // plane, which (unlike a real basin) has no recess for them
-    const water2 = place(makeWater({ shape: 'round', size: 2.3, opacity: 0.55 }), -3, -6.4);
+    const water2 = place(makeWater({ shape: 'round', size: 2.3, opacity: 0.55 }), -3, -6.4, 0, 'koi');
     water2.group.position.y = 0.16;
-    const koi = place(makeKoi({ count: 4, radius: 0.85, surfaceAt: water2.heightAt }), -3, -6.4);
+    const koi = place(makeKoi({ count: 4, radius: 0.85, surfaceAt: water2.heightAt }), -3, -6.4, 0, 'koi');
     koi.group.position.y = 0.16;
 
-    const bird = place(makeBird({ size: 0.5 }), 1, -6);
+    const bird = place(makeBird({ size: 0.5 }), 1, -6, 0, 'bird');
     bird.group.position.y = 1.4;
 
-    place(makeBirds({ count: 6, seed: 24, center: [0, 0], height: 6.2, spread: 4 }), 6, -8);
+    place(makeBirds({ count: 6, seed: 24, center: [0, 0], height: 6.2, spread: 4 }), 6, -8, 0, 'birds');
 
-    place(makeRaisedFinger({}), 10, -6);
+    place(makeRaisedFinger({}), 10, -6, 0, 'finger');
 
     // row D — vegetation (z ≈ 14). Pushed back from the original z≈12 plan,
     // and the forest's footprint kept modest (spread 3.5, not 5) — the wider
     // draft's scatter radius reached clear into row B's hut and row E's stall,
     // which shared its x, and the two rows visibly collided in the wide shot.
-    place(makeTree({ height: 3.2 }), -16, 14);
-    place(makePine({ height: 4 }), -11, 14);
+    place(makeTree({ height: 3.2 }), -16, 14, 0, 'tree');
+    place(makePine({ height: 4 }), -11, 14, 0, 'pine');
     // makeForest's `center` is [x, _, z] (three elements — see forest.js,
     // which reads center[0]/center[2]); a 2-element array leaves center[2]
     // undefined and every instance position comes out NaN (invisible)
-    place(makeForest({ center: [0, 0, 0], spread: 3.5, count: 22, treeH: 2.2 }), -4, 14);
+    place(makeForest({ center: [0, 0, 0], spread: 3.5, count: 22, treeH: 2.2 }), -4, 14, 0, 'forest');
     // count kept close to the real game's per-area density (radius 20 / count
     // 52000 in production) rather than the naive scale-down, which packed the
     // blades ~3x too dense and read as a solid black mass
-    place(makeGrassField({ radius: 3.2, count: 1300 }), 5, 14);
-    place(makeWildflowers({ radius: 2.3, count: 70 }), 12, 14);
+    place(makeGrassField({ radius: 3.2, count: 1300 }), 5, 14, 0, 'grassfield');
+    place(makeWildflowers({ radius: 2.3, count: 70 }), 12, 14, 0, 'wildflowers');
 
     // the oak (case 38) and, hung from one of its outer canopy anchors, the
     // hanging monk (case 5) — a real branch tip rather than a hand-picked point,
     // so he previews in his true dangling attitude
-    const oak = place(makeOak({ height: 5.2, seed: 5 }), 19, 15, 0.3);
+    const oak = place(makeOak({ height: 5.2, seed: 5 }), 19, 15, 0.3, ['oak', 'hangingmonk']);
     oak.updateMatrixWorld(true);
     const branchTip = oak.localToWorld(oak.canopyPoints[0].clone());
     // the accent colour (as case 5 itself uses) — plain ink would blend into
@@ -120,25 +131,31 @@
     dangler.group.position.copy(branchTip);
     scene.add(dangler.group);
     if (dangler.update) animated.push(dangler);
+    // paired with the oak he hangs from — registered directly (not via
+    // place()) since he's added outside that helper — so solo('oak') and
+    // solo('hangingmonk') both keep the pair visible together
+    allPlaced.push(dangler.group);
+    soloGroups.oak.push(dangler.group);
+    soloGroups.hangingmonk.push(dangler.group);
 
     // row E — architecture & staged objects (z ≈ 22 — pushed back 2 from the
     // original z≈20 plan for clearance from row D's forest, see above)
-    place(makeGate({}), -30, 22);
-    place(makeVeranda({}), -23, 22);
-    place(makeLantern({}), -17, 22);
-    place(makeBell({}), -12, 22);
-    place(makeDrum({}), -7, 22);
-    place(makeStall({}), -2, 22);
-    place(makeBasin({}), 2, 22);
+    place(makeGate({}), -30, 22, 0, 'gate');
+    place(makeVeranda({}), -23, 22, 0, 'veranda');
+    place(makeLantern({}), -17, 22, 0, 'lantern');
+    place(makeBell({}), -12, 22, 0, 'bell');
+    place(makeDrum({}), -7, 22, 0, 'drum');
+    place(makeStall({}), -2, 22, 0, 'stall');
+    place(makeBasin({}), 2, 22, 0, 'basin');
     // sized up from the default (0.17) so the tiny chime reads at all from a
     // workbench distance; hung at a plausible eave height
-    const furin = place(makeFurin({ size: 0.5 }), 6, 22);
+    const furin = place(makeFurin({ size: 0.5 }), 6, 22, 0, 'furin');
     furin.group.position.y = 1.7;
-    place(makeWheel({}), 10, 22);
-    place(makeVase({}), 14, 22);
-    place(makeRack({}), 17, 22);
-    place(makePole({}), 24, 22);
-    place(makeBundle({}), 30, 22);
+    place(makeWheel({}), 10, 22, 0, 'wheel');
+    place(makeVase({}), 14, 22, 0, 'vase');
+    place(makeRack({}), 17, 22, 0, 'rack');
+    place(makePole({}), 24, 22, 0, 'pole');
+    place(makeBundle({}), 30, 22, 0, 'bundle');
 
     addOutlines(scene, { width: 0.035, wobble: 0.7 });
 
@@ -213,6 +230,24 @@
       }
       render();
     }
+    // views that survey more than one model at once — solo() leaves everyone
+    // visible for these, same as solo(null)
+    const OVERVIEW_VIEWS = new Set(['wide', 'rowA', 'rowB']);
+    // kp.solo(name) hides every placed top-level object except the one(s)
+    // registered under that VIEWS key — paired placements (koi + its water,
+    // the hanging monk + its oak) were registered under both keys and so
+    // stay visible together. The ground plane is never touched.
+    // kp.solo(null) restores everything.
+    function solo(name) {
+      if (name == null) {
+        for (const obj of allPlaced) obj.visible = true;
+        render();
+        return;
+      }
+      const keep = new Set(soloGroups[name] || []);
+      for (const obj of allPlaced) obj.visible = keep.has(obj);
+      render();
+    }
     async function shot(name = 'kit') {
       const url = renderer.domElement.toDataURL('image/jpeg', 0.85);
       try {
@@ -223,13 +258,15 @@
     async function shotAll(prefix = 'kit') {
       const out = [];
       for (const name of Object.keys(VIEWS)) {
+        solo(OVERVIEW_VIEWS.has(name) ? null : name);
         setView(name); step(1);
         out.push(await shot(`${prefix}-${name}`));
       }
+      solo(null);
       return out;
     }
 
-    window.kp = { renderer, scene, camera, render, step, shot, view: setView, shotAll, buffalo, water, THREE };
+    window.kp = { renderer, scene, camera, render, step, shot, view: setView, shotAll, solo, buffalo, water, THREE };
 
     // real-browser convenience: gentle auto-orbit (paused in headless previews, which is fine)
     let t0 = performance.now();
