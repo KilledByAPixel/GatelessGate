@@ -36,11 +36,23 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // read as a snout on a crocodile. Lower and more nose-down than the first
     // pass so the muzzle drops below the withers — the grazing line.
     head: { shape: 'box', w: 0.36, hh: 0.32, d: 0.52, fwd: 0.68, up: -0.34, tilt: 0.55 },
-    // long, close-set at the base, swept up-and-back so the tip clears the
-    // (now much lower) skull line and reads as a crescent, not a bump. Thicker
-    // base radius than the first pass so it survives fog/distance (k37) as a
-    // stroke, not a hairline.
-    horns: { r: 0.055, len: 0.90, x: 0.16, up: 0.30, fwd: 0.60, sweep: 0.60, back: 0.62 },
+    // THE BASE SITS ON THE SKULL, NOT THE HUMP. horns.up/fwd are NOT free
+    // parameters — they are the poll (the top-back corner of the tilted head
+    // box, where a real buffalo's horns actually emerge), solved the same way
+    // fox.js solves NECK_TOP: rotate the box's local top-back corner
+    // (0, +hh/2, -d/2) by head.tilt about x, then add head.up/head.fwd.
+    //   up  = head.up + (hh/2)*cos(tilt) + (d/2)*sin(tilt)
+    //       = -0.34    + 0.16*cos(0.55)   + 0.26*sin(0.55)   ≈ -0.07
+    //   fwd = head.fwd + (hh/2)*sin(tilt) - (d/2)*cos(tilt)
+    //       =  0.68    + 0.16*sin(0.55)   - 0.26*cos(0.55)   ≈  0.54
+    // A first pass set `up` from taste (0.02, then 0.30 chasing the k37
+    // crescent) without re-deriving it against head.up, which fell to -0.34 in
+    // the same round — the base drifted half a height clear of the skull and
+    // read as sprouting from the hump instead. Everything ABOVE the base is
+    // still free: tip height above the base is len*cos(back)*cos(sweep) (both
+    // rotations shorten the vertical reach, since each tips the cone away from
+    // straight-up), and back/sweep alone steer the crescent's direction.
+    horns: { r: 0.055, len: 1.10, x: 0.14, up: -0.07, fwd: 0.54, sweep: 0.55, back: 0.66 },
     tail: { kind: 'strand', segments: 7, length: 0.74, thickness: 0.05, up: 0.16, back: 0.62, color: tailColor },
   });
   group.name = 'buffalo';
