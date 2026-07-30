@@ -177,6 +177,17 @@
       // kit edit, and both before-shots retaken from here.
       buffalo: { p: [-2.37, 0.85, 1.92], t: [-6.2, 1.05, 0.2] },
       dog:     { p: [-9.66, 0.28, 0.45], t: [-11, 0.36, 0] },
+      // profile view, added for A4 (dog.js): the near view's 3/4 angle can't
+      // show the haunch/chest masses or the tail's cocked-up curl
+      // unambiguously — same trap A2/A3 flagged for horn/neck work. Formula
+      // per A1's report, calibrated the way A3 did: camera sits at the
+      // model's own placement position, offset along its local +x (the
+      // "right" side, i.e. (cos ry, 0, -sin ry)) by the near view's own
+      // distance, at the near view's own eye height —
+      // `(x + d*cos(ry), eye, z - d*sin(ry))` looking at the near view's own
+      // target. dog is placed at (-11, 0, 0) with ry=0.6; near view distance
+      // d = |(-9.66,0.45) - (-11,0)| = 1.4136.
+      'dog-side': { p: [-9.8334, 0.28, -0.7981], t: [-11, 0.36, 0] },
       buddha:  { p: [-1.2, 3.2, 5], t: [-1.2, 1.4, 0] },
       figures: { p: [3.5, 3.4, 8], t: [3.5, 1.2, -0.1] },
       water:   { p: [-4.6, 3.2, 9.5], t: [-4.6, 0.4, 5.4] },
@@ -231,6 +242,7 @@
     // pointing at the same placed object(s) or solo('horse-side') would hide
     // everything.
     soloGroups['horse-side'] = soloGroups.horse;
+    soloGroups['dog-side'] = soloGroups.dog;
 
     // below and out from his anchor, looking up across the canopy's underside
     // rather than into it — the anchor sits ON the crown mass, so a close
