@@ -9,14 +9,19 @@
   </style>
 </head>
 <body>
-  <div id="hud">kit preview — window.kp.step(n) / kp.view(name) / kp.shot('name')</div>
+  <div id="hud">kit preview — window.kp.step(n) / kp.view(name) / kp.shot('name') / kp.shotAll('prefix')</div>
   <script type="module">
     import * as THREE from '../lib/three.module.js';
-    import { PAPER, INK } from '../src/palette.js';
+    import { PAPER, INK, ACCENT_DEEP } from '../src/palette.js';
     import {
       makeDog, makeBuffalo, makeBuddha, makeMonk, makeFlower, makeBowl,
       makeWater, makeHut, makeLattice, makeAssembly, makeLights, addOutlines,
       toonMaterial,
+      makeFox, makeCat, makeHorse, makeKoi, makeBird, makeBirds,
+      makeHangingMonk, makeRaisedFinger,
+      makeTree, makePine, makeOak, makeForest, makeGrassField, makeWildflowers,
+      makeGate, makeVeranda, makeLantern, makeBell, makeDrum, makeStall,
+      makeBasin, makeFurin, makeWheel, makeVase, makeRack, makePole, makeBundle,
     } from '../src/kit/index.js';
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -31,18 +36,18 @@
 
     // flat ground so every piece is judged against y=0
     const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(80, 80),
+      new THREE.PlaneGeometry(220, 220),
       toonMaterial({ color: '#CFC7B2' }));
     ground.rotation.x = -Math.PI / 2;
     ground.userData.noOutline = true;
     scene.add(ground);
 
-    const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 200);
+    const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 260);
 
-    // place a piece at (x,z); accepts a Group/Mesh or a {group} handle
+    // place a piece at (x,z); accepts a Group/Mesh or a {group}/{mesh} handle
     const animated = [];
     function place(thing, x, z, ry = 0) {
-      const obj = thing.isObject3D ? thing : thing.group;
+      const obj = thing.isObject3D ? thing : (thing.group || thing.mesh);
       obj.position.set(x, 0, z);
       obj.rotation.y = ry;
       scene.add(obj);
@@ -66,10 +71,79 @@
     place(makeHut({}), 0.5, 6.5, 0);
     place(makeLattice({}), 5.5, 5.5, 0.15);
 
+    // row C — the second chapter's creatures & small figures (z ≈ -6)
+    place(makeFox({}), -16, -6, 0.5);
+    place(makeCat({}), -13, -6, -0.4);
+    place(makeHorse({}), -8, -6, 0.2);
+
+    // a small round pond so the koi have a surface to ride — lifted clear of
+    // the flat preview ground (y=0), since the koi swim just BELOW the water's
+    // own local surface and would otherwise sink invisibly into the ground
+    // plane, which (unlike a real basin) has no recess for them
+    const water2 = place(makeWater({ shape: 'round', size: 2.3, opacity: 0.55 }), -3, -6.4);
+    water2.group.position.y = 0.16;
+    const koi = place(makeKoi({ count: 4, radius: 0.85, surfaceAt: water2.heightAt }), -3, -6.4);
+    koi.group.position.y = 0.16;
+
+    const bird = place(makeBird({ size: 0.5 }), 1, -6);
+    bird.group.position.y = 1.4;
+
+    place(makeBirds({ count: 6, seed: 24, center: [0, 0], height: 6.2, spread: 4 }), 6, -8);
+
+    place(makeRaisedFinger({}), 10, -6);
+
+    // row D — vegetation (z ≈ 14). Pushed back from the original z≈12 plan,
+    // and the forest's footprint kept modest (spread 3.5, not 5) — the wider
+    // draft's scatter radius reached clear into row B's hut and row E's stall,
+    // which shared its x, and the two rows visibly collided in the wide shot.
+    place(makeTree({ height: 3.2 }), -16, 14);
+    place(makePine({ height: 4 }), -11, 14);
+    // makeForest's `center` is [x, _, z] (three elements — see forest.js,
+    // which reads center[0]/center[2]); a 2-element array leaves center[2]
+    // undefined and every instance position comes out NaN (invisible)
+    place(makeForest({ center: [0, 0, 0], spread: 3.5, count: 22, treeH: 2.2 }), -4, 14);
+    // count kept close to the real game's per-area density (radius 20 / count
+    // 52000 in production) rather than the naive scale-down, which packed the
+    // blades ~3x too dense and read as a solid black mass
+    place(makeGrassField({ radius: 3.2, count: 1300 }), 5, 14);
+    place(makeWildflowers({ radius: 2.3, count: 70 }), 12, 14);
+
+    // the oak (case 38) and, hung from one of its outer canopy anchors, the
+    // hanging monk (case 5) — a real branch tip rather than a hand-picked point,
+    // so he previews in his true dangling attitude
+    const oak = place(makeOak({ height: 5.2, seed: 5 }), 19, 15, 0.3);
+    oak.updateMatrixWorld(true);
+    const branchTip = oak.localToWorld(oak.canopyPoints[0].clone());
+    // the accent colour (as case 5 itself uses) — plain ink would blend into
+    // the trunk/canopy's own dark grey and vanish against the crown
+    const dangler = makeHangingMonk({ height: 1.6, color: ACCENT_DEEP });
+    dangler.group.position.copy(branchTip);
+    scene.add(dangler.group);
+    if (dangler.update) animated.push(dangler);
+
+    // row E — architecture & staged objects (z ≈ 22 — pushed back 2 from the
+    // original z≈20 plan for clearance from row D's forest, see above)
+    place(makeGate({}), -30, 22);
+    place(makeVeranda({}), -23, 22);
+    place(makeLantern({}), -17, 22);
+    place(makeBell({}), -12, 22);
+    place(makeDrum({}), -7, 22);
+    place(makeStall({}), -2, 22);
+    place(makeBasin({}), 2, 22);
+    // sized up from the default (0.17) so the tiny chime reads at all from a
+    // workbench distance; hung at a plausible eave height
+    const furin = place(makeFurin({ size: 0.5 }), 6, 22);
+    furin.group.position.y = 1.7;
+    place(makeWheel({}), 10, 22);
+    place(makeVase({}), 14, 22);
+    place(makeRack({}), 17, 22);
+    place(makePole({}), 24, 22);
+    place(makeBundle({}), 30, 22);
+
     addOutlines(scene, { width: 0.035, wobble: 0.7 });
 
     const VIEWS = {
-      wide:    { p: [1, 9, 20], t: [-1, 1.2, 1] },
+      wide:    { p: [0, 26, 100], t: [0, 2, 9] },
       rowA:    { p: [-2, 4.5, 12], t: [-2, 1.1, 0] },
       rowB:    { p: [-3, 4.5, 14], t: [-3, 1.1, 5.5] },
       buffalo: { p: [-6.2, 3.2, 4], t: [-6.2, 1.4, 0.2] },
@@ -78,7 +152,51 @@
       figures: { p: [3.5, 3.4, 8], t: [3.5, 1.2, -0.1] },
       water:   { p: [-4.6, 3.2, 9.5], t: [-4.6, 0.4, 5.4] },
       hut:     { p: [0.5, 4.2, 11.5], t: [0.5, 1.5, 6.5] },
+
+      // row C — creatures
+      fox:     { p: [-16.9, 0.45, -4.6], t: [-16, 0.30, -6] },
+      cat:     { p: [-13.8, 0.42, -4.7], t: [-13, 0.28, -6] },
+      horse:   { p: [-9.6, 1.30, -2.8], t: [-8, 1.00, -6] },
+      koi:     { p: [-3.9, 1.10, -4.6], t: [-3, 0.20, -6.4] },
+      // seen from below, the way this kit's birds are actually staged (see
+      // birds.js: "birds seen from below") — a level eye-height shot presents
+      // the bird nearly edge-on, since its spread silhouette lies flat
+      bird:    { p: [-0.3, 0.40, -4.2], t: [1, 1.40, -6] },
+      birds:   { p: [3.0, 4.50, -1.0], t: [6, 6.00, -8] },
+      finger:  { p: [10.6, 0.22, -5.4], t: [10, 0.08, -6] },
+
+      // row D — vegetation
+      tree:        { p: [-19.5, 2.2, 19.5], t: [-16, 1.5, 14] },
+      pine:        { p: [-14.5, 2.3, 20.0], t: [-11, 1.9, 14] },
+      forest:      { p: [-8, 3.0, 21], t: [-4, 1.8, 14] },
+      grassfield:  { p: [2, 1.6, 21], t: [5, 0.3, 14.5] },
+      wildflowers: { p: [10, 1.3, 20], t: [12, 0.3, 14.5] },
+      oak:         { p: [10, 4.0, 25], t: [19, 3.0, 15] },
+      // hangingmonk view is set below, once the branch tip is known
+
+      // row E — architecture & staged objects
+      gate:    { p: [-27, 1.6, 27], t: [-30, 1.3, 22] },
+      veranda: { p: [-19, 2.0, 30], t: [-23, 1.6, 24] },
+      lantern: { p: [-15.5, 0.75, 24.6], t: [-17, 0.55, 22] },
+      bell:    { p: [-9.6, 1.5, 26], t: [-12, 1.2, 22] },
+      drum:    { p: [-5, 1.3, 25], t: [-7, 0.9, 22] },
+      stall:   { p: [0.5, 1.4, 26.5], t: [-2, 1.0, 22.6] },
+      basin:   { p: [4.5, 0.42, 25], t: [2, 0.30, 22] },
+      furin:   { p: [7.0, 1.9, 23.3], t: [6, 1.65, 22] },
+      wheel:   { p: [12, 1.3, 25.5], t: [10, 1.0, 22] },
+      vase:    { p: [15.2, 0.55, 23.8], t: [14, 0.35, 22] },
+      rack:    { p: [20.5, 1.2, 26], t: [17, 0.8, 22] },
+      pole:    { p: [14, 2.4, 32], t: [24, 3.5, 22] },
+      bundle:  { p: [31.2, 0.4, 23.6], t: [30, 0.2, 22] },
     };
+    // below and out from his anchor, looking up across the canopy's underside
+    // rather than into it — the anchor sits ON the crown mass, so a close
+    // offset stays buried in leaf geometry
+    VIEWS.hangingmonk = {
+      p: [branchTip.x + 5.5, branchTip.y - 0.6, branchTip.z + 5.5],
+      t: [branchTip.x, branchTip.y - 1.0, branchTip.z],
+    };
+
     let simTime = 0;
     function setView(name) {
       const v = VIEWS[name] || VIEWS.wide;
@@ -102,8 +220,16 @@
         return await r.text();
       } catch (e) { return 'post-failed: ' + e.message; }
     }
+    async function shotAll(prefix = 'kit') {
+      const out = [];
+      for (const name of Object.keys(VIEWS)) {
+        setView(name); step(1);
+        out.push(await shot(`${prefix}-${name}`));
+      }
+      return out;
+    }
 
-    window.kp = { renderer, scene, camera, render, step, shot, view: setView, buffalo, water, THREE };
+    window.kp = { renderer, scene, camera, render, step, shot, view: setView, shotAll, buffalo, water, THREE };
 
     // real-browser convenience: gentle auto-orbit (paused in headless previews, which is fine)
     let t0 = performance.now();
