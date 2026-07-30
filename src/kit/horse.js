@@ -1,29 +1,73 @@
 import { INK } from '../palette.js';
 import { makeQuadruped } from './quadruped.js';
 
-// A horse (case 45): the shared quadruped plan run tall and light — long legs, a
-// deep chest, a high arched neck and a small head, with pricked ears and a
-// hanging tail. The verse says "Do not ride another's horse," so one stands
-// tethered by a stall, and it is the case's one red thing.
+// A horse (case 45): THE NECK IS THE ANIMAL. Everything else stays quiet — a
+// lean barrel, the slimmest legs of any species in the kit, and a small head
+// hung off the end of a long, thick-at-the-base neck. The shared plan only
+// offers a STRAIGHT neck cylinder (no curve option — see `neck` in
+// quadruped.js), so the "arch" is a two-part illusion rather than a literal
+// bend: the neck rises steeply out of the chest, and the head hangs off its
+// top at ~45 degrees nose-down, so the silhouette bends hard right at the
+// poll, exactly where a real horse's neck crests and drops. The verse says
+// "Do not ride another's horse," so one stands tethered by a stall, and it
+// is the case's one red thing.
 //
-// Stiff tail rather than a verlet strand: this horse only stands there, and a
-// single cylinder keeps it inside the draw budget with a market already built.
+// BUDGET, not taste, is why `legs.knee` and `chest` are absent even though
+// both are on the shared plan and both would help the neck read. k45's
+// market — a road, three stalls, two keepers, a customer, two walkers, a
+// crowd, and the man who is always just out of frame — already sits at 146
+// of the 150-draw cap with the ORIGINAL horse (measured directly, not
+// estimated: every mesh here costs TWO draws, since `addOutlines` adds one
+// inverted-hull child per mesh, so the cap really only has room for two more
+// meshes than the original 11 gave). A knee'd hind pair alone (+2 meshes) or
+// knee+chest together (+3) blows it. For a horse that stands still, tethered,
+// the fold at the hock pays far less than it does for buffalo.js's grazing
+// animal, so it stayed off; the strand tail (+1 mesh, replacing the old
+// stiff cylinder 1-for-1 in kind but not in count) is the one paid addition,
+// because "tail as strand" is its own named target, not a technique note for
+// the neck. If a future pass frees draw budget elsewhere in the k45 scene,
+// `legs: { knee: 0.4 }` and a `chest: { r: 0.15, drop: 0.10, fwd: 0.32 }`
+// (the brisket, under the neck's base) are the two options to add back first.
+//
+// Snout and ears are positioned INDEPENDENTLY of the head box by the shared
+// plan (quadruped.js anchors them off `bodyY`, not off the head mesh), so
+// their up/fwd are DERIVED from the tilted head box's own corners rather
+// than tuned by eye — the lesson buffalo.js's horns learned the hard way
+// (see that file's header for the same trick). Both attach at the box's
+// local front-face and top-face centres, rotated by `head.tilt` about x:
+//   snout.up  = head.up  - (head.d / 2)  * sin(head.tilt)
+//   snout.fwd = head.fwd + (head.d / 2)  * cos(head.tilt)
+//   ears.up   = head.up  + (head.hh / 2) * cos(head.tilt)
+//   ears.fwd  = head.fwd + (head.hh / 2) * sin(head.tilt)
+// With head = { hh: 0.125, d: 0.28, fwd: 0.62, up: 0.54, tilt: 0.785 } that's
+// snout (0.441, 0.719) and ears (0.584, 0.664), used below.
 export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
-  const { group } = makeQuadruped({
+  const { group, tail } = makeQuadruped({
     height, color, seed,
-    bodyR: 0.22, bodyLen: 0.9, bodyDrop: 0.1,
-    // long, slim legs set at the corners of a deep barrel
-    legH: 0.62, legR: 0.05, legTaper: 0.82, hipX: 0.14, hipZ: 0.35,
-    // a high neck up to the head — the line that says horse
-    neck: { r: 0.10, len: 0.5 },
-    // a LONG, THIN head rather than a ball (Frank): a narrow box for the skull,
-    // nosed down, with a tapering muzzle cylinder out front for the mouth
-    head: { shape: 'box', w: 0.13, hh: 0.17, d: 0.42, fwd: 0.6, up: 0.44, tilt: 0.42 },
-    snout: { r0: 0.05, r1: 0.075, len: 0.34, fwd: 0.84, up: 0.33 },
-    // ears sitting ON the skull, not floating above it
-    ears: { r: 0.028, h: 0.15, x: 0.055, up: 0.5, fwd: 0.48, tilt: 0.35 },
-    tail: { kind: 'stiff', r0: 0.055, r1: 0.02, length: 0.62, up: 0.06, back: 0.46, tilt: -0.7 },
+    bodyR: 0.19, bodyLen: 0.86, bodyDrop: 0.08,
+    // the slimmest legs of any species in the kit. legTaper > 1 narrows
+    // toward the FOOT (legTaper < 1, the old value, is inverted from
+    // anatomy — quadruped.js's own note), which reads as a slender cannon
+    // bone rather than a post.
+    legH: 0.64, legR: 0.040, legTaper: 1.25, hipX: 0.13, hipZ: 0.34,
+    // long, thick where it leaves the chest, tapering toward the head (the
+    // plan already tapers it: radiusTop is 0.85x radiusBottom)
+    neck: { r: 0.085, len: 0.60 },
+    // a SMALL head — the neck is what should read, not the skull — nosed
+    // down at very close to 45 degrees
+    head: { shape: 'box', w: 0.095, hh: 0.125, d: 0.28, fwd: 0.62, up: 0.54, tilt: 0.785 },
+    snout: { r0: 0.035, r1: 0.052, len: 0.24, fwd: 0.719, up: 0.441 },
+    ears: { r: 0.026, h: 0.095, x: 0.045, up: 0.584, fwd: 0.664, tilt: 0.30 },
+    // a hanging strand rather than a stiff rod: it settles with a real joint
+    // from the verlet warmup instead of one rigid cylinder. Two segments
+    // (one mesh) would be indistinguishable from 'stiff'; three is the
+    // fewest that actually shows a bend, and the cheapest that fits budget.
+    tail: { kind: 'strand', segments: 3, length: 0.52, thickness: 0.045, up: 0.14, back: 0.62 },
   });
   group.name = 'horse';
-  return { group };
+  return {
+    group,
+    tail,
+    update(dt, simTime) { tail && tail.update(dt, simTime); },
+  };
 }
