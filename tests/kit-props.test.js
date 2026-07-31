@@ -70,15 +70,43 @@ test('makeWater is a flat surface that ripples on demand', () => {
   assert.equal(w.rippleCount(), 0, 'the ring expires');
 });
 
-test('makeHut is a roofed threshold on the ground', () => {
+test('makeHut is a roofed hall on the ground, and cheap to draw', () => {
   const hut = makeHut({ width: 2.4, height: 2.2, depth: 2.0 });
   assert.equal(hut.name, 'hut');
-  assert.equal(hut.children.filter((c) => c.name === 'post').length, 4, 'four posts');
+
+  // The four corner posts are ONE merged mesh, not four children — same reason
+  // makeLattice bakes its bars: an inverted-hull outline is added per mesh, and
+  // the hall appears in fourteen cases, two of them twice. They stay a mesh of
+  // their own rather than joining the walls because they are the one round,
+  // smooth-shaded part of the building.
+  const posts = hut.children.filter((c) => c.name === 'post');
+  assert.equal(posts.length, 1, 'the posts are merged');
+  assert.equal(posts[0].children.length, 0, 'no child meshes to outline separately');
+  const pb = new THREE.Box3().setFromObject(posts[0]);
+  assert.ok(pb.min.x < -1.0 && pb.max.x > 1.0, 'a post at each end of the width');
+  assert.ok(pb.min.z < -0.8 && pb.max.z > 0.8, 'and at each end of the depth');
+  assert.ok(pb.max.y >= 2.2 - 0.02, 'full height');
+
+  // the whole hall stays inside a small, fixed mesh budget
+  const meshes = [];
+  hut.traverse((o) => { if (o.isMesh) meshes.push(o.name); });
+  assert.ok(meshes.length <= 6, `hall draws ${meshes.length} meshes: ${meshes}`);
+
   const roof = hut.children.find((c) => c.name === 'roof');
   assert.ok(roof, 'has a roof');
   const box = new THREE.Box3().setFromObject(hut);
   assert.ok(box.min.y > -0.02, 'on the ground');
   assert.ok(roof.position.y > 2.0, 'roof up top');
+  // the eave carries well past the walls it covers
+  assert.ok(box.max.x > 2.4 / 2 + 0.25, `deep overhang: ${box.max.x}`);
+  // and the door is a solid, dark panel — an open void looks straight through
+  // the hall at lit ground and blows out to paper-white
+  const doorway = hut.children.find((c) => c.name === 'doorway');
+  const wall = hut.children.find((c) => c.name === 'wall');
+  assert.ok(doorway, 'the doorway is closed');
+  const lum = (m) => m.material.color.r + m.material.color.g + m.material.color.b;
+  assert.ok(lum(doorway) < lum(wall) * 0.6,
+    'and reads well darker than the wall it sits in');
 });
 
 test('makeLattice is a single merged mesh, framed and full height', () => {
