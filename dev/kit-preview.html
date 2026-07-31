@@ -280,6 +280,16 @@
       'bird-side': { p: [3.4352, 0.40, -6], t: [1, 1.40, -6] },
       birds:   { p: [3.0, 4.50, -1.0], t: [6, 6.00, -8] },
       finger:  { p: [10.6, 0.22, -5.4], t: [10, 0.08, -6] },
+      // profile view, added for B4 (finger.js). The finger has no established
+      // "facing" the way a monk or quadruped does (it's a lathe standing
+      // straight up), so rather than reuse the local-+x-offset formula those
+      // models anchor to a walking/aiming direction, this rotates the near
+      // view's own camera offset by 90 degrees around the target (the finger
+      // is placed at (10, 0, -6) with ry=0; near view offset from target is
+      // (0.6, 0.14, 0.6) — rotated to (-0.6, 0.14, 0.6), same distance and
+      // height, a genuinely different azimuth so the nail plane and knuckle
+      // steps are checked from both sides).
+      'finger-side': { p: [9.4, 0.22, -5.4], t: [10, 0.08, -6] },
 
       // row D — vegetation
       tree:        { p: [-19.5, 2.2, 19.5], t: [-16, 1.5, 14] },
@@ -316,6 +326,7 @@
     soloGroups['koi-side'] = soloGroups.koi;
     soloGroups['bird-side'] = soloGroups.bird;
     soloGroups['buddha-side'] = soloGroups.buddha;
+    soloGroups['finger-side'] = soloGroups.finger;
 
     // below and out from his anchor, looking up across the canopy's underside
     // rather than into it — the anchor sits ON the crown mass, so a close
