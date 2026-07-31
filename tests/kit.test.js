@@ -106,25 +106,59 @@ test('tree: recursive branch skeleton + canopy, connected and deterministic by s
   assert.notDeepEqual(leafVerts(t), leafVerts(makeTree({ height: 3.2, seed: 6 })));
 });
 
-test('pine: tiered skirts on a trunk, grounded and deterministic', () => {
+test('pine: tilted pads on an elbowed trunk, grounded and deterministic', () => {
   const p = makePine({ height: 4, tiers: 5, seed: 3 });
   assert.equal(p.name, 'pine');
   const box = new THREE.Box3().setFromObject(p);
   assert.ok(box.min.y > -0.02, `sits on the ground, got ${box.min.y}`);
   assert.ok(box.max.y > 4 * 0.7 && box.max.y < 4 * 1.15, `pine height, got ${box.max.y}`);
-  // more than a single cone: trunk + 5 skirts merged
+  // more than a single cone: root + 3 trunk segments + 2 knuckles + pads merged
   assert.ok(p.geometry.attributes.position.count > 100, 'tiered, not one smooth cone');
-  // the crown is narrower than the lowest skirt
-  const g = pineGeometry({ height: 4, tiers: 5, seed: 3 });
-  const pos = g.attributes.position;
-  let lowWidth = 0, highWidth = 0;
-  for (let i = 0; i < pos.count; i++) {
-    const r = Math.hypot(pos.getX(i), pos.getZ(i));
-    if (pos.getY(i) < 4 * 0.35) lowWidth = Math.max(lowWidth, r);
-    if (pos.getY(i) > 4 * 0.72) highWidth = Math.max(highWidth, r);
+  assert.equal(p.children.length, 0, 'one mesh: a stand of these is one draw call');
+
+  // Sampled over many seeds, because every number in this model is seeded and
+  // a single seed can hide a shape that only some streams produce.
+  for (const seed of [1, 3, 7, 9, 22, 35, 41]) {
+    const g = pineGeometry({ height: 4, tiers: 5, seed });
+    const pos = g.attributes.position;
+
+    // The crown is narrower than the base. Measured against the top of the
+    // model (y > 0.80h) rather than the old 0.72h band: the pads now hang OFF
+    // the trunk to alternating sides, so a band that catches the raised outer
+    // rim of a mid pad is measuring the zigzag, not the taper.
+    let lowWidth = 0, highWidth = 0;
+    const BANDS = 6;
+    const cent = Array.from({ length: BANDS }, () => ({ x: 0, z: 0, n: 0 }));
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+      const r = Math.hypot(x, z);
+      if (y < 4 * 0.35) lowWidth = Math.max(lowWidth, r);
+      if (y > 4 * 0.80) highWidth = Math.max(highWidth, r);
+      const b = Math.min(BANDS - 1, Math.max(0, Math.floor((y / 4) * BANDS)));
+      cent[b].x += x; cent[b].z += z; cent[b].n++;
+    }
+    assert.ok(highWidth < lowWidth, `seed ${seed} tapers upward: crown ${highWidth} vs base ${lowWidth}`);
+
+    // The zigzag itself: take the horizontal centre of mass of each height
+    // band, project them all onto the tree's own lean axis, and require both
+    // a real sideways swing AND at least one reversal of direction on the way
+    // up. A cone stack scores zero on both — that is exactly the silhouette
+    // this model exists not to be.
+    const cs = cent.filter((c) => c.n).map((c) => [c.x / c.n, c.z / c.n]);
+    let axis = cs[0];
+    for (const c of cs) if (Math.hypot(...c) > Math.hypot(...axis)) axis = c;
+    const len = Math.hypot(...axis) || 1;
+    const proj = cs.map((c) => (c[0] * axis[0] + c[1] * axis[1]) / len);
+    const swing = Math.max(...proj) - Math.min(...proj);
+    let reversals = 0;
+    for (let i = 2; i < proj.length; i++) {
+      if (Math.sign(proj[i] - proj[i - 1]) !== Math.sign(proj[i - 1] - proj[i - 2])) reversals++;
+    }
+    assert.ok(swing > 4 * 0.05, `seed ${seed} leans off axis, got ${swing}`);
+    assert.ok(reversals >= 1, `seed ${seed} profile reverses direction, got ${reversals}`);
   }
-  assert.ok(highWidth < lowWidth, `tapers upward: crown ${highWidth} vs base ${lowWidth}`);
-  // compare the whole buffer: the leading vertices are the trunk, which is
+
+  // compare the whole buffer: the leading vertices are the root stub, which is
   // seed-invariant, so a short prefix would look identical for every seed
   const verts = (s) => Array.from(pineGeometry({ height: 4, tiers: 5, seed: s }).attributes.position.array);
   assert.deepEqual(verts(3), verts(3));
