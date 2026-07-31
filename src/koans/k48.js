@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeMonk, aimMonk,
+  composeWorld, makePath, makeMonk, aimMonk, makeFan,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -20,8 +20,10 @@ const ID = 48;
 // the verse says that before the first step is taken the goal is reached, and
 // a line that stayed up would turn into a signpost.
 //
-// Ummon's fan lies on the stone beside him — the other half of the case, and
-// the last object in the collection.
+// Ummon's fan is the other half of the case — and the fan is what this staging
+// leads with: both figures hold one (the pupil a small paper fan, Kembo a big
+// red ōgi raised in place of the stick), so the last object in the collection
+// is in every hand that answers.
 
 const DRAW = 0.9;
 const HOLD = 3.4;
@@ -49,10 +51,11 @@ export default {
     const road = makePath({ from: [7.0, 6.0], to: [-6.0, -16], width: 1.7, seed: ID, groundSeed: 21, wander: 0.45 });
     scene.add(road);
 
-    // KEMBO, raising his walking stick in the air — "Here it is." The stick is
-    // the thing (Frank), so he holds it UP in his raised hand rather than
-    // leaning on it: not an elder's side-staff but a stick continuing the line
-    // of the raised sleeve, red like the stroke it just drew.
+    // KEMBO, raising a great folding fan in the air — "Here it is." He held a
+    // walking stick here for a while, but Frank traded it for a big ōgi: an
+    // open paper wedge held up in the raised hand, face turned to the reader,
+    // red like the stroke it draws. (It also folds the case's two halves into
+    // one picture — Ummon's answer to the same question WAS a fan.)
     const KH = 1.68;
     const kembo = makeMonk({ height: KH, pose: 'raise' });
     kembo.position.set(-1.2, 0, -0.6);
@@ -62,13 +65,15 @@ export default {
       .sort((a, b) => b.position.x - a.position.x)[0];
     if (raisedArm) {
       const SLEEVE_L = 0.34 * KH;
-      const STICK_L = 0.95 * KH;
-      const stick = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.023 * KH, 0.028 * KH, STICK_L, 7),
-        toonMaterial({ color: ACCENT, flat: true }));
-      stick.name = 'stick';
-      stick.position.y = -SLEEVE_L - STICK_L / 2;   // continue the raised arm's line, up and out
-      raisedArm.add(stick);
+      const bigFan = makeFan({
+        radius: 0.42 * KH, angle: Math.PI * 0.78, handleLen: 0.13 * KH,
+        color: ACCENT, seed: ID,
+      });
+      // grip sunk into the cuff, the wedge continuing the raised sleeve's line
+      bigFan.position.y = -SLEEVE_L + 0.03 * KH;
+      bigFan.rotation.z = Math.PI;      // opening out along the sleeve, not back down it
+      bigFan.rotation.y = -0.65;        // spun on the sleeve's axis to show its face
+      raisedArm.add(bigFan);
     }
     scene.add(kembo);
 
@@ -96,24 +101,13 @@ export default {
     pupil.position.set(3.2, 0, 2.4);
     aimMonk(pupil, kembo.position);
 
-    const fan = new THREE.Group();
-    fan.name = 'fan';
-    const leaf = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.34, 0.34, 0.02, 14, 1, false, 0, Math.PI * 0.7),
-      toonMaterial({ color: WASH.dry, flat: true }));
-    leaf.name = 'fan-leaf';
-    leaf.rotation.x = Math.PI / 2;                 // stand the arc up, ribs fanning from the grip
-    leaf.position.y = 0.18;
-    fan.add(leaf);
-    const handle = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.02, 0.024, 0.2, 6),
-      toonMaterial({ color: WASH.dark, flat: true }));
-    handle.name = 'fan-handle';
-    handle.position.y = 0.02;
-    fan.add(handle);
+    // same kit piece as Kembo's, at a hand-fan size and in paper tones — the
+    // teacher's copy is the big red one, which is how the case reads on sight
+    const fan = makeFan({ radius: 0.34, angle: Math.PI * 0.7, handleLen: 0.18, seed: ID + 1 });
     // set it in his raised-ish right hand, out in front of the chest
     fan.position.set(0.2 * PH, 0.58 * PH, 0.16 * PH);
     fan.rotation.z = -0.5;
+    fan.rotation.y = 0.9;             // turned so the leaf shows its face, not its edge
     pupil.add(fan);
     scene.add(pupil);
 

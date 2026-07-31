@@ -59,3 +59,4 @@ export { makeStall } from './stall.js';
 export { makeHorse } from './horse.js';
 export { makeSnow } from './snowfall.js';
 export { makeKoi } from './koi.js';
+export { makeFan } from './fan.js';
