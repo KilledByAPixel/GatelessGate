@@ -107,10 +107,24 @@ export default {
     // writing depth, so it composites as a wash on the surface rather than as
     // a solid object standing in it. It rides just clear of the highest ripple
     // crest, so a passing wave cannot saw through it.
+    //
+    // Two things make "laid flat" true and not just intended (both were wrong
+    // once, and together they read as a half-transparent mound squatting in
+    // front of the statue — Frank flagged it):
+    //   - rotation.x is +π/2, not -π/2: +π/2 sends local UP to world +z, head
+    //     out across the pond toward the viewer, the way a real reflection
+    //     falls. -π/2 sent the head to -z — under the statue's own seat, out
+    //     of the water entirely.
+    //   - the thickness axis is SQUASHED. A solid of revolution rotated flat
+    //     still carries its full radial depth, so the knees stood a metre
+    //     proud of the surface as a see-through dome. After the x-rotation,
+    //     local z is world-vertical; scaling it to 0.12 flattens the figure
+    //     to the painted wash the comment above always claimed it was.
     const reflection = makeBuddha({ height: 2.0, color: WASH.mid });
     reflection.name = 'reflection';
-    reflection.rotation.x = -Math.PI / 2;
-    reflection.position.set(BANK.x, POND.surface + 0.09, BANK.z + 1.5);
+    reflection.rotation.x = Math.PI / 2;
+    reflection.scale.z = 0.12;
+    reflection.position.set(BANK.x, POND.surface + 0.09, BANK.z + 1.4);
     reflection.traverse((o) => {
       if (!o.isMesh) return;
       o.userData.noOutline = true;

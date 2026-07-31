@@ -49,7 +49,11 @@ export default {
     // Sized against his HEAD, not against a real lotus: the case is staged wide,
     // and at this distance anything smaller than the skull is a red dot.
     const flower = makeFlower({ height: 0.42, bloom: 0.52, petals: 7 });
-    flower.position.set(1.2, 0.52, SEAT_Z + 1.02);   // waist height, clear of the lap
+    // Raised when the buddha stopped being a mountain: the rebuilt figure's
+    // hands rest at 0.235·H (~0.89 world here), so the bloom rides just above
+    // them — at the old 0.52 it sat at the new figure's knees, lying on the
+    // stone instead of held.
+    flower.position.set(1.2, 0.72, SEAT_Z + 0.72);   // held over the hands, clear of the lap
     flower.rotation.z = -0.14;
     scene.add(flower);
 
