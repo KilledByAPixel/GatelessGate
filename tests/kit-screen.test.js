@@ -138,16 +138,36 @@ test('makeVeranda is an open bay on a raised floor', () => {
 });
 
 test('makeVeranda floor is grooved planks, merged into one mesh', () => {
-  const v = makeVeranda({ width: 4.8, depth: 4.4, height: 3.3, deck: 0.34 });
+  const depth = 4.4;
+  const v = makeVeranda({ width: 4.8, depth, height: 3.3, deck: 0.34 });
   const floors = v.children.filter((c) => c.name === 'floor');
   assert.equal(floors.length, 1, 'the whole deck is one merged mesh');
-  // planks are boxes with a gap between them, so their vertex x-positions land
-  // on plank tops at exactly two y-levels (top and bottom of the board) rather
-  // than one continuous slab
+
+  // Y alone does not discriminate: a single flat slab is ALSO a box with
+  // exactly two y-levels (its top and its bottom), so that check passes on a
+  // regression that collapses every plank back into one slab just as
+  // happily as it passes on real grooves — a reviewer caught this empirically
+  // against a plain BoxGeometry. The real signal is Z: each plank is its own
+  // box with two distinct z-edges (front and back face), and planks do not
+  // touch (there's a gap), so N planks leave exactly 2N distinct z-values.
+  // One slab leaves 2. Reproduce the builder's own plank-count formula (same
+  // disclosed tradeoff as the post-spacing test below: this constant can
+  // drift, but then so does the test that watches it) rather than hardcoding
+  // an expected count.
+  const PLANK_RUN = Math.max(0.30, Math.min(0.42, depth / 9));
+  const plankCount = Math.max(5, Math.round(depth / PLANK_RUN));
+  assert.ok(plankCount > 1, 'sanity: the formula itself should call for more than one board');
+
   const pos = floors[0].geometry.attributes.position;
+  const zs = new Set();
+  for (let i = 0; i < pos.count; i++) zs.add(Math.round(pos.getZ(i) * 1000) / 1000);
+  assert.equal(zs.size, plankCount * 2, `${plankCount} planks leave ${plankCount * 2} distinct z-edges, not one slab's 2`);
+
+  // the old (correct, but non-discriminating) y-level check still holds, kept
+  // as a real property of the geometry rather than dropped
   const ys = new Set();
   for (let i = 0; i < pos.count; i++) ys.add(Math.round(pos.getY(i) * 1000) / 1000);
-  assert.equal(ys.size, 2, 'each plank has a top and a bottom, and nothing else');
+  assert.equal(ys.size, 2, 'every plank shares the same top and bottom height');
 });
 
 test('makeVeranda posts are regular, merged, and still carry the beam', () => {
