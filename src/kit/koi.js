@@ -57,9 +57,15 @@ export function makeKoi({
   const g = new THREE.Group();
   g.name = 'koi';
   const L = length;
-  const mat = toonMaterial({ color, flat: true });
+  // DoubleSide: the fin-hint triangles below are zero-thickness planes, and
+  // toonMaterial defaults to FrontSide — a single-sided fin vanishes for half
+  // of every lap, whenever the yaw swings its back face toward the camera
+  // (visible in wip-koi-r2.jpeg: one fish's dorsal fin missing while the
+  // other two showed theirs). Shared by the whole fish rather than a
+  // fin-only material so body/tail keep the same material identity as before.
+  const mat = toonMaterial({ color, flat: true, side: THREE.DoubleSide });
 
-  // A flat triangle standing off the plane of symmetry (x=0 in the segment's
+  // A flat triangle standing off the plane of symmetry (z=0 in the segment's
   // own local space) — reads from any angle without a mirrored twin, since it
   // never leans to one side.
   function finPlane(root, rootY, tip, tipY) {
