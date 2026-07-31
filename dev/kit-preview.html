@@ -198,6 +198,17 @@
       // d = |(-9.66,0.45) - (-11,0)| = 1.4136.
       'dog-side': { p: [-9.8334, 0.28, -0.7981], t: [-11, 0.36, 0] },
       buddha:  { p: [-1.2, 3.2, 5], t: [-1.2, 1.4, 0] },
+      // profile view, added for B2 (buddha.js): the near view looks straight
+      // at the front (ry=0, no x offset) and can't show the shoulder/lap
+      // silhouette (the mountain triangle), the fold rings' depth, or the ear
+      // lobes' projection unambiguously — the same trap A1-A7 flagged for
+      // legs/tails/knees on the quadrupeds. Formula per those tasks, buddha's
+      // own case since ry=0: camera sits at the model's own placement
+      // position, offset along local +x by the near view's own distance, at
+      // the near view's own eye/target heights — buddha is placed at
+      // (-1.2, 0, 0); near view distance d = |(-1.2,3.2,5) - (-1.2,1.4,0)| =
+      // 5.3141.
+      'buddha-side': { p: [4.1141, 3.2, 0], t: [-1.2, 1.4, 0] },
       figures: { p: [3.5, 3.4, 8], t: [3.5, 1.2, -0.1] },
       // profile view of the reference standing monk, added for B1 (figure.js).
       // A person's "side" is perpendicular to the way he FACES, and a monk
@@ -303,6 +314,7 @@
     soloGroups['cat-side'] = soloGroups.cat;
     soloGroups['koi-side'] = soloGroups.koi;
     soloGroups['bird-side'] = soloGroups.bird;
+    soloGroups['buddha-side'] = soloGroups.buddha;
 
     // below and out from his anchor, looking up across the canopy's underside
     // rather than into it — the anchor sits ON the crown mass, so a close
