@@ -1,0 +1,350 @@
+import * as THREE from '../../../lib/three.module.js';
+import { PAPER, INK, ACCENT, ACCENT_DEEP } from '../../palette.js';
+import { makeLights } from '../../render/toon.js';
+import { addOutlines } from '../../render/outlines.js';
+import { makeGround } from '../../kit/ground.js';
+import { makeTuftField } from '../../kit/tuftfield.js';
+import { makeScale } from '../../kit/scale.js';
+import { makeOdoshi } from '../../kit/odoshi.js';
+import {
+  makeQuadruped, makeBuffalo, makeHorse, makeDog, makeFox, makeCat,
+  makeKoi, makeWater, makeBasin, makeBird, makeBirds,
+  makeMonk, makeBuddha, makeAssembly, makeRaisedFinger, makeFlag, makeHangingMonk,
+  makeTree, makePine, makeOak, makeForest, makeGrassField, makeWildflowers, makeFlower,
+  makeGate, makeHut, makeVeranda, makeStall, makeScreen, makeLattice, makePole,
+  makeLantern, makeBell, makeDrum, makeRack, makeVase, makeBowl, makeWheel,
+  makeFurin, makeBundle, makeMoon,
+} from '../../kit/index.js';
+
+// THE SHOWCASE — every model in the kit, in one room.
+//
+// A developer page, not a page of the book: no number, no seal, not in the
+// spine, not in the contents. It exists so a change to a shared builder can be
+// judged against every OTHER builder at once — the thing `dev/kit-preview.html`
+// does on a bare plane, but inside the real pipeline. Same toon ramp, same
+// inverted-hull ink, same fog-to-paper, same post spine, same ink dissolve on
+// the way in. A model that looks right on the workbench and wrong here is
+// wrong; this is the room that says which.
+//
+// THE DRAW BUDGET DOES NOT APPLY HERE, and that is deliberate: forty-odd models
+// at once is several times a case's allowance and always will be. Nothing had to
+// be carved out of tests/staging.test.js to allow it — the showcase lives in its
+// own loader table (registry.js's DEV_LOADERS) and the staging net walks CASES,
+// so it is never in that walk to begin with. tests/showcase.test.js pins exactly
+// that, and gives this scene the rest of the smoke treatment a case gets.
+//
+// Everything is seeded, like everywhere else in the book: two builds are the
+// same room, down to the last blade.
+
+// The families, front to back. Rows recede in -z with the camera looking down
+// the length of the room, so the reader reads them the way the kit is grouped:
+// what lives, who watches, what grows, what is built, what is used.
+const ROWS = {
+  animals: -4,
+  people: -13,
+  vegetation: -23,
+  architecture: -32,
+  props: -39,
+};
+
+// Rows get WIDER the further back they stand, and that is not decoration: the
+// camera sits over the near edge of the room, so at the front row only about
+// eleven units either side of the centre line are in frame and at the back row
+// twenty-one are. A uniform grid would have pushed the first and last animal
+// clean off both edges — which is exactly what the first take of this scene
+// did. Each row's models are spaced to its own allowance.
+
+// The captions stand in the aisle IN FRONT of their row, on the centre line.
+// Left of the row was the obvious place and the wrong one: x = 0 is the one
+// column that is in frame at every depth and every zoom, and the aisles are
+// empty by construction, so a caption can never collide with a model.
+const LABEL_AISLE = 3.4;
+const LABEL_X = -6.5;        // a quieter column than dead centre
+const LABEL_Y = 0.60;
+const LABEL_CAP = 0.92;      // world height of the drawn line, at LABEL_REF
+// The distance the caption sizes were tuned at — the camera's own home. update()
+// scales each label by its distance over this, so a caption is the same size on
+// screen from the survey shot as it is with your nose against one model.
+const LABEL_REF = 56;
+
+// An ink caption, drawn on a canvas and hung as a sprite so it faces the reader
+// from any orbit angle. The canvas is measured to the word rather than fixed, so
+// the sprite is exactly as wide as its text and "ARCHITECTURE" cannot run off
+// the end of its own texture. Sprites are outside the mesh graph: the ink pass
+// never touches them and the scene manager's disposeRoot never sees them, which
+// is why this module frees them by hand. Returns null with no DOM (the Node
+// tests), so nothing in the scene may depend on a label existing.
+function makeRowLabel(text) {
+  if (typeof document === 'undefined' || !document.createElement) return null;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext && canvas.getContext('2d');
+  if (!ctx) return null;
+  const font = '600 72px Georgia, serif';
+  const word = text.toUpperCase();
+  ctx.font = font;
+  const w = Math.max(8, Math.ceil(ctx.measureText(word).width));
+  canvas.width = w + 16; canvas.height = 112;
+  // resizing the canvas resets the context, so the font has to be set again
+  const c2 = canvas.getContext('2d');
+  c2.font = font;
+  c2.textAlign = 'center';
+  c2.textBaseline = 'middle';
+  c2.fillStyle = INK;
+  c2.globalAlpha = 0.68;
+  c2.fillText(word, canvas.width / 2, 60);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  // depthWrite: false is not a nicety. A sprite that writes depth hands the
+  // post spine's depth-edge ink pass a rectangle, and every caption shipped
+  // inside a drawn box — the ink was correctly outlining the quad it could see.
+  // Not writing depth makes the caption what it looks like: text on the page.
+  // depthTest goes with it: a caption that a pine tree can hide is a caption
+  // you cannot read from half the angles this camera can reach, and a heading
+  // is not part of the picture it labels. Drawn last, over everything.
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: tex, transparent: true, fog: false, depthWrite: false, depthTest: false,
+  }));
+  sprite.renderOrder = 10;
+  sprite.name = `label-${text}`;
+  const h = LABEL_CAP * (canvas.height / 72);
+  sprite.scale.set(h * (canvas.width / canvas.height), h, 1);
+  // Held so update() can hold the caption at a constant SIZE ON SCREEN — see
+  // LABEL_REF. A world-sized caption is tuned for exactly one zoom level, and
+  // at the close end of this camera's range "ARCHITECTURE" filled the frame.
+  sprite.userData.base = sprite.scale.clone();
+  return sprite;
+}
+
+export default {
+  id: null,                 // no number: no seal, and nothing that counts cases sees it
+  slug: 'showcase',
+  title: 'Showcase',
+  // The flag main.js reads to keep a tool out of the reader's progress: opening
+  // the showcase must not mark a page read or move "Continue".
+  dev: true,
+  accent: ACCENT,
+  sections: ['note'],
+  labels: { note: 'The Kit' },
+  text: {
+    note: [
+      'Every model the kit builds, in one room, through the book\'s own renderer — '
+      + 'the same toon ramp, the same brushed outlines, the same fog into paper.',
+      'Front to back: the animals, the people, what grows, what is built, what is used. '
+      + 'Anything with a behaviour is running — the fox breathes, the wheel turns, '
+      + 'the water swells, the flag takes the wind.',
+      'This page is not part of the book. It has no number, it is not in the contents, '
+      + 'and it appears only while Developer mode is on.',
+    ].join('\n\n'),
+  },
+  ambience: ['wind:0.10'],   // a quiet room; no drift, nothing to be moved by
+  mood: 'in',
+
+  // A survey shot, and clamps wide enough to be useful: all the way out to hold
+  // the whole room in frame, all the way in to put your nose on one model, and
+  // most of a half-turn of orbit either way. A case would never want this — a
+  // case is a photograph — which is why it is stated here rather than loosened
+  // for everyone.
+  //
+  // 56 is what holds all five rows WITH the text panel open, which eats about a
+  // third of the window: the stage is nearer square than wide, so the room has
+  // to be framed for the narrow case. maxDist stops at 70 rather than going
+  // further because the app's camera far plane is 100 and the moon stands out
+  // past the back row — a deeper pull-out would clip it out of existence.
+  camera: {
+    distance: 56, target: [0, 1.0, -22], azimuth: 0, polar: 1.02,
+    minDist: 3, maxDist: 70, minPolar: 0.40, maxPolar: 1.48, azimuthRange: 1.5,
+  },
+
+  build() {
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(PAPER);
+    // Thin: the room is forty units deep and the back row still has to be
+    // legible. Fog is present because nothing in this book meets a horizon —
+    // the far ground still has to wash out into the paper.
+    scene.fog = new THREE.FogExp2(PAPER, 0.0075);
+    scene.add(makeLights({ focus: [0, 0, -16], radius: 26 }));
+
+    // Dead flat, on purpose. Every field in the kit places its blades with
+    // groundHeight() in its OWN local space, which is level inside the default
+    // flat radius — so a flat floor is the one that agrees with them wherever
+    // the field is set down. roll: 0 makes the whole plane that surface.
+    const ground = makeGround({ size: 200, roll: 0, flatRadius: 60 });
+    scene.add(ground);
+
+    const animated = [];
+    const labels = [];
+
+    // Place a piece at (x, z) in a family row. Takes a Group/Mesh or a
+    // {group}/{mesh} handle — the kit returns both shapes — and collects
+    // anything with an update() so its behaviour runs here too. A dead model in
+    // a room full of live ones reads as a bug in the model, which is the whole
+    // point of looking at them together.
+    function place(thing, x, row, ry = 0, y = 0) {
+      const obj = thing.isObject3D ? thing : (thing.group || thing.mesh);
+      obj.position.set(x, y, ROWS[row]);
+      obj.rotation.y = ry;
+      scene.add(obj);
+      if (typeof thing.update === 'function') animated.push(thing);
+      return thing;
+    }
+
+    // ---- animals (±10.5) ---------------------------------------------------
+    // The plain quadruped first: the table every species is a departure from.
+    place(makeQuadruped({ height: 1 }), -10.5, 'animals', 0.5);
+    place(makeBuffalo({}), -7.8, 'animals', 0.5);
+    place(makeHorse({}), -4.8, 'animals', 0.4);
+    place(makeDog({}), -2.2, 'animals', 0.6);
+    place(makeFox({}), -0.3, 'animals', 0.5);
+    place(makeCat({}), 1.4, 'animals', -0.4);
+
+    // The koi need somewhere to be. A basin with water in it is the pairing the
+    // kit is actually used in, so it is the pairing shown: fish just under a
+    // surface that swells, inside a rim they never slop over.
+    const POND_X = 4.2, POND_Y = 0.22;
+    place(makeBasin({ inner: 1.05, outer: 1.25, rim: 0.4 }), POND_X, 'animals');
+    const pond = place(makeWater({ shape: 'round', size: 2.0, opacity: 0.55, strike: 0.06 }),
+      POND_X, 'animals', 0, POND_Y);
+    place(makeKoi({ count: 3, radius: 0.62, length: 0.66, depth: 0.10, surfaceAt: pond.heightAt }),
+      POND_X, 'animals', 0, POND_Y);
+
+    // A single bird is modelled flat — it is meant to be seen from below, in a
+    // flock. Held here at eye height and flapped off simTime so the pose it is
+    // usually driven into is the pose on show.
+    const bird = place(makeBird({ size: 0.5 }), 7.2, 'animals', 0, 1.5);
+    place(makeBirds({ count: 6, seed: 24, center: [0, 0], height: 6.0, spread: 4 }), 10, 'animals');
+
+    // ---- people (±13.5) ----------------------------------------------------
+    // The four poses side by side, then the elder, so a change to the robe or
+    // the stance can be read across all of them at once.
+    place(makeMonk({ pose: 'stand' }), -13.5, 'people', -0.3);
+    place(makeMonk({ pose: 'sit' }), -11.8, 'people', -0.3);
+    place(makeMonk({ pose: 'point' }), -10.1, 'people', -0.3);
+    place(makeMonk({ pose: 'raise' }), -8.4, 'people', -0.3);
+    place(makeMonk({ pose: 'stand', elder: true }), -6.7, 'people', -0.3);
+    place(makeBuddha({}), -3.6, 'people');
+    // The assembly reads its own centre in world space, so it is added where it
+    // stands rather than moved afterwards. Set off the centre line so it does
+    // not sit on top of the row's caption in the aisle ahead of it.
+    scene.add(makeAssembly({ count: 8, radius: 2.2, center: [1.0, ROWS.people], facing: [1.0, ROWS.people + 4] }));
+    place(makeRaisedFinger({}), 4.8, 'people');
+    place(makeFlag({}), 7.6, 'people', -0.4);
+
+    // The hanging monk needs a branch, so he gets one: a real canopy anchor on
+    // a real oak, the way case 5 hangs him, rather than a hand-picked point in
+    // the air that would show him in an attitude he never actually takes.
+    const gallows = place(makeOak({ height: 4.8, seed: 5 }), 11.2, 'people', 0.3);
+    gallows.updateMatrixWorld(true);
+    const branch = gallows.localToWorld(gallows.canopyPoints[0].clone());
+    // ACCENT_DEEP, as case 5 uses: plain ink would vanish into the crown.
+    const dangler = makeHangingMonk({ height: 1.6, color: ACCENT_DEEP });
+    dangler.group.position.copy(branch);
+    scene.add(dangler.group);
+    animated.push(dangler);
+
+    // ---- vegetation (±16.5) ------------------------------------------------
+    place(makeTree({ height: 3.2 }), -16, 'vegetation');
+    place(makePine({ height: 4 }), -12.5, 'vegetation');
+    place(makeOak({ height: 5.0, seed: 38 }), -8, 'vegetation', 0.4);
+    // Modest footprints: a stand at production density would reach into the
+    // rows either side, which is the collision dev/kit-preview.html already
+    // learned the hard way.
+    place(makeForest({ center: [0, 0, 0], spread: 3, count: 20, treeH: 2.2 }), -2.5, 'vegetation');
+    place(makeGrassField({ radius: 2.6, count: 1100, seed: 5 }), 3.5, 'vegetation');
+    place(makeTuftField({ radius: 2.6, count: 700, seed: 9 }), 8.5, 'vegetation');
+    place(makeWildflowers({ radius: 2.2, count: 70, seed: 71 }), 13, 'vegetation');
+    place(makeFlower({}), 16, 'vegetation');
+
+    // ---- architecture (±18) ------------------------------------------------
+    place(makeGate({}), -17.5, 'architecture');
+    place(makeHut({}), -12, 'architecture', 0.2);
+    place(makeVeranda({}), -5.5, 'architecture', 0.15);
+    place(makeStall({}), 1, 'architecture', 0.1);
+    place(makeScreen({}), 6.5, 'architecture');
+    place(makeLattice({}), 11.5, 'architecture', 0.15);
+    place(makePole({ height: 6 }), 16, 'architecture');
+
+    // ---- props (±20) -------------------------------------------------------
+    place(makeLantern({}), -18, 'props');
+    place(makeBell({}), -15, 'props');
+    place(makeDrum({}), -12, 'props');
+    place(makeRack({}), -9.2, 'props');
+    place(makeBasin({}), -6.6, 'props');
+    place(makeVase({}), -4.2, 'props');
+    place(makeBowl({}), -2.5, 'props');
+    place(makeWheel({}), -0.3, 'props');
+    // Sized up from its own default the way the workbench does: the real chime
+    // is a few centimetres across and would be invisible from a survey camera.
+    place(makeFurin({ size: 0.5 }), 3.2, 'props', 0, 1.9);
+    place(makeBundle({}), 5.6, 'props');
+    place(makeScale({}), 8.2, 'props');
+    place(makeOdoshi({}), 11.5, 'props');
+
+    // The moon, out past everything, because it is a model too — and the one
+    // thing in the kit that has to be judged against sky rather than ground.
+    // 44 units, not the 62 it defaults to: the app's far plane is 100 and this
+    // camera can pull back to 70, so a moon set at its usual remove clips out of
+    // existence at full zoom. Case 19 hit the same wall from the other side.
+    scene.add(makeMoon({ radius: 2.6, distance: 44, height: 10.5, azimuth: 0.3 }));
+
+    // Ink LAST, as always: anything added after this pass ships without an
+    // outline and reads as a different material from everything around it.
+    addOutlines(scene, { width: 0.033, wobble: 0.7 });
+
+    // Captions go on after the ink because they are not part of the picture —
+    // they are the contact sheet's handwriting in the margin.
+    for (const [name, z] of Object.entries(ROWS)) {
+      const label = makeRowLabel(name);
+      if (!label) continue;
+      label.position.set(LABEL_X, LABEL_Y, z + LABEL_AISLE);
+      scene.add(label);
+      labels.push(label);
+    }
+
+    let camera = null;
+    let elapsed = 0;
+
+    return {
+      scene,
+      setCamera(c) { camera = c; },
+      update(dt, simTime) {
+        elapsed += dt;
+        const t = simTime === undefined ? elapsed : simTime;
+        for (const a of animated) a.update(dt, t);
+        // The lone bird is a static model with a pose() rather than an update();
+        // driving it off the clock is what shows the pose the flock uses.
+        bird.pose({ flap: Math.sin(t * 2.4) * 0.5, pitch: -0.05, roll: 0 });
+        // Captions hold their size on screen. Skipped entirely with no camera
+        // (the Node tests), which is why the base scale has to be the one the
+        // wide shot wants rather than something update() must run to fix.
+        if (!camera) return;
+        for (const l of labels) {
+          const k = camera.position.distanceTo(l.position) / LABEL_REF;
+          l.scale.set(l.userData.base.x * k, l.userData.base.y * k, 1);
+        }
+      },
+      fragment() {
+        let meshes = 0;
+        scene.traverse((o) => { if (o.isMesh && !o.userData.isOutline) meshes++; });
+        return { models: animated.length, meshes, labels: labels.length, camera: !!camera };
+      },
+      dispose() {
+        // Sprites are not meshes, so the scene manager's disposeRoot walks
+        // straight past them and their canvas textures would leak on every
+        // visit. Nothing else here needs freeing by hand.
+        for (const l of labels) {
+          if (l.material) {
+            if (l.material.map) l.material.map.dispose();
+            l.material.dispose();
+          }
+        }
+        labels.length = 0;
+      },
+    };
+  },
+};
+
+// Kept out on purpose, and not by oversight: makeGround/makeMountains/makeIsland/
+// makeCliff/makeCave/makePath/makeSnow/makeRocks/makeBushes/makeGrass are terrain
+// and weather, not models — they have no footprint that sits in a row, and each
+// one would swallow the neighbours it is meant to be compared against. The
+// ground here IS makeGround; the rest are judged in the cases that use them.

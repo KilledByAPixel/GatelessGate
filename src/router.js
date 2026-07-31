@@ -1,5 +1,6 @@
 import { byId, bySlug } from './koans/index.js';
 import { PREFACE_SLUG, AFTERWORD_SLUG } from './spine.js';
+import { DEV_PAGES } from './koans/dev/index.js';
 
 // The URL always names what's on screen.
 //
@@ -12,9 +13,18 @@ import { PREFACE_SLUG, AFTERWORD_SLUG } from './spine.js';
 // change; the front and back matter have no number to use, so they take the one
 // word that names them. Checked before the numeric branch, and lower-cased so a
 // hand-typed `#Preface` still lands.
+//
+// The developer pages join them on the same terms. They are not pages of the
+// book, but the invariant is about the SCREEN, not about the book: if a dev
+// page is what you are looking at, the URL has to say so, or Back stops working
+// the moment you open one. Whether the reader may go there is a question this
+// file deliberately does not ask — parseRoute answers "what does this hash
+// name", which is a fact about the string. main.js holds the developer-mode
+// flag and sends anyone without it to Contents.
 const NAMED = new Map([
   [PREFACE_SLUG, PREFACE_SLUG],
   [AFTERWORD_SLUG, AFTERWORD_SLUG],
+  ...DEV_PAGES.map((p) => [p.slug, p.slug]),
 ]);
 
 // '#29' -> { view: 'case', id: 29, slug: '…' } | { view: 'contents' } | null.

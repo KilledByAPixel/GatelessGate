@@ -390,7 +390,10 @@ function buildKoan(mod, slug) {
   koan = built; koanSlug = slug;
   built.onEnter && built.onEnter();
   audio.startAmbience(mod.ambience || []);
-  save.markRead(slug);
+  // A developer page is not something you have READ. Marking it would put a
+  // tool in the reader's progress and, worse, hand it to `lastSlug` — so
+  // "Continue" would offer the showcase next time the book was opened.
+  if (!mod.dev) save.markRead(slug);
   // Safe to write here and only here: showKoan's freeze.capture is synchronous,
   // so nothing awaits between the nav queue's load resolving and this running —
   // no hashchange task can interleave and overtake it with a stale URL. That
@@ -498,8 +501,15 @@ const nav = makeNavQueue({
   current: () => (mode === 'koan' ? koanSlug : null),
 });
 
+// The one gate on the developer pages, and it is deliberately here rather than
+// in the router: parseRoute answers what a hash NAMES, which is a fact about
+// the string; whether this reader may go there is a fact about this browser's
+// settings. Every path in (the menu button, a deep link, a hashchange, Back)
+// funnels through enter(), so one check covers all of them.
+const devOpen = (slug) => !isDevPage(slug) || devMode;
+
 function enter(slug) {
-  if (!isRegistered(slug)) return Promise.resolve();
+  if (!isRegistered(slug) || !devOpen(slug)) return Promise.resolve();
   return nav.go(slug);
 }
 
@@ -557,6 +567,11 @@ const router = makeRouter({
     if (mode === 'sit') sit.end();
     if (route.view === 'case') {
       if (mode === 'koan' && koanSlug === route.slug) return;   // already there
+      // A dev page named by a reader who has developer mode off is not junk —
+      // the hash is real — but it is not somewhere they can go. Treat it the
+      // way a junk hash is treated: put the bar back on what is actually on
+      // screen, in place, and leave them where they are.
+      if (!devOpen(route.slug)) { router.set(currentRoute(), { replace: true }); return; }
       enter(route.slug);
     } else {
       if (mode === 'menu') return;                              // already there
@@ -772,7 +787,12 @@ window.gate = {
 // what tells showKoan this is a cold arrival: it cuts to the finished diorama
 // instead of dissolving. There is nothing on screen to dissolve away from.
 const booted = router.initial();
-if (booted && booted.view === 'case') {
+// A showcase link opened WITHOUT developer mode is treated exactly like a hash
+// that names nothing: the reader lands at Contents and the bar is corrected in
+// place. Checked here as well as in onRoute because boot does not go through
+// it — and a silent enter() that resolved to nothing would strand the reader on
+// inked-over paper, which is the one failure this whole block exists to avoid.
+if (booted && booted.view === 'case' && devOpen(booted.slug)) {
   router.set(booted, { replace: true });   // canonicalise `#029` -> `#29` without a history entry
   dissolve.set(0);
   // If the case fails to load (flaky connection, bad deploy, a chunk that

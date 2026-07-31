@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { parseRoute, hashFor, makeRouter } from '../src/router.js';
 import { CASES } from '../src/koans/index.js';
 import { PREFACE_SLUG, AFTERWORD_SLUG } from '../src/spine.js';
+import { SHOWCASE_SLUG } from '../src/koans/dev/index.js';
 
 test('a bare hash is a case number', () => {
   assert.deepEqual(parseRoute('#29'), {
@@ -217,6 +218,36 @@ test('adding names did not disturb the numbers', () => {
   for (const junk of ['#0', '#50', '#foo', '#prefaces', '#after']) {
     assert.equal(parseRoute(junk), null, `expected null for ${junk}`);
   }
+});
+
+test('the showcase is a named route too — the URL still names what is on screen', () => {
+  // Developer mode is NOT consulted here, on purpose. parseRoute answers "what
+  // does this hash name", which is a fact about the string; whether the reader
+  // may go there is main.js's question, and it answers it by sending them to
+  // Contents. Folding the flag in here would make a pure function depend on
+  // localStorage and would still have to be re-checked at the navigation.
+  assert.deepEqual(parseRoute('#showcase'), { view: 'case', id: null, slug: SHOWCASE_SLUG });
+  assert.equal(hashFor(SHOWCASE_SLUG), '#showcase');
+  assert.equal(parseRoute('  #Showcase ').slug, SHOWCASE_SLUG);
+});
+
+test('naming the showcase disturbed neither the numbers nor the matter', () => {
+  assert.equal(parseRoute('#29').id, 29);
+  assert.deepEqual(parseRoute('#preface'), { view: 'case', id: null, slug: PREFACE_SLUG });
+  assert.deepEqual(parseRoute(''), { view: 'contents' });
+  for (const junk of ['#showcases', '#show', '#dev']) {
+    assert.equal(parseRoute(junk), null, `expected null for ${junk}`);
+  }
+});
+
+test('the showcase round-trips through set() like any other named route', () => {
+  const w = win('');
+  const r = makeRouter({ win: w });
+  r.set({ view: 'case', slug: SHOWCASE_SLUG });
+  assert.equal(w.location.hash, '#showcase');
+  assert.deepEqual(w.pushed, ['#showcase']);
+  r.set({ view: 'case', slug: SHOWCASE_SLUG });
+  assert.equal(w.pushed.length, 1, 'already there: nothing more to push');
 });
 
 test('a named route round-trips through set() without pushing twice', () => {

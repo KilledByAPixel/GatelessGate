@@ -1,6 +1,7 @@
 import { bySlug } from './index.js';
 import { makeDefaultCase } from './default-case.js';
 import { PREFACE_SLUG, AFTERWORD_SLUG } from '../spine.js';
+import { SHOWCASE_SLUG } from './dev/index.js';
 
 // Cases with a diorama of their own. Lazy loaders keyed by numeric id (stable):
 // the first chapter — Mu, the flower, the bowl, the buffalo, and the flag.
@@ -63,6 +64,16 @@ const MATTER_LOADERS = {
   [AFTERWORD_SLUG]: () => import('./matter/afterword.js'),
 };
 
+// The developer pages, in a table of their OWN rather than folded in with the
+// matter — and that separation is load-bearing, not tidiness. tests/staging.test.js
+// walks CASES ∩ isStaged() and holds every result to the <150 draw budget; the
+// showcase draws the entire kit at once and is exempt by design. Keeping it in
+// its own table is what keeps it out of that walk, with no exception carved into
+// the budget and nothing to remember when the next dev page lands.
+const DEV_LOADERS = {
+  [SHOWCASE_SLUG]: () => import('./dev/showcase.js'),
+};
+
 // Whether a page has been STAGED — art of its own, rather than the default
 // landscape. The menu uses this to show what has been built; it is no longer a
 // gate on reading, because every page in the book is readable. The matter pages
@@ -78,12 +89,16 @@ export function isStaged(slug) {
 // different questions, and conflating them is what locked forty-four cases the
 // text was already sitting in the bundle for.
 export function isRegistered(slug) {
-  return Object.hasOwn(MATTER_LOADERS, slug) || !!bySlug(slug);
+  return Object.hasOwn(MATTER_LOADERS, slug)
+    || Object.hasOwn(DEV_LOADERS, slug)
+    || !!bySlug(slug);
 }
 
 export async function loadKoan(slug) {
   const matter = Object.hasOwn(MATTER_LOADERS, slug) ? MATTER_LOADERS[slug] : null;
   if (matter) return (await matter()).default;
+  const dev = Object.hasOwn(DEV_LOADERS, slug) ? DEV_LOADERS[slug] : null;
+  if (dev) return (await dev()).default;
   const c = bySlug(slug);
   if (!c) return null;
   const loader = LOADERS[c.id];
