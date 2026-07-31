@@ -12,17 +12,19 @@ const ID = 36;
 // face him with silence. What are you going to do?"
 //
 // Both of the answers you have are taken away before you start, so the scene
-// gives you a road, a master standing in the middle of it, and one thing you
-// can do: reach for him. He comes on, passes through where you are looking,
-// re-forms on the far side, and keeps walking. You never get to face him and
+// gives you the moment JUST AFTER: two travellers on the one road, each on his
+// own side, already past one another — the meeting neither could open. The
+// master keeps walking, down into the near fog, and comes up the road again;
+// touching him only starts the approach over. You never get to face him and
 // you never get to not face him.
 //
-// He is half-there from the first frame — not a ghost effect that triggers on
-// touch, because a solid figure that suddenly went transparent would be a
-// trick. This one was always like that.
+// Both are solid ink. An earlier pass ghosted the master to half-opacity and
+// Frank pulled it: he is not a spirit (case 35 is the one about souls), he is
+// a man you failed to meet. The passing does the work the fade used to do.
 
-const PASS = 17;          // seconds to come on, through, and out — a slow, dreamlike drift past (Frank: much slower)
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+const PASS = 17;          // seconds to come on, past, and out — a slow, dreamlike walk (Frank: much slower)
+const LANE = 0.45;        // how far each keeps to his own side of the road
+const START_U = 0.66;     // first frame: just past the meeting — the moment the case is about
 
 export default {
   id: ID,
@@ -46,29 +48,23 @@ export default {
     scene.add(road);
 
     // YOU — or the traveller standing in for you — on the near stretch, staff
-    // in hand, stopped
+    // in hand, keeping to his own side of the road and walking on: the meeting
+    // is already behind him
     const traveller = makeMonk({ height: 1.62, elder: true });
     const HERE = road.sample(0.30);
-    traveller.position.set(HERE.x, 0, HERE.z);
-    // facing up the road, into the oncoming figure — he has stopped BECAUSE of
-    // the meeting, so he cannot be looking anywhere else
+    traveller.position.set(HERE.x + HERE.perp.x * LANE, 0, HERE.z + HERE.perp.z * LANE);
+    // facing up the road, the way he is going — past the man he did not meet
     const THERE = road.sample(0.72);
-    aimMonk(traveller, { x: THERE.x, z: THERE.z });
+    aimMonk(traveller, { x: THERE.x + THERE.perp.x * LANE, z: THERE.z + THERE.perp.z * LANE });
     scene.add(traveller);
     // the traveller's staff stays plain ink now (Frank: the master is the seal,
     // not the staff)
 
-    // THE MASTER, coming the other way, half-there and RED — he is the seal:
-    // the one you cannot face or not-face, the thing the whole case is about.
+    // THE MASTER, going the other way on the other side, solid and RED — he is
+    // the seal: the one you cannot face or not-face, the thing the whole case
+    // is about.
     const master = makeMonk({ height: 1.68, color: ACCENT });
     master.name = 'master';
-    master.traverse((o) => {
-      if (!o.isMesh) return;
-      o.material = o.material.clone();
-      o.material.transparent = true;
-      o.material.opacity = 0.42;
-      o.material.depthWrite = false;
-    });
     scene.add(master);
 
     // a pine at the roadside, so the passing has something to be measured
@@ -91,8 +87,10 @@ export default {
     });
 
     const shadow = makeBlobShadow({ radiusX: 0.68, radiusZ: 0.52, opacity: 0.42 });
-    shadow.position.set(HERE.x, 0, HERE.z);
+    shadow.position.set(traveller.position.x, 0, traveller.position.z);
     scene.add(shadow);
+    const masterShadow = makeBlobShadow({ radiusX: 0.68, radiusZ: 0.52, opacity: 0.42 });
+    scene.add(masterShadow);
     const pineShadow = makeBlobShadow({ radiusX: 0.8, radiusZ: 0.62, opacity: 0.30 });
     pineShadow.position.set(pine.position.x, 0, pine.position.z);
     scene.add(pineShadow);
@@ -106,30 +104,29 @@ export default {
     hit.userData.noOutline = true;
     scene.add(hit);
 
-    // ---- the moment: he goes through -------------------------------------
-    // A single walk parameter runs 0.72 → 0.06 along the road, carrying him
-    // from the far fog, through the traveller, and out past the camera. It
-    // starts over on its own, and touching him only makes it start over sooner.
+    // ---- the moment: he goes past -----------------------------------------
+    // A single walk parameter runs 0.72 → 0.04 along the road, carrying him
+    // from the far fog, past the traveller on the other side, and out below
+    // the camera. It starts over on its own, and touching him only makes it
+    // start over sooner. The book opens on START_U — the two of them a stride
+    // past each other, the meeting already missed.
     let camera = null;
     let clock = 0;
     let reaches = 0;
-    let runStart = 0;
+    let runStart = null;               // set from the first real clock reading
 
     const place = (u) => {
       const t = 0.72 - u * 0.68;
       const p = road.sample(Math.max(0.02, Math.min(0.98, t)));
-      master.position.set(p.x, 0, p.z);
+      // his own side of the road — the traveller keeps to +perp, he to -perp
+      const x = p.x - p.perp.x * LANE, z = p.z - p.perp.z * LANE;
+      master.position.set(x, 0, z);
       // facing back down the road, toward the traveller and past him
       master.rotation.y = Math.atan2(p.perp.x, -p.perp.z) + Math.PI / 2;
-      hit.position.set(p.x, 1.0, p.z);
-      // he thins as he arrives at the traveller and thickens again beyond —
-      // you cannot look at him where he is closest
-      const near = 1 - Math.min(1, Math.abs(u - 0.5) * 3.2);
-      const op = 0.42 * (1 - near * 0.82);
-      master.traverse((o) => { if (o.isMesh && o.material) o.material.opacity = op; });
-      return op;
+      hit.position.set(x, 1.0, z);
+      masterShadow.position.set(x, 0, z);
     };
-    place(0);
+    place(START_U);
 
     input.onTap(() => {
       if (!camera) return;
@@ -144,17 +141,14 @@ export default {
       setCamera(c) { camera = c; },
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
+        if (runStart === null) runStart = clock - START_U * PASS;
         world.update(dt, simTime);
         const u = ((clock - runStart) % PASS) / PASS;
         place(u);
       },
       fragment() {
-        const u = ((clock - runStart) % PASS) / PASS;
-        return {
-          reaches,
-          walk: +u.toFixed(3),
-          faint: +(1 - Math.min(1, Math.abs(u - 0.5) * 3.2)).toFixed(3),
-        };
+        const u = runStart === null ? START_U : ((clock - runStart) % PASS) / PASS;
+        return { reaches, walk: +u.toFixed(3) };
       },
       dispose() {},
     };

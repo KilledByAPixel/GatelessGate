@@ -209,9 +209,10 @@ const OVER_BUDGET_BY_HISTORY = {};
 // 24's is the whole flowering meadow (an instanced field); 27's is the moon,
 // sixty units out beyond the mountains; 22's and 34's is the PATH, a ground-
 // spanning ribbon whose mesh origin is not a meaningful point to project (the
-// road is inherently in frame — it is the ground you are looking at); 36's is
-// the drifting master, who at the first frame stands far off in the fog.
-const ACCENT_NOT_IN_FRAME = [22, 24, 27, 34, 36];
+// road is inherently in frame — it is the ground you are looking at). 36 used
+// to be here while its master opened far off in the fog; he now opens a
+// stride past the traveller, so the ordinary check covers him again.
+const ACCENT_NOT_IN_FRAME = [22, 24, 27, 34];
 
 test('the seal of each case is actually in the picture', async () => {
   // Every case puts its one accent on the thing the case turns on. If that
