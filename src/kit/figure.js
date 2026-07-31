@@ -32,19 +32,40 @@ export function robeLathe(profile, height, mat, segments = 10) {
   return body;
 }
 
+// How far the cuff lip flares past the wrist. A straight cone from shoulder to
+// hem reads as a stick of cloth; a sleeve reads as a sleeve when the mouth of
+// it is wider than the arm above, with a nip between the two so the flare has
+// something to flare FROM.
+const CUFF_FLARE = 1.14;
+
 // A sleeve, with the hand hidden inside it.
 //
-// THE ORIGIN IS THE SHOULDER. The geometry is translated down by half its
-// length so the mesh's own origin sits at the top of it and the cloth hangs
-// along local -y: that is what makes an arm rotatable from the shoulder by
-// setting rotation on the mesh, and it is what lets a case find the cuff at
-// local (0, -len, 0) without knowing anything else about the figure. Cases do
-// exactly that (k3 reads the length back off the bounding box; k11 parents a
-// fist to the hem; k43/k48 hang a staff off it), so this convention is API.
+// THE ORIGIN IS THE SHOULDER. The profile is authored in shoulder-origin space
+// so the mesh's own origin sits at the top of it and the cloth hangs along
+// local -y: that is what makes an arm rotatable from the shoulder by setting
+// rotation on the mesh, and it is what lets a case find the cuff at local
+// (0, -len, 0) without knowing anything else about the figure. Cases do exactly
+// that (k3 reads the length back off the bounding box's min.y and the cuff
+// width off its max.x; k11 parents a fist to the hem; k43/k48 hang a staff off
+// it), so this convention is API — the profile may be retuned, but it must
+// always span y from -len to 0 and be widest at the cuff.
+//
+// `r0` is the shoulder, `r1` the wrist; everything between is expressed in
+// terms of those two so a caller retuning either still gets the same shape.
 export function sleeve({ height = 1.6, len = 0.34 * 1.6, r0 = 0.035, r1 = 0.065, mat }) {
-  const geo = new THREE.CylinderGeometry(r0 * height, r1 * height, len, 7);
-  geo.translate(0, -len / 2, 0);
-  const arm = new THREE.Mesh(geo, mat);
+  const a = r0 * height;              // shoulder
+  const b = r1 * height;              // wrist
+  const profile = [
+    [0, -len],                        // the mouth of the cuff, closed
+    [b * CUFF_FLARE, -len],           // THE CUFF LIP — the widest cloth on the arm
+    [b * 0.99, -len * 0.930],         // the flare rolling back in
+    [b * 0.76, -len * 0.840],         // the nip above it
+    [b * 0.88, -len * 0.620],         // the belly of the sleeve
+    [b * 0.81, -len * 0.320],
+    [a, 0],                           // THE SHOULDER — origin, and the top of the bounds
+    [0, 0],                           // closed
+  ].map(([r, y]) => new THREE.Vector2(r, y));
+  const arm = new THREE.Mesh(new THREE.LatheGeometry(profile, 7), mat);
   arm.name = 'arm';
   return arm;
 }
@@ -81,13 +102,76 @@ export function neckBetween(a, b, { r0 = 0.056, r1 = 0.070, mat, pad = 0.03 } = 
 // Robe profiles, authored hem-first in fractions of height. Point 0 is the
 // closed centre of the hem and is the one point `stout` never widens — the
 // figure is thickened around its axis, not stretched off it.
+//
+// Two features carry the whole read of these, and both are silhouette events
+// rather than surface detail, because ink figures have no surface detail:
+//
+//   THE OBI. A robe is tied. Without the tie a monk is a bell, and a bell is
+//   the same shape as a lampshade, a rock, or the assembly's cone — which is
+//   why the crowd figure can afford to be one. The sash is drawn as three
+//   points, not one: the skirt gathering below it, the pinch of the tie
+//   itself (the narrowest the robe ever gets), and the blouse above, where
+//   cloth is pushed up over the knot. A single pinch reads as a dent; the
+//   swell above it is what makes it read as a belt.
+//
+//   THE COLLAR. The old profile ran the shoulder straight into the neck hole
+//   in one segment, so the head sat on a funnel. A robe has a lapel that
+//   stands proud of the neck, and one extra ring wide enough to clear the
+//   head's cross-section at that height draws it as a step. It is the step,
+//   not the taper, that says "cloth folded over" rather than "cone".
+//
+// RING COUNT IS A BUDGET, and it is a visual one, not a performance one. The
+// material is flat-shaded, so every ring in a profile is a tone band in the
+// finished figure: a first pass at this spent twelve rings and the monk came
+// back striped like a stack of plates, with the obi lost among its own
+// neighbours. Nine bands, with two long uninterrupted runs (the skirt, the
+// chest) doing most of the height, is what lets the two events read AS events.
+// If you add a point here, take one out.
+//
+// The two profiles are index-aligned — same ten points, same roles — so
+// `kneel` can be an honest halfway blend of them.
 const STAND_PROFILE = [
-  [0.02, 0.0], [0.21, 0.0], [0.20, 0.03], [0.155, 0.30],
-  [0.125, 0.48], [0.115, 0.58], [0.13, 0.64], [0.06, 0.68],
+  [0.020, 0.000],   // hem centre, closed on the ground
+  [0.212, 0.000],   // hem edge — the widest cloth he owns
+  [0.200, 0.035],
+  [0.150, 0.335],   // the long clean run up the skirt
+  [0.128, 0.452],   // the skirt gathering under the sash
+  [0.110, 0.492],   // OBI — the tie, the narrowest the robe gets
+  [0.134, 0.552],   // the blouse pushed up over the knot
+  [0.121, 0.652],   // chest into shoulder — this run must TAPER: held straight
+                    //   it turned the torso into a drum sitting on a cone
+  [0.097, 0.674],   // COLLAR — a step, not a taper
+  [0.058, 0.692],   // the neck opening
 ];
 const SIT_PROFILE = [
-  [0.02, 0.0], [0.30, 0.0], [0.32, 0.05], [0.27, 0.16],
-  [0.20, 0.28], [0.165, 0.36], [0.15, 0.42], [0.07, 0.46],
+  [0.020, 0.000],   // hem centre, closed on the ground
+  [0.300, 0.000],   // the hem pooling round the crossed legs
+  [0.318, 0.052],
+  [0.262, 0.190],   // the long run over the knees
+  [0.212, 0.268],   // the skirt gathering under the sash
+  [0.186, 0.300],   // OBI — the tie
+  [0.206, 0.348],   // the blouse pushed up over the knot
+  [0.160, 0.428],   // chest into shoulder
+  [0.110, 0.449],   // COLLAR
+  [0.068, 0.466],   // the neck opening
+];
+
+// The sedge hat, authored in its own local space (y = 0 is where the old
+// cone's centre sat, so `hat` placement heights are unchanged). A cone is a
+// party hat; a kasa has a BRIM — the rim is the widest AND the lowest point on
+// it, and the underside slopes back up to the crown, so from any camera below
+// the wearer's eyeline you see cloth turned down rather than a straight bevel.
+// Traced the same way a robe is — out along the underside, up the outside, in
+// at the crown — which makes it one closed solid, not a shell with a hole
+// where the head goes.
+const HAT_PROFILE = [
+  [0.000, -0.026],  // the underside, centre — buried in the skull
+  [0.150, -0.046],  // the underside sloping out and DOWN
+  [0.192, -0.062],  // THE RIM: widest and lowest
+  [0.178, -0.034],  // up the outside of the brim
+  [0.128, -0.006],
+  [0.068, 0.026],
+  [0.000, 0.050],   // the crown
 ];
 
 const mix = (a, b, t) => a + (b - a) * t;
@@ -171,10 +255,12 @@ export function makeFigure({
   g.add(head);
 
   if (hat) {
-    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.185 * height, 0.10 * height, 12), mat);
-    cone.name = 'hat';
-    cone.position.y = st.hat * height;
-    g.add(cone);
+    // same lathe the robe is, at the hat's own twelve segments — one mesh, so
+    // a brim costs a figure nothing in draw calls
+    const brim = robeLathe(HAT_PROFILE, height, mat, 12);
+    brim.name = 'hat';
+    brim.position.y = st.hat * height;
+    g.add(brim);
   }
 
   if (elder) {
