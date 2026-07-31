@@ -1,5 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
+import { mergeSimple } from './scatter.js';
 import { hash1 } from '../util/noise.js';
 import { ACCENT, WASH } from '../palette.js';
 
@@ -72,20 +73,43 @@ export function makeBell({ height = 1.1, color = ACCENT, frameColor = WASH.dark,
   swing.position.y = pivotY;
   g.add(swing);
 
+  // The suspension loop (ryuzu) — a real bonshō hangs from a dragon-shaped
+  // handle, not a bare rod. Built as a short mounting stub (the boss the
+  // handle roots in) with a half-torus arch merged on top of it: the arch's
+  // two feet plant on the stub, and its crown reaches up to just shy of the
+  // pivot — close enough to read as "this is what carries the weight"
+  // without pretending to model a beam threaded through it.
   const linkLen = 0.14 * H;
-  const linkGeo = new THREE.CylinderGeometry(0.032 * H, 0.032 * H, linkLen, 6);
-  linkGeo.translate(0, -linkLen / 2, 0);
-  const link = new THREE.Mesh(linkGeo, flat);
+  const STUB_R = 0.050 * H, STUB_H = 0.060 * H;
+  const LOOP_R = 0.085 * H, TUBE_R = 0.024 * H;
+  const stubGeo = new THREE.CylinderGeometry(STUB_R * 0.85, STUB_R, STUB_H, 7);
+  stubGeo.translate(0, -linkLen + STUB_H / 2, 0);
+  const loopGeo = new THREE.TorusGeometry(LOOP_R, TUBE_R, 6, 10, Math.PI);
+  loopGeo.translate(0, -linkLen + STUB_H, 0);   // feet on the stub's top face
+  const link = new THREE.Mesh(mergeSimple([stubGeo, loopGeo]), flat);
   link.name = 'link';
   swing.add(link);
 
-  // The bell itself: dome top, near-straight barrel, and a slight flare at the
-  // mouth — the widest ring is the lowest one. The profile runs mouth to crown
-  // with a shallow recessed underside, so nothing is open from below.
+  // The bell itself: a dome crown taper into a shoulder carrying two raised
+  // bands (the chi bosses' beat, simplified to a plain ring rather than the
+  // individual studs — legible at this scale, invisible past it), a waist
+  // that pulls the barrel in below the shoulder, and a flared mouth lip —
+  // the widest ring is the lowest one, pulled in sharply just above the rim
+  // so the flare actually reads instead of blending into the taper. The
+  // profile runs mouth to crown with a shallow recessed underside, so
+  // nothing is open from below.
   const P = [
-    [0.000, 0.055], [0.235, 0.035], [0.340, 0.000], [0.315, 0.090],
-    [0.300, 0.300], [0.295, 0.520], [0.285, 0.660], [0.245, 0.790],
-    [0.160, 0.910], [0.065, 0.985], [0.000, 1.000],
+    [0.000, 0.050],                                    // recessed underside
+    [0.335, 0.000],                                    // MOUTH — the widest ring
+    [0.250, 0.065],                                     // sharp pull-in: the flared lip reads here
+    [0.232, 0.300],                                     // WAIST — the narrowest point
+    [0.255, 0.520],
+    [0.272, 0.600],                                     // shoulder band 1
+    [0.262, 0.625],                                     // the valley between the two bands
+    [0.278, 0.655],                                     // shoulder band 2 / the shoulder's own widest point
+    [0.205, 0.800],
+    [0.110, 0.920],
+    [0.000, 1.000],                                     // crown
   ].map(([r, y]) => new THREE.Vector2(r * H, y * H));
   const body = new THREE.Mesh(new THREE.LatheGeometry(P, 12), toonMaterial({ color, flat: true }));
   body.name = 'body';

@@ -52,6 +52,57 @@ test('makeBell is a grounded bonshō hung from a roofed two-post frame', () => {
   assert.ok(b.pickTargets().some((m) => m.name === 'bell-hit'));
 });
 
+test('the bonshō profile carries a flared mouth, a waist, and shoulder bands', () => {
+  // Reproduces the builder's own profile formula (same disclosed
+  // reproduce-the-tuned-constant tradeoff other D-tasks' eave/post/roof
+  // tests use) rather than a magic epsilon, and every comparison here is
+  // mutation-provable — flattening any one of these features makes the
+  // matching assertion false.
+  const H = 1.1;
+  const b = makeBell({ height: H });
+  const body = b.group.children.find((c) => c.name === 'swing')
+    .children.find((c) => c.name === 'body');
+  const pos = body.geometry.attributes.position;
+  const radiusAt = (yFrac, tol = 0.008) => {
+    let r = -Infinity;
+    for (let i = 0; i < pos.count; i++) {
+      if (Math.abs(pos.getY(i) - yFrac * H) < tol * H) {
+        r = Math.max(r, Math.hypot(pos.getX(i), pos.getZ(i)));
+      }
+    }
+    return r;
+  };
+  const mouth = radiusAt(0.000);
+  const lip = radiusAt(0.065);
+  const waist = radiusAt(0.300);
+  const band1 = radiusAt(0.600);
+  const valley = radiusAt(0.625);
+  const band2 = radiusAt(0.655);
+  for (const [name, v] of [['mouth', mouth], ['lip', lip], ['waist', waist], ['band1', band1], ['valley', valley], ['band2', band2]]) {
+    assert.ok(v > -Infinity, `found a vertex ring near ${name}`);
+  }
+  assert.ok(mouth > lip + 0.03 * H, `the mouth flares out past the ring just above it: mouth=${mouth.toFixed(4)} lip=${lip.toFixed(4)}`);
+  assert.ok(waist < lip - 0.005 * H, `the waist pulls in below the flare: waist=${waist.toFixed(4)} lip=${lip.toFixed(4)}`);
+  assert.ok(waist < band1 - 0.01 * H, `the waist is narrower than the shoulder above it: waist=${waist.toFixed(4)} band1=${band1.toFixed(4)}`);
+  assert.ok(band1 > valley + 0.005 * H, `shoulder band 1 stands proud of the valley behind it: band1=${band1.toFixed(4)} valley=${valley.toFixed(4)}`);
+  assert.ok(band2 > valley + 0.005 * H, `shoulder band 2 stands proud of the same valley: band2=${band2.toFixed(4)} valley=${valley.toFixed(4)}`);
+});
+
+test('the ryuzu is a loop, not a bare rod: it reaches well off the hanging axis', () => {
+  const H = 1.1;
+  const b = makeBell({ height: H });
+  const swing = b.group.children.find((c) => c.name === 'swing');
+  const link = swing.children.find((c) => c.name === 'link');
+  assert.ok(link && link.isMesh, 'the link mesh exists');
+  const box = new THREE.Box3().setFromObject(link);
+  // a bare rod (the old design) sat within ~0.032*H of the axis; a loop
+  // arches its two feet out to roughly the stub-to-loop radius on each side
+  const halfSpan = (box.max.x - box.min.x) / 2;
+  assert.ok(halfSpan > 0.07 * H, `link reaches well past a thin rod's radius: half-span=${halfSpan.toFixed(4)}`);
+  // and it still stands over the crown, roughly centred on the hanging axis
+  assert.ok(Math.abs((box.max.x + box.min.x) / 2) < 0.01 * H, 'the loop is centred over the axis it hangs from');
+});
+
 test('strike() sets a subtle swing that decays back near zero', () => {
   const b = makeBell({ seed: 3 });
   const swing = b.group.children.find((c) => c.name === 'swing');
