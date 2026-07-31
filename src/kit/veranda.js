@@ -26,6 +26,7 @@ const boxGeo = (w, h, d, x, y, z) => {
 
 export function makeVeranda({
   width = 4.8, depth = 4.4, height = 3.3, deck = 0.34,
+  legs = 0,
   color = WASH.dark, floorColor = WASH.stone,
 } = {}) {
   const g = new THREE.Group();
@@ -62,6 +63,40 @@ export function makeVeranda({
   const pier = new THREE.Mesh(mergeSimple(pierGeos), flat);
   pier.name = 'pier';
   g.add(pier);
+
+  // ---- the under-frame, for a veranda LIFTED off the ground ---------------
+  // At y = 0 the stub piers above are the whole story. But a case that raises
+  // the group (case 25 floats its dream hall `legs` above the terrain) leaves
+  // daylight under the boards, and a floor standing on air reads as a bug, not
+  // a dream (Frank: "it's okay if the platform is above the ground as long as
+  // it has some type of frame lifting it up off the ground"). `legs` is how
+  // far below the group's origin the ground lies: four square corner legs run
+  // from under the boards down past it (with a generous buried margin, since
+  // composeWorld terrain rolls), and a skirting rail ties them just above the
+  // ground line so the frame reads as carpentry, not four loose sticks.
+  // One merged mesh: one draw, one outline, same economy as the posts.
+  if (legs > 0) {
+    const SINK = 0.30;                       // buried margin for terrain relief
+    const LEG_T = 0.24;
+    const legTop = deck - boardT;            // tucked up under the boards
+    const lx = width / 2 - 0.5;
+    const lz0 = 0.5, lz1 = depth - 0.5;
+    const legGeos = [];
+    for (const sx of [-1, 1]) for (const zz of [lz0, lz1]) {
+      const h = legTop + legs + SINK;
+      legGeos.push(boxGeo(LEG_T, h, LEG_T, sx * lx, legTop - h / 2, zz));
+    }
+    // the skirt: one slim rail around all four sides, just above the ground
+    const SK_H = 0.14, SK_T = 0.10;
+    const skY = -legs + SK_H / 2 + 0.06;
+    legGeos.push(boxGeo(lx * 2 + LEG_T, SK_H, SK_T, 0, skY, lz0));
+    legGeos.push(boxGeo(lx * 2 + LEG_T, SK_H, SK_T, 0, skY, lz1));
+    legGeos.push(boxGeo(SK_T, SK_H, lz1 - lz0, -lx, skY, (lz0 + lz1) / 2));
+    legGeos.push(boxGeo(SK_T, SK_H, lz1 - lz0, lx, skY, (lz0 + lz1) / 2));
+    const leg = new THREE.Mesh(mergeSimple(legGeos), flat);
+    leg.name = 'leg';
+    g.add(leg);
+  }
 
   // ---- posts, on a regular beat, all carrying one beam -------------------
   // Two posts (the corners of the opening) read as a doorframe, not a hall;

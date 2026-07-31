@@ -245,6 +245,63 @@ test('makeVeranda eave sweeps and turns up at the tip, the hut\'s language', () 
   assert.ok(box.max.z - box.min.z > 0.6, 'the eave reaches well past the beam');
 });
 
+test('makeVeranda legs carry a lifted deck to the ground, at all four corners', () => {
+  // `legs` is additive: without it the veranda is byte-for-byte the old one,
+  // so the consumers that stand at y = 0 (cases 4, 17, 26, 28) never grow a
+  // frame they don't need.
+  const plain = makeVeranda({});
+  assert.ok(!plain.children.some((c) => c.name === 'leg'), 'no legs unless asked');
+
+  const width = 4.8, depth = 4.4, deck = 0.34, LEGS = 0.6;
+  const v = makeVeranda({ width, depth, height: 3.3, deck, legs: LEGS });
+  const legMeshes = v.children.filter((c) => c.name === 'leg');
+  assert.equal(legMeshes.length, 1, 'the whole frame merges into one mesh, hut-style');
+  assert.equal(legMeshes[0].children.length, 0, 'no child meshes to outline separately');
+
+  const box = new THREE.Box3().setFromObject(legMeshes[0]);
+  assert.ok(box.min.y < -(LEGS + 0.25), `the frame sinks past the ground line: ${box.min.y}`);
+  assert.ok(box.max.y < deck, 'and stays tucked under the boards');
+
+  // Four legs, one per corner — the kit-props hut-post pattern: bucket the
+  // merged mesh's DEEP vertices (below the ground line, where only the legs
+  // reach; the skirt rail stops above it) by plan quadrant. All four buckets
+  // must exist, carry an equal share, and reach the bottom — a merge that
+  // silently dropped a corner fails every way at once.
+  const pos = legMeshes[0].geometry.attributes.position;
+  const quads = new Map();
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i);
+    if (y > -(LEGS + 0.02)) continue;
+    const key = `${Math.sign(pos.getX(i))},${Math.sign(pos.getZ(i) - depth / 2)}`;
+    const q = quads.get(key) || { n: 0, minY: Infinity };
+    q.n++;
+    q.minY = Math.min(q.minY, y);
+    quads.set(key, q);
+  }
+  assert.deepEqual([...quads.keys()].sort(), ['-1,-1', '-1,1', '1,-1', '1,1'],
+    `a leg in each corner, got ${[...quads.keys()].sort()}`);
+  const counts = [...quads.values()].map((q) => q.n);
+  assert.ok(counts.every((c) => c === counts[0]), 'every corner carries its share of the merge');
+  for (const [key, q] of quads) {
+    assert.ok(q.minY < -(LEGS + 0.25), `corner ${key} reaches past the ground: ${q.minY}`);
+  }
+
+  // ...and a skirting rail ties them just above the ground line, running the
+  // full plan in both axes — legs alone read as four loose sticks.
+  let skMaxX = -Infinity, skMinZ = Infinity, skMaxZ = -Infinity, skirtVerts = 0;
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i);
+    if (y < -(LEGS + 0.02) || y > -LEGS + 0.25) continue;
+    skirtVerts++;
+    skMaxX = Math.max(skMaxX, Math.abs(pos.getX(i)));
+    skMinZ = Math.min(skMinZ, pos.getZ(i));
+    skMaxZ = Math.max(skMaxZ, pos.getZ(i));
+  }
+  assert.ok(skirtVerts > 0, 'a skirt exists');
+  assert.ok(skMaxX > width / 2 - 0.6, `the skirt spans the width: ${skMaxX}`);
+  assert.ok(skMinZ < 0.6 && skMaxZ > depth - 0.6, `and the depth: ${skMinZ}..${skMaxZ}`);
+});
+
 // ---- the case itself ------------------------------------------------------
 
 function stubCtx({ hit = false } = {}) {
