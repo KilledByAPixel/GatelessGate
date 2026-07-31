@@ -41,10 +41,19 @@ export function makeRaisedFinger({
   // Two step pairs (rise then a shallow step-in) stand in for the proximal and
   // middle knuckles — a joint on a finger is a swell followed by a crease, not
   // a smooth taper, and without them the lathe read as a shaft rather than a
-  // digit at workbench range. The widest point (0.30L) and everything from
-  // 0.60L to the tip are untouched from the original profile: the finger's
-  // overall silhouette — its bounding box, its widest ring — is unchanged, only
-  // the run below that ring now steps instead of running straight.
+  // digit at workbench range. The widest point (0.30L) is untouched from the
+  // original profile, so the finger's overall silhouette (its bounding box,
+  // its widest ring) is unchanged.
+  //
+  // A THIRD step, right before the tip, is the nail bed: a short FLAT run
+  // (0.64L to 0.90L both sit at the same 0.50R) rather than a continued taper.
+  // A first attempt left the wall tapering smoothly through that span and set
+  // the nail plane at a single depth chosen to clear the taper's tightest
+  // point — which meant it sat flush with, or inside, the wall everywhere the
+  // taper was looser (a raycast from the nail's own facing direction proved
+  // this: every ray hit the shaft first, none hit the nail). Flattening the
+  // bed under it removes the tapering-clearance problem entirely: the plane
+  // only has to clear ONE radius, not a range.
   const profile = [
     [0.00, 0.00],
     [R * 0.94, 0.00],
@@ -52,26 +61,32 @@ export function makeRaisedFinger({
     [R * 0.87, L * 0.15],   // first knuckle: the joint's own step-in
     [R * 1.00, L * 0.30],   // second knuckle: the widest point on the digit
     [R * 0.89, L * 0.38],   // second knuckle: its step-in
-    [R * 0.96, L * 0.60],
-    [R * 0.84, L * 0.79],
-    [R * 0.62, L * 0.91],
-    [R * 0.33, L * 0.98],
+    [R * 0.96, L * 0.58],
+    [R * 0.68, L * 0.62],   // crease into the nail bed
+    [R * 0.50, L * 0.64],   // nail bed floor starts — matches nailY0 below
+    [R * 0.50, L * 0.90],   // nail bed floor ends — matches nailY1 below, still flat
+    [R * 0.36, L * 0.95],   // taper resumes past the nail, toward the tip
+    [R * 0.16, L * 0.98],
     [0.00, L],
   ].map(([r, y]) => new THREE.Vector2(r, y));
   const shaft = new THREE.LatheGeometry(profile, segments);
 
   // The nail: a flat facet standing in for it, since a nail is not a body of
-  // revolution and no lathe profile can produce one. Sized and set well back
-  // from the shaft's own local +x radius (0.5R plus a 0.3R half-width, against
-  // a shaft that is never narrower than ~0.64R across this span) so the plane
-  // sits inset, never poking past the taper it sits on — which also keeps the
-  // finger's overall bounding box exactly what the plain lathe's was.
-  const nailY0 = L * 0.64, nailY1 = L * 0.90;      // the last phalanx, short of the tip's own curve
-  const nailHalfWidth = R * 0.30;
-  const nailSetback = R * 0.50;
+  // revolution and no lathe profile can produce one. Set PROUD of the (now
+  // flat) 0.50R bed it sits over — 0.62R, a deliberate 0.12R standoff, comfortably
+  // under the shaft's own global-max radius (1.00R at 0.30L) so the bounding
+  // box the finger's shape test measures doesn't move.
+  // Kept a hair inside the bed's own 0.64L-0.90L span, not flush with it: right
+  // at those exact y's the lathe geometry is still the RING where the crease
+  // and the taper-resume triangles land, and a ray grazing that exact seam can
+  // catch a transitional facet instead of the flat floor. A small margin keeps
+  // every ray inside the nail's own footprint over the bed proper.
+  const nailY0 = L * 0.655, nailY1 = L * 0.885;
+  const nailHalfWidth = R * 0.28;
+  const nailStandoff = R * 0.62;
   const nail = new THREE.PlaneGeometry(nailHalfWidth * 2, nailY1 - nailY0);
   nail.rotateY(Math.PI / 2);                       // its normal now faces local +x, not the plane's own +z
-  nail.translate(nailSetback, (nailY0 + nailY1) / 2, 0);
+  nail.translate(nailStandoff, (nailY0 + nailY1) / 2, 0);
 
   const mesh = new THREE.Mesh(
     mergeSimple([shaft, nail]),
