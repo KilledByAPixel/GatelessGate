@@ -16,7 +16,7 @@
     import {
       makeDog, makeBuffalo, makeBuddha, makeMonk, makeFlower, makeBowl,
       makeWater, makeHut, makeLattice, makeAssembly, makeLights, addOutlines,
-      toonMaterial,
+      setInkScale, toonMaterial,
       makeFox, makeCat, makeHorse, makeKoi, makeBird, makeBirds,
       makeHangingMonk, makeRaisedFinger,
       makeTree, makePine, makeOak, makeForest, makeGrassField, makeTuftField, makeWildflowers,
@@ -172,11 +172,19 @@
     place(makePole({}), 24, 22, 0, 'pole');
     place(makeBundle({}), 30, 22, 0, 'bundle');
 
-    // ?ink=0 skips the inverted-hull outline pass entirely, for judging shots
-    // that want raw silhouette/form with no ink dressing on top. Default
-    // (param absent, or anything other than the literal '0') is unchanged.
-    const inkOn = new URLSearchParams(location.search).get('ink') !== '0';
-    if (inkOn) addOutlines(scene, { width: 0.035, wobble: 0.7 });
+    // ?ink=<number> — 0 skips the inverted-hull outline pass entirely, for
+    // judging shots that want raw silhouette/form with no ink dressing on
+    // top; any other number keeps the pass and sets the global ink-width
+    // scale (setInkScale) to it. Param absent matches the app's shipped
+    // default — hull off (scale 0) — but the outlines ARE still built, so
+    // setInkScale from the console (or a later ?ink=N reload) brings them
+    // back without re-adding anything.
+    const inkParam = new URLSearchParams(location.search).get('ink');
+    if (inkParam !== '0') {
+      addOutlines(scene, { width: 0.035, wobble: 0.7 });
+      const inkScale = parseFloat(inkParam);
+      if (Number.isFinite(inkScale)) setInkScale(inkScale);
+    }
 
     const VIEWS = {
       wide:    { p: [0, 26, 100], t: [0, 2, 9] },

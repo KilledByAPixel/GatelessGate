@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { setGrassPatchiness } from '../kit/grassfield.js';
 import { setGrassStyle } from '../kit/scenery.js';
+import { setInkScale } from '../render/outlines.js';
 
 // A workbench: a toolbar button top-right of the stage, and a plain panel that
 // slides out under it. Deliberately unstyled beyond the minimum — this is for
@@ -12,10 +13,13 @@ import { setGrassStyle } from '../kit/scenery.js';
 
 // Defaults are the INK & SEAL preset: no toon banding, depth-driven ink, real
 // contact shadows, paper pass at full grain, no quantisation, and the
-// inverted-hull ink outlines ON (Frank). One red seal per koan.
+// inverted-hull ink outlines OFF by default — the depth-ink pass carries the
+// edges; the "Ink width" slider is the experiment knob that brings the hull
+// back live (Frank). One red seal per koan.
 // bumped when a default LOOK changes, since a stored state would otherwise
-// mask it: v3 turned the ink outlines on, v4 dropped ink strength to 0.5 (Frank)
-const KEY = 'gateless-gate-debug-v4';
+// mask it: v3 turned the ink outlines on, v4 dropped ink strength to 0.5,
+// v5 turned the hull off by default (ink width 0) (all Frank)
+const KEY = 'gateless-gate-debug-v5';
 // Persistence is opt-in. By default the workbench opens on the shipped defaults
 // every reload, so a quick test can never quietly leave the look changed the next
 // time round. The "Keep settings on reload" toggle (below "reset all") turns it
@@ -60,6 +64,7 @@ const CONTROLS = [
   { group: 'Render' },
   { key: 'toon', label: 'Toon shader', type: 'bool', def: false },
   { key: 'outlines', label: 'Ink outlines (hull)', type: 'bool', def: true },
+  { key: 'inkWidth', label: 'Ink width', type: 'range', def: 0, min: 0, max: 3, step: 0.05 },
   { key: 'grain', label: 'Paper texture', type: 'bool', def: true },   // master: off = no paper at all
   { key: 'blobs', label: 'Blob shadows', type: 'bool', def: false },
   { key: 'shadows', label: 'Real shadows', type: 'bool', def: true },
@@ -274,6 +279,12 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
   }
 
   function apply() {
+    // Before the traverse: setInkScale drives the shared width uniform and
+    // shows/hides every outline mesh in every scene (hidden at 0, where the
+    // zero-width shell would z-fight its source). The traverse below then
+    // ANDs in the hull checkbox for the active scene, so "outlines off"
+    // still wins over a non-zero width.
+    setInkScale(state.inkWidth);
     const scene = getScene && getScene();
     if (scene) {
       if (scene.fog && scene.userData._fog0 === undefined) scene.userData._fog0 = scene.fog.density;
@@ -289,7 +300,7 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
           case 'blobshadow': o.visible = state.blobs; break;
           default: break;
         }
-        if (o.userData.isOutline) o.visible = state.outlines;
+        if (o.userData.isOutline) o.visible = state.outlines && state.inkWidth > 0;
 
         if (o.isDirectionalLight) {
           if (o.userData._i0 === undefined) o.userData._i0 = o.intensity;

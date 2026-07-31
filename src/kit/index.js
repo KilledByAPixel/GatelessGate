@@ -17,7 +17,7 @@ export { makeGate } from './gate.js';
 export { makeFlag } from './flag.js';
 export { makeBlobShadow } from '../render/blobshadow.js';
 export { makeLights, toonMaterial } from '../render/toon.js';
-export { addOutlines } from '../render/outlines.js';
+export { addOutlines, setInkScale, getInkScale } from '../render/outlines.js';
 export { makeDog } from './dog.js';
 export { makeTail } from './tail.js';
 export { makeBuffalo } from './buffalo.js';

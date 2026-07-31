@@ -17,7 +17,7 @@
     import { PAPER, INK } from '../src/palette.js';
     import {
       composeWorld, makePath, makeLantern, makeMonk, aimMonk, makeGate, makeFlag,
-      makeBlobShadow, addOutlines, makeGrassField,
+      makeBlobShadow, addOutlines, setInkScale, makeGrassField,
     } from '../src/kit/index.js';
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -101,6 +101,10 @@
     }
 
     addOutlines(scene, { width: 0.035, wobble: 0.7 });
+    // the app's shipped default is hull OFF (ink scale 0), but this harness's
+    // treatments toggle outline visibility by hand and were authored around a
+    // real stroke — pin the scale up so those toggles still show one
+    setInkScale(1);
 
     // ---- treatment machinery -------------------------------------------------
     const originals = new Map();   // mesh -> its authored (toon) material
