@@ -1,59 +1,64 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { INK } from '../palette.js';
-import { robeLathe, sphereHead } from './figure.js';
+import { sphereHead } from './figure.js';
+import { mergeSimple } from './scatter.js';
 
-// A seated Buddha: built on the same lathe-and-sphere vocabulary as `figure.js`
-// (`robeLathe`, `sphereHead`), reusable for any Buddha-statue case
-// (6, 9, 30, 32, 42). Featureless, like every figure in the book — the smile,
-// if any, is added by the scene, not the statue.
+// A seated Buddha: same lathe-and-sphere vocabulary as `figure.js`, reusable
+// for any Buddha-statue case (6, 9, 30, 32, 42). Featureless, like every
+// figure in the book — the smile, if any, is added by the scene.
 //
-// A SEATED MAN, NOT A MOUNTAIN. The first build of this ran one continuous
-// taper from the knees to the shoulders, and the whole figure collapsed into
-// "a big round kind of thing" (Frank's words) — a bell, a rock, a pile. What
-// makes a cross-legged man read as a man is a DISCONTINUITY: the crossed legs
-// are a low, comparatively narrow base (lap about half the height wide,
-// topping out around a fifth of the height), and the torso rises visibly
-// INSET from it — a hard step at the waist, then a chest that carries real
-// shoulders about a third of the height wide, up at seven tenths. Lap, step,
-// torso, shoulders, head: five events, and the step is the one that says
-// "someone is sitting" instead of "something is heaped".
+// THREE SILHOUETTE EVENTS carry the whole read, and each earned its place by
+// being missing once (round 1 came back "a fire hydrant / chess bishop"):
 //
-// The read still has to survive three scales — workbench close-up, a
-// garden-scale figure (k6, k30, k32, k42), and the six-times-height hillside
-// colossus of k9 — so every one of those events is a silhouette event, not
-// surface detail. Per the detail floor (see finger.js): silhouette plus two
-// or three tone steps is the entire budget.
+//   KNEES, PLURAL. A lathe base is a plinth disc; crossed legs are two knee
+//   masses poking out at ±x, the widest thing he owns, low. They are
+//   ellipsoids MERGED INTO THE BODY GEOMETRY (mergeSimple, one mesh) — the
+//   lumpy asymmetric base cannot come from a solid of revolution, and the
+//   mesh budget (k30 builds two of him) cannot afford them as separate parts.
+//
+//   THE SHOULDER SHELF. The torso is a trapezoid that narrows DOWNWARD —
+//   waist narrowest, chest swelling out above it, then a hard horizontal
+//   turn at the shoulder. Run parallel it reads as a pipe; run wider at the
+//   waist it reads as a bottle. The taper direction is the torso.
+//
+//   HEAD PROUD ON A NECK NOTCH. The collar dives from the shelf to a slim
+//   neck column and the skull sits clearly ON it — a deep notch either side.
+//   Nothing but the ushnisha breaks the crown line: round 1's ears were tall
+//   enough to fuse head into shoulders, and the side view read half-buried.
+//
+// The read must survive three scales — workbench, garden figure, and k9's
+// six-times-height hillside colossus — so every event above is silhouette,
+// not surface. Detail floor (see finger.js): silhouette + 2–3 tone steps.
 const BODY_PROFILE = [
   [0.020, 0.000],   // hem centre, closed on the ground (or on the plinth)
-  [0.240, 0.000],   // hem edge, the pooled robe just past the knees
-  [0.270, 0.060],   // THE KNEES — the crossed legs, widest cloth he owns (0.54·H)
-  [0.255, 0.140],   // the top plane of the lap begins rolling in
-  [0.225, 0.200],   // LAP TOP — the shelf the hands rest on
-  [0.135, 0.240],   // THE WAIST STEP — torso hard inset from the lap. This one
-                    //   ring is the whole difference between a man and a mound.
-  [0.150, 0.340],   // the belly easing back out above the sash
-  [0.140, 0.520],   // the long clean run up the chest
-  [0.162, 0.660],   // filling out under the shoulders
-  [0.165, 0.700],   // SHOULDER — 0.33·H across, square at seven tenths height
-  [0.100, 0.725],   // collar — a step, the same event figure.js's monk collar is
-  [0.058, 0.755],   // the neck opening — reaches UP PAST the head's own bottom
-                    //   (see HEAD_Y/HEAD_R below), or the two solids leave a
-                    //   visible gap of bare paper between them, the same trap
-                    //   figure.js's neckBetween exists to close
+  [0.190, 0.000],   // hem edge
+  [0.210, 0.060],   // the pooled robe over the shins
+  [0.180, 0.160],   // lap top rolling in — the shelf the hands rest on
+  [0.115, 0.240],   // THE WAIST — narrowest ring on the figure
+  [0.140, 0.420],   // the chest growing back out: the torso tapers DOWN
+  [0.175, 0.640],   // full chest
+  [0.180, 0.685],   // THE SHOULDER SHELF — widest ring of the torso, then a
+                    //   hard turn: this corner, not the taper, is "shoulders"
+  [0.075, 0.715],   // collar diving in — the wall of the neck notch
+  [0.055, 0.760],   // the neck column the head sits on
 ];
 
 const HEAD_R = 0.115;   // fraction of height
-const HEAD_Y = 0.820;
+const HEAD_Y = 0.865;   // head bottom at 0.750 — the neck column (top 0.760)
+                        // tucks just inside it, sealing the joint with a
+                        // visible notch below, not a buried skull
 
-// The arms, in fractions of height. One slim tapered column per side, from
-// the shoulder down and inward to the wrist at the lap — this pair is what
-// finally makes the figure read as a person rather than a statue-shaped
-// solid, because a lathe can never show arms and a man visibly has them.
-const ARM_SHOULDER = [0.150, 0.660, 0.035];   // sunk into the shoulder mass
-const ARM_WRIST = [0.085, 0.245, 0.170];      // sunk into the hands mound
-const ARM_R0 = 0.042;                          // upper arm radius
-const ARM_R1 = 0.030;                          // wrist radius
+// The crossed legs: one flattened ellipsoid per side, merged into the body.
+const KNEE = { r: 0.09, scale: [1.35, 0.75, 1.15], x: 0.155, y: 0.09, z: 0.05 };
+
+// The arms: a tapered column per side with real limb volume (not wires),
+// falling from just OUTSIDE the shoulder shelf, then folding inward to the
+// hands. Both ends padded into the solids they join.
+const ARM_SHOULDER = [0.185, 0.670, 0.020];
+const ARM_WRIST = [0.100, 0.260, 0.140];
+const ARM_R0 = 0.048;                          // upper arm radius
+const ARM_R1 = 0.038;                          // wrist radius
 
 export function makeBuddha({ height = 2.0, color = INK } = {}) {
   const g = new THREE.Group();
@@ -61,27 +66,32 @@ export function makeBuddha({ height = 2.0, color = INK } = {}) {
   const mat = toonMaterial({ color, flat: true });
   const H = height;
 
-  g.add(robeLathe(BODY_PROFILE, H, mat, 12));   // 12 segments — a statue is the roundest figure in the kit
+  // the body: robe lathe + the two knees, one merged solid. 12 segments —
+  // a statue is the roundest figure in the kit.
+  const lathe = new THREE.LatheGeometry(
+    BODY_PROFILE.map(([r, y]) => new THREE.Vector2(r * H, y * H)), 12);
+  const knees = [-1, 1].map((side) => {
+    const k = new THREE.SphereGeometry(KNEE.r * H, 10, 8);
+    k.scale(KNEE.scale[0], KNEE.scale[1], KNEE.scale[2]);
+    k.translate(side * KNEE.x * H, KNEE.y * H, KNEE.z * H);
+    return k;
+  });
+  const body = new THREE.Mesh(mergeSimple([lathe, ...knees]), mat);
+  body.name = 'body';
+  g.add(body);
 
-  // HANDS-IN-LAP. One squashed sphere resting on the lap shelf, in the
-  // dhyana-mudra spot. A lathe is a solid of revolution, so ANY point inside
-  // the profile's own radius at that height is buried and invisible — the
-  // mound has to reach OUTSIDE the body's radius (~0.146·H here, on the waist
-  // step) to read as its own mass, the same "proud, not coincident" rule the
-  // ushnisha and ears lean on. Shallow and wide: a bowl of hands, not a fist.
-  const hands = new THREE.Mesh(new THREE.SphereGeometry(0.09 * H, 10, 8), mat);
+  // HANDS-IN-LAP. One squashed sphere on the lap shelf, in the dhyana-mudra
+  // spot, reaching OUTSIDE the lathe's own radius there so it reads as its
+  // own mass — the same "proud, not coincident" rule the ushnisha leans on.
+  const hands = new THREE.Mesh(new THREE.SphereGeometry(0.085 * H, 10, 8), mat);
   hands.name = 'hands';
-  hands.scale.set(1.4, 0.5, 0.95);
-  hands.position.set(0, 0.235 * H, 0.175 * H);
+  hands.scale.set(1.5, 0.55, 1.0);
+  hands.position.set(0, 0.24 * H, 0.13 * H);
   g.add(hands);
 
-  // THE ARMS. Both ends are padded into the solids they join (the shoulder
-  // mass, the hands mound) so no seam of bare paper opens at either joint —
-  // neckBetween's rule, applied to a limb. The run between them bows FORWARD
-  // of the chest (the z components below) as well as outboard of it, so the
-  // arm stays proud of the lathe along its whole length instead of dipping
-  // inside the torso midway, which is where a straight shoulder-to-lap chord
-  // would put it.
+  // THE ARMS. The run bows forward of the chest (the z components) as well
+  // as outboard of it, so the limb stays proud of the lathe its whole length
+  // instead of dipping inside the torso midway.
   const up = new THREE.Vector3(0, 1, 0);
   for (const side of [-1, 1]) {
     const a = new THREE.Vector3(side * ARM_SHOULDER[0] * H, ARM_SHOULDER[1] * H, ARM_SHOULDER[2] * H);
@@ -100,23 +110,20 @@ export function makeBuddha({ height = 2.0, color = INK } = {}) {
   g.add(head);
 
   // USHNISHA — the cranial bump, embedded into the crown so only its crest
-  // shows proud of the skull.
+  // shows proud of the skull. The one thing allowed to break the crown line.
   const ush = new THREE.Mesh(new THREE.SphereGeometry(0.05 * H, 10, 8), mat);
   ush.name = 'ushnisha';
   ush.position.y = (HEAD_Y + HEAD_R * 0.87) * H;
   g.add(ush);
 
-  // LONG EARS. Renunciation's mark — the earlobes stretched long by the
-  // jewelry he gave up. Two small lobes, elongated down toward the
-  // shoulders rather than out, set low on the head where a jaw would be.
-  // Sized so the lobe bottoms stop CLEAR of the shoulder line — at the first
-  // scale they reached it, and head, ears and shoulders fused into one hooded
-  // mass from the front.
+  // LONG EARS. Renunciation's mark. Small lobes set where a jaw would be,
+  // stopping at the head's own underline — any longer and head, ears and
+  // shoulders fuse into one hooded mass (round 1's mistake).
   for (const side of [-1, 1]) {
-    const ear = new THREE.Mesh(new THREE.SphereGeometry(0.042 * H, 8, 6), mat);
+    const ear = new THREE.Mesh(new THREE.SphereGeometry(0.040 * H, 8, 6), mat);
     ear.name = 'ear';
-    ear.scale.set(0.6, 1.7, 0.55);
-    ear.position.set(side * HEAD_R * 1.0 * H, (HEAD_Y - HEAD_R * 0.35) * H, 0);
+    ear.scale.set(0.55, 1.5, 0.5);
+    ear.position.set(side * HEAD_R * 0.95 * H, (HEAD_Y - HEAD_R * 0.5) * H, 0);
     g.add(ear);
   }
 

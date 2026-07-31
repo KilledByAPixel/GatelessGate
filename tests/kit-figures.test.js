@@ -36,17 +36,26 @@ test('makeBuddha is a seated MAN — lap, waist step, shoulders, arms — on the
   assert.ok(width < 0.6 * H, `lap width under 0.6·H: ${width}`);
   assert.ok(box.max.y / width > 1.4, `taller than wide: ${(box.max.y / width).toFixed(2)}`);
 
-  // the silhouette discontinuity, read off the body lathe itself: a lap that
-  // is the widest thing he owns, a waist visibly inset from it, shoulders
-  // between the two — the old continuous knee→shoulder taper is the "big
-  // round thing" this figure must never collapse back into
+  // the silhouette discontinuities, read off the body geometry itself. Three
+  // events (each was missing once, and the figure collapsed into "a big
+  // round thing" / "a fire hydrant"):
+  //   knees — the crossed legs push the base out past the lathe's own hem;
+  //   the waist — narrowest ring, visibly inset from the lap;
+  //   the shoulder shelf — the torso tapers DOWN to the waist, so the
+  //   shoulders must be decisively wider than it (a shelf, not a pipe).
   const body = b.children.find((c) => c.name === 'body');
   const lap = maxRadiusInBand(body, 0, 0.25 * H);
   const waist = maxRadiusInBand(body, 0.23 * H, 0.28 * H);
   const shoulder = maxRadiusInBand(body, 0.6 * H, 0.72 * H);
+  assert.ok(lap > 0.25 * H, `the knees spread past the robe lathe: ${lap}`);
   assert.ok(waist < lap * 0.7, `waist steps in from the lap: ${waist} vs ${lap}`);
   assert.ok(shoulder < lap * 0.75, `shoulders narrower than the lap: ${shoulder} vs ${lap}`);
-  assert.ok(shoulder > waist, `but the chest carries real shoulders: ${shoulder} vs ${waist}`);
+  assert.ok(shoulder > waist * 1.3, `a shoulder shelf over the waist, not a pipe: ${shoulder} vs ${waist}`);
+
+  // and the head sits proud on a neck notch: the body's neck opening is far
+  // slimmer than both the skull above it and the shelf below it
+  const neck = maxRadiusInBand(body, 0.72 * H, 0.77 * H);
+  assert.ok(neck < shoulder * 0.5 && neck < 0.115 * H, `a notched neck under the skull: ${neck}`);
 });
 
 test('makeAssembly is one instanced, grounded, deterministic crowd', () => {
