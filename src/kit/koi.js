@@ -12,28 +12,108 @@ import { mergeSimple } from './scatter.js';
 // ink wash (a sumi-e koi is a brush shape, not a spot of orange), but a scene
 // whose seal IS the fish can pass an accent colour.
 //
-// Each koi swims a closed form over the simTime handed to update() — a seeded
-// ellipse at a shallow depth, the body yawed along its own tangent, the tail
-// beating. Nothing is stored between frames and no Math.random is used, so the
-// same pond holds the same fish every run. The group sits at the water's
-// SURFACE; the fish hang just beneath it.
+// THE SHAPE. One continuous body per fish, not butted primitives — the old
+// two-ellipsoid + cone build read as three disconnected lumps ("weird tadpole
+// type things"). The body is lofted from elliptical cross-sections along a
+// single profile: full head and shoulder a quarter of the way back, a long
+// taper to a narrow caudal peduncle, then a wide flat caudal fan whose cap
+// centre is pulled FORWARD so the trailing edge cuts a fork — the notch is
+// what says "tail fin" from the top-down pond cameras. Three flat fin hints
+// are merged into the same geometry (one draw call per fish): a dorsal
+// triangle on the spine and a pair of swept-back pectorals at the shoulder,
+// the pair being the mark that reads strongest from directly above.
 //
-// A fish is a flexing LINE, not a rigid pellet: the body is two segments, not
-// one. FORE (nose to just past mid-body, fullest a third of the way back) is
-// rigid, the way a real fish keeps its head steady while the rest of it
-// sweeps — the taper alone, nose to the fore/aft joint, is what used to be
-// missing (one uniform ellipsoid tapers to nothing, everywhere, at once). AFT
-// (the peduncle) hangs off a pivot and is itself narrower than fore; the tail
-// fin hangs off a second pivot at the end of AFT. Both pivots beat on the same
-// clock as the tail always did, phase-lagged so the wave visibly travels back
-// along the body rather than the whole fish snapping side to side as one
-// piece — still driven entirely from pose(), called only from update(), so a
-// turn (the ellipse tangent changing k.group.rotation.y) and a stroke (the
-// pivots) are the same existing update path doing two things at once. Two
-// flat triangle fins — dorsal on fore, ventral on aft — are baked into their
-// segment's own merged geometry (mergeSimple), so the hint costs no extra
-// draw call; both sit ON the fish's plane of symmetry, so neither needs a
-// mirrored twin to read correctly as the school wheels past every angle.
+// THE SWIM. A fish is a travelling wave, not a rigid pellet wagging: each
+// update, every vertex is displaced sideways by amp(s) * sin(phase - s*WAVE),
+// where s runs 0 at the nose to 1 at the tail tip. Amplitude grows ~quadratic
+// in s — near zero at the head (a real fish keeps its head steady), maximal
+// at the fan — and the -s*WAVE term makes the crest travel visibly backward
+// along the body. Base positions are kept once and re-displaced from scratch
+// each frame off the simTime clock, so nothing integrates and the same pond
+// holds the same fish every run (phase comes from hash1, never Math.random).
+//
+// Each koi swims a closed seeded ellipse at a shallow depth, the body yawed
+// along its own tangent — the steering is unchanged from the old build; only
+// the flesh on it is new. The group sits at the water's SURFACE; the fish
+// hang just beneath it.
+
+// nose is at +NOSE_X * L in fish-local space, tail tip at NOSE_X - 1 (so the
+// whole fish, fan included, spans exactly `length`)
+const NOSE_X = 0.45;
+// how many radians of wave the body holds nose-to-tail — enough that the
+// crest is seen to travel, not so many the fish looks like an eel
+const WAVE = 2.6;
+
+// body profile: [x, halfWidth (z), halfHeight (y)] in units of L. Fullest at
+// the shoulder a quarter back from the nose, pinched at the peduncle, then
+// the fan: wide and flat, the widest z-extent on the whole fish, which is
+// what separates "fish" from "tadpole" in a straight-down view.
+const PROFILE = [
+  [0.42, 0.044, 0.042],   // blunt snout — a koi's head is round, never sharp
+  [0.36, 0.074, 0.066],
+  [0.26, 0.092, 0.082],   // shoulder — the fullest station
+  [0.12, 0.088, 0.078],
+  [-0.03, 0.070, 0.064],
+  [-0.16, 0.046, 0.046],
+  [-0.26, 0.028, 0.026],  // caudal peduncle — the pinch before the fan
+  [-0.32, 0.055, 0.024],  // fan root
+  [-0.45, 0.110, 0.018],
+  [-0.55, 0.155, 0.013],  // fan tips
+];
+const RING = 8;
+
+function fishGeometry(L) {
+  // ---- the lofted body ----------------------------------------------------
+  const pos = [];
+  pos.push(NOSE_X * L, 0, 0);                    // 0: nose point
+  for (const [x, w, h] of PROFILE) {
+    for (let j = 0; j < RING; j++) {
+      const a = (j / RING) * Math.PI * 2;
+      pos.push(x * L, Math.cos(a) * h * L, Math.sin(a) * w * L);
+    }
+  }
+  // tail cap centre pulled forward of the fan tips: the trailing edge then
+  // slopes from each tip in toward this point — a V notch, the fork
+  pos.push(-0.44 * L, 0, 0);
+  const tailC = pos.length / 3 - 1;
+
+  const idx = [];
+  for (let j = 0; j < RING; j++) idx.push(0, 1 + j, 1 + ((j + 1) % RING));
+  for (let i = 0; i < PROFILE.length - 1; i++) {
+    const a = 1 + i * RING, b = a + RING;
+    for (let j = 0; j < RING; j++) {
+      const j2 = (j + 1) % RING;
+      idx.push(a + j, b + j, a + j2, a + j2, b + j, b + j2);
+    }
+  }
+  const last = 1 + (PROFILE.length - 1) * RING;
+  for (let j = 0; j < RING; j++) idx.push(tailC, last + ((j + 1) % RING), last + j);
+
+  const body = new THREE.BufferGeometry();
+  body.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
+  body.setIndex(idx);
+  body.computeVertexNormals();
+
+  // ---- fin hints, all flat triangles merged into the same draw -----------
+  const tri = (a, b, c) => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array([...a, ...b, ...c]), 3));
+    g.computeVertexNormals();
+    return g;
+  };
+  // dorsal: on the plane of symmetry, so it reads from either side unmirrored
+  const dorsal = tri(
+    [0.04 * L, 0.072 * L, 0], [-0.14 * L, 0.038 * L, 0], [-0.05 * L, 0.115 * L, 0],
+  );
+  // pectorals: a swept-back pair at the shoulder, tipped down and out — from
+  // straight above they are the two little wings that instantly say koi
+  const pect = (side) => tri(
+    [0.20 * L, -0.018 * L, side * 0.050 * L],
+    [0.11 * L, -0.024 * L, side * 0.042 * L],
+    [0.02 * L, -0.048 * L, side * 0.130 * L],
+  );
+  return mergeSimple([body, dorsal, pect(1), pect(-1)]);
+}
 
 export function makeKoi({
   count = 3,
@@ -57,88 +137,43 @@ export function makeKoi({
   const g = new THREE.Group();
   g.name = 'koi';
   const L = length;
-  // DoubleSide: the fin-hint triangles below are zero-thickness planes, and
-  // toonMaterial defaults to FrontSide — a single-sided fin vanishes for half
-  // of every lap, whenever the yaw swings its back face toward the camera
-  // (visible in wip-koi-r2.jpeg: one fish's dorsal fin missing while the
-  // other two showed theirs). Shared by the whole fish rather than a
-  // fin-only material so body/tail keep the same material identity as before.
+  // DoubleSide: the fin triangles are zero-thickness planes and toonMaterial
+  // defaults to FrontSide — a single-sided fin vanishes for half of every lap,
+  // whenever the yaw swings its back face toward the camera. Shared by the
+  // whole fish so body and fins keep one material identity.
   const mat = toonMaterial({ color, flat: true, side: THREE.DoubleSide });
 
-  // A flat triangle standing off the plane of symmetry (z=0 in the segment's
-  // own local space) — reads from any angle without a mirrored twin, since it
-  // never leans to one side.
-  function finPlane(root, rootY, tip, tipY) {
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([
-      root[0], rootY, 0,
-      root[1], rootY, 0,
-      tip, tipY, 0,
-    ]), 3));
-    geo.computeVertexNormals();
-    return geo;
+  // One template geometry; each fish clones it (its vertices flex on its own
+  // phase) but they all displace from this single shared base, with the wave
+  // coordinate s and per-vertex amplitude precomputed once here.
+  const template = fishGeometry(L);
+  const base = template.attributes.position.array;
+  const nV = template.attributes.position.count;
+  const sArr = new Float32Array(nV);
+  const ampArr = new Float32Array(nV);
+  for (let v = 0; v < nV; v++) {
+    const s = Math.min(1, Math.max(0, (NOSE_X * L - base[v * 3]) / L));
+    sArr[v] = s;
+    // near zero at the head, maximal at the fan — quadratic growth is what
+    // sells a fish; uniform amplitude is what sells a tadpole
+    ampArr[v] = L * (0.012 + 0.118 * s * s);
   }
 
   const fish = [];
   for (let i = 0; i < count; i++) {
     const f = new THREE.Group();
     f.name = 'fish';
-
-    // FORE: nose to just past mid-body, fullest a third of the way back, then
-    // tapering into the fore/aft joint — the taper the old single ellipsoid
-    // never had (it tapered identically toward both ends at once). Rigid: a
-    // real fish keeps its head steady while the rest of the line sweeps.
-    // Reaches past the joint on purpose (overlapping AFT below) — two
-    // ellipsoids butted exactly at their own zero-radius tips pinch to a
-    // wasp waist; overlapped, AFT's own flesh fills the taper in behind FORE.
-    const foreGeo = new THREE.SphereGeometry(0.5, 10, 8);
-    foreGeo.scale(L * 0.40, L * 0.15, L * 0.24);
-    foreGeo.translate(L * 0.11, 0, 0);
-    // dorsal fin hint, a small ridge just proud of the back — sized against
-    // the body's own radius (0.075L), not against the fish's overall length
-    const dorsal = finPlane([L * 0.10, L * 0.04], L * 0.070, L * 0.07, L * 0.115);
-    const fore = new THREE.Mesh(mergeSimple([foreGeo, dorsal]), mat);
-    fore.name = 'koi-body';
-    f.add(fore);
-
-    // AFT — the peduncle: a pivot that beats, carrying a segment narrower
-    // than fore so the taper continues on toward the tail root. This second
-    // joint (plus the tail's own, below) is what turns the swim into a
-    // travelling flex instead of the whole fish snapping as one rigid piece.
-    const aftPivot = new THREE.Group();
-    aftPivot.name = 'koi-aft-pivot';
-    aftPivot.position.x = -L * 0.06;
-    const aftGeo = new THREE.SphereGeometry(0.5, 8, 6);
-    aftGeo.scale(L * 0.30, L * 0.09, L * 0.15);
-    aftGeo.translate(-L * 0.10, 0, 0);
-    // a small ventral/anal fin hint, near the joint, sized against AFT's own
-    // (thinner) radius
-    const ventral = finPlane([-L * 0.03, -L * 0.09], -L * 0.040, -L * 0.06, -L * 0.070);
-    const aft = new THREE.Mesh(mergeSimple([aftGeo, ventral]), mat);
-    aft.name = 'koi-aft';
-    aftPivot.add(aft);
-    f.add(aftPivot);
-
-    // the caudal fin: a flat triangle fan hinged at the tail root, so it can
-    // beat side to side. Pointed toward the body, flaring out behind. Hung
-    // off the end of the peduncle rather than straight off fore, now that
-    // there is a peduncle to hang it off of; sized down a touch to match the
-    // slimmer peduncle it now grows from.
-    const tail = new THREE.Group();
-    tail.name = 'koi-tail';
-    tail.position.x = -L * 0.25;
-    const finGeo = new THREE.ConeGeometry(L * 0.15, L * 0.28, 3);
-    finGeo.rotateZ(Math.PI / 2);          // apex toward +x (the body), base trailing -x
-    finGeo.scale(1, 1, 0.28);             // flatten to a fin, upright in the water
-    const fin = new THREE.Mesh(finGeo, mat);
-    fin.name = 'koi-fin';
-    fin.position.x = -L * 0.12;
-    tail.add(fin);
-    aftPivot.add(tail);
-
+    const mesh = new THREE.Mesh(template.clone(), mat);
+    mesh.name = 'koi-body';
+    // the wave displaces vertices past the rest pose; pad the culling sphere
+    // so a fish at the frame's edge doesn't pop out mid-tailbeat
+    mesh.geometry.computeBoundingSphere();
+    mesh.geometry.boundingSphere.radius += L * 0.15;
+    f.add(mesh);
     g.add(f);
     fish.push({
-      group: f, tail, aftPivot,
+      group: f,
+      posAttr: mesh.geometry.attributes.position,
       phase: hash1(i * 4 + 1, seed) * Math.PI * 2,
       rx: radius * (0.55 + hash1(i * 4 + 2, seed) * 0.4),
       rz: radius * (0.45 + hash1(i * 4 + 3, seed) * 0.4),
@@ -165,15 +200,17 @@ export function makeKoi({
       const vx = -k.rx * Math.sin(a) * k.dir;
       const vz = k.rz * Math.cos(a) * k.dir;
       k.group.rotation.y = Math.atan2(-vz, vx);
-      // the travelling wave: the peduncle beats first, the tail catches the
-      // same wave a beat later and swings further — a flexing line, not a
-      // rigid pellet turning as one piece. The tail's own formula is
-      // unchanged from before this segment existed.
-      const beatPhase = clock * k.beat + k.phase;
-      k.aftPivot.rotation.y = Math.sin(beatPhase - 0.7) * 0.22;
-      k.tail.rotation.y = Math.sin(beatPhase) * 0.5;
       // the body banks a little into its turns
       k.group.rotation.z = Math.sin(clock * k.beat * 0.5 + k.phase) * 0.08;
+      // the travelling wave: every vertex re-displaced from the shared base,
+      // sideways only, on this fish's own beat. Flat shading derives normals
+      // in the shader, so the position attribute is the only thing touched.
+      const beatPhase = clock * k.beat + k.phase;
+      const arr = k.posAttr.array;
+      for (let v = 0; v < nV; v++) {
+        arr[v * 3 + 2] = base[v * 3 + 2] + ampArr[v] * Math.sin(beatPhase - sArr[v] * WAVE);
+      }
+      k.posAttr.needsUpdate = true;
     }
   }
   pose();
