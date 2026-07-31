@@ -234,10 +234,28 @@
       // (-13,0.28,-6)| = 1.5328.
       'cat-side': { p: [-11.5882, 0.42, -5.4031], t: [-13, 0.28, -6] },
       koi:     { p: [-3.9, 1.10, -4.6], t: [-3, 0.20, -6.4] },
+      // profile view, added for A7 (koi.js): the near view's 3/4-from-above
+      // angle can't show the body's nose-to-tail taper or the travelling
+      // flex through the peduncle/tail joints unambiguously — the same trap
+      // A3-A6 flagged for neck/tail/knee/haunch work. Formula per those
+      // tasks: camera sits at the model's own placement position, offset
+      // along its local +x (the "right" side, i.e. (cos ry, 0, -sin ry)) by
+      // the near view's own distance, at the near view's own eye height —
+      // `(x + d*cos(ry), eye, z - d*sin(ry))` looking at the near view's own
+      // target. the koi group is placed at (-3, -6.4, 0.16) with ry=0; near
+      // view distance d = |(-3.9,1.10,-4.6) - (-3,0.20,-6.4)| = 2.2045.
+      'koi-side': { p: [-0.7955, 1.10, -6.4], t: [-3, 0.20, -6.4] },
       // seen from below, the way this kit's birds are actually staged (see
       // birds.js: "birds seen from below") — a level eye-height shot presents
       // the bird nearly edge-on, since its spread silhouette lies flat
       bird:    { p: [-0.3, 0.40, -4.2], t: [1, 1.40, -6] },
+      // profile view, added for A7 (bird.js): the near view is already a
+      // side-on angle, but low and close; this pulls back to the near view's
+      // own distance so the whole wing sweep/fold is visible without the
+      // wingtip clipping the frame. Same formula as koi-side above. the bird
+      // is placed at (1, -6, 1.4) with ry=0; near view distance
+      // d = |(-0.3,0.40,-4.2) - (1,1.40,-6)| = 2.4352.
+      'bird-side': { p: [3.4352, 0.40, -6], t: [1, 1.40, -6] },
       birds:   { p: [3.0, 4.50, -1.0], t: [6, 6.00, -8] },
       finger:  { p: [10.6, 0.22, -5.4], t: [10, 0.08, -6] },
 
@@ -273,6 +291,8 @@
     soloGroups['dog-side'] = soloGroups.dog;
     soloGroups['fox-side'] = soloGroups.fox;
     soloGroups['cat-side'] = soloGroups.cat;
+    soloGroups['koi-side'] = soloGroups.koi;
+    soloGroups['bird-side'] = soloGroups.bird;
 
     // below and out from his anchor, looking up across the canopy's underside
     // rather than into it — the anchor sits ON the crown mass, so a close
@@ -334,7 +354,7 @@
       return out;
     }
 
-    window.kp = { renderer, scene, camera, render, step, shot, view: setView, shotAll, solo, buffalo, water, fox, cat, THREE };
+    window.kp = { renderer, scene, camera, render, step, shot, view: setView, shotAll, solo, buffalo, water, fox, cat, koi, bird, THREE };
 
     // real-browser convenience: gentle auto-orbit (paused in headless previews, which is fine)
     let t0 = performance.now();
