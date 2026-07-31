@@ -1,5 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
+import { mergeSimple } from './scatter.js';
 import { WASH } from '../palette.js';
 
 // An open hall veranda: a raised timber floor with a post-and-beam opening
@@ -10,6 +11,19 @@ import { WASH } from '../palette.js';
 // Local frame: the post line (the opening) stands at z = 0 and the floor runs
 // back to +z. Place the group at the front edge and everything behind it is
 // interior.
+//
+// This is the hut's small sibling, not a separate building language: floor
+// boards instead of a wall's plaster, a beam on posts instead of a corner post
+// proud of a wall, and an eave that sweeps and flicks up at the tip exactly the
+// way the hut's roof does (see hut.js's hipShell) — just a single straight run,
+// not a hip, because a veranda eave does not need a ridge to hold one up.
+
+const boxGeo = (w, h, d, x, y, z) => {
+  const g = new THREE.BoxGeometry(w, h, d);
+  g.translate(x, y, z);
+  return g;
+};
+
 export function makeVeranda({
   width = 4.8, depth = 4.4, height = 3.3, deck = 0.34,
   color = WASH.dark, floorColor = WASH.stone,
@@ -19,42 +33,103 @@ export function makeVeranda({
   const mat = toonMaterial({ color });
   const flat = toonMaterial({ color, flat: true });
 
-  const boardT = Math.min(0.24, deck * 0.7);
-  const floor = new THREE.Mesh(
-    new THREE.BoxGeometry(width, boardT, depth),
-    toonMaterial({ color: floorColor, flat: true }));
+  // ---- the deck: thin merged planks, not one slab ------------------------
+  // Real board width, laid crosswise (each plank runs the full opening, the
+  // planks stack back into the room) with a hairline gap between them — the
+  // gap is the groove: two flat tops at the same height read as one slab, but
+  // the little vertical riser between boards catches the sun differently and
+  // the seam shows.
+  const boardT = Math.min(0.20, deck * 0.65);
+  const PLANK_RUN = Math.max(0.30, Math.min(0.42, depth / 9));
+  const plankCount = Math.max(5, Math.round(depth / PLANK_RUN));
+  const GROOVE = 0.016;
+  const step = depth / plankCount;
+  const floorGeos = [];
+  for (let i = 0; i < plankCount; i++) {
+    floorGeos.push(boxGeo(width, boardT, Math.max(0.05, step - GROOVE),
+      0, deck - boardT / 2, step * (i + 0.5)));
+  }
+  const floor = new THREE.Mesh(mergeSimple(floorGeos), toonMaterial({ color: floorColor, flat: true }));
   floor.name = 'floor';
-  floor.position.set(0, deck - boardT / 2, depth / 2);
   g.add(floor);
 
   // stub piers, so the floor reads as raised boards rather than a poured slab
   const pierH = Math.max(0.06, deck - boardT);
+  const pierGeos = [];
   for (const sx of [-1, 1]) for (const sz of [0.7, depth - 0.7]) {
-    const pier = new THREE.Mesh(new THREE.BoxGeometry(0.34, pierH, 0.34), flat);
-    pier.name = 'pier';
-    pier.position.set(sx * (width / 2 - 0.55), pierH / 2, sz);
-    g.add(pier);
+    pierGeos.push(boxGeo(0.34, pierH, 0.34, sx * (width / 2 - 0.55), pierH / 2, sz));
   }
+  const pier = new THREE.Mesh(mergeSimple(pierGeos), flat);
+  pier.name = 'pier';
+  g.add(pier);
 
-  // the two posts carry the beam; they run past the floor to the ground
-  for (const sx of [-1, 1]) {
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.13, height, 10), mat);
-    post.name = 'post';
-    post.position.set(sx * width / 2, height / 2, 0);
-    g.add(post);
+  // ---- posts, on a regular beat, all carrying one beam -------------------
+  // Two posts (the corners of the opening) read as a doorframe, not a hall;
+  // real post-and-beam construction repeats a post every span or so along the
+  // beam it carries. One merged mesh, still named 'post', spaced evenly across
+  // the whole width so the count itself scales with it (a wider bay earns
+  // another post rather than a longer gap).
+  // The two outer posts stay exactly on the opening line (z = 0) — that line
+  // is what a case builds against (a hung screen, a scroll) and moving it
+  // would be an API change in spirit even though the option list does not
+  // say so. Interior posts step back a little toward the exterior, the same
+  // way a real intermediate mullion sits behind the sliding track rather than
+  // in it: case 26 hangs a screen exactly on z = 0 across the WHOLE opening,
+  // and a post standing there would run straight through it.
+  const POST_SPACING = 1.7;
+  const POST_RECESS = 0.12;
+  const postCount = Math.max(2, Math.round(width / POST_SPACING) + 1);
+  const postGeos = [];
+  for (let i = 0; i < postCount; i++) {
+    const px = postCount > 1 ? -width / 2 + (width * i) / (postCount - 1) : 0;
+    const pz = (i === 0 || i === postCount - 1) ? 0 : -POST_RECESS;
+    const p = new THREE.CylinderGeometry(0.10, 0.13, height, 10);
+    p.translate(px, height / 2, pz);
+    postGeos.push(p);
   }
+  const post = new THREE.Mesh(mergeSimple(postGeos), mat);
+  post.name = 'post';
+  g.add(post);
 
-  const beam = new THREE.Mesh(new THREE.BoxGeometry(width + 0.55, 0.20, 0.30), flat);
+  // the edge beam the posts carry, running the whole width past the corners
+  const beam = new THREE.Mesh(boxGeo(width + 0.55, 0.20, 0.30, 0, height - 0.10, 0), flat);
   beam.name = 'beam';
-  beam.position.set(0, height - 0.10, 0);
   g.add(beam);
 
-  // one board of roof, tipped so the lip drops toward the garden. Enough eave to
-  // frame the shot from underneath without putting a slab over the scene.
-  const eave = new THREE.Mesh(new THREE.BoxGeometry(width + 0.95, 0.09, 0.95), flat);
+  // ---- the eave: the hut's roof language, in one straight run -------------
+  // Steepest where it leaves the beam, flattening as it runs out, then a LIP
+  // that turns the very tip back up — the same concave sweep the hut's hipShell
+  // builds from a stack of rings, drawn here from a short curve of tilted
+  // boards instead, because a lean-to run needs no hip taper to get there.
+  // Every board is real box geometry (six faces, no manifold-stitching), so
+  // there is no chance of the underside culling black the way an open sheet
+  // would from below the eave — the one place these bays are always seen from.
+  const EAVE_T = 0.08;
+  const OVER = 0.55 + 0.075 * width;      // how far the eave reaches past the beam
+  const DROP = 0.20 + 0.05 * depth;       // how far it dips before the lip
+  const LIP = 0.05;                       // how far the very tip turns back up
+  const ROOT_Z = 0.12;                    // tucked a little behind the beam
+  const ROOT_Y = height + 0.14;
+  const profile = [
+    { r: 0, d: 0 },
+    { r: 0.27 * OVER, d: 0.45 * DROP },
+    { r: 0.58 * OVER, d: 0.80 * DROP },
+    { r: 0.91 * OVER, d: 1.00 * DROP },
+    { r: 1.00 * OVER, d: 1.00 * DROP - LIP },
+  ].map((p) => ({ z: ROOT_Z - p.r, y: ROOT_Y - p.d }));
+  const eaveHalfW = width / 2 + 0.42;
+  const eaveGeos = [];
+  for (let i = 0; i < profile.length - 1; i++) {
+    const a = profile[i], b = profile[i + 1];
+    const dz = b.z - a.z, dy = b.y - a.y;
+    const len = Math.hypot(dz, dy);
+    const seg = new THREE.BoxGeometry(eaveHalfW * 2, EAVE_T, len);
+    seg.rotateX(Math.atan2(-dy, dz));
+    seg.translate(0, (a.y + b.y) / 2, (a.z + b.z) / 2);
+    eaveGeos.push(seg);
+  }
+  const eave = new THREE.Mesh(mergeSimple(eaveGeos), flat);
   eave.name = 'eave';
-  eave.position.set(0, height + 0.08, -0.14);
-  eave.rotation.x = -0.14;
   g.add(eave);
 
   g.userData.deck = deck;

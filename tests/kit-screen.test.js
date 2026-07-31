@@ -118,11 +118,11 @@ test('the screen is deterministic and renderer-free', () => {
 test('makeVeranda is an open bay on a raised floor', () => {
   const v = makeVeranda({ width: 4.8, depth: 4.4, height: 3.3, deck: 0.34 });
   assert.equal(v.name, 'veranda');
-  assert.equal(v.children.filter((c) => c.name === 'post').length, 2, 'two posts, no walls');
   assert.ok(v.children.some((c) => c.name === 'beam'));
   assert.ok(v.children.some((c) => c.name === 'eave'));
   const floor = v.children.find((c) => c.name === 'floor');
   assert.ok(floor, 'a floor to sit on');
+  assert.ok(v.children.some((c) => c.name === 'pier'), 'stub piers under the boards');
 
   const box = new THREE.Box3().setFromObject(v);
   assert.ok(box.min.y > -0.02, 'on the ground');
@@ -135,6 +135,94 @@ test('makeVeranda is an open bay on a raised floor', () => {
   for (const [x, z] of [[0, 2.2], [-2.2, 0.3], [2.2, 4.1]]) {
     assert.ok(marks.some((m) => Math.hypot(x - m.x, z - m.z) < m.r), `covers (${x}, ${z})`);
   }
+});
+
+test('makeVeranda floor is grooved planks, merged into one mesh', () => {
+  const v = makeVeranda({ width: 4.8, depth: 4.4, height: 3.3, deck: 0.34 });
+  const floors = v.children.filter((c) => c.name === 'floor');
+  assert.equal(floors.length, 1, 'the whole deck is one merged mesh');
+  // planks are boxes with a gap between them, so their vertex x-positions land
+  // on plank tops at exactly two y-levels (top and bottom of the board) rather
+  // than one continuous slab
+  const pos = floors[0].geometry.attributes.position;
+  const ys = new Set();
+  for (let i = 0; i < pos.count; i++) ys.add(Math.round(pos.getY(i) * 1000) / 1000);
+  assert.equal(ys.size, 2, 'each plank has a top and a bottom, and nothing else');
+});
+
+test('makeVeranda posts are regular, merged, and still carry the beam', () => {
+  const width = 4.8, height = 3.3;
+  const v = makeVeranda({ width, depth: 4.4, height, deck: 0.34 });
+  const posts = v.children.filter((c) => c.name === 'post');
+  assert.equal(posts.length, 1, 'every post merges into one mesh, same as the hut');
+
+  // the builder's own regular-beat formula, reproduced so a tuned spacing
+  // constant does not silently desync this test from the geometry
+  const postCount = Math.max(2, Math.round(width / 1.7) + 1);
+  assert.ok(postCount >= 3, 'this width earns more than the two corner posts');
+  const xs = [];
+  for (let i = 0; i < postCount; i++) xs.push(-width / 2 + (width * i) / (postCount - 1));
+
+  const pos = posts[0].geometry.attributes.position;
+  const buckets = new Map();
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    let nearest = xs[0], best = Infinity;
+    for (const cx of xs) { const d = Math.abs(x - cx); if (d < best) { best = d; nearest = cx; } }
+    assert.ok(best < 0.15, `vertex at x=${x.toFixed(3)} lands near a post centre`);
+    buckets.set(nearest, (buckets.get(nearest) || 0) + 1);
+  }
+  assert.equal(buckets.size, postCount, `all ${postCount} posts are present, none dropped`);
+  const counts = [...buckets.values()];
+  assert.ok(counts.every((c) => c === counts[0]), 'every post carries the same vertex count');
+
+  // the outer two still sit exactly at the corners of the opening — a wider
+  // hall gets an extra post in the middle, not a wider gap at the ends
+  assert.ok(Math.abs(xs[0] + width / 2) < 1e-6 && Math.abs(xs[xs.length - 1] - width / 2) < 1e-6);
+
+  const box = new THREE.Box3().setFromObject(posts[0]);
+  assert.ok(box.max.y > height - 0.05, 'every post reaches the beam');
+});
+
+test('makeVeranda eave sweeps and turns up at the tip, the hut\'s language', () => {
+  const width = 4.8, depth = 4.4, height = 3.3;
+  const v = makeVeranda({ width, depth, height, deck: 0.34 });
+  const eave = v.children.find((c) => c.name === 'eave');
+  assert.ok(eave, 'a merged eave mesh');
+
+  // The tip (the LAST control point) should stand HIGHER than the low point
+  // just behind it (the SECOND-LAST control point) — that is the lip. Every
+  // board spans the full width (each is one un-subdivided box), so x carries
+  // no information here, unlike a tapered hip roof — only z (reach) and y
+  // matter. Reproduce the builder's own reach formula (same tradeoff as the
+  // post-spacing test above: this constant can drift, but then so does the
+  // test that watches it) to find where those two control points actually
+  // land, then sample real geometry near each rather than trusting the
+  // formula alone. A tight window fails here: each board's own thickness
+  // smears its corners a few centimetres in z once tilted, on the same order
+  // as the ~0.08 reach gap between these two points, so anything narrower
+  // than ~0.05 can miss the real corners entirely (proven empirically —
+  // 0.03 misses, 0.05 does not, on this width/depth).
+  const OVER = 0.55 + 0.075 * width;
+  const ROOT_Z = 0.12;
+  const dipZ = ROOT_Z - 0.91 * OVER;      // the low point, just behind the lip
+  const tipZ = ROOT_Z - 1.00 * OVER;      // the very tip
+  const pos = eave.geometry.attributes.position;
+  const maxYNear = (z0, r) => {
+    let y = -Infinity;
+    for (let i = 0; i < pos.count; i++) {
+      if (Math.abs(pos.getZ(i) - z0) < r) y = Math.max(y, pos.getY(i));
+    }
+    return y;
+  };
+  const tipY = maxYNear(tipZ, 0.05);
+  const dipY = maxYNear(dipZ, 0.05);
+  assert.ok(Number.isFinite(tipY) && Number.isFinite(dipY), 'both control points land on real geometry');
+  assert.ok(tipY > dipY, 'the very tip turns back up above the dip just behind it');
+
+  const box = new THREE.Box3().setFromObject(eave);
+  assert.ok(box.max.y > height, 'the eave clears the posts');
+  assert.ok(box.max.z - box.min.z > 0.6, 'the eave reaches well past the beam');
 });
 
 // ---- the case itself ------------------------------------------------------
