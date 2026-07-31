@@ -87,6 +87,37 @@ test('makeHut is a roofed hall on the ground, and cheap to draw', () => {
   assert.ok(pb.min.z < -0.8 && pb.max.z > 0.8, 'and at each end of the depth');
   assert.ok(pb.max.y >= 2.2 - 0.02, 'full height');
 
+  // ...and there are FOUR of them, not two on a diagonal. The bounding box above
+  // cannot tell those apart, so bucket the merged mesh's own vertices by which
+  // corner they belong to: each post is well clear of both centre planes, so
+  // sign(x)/sign(z) partitions them cleanly. All four buckets must exist, carry
+  // an equal share of the geometry, stand at their own corner, and reach the
+  // eave — a merge that silently dropped a post fails all four ways.
+  const pos = posts[0].geometry.attributes.position;
+  assert.equal(pos.count % 4, 0, 'four equal posts share the merged geometry');
+  const quads = new Map();
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    const key = `${Math.sign(x)},${Math.sign(z)}`;
+    const q = quads.get(key) || { n: 0, minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity, maxY: -Infinity };
+    q.n++;
+    q.minX = Math.min(q.minX, x); q.maxX = Math.max(q.maxX, x);
+    q.minZ = Math.min(q.minZ, z); q.maxZ = Math.max(q.maxZ, z);
+    q.maxY = Math.max(q.maxY, y);
+    quads.set(key, q);
+  }
+  assert.deepEqual([...quads.keys()].sort(), ['-1,-1', '-1,1', '1,-1', '1,1'],
+    `a post in each corner, got ${[...quads.keys()].sort()}`);
+  for (const [key, q] of quads) {
+    const [sx, sz] = key.split(',').map(Number);
+    assert.equal(q.n, pos.count / 4, `corner ${key} carries its quarter of the merge`);
+    assert.ok(q.maxY >= 2.2 - 0.02, `corner ${key} reaches the eave: ${q.maxY}`);
+    // the post's axis sits on the corner of the plan, within its own radius
+    const cx = (q.minX + q.maxX) / 2, cz = (q.minZ + q.maxZ) / 2;
+    assert.ok(Math.abs(cx - sx * 2.4 / 2) < 0.02, `corner ${key} is on the width: ${cx}`);
+    assert.ok(Math.abs(cz - sz * 2.0 / 2) < 0.02, `corner ${key} is on the depth: ${cz}`);
+  }
+
   // the whole hall stays inside a small, fixed mesh budget
   const meshes = [];
   hut.traverse((o) => { if (o.isMesh) meshes.push(o.name); });
