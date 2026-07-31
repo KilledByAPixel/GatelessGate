@@ -70,6 +70,13 @@ export default {
     const oakRoot = oak.group || oak;
     const TREE = { x: 4.0, z: -2.6 };      // moved clear of the path (Frank: it stood in the road)
     oakRoot.position.set(TREE.x, 0, TREE.z);
+    // Turn the hero limb AWAY from the home lens (Frank: "what's going on with
+    // the weird tree branch?"). Seed 27 grows its long low bough at local
+    // azimuth 2.50, which the home camera (azimuth 0.55) saw end-on: a bare
+    // foreshortened limb with a knuckle, jutting at the hall like an arm. At
+    // this yaw the bough reaches directly behind the crown, so from the whole
+    // reachable arc the tree reads as one heavy mass over its trunk.
+    oakRoot.rotation.y = 4.62;
     treeGroup.add(oakRoot);
     scene.add(treeGroup);
 
