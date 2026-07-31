@@ -9,6 +9,7 @@ export { makeLantern } from './lantern.js';
 export { makePath } from './path.js';
 export { composeWorld } from './scenery.js';
 export { makeMonk, aimMonk } from './monk.js';
+export { makeFigure, robeLathe, sleeve, sphereHead, neckBetween } from './figure.js';
 export { makeTree } from './tree.js';
 export { makePine, pineGeometry } from './pine.js';
 export { makeGate } from './gate.js';

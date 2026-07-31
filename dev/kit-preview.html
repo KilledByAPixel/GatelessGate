@@ -72,7 +72,10 @@
     place(makeBuddha({}), -1.2, 0, 0, 'buddha');
     place(makeMonk({ pose: 'sit' }), 2.4, 0, 0, 'figures');
     place(makeMonk({ pose: 'sit', elder: true }), 4.6, 0, -0.2, 'figures');
-    place(makeMonk({ pose: 'point' }), 6.8, 0, -0.3, 'figures');      // reference standing monk
+    // reference standing monk. Also keyed 'monk-side' so B1 can solo HIM alone
+    // for a true profile — the 'figures' view is a 3/4 group shot and can't
+    // show the robe's silhouette (collar, waist, hem flare) edge-on.
+    place(makeMonk({ pose: 'point' }), 6.8, 0, -0.3, ['figures', 'monk-side']);
     place(makeAssembly({ count: 8, radius: 2.2, center: [11, -1.5], facing: [11, 3] }), 0, 0, 0, 'figures');
 
     // row B — props (back)
@@ -196,6 +199,13 @@
       'dog-side': { p: [-9.8334, 0.28, -0.7981], t: [-11, 0.36, 0] },
       buddha:  { p: [-1.2, 3.2, 5], t: [-1.2, 1.4, 0] },
       figures: { p: [3.5, 3.4, 8], t: [3.5, 1.2, -0.1] },
+      // profile view of the reference standing monk, added for B1 (figure.js).
+      // A person's "side" is perpendicular to the way he FACES, and a monk
+      // faces local +x (aimMonk's convention), so this offsets along local +z
+      // — `(x + d*sin(ry), eye, z + d*cos(ry))` — not along +x the way the
+      // quadruped side views do. Monk is placed at (6.8, 0, -0.3), ry = -0.3,
+      // d = 3.0: a true edge-on read of the robe silhouette.
+      'monk-side': { p: [5.9134, 1.10, 2.5659], t: [6.8, 0.90, -0.3] },
       water:   { p: [-4.6, 3.2, 9.5], t: [-4.6, 0.4, 5.4] },
       hut:     { p: [0.5, 4.2, 11.5], t: [0.5, 1.5, 6.5] },
 
