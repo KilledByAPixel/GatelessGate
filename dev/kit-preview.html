@@ -80,7 +80,7 @@
 
     // row B — props (back)
     place(makeFlower({}), -11, 5, 0, 'flower');
-    place(makeBowl({}), -8, 5, 0);
+    place(makeBowl({}), -8, 5, 0, 'bowl');
     const water = place(makeWater({ size: 2.4 }), -4.6, 5.4, 0, 'water');
     place(makeHut({}), 0.5, 6.5, 0, 'hut');
     place(makeLattice({}), 5.5, 5.5, 0.15);
@@ -238,6 +238,18 @@
       // the near view's own camera offset 90 degrees around the target — same
       // formula as `finger-side`: (dx, dy, dz) -> (-dz, dy, dx).
       'flower-side': { p: [-11.35, 1.15, 5.6], t: [-11, 0.55, 5.05] },
+      // bowl had no dedicated view at all (a ledgered gap — flower got one in
+      // C5, lattice comes in D6, this is bowl's turn). place(thing, x, z, ry)
+      // — the bowl is placed at (-8, 5) in (x, z), i.e. row B's own z≈5, not
+      // z=0 (a first draft of this view aimed at z=0 and shot blank frames —
+      // caught by reading the before-shot, fixed here). Framed close since
+      // the bowl is small (R=0.22, H=0.3) — target at rim height, camera a
+      // little above and back.
+      bowl:        { p: [-7, 0.50, 6.6], t: [-8, 0.18, 5] },
+      // profile view: a bowl (like the flower/finger) has no established
+      // facing to offset from, so this rotates the near view's own camera
+      // offset 90 degrees around the target — same formula as `flower-side`.
+      'bowl-side': { p: [-9.6, 0.50, 6.0], t: [-8, 0.18, 5] },
 
       // row C — creatures
       fox:     { p: [-16.9, 0.45, -4.6], t: [-16, 0.30, -6] },
@@ -339,12 +351,29 @@
       drum:    { p: [-5, 1.3, 25], t: [-7, 0.9, 22] },
       stall:   { p: [0.5, 1.4, 26.5], t: [-2, 1.0, 22.6] },
       basin:   { p: [4.5, 0.42, 25], t: [2, 0.30, 22] },
+      // profile view, added for D5 (basin.js): the near view looks across the
+      // rim at a 3/4 angle and can't show the rim lip's thickness or the
+      // water inset line unambiguously edge-on. basin has no established
+      // facing (ry=0, radially symmetric), so this rotates the near view's
+      // own camera offset 90 degrees around the target — same formula as
+      // `flower-side`/`bowl-side`: (dx, dy, dz) -> (-dz, dy, dx). offset from
+      // target is (2.5, 0.12, 3) -> rotated (-3, 0.12, 2.5).
+      'basin-side': { p: [-1, 0.42, 24.5], t: [2, 0.30, 22] },
       furin:   { p: [7.0, 1.9, 23.3], t: [6, 1.65, 22] },
       wheel:   { p: [12, 1.3, 25.5], t: [10, 1.0, 22] },
       vase:    { p: [15.2, 0.55, 23.8], t: [14, 0.35, 22] },
+      // profile view, added for D5 (vase.js): the near view's 3/4 angle can't
+      // show the neck/shoulder taper's true profile edge-on. Same rotate-90
+      // formula as basin-side; offset (1.2, 0.2, 1.8) -> rotated
+      // (-1.8, 0.2, 1.2).
+      'vase-side': { p: [12.2, 0.55, 23.2], t: [14, 0.35, 22] },
       rack:    { p: [20.5, 1.2, 26], t: [17, 0.8, 22] },
       pole:    { p: [14, 2.4, 32], t: [24, 3.5, 22] },
       bundle:  { p: [31.2, 0.4, 23.6], t: [30, 0.2, 22] },
+      // profile view, added for D5 (bundle.js): the near view can't show the
+      // folds' stacked-and-turned silhouette or the rope ties edge-on. Same
+      // rotate-90 formula; offset (1.2, 0.2, 1.6) -> rotated (-1.6, 0.2, 1.2).
+      'bundle-side': { p: [28.4, 0.4, 23.2], t: [30, 0.2, 22] },
       // profile views, added for D4 (lantern.js/bell.js): same formula as
       // gate-side/finger-side — `(t.x + d, near.eye, t.z)` where d is the
       // near view's own distance from its target and both placements have
@@ -370,6 +399,10 @@
     soloGroups['gate-side'] = soloGroups.gate;
     soloGroups['lantern-side'] = soloGroups.lantern;
     soloGroups['bell-side'] = soloGroups.bell;
+    soloGroups['bowl-side'] = soloGroups.bowl;
+    soloGroups['basin-side'] = soloGroups.basin;
+    soloGroups['vase-side'] = soloGroups.vase;
+    soloGroups['bundle-side'] = soloGroups.bundle;
 
     // below and out from his anchor, looking up across the canopy's underside
     // rather than into it — the anchor sits ON the crown mass, so a close

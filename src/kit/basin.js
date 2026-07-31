@@ -17,6 +17,21 @@ import { WASH } from '../palette.js';
 // The ground plane is unbroken (see kit/ground.js), so a basin cannot be sunk
 // into it; the floor sits just above ground level and the vessel stands proud,
 // which is what a temple water basin does anyway.
+//
+// LATHE WINDING. `LatheGeometry` derives its face winding from the order the
+// profile is walked, and that order has to go the same direction bowl.js's
+// does — up the OUTSIDE first, across the top, back down the INSIDE — or the
+// whole shell's normals come out backwards: the interior read uniformly
+// near-black (grazing angles) or vanished outright (steep-overhead, the
+// culled backface showing whatever sits behind the mesh), confirmed with a
+// LatheGeometry+computeVertexNormals probe against this exact profile before
+// the fix (every band's face normal pointed down/inward instead of
+// up/outward) and with real workbench screenshots after (see task-D5-report).
+// The old order walked the INSIDE first (floor -> inner wall -> rim top ->
+// outer wall), which is the reverse of a correctly-wound vessel. `DoubleSide`
+// is added on top, matching bowl.js/vase.js's own lathe shells, as a second
+// line of defence for any grazing angle a future camera might still catch
+// wrong-side-on.
 export function makeBasin({
   inner = 1.0,           // radius of the water's room — the hole
   outer = 1.2,           // outer radius at the rim
@@ -27,16 +42,16 @@ export function makeBasin({
 } = {}) {
   const base = outer * 1.02;             // a slight outward flare at the foot
   const profile = [
-    [0, floor],                          // the floor, closed at the centre
-    [inner, floor],                      // out to the wall
-    [inner, rim],                        // up the inside
-    [outer, rim],                        // across the top of the rim
-    [base, 0],                           // and down the outside to the ground
+    [base, 0],                           // up the outside from the ground
+    [outer, rim],                        // to the top of the rim
+    [inner, rim],                        // across the rim lip — reads as a thin inset line
+    [inner, floor],                      // down the inside wall
+    [0, floor],                          // and in to the floor, closed at the centre
   ].map(([r, y]) => new THREE.Vector2(r, y));
 
   const mesh = new THREE.Mesh(
     new THREE.LatheGeometry(profile, segments),
-    toonMaterial({ color, flat: true }));
+    toonMaterial({ color, flat: true, side: THREE.DoubleSide }));
   mesh.name = 'basin';
   return mesh;
 }

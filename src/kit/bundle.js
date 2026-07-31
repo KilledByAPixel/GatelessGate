@@ -20,7 +20,9 @@ import { makeBowl } from './bowl.js';
 const DUR = 0.8;          // seconds, strain to stillness
 const MAX_TILT = 0.028;   // radians (~1.6 degrees) — the whole concession
 
-export function makeBundle({ width = 0.46, color = WASH.dark, bowlColor = WASH.mid, seed = 23 } = {}) {
+export function makeBundle({
+  width = 0.46, color = WASH.dark, bowlColor = WASH.mid, ropeColor = WASH.deep, seed = 23,
+} = {}) {
   const g = new THREE.Group();
   g.name = 'bundle';
   const mat = toonMaterial({ color, flat: true });
@@ -63,6 +65,37 @@ export function makeBundle({ width = 0.46, color = WASH.dark, bowlColor = WASH.m
     fold.scale.z = 0.88 + hash1(i * 9 + 4, seed) * 0.12;        // cloth, not a lathe
     g.add(fold);
     stackH += f.h;
+  });
+
+  // ---- the rope ties ------------------------------------------------------
+  // Silhouette truth: nothing in the old stack said "tied bundle" rather than
+  // "stack of coins" — no cord, nothing cinching the folds together. Two thin
+  // tori, sunk into the seams between folds so they read as binding the
+  // stack rather than floating around it, each tilted a few degrees off
+  // level (a real cord never lies perfectly flat) and given its own tiny
+  // twist so the two ties don't read as one ring duplicated. A distinct
+  // `ropeColor` (defaults to WASH.deep, near-ink) instead of reusing `color`:
+  // in case 23 the folds turn ACCENT red, and a red cord on a red robe would
+  // vanish — the tie has to contrast with whatever the robe is wearing.
+  const ropeMat = toonMaterial({ color: ropeColor, flat: true });
+  const TIES = [
+    { seam: 0, r: 0.465, tube: 0.019 },   // between fold 0 and fold 1
+    { seam: 1, r: 0.400, tube: 0.016 },   // between fold 1 and fold 2
+  ];
+  let seamY = 0;
+  const seamHeights = FOLDS.map((f) => (seamY += f.h));
+  TIES.forEach((t, i) => {
+    const rope = new THREE.Mesh(
+      new THREE.TorusGeometry(width * t.r, width * t.tube, 6, 16), ropeMat);
+    rope.name = 'rope';
+    rope.position.set(
+      (hash1(i * 5 + 1, seed + 100) - 0.5) * width * 0.03,
+      seamHeights[t.seam],
+      (hash1(i * 5 + 2, seed + 100) - 0.5) * width * 0.03,
+    );
+    rope.rotation.x = Math.PI / 2 + (hash1(i * 5 + 3, seed + 100) - 0.5) * 0.12;
+    rope.rotation.z = (hash1(i * 5 + 4, seed + 100) - 0.5) * 0.12;
+    g.add(rope);
   });
 
   // ---- the bowl, seated on the top fold ---------------------------------

@@ -30,15 +30,24 @@ export function makeVase({ height = 0.55, color = WASH.mid, seed = 0 } = {}) {
 
   // profile in fractions of height: up the outside, over the lip, a little way
   // back down inside so the mouth reads as an opening rather than a plug
+  //
+  // NECK/SHOULDER. The old belly->neck run was one smooth, near-linear cone
+  // (0.290 -> 0.270 -> 0.160 -> 0.085 across a third of the height) — legible,
+  // but it read as a single taper rather than two features. A real shoulder
+  // is a shelf: it holds close to the belly's own width a while longer, THEN
+  // pulls in over a short, steep run, so the eye catches a distinct kink
+  // before the neck — which then holds a near-constant narrow radius for a
+  // real stretch, instead of continuing to taper, so it reads as a neck and
+  // not just the tail end of the same cone.
   const prof = [
     [0.020, 0.000],
     [0.150, 0.000],   // base edge — the pivot circle
     [0.185, 0.045],   // foot swell
-    [0.290, 0.230],   // the belly, widest point
-    [0.270, 0.400],
-    [0.160, 0.560],   // shoulder drawing in
-    [0.085, 0.660],   // neck
-    [0.075, 0.820],   // narrowest
+    [0.300, 0.220],   // the belly, widest point
+    [0.290, 0.320],   // the shoulder's shelf — still broad, barely drawn in
+    [0.175, 0.420],   // the shoulder's own steep pull-in toward the neck
+    [0.082, 0.480],   // the neck begins, already narrow
+    [0.078, 0.660],   // and holds narrow — a cylinder, not a continued cone
     [0.100, 0.930],   // flare
     [0.120, 0.980],   // lip edge
     [0.088, 1.000],   // rim, open
