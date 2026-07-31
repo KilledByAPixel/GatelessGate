@@ -21,25 +21,78 @@ export function makeTree({
   const leaves = [];
   let draw = 0;
   const rnd = () => hash1(draw++, seed);   // one deterministic stream for the whole tree
+  // a second, independent seeded stream for the droop/curve detail added
+  // below — kept off the `rnd`/`draw` stream on purpose: consuming it there
+  // would shift every fork-count, spread-angle and leaf-placement draw that
+  // follows in the traversal, changing the whole tree's silhouette for a
+  // "slight" cosmetic tweak. Still fully seeded (hash1 only), just its own
+  // counter.
+  let droopDraw = 0;
+  const droopRnd = () => hash1(droopDraw++, seed * 1013 + 7);
 
   const T = (x, y, z) => new THREE.Matrix4().makeTranslation(x, y, z);
   const RY = (a) => new THREE.Matrix4().makeRotationY(a);
   const RZ = (a) => new THREE.Matrix4().makeRotationZ(a);
 
-  function grow(m, len, rad, level) {
-    const seg = new THREE.CylinderGeometry(rad * 0.68, rad, len, 5);
-    seg.translate(0, len / 2, 0);          // grow upward from the joint
+  // pushes one tapered cylinder growing up from the joint at m into the shared
+  // wood[] merge list — every branch segment, at any level, goes through this
+  function pushSeg(m, len, radTop, radBottom) {
+    const seg = new THREE.CylinderGeometry(radTop, radBottom, len, 5);
+    seg.translate(0, len / 2, 0);
     seg.applyMatrix4(m);
     wood.push(seg);
+  }
 
-    const tip = m.clone().multiply(T(0, len, 0));
+  function grow(m, len, rad, level) {
+    let tip;
+    if (level === 0) {
+      // root flare: a short stub whose bottom stop is markedly wider than the
+      // trunk above it, tapering back to the ordinary trunk radius before the
+      // normal taper (rad -> rad*0.68) takes over — old-tree buttressing, not
+      // a cone for the whole bole.
+      const flareLen = len * 0.2;
+      pushSeg(m, flareLen, rad, rad * 2.15);
+      const aboveFlare = m.clone().multiply(T(0, flareLen, 0));
+      pushSeg(aboveFlare, len - flareLen, rad * 0.68, rad);
+      tip = m.clone().multiply(T(0, len, 0));
+    } else if (level >= 2) {
+      // limbs this far out sag under their own ink: two segments meeting at a
+      // joint, the second drooping and curving away rather than continuing
+      // the first segment's line straight to the tip
+      const half = len / 2;
+      pushSeg(m, half, rad * 0.82, rad);
+      const joint = m.clone().multiply(T(0, half, 0));
+      const droop = 0.12 + 0.14 * droopRnd() + (level - 2) * 0.05;
+      const curve = (droopRnd() - 0.5) * 0.4;
+      const bent = joint.clone().multiply(RY(curve)).multiply(RZ(droop));
+      pushSeg(bent, half, rad * 0.68, rad * 0.82);
+      tip = bent.clone().multiply(T(0, half, 0));
+    } else {
+      pushSeg(m, len, rad * 0.68, rad);
+      tip = m.clone().multiply(T(0, len, 0));
+    }
 
     if (level >= depth) {
-      const r = height * (0.115 + 0.055 * rnd());
-      const blob = new THREE.DodecahedronGeometry(r, 0);
-      blob.scale(1, 0.78, 1);              // squash: crowns spread wider than they are tall
-      blob.applyMatrix4(tip);
-      leaves.push(blob);
+      // a broken crown, not a lollipop: 2-3 smaller, flattened blobs offset
+      // around the tip with seeded overlap — some touch, some don't, so sky
+      // shows through the gaps between them rather than one solid mass
+      const n = rnd() > 0.5 ? 3 : 2;
+      for (let i = 0; i < n; i++) {
+        const r = height * (0.075 + 0.05 * rnd());
+        const blob = new THREE.DodecahedronGeometry(r, 0);
+        blob.scale(1, 0.7 + 0.16 * rnd(), 1);   // squash: crowns spread wider than they are tall
+        // offset scales with the blob's OWN radius, not a flat tree-wide
+        // constant, so the cluster stays compact (partial overlap -> gaps)
+        // without inflating the tree's overall footprint at every height
+        const spread = r * 0.55;
+        blob.translate(
+          (rnd() - 0.5) * spread * 2,
+          (rnd() - 0.5) * spread * 1.1 + r * 0.2,
+          (rnd() - 0.5) * spread * 2,
+        );
+        blob.applyMatrix4(tip);
+        leaves.push(blob);
+      }
       return;
     }
 
