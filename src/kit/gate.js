@@ -30,9 +30,18 @@ export function makeGate({ width = 2.4, height = 2.6, color = INK } = {}) {
   // post actually meets the ground.
   const POST_TOP_R = 0.09, POST_BOTTOM_R = 0.12;
   const NEMAKI_H = 0.14, NEMAKI_TOP_R = 0.15, NEMAKI_BOTTOM_R = 0.165;
+  // THE BURIED TOP. The posts stand at ±width/2, and the kasagi's flat centre
+  // span only reaches ±0.364·width — so the posts always sit under the tilted
+  // WINGS, whose undersides lift off y = height as they sweep up. A post cut
+  // to exactly `height` therefore leaves a sliver of daylight between its top
+  // and the lintel (≈0.06–0.08 across the widths in use; Frank's redo-round
+  // note). Run the post up INTO the kasagi instead: 0.12 extra always lands
+  // inside the lintel's own box (max gap ~0.08, box depth 0.18), so the join
+  // is buried and nothing pokes out the top.
+  const POST_BURY = 0.12;
   for (const sx of [-1, 1]) {
-    const postGeo = new THREE.CylinderGeometry(POST_TOP_R, POST_BOTTOM_R, height, 10);
-    postGeo.translate(0, height / 2, 0);      // base at local y=0, matching the old mesh.position placement
+    const postGeo = new THREE.CylinderGeometry(POST_TOP_R, POST_BOTTOM_R, height + POST_BURY, 10);
+    postGeo.translate(0, (height + POST_BURY) / 2, 0);  // base at local y=0, matching the old mesh.position placement
     const ringGeo = new THREE.CylinderGeometry(NEMAKI_TOP_R, NEMAKI_BOTTOM_R, NEMAKI_H, 10);
     ringGeo.translate(0, NEMAKI_H / 2, 0);    // sits right at the foot, wider than the post it wraps
     const post = new THREE.Mesh(mergeSimple([postGeo, ringGeo]), mat);
