@@ -62,9 +62,21 @@ export default {
     }
     hall.add(cloud);
 
-    const veranda = makeVeranda({ width: 5.4, depth: 4.4, height: 3.4 });
-    veranda.position.set(0.2, 0.32, -4.0);
+    // The hall hovers HOVER above the terrain — it is a dream — but Frank's
+    // rule for floating platforms holds even here: a deck standing on daylight
+    // reads as a bug, so the veranda's own under-frame (`legs`) carries it to
+    // the ground and the dream floats on carpentry instead of air.
+    const HOVER = 0.32;
+    const veranda = makeVeranda({ width: 5.4, depth: 4.4, height: 3.4, legs: HOVER });
+    veranda.position.set(0.2, HOVER, -4.0);
     hall.add(veranda);
+
+    // Everyone in the hall stands ON the boards. The deck's top surface is
+    // HOVER + the deck thickness (0.34, the veranda default) — the seats and
+    // monks used to be placed for a far thinner deck and sat 0.14 INSIDE the
+    // boards, which swallowed every seated robe's base and made the figures
+    // read as squat blobs (Frank's "really squat and fat weirdly").
+    const DECK_TOP = HOVER + 0.34;
 
     // the seats: three low platforms, and Kyozan standing at the third
     const seats = [];
@@ -73,20 +85,22 @@ export default {
         new THREE.BoxGeometry(1.05, 0.20, 1.05),
         toonMaterial({ color: i === 2 ? WASH.stone : wash(0.26), flat: true }));
       seat.name = 'seat';
-      seat.position.set(-1.9 + i * 1.75, 0.42, -2.2);
+      seat.position.set(-1.9 + i * 1.75, DECK_TOP + 0.10, -2.2);
       hall.add(seat);
       seats.push(seat);
     }
+    const SEAT_TOP = DECK_TOP + 0.20;
 
     const kyozan = makeMonk({ height: 1.62, pose: 'raise' });
-    kyozan.position.set(seats[2].position.x, 0.52, seats[2].position.z);
+    kyozan.position.set(seats[2].position.x, SEAT_TOP, seats[2].position.z);
     aimMonk(kyozan, { x: 1.0, z: 4.0 });
     hall.add(kyozan);
 
-    // the two who are already seated
+    // the two who are already seated — book-normal height, not the 1.42 they
+    // were first authored at (the shortest ordinary sitters in the book)
     for (let i = 0; i < 2; i++) {
-      const sitter = makeMonk({ height: 1.42, pose: 'sit' });
-      sitter.position.set(seats[i].position.x, 0.52, seats[i].position.z);
+      const sitter = makeMonk({ height: 1.54, pose: 'sit' });
+      sitter.position.set(seats[i].position.x, SEAT_TOP, seats[i].position.z);
       aimMonk(sitter, { x: 0.6, z: 4.0 });
       hall.add(sitter);
     }
@@ -97,7 +111,7 @@ export default {
       new THREE.BoxGeometry(0.5, 0.42, 0.4),
       toonMaterial({ color: WASH.dark, flat: true }));
     stand.name = 'stand';
-    stand.position.set(seats[2].position.x, 0.73, seats[2].position.z + 1.15);
+    stand.position.set(seats[2].position.x, DECK_TOP + 0.21, seats[2].position.z + 1.15);
     hall.add(stand);
 
     const gavel = new THREE.Group();
@@ -112,11 +126,15 @@ export default {
     gavel.add(head);
     hall.add(gavel);
 
-    // the audience, out in the cloud where the floor stops
+    // The audience, on the ground where the floor stops. The whole staging
+    // area sits inside groundHeight's flat radius, so the terrain under the
+    // arc is level at y = 0 — the crowd sits AT zero, not floated 0.34 up on
+    // an imaginary extension of the deck (Frank: "they're also floating above
+    // the ground there"). The dream's rocking still carries them, but its
+    // amplitude is millimetres; it never lifts a hem visibly off the grass.
     const assembly = makeAssembly({
       count: 8, radius: 2.6, center: [0.4, 1.9], facing: [0.2, -3.0], spread: 1.3, seed: ID,
     });
-    assembly.position.y = 0.34;
     hall.add(assembly);
 
     // The surrounding world hangs off the SCENE, not the dream — deliberately.

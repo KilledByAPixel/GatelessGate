@@ -22,6 +22,54 @@ test('module shape matches the koan contract', () => {
   assert.equal(typeof k25.build, 'function');
 });
 
+// THE FLOATING-HALL / SUNKEN-MONK BUG (Frank's live feedback).
+//
+// Three things were adrift at once: the veranda hovered 0.32 up with daylight
+// under it and no structure reaching the ground; the crowd sat 0.34 above the
+// terrain (which is FLAT at y = 0 inside groundHeight's flatRadius here); and
+// the seats + monks were placed for a much thinner deck than the veranda
+// actually builds, so every figure stood 0.14 INSIDE the boards — a seated
+// robe with its base swallowed is exactly the "really squat and fat" blob
+// Frank called out. The dream may float; it must float on a frame.
+test('the hall stands on legs, the crowd on the ground, the monks on the boards', () => {
+  const built = k25.build(fakeCtx());
+  const scene = built.scene;
+
+  // the veranda's under-frame reaches from under the deck to below the ground
+  const veranda = scene.getObjectByName('veranda');
+  assert.ok(veranda, 'veranda present');
+  const leg = veranda.children.find((c) => c.name === 'leg');
+  assert.ok(leg, 'the lifted veranda grew its under-frame');
+  scene.updateMatrixWorld(true);
+  const legBox = new THREE.Box3().setFromObject(leg);
+  assert.ok(legBox.min.y < -0.05, `the frame sinks past the terrain: ${legBox.min.y}`);
+  assert.ok(legBox.max.y < veranda.position.y + 0.34, 'and stays under the boards');
+
+  // the crowd sits AT ground level (flat y = 0 here), not floated above it
+  const assembly = scene.getObjectByName('assembly');
+  assert.ok(assembly, 'assembly present');
+  assert.equal(assembly.position.y, 0, 'the audience is on the ground');
+
+  // every monk stands ON the deck surface, not inside it
+  const deckTop = veranda.position.y + 0.34;
+  const monks = [];
+  scene.traverse((o) => { if (o.name === 'monk') monks.push(o); });
+  assert.equal(monks.length, 3, 'Kyozan and the two sitters');
+  for (const m of monks) {
+    assert.ok(m.position.y >= deckTop - 1e-6,
+      `monk at y=${m.position.y} is on or above the deck top ${deckTop}`);
+  }
+
+  // and the seats rest on the boards rather than being buried in them
+  const seats = [];
+  scene.traverse((o) => { if (o.name === 'seat') seats.push(o); });
+  assert.equal(seats.length, 3);
+  for (const s of seats) {
+    assert.ok(Math.abs((s.position.y - 0.10) - deckTop) < 1e-6,
+      `seat base sits on the deck: ${s.position.y - 0.10} vs ${deckTop}`);
+  }
+});
+
 // THE DREAM-ROCK / GRASS-SHIMMER BUG.
 //
 // The tuft field derives each tuft's atlas variant, mirror, stiffness and
