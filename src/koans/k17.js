@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
-  composeWorld, makeVeranda, makeMonk, aimMonk, makeLantern,
+  composeWorld, makeVeranda, makeMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -55,7 +55,22 @@ export default {
     // at full accent glares (Frank's call).
     const chu = makeMonk({ height: 1.6, pose: 'sit', elder: true, color: ACCENT_DEEP });
     const CHU_POS = new THREE.Vector3(-1.9, 0.34, -2.7);
+    const OSHIN_POS = new THREE.Vector3(3.1, 0, 1.6);
     chu.position.copy(CHU_POS);
+    // A SEATED figure's visible front is local +z — the folded sleeves point
+    // that way — so aimMonk (which turns local +x) left him reading a quarter
+    // turn off, gazing past the yard instead of at the man he is calling
+    // (Frank: "why is the guy looking over to the side?"). Turn his lap toward
+    // Oshin directly, and bow about x (order YXZ: pitch inside the yaw) so the
+    // lean goes the way he faces.
+    chu.rotation.order = 'YXZ';
+    chu.rotation.y = Math.atan2(OSHIN_POS.x - CHU_POS.x, OSHIN_POS.z - CHU_POS.z);
+    // His staff rests on the boards BESIDE him. The kit plants it at 0.26h,
+    // which is inside a seated robe's hem (0.318h) — it emerged through the
+    // cloth like a stick stuck in him (Frank). Out past the hem it reads as
+    // what it is: the teacher's staff, set down within reach.
+    const staff = chu.getObjectByName('staff');
+    if (staff) staff.position.set(0.58, 0, 0.06);
     scene.add(chu);
 
     // a plain reed mat under him now, not a red one
@@ -70,13 +85,11 @@ export default {
     // OSHIN, across the yard, turned to his own work — the whole point is that
     // he is not already looking
     const oshin = makeMonk({ height: 1.58 });
-    const OSHIN_POS = new THREE.Vector3(3.1, 0, 1.6);
     oshin.position.copy(OSHIN_POS);
     const AWAY = bearing(OSHIN_POS, { x: 6.5, z: 3.0 });
     const TOWARD = bearing(OSHIN_POS, CHU_POS);
     oshin.rotation.y = AWAY;
     scene.add(oshin);
-    aimMonk(chu, OSHIN_POS);
 
     const lantern = makeLantern({ height: 1.1 });
     lantern.position.set(1.4, 0, -3.2);
@@ -168,7 +181,7 @@ export default {
           lean = lean * lean * (3 - 2 * lean);
         }
         oshin.rotation.z = -BOW * lean;             // local +x is his facing: lean along it
-        chu.rotation.z = -BOW * 0.7 * lean;
+        chu.rotation.x = BOW * 0.7 * lean;          // seated front is +z: pitch, inside the yaw
         if (done) { bowAt = -99; calls = 0; answered = 0; }
       },
       fragment() {
