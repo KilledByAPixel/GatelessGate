@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert';
 import * as THREE from '../lib/three.module.js';
 import { makeQuadruped } from '../src/kit/quadruped.js';
+import { makeDog } from '../src/kit/dog.js';
+import { makeFox } from '../src/kit/fox.js';
 
 const names = (g) => g.children.map((c) => c.name).sort();
 
@@ -60,6 +62,57 @@ test('a knee splits the hind legs into leg + shin, and only the hind legs', () =
   for (const l of jointed) assert.ok(l.position.z < 0, 'the knee went on a FRONT leg');
   // and the joint is a real bend, not a straight leg cut in two
   for (const l of jointed) assert.ok(Math.abs(l.rotation.x) > 0.01, 'thigh is not tilted');
+});
+
+// EARS ROOT ON THE SKULL — the fix for "the ears are hanging off the side of
+// its head" (Frank, on the fox and the dog both). { x, up, fwd } aim a ray
+// from the head's centre; the base snaps onto the sphere's surface, slightly
+// sunk (EAR_SINK = 0.96 of the radius) so the join is buried, never gapped.
+// Checked on the real species builds, not a synthetic option set, because the
+// dog attaches ears straight to the group while the fox re-parents them onto
+// a headPivot — the invariant must survive both.
+test('ear bases sit on the head sphere, slightly sunk, for dog and fox', () => {
+  const builds = [
+    ['dog', makeDog({ height: 0.5 })],
+    ['fox', makeFox({ height: 0.45 }).group],
+  ];
+  for (const [label, root] of builds) {
+    root.updateMatrixWorld(true);
+    const head = root.getObjectByName('head');
+    const r = head.geometry.parameters.radius;
+    const centre = head.getWorldPosition(new THREE.Vector3());
+    const ears = [];
+    root.traverse((o) => { if (o.name === 'ear' && !o.userData.isOutline) ears.push(o); });
+    assert.strictEqual(ears.length, 2, `${label} has two ears`);
+    for (const ear of ears) {
+      // the geometry is base-hinged (translated), so the mesh origin IS the base
+      const d = ear.getWorldPosition(new THREE.Vector3()).distanceTo(centre);
+      assert.ok(Math.abs(d - r * 0.96) < r * 0.03,
+        `${label} ear base rides the skull surface: d/r = ${(d / r).toFixed(3)}`);
+    }
+  }
+});
+
+test('the ear hinge channel (rotation.x) is left free for the species to animate', () => {
+  // The base orientation must live entirely in rotation.z + rotation.y: the
+  // fox's flick and the cat's swivel OVERWRITE rotation.x every frame, so any
+  // placement stored there would be silently destroyed on the first update.
+  const { group } = makeQuadruped({
+    ears: { r: 0.09, h: 0.2, x: 0.07, up: 0.3, fwd: 0.5, tilt: 0.3 },
+  });
+  for (const ear of group.children.filter((c) => c.name === 'ear')) {
+    assert.strictEqual(ear.rotation.x, 0, 'no placement in the hinge channel');
+    assert.ok(Math.abs(ear.rotation.z) > 0.01, 'the cant lives in z');
+  }
+});
+
+test('the dog dropped the chest ball; the haunch stays', () => {
+  // Frank: "he has something weird hanging below his chest now, like a round
+  // ball type thing" — the brisket never merged with the body line, so the
+  // dog stopped asking for it. The option itself stays on the shared plan.
+  const dog = makeDog({});
+  assert.strictEqual(dog.getObjectByName('chest'), undefined, 'no brisket');
+  assert.ok(dog.getObjectByName('haunch'), 'the rump mass is still there');
 });
 
 // NOTE — this is the brief's determinism test with ONE change, and the change is

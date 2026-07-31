@@ -63,8 +63,12 @@ export function makeFox({ height = 0.45, color = INK, seed = 2 } = {}) {
     // long and narrow, and set a little below the head's centre — the muzzle,
     // not the skull, is what should be sticking out
     snout: { r0: 0.028, r1: 0.078, len: 0.28, fwd: 0.78, up: 0.235 },
-    // twice the head's radius tall: on a fox the ears are half the head
-    ears: { r: 0.092, h: 0.28, x: 0.072, up: 0.33, fwd: 0.50, tilt: 0.20 },
+    // twice the head's radius tall: on a fox the ears are half the head.
+    // x/up/fwd AIM from the skull's centre (see EARS ROOT ON THE SKULL in
+    // quadruped.js): up-and-out with a touch of forward, so the pair roots on
+    // TOP of the skull — the old values pointed sideways-and-back and left
+    // the ears hanging off the side of the head (Frank, on exactly that).
+    ears: { r: 0.092, h: 0.28, x: 0.055, up: 0.37, fwd: 0.57, tilt: 0.20 },
     tail: {
       kind: 'stiff', r0: 0.075,
       // the root end (buried in the barrel — see THE BRUSH above) reads as
@@ -93,17 +97,9 @@ export function makeFox({ height = 0.45, color = INK, seed = 2 } = {}) {
     }
   }
   const ears = headPivot.children.filter((c) => c.name === 'ear');
-  // The ear is a 5-sided cone (quadruped.js's `spike`); its default spin
-  // leaves a flat facet pointed straight astern (-z) and nothing but an edge
-  // toward the front, so from the kit's own 3/4 camera the ear reads as a
-  // sliver rather than a shape. Spin each cone about its own axis — mirrored
-  // by side, so the pair stays symmetric — until a facet faces forward and
-  // in, toward the muzzle: the "inner face" a 3/4 view actually needs to see.
-  // Static, set once here (not in `update`), which is why it is a plain
-  // rotation.y rather than something update() would have to preserve every
-  // frame against the twitch/flick it drives on rotation.x.
-  const EAR_SPIN = 0.7;
-  for (const ear of ears) ear.rotation.y = Math.sign(ear.position.x) * EAR_SPIN;
+  // (The old EAR_SPIN facet hack lived here — quadruped.js now bakes half a
+  // facet of pre-spin into the ear GEOMETRY so a flat face meets the 3/4
+  // camera, and rotation.y belongs to the shared placement. Nothing to do.)
 
   // ---- the brush, onto its own hinge -----------------------------------
   // Rotating the tail MESH about y does nothing: y is its own long axis. The

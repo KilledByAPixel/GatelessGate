@@ -9,18 +9,20 @@ import { makeQuadruped } from './quadruped.js';
 //
 // He is HALF THE CAST of case 1 — a small red seal beside two ink monks, not a
 // showpiece — so this stays humble: the same bare barrel as before, plus just
-// enough mass to stop it reading as a table. `haunch` and `chest` (not
-// `shoulder`, not `legs.knee`) are the two the brief asks for: `haunch` sits
-// over the hind legs (`back` matches `hipZ` — it seats where the hind pair
-// actually roots, so a sitting-or-standing dog reads as one animal, not a
-// barrel with sticks) and `chest` hangs a small brisket ahead of the
-// foreleg, under the neck. Both stand only barely proud of the barrel line
-// (`up + r*scaleY` clears `bodyR` by ~0.04h, versus the buffalo's ~0.07h) —
-// enough to read as weight at k1 scale, not enough to look fed. The existing
-// cocked-up tail (`tilt: -1.0`) and the k1 module's own `dog.rotation.y`
-// (which turns the whole animal, head included, back up the road toward the
-// monks — the "head tilt toward the monk" handle) are untouched by this
-// pass; nothing here changes the group's orientation.
+// enough mass to stop it reading as a table. `haunch` alone carries that
+// (not `shoulder`, not `legs.knee`): it sits over the hind legs (`back`
+// matches `hipZ` — it seats where the hind pair actually roots, so the dog
+// reads as one animal, not a barrel with sticks) and stands only barely
+// proud of the barrel line (`up + r*scaleY` clears `bodyR` by ~0.04h) —
+// enough to read as weight at k1 scale, not enough to look fed. A `chest`
+// brisket was tried here and CUT: hung ahead of the foreleg it never merged
+// with the body line, and at case distance it read as "something weird
+// hanging below his chest, like a round ball" (Frank) — the plain barrel
+// beats a bolted-on lump. The existing cocked-up tail (`tilt: -1.0`) and
+// the k1 module's own `dog.rotation.y` (which turns the whole animal, head
+// included, back up the road toward the monks — the "head tilt toward the
+// monk" handle) are untouched by this pass; nothing here changes the
+// group's orientation.
 export function makeDog({ height = 0.5, color = INK, seed = 1 } = {}) {
   // Taller legs and a slimmer barrel: the first pass was short-legged and
   // fat-bodied, which read as a pig rather than a dog. The neck lifts the head
@@ -40,15 +42,6 @@ export function makeDog({ height = 0.5, color = INK, seed = 1 } = {}) {
     // it. `up + r*scaleY` = 0.11 + 0.1275 = 0.2375, clearing `bodyR` (0.20)
     // by 0.0375h — proud of the barrel line, not flush inside it.
     haunch: { r: 0.15, scaleY: 0.85, scaleZ: 1.05, up: 0.11, back: 0.28 },
-    // brisket: round 1 set `fwd` to the front leg's own z (0.30) and it
-    // vanished — same z as the leg means the same screen position in
-    // profile, so the sphere merged into the leg's own silhouette instead of
-    // reading as a separate mass (`wip-dog-r1-zoom2.jpeg`). Pulled forward of
-    // the leg (0.30 -> 0.38, clear of the leg's own z by ~15% of height) and
-    // hung lower (`drop` 0.18 -> 0.24, so its underside sits below the leg's
-    // own top rather than beside it) so it reads as a hanging chest ahead of
-    // the foreleg, not a bump merged with it.
-    chest: { r: 0.12, drop: 0.24, fwd: 0.38 },
     tail: { kind: 'stiff', r0: 0.022, r1: 0.045, length: 0.38, up: 0.12, back: 0.42, tilt: -1.0 },
   });
   group.name = 'dog';

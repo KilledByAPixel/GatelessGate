@@ -31,14 +31,21 @@ import { makeQuadruped } from './quadruped.js';
 //
 // Snout and ears are positioned INDEPENDENTLY of the head box by the shared
 // plan (quadruped.js anchors them off `bodyY`, not off the head mesh), so
-// their up/fwd are DERIVED from the tilted head box's own corners rather
+// their up/fwd are DERIVED from the tilted head box's own faces rather
 // than tuned by eye — the lesson buffalo.js's horns learned the hard way
-// (see that file's header for the same trick). Both attach at the box's
-// local front-face and top-face centres, rotated by `head.tilt` about x:
+// (see that file's header for the same trick). The snout anchors at the
+// box's local front-face centre, rotated by `head.tilt` about x:
 //   snout.up  = head.up  - (head.d / 2)  * sin(head.tilt)
 //   snout.fwd = head.fwd + (head.d / 2)  * cos(head.tilt)
-//   ears.up   = head.up  + (head.hh / 2) * cos(head.tilt)
-//   ears.fwd  = head.fwd + (head.hh / 2) * sin(head.tilt)
+// and — the fix for "the head is kinda messed up" (Frank) — it carries
+// `tilt: head.tilt`, so the muzzle continues the skull's own nose-down line
+// instead of jutting off the jaw as a horizontal beak, which is what a
+// 45-degree head over the shared plan's level snout used to read as.
+// The ears' up/fwd aim at the box's top-face centre (the same face-centre
+// numbers as before: up 0.584, fwd 0.664), but since EARS ROOT ON THE SKULL
+// (quadruped.js) they are a DIRECTION now, not a position — the shared plan
+// intersects that aim ray with the tilted box itself and roots each ear on
+// the face it exits, pricked up-and-forward along the poll's own normal.
 // With head = { hh: 0.125, d: 0.28, fwd: 0.62, up: 0.54, tilt: 0.785 } that's
 // snout (0.441, 0.719) and ears (0.584, 0.664), used below.
 export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
@@ -56,7 +63,7 @@ export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
     // a SMALL head — the neck is what should read, not the skull — nosed
     // down at very close to 45 degrees
     head: { shape: 'box', w: 0.095, hh: 0.125, d: 0.28, fwd: 0.62, up: 0.54, tilt: 0.785 },
-    snout: { r0: 0.035, r1: 0.052, len: 0.24, fwd: 0.719, up: 0.441 },
+    snout: { r0: 0.035, r1: 0.052, len: 0.24, fwd: 0.719, up: 0.441, tilt: 0.785 },
     ears: { r: 0.026, h: 0.095, x: 0.045, up: 0.584, fwd: 0.664, tilt: 0.30 },
     // a hanging strand rather than a stiff rod: it settles with a real joint
     // from the verlet warmup instead of one rigid cylinder. Two segments

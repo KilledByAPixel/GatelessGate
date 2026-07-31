@@ -57,7 +57,15 @@ test('the fox is longer and lower than the dog it is built from', () => {
   const f = makeFox({ height: 0.5 });
   const b = box(f.group);
   const body = box(part(f.group, 'body'));
-  assert.ok((b.max.z - b.min.z) > 2.0 * b.max.y, `a fox is a line: ${(b.max.z - b.min.z).toFixed(2)} long, ${b.max.y.toFixed(2)} tall`);
+  // "long and low" is a claim about the ANIMAL, not its ear tips. The whole
+  // group's max.y is an ear point now that the ears root on TOP of the skull
+  // (EARS ROOT ON THE SKULL in quadruped.js — the old side-slung pair kept
+  // the box artificially short), and a fox with pricked ears is no less a
+  // line for it: measure the carried height at the skull instead.
+  const head = box(part(f.group, 'head'));
+  const carried = Math.max(head.max.y, body.max.y);
+  assert.ok((b.max.z - b.min.z) > 2.0 * carried,
+    `a fox is a line: ${(b.max.z - b.min.z).toFixed(2)} long, carried at ${carried.toFixed(2)}`);
   assert.ok(body.min.y < 0.5 * 0.46, `the belly is carried low: ${body.min.y.toFixed(3)}`);
 });
 

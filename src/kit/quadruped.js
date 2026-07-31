@@ -43,8 +43,8 @@ export function makeQuadruped({
   // head
   head = { shape: 'sphere', r: 0.20, fwd: 0.56, up: 0.22 },
   neck = null,           // { r, len, tilt } — a short column from chest to head
-  snout = null,          // { r0, r1, len, fwd, up }
-  ears = null,           // { r, h, x, up, fwd, tilt }
+  snout = null,          // { r0, r1, len, fwd, up, tilt } — tilt noses the muzzle DOWN off horizontal
+  ears = null,           // { r, h, x, up, fwd, tilt } — x/up/fwd AIM from the head's centre; see EARS ROOT ON THE SKULL below
   horns = null,          // { r, len, x, up, fwd, sweep }
   hump = null,           // { r, scaleY, scaleZ, up, fwd }
   haunch = null,         // { r, scaleY, scaleZ, up, back } — the rump, over the hind legs
@@ -196,7 +196,10 @@ export function makeQuadruped({
     const m = new THREE.Mesh(
       new THREE.CylinderGeometry(snout.r0 * h, snout.r1 * h, snout.len * h, 7), mat);
     m.name = 'snout';
-    m.rotation.x = Math.PI / 2;
+    // π/2 lies the cylinder along +z; `tilt` noses it DOWN from there, so a
+    // nosed-down head (the horse) can carry its muzzle along the skull's own
+    // line instead of jutting a horizontal beak off the jaw.
+    m.rotation.x = Math.PI / 2 + (snout.tilt || 0);
     m.position.set(0, bodyY + snout.up * h, snout.fwd * h);
     g.add(m);
   }
@@ -205,23 +208,84 @@ export function makeQuadruped({
   // origin, so attaching one at the skull buries half its length inside the head
   // and only the outer half shows — which is why the buffalo's horns read as two
   // small bumps rather than a sweep. Translating the geometry first means the
-  // stated length is the length you actually see.
-  const spike = (r, len, seg) => {
+  // stated length is the length you actually see. `spin` pre-turns the cone
+  // about its own axis at the GEOMETRY level, so all three rotation channels
+  // stay free for placement and animation.
+  const spike = (r, len, seg, spin = 0) => {
     const geo = new THREE.ConeGeometry(r, len, seg);
+    if (spin) geo.rotateY(spin);
     geo.translate(0, len / 2, 0);
     return geo;
   };
 
-  if (ears) for (const sx of [-1, 1]) {
-    const m = new THREE.Mesh(spike(ears.r * h, ears.h * h, 5), mat);
-    m.name = 'ear';
-    m.position.set(sx * ears.x * h, bodyY + ears.up * h, ears.fwd * h);
-    // NOTE THE SIGN. Rotating +y about +z by θ sends it toward -x, so the LEFT
-    // side (sx = -1) needs a POSITIVE angle to lean outward. Getting this
-    // backwards points the pair inward across the skull, which is exactly how
-    // the buffalo's horns managed to be invisible in every shot.
-    if (ears.tilt) m.rotation.z = -sx * ears.tilt;
-    g.add(m);
+  // EARS ROOT ON THE SKULL. The old placement took { x, up, fwd } as a raw
+  // body-frame POSITION, which left every ear base either floating beside the
+  // head or buried in its cheek at the wrong angle — "hanging off the side of
+  // its head" (Frank, on the fox and the dog both). Those three numbers are now
+  // a DIRECTION: the ray from the head's centre toward the stated point picks
+  // WHERE on the skull the ear roots — the sphere's surface, or for a box head
+  // the face that ray exits through — the base is snapped onto that surface,
+  // slightly sunk so the join is buried, never gapped, and the cone is canted
+  // along a blend of the surface normal and world-up (out of the skull AND
+  // standing up off it, the way an ear actually sits), then leaned a further
+  // `tilt` outward — tilt still means what it always did.
+  const EAR_SINK = 0.96;                 // of the way to the surface — buried join
+  if (ears) {
+    const X = new THREE.Vector3(1, 0, 0);
+    const UP = new THREE.Vector3(0, 1, 0);
+    for (const sx of [-1, 1]) {
+      // A 5-gon cone's default spin points an EDGE at the front, so from the
+      // book's 3/4 cameras the ear read as a sliver; half a facet of pre-spin
+      // (π/5) centres a flat face on +z instead. Baked into the geometry so it
+      // cannot fight the placement below or the flick the species drive.
+      const m = new THREE.Mesh(spike(ears.r * h, ears.h * h, 5, Math.PI / 5), mat);
+      m.name = 'ear';
+
+      const dir = new THREE.Vector3(
+        sx * ears.x * h,
+        bodyY + ears.up * h - headY,
+        ears.fwd * h - headZ);
+      if (dir.lengthSq() < 1e-12) dir.set(sx * 0.5, 1, 0);  // degenerate: out-and-up
+      dir.normalize();
+
+      let base, normal;
+      if (head.shape === 'box') {
+        // Intersect the aim ray with the box in the head's own tilted frame;
+        // the exit face is the axis the ray runs out of room on first.
+        const tilt = head.tilt || 0;
+        const local = dir.clone().applyAxisAngle(X, -tilt);
+        const half = [head.w * h / 2, head.hh * h / 2, head.d * h / 2];
+        let t = Infinity, exit = 1;
+        for (let i = 0; i < 3; i++) {
+          const d = Math.abs(local.getComponent(i));
+          if (d > 1e-9 && half[i] / d < t) { t = half[i] / d; exit = i; }
+        }
+        base = local.clone().multiplyScalar(t * EAR_SINK).applyAxisAngle(X, tilt);
+        normal = new THREE.Vector3().setComponent(
+          exit, Math.sign(local.getComponent(exit)) || 1).applyAxisAngle(X, tilt);
+      } else {
+        base = dir.clone().multiplyScalar(head.r * h * EAR_SINK);
+        normal = dir;
+      }
+      m.position.set(base.x, headY + base.y, headZ + base.z);
+
+      // The axis: surface normal pulled halfway back to world-up, then leaned
+      // `tilt` further OUTWARD (about z, so tilt spreads the pair no matter
+      // which way the normal faced). Expressed as rotation.z (how far off
+      // vertical) + rotation.y (which way around) and NEVER rotation.x — that
+      // channel is the hinge the species animate (the fox's flick and the
+      // cat's swivel overwrite it every frame, so anything stored there would
+      // be lost on the first update). Sign note: rotating +y about +z sends
+      // it toward -x, so the LEFT ear (sx = -1) takes the POSITIVE angle —
+      // same convention as the horns below.
+      const axis = normal.clone().add(UP).normalize();
+      if (ears.tilt) axis.applyAxisAngle(new THREE.Vector3(0, 0, 1), -sx * ears.tilt);
+      const polar = Math.acos(Math.min(1, Math.max(-1, axis.y)));
+      m.rotation.z = -sx * polar;
+      if (Math.hypot(axis.x, axis.z) > 1e-6)
+        m.rotation.y = Math.atan2(-sx * axis.z, sx * axis.x);
+      g.add(m);
+    }
   }
 
   if (horns) for (const sx of [-1, 1]) {
