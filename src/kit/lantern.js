@@ -56,14 +56,21 @@ export function makeLantern({ height = 1.15, color = WASH.stone } = {}) {
   const platGeo = new THREE.CylinderGeometry(0.085 * H, 0.10 * H, PLAT_H, 8);
   platGeo.translate(0, PLAT_H / 2, 0);
 
-  // FIREBOX (hibukuro) — a square stone box. Windows are cut in as their own
-  // dark mesh below, not a real hole (a void reads by colour here, the same
-  // reason hut.js's doorway is a solid recessed panel rather than an actual
-  // gap — an open box invites the outline pass to ink an edge that is not
-  // there and risks a see-through blowout against the sky).
+  // FIREBOX (hibukuro) — a square stone box, and the tallest single stone
+  // here (real tōrō carry their height in this piece, not the shaft).
+  // Windows are cut in as their own dark mesh below, not a real hole (a void
+  // reads by colour here, the same reason hut.js's doorway is a solid
+  // recessed panel rather than an actual gap — an open box invites the
+  // outline pass to ink an edge that is not there and risks a see-through
+  // blowout against the sky). Sized so its window band actually reaches
+  // case 28's own flame: k28.js hangs its flame at a fixed world y=0.78 on a
+  // height:1.15 lantern (flame spans 0.68–0.88 there), independent of
+  // anything in this file — this box and its window are tall enough that
+  // the window covers 0.553–0.838 at that same height, catching ~80% of the
+  // flame's own span instead of ceding it to the roof above.
   const FBOX_BOT = PLAT_BOT + PLAT_H;
-  const FBOX_HW = 0.11 * H;
-  const FBOX_H = 0.195 * H;
+  const FBOX_HW = 0.125 * H;
+  const FBOX_H = 0.40 * H;
   const fboxGeo = new THREE.BoxGeometry(FBOX_HW * 2, FBOX_H, FBOX_HW * 2);
   fboxGeo.translate(0, PLAT_H + FBOX_H / 2, 0);
   const firebox = new THREE.Mesh(mergeSimple([platGeo, fboxGeo]), flat);
@@ -101,7 +108,7 @@ export function makeLantern({ height = 1.15, color = WASH.stone } = {}) {
   // the crown, a low point just inboard of the rim, then the rim itself
   // kicked back UP past that low point — the upturned tip.
   const roofY = FBOX_BOT + FBOX_H;
-  const ROOF_R = 0.19 * H;
+  const ROOF_R = 0.21 * H;
   const RISE = 0.13 * H;
   const LIP = 0.016 * H;
   const DIP = 0.010 * H;

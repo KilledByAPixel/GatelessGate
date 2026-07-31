@@ -7,6 +7,7 @@ import { makePath } from '../src/kit/path.js';
 import { composeWorld } from '../src/kit/scenery.js';
 import { makeGrassField } from '../src/kit/grassfield.js';
 import { groundHeight } from '../src/kit/ground.js';
+import k28 from '../src/koans/k28.js';
 
 test('scatterPoints respects keepouts and stays in the annulus', () => {
   const keepout = [{ x: 0, z: 0, r: 6 }, { x: 10, z: 0, r: 3 }];
@@ -68,6 +69,29 @@ test('lantern firebox windows are a genuinely darker void than the stone', () =>
   assert.ok(wBox.max.x > fBox.max.x, 'window panel is proud of the firebox face, not sealed inside it');
 });
 
+test('lantern firebox window overlaps case 28\'s own flame band', () => {
+  // Fix round 1: the reviewer measured the FIRST shipped rebuild's window at
+  // 0.508–0.647 against k28's own flame at 0.68–0.88 (both at k28's explicit
+  // height:1.15) — zero overlap, the flame sat entirely in the roof, same
+  // burial the pre-existing lantern had. Derived from k28's own build()
+  // rather than hardcoded so either file drifting out from under the other
+  // is caught here, not just by eye.
+  const built = k28.build({ audio: null, input: { onTap: () => {} } });
+  const flame = built.scene.getObjectByName('flame');
+  assert.ok(flame, 'k28 builds a flame mesh');
+  const flameBox = new THREE.Box3().setFromObject(flame);
+
+  const l = makeLantern({ height: 1.15 });   // k28's own explicit override
+  const win = l.children.find((c) => c.name === 'window');
+  const winBox = new THREE.Box3().setFromObject(win);
+
+  const overlap = Math.min(flameBox.max.y, winBox.max.y) - Math.max(flameBox.min.y, winBox.min.y);
+  const flameSpan = flameBox.max.y - flameBox.min.y;
+  assert.ok(overlap > flameSpan * 0.5,
+    `window (${winBox.min.y.toFixed(3)}-${winBox.max.y.toFixed(3)}) should cover most of the flame's own span `
+    + `(${flameBox.min.y.toFixed(3)}-${flameBox.max.y.toFixed(3)}), got overlap=${overlap.toFixed(3)} of ${flameSpan.toFixed(3)}`);
+});
+
 test('lantern roof rim kicks up above the low point just behind it', () => {
   // Reproduces the builder's own profile formula (same disclosed
   // reproduce-the-tuned-constant tradeoff other D-tasks' eave/post tests
@@ -78,7 +102,7 @@ test('lantern roof rim kicks up above the low point just behind it', () => {
   const roof = l.children.find((c) => c.name === 'roof');
   assert.ok(roof, 'roof mesh present');
   const pos = roof.geometry.attributes.position;
-  const ROOF_R = 0.19 * H;
+  const ROOF_R = 0.21 * H;
   // bucket vertices near the rim tip (r close to ROOF_R) vs. the dip point
   // just inboard of it (r close to 0.85*ROOF_R) and compare their max y —
   // "max" because both the upper (visible) and lower (underside) surfaces
