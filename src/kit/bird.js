@@ -9,12 +9,22 @@ import { mergeSimple } from './scatter.js';
 // beak, a tail and little legs, and it read as fiddly and wrong — the head too
 // big, the legs pointless on a bird that only flies, the wings too sharp
 // (Frank). The flat two-stroke chevron it replaced was almost better. So this
-// is barely more than that chevron: a small flattened body, a hint of a head,
-// a short tail, and two broad blunt wings. No legs, no beak.
+// is barely more than that chevron: a small flattened body, a head with a
+// beak, a short tail, and two broad blunt wings. No legs.
 //
 // Three meshes — one merged body and two wings — no outline (an inverted hull
 // on a shape this thin reads as a blot). The body is baked into one mesh; only
 // the wings move.
+//
+// The wings FOLD. A flat paddle that only hinges up and down at the shoulder
+// reads fine at flock distance but static up close — the close-up single
+// earns a real wingbeat: as the stroke nears its peak, the same hinge sweeps
+// the wing back and its own mesh foreshortens along its span, the way a real
+// wing draws in near the top of the beat before spreading flat again on the
+// downstroke. Both are driven off the SAME `flap` value birds.js already
+// passes to pose() — no new parameter crosses the update path, and no new
+// mesh is added (a wrist joint would cost a second mesh per wing, doubling
+// per-bird draws across an 8-9 bird flock for no gain at flock distance).
 
 function bodyGeometry(s) {
   const parts = [];
@@ -25,19 +35,21 @@ function bodyGeometry(s) {
   body.scale(1, 0.7, 2.5);                   // long and flat, not a ball
   parts.push(body);
 
-  // just a suggestion of a head: a small low bump at the front, not a sphere
-  // on a neck
-  const head = new THREE.SphereGeometry(0.09 * s, 6, 5);
-  head.scale(1, 0.85, 1.1);
-  head.translate(0, 0.02 * s, 0.42 * s);
+  // a suggestion of a head: a small bump at the front, not a sphere on a
+  // neck — sized up a touch from the first pass (0.09s -> 0.105s) so the
+  // close-up single reads as having a head at all, short of the "too big"
+  // mistake the header above still warns against.
+  const head = new THREE.SphereGeometry(0.105 * s, 7, 5);
+  head.scale(1, 0.82, 1.05);
+  head.translate(0, 0.025 * s, 0.43 * s);
   parts.push(head);
 
   // a small beak — just a nub at the front of the head, back after Frank
   // noticed it was gone. Kept tiny so it reads as a point, not the fiddly cone
   // the earlier detailed bird had.
-  const beak = new THREE.ConeGeometry(0.035 * s, 0.13 * s, 4);
+  const beak = new THREE.ConeGeometry(0.035 * s, 0.14 * s, 4);
   beak.rotateX(Math.PI / 2);
-  beak.translate(0, 0.01 * s, 0.54 * s);
+  beak.translate(0, 0.015 * s, 0.555 * s);
   parts.push(beak);
 
   // a short tail fanned flat behind
@@ -91,17 +103,27 @@ export function makeBird({ size = 0.5, color, seed = 0 } = {}) {
     mesh.userData.noOutline = true;
     w.add(mesh);
     g.add(w);
-    wings.push({ hinge: w, side });
+    wings.push({ hinge: w, mesh, side });
   }
 
-  // Pose the bird in flight. `flap` is the up/down beat in radians; `pitch` and
-  // `roll` tilt and bank the whole body. Wings are always out — this bird only
-  // flies — so there is no fold any more.
+  // the flap amplitude birds.js drives in the ordinary (unstartled) case —
+  // the reference the fold ramps against. A scatter can push flap past this;
+  // fold simply clamps at fully-tucked rather than over-rotating.
+  const FLAP_REF = 0.75;
+
+  // Pose the bird in flight. `flap` is the up/down beat in radians; `pitch`
+  // and `roll` tilt and bank the whole body. The wings fold as the stroke
+  // rises: 0 at the bottom of the beat (fully spread), 1 near the top (swept
+  // back toward the tail and foreshortened along its own span) — the same
+  // recovery-stroke tuck a real wingbeat makes, entirely a function of flap.
   function pose({ flap = 0, pitch = 0, roll = 0 } = {}) {
     g.rotation.x = pitch;
     g.rotation.z = roll;
-    for (const { hinge, side } of wings) {
+    const fold = Math.min(1, Math.max(0, flap / FLAP_REF));
+    for (const { hinge, mesh, side } of wings) {
       hinge.rotation.z = -side * (0.12 + flap);        // a slight dihedral, plus the beat
+      hinge.rotation.y = side * fold * 0.85;            // sweep back and inward as it tucks
+      mesh.scale.x = 1 - fold * 0.4;                    // and foreshorten along the span
     }
   }
   pose();
