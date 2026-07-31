@@ -5,6 +5,7 @@ export { makeMountains } from './mountains.js';
 export { makeForest } from './forest.js';
 export { makeRocks, makeBushes, makeGrass, scatterPoints } from './scatter.js';
 export { makeGrassField } from './grassfield.js';
+export { makeTuftField } from './tuftfield.js';
 export { makeLantern } from './lantern.js';
 export { makePath } from './path.js';
 export { composeWorld } from './scenery.js';

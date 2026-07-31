@@ -1,8 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonRamp } from '../render/toon.js';
-import { WASH } from '../palette.js';
 import { hash1 } from '../util/noise.js';
-import { grassPlacements } from './grassfield.js';
+import { grassPlacements, GRASS_TONE } from './grassfield.js';
 
 // Frank's tuft grass: instead of one chunky geometric spear per grass plant,
 // each instance is a single camera-facing QUAD carrying a baked texture of a
@@ -102,7 +101,7 @@ export function makeTuftField({
   // width came down 0.52 -> 0.46 with the density doubling: Frank read the wide
   // cards as "a bit thick", and narrower cards at twice the count give more
   // plants AND more ground showing between them
-  color = WASH.dry, width = 0.46, height = 0.44, wind = 1,
+  color = GRASS_TONE, width = 0.46, height = 0.44, wind = 1,
   windDir = [1, 0.35], gustScale = 0.055, gustSpeed = 2.4,
   keepout = [],
 } = {}) {
@@ -124,6 +123,13 @@ export function makeTuftField({
   const mat = new THREE.MeshToonMaterial({
     color, gradientMap: toonRamp(), map: tuftTexture(), alphaTest: 0.35,
   });
+  // Same dark-mass symptom grassfield.js carries, same fix: a small emissive
+  // floor tied to the tuft's own colour, so the toon ramp's shadow band can no
+  // longer take a whole dense field down to near-black. See grassfield.js for
+  // the full reasoning — kept in lockstep so the two renderers still look like
+  // the same grass when the debug panel swaps between them.
+  mat.emissive = new THREE.Color(color);
+  mat.emissiveIntensity = 0.16;
 
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);

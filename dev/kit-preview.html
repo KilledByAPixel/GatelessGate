@@ -19,7 +19,7 @@
       toonMaterial,
       makeFox, makeCat, makeHorse, makeKoi, makeBird, makeBirds,
       makeHangingMonk, makeRaisedFinger,
-      makeTree, makePine, makeOak, makeForest, makeGrassField, makeWildflowers,
+      makeTree, makePine, makeOak, makeForest, makeGrassField, makeTuftField, makeWildflowers,
       makeGate, makeVeranda, makeLantern, makeBell, makeDrum, makeStall,
       makeBasin, makeFurin, makeWheel, makeVase, makeRack, makePole, makeBundle,
     } from '../src/kit/index.js';
@@ -79,7 +79,7 @@
     place(makeAssembly({ count: 8, radius: 2.2, center: [11, -1.5], facing: [11, 3] }), 0, 0, 0, 'figures');
 
     // row B — props (back)
-    place(makeFlower({}), -11, 5, 0);
+    place(makeFlower({}), -11, 5, 0, 'flower');
     place(makeBowl({}), -8, 5, 0);
     const water = place(makeWater({ size: 2.4 }), -4.6, 5.4, 0, 'water');
     place(makeHut({}), 0.5, 6.5, 0, 'hut');
@@ -126,6 +126,11 @@
     // 52000 in production) rather than the naive scale-down, which packed the
     // blades ~3x too dense and read as a solid black mass
     place(makeGrassField({ radius: 3.2, count: 1300 }), 5, 14, 0, 'grassfield');
+    // the production grass renderer (composeWorld's default) — offset a touch in
+    // z from grassfield's own slot so the two patches don't overlap in the wide
+    // overview shot; had no workbench view at all before this task (the gap the
+    // task brief calls out)
+    place(makeTuftField({ radius: 3.2, count: 900 }), 8.5, 17, 0, 'tuftfield');
     place(makeWildflowers({ radius: 2.3, count: 70 }), 12, 14, 0, 'wildflowers');
 
     // the oak (case 38) and, hung from one of its outer canopy anchors, the
@@ -220,6 +225,19 @@
       'monk-side': { p: [5.9134, 1.10, 2.5659], t: [6.8, 0.90, -0.3] },
       water:   { p: [-4.6, 3.2, 9.5], t: [-4.6, 0.4, 5.4] },
       hut:     { p: [0.5, 4.2, 11.5], t: [0.5, 1.5, 6.5] },
+      // flower/bowl/lattice had no dedicated view (a ledgered gap) — this task
+      // adds flower's. A held bloom's petals splay outward and slightly UP
+      // from the pod (RINGS.tilt in flower.js), so a level eye-height camera
+      // sees most of them edge-on as thin spikes; a bit of elevation looking
+      // DOWN onto the bloom (the way anyone actually looks at a held flower)
+      // shows each petal's true widened face instead. flower is placed at
+      // (-11, 5, 0) with no rotation; offset (0.6, 0.60, 0.35) from the pod.
+      flower:      { p: [-10.4, 1.15, 5.35], t: [-11, 0.55, 5.05] },
+      // profile view: the near view has no established "facing" to offset from
+      // (a flower has none, same reasoning `finger-side` used), so this rotates
+      // the near view's own camera offset 90 degrees around the target — same
+      // formula as `finger-side`: (dx, dy, dz) -> (-dz, dy, dx).
+      'flower-side': { p: [-11.35, 1.15, 5.6], t: [-11, 0.55, 5.05] },
 
       // row C — creatures
       fox:     { p: [-16.9, 0.45, -4.6], t: [-16, 0.30, -6] },
@@ -296,6 +314,11 @@
       pine:        { p: [-14.5, 2.3, 20.0], t: [-11, 1.9, 14] },
       forest:      { p: [-8, 3.0, 21], t: [-4, 1.8, 14] },
       grassfield:  { p: [2, 1.6, 21], t: [5, 0.3, 14.5] },
+      // same relative camera offset as grassfield's own view, carried over to
+      // the tuft field's placement — no dedicated view existed for this model
+      // before this task, the gap the brief calls out (composeWorld's actual
+      // default grass renderer had never been seen in the workbench at all).
+      tuftfield:   { p: [5.5, 1.6, 24], t: [8.5, 0.3, 17.5] },
       wildflowers: { p: [10, 1.3, 20], t: [12, 0.3, 14.5] },
       oak:         { p: [10, 4.0, 25], t: [19, 3.0, 15] },
       // hangingmonk view is set below, once the branch tip is known
@@ -327,6 +350,7 @@
     soloGroups['bird-side'] = soloGroups.bird;
     soloGroups['buddha-side'] = soloGroups.buddha;
     soloGroups['finger-side'] = soloGroups.finger;
+    soloGroups['flower-side'] = soloGroups.flower;
 
     // below and out from his anchor, looking up across the canopy's underside
     // rather than into it — the anchor sits ON the crown mass, so a close

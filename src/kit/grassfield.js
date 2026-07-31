@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
-import { WASH } from '../palette.js';
+import { wash } from '../palette.js';
 import { groundHeight } from './ground.js';
 import { hash1, fbm2 } from '../util/noise.js';
 
@@ -127,23 +127,40 @@ export function grassPlacements({
   return out;
 }
 
+// Punch-listed from Task 0 and confirmed again under Task DM's showcase: a
+// dense stand of WASH.dry blades reads as a near-solid dark scribble rather
+// than individual grass. WASH.dry itself is shared with a handful of unrelated
+// props (odoshi's bamboo, stall timber, several koans' straw mats), so it is
+// not this builder's to retune — but the FIELD's own default is. GRASS_TONE
+// lifts one step lighter than WASH.dry, local to the grass renderers only —
+// exported so tuftfield.js's billboard cards (the OTHER thing a grass plant
+// can be, per that file's own header) share the exact same base tone rather
+// than drifting apart the moment the debug panel swaps one for the other.
+export const GRASS_TONE = wash(0.40);
+
 export function makeGrassField({
   count = 52000, radius = 20, inner = 0, seed = 5, groundSeed = 21,
-  // an ash-olive, not a green: the rest of the palette (bushes #4E4F49, forest
-  // #66655A, ground #CDC6B5) is desaturated, and a saturated field fights it
-  color = WASH.dry, height = 0.34, width = 0.05, wind = 1,
+  color = GRASS_TONE, height = 0.34, width = 0.05, wind = 1,
   windDir = [1, 0.35], gustScale = 0.055, gustSpeed = 2.4,
   patchiness = defaultPatchiness,   // 0 = wall-to-wall turf; higher opens bare ground
   keepout = [],
 } = {}) {
-  // one blade: a tapered strip, origin at the base, segmented so it can curve
+  // one blade: a tapered strip, origin at the base, segmented so it can curve.
+  // BOW is a static curve baked into the rest pose itself — the geometry no
+  // longer describes an upright rectangle, it describes a bowed quad strip.
+  // It is the same shape for every instance (one shared geometry buffer, one
+  // draw call), but each blade's own random yaw (grassPlacements) rotates that
+  // bow into a different world-space direction per blade, so the field reads
+  // as many individually curved strokes rather than one shape repeated
+  // identically — "seeded" via the placement seed that already drives yaw.
   const SEG = 5;
+  const BOW = height * 0.30;
   const geo = new THREE.PlaneGeometry(width, height, 1, SEG);
   geo.translate(0, height / 2, 0);              // base at the origin
   const pos = geo.attributes.position;
   for (let i = 0; i < pos.count; i++) {
     const t = pos.getY(i) / height;             // 0 at base, 1 at tip
-    pos.setX(i, pos.getX(i) * (1 - t * 0.85));  // taper to a point
+    pos.setX(i, pos.getX(i) * (1 - t * 0.85) + BOW * t * t);  // taper AND bow
   }
   geo.computeVertexNormals();
 
@@ -156,6 +173,16 @@ export function makeGrassField({
   };
 
   const mat = toonMaterial({ color, side: THREE.DoubleSide });
+  // A dense stand was reading as a near-solid dark mass: half the field's
+  // blades face away from the key light after their random yaw and land in
+  // the toon ramp's darkest step, and thousands of them overlapping on screen
+  // reads as one dark scribble rather than individual strokes. A small
+  // emissive floor (tied to the grass's own colour, not a flat white) puts a
+  // ceiling under how dark any blade can go while leaving the ramp's shading
+  // contrast intact above it — the same "hold a floor under the dark end"
+  // idea PATCH_FLOOR already uses for density, applied to tone.
+  mat.emissive = new THREE.Color(color);
+  mat.emissiveIntensity = 0.16;
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
     shader.vertexShader = `
@@ -220,6 +247,18 @@ export function makeGrassField({
         transformed.y = arcY;
         transformed.x += bendDir.x * arcOff;
         transformed.z += bendDir.y * arcOff;
+      #endif
+      `)
+      // Blades are yawed around Y only (grassPlacements never tips a blade off
+      // vertical), so a blade's LOCAL up is always WORLD up regardless of its
+      // yaw — blending the shading normal partway toward it, tuftfield.js's
+      // own fix for the identical dark-mass symptom, lifts a blade's face out
+      // of the ramp's shadow band without flattening it into a billboard: the
+      // other 45% keeps the blade's own facing so a stand still has shape.
+      .replace('#include <beginnormal_vertex>', `
+      vec3 objectNormal = normalize(mix(normal, vec3(0.0, 1.0, 0.0), 0.55));
+      #ifdef USE_TANGENT
+        vec3 objectTangent = vec3(tangent.xyz);
       #endif
       `);
 

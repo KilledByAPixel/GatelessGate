@@ -115,11 +115,13 @@ export function makeWildflowers({
   const baseColor = new THREE.Color(color);
   const blooms = pts.map((pt, i) => {
     // a resting tilt in its OWN direction, so a windless field is a meadow
-    // rather than a bed of nails
+    // rather than a bed of nails — widened from the original 0.05-0.20 rad so
+    // the lean actually reads at a case's real viewing distance, not just in
+    // a workbench close-up
     const tiltA = hash1(i * 9 + 2, seed) * Math.PI * 2;
     _axis.set(Math.cos(tiltA), 0, Math.sin(tiltA));
     const rest = new THREE.Quaternion()
-      .setFromAxisAngle(_axis, 0.05 + 0.15 * hash1(i * 9 + 3, seed))
+      .setFromAxisAngle(_axis, 0.08 + 0.24 * hash1(i * 9 + 3, seed))
       .multiply(new THREE.Quaternion().setFromAxisAngle(UP, hash1(i * 9 + 1, seed) * Math.PI * 2));
 
     _c.copy(baseColor).offsetHSL(
@@ -129,11 +131,20 @@ export function makeWildflowers({
     );
     mesh.setColorAt(i, _c);
 
+    // Two sizes, not one continuous range: about a third of the field is
+    // openly BIG blooms, the rest small buds still tightening — a meadow has
+    // flowers at different stages, not one species scaled up and down. The
+    // old single `0.72 + 0.62*u` range read as texture noise rather than
+    // variety; two clusters with a visible gap between them read as bud vs
+    // bloom even at a case's real distance.
+    const big = hash1(i * 9 + 21, seed) < 0.32;
+    const sc = big ? 1.05 + 0.35 * pt.u : 0.52 + 0.30 * pt.u;
+
     return {
       x: pt.x,
       z: pt.z,
       y: groundHeight(pt.x, pt.z, { seed: groundSeed }),
-      sc: 0.72 + 0.62 * pt.u,
+      sc,
       tall: 0.85 + 0.35 * hash1(i * 9 + 9, seed),
       rest,
       phase: hash1(i * 9 + 5, seed) * Math.PI * 2,
