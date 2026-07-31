@@ -117,7 +117,11 @@ panel.appendChild(about.el);
 const sit = makeSit({
   audio,
   onComplete: () => {
-    if (koanSlug) { save.markSat(koanSlug); menu.refresh(save.state()); }
+    // Same guard buildKoan uses for markRead: a dev page's Sit button exists
+    // for judging the timer, not for the reader's progress. Without this, a
+    // completed sit on the showcase would persist sat['showcase'] into save
+    // state — a tool leaking into the book the same way an unmarked read would.
+    if (koanSlug && !isDevPage(koanSlug)) { save.markSat(koanSlug); menu.refresh(save.state()); }
     resumeKoan();
   },
   onExit: () => resumeKoan(),

@@ -35,6 +35,19 @@ test('the showcase loads through its own table', async () => {
   assert.equal(mod.dev, true, 'the flag main.js reads to keep it out of reading progress');
 });
 
+test('the sit guard has what it needs — isDevPage(showcase) is true', () => {
+  // The showcase has a Sit button like any case, so a completed sit calls
+  // main.js's sit.onComplete, which guards save.markSat with
+  // `koanSlug && !isDevPage(koanSlug)` — the same class of leak the markRead
+  // guard above (mod.dev) exists to prevent, but driven from koanSlug alone
+  // rather than the module, which is why the sit guard reads isDevPage()
+  // instead. main.js itself isn't Node-testable (DOM + Three.js), so this is
+  // the pure seam: if isDevPage ever stopped recognising the showcase, the
+  // guard in main.js would silently stop guarding it and a finished sit would
+  // persist sat['showcase'] into save state.
+  assert.ok(isDevPage(SHOWCASE_SLUG), 'a completed sit on the showcase must never reach save.markSat');
+});
+
 test('the showcase is not in the book', async () => {
   // The spine is the reading order; the showcase is not in it, so nothing pages
   // into it, the arrow keys stop before it, and the continuous reading cannot

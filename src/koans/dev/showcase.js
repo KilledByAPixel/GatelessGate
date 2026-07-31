@@ -11,7 +11,7 @@ import {
   makeKoi, makeWater, makeBasin, makeBird, makeBirds,
   makeMonk, makeBuddha, makeAssembly, makeRaisedFinger, makeFlag, makeHangingMonk,
   makeTree, makePine, makeOak, makeForest, makeGrassField, makeWildflowers, makeFlower,
-  makeGate, makeHut, makeVeranda, makeStall, makeScreen, makeLattice, makePole,
+  makeGate, makeHut, makeVeranda, makeStall, makeScreen, makeLattice, makePen, makePole,
   makeLantern, makeBell, makeDrum, makeRack, makeVase, makeBowl, makeWheel,
   makeFurin, makeBundle, makeMoon,
 } from '../../kit/index.js';
@@ -54,13 +54,33 @@ const ROWS = {
 // clean off both edges — which is exactly what the first take of this scene
 // did. Each row's models are spaced to its own allowance.
 
-// The captions stand in the aisle IN FRONT of their row, on the centre line.
-// Left of the row was the obvious place and the wrong one: x = 0 is the one
-// column that is in frame at every depth and every zoom, and the aisles are
-// empty by construction, so a caption can never collide with a model.
+// The captions stand in the aisle IN FRONT of their row, on the TRUE centre
+// line (x = 0) — the one column that stays clear at every depth, zoom and
+// azimuth this camera reaches, because every row's own tall outlier (the
+// vegetation oak, the gallows oak in the people row, the architecture pole)
+// is placed off to one side precisely so the middle of the room is empty.
+//
+// This used to read x = 0 in the comment but -6.5 in the constant — "a
+// quieter column than dead centre" — and that quieter column is almost
+// exactly under the vegetation row's own oak (x = -8): from an angled near
+// shot the ARCHITECTURE caption standing behind it lined up with the oak's
+// crown on screen and read as ink lost in ink. Dead centre does not have
+// that neighbour. A caption can still fail to read against paper-coloured
+// ground or a light sky, which is what the stroke halo below is for — this
+// column just keeps it off the room's one consistently dark shape.
+//
+// Height is ONE constant, deliberately not tuned per row: a first pass raised
+// the back rows well above their own tallest piece (up to 7 units, to clear
+// the pole) and that broke the wide shot instead of fixing it — ARCHITECTURE
+// and PROPS sit close together in depth, and lifting one far more than the
+// other collapsed the gap perspective had been giving them, so the two
+// captions crowded together on screen. A single modest height keeps every
+// caption's screen position governed by its row's OWN depth, the way the
+// five read cleanly apart in the first place; nothing at x = 0 in any row is
+// taller than this clears, and the halo carries the rest.
 const LABEL_AISLE = 3.4;
-const LABEL_X = -6.5;        // a quieter column than dead centre
-const LABEL_Y = 0.60;
+const LABEL_X = 0;
+const LABEL_Y = 0.85;
 const LABEL_CAP = 0.92;      // world height of the drawn line, at LABEL_REF
 // The distance the caption sizes were tuned at — the camera's own home. update()
 // scales each label by its distance over this, so a caption is the same size on
@@ -89,8 +109,18 @@ function makeRowLabel(text) {
   c2.font = font;
   c2.textAlign = 'center';
   c2.textBaseline = 'middle';
+  // A paper-coloured halo behind the ink, not just a flat fill: a caption is
+  // read against whatever the room puts behind it — sky, ground, or the one
+  // dark canopy in frame — and a flat fill at low alpha vanished into that
+  // last one. The stroke reads as a caption on any of them; the fill on top
+  // is what still says "ink" rather than "sticker".
+  c2.lineJoin = 'round';
+  c2.lineWidth = 14;
+  c2.strokeStyle = PAPER;
+  c2.globalAlpha = 0.9;
+  c2.strokeText(word, canvas.width / 2, 60);
   c2.fillStyle = INK;
-  c2.globalAlpha = 0.68;
+  c2.globalAlpha = 0.92;
   c2.fillText(word, canvas.width / 2, 60);
   const tex = new THREE.CanvasTexture(canvas);
   tex.needsUpdate = true;
@@ -254,7 +284,7 @@ export default {
     place(makeWildflowers({ radius: 2.2, count: 70, seed: 71 }), 13, 'vegetation');
     place(makeFlower({}), 16, 'vegetation');
 
-    // ---- architecture (±18) ------------------------------------------------
+    // ---- architecture (±23) -------------------------------------------------
     place(makeGate({}), -17.5, 'architecture');
     place(makeHut({}), -12, 'architecture', 0.2);
     place(makeVeranda({}), -5.5, 'architecture', 0.15);
@@ -262,6 +292,11 @@ export default {
     place(makeScreen({}), 6.5, 'architecture');
     place(makeLattice({}), 11.5, 'architecture', 0.15);
     place(makePole({ height: 6 }), 16, 'architecture');
+    // Case 37's enclosure. Its own footprint is a 5.4-unit square (walls to
+    // either side of centre), so it needs more clearance than any other single
+    // piece in this row — set past the pole with a gap wide enough that neither
+    // its walls nor the pole's guy-line footprint touch.
+    place(makePen({}), 21.5, 'architecture');
 
     // ---- props (±20) -------------------------------------------------------
     place(makeLantern({}), -18, 'props');
@@ -348,3 +383,12 @@ export default {
 // and weather, not models — they have no footprint that sits in a row, and each
 // one would swallow the neighbours it is meant to be compared against. The
 // ground here IS makeGround; the rest are judged in the cases that use them.
+//
+// Also excluded, for a different reason — these are component and helper
+// builders, never placed on their own: makeFigure is the lathe-and-limbs rig
+// makeMonk (and so every monk in the people row) is built from, not a model in
+// its own right; makeTail is the same for every quadruped's tail (buffalo,
+// horse, dog, fox, cat all carry one, already visible on each of them); and
+// makeBlobShadow is the render-side ground blob every case drops under its
+// own hover-lit figure — a per-case behaviour, not a model this room could
+// show standing on its own.
