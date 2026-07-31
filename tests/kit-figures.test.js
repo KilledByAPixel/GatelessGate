@@ -55,6 +55,19 @@ test('makeAssembly is one instanced, grounded, deterministic crowd', () => {
   assert.ok(a.isInstancedMesh, 'a single instanced mesh');
   assert.equal(a.count, 8);
   assert.equal(a.userData.noOutline, true);
+
+  // each instance is a seated MONK, not a pawn: the silhouette carries the
+  // obi pinch (a belt — narrower than the blouse pushed up over it) and a
+  // hat brim wider than the robe's own shoulders, read straight off the
+  // merged geometry via the same band scan the buddha test uses
+  const fake = { geometry: a.geometry };
+  const hem = maxRadiusInBand(fake, 0, 0.12);
+  const obi = maxRadiusInBand(fake, 0.43, 0.47);      // the tie, at 0.300·FIG_H
+  const blouse = maxRadiusInBand(fake, 0.50, 0.54);   // the swell above the knot
+  assert.ok(obi < blouse, `the obi pinch reads as a belt: ${obi} vs ${blouse}`);
+  assert.ok(obi < hem * 0.7, `a waisted figure, not a cone: ${obi} vs ${hem}`);
+  const geoBox = a.geometry.boundingBox || (a.geometry.computeBoundingBox(), a.geometry.boundingBox);
+  assert.ok(geoBox.max.y > 0.8 && geoBox.max.y < 1.1, `crowd figure stays crowd-sized: ${geoBox.max.y}`);
   const m = new THREE.Matrix4();
   a.getMatrixAt(0, m);
   const p = new THREE.Vector3().setFromMatrixPosition(m);

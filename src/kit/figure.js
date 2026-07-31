@@ -143,7 +143,11 @@ const STAND_PROFILE = [
   [0.097, 0.674],   // COLLAR — a step, not a taper
   [0.058, 0.692],   // the neck opening
 ];
-const SIT_PROFILE = [
+// Exported (with the hat profile below) for `assembly.js`: the instanced
+// crowd builds its per-instance geometry from the same seated silhouette the
+// hero monks wear, so a background figure at fog distance is the same person,
+// simplified — not a different species of pawn.
+export const SIT_PROFILE = [
   [0.020, 0.000],   // hem centre, closed on the ground
   [0.300, 0.000],   // the hem pooling round the crossed legs
   [0.318, 0.052],
@@ -164,7 +168,7 @@ const SIT_PROFILE = [
 // Traced the same way a robe is — out along the underside, up the outside, in
 // at the crown — which makes it one closed solid, not a shell with a hole
 // where the head goes.
-const HAT_PROFILE = [
+export const HAT_PROFILE = [
   [0.000, -0.026],  // the underside, centre — buried in the skull
   [0.150, -0.046],  // the underside sloping out and DOWN
   [0.192, -0.062],  // THE RIM: widest and lowest

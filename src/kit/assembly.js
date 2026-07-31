@@ -3,19 +3,33 @@ import { toonMaterial } from '../render/toon.js';
 import { mergeSimple } from './scatter.js';
 import { hash1 } from '../util/noise.js';
 import { INK } from '../palette.js';
+import { SIT_PROFILE, HAT_PROFILE } from './figure.js';
 
-// A seated crowd as one InstancedMesh (one draw call): a simplified silhouette
-// (pooled cone body + head) repeated in a shallow arc, each facing a focal
-// point. Hero figures (Buddha, Kasyapa) are placed separately by the scene.
+// A seated crowd as one InstancedMesh (one draw call): a simplified seated
+// monk repeated in a shallow arc, each facing a focal point. Hero figures
+// (Buddha, Kasyapa) are placed separately by the scene.
+//
+// The per-instance geometry is built from figure.js's OWN seated-robe and
+// sedge-hat profiles, not from a stand-in: a cone-and-ball pawn was tried
+// first and Frank called it what it was ("a triangle with a little tiny
+// circle head"). The obi pinch, the collar step and the hat brim are all
+// silhouette events, so they survive fog distance for free — a crowd member
+// is the hero monk's shape with the sleeves dropped, which is exactly the
+// economy figure.js's `arms: null` crowd option already promises.
+const FIG_H = 1.5;    // the height each crowd figure is authored at (world units)
+const SLIM = 0.8;     // radial squeeze — figure.js's `stout`, run below 1: a
+                      //   full-width seated hem is ~1.0 wide at this height and
+                      //   the arc packs figures ~0.6 apart, so un-slimmed robes
+                      //   merge into one black bank; hem point 0 stays put, same
+                      //   as stout, so the figure thins around its axis
 export function makeAssembly({ count = 8, radius = 3.0, center = [0, 0], facing = [0, 0], spread = 1.4, color = INK, seed = 6 } = {}) {
-  // body + head + the same sedge hat the monks wear: without the hat the
-  // silhouette reads as a chess pawn rather than a seated figure
-  const bodyGeo = new THREE.ConeGeometry(0.34, 0.8, 8);
-  bodyGeo.translate(0, 0.4, 0);
-  const headGeo = new THREE.SphereGeometry(0.12, 10, 8);
-  headGeo.translate(0, 0.9, 0);
-  const hatGeo = new THREE.ConeGeometry(0.235, 0.11, 10);
-  hatGeo.translate(0, 0.985, 0);
+  const bodyGeo = new THREE.LatheGeometry(
+    SIT_PROFILE.map(([r, y], i) => new THREE.Vector2((i ? r * SLIM : r) * FIG_H, y * FIG_H)), 8);
+  const headGeo = new THREE.SphereGeometry(0.095 * FIG_H, 10, 8);
+  headGeo.translate(0, 0.50 * FIG_H, 0);
+  const hatGeo = new THREE.LatheGeometry(
+    HAT_PROFILE.map(([r, y]) => new THREE.Vector2(r * FIG_H, y * FIG_H)), 10);
+  hatGeo.translate(0, 0.545 * FIG_H, 0);
   const geo = mergeSimple([bodyGeo, headGeo, hatGeo]);
 
   const mesh = new THREE.InstancedMesh(geo, toonMaterial({ color, flat: true }), count);
