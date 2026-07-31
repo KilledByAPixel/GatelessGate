@@ -131,7 +131,7 @@
     // the oak (case 38) and, hung from one of its outer canopy anchors, the
     // hanging monk (case 5) — a real branch tip rather than a hand-picked point,
     // so he previews in his true dangling attitude
-    const oak = place(makeOak({ height: 5.2, seed: 5 }), 19, 15, 0.3, ['oak', 'hangingmonk']);
+    const oak = place(makeOak({ height: 5.2, seed: 5 }), 19, 15, 0.3, ['oak', 'hangingmonk', 'hangingmonk-side']);
     oak.updateMatrixWorld(true);
     const branchTip = oak.localToWorld(oak.canopyPoints[0].clone());
     // the accent colour (as case 5 itself uses) — plain ink would blend into
@@ -146,6 +146,7 @@
     allPlaced.push(dangler.group);
     soloGroups.oak.push(dangler.group);
     soloGroups.hangingmonk.push(dangler.group);
+    soloGroups['hangingmonk-side'].push(dangler.group);
 
     // row E — architecture & staged objects (z ≈ 22 — pushed back 2 from the
     // original z≈20 plan for clearance from row D's forest, see above)
@@ -321,6 +322,13 @@
     // offset stays buried in leaf geometry
     VIEWS.hangingmonk = {
       p: [branchTip.x + 5.5, branchTip.y - 0.6, branchTip.z + 5.5],
+      t: [branchTip.x, branchTip.y - 1.0, branchTip.z],
+    };
+    // a true profile: he faces local -z (the bite offset is forward on -z),
+    // so his side is perpendicular to that — offset along x alone rather
+    // than the 3/4 diagonal above, same distance and target
+    VIEWS['hangingmonk-side'] = {
+      p: [branchTip.x + 7.0, branchTip.y - 0.3, branchTip.z],
       t: [branchTip.x, branchTip.y - 1.0, branchTip.z],
     };
 

@@ -2,9 +2,12 @@ import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { INK } from '../palette.js';
 import { hash1 } from '../util/noise.js';
+import { sphereHead, neckBetween, sleeve } from './figure.js';
 
 // The man in Kyogen's tree (case 5), holding on by his teeth. Built from
-// monk.js's vocabulary — lathed robe, sphere head, cylinder sleeves — but
+// figure.js's shared vocabulary — the same sphere head, the same solved
+// neck, the same cuffed sleeve every other person in the book wears — but
+// the robe stays his own profile (hanging robes hang; see below) and he is
 // hung rather than stood: the group's ORIGIN is the teeth-grip itself, the
 // point where his mouth meets the branch, and every part of him hangs below
 // it. Rotating the group therefore swings him from the bite, which is the
@@ -60,8 +63,9 @@ export function makeHangingMonk({ height = 1.6, color = INK, seed = 5 } = {}) {
   // behind the pivot, body further behind still — rather than by rotating
   // geometry nobody can see rotate.)
   const headR = 0.095 * h;
-  const head = new THREE.Mesh(new THREE.SphereGeometry(headR, 14, 10), mat);
-  head.name = 'head';
+  // sphereHead's default r is 0.095 — the same radius headR names — so this
+  // is figure.js's own head, not a lookalike copy.
+  const head = sphereHead({ height: h, mat });
   // mouth = origin = head centre + (up 0.55 + forward 0.75) · headR
   head.position.set(0, -0.55 * headR, -0.75 * headR);
   g.add(head);
@@ -74,21 +78,24 @@ export function makeHangingMonk({ height = 1.6, color = INK, seed = 5 } = {}) {
   // head, which hangs behind the pivot.
   const collar = new THREE.Vector3(0, -0.232 * h + LIFT, -0.060 * h);   // the lifted collar
   const nape = new THREE.Vector3(0, -0.140 * h, -0.072 * h);            // just into the skull
-  const dir = nape.clone().sub(collar);
-  const neck = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.056 * h, 0.070 * h, dir.length() + 0.03 * h, 8), mat);
-  neck.name = 'neck';
-  neck.position.copy(collar).addScaledVector(dir, 0.5);
-  neck.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+  // neckBetween is this file's own solve, promoted to figure.js — same two
+  // radii and pad this file always used, just passed explicitly: its
+  // defaults are absolute units, not fractions of height, so the
+  // height-scaled numbers below would silently mean something else left
+  // implicit.
+  const neck = neckBetween(collar, nape, { r0: 0.056 * h, r1: 0.070 * h, pad: 0.03 * h, mat });
   g.add(neck);
 
-  // sleeves hanging straight down at his sides — his hands grasp no branch
+  // sleeves hanging straight down at his sides — his hands grasp no branch.
+  // figure.js's sleeve() gives him the same cuffed taper the rebuilt monk
+  // wears: its default shoulder/wrist radii (0.035, 0.065) are the exact
+  // numbers this file's plain cylinder always used, so this is the cuff
+  // upgrade landing here, not a new proportion. The mesh's own origin is the
+  // shoulder — the same convention the old hand-translated cylinder used —
+  // so the position below still means what it always meant.
   const sleeveL = 0.36 * h;
   for (const side of [-1, 1]) {
-    const geo = new THREE.CylinderGeometry(0.035 * h, 0.065 * h, sleeveL, 7);
-    geo.translate(0, -sleeveL / 2, 0);
-    const arm = new THREE.Mesh(geo, mat);
-    arm.name = 'arm';
+    const arm = sleeve({ height: h, len: sleeveL, mat });
     arm.position.set(side * 0.122 * h, -0.295 * h + LIFT, -0.062 * h);
     arm.rotation.z = side * -0.055;   // a hair clear of the robe, still plumb
     arm.rotation.x = 0.02;
