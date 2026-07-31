@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, INK, mixHex } from '../palette.js';
+import { PAPER, ACCENT, INK, mixHex, hexToRgb } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makePath, makeVeranda, makeLantern, makeMonk, aimMonk,
@@ -71,10 +71,16 @@ export default {
     aimMonk(ryutan, tokusan.position);
 
     // THE LANTERN, between them, and the flame in it — the only light in the
-    // book that anything depends on
+    // book that anything depends on. The firebox is a real open chamber now
+    // (see lantern.js), turned so a face — not a corner pillar — meets the
+    // home camera: the rig puts the camera at bearing atan2(4.64, 8.43) ≈ 0.50
+    // from the lantern, so this rotation aims the opening straight down that
+    // sight-line and the candle inside is plainly visible.
     const lantern = makeLantern({ height: 1.15 });
     lantern.position.set(0.5, 0, -1.7);
+    lantern.rotation.y = 0.5;
     scene.add(lantern);
+    const candle = lantern.getObjectByName('candle');
 
     const flameMat = toonMaterial({ color: ACCENT, flat: true });
     flameMat.transparent = true;
@@ -83,8 +89,41 @@ export default {
     const flame = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.20, 7), flameMat);
     flame.name = 'flame';
     flame.userData.noOutline = true;
-    flame.position.set(0.5, 0.78, -1.7);
+    flame.position.set(0.5, 0.78, -1.7);     // base at 0.68 — the kit candle's tip
     scene.add(flame);
+
+    // THE GLOW — the bright red light Frank asked to see in the box. A radial
+    // falloff built as a DataTexture (canvas-free, so build() still runs under
+    // plain Node in the tests), on an additive sprite behind the flame: over
+    // the night tone it reads as light spilling from the chamber, and being
+    // depth-tested it is clipped by the pillars and roof exactly the way real
+    // spill would be. No PointLight — the book washes, it does not cast.
+    const GLOW_TEX_SIZE = 32;
+    const glowPx = new Uint8Array(GLOW_TEX_SIZE * GLOW_TEX_SIZE * 4);
+    const [gr, gg, gb] = hexToRgb(mixHex(ACCENT, PAPER, 0.30));
+    for (let i = 0; i < GLOW_TEX_SIZE * GLOW_TEX_SIZE; i++) {
+      const gx = ((i % GLOW_TEX_SIZE) + 0.5) / GLOW_TEX_SIZE - 0.5;
+      const gy = (Math.floor(i / GLOW_TEX_SIZE) + 0.5) / GLOW_TEX_SIZE - 0.5;
+      const r = Math.min(1, Math.hypot(gx, gy) * 2);
+      const a = (1 - r) * (1 - r);           // soft core, zero at the rim
+      glowPx[i * 4] = gr; glowPx[i * 4 + 1] = gg; glowPx[i * 4 + 2] = gb;
+      glowPx[i * 4 + 3] = Math.round(255 * a);
+    }
+    const glowTex = new THREE.DataTexture(glowPx, GLOW_TEX_SIZE, GLOW_TEX_SIZE);
+    glowTex.colorSpace = THREE.SRGBColorSpace;
+    glowTex.needsUpdate = true;
+    const glowMat = new THREE.SpriteMaterial({
+      map: glowTex,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      fog: false,
+    });
+    const glow = new THREE.Sprite(glowMat);
+    glow.name = 'flame-glow';
+    glow.position.copy(flame.position);
+    glow.scale.set(0.7, 0.7, 1);
+    scene.add(glow);
 
     // ---- THE STARS --------------------------------------------------------
     // Present from the first frame, at zero opacity. They are not created when
@@ -171,7 +210,10 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
-      if (!input.raycastFirst(camera, [hit])) return;
+      // the generous invisible cylinder is still the real target (a flame is
+      // a sliver to hit on a phone), but the flame and the kit's candle are
+      // listed too so a dead-on tap works even if the cylinder ever moves
+      if (!input.raycastFirst(camera, [hit, flame, candle])) return;
       lit = !lit;
       changedAt = clock;
       blows++;
@@ -205,6 +247,12 @@ export default {
         flame.visible = alive > 0.01;
         const flick = 1 + Math.sin(clock * 11.3) * 0.10 + Math.sin(clock * 6.7 + 1.4) * 0.06;
         flame.scale.set(alive * flick, alive * (0.9 + flick * 0.15), alive * flick);
+
+        // the glow breathes with the same flicker and dies with the flame
+        glow.visible = flame.visible;
+        glowMat.opacity = alive * (0.85 + (flick - 1) * 0.5);
+        const gs = 0.7 * alive * flick;
+        glow.scale.set(gs, gs, 1);
       },
       fragment() {
         return {
@@ -213,7 +261,10 @@ export default {
           dark: +(starMat.opacity / 0.92).toFixed(3),
         };
       },
-      dispose() {},
+      // the glow sprite sits outside the mesh graph the scene manager's
+      // disposeRoot walks (same caveat showcase.js documents), so its texture
+      // and material are released here by hand
+      dispose() { glowTex.dispose(); glowMat.dispose(); },
     };
   },
 };

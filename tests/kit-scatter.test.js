@@ -49,47 +49,81 @@ test('lantern stacks its stones above y=0', () => {
   assert.ok(box.max.y > 0.7, `tall enough, got ${box.max.y}`);
 });
 
-test('lantern firebox windows are a genuinely darker void than the stone', () => {
+test('lantern firebox is a real opening onto a darker interior, with a candle', () => {
+  // Fix round 2 (Frank: "I want it to be open — I wanna see the red candle
+  // inside"): the firebox is no longer a solid box with dark panels painted
+  // on. 'window' is now the chamber's own BackSide interior, and a pale
+  // candle stands inside it.
   const l = makeLantern({});
   const firebox = l.children.find((c) => c.name === 'firebox');
   const win = l.children.find((c) => c.name === 'window');
-  assert.ok(firebox && win, 'both firebox and window meshes present');
-  // luminance proxy: sum of RGB channels — the window mix must sit closer to
-  // ink than the firebox stone does, not just a different hue.
+  const candle = l.children.find((c) => c.name === 'candle');
+  assert.ok(firebox && win && candle, 'firebox, window (interior) and candle meshes present');
+  // luminance proxy: sum of RGB channels — the interior must sit closer to
+  // ink than the firebox stone does, and the wax must sit well above it.
   const lum = (mat) => mat.color.r + mat.color.g + mat.color.b;
   assert.ok(lum(win.material) < lum(firebox.material) - 0.15,
-    `window (${lum(win.material).toFixed(3)}) should read darker than the firebox stone (${lum(firebox.material).toFixed(3)})`);
-  // the window sits inside the firebox's own vertical span, not off in the roof
+    `interior (${lum(win.material).toFixed(3)}) should read darker than the firebox stone (${lum(firebox.material).toFixed(3)})`);
+  assert.ok(lum(candle.material) > lum(firebox.material) + 0.3,
+    `candle (${lum(candle.material).toFixed(3)}) should read paler than the stone (${lum(firebox.material).toFixed(3)})`);
+  // the interior lines the cavity: inward-facing, and inside the firebox span
+  assert.equal(win.material.side, THREE.BackSide, 'interior is drawn inward (BackSide)');
   const fBox = new THREE.Box3().setFromObject(firebox);
   const wBox = new THREE.Box3().setFromObject(win);
   assert.ok(wBox.min.y >= fBox.min.y - 1e-6 && wBox.max.y <= fBox.max.y + 1e-6,
-    'window stays within the firebox height');
-  // and it stands proud of the firebox face, not buried inside the solid box
-  // (a panel with its outer face behind the wall would never be seen)
-  assert.ok(wBox.max.x > fBox.max.x, 'window panel is proud of the firebox face, not sealed inside it');
+    'interior stays within the firebox height');
+  assert.ok(wBox.max.x < fBox.max.x, 'interior is inset behind the stonework, not proud of it');
+  // and the opening is REAL: a level ray through the chamber (offset a hair
+  // in z so it passes beside the candle) must sail past the near face and
+  // land on the interior's FAR wall, beyond the lantern's own axis. Against
+  // the closed box this ray stopped on the front panel at x=+0.14.
+  l.updateMatrixWorld(true);
+  const midY = (wBox.min.y + wBox.max.y) / 2;
+  const ray = new THREE.Raycaster(new THREE.Vector3(2, midY, 0.045), new THREE.Vector3(-1, 0, 0));
+  const hits = ray.intersectObject(l, true);
+  assert.ok(hits.length, 'the ray meets the lantern');
+  assert.equal(hits[0].object.name, 'window', `first hit should be the interior, got '${hits[0].object.name}'`);
+  assert.ok(hits[0].point.x < 0,
+    `first hit should be the FAR wall (x<0), got x=${hits[0].point.x.toFixed(3)} — the chamber is not open`);
 });
 
-test('lantern firebox window overlaps case 28\'s own flame band', () => {
-  // Fix round 1: the reviewer measured the FIRST shipped rebuild's window at
-  // 0.508–0.647 against k28's own flame at 0.68–0.88 (both at k28's explicit
-  // height:1.15) — zero overlap, the flame sat entirely in the roof, same
-  // burial the pre-existing lantern had. Derived from k28's own build()
-  // rather than hardcoded so either file drifting out from under the other
-  // is caught here, not just by eye.
+test('case 28\'s flame is visible from the case\'s own home camera', () => {
+  // Fix round 1 measured band overlap; round 2 asserts the thing Frank
+  // actually asked for — an unobstructed SIGHT-LINE. The home camera pose is
+  // reproduced from the rig formula (camera.js makeCameraRig: target +
+  // distance * (sinφ·sinθ, cosφ, sinφ·cosθ) — same disclosed
+  // reproduce-the-formula tradeoff the roof-rim test below uses), and a ray
+  // from there to the flame must reach it before any lantern stone, roof or
+  // veranda timber. Derived from k28's own build() and camera block, so
+  // either file drifting out from under the other is caught here, not by eye.
   const built = k28.build({ audio: null, input: { onTap: () => {} } });
   const flame = built.scene.getObjectByName('flame');
   assert.ok(flame, 'k28 builds a flame mesh');
-  const flameBox = new THREE.Box3().setFromObject(flame);
+  built.scene.updateMatrixWorld(true);
 
-  const l = makeLantern({ height: 1.15 });   // k28's own explicit override
-  const win = l.children.find((c) => c.name === 'window');
-  const winBox = new THREE.Box3().setFromObject(win);
+  const { distance, target, azimuth, polar } = k28.camera;
+  const sp = Math.sin(polar), cp = Math.cos(polar);
+  const cam = new THREE.Vector3(
+    target[0] + distance * sp * Math.sin(azimuth),
+    target[1] + distance * cp,
+    target[2] + distance * sp * Math.cos(azimuth));
 
-  const overlap = Math.min(flameBox.max.y, winBox.max.y) - Math.max(flameBox.min.y, winBox.min.y);
-  const flameSpan = flameBox.max.y - flameBox.min.y;
-  assert.ok(overlap > flameSpan * 0.5,
-    `window (${winBox.min.y.toFixed(3)}-${winBox.max.y.toFixed(3)}) should cover most of the flame's own span `
-    + `(${flameBox.min.y.toFixed(3)}-${flameBox.max.y.toFixed(3)}), got overlap=${overlap.toFixed(3)} of ${flameSpan.toFixed(3)}`);
+  const fpos = flame.getWorldPosition(new THREE.Vector3());
+  const ray = new THREE.Raycaster(cam, fpos.clone().sub(cam).normalize());
+  // solid meshes only: the invisible tap cylinder is deliberately in the way
+  // (it IS the tap target), and instanced scatter/grass is waist-high set
+  // dressing whose blades are not walls — this assertion is about the lantern
+  // and the architecture around it.
+  const solids = [];
+  built.scene.traverse((o) => {
+    if (o.isMesh && !o.isInstancedMesh && o.name !== 'flame-hit') solids.push(o);
+  });
+  const hits = ray.intersectObjects(solids, false);
+  assert.ok(hits.length, 'the sight-line lands on something');
+  const first = hits[0].object.name;
+  assert.ok(first === 'flame' || first === 'candle',
+    `first thing on the camera's sight-line must be the flame/candle, got '${first}' `
+    + `at ${hits[0].distance.toFixed(2)} (flame at ${cam.distanceTo(fpos).toFixed(2)})`);
 });
 
 test('lantern roof rim kicks up above the low point just behind it', () => {

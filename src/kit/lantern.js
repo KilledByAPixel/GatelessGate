@@ -1,37 +1,56 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { mergeSimple } from './scatter.js';
-import { WASH, INK, mixHex } from '../palette.js';
+import { WASH, PAPER, INK, mixHex } from '../palette.js';
 
-// A stone lantern (tōrō): five parts, base to jewel, carved from one stone —
-// base (kiso), post (sao), a windowed firebox (hibukuro, on its own platform
-// collar), a roof cap (kasa) with an upturned eave, and the jewel finial
-// (hōju). Reused everywhere — temple gates, paths, and later the menu's
-// progress marks — and it is case 28's own light: k28.js builds its flame
-// and hit-target as separate meshes at a fixed world height, so nothing here
-// may rename the group or drift its rough silhouette/scale out from under it.
+// A stone lantern (tōrō): base to jewel, carved from one stone — base (kiso),
+// post (sao), an OPEN firebox (hibukuro, on its own platform collar), a roof
+// cap (kasa) with an upturned eave, and the jewel finial (hōju). Reused
+// everywhere — temple gates, paths, and later the menu's progress marks — and
+// it is case 28's own light: k28.js builds its flame and hit-target as
+// separate meshes at a fixed world height, so nothing here may rename the
+// group or drift its rough silhouette/scale out from under it.
 //
-// One material colours the whole thing (a real tōrō is one stone), so the
-// five parts separate by SHADE, not hue: base/post/jewel keep round toon
-// shading (a soft light-to-dark band across the curve), the firebox and roof
-// are flat-shaded (a crisp, single value per face) — the same round-vs-flat
-// rhythm gate.js's posts/kasagi and hut.js's posts/walls use to step value
-// without adding a second colour. The one genuine colour step is the
-// firebox's windows: a real darker void, same idea as hut's recessed
-// doorway, so a case's own flame (k28) has something dark to sit against
-// rather than the same stone tone as the wall around it.
+// THE FIREBOX IS A REAL OPENING NOW (Frank, on case 28: "I want it to be open
+// — I wanna see the red candle inside"). The previous pass built it as a solid
+// box with dark panels painted on, which read as a closed crate from the
+// case's own camera and buried the one flame the book has. It is now a sill
+// band, four corner pillars, and a header band — a chamber you can genuinely
+// see into from every side, the way a real hibukuro takes its hi-guchi.
 //
-// Mesh count held at six — the same as before this pass (base, post,
-// platform, firebox, roof, jewel were already six unmerged meshes): the
-// platform now merges onto the firebox box (one 'firebox' mesh), which buys
-// back the mesh the four windows spend (merged into one 'window' mesh).
+// The old "open box = see-through blowout against the sky" worry is answered
+// by the `window` mesh: no longer panels standing proud of a wall, it is the
+// chamber's own dark INTERIOR — a slightly-inset box rendered BackSide, so
+// through any opening you see its far wall, ceiling and floor in near-ink and
+// never the sky behind the lantern. Same dark-void idea as hut.js's recessed
+// doorway, turned inside out. It is marked noOutline (an inverted hull of an
+// inward-facing box would ink the cavity shut).
+//
+// And since the chamber is visible, it holds a CANDLE — a stub of pale wax on
+// the sill floor, sized so its tip meets the flame k28 hangs at world y=0.78
+// on its height:1.15 lantern (candle top lands at 0.59*H = 0.678 there, the
+// flame cone's own base). Every other case just gets an unlit candle in an
+// open lantern, which is what a tōrō by a path looks like in daylight; it and
+// the interior are the two genuine colour steps on the one-stone rule.
+//
+// One material still colours all the stone, so the parts separate by SHADE,
+// not hue: base/post/jewel keep round toon shading, the firebox stonework and
+// roof are flat-shaded — the same round-vs-flat rhythm gate.js and hut.js use.
+// Mesh count: seven (base, post, firebox, window, candle, roof, jewel) — the
+// platform, sill, header and four pillars all merge into the one 'firebox'
+// mesh, so opening the chamber costs exactly one mesh (the candle) over the
+// closed version.
 export function makeLantern({ height = 1.15, color = WASH.stone } = {}) {
   const H = height;
   const g = new THREE.Group();
   g.name = 'lantern';
   const mat = toonMaterial({ color });
   const flat = toonMaterial({ color, flat: true });
-  const windowMat = toonMaterial({ color: mixHex(color, INK, 0.62), flat: true });
+  // the chamber's interior — a true dark void, deeper than the old painted
+  // panels (0.78 vs 0.62 toward ink) so a flame has real night to sit against
+  const voidMat = toonMaterial({ color: mixHex(color, INK, 0.78), flat: true, side: THREE.BackSide });
+  // wax — barely off the paper, the palest thing on the lantern
+  const waxMat = toonMaterial({ color: mixHex(PAPER, INK, 0.05) });
 
   const add = (geo, y, m, name) => {
     const mesh = new THREE.Mesh(geo, m);
@@ -56,52 +75,64 @@ export function makeLantern({ height = 1.15, color = WASH.stone } = {}) {
   const platGeo = new THREE.CylinderGeometry(0.085 * H, 0.10 * H, PLAT_H, 8);
   platGeo.translate(0, PLAT_H / 2, 0);
 
-  // FIREBOX (hibukuro) — a square stone box, and the tallest single stone
-  // here (real tōrō carry their height in this piece, not the shaft).
-  // Windows are cut in as their own dark mesh below, not a real hole (a void
-  // reads by colour here, the same reason hut.js's doorway is a solid
-  // recessed panel rather than an actual gap — an open box invites the
-  // outline pass to ink an edge that is not there and risks a see-through
-  // blowout against the sky). Sized so its window band actually reaches
-  // case 28's own flame: k28.js hangs its flame at a fixed world y=0.78 on a
-  // height:1.15 lantern (flame spans 0.68–0.88 there), independent of
-  // anything in this file — this box and its window are tall enough that
-  // the window covers 0.553–0.838 at that same height, catching ~80% of the
-  // flame's own span instead of ceding it to the roof above.
+  // FIREBOX (hibukuro) — the open chamber: a solid sill band, four square
+  // corner pillars, and a header band under the roof. The pillars are kept
+  // slim (0.042*H against the 0.125*H half-width) so each face's opening is
+  // most of the face — from k28's own camera the sight-line to the flame
+  // passes well inside a pillar's edge once the case turns the chamber to
+  // face the reader. Footprint, height and band positions keep the closed
+  // version's silhouette exactly, so no consumer's framing moves.
   const FBOX_BOT = PLAT_BOT + PLAT_H;
   const FBOX_HW = 0.125 * H;
   const FBOX_H = 0.40 * H;
-  const fboxGeo = new THREE.BoxGeometry(FBOX_HW * 2, FBOX_H, FBOX_HW * 2);
-  fboxGeo.translate(0, PLAT_H + FBOX_H / 2, 0);
-  const firebox = new THREE.Mesh(mergeSimple([platGeo, fboxGeo]), flat);
+  const SILL_H = 0.055 * H;
+  const HEAD_H = 0.05 * H;
+  const PILLAR_W = 0.042 * H;
+  const OPEN_H = FBOX_H - SILL_H - HEAD_H;
+  const stones = [platGeo];
+  const sill = new THREE.BoxGeometry(FBOX_HW * 2, SILL_H, FBOX_HW * 2);
+  sill.translate(0, PLAT_H + SILL_H / 2, 0);
+  stones.push(sill);
+  const head = new THREE.BoxGeometry(FBOX_HW * 2, HEAD_H, FBOX_HW * 2);
+  head.translate(0, PLAT_H + FBOX_H - HEAD_H / 2, 0);
+  stones.push(head);
+  for (const sx of [-1, 1]) {
+    for (const sz of [-1, 1]) {
+      const pillar = new THREE.BoxGeometry(PILLAR_W, OPEN_H, PILLAR_W);
+      pillar.translate(
+        sx * (FBOX_HW - PILLAR_W / 2),
+        PLAT_H + SILL_H + OPEN_H / 2,
+        sz * (FBOX_HW - PILLAR_W / 2));
+      stones.push(pillar);
+    }
+  }
+  const firebox = new THREE.Mesh(mergeSimple(stones), flat);
   firebox.name = 'firebox';
   firebox.position.y = PLAT_BOT;
   g.add(firebox);
 
-  // WINDOWS (hi-guchi) — one dark panel per face, standing PROUD of the
-  // firebox wall (not recessed into it: the firebox is a single solid box,
-  // so a panel set back behind that face would sit buried inside the stone
-  // and never be seen — the same "proud, not a token 0.02" logic hut.js's
-  // own doorway/beam comment argues for, just applied outward instead of in
-  // a reveal). Built directly at their own thickness/width rather than
-  // rotated, so there is no rotation-order surprise between the ±x/±z pairs.
-  const winW = 1.24 * FBOX_HW;
-  const winH = 0.62 * FBOX_H;
-  const winT = 0.03 * H;
-  const winInset = FBOX_HW + winT / 2 - 0.004 * H;
-  const winGeos = [];
-  for (const s of [-1, 1]) {
-    const wx = new THREE.BoxGeometry(winT, winH, winW);
-    wx.translate(s * winInset, 0, 0);
-    winGeos.push(wx);
-    const wz = new THREE.BoxGeometry(winW, winH, winT);
-    wz.translate(0, 0, s * winInset);
-    winGeos.push(wz);
-  }
-  const windowMesh = new THREE.Mesh(mergeSimple(winGeos), windowMat);
+  // WINDOW — the name survives from the closed version (k28 and the tests key
+  // off it), but it is now the dark interior itself: an inset box drawn
+  // BackSide, so every opening looks into a near-ink cavity instead of
+  // through to whatever stands behind the lantern.
+  const IN_HW = 0.115 * H;
+  const IN_H = FBOX_H - 0.03 * H;
+  const windowMesh = new THREE.Mesh(new THREE.BoxGeometry(IN_HW * 2, IN_H, IN_HW * 2), voidMat);
   windowMesh.name = 'window';
   windowMesh.position.y = FBOX_BOT + FBOX_H / 2;
+  windowMesh.userData.noOutline = true;
   g.add(windowMesh);
+
+  // CANDLE — pale wax standing on the sill floor, sunk a hair so it reads as
+  // set into the chamber rather than balanced on the lip. noOutline: at this
+  // size the inverted hull would swallow it whole.
+  const CAND_R = 0.027 * H;
+  const CAND_H = 0.14 * H;
+  const candle = new THREE.Mesh(new THREE.CylinderGeometry(CAND_R * 0.92, CAND_R, CAND_H, 7), waxMat);
+  candle.name = 'candle';
+  candle.userData.noOutline = true;
+  candle.position.y = FBOX_BOT + SILL_H - 0.01 * H + CAND_H / 2;
+  g.add(candle);
 
   // ROOF (kasa) — a hex lathe (segments: 6 gives the facets a real tōrō roof
   // has). The profile carries the same idea as the hut's own eave: steep off
