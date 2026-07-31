@@ -90,6 +90,16 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
 }
 .gg-about-link:hover { color: var(--accent); background: none; }
 
+/* Developer mode's own section, under the back matter. Never rendered at all
+   unless the workbench's "Developer mode" box is ticked, so nothing here is
+   part of the book's ordinary look. Deliberately drab: it is a tool shelf. */
+.gg-dev { margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(30,30,36,0.15); }
+.gg-dev-head {
+  font-family: Georgia, serif; font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--gray); opacity: 0.7; margin-bottom: 6px;
+}
+.gg-dev .gg-about-link { display: block; font-style: normal; font-size: 14px; }
+
 /* ---- koan text (scroll), in the left panel ---- */
 .gg-scroll { --accent: var(--accent); }
 /* The about page borrows the koan page wholesale; it differs only in having no

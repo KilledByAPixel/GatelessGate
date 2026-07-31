@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildRows, continueTarget } from '../src/ui/menu_state.js';
+import { buildRows, continueTarget, devEntries } from '../src/ui/menu_state.js';
+import { SHOWCASE_SLUG } from '../src/koans/dev/index.js';
 
 const CASES = [
   { id: 1, slug: 'a', title: 'A', extra: false },
@@ -48,4 +49,44 @@ test('the matter pages are rows like any other', () => {
 
 test('continue can land on a matter page', () => {
   assert.equal(continueTarget(ENTRIES, { read: {} }, 'afterword'), 'afterword');
+});
+
+// ---- developer mode ------------------------------------------------------
+// The flag itself is stored by the workbench (src/ui/debug.js, below "Keep
+// settings on reload"), the same way that toggle stores its own. What the menu
+// DRAWS from it is decided here, so the "off = the app is identical to today"
+// promise is a plain-Node assertion rather than something only a screenshot
+// could catch.
+
+test('developer mode off yields no entries at all — nothing to render, nothing to listen to', () => {
+  assert.deepEqual(devEntries(false), []);
+  assert.deepEqual(devEntries(undefined), []);
+  assert.deepEqual(devEntries(null), []);
+});
+
+test('developer mode on lists the dev pages, Showcase first', () => {
+  const rows = devEntries(true);
+  assert.ok(rows.length >= 1, 'there is at least one dev page');
+  assert.equal(rows[0].slug, SHOWCASE_SLUG);
+  assert.equal(rows[0].label, 'Showcase');
+  for (const r of rows) {
+    assert.equal(typeof r.slug, 'string');
+    assert.equal(typeof r.label, 'string');
+  }
+});
+
+test('adding a dev page is one row in the manifest — devEntries maps whatever it is given', () => {
+  // The button list is data, not code: this is the whole of what "structure it
+  // so adding entries is trivial" means.
+  assert.deepEqual(
+    devEntries(true, [{ slug: 'x', label: 'X' }, { slug: 'y', title: 'Y' }]),
+    [{ slug: 'x', label: 'X' }, { slug: 'y', label: 'Y' }],
+  );
+  assert.deepEqual(devEntries(false, [{ slug: 'x', label: 'X' }]), []);
+});
+
+test('a dev page is never a row of the contents', () => {
+  const rows = buildRows(ENTRIES, { read: {}, sat: {} }, reg);
+  assert.ok(!rows.some((r) => r.slug === SHOWCASE_SLUG),
+    'the showcase is a tool, not a page of the book');
 });

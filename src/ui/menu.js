@@ -1,11 +1,11 @@
-import { buildRows, continueTarget } from './menu_state.js';
+import { buildRows, continueTarget, devEntries } from './menu_state.js';
 import { searchCases } from './search.js';
 import MATTER from '../koans/text/matter.js';
 import { readingEntries } from '../spine.js';
 
 // The table of contents — a left-panel view over the idling stage scene.
 // Reads as a book's contents, not a level select.
-export function makeMenu({ cases, progress, isStaged, onSelect, onAbout } = {}) {
+export function makeMenu({ cases, progress, isStaged, onSelect, onAbout, devMode = false, onDev } = {}) {
   const el = document.createElement('div');
   el.className = 'gg-view gg-menu hidden';
 
@@ -42,6 +42,33 @@ export function makeMenu({ cases, progress, isStaged, onSelect, onAbout } = {}) 
   about.title = 'The translation, the lineage, and the credits';
   about.onclick = () => onAbout && onAbout();
   backMatter.appendChild(about);
+
+  // The Developer section, after About — the tools, not the book. Rebuilt from
+  // scratch on every render and EMPTY unless developer mode is on: with the
+  // flag off there is no element here and no handler attached, which is what
+  // makes "off = the app as it was" literally true rather than merely hidden.
+  const dev = document.createElement('div');
+  dev.className = 'gg-dev';
+  let devOn = !!devMode;
+
+  function renderDev() {
+    dev.innerHTML = '';
+    const entries = devEntries(devOn);
+    dev.style.display = entries.length ? '' : 'none';
+    if (!entries.length) return;
+    const h = document.createElement('div');
+    h.className = 'gg-dev-head';
+    h.textContent = 'Developer';
+    dev.appendChild(h);
+    for (const e of entries) {
+      const b = document.createElement('button');
+      b.className = 'gg-about-link';        // the back matter's own button shape
+      b.textContent = e.label;
+      b.onclick = () => onDev && onDev(e.slug);
+      dev.appendChild(b);
+    }
+  }
+  backMatter.appendChild(dev);
 
   el.append(h1, lede, cont, find, found, list, backMatter);
 
@@ -100,6 +127,7 @@ export function makeMenu({ cases, progress, isStaged, onSelect, onAbout } = {}) 
     lastProg = prog;
     cont.style.display = query ? 'none' : '';
     backMatter.style.display = query ? 'none' : '';
+    renderDev();
     if (renderResults(prog)) return;
     list.innerHTML = '';
     for (const r of buildRows(entries, prog, isStaged)) {
@@ -135,6 +163,10 @@ export function makeMenu({ cases, progress, isStaged, onSelect, onAbout } = {}) 
     open() { open = true; el.classList.remove('hidden'); },
     close() { open = false; el.classList.add('hidden'); },
     isOpen() { return open; },
+    // The workbench owns the flag; the menu is told about it. Re-renders in
+    // place so the section appears (or vanishes) the moment the box is ticked,
+    // without closing and reopening the contents.
+    setDevMode(on) { devOn = !!on; render(lastProg); },
     refresh(prog) { render(prog); },
     dispose() { el.remove(); },
   };

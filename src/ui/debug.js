@@ -23,6 +23,22 @@ const KEY = 'gateless-gate-debug-v4';
 // way to switch persistence on and have it survive a reload.
 const PERSIST_KEY = 'gateless-gate-debug-persist';
 
+// Developer mode: whether the contents grows a "Developer" section with the
+// tools in it (the showcase, and whatever follows it). Its own key, remembered
+// unconditionally — exactly like PERSIST_KEY above and for the same reason: a
+// flag that only survives when some OTHER flag is on is a flag nobody can turn
+// on. It is NOT one of the CONTROLS, because those are look settings that get
+// wiped by "reset all" and re-applied to every scene; this one changes what the
+// app offers, not what it renders. Off by default: with it off the app is
+// identical to what it was before this existed.
+const DEV_KEY = 'gateless-gate-dev';
+
+// Read outside makeDebug, so main.js can build the menu with the right shape on
+// the first frame rather than popping the section in once the workbench mounts.
+export function devModeOn() {
+  try { return localStorage.getItem(DEV_KEY) === '1'; } catch { return false; }
+}
+
 const CONTROLS = [
   { group: 'Scene' },
   { key: 'grass', label: 'Grass field', type: 'bool', def: true },
@@ -85,7 +101,7 @@ function load(persist) {
   } catch { return defaults(); }
 }
 
-export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens, onFreeCam }) {
+export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens, onFreeCam, onDevMode }) {
   let persist = loadPersist();
   const state = load(persist);
   const inputs = {};
@@ -194,6 +210,24 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
   keepRow.appendChild(keepName);
   keepRow.appendChild(keepInput);
   panel.appendChild(keepRow);
+
+  // Developer mode — directly below the persistence toggle, because it is the
+  // same kind of thing: a switch about the APP rather than about the look, and
+  // so remembered on its own terms and untouched by "reset all".
+  const devRow = document.createElement('label');
+  devRow.className = 'gg-debug-row gg-debug-keep';
+  const devName = document.createElement('span');
+  devName.textContent = 'Developer mode';
+  const devInput = document.createElement('input');
+  devInput.type = 'checkbox';
+  devInput.checked = devModeOn();
+  devInput.onchange = () => {
+    try { localStorage.setItem(DEV_KEY, devInput.checked ? '1' : '0'); } catch { /* private mode */ }
+    onDevMode && onDevMode(devInput.checked);
+  };
+  devRow.appendChild(devName);
+  devRow.appendChild(devInput);
+  panel.appendChild(devRow);
 
   button.onclick = () => {
     panel.classList.toggle('open');

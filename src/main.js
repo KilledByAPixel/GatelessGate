@@ -5,7 +5,7 @@ import { installGrain } from './render/grain.js';
 import { makePost } from './render/post.js';
 import { makeFreeze } from './render/freeze.js';
 import { makeSceneManager, disposeRoot } from './scene/manager.js';
-import { makeDebug } from './ui/debug.js';
+import { makeDebug, devModeOn } from './ui/debug.js';
 import { makeInput } from './input.js';
 import { createSave } from './save.js';
 import { createAudio } from './audio/engine.js';
@@ -14,6 +14,7 @@ import { createNarration } from './audio/narration.js';
 import { CASES } from './koans/index.js';
 import { makeNavQueue } from './nav_queue.js';
 import { isStaged, isRegistered, loadKoan } from './koans/registry.js';
+import { isDevPage } from './koans/dev/index.js';
 import { buildHub, makeIntro } from './intro.js';
 import { makeMenu } from './ui/menu.js';
 import { makeAbout } from './ui/about.js';
@@ -90,10 +91,19 @@ function showView(el) {
   if (el) el.classList.remove('hidden');
 }
 
+// Developer mode. Off by default and remembered on its own key by the
+// workbench, which owns the checkbox (src/ui/debug.js, under "Keep settings on
+// reload"). Read here rather than passed in, so the contents is built with the
+// right shape on the first frame instead of growing a section a moment later.
+// With it off nothing below this line ever runs: no menu section, no dev route.
+let devMode = devModeOn();
+
 const menu = makeMenu({
   cases: CASES, progress: save.state(), isStaged,
   onSelect: (slug) => enter(slug),
   onAbout: () => showView(about.el),
+  devMode,
+  onDev: (slug) => enter(slug),
 });
 panel.appendChild(menu.el);
 
@@ -260,6 +270,13 @@ const debug = makeDebug({
   onSound: () => setSoundLabel(),
   onLens: (fov) => applyLens(fov),
   onFreeCam: (on) => freeCam.set(on),
+  onDevMode: (on) => {
+    devMode = !!on;
+    menu.setDevMode(devMode);
+    // Turning it OFF while standing in a dev page would leave the reader on a
+    // page they can no longer reach — and the URL naming it. Show them out.
+    if (!devMode && mode === 'koan' && isDevPage(koanSlug)) exit();
+  },
 });
 debug.mount(stage, toolbar);   // panel over the stage, button into the toolbar
 // every scene swap builds fresh objects, so the workbench must re-apply to them
