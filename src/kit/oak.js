@@ -5,18 +5,33 @@ import { mergeSimple } from './scatter.js';
 import { GRAY_DARK, WASH } from '../palette.js';
 
 // THE oak — the one Joshu points at when he is asked why Bodhidharma came
-// (case 38). Built the same cheap way as makeTree (every limb merged into one
-// mesh, all the foliage into another, so it is two draw calls no matter how
-// many branches) but it is deliberately a different animal.
+// (case 38), and the one Kyogen hangs from by his teeth (case 5: k5.js hangs
+// makeHangingMonk from ITS OWN hand-authored branch mesh, not from anything
+// read off this builder — the contract with k5 is purely visual: at
+// height 5.0 / seed 13 / yaw 4.9, the crown this file grows must stay clear
+// of the fixed world-space swing column k5.js hangs him on. See
+// tests/k5.test.js's canopy-clearance assertion, which is the actual gate —
+// pass that and the branch reads as buried in the tree without ever
+// touching the man. Built the same cheap way as makeTree (every limb merged
+// into one mesh, all the foliage into another, so it is two draw calls no
+// matter how many branches) but it is deliberately a different animal.
 //
-// A scatter tree is slender and vertical. This one is short in the bole, throws
-// four heavy primaries almost sideways, and carries a domed crown WIDER than the
+// A scatter tree is slender and vertical. This one is short in the bole,
+// throws four heavy, knotty primaries — one of them a near-horizontal hero
+// limb that reaches well clear of the crown mass, the one k27/k38/the
+// showcase/the workbench all hang a man from via canopyPoints[0] (the
+// sorted-outward anchor list; the hero limb's own tip is always the
+// outermost by construction) — and carries a domed crown WIDER than the
 // tree is tall. It has to read as "that one" from across the meadow before
 // anyone reads a word of the case.
 //
 // makeTree cannot be talked into this silhouette — its bole radius, limb spread
 // and crown size are all fixed fractions of `height` with no way in — so the
-// shape is authored here. tree.js is left alone.
+// shape is authored here. tree.js is left alone. Fork angles here run wider
+// than tree.js's (a sapling's forks lean 19-39 degrees off their parent; an
+// oak's lean 55-98) and limb radius falls off more slowly generation to
+// generation (0.66-0.80 here vs tree.js's 0.66-0.68), so a cut branch reads
+// thick and old rather than twiggy.
 //
 // Trunk and canopy are separate meshes on purpose: case 38 wants the leaves red
 // and the wood on the same grey ramp as every other tree in the book.
@@ -55,7 +70,15 @@ export function makeOak({
     anchors.push(new THREE.Vector3(x, y - r * 0.62, z));
   }
 
-  function grow(m, len, rad, level) {
+  // a small knuckle where two segments meet: reads as a knot/burl and hides
+  // the radius step where a heavier-falloff child meets its parent's tip
+  function addKnuckle(m, r) {
+    const knot = new THREE.DodecahedronGeometry(r, 0);
+    knot.applyMatrix4(m);
+    wood.push(knot);
+  }
+
+  function grow(m, len, rad, level, hero) {
     const seg = new THREE.CylinderGeometry(rad * 0.64, rad, len, 6);
     seg.translate(0, len / 2, 0);           // grow upward from the joint
     seg.applyMatrix4(m);
@@ -70,16 +93,40 @@ export function makeOak({
       return;
     }
 
+    if (hero) {
+      // THE hero branch: one continuous reach, not a fork. A second segment
+      // in almost the same direction as the first — composing the same-axis
+      // tilt additively (RZ(a)*RZ(b) = RZ(a+b)) is what turns a primary that
+      // left the bole climbing into a limb that finishes near-horizontal,
+      // the way a real low bough elbows out from an upward start. The tiny
+      // extra droop (rather than a sharp new angle) is the clean underside
+      // line: one smooth concave curve a body could actually hang from,
+      // not a knee.
+      addKnuckle(tip, rad * 0.72);
+      const droop = 0.38 + 0.12 * rnd();
+      const wobble = (rnd() - 0.5) * 0.10;
+      const child = tip.clone().multiply(RY(wobble)).multiply(RZ(droop));
+      grow(child, len * (0.56 + 0.16 * rnd()), rad * 0.80, level + 1, true);
+      return;
+    }
+
     const kids = level === 0 ? 4 : (rnd() > 0.5 ? 3 : 2);
     for (let i = 0; i < kids; i++) {
+      const isHero = level === 0 && i === 0;
       const azimuth = (i / kids) * Math.PI * 2 + rnd() * 0.9;
-      // the primaries leave the bole at 50-64 degrees off vertical — that near
-      // horizontal reach is the whole difference between an oak and a sapling.
-      // The forks above them turn back up toward the light.
-      const spread = level === 0 ? 0.88 + 0.24 * rnd() : 0.30 + 0.42 * rnd();
+      // Regular primaries leave the bole at 50-64 degrees off vertical — wide
+      // against tree.js's forks (19-39) — and secondaries fork a touch wider
+      // than before (19-44 vs 17-41). The hero primary climbs at much the
+      // same angle as its siblings (it only turns horizontal at its own
+      // elbow, above) so its base reads as one more thick limb leaving the
+      // trunk, not a break in the tree's logic.
+      const spread = isHero ? 0.95 + 0.24 * rnd()
+        : level === 0 ? 0.88 + 0.24 * rnd() : 0.32 + 0.46 * rnd();
       const child = tip.clone().multiply(RY(azimuth)).multiply(RZ(spread));
-      const scale = level === 0 ? 1.30 : 0.52;
-      grow(child, len * scale * (0.86 + 0.28 * rnd()), rad * 0.58, level + 1);
+      const scale = isHero ? 1.62 + 0.18 * rnd() : level === 0 ? 1.18 : 0.42;
+      const fall = isHero ? 0.80 : level === 0 ? 0.66 : 0.66;
+      if (level === 0) addKnuckle(tip, rad * 0.62);
+      grow(child, len * scale * (0.86 + 0.28 * rnd()), rad * fall, level + 1, isHero);
     }
   }
 
