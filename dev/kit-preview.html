@@ -325,6 +325,14 @@
 
       // row E — architecture & staged objects
       gate:    { p: [-27, 1.6, 27], t: [-30, 1.3, 22] },
+      // profile view, added for D1 (gate.js): the near view's 3/4 angle can't
+      // show the kasagi/nuki's own thickness or the post taper from the side —
+      // same formula as horse-side/dog-side/etc: the near view's own distance
+      // and eye height, rotated to the model's own ry (0 for this placement) —
+      // `(x + d*cos(ry), eye, z - d*sin(ry))` looking at the same target. gate
+      // is placed at (-30, 22) with ry=0; near view distance
+      // d = |(-27,27) - (-30,22)| = 5.83095.
+      'gate-side': { p: [-24.169, 1.6, 22], t: [-30, 1.3, 22] },
       veranda: { p: [-19, 2.0, 30], t: [-23, 1.6, 24] },
       lantern: { p: [-15.5, 0.75, 24.6], t: [-17, 0.55, 22] },
       bell:    { p: [-9.6, 1.5, 26], t: [-12, 1.2, 22] },
@@ -351,6 +359,7 @@
     soloGroups['buddha-side'] = soloGroups.buddha;
     soloGroups['finger-side'] = soloGroups.finger;
     soloGroups['flower-side'] = soloGroups.flower;
+    soloGroups['gate-side'] = soloGroups.gate;
 
     // below and out from his anchor, looking up across the canopy's underside
     // rather than into it — the anchor sits ON the crown mass, so a close
