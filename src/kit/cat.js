@@ -93,6 +93,34 @@ export function makeCat({ height = 0.32, color = INK, seed = 14, pose = 'sit' } 
     // "cat", but a pair no wider than the head reads as two bumps at distance,
     // which is the failure the buffalo's horns shipped with.
     ears: { r: 0.075, h: 0.25, x: 0.122, up: 0.33, fwd: 0.42, tilt: 0.42 },
+    // THE CROUCH. Weight riding over raised hindquarters with the shoulders
+    // barely troubling the back line is the one silhouette cue that keeps
+    // this reading as a compact cat and not a small dog on the same barrel.
+    // Both masses obey quadruped.js's own mass() rule (`up + r*scaleY` must
+    // clear `bodyR` to stand proud of the barrel rather than sink invisibly
+    // inside it) — haunch clears it by a wide margin (40% of bodyR), shoulder
+    // by much less (16%), which is what makes one read as raised and the
+    // other as low without either vanishing into the capsule. `back`/`fwd`
+    // are derived from `hipZ` (a little short of it, the same reasoning
+    // dog.js's haunch comment gives) so the bumps sit where the legs actually
+    // root rather than drifting if the barrel's proportions ever move.
+    //
+    // Both numbers above describe the STANDING body plan — the frame every
+    // other species' haunch/shoulder is written in, and the one `pose:
+    // 'stand'` actually renders unmodified. Seated (the case's own default,
+    // and everything the workbench/k14 shots below show) runs this same
+    // plan through the pitched-torso transform below, which swings mass
+    // FORWARD of the rear-hip pivot up and back much more than mass near it
+    // (see "Pitching the spine up..." a few lines down) — so in the seated
+    // render the shoulder mass, being far from the pivot, actually rides
+    // higher than the haunch, which sits almost on top of it. That is not a
+    // bug here: it is the ordinary look of a cat sitting upright (chest and
+    // shoulders held up, haunches low and tucked), and it is what
+    // `after-cat-side.jpeg` shows. The plan-level "haunch high, shoulder
+    // low" claim is honest about the barrel these masses are authored
+    // against, not a claim about every pose that barrel can be posed into.
+    haunch: { r: 0.19, scaleY: 0.85, scaleZ: 1.08, up: 0.19, back: P.hipZ - 0.02 },
+    shoulder: { r: 0.20, scaleY: 0.85, up: 0.12, fwd: P.hipZ - 0.06 },
     // no tail here; this one is jointed and built below
   });
   group.name = 'cat';

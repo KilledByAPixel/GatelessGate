@@ -87,7 +87,10 @@
     // fox.notice() directly from the console when judging the ear-flick /
     // head-turn / brush-sweep response, the same behavior k2.js wires to a tap
     const fox = place(makeFox({}), -16, -6, 0.5, 'fox');
-    place(makeCat({}), -13, -6, -0.4, 'cat');
+    // handle kept the same way, for kp.cat.stir() — the tail-curl/ear-swivel
+    // response k14.js wires to a tap, judged in A6 the same way A5 judged
+    // fox.notice()
+    const cat = place(makeCat({}), -13, -6, -0.4, 'cat');
     place(makeHorse({}), -8, -6, 0.2, 'horse');
 
     // a small round pond so the koi have a surface to ride — lifted clear of
@@ -219,6 +222,17 @@
       // ry=0.5; near view distance d = |(-16.9,0.45,-4.6) - (-16,0.30,-6)| =
       // 1.6711.
       'fox-side': { p: [-14.5335, 0.45, -6.8012], t: [-16, 0.30, -6] },
+      // profile view, added for A6 (cat.js): the near view's front-on 3/4
+      // angle can't show the haunch-high/shoulder-low crouch or the tail's
+      // curl unambiguously — the same trap A3/A4/A5 flagged for neck/tail/
+      // knee work. Formula per those tasks: camera sits at the model's own
+      // placement position, offset along its local +x (the "right" side,
+      // i.e. (cos ry, 0, -sin ry)) by the near view's own distance, at the
+      // near view's own eye height — `(x + d*cos(ry), eye, z - d*sin(ry))`
+      // looking at the near view's own target. cat is placed at (-13, 0, -6)
+      // with ry=-0.4; near view distance d = |(-13.8,0.42,-4.7) -
+      // (-13,0.28,-6)| = 1.5328.
+      'cat-side': { p: [-11.5882, 0.42, -5.4031], t: [-13, 0.28, -6] },
       koi:     { p: [-3.9, 1.10, -4.6], t: [-3, 0.20, -6.4] },
       // seen from below, the way this kit's birds are actually staged (see
       // birds.js: "birds seen from below") — a level eye-height shot presents
@@ -258,6 +272,7 @@
     soloGroups['horse-side'] = soloGroups.horse;
     soloGroups['dog-side'] = soloGroups.dog;
     soloGroups['fox-side'] = soloGroups.fox;
+    soloGroups['cat-side'] = soloGroups.cat;
 
     // below and out from his anchor, looking up across the canopy's underside
     // rather than into it — the anchor sits ON the crown mass, so a close
@@ -319,7 +334,7 @@
       return out;
     }
 
-    window.kp = { renderer, scene, camera, render, step, shot, view: setView, shotAll, solo, buffalo, water, fox, THREE };
+    window.kp = { renderer, scene, camera, render, step, shot, view: setView, shotAll, solo, buffalo, water, fox, cat, THREE };
 
     // real-browser convenience: gentle auto-orbit (paused in headless previews, which is fine)
     let t0 = performance.now();
