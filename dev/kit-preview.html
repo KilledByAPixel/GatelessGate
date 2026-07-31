@@ -345,6 +345,14 @@
       rack:    { p: [20.5, 1.2, 26], t: [17, 0.8, 22] },
       pole:    { p: [14, 2.4, 32], t: [24, 3.5, 22] },
       bundle:  { p: [31.2, 0.4, 23.6], t: [30, 0.2, 22] },
+      // profile views, added for D4 (lantern.js/bell.js): same formula as
+      // gate-side/finger-side — `(t.x + d, near.eye, t.z)` where d is the
+      // near view's own distance from its target and both placements have
+      // ry=0, so the side offset is a pure +x step from the target at the
+      // same eye height. lantern: d = |(-15.5,24.6)-(-17,22)| = 3.001666;
+      // bell: d = |(-9.6,26)-(-12,22)| = 4.664762.
+      'lantern-side': { p: [-13.998334, 0.75, 22], t: [-17, 0.55, 22] },
+      'bell-side':    { p: [-7.335238, 1.5, 22], t: [-12, 1.2, 22] },
     };
     // 'horse-side' is the same model as 'horse', just a different camera —
     // solo() keys off soloGroups, not VIEWS, so it needs its own entry
@@ -360,6 +368,8 @@
     soloGroups['finger-side'] = soloGroups.finger;
     soloGroups['flower-side'] = soloGroups.flower;
     soloGroups['gate-side'] = soloGroups.gate;
+    soloGroups['lantern-side'] = soloGroups.lantern;
+    soloGroups['bell-side'] = soloGroups.bell;
 
     // below and out from his anchor, looking up across the canopy's underside
     // rather than into it — the anchor sits ON the crown mass, so a close

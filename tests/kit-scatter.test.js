@@ -42,10 +42,57 @@ test('rocks/bushes/grass are single instanced meshes sitting on the ground', () 
 test('lantern stacks its stones above y=0', () => {
   const l = makeLantern({});
   assert.equal(l.name, 'lantern');
-  assert.ok(l.children.length >= 5, 'base/shaft/platform/box/roof at least');
+  assert.ok(l.children.length >= 5, 'base/post/firebox/window/roof/jewel at least');
   const box = new THREE.Box3().setFromObject(l);
   assert.ok(box.min.y > -0.02, `sits on ground, got ${box.min.y}`);
   assert.ok(box.max.y > 0.7, `tall enough, got ${box.max.y}`);
+});
+
+test('lantern firebox windows are a genuinely darker void than the stone', () => {
+  const l = makeLantern({});
+  const firebox = l.children.find((c) => c.name === 'firebox');
+  const win = l.children.find((c) => c.name === 'window');
+  assert.ok(firebox && win, 'both firebox and window meshes present');
+  // luminance proxy: sum of RGB channels — the window mix must sit closer to
+  // ink than the firebox stone does, not just a different hue.
+  const lum = (mat) => mat.color.r + mat.color.g + mat.color.b;
+  assert.ok(lum(win.material) < lum(firebox.material) - 0.15,
+    `window (${lum(win.material).toFixed(3)}) should read darker than the firebox stone (${lum(firebox.material).toFixed(3)})`);
+  // the window sits inside the firebox's own vertical span, not off in the roof
+  const fBox = new THREE.Box3().setFromObject(firebox);
+  const wBox = new THREE.Box3().setFromObject(win);
+  assert.ok(wBox.min.y >= fBox.min.y - 1e-6 && wBox.max.y <= fBox.max.y + 1e-6,
+    'window stays within the firebox height');
+  // and it stands proud of the firebox face, not buried inside the solid box
+  // (a panel with its outer face behind the wall would never be seen)
+  assert.ok(wBox.max.x > fBox.max.x, 'window panel is proud of the firebox face, not sealed inside it');
+});
+
+test('lantern roof rim kicks up above the low point just behind it', () => {
+  // Reproduces the builder's own profile formula (same disclosed
+  // reproduce-the-tuned-constant tradeoff other D-tasks' eave/post tests
+  // use) rather than a magic epsilon, and is mutation-provable: flip the
+  // sign of LIP and this assertion goes false.
+  const H = 1.15;
+  const l = makeLantern({ height: H });
+  const roof = l.children.find((c) => c.name === 'roof');
+  assert.ok(roof, 'roof mesh present');
+  const pos = roof.geometry.attributes.position;
+  const ROOF_R = 0.19 * H;
+  // bucket vertices near the rim tip (r close to ROOF_R) vs. the dip point
+  // just inboard of it (r close to 0.85*ROOF_R) and compare their max y —
+  // "max" because both the upper (visible) and lower (underside) surfaces
+  // pass near each radius and we only care that the visible rim tip is the
+  // higher of the two.
+  let tipY = -Infinity, dipY = -Infinity;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i), y = pos.getY(i);
+    const r = Math.hypot(x, z);
+    if (Math.abs(r - ROOF_R) < 0.01) tipY = Math.max(tipY, y);
+    else if (Math.abs(r - 0.85 * ROOF_R) < 0.01) dipY = Math.max(dipY, y);
+  }
+  assert.ok(tipY > -Infinity && dipY > -Infinity, 'found both the rim tip and the dip point');
+  assert.ok(tipY > dipY, `rim tip (${tipY.toFixed(4)}) should sit above the dip just behind it (${dipY.toFixed(4)}) — the upturn`);
 });
 
 test('path is a draped ribbon from A to B', () => {
