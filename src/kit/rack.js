@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { WASH } from '../palette.js';
+import { mergeSimple } from './scatter.js';
 
 // Basho's staff rack (case 44): "When you have a staff, I will give it to you.
 // If you have no staff, I will take it away from you."
@@ -43,6 +44,23 @@ export function makeRack({ height = 1.25, color = WASH.dark, staffColor = WASH.m
   sill.name = 'sill';
   sill.position.y = 0.06 * H;
   g.add(sill);
+
+  // JOINERY — a small collar block where the rail and the sill each cross a
+  // post, the way a real through-tenon reads: the timber doesn't just touch,
+  // it is visibly notched together. The first pass had the rail and sill
+  // simply overlapping the post cylinders with no seam at all. One merged
+  // mesh, four blocks, one extra outline.
+  const collar = 0.11 * H;
+  const joineryParts = [];
+  for (const sx of [-1, 1]) {
+    for (const y of [rail.position.y, sill.position.y]) {
+      joineryParts.push(new THREE.BoxGeometry(collar, collar, collar)
+        .translate(sx * SPREAD / 2, y, 0));
+    }
+  }
+  const joinery = new THREE.Mesh(mergeSimple(joineryParts), flat);
+  joinery.name = 'joinery';
+  g.add(joinery);
 
   // THE STAFF — leaning in the rack, growing up out of the sill when given and
   // sinking back into it when taken. Anchored at its foot so it never floats.

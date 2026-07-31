@@ -83,7 +83,7 @@
     place(makeBowl({}), -8, 5, 0, 'bowl');
     const water = place(makeWater({ size: 2.4 }), -4.6, 5.4, 0, 'water');
     place(makeHut({}), 0.5, 6.5, 0, 'hut');
-    place(makeLattice({}), 5.5, 5.5, 0.15);
+    place(makeLattice({}), 5.5, 5.5, 0.15, 'lattice');
 
     // row C — the second chapter's creatures & small figures (z ≈ -6)
     // handle kept (like buffalo/water below) so a diagnostic script can drive
@@ -225,6 +225,12 @@
       'monk-side': { p: [5.9134, 1.10, 2.5659], t: [6.8, 0.90, -0.3] },
       water:   { p: [-4.6, 3.2, 9.5], t: [-4.6, 0.4, 5.4] },
       hut:     { p: [0.5, 4.2, 11.5], t: [0.5, 1.5, 6.5] },
+      // lattice had no dedicated view at all (the ledgered gap D6 is asked to
+      // close first, before any edit to lattice.js) — framed close since the
+      // panel is modest (2.2 wide, 2.0 tall): camera a little above mid-height,
+      // pulled back along the panel's own facing (+z, nudged by its ry=0.15) so
+      // the bar rhythm reads face-on rather than raked.
+      lattice: { p: [4.96, 1.3, 9.06], t: [5.5, 1.0, 5.5] },
       // flower/bowl/lattice had no dedicated view (a ledgered gap) — this task
       // adds flower's. A held bloom's petals splay outward and slightly UP
       // from the pod (RINGS.tilt in flower.js), so a level eye-height camera

@@ -70,13 +70,20 @@ export function makeWheel({
   spin.position.y = CY;
   g.add(spin);
 
-  // THE RIM — the pure circle, and the only thing that survives the question
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 0.062 * R, 6, 30), wheelMat);
+  // THE RIM — the felloe, the wooden band the spokes actually drive. The first
+  // pass drew it as a wire (0.062R tube on a 30-facet torus): thin enough that
+  // at scene distance it read as a hoop of string, not the timber a wheel-
+  // wright would have bent and jointed. Thickened, and the facet count eased
+  // back since the extra tube radius makes the segments themselves more
+  // visible — the same silhouette wants fewer, cleaner facets at this size.
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 0.088 * R, 8, 24), wheelMat);
   rim.name = 'rim';
   spin.add(rim);
 
-  // THE NAVE — the hub uniting the spokes; what the case reaches in and removes
-  const naveGeo = new THREE.CylinderGeometry(0.17 * R, 0.17 * R, 0.30 * R, 9);
+  // THE NAVE — the hub uniting the spokes; what the case reaches in and
+  // removes. A shade bigger than the first pass so it reads as the thing
+  // twelve spokes actually root into, not a bead threaded onto the axle.
+  const naveGeo = new THREE.CylinderGeometry(0.20 * R, 0.20 * R, 0.36 * R, 9);
   naveGeo.rotateX(Math.PI / 2);
   const nave = new THREE.Mesh(naveGeo, wheelMat);
   nave.name = 'nave';

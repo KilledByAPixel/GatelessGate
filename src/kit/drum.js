@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { WASH, wash } from '../palette.js';
+import { mergeSimple } from './scatter.js';
 
 // The dinner drum (case 13) — a barrel drum slung in its own frame, the
 // companion piece to the bonshō. Tokusan's whole mistake is that this has not
@@ -40,17 +41,38 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
   pad.position.y = padH / 2;
   g.add(pad);
 
-  // two posts flanking the barrel along its axis, carrying a beam
+  // two posts flanking the barrel along its axis, carrying a beam — a shade
+  // stouter than the first pass, so the stand reads as a frame built to carry
+  // a barrel rather than two sticks it happens to hang between
+  const STAND_H = PIVOT_Y + 0.2 * R;
   for (const sx of [-1, 1]) {
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.09 * R, 0.12 * R, PIVOT_Y + 0.2 * R, 7), timber);
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.105 * R, 0.145 * R, STAND_H, 7), timber);
     post.name = 'post';
-    post.position.set(sx * 1.02 * R, (PIVOT_Y + 0.2 * R) / 2, 0);
+    post.position.set(sx * 1.02 * R, STAND_H / 2, 0);
     g.add(post);
   }
-  const beam = new THREE.Mesh(new THREE.BoxGeometry(2.5 * R, 0.16 * R, 0.16 * R), flat);
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(2.5 * R, 0.19 * R, 0.19 * R), flat);
   beam.name = 'beam';
-  beam.position.y = PIVOT_Y + 0.2 * R;
+  beam.position.y = STAND_H;
   g.add(beam);
+
+  // FRAME JOINERY — a low footrail tying the two posts together at the base
+  // (the first pass left them planted with nothing between, which read as a
+  // drum balanced on two sticks rather than standing in a built frame), and a
+  // small saddle block atop each post where the beam actually bears — the
+  // post-and-beam hint hut.js uses at its own corners. One merged mesh, so
+  // the joinery costs a single extra outline.
+  const saddleW = 0.30 * R, saddleH = 0.10 * R;
+  const trimParts = [
+    new THREE.BoxGeometry(2.14 * R, 0.09 * R, 0.16 * R).translate(0, 0.07 * R, 0),
+  ];
+  for (const sx of [-1, 1]) {
+    trimParts.push(new THREE.BoxGeometry(saddleW, saddleH, saddleW)
+      .translate(sx * 1.02 * R, STAND_H - saddleH / 2, 0));
+  }
+  const trim = new THREE.Mesh(mergeSimple(trimParts), flat);
+  trim.name = 'stand-trim';
+  g.add(trim);
 
   // the barrel hangs under the beam and rocks about it
   const rock = new THREE.Group();
@@ -101,6 +123,22 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
     barrel.add(head);
     heads.push(head);
   }
+
+  // BODY HOOPS — the dark rings that bind each skin to the barrel, the taiko's
+  // own rim work. The first pass had the pale skin meeting the ink body with
+  // no seam at all, which read as a painted circle rather than a stretched
+  // hide bound down. Two toruses, merged into one mesh (one extra outline for
+  // both, the same trick hoop.js's own kit neighbours use).
+  const hoopGeo = [];
+  for (const sx of [-1, 1]) {
+    const t = new THREE.TorusGeometry(0.805 * R, 0.052 * R, 6, 14);
+    t.rotateY(Math.PI / 2);
+    t.translate(sx * (DEPTH / 2 + 0.01 * R), 0, 0);
+    hoopGeo.push(t);
+  }
+  const hoops = new THREE.Mesh(mergeSimple(hoopGeo), toonMaterial({ color, flat: true }));
+  hoops.name = 'hoop';
+  barrel.add(hoops);
 
   const hit = new THREE.Mesh(
     new THREE.CylinderGeometry(R * 1.05, R * 1.05, DEPTH * 1.5, 10),

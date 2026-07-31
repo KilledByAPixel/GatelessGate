@@ -30,8 +30,13 @@ export function makePole({
   g.name = 'pole';
   const wood = toonMaterial({ color, flat: true });
 
-  // the mast: slightly tapered, base sitting on the ground plane
-  const shaftGeo = new THREE.CylinderGeometry(radius * 0.62, radius, height, 9);
+  // the mast: tapered, base sitting on the ground plane. The first pass
+  // (0.62x at the tip) read closer to a fence post stretched tall than a pole
+  // that has actually been climbed — a sharper taper is the one cue this
+  // object can offer for HIGH beyond what the camera rig already does, so the
+  // tip is thinned further and the segment count eased up for a cleaner
+  // silhouette over the long run the home camera sees it at.
+  const shaftGeo = new THREE.CylinderGeometry(radius * 0.46, radius, height, 10);
   shaftGeo.translate(0, height / 2, 0);
   const shaft = new THREE.Mesh(shaftGeo, wood);
   shaft.name = 'shaft';
@@ -63,7 +68,7 @@ export function makePole({
     const to = new THREE.Vector3(ax, 0.02, az);
     const dir = to.clone().sub(from);
     const len = dir.length();
-    const lineGeo = new THREE.CylinderGeometry(0.012, 0.012, len, 5);
+    const lineGeo = new THREE.CylinderGeometry(0.015, 0.015, len, 5);
     lineGeo.translate(0, len / 2, 0);
     const line = new THREE.Mesh(lineGeo, inkline);
     line.name = 'guy';

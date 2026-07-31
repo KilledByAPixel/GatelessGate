@@ -47,19 +47,24 @@ export function makeFurin({ size = 0.17, tubes = 5, seed = 5, phase = null, coup
   const wood = toonMaterial({ color: WASH.dark, flat: true });
   const metal = toonMaterial({ color: WASH.stone });
 
-  // the cap the tubes hang from
-  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.5 * S, 0.55 * S, 0.1 * S, 8), wood);
+  // the cap the tubes hang from — a shade deeper and more sharply tapered
+  // than the first pass (0.1S, barely tapered), so it reads as a small roof
+  // over the ring rather than a washer the tubes happen to hang from
+  const CAP_H = 0.14 * S;
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.46 * S, 0.58 * S, CAP_H, 8), wood);
   cap.name = 'cap';
-  cap.position.y = -0.05 * S;
+  cap.position.y = -CAP_H / 2;                // top face stays AT the hang point
   swing.add(cap);
 
   // tubes in a ring; the longer the tube the deeper the note — index 0 is the
-  // longest, matching the engine's degree mapping
+  // longest, matching the engine's degree mapping. Thickened from the first
+  // pass (0.055S — a wire at this length-to-radius ratio) so they read as the
+  // metal pipes a real furin hangs, not threads.
   const state = [];
   for (let i = 0; i < tubes; i++) {
     const angle = (i / tubes) * Math.PI * 2;
     const len = S * (1.7 - 0.14 * i);
-    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.055 * S, 0.055 * S, len, 6), metal);
+    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.075 * S, 0.075 * S, len, 6), metal);
     tube.name = 'tube';
     tube.position.set(Math.cos(angle) * 0.33 * S, -(0.18 * S + len / 2), Math.sin(angle) * 0.33 * S);
     swing.add(tube);
@@ -75,8 +80,11 @@ export function makeFurin({ size = 0.17, tubes = 5, seed = 5, phase = null, coup
   const clapper = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * S, 0.16 * S, 0.03 * S, 8), wood);
   clapper.name = 'clapper';
   clapper.position.y = -0.9 * S;
-  const tagGeo = new THREE.PlaneGeometry(0.3 * S, 0.85 * S);
-  tagGeo.translate(0, -0.425 * S, 0);
+  // the tanzaku — a long narrow poem-strip, not the stubby rectangle the
+  // first pass drew (0.3S x 0.85S, ratio ~2.8:1). Real ones run closer to
+  // 4-5:1: narrower, and reaching further past the clapper.
+  const tagGeo = new THREE.PlaneGeometry(0.22 * S, 1.0 * S);
+  tagGeo.translate(0, -0.5 * S, 0);
   const tag = new THREE.Mesh(tagGeo, toonMaterial({ color: PAPER, side: THREE.DoubleSide }));
   tag.name = 'tag';
   tag.userData.noOutline = true;      // an open surface; the inverted hull doesn't suit it

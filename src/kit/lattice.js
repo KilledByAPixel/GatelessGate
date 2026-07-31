@@ -3,7 +3,7 @@ import { toonMaterial } from '../render/toon.js';
 import { mergeSimple } from './scatter.js';
 import { WASH } from '../palette.js';
 
-const T = 0.06;   // bar thickness
+const T = 0.06;   // frame thickness
 
 // The bars of one lattice panel, merged into a SINGLE geometry: a four-sided
 // frame with vertical and horizontal bars, built in the XY plane facing +z and
@@ -13,6 +13,16 @@ const T = 0.06;   // bar thickness
 // This is the whole reason the pen went from ~50 meshes to three: an inverted-
 // hull outline is added per mesh, so every bar used to cost two draws. One
 // merged geometry per panel (or per wall) is one silhouette, one outline.
+//
+// BAR RHYTHM: three distinct weights, not one. The frame (T) reads as the
+// timber that carries load; the verticals (0.62T) are the primary infill,
+// running the panel's full height uninterrupted; the horizontals (0.46T) are
+// the lighter cross-members threaded between them — the way a real kōshi
+// lattice is actually built, heaviest members first, lightest last. The first
+// pass drew both infill directions at the same 0.6T, which read as one flat
+// grid with a frame around it rather than a built thing with a hierarchy.
+const V_BAR = T * 0.62;
+const H_BAR = T * 0.46;
 export function latticeGeometry({ width = 2.2, height = 2.0, bars = 5 } = {}) {
   const parts = [];
   const box = (w, h, d, x, y) => {
@@ -27,11 +37,11 @@ export function latticeGeometry({ width = 2.2, height = 2.0, bars = 5 } = {}) {
   box(T, height, T, width / 2 - T / 2, height / 2);    // right
 
   for (let i = 1; i < bars; i++) {
-    box(T * 0.6, height, T * 0.6, -width / 2 + (i / bars) * width, height / 2);
+    box(V_BAR, height, V_BAR, -width / 2 + (i / bars) * width, height / 2);
   }
   const hRows = Math.max(1, Math.round(bars * height / width));
   for (let j = 1; j < hRows; j++) {
-    box(width, T * 0.6, T * 0.6, 0, (j / hRows) * height);
+    box(width, H_BAR, H_BAR, 0, (j / hRows) * height);
   }
   return mergeSimple(parts);
 }

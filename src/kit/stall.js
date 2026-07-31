@@ -51,6 +51,24 @@ export function makeStall({
   frame.push(box(width, 0.5, 0.06, 0, counterY - 0.28, hd - post));   // its front panel
   // a back shelf up under the awning
   frame.push(box(width, 0.07, 0.22, 0, height * 0.72, -hd + post * 1.5));
+
+  // ---- the awning's own eave: fascia + rafter-tip rhythm -------------------
+  // The stall's cloth roof had no eave language at all — a flat tilted box
+  // with nothing telling the reader it is a ROOF rather than a lid. hut.js's
+  // eave is a fascia band with rafter tips poking through it on a regular
+  // beat; a market awning cannot afford the full hipped shell, but it can
+  // afford the same two moves in timber, baked into the one frame mesh so
+  // the rhythm costs nothing extra to draw. eaveY sits just under the cloth
+  // (awning is set below); ribs run back under the cloth and their tips
+  // poke a hair proud of the fascia, echoing hut.js's RAFTER_OUT.
+  const eaveY = height * 0.88;
+  const fasciaZ = hd + 0.03;
+  frame.push(box(width + 0.20, 0.05, 0.05, 0, eaveY, fasciaZ));       // the fascia band
+  const ribN = Math.max(3, Math.round(width / 0.42));
+  for (let i = 0; i <= ribN; i++) {
+    const rx = -width / 2 + (width * i) / ribN;
+    frame.push(box(0.045, 0.045, depth + 0.10, rx, eaveY - 0.01, 0.02));
+  }
   const frameMesh = new THREE.Mesh(mergeSimple(frame), toonMaterial({ color: wood, flat: true }));
   frameMesh.name = 'stall-frame';
   g.add(frameMesh);
