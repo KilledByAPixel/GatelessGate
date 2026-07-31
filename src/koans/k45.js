@@ -153,11 +153,13 @@ export default {
     // glaring full accent across a whole animal.
     const horse = makeHorse({ height: 1.5, color: ACCENT_DEEP, seed: ID });
     // beside the first stall, not in front of it — pulled back along the lane so
-    // it does not block the counter, and set at the road's edge (Frank)
-    const hp = road.sample(0.24);
+    // it does not block the counter, and standing a clear step off the road
+    // rather than at its very edge (Frank: it was a little too close, so it
+    // moved back — tethered on the grass, not loitering in the traffic)
+    const hp = road.sample(0.262);
     const side = stalls[0].sidesign;
-    const horseX = hp.x + hp.perp.x * 1.5 * side;
-    const horseZ = hp.z + hp.perp.z * 1.5 * side;
+    const horseX = hp.x + hp.perp.x * 1.95 * side;
+    const horseZ = hp.z + hp.perp.z * 1.95 * side;
     horse.group.position.set(horseX, 0, horseZ);
     // the horse faces +z; turn its head toward the road (i.e. toward -perp on
     // the side it stands), a little angled so it reads three-quarter, not flat
