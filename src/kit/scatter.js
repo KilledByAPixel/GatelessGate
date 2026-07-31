@@ -70,17 +70,21 @@ function rockGeometry(seed = 1) {
   return mergeSimple(parts);
 }
 
-// A shrub is a cluster of lobes around a centre, so it breaks the silhouette
-// instead of reading as one squashed sphere.
+// A shrub is 2-3 lobes grown together, not a five-lobe cluster that averages
+// out toward a smoothed sphere at the size a bush actually reads — Frank's
+// "bushes and small shrubs" ask wants the lobes themselves legible. Lobe
+// count is itself seeded (2 or 3), and each lobe is bigger than the old
+// five-lobe version's so the whole clump keeps a similar footprint with
+// fewer, chunkier masses.
 function bushGeometry(seed = 1) {
   const parts = [];
-  const N = 5;
+  const N = hash1(seed * 13 + 1, seed) < 0.5 ? 2 : 3;
   for (let i = 0; i < N; i++) {
-    const d = new THREE.DodecahedronGeometry(0.30 * (0.7 + 0.6 * hash1(i * 6 + 1, seed)), 0);
-    d.scale(1.12, 0.82, 1.12);
-    const a = (i / N) * Math.PI * 2 + hash1(i * 6 + 2, seed) * 1.2;
-    const rad = i === 0 ? 0 : 0.30 * (0.5 + hash1(i * 6 + 3, seed));
-    d.translate(Math.cos(a) * rad, 0.16 + 0.24 * hash1(i * 6 + 4, seed), Math.sin(a) * rad);
+    const d = new THREE.DodecahedronGeometry(0.34 * (0.75 + 0.5 * hash1(i * 6 + 1, seed)), 0);
+    d.scale(1.15, 0.85, 1.15);
+    const a = (i / N) * Math.PI * 2 + hash1(i * 6 + 2, seed) * 1.4;
+    const rad = i === 0 ? 0 : 0.26 * (0.6 + hash1(i * 6 + 3, seed));
+    d.translate(Math.cos(a) * rad, 0.16 + 0.22 * hash1(i * 6 + 4, seed), Math.sin(a) * rad);
     parts.push(d);
   }
   return mergeSimple(parts);
@@ -114,18 +118,24 @@ export function makeBushes({ count = 9, seed = 61, groundSeed = 21, keepout = []
 export function makeGrass({ count = 150, seed = 81, groundSeed = 21, keepout = [], rMin = 1.5, rMax = 20, color = WASH.dry } = {}) {
   const pts = scatterPoints({ count, rMin, rMax, seed, keepout });
   // one tuft = blades splaying OUTWARD from a shared base (a patch, not a teepee).
-  // each blade pivots at its base (y=0) and leans away from center.
+  // each blade pivots at its base (y=0) and leans away from center. Each
+  // blade also gets its OWN height (seeded, not a fixed 0.34 for all six) —
+  // a real tuft is ragged, not a set of matched-length spikes; the per-tuft
+  // scale (below, in `instanced()`) still varies the whole clump, this varies
+  // the blades within one clump.
   const blades = [];
   const N = 6;
   for (let i = 0; i < N; i++) {
-    const b = new THREE.ConeGeometry(0.03, 0.34, 3, 1, true); // open-ended: no base cap
-    b.translate(0, 0.17, 0);                 // base at origin so rotation pivots there
+    const h = 0.34 * (0.6 + 0.75 * hash1(i * 11 + 3, seed));
+    const b = new THREE.ConeGeometry(0.03, h, 3, 1, true); // open-ended: no base cap
+    b.translate(0, h / 2, 0);                 // base at origin so rotation pivots there
     b.rotateZ(0.55 + 0.2 * ((i * 5) % 3));    // tilt away from vertical (~31–43°)
     b.rotateY((i / N) * Math.PI * 2 + 0.4);   // spread the lean around the compass
     blades.push(b);
   }
-  const stub = new THREE.ConeGeometry(0.03, 0.3, 3, 1, true);
-  stub.translate(0, 0.15, 0); stub.rotateZ(0.1); // one near-upright blade at the middle
+  const stubH = 0.3 * (0.65 + 0.7 * hash1(N * 11 + 3, seed));
+  const stub = new THREE.ConeGeometry(0.03, stubH, 3, 1, true);
+  stub.translate(0, stubH / 2, 0); stub.rotateZ(0.1); // one near-upright blade at the middle
   blades.push(stub);
   const merged = mergeSimple(blades);
   const mesh = instanced(merged, color, pts, {

@@ -1,6 +1,5 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import * as THREE from '../lib/three.module.js';
 import { makeGround } from '../src/kit/ground.js';
 import { makeMountains } from '../src/kit/mountains.js';
 import { makeForest } from '../src/kit/forest.js';
@@ -40,13 +39,25 @@ test('mountains form a distant arc of faceted cones', () => {
   );
 });
 
-test('forest is one instanced mesh with the requested count', () => {
+test('forest mixes species into one merged mesh, still a single draw call', () => {
+  // Species mixing (pine/tree/oak) replaced the old single-shape InstancedMesh
+  // with every instance baked into one static merged geometry — the point
+  // being that the draw-call cost stays flat (ONE mesh, not a Group of
+  // per-species meshes) no matter how many trees or species the stand mixes.
   const f = makeForest({ count: 40, seed: 41 });
-  assert.ok(f.isInstancedMesh, 'forest must be instanced (one draw call)');
-  assert.equal(f.count, 40);
+  assert.ok(f.isMesh, 'forest is a Mesh');
+  assert.ok(!f.isInstancedMesh, 'no longer instanced — species vary the geometry itself');
+  assert.equal(f.children.length, 0, 'one mesh, not a group of per-species meshes');
+  assert.equal(f.name, 'forest');
   assert.equal(f.userData.noOutline, true);
-  const a = new THREE.Matrix4(), b = new THREE.Matrix4();
-  f.getMatrixAt(0, a);
-  f.getMatrixAt(1, b);
-  assert.notDeepEqual(Array.from(a.elements), Array.from(b.elements), 'instances vary');
+  assert.ok(f.geometry.attributes.position.count > 0);
+  // deterministic: same seed -> byte-identical merged geometry
+  const f2 = makeForest({ count: 40, seed: 41 });
+  assert.deepEqual(
+    Array.from(f.geometry.attributes.position.array),
+    Array.from(f2.geometry.attributes.position.array),
+  );
+  // draw-call cost doesn't grow with `count` or with species variety
+  const bigger = makeForest({ count: 90, seed: 41 });
+  assert.ok(bigger.isMesh && !bigger.isInstancedMesh && bigger.children.length === 0);
 });
