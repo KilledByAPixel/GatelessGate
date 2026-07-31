@@ -18,39 +18,28 @@ import { ACCENT } from '../palette.js';
 // lathe is also plenty: this is a few centimetres of geometry read from six
 // metres away, where nothing survives but the silhouette.
 //
+// THE DETAIL FLOOR (Frank, 2026-07-31, reverting the polish pass's knuckles):
+// there is a level of detail the reader's camera can never resolve, and this
+// finger sits below it. Knuckle creases and a nail were added, raycast-proved,
+// and reviewed — and none of it survived six metres of distance. Don't spend
+// geometry under the floor: if a feature can't be seen from the case's own
+// camera, it doesn't exist. The smooth profile below is the whole finger.
+//
 // Authored a good deal larger than an anatomical finger, for the same reason the
 // lotus in case 6 is oversized — the thing being gestured with has to carry the
 // shot, and at true scale the seal is a speck. Kept around three times as long
 // as it is wide, though: fatter than that and it stops reading as a finger and
 // starts reading as a bead someone is holding up.
-//
-// A fingernail was tried here (a flat plane merged onto the tip) and pulled:
-// Frank's call was that it's detail no reader is ever close enough to resolve
-// — this thing carries a shot from six metres, and a nail is a two-centimetre
-// facet on a prop already smaller than that. The knuckle steps below stay,
-// because they read in the silhouette at distance; the nail only read at a
-// macro camera distance nobody in the actual book uses. Filed as the
-// plan-miscalibration it was, not a modelling bug — see task-B4-report.md.
 export function makeRaisedFinger({
   length = 0.15, radius = 0.025, color = ACCENT, segments = 9,
 } = {}) {
   const L = length, R = radius;
   // (radius, height) up the digit: closed at the base so nothing shows when it
-  // is sunk into a cuff, closed again at the tip so it reads round, not cut off.
-  // Two step pairs (rise then a shallow step-in) stand in for the proximal and
-  // middle knuckles — a joint on a finger is a swell followed by a crease, not
-  // a smooth taper, and without them the lathe read as a shaft rather than a
-  // digit at workbench range. The widest point (0.30L) and everything from
-  // 0.60L to the tip are untouched from the original profile: the finger's
-  // overall silhouette — its bounding box, its widest ring — is unchanged, only
-  // the run below that ring now steps instead of running straight.
+  // is sunk into a cuff, closed again at the tip so it reads round, not cut off
   const profile = [
     [0.00, 0.00],
     [R * 0.94, 0.00],
-    [R * 0.99, L * 0.09],   // first knuckle: swells toward the joint
-    [R * 0.87, L * 0.15],   // first knuckle: the joint's own step-in
-    [R * 1.00, L * 0.30],   // second knuckle: the widest point on the digit
-    [R * 0.89, L * 0.38],   // second knuckle: its step-in
+    [R * 1.00, L * 0.30],
     [R * 0.96, L * 0.60],
     [R * 0.84, L * 0.79],
     [R * 0.62, L * 0.91],
