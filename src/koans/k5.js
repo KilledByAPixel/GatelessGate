@@ -1,7 +1,8 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, INK, ACCENT, ACCENT_DEEP, GRAY_DARK } from '../palette.js';
+import { PAPER, INK, ACCENT, ACCENT_DEEP, GRAY_DARK, WASH } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
+import { mergeSimple } from '../kit/scatter.js';
 import { makeOak } from '../kit/oak.js';
 import { makeCliff } from '../kit/cliff.js';
 import { makeHangingMonk } from '../kit/hangingmonk.js';
@@ -90,6 +91,31 @@ export default {
     branch.position.set(...BRANCH.base);
     branch.rotation.z = Math.PI / 2 + BRANCH.tilt;
     scene.add(branch);
+
+    // Foliage at the very end of the limb (Frank: "otherwise it's kinda like
+    // a stick hanging out"). Three lobes in the oak's own canopy grammar —
+    // squashed dodecahedra, same deep wash — merged into one mesh, clustered
+    // just PAST the grip so the branch finishes in leaves instead of a point.
+    // All of them sit at or above the branch line and beyond his bite, so his
+    // fullest swing still never brushes a leaf (the clearance the oak's crown
+    // is held to, kept here by construction).
+    const [tipX, tipY] = branchAt(BRANCH.len);
+    const TIP_LOBES = [
+      // [dx past the tip, dy off the branch line, dz, radius]
+      [-0.31, 0.30, 0.00, 0.36],
+      [-0.71, 0.05, -0.25, 0.30],
+      [-0.51, -0.05, 0.28, 0.26],
+    ];
+    const tipLeaves = new THREE.Mesh(
+      mergeSimple(TIP_LOBES.map(([dx, dy, dz, r]) => {
+        const lobe = new THREE.DodecahedronGeometry(r, 0);
+        lobe.scale(1.08, 0.80, 1.08);   // the oak's squash: wider than tall
+        lobe.translate(tipX + dx, tipY + dy, BRANCH.base[2] + dz);
+        return lobe;
+      })),
+      toonMaterial({ color: WASH.deep, flat: true }));
+    tipLeaves.name = 'tipleaves';
+    scene.add(tipLeaves);
 
     // ---- the man ---------------------------------------------------------
     // The red seal: a person-sized mass, so the deep mix — and nothing else in
