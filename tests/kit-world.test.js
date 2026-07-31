@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import * as THREE from '../lib/three.module.js';
 import { makeGround } from '../src/kit/ground.js';
 import { makeMountains } from '../src/kit/mountains.js';
 import { makeForest } from '../src/kit/forest.js';
@@ -60,4 +61,42 @@ test('forest mixes species into one merged mesh, still a single draw call', () =
   // draw-call cost doesn't grow with `count` or with species variety
   const bigger = makeForest({ count: 90, seed: 41 });
   assert.ok(bigger.isMesh && !bigger.isInstancedMesh && bigger.children.length === 0);
+});
+
+test('forest count scales the built geometry, and instances actually spread out', () => {
+  // The old InstancedMesh-based test pinned `count` via `f.count` (an actual
+  // instance count the object carried) and placement variety via comparing
+  // two instances' matrices directly. Neither reads off the new merged-mesh
+  // contract — there is no `.count` and no per-instance matrix any more — so
+  // both guarantees have to be re-earned against vertex data instead. This
+  // closes a real gap the mesh/material/determinism test above left open: it
+  // never actually proved `count` does anything, or that instances land
+  // anywhere other than on top of each other.
+
+  // (a) count scaling: a bigger forest must contain more geometry. Manually
+  // verified at these exact counts/seed: 40 -> 78,408 vertices, 90 -> 181,608
+  // — comfortably in the same ratio as the requested counts. Asserting the
+  // relationship (not the exact numbers) keeps this from breaking on a
+  // legitimate future retune of template detail (lobe counts, tree depth).
+  const small = makeForest({ count: 40, seed: 41 });
+  const big = makeForest({ count: 90, seed: 41 });
+  const smallN = small.geometry.attributes.position.count;
+  const bigN = big.geometry.attributes.position.count;
+  assert.ok(bigN > smallN, `bigger count should mean more vertices: ${smallN} (count 40) vs ${bigN} (count 90)`);
+
+  // (b) placement variety: if every instance collapsed onto the same spot (a
+  // "single repeated block" bug — e.g. the placement matrix silently stopped
+  // being applied), a stand's bounding box would be no bigger than one tree's
+  // own footprint, however many vertices it has. `spread` defaults to a
+  // 16-unit-radius ring, so a real stand's horizontal footprint should dwarf
+  // a lone tree's by a wide margin.
+  const one = makeForest({ count: 1, seed: 41 });
+  const oneSize = new THREE.Box3().setFromBufferAttribute(one.geometry.attributes.position).getSize(new THREE.Vector3());
+  const standSize = new THREE.Box3().setFromBufferAttribute(small.geometry.attributes.position).getSize(new THREE.Vector3());
+  const oneSpan = Math.hypot(oneSize.x, oneSize.z);
+  const standSpan = Math.hypot(standSize.x, standSize.z);
+  assert.ok(
+    standSpan > oneSpan * 3,
+    `a 40-tree stand should spread far wider than one tree's own footprint: one=${oneSpan.toFixed(2)} stand=${standSpan.toFixed(2)}`,
+  );
 });
