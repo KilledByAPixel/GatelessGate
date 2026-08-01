@@ -23,6 +23,20 @@ import { makeQuadruped } from './quadruped.js';
 // included, back up the road toward the monks — the "head tilt toward the
 // monk" handle) are untouched by this pass; nothing here changes the
 // group's orientation.
+// THE TAIL ROOTS INTO THE BODY. A 'stiff' tail is a cylinder centred on its
+// own origin, and the old up/back numbers left its root end hovering near the
+// barrel's axis — which put the visible root at the top of the rump, perched
+// ON the outline instead of growing out of it, and together with the proud
+// haunch it broke the topline as "something weird on the top of its butt"
+// (Frank). Same cure as the fox's brush: pin the ROOT to a stated point just
+// under the rump's surface and solve the centre the quadruped wants, so the
+// cocked tail emerges from inside the body at any length or angle.
+const TAIL_TILT = -1.0;                  // rad: up and back — the cocked tail is the read
+const TAIL_LEN = 0.38;
+const TAIL_ROOT = [0.13, -0.30];         // [above the barrel axis, z] — 0.07 under the surface
+const TAIL_UP = TAIL_ROOT[0] + (TAIL_LEN / 2) * Math.cos(TAIL_TILT);
+const TAIL_BACK = -(TAIL_ROOT[1] + (TAIL_LEN / 2) * Math.sin(TAIL_TILT));
+
 export function makeDog({ height = 0.5, color = INK, seed = 1 } = {}) {
   // Taller legs and a slimmer barrel: the first pass was short-legged and
   // fat-bodied, which read as a pig rather than a dog. The neck lifts the head
@@ -30,19 +44,26 @@ export function makeDog({ height = 0.5, color = INK, seed = 1 } = {}) {
   const { group } = makeQuadruped({
     height, color, seed,
     bodyR: 0.20, bodyLen: 0.70, bodyDrop: 0.18,
-    // legs read as sticks at 0.052 — thicker, and a gentler taper so the foot
-    // is not a pin (Frank's first-pass note across all the quadrupeds)
-    legH: 0.52, legR: 0.078, legTaper: 0.88, hipX: 0.13, hipZ: 0.30,
+    // legs read as sticks at 0.052 — thicker; the limb profile in the shared
+    // plan (broad thigh, slim cannon, small foot) does the shaping now, and
+    // legTaper 1.0 hands it a full-width thigh to start from
+    legH: 0.52, legR: 0.078, legTaper: 1.0, hipX: 0.13, hipZ: 0.30,
     neck: { r: 0.085, len: 0.26 },
     head: { shape: 'sphere', r: 0.165, fwd: 0.55, up: 0.30 },
     snout: { r0: 0.05, r1: 0.09, len: 0.20, fwd: 0.74, up: 0.24 },
     ears: { r: 0.07, h: 0.16, x: 0.10, up: 0.44, fwd: 0.50, tilt: 0.28 },
     // rump: `back` (0.28) sits just short of `hipZ` (0.30) so the mass
-    // gathers where the hind legs actually drive into the barrel, not behind
-    // it. `up + r*scaleY` = 0.11 + 0.1275 = 0.2375, clearing `bodyR` (0.20)
-    // by 0.0375h — proud of the barrel line, not flush inside it.
-    haunch: { r: 0.15, scaleY: 0.85, scaleZ: 1.05, up: 0.11, back: 0.28 },
-    tail: { kind: 'stiff', r0: 0.022, r1: 0.045, length: 0.38, up: 0.12, back: 0.42, tilt: -1.0 },
+    // gathers where the hind legs actually drive into the barrel. LOW AND
+    // LONG: an earlier round stood it 0.04h proud of the barrel line and the
+    // bump over the hips was the first thing Frank saw. `up + r*scaleY` =
+    // 0.10 + 0.109 = 0.209 now clears `bodyR` (0.20) by under 0.01h — the
+    // haunch thickens the topline without breaking it — and the longer
+    // scaleZ lets the extra weight run INTO the back instead of up off it.
+    haunch: { r: 0.145, scaleY: 0.75, scaleZ: 1.30, up: 0.10, back: 0.28 },
+    tail: {
+      kind: 'stiff', r0: 0.024, r1: 0.052, length: TAIL_LEN,
+      up: TAIL_UP, back: TAIL_BACK, tilt: TAIL_TILT,
+    },
   });
   group.name = 'dog';
   return group;
