@@ -17,8 +17,13 @@ import { mergeSimple } from './scatter.js';
 //      so the neck's GEOMETRY is re-cut locally (0.043/0.10 top/base radius);
 //      transform, name and material stay the plan's.
 //   2. A SMALL HEAD, carried forward off the top of that line, poll around
-//      1.17x withers (was 1.4x — llama). Muzzle continues the skull's own
-//      nose-down line (snout.tilt = head.tilt), face-centre maths as before.
+//      1.17x withers (was 1.4x — llama). ONE PIECE now: the box skull +
+//      cylinder muzzle pair read as parts ("if there was a way to nail the
+//      vertices together to create a smoother shaped head" — Frank), so the
+//      head is a single koi-style ring loft from poll to nostril, tapering
+//      continuously, tilted down the neck line by the same head.tilt. The
+//      snout mesh is GONE (11 meshes now, was 12 — k45's frozen budget only
+//      breathes easier).
 //   3. DEEP CHEST, RISING BELLY — the barrel is pitched nose-down a few
 //      degrees (body.rotation.x past PI/2), so the underline climbs toward
 //      the hind legs while the broad neck base fills the withers. Costs zero
@@ -32,8 +37,8 @@ import { mergeSimple } from './scatter.js';
 //      (up 0.185, back 0.44, solved against the pitched barrel surface so the
 //      join is buried, not floating), instead of a stub at rear-centre height.
 //
-// Mesh ledger (12, same as before the rework):
-//   body, front-leg pair (merged), 2 thighs, 2 shins, neck, head, snout,
+// Mesh ledger (11, was 12 — the snout merged into the head loft):
+//   body, front-leg pair (merged), 2 thighs, 2 shins, neck, head,
 //   ear pair (merged), 2 tail strand segments.
 const NECK_LEAN = Math.PI / 4;   // off vertical, chest anchor -> head centre
 const NECK_RISE = 0.28;          // the vertical run of that line, x height
@@ -66,14 +71,7 @@ export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
     // r/len still size the plan's mesh; the wedge taper is re-cut below
     neck: { r: 0.10, len: 0.50 },
     head,
-    // the muzzle anchors at the tilted box's front-face centre and carries the
-    // same tilt — DERIVED from the head, never tuned (see buffalo.js's horns)
-    snout: {
-      r0: 0.030, r1: 0.048, len: 0.20,
-      fwd: head.fwd + (head.d / 2) * cosT,
-      up: head.up - (head.d / 2) * sinT,
-      tilt: head.tilt,
-    },
+    // no snout: the muzzle is the front half of the single head loft below
     // aim at the tilted box's top-face centre; EARS ROOT ON THE SKULL
     // (quadruped.js) intersects the ray and roots them on the poll
     ears: {
@@ -103,6 +101,57 @@ export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
   // group's LOCAL frame, so sweeping the whole group back turns "hanging
   // string" into "tail carried off the buttock", and the idle sway rides along.
   if (tail) tail.group.rotation.x = 0.4;
+
+  // ---- ONE head: poll to nostril in a single loft -------------------------
+  // The box skull + cylinder muzzle read as two parts bolted together; this
+  // nails the vertices into one continuous form (Frank's ask). Rings of
+  // [z, halfW, halfH, yOff] in units of height, head-local: +z out the nose,
+  // the mesh transform still carrying head.tilt down the neck line. Full at
+  // the cheek, one unbroken taper to a blunt nostril — same koi-style loft,
+  // same half-step spin so a flat facet (not an edge) faces top and sides.
+  // Replacing the box geometry moves nothing: position, tilt, and the ears'
+  // solved roots on the poll all stay exactly where the plan put them.
+  const HEAD_RINGS = [
+    [-0.105, 0.030, 0.042, 0.004],    // poll, rounding away behind
+    [-0.070, 0.040, 0.0525, 0.000],   // skull at its fullest (the old box)
+    [-0.005, 0.040, 0.050, -0.002],   // cheek and jaw
+    [0.060, 0.032, 0.040, -0.006],    // the taper begins
+    [0.130, 0.026, 0.031, -0.010],
+    [0.205, 0.020, 0.023, -0.012],    // nostril end, blunt — the old snout tip
+  ];
+  const headMesh = group.children.find((c) => c.name === 'head');
+  {
+    const SEG = 8, pos = [], idx = [];
+    for (const [z, w, hh, yo] of HEAD_RINGS) {
+      for (let j = 0; j < SEG; j++) {
+        const a = ((j + 0.5) / SEG) * Math.PI * 2;
+        pos.push(Math.sin(a) * w * height, (Math.cos(a) * hh + yo) * height, z * height);
+      }
+    }
+    for (let i = 0; i < HEAD_RINGS.length - 1; i++) {
+      const a = i * SEG, b = a + SEG;
+      for (let j = 0; j < SEG; j++) {
+        const j2 = (j + 1) % SEG;
+        idx.push(a + j, b + j, a + j2, a + j2, b + j, b + j2);
+      }
+    }
+    // caps: a reversed fan at the poll (the start of the loft) and a fan at
+    // the nostril plane (its end) — the same pattern the koi's tail cap uses
+    const first = HEAD_RINGS[0], back = HEAD_RINGS[HEAD_RINGS.length - 1];
+    const poll = pos.length / 3;
+    pos.push(0, first[3] * height, first[0] * height);
+    for (let j = 0; j < SEG; j++) idx.push(poll, j, (j + 1) % SEG);
+    const nose = pos.length / 3;
+    pos.push(0, back[3] * height, back[0] * height);
+    const l0 = (HEAD_RINGS.length - 1) * SEG;
+    for (let j = 0; j < SEG; j++) idx.push(nose, l0 + (j + 1) % SEG, l0 + j);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
+    geo.setIndex(idx);
+    geo.computeVertexNormals();
+    headMesh.geometry.dispose();
+    headMesh.geometry = geo;
+  }
 
   // ---- the neck wedge ---------------------------------------------------
   // The plan cuts every neck at a fixed 0.85x taper — a pipe. Re-cut this one

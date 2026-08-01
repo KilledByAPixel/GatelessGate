@@ -28,14 +28,15 @@ function withersOf(group) {
   return v.y + body.geometry.parameters.radius;
 }
 
-test('the budget freeze holds: exactly 12 meshes', () => {
+test('the budget freeze holds: exactly 11 meshes', () => {
   // k45 is frozen at 148/150 draw calls and every mesh costs 2 when hull
   // outlines are on. 12 is what the pre-rework horse spent; the knee'd hind
-  // pair was paid for by merging the front posts and the ear pair.
+  // pair was paid for by merging the front posts and the ear pair, and the
+  // single-loft head then RETIRED the snout mesh — trade, never add.
   const { group } = build();
   let meshes = 0;
   group.traverse((o) => { if (o.isMesh) meshes++; });
-  assert.equal(meshes, 12, 'mesh count is the draw budget — trade, never add');
+  assert.equal(meshes, 11, 'mesh count is the draw budget — trade, never add');
 });
 
 test('THE NECK WEDGE: leaning 40-50 degrees off vertical, broad base to narrow top', () => {
@@ -66,15 +67,42 @@ test('a SMALL head, carried around 1.1-1.25x withers, nosed down the neck line',
   assert.ok(v.y / withers > 1.05 && v.y / withers < 1.25,
     `head centre at ${(v.y / withers).toFixed(2)}x withers`);
 
-  // head length (skull box depth) stays small against the body
-  assert.ok(head.geometry.parameters.depth / withers < 0.28,
-    'the skull is small against the body');
-
-  // and the muzzle continues the skull's own nose-down line
-  const snout = find(group, 'snout')[0];
-  assert.ok(Math.abs((snout.rotation.x - Math.PI / 2) - head.rotation.x) < 1e-6,
-    'snout.tilt === head.tilt: the muzzle falls along the skull line');
+  // skull AND muzzle together stay small against the body (the old pin was
+  // the skull box alone at < 0.28; the loft carries the muzzle too)
+  head.geometry.computeBoundingBox();
+  const bb = head.geometry.boundingBox;
+  assert.ok((bb.max.z - bb.min.z) / withers < 0.40,
+    `the whole head is small against the body: ${((bb.max.z - bb.min.z) / withers).toFixed(2)}`);
   assert.ok(head.rotation.x > 0.5, 'the head is nosed well down');
+});
+
+test('ONE head: no snout mesh, one loft tapering poll to nostril unbroken', () => {
+  // "if there was a way to nail the vertices together to create a smoother
+  // shaped head" — the head is a single geometry now; a regression to the
+  // box + muzzle-cylinder pair brings the snout mesh back and trips this.
+  const { group } = build();
+  assert.equal(find(group, 'snout').length, 0, 'the snout mesh is retired');
+  const head = find(group, 'head')[0];
+  const p = head.geometry.getAttribute('position');
+  assert.ok(p.count > 24, 'a loft, not the old 24-corner box');
+
+  // ring half-widths must NARROW monotonically from the cheek forward — one
+  // continuous taper is what makes it read as one form, not parts
+  const zs = new Map();
+  for (let i = 0; i < p.count; i++) {
+    const z = +p.getZ(i).toFixed(4);
+    zs.set(z, Math.max(zs.get(z) ?? 0, Math.abs(p.getX(i))));
+  }
+  const stations = [...zs.entries()].sort((a, b) => a[0] - b[0])
+    .map(([, w]) => w).filter((w) => w > 1e-6);
+  const cheekAt = stations.indexOf(Math.max(...stations));
+  for (let i = cheekAt; i < stations.length - 1; i++) {
+    assert.ok(stations[i + 1] <= stations[i] + 1e-6,
+      `taper never widens again forward of the cheek (station ${i})`);
+  }
+  // and the nostril end is genuinely narrower than the skull — a taper, not a tube
+  assert.ok(stations[stations.length - 1] < Math.max(...stations) * 0.6,
+    'the muzzle ends well inside the skull width');
 });
 
 test('deep chest, rising belly: the barrel pitches nose-down', () => {
