@@ -237,6 +237,12 @@ function showModel(index) {
     const box = new THREE.Box3().setFromObject(obj);
     box.getCenter(pivot);
     modelRadius = Math.max(0.001, box.getSize(new THREE.Vector3()).length() / 2);
+    // a model that lives below y=0 (the koi swim under their pond's surface)
+    // would hide behind an opaque ground disc — go glassy so it shows through
+    const dips = box.min.y < -0.02 * modelRadius;
+    ground.material.transparent = dips;
+    ground.material.opacity = dips ? 0.3 : 1;
+    ground.material.needsUpdate = true;
     dist = modelRadius * 3.4;
     minD = modelRadius * 1.2;
     maxD = modelRadius * 20;
