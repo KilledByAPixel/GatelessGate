@@ -147,17 +147,30 @@ const STAND_PROFILE = [
 // crowd builds its per-instance geometry from the same seated silhouette the
 // hero monks wear, so a background figure at fog distance is the same person,
 // simplified — not a different species of pawn.
+//
+// THE LAP SHELF. The first seated profile tapered continuously from hem to
+// collar and Frank read it exactly right: "like they're wearing a fat dress —
+// like they're not sitting at all." A seated robed figure's silhouette BREAKS
+// at the lap (see local/refs/buddha.png, and buddha.js's round-2 lathe, which
+// solved this first): the crossed legs are a wide low block — the widest
+// thing the figure owns, wider than the shoulders — the lap line turns
+// near-horizontally in at about 0.3 of the seated height, and the torso rises
+// visibly INSET above it. One event, three points: the knee crest, the top of
+// the knee block, and the hard turn to the obi. Same ten indices, same roles
+// as STAND_PROFILE, so `kneel`'s halfway blend stays honest — the "long run
+// up the skirt" is here the long run up the knees, and the "skirt gathering"
+// is the lap turn itself.
 export const SIT_PROFILE = [
   [0.020, 0.000],   // hem centre, closed on the ground
-  [0.300, 0.000],   // the hem pooling round the crossed legs
-  [0.318, 0.052],
-  [0.262, 0.190],   // the long run over the knees
-  [0.212, 0.268],   // the skirt gathering under the sash
-  [0.186, 0.300],   // OBI — the tie
-  [0.206, 0.348],   // the blouse pushed up over the knot
-  [0.160, 0.428],   // chest into shoulder
-  [0.110, 0.449],   // COLLAR
-  [0.068, 0.466],   // the neck opening
+  [0.310, 0.000],   // the hem pooling round the crossed legs
+  [0.320, 0.060],   // KNEE CREST — the widest ring on the figure, low
+  [0.295, 0.155],   // top of the knee block: the run stays WIDE, not a taper
+  [0.148, 0.180],   // THE LAP — a near-horizontal shelf in to the waist
+  [0.130, 0.220],   // OBI — the tie
+  [0.148, 0.265],   // the blouse pushed up over the knot
+  [0.125, 0.408],   // chest into shoulder — clearly inset above the lap
+  [0.100, 0.442],   // COLLAR
+  [0.062, 0.462],   // the neck opening
 ];
 
 // The sedge hat, authored in its own local space (y = 0 is where the old
@@ -194,10 +207,18 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // past the hem plus the staff's own radius, so it reads as the teacher's
 // staff set down beside him, within reach). Standing keeps 0.26 exactly —
 // every standing elder in the book is framed around it.
+// `fold` is the folded-arm pitch (radians off plumb, toward local +z) and it
+// is per-stance because the lap is. The old single angle (-1.15) was tuned
+// against the bell-shaped robe, whose fat slope happened to catch the cuffs;
+// above the lap-shelf profile the same angle parked them in mid-air, a
+// hand's-breadth forward of the inset chest (k17's "his hands have weird
+// thing"). Seated, the sleeves now hang nearer plumb so the cuff lips come
+// down onto the knee block and sink just below its surface — hands resting
+// in the lap, joined not floating.
 const KNEEL = 0.5;
 const STANCES = {
-  stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.735, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26 },
-  sit: { profile: SIT_PROFILE, shoulder: 0.40, sleeve: 0.24, head: 0.50, hat: 0.545, armZ: 0.03, staff: 0.7, staffX: 0.3625 },
+  stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.735, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, fold: -1.15 },
+  sit: { profile: SIT_PROFILE, shoulder: 0.40, sleeve: 0.24, head: 0.50, hat: 0.545, armZ: 0.03, staff: 0.7, staffX: 0.3625, fold: -0.48 },
   kneel: {
     profile: mixProfile(STAND_PROFILE, SIT_PROFILE, KNEEL),
     shoulder: mix(0.60, 0.40, KNEEL),
@@ -207,6 +228,7 @@ const STANCES = {
     armZ: mix(0, 0.03, KNEEL),
     staff: mix(1.2, 0.7, KNEEL),
     staffX: mix(0.26, 0.3625, KNEEL),
+    fold: mix(-1.15, -0.48, KNEEL),
   },
 };
 
@@ -252,7 +274,7 @@ export function makeFigure({
     // still ANIMATE the lift toward vertical (k3 adds 0.24rad); starting plumb
     // would send the arm over the top and back down the far side.
     else if (arms === 'raise' && side === 1) { arm.rotation.z = Math.PI - 0.34; arm.rotation.x = 0.22; }
-    else if (arms === 'fold' || seated) { arm.rotation.x = -1.15; arm.rotation.z = side * 0.12; } // fold into the lap
+    else if (arms === 'fold' || seated) { arm.rotation.x = st.fold; arm.rotation.z = side * 0.12; } // fold into the lap
     else { arm.rotation.z = side * 0.28; }
     g.add(arm);
     return arm;

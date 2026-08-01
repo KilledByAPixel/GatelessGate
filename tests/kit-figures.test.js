@@ -66,15 +66,19 @@ test('makeAssembly is one instanced, grounded, deterministic crowd', () => {
   assert.equal(a.userData.noOutline, true);
 
   // each instance is a seated MONK, not a pawn: the silhouette carries the
-  // obi pinch (a belt — narrower than the blouse pushed up over it) and a
-  // hat brim wider than the robe's own shoulders, read straight off the
-  // merged geometry via the same band scan the buddha test uses
+  // lap shelf (the knee block the widest thing it owns, the torso inset
+  // above it — the same event that fixed "a fat dress standing up" on the
+  // hero monks) and the obi pinch (a belt — narrower than the blouse pushed
+  // up over it), read straight off the merged geometry via the same band
+  // scan the buddha test uses. Bands in world units at FIG_H = 1.5.
   const fake = { geometry: a.geometry };
-  const hem = maxRadiusInBand(fake, 0, 0.12);
-  const obi = maxRadiusInBand(fake, 0.43, 0.47);      // the tie, at 0.300·FIG_H
-  const blouse = maxRadiusInBand(fake, 0.50, 0.54);   // the swell above the knot
+  const knees = maxRadiusInBand(fake, 0, 0.16);       // the knee crest, at 0.060·FIG_H
+  const torso = maxRadiusInBand(fake, 0.45, 0.62);    // obi → chest, above the lap turn
+  const obi = maxRadiusInBand(fake, 0.32, 0.34);      // the tie, at 0.220·FIG_H
+  const blouse = maxRadiusInBand(fake, 0.39, 0.41);   // the swell above the knot, at 0.265·FIG_H
+  assert.ok(torso < knees * 0.55, `the torso rises inset above the lap: ${torso} vs ${knees}`);
   assert.ok(obi < blouse, `the obi pinch reads as a belt: ${obi} vs ${blouse}`);
-  assert.ok(obi < hem * 0.7, `a waisted figure, not a cone: ${obi} vs ${hem}`);
+  assert.ok(obi < knees * 0.7, `a seated figure, not a cone: ${obi} vs ${knees}`);
   const geoBox = a.geometry.boundingBox || (a.geometry.computeBoundingBox(), a.geometry.boundingBox);
   assert.ok(geoBox.max.y > 0.8 && geoBox.max.y < 1.1, `crowd figure stays crowd-sized: ${geoBox.max.y}`);
   const m = new THREE.Matrix4();
