@@ -61,3 +61,4 @@ export { makeSnow } from './snowfall.js';
 export { makeKoi } from './koi.js';
 export { makeFan } from './fan.js';
 export { makeWalk, walkPose, walkHeading, pathLength } from './walk.js';
+export { setBreezePointer, clearBreeze, breezeState, breezeFalloff, treeSpringStep } from './breeze.js';

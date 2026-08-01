@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { toonRamp } from '../render/toon.js';
 import { hash1 } from '../util/noise.js';
 import { grassPlacements, GRASS_TONE } from './grassfield.js';
+import { breezeState, easePoke, GRASS_POKE_RADIUS } from './breeze.js';
 
 // Frank's tuft grass: instead of one chunky geometric spear per grass plant,
 // each instance is a single camera-facing QUAD carrying a baked texture of a
@@ -115,6 +116,11 @@ export function makeTuftField({
     uWindDir: { value: new THREE.Vector2(windDir[0], windDir[1]).normalize() },
     uGustScale: { value: gustScale },
     uGustSpeed: { value: gustSpeed },
+    // the pointer's breeze — same trio as grassfield.js, kept in lockstep.
+    // uPokeAmt defaults to 0: an unpoked scene renders exactly as before.
+    uPokePos: { value: new THREE.Vector2(0, 0) },
+    uPokeAmt: { value: 0 },
+    uPokeR: { value: GRASS_POKE_RADIUS },
   };
 
   // Toon material built by hand rather than via toonMaterial(): it needs the
@@ -139,6 +145,9 @@ export function makeTuftField({
       uniform vec2 uWindDir;
       uniform float uGustScale;
       uniform float uGustSpeed;
+      uniform vec2 uPokePos;
+      uniform float uPokeAmt;
+      uniform float uPokeR;
 
       // The SAME gust grammar as grassfield.js, kept in lockstep on purpose:
       // a value-noise field that drifts downwind, so gusts arrive and pass
@@ -207,6 +216,18 @@ export function makeTuftField({
         float swing = gust * 2.0 - 1.0;
         vec2 swayW = uWindDir * (uWind * 0.26 * swing * stiff);
 
+        // the pointer's breeze: a radial push AWAY from the poke point, larger
+        // than the wind's own amplitude — the grass gets the MOST motion. A
+        // world vector like swayW, so the projection below keeps it on the
+        // card's own axis; falloff mirrors breezeFalloff in breeze.js.
+        vec2 pokeD = iw.xz - uPokePos;
+        float pokeDist = length(pokeD);
+        float pokeT = clamp(1.0 - pokeDist / uPokeR, 0.0, 1.0);
+        float pokeFall = pokeT * pokeT * (3.0 - 2.0 * pokeT);
+        vec2 pokeDir = pokeDist > 1e-4 ? pokeD / pokeDist : vec2(0.0, 0.0);
+        vec2 pokeW = pokeDir * (uPokeAmt * pokeFall * (0.45 + 0.20 * gust) * stiff);
+        swayW += pokeW;
+
         // ...projected onto the CARD'S OWN axis. This was the "stretchy" glitch
         // Frank suspected was bad billboard math, and he was close: the sway was
         // applied as a world vector, so whenever the orbit swung across the wind
@@ -237,7 +258,7 @@ export function makeTuftField({
       '#include <dithering_fragment>\n  gl_FragColor.a = 0.0;   // ink-mask marker',
     );
   };
-  mat.customProgramCacheKey = () => 'tuftfield-billboard';
+  mat.customProgramCacheKey = () => 'tuftfield-billboard-poke';
 
   const spots = grassPlacements({ count, radius, inner, seed, groundSeed, keepout });
   const mesh = new THREE.InstancedMesh(geo, mat, Math.max(1, spots.length));
@@ -278,6 +299,12 @@ export function makeTuftField({
       if (scale !== undefined) uniforms.uGustScale.value = scale;
       if (speed !== undefined) uniforms.uGustSpeed.value = speed;
     },
-    update(dt, simTime) { uniforms.uTime.value = simTime; },
+    update(dt, simTime) {
+      uniforms.uTime.value = simTime;
+      // same three uniform writes as grassfield.js — see the note there
+      const b = breezeState();
+      uniforms.uPokePos.value.set(b.x, b.z);
+      uniforms.uPokeAmt.value = easePoke(uniforms.uPokeAmt.value, b.strength, dt);
+    },
   };
 }

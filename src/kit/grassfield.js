@@ -3,6 +3,7 @@ import { toonMaterial } from '../render/toon.js';
 import { wash } from '../palette.js';
 import { groundHeight } from './ground.js';
 import { hash1, fbm2 } from '../util/noise.js';
+import { breezeState, easePoke, GRASS_POKE_RADIUS } from './breeze.js';
 
 // Dense wind-blown grass: thousands of tapered blades in ONE InstancedMesh,
 // bent entirely in the vertex shader from a single uTime uniform, so the wind
@@ -170,6 +171,12 @@ export function makeGrassField({
     uWindDir: { value: new THREE.Vector2(windDir[0], windDir[1]).normalize() },
     uGustScale: { value: gustScale },   // world units per noise cell — gust patch size
     uGustSpeed: { value: gustSpeed },   // how fast the field drifts downwind
+    // the pointer's breeze (src/kit/breeze.js): a radial push away from the
+    // poke point. uPokeAmt defaults to 0, so a scene whose pointer never moves
+    // renders exactly as it did before the breeze existed.
+    uPokePos: { value: new THREE.Vector2(0, 0) },
+    uPokeAmt: { value: 0 },
+    uPokeR: { value: GRASS_POKE_RADIUS },
   };
 
   const mat = toonMaterial({ color, side: THREE.DoubleSide });
@@ -191,6 +198,9 @@ export function makeGrassField({
       uniform vec2 uWindDir;
       uniform float uGustScale;
       uniform float uGustSpeed;
+      uniform vec2 uPokePos;
+      uniform float uPokeAmt;
+      uniform float uPokeR;
 
       // Cheap 2D value noise. A sine of dot(pos, windDir) is a PLANE WAVE: every
       // blade the same distance along the wind axis moves identically, which
@@ -230,9 +240,22 @@ export function makeGrassField({
         vec2 ix = normalize(vec2(instanceMatrix[0].x, instanceMatrix[0].z) + vec2(1e-6));
         vec2 iz = normalize(vec2(instanceMatrix[2].x, instanceMatrix[2].z) + vec2(1e-6));
 
+        // the pointer's breeze: a radial push AWAY from the poke point, with a
+        // touch of the gust so it reads as stirred air rather than a force
+        // field. It joins the same arc bend the wind uses, so the tip factor is
+        // the arc itself and roots stay planted. Falloff mirrors breezeFalloff
+        // in breeze.js — smoothstep to zero at uPokeR.
+        vec2 pokeD = iPos.xz - uPokePos;
+        float pokeDist = length(pokeD);
+        float pokeT = clamp(1.0 - pokeDist / uPokeR, 0.0, 1.0);
+        float pokeFall = pokeT * pokeT * (3.0 - 2.0 * pokeT);
+        vec2 pokeDir = pokeDist > 1e-4 ? pokeD / pokeDist : vec2(0.0, 1.0);
+        float thetaPoke = uPokeAmt * pokeFall * (0.50 + 0.20 * gust) * stiff;
+
         // wind (shared world direction) plus the blade's own resting lean (local
         // +z, so calm grass leans every which way instead of all one way)
         vec2 bendVec = vec2(dot(ix, uWindDir), dot(iz, uWindDir)) * thetaWind
+                     + vec2(dot(ix, pokeDir), dot(iz, pokeDir)) * thetaPoke
                      + vec2(0.0, 1.0) * droop;
         float theta = length(bendVec);
         vec2 bendDir = theta > 1e-5 ? bendVec / theta : vec2(0.0, 1.0);
@@ -271,7 +294,7 @@ export function makeGrassField({
       '#include <dithering_fragment>\n  gl_FragColor.a = 0.0;   // ink-mask marker',
     );
   };
-  mat.customProgramCacheKey = () => 'grassfield-arc';
+  mat.customProgramCacheKey = () => 'grassfield-arc-poke';
 
   const mesh = new THREE.InstancedMesh(geo, mat, count);
   mesh.name = 'grassfield';
@@ -312,6 +335,14 @@ export function makeGrassField({
       if (scale !== undefined) uniforms.uGustScale.value = scale;
       if (speed !== undefined) uniforms.uGustSpeed.value = speed;
     },
-    update(dt, simTime) { uniforms.uTime.value = simTime; },
+    update(dt, simTime) {
+      uniforms.uTime.value = simTime;
+      // the pointer's breeze: three uniform writes, no per-instance CPU work.
+      // Fast attack / slow release (easePoke) so a swipe is felt at once and
+      // leaves a settling wake behind it.
+      const b = breezeState();
+      uniforms.uPokePos.value.set(b.x, b.z);
+      uniforms.uPokeAmt.value = easePoke(uniforms.uPokeAmt.value, b.strength, dt);
+    },
   };
 }

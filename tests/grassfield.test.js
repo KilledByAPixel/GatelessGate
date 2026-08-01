@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { patchDensity, makeGrassField } from '../src/kit/grassfield.js';
+import { setBreezePointer, clearBreeze } from '../src/kit/breeze.js';
 
 // These guard a bug that reached Frank's screen: the meadow cut a huge SQUARE
 // out of itself around the staging. One octave of bilinear value noise on an
@@ -87,6 +88,33 @@ test('grass stands are smaller than the shot, and not axis-aligned', () => {
   for (const [name, d] of Object.entries(lengths)) {
     assert.ok(d < 6.5, `${name} stands decorrelate well inside the shot: ${d} units`);
   }
+});
+
+test('the breeze is invisible until a pointer moves', () => {
+  // uPokeAmt = 0 is the whole feature switched off: a scene that is never
+  // poked must render EXACTLY as it did before breeze.js existed. The wind
+  // clock may tick all it likes — only real pointer motion may raise it.
+  clearBreeze();
+  const f = makeGrassField({ count: 300, radius: 20, seed: 2349 });
+  const u = f.mesh.userData.uniforms;
+  assert.equal(u.uPokeAmt.value, 0, 'born still');
+  assert.ok(u.uPokePos, 'poke position uniform exists');
+  assert.ok(u.uPokeR.value > 0, 'poke radius uniform exists');
+  for (let i = 0; i < 240; i++) f.update(1 / 60, i / 60);
+  assert.equal(u.uPokeAmt.value, 0, 'stays exactly zero with no pointer — not drifting');
+
+  // and a genuine sweep wakes it, then stopping lets it settle back
+  let x = 0;
+  for (let i = 0; i < 30; i++) { x += 8 / 60; setBreezePointer(x, 0, 1 / 60); f.update(1 / 60, 4 + i / 60); }
+  assert.ok(u.uPokeAmt.value > 0.3, `a swipe is felt: ${u.uPokeAmt.value.toFixed(3)}`);
+  assert.ok(Math.abs(u.uPokePos.value.x - x) < 1e-9, 'the poke rides the pointer');
+  clearBreeze();
+  const atRelease = u.uPokeAmt.value;
+  f.update(1 / 60, 5);
+  assert.ok(u.uPokeAmt.value < atRelease, 'release starts at once');
+  for (let i = 0; i < 600; i++) f.update(1 / 60, 6 + i / 60);
+  assert.ok(u.uPokeAmt.value < 0.01, `and the wake settles: ${u.uPokeAmt.value}`);
+  clearBreeze();
 });
 
 test('the field actually places the blades it is asked for', () => {

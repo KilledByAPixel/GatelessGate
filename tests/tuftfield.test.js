@@ -70,9 +70,12 @@ test('the field wears the grassfield name and wiring the debug panel expects', (
   assert.equal(f.mesh.name, 'grassfield');
   assert.ok(f.mesh.userData.noOutline);
   const u = f.mesh.userData.uniforms;
-  for (const k of ['uTime', 'uWind', 'uWindDir', 'uGustScale', 'uGustSpeed']) {
+  for (const k of ['uTime', 'uWind', 'uWindDir', 'uGustScale', 'uGustSpeed', 'uPokePos', 'uPokeAmt', 'uPokeR']) {
     assert.ok(u[k], `exposes ${k}`);
   }
+  // the pointer's breeze is OFF until a pointer actually moves: an unpoked
+  // scene renders identically to one built before the breeze existed
+  assert.equal(u.uPokeAmt.value, 0, 'born still');
   assert.equal(f.mesh.castShadow, false, 'tufts throw no shadow maps');
   assert.ok(f.mesh.material.alphaTest > 0, 'cutout, not blending — no sort order to get wrong');
   f.update(1 / 60, 3.5);

@@ -7,6 +7,7 @@ import { makeFreeze } from './render/freeze.js';
 import { makeSceneManager, disposeRoot } from './scene/manager.js';
 import { makeDebug, devModeOn } from './ui/debug.js';
 import { makeInput } from './input.js';
+import { setBreezePointer, clearBreeze } from './kit/breeze.js';
 import { createSave } from './save.js';
 import { createAudio } from './audio/engine.js';
 import { gustPhase } from './audio/synths.js';
@@ -718,9 +719,28 @@ addEventListener('pointerdown', () => {
 });
 
 // ---- loop ----
+// The pointer's breeze (src/kit/breeze.js): each tick, drop the pointer onto
+// the y=0 ground plane and hand the point to the shared breeze state, which
+// the grass fields and composeWorld's trees read back. One unproject, no
+// allocation — the two vectors are reused. Koan pages only: the menu, the
+// intro, sitting and the free cam clear it — WASD flying especially must not
+// read as a gale through the meadow.
+const breezeVec = new THREE.Vector3();
+function feedBreeze() {
+  if (mode !== 'koan' || !rig || freeCam.enabled()) { clearBreeze(); return; }
+  const p = input.pointerNDC();
+  if (!p) { clearBreeze(); return; }
+  breezeVec.set(p.x, p.y, 0.5).unproject(camera).sub(camera.position).normalize();
+  const t = breezeVec.y < -1e-4 ? camera.position.y / -breezeVec.y : -1;
+  // above the horizon, or so far out it could only be fog — no breeze there
+  if (t < 0 || t > 60) { clearBreeze(); return; }
+  setBreezePointer(camera.position.x + breezeVec.x * t, camera.position.z + breezeVec.z * t, STEP);
+}
+
 function tick() {
   simTime += STEP;
   audio.setGust(gustPhase(simTime));
+  feedBreeze();
   if (mode === 'intro' && intro) intro.update(STEP);
   else if (freeCam.enabled()) freeCam.update(STEP);
   else if (rig) rig.update(STEP);
