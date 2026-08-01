@@ -10,12 +10,10 @@ const ID = 30;
 
 // "What is Buddha?" — "This mind is Buddha."
 //
-// A still pond with the figure seated on the far bank, and his reflection
-// lying on the water. The reflection is not a mirrored copy hung under the
-// surface: it is PAINTED — the same figure laid flat in the plane of the
-// water, pale, no outline, the way a reflection is actually rendered in ink.
-// Which is the honest version of the claim: what is on the water is not
-// another Buddha, it is the same one, appearing where you are looking.
+// A still pond with the figure seated on the far bank. There used to be a
+// painted reflection of him lying flat on the water; Frank read it exactly
+// right ("that weird 2D thing in the water") and it is gone — the pond
+// answers with koi and ripples, not with a second Buddha.
 //
 // Case 33 is this scene with the far bank empty. They are meant to be read as
 // a pair, so they share a seed, a camera and a pond.
@@ -98,42 +96,11 @@ export default {
     cushion.position.set(BANK.x, 0.28, BANK.z);
     scene.add(cushion);
 
-    const buddha = makeBuddha({ height: 2.0 });
-    buddha.position.set(BANK.x, 0.30, BANK.z);
+    // ordinary monk scale (overnight pass 2), seated on the top of the mat:
+    // cushion centre 0.28 + half its 0.05 thickness
+    const buddha = makeBuddha({ height: 1.6 });
+    buddha.position.set(BANK.x, 0.305, BANK.z);
     scene.add(buddha);
-
-    // THE REFLECTION — the same figure, laid flat in the water's plane with
-    // its head pointing away across the pond. Pale, unoutlined, and not
-    // writing depth, so it composites as a wash on the surface rather than as
-    // a solid object standing in it. It rides just clear of the highest ripple
-    // crest, so a passing wave cannot saw through it.
-    //
-    // Two things make "laid flat" true and not just intended (both were wrong
-    // once, and together they read as a half-transparent mound squatting in
-    // front of the statue — Frank flagged it):
-    //   - rotation.x is +π/2, not -π/2: +π/2 sends local UP to world +z, head
-    //     out across the pond toward the viewer, the way a real reflection
-    //     falls. -π/2 sent the head to -z — under the statue's own seat, out
-    //     of the water entirely.
-    //   - the thickness axis is SQUASHED. A solid of revolution rotated flat
-    //     still carries its full radial depth, so the knees stood a metre
-    //     proud of the surface as a see-through dome. After the x-rotation,
-    //     local z is world-vertical; scaling it to 0.12 flattens the figure
-    //     to the painted wash the comment above always claimed it was.
-    const reflection = makeBuddha({ height: 2.0, color: WASH.mid });
-    reflection.name = 'reflection';
-    reflection.rotation.x = Math.PI / 2;
-    reflection.scale.z = 0.12;
-    reflection.position.set(BANK.x, POND.surface + 0.09, BANK.z + 1.4);
-    reflection.traverse((o) => {
-      if (!o.isMesh) return;
-      o.userData.noOutline = true;
-      o.material = o.material.clone();
-      o.material.transparent = true;
-      o.material.opacity = 0.34;
-      o.material.depthWrite = false;
-    });
-    scene.add(reflection);
 
     // the monk who asked, on the near shore
     const daibai = makeMonk({ height: 1.58 });
