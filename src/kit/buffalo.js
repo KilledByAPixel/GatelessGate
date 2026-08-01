@@ -24,6 +24,7 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // legTaper 1.05: the shared limb profile wants a thigh to start from —
     // at the old default 0.82 the heaviest animal in the book had the
     // thinnest leg tops
+    legBury: .2,
     legH: 0.46, legR: 0.125, legTaper: 1.05, hipX: 0.15, hipZ: 0.34,
     hump: { r: 0.40, scaleY: 0.86, scaleZ: 1.00, up: 0.24, fwd: 0.18 },
     // up + r*scaleY must clear bodyR (0.40) for these to stand PROUD of the
@@ -34,11 +35,11 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // close to the hump's own fwd so the two masses MERGE into one wide crown
     // rather than reading as two separate peaks (a camel, not a buffalo).
     shoulder: { r: 0.30, scaleY: 0.82, up: 0.20, fwd: 0.22 },
-    chest: { r: 0.24, drop: 0.36, fwd: 0.42 },
     // a compact wedge rather than a long slab: the head sat so far forward it
     // read as a snout on a crocodile. Lower and more nose-down than the first
     // pass so the muzzle drops below the withers — the grazing line.
-    head: { shape: 'box', w: 0.36, hh: 0.32, d: 0.52, fwd: 0.68, up: -0.34, tilt: 0.55 },
+    head: { shape: 'sphere', r: 0.3, fwd: 0.6, up: -0.05  },
+    snout: { r0: 0.1, r1: 0.15, len: 0.2, fwd: 0.8, up: -.2, tilt:.5},
     // THE BASE SITS ON THE SKULL, NOT THE HUMP. horns.up/fwd are NOT free
     // parameters — they are the poll (the top-back corner of the tilted head
     // box, where a real buffalo's horns actually emerge), solved the same way
@@ -62,7 +63,7 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // 1.10) and fat at the base (0.10, was 0.055): a devil's horn, not a
     // fencepost.
     horns: { r: 0.1, len: 0.5, x: 0.1, up: -0.02, fwd: 0.7, sweep: 0.55, back: 0.25, curve: -0.50 },
-    tail: { kind: 'strand', segments: 7, length: 0.74, thickness: 0.05, up: 0.16, back: 0.62, color: tailColor },
+    tail: { kind: 'strand', segments: 7, length: 0.74, thickness: 0.05, up: 0.16, back: 0.7, color: tailColor },
   });
   group.name = 'buffalo';
 

@@ -65,7 +65,8 @@ export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
     bodyR: BODY_R, bodyLen: BODY_LEN, bodyDrop: BODY_DROP,
     // the slimmest legs in the kit; legTaper > 1 narrows toward the FOOT
     // (a slender cannon bone, not a post — quadruped.js's own note)
-    legH: LEG_H, legR: 0.04, legTaper: 1.5, hipX: 0.08, hipZ: 0.31,
+    legBury: .2,
+    legH: LEG_H, legR: 0.04, legTaper: 1.5, hipX: 0.1, hipZ: 0.31,
     legs: { knee: KNEE },
     // r/len still size the plan's mesh; the wedge taper is re-cut below
     neck: { r: 0.10, len: 0.50 },
