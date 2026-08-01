@@ -69,6 +69,22 @@ const pivot = new THREE.Vector3();
 let az = 0.7, el = 0.32, dist = 6, minD = 1, maxD = 60;
 let modelRadius = 1;
 
+// Camera memory: a reload — hot or full-page — must not move the eye. Orbit
+// state is saved per MODEL (each has its own scale), restored in showModel().
+// R resets the view and forgets the stored spot. The pivot itself always
+// re-derives from the fresh bbox, so an edited model stays centered.
+const CAM_LS = 'gg-model-viewer-camera-v1';
+let cams = (() => { try { return JSON.parse(localStorage.getItem(CAM_LS)) || {}; } catch { return {}; } })();
+let camSaveT = 0;
+function queueSaveCam() {
+  clearTimeout(camSaveT);
+  camSaveT = setTimeout(() => {
+    if (!currentKey) return;
+    cams[currentKey] = { az, el, dist };
+    localStorage.setItem(CAM_LS, JSON.stringify(cams));
+  }, 250);
+}
+
 function updateCamera() {
   camera.position.set(
     pivot.x + Math.sin(az) * Math.cos(el) * dist,
@@ -86,6 +102,7 @@ renderer.domElement.addEventListener('pointerdown', (e) => {
     el += (ev.clientY - py) * 0.005;     // inverted from the usual orbit convention (owner preference)
     el = Math.max(-1.55, Math.min(1.55, el));
     px = ev.clientX; py = ev.clientY;
+    queueSaveCam();
   };
   const up = () => {
     renderer.domElement.removeEventListener('pointermove', move);
@@ -97,6 +114,7 @@ renderer.domElement.addEventListener('pointerdown', (e) => {
 renderer.domElement.addEventListener('wheel', (e) => {
   e.preventDefault();
   dist = Math.max(minD, Math.min(maxD, dist * Math.exp(e.deltaY * 0.0012)));
+  queueSaveCam();
 }, { passive: false });
 
 // ---- DOM --------------------------------------------------------------
@@ -223,6 +241,12 @@ function showModel(index) {
     minD = modelRadius * 1.2;
     maxD = modelRadius * 20;
     ground.scale.setScalar(Math.max(3, modelRadius * 1.8));
+    const saved = cams[currentKey];
+    if (saved) {
+      az = saved.az;
+      el = Math.max(-1.55, Math.min(1.55, saved.el));
+      dist = Math.max(minD, Math.min(maxD, saved.dist));
+    }
   } catch (e) {
     console.error('[mv]', entry.key, e);
     errBanner.textContent = `${entry.key}: ${e && e.message || e}`;
@@ -325,6 +349,9 @@ addEventListener('keydown', (e) => {
     $('btn-turn').classList.toggle('on', turntable);
   } else if (e.key === 'r' || e.key === 'R') {
     az = 0.7; el = 0.32; dist = modelRadius * 3.4; modelGroup.rotation.y = 0;
+    clearTimeout(camSaveT);                     // a queued drag-save must not resurrect it
+    delete cams[currentKey];                    // reset also FORGETS the stored spot
+    localStorage.setItem(CAM_LS, JSON.stringify(cams));
   } else if (e.key === 's' || e.key === 'S') {
     setSilhouette(!silhouette);
   } else if (e.key === 'g' || e.key === 'G') {
@@ -550,5 +577,6 @@ setInterval(poll, 1000);
 // paused in headless Chrome, so a driver steps frames by hand — same house
 // pattern as gate.step() and kp.step()
 window.__mvStep = (n = 1) => { for (let i = 0; i < n; i++) frame(16.7); };
+window.__mvCam = () => ({ az, el, dist, key: currentKey });
 window.__mvReload = doReload;
 window.__mvGalleryCellUUID = (key) => gallery.cellUUID(key);
