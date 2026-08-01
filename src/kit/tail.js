@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { createCloth, stepCloth, clothEnergy } from '../sim/verlet.js';
 import { noise3 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
+import { mergeSimple } from './scatter.js';
 import { INK } from '../palette.js';
 
 // A hanging tail: the verlet cloth as a 1-column strand, pinned at the root.
@@ -18,7 +19,14 @@ export function makeTail({ segments = 7, length = 1.0, thickness = 0.06, color =
   for (let i = 0; i < segments - 1; i++) {
     const r0 = thickness * (1 - i / segments);
     const r1 = thickness * (1 - (i + 1) / segments);
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, spacing, 6), mat);
+    // a joint ball merged at the segment's thick (upper) end: two cylinders
+    // meeting at a bend open a wedge of daylight at every joint of the
+    // strand (Frank, on tails generally) — the ball keeps each node covered
+    // however the verlet folds it, for zero extra meshes
+    const ball = new THREE.SphereGeometry(r0 * 1.05, 6, 5);
+    ball.translate(0, spacing / 2, 0);
+    const m = new THREE.Mesh(
+      mergeSimple([new THREE.CylinderGeometry(r1, r0, spacing, 6), ball]), mat);
     m.name = 'seg';
     segs.push(m);
     group.add(m);

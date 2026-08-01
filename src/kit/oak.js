@@ -153,13 +153,13 @@ export function makeOak({
     }
   }
 
-  // the root flare: an oak is fattest where it meets the ground. Lifted so it
-  // rests ON y=0 rather than half-sunk — every kit prop is authored to stand on
-  // the ground plane, and the ground rolls underneath it.
-  const flare = new THREE.DodecahedronGeometry(BOLE_R * 1.55, 0);
-  flare.scale(1, 0.40, 1);
-  flare.computeBoundingBox();
-  flare.translate(0, -flare.boundingBox.min.y, 0);
+  // the root flare: an oak is fattest where it meets the ground. It used to
+  // be a squashed dodecahedron ball resting at the foot, which read as
+  // "kinda like a rock at its base" (Frank) — a boulder beside the trunk,
+  // not the trunk itself. A short tapered collar instead: same width at the
+  // ground, but it runs INTO the bole so the flare is the trunk widening.
+  const flare = new THREE.CylinderGeometry(BOLE_R * 1.02, BOLE_R * 1.5, 0.07 * H, 6);
+  flare.translate(0, 0.035 * H, 0);
   wood.push(flare);
 
   grow(new THREE.Matrix4(), BOLE_LEN, BOLE_R, 0);

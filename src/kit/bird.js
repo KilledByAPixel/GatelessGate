@@ -69,13 +69,14 @@ function wingGeometry(s, side) {
   const t = side;
   const v = new Float32Array([
     // inner edge, at the body
+    // span stretched 0.60 -> 0.80 (Frank: 'longer from the body, not wider')
     0, 0, 0.16 * s,          // root front
     0, 0, -0.20 * s,         // root back
-    0.60 * s * t, 0, -0.12 * s,   // outer back
+    0.80 * s * t, 0, -0.12 * s,   // outer back
     // and the front half of the paddle
     0, 0, 0.16 * s,          // root front
-    0.60 * s * t, 0, -0.12 * s,   // outer back
-    0.52 * s * t, 0, 0.08 * s,    // outer front — blunts the tip
+    0.80 * s * t, 0, -0.12 * s,   // outer back
+    0.70 * s * t, 0, 0.08 * s,    // outer front — blunts the tip
   ]);
   g.setAttribute('position', new THREE.BufferAttribute(v, 3));
   g.computeVertexNormals();

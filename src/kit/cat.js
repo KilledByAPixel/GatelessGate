@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { INK } from '../palette.js';
 import { makeQuadruped } from './quadruped.js';
+import { mergeSimple } from './scatter.js';
 import { hash1 } from '../util/noise.js';
 
 // Nansen's cat (case 14). The third preset on the shared quadruped, after the
@@ -214,10 +215,17 @@ export function makeCat({ height = 0.32, color = INK, seed = 14, pose = 'sit' } 
     joint.userData.baseZ = joint.rotation.z;
 
     const a = i / TAIL_SEGS, b = (i + 1) / TAIL_SEGS;
-    const seg = new THREE.Mesh(new THREE.CylinderGeometry(
-      (TAIL_R0 + (TAIL_R1 - TAIL_R0) * b) * h,
-      (TAIL_R0 + (TAIL_R1 - TAIL_R0) * a) * h,
-      segLen, 5), material);
+    const rBase = (TAIL_R0 + (TAIL_R1 - TAIL_R0) * a) * h;
+    // a joint ball merged at the segment's base: jointed cylinders open a
+    // wedge of daylight at every bend (Frank) — the ball rides the hinge
+    // point so the curl stays covered at any pose, for zero extra meshes
+    const ball = new THREE.SphereGeometry(rBase * 1.05, 6, 5);
+    ball.translate(0, -segLen / 2, 0);
+    const seg = new THREE.Mesh(mergeSimple([
+      new THREE.CylinderGeometry(
+        (TAIL_R0 + (TAIL_R1 - TAIL_R0) * b) * h, rBase, segLen, 5),
+      ball,
+    ]), material);
     seg.name = 'tailseg';
     seg.position.y = segLen / 2;
     joint.add(seg);

@@ -43,6 +43,16 @@ export function makeTree({
     wood.push(seg);
   }
 
+  // a joint ball where two segments meet at an angle: cylinders touching
+  // edge-to-edge open a wedge of daylight at every node (Frank: "the tree
+  // has gaps at the nodes"), and a knot there both closes it and reads as
+  // the burl a real fork grows. Merged into the trunk mesh — zero draws.
+  function pushKnot(m, r) {
+    const knot = new THREE.DodecahedronGeometry(r, 0);
+    knot.applyMatrix4(m);
+    wood.push(knot);
+  }
+
   function grow(m, len, rad, level) {
     let tip;
     if (level === 0) {
@@ -65,6 +75,7 @@ export function makeTree({
       const droop = 0.12 + 0.14 * droopRnd() + (level - 2) * 0.05;
       const curve = (droopRnd() - 0.5) * 0.4;
       const bent = joint.clone().multiply(RY(curve)).multiply(RZ(droop));
+      pushKnot(joint, rad * 0.85);      // cover the sag's elbow
       pushSeg(bent, half, rad * 0.68, rad * 0.82);
       tip = bent.clone().multiply(T(0, half, 0));
     } else {
@@ -97,6 +108,7 @@ export function makeTree({
     }
 
     const kids = rnd() > 0.45 ? 3 : 2;
+    pushKnot(tip, rad * 0.72);          // cover the fork where the children lean away
     for (let i = 0; i < kids; i++) {
       const azimuth = (i / kids) * Math.PI * 2 + rnd() * 1.1;
       const spread = 0.34 + 0.34 * rnd();  // lean away from the parent limb
