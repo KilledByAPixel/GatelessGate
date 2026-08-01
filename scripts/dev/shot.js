@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 // scripts/dev/shot.js — self-contained one-shot screenshotter.
 //
-//   node scripts/dev/shot.js --kit dog --out after-dog
+//   node scripts/dev/shot.js --model dog --out sil-dog     # SILHOUETTE GRID (the primary
+//       judging artifact: front/3-4/side/top of ONE model, flat ink, auto-framed)
+//   node scripts/dev/shot.js --model dog --mode toon --out toon-dog
+//   node scripts/dev/shot.js --kit dog --out after-dog     # full workbench view (hand-authored VIEWS)
 //   node scripts/dev/shot.js --kit fan --view fan-side --out after-fan-side
 //   node scripts/dev/shot.js --case 1 --out redo-k1        # case NUMBER (or preface/afterword)
-//   node scripts/dev/shot.js --jobs <file.json>   # [{ "kit"|"case"|"expr": ..., "view"?, "out": ... }]
+//   node scripts/dev/shot.js --jobs <file.json>   # [{ "model"|"kit"|"case"|"expr": ..., "mode"?, "view"?, "out": ... }]
 //
 // Case jobs ride the router's deep links (#<id> / #preface / #afterword) — the
 // app's own "URL names what's on screen" invariant — instead of driving
@@ -44,11 +47,12 @@ const flag = (name) => {
 let jobs = [];
 if (flag('jobs')) {
   jobs = JSON.parse(await readFile(flag('jobs'), 'utf8'));
-} else if (flag('kit') || flag('case') || flag('expr')) {
-  jobs = [{ kit: flag('kit'), case: flag('case'), expr: flag('expr'), view: flag('view'), out: flag('out') }];
+} else if (flag('model') || flag('kit') || flag('case') || flag('expr')) {
+  jobs = [{ model: flag('model'), mode: flag('mode'), kit: flag('kit'), case: flag('case'), expr: flag('expr'), view: flag('view'), out: flag('out') }];
 }
-if (!jobs.length || jobs.some((j) => !j.out || !(j.kit || j.case || j.expr))) {
-  console.error('usage: shot.js --kit <model> [--view <view>] --out <name>');
+if (!jobs.length || jobs.some((j) => !j.out || !(j.model || j.kit || j.case || j.expr))) {
+  console.error('usage: shot.js --model <name> [--mode silhouette|toon] --out <name>');
+  console.error('       shot.js --kit <model> [--view <view>] --out <name>');
   console.error('       shot.js --case <slug> --out <name>');
   console.error('       shot.js --expr "<js returning a dataURL>" --out <name>  (add --page kit|app)');
   console.error('       shot.js --jobs <file.json>');
@@ -77,11 +81,13 @@ await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const BASE = `http://127.0.0.1:${server.address().port}`;
 
 // ---- one headless chrome, killed hard on the way out -------------------
-const pageUrlFor = (job) => job.kit
-  ? `${BASE}/dev/kit-preview.html?ink=0`
-  : job.case
-    ? `${BASE}/#${job.case}`
-    : (job.page === 'kit' ? `${BASE}/dev/kit-preview.html?ink=0` : `${BASE}/`);
+const pageUrlFor = (job) => job.model
+  ? `${BASE}/dev/model-shot.html?model=${encodeURIComponent(job.model)}&mode=${job.mode || 'silhouette'}`
+  : job.kit
+    ? `${BASE}/dev/kit-preview.html?ink=0`
+    : job.case
+      ? `${BASE}/#${job.case}`
+      : (job.page === 'kit' ? `${BASE}/dev/kit-preview.html?ink=0` : `${BASE}/`);
 
 const debugPort = 9300 + (process.pid % 600);
 const profile = path.join(tmpdir(), `gate-shot-${process.pid}`);
@@ -131,7 +137,13 @@ async function evalInPage(page, expr) {
   } finally { ws.close(); }
 }
 
-// ---- the two page recipes ---------------------------------------------
+// ---- the three page recipes ---------------------------------------------
+const modelExpr = () => `(async () => {
+  for (let i = 0; i < 200 && !window.ms; i++) await new Promise(r => setTimeout(r, 100));
+  if (!window.ms) return 'ERR: model-shot never exposed window.ms';
+  return ms.grid();
+})()`;
+
 const kitExpr = (kit, view) => `(async () => {
   for (let i = 0; i < 200 && !window.kp; i++) await new Promise(r => setTimeout(r, 100));
   if (!window.kp) return 'ERR: kit-preview never exposed window.kp';
@@ -174,7 +186,7 @@ try {
       page = await target(url);
       lastUrl = url;
     }
-    const expr = job.kit ? kitExpr(job.kit, job.view) : job.case ? caseExpr(job.case) : job.expr;
+    const expr = job.model ? modelExpr() : job.kit ? kitExpr(job.kit, job.view) : job.case ? caseExpr(job.case) : job.expr;
     const t0 = Date.now();
     // the fresh tab is still navigating when the target first appears, and an
     // evaluate started then dies with "Execution context was destroyed" —

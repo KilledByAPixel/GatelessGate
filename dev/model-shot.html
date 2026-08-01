@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>model shot</title>
+  <style> body { margin: 0; background: #f4efe4; } </style>
+</head>
+<body>
+  <!--
+    Single-model render harness for the screenshot pipeline (shot.js - -model).
+    Loads exactly ONE kit model — never the whole workbench — and exposes
+    window.ms for capturing it:
+
+      ms.capture(yawDeg, pitchDeg)  -> dataURL, auto-framed from the bbox
+      ms.grid()                     -> one dataURL: front / 3-4 / side / top,
+                                       labeled, composed on a 2D canvas
+      ms.error                      -> build error text, if the model threw
+
+    ?model=<name>   registry key below
+    ?mode=silhouette (default) | toon
+    Silhouette mode flattens every material to flat ink on paper: this book's
+    models are DESIGNED by silhouette (see the low-poly-modeling skill), so the
+    shape alone — no shading to flatter it — is the primary judging artifact.
+  -->
+  <script type="module">
+    import * as THREE from '../lib/three.module.js';
+    import {
+      makeDog, makeFox, makeCat, makeHorse, makeBuffalo, makeKoi, makeBird, makeBirds,
+      makeMonk, makeBuddha, makeHangingMonk, makeAssembly, makeRaisedFinger,
+      makeTree, makePine, makeOak, makeFlower, makeWildflowers,
+      makeGate, makeHut, makeVeranda, makeLantern, makeBell, makeFlag, makeScreen,
+      makeBowl, makeVase, makeBasin, makeBundle, makeDrum, makeRack, makeStall,
+      makeWheel, makeFurin, makePole, makeFan, makeScale, makeMoon, makeCave,
+      makeLights,
+    } from '../src/kit/index.js';
+    import { PAPER } from '../src/palette.js';
+
+    // name -> lazy builder. Only the requested entry ever runs. Variants that
+    // matter to the polish work (poses, stances) get their own keys.
+    const MODELS = {
+      dog: () => makeDog({}), fox: () => makeFox({}), cat: () => makeCat({}),
+      horse: () => makeHorse({}), buffalo: () => makeBuffalo({}),
+      koi: () => makeKoi({}), bird: () => makeBird({}), birds: () => makeBirds({}),
+      monk: () => makeMonk({}), 'monk-sit': () => makeMonk({ pose: 'sit' }),
+      'monk-point': () => makeMonk({ pose: 'point' }), 'monk-raise': () => makeMonk({ pose: 'raise' }),
+      buddha: () => makeBuddha({}), hangingmonk: () => makeHangingMonk({}),
+      assembly: () => makeAssembly({ count: 6, radius: 1.6 }),
+      finger: () => makeRaisedFinger({}),
+      tree: () => makeTree({}), pine: () => makePine({}), oak: () => makeOak({}),
+      flower: () => makeFlower({}), wildflowers: () => makeWildflowers({}),
+      gate: () => makeGate({}), hut: () => makeHut({}), veranda: () => makeVeranda({}),
+      lantern: () => makeLantern({}), bell: () => makeBell({}), flag: () => makeFlag({}),
+      screen: () => makeScreen({}), bowl: () => makeBowl({}), vase: () => makeVase({}),
+      basin: () => makeBasin({}), bundle: () => makeBundle({}), drum: () => makeDrum({}),
+      rack: () => makeRack({}), stall: () => makeStall({}), wheel: () => makeWheel({}),
+      furin: () => makeFurin({}), pole: () => makePole({}), fan: () => makeFan({}),
+      scale: () => makeScale({}), moon: () => makeMoon({}), cave: () => makeCave({}),
+    };
+
+    const params = new URLSearchParams(location.search);
+    const modelName = params.get('model') || 'dog';
+    const mode = params.get('mode') || 'silhouette';
+
+    const CELL = 640;
+    const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.setSize(CELL, CELL);
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(PAPER);
+    const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 200);
+
+    let error = null;
+    let center = new THREE.Vector3();
+    let radius = 1;
+    try {
+      const built = MODELS[modelName] ? MODELS[modelName]() : null;
+      if (!built) throw new Error(`unknown model "${modelName}" — keys: ${Object.keys(MODELS).join(' ')}`);
+      const obj = built.isObject3D ? built : (built.group || built.mesh);
+      if (!obj || !obj.isObject3D) throw new Error('builder returned no Object3D');
+      if (built.update) built.update(0, 0);      // settle handle-style models into their rest pose
+
+      if (mode === 'silhouette') {
+        // flat ink, no lights, outline shells hidden: the naked shape
+        const ink = new THREE.MeshBasicMaterial({ color: 0x14110c });
+        obj.traverse((o) => {
+          if (!o.isMesh) return;
+          if (o.userData.isOutline) { o.visible = false; return; }
+          o.material = ink;
+        });
+      } else {
+        scene.add(makeLights());
+      }
+      scene.add(obj);
+
+      const box = new THREE.Box3().setFromObject(obj);
+      box.getCenter(center);
+      radius = Math.max(0.001, box.getSize(new THREE.Vector3()).length() / 2);
+    } catch (e) {
+      error = String(e && e.message || e);
+      document.title = 'model shot ERR';
+    }
+
+    // yaw 0 = the +z face (every kit model faces +z), pitch in degrees up
+    function frame(yawDeg = 0, pitchDeg = 6) {
+      const yaw = yawDeg * Math.PI / 180, pitch = pitchDeg * Math.PI / 180;
+      const d = radius * 3.4;
+      camera.position.set(
+        center.x + Math.sin(yaw) * Math.cos(pitch) * d,
+        center.y + Math.sin(pitch) * d,
+        center.z + Math.cos(yaw) * Math.cos(pitch) * d,
+      );
+      camera.lookAt(center);
+      renderer.render(scene, camera);
+    }
+
+    function capture(yawDeg, pitchDeg) {
+      if (error) return 'ERR: ' + error;
+      frame(yawDeg, pitchDeg);
+      return renderer.domElement.toDataURL('image/jpeg', 0.9);
+    }
+
+    const DEFAULT_ANGLES = [
+      ['front', 0, 6], ['three-quarter', 40, 18], ['side', 90, 6], ['top', 15, 65],
+    ];
+    function grid(angles = DEFAULT_ANGLES) {
+      if (error) return 'ERR: ' + error;
+      const cols = 2, rows = Math.ceil(angles.length / cols);
+      const c = document.createElement('canvas');
+      c.width = cols * CELL; c.height = rows * CELL;
+      const ctx = c.getContext('2d');
+      angles.forEach(([label, yaw, pitch], i) => {
+        frame(yaw, pitch);
+        const x = (i % cols) * CELL, y = Math.floor(i / cols) * CELL;
+        ctx.drawImage(renderer.domElement, x, y);
+        ctx.fillStyle = '#5a5348';
+        ctx.font = '22px monospace';
+        ctx.fillText(`${modelName} · ${label} (${yaw}°/${pitch}°)`, x + 16, y + CELL - 18);
+        ctx.strokeStyle = '#d8d0bf';
+        ctx.strokeRect(x + 0.5, y + 0.5, CELL - 1, CELL - 1);
+      });
+      return c.toDataURL('image/jpeg', 0.88);
+    }
+
+    frame(40, 18);   // something on screen for a human opening this by hand
+    window.ms = { frame, capture, grid, error, scene, camera, renderer };
+  </script>
+</body>
+</html>
