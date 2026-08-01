@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeMonk, aimMonk,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, makeBlobShadow, addOutlines, toonMaterial, groundHeight,
 } from '../kit/index.js';
 
 const ID = 11;
@@ -33,7 +33,7 @@ export default {
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.22', 'fist', 'music'],
-  camera: { distance: 10.0, target: [0.6, 1.35, -0.6], azimuth: 0.55, polar: 1.25 },
+  camera: { distance: 10.8, target: [-0.2, 1.3, -0.6], azimuth: 0.55, polar: 1.25 },
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -46,23 +46,51 @@ export default {
     const path = makePath({ from: [5.2, 8.0], to: [-3.4, -17], width: 1.2, seed: ID, groundSeed: 21, wander: 1.3 });
     scene.add(path);
 
-    // the hut he retired to, on its rise
+    // the hut he retired to, on its rise — set OFF to the side of the road
+    // (Frank: the hill was blocking the main path; it used to sit at x -0.4,
+    // where the path's closest approach was 2.2 units from its center, well
+    // inside the 3.6 base — the road ran straight into the slope and vanished.
+    // At -2.8 the centerline clears the base by ~0.9 at its nearest sample).
+    const RISE = { x: -2.8, z: -2.6, rTop: 3.0, rBase: 3.6, h: 0.45, sides: 10 };
+    const RISE_TOP_Y = 0.22 + RISE.h / 2;          // the plateau's world height
     const rise = new THREE.Mesh(
-      new THREE.CylinderGeometry(3.0, 3.6, 0.45, 10),
+      new THREE.CylinderGeometry(RISE.rTop, RISE.rBase, RISE.h, RISE.sides),
       toonMaterial({ color: WASH.ground, flat: true }));
     rise.name = 'rise';
-    rise.position.set(-0.4, 0.22, -2.6);
+    rise.position.set(RISE.x, 0.22, RISE.z);
     scene.add(rise);
 
+    // Height of the rise's SURFACE at (x, z) — the grass plants on this (via
+    // composeWorld's groundFn below), so it must match the mesh, not an ideal
+    // cone: CylinderGeometry is a ten-sided frustum, and treating it as round
+    // floats blades mid-air off the flats and buries them at the corners. A
+    // regular polygon's radius toward angle a is apothem / cos(offset from the
+    // nearest face's midline); along any ray from the axis the slope face is a
+    // straight line from base edge to top edge, so the lerp between the two
+    // polygon radii IS the facet, exactly.
+    const SLICE = (Math.PI * 2) / RISE.sides;
+    const riseHeight = (x, z) => {
+      const dx = x - RISE.x, dz = z - RISE.z;
+      const d = Math.hypot(dx, dz);
+      if (d >= RISE.rBase) return 0;               // cheap out past any corner
+      const a = Math.atan2(dx, dz);                // CylinderGeometry runs sin/cos
+      const off = ((a % SLICE) + SLICE) % SLICE - SLICE / 2;
+      const poly = Math.cos(SLICE / 2) / Math.cos(off);   // polygon radius / circumradius
+      const top = RISE.rTop * poly, base = RISE.rBase * poly;
+      if (d >= base) return 0;
+      if (d <= top) return RISE_TOP_Y;
+      return RISE_TOP_Y * ((base - d) / (base - top));
+    };
+
     const hut = makeHut({ width: 2.4, height: 2.0, depth: 2.0 });
-    hut.position.set(-1.0, 0.44, -3.6);
+    hut.position.set(RISE.x - 0.6, 0.44, RISE.z - 1.0);
     hut.rotation.y = 0.62;
     scene.add(hut);
 
     // THE MONK, seated before his door with the fist up. pose 'raise' holds the
     // sleeve nearly vertical, offered to the air rather than aimed at anyone.
     const monk = makeMonk({ height: 1.5, pose: 'raise', hat: false });
-    monk.position.set(0.5, 0.44, -1.9);
+    monk.position.set(RISE.x + 0.9, 0.44, RISE.z + 0.7);
     scene.add(monk);
     // he is looking at his visitor, both times — a fist raised at nobody in
     // particular would read as a man alone rather than as an answer given
@@ -100,22 +128,27 @@ export default {
       trees: 4,
       keepout: [
         ...path.keepout(24, 1.1),
-        { x: -0.4, z: -2.6, r: 3.8 },
+        { x: RISE.x, z: RISE.z, r: 3.8 },
         { x: JOSHU.x, z: JOSHU.z, r: 1.2 },
       ],
       grassKeepout: [
         ...path.keepout(24, 0.95),
-        { x: -1.0, z: -3.6, r: 1.7 },
+        { x: hut.position.x, z: hut.position.z, r: 1.7 },
       ],
+      // the grass stands on the rise where the rise is, and on the terrain
+      // everywhere else — same seed the terrain itself is built from, so the
+      // meadow rides the slope up to the hall instead of knifing through it
+      groundFn: (x, z) => Math.max(groundHeight(x, z, { seed: 21 }), riseHeight(x, z)),
     });
 
-    for (const [p, rx, rz, op] of [
-      [monk.position, 0.6, 0.48, 0.40],
-      [JOSHU, 0.68, 0.52, 0.42],
-      [hut.position, 1.7, 1.3, 0.28],
+    for (const [p, rx, rz, op, y] of [
+      [monk.position, 0.6, 0.48, 0.40, RISE_TOP_Y],   // he sits on the plateau,
+      [hut.position, 1.7, 1.3, 0.28, RISE_TOP_Y],     // and so does his hut —
+      [JOSHU, 0.68, 0.52, 0.42, 0],                   // Joshu is down on the road
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = p.x; s.position.z = p.z;
+      s.position.y += y;   // atop the rise, not buried inside it at ground level
       scene.add(s);
     }
 
@@ -126,7 +159,7 @@ export default {
       new THREE.MeshBasicMaterial({ visible: false }));
     hit.name = 'fist-hit';
     hit.userData.noOutline = true;
-    hit.position.set(0.5, 0.44 + 1.05, -1.75);
+    hit.position.set(monk.position.x, 0.44 + 1.05, monk.position.z + 0.15);
     scene.add(hit);
 
     // ---- the moment: the same fist, twice --------------------------------
