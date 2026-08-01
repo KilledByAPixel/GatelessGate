@@ -125,7 +125,13 @@ export default {
     gavel.name = 'gavel';
     gavel.position.copy(stand.position);
     gavel.position.y += 0.24;
-    gavel.rotation.y = 0.6;                  // laid down, not squared to the block
+    // The handle (local +z) faces KYOZAN at the third seat, not the audience —
+    // it is his hand that takes it up (Frank: "rotate it about 180 degrees so
+    // the handle faces toward the monk"). Derived from where he actually
+    // stands, plus a few degrees off square so it still reads hand-laid.
+    gavel.rotation.y = Math.atan2(
+      kyozan.position.x - stand.position.x,
+      kyozan.position.z - stand.position.z) + 0.15;
     const headGeo = new THREE.CylinderGeometry(0.065, 0.065, 0.21, 8);
     headGeo.rotateZ(Math.PI / 2);            // the head lies on its side
     const handleGeo = new THREE.CylinderGeometry(0.020, 0.026, 0.34, 7);
