@@ -45,7 +45,7 @@ export function makeQuadruped({
   neck = null,           // { r, len, tilt } — a short column from chest to head
   snout = null,          // { r0, r1, len, fwd, up, tilt } — tilt noses the muzzle DOWN off horizontal
   ears = null,           // { r, h, x, up, fwd, tilt } — x/up/fwd AIM from the head's centre; see EARS ROOT ON THE SKULL below
-  horns = null,          // { r, len, x, up, fwd, sweep }
+  horns = null,          // { r, len, x, up, fwd, sweep, back?, curve? } — curve bends the spike into an arc
   hump = null,           // { r, scaleY, scaleZ, up, fwd }
   haunch = null,         // { r, scaleY, scaleZ, up, back } — the rump, over the hind legs
   shoulder = null,       // { r, scaleY, up, fwd } — and the mass over the front pair
@@ -80,6 +80,66 @@ export function makeQuadruped({
     geo.translate(0, -len / 2, 0);
     return geo;
   };
+
+  // A ring loft — the one cut behind every SHAPED limb, ear and horn here,
+  // the same construction koi.js lofts its body with. `stations` is
+  // [{ p: [x,y,z], r }] from ROOT to TIP: the root ring stays open (it is
+  // always buried inside a larger mass), the tip is fanned shut. Each ring
+  // sits square to the path's own tangent, so a curved run (the horn arc
+  // below) carries its rings around the bend without shearing. Basis
+  // convention matches koi.js — b2 x b1 = -tangent — so the same index
+  // pattern keeps every face outward.
+  const loft = (stations, seg, spin = 0) => {
+    const P = stations.map((s) => new THREE.Vector3(...s.p));
+    const last = P.length - 1;
+    const pos = [];
+    for (let i = 0; i < P.length; i++) {
+      const t = P[Math.min(i + 1, last)].clone().sub(P[Math.max(i - 1, 0)]).normalize();
+      const seed = Math.abs(t.x) > 0.9
+        ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+      const b1 = seed.cross(t).normalize();
+      const b2 = t.clone().cross(b1);
+      for (let j = 0; j < seg; j++) {
+        const a = spin + (j / seg) * Math.PI * 2;
+        const c = Math.cos(a) * stations[i].r, s = Math.sin(a) * stations[i].r;
+        pos.push(P[i].x + b2.x * c + b1.x * s,
+          P[i].y + b2.y * c + b1.y * s,
+          P[i].z + b2.z * c + b1.z * s);
+      }
+    }
+    const idx = [];
+    for (let i = 0; i < last; i++) {
+      const a = i * seg, b = a + seg;
+      for (let j = 0; j < seg; j++) {
+        const j2 = (j + 1) % seg;
+        idx.push(a + j, b + j, a + j2, a + j2, b + j, b + j2);
+      }
+    }
+    const tip = pos.length / 3;
+    pos.push(P[last].x, P[last].y, P[last].z);
+    for (let j = 0; j < seg; j++)
+      idx.push(tip, last * seg + (j + 1) % seg, last * seg + j);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
+    geo.setIndex(idx);
+    geo.computeVertexNormals();
+    return geo;
+  };
+
+  // A LIMB, NOT A DOWEL (Frank: "the legs are mostly just sticks", across
+  // every animal). A real leg spends its width unevenly: broad where the
+  // thigh leaves the body, a pinch at the knee line, a slim cannon bone, and
+  // a small flare back out at the foot. Four rings say all of that in one
+  // mesh — same count as the old cylinder, so no species pays a draw for it.
+  // `legTaper` keeps its job as the TOP's knob (the horse runs it at 1.3 for
+  // a broad forearm over a wire cannon); the foot stays anchored on legR so
+  // front and hind feet always match.
+  const limb = (rTop, rFoot, len, seg) => loft([
+    { p: [0, 0, 0], r: rTop * 1.18 },
+    { p: [0, -0.45 * len, 0], r: rFoot * 0.85 },
+    { p: [0, -0.82 * len, 0], r: rFoot * 0.68 },
+    { p: [0, -len, 0], r: rFoot * 0.85 },
+  ], seg);
 
   // Share of the leg's VERTICAL run taken by the thigh; the shin has the rest.
   // TWO THIRDS, which is not the obvious choice and is the whole trick. Splitting
@@ -119,8 +179,13 @@ export function makeQuadruped({
       // a real hinge: move or re-angle the thigh and the shin follows it. It
       // undoes the thigh's tilt to stand plumb again, and its length is solved
       // (not tuned) so the foot lands exactly on y = 0 — THE LEG RULE, at the
-      // other end of the leg.
-      const shin = new THREE.Mesh(hung(rKnee, rFoot, shinLen, 6), mat);
+      // other end of the leg. Its radii make the FOLD READ: pinched where it
+      // leaves the hock, a slim cannon below, the same small foot as the front.
+      const shin = new THREE.Mesh(loft([
+        { p: [0, 0, 0], r: rKnee },
+        { p: [0, -shinLen * 0.5, 0], r: rFoot * 0.66 },
+        { p: [0, -shinLen, 0], r: rFoot * 0.85 },
+      ], 6), mat);
       shin.name = 'shin';
       shin.position.y = -thighLen;                    // the hock, in the thigh's own frame
       shin.rotation.x = -knee;
@@ -129,10 +194,11 @@ export function makeQuadruped({
       g.add(thigh);
       continue;
     }
-    const leg = new THREE.Mesh(
-      new THREE.CylinderGeometry(legR * h * legTaper, legR * h, legTop, 6), mat);
+    // Hung from its top like the jointed pair, so the limb profile above can
+    // put its rings at stated fractions of the visible run.
+    const leg = new THREE.Mesh(limb(legR * h * legTaper, legR * h, legTop, 6), mat);
     leg.name = 'leg';
-    leg.position.set(sx * hx, legTop / 2, sz * hipZ * h);
+    leg.position.set(sx * hx, legTop, sz * hipZ * h);
     g.add(leg);
   }
 
@@ -229,16 +295,25 @@ export function makeQuadruped({
   // along a blend of the surface normal and world-up (out of the skull AND
   // standing up off it, the way an ear actually sits), then leaned a further
   // `tilt` outward — tilt still means what it always did.
-  const EAR_SINK = 0.96;                 // of the way to the surface — buried join
+  // 0.92, down from 0.96: at 0.96 the base circle still met the curved skull
+  // nearly edge-on and the join read as GLUED-ON (Frank, round three). Sinking
+  // almost a tenth of the radius buries the whole base rim inside the head.
+  const EAR_SINK = 0.92;                 // of the way to the surface — buried join
   if (ears) {
     const X = new THREE.Vector3(1, 0, 0);
     const UP = new THREE.Vector3(0, 1, 0);
     for (const sx of [-1, 1]) {
-      // A 5-gon cone's default spin points an EDGE at the front, so from the
-      // book's 3/4 cameras the ear read as a sliver; half a facet of pre-spin
-      // (π/5) centres a flat face on +z instead. Baked into the geometry so it
-      // cannot fight the placement below or the flick the species drive.
-      const m = new THREE.Mesh(spike(ears.r * h, ears.h * h, 5, Math.PI / 5), mat);
+      // Not a bare cone any more: the base ring FLARES a quarter wider than
+      // the stated radius and waists back in just above it, so the ear grows
+      // OUT of the skull the way a real ear roots in a muscle bulge, instead
+      // of a triangle resting on the surface. 5-gon, and the half-facet of
+      // pre-spin (π/5) still centres a flat face on +z so the book's 3/4
+      // cameras never catch an edge-on sliver.
+      const m = new THREE.Mesh(loft([
+        { p: [0, 0, 0], r: ears.r * h * 1.25 },
+        { p: [0, ears.h * h * 0.30, 0], r: ears.r * h * 0.92 },
+        { p: [0, ears.h * h, 0], r: ears.r * h * 0.02 },
+      ], 5, Math.PI / 5), mat);
       m.name = 'ear';
 
       const dir = new THREE.Vector3(
@@ -288,8 +363,32 @@ export function makeQuadruped({
     }
   }
 
+  // A HORN IS AN ARC, NOT A SPIKE (Frank, on the buffalo: "they're supposed to
+  // be ROUND, curved — like a devil's horn almost"). `horns.curve` (additive;
+  // absent keeps the legacy straight cone) lofts the rings along a quadratic
+  // arc instead: the horn leaves its base along local +y, then bends toward
+  // local -z — up, then hooking back — with the radius shrinking to a point.
+  // `curve` is how far the tip is displaced off the straight line, as a
+  // fraction of len; the arc trades some vertical reach for it (0.85·len), the
+  // way a bent finger stands shorter than a straight one. Base still hinges at
+  // the origin, so placement and the sweep/back channels work unchanged.
   if (horns) for (const sx of [-1, 1]) {
-    const m = new THREE.Mesh(spike(horns.r * h, horns.len * h, 6), mat);
+    let geo;
+    if (horns.curve) {
+      const N = 6, sts = [];
+      for (let i = 0; i <= N; i++) {
+        const t = i / N;
+        sts.push({
+          p: [0, (2 * (1 - t) * t * 0.55 + t * t * 0.85) * horns.len * h,
+            -t * t * horns.curve * horns.len * h],
+          r: Math.max(horns.r * h * Math.pow(1 - t, 0.8), horns.r * h * 0.04),
+        });
+      }
+      geo = loft(sts, 6);
+    } else {
+      geo = spike(horns.r * h, horns.len * h, 6);
+    }
+    const m = new THREE.Mesh(geo, mat);
     m.name = 'horn';
     m.position.set(sx * horns.x * h, bodyY + horns.up * h, horns.fwd * h);
     if (horns.back) m.rotation.x = -horns.back;  // swept back over the skull

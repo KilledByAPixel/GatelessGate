@@ -66,12 +66,13 @@ test('a knee splits the hind legs into leg + shin, and only the hind legs', () =
 
 // EARS ROOT ON THE SKULL — the fix for "the ears are hanging off the side of
 // its head" (Frank, on the fox and the dog both). { x, up, fwd } aim a ray
-// from the head's centre; the base snaps onto the sphere's surface, slightly
-// sunk (EAR_SINK = 0.96 of the radius) so the join is buried, never gapped.
-// Checked on the real species builds, not a synthetic option set, because the
-// dog attaches ears straight to the group while the fox re-parents them onto
-// a headPivot — the invariant must survive both.
-test('ear bases sit on the head sphere, slightly sunk, for dog and fox', () => {
+// from the head's centre; the base snaps onto the sphere's surface, sunk
+// (EAR_SINK = 0.92 of the radius — deepened from 0.96 after round three:
+// "still don't quite connect properly") so the whole base rim is buried,
+// never gapped. Checked on the real species builds, not a synthetic option
+// set, because the dog attaches ears straight to the group while the fox
+// re-parents them onto a headPivot — the invariant must survive both.
+test('ear bases sit on the head sphere, well sunk, for dog and fox', () => {
   const builds = [
     ['dog', makeDog({ height: 0.5 })],
     ['fox', makeFox({ height: 0.45 }).group],
@@ -85,12 +86,98 @@ test('ear bases sit on the head sphere, slightly sunk, for dog and fox', () => {
     root.traverse((o) => { if (o.name === 'ear' && !o.userData.isOutline) ears.push(o); });
     assert.strictEqual(ears.length, 2, `${label} has two ears`);
     for (const ear of ears) {
-      // the geometry is base-hinged (translated), so the mesh origin IS the base
+      // the geometry is base-hinged (root ring at the origin), so the mesh
+      // origin IS the base
       const d = ear.getWorldPosition(new THREE.Vector3()).distanceTo(centre);
-      assert.ok(Math.abs(d - r * 0.96) < r * 0.03,
+      assert.ok(Math.abs(d - r * 0.92) < r * 0.03,
         `${label} ear base rides the skull surface: d/r = ${(d / r).toFixed(3)}`);
     }
   }
+});
+
+// THE EAR GROWS OUT OF THE SKULL: the base ring flares wider than the ear's
+// stated radius, then waists back in above it — a bare cone resting its rim
+// on the surface was the "glued on" read.
+test('the ear base flares wider than the ear itself', () => {
+  const r = 0.09, hh = 0.2;
+  const { group } = makeQuadruped({ ears: { r, h: hh, x: 0.07, up: 0.3, fwd: 0.5 } });
+  const ear = group.children.find((c) => c.name === 'ear');
+  const p = ear.geometry.getAttribute('position');
+  // ring radii measured from the geometry itself: verts are ordered
+  // base-ring first (y = 0), so bucket by height fraction
+  let baseR = 0, waistR = 0;
+  for (let i = 0; i < p.count; i++) {
+    const y = p.getY(i), rr = Math.hypot(p.getX(i), p.getZ(i));
+    if (y < hh * 0.05) baseR = Math.max(baseR, rr);
+    else if (y < hh * 0.6) waistR = Math.max(waistR, rr);
+  }
+  assert.ok(baseR > r * 1.1, `base flares past r: ${baseR.toFixed(3)} vs ${r}`);
+  assert.ok(waistR < baseR * 0.85, `waist pulls back in: ${waistR.toFixed(3)} vs base ${baseR.toFixed(3)}`);
+});
+
+// A LIMB, NOT A DOWEL: the plain leg spends its radii like a leg — broad
+// thigh at the body, slim cannon low down, and a small flare back out at the
+// foot. Measured off the geometry so a regression to a straight cylinder
+// (identical ring radii) trips it.
+test('legs carry the limb profile: thigh > cannon < foot', () => {
+  const legR = 0.06;
+  const { group } = makeQuadruped({ legR, legTaper: 1.0 });
+  const leg = group.children.find((c) => c.name === 'leg');
+  const p = leg.geometry.getAttribute('position');
+  // hung from the top: y runs 0 (hip) down to -legTop (foot)
+  let top = 0; for (let i = 0; i < p.count; i++) top = Math.min(top, p.getY(i));
+  const radiusNear = (yFrac) => {
+    let best = Infinity, r = 0;
+    for (let i = 0; i < p.count; i++) {
+      const d = Math.abs(p.getY(i) - top * yFrac);
+      const rr = Math.hypot(p.getX(i), p.getZ(i));
+      if (d < best - 1e-9 || (d < best + 1e-9 && rr > r)) { best = d; r = rr; }
+    }
+    return r;
+  };
+  const hip = radiusNear(0), cannon = radiusNear(0.82), foot = radiusNear(1);
+  assert.ok(hip > legR * 1.15, `thigh broader than legR: ${hip.toFixed(3)}`);
+  assert.ok(cannon < legR * 0.75, `cannon slims: ${cannon.toFixed(3)}`);
+  assert.ok(foot > cannon * 1.1, `the foot flares back out: ${foot.toFixed(3)} vs ${cannon.toFixed(3)}`);
+  // and the hind shin repeats it below the hock
+  const kneed = makeQuadruped({ legR, legs: { knee: 0.35 } });
+  const shin = kneed.group.getObjectByName('shin');
+  const sp = shin.geometry.getAttribute('position');
+  let sTop = 0; for (let i = 0; i < sp.count; i++) sTop = Math.min(sTop, sp.getY(i));
+  let mid = 0, end = 0;
+  for (let i = 0; i < sp.count; i++) {
+    const y = sp.getY(i), rr = Math.hypot(sp.getX(i), sp.getZ(i));
+    if (Math.abs(y - sTop * 0.5) < -sTop * 0.1) mid = Math.max(mid, rr);
+    if (Math.abs(y - sTop) < -sTop * 0.05) end = Math.max(end, rr);
+  }
+  assert.ok(mid < legR * 0.75, `shin cannon slims: ${mid.toFixed(3)}`);
+  assert.ok(end > mid, 'shin foot flares back out');
+});
+
+// A HORN IS AN ARC: with `curve` set, the tip ends displaced BACK (-z) and
+// UP (+y) off the base plane — a crescent, not a spike — while the legacy
+// straight cone stays available (and straight) when curve is absent.
+test('horns.curve bends the horn back and up; no curve stays a cone', () => {
+  const opts = { r: 0.06, len: 0.5, x: 0.1, up: 0.3, fwd: 0.4, sweep: 0 };
+  const straight = makeQuadruped({ horns: opts });
+  const bent = makeQuadruped({ horns: { ...opts, curve: 0.5 } });
+  for (const g of [straight, bent]) g.group.updateMatrixWorld(true);
+  const tipOf = (group) => {
+    const horn = group.children.find((c) => c.name === 'horn');
+    const p = horn.geometry.getAttribute('position');
+    // the tip is the vertex farthest from the base (geometry origin)
+    let tip = new THREE.Vector3(), best = -1;
+    for (let i = 0; i < p.count; i++) {
+      const v = new THREE.Vector3(p.getX(i), p.getY(i), p.getZ(i));
+      if (v.length() > best) { best = v.length(); tip = v; }
+    }
+    return tip;
+  };
+  const st = tipOf(straight.group), bt = tipOf(bent.group);
+  assert.ok(Math.abs(st.z) < 1e-6, 'straight cone tip stays on its own axis');
+  assert.ok(bt.z < -0.15, `curved tip hooks back: z = ${bt.z.toFixed(3)}`);
+  assert.ok(bt.y > 0.3, `and still stands up: y = ${bt.y.toFixed(3)}`);
+  assert.ok(bt.y < st.y, 'the arc trades some reach for the hook');
 });
 
 test('the ear hinge channel (rotation.x) is left free for the species to animate', () => {

@@ -56,7 +56,7 @@ export function makeFox({ height = 0.45, color = INK, seed = 2 } = {}) {
   const { group } = makeQuadruped({
     height, color, seed,
     bodyR: BODY_R, bodyLen: BODY_LEN, bodyDrop: BODY_DROP,
-    legH: LEG_H, legR: 0.062, legTaper: 0.95, hipX: 0.105, hipZ: 0.31,
+    legH: LEG_H, legR: 0.062, legTaper: 1.0, hipX: 0.105, hipZ: 0.31,
     legs: { knee: KNEE },
     neck: { r: 0.078, len: 0.30 },
     head: { shape: 'sphere', r: 0.125, fwd: 0.55, up: 0.26 },

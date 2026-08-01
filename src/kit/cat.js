@@ -39,7 +39,7 @@ import { hash1 } from '../util/noise.js';
 
 const P = {
   bodyR: 0.25, bodyLen: 0.62, bodyDrop: 0.18,
-  legH: 0.46, legR: 0.068, legTaper: 0.90, hipX: 0.13, hipZ: 0.26,
+  legH: 0.46, legR: 0.068, legTaper: 1.0, hipX: 0.13, hipZ: 0.26,
 };
 
 const SIT_TILT = 0.80;      // radians the spine pitches up off horizontal
@@ -173,7 +173,9 @@ export function makeCat({ height = 0.32, color = INK, seed = 14, pose = 'sit' } 
       const axisY = (bodyY - drop) + s * Math.sin(tilt);
       const top = axisY - legDrop(xWorld);
       leg.scale.y = top / standLegTop;
-      leg.position.set(Math.sign(leg.position.x) * xWorld, top / 2, zWorld);
+      // the limb loft hangs from its top (quadruped.js), so the mesh origin
+      // sits AT the join, not at the leg's middle
+      leg.position.set(Math.sign(leg.position.x) * xWorld, top, zWorld);
     };
     // the shoulder has swung up and back over the haunch; the front legs stand
     // straight under wherever it ended up
