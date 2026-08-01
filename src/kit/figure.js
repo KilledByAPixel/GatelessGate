@@ -49,7 +49,9 @@ const CUFF_FLARE = 1.14;
 // that (k3 reads the length back off the bounding box's min.y and the cuff
 // width off its max.x; k11 parents a fist to the hem; k43/k48 hang a staff off
 // it), so this convention is API — the profile may be retuned, but it must
-// always span y from -len to 0 and be widest at the cuff.
+// always reach y = -len at the cuff and be widest there. (The shoulder ball
+// below pokes a little ABOVE y = 0; min.y and max.x, the two numbers cases
+// actually read, are untouched by it.)
 //
 // `r0` is the shoulder, `r1` the wrist; everything between is expressed in
 // terms of those two so a caller retuning either still gets the same shape.
@@ -66,14 +68,29 @@ export function sleeve({ height = 1.6, len = 0.34 * 1.6, r0 = 0.035, r1 = 0.065,
     [a, 0],                           // THE SHOULDER — origin, and the top of the bounds
     [0, 0],                           // closed
   ].map(([r, y]) => new THREE.Vector2(r, y));
-  const arm = new THREE.Mesh(new THREE.LatheGeometry(profile, 7), mat);
+  // THE SHOULDER BALL. The sleeve hinges at its origin, and any rotation
+  // tips its top ring away from the robe — a wedge of daylight at every
+  // posed arm ("the joints show there's a gap where the arm attaches" —
+  // Frank). A ball centred exactly on the hinge is rotation-invariant, so
+  // the join stays covered at ANY arm pose; merged into the sleeve's own
+  // geometry, it costs no mesh.
+  const ball = new THREE.SphereGeometry(a * 1.35, 7, 6);
+  const arm = new THREE.Mesh(
+    mergeSimple([new THREE.LatheGeometry(profile, 7), ball]), mat);
   arm.name = 'arm';
   return arm;
 }
 
-// A head: a sphere, centred on its own origin, the caller sets the height.
+// A head: slightly OBLONG, not a ball — narrowed a touch and stretched tall
+// ("slightly less spherical, slightly more oblong, shaped like a head is" —
+// Frank). Baked into the GEOMETRY, not mesh.scale: buddha.js parents its
+// topknot and urna to this mesh, and a scaled mesh would distort them.
+// Exported so those marks can place themselves against the true skull shell.
+export const HEAD_OBLONG = [0.96, 1.10, 1.0];
 export function sphereHead({ height = 1.6, r = 0.095, mat }) {
-  const head = new THREE.Mesh(new THREE.SphereGeometry(r * height, 14, 10), mat);
+  const geo = new THREE.SphereGeometry(r * height, 14, 10);
+  geo.scale(HEAD_OBLONG[0], HEAD_OBLONG[1], HEAD_OBLONG[2]);
+  const head = new THREE.Mesh(geo, mat);
   head.name = 'head';
   return head;
 }
@@ -178,14 +195,18 @@ export const SIT_PROFILE = [
   [0.064, 0.478],   // the neck opening
 ];
 
-// THE KNEES, in fractions of height. One flattened ellipsoid per side at ±x,
-// low and slightly forward (seated figures face local +z), reaching past the
-// shin roll so each side of the base is a lump of folded leg, not skirt:
-// reach = x + r·scale[0] = 0.3375·h against the lathe's 0.25·h. The inner
-// two-thirds of each ellipsoid is buried in the lathe (the buried-join rule),
-// so the merge reads as one mass with two knees, and the dip between their
-// crests is the valley the folded cuffs rest in.
-const KNEE = { r: 0.085, scale: [1.5, 0.8, 1.2], x: 0.21, y: 0.065, z: 0.055 };
+// THE KNEES, in fractions of height. One flattened ellipsoid per side,
+// its long axis YAWED forward-out so the lump runs the way a folded thigh
+// actually lies — from the hip, forward and out to the knee. The first cut
+// pointed the long axis straight sideways at mid-block height and Frank
+// read it as anatomy from nowhere: "weird kinda legs or knees coming out
+// from the side... like he's sitting on something." Angling the mass and
+// carrying it a little higher (toward the top of the leg block, where a
+// knee crests on crossed legs) keeps the ±x width that says "folded legs"
+// while reading as legs folded FORWARD. The inner half of each ellipsoid
+// stays buried in the lathe (the buried-join rule), and the dip between
+// the crests is still the valley the folded cuffs rest in.
+const KNEE = { r: 0.09, scale: [1.5, 0.75, 1.1], x: 0.18, y: 0.105, z: 0.085, yaw: 0.5 };
 
 // The whole seated body — lathe core + both knees — as ONE geometry.
 // Exported because the assembly's instanced crowd must be the same person:
@@ -201,6 +222,7 @@ export function seatedBodyGeometry({ height, width = 1, segments = 10 } = {}) {
   const knees = [-1, 1].map((side) => {
     const k = new THREE.SphereGeometry(KNEE.r * height, 8, 6);
     k.scale(KNEE.scale[0], KNEE.scale[1], KNEE.scale[2]);
+    k.rotateY(-side * KNEE.yaw);      // long axis angles forward-out: a folded thigh
     k.translate(side * KNEE.x * width * height, KNEE.y * height, KNEE.z * height);
     return k;
   });

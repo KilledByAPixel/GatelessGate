@@ -26,8 +26,12 @@ test('sleeves hinge at the shoulder (geometry translated, not centred)', () => {
   // thing it is for by a factor of eighteen. Same reason k14-cat.test.js
   // passes `true` here.
   const box = new THREE.Box3().setFromObject(arm, true);
-  // the mesh's origin (shoulder) must sit at the TOP of its bounds
-  assert.ok(box.max.y <= arm.position.y + 0.02, 'sleeve not hinged at shoulder');
+  // The mesh's origin (shoulder) must sit at the top of its CLOTH — only the
+  // SHOULDER BALL (r = r0·1.35·h, merged at the hinge to bury the arm/body
+  // join at any pose) may crest above it. An un-translated (centred) sleeve
+  // overshoots this bound by ~0.19, so the check still catches what it is for.
+  const ballR = 0.035 * 1.35 * 1.6;
+  assert.ok(box.max.y <= arm.position.y + ballR + 0.01, 'sleeve not hinged at shoulder');
 });
 
 // The widest radius a mesh's own geometry reaches inside a y band — the
@@ -73,19 +77,25 @@ test('the seated figure folds real legs — knees at ±x, lap valley, torso inse
   // THE KNEES: the widest thing the figure owns, low, and LEFT/RIGHT —
   // the base must be clearly wider (±x, where the folded legs point) than
   // it is deep (±z), which is exactly what no solid of revolution can do
+  // (Round three narrowed and YAWED the knee masses forward — Frank read the
+  // straight-sideways pair as "weird legs coming out from the side" — so the
+  // reach thresholds came down from 0.32·H with the retune; the shape claims
+  // are unchanged: wide, low, and wider than deep.)
   const knees = maxRadiusInBand(body, 0, 0.16 * H);
   const kneeX = maxAxisInBand(body, 0, 0.16 * H, 'x');
   const kneeZ = maxAxisInBand(body, 0, 0.16 * H, 'z');
-  assert.ok(knees > 0.32 * H, `a wide knee base: ${knees}`);
-  assert.ok(kneeX > 0.32 * H, `knee masses reach past the cloth core: ${kneeX}`);
-  assert.ok(kneeX > kneeZ * 1.25, `folded legs, not a skirt — wider than deep: ${kneeX} vs ${kneeZ}`);
+  assert.ok(knees > 0.28 * H, `a wide knee base: ${knees}`);
+  assert.ok(kneeX > 0.28 * H, `knee masses reach past the cloth core: ${kneeX}`);
+  assert.ok(kneeX > kneeZ * 1.1, `folded legs, not a skirt — wider than deep: ${kneeX} vs ${kneeZ}`);
 
-  // THE LAP: a near-horizontal turn — the lap ring (0.175·h) keeps under
-  // 45% of the knee width, and the run above it stays inset
-  const lap = maxRadiusInBand(body, 0.17 * H, 0.20 * H);
+  // THE LAP: a near-horizontal turn — the lap ring (0.175·h) keeps well
+  // under the knee width, and the run above it stays inset. Measured in ±z:
+  // the raised knee crests share this y band at ±x, so depth is what reads
+  // the lathe's own inset — the valley between the knees.
+  const lap = maxAxisInBand(body, 0.17 * H, 0.20 * H, 'z');
   const aboveLap = maxRadiusInBand(body, 0.20 * H, 0.30 * H);
-  assert.ok(lap > 0 && lap < knees * 0.45, `the lap turns in hard: ${lap} vs ${knees}`);
-  assert.ok(aboveLap > 0 && aboveLap < knees * 0.45, `the torso rises inset: ${aboveLap} vs ${knees}`);
+  assert.ok(lap > 0 && lap < knees * 0.52, `the lap turns in hard: ${lap} vs ${knees}`);
+  assert.ok(aboveLap > 0 && aboveLap < knees * 0.52, `the torso rises inset: ${aboveLap} vs ${knees}`);
 
   // THE STRAIGHT BACK ("they should all kinda look like Buddha"): the chest
   // ring near the shoulder keeps at least 85% of the blouse ring's width —

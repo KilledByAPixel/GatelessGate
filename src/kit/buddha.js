@@ -1,7 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { INK, ACCENT } from '../palette.js';
-import { makeFigure } from './figure.js';
+import { makeFigure, HEAD_OBLONG } from './figure.js';
 
 // The Buddha is NOT special (Frank, overnight pass 2: "Buddha is not supposed
 // to have a whole special different look — use the same biped kit everyone
@@ -50,11 +50,14 @@ export function makeBuddha({ height = 1.6, color = INK } = {}) {
   g.name = 'buddha';
 
   const head = g.children.find((c) => c.name === 'head');
+  // parameters.radius is the sphere BEFORE the oblong bake (figure.js scales
+  // the geometry, not the mesh) — stretch the marks' placements by the same
+  // factors so sink depths keep meaning "fraction of the actual shell"
   const r = head.geometry.parameters.radius;
 
   const knot = new THREE.Mesh(new THREE.SphereGeometry(KNOT_R * r, 8, 6), head.material);
   knot.name = 'topknot';
-  knot.position.y = KNOT_SINK * r;   // on the crown, centred — the seal of the silhouette
+  knot.position.y = KNOT_SINK * r * HEAD_OBLONG[1];   // on the crown, centred — the seal of the silhouette
   head.add(knot);
 
   const urna = new THREE.Mesh(
@@ -64,8 +67,8 @@ export function makeBuddha({ height = 1.6, color = INK } = {}) {
   urna.userData.noOutline = true;   // a dot this small would drown in its own hull
   urna.position.set(
     0,
-    Math.sin(URNA_ELEV) * r * URNA_SINK,
-    Math.cos(URNA_ELEV) * r * URNA_SINK);
+    Math.sin(URNA_ELEV) * r * URNA_SINK * HEAD_OBLONG[1],
+    Math.cos(URNA_ELEV) * r * URNA_SINK * HEAD_OBLONG[2]);
   head.add(urna);
 
   return g;

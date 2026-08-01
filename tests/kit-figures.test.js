@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeBuddha } from '../src/kit/buddha.js';
-import { makeFigure } from '../src/kit/figure.js';
+import { makeFigure, seatedBodyGeometry } from '../src/kit/figure.js';
 import { makeAssembly } from '../src/kit/assembly.js';
 import { ACCENT } from '../src/palette.js';
 
@@ -147,10 +147,22 @@ test('makeAssembly is one instanced, grounded, deterministic crowd', () => {
   assert.ok(torso > 0 && torso < knees * 0.55, `the torso rises inset above the lap: ${torso} vs ${knees}`);
   assert.ok(obi > 0 && obi < blouse, `the obi pinch reads as a belt: ${obi} vs ${blouse}`);
   assert.ok(obi < knees * 0.7, `a seated figure, not a cone: ${obi} vs ${knees}`);
-  // THE CROWD MATCHES: knee reach is figure.js's own number — x-offset
-  // 0.21·h scaled by the crowd's 0.8 slim, plus the knee's un-slimmed
-  // half-width 0.1275·h, at FIG_H = 1.5 — and the base is wider (±x) than
-  // it is deep (±z): folded legs, even at fog distance
+  // THE CROWD MATCHES: its knee reach is measured against seatedBodyGeometry
+  // ITSELF at the crowd's own height/slim — the real claim is that the crowd
+  // feeds the same geometry the hero monks wear, not a private approximation.
+  // (The old pin re-derived the reach from KNEE's raw numbers by hand and
+  // broke the day the knees were re-angled; comparing like against like
+  // can't.) And the base stays wider (±x) than deep (±z): folded legs,
+  // even at fog distance.
+  const bandX = (geo) => {
+    let m = 0;
+    const p = geo.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      if (p.getY(i) < 0 || p.getY(i) > 0.16) continue;
+      m = Math.max(m, Math.abs(p.getX(i)));
+    }
+    return m;
+  };
   let kneeX = 0, kneeZ = 0;
   const pos = a.geometry.attributes.position;
   for (let i = 0; i < pos.count; i++) {
@@ -158,9 +170,9 @@ test('makeAssembly is one instanced, grounded, deterministic crowd', () => {
     kneeX = Math.max(kneeX, Math.abs(pos.getX(i)));
     kneeZ = Math.max(kneeZ, Math.abs(pos.getZ(i)));
   }
-  assert.ok(Math.abs(kneeX - (0.21 * 0.8 + 0.1275) * 1.5) < 2e-3,
+  assert.ok(Math.abs(kneeX - bandX(seatedBodyGeometry({ height: 1.5, width: 0.8 }))) < 2e-3,
     `the crowd folds the hero's knees: ${kneeX}`);
-  assert.ok(kneeX > kneeZ * 1.25, `wider than deep — legs, not a skirt: ${kneeX} vs ${kneeZ}`);
+  assert.ok(kneeX > kneeZ * 1.1, `wider than deep — legs, not a skirt: ${kneeX} vs ${kneeZ}`);
   const geoBox = a.geometry.boundingBox || (a.geometry.computeBoundingBox(), a.geometry.boundingBox);
   assert.ok(geoBox.max.y > 0.8 && geoBox.max.y < 1.1, `crowd figure stays crowd-sized: ${geoBox.max.y}`);
   const m = new THREE.Matrix4();
