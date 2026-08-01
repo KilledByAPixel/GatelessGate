@@ -691,6 +691,12 @@ addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight') { const n = neighbor(koanSlug, +1); if (n) enter(n); }
     else if (e.key === 'ArrowLeft') { const p = neighbor(koanSlug, -1); if (p) enter(p); }
   }
+  // and open the book from its cover: on the contents page the right arrow
+  // walks straight into the preface — the spine's first page — so a keyboard
+  // reader can go cover-to-cover without ever touching the mouse
+  else if (mode === 'menu' && !typing && e.key === 'ArrowRight') {
+    enter('preface');
+  }
 });
 // On the WINDOW, not the canvas: during the intro the title text sits in a DOM
 // panel over the canvas, so a click on that side never reached a canvas-only

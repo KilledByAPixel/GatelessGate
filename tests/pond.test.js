@@ -85,10 +85,11 @@ for (const [label, mod, x, z] of [
   });
 }
 
-// Case 33's seal moved into the water (Frank, overnight pass 2): the koi wear
-// the case's one red, and the mat — vermillion in case 30, where the answer is
-// sitting on it — goes to ink here. The pairing with case 30 is the point, so
-// the check is written against BOTH scenes: same pond, opposite carriers.
+// The pair's reds (Frank, overnight pass 2 + morning notes): in case 33 the
+// koi wear the case's one red; in case 30 the red is the URNA on the seated
+// buddha's forehead. The mat is dark in BOTH scenes — same mat, same spot,
+// occupied in 30 and bare in 33 — so the check is written against both:
+// same pond, opposite carriers, and the mat never competes with either.
 test('case 33: the koi carry the red and the mat has gone to ink', () => {
   const root = staged(k33);
   const red = new THREE.Color(ACCENT).getHexString();
@@ -105,16 +106,21 @@ test('case 33: the koi carry the red and the mat has gone to ink', () => {
     'the mat gave the red up — one accent per koan');
 });
 
-test('case 30: the mat still holds its red, and its koi stay ink', () => {
+test('case 30: the red is the urna alone — mat dark, koi ink', () => {
   const root = staged(k30);
   const red = new THREE.Color(ACCENT).getHexString();
   let cushion = null;
+  let urna = null;
   const bodies = [];
   root.scene.traverse((o) => {
     if (o.name === 'cushion' && !cushion) cushion = o;
+    if (o.name === 'urna' && !urna) urna = o;
     if (o.name === 'koi-body') bodies.push(o);
   });
-  assert.equal(cushion.material.color.getHexString(), red, 'case 30 keeps the vermillion mat');
+  assert.ok(urna, 'the seated buddha carries his forehead dot');
+  assert.equal(urna.material.color.getHexString(), red, 'the urna is the case\'s red');
+  assert.notEqual(cushion.material.color.getHexString(), red,
+    'the mat under him is not red (Frank\'s morning note)');
   for (const b of bodies) {
     assert.notEqual(b.material.color.getHexString(), red, 'case 30 koi are ink, not accent');
   }
