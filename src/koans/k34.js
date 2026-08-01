@@ -6,6 +6,7 @@ import {
   composeWorld, makePath, makeHut, makeBirds, makeMonk, aimMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
+import { mergeSimple } from '../kit/scatter.js';
 
 const ID = 34;
 
@@ -61,31 +62,75 @@ export default {
     mat.rotation.y = 0.2;
     scene.add(mat);
 
-    // THE SCROLLS. Pale rolls stacked and spilled from the door — all the same
-    // wash now (Frank: no single red scroll; the path carries the accent).
+    // THE SCROLLS. The old version was 22 loose cylinders flung across the
+    // whole mat — Frank: "what are all of the cylinders around on the ground
+    // for?" A scroll is only legible as a scroll when it behaves like one, so
+    // now the overflow is STACKED: a cord-wood pile by the door (a bottom row,
+    // a nested row, a crown), a few rolls tumbled off its skirt, and two
+    // scrolls lying PART-UNROLLED on the mat — a pale ribbon of paper ending
+    // in its own roll, which is the one silhouette that says "scroll" and not
+    // "pipe". Fewer, fatter, and all of it merged into three meshes by tone.
     const scrolls = new THREE.Group();
     scrolls.name = 'scrolls';
-    for (let i = 0; i < 22; i++) {
-      const len = 0.34 + hash1(i * 7 + 1, ID) * 0.20;
-      const rad = 0.038 + hash1(i * 7 + 2, ID) * 0.016;
-      const tone = 0.12 + hash1(i * 7 + 3, ID) * 0.14;
-      const roll = new THREE.Mesh(
-        new THREE.CylinderGeometry(rad, rad, len, 7),
-        toonMaterial({ color: wash(tone), flat: true }));
-      roll.name = 'scroll';
-      roll.rotation.z = Math.PI / 2;
-      // heaped: a rough pile near the door thinning out across the mat
-      const a = hash1(i * 7 + 4, ID) * Math.PI * 2;
-      const r = 0.15 + hash1(i * 7 + 5, ID) * 1.35;
-      const tier = Math.floor(hash1(i * 7 + 6, ID) * 3);
-      roll.position.set(
-        -0.1 + Math.cos(a) * r,
-        0.04 + rad + tier * rad * 1.9,
-        -0.8 + Math.sin(a) * r * 0.8,
-      );
-      roll.rotation.y = hash1(i * 7 + 7, ID) * Math.PI;
-      roll.rotation.x = (hash1(i * 7 + 8, ID) - 0.5) * 0.3;
-      scrolls.add(roll);
+    const PILE = { x: -0.3, z: -1.25 };       // by the door edge of the mat
+    const AX = 0.2;                            // rolls lie along the mat's grain
+    const dirX = Math.cos(AX), dirZ = -Math.sin(AX);   // roll axis
+    const perpX = Math.sin(AX), perpZ = Math.cos(AX);  // across the pile
+    const R = 0.058;                           // one gauge, like a bound set
+    const rollGeo = (x, y, z, yaw, len) => {
+      const g = new THREE.CylinderGeometry(R, R, len, 7);
+      g.rotateZ(Math.PI / 2);
+      g.rotateY(yaw);
+      g.translate(x, y, z);
+      return g;
+    };
+    const light = [], dark = [], paper = [];
+    // the pile: five below, three nested in the gaps, one on the crown
+    const rows = [[-2, -1, 0, 1, 2], [-1.5, -0.5, 0.5], [0]];
+    rows.forEach((row, tier) => {
+      row.forEach((k, j) => {
+        const i = tier * 7 + j;
+        const jx = (hash1(i * 3 + 1, ID) - 0.5) * 0.04;
+        const len = 0.44 + hash1(i * 3 + 2, ID) * 0.12;
+        const g = rollGeo(
+          PILE.x + perpX * k * 0.125 + dirX * jx,
+          0.05 + R + tier * R * 1.72,
+          PILE.z + perpZ * k * 0.125 + dirZ * jx,
+          AX + (hash1(i * 3 + 3, ID) - 0.5) * 0.14,
+          len);
+        (hash1(i * 5 + 4, ID) < 0.5 ? light : dark).push(g);
+      });
+    });
+    // a few tumbled off the skirt, still within reach of the pile
+    for (let i = 0; i < 4; i++) {
+      const a = 0.6 + i * 1.35 + hash1(i * 9 + 5, ID) * 0.8;
+      const r = 0.42 + hash1(i * 9 + 6, ID) * 0.30;
+      const g = rollGeo(
+        PILE.x + Math.cos(a) * r,
+        0.05 + R,
+        PILE.z + Math.sin(a) * r * 0.8,
+        hash1(i * 9 + 7, ID) * Math.PI,
+        0.40 + hash1(i * 9 + 8, ID) * 0.14);
+      (i % 2 ? light : dark).push(g);
+    }
+    // two part-unrolled: a ribbon of paper running out from the pile, the
+    // remaining roll waiting at its far end
+    for (const [fx, fz, len] of [[0.42, 0.91, 0.95], [0.97, 0.10, 0.62]]) {
+      const w = 0.34;
+      const strip = new THREE.BoxGeometry(w, 0.014, len);
+      strip.rotateY(Math.atan2(fx, fz));
+      strip.translate(PILE.x + fx * (0.32 + len / 2), 0.058, PILE.z + fz * (0.32 + len / 2));
+      paper.push(strip);
+      paper.push(rollGeo(
+        PILE.x + fx * (0.32 + len + 0.02),
+        0.05 + R,
+        PILE.z + fz * (0.32 + len + 0.02),
+        Math.atan2(fx, fz) + Math.PI / 2, w + 0.06));
+    }
+    for (const [geos, tone] of [[light, 0.11], [dark, 0.24], [paper, 0.06]]) {
+      const m = new THREE.Mesh(mergeSimple(geos), toonMaterial({ color: wash(tone), flat: true }));
+      m.name = 'scroll';
+      scrolls.add(m);
     }
     scene.add(scrolls);
 
