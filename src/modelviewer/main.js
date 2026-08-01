@@ -139,6 +139,13 @@ function buildSidebar() {
 }
 
 function refreshMarks(key) {
+  if (key == null) {           // everything changed (checklist cleared)
+    sideList.querySelectorAll('.row').forEach((r) => {
+      r.querySelector('.dot').className = dotClass(r.dataset.key);
+    });
+    bindFeedback();
+    return;
+  }
   const row = sideList.querySelector(`.row[data-key="${key}"] .dot`);
   if (row) row.className = dotClass(key);
   if (key === currentKey) bindFeedback();

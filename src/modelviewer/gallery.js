@@ -38,12 +38,14 @@ export function createGallery({ getKit, getRoster, toast, onChecklistChange }) {
         <button id="gallery-back">&larr; back</button>
         <span id="gallery-title"></span>
         <button id="gallery-export">copy checklist</button>
+        <button id="gallery-clear">clear notes</button>
       </div>
       <div id="gallery-grid"></div>`;
     document.body.append(canvas, container);
     grid = container.querySelector('#gallery-grid');
     container.querySelector('#gallery-back').onclick = () => history.back();
     container.querySelector('#gallery-export').onclick = exportChecklist;
+    container.querySelector('#gallery-clear').onclick = clearChecklist;
 
     renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
     renderer.setPixelRatio(1);
@@ -182,6 +184,18 @@ export function createGallery({ getKit, getRoster, toast, onChecklistChange }) {
         .then(() => toast('checklist copied'))
         .catch(() => fallbackExport(md))
       : fallbackExport(md);
+  }
+
+  function clearChecklist() {
+    const n = checklist.count();
+    if (!n) { toast('nothing to clear'); return; }
+    if (!confirm(`Clear all marks and notes? ${n} model${n === 1 ? '' : 's'} marked — this cannot be undone.`)) return;
+    checklist.clear();
+    // reset the cell UI in place — the meshes don't need a rebuild for this
+    grid.querySelectorAll('.mark-ok.on, .mark-needs.on').forEach((b) => b.classList.remove('on'));
+    grid.querySelectorAll('.cell-note').forEach((i) => { i.value = ''; });
+    onChecklistChange && onChecklistChange(null);      // null = everything changed
+    toast('checklist cleared');
   }
 
   // headless / insecure contexts have no clipboard API — show a selectable box

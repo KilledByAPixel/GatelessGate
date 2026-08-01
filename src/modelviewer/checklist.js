@@ -23,6 +23,15 @@ export function set(key, patch) {
   return cur;
 }
 
+export function count() {
+  return Object.keys(load()).length;
+}
+
+// wipe everything — callers confirm with the user first
+export function clear() {
+  localStorage.removeItem(LS_KEY);
+}
+
 // Markdown export, needs-work first then ok, in roster order — the shape the
 // polish feedback loop already speaks (`- [ ] key — note`). A note with no
 // verdict counts as needs-work: it was worth writing down.
