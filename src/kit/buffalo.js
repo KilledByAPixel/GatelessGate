@@ -21,7 +21,10 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     height, color, seed,
     // few segments so flatShading facets it — a smooth capsule reads as a lozenge
     bodyR: 0.40, bodyLen: 0.86, bodyDrop: 0.36,
-    legH: 0.46, legR: 0.125, hipX: 0.24, hipZ: 0.34,
+    // legTaper 1.05: the shared limb profile wants a thigh to start from —
+    // at the old default 0.82 the heaviest animal in the book had the
+    // thinnest leg tops
+    legH: 0.46, legR: 0.125, legTaper: 1.05, hipX: 0.24, hipZ: 0.34,
     hump: { r: 0.40, scaleY: 0.86, scaleZ: 1.00, up: 0.24, fwd: 0.18 },
     // up + r*scaleY must clear bodyR (0.40) for these to stand PROUD of the
     // barrel line rather than sit flush inside it — the same trap the hump
@@ -48,11 +51,17 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // A first pass set `up` from taste (0.02, then 0.30 chasing the k37
     // crescent) without re-deriving it against head.up, which fell to -0.34 in
     // the same round — the base drifted half a height clear of the skull and
-    // read as sprouting from the hump instead. Everything ABOVE the base is
-    // still free: tip height above the base is len*cos(back)*cos(sweep) (both
-    // rotations shorten the vertical reach, since each tips the cone away from
-    // straight-up), and back/sweep alone steer the crescent's direction.
-    horns: { r: 0.055, len: 1.10, x: 0.14, up: -0.07, fwd: 0.54, sweep: 0.55, back: 0.66 },
+    // read as sprouting from the hump instead.
+    //
+    // THE HORN IS SMALL, THICK AND CURVED — "round, curved, like a devil's
+    // horn almost, small curved pointy horn" (Frank; the long straight cones
+    // read as "spikes coming up from its ears"). `curve` (quadruped.js) lofts
+    // the cone along an arc bending toward local -z, so with a wide `sweep`
+    // the pair leaves the SIDES of the skull, stands up-and-out, and hooks
+    // back over the neck like local/refs/buffaloHead.png. Short (0.52, was
+    // 1.10) and fat at the base (0.10, was 0.055): a devil's horn, not a
+    // fencepost.
+    horns: { r: 0.11, len: 0.85, x: 0.16, up: -0.07, fwd: 0.54, sweep: 0.55, back: 0.25, curve: 0.60 },
     tail: { kind: 'strand', segments: 7, length: 0.74, thickness: 0.05, up: 0.16, back: 0.62, color: tailColor },
   });
   group.name = 'buffalo';
