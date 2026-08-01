@@ -183,10 +183,16 @@ const STAND_PROFILE = [
 // stays honest — the "long run up the skirt" is here the run up the shins,
 // and the "skirt gathering" is the lap turn itself.
 export const SIT_PROFILE = [
+  // The cloth core is SLIMMER than the knees on purpose (round four: at
+  // 0.25·h its widest ring out-bulged everything and Frank read the base as
+  // furniture — "is he sitting on top of, like, a cushion? what is the round
+  // thing underneath him?"). The lathe now stays inside the knee masses, so
+  // the ±x crests are the widest thing the figure owns and the base reads
+  // as tucked, folded legs — not a pouf he perches on.
   [0.020, 0.000],   // hem centre, closed on the ground
-  [0.240, 0.000],   // the hem pooling round the crossed shins
-  [0.250, 0.055],   // SHIN ROLL — the lathe's own widest ring, INSIDE the knees
-  [0.230, 0.150],   // top of the leg block: the run stays WIDE, not a taper
+  [0.205, 0.000],   // the hem pooling round the crossed shins
+  [0.215, 0.050],   // SHIN ROLL — the lathe's own widest ring, INSIDE the knees
+  [0.195, 0.150],   // top of the leg block: the run stays WIDE, not a taper
   [0.140, 0.175],   // THE LAP — a near-horizontal shelf in to the waist
   [0.126, 0.220],   // OBI — the tie
   [0.142, 0.265],   // the blouse pushed up over the knot

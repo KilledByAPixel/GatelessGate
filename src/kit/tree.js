@@ -75,7 +75,7 @@ export function makeTree({
       const droop = 0.12 + 0.14 * droopRnd() + (level - 2) * 0.05;
       const curve = (droopRnd() - 0.5) * 0.4;
       const bent = joint.clone().multiply(RY(curve)).multiply(RZ(droop));
-      pushKnot(joint, rad * 0.85);      // cover the sag's elbow
+      pushKnot(joint, rad * 0.81);      // cover the sag's elbow (trimmed 5% — proud knots read as galls, Frank)
       pushSeg(bent, half, rad * 0.68, rad * 0.82);
       tip = bent.clone().multiply(T(0, half, 0));
     } else {
@@ -108,7 +108,7 @@ export function makeTree({
     }
 
     const kids = rnd() > 0.45 ? 3 : 2;
-    pushKnot(tip, rad * 0.72);          // cover the fork where the children lean away
+    pushKnot(tip, rad * 0.68);          // cover the fork where the children lean away (trimmed 5%, same reason)
     for (let i = 0; i < kids; i++) {
       const azimuth = (i / kids) * Math.PI * 2 + rnd() * 1.1;
       const spread = 0.34 + 0.34 * rnd();  // lean away from the parent limb

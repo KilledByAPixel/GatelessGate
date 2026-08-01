@@ -23,7 +23,7 @@ export function makeTail({ segments = 7, length = 1.0, thickness = 0.06, color =
     // meeting at a bend open a wedge of daylight at every joint of the
     // strand (Frank, on tails generally) — the ball keeps each node covered
     // however the verlet folds it, for zero extra meshes
-    const ball = new THREE.SphereGeometry(r0 * 1.05, 6, 5);
+    const ball = new THREE.SphereGeometry(r0, 6, 5);   // was r0*1.05 — proud of the cylinder wall, it beaded the tail (Frank)
     ball.translate(0, spacing / 2, 0);
     const m = new THREE.Mesh(
       mergeSimple([new THREE.CylinderGeometry(r1, r0, spacing, 6), ball]), mat);

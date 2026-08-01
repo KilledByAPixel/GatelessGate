@@ -219,7 +219,7 @@ export function makeCat({ height = 0.32, color = INK, seed = 14, pose = 'sit' } 
     // a joint ball merged at the segment's base: jointed cylinders open a
     // wedge of daylight at every bend (Frank) — the ball rides the hinge
     // point so the curl stays covered at any pose, for zero extra meshes
-    const ball = new THREE.SphereGeometry(rBase * 1.05, 6, 5);
+    const ball = new THREE.SphereGeometry(rBase, 6, 5);   // was rBase*1.05 — proud of the cylinder wall, it beaded the tail (Frank)
     ball.translate(0, -segLen / 2, 0);
     const seg = new THREE.Mesh(mergeSimple([
       new THREE.CylinderGeometry(
