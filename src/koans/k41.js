@@ -102,8 +102,16 @@ export default {
     drop(0.96, -3.24, 0.038, 'drop');
     scene.add(blood);
 
-    const pine = makePine({ height: 3.8, seed: ID, color: wash(0.55) });
-    pine.position.set(3.6, 0, -3.4);
+    // The pine. It used to stand at (3.6, -3.4) in wash(0.55) — hard against
+    // the right frame edge, stone-pale, cropped to a stack of faceted pads
+    // that read as boulders piled beside the cave, with its lowest bough
+    // hovering over the snow like a floating mound (Frank flagged both). Moved
+    // to the open snow on the LEFT, where the whole silhouette fits the frame,
+    // and dropped to the book's standard pine ink (WASH.dark) so it separates
+    // from the rock instead of matching it. A tree again.
+    const PINE = { x: -4.2, z: -3.2 };
+    const pine = makePine({ height: 4.2, seed: ID, color: WASH.dark });
+    pine.position.set(PINE.x, 0, PINE.z);
     scene.add(pine);
 
     const world = composeWorld(scene, {
@@ -118,7 +126,7 @@ export default {
       keepout: [
         { x: -0.4, z: -5.2, r: 3.0 },
         { x: 1.5, z: -1.9, r: 1.2 },
-        { x: 3.6, z: -3.4, r: 1.4 },
+        { x: PINE.x, z: PINE.z, r: 1.6 },
       ],
       // snow covers everything: no grass anywhere near the clearing
       grassKeepout: [{ x: 0.4, z: -3.0, r: 13 }],
