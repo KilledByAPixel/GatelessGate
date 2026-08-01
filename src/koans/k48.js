@@ -21,9 +21,11 @@ const ID = 48;
 // a line that stayed up would turn into a signpost.
 //
 // Ummon's fan is the other half of the case — and the fan is what this staging
-// leads with: both figures hold one (the pupil a small paper fan, Kembo a big
-// red ōgi raised in place of the stick), so the last object in the collection
-// is in every hand that answers.
+// leads with: Kembo raises a big red ōgi in place of the stick. ONE fan only
+// (Frank, round 2: "we only want one person to have a fan; there's a weird
+// fan floating in front of the other figure") — the pupil's small paper copy
+// is gone and his hands are simply empty, which is the right state for the
+// one who is still asking.
 
 const DRAW = 0.9;
 const HOLD = 3.4;
@@ -93,22 +95,12 @@ export default {
     stroke.rotation.z = 0.04;                     // a hand's tilt, not a ruler's
     scene.add(stroke);
 
-    // the other figure — Ummon, who answered the same question with a fan.
-    // He HOLDS the fan up in his hand (Frank: an old-fashioned folding fan in
-    // the other guy's hand), an open paper arc on a short handle.
+    // the pupil, empty-handed — he asked the question; the fan is the answer,
+    // and only the one who answers holds it
     const PH = 1.6;
     const pupil = makeMonk({ height: PH });
     pupil.position.set(3.2, 0, 2.4);
     aimMonk(pupil, kembo.position);
-
-    // same kit piece as Kembo's, at a hand-fan size and in paper tones — the
-    // teacher's copy is the big red one, which is how the case reads on sight
-    const fan = makeFan({ radius: 0.34, angle: Math.PI * 0.7, handleLen: 0.18, seed: ID + 1 });
-    // set it in his raised-ish right hand, out in front of the chest
-    fan.position.set(0.2 * PH, 0.58 * PH, 0.16 * PH);
-    fan.rotation.z = -0.5;
-    fan.rotation.y = 0.9;             // turned so the leaf shows its face, not its edge
-    pupil.add(fan);
     scene.add(pupil);
 
     // a roadside stone, now just scenery
