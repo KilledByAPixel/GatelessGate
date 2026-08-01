@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, wash } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeMoon, makeMonk,
-  makeLights, makeBlobShadow, addOutlines,
+  walkHeading, makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
 const ID = 35;
@@ -22,6 +22,9 @@ const ID = 35;
 // the seal of the case and the only warm thing in the picture.
 
 const CYCLE = 26;         // seconds for one full apart-and-together
+const LANE = 0.4;         // each soul keeps to her own side of the width-1.4 road
+                          // (k36's travellers do the same at 0.45 on a 1.6 road):
+                          // they pass BESIDE each other now, never through
 
 export default {
   id: ID,
@@ -143,15 +146,22 @@ export default {
         // same distance from the meeting point, in opposite directions
         const sep = (1 - Math.cos(phase * Math.PI * 2)) * 0.5;      // 0 together, 1 apart
         for (const [i, s] of souls.entries()) {
-          const d = (i === 0 ? 1 : -1) * sep * 3.4;
+          const lane = i === 0 ? 1 : -1;                             // her fixed side of the road
+          const d = lane * sep * 3.4;
           const t = 0.5 + d * 0.055;                                 // along the road
           const p = path.sample(Math.max(0.02, Math.min(0.98, t)));
           // a little walk in them: a gait bob and a slight roll/yaw sway, so
           // they read as two people walking rather than two markers sliding
           // along a rail (Frank's note). Out of phase between the two.
           const gait = clock * 2.3 + i * Math.PI;
-          s.position.set(p.x, Math.abs(Math.sin(gait)) * 0.035, p.z);
-          s.rotation.y = Math.atan2(-(i === 0 ? -p.perp.z : p.perp.z), (i === 0 ? -p.perp.x : p.perp.x))
+          // each keeps to her own side (Frank: once one's on one side, once
+          // the other) — the meeting is two of her side by side, not a merge
+          s.position.set(p.x + p.perp.x * LANE * lane, Math.abs(Math.sin(gait)) * 0.035, p.z + p.perp.z * LANE * lane);
+          // face along the road, the way she goes when they separate — the
+          // kit's walkHeading of her outbound travel (perp is (-dz, dx), so
+          // the tangent is (perp.z, -perp.x)); this is the same atan2 the
+          // case always had, named
+          s.rotation.y = walkHeading(lane * p.perp.z, lane * -p.perp.x)
             + Math.sin(clock * 1.1 + i) * 0.06;
           s.rotation.z = Math.sin(gait) * 0.04;
           // where they meet, the pair reads as one whole person
