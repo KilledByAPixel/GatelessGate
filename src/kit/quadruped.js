@@ -43,7 +43,7 @@ export function makeQuadruped({
   legBury = 0.06,        // how far the leg TOPS sink up into the barrel, x height — raise it to close a leg/body gap
   legs = null,           // { knee } — radians of bend in the HIND pair; 0/absent = posts
   // head
-  head = { shape: 'sphere', r: 0.20, fwd: 0.56, up: 0.22 },
+  head = { shape: 'sphere', r: 0.20, fwd: 0.56, up: 0.22 },   // + scaleX/scaleY/scaleZ (default 1): squish the skull in its own tilted frame
   neck = null,           // { r, len, tilt } — a short column from chest to head
   snout = null,          // { r0, r1, len, fwd, up, tilt } — tilt noses the muzzle DOWN off horizontal
   ears = null,           // { r, h, x, y, z, tilt } — DIRECT base offsets from the head's centre; see EARS ARE PLACED DIRECTLY below
@@ -270,6 +270,11 @@ export function makeQuadruped({
     : new THREE.Mesh(new THREE.SphereGeometry(head.r * h, 12, 10), mat);
   headMesh.name = 'head';
   headMesh.position.set(0, headY, headZ);
+  // the skull SQUISH: a sphere r is one number, and no real head is a ball —
+  // per-axis scales (defaulting to 1, same idiom as hump.scaleY) let a
+  // species flatten, lengthen or narrow it without a new shape. Applied in
+  // the mesh's own frame, so a tilted head squishes along its own axes.
+  headMesh.scale.set(head.scaleX ?? 1, head.scaleY ?? 1, head.scaleZ ?? 1);
   // A head held level projects like a drawer pulled out of the chest. Nosing it
   // down sinks the back of the skull into the shoulder and leaves the muzzle as
   // the thing that sticks out, which is what the silhouette wants.

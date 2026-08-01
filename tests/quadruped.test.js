@@ -148,6 +148,25 @@ test('the knee ball caps the hock joint inside the thigh mesh', () => {
     `the ball caps below the hinge: ${minY} vs joint at ${-thighLen}`);
 });
 
+// THE SKULL SQUISH: head.scaleX/scaleY/scaleZ (default 1) reshape the head
+// per axis — "not just a sphere... an x y z scale, defaulting to one, to
+// tweak the kind of shape of the head" (Frank).
+test('head scaleX/scaleY/scaleZ squish the skull, and default to exactly 1', () => {
+  const r = 0.2;
+  const head = (opts) => {
+    const { group } = makeQuadruped({ head: { shape: 'sphere', r, fwd: 0.5, up: 0.2, ...opts } });
+    return group.children.find((c) => c.name === 'head');
+  };
+  const plain = head({});
+  assert.deepEqual([plain.scale.x, plain.scale.y, plain.scale.z], [1, 1, 1]);
+
+  const squished = head({ scaleX: 0.7, scaleY: 1.3, scaleZ: 1.6 });
+  const bb = new THREE.Box3().setFromObject(squished);
+  assert.ok(Math.abs((bb.max.x - bb.min.x) - 2 * r * 0.7) < 0.01, 'narrower across');
+  assert.ok(Math.abs((bb.max.y - bb.min.y) - 2 * r * 1.3) < 0.01, 'taller');
+  assert.ok(Math.abs((bb.max.z - bb.min.z) - 2 * r * 1.6) < 0.01, 'longer fore-aft');
+});
+
 // legBury is the dial that closes a leg/body gap: the belly formula is exact
 // only at the barrel's cylindrical mid-span, so a species whose hips ride
 // near the capsule's end caps needs to sink its leg tops deeper by hand.
