@@ -207,6 +207,19 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // past the hem plus the staff's own radius, so it reads as the teacher's
 // staff set down beside him, within reach). Standing keeps 0.26 exactly —
 // every standing elder in the book is framed around it.
+// `staffAng` is the BEARING of the staff plant, radians around +y off the
+// local +x axis (toward +z). It exists because of a systematic staging
+// coincidence the grip audit found: cases aim a standing elder at something
+// up-scene with aimMonk (which turns local +x to the target) and the shipped
+// camera looks over his shoulder at the same target — so a staff planted ON
+// the +x axis sits exactly on the camera→figure→target line and reads as
+// growing out of the wearer's hat (k11/k19/k21/k22/k27/k31/k34/k36/k39).
+// Swinging the standing plant ~50° off the facing axis keeps it the same
+// distance out — past the hem, beside the resting sleeve — but breaks the
+// alignment for over-the-shoulder cameras. Seated figures face local +z
+// (the folded sleeves), so their +x plant already IS the side plant and
+// stays at 0. Cases with a bearing-sensitive staging can override with the
+// `staffAng` option (additive; 0 = the old on-axis plant).
 // `fold` is the folded-arm pitch (radians off plumb, toward local +z) and it
 // is per-stance because the lap is. The old single angle (-1.15) was tuned
 // against the bell-shaped robe, whose fat slope happened to catch the cuffs;
@@ -217,8 +230,8 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // in the lap, joined not floating.
 const KNEEL = 0.5;
 const STANCES = {
-  stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.735, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, fold: -1.15 },
-  sit: { profile: SIT_PROFILE, shoulder: 0.40, sleeve: 0.24, head: 0.50, hat: 0.545, armZ: 0.03, staff: 0.7, staffX: 0.3625, fold: -0.48 },
+  stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.735, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.9, fold: -1.15 },
+  sit: { profile: SIT_PROFILE, shoulder: 0.40, sleeve: 0.24, head: 0.50, hat: 0.545, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, fold: -0.48 },
   kneel: {
     profile: mixProfile(STAND_PROFILE, SIT_PROFILE, KNEEL),
     shoulder: mix(0.60, 0.40, KNEEL),
@@ -228,6 +241,7 @@ const STANCES = {
     armZ: mix(0, 0.03, KNEEL),
     staff: mix(1.2, 0.7, KNEEL),
     staffX: mix(0.26, 0.3625, KNEEL),
+    staffAng: mix(0.9, 0, KNEEL),
     fold: mix(-1.15, -0.48, KNEEL),
   },
 };
@@ -246,7 +260,7 @@ const STANCES = {
 // remove an arm.
 export function makeFigure({
   height = 1.6, color = INK, stance = 'stand', arms = 'rest',
-  hat = true, stout = 1, elder = false, mat: matIn,
+  hat = true, stout = 1, elder = false, staffAng, mat: matIn,
 } = {}) {
   const g = new THREE.Group();
   g.name = 'figure';
@@ -305,8 +319,23 @@ export function makeFigure({
     staffGeo.translate(0, staffLen / 2, 0);   // base at the local origin -> stands on the ground
     const staff = new THREE.Mesh(staffGeo, mat);
     staff.name = 'staff';
-    staff.position.set(st.staffX * s * height, 0, 0.06 * height);
-    staff.rotation.z = 0.08;
+    // polar plant: same distance out, swung `staffAng` around the figure
+    // (see the STANCES note). ang = 0 reproduces the old on-axis plant
+    // bit-exactly: (staffX·s·h, 0, 0.06·h).
+    const ang = staffAng !== undefined ? staffAng : st.staffAng;
+    staff.position.set(
+      Math.cos(ang) * st.staffX * s * height, 0,
+      Math.sin(ang) * st.staffX * s * height + 0.06 * height);
+    // NEAR-VERTICAL, not leaned in. The old 0.08 rad lean tipped the top
+    // toward the figure, which put the shaft at ~0.194·h off the axis right
+    // at hat-brim height — the brim reaches 0.192·h — so from roughly half
+    // of all camera bearings the staff read as growing out of the wearer's
+    // hat (k11/k19/k21/k22/k27/k31/k34/k36/k39, the "not in the right
+    // place" audit). At 0.02 rad the shaft clears the brim by ~0.05·h and
+    // still passes within a hand's reach of the resting cuff, so it reads
+    // as the same planted, gripped staff — just beside the monk instead of
+    // through his hat. The plant distances (staffX) are untouched.
+    staff.rotation.z = 0.02;
     g.add(staff);
   }
   return g;

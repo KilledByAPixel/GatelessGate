@@ -24,10 +24,11 @@ const POSES = {
 
 export function makeMonk({
   height = 1.6, stout = 1, color = INK, hat = true, pose = 'stand', elder = false, arms = true,
+  staffAng,   // optional plant-bearing override, passed through to the figure
 } = {}) {
   const p = POSES[pose] || POSES.stand;
   const g = makeFigure({
-    height, stout, color, hat, elder,
+    height, stout, color, hat, elder, staffAng,
     stance: p.stance,
     arms: arms ? p.arms : null,
   });

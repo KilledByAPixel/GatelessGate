@@ -95,19 +95,34 @@ test('the elder\'s staff plants outside the seated hem, and the standing plant i
   }
 
   // The standing transform is regression-sensitive — every standing elder in
-  // the book is framed around it. Bit-exact against the shipped values.
+  // the book is framed around it. Bit-exact against the shipped values:
+  // the same 0.26·h out, but planted 0.9 rad off the facing axis, because
+  // an on-axis plant sat exactly on the camera→figure→target line whenever
+  // a case aimed the elder up-scene (the grip audit: the staff "grew out of
+  // his hat" in nine cases). Lean is 0.02, near-vertical — the old 0.08
+  // walked the top back over the brim.
   for (const [height, stout] of [[1.6, 1], [1.66, 1], [1.72, 1.05]]) {
     const staff = makeFigure({ stance: 'stand', elder: true, height, stout }).getObjectByName('staff');
-    assert.strictEqual(staff.position.x, 0.26 * stout * height);
+    assert.strictEqual(staff.position.x, Math.cos(0.9) * 0.26 * stout * height);
     assert.strictEqual(staff.position.y, 0);
-    assert.strictEqual(staff.position.z, 0.06 * height);
-    assert.strictEqual(staff.rotation.z, 0.08);
+    assert.strictEqual(staff.position.z, Math.sin(0.9) * 0.26 * stout * height + 0.06 * height);
+    assert.strictEqual(staff.rotation.z, 0.02);
+    // the plant still clears the standing hem (0.212·h) by the staff's own
+    // radius, in the plant's own direction
+    const dist = Math.hypot(staff.position.x, staff.position.z);
+    assert.ok(dist > (0.212 + 0.018) * stout * height, `standing staff outside the hem: ${dist}`);
   }
+
+  // staffAng is an override: 0 restores the old on-axis plant bit-exactly
+  const onAxis = makeFigure({ stance: 'stand', elder: true, height: 1.6, staffAng: 0 }).getObjectByName('staff');
+  assert.strictEqual(onAxis.position.x, 0.26 * 1.6);
+  assert.strictEqual(onAxis.position.z, 0.06 * 1.6);
 
   // kneel sits between the two, and still clears its own (blended) hem
   const kneel = makeFigure({ stance: 'kneel', elder: true, height: 1.6 }).getObjectByName('staff');
   const KNEEL_HEM = (0.212 + 0.310) / 2;   // widest ring of the blended profile
-  assert.ok(kneel.position.x > (KNEEL_HEM + STAFF_R) * 1.6, `kneeling staff: ${kneel.position.x}`);
+  const kneelDist = Math.hypot(kneel.position.x, kneel.position.z);
+  assert.ok(kneelDist > (KNEEL_HEM + STAFF_R) * 1.6, `kneeling staff: ${kneelDist}`);
 });
 
 test('monk keeps its contract: poses, arms:false, point/raise angles distinct', () => {
