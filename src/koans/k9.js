@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT_DEEP, wash } from '../palette.js';
 import {
-  composeWorld, makeBuddha, makeMonk, aimMonk,
+  composeWorld, makeBuddha, makeMonk, aimMonk, makeTree,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -27,8 +27,10 @@ export default {
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.16', 'bell', 'music'],
   // sat back and tilted up: the subject is six units tall and the point is
-  // that you are small in front of it
-  camera: { distance: 17.5, target: [0.4, 3.2, -3.0], azimuth: 0.55, polar: 1.16 },
+  // that you are small in front of it. The colossus is NOT centered — he sits
+  // off at the left third, backed by a mountain flank, discovered rather than
+  // presented; the right of the frame holds the scale tree and the two monks.
+  camera: { distance: 17, target: [0.2, 2.6, -1.6], azimuth: 0.55, polar: 1.32 },
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -36,6 +38,12 @@ export default {
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.024);       // thinner: the scale needs depth
     scene.add(makeLights());
+
+    // Where the monument sits: off to the side and deeper, against the
+    // mountain flank, so the frame discovers him instead of presenting him.
+    // Everything anchored to the statue — strata, hit cylinder, keepouts, the
+    // scale tree — derives from this one point.
+    const CX = -5.6, CZ = -5.2;
 
     // ---- the strata -------------------------------------------------------
     // Terraces stepping up to the plinth, each one paler than the last as it
@@ -75,7 +83,7 @@ export default {
         y += 0.045;
       }
     }
-    strata.position.set(0.4, 0, -3.0);
+    strata.position.set(CX, 0, CZ);
     scene.add(strata);
 
     // ---- the figure -------------------------------------------------------
@@ -91,18 +99,31 @@ export default {
     // strata, the smallness of the two monks — was staged around.
     const SEAT_Y = y - 0.9;      // deeper: the wider pooled hem is the buried part
     const buddha = makeBuddha({ height: 10.2, color: ACCENT_DEEP });
-    buddha.position.set(0.4, SEAT_Y, -3.0);
+    buddha.position.set(CX, SEAT_Y, CZ);
+    buddha.rotation.y = 0.30;    // gaze out across the frame, over the monks
     scene.add(buddha);
+
+    // ---- the scale tree ---------------------------------------------------
+    // What tells you how big he is. An ordinary full-grown tree — the same
+    // species and size as the midground scatter, so nothing reads imported —
+    // rooted on the lowest stratum at the statue's flank: its whole life fits
+    // inside the newest band of his time, and its crown barely clears his
+    // elbow. Ink like every other tree; the accent stays his.
+    const TREE_X = CX + 7.8, TREE_Z = CZ + 2.2;   // radius ~8.1: on band 0's top
+    const tree = makeTree({ height: 3.5, seed: 907 });
+    tree.position.set(TREE_X, BANDS[0].h, TREE_Z);
+    tree.rotation.y = 2.1;
+    scene.add(tree);
 
     // the monk who came to ask why, at the foot of the lowest terrace
     const monk = makeMonk({ height: 1.58 });
-    monk.position.set(4.2, 0, 5.4);
+    monk.position.set(2.8, 0, 1.6);
     aimMonk(monk, buddha.position);
     scene.add(monk);
 
     // and Seijo, who answered that the question answers itself
     const seijo = makeMonk({ height: 1.64, elder: true });
-    seijo.position.set(6.0, 0, 4.0);
+    seijo.position.set(4.4, 0, 0.6);
     aimMonk(seijo, monk.position);
     scene.add(seijo);
 
@@ -112,11 +133,31 @@ export default {
       trees: 3,
       treeRing: [13, 22],
       keepout: [
-        { x: 0.4, z: -3.0, r: 9.4 },       // the whole monument
-        { x: 4.2, z: 5.4, r: 1.2 },
-        { x: 6.0, z: 4.0, r: 1.2 },
+        { x: CX, z: CZ, r: 9.4 },          // the whole monument (tree included)
+        { x: 2.8, z: 1.6, r: 1.2 },
+        { x: 4.4, z: 0.6, r: 1.2 },
+        // the near flank's footprint: a scatter tree that spawns inside the
+        // mountain pokes its crown through the slope and reads as a hole
+        { x: -22.7, z: -15.3, r: 19 },
       ],
-      grassKeepout: [{ x: 0.4, z: -3.0, r: 8.8 }],
+      grassKeepout: [{ x: CX, z: CZ, r: 8.8 }],
+      // the left forest cluster moves behind the near flank's center plane —
+      // forests ignore keepouts, and a forest crown that spawns mid-slope
+      // pokes through the mountain face and reads as a hole in the rock
+      forests: [
+        { center: [-31, 0, -36], spread: 12, count: 55 },
+        { center: [16, 0, -31], spread: 14, count: 40, color: wash(0.55) },
+      ],
+      mountains: [
+        { count: 8, distance: 52, arcSpan: 3.6, color: wash(0.16) },
+        { count: 5, distance: 33, arcSpan: 2.4, color: wash(0.28), hScale: 0.65 },
+        // the flank he sits against: two near peaks pulled in behind the
+        // statue's shoulder, so he is carved into a slope, not parked on a
+        // lawn. Seed/distance/hScale chosen so the big peak's toe lands ~1
+        // unit behind the statue's back — the strata run into the slope, the
+        // statue himself stays clear of it.
+        { count: 2, distance: 26, arcCenter: -0.82, arcSpan: 0.5, color: wash(0.34), hScale: 0.62, seed: 9009 },
+      ],
     });
 
     for (const [p, rx, rz, op] of [
@@ -135,7 +176,7 @@ export default {
       new THREE.MeshBasicMaterial({ visible: false }));
     hit.name = 'buddha-hit';
     hit.userData.noOutline = true;
-    hit.position.set(0.4, SEAT_Y + 3.0, -3.0);   // covers the taller crown too
+    hit.position.set(CX, SEAT_Y + 3.0, CZ);      // covers the taller crown too
     scene.add(hit);
 
     // ---- the moment: the oldest sound in the book -------------------------
