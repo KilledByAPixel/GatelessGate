@@ -48,17 +48,18 @@ export default {
     buddha.position.set(1.2, 0.34, SEAT_Z);
     scene.add(buddha);
 
-    // The lotus, held at his waist on the centre line — the one thing in the
-    // case that actually happens, so it sits dead centre of him and is big
-    // enough to read from the back of the scene.
-    // Sized against his HEAD, not against a real lotus: the case is staged wide,
-    // and at this distance anything smaller than the skull is a red dot.
-    const flower = makeFlower({ height: 0.42, bloom: 0.52, petals: 7 });
-    // Re-derived for the figure-kit buddha: his folded cuffs come down at
-    // 0.187·H above the seat (0.40·H shoulder minus 0.24·H sleeve at the
-    // seated fold angle) and 0.141·H forward — world (0.64, −4.775) here —
-    // so the bloom (base + 0.42) rides just over the joined hands.
-    flower.position.set(1.2, 0.40, SEAT_Z + 0.34);   // held over the hands, clear of the lap
+    // The lotus, STANDING ON THE GROUND before the raised stone — the one
+    // thing in the case that actually happens. It used to be "held" at his
+    // waist, which from the shipped lens meant a red mass punched through his
+    // torso (Frank: "way too big, going through his body — it has to be DOWN,
+    // in front of him"). So it is down: planted in the open ground between
+    // the stone and the assembly, on his centre line, where the sight line to
+    // him passes well over it. Still deliberately big — at this staging
+    // distance a real-scale lotus is a red dot — big is fine; intersecting
+    // is not.
+    const flower = makeFlower({ height: 0.5, bloom: 0.62, petals: 7 });
+    const FLOWER_Z = SEAT_Z + 1.5;                   // just clear of the stone's skirt
+    flower.position.set(1.2, 0, FLOWER_Z);
     flower.rotation.z = -0.14;
     scene.add(flower);
 
@@ -98,8 +99,13 @@ export default {
         { x: 1.2, z: -2.2, r: 4.0 },     // the assembly
         { x: 3.05, z: -0.7, r: 1.2 },    // Kasyapa
       ],
-      // only the stone platform covers ground; the assembly sits in the grass
-      grassKeepout: [{ x: 1.2, z: SEAT_Z, r: 1.2 }],
+      // the stone platform covers ground, and the meadow steps back from the
+      // grounded lotus so the bloom is not buried in blades; the assembly
+      // sits in the grass
+      grassKeepout: [
+        { x: 1.2, z: SEAT_Z, r: 1.2 },
+        { x: 1.2, z: FLOWER_Z, r: 0.9 },
+      ],
     });
 
     for (const [p, rx, rz, op] of [
