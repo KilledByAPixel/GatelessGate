@@ -18,12 +18,20 @@ import { GRAY_DARK, WASH } from '../palette.js';
 //
 // A scatter tree is slender and vertical. This one is short in the bole,
 // throws four heavy, knotty primaries — one of them a near-horizontal hero
-// limb that reaches well clear of the crown mass, the one k27/k38/the
-// showcase/the workbench all hang a man from via canopyPoints[0] (the
-// sorted-outward anchor list; the hero limb's own tip is always the
-// outermost by construction) — and carries a domed crown WIDER than the
-// tree is tall. It has to read as "that one" from across the meadow before
-// anyone reads a word of the case.
+// limb, a low bough that elbows out of the crown — and carries a domed crown
+// WIDER than the tree is tall. It has to read as "that one" from across the
+// meadow before anyone reads a word of the case.
+//
+// The hero limb is MODERATED by default (overnight pass 2, Frank: "that
+// weird extra branch... an extra long branch for some reason"): it finishes
+// at the crown's fringe as a shoulder in the mass, not a spear past it.
+// `reach: 1` restores the full reaching limb for a scene that stages
+// something on it — the workbench and showcase hang the case-5 monk from
+// canopyPoints[0] (the sorted-outward anchor list, so the fringe anchor is
+// always first whichever lobe is outermost). The option only stretches the
+// hero limb's own segments: the deterministic stream is consumed in the same
+// order at any reach, so every other limb and every crown lobe of a given
+// seed stays exactly where it was.
 //
 // makeTree cannot be talked into this silhouette — its bole radius, limb spread
 // and crown size are all fixed fractions of `height` with no way in — so the
@@ -41,6 +49,11 @@ export function makeOak({
   trunkColor = GRAY_DARK,
   canopyColor = WASH.deep,
   lobes = 16,
+  // 0 (default): the hero limb finishes at the crown fringe — a low bough's
+  // shoulder, not a spear. 1: the legacy full reach, for a scene that hangs
+  // something from the limb. Values between interpolate. Additive: existing
+  // callers get the tamed tree without changing a line.
+  reach = 0,
 } = {}) {
   const g = new THREE.Group();
   g.name = 'oak';
@@ -51,6 +64,9 @@ export function makeOak({
   const anchors = [];
   let draw = 0;
   const rnd = () => hash1(draw++, seed);   // one deterministic stream for the whole tree
+  // hero-limb constants, lerped tamed -> legacy by `reach`. Every branch of
+  // this lerp consumes rnd() identically, so reach moves ONLY the hero limb.
+  const R = (tame, legacy) => tame + (legacy - tame) * reach;
 
   const T = (x, y, z) => new THREE.Matrix4().makeTranslation(x, y, z);
   const RY = (a) => new THREE.Matrix4().makeRotationY(a);
@@ -87,9 +103,13 @@ export function makeOak({
     const tip = m.clone().multiply(T(0, len, 0));
     if (level >= DEPTH) {
       // a clump at every limb tip: this is what stitches the crown onto the wood
-      // and what keeps its outline ragged instead of a ball
+      // and what keeps its outline ragged instead of a ball. The tamed hero
+      // limb takes a crown-sized clump — its tip sits at the skirt, and a
+      // small ball there reads as a lollipop on a stick, not a low bough
+      // shoulder. At full reach the legacy small clump returns: out past the
+      // crown, small is what keeps the limb readable as wood with leaves.
       _v.setFromMatrixPosition(tip);
-      addLobe(_v.x, _v.y, _v.z, H * (0.10 + 0.05 * rnd()));
+      addLobe(_v.x, _v.y, _v.z, H * ((hero ? R(0.14, 0.10) : 0.10) + 0.05 * rnd()));
       return;
     }
 
@@ -106,7 +126,7 @@ export function makeOak({
       const droop = 0.38 + 0.12 * rnd();
       const wobble = (rnd() - 0.5) * 0.10;
       const child = tip.clone().multiply(RY(wobble)).multiply(RZ(droop));
-      grow(child, len * (0.56 + 0.16 * rnd()), rad * 0.80, level + 1, true);
+      grow(child, len * (R(0.34, 0.56) + R(0.10, 0.16) * rnd()), rad * 0.80, level + 1, true);
       return;
     }
 
@@ -123,7 +143,10 @@ export function makeOak({
       const spread = isHero ? 0.95 + 0.24 * rnd()
         : level === 0 ? 0.88 + 0.24 * rnd() : 0.32 + 0.46 * rnd();
       const child = tip.clone().multiply(RY(azimuth)).multiply(RZ(spread));
-      const scale = isHero ? 1.62 + 0.18 * rnd() : level === 0 ? 1.18 : 0.42;
+      // Tamed, the hero primary is only a touch longer than its siblings
+      // (1.24 vs 1.18) — its character is the horizontal elbow, not raw
+      // length. At reach 1 it grows the legacy 1.62-1.80 spear again.
+      const scale = isHero ? R(1.24, 1.62) + R(0.10, 0.18) * rnd() : level === 0 ? 1.18 : 0.42;
       const fall = isHero ? 0.80 : level === 0 ? 0.66 : 0.66;
       if (level === 0) addKnuckle(tip, rad * 0.62);
       grow(child, len * scale * (0.86 + 0.28 * rnd()), rad * fall, level + 1, isHero);

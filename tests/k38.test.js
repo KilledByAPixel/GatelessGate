@@ -97,6 +97,31 @@ test('makeOak is deterministic by seed and offers somewhere for a leaf to let go
   assert.ok(r[0] > r[r.length - 1], 'outermost anchor first');
 });
 
+test('the hero limb is tamed by default; `reach` restores it and moves nothing else', () => {
+  const H = 5.8;
+  const rMax = (o) => Math.max(...o.canopyPoints.map((p) => Math.hypot(p.x, p.z)));
+  for (const seed of [5, 20, 38]) {
+    const tame = makeOak({ height: H, seed });
+    const long = makeOak({ height: H, seed, reach: 1 });
+    // tamed: every clump, the hero limb's tip included, finishes at the crown
+    // fringe (shell lobes centre out to ~0.44H and are up to ~0.19H fat) —
+    // no clump on a spear past it. Frank, overnight pass 2: "that weird
+    // extra branch... an extra long branch for some reason."
+    assert.ok(rMax(tame) < H * 0.68,
+      `seed ${seed}: tamed limb still spears out to ${(rMax(tame) / H).toFixed(2)}H`);
+    // asked for, the reach is real — the legacy hanging bough comes back
+    assert.ok(rMax(long) > rMax(tame) + H * 0.08,
+      `seed ${seed}: reach 1 should out-reach the tamed default`);
+    // and it is surgical: the option stretches the hero limb's own clump and
+    // nothing else — every other anchor of the same seed is bit-identical,
+    // because reach must not reorder the deterministic stream
+    const key = (p) => p.toArray().map((v) => v.toFixed(4)).join(',');
+    const tameSet = new Set(tame.canopyPoints.map(key));
+    const moved = long.canopyPoints.filter((p) => !tameSet.has(key(p)));
+    assert.equal(moved.length, 1, `seed ${seed}: exactly one clump moves, got ${moved.length}`);
+  }
+});
+
 // ---- the case ------------------------------------------------------------
 
 test('module shape matches the koan contract', () => {
