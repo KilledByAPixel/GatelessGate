@@ -5,6 +5,7 @@ import {
   composeWorld, makeVeranda, makeAssembly, makeMonk, aimMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
+import { mergeSimple } from '../kit/scatter.js';
 
 const ID = 25;
 
@@ -114,16 +115,27 @@ export default {
     stand.position.set(seats[2].position.x, DECK_TOP + 0.21, seats[2].position.z + 1.15);
     hall.add(stand);
 
+    // The gavel is an actual MALLET now (Frank: "it should have, like, a
+    // stick — like a hammer kind of"): a fat head lying across the block and
+    // a slim tapered handle out of its side, resting at a hand-laid angle
+    // with its butt overhanging the block's edge. One accent material, so
+    // the two parts merge into a single mesh and the strike bounce still
+    // moves the whole tool through the group.
     const gavel = new THREE.Group();
     gavel.name = 'gavel';
     gavel.position.copy(stand.position);
     gavel.position.y += 0.24;
-    const head = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.075, 0.075, 0.24, 8),
+    gavel.rotation.y = 0.6;                  // laid down, not squared to the block
+    const headGeo = new THREE.CylinderGeometry(0.065, 0.065, 0.21, 8);
+    headGeo.rotateZ(Math.PI / 2);            // the head lies on its side
+    const handleGeo = new THREE.CylinderGeometry(0.020, 0.026, 0.34, 7);
+    handleGeo.translate(0, 0.17, 0);         // hinge at the head end
+    handleGeo.rotateX(Math.PI / 2 + 0.03);   // out along +z, butt settling to the wood
+    const mallet = new THREE.Mesh(
+      mergeSimple([headGeo, handleGeo]),
       toonMaterial({ color: ACCENT, flat: true }));
-    head.name = 'gavel-head';
-    head.rotation.z = Math.PI / 2;
-    gavel.add(head);
+    mallet.name = 'gavel-head';
+    gavel.add(mallet);
     hall.add(gavel);
 
     // The audience, on the ground where the floor stops. The whole staging
