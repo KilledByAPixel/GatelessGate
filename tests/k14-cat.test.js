@@ -150,8 +150,11 @@ test('the cat ears lean away from the skull, not across it', () => {
   }
   const spread = box(ears[0]).union(box(ears[1]));
   const skull = box(cat.group.getObjectByName('head'));
-  assert.ok(spread.max.x - spread.min.x > (skull.max.x - skull.min.x) * 1.2,
-    'the pair reads wider than the skull');
+  // Was * 1.2 — Frank's 2026-08-01 retune shrank the cat's ears (r/h/x all
+  // down) on purpose, spending that margin. The claim that survives is the
+  // DIRECTION: the pair still spans the skull rather than stacking on top.
+  assert.ok(spread.max.x - spread.min.x > (skull.max.x - skull.min.x) * 0.9,
+    'the pair spans the skull');
   assert.ok(spread.max.y > skull.max.y, 'and stands clear above it');
 });
 

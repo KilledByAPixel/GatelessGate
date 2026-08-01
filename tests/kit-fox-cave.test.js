@@ -69,13 +69,17 @@ test('the fox is longer and lower than the dog it is built from', () => {
   assert.ok(body.min.y < 0.5 * 0.46, `the belly is carried low: ${body.min.y.toFixed(3)}`);
 });
 
-test('the brush is thick, carried low, and trails well behind the rump', () => {
+test('the brush is thick, trails well behind the rump, and reads as a tail not a flag', () => {
   // The tail is most of what makes a fox a fox. The dog's is cocked UP and thin;
   // if this one ever ends up looking like that the animal stops reading.
+  // (The old "carried below the back line" pin is gone: Frank's 2026-08-01
+  // retune cocked the brush up on purpose — TAIL_TILT -1.72 -> -1.2 — so the
+  // claim that survives is that it still runs BACKWARD far more than up.)
   const f = makeFox({ height: 0.5 });
   const tail = box(part(f.group, 'tail'));
   const body = box(part(f.group, 'body'));
-  assert.ok(tail.max.y < body.max.y, `carried below the back line: ${tail.max.y.toFixed(3)} vs ${body.max.y.toFixed(3)}`);
+  assert.ok((tail.max.z - tail.min.z) > 1.3 * (tail.max.y - tail.min.y),
+    `trails, not flagpoles: z run ${(tail.max.z - tail.min.z).toFixed(3)} vs y run ${(tail.max.y - tail.min.y).toFixed(3)}`);
   assert.ok(tail.min.y > 0.02, `and off the ground: ${tail.min.y.toFixed(3)}`);
   assert.ok(tail.min.z < body.min.z - 0.5 * 0.5, `trails behind the rump: ${tail.min.z.toFixed(3)} vs ${body.min.z.toFixed(3)}`);
   const thickness = tail.max.x - tail.min.x;
