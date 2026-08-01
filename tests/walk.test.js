@@ -83,15 +83,24 @@ test('apply dresses a group: lift on y, sway around the heading, roll on z', () 
   assert.equal(group.position.z, -2);
 });
 
-test('walkHeading matches the figure kit\'s +x-forward convention', () => {
-  close(walkHeading(1, 0), 0);                 // +x travel: no turn
-  close(walkHeading(0, -1), Math.PI / 2);      // -z travel: quarter turn
-  // rotation.y maps local +x onto (cos y, 0, -sin y): check it lands on the
+test('walkHeading turns the figure\'s true front — local +z — onto the travel direction', () => {
+  // The forward axis was determined EMPIRICALLY (shots wip-monk-axis-*): the
+  // figure's arm meshes hang at x = ±0.27, so the shoulder line spans x and
+  // the body fronts ±z; the k35 souls Frank approved face travel with exactly
+  // this mapping, and path.sample().heading (a gate you walk through) is the
+  // same atan2. An earlier draft assumed aimMonk's +x — the POINTING-ARM
+  // axis — and every walker read a quarter turn off the road (Frank, twice).
+  // The four cardinal directions, pinned:
+  close(walkHeading(0, 1), 0);                 // +z travel: no turn — forward IS +z
+  close(walkHeading(1, 0), Math.PI / 2);       // +x travel: quarter turn
+  close(walkHeading(0, -1), Math.PI);          // -z travel: about-face
+  close(walkHeading(-1, 0), -Math.PI / 2);     // -x travel: quarter turn the other way
+  // rotation.y maps local +z onto (sin y, 0, cos y): check it lands on the
   // travel direction for an arbitrary bearing
   const dx = -0.6, dz = 0.8;
   const y = walkHeading(dx, dz);
-  close(Math.cos(y), dx, 1e-12);
-  close(-Math.sin(y), dz, 1e-12);
+  close(Math.sin(y), dx, 1e-12);
+  close(Math.cos(y), dz, 1e-12);
 });
 
 test('pathLength measures a sampled route', () => {

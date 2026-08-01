@@ -116,9 +116,12 @@ export default {
     // Both walk with the kit gait (the souls' walk from case 35, extracted to
     // src/kit/walk.js): a footfall bob, a weight-shift roll, a slow heading
     // sway — driven by DISTANCE covered, so the step rhythm is the pace you
-    // see. Each faces his own direction of travel, upright; an earlier pass
-    // had the master's yaw a quarter-turn off his heading (Frank: "rotated
-    // weird") and this is the fix as much as the gait is.
+    // see. Each faces his own direction of travel, upright: walkHeading takes
+    // the travel vector and turns the figure's true front (local +z) onto it.
+    // Twice now a pass has had these two a quarter turn off the road (Frank:
+    // "rotated weird", then "facing the wrong way") — both times the bug was
+    // heading math assuming the wrong forward axis, and the second fix moved
+    // the convention into the kit so it cannot drift per-case again.
     let camera = null;
     let clock = 0;
     let reaches = 0;

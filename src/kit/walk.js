@@ -69,10 +69,16 @@ export function makeWalk({
 }
 
 // The rotation.y that faces the standard figure along a travel direction
-// (dx, dz): makeFigure/makeMonk's forward is local +x (aimMonk's convention),
-// and rotation.y maps local +x onto the world direction (cos y, 0, -sin y).
+// (dx, dz). The figure kit's BODIES front local +z — proved empirically
+// (shots wip-monk-axis-*): the arm meshes hang at x = ±0.27, so the shoulder
+// line spans x and the robe/hat silhouette is symmetric about x = 0; the k35
+// souls Frank approved face travel with exactly this mapping, and k17 learned
+// the same lesson case-locally before it lived here. rotation.y maps local +z
+// onto the world direction (sin y, 0, cos y), so sin y = dx, cos y = dz.
+// (An earlier draft assumed aimMonk's +x — that is the POINTING-ARM axis,
+// a different convention, and it read walkers a quarter turn off the road.)
 export function walkHeading(dx, dz) {
-  return Math.atan2(-dz, dx);
+  return Math.atan2(dx, dz);
 }
 
 // Arc length of a path.sample-style centreline (fn(t in 0..1) → {x, z}), so a
