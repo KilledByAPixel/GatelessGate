@@ -687,9 +687,16 @@ addEventListener('keydown', (e) => {
     if (mode === 'sit') sit.end(); else if (mode === 'koan') exit();
     return;
   }
-  // page the book with the arrow keys while reading a case
   const t = e.target;
   const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+  // dev-mode hotkeys: F toggles the free cam — the same switch as the
+  // workbench checkbox (debug.toggle keeps panel, save and effect in step).
+  // Dev mode only: a reader mashing keys must never wander the camera off.
+  if (devMode && !typing && (e.key === 'f' || e.key === 'F')) {
+    debug.toggle('freeCam');
+    return;
+  }
+  // page the book with the arrow keys while reading a case
   if (mode === 'koan' && koanSlug && !typing) {
     if (e.key === 'ArrowRight') { const n = neighbor(koanSlug, +1); if (n) enter(n); }
     else if (e.key === 'ArrowLeft') { const p = neighbor(koanSlug, -1); if (p) enter(p); }

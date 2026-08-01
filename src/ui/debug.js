@@ -389,6 +389,16 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
 
   return {
     button, panel, state, apply, tick,
+    // Keyboard-driven flips (main.js binds F to the free cam in dev mode): one
+    // entry point that changes the state, the checkbox, the saved blob and the
+    // applied effect together, so a hotkey can never drift from the panel.
+    toggle(key) {
+      state[key] = !state[key];
+      if (inputs[key]) inputs[key].checked = !!state[key];
+      save();
+      apply();
+      return state[key];
+    },
     // The panel belongs to the stage; the button belongs in the shared toolbar
     // beside sound and fullscreen, so the three read as one row rather than the
     // workbench floating on its own.
