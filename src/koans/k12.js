@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
-  composeWorld, makeCliff, makeMonk, makePine,
+  composeWorld, makeCliff, makeMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -66,11 +66,11 @@ export default {
     staff.rotation.z = 0.10;
     scene.add(staff);
 
-    // one pine on the lip, because a bare ledge reads as unfinished
-    const pine = makePine({ height: 3.6, seed: ID });
-    pine.position.set(-2.9, 0, -0.4);
-    scene.add(pine);
-
+    // The pine that used to stand on the lip at (-2.9, -0.4) is GONE — a
+    // different species growing right beside the one figure, and it never
+    // read as well as the ordinary trees (Frank: "get rid of it"). The rock
+    // outcrop dresses that end of the ledge on its own now, and the world's
+    // own trees keep the middle distance from going bare.
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
@@ -80,14 +80,12 @@ export default {
         ...cliff.footprint(1.0),
         ...cliff.voidFootprint(0.5),
         { x: 0.9, z: -0.5, r: 1.4 },
-        { x: -2.9, z: -0.4, r: 1.4 },
       ],
       grassKeepout: [...cliff.voidFootprint(0.4)],
     });
 
     for (const [p, rx, rz, op] of [
       [zuigan.position, 0.68, 0.52, 0.42],
-      [pine.position, 0.8, 0.62, 0.30],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = p.x; s.position.z = p.z;
