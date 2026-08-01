@@ -65,11 +65,14 @@ export default {
     // THE SCROLLS. The old version was 22 loose cylinders flung across the
     // whole mat — Frank: "what are all of the cylinders around on the ground
     // for?" A scroll is only legible as a scroll when it behaves like one, so
-    // now the overflow is STACKED: a cord-wood pile by the door (a bottom row,
-    // a nested row, a crown), a few rolls tumbled off its skirt, and two
-    // scrolls lying PART-UNROLLED on the mat — a pale ribbon of paper ending
-    // in its own roll, which is the one silhouette that says "scroll" and not
-    // "pipe". Fewer, fatter, and all of it merged into three meshes by tone.
+    // the overflow is STACKED: a cord-wood pile by the door (a bottom row, a
+    // nested row, a crown) and two scrolls lying PART-UNROLLED on the mat — a
+    // pale ribbon of paper ending in its own roll, which is the one
+    // silhouette that says "scroll" and not "pipe". The round-1 tumbled rolls
+    // off the pile's skirt are gone too (Frank, round 2: "get rid of the
+    // cylinders that are lying there") — loose cylinders never read as
+    // anything but cylinders; only the pile and the unrolled pages remain,
+    // merged into three meshes by tone.
     const scrolls = new THREE.Group();
     scrolls.name = 'scrolls';
     const PILE = { x: -0.3, z: -1.25 };       // by the door edge of the mat
@@ -101,18 +104,6 @@ export default {
         (hash1(i * 5 + 4, ID) < 0.5 ? light : dark).push(g);
       });
     });
-    // a few tumbled off the skirt, still within reach of the pile
-    for (let i = 0; i < 4; i++) {
-      const a = 0.6 + i * 1.35 + hash1(i * 9 + 5, ID) * 0.8;
-      const r = 0.42 + hash1(i * 9 + 6, ID) * 0.30;
-      const g = rollGeo(
-        PILE.x + Math.cos(a) * r,
-        0.05 + R,
-        PILE.z + Math.sin(a) * r * 0.8,
-        hash1(i * 9 + 7, ID) * Math.PI,
-        0.40 + hash1(i * 9 + 8, ID) * 0.14);
-      (i % 2 ? light : dark).push(g);
-    }
     // two part-unrolled: a ribbon of paper running out from the pile, the
     // remaining roll waiting at its far end
     for (const [fx, fz, len] of [[0.42, 0.91, 0.95], [0.97, 0.10, 0.62]]) {
