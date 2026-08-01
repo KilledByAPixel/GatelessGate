@@ -12,15 +12,28 @@ import { makeFigure } from './figure.js';
 // every monk sitting near it. This is now a thin naming layer over the same
 // figure kit the whole book speaks: the seated stance (whose lap shelf the
 // old statue's rebuild pioneered — that work lives on in figure.js's
-// SIT_PROFILE), sleeves folded into the lap, bare-headed. A buddha wears no
-// sedge hat, and the sphere head needs nothing else: featureless is the
-// house style for every face in the book.
+// SIT_PROFILE and whose knees it pioneered), sleeves folded into the lap,
+// bare-headed. A buddha wears no sedge hat; featureless is the house style
+// for every face in the book. What makes him HIM is two marks on the same
+// shared skull — the topknot and the urna — and nothing below the neck.
 //
 // THE ONE MARK: the urna — a small vermillion dot centred on the forehead.
 // A tiny sphere sunk into the skull (buried join: its centre stays inside
 // the head so only the crest shows), parented to the head mesh so it derives
 // from the skull it sits on and travels with it. It is always ACCENT, never
 // the robe colour: the dot IS the mark, whatever the statue is carved from.
+// THE SECOND MARK: the topknot ("we can make Buddha special with, like, a
+// topknot"). A single bun sunk into the crown — the ushnisha's read at the
+// detail floor: one sphere, its centre buried so the crest sits proud of the
+// skull line. It is a silhouette event (the one thing allowed to break the
+// crown), so unlike the urna it keeps its outline, and it wears the figure's
+// own material — hair on an ink man, stone on k9's colossus. Monks keep
+// their hats and bare heads; buddha = bare head + topknot + urna.
+const KNOT_R = 0.44;        // fraction of the head's radius — a bun, not a second head
+const KNOT_SINK = 0.82;     // centre at 0.82·r: crest proud by ~0.26·r, enough
+                            //   to break the crown line at case distance
+                            //   without reading as a hat
+
 const URNA_ELEV = 0.5;      // radians above the head's equator — mid-forehead
 const URNA_R = 0.20;        // fraction of the head's own radius — a dot, not a lamp
 const URNA_SINK = 0.90;     // centre at 0.90·r: buried join, only the crest shows.
@@ -38,6 +51,12 @@ export function makeBuddha({ height = 1.6, color = INK } = {}) {
 
   const head = g.children.find((c) => c.name === 'head');
   const r = head.geometry.parameters.radius;
+
+  const knot = new THREE.Mesh(new THREE.SphereGeometry(KNOT_R * r, 8, 6), head.material);
+  knot.name = 'topknot';
+  knot.position.y = KNOT_SINK * r;   // on the crown, centred — the seal of the silhouette
+  head.add(knot);
+
   const urna = new THREE.Mesh(
     new THREE.SphereGeometry(URNA_R * r, 8, 6),
     toonMaterial({ color: ACCENT, flat: true }));

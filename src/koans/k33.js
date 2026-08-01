@@ -71,12 +71,17 @@ export default {
     koi.group.position.set(POND.x, POND.surface, POND.z);
     scene.add(koi.group);
 
-    // the same seat, with nobody on it
+    // the same seat, with nobody on it — and the same HEIGHT as case 30's,
+    // which was raised to a real dais (SEAT_TOP 0.62, above the basin rim).
+    // The pair's joke depends on the two scenes being the one scene: if his
+    // seat rose and the empty one stayed a paver, the "same spot" would stop
+    // being the same spot.
+    const SEAT_TOP = 0.62;               // keep in step with k30.js
     const seat = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.05, 1.2, 0.26, 9),
+      new THREE.CylinderGeometry(1.05, 1.2, SEAT_TOP, 9),
       toonMaterial({ color: WASH.stone, flat: true }));
     seat.name = 'seat';
-    seat.position.set(BANK.x, 0.13, BANK.z);
+    seat.position.set(BANK.x, SEAT_TOP / 2, BANK.z);
     scene.add(seat);
 
     // and the same mat, in the same place, bare — but in ink. In case 30 the
@@ -89,7 +94,7 @@ export default {
       toonMaterial({ color: WASH.dark, flat: true }));
     cushion.name = 'cushion';
     cushion.rotation.y = Math.PI / 4;
-    cushion.position.set(BANK.x, 0.28, BANK.z);
+    cushion.position.set(BANK.x, SEAT_TOP + 0.025, BANK.z);
     scene.add(cushion);
 
     // and the same monk, still standing there

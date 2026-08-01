@@ -19,11 +19,13 @@ function maxRadiusInBand(mesh, y0, y1) {
   return r;
 }
 
-// The Buddha is NOT special (Frank, overnight pass 2): the same seated figure
-// kit as every monk, ordinary human size, bare-headed, with ONE mark — the
-// urna, a small accent dot sunk into the forehead. These tests pin exactly
-// that: same robe as everyone (byte-for-byte), no hat, no bespoke anatomy,
-// and a dot that is a buried join on the skull, not a floating bead.
+// The Buddha is NOT special below the neck (Frank, overnight pass 2): the
+// same seated figure kit as every monk, ordinary human size, bare-headed.
+// What makes him him is TWO marks on the shared skull — the topknot (Frank,
+// polish round 2: "we can make Buddha special with, like, a topknot") and
+// the urna. These tests pin exactly that: same robe as everyone
+// (byte-for-byte), no hat, no bespoke anatomy, a bun that is a silhouette
+// event on the crown, and a dot that is a buried join on the forehead.
 test('makeBuddha is the same seated figure as every monk — no hat, ordinary size', () => {
   const H = 1.6;
   const b = makeBuddha({ height: H });
@@ -48,6 +50,39 @@ test('makeBuddha is the same seated figure as every monk — no hat, ordinary si
   const box = new THREE.Box3().setFromObject(b);
   assert.ok(box.min.y > -0.02, `on the ground: ${box.min.y}`);
   assert.ok(box.max.y > 0.85 && box.max.y < 1.1, `seated monk scale: ${box.max.y}`);
+});
+
+test('the topknot: one bun on the crown, proud of the skull line, in the figure\'s own material', () => {
+  const H = 1.6;
+  const b = makeBuddha({ height: H, color: '#402020' });
+  const head = b.children.find((c) => c.name === 'head');
+  const knot = head.children.find((c) => c.name === 'topknot');
+  assert.ok(knot, 'the topknot is a child of the head — it travels with the skull');
+
+  const rHead = head.geometry.parameters.radius;
+  const rKnot = knot.geometry.parameters.radius;
+  // a bun, not a second head — and not a dot: it must survive as SILHOUETTE
+  // on k9's colossus, so it is much bigger than the urna
+  assert.ok(rKnot > 0.3 * rHead && rKnot < 0.6 * rHead, `a bun: ${rKnot} vs head ${rHead}`);
+
+  // on the crown, centred, buried join: centre inside the skull, crest proud
+  assert.equal(knot.position.x, 0, 'centred');
+  assert.equal(knot.position.z, 0, 'on the crown, not the brow');
+  assert.ok(knot.position.y > 0.6 * rHead && knot.position.y < rHead,
+    `sunk into the crown: ${knot.position.y}`);
+  assert.ok(knot.position.y + rKnot > rHead * 1.15,
+    `the crest breaks the crown line: ${knot.position.y + rKnot} vs ${rHead}`);
+
+  // hair on an ink man, stone on a statue: the knot wears the head's own
+  // material (recolour the figure and the knot follows), and unlike the
+  // urna it is a silhouette event, so it keeps its outline
+  assert.equal(knot.material, head.material, 'the figure\'s own material');
+  assert.notEqual(knot.userData.noOutline, true, 'a silhouette event keeps its outline');
+
+  // monks are untouched: no topknot on the shared figure
+  const monk = makeFigure({ stance: 'sit', arms: 'fold', hat: false });
+  const monkHead = monk.children.find((c) => c.name === 'head');
+  assert.equal(monkHead.children.length, 0, 'only the buddha wears the bun');
 });
 
 test('the urna: one small accent dot, sunk into the forehead, no outline', () => {
@@ -84,7 +119,8 @@ test('makeBuddha keeps its signature: height scales it, color robes it, urna sta
   assert.ok(Math.abs(boxT.max.y - 2 * boxS.max.y) < 1e-6, 'height is a scale');
   const body = tall.children.find((c) => c.name === 'body');
   assert.equal(body.material.color.getHexString(), '402020', 'the robe takes the colour');
-  const urna = tall.children.find((c) => c.name === 'head').children[0];
+  const urna = tall.children.find((c) => c.name === 'head')
+    .children.find((c) => c.name === 'urna');
   assert.equal(urna.material.color.getHexString(),
     new THREE.Color(ACCENT).getHexString(), 'the mark is not recoloured with the robe');
 });
@@ -97,19 +133,34 @@ test('makeAssembly is one instanced, grounded, deterministic crowd', () => {
   assert.equal(a.userData.noOutline, true);
 
   // each instance is a seated MONK, not a pawn: the silhouette carries the
-  // lap shelf (the knee block the widest thing it owns, the torso inset
-  // above it — the same event that fixed "a fat dress standing up" on the
-  // hero monks) and the obi pinch (a belt — narrower than the blouse pushed
-  // up over it), read straight off the merged geometry via the same band
-  // scan the buddha test uses. Bands in world units at FIG_H = 1.5.
+  // KNEES (two merged leg masses at ±x — the crowd folds the same legs the
+  // hero monks do, via figure.js's seatedBodyGeometry), the lap shelf (the
+  // torso inset above the leg block) and the obi pinch (a belt — narrower
+  // than the blouse pushed up over it), read straight off the merged
+  // geometry via the same band scan the buddha test uses. Bands in world
+  // units at FIG_H = 1.5.
   const fake = { geometry: a.geometry };
-  const knees = maxRadiusInBand(fake, 0, 0.16);       // the knee crest, at 0.060·FIG_H
-  const torso = maxRadiusInBand(fake, 0.45, 0.62);    // obi → chest, above the lap turn
+  const knees = maxRadiusInBand(fake, 0, 0.16);       // the knee masses, low
+  const torso = maxRadiusInBand(fake, 0.60, 0.70);    // the chest run into the collar
   const obi = maxRadiusInBand(fake, 0.32, 0.34);      // the tie, at 0.220·FIG_H
   const blouse = maxRadiusInBand(fake, 0.39, 0.41);   // the swell above the knot, at 0.265·FIG_H
-  assert.ok(torso < knees * 0.55, `the torso rises inset above the lap: ${torso} vs ${knees}`);
-  assert.ok(obi < blouse, `the obi pinch reads as a belt: ${obi} vs ${blouse}`);
+  assert.ok(torso > 0 && torso < knees * 0.55, `the torso rises inset above the lap: ${torso} vs ${knees}`);
+  assert.ok(obi > 0 && obi < blouse, `the obi pinch reads as a belt: ${obi} vs ${blouse}`);
   assert.ok(obi < knees * 0.7, `a seated figure, not a cone: ${obi} vs ${knees}`);
+  // THE CROWD MATCHES: knee reach is figure.js's own number — x-offset
+  // 0.21·h scaled by the crowd's 0.8 slim, plus the knee's un-slimmed
+  // half-width 0.1275·h, at FIG_H = 1.5 — and the base is wider (±x) than
+  // it is deep (±z): folded legs, even at fog distance
+  let kneeX = 0, kneeZ = 0;
+  const pos = a.geometry.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    if (pos.getY(i) < 0 || pos.getY(i) > 0.16) continue;
+    kneeX = Math.max(kneeX, Math.abs(pos.getX(i)));
+    kneeZ = Math.max(kneeZ, Math.abs(pos.getZ(i)));
+  }
+  assert.ok(Math.abs(kneeX - (0.21 * 0.8 + 0.1275) * 1.5) < 2e-3,
+    `the crowd folds the hero's knees: ${kneeX}`);
+  assert.ok(kneeX > kneeZ * 1.25, `wider than deep — legs, not a skirt: ${kneeX} vs ${kneeZ}`);
   const geoBox = a.geometry.boundingBox || (a.geometry.computeBoundingBox(), a.geometry.boundingBox);
   assert.ok(geoBox.max.y > 0.8 && geoBox.max.y < 1.1, `crowd figure stays crowd-sized: ${geoBox.max.y}`);
   const m = new THREE.Matrix4();

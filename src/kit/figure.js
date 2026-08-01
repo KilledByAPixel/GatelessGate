@@ -1,5 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
+import { mergeSimple } from './scatter.js';
 import { INK } from '../palette.js';
 
 // The shared human vocabulary — the makeQuadruped of people.
@@ -148,30 +149,63 @@ const STAND_PROFILE = [
 // hero monks wear, so a background figure at fog distance is the same person,
 // simplified — not a different species of pawn.
 //
-// THE LAP SHELF. The first seated profile tapered continuously from hem to
-// collar and Frank read it exactly right: "like they're wearing a fat dress —
-// like they're not sitting at all." A seated robed figure's silhouette BREAKS
-// at the lap (see local/refs/buddha.png, and buddha.js's round-2 lathe, which
-// solved this first): the crossed legs are a wide low block — the widest
-// thing the figure owns, wider than the shoulders — the lap line turns
-// near-horizontally in at about 0.3 of the seated height, and the torso rises
-// visibly INSET above it. One event, three points: the knee crest, the top of
-// the knee block, and the hard turn to the obi. Same ten indices, same roles
-// as STAND_PROFILE, so `kneel`'s halfway blend stays honest — the "long run
-// up the skirt" is here the long run up the knees, and the "skirt gathering"
-// is the lap turn itself.
+// THE LAP SHELF, then THE KNEES. The first seated profile tapered
+// continuously from hem to collar and Frank read it exactly right: "like
+// they're wearing a fat dress — like they're not sitting at all." The lap
+// shelf fixed the vertical read — a wide low block, a near-horizontal lap
+// turn, the torso rising visibly INSET — but the block itself was still a
+// solid of revolution, and Frank read THAT exactly right too: "they need,
+// like, legs." A figure in lotus (see local/refs/buddha.png) is widest at
+// the KNEES, left and right, with a valley between them where the hands
+// rest; a radially symmetric pool can never say "folded legs". So the lathe
+// here is only the cloth core — the shins and the pooled robe BETWEEN the
+// knees — pulled in to 0.25·h, and the knees are two ellipsoids at ±x merged
+// into the same geometry by `seatedBodyGeometry` below (one mesh; the same
+// move buddha.js's round-2 statue made before it was folded into this kit).
+// Same ten indices, same roles as STAND_PROFILE, so `kneel`'s halfway blend
+// stays honest — the "long run up the skirt" is here the run up the shins,
+// and the "skirt gathering" is the lap turn itself.
 export const SIT_PROFILE = [
   [0.020, 0.000],   // hem centre, closed on the ground
-  [0.310, 0.000],   // the hem pooling round the crossed legs
-  [0.320, 0.060],   // KNEE CREST — the widest ring on the figure, low
-  [0.295, 0.155],   // top of the knee block: the run stays WIDE, not a taper
-  [0.148, 0.180],   // THE LAP — a near-horizontal shelf in to the waist
-  [0.130, 0.220],   // OBI — the tie
-  [0.148, 0.265],   // the blouse pushed up over the knot
-  [0.125, 0.408],   // chest into shoulder — clearly inset above the lap
-  [0.100, 0.442],   // COLLAR
-  [0.062, 0.462],   // the neck opening
+  [0.240, 0.000],   // the hem pooling round the crossed shins
+  [0.250, 0.055],   // SHIN ROLL — the lathe's own widest ring, INSIDE the knees
+  [0.230, 0.150],   // top of the leg block: the run stays WIDE, not a taper
+  [0.140, 0.175],   // THE LAP — a near-horizontal shelf in to the waist
+  [0.126, 0.220],   // OBI — the tie
+  [0.142, 0.265],   // the blouse pushed up over the knot
+  [0.128, 0.425],   // chest — one long VERTICAL run: a meditator sits straight
+  [0.103, 0.458],   // COLLAR
+  [0.064, 0.478],   // the neck opening
 ];
+
+// THE KNEES, in fractions of height. One flattened ellipsoid per side at ±x,
+// low and slightly forward (seated figures face local +z), reaching past the
+// shin roll so each side of the base is a lump of folded leg, not skirt:
+// reach = x + r·scale[0] = 0.3375·h against the lathe's 0.25·h. The inner
+// two-thirds of each ellipsoid is buried in the lathe (the buried-join rule),
+// so the merge reads as one mass with two knees, and the dip between their
+// crests is the valley the folded cuffs rest in.
+const KNEE = { r: 0.085, scale: [1.5, 0.8, 1.2], x: 0.21, y: 0.065, z: 0.055 };
+
+// The whole seated body — lathe core + both knees — as ONE geometry.
+// Exported because the assembly's instanced crowd must be the same person:
+// it feeds this straight into its InstancedMesh (still one draw call).
+// `width` is the radial squeeze (`stout`, or the crowd's SLIM): it thins the
+// lathe around its axis and carries the knee centres inward with it, but the
+// knee masses keep their own size — at fog distance the knees are the event
+// that must survive, so the crowd figure spends its width there.
+export function seatedBodyGeometry({ height, width = 1, segments = 10 } = {}) {
+  const lathe = new THREE.LatheGeometry(
+    SIT_PROFILE.map(([r, y], i) => new THREE.Vector2((i ? r * width : r) * height, y * height)),
+    segments);
+  const knees = [-1, 1].map((side) => {
+    const k = new THREE.SphereGeometry(KNEE.r * height, 8, 6);
+    k.scale(KNEE.scale[0], KNEE.scale[1], KNEE.scale[2]);
+    k.translate(side * KNEE.x * width * height, KNEE.y * height, KNEE.z * height);
+    return k;
+  });
+  return mergeSimple([lathe, ...knees]);
+}
 
 // The sedge hat, authored in its own local space (y = 0 is where the old
 // cone's centre sat, so `hat` placement heights are unchanged). A cone is a
@@ -200,8 +234,8 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // standing figure's height.
 // `staffX` is where the elder's staff plants, laterally, in fractions of
 // height — and it is per-stance because the hem is. A standing hem reaches
-// 0.212h and the staff at 0.26h stands clear of it; a seated hem pools out to
-// 0.318h, so the same 0.26h planted the staff INSIDE the cloth and it emerged
+// 0.212h and the staff at 0.26h stands clear of it; a seated figure's knees
+// reach 0.3375h, so the same 0.26h planted the staff INSIDE the cloth and it emerged
 // through the robe like a stick stuck in a tent (k17's report — fixed there
 // by hand first, at 0.58/1.6h = 0.3625h, which is the number promoted here:
 // past the hem plus the staff's own radius, so it reads as the teacher's
@@ -231,7 +265,12 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 const KNEEL = 0.5;
 const STANCES = {
   stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.735, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.9, fold: -1.15 },
-  sit: { profile: SIT_PROFILE, shoulder: 0.40, sleeve: 0.24, head: 0.50, hat: 0.545, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, fold: -0.48 },
+  // Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did:
+  // the chest run in SIT_PROFILE was lengthened and steepened so a meditator
+  // sits STRAIGHT ("they should all kinda look like Buddha") — the crown now
+  // tops out at 0.610·h, still comfortably a seated man, and the fold angle
+  // eases to -0.44 so the cuffs keep landing in the lap the knees now frame.
+  sit: { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, head: 0.515, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, fold: -0.44 },
   kneel: {
     profile: mixProfile(STAND_PROFILE, SIT_PROFILE, KNEEL),
     shoulder: mix(0.60, 0.40, KNEEL),
@@ -269,7 +308,14 @@ export function makeFigure({
   const st = STANCES[stance] || STANCES.stand;
   const seated = stance === 'sit';
 
-  g.add(robeLathe(st.profile.map(([r, y], i) => [i === 0 ? r : r * s, y]), height, mat));
+  if (seated) {
+    // the seated body is NOT a pure lathe — the knees are merged in
+    const body = new THREE.Mesh(seatedBodyGeometry({ height, width: s }), mat);
+    body.name = 'body';
+    g.add(body);
+  } else {
+    g.add(robeLathe(st.profile.map(([r, y], i) => [i === 0 ? r : r * s, y]), height, mat));
+  }
 
   const shoulderY = st.shoulder * height;
   const sleeveL = st.sleeve * height;
