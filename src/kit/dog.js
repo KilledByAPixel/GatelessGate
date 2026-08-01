@@ -43,15 +43,15 @@ export function makeDog({ height = 0.5, color = INK, seed = 1 } = {}) {
   // off the shoulders, which is most of what separates the two silhouettes.
   const { group } = makeQuadruped({
     height, color, seed,
-    bodyR: 0.20, bodyLen: 0.70, bodyDrop: 0.18,
+    bodyR: 0.25, bodyLen: 0.70, bodyDrop: 0.18,
     // legs read as sticks at 0.052 — thicker; the limb profile in the shared
     // plan (broad thigh, slim cannon, small foot) does the shaping now, and
     // legTaper 1.0 hands it a full-width thigh to start from
-    legH: 0.52, legR: 0.078, legTaper: 1.0, hipX: 0.13, hipZ: 0.30,
+    legH: 0.52, legR: 0.078, legTaper: 1.0, hipX: 0.1, hipZ: 0.30,
     neck: { r: 0.085, len: 0.26 },
     head: { shape: 'sphere', r: 0.165, fwd: 0.55, up: 0.30 },
-    snout: { r0: 0.05, r1: 0.09, len: 0.20, fwd: 0.74, up: 0.24 },
-    ears: { r: 0.07, h: 0.16, x: 0.10, up: 0.44, fwd: 0.50, tilt: 0.28 },
+    snout: { r0: 0.06, r1: 0.09, len: 0.20, fwd: 0.7, up: 0.24 },
+    ears: { r: 0.07, h: 0.15, x: 0.005, up: 0.305, fwd: 0.55, tilt: 0.38 },
     // rump: `back` (0.28) sits just short of `hipZ` (0.30) so the mass
     // gathers where the hind legs actually drive into the barrel. LOW AND
     // LONG: an earlier round stood it 0.04h proud of the barrel line and the
