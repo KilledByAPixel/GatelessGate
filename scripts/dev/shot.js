@@ -48,13 +48,18 @@ let jobs = [];
 if (flag('jobs')) {
   jobs = JSON.parse(await readFile(flag('jobs'), 'utf8'));
 } else if (flag('model') || flag('kit') || flag('case') || flag('expr')) {
-  jobs = [{ model: flag('model'), mode: flag('mode'), kit: flag('kit'), case: flag('case'), expr: flag('expr'), view: flag('view'), out: flag('out') }];
+  jobs = [{
+    model: flag('model'), mode: flag('mode'), kit: flag('kit'), case: flag('case'),
+    expr: flag('expr'), view: flag('view'), out: flag('out'),
+    url: flag('url'), pageshot: argv.includes('--pageshot') || undefined,
+  }];
 }
 if (!jobs.length || jobs.some((j) => !j.out || !(j.model || j.kit || j.case || j.expr))) {
   console.error('usage: shot.js --model <name> [--mode silhouette|toon] --out <name>');
   console.error('       shot.js --kit <model> [--view <view>] --out <name>');
   console.error('       shot.js --case <slug> --out <name>');
-  console.error('       shot.js --expr "<js returning a dataURL>" --out <name>  (add --page kit|app)');
+  console.error('       shot.js --expr "<js returning a dataURL>" --out <name>  (add --page kit|app, or --url /any/page.html)');
+  console.error('       shot.js --expr "<js returning OK...>" --pageshot --out <name>  (composited DOM+GL screenshot)');
   console.error('       shot.js --jobs <file.json>');
   process.exit(1);
 }
@@ -87,7 +92,11 @@ const pageUrlFor = (job) => job.model
     ? `${BASE}/dev/kit-preview.html?ink=0`
     : job.case
       ? `${BASE}/#${job.case}`
-      : (job.page === 'kit' ? `${BASE}/dev/kit-preview.html?ink=0` : `${BASE}/`);
+      : job.page === 'kit'
+        ? `${BASE}/dev/kit-preview.html?ink=0`
+        : job.url
+          ? `${BASE}${job.url}`      // any page in the repo, e.g. /model-viewer.html?sweep#dog
+          : `${BASE}/`;
 
 const debugPort = 9300 + (process.pid % 600);
 const profile = path.join(tmpdir(), `gate-shot-${process.pid}`);
@@ -133,6 +142,26 @@ async function evalInPage(page, expr) {
         else res(m.result && m.result.result && m.result.result.value);
       };
       ws.send(J({ id: 1, method: 'Runtime.evaluate', params: { expression: expr, awaitPromise: true, returnByValue: true } }));
+    });
+  } finally { ws.close(); }
+}
+
+// Composited page screenshot (DOM + GL together) — for pages whose output is
+// DOM-over-canvas (the model viewer's gallery grid). The job's expr runs
+// first and must return a string starting with 'OK'; the capture then comes
+// from the compositor, so no preserveDrawingBuffer needed.
+async function pageShot(page) {
+  const ws = new WebSocket(page.webSocketDebuggerUrl);
+  await new Promise((res, rej) => { ws.onopen = res; ws.onerror = () => rej(new Error('ws connect failed')); });
+  try {
+    return await new Promise((res, rej) => {
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(ev.data);
+        if (m.id !== 1) return;
+        if (m.error) rej(new Error(JSON.stringify(m.error)));
+        else res(m.result && m.result.data);
+      };
+      ws.send(J({ id: 1, method: 'Page.captureScreenshot', params: { format: 'jpeg', quality: 88 } }));
     });
   } finally { ws.close(); }
 }
@@ -201,6 +230,15 @@ try {
         await new Promise((r) => setTimeout(r, 600));
         page = await target(url === lastUrl ? BASE : url);
       }
+    }
+    if (job.pageshot) {
+      if (typeof data !== 'string' || !data.startsWith('OK')) {
+        console.error(`FAIL ${job.out}: ${String(data).slice(0, 300)}`);
+        failures++;
+        continue;
+      }
+      if (data.length > 2) console.log(`  ${job.out}: ${data}`);
+      data = 'data:image/jpeg;base64,' + await pageShot(page);
     }
     if (typeof data !== 'string' || !data.startsWith('data:image/')) {
       console.error(`FAIL ${job.out}: ${String(data).slice(0, 200)}`);
