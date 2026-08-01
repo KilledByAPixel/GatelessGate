@@ -69,9 +69,25 @@ export function patchDensity(x, z, seed = 5, patchiness = defaultPatchiness) {
 // that were argued over one at a time — even area density, rim thinning into
 // the fog, fbm patchiness with a floor, tight feathered keepouts — exist once.
 // A renderer decides what a grass thing LOOKS like; this decides where grass IS.
+// A custom-surface root sits a hair BELOW the surface it was given. groundFn
+// callers describe prop surfaces (k11's rise is a faceted frustum, not part of
+// groundHeight), and a root planted exactly ON a facet floats visibly the
+// moment the analytic function and the mesh disagree by a millimetre — burying
+// it is the same rule the modeling skill uses for every other join. The
+// default path keeps planting AT groundHeight exactly, as it always has: the
+// ground mesh is displaced by the very same function, so there is nothing to
+// disagree with, and existing scenes must stay byte-identical.
+const GROUND_FN_SINK = 0.02;
+
 export function grassPlacements({
   count, radius = 20, inner = 0, seed = 5, groundSeed = 21,
   patchiness = defaultPatchiness, keepout = [],
+  // (x, z) => y of the surface the grass stands on, for cases whose ground is
+  // more than the terrain function (a rise, a platform). Optional and additive:
+  // absent, placement is byte-identical to what it always was. Only y changes
+  // when it IS given — acceptance (rim, patchiness, keepouts) never reads it,
+  // so the same blades land in the same places, just at their surface's height.
+  groundFn = null,
 } = {}) {
   const out = [];
   // The candidate budget is 8x the ask, and the number is load-bearing: overall
@@ -112,7 +128,7 @@ export function grassPlacements({
 
     out.push({
       x, z,
-      y: groundHeight(x, z, { seed: groundSeed }),
+      y: groundFn ? groundFn(x, z) - GROUND_FN_SINK : groundHeight(x, z, { seed: groundSeed }),
       yaw: hash1(i * 4 + 7, seed) * Math.PI * 2,
       wide: 0.8 + 0.5 * hash1(i * 4 + 9, seed),
       tall: 0.65 + 0.8 * hash1(i * 4 + 5, seed),
@@ -145,6 +161,7 @@ export function makeGrassField({
   windDir = [1, 0.35], gustScale = 0.055, gustSpeed = 2.4,
   patchiness = defaultPatchiness,   // 0 = wall-to-wall turf; higher opens bare ground
   keepout = [],
+  groundFn = null,                  // see grassPlacements — the surface the blades stand on
 } = {}) {
   // one blade: a tapered strip, origin at the base, segmented so it can curve.
   // BOW is a static curve baked into the rest pose itself — the geometry no
@@ -333,7 +350,7 @@ export function makeGrassField({
   const sc3 = new THREE.Vector3();
   const base = new THREE.Color(color);
   const col = new THREE.Color();
-  const spots = grassPlacements({ count, radius, inner, seed, groundSeed, patchiness, keepout });
+  const spots = grassPlacements({ count, radius, inner, seed, groundSeed, patchiness, keepout, groundFn });
   let n = 0;
   for (const p of spots) {
     v.set(p.x, p.y, p.z);

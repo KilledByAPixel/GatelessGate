@@ -1,9 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { makeGround } from '../src/kit/ground.js';
+import { makeGround, groundHeight } from '../src/kit/ground.js';
 import { makeMountains } from '../src/kit/mountains.js';
 import { makeForest } from '../src/kit/forest.js';
+import { composeWorld, setGrassStyle } from '../src/kit/scenery.js';
 
 test('ground rolls in the distance but stays flat at center', () => {
   const g = makeGround({ seed: 21 });
@@ -61,6 +62,44 @@ test('forest mixes species into one merged mesh, still a single draw call', () =
   // draw-call cost doesn't grow with `count` or with species variety
   const bigger = makeForest({ count: 90, seed: 41 });
   assert.ok(bigger.isMesh && !bigger.isInstancedMesh && bigger.children.length === 0);
+});
+
+test('composeWorld hands the case ground function through to its grass', () => {
+  // The wire-through matters as much as the option: k11's fix is the CASE
+  // passing composeWorld the surface its rise makes, and the field planting on
+  // it. Both renderers must honour it — the debug panel swaps between them.
+  const fn = (x, z) => 1.5 + 0.02 * x;
+  const grassOf = (opts) => {
+    const scene = new THREE.Scene();
+    composeWorld(scene, { seed: 3, grass: 1200, trees: 0, rocks: 0, bushes: 0, ...opts });
+    return scene.children.find((c) => c.name === 'grassfield');
+  };
+  const m = new THREE.Matrix4(), p = new THREE.Vector3();
+  const q = new THREE.Quaternion(), s = new THREE.Vector3();
+  try {
+    for (const style of ['tufts', 'blades']) {
+      setGrassStyle(style);
+      const lifted = grassOf({ groundFn: fn });
+      assert.ok(lifted && lifted.count > 100, `${style}: field built (${lifted && lifted.count})`);
+      for (let i = 0; i < lifted.count; i++) {
+        lifted.getMatrixAt(i, m);
+        m.decompose(p, q, s);
+        assert.ok(Math.abs(p.y - (fn(p.x, p.z) - 0.02)) < 1e-5,
+          `${style} instance ${i} stands on the case ground: y ${p.y}`);
+      }
+      // and WITHOUT one, the field keeps standing on the world's own terrain
+      const plain = grassOf({});
+      for (let i = 0; i < plain.count; i++) {
+        plain.getMatrixAt(i, m);
+        m.decompose(p, q, s);
+        const want = groundHeight(p.x, p.z, { seed: 21 });
+        assert.ok(Math.abs(p.y - want) < 1e-5,
+          `${style} instance ${i} stays on the terrain: y ${p.y} vs ${want}`);
+      }
+    }
+  } finally {
+    setGrassStyle('tufts');   // the shipped default — leave the module as found
+  }
 });
 
 test('forest count scales the built geometry, and instances actually spread out', () => {

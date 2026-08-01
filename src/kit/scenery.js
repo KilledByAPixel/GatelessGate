@@ -35,6 +35,13 @@ export function composeWorld(scene, {
   // what genuinely covers the ground here (a worn trail, a stone base).
   // Defaults to `keepout` so existing callers keep their old behaviour.
   grassKeepout = null,
+  // (x, z) => y of the surface the grass stands on, for a case whose ground is
+  // more than the terrain function — k11's rise is a prop the terrain knows
+  // nothing about, and grass planted at terrain height knifed up through it.
+  // The case owns the shape, so the case supplies the function (typically
+  // max(groundHeight, its own relief)); absent, the fields keep planting at
+  // groundHeight(groundSeed) — this world's own terrain — exactly as before.
+  groundFn = null,
   trees = 5,
   treeRing = [7, 20],
   rocks = 12,
@@ -93,11 +100,11 @@ export function composeWorld(scene, {
   const field = grassStyle === 'tufts'
     ? makeTuftField({
       count: Math.round(grass / 1.5), seed: seed * 81, groundSeed,
-      keepout: grassKeepout || keepout,
+      keepout: grassKeepout || keepout, groundFn,
     })
     : makeGrassField({
       count: grass, seed: seed * 81, groundSeed,
-      keepout: grassKeepout || keepout,
+      keepout: grassKeepout || keepout, groundFn,
     });
   scene.add(field.mesh);
 

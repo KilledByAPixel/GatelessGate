@@ -82,6 +82,31 @@ test('the field wears the grassfield name and wiring the debug panel expects', (
   assert.equal(u.uTime.value, 3.5, 'update drives the wind clock');
 });
 
+test('tufts stand on the supplied ground, and on flat ground without one', () => {
+  // same additive contract as the blade field: grassPlacements does the
+  // sampling for both renderers, but each field feeds its instance matrices
+  // itself — this pins that the tuft path forwards groundFn at all
+  const fn = (x, z) => 1.5 + 0.04 * z;
+  const m = new THREE.Matrix4(), p = new THREE.Vector3();
+  const q = new THREE.Quaternion(), s = new THREE.Vector3();
+  const lifted = makeTuftField({ count: 300, radius: 12, seed: 11, groundFn: fn });
+  assert.ok(lifted.tufts > 100, `tufts to check: ${lifted.tufts}`);
+  for (let i = 0; i < lifted.tufts; i++) {
+    lifted.mesh.getMatrixAt(i, m);
+    m.decompose(p, q, s);
+    assert.ok(Math.abs(p.y - (fn(p.x, p.z) - 0.02)) < 1e-5,
+      `tuft ${i} rooted in its ground: y ${p.y} at (${p.x}, ${p.z})`);
+  }
+  // absent, the default is the terrain function — inside its flat radius, y = 0
+  const plain = makeTuftField({ count: 300, radius: 8, seed: 11 });
+  for (let i = 0; i < plain.tufts; i++) {
+    plain.mesh.getMatrixAt(i, m);
+    m.decompose(p, q, s);
+    // === not strictEqual: decompose hands back -0, which is still ground zero
+    assert.ok(p.y === 0, `tuft ${i} sits at ground zero without a ground fn: ${p.y}`);
+  }
+});
+
 test('tufts respect keepouts the same way blades do', () => {
   const keep = { x: 0, z: 0, r: 6 };
   const f = makeTuftField({ count: 2000, radius: 18, seed: 11, keepout: [keep] });

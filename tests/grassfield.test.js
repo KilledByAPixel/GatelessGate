@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { patchDensity, makeGrassField } from '../src/kit/grassfield.js';
+import * as THREE from '../lib/three.module.js';
+import { patchDensity, makeGrassField, grassPlacements } from '../src/kit/grassfield.js';
+import { groundHeight } from '../src/kit/ground.js';
 import { setBreezePointer, clearBreeze } from '../src/kit/breeze.js';
 
 // These guard a bug that reached Frank's screen: the meadow cut a huge SQUARE
@@ -132,6 +134,54 @@ test('a sweep brushes the field ALONG the stroke, and release springs it back', 
   for (let i = 0; i < 600; i++) f.update(1 / 60, 12 + i / 60);
   assert.ok(u.uPokeAmt.value < 0.01, `and the wake settles: ${u.uPokeAmt.value}`);
   clearBreeze();
+});
+
+test('grass plants on the surface it is given — and nothing moves when none is', () => {
+  // groundFn is ADDITIVE: k11's rise is a prop the terrain function knows
+  // nothing about, so the case hands placement the surface its meshes stand
+  // on. Every scene that does NOT pass one must keep planting exactly where it
+  // always did — this pins that, byte for byte.
+  const opts = { count: 600, radius: 16, seed: 2349 };
+  const plain = grassPlacements(opts);
+  assert.ok(plain.length > 300, `placements to compare: ${plain.length}`);
+  // the default has always been the terrain function itself, exactly — no sink
+  for (const p of plain) {
+    assert.equal(p.y, groundHeight(p.x, p.z, { seed: 21 }), 'default y IS groundHeight');
+  }
+  // groundFn: null is the "absent" spelling — identical output, not merely close
+  assert.deepEqual(grassPlacements({ ...opts, groundFn: null }), plain);
+
+  // a case-shaped surface: half plateau, half tilted plane
+  const fn = (x, z) => (x > 0 ? 0.5 : 0) + 0.1 * z;
+  const lifted = grassPlacements({ ...opts, groundFn: fn });
+  assert.equal(lifted.length, plain.length, 'acceptance never reads the height');
+  for (let i = 0; i < plain.length; i++) {
+    const a = plain[i], b = lifted[i];
+    // only y answers the surface — same blades, same spots, same look
+    assert.equal(b.x, a.x);
+    assert.equal(b.z, a.z);
+    assert.equal(b.yaw, a.yaw);
+    assert.equal(b.wide, a.wide);
+    assert.equal(b.tall, a.tall);
+    assert.deepEqual(b.tint, a.tint);
+    // and the root sits a hair BELOW the surface, so it never floats off a facet
+    assert.ok(Math.abs(b.y - (fn(b.x, b.z) - 0.02)) < 1e-12,
+      `root buried in the given ground: ${b.y} vs surface ${fn(b.x, b.z)}`);
+  }
+});
+
+test('the blade field stands its instances on the supplied ground', () => {
+  const fn = (x, z) => 2 + 0.05 * x - 0.03 * z;
+  const f = makeGrassField({ count: 300, radius: 12, seed: 7, groundFn: fn });
+  const m = new THREE.Matrix4(), p = new THREE.Vector3();
+  const q = new THREE.Quaternion(), s = new THREE.Vector3();
+  assert.ok(f.blades > 100, `blades to check: ${f.blades}`);
+  for (let i = 0; i < f.blades; i++) {
+    f.mesh.getMatrixAt(i, m);
+    m.decompose(p, q, s);
+    assert.ok(Math.abs(p.y - (fn(p.x, p.z) - 0.02)) < 1e-5,
+      `blade ${i} rooted in its ground: y ${p.y} at (${p.x}, ${p.z})`);
+  }
 });
 
 test('the field actually places the blades it is asked for', () => {

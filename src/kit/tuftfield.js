@@ -105,6 +105,7 @@ export function makeTuftField({
   color = GRASS_TONE, width = 0.46, height = 0.44, wind = 1,
   windDir = [1, 0.35], gustScale = 0.055, gustSpeed = 2.4,
   keepout = [],
+  groundFn = null,   // see grassPlacements — the surface the tufts stand on
 } = {}) {
   // one quad: two triangles, base at the origin so the shear pivots the ground
   const geo = new THREE.PlaneGeometry(1, 1, 1, 1);
@@ -277,7 +278,7 @@ export function makeTuftField({
   };
   mat.customProgramCacheKey = () => 'tuftfield-billboard-poke-v2';
 
-  const spots = grassPlacements({ count, radius, inner, seed, groundSeed, keepout });
+  const spots = grassPlacements({ count, radius, inner, seed, groundSeed, keepout, groundFn });
   const mesh = new THREE.InstancedMesh(geo, mat, Math.max(1, spots.length));
   mesh.name = 'grassfield';          // the debug panel's toggles, wind sliders and
   mesh.userData.noOutline = true;    // material-swap exemption all key off this name
