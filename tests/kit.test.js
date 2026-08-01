@@ -106,13 +106,16 @@ test('tree: recursive branch skeleton + canopy, connected and deterministic by s
   assert.notDeepEqual(leafVerts(t), leafVerts(makeTree({ height: 3.2, seed: 6 })));
 });
 
-test('pine: tilted pads on an elbowed trunk, grounded and deterministic', () => {
+test('pine: a straight tiered pine with a pointy top, grounded and deterministic', () => {
+  // The elbowed cloud-pad pine is GONE — Frank: "it looks really weird...
+  // more straight up, pointy top like a pine tree has." What this pins now
+  // is the opposite of what it used to: the tree stands straight, tapers
+  // hard, and finishes on an apex.
   const p = makePine({ height: 4, tiers: 5, seed: 3 });
   assert.equal(p.name, 'pine');
   const box = new THREE.Box3().setFromObject(p);
   assert.ok(box.min.y > -0.02, `sits on the ground, got ${box.min.y}`);
-  assert.ok(box.max.y > 4 * 0.7 && box.max.y < 4 * 1.15, `pine height, got ${box.max.y}`);
-  // more than a single cone: root + 3 trunk segments + 2 knuckles + pads merged
+  assert.ok(box.max.y > 4 * 0.8 && box.max.y < 4 * 1.15, `pine height, got ${box.max.y}`);
   assert.ok(p.geometry.attributes.position.count > 100, 'tiered, not one smooth cone');
   assert.equal(p.children.length, 0, 'one mesh: a stand of these is one draw call');
 
@@ -122,11 +125,8 @@ test('pine: tilted pads on an elbowed trunk, grounded and deterministic', () => 
     const g = pineGeometry({ height: 4, tiers: 5, seed });
     const pos = g.attributes.position;
 
-    // The crown is narrower than the base. Measured against the top of the
-    // model (y > 0.80h) rather than the old 0.72h band: the pads now hang OFF
-    // the trunk to alternating sides, so a band that catches the raised outer
-    // rim of a mid pad is measuring the zigzag, not the taper.
     let lowWidth = 0, highWidth = 0;
+    let top = { y: -Infinity, r: 0 };
     const BANDS = 6;
     const cent = Array.from({ length: BANDS }, () => ({ x: 0, z: 0, n: 0 }));
     for (let i = 0; i < pos.count; i++) {
@@ -134,28 +134,22 @@ test('pine: tilted pads on an elbowed trunk, grounded and deterministic', () => 
       const r = Math.hypot(x, z);
       if (y < 4 * 0.35) lowWidth = Math.max(lowWidth, r);
       if (y > 4 * 0.80) highWidth = Math.max(highWidth, r);
+      if (y > top.y) top = { y, r };
       const b = Math.min(BANDS - 1, Math.max(0, Math.floor((y / 4) * BANDS)));
       cent[b].x += x; cent[b].z += z; cent[b].n++;
     }
-    assert.ok(highWidth < lowWidth, `seed ${seed} tapers upward: crown ${highWidth} vs base ${lowWidth}`);
-
-    // The zigzag itself: take the horizontal centre of mass of each height
-    // band, project them all onto the tree's own lean axis, and require both
-    // a real sideways swing AND at least one reversal of direction on the way
-    // up. A cone stack scores zero on both — that is exactly the silhouette
-    // this model exists not to be.
-    const cs = cent.filter((c) => c.n).map((c) => [c.x / c.n, c.z / c.n]);
-    let axis = cs[0];
-    for (const c of cs) if (Math.hypot(...c) > Math.hypot(...axis)) axis = c;
-    const len = Math.hypot(...axis) || 1;
-    const proj = cs.map((c) => (c[0] * axis[0] + c[1] * axis[1]) / len);
-    const swing = Math.max(...proj) - Math.min(...proj);
-    let reversals = 0;
-    for (let i = 2; i < proj.length; i++) {
-      if (Math.sign(proj[i] - proj[i - 1]) !== Math.sign(proj[i - 1] - proj[i - 2])) reversals++;
+    // tapers HARD toward the crown — a triangle, not a cylinder of pads
+    assert.ok(highWidth < lowWidth * 0.6,
+      `seed ${seed} tapers upward: crown ${highWidth} vs base ${lowWidth}`);
+    // the pointy top: the highest vertex is the crown cone's apex, on-axis
+    assert.ok(top.r < 4 * 0.04, `seed ${seed} finishes on a point: apex r=${top.r.toFixed(3)}`);
+    // and it stands STRAIGHT: every height band's centre of mass hugs the
+    // y axis — the seeded variation lives in the tiers, not the posture
+    for (const c of cent) {
+      if (!c.n) continue;
+      const d = Math.hypot(c.x / c.n, c.z / c.n);
+      assert.ok(d < 4 * 0.035, `seed ${seed} stands straight: band centre ${d.toFixed(3)} off axis`);
     }
-    assert.ok(swing > 4 * 0.05, `seed ${seed} leans off axis, got ${swing}`);
-    assert.ok(reversals >= 1, `seed ${seed} profile reverses direction, got ${reversals}`);
   }
 
   // compare the whole buffer: the leading vertices are the root stub, which is
