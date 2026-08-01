@@ -1,10 +1,11 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, WASH, wash } from '../palette.js';
+import { PAPER, ACCENT, INK, WASH, wash, mixHex } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, aimMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
+import { mergeSimple } from '../kit/scatter.js';
 
 const ID = 20;
 
@@ -73,14 +74,32 @@ export default {
     aimMonk(monk, colossus.position);
     moving.add(monk);
 
-    // a stone marker at his feet, worn down by everyone who has tried
+    // A stone waymarker beside the road, worn down by everyone who has tried.
+    // It used to be a plain box ON the path — Frank: "why is there a weird
+    // cube in the road?" — so now it is shaped like the thing it is: a square
+    // pillar that tapers as it rises, a pyramid cap, a half-buried plinth
+    // underneath, in a tone a step darker than the road so it stands against
+    // the ribbon instead of dissolving into it. And it stands at the verge,
+    // not in anyone's way.
+    const MARKER = { x: -0.95, z: 1.55 };
+    const markerParts = [];
+    const shaft = new THREE.CylinderGeometry(0.145, 0.185, 0.82, 4);
+    shaft.translate(0, 0.41, 0);
+    markerParts.push(shaft);
+    const cap = new THREE.ConeGeometry(0.205, 0.17, 4);
+    cap.translate(0, 0.82 + 0.075, 0);
+    markerParts.push(cap);
+    const plinth = new THREE.DodecahedronGeometry(0.26, 0);
+    plinth.scale(1.25, 0.42, 1.05);
+    plinth.translate(0.02, 0.05, 0.01);
+    markerParts.push(plinth);
     const marker = new THREE.Mesh(
-      new THREE.BoxGeometry(0.42, 0.92, 0.3),
-      toonMaterial({ color: WASH.stone, flat: true }));
+      mergeSimple(markerParts),
+      toonMaterial({ color: mixHex(WASH.stone, INK, 0.22), flat: true }));
     marker.name = 'marker';
-    marker.position.set(-1.9, 0.46, 0.9);
-    marker.rotation.y = 0.3;
-    marker.rotation.z = 0.07;
+    marker.position.set(MARKER.x, 0, MARKER.z);
+    marker.rotation.y = 0.55;
+    marker.rotation.z = 0.05;   // an old stone leans a little
     moving.add(marker);
 
     const world = composeWorld(moving, {
@@ -91,9 +110,12 @@ export default {
         ...path.keepout(24, 1.4),
         { x: 0.4, z: -0.8, r: 2.6 },
         { x: 3.6, z: 3.4, r: 1.2 },
-        { x: -1.9, z: 0.9, r: 0.9 },
+        { x: MARKER.x, z: MARKER.z, r: 0.9 },
       ],
-      grassKeepout: path.keepout(26, 1.0),
+      grassKeepout: [
+        ...path.keepout(26, 1.0),
+        { x: MARKER.x, z: MARKER.z, r: 0.45 },
+      ],
     });
 
     for (const [p, rx, rz, op, parent] of [
