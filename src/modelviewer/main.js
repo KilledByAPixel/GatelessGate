@@ -169,6 +169,7 @@ $('fb-needs').onclick = () => {
   checklist.set(currentKey, { state: cur === 'needs' ? null : 'needs' });
   refreshMarks(currentKey);
 };
+$('fb-file').onclick = () => openSource(currentKey);
 $('fb-note').oninput = () => {
   checklist.set(currentKey, { note: $('fb-note').value });
   const row = sideList.querySelector(`.row[data-key="${currentKey}"] .dot`);
@@ -232,6 +233,8 @@ function showModel(index) {
   lightRig.visible = !silhouette;
   document.title = `${currentKey} · model viewer`;
 
+  $('fb-file').textContent = sourceFileFor(currentKey) || '';
+
   const sel = sideList.querySelector('.row.sel');
   if (sel) sel.classList.remove('sel');
   const row = sideList.querySelector(`.row[data-key="${currentKey}"]`);
@@ -277,6 +280,7 @@ const gallery = createGallery({
   getRoster: () => liveRoster,
   toast,
   onChecklistChange: refreshMarks,
+  openSource,
 });
 
 function enterGallery() {
@@ -408,6 +412,7 @@ async function doReload() {
     liveKit = kit;
     liveRoster = roster.ROSTER;
     watched = texts;
+    rebuildSourceMap(texts.get(KIT_URL));
     scene.remove(lightRig);
     lightRig = liveKit.makeLights();
     lightRig.visible = !silhouette;
@@ -424,6 +429,45 @@ async function doReload() {
     console.error('[mv] reload failed:', e);
     toast('reload failed — see console', true);
     return false;
+  }
+}
+
+// ---- click-to-edit: which file is this model's builder in? ----------------
+// Derived from the kit facade itself (`export { makeDog } from './dog.js'`),
+// so it stays correct as the kit grows — no per-model annotation to maintain.
+// Clicking opens the file in VS Code via vscode://file/ when the mv-root meta
+// tag names this machine's repo path; otherwise it copies the relative path.
+const MV_ROOT = (document.querySelector('meta[name="mv-root"]') || {}).content || '';
+let sourceMap = null;          // kit export name -> repo-relative path
+
+function rebuildSourceMap(indexText) {
+  if (!indexText) return;
+  sourceMap = {};
+  for (const m of indexText.matchAll(/export\s*\{([^}]*)\}\s*from\s*['"]([^'"]+)['"]/g)) {
+    const rel = new URL(m[2], KIT_URL).pathname.replace(/^\//, '');
+    for (const piece of m[1].split(',')) {
+      const name = piece.trim().split(/\s+as\s+/).pop().trim();
+      if (name) sourceMap[name] = rel;
+    }
+  }
+}
+
+function sourceFileFor(key) {
+  if (!sourceMap) return null;
+  const entry = liveRoster.find((e) => e.key === key);
+  const name = entry && (String(entry.build).match(/kit\s*\.\s*(\w+)/) || [])[1];
+  return (name && sourceMap[name]) || null;
+}
+
+function openSource(key) {
+  const file = sourceFileFor(key);
+  if (!file) { toast('source file unknown'); return; }
+  if (MV_ROOT) {
+    location.href = `vscode://file/${MV_ROOT.replace(/\/+$/, '')}/${file}`;
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(file).then(() => toast('path copied: ' + file), () => toast(file));
+  } else {
+    toast(file);
   }
 }
 
@@ -495,7 +539,11 @@ window.__mvReady = true;
 requestAnimationFrame(tick);
 
 if (new URLSearchParams(location.search).has('sweep')) sweep();
-crawlTexts().then((t) => { watched = t; }).catch((e) => console.warn('[mv] watch crawl failed:', e));
+crawlTexts().then((t) => {
+  watched = t;
+  rebuildSourceMap(t.get(KIT_URL));
+  if (mode === 'single' && currentKey) $('fb-file').textContent = sourceFileFor(currentKey) || '';
+}).catch((e) => console.warn('[mv] watch crawl failed:', e));
 setInterval(poll, 1000);
 
 // verification hooks for the one-shot headless driver (shot.js): rAF is

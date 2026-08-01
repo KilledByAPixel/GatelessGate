@@ -21,7 +21,7 @@ const SPACING = 120;            // wide vs the narrow FOV: neighbors stay out of
 const RENDER_MARGIN_PX = 200;   // build cells a little past the viewport edge
 const YAW = 40 * Math.PI / 180, PITCH = 18 * Math.PI / 180;   // the judging 3/4 view
 
-export function createGallery({ getKit, getRoster, toast, onChecklistChange }) {
+export function createGallery({ getKit, getRoster, toast, onChecklistChange, openSource }) {
   let mounted = false, visible = false, dirty = true;
   let renderer, scene, camera, lightRig;
   let container, grid, canvas;
@@ -78,6 +78,9 @@ export function createGallery({ getKit, getRoster, toast, onChecklistChange }) {
       </div>
       <div class="cell-view"></div>
       <input class="cell-note" placeholder="note&hellip;">`;
+    const keyEl = root.querySelector('.cell-key');
+    keyEl.title = 'open source in VS Code';
+    keyEl.onclick = () => openSource && openSource(entry.key);
     const [ok, needs] = [root.querySelector('.mark-ok'), root.querySelector('.mark-needs')];
     const note = root.querySelector('.cell-note');
     note.value = st.note;

@@ -3,6 +3,11 @@
 <head>
   <meta charset="utf-8">
   <title>model viewer</title>
+  <!-- Absolute repo path for click-to-edit: the source-file link in the
+       sidebar (and a cell's name in the gallery) opens the model's builder
+       in VS Code via vscode://file/. On a machine where this path is wrong,
+       clicking falls back to copying the repo-relative path instead. -->
+  <meta name="mv-root" content="c:/dev/claude/gateless_gate">
   <!--
     Standalone art-iteration tool (see src/modelviewer/main.js). It loads the
     KIT BUILDERS only — never the game — and shows every model in the roster
@@ -69,6 +74,14 @@
       padding: 8px 12px 10px; border-top: 1px solid var(--line);
       display: flex; flex-direction: column; gap: 6px;
     }
+    #fb-file {
+      color: var(--mid); font-size: 11px; cursor: pointer;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    #fb-file:hover { text-decoration: underline; color: var(--ink); }
+    #fb-file:empty { display: none; }
+    .cell-key { cursor: pointer; }
+    .cell-key:hover { text-decoration: underline; }
     #side-feedback > div { display: flex; gap: 6px; }
     #fb-ok.on { background: var(--ok); border-color: var(--ok); color: var(--paper); }
     #fb-needs.on { background: var(--accent); border-color: var(--accent); color: var(--paper); }
@@ -148,6 +161,7 @@
     </div>
     <div id="side-list"></div>
     <div id="side-feedback">
+      <div id="fb-file" title="open in VS Code"></div>
       <div><button id="fb-ok">&#10003; ok</button><button id="fb-needs">&#10005; needs work</button></div>
       <input id="fb-note" placeholder="note&hellip;">
     </div>
