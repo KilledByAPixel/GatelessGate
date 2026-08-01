@@ -1,7 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { INK } from '../palette.js';
 import { makeQuadruped } from './quadruped.js';
-import { mergeSimple } from './scatter.js';
 import { hash1 } from '../util/noise.js';
 
 // Nansen's cat (case 14). The third preset on the shared quadruped, after the
@@ -215,17 +214,15 @@ export function makeCat({ height = 0.32, color = INK, seed = 14, pose = 'sit' } 
     joint.userData.baseZ = joint.rotation.z;
 
     const a = i / TAIL_SEGS, b = (i + 1) / TAIL_SEGS;
-    const rBase = (TAIL_R0 + (TAIL_R1 - TAIL_R0) * a) * h;
-    // a joint ball merged at the segment's base: jointed cylinders open a
-    // wedge of daylight at every bend (Frank) — the ball rides the hinge
-    // point so the curl stays covered at any pose, for zero extra meshes
-    const ball = new THREE.SphereGeometry(rBase, 6, 5);   // was rBase*1.05 — proud of the cylinder wall, it beaded the tail (Frank)
-    ball.translate(0, -segLen / 2, 0);
-    const seg = new THREE.Mesh(mergeSimple([
-      new THREE.CylinderGeometry(
-        (TAIL_R0 + (TAIL_R1 - TAIL_R0) * b) * h, rBase, segLen, 5),
-      ball,
-    ]), material);
+    // Cut 30% longer than the joint spacing (still centred on it), so each
+    // segment overlaps its neighbour and a curled joint never opens
+    // daylight. Replaced a merged joint ball — even trimmed flush it beaded
+    // the tail (Frank); overlap covers the same gap without touching the
+    // silhouette.
+    const seg = new THREE.Mesh(new THREE.CylinderGeometry(
+      (TAIL_R0 + (TAIL_R1 - TAIL_R0) * b) * h,
+      (TAIL_R0 + (TAIL_R1 - TAIL_R0) * a) * h,
+      segLen * 1.3, 5), material);
     seg.name = 'tailseg';
     seg.position.y = segLen / 2;
     joint.add(seg);

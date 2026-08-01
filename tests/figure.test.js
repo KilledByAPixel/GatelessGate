@@ -77,15 +77,18 @@ test('the seated figure folds real legs — knees at ±x, lap valley, torso inse
   // THE KNEES: the widest thing the figure owns, low, and LEFT/RIGHT —
   // the base must be clearly wider (±x, where the folded legs point) than
   // it is deep (±z), which is exactly what no solid of revolution can do
-  // (Round three narrowed and YAWED the knee masses forward — Frank read the
-  // straight-sideways pair as "weird legs coming out from the side" — so the
-  // reach thresholds came down from 0.32·H with the retune; the shape claims
-  // are unchanged: wide, low, and wider than deep.)
-  const knees = maxRadiusInBand(body, 0, 0.16 * H);
-  const kneeX = maxAxisInBand(body, 0, 0.16 * H, 'x');
-  const kneeZ = maxAxisInBand(body, 0, 0.16 * H, 'z');
+  // (Round three yawed the knee masses forward; round five made the base an
+  // honest CUSHION — a flat zabuton at y=0 with cheeks and shins resting on
+  // it, Frank's own reading. The leg claims are measured ABOVE the cushion
+  // band so they read the body, not the furniture.)
+  const cushion = maxRadiusInBand(body, 0, 0.044 * H);
+  assert.ok(cushion > 0.23 * H, `a real zabuton, wider than the robe: ${cushion}`);
+  const knees = maxRadiusInBand(body, 0.05 * H, 0.16 * H);
+  const kneeX = maxAxisInBand(body, 0.05 * H, 0.16 * H, 'x');
+  const kneeZ = maxAxisInBand(body, 0.05 * H, 0.16 * H, 'z');
   assert.ok(knees > 0.28 * H, `a wide knee base: ${knees}`);
   assert.ok(kneeX > 0.28 * H, `knee masses reach past the cloth core: ${kneeX}`);
+  assert.ok(kneeX > cushion, `the knees still out-reach the cushion rim: ${kneeX} vs ${cushion}`);
   assert.ok(kneeX > kneeZ * 1.1, `folded legs, not a skirt — wider than deep: ${kneeX} vs ${kneeZ}`);
 
   // THE LAP: a near-horizontal turn — the lap ring (0.175·h) keeps well

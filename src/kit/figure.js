@@ -183,16 +183,19 @@ const STAND_PROFILE = [
 // stays honest — the "long run up the skirt" is here the run up the shins,
 // and the "skirt gathering" is the lap turn itself.
 export const SIT_PROFILE = [
-  // The cloth core is SLIMMER than the knees on purpose (round four: at
-  // 0.25·h its widest ring out-bulged everything and Frank read the base as
-  // furniture — "is he sitting on top of, like, a cushion? what is the round
-  // thing underneath him?"). The lathe now stays inside the knee masses, so
-  // the ±x crests are the widest thing the figure owns and the base reads
-  // as tucked, folded legs — not a pouf he perches on.
-  [0.020, 0.000],   // hem centre, closed on the ground
-  [0.205, 0.000],   // the hem pooling round the crossed shins
-  [0.215, 0.050],   // SHIN ROLL — the lathe's own widest ring, INSIDE the knees
-  [0.195, 0.150],   // top of the leg block: the run stays WIDE, not a taper
+  // Round five made the base HONEST (Frank: "it IS a cushion — okay, cushion
+  // is good, but make it flat, about a quarter the height, and give them
+  // butt cheeks and a leg shape so it looks like they're sitting ON it").
+  // The lathe here is now only the ROBE — a slim cloth core whose hem pools
+  // on the cushion's top, not on the ground. Everything the robe drapes
+  // over is its own ellipsoid, merged in by seatedBodyGeometry below: a
+  // flat zabuton at y=0, two cheeks resting on it at the rear, the crossed
+  // shins as a wide bar in front, and the two knee crests. The lathe stays
+  // inside all of them, so what reads at distance is figure-on-cushion.
+  [0.020, 0.035],   // hem centre, closed on the cushion's top
+  [0.165, 0.040],   // the hem pooling over the seat
+  [0.175, 0.085],   // the robe over the hips — widest ring, inside cheeks and shins
+  [0.165, 0.150],   // rising over the leg block toward the lap
   [0.140, 0.175],   // THE LAP — a near-horizontal shelf in to the waist
   [0.126, 0.220],   // OBI — the tie
   [0.142, 0.265],   // the blouse pushed up over the knot
@@ -201,30 +204,45 @@ export const SIT_PROFILE = [
   [0.064, 0.478],   // the neck opening
 ];
 
-// THE KNEES, in fractions of height. One flattened ellipsoid per side,
-// its long axis YAWED forward-out so the lump runs the way a folded thigh
-// actually lies — from the hip, forward and out to the knee. The first cut
-// pointed the long axis straight sideways at mid-block height and Frank
-// read it as anatomy from nowhere: "weird kinda legs or knees coming out
-// from the side... like he's sitting on something." Angling the mass and
-// carrying it a little higher (toward the top of the leg block, where a
-// knee crests on crossed legs) keeps the ±x width that says "folded legs"
-// while reading as legs folded FORWARD. The inner half of each ellipsoid
-// stays buried in the lathe (the buried-join rule), and the dip between
-// the crests is still the valley the folded cuffs rest in.
-const KNEE = { r: 0.09, scale: [1.5, 0.75, 1.1], x: 0.18, y: 0.105, z: 0.085, yaw: 0.5 };
+// THE SEAT, in fractions of height. Frank's reading, round five: the base
+// IS a cushion, so build it as one — and put a body on it.
+//   CUSHION — a flat zabuton: a quarter the height of the old pooled base,
+//     wider than everything above it, so a rim of it shows all round and
+//     the figure reads as sitting ON something rather than melting into it.
+//   CHEEKS — two lobes resting on the cushion at the rear; they carry the
+//     rump's silhouette from behind and the sides.
+//   SHINS — the crossed legs: one wide flat bar ACROSS the front.
+//   KNEES — the two crests at ±x, long axis yawed forward-out the way a
+//     folded thigh lies; still the widest thing the figure owns.
+const CUSHION = { r: 0.26, rTop: 0.235, hh: 0.042 };
+const CHEEK = { r: 0.09, scale: [1.05, 0.65, 1.05], x: 0.08, y: 0.07, z: -0.10 };
+const SHINS = { r: 0.09, scale: [2.3, 0.62, 1.0], y: 0.075, z: 0.10 };
+const KNEE = { r: 0.09, scale: [1.5, 0.75, 1.1], x: 0.18, y: 0.095, z: 0.095, yaw: 0.5 };
 
-// The whole seated body — lathe core + both knees — as ONE geometry.
+// The whole seated body — robe lathe + cushion + cheeks + shins + knees —
+// as ONE geometry (one mesh, no extra draws anywhere it is used).
 // Exported because the assembly's instanced crowd must be the same person:
 // it feeds this straight into its InstancedMesh (still one draw call).
 // `width` is the radial squeeze (`stout`, or the crowd's SLIM): it thins the
-// lathe around its axis and carries the knee centres inward with it, but the
-// knee masses keep their own size — at fog distance the knees are the event
-// that must survive, so the crowd figure spends its width there.
+// lathe and the cushion around the axis and carries the mass centres inward,
+// but the flesh masses keep their own size — at fog distance the knees and
+// the cushion rim are the events that must survive.
 export function seatedBodyGeometry({ height, width = 1, segments = 10 } = {}) {
   const lathe = new THREE.LatheGeometry(
     SIT_PROFILE.map(([r, y], i) => new THREE.Vector2((i ? r * width : r) * height, y * height)),
     segments);
+  const cushion = new THREE.CylinderGeometry(
+    CUSHION.rTop * width * height, CUSHION.r * width * height, CUSHION.hh * height, 10);
+  cushion.translate(0, CUSHION.hh * height / 2, 0);
+  const cheeks = [-1, 1].map((side) => {
+    const c = new THREE.SphereGeometry(CHEEK.r * height, 8, 6);
+    c.scale(CHEEK.scale[0], CHEEK.scale[1], CHEEK.scale[2]);
+    c.translate(side * CHEEK.x * width * height, CHEEK.y * height, CHEEK.z * height);
+    return c;
+  });
+  const shins = new THREE.SphereGeometry(SHINS.r * height, 8, 6);
+  shins.scale(SHINS.scale[0] * width, SHINS.scale[1], SHINS.scale[2]);
+  shins.translate(0, SHINS.y * height, SHINS.z * height);
   const knees = [-1, 1].map((side) => {
     const k = new THREE.SphereGeometry(KNEE.r * height, 8, 6);
     k.scale(KNEE.scale[0], KNEE.scale[1], KNEE.scale[2]);
@@ -232,7 +250,7 @@ export function seatedBodyGeometry({ height, width = 1, segments = 10 } = {}) {
     k.translate(side * KNEE.x * width * height, KNEE.y * height, KNEE.z * height);
     return k;
   });
-  return mergeSimple([lathe, ...knees]);
+  return mergeSimple([lathe, cushion, ...cheeks, shins, ...knees]);
 }
 
 // The sedge hat, authored in its own local space (y = 0 is where the old

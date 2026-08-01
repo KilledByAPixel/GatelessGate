@@ -2,7 +2,6 @@ import * as THREE from '../../lib/three.module.js';
 import { createCloth, stepCloth, clothEnergy } from '../sim/verlet.js';
 import { noise3 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
-import { mergeSimple } from './scatter.js';
 import { INK } from '../palette.js';
 
 // A hanging tail: the verlet cloth as a 1-column strand, pinned at the root.
@@ -16,17 +15,17 @@ export function makeTail({ segments = 7, length = 1.0, thickness = 0.06, color =
 
   const mat = toonMaterial({ color, flat: true });
   const segs = [];
+  // Segments are cut LONGER than their node spacing (still centred between
+  // their nodes), so neighbours overlap into each other at every joint and
+  // a bend never opens daylight. This replaced a merged joint ball — even
+  // trimmed flush it beaded the tail ("weird balls appearing in the
+  // joints" — Frank); plain overlap covers the same gap while adding
+  // nothing to the silhouette.
+  const OVERLAP = 1.35;
   for (let i = 0; i < segments - 1; i++) {
     const r0 = thickness * (1 - i / segments);
     const r1 = thickness * (1 - (i + 1) / segments);
-    // a joint ball merged at the segment's thick (upper) end: two cylinders
-    // meeting at a bend open a wedge of daylight at every joint of the
-    // strand (Frank, on tails generally) — the ball keeps each node covered
-    // however the verlet folds it, for zero extra meshes
-    const ball = new THREE.SphereGeometry(r0, 6, 5);   // was r0*1.05 — proud of the cylinder wall, it beaded the tail (Frank)
-    ball.translate(0, spacing / 2, 0);
-    const m = new THREE.Mesh(
-      mergeSimple([new THREE.CylinderGeometry(r1, r0, spacing, 6), ball]), mat);
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, spacing * OVERLAP, 6), mat);
     m.name = 'seg';
     segs.push(m);
     group.add(m);
@@ -46,7 +45,7 @@ export function makeTail({ segments = 7, length = 1.0, thickness = 0.06, color =
       dir.multiplyScalar(1 / len);
       q.setFromUnitVectors(up, dir);          // cylinder Y-axis -> segment direction
       segs[i].quaternion.copy(q);
-      segs[i].scale.y = len / spacing;
+      segs[i].scale.y = len / spacing;        // geometry is spacing*OVERLAP long, so the overlap rides the stretch
     }
   }
   layout();
