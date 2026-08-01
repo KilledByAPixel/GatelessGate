@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { INK } from '../palette.js';
 import { makeTail } from './tail.js';
+import { mergeSimple } from './scatter.js';
 
 // The shared body plan for every four-legged animal in the book: a barrel slung
 // between four legs, a head out front, and optional hump / horns / ears / snout.
@@ -39,6 +40,7 @@ export function makeQuadruped({
   bodyR = 0.22, bodyLen = 0.72, bodyDrop = 0.16,
   // legs
   legH = 0.52, legR = 0.055, legTaper = 0.82, hipX = 0.13, hipZ = 0.32,
+  legBury = 0.06,        // how far the leg TOPS sink up into the barrel, x height — raise it to close a leg/body gap
   legs = null,           // { knee } — radians of bend in the HIND pair; 0/absent = posts
   // head
   head = { shape: 'sphere', r: 0.20, fwd: 0.56, up: 0.22 },
@@ -69,7 +71,13 @@ export function makeQuadruped({
   // see THE LEG RULE above
   const hx = hipX * h;
   const belly = bodyY - Math.sqrt(Math.max(0, R * R - hx * hx));
-  const legTop = belly + 0.06 * h;                 // bury the top slightly in the barrel
+  // How deep the tops ride inside the barrel is a DIAL (legBury), not a
+  // constant: the belly formula above is exact only at the barrel's
+  // cylindrical mid-span, so a species whose hips sit near the capsule's
+  // rounding caps — or whose barrel is pitched — shows a sliver of air at
+  // the join. Cranking legBury is the one-number fix (Frank: "I need a way
+  // to adjust the legs to be inside the body more").
+  const legTop = belly + legBury * h;
   const knee = (legs && legs.knee) || 0;
 
   // A cylinder is built centred on its own origin. For a jointed leg we want it
@@ -167,7 +175,17 @@ export function makeQuadruped({
       const rKnee = legR * h * HOCK_PINCH;
       const rFoot = legR * h;
 
-      const thigh = new THREE.Mesh(hung(rHip, rKnee, thighLen, 6), mat);
+      // THE KNEE BALL. Two lofts meeting at an angle touch edge-to-edge and
+      // open a wedge of daylight on the OUTSIDE of the bend ("there's like a
+      // gap where the two cylinders are touching" — Frank). A ball of the
+      // joint's own radius, centred exactly on the hinge point, keeps the
+      // joint covered at any bend — and it is MERGED into the thigh's
+      // geometry rather than added as a child, so it costs no mesh and no
+      // draw call (k45's horse budget is frozen at the line).
+      const kneeBall = new THREE.SphereGeometry(rKnee * 1.05, 7, 5);
+      kneeBall.translate(0, -thighLen, 0);
+      const thigh = new THREE.Mesh(
+        mergeSimple([hung(rHip, rKnee, thighLen, 6), kneeBall]), mat);
       thigh.name = 'leg';                             // still 'leg': species re-parent by name
       thigh.position.set(sx * hx, legTop, sz * hipZ * h);
       // Rotating +y about +x by θ sends it toward +z, so a POSITIVE angle tips

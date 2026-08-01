@@ -126,6 +126,46 @@ test('the ear base flares wider than the ear itself', () => {
   assert.ok(waistR < baseR * 0.85, `waist pulls back in: ${waistR.toFixed(3)} vs base ${baseR.toFixed(3)}`);
 });
 
+// THE KNEE BALL: two lofts meeting at an angle open a wedge of daylight on
+// the outside of the bend ("there's like a gap where the two cylinders are
+// touching" — Frank). A ball of the joint's own radius is MERGED into the
+// thigh geometry at the hinge point — no extra mesh, no draw call, and the
+// joint stays covered at any bend.
+test('the knee ball caps the hock joint inside the thigh mesh', () => {
+  const legR = 0.055;                                // the plan's default
+  const { group } = makeQuadruped({ legs: { knee: 0.35 } });
+  const thigh = group.children.find((c) => c.name === 'leg'
+    && c.children.some((k) => k.name === 'shin'));
+  assert.ok(thigh, 'a jointed thigh exists');
+  const thighLen = -thigh.children.find((k) => k.name === 'shin').position.y;
+  const rKnee = legR * 0.85;                         // HOCK_PINCH in the plan
+  // the plain hung() loft ends exactly at -thighLen; only the merged ball
+  // reaches below the hinge point
+  const p = thigh.geometry.attributes.position;
+  let minY = Infinity;
+  for (let i = 0; i < p.count; i++) minY = Math.min(minY, p.getY(i));
+  assert.ok(minY < -thighLen - rKnee * 0.5,
+    `the ball caps below the hinge: ${minY} vs joint at ${-thighLen}`);
+});
+
+// legBury is the dial that closes a leg/body gap: the belly formula is exact
+// only at the barrel's cylindrical mid-span, so a species whose hips ride
+// near the capsule's end caps needs to sink its leg tops deeper by hand.
+test('legBury sinks the leg tops deeper while the feet stay on the ground', () => {
+  const tops = (legBury) => {
+    const { group } = makeQuadruped({ legBury });
+    const legs = group.children.filter((c) => c.name === 'leg');
+    const box = new THREE.Box3();
+    for (const l of legs) box.union(new THREE.Box3().setFromObject(l));
+    return { top: legs[0].position.y, minY: box.min.y };
+  };
+  const a = tops(0.06), b = tops(0.18);
+  assert.ok(Math.abs((b.top - a.top) - 0.12) < 1e-9,
+    `the dial moves the join: ${a.top} -> ${b.top}`);
+  assert.ok(Math.abs(a.minY) < 1e-6 && Math.abs(b.minY) < 1e-6,
+    `feet still land on y = 0: ${a.minY}, ${b.minY}`);
+});
+
 // A LIMB, NOT A DOWEL: the plain leg spends its radii like a leg — broad
 // thigh at the body, slim cannon low down, and a small flare back out at the
 // foot. Measured off the geometry so a regression to a straight cylinder
