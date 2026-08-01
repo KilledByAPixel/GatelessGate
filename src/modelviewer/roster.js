@@ -26,6 +26,7 @@ export const ROSTER = [
   { key: 'monk-sit', section: 'figures', build: (kit) => kit.makeMonk({ pose: 'sit' }) },
   { key: 'monk-point', section: 'figures', build: (kit) => kit.makeMonk({ pose: 'point' }) },
   { key: 'monk-raise', section: 'figures', build: (kit) => kit.makeMonk({ pose: 'raise' }) },
+  { key: 'monk-fold', section: 'figures', build: (kit) => kit.makeMonk({ pose: 'fold' }) },
   { key: 'buddha', section: 'figures', build: (kit) => kit.makeBuddha({}) },
   { key: 'hangingmonk', section: 'figures', build: (kit) => kit.makeHangingMonk({}) },
   { key: 'assembly', section: 'figures', build: (kit) => kit.makeAssembly({ count: 6, radius: 1.6 }) },

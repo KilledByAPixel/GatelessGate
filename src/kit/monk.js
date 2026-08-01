@@ -12,7 +12,9 @@ import { INK } from '../palette.js';
 // Poses: 'stand' (sleeves hang), 'point' (one sleeve raised toward +x, for
 // indicating a thing across the scene), 'raise' (one sleeve held nearly
 // vertical, offered to the air — see figure.js for why those two are not the
-// same gesture), 'sit' (seated proportions, sleeves folded into the lap).
+// same gesture), 'sit' (seated proportions, elbowed arms folded, hands
+// together in the lap), 'fold' (standing, the same folded arms held at the
+// belly — a monk waiting, hands in his sleeves).
 // `arms: false` drops the sleeves for a cheap crowd figure — a robe and a
 // head, which is all a person in the background needs.
 const POSES = {
@@ -20,6 +22,7 @@ const POSES = {
   sit: { stance: 'sit', arms: 'fold' },
   point: { stance: 'stand', arms: 'point' },
   raise: { stance: 'stand', arms: 'raise' },
+  fold: { stance: 'stand', arms: 'fold' },
 };
 
 export function makeMonk({

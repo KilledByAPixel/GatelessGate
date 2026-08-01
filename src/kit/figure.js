@@ -294,23 +294,21 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // (the folded sleeves), so their +x plant already IS the side plant and
 // stays at 0. Cases with a bearing-sensitive staging can override with the
 // `staffAng` option (additive; 0 = the old on-axis plant).
-// `fold` is the folded-arm pitch (radians off plumb, toward local +z) and it
-// is per-stance because the lap is. The old single angle (-1.15) was tuned
-// against the bell-shaped robe, whose fat slope happened to catch the cuffs;
-// above the lap-shelf profile the same angle parked them in mid-air, a
-// hand's-breadth forward of the inset chest (k17's "his hands have weird
-// thing"). Seated, the sleeves now hang nearer plumb so the cuff lips come
-// down onto the knee block and sink just below its surface — hands resting
-// in the lap, joined not floating.
+// `foldUpper`/`foldFore` are the folded-arm pitches (radians off plumb,
+// toward local +z) for the two-piece arm — the upper's hang and the
+// forearm's bend at the elbow — and they are per-stance because the hands'
+// destination is: seated hands rest DOWN in the lap (a gentle bend), while
+// standing hands meet at the waist (the forearm swings nearly horizontal).
+// The inward swing (the cuffs crossing to the centre) is the same for all.
 const KNEEL = 0.5;
 const STANCES = {
-  stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.735, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.9, fold: -1.15 },
+  stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.735, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.9, foldUpper: -0.12, foldFore: -1.45 },
   // Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did:
   // the chest run in SIT_PROFILE was lengthened and steepened so a meditator
   // sits STRAIGHT ("they should all kinda look like Buddha") — the crown now
   // tops out at 0.610·h, still comfortably a seated man, and the fold angle
   // eases to -0.44 so the cuffs keep landing in the lap the knees now frame.
-  sit: { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, head: 0.515, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, fold: -0.44 },
+  sit: { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, head: 0.515, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31 },
   kneel: {
     profile: mixProfile(STAND_PROFILE, SIT_PROFILE, KNEEL),
     shoulder: mix(0.60, 0.40, KNEEL),
@@ -321,7 +319,8 @@ const STANCES = {
     staff: mix(1.2, 0.7, KNEEL),
     staffX: mix(0.26, 0.3625, KNEEL),
     staffAng: mix(0.9, 0, KNEEL),
-    fold: mix(-1.15, -0.48, KNEEL),
+    foldUpper: mix(-0.12, -0.22, KNEEL),
+    foldFore: mix(-1.45, -0.31, KNEEL),
   },
 };
 
@@ -374,16 +373,45 @@ export function makeFigure({
     // still ANIMATE the lift toward vertical (k3 adds 0.24rad); starting plumb
     // would send the arm over the top and back down the far side.
     else if (arms === 'raise' && side === 1) { arm.rotation.z = Math.PI - 0.34; arm.rotation.x = 0.22; }
-    else if (arms === 'fold' || seated) { arm.rotation.x = st.fold; arm.rotation.z = side * 0.12; } // fold into the lap
     else { arm.rotation.z = side * 0.28; }
+    g.add(arm);
+    return arm;
+  };
+
+  // FOLDED ARMS HAVE ELBOWS. One straight sleeve pitched into the lap read
+  // as "very stiff arms... like they don't have any forearms at all"
+  // (Frank). A folded arm is two sleeves: a short UPPER hanging from the
+  // shoulder (its slimmer cuff is the elbow), and a FOREARM hinged there,
+  // swung inward and forward so the two cuff mouths meet at the lap centre —
+  // hands tucked into the opposite sleeves, no hand detail needed. The
+  // forearm is a sleeve() too, so its merged shoulder ball covers the elbow
+  // joint at any bend, the same way the upper's covers the shoulder.
+  const makeFoldedArm = (side) => {
+    const upperLen = sleeveL * 0.55;
+    const arm = sleeve({ height, len: upperLen, r1: 0.052, mat });
+    arm.position.set(side * 0.115 * s * height, shoulderY, st.armZ * height);
+    arm.rotation.x = st.foldUpper;          // the upper hangs, only a little forward
+    arm.rotation.z = side * 0.12;           // elbows just clear of the body
+    const fore = sleeve({ height, len: sleeveL * 0.62, mat });
+    fore.name = 'forearm';
+    fore.position.y = -upperLen;            // hinged at the elbow, in the upper's frame
+    fore.rotation.x = st.foldFore;          // seated: down into the lap; standing: up to the waist
+    fore.rotation.z = -side * 0.9;          // and across the body, cuff to the centre
+    arm.add(fore);
     g.add(arm);
     return arm;
   };
   // a background figure can skip its sleeves — two fewer meshes apiece, which is
   // what lets a crowd fit the draw budget
   if (arms) {
-    makeSleeve(-1);
-    makeSleeve(1);
+    for (const side of [-1, 1]) {
+      // the gesture arm (point/raise, always the right) stays a single
+      // sleeve; everything else folds when the pose or the stance says so —
+      // a seated pointing teacher still keeps his OTHER hand in his lap
+      const gesture = (arms === 'point' || arms === 'raise') && side === 1;
+      if (!gesture && (arms === 'fold' || seated)) makeFoldedArm(side);
+      else makeSleeve(side);
+    }
   }
 
   const head = sphereHead({ height, mat });
