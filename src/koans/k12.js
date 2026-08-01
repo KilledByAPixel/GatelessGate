@@ -53,12 +53,16 @@ export default {
     zuigan.rotation.y = Math.PI * 0.5 + 0.22;      // pointing out into the air
     scene.add(zuigan);
 
-    // his staff, planted in the rock beside him
+    // his staff, planted in the rock beside him. NOT at (1.75, 0.5): the
+    // shipped camera's sight line to Zuigan passes through that exact spot
+    // (solve the camera ray — it crosses (1.75, 0.80, 0.55)), so the red shaft
+    // used to slice through his robe. Offset perpendicular to that line, down
+    // the lip he points along, where it reads planted and clear of him.
     const staff = new THREE.Mesh(
       new THREE.CylinderGeometry(0.028, 0.034, 1.5, 7),
       toonMaterial({ color: ACCENT, flat: true }));
     staff.name = 'staff';
-    staff.position.set(1.75, 0.72, 0.5);
+    staff.position.set(2.25, 0.72, 0.15);
     staff.rotation.z = 0.10;
     scene.add(staff);
 
