@@ -193,9 +193,10 @@ export const SIT_PROFILE = [
   // shins as a wide bar in front, and the two knee crests. The lathe stays
   // inside all of them, so what reads at distance is figure-on-cushion.
   [0.020, 0.035],   // hem centre, closed on the cushion's top
-  [0.165, 0.040],   // the hem pooling over the seat
-  [0.175, 0.085],   // the robe over the hips — widest ring, inside cheeks and shins
-  [0.165, 0.150],   // rising over the leg block toward the lap
+  [0.150, 0.040],   // the hem pooling over the seat
+  [0.158, 0.085],   // the robe over the hips — slimmed in round six ("that round
+                    //   thing that's their whole bottom part... a little smaller")
+  [0.150, 0.150],   // rising over the leg block toward the lap
   [0.140, 0.175],   // THE LAP — a near-horizontal shelf in to the waist
   [0.126, 0.220],   // OBI — the tie
   [0.142, 0.265],   // the blouse pushed up over the knot
@@ -209,13 +210,12 @@ export const SIT_PROFILE = [
 //   CUSHION — a flat zabuton: a quarter the height of the old pooled base,
 //     wider than everything above it, so a rim of it shows all round and
 //     the figure reads as sitting ON something rather than melting into it.
-//   CHEEKS — two lobes resting on the cushion at the rear; they carry the
-//     rump's silhouette from behind and the sides.
 //   SHINS — the crossed legs: one wide flat bar ACROSS the front.
 //   KNEES — the two crests at ±x, long axis yawed forward-out the way a
 //     folded thigh lies; still the widest thing the figure owns.
+// (Round six cut the CHEEK lobes: with the hip ring slimmed they added
+// nothing but width where Frank wanted less — the robe's own rear reads.)
 const CUSHION = { r: 0.26, rTop: 0.235, hh: 0.042 };
-const CHEEK = { r: 0.09, scale: [1.05, 0.65, 1.05], x: 0.08, y: 0.07, z: -0.10 };
 const SHINS = { r: 0.09, scale: [2.3, 0.62, 1.0], y: 0.075, z: 0.10 };
 const KNEE = { r: 0.09, scale: [1.5, 0.75, 1.1], x: 0.18, y: 0.095, z: 0.095, yaw: 0.5 };
 
@@ -234,12 +234,6 @@ export function seatedBodyGeometry({ height, width = 1, segments = 10 } = {}) {
   const cushion = new THREE.CylinderGeometry(
     CUSHION.rTop * width * height, CUSHION.r * width * height, CUSHION.hh * height, 10);
   cushion.translate(0, CUSHION.hh * height / 2, 0);
-  const cheeks = [-1, 1].map((side) => {
-    const c = new THREE.SphereGeometry(CHEEK.r * height, 8, 6);
-    c.scale(CHEEK.scale[0], CHEEK.scale[1], CHEEK.scale[2]);
-    c.translate(side * CHEEK.x * width * height, CHEEK.y * height, CHEEK.z * height);
-    return c;
-  });
   const shins = new THREE.SphereGeometry(SHINS.r * height, 8, 6);
   shins.scale(SHINS.scale[0] * width, SHINS.scale[1], SHINS.scale[2]);
   shins.translate(0, SHINS.y * height, SHINS.z * height);
@@ -250,7 +244,7 @@ export function seatedBodyGeometry({ height, width = 1, segments = 10 } = {}) {
     k.translate(side * KNEE.x * width * height, KNEE.y * height, KNEE.z * height);
     return k;
   });
-  return mergeSimple([lathe, cushion, ...cheeks, shins, ...knees]);
+  return mergeSimple([lathe, cushion, shins, ...knees]);
 }
 
 // The sedge hat, authored in its own local space (y = 0 is where the old
