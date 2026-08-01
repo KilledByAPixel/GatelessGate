@@ -5,6 +5,7 @@ import * as THREE from '../lib/three.module.js';
 import k7 from '../src/koans/k7.js';
 import k30, { POND } from '../src/koans/k30.js';
 import k33 from '../src/koans/k33.js';
+import { ACCENT } from '../src/palette.js';
 
 // Cases 7, 30 and 33 each held their water in a solid cylinder and set the
 // surface a couple of centimetres below its top face — so the cap covered the
@@ -83,6 +84,41 @@ for (const [label, mod, x, z] of [
     assert.ok(water.max.z < stone.max.z && water.min.z > stone.min.z);
   });
 }
+
+// Case 33's seal moved into the water (Frank, overnight pass 2): the koi wear
+// the case's one red, and the mat — vermillion in case 30, where the answer is
+// sitting on it — goes to ink here. The pairing with case 30 is the point, so
+// the check is written against BOTH scenes: same pond, opposite carriers.
+test('case 33: the koi carry the red and the mat has gone to ink', () => {
+  const root = staged(k33);
+  const red = new THREE.Color(ACCENT).getHexString();
+  const bodies = [];
+  root.scene.traverse((o) => { if (o.name === 'koi-body') bodies.push(o); });
+  assert.ok(bodies.length >= 4, 'a school to carry the seal');
+  for (const b of bodies) {
+    assert.equal(b.material.color.getHexString(), red, 'every fish wears the accent');
+  }
+  let cushion = null;
+  root.scene.traverse((o) => { if (o.name === 'cushion' && !cushion) cushion = o; });
+  assert.ok(cushion, 'the bare mat is still on the seat');
+  assert.notEqual(cushion.material.color.getHexString(), red,
+    'the mat gave the red up — one accent per koan');
+});
+
+test('case 30: the mat still holds its red, and its koi stay ink', () => {
+  const root = staged(k30);
+  const red = new THREE.Color(ACCENT).getHexString();
+  let cushion = null;
+  const bodies = [];
+  root.scene.traverse((o) => {
+    if (o.name === 'cushion' && !cushion) cushion = o;
+    if (o.name === 'koi-body') bodies.push(o);
+  });
+  assert.equal(cushion.material.color.getHexString(), red, 'case 30 keeps the vermillion mat');
+  for (const b of bodies) {
+    assert.notEqual(b.material.color.getHexString(), red, 'case 30 koi are ink, not accent');
+  }
+});
 
 for (const [label, mod] of [['case 30', k30], ['case 33', k33]]) {
   test(`${label}: the koi are under the water and clear of the floor`, () => {

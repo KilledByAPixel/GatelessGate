@@ -54,9 +54,15 @@ export default {
     scene.add(water.group);
 
     // the same pond, so the same koi: seed 30 gives case 33 the identical fish
-    // moving in the identical water — only the far bank differs
+    // moving in the identical water — only the far bank differs. THE SEAL IS
+    // THEIRS (Frank, overnight pass 2: the koi carry the red here): in case 30
+    // the red sits on the mat under the one who answered; here the answer is
+    // taken out, and the only warm thing left alive in the picture is under
+    // the water. Full ACCENT, not the deep mix — four small fish seen through
+    // a half-opaque surface are a held thing, not a mass, and the water
+    // already takes the glare off them.
     const koi = makeKoi({
-      count: 4, seed: 30, radius: POND.size * 0.32, color: WASH.mid,
+      count: 4, seed: 30, radius: POND.size * 0.32, color: ACCENT,
       // sized to the water they are actually in: the tail fin stands taller
       // than the old 0.95 fish was deep, so its dorsal broke the surface
       length: 0.7, depth: 0.19,
@@ -73,12 +79,14 @@ export default {
     seat.position.set(BANK.x, 0.13, BANK.z);
     scene.add(seat);
 
-    // and the same vermillion mat, in the same place, bare. In case 30 it is
-    // mostly hidden under the figure sitting on it; here the whole of it shows,
-    // which is the only difference between the two pictures.
+    // and the same mat, in the same place, bare — but in ink. In case 30 the
+    // mat is vermillion under the one sitting on it; here the koi carry the
+    // case's one red (above), so the mat goes to a dark wash: the same shape
+    // in the same spot with the warmth gone out of it, which is what "not
+    // Buddha" looks like as furniture. One accent per koan holds.
     const cushion = new THREE.Mesh(
       new THREE.CylinderGeometry(0.62, 0.62, 0.05, 4),
-      toonMaterial({ color: ACCENT, flat: true }));
+      toonMaterial({ color: WASH.dark, flat: true }));
     cushion.name = 'cushion';
     cushion.rotation.y = Math.PI / 4;
     cushion.position.set(BANK.x, 0.28, BANK.z);
