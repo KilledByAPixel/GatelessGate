@@ -164,6 +164,7 @@ export function makeWaterBed(ctx, dest) {
       g.gain.setTargetAtTime(l, ctx.currentTime, 0.3);
       gWob.gain.setTargetAtTime(l * 0.18, ctx.currentTime, 0.3);
     },
+    gain() { return g.gain.value; },   // headless probe read; never drives anything
     stop() {
       for (const node of [src, lfoA, lfoB]) { try { node.stop(); } catch { /* already stopped */ } }
       g.disconnect();
@@ -238,6 +239,7 @@ export function makeWind(ctx, dest) {
       gust = v;
       apply();
     },
+    gain() { return g.gain.value; },   // headless probe read; never drives anything
     stop() {
       try { src.stop(); } catch { /* already stopped */ }
       g.disconnect();

@@ -375,12 +375,15 @@ function buildKoan(mod, slug) {
   if (koan && koan.onExit) koan.onExit();
   stopReading();
   input.clear();
-  // Ambience is main's job now, not the koans': the module's `ambience`
-  // field is the single source of truth, started below and stopped here —
-  // so a recipe can never drift from what actually plays, and the menu's
-  // music never follows you in. A lingering wind would also block the new
-  // case's level (startAmbience only creates wind when none exists).
-  audio.stopAmbience();
+  // Ambience is main's job, not the koans': the module's `ambience` field is
+  // the single source of truth, handed to audio.transition() below — so a
+  // recipe can never drift from what actually plays. No stop here any more:
+  // transition() diffs the playing bed against the new page's recipe, ramps
+  // the layers both share (the wind keeps blowing through the page turn),
+  // fades out what the old page takes with it, fades in what is new — and it
+  // swaps the menu's chiming music for a case's plain drift itself, so the
+  // menu still never follows you in. Mood first: the music's pitch closure
+  // reads it live, so a kept drift retunes from its very next note.
   audio.setMood(mod.mood);
   if (scroll) { scroll.dispose(); scroll = null; }
   const built = mod.build({
@@ -393,7 +396,7 @@ function buildKoan(mod, slug) {
   if (prev && prev !== hub && prev !== built) { disposeRoot(prev); prev.dispose && prev.dispose(); }
   koan = built; koanSlug = slug;
   built.onEnter && built.onEnter();
-  audio.startAmbience(mod.ambience || []);
+  audio.transition(mod.ambience || []);
   // A developer page is not something you have READ. Marking it would put a
   // tool in the reader's progress and, worse, hand it to `lastSlug` — so
   // "Continue" would offer the showcase next time the book was opened.
@@ -787,6 +790,7 @@ window.gate = {
   ambient(on) { setAmbient(on === undefined ? !ambient : on); return ambient; },
   // Voice and delivery are baked, not chosen at runtime. This reports what shipped.
   voice() { const m = narration.manifest(); return m ? `${m.voice} / ${m.preset}` : null; },
+  audio() { return audio.debugState(); },   // live ambience layers, for headless probes
   narrationCount() { const m = narration.manifest(); return m ? Object.keys(m.files).length : 0; },
 };
 

@@ -90,6 +90,7 @@ export function makeMusic(ctx, dest, { emitters = 0, rng = Math.random, verbIn =
   return {
     stop() { stopped = true; if (timer) clearTimeout(timer); timer = null; },
     setEmitters(v) { n = v; },
+    emitters() { return n; },
     played() { return played; },
     degree() { return degree; },
   };

@@ -6,23 +6,24 @@ import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
 import { hz, SCALES } from './tuning.js';
 
-export function parseRecipe(str) {
-  const [type, arg] = str.split(':');
-  return { type, level: arg !== undefined ? parseFloat(arg) : 1 };
-}
+import { parseRecipe, emitterCount, diffAmbience } from './ambience_diff.js';
 
-// Beds are not emitters: wind is atmosphere rather than an event source, and
-// music is the thing being thinned. Everything else in a recipe is an object
-// that makes noise, and each one buys the drift layer more silence.
-const BEDS = new Set(['wind', 'music']);
-export function emitterCount(recipe = []) {
-  return recipe.filter((s) => !BEDS.has(parseRecipe(s).type)).length;
-}
+// The recipe grammar and the page-turn diff live in ambience_diff.js (pure,
+// Node-tested); re-exported here so the engine stays the module everyone
+// imports the recipe vocabulary from.
+export { parseRecipe, emitterCount } from './ambience_diff.js';
 
 // Browser-only. `save` is a createSave() instance.
 export function createAudio(save) {
   let ctx = null, master = null, music = null, musicGain = null;
   let wind = null, verb = null, water = null, dripTimer = null;
+  let playing = [];       // the recipe currently sounding — what transition() diffs against
+  let musicChimed = false; // the live music is the menu's chiming variant, not a case bed
+  // Creation counters for the headless probe: a layer that survived a page
+  // turn keeps its epoch, one that restarted took a new one. Clock-free, so
+  // it works even when a suspended headless context freezes every gain ramp.
+  let windEpoch = 0, waterEpoch = 0, musicEpoch = 0;
+  const tlog = [];        // last few transitions, for the same probe
   let soundOn = save.state().soundOn;
   let windScale = 1;      // debug-panel multiplier over whatever a koan asks for
   let windLevel = 0;      // last level a koan requested, so a scale change applies now
@@ -59,6 +60,17 @@ export function createAudio(save) {
     music = makeMusic(ctx, musicGain, {
       emitters, verbIn: verb.in, pitch: (d) => hz(d, mood), ...opts,
     });
+    musicChimed = !!opts.chimes;
+    musicEpoch++;
+  }
+
+  // The music a case bed may KEEP across a page turn is the plain drift; the
+  // menu's chiming variant (playMusic(0, { chimes: true })) must never ride
+  // into a case, because playMusic reuses a live scheduler and silently drops
+  // its options — the exact trap exit()'s stop/menuMusic() pairing guards.
+  function ensureCaseMusic(emitters) {
+    if (music && musicChimed) stopMusic();
+    playMusic(emitters);
   }
 
   function stopMusic() {
@@ -83,6 +95,47 @@ export function createAudio(save) {
     }, WATER.gap * (0.6 + Math.random() * 0.8) * 1000);
   }
 
+  // One sustained layer coming to life. Every bed is born at gain 0 and
+  // setLevel rides setTargetAtTime, so a started layer always FADES in from
+  // silence — there is no click to guard against here.
+  function startLayer(type, level, emitters) {
+    if (type === 'wind' && !wind) {
+      wind = makeWind(ctx, master);
+      windEpoch++;
+      windLevel = level;
+      wind.setLevel(level * windScale);
+    }
+    if (type === 'music') ensureCaseMusic(emitters);
+    if (type === 'water' && !water) {
+      water = makeWaterBed(ctx, master);
+      waterEpoch++;
+      water.setLevel(WATER.bedLevel * level);
+      scheduleDrip();
+    }
+  }
+
+  // A sustained layer leaving: fade to true silence on the bed's own
+  // setTargetAtTime curve, and only then release the nodes. The engine's
+  // reference to the layer is dropped at once, so a quick page turn can start
+  // a fresh bed while the old one is still dying underneath it.
+  const STOP_FADE_S = 3;   // > 7 time-constants of the beds' tau — gone before release
+  function stopLayer(layer) {
+    if (layer === 'wind' && wind) {
+      const w = wind; wind = null; windLevel = 0;
+      w.setLevel(0);                    // windParams(0) reaches true zero, not just quiet
+      setTimeout(() => w.stop(), STOP_FADE_S * 1000);
+    }
+    if (layer === 'water' && water) {
+      const w = water; water = null;
+      if (dripTimer) { clearTimeout(dripTimer); dripTimer = null; }
+      w.setLevel(0);
+      setTimeout(() => w.stop(), STOP_FADE_S * 1000);
+    }
+    // Music needs no fade: stop() only cancels the scheduler, and every note
+    // already sounding decays on its own strike envelope.
+    if (layer === 'music') stopMusic();
+  }
+
   return {
     get ctx() { return ctx; },
     get master() { return master; },
@@ -102,14 +155,45 @@ export function createAudio(save) {
       const emitters = emitterCount(recipe);
       for (const item of recipe) {
         const { type, level } = parseRecipe(item);
-        if (type === 'wind' && !wind) { wind = makeWind(ctx, master); wind.setLevel(level); }
-        if (type === 'music') playMusic(emitters);
-        if (type === 'water' && !water) {
-          water = makeWaterBed(ctx, master);
-          water.setLevel(WATER.bedLevel * level);
-          scheduleDrip();
-        }
+        startLayer(type, level, emitters);
       }
+      playing = recipe.slice();
+    },
+    // The page turn: the outgoing case's bed flows into the incoming one's
+    // instead of stopping and starting. KEPT layers never restart — the wind
+    // that carried you through case 12 is the same buffer source in case 13,
+    // ramped to the new level on the beds' own setTargetAtTime smoothing
+    // (tau 0.3–0.4 s → settled in about a second and a half, silent-click by
+    // construction). STOPPED layers fade out on the same curve before their
+    // nodes are released; STARTED layers are born at gain 0 and fade in.
+    // From silence (empty `playing`) this is exactly startAmbience; to
+    // silence it is a soft stopAmbience. Mood needs nothing here — it is
+    // pitch-only and the music reads it through a live closure.
+    transition(next = []) {
+      ensureCtx();
+      const { keep, start, stop } = diffAmbience(playing, next);
+      const emitters = emitterCount(next);
+      for (const layer of stop) stopLayer(layer);
+      for (const k of keep) {
+        // `playing` and the live nodes can only disagree if something outside
+        // this file reached in, but a keep on a missing node must build, not
+        // crash — startLayer is the same fade-in the start list gets.
+        if (k.layer === 'wind') {
+          if (wind) { windLevel = k.to; wind.setLevel(k.to * windScale); } else startLayer('wind', k.to, emitters);
+        }
+        if (k.layer === 'water') {
+          if (water) water.setLevel(WATER.bedLevel * k.to); else startLayer('water', k.to, emitters);
+        }
+        if (k.layer === 'music') ensureCaseMusic(emitters);   // keeps the plain drift; swaps out the menu's chimes
+      }
+      for (const s of start) startLayer(s.layer, s.level, emitters);
+      playing = next.slice();
+      tlog.push({
+        keep: keep.map((k) => `${k.layer}:${k.from}>${k.to}`),
+        start: start.map((s) => `${s.layer}:${s.level}`),
+        stop,
+      });
+      if (tlog.length > 8) tlog.shift();
     },
     setWindLevel(v) { windLevel = v; if (wind) wind.setLevel(v * windScale); },
     setGust(v) { if (wind) wind.setGust(v); },
@@ -120,6 +204,24 @@ export function createAudio(save) {
       if (water) { water.stop(); water = null; }
       if (dripTimer) { clearTimeout(dripTimer); dripTimer = null; }
       stopMusic();
+      playing = [];
+    },
+    // Headless probe read — never drives anything. Epochs are the reliable
+    // witness that a layer was KEPT across a transition (same number) rather
+    // than restarted (bumped): a suspended headless context freezes
+    // currentTime, so the gain values may read as their pre-ramp numbers.
+    debugState() {
+      return {
+        recipe: playing.slice(),
+        mood,
+        ctxState: ctx ? ctx.state : null,   // suspended = every gain reads pre-ramp
+        log: tlog.slice(),
+        layers: {
+          wind: wind ? { epoch: windEpoch, level: windLevel, gain: wind.gain() } : null,
+          water: water ? { epoch: waterEpoch, gain: water.gain() } : null,
+          music: music ? { epoch: musicEpoch, emitters: music.emitters(), chimes: musicChimed } : null,
+        },
+      };
     },
     // Strikes into a suspended context are DROPPED, not queued — same reason
     // as the scheduler's guard in music.js: a frozen currentTime stacks every
