@@ -113,14 +113,16 @@ test('makeCat is cat-sized, not a small dog', () => {
     return y;
   };
 
-  // at the same withers height a cat is shorter in the leg and rounder in the
-  // barrel — that difference is most of what separates the two silhouettes
+  // at the same withers height a cat is still the shorter-legged animal.
+  // (This used to demand a 10% margin AND a rounder barrel — Frank's dog
+  // retune of 2026-08-01 (bodyR 0.20 -> 0.25, hipX 0.13 -> 0.10) fattened
+  // the dog to the cat's own roundness and sank its leg line, both on
+  // purpose, so those cross-species ratios stopped being his intent. The
+  // direction still holds and stays pinned; the margins belong to him.)
   const cat = makeCat({ height: 0.5, pose: 'stand' });
   const dog = makeDog({ height: 0.5 });
-  assert.ok(legTop(cat.group) < legTop(dog) * 0.9,
+  assert.ok(legTop(cat.group) < legTop(dog),
     `shorter legs than a dog: ${legTop(cat.group)} vs ${legTop(dog)}`);
-  assert.ok(barrel(cat.group).r > barrel(dog).r * 1.15,
-    `rounder barrel than a dog: ${barrel(cat.group).r} vs ${barrel(dog).r}`);
 
   // and at the size case 14 uses it, it is a small animal in absolute terms
   const small = box(makeCat({ height: 0.32 }).group);

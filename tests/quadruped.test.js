@@ -10,7 +10,7 @@ const names = (g) => g.children.map((c) => c.name).sort();
 test('legacy child names survive (species re-parent by name)', () => {
   const { group } = makeQuadruped({
     neck: { r: 0.07, len: 0.3 }, snout: { r0: 0.03, r1: 0.07, len: 0.2, fwd: 0.7, up: 0.2 },
-    ears: { r: 0.09, h: 0.2, x: 0.07, up: 0.3, fwd: 0.5 },
+    ears: { r: 0.09, h: 0.2, x: 0.07, y: 0.1, z: 0.02 },
     horns: { r: 0.05, len: 0.3, x: 0.1, up: 0.3, fwd: 0.4, sweep: 0.8 },
     hump: { r: 0.15, up: 0.15, fwd: 0.15 },
     tail: { kind: 'stiff', r0: 0.05, r1: 0.07, length: 0.5, up: 0.1, back: 0.35 },
@@ -64,15 +64,15 @@ test('a knee splits the hind legs into leg + shin, and only the hind legs', () =
   for (const l of jointed) assert.ok(Math.abs(l.rotation.x) > 0.01, 'thigh is not tilted');
 });
 
-// EARS ROOT ON THE SKULL — the fix for "the ears are hanging off the side of
-// its head" (Frank, on the fox and the dog both). { x, up, fwd } aim a ray
-// from the head's centre; the base snaps onto the sphere's surface, sunk
-// (EAR_SINK = 0.92 of the radius — deepened from 0.96 after round three:
-// "still don't quite connect properly") so the whole base rim is buried,
-// never gapped. Checked on the real species builds, not a synthetic option
-// set, because the dog attaches ears straight to the group while the fox
-// re-parents them onto a headPivot — the invariant must survive both.
-test('ear bases sit on the head sphere, well sunk, for dog and fox', () => {
+// EARS ARE PLACED DIRECTLY — { x, y, z } are the base's offsets from the
+// head's centre, so how close an ear sits to the skull is a dial the species
+// (and Frank, live in the model viewer) turn by hand. The invariant worth
+// pinning is the JOIN: each shipped ear's base must sit INSIDE its skull —
+// buried, never gapped — and still near the surface, not sunk to the core.
+// Checked on the real species builds, not a synthetic option set, because
+// the dog attaches ears straight to the group while the fox re-parents them
+// onto a headPivot — the invariant must survive both.
+test('ear bases are buried inside the skull — no gap — for dog and fox', () => {
   const builds = [
     ['dog', makeDog({ height: 0.5 })],
     ['fox', makeFox({ height: 0.45 }).group],
@@ -89,10 +89,21 @@ test('ear bases sit on the head sphere, well sunk, for dog and fox', () => {
       // the geometry is base-hinged (root ring at the origin), so the mesh
       // origin IS the base
       const d = ear.getWorldPosition(new THREE.Vector3()).distanceTo(centre);
-      assert.ok(Math.abs(d - r * 0.92) < r * 0.03,
-        `${label} ear base rides the skull surface: d/r = ${(d / r).toFixed(3)}`);
+      assert.ok(d < r * 0.99,
+        `${label} ear base is inside the skull, not gapped: d/r = ${(d / r).toFixed(3)}`);
+      assert.ok(d > r * 0.4,
+        `${label} ear base stays near the surface, not sunk to the core: d/r = ${(d / r).toFixed(3)}`);
     }
   }
+});
+
+// The old aim-ray keys must fail LOUDLY: under the direct scheme the same
+// key 'x' means an offset, not a direction, so a stale { up, fwd } call
+// site would silently misplace the ears instead of erroring.
+test('the retired aim-ray ear keys (up/fwd) are a hard error', () => {
+  assert.throws(
+    () => makeQuadruped({ ears: { r: 0.09, h: 0.2, x: 0.07, up: 0.3, fwd: 0.5 } }),
+    /direct head-relative offsets/);
 });
 
 // THE EAR GROWS OUT OF THE SKULL: the base ring flares wider than the ear's
@@ -100,7 +111,7 @@ test('ear bases sit on the head sphere, well sunk, for dog and fox', () => {
 // on the surface was the "glued on" read.
 test('the ear base flares wider than the ear itself', () => {
   const r = 0.09, hh = 0.2;
-  const { group } = makeQuadruped({ ears: { r, h: hh, x: 0.07, up: 0.3, fwd: 0.5 } });
+  const { group } = makeQuadruped({ ears: { r, h: hh, x: 0.07, y: 0.1, z: 0.02 } });
   const ear = group.children.find((c) => c.name === 'ear');
   const p = ear.geometry.getAttribute('position');
   // ring radii measured from the geometry itself: verts are ordered
@@ -181,11 +192,11 @@ test('horns.curve bends the horn back and up; no curve stays a cone', () => {
 });
 
 test('the ear hinge channel (rotation.x) is left free for the species to animate', () => {
-  // The base orientation must live entirely in rotation.z + rotation.y: the
-  // fox's flick and the cat's swivel OVERWRITE rotation.x every frame, so any
-  // placement stored there would be silently destroyed on the first update.
+  // The base orientation must live entirely in rotation.z: the fox's flick
+  // and the cat's swivel OVERWRITE rotation.x every frame, so any placement
+  // stored there would be silently destroyed on the first update.
   const { group } = makeQuadruped({
-    ears: { r: 0.09, h: 0.2, x: 0.07, up: 0.3, fwd: 0.5, tilt: 0.3 },
+    ears: { r: 0.09, h: 0.2, x: 0.07, y: 0.1, z: 0.02, tilt: 0.3 },
   });
   for (const ear of group.children.filter((c) => c.name === 'ear')) {
     assert.strictEqual(ear.rotation.x, 0, 'no placement in the hinge channel');

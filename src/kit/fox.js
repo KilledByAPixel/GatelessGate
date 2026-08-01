@@ -64,11 +64,10 @@ export function makeFox({ height = 0.45, color = INK, seed = 2 } = {}) {
     // not the skull, is what should be sticking out
     snout: { r0: 0.028, r1: 0.078, len: 0.28, fwd: 0.78, up: 0.235 },
     // twice the head's radius tall: on a fox the ears are half the head.
-    // x/up/fwd AIM from the skull's centre (see EARS ROOT ON THE SKULL in
-    // quadruped.js): up-and-out with a touch of forward, so the pair roots on
-    // TOP of the skull — the old values pointed sideways-and-back and left
-    // the ears hanging off the side of the head (Frank, on exactly that).
-    ears: { r: 0.092, h: 0.28, x: 0.055, up: 0.37, fwd: 0.57, tilt: 0.20 },
+    // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): base offsets
+    // from the skull's centre — high on top with a touch of forward, inside
+    // the 0.125 radius so the join is buried — leaning 0.44 out.
+    ears: { r: 0.092, h: 0.28, x: 0.051, y: 0.102, z: 0.019, tilt: 0.44 },
     tail: {
       kind: 'stiff', r0: 0.075,
       // the root end (buried in the barrel — see THE BRUSH above) reads as

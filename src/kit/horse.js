@@ -59,7 +59,6 @@ export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
 
   // A SMALL head, nosed down so the muzzle keeps falling along the neck's line.
   const head = { shape: 'box', w: 0.08, hh: 0.105, d: 0.21, fwd: headFwd, up: headUp, tilt: 0.88 };
-  const sinT = Math.sin(head.tilt), cosT = Math.cos(head.tilt);
 
   const { group, tail } = makeQuadruped({
     height, color, seed,
@@ -71,15 +70,11 @@ export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
     // r/len still size the plan's mesh; the wedge taper is re-cut below
     neck: { r: 0.10, len: 0.50 },
     head,
-    // no snout: the muzzle is the front half of the single head loft below
-    // aim at the tilted box's top-face centre; EARS ROOT ON THE SKULL
-    // (quadruped.js) intersects the ray and roots them on the poll
-    ears: {
-      r: 0.022, h: 0.085, x: 0.04,
-      up: head.up + (head.hh / 2) * cosT,
-      fwd: head.fwd + (head.hh / 2) * sinT,
-      tilt: 0.35,
-    },
+    // no snout: the muzzle is the front half of the single head loft below.
+    // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): rooted on the
+    // poll — just inside the tilted crown of the head loft — and laid well
+    // out (1.135 off vertical), the pinned-back read the reference has.
+    ears: { r: 0.022, h: 0.085, x: 0.037, y: 0.031, z: 0.037, tilt: 1.135 },
     // off the CROUP: root on the rump's top-rear, just under the pitched
     // barrel's surface, so the strand falls from the top line — not a stub
     // stuck at rear-centre height (the old read)

@@ -44,7 +44,7 @@ export function makeQuadruped({
   head = { shape: 'sphere', r: 0.20, fwd: 0.56, up: 0.22 },
   neck = null,           // { r, len, tilt } — a short column from chest to head
   snout = null,          // { r0, r1, len, fwd, up, tilt } — tilt noses the muzzle DOWN off horizontal
-  ears = null,           // { r, h, x, up, fwd, tilt } — x/up/fwd AIM from the head's centre; see EARS ROOT ON THE SKULL below
+  ears = null,           // { r, h, x, y, z, tilt } — DIRECT base offsets from the head's centre; see EARS ARE PLACED DIRECTLY below
   horns = null,          // { r, len, x, up, fwd, sweep, back?, curve? } — curve bends the spike into an arc
   hump = null,           // { r, scaleY, scaleZ, up, fwd }
   haunch = null,         // { r, scaleY, scaleZ, up, back } — the rump, over the hind legs
@@ -284,81 +284,51 @@ export function makeQuadruped({
     return geo;
   };
 
-  // EARS ROOT ON THE SKULL. The old placement took { x, up, fwd } as a raw
-  // body-frame POSITION, which left every ear base either floating beside the
-  // head or buried in its cheek at the wrong angle — "hanging off the side of
-  // its head" (Frank, on the fox and the dog both). Those three numbers are now
-  // a DIRECTION: the ray from the head's centre toward the stated point picks
-  // WHERE on the skull the ear roots — the sphere's surface, or for a box head
-  // the face that ray exits through — the base is snapped onto that surface,
-  // slightly sunk so the join is buried, never gapped, and the cone is canted
-  // along a blend of the surface normal and world-up (out of the skull AND
-  // standing up off it, the way an ear actually sits), then leaned a further
-  // `tilt` outward — tilt still means what it always did.
-  // 0.92, down from 0.96: at 0.96 the base circle still met the curved skull
-  // nearly edge-on and the join read as GLUED-ON (Frank, round three). Sinking
-  // almost a tenth of the radius buries the whole base rim inside the head.
-  const EAR_SINK = 0.92;                 // of the way to the surface — buried join
+  // EARS ARE PLACED DIRECTLY — width, height, position, angle. Nothing hidden.
+  //
+  //   r      base radius (the ear's width)      — in units of height
+  //   h      the ear's length
+  //   x      lateral offset of the BASE from the head's centre (mirrored ±)
+  //   y, z   base offset up / forward from the head's centre
+  //   tilt   lean off vertical, OUTWARD (the pair spreads)
+  //
+  // The base ring is a flared loft, so push {x,y,z} INSIDE the skull to bury
+  // the join — how close the ear sits to the head is a DIAL here, not a
+  // hidden constant. This replaces the aim-ray scheme, which normalized
+  // {x, up, fwd} into a direction and snapped the base onto the surface at a
+  // fixed sink: the magnitudes did nothing (the dog's x: 0.005 still landed
+  // 45° out on the crown, because only the RATIO survived), and the
+  // ear-to-head distance was untunable — Frank fought exactly that in the
+  // model viewer and could not win, because the knob did not exist.
   if (ears) {
-    const X = new THREE.Vector3(1, 0, 0);
-    const UP = new THREE.Vector3(0, 1, 0);
+    if (ears.up !== undefined || ears.fwd !== undefined) {
+      throw new Error('ears take direct head-relative offsets { r, h, x, y, z, tilt } now — '
+        + 'up/fwd belonged to the old aim-ray scheme; see EARS ARE PLACED DIRECTLY in quadruped.js');
+    }
     for (const sx of [-1, 1]) {
-      // Not a bare cone any more: the base ring FLARES a quarter wider than
-      // the stated radius and waists back in just above it, so the ear grows
-      // OUT of the skull the way a real ear roots in a muscle bulge, instead
-      // of a triangle resting on the surface. 5-gon, and the half-facet of
-      // pre-spin (π/5) still centres a flat face on +z so the book's 3/4
-      // cameras never catch an edge-on sliver.
+      // Not a bare cone: the base ring FLARES a quarter wider than the stated
+      // radius and waists back in just above it, so the ear grows OUT of the
+      // skull the way a real ear roots in a muscle bulge, instead of a
+      // triangle resting on the surface. 5-gon, and the half-facet of
+      // pre-spin (π/5) centres a flat face on +z so the book's 3/4 cameras
+      // never catch an edge-on sliver.
       const m = new THREE.Mesh(loft([
         { p: [0, 0, 0], r: ears.r * h * 1.25 },
         { p: [0, ears.h * h * 0.30, 0], r: ears.r * h * 0.92 },
         { p: [0, ears.h * h, 0], r: ears.r * h * 0.02 },
       ], 5, Math.PI / 5), mat);
       m.name = 'ear';
-
-      const dir = new THREE.Vector3(
-        sx * ears.x * h,
-        bodyY + ears.up * h - headY,
-        ears.fwd * h - headZ);
-      if (dir.lengthSq() < 1e-12) dir.set(sx * 0.5, 1, 0);  // degenerate: out-and-up
-      dir.normalize();
-
-      let base, normal;
-      if (head.shape === 'box') {
-        // Intersect the aim ray with the box in the head's own tilted frame;
-        // the exit face is the axis the ray runs out of room on first.
-        const tilt = head.tilt || 0;
-        const local = dir.clone().applyAxisAngle(X, -tilt);
-        const half = [head.w * h / 2, head.hh * h / 2, head.d * h / 2];
-        let t = Infinity, exit = 1;
-        for (let i = 0; i < 3; i++) {
-          const d = Math.abs(local.getComponent(i));
-          if (d > 1e-9 && half[i] / d < t) { t = half[i] / d; exit = i; }
-        }
-        base = local.clone().multiplyScalar(t * EAR_SINK).applyAxisAngle(X, tilt);
-        normal = new THREE.Vector3().setComponent(
-          exit, Math.sign(local.getComponent(exit)) || 1).applyAxisAngle(X, tilt);
-      } else {
-        base = dir.clone().multiplyScalar(head.r * h * EAR_SINK);
-        normal = dir;
-      }
-      m.position.set(base.x, headY + base.y, headZ + base.z);
-
-      // The axis: surface normal pulled halfway back to world-up, then leaned
-      // `tilt` further OUTWARD (about z, so tilt spreads the pair no matter
-      // which way the normal faced). Expressed as rotation.z (how far off
-      // vertical) + rotation.y (which way around) and NEVER rotation.x — that
-      // channel is the hinge the species animate (the fox's flick and the
-      // cat's swivel overwrite it every frame, so anything stored there would
-      // be lost on the first update). Sign note: rotating +y about +z sends
-      // it toward -x, so the LEFT ear (sx = -1) takes the POSITIVE angle —
-      // same convention as the horns below.
-      const axis = normal.clone().add(UP).normalize();
-      if (ears.tilt) axis.applyAxisAngle(new THREE.Vector3(0, 0, 1), -sx * ears.tilt);
-      const polar = Math.acos(Math.min(1, Math.max(-1, axis.y)));
-      m.rotation.z = -sx * polar;
-      if (Math.hypot(axis.x, axis.z) > 1e-6)
-        m.rotation.y = Math.atan2(-sx * axis.z, sx * axis.x);
+      m.position.set(
+        sx * (ears.x || 0) * h,
+        headY + (ears.y || 0) * h,
+        headZ + (ears.z || 0) * h);
+      // The cant lives in rotation.z and NEVER rotation.x — that channel is
+      // the hinge the species animate (the fox's flick and the cat's swivel
+      // overwrite it every frame, so anything stored there would be lost on
+      // the first update). Sign note: rotating +y about +z sends it toward
+      // -x, so the LEFT ear (sx = -1) takes the POSITIVE angle — same
+      // convention as the horns below.
+      m.rotation.z = -sx * (ears.tilt || 0);
       g.add(m);
     }
   }

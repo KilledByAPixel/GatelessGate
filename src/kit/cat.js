@@ -88,13 +88,13 @@ export function makeCat({ height = 0.32, color = INK, seed = 14, pose = 'sit' } 
     head: { shape: 'sphere', r: 0.175, fwd: 0.44, up: 0.24 },
     // blunt and short: a cat's muzzle barely leaves the skull
     snout: { r0: 0.058, r1: 0.100, len: 0.16, fwd: 0.60, up: 0.205 },
-    // Tall, wide-set and leaning OUT. x/up/fwd AIM from the skull's centre
-    // (see EARS ROOT ON THE SKULL in quadruped.js) so the pair roots high on
-    // the sphere and cants out along it. They have to clear the skull in BOTH
-    // directions: standing above it is what says "cat", but a pair no wider
-    // than the head reads as two bumps at distance, which is the failure the
-    // buffalo's horns shipped with.
-    ears: { r: 0.075, h: 0.25, x: 0.10, up: 0.38, fwd: 0.45, tilt: 0.22 },
+    // Tall, wide-set and leaning OUT. DIRECT dials (quadruped.js, EARS ARE
+    // PLACED DIRECTLY): base offsets from the skull's centre, high and wide
+    // on the 0.175 sphere with the join buried inside it. They have to clear
+    // the skull in BOTH directions: standing above it is what says "cat",
+    // but a pair no wider than the head reads as two bumps at distance,
+    // which is the failure the buffalo's horns shipped with.
+    ears: { r: 0.075, h: 0.25, x: 0.093, y: 0.131, z: 0.009, tilt: 0.53 },
     // NO haunch, NO shoulder. The polish pass hung both masses on this barrel
     // to sell a crouch, and seated — the only pose the book ever shows — the
     // pitched-torso transform below swung them up into "weird things sticking
