@@ -77,12 +77,17 @@ export default {
     koi.group.position.set(POND.x, POND.surface, POND.z);
     scene.add(koi.group);
 
-    // THE BUDDHA, on the far bank
+    // THE BUDDHA, on the far bank. The stone is a real DAIS now, not a paver:
+    // its top (SEAT_TOP) stands above the basin's rim (POND.rim = 0.55), so
+    // from the shipped lens he sits clearly over the water line instead of
+    // peeking out from behind the stone lip (Frank: "lift him up a bit — the
+    // little platform can be higher, slightly above the rest of the pool").
+    const SEAT_TOP = 0.62;
     const seat = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.05, 1.2, 0.26, 9),
+      new THREE.CylinderGeometry(1.05, 1.2, SEAT_TOP, 9),
       toonMaterial({ color: WASH.stone, flat: true }));
     seat.name = 'seat';
-    seat.position.set(BANK.x, 0.13, BANK.z);
+    seat.position.set(BANK.x, SEAT_TOP / 2, BANK.z);
     scene.add(seat);
 
     // the mat on the stone — the same mat as case 33, where nobody is sitting
@@ -95,13 +100,14 @@ export default {
       toonMaterial({ color: WASH.dark, flat: true }));
     cushion.name = 'cushion';
     cushion.rotation.y = Math.PI / 4;
-    cushion.position.set(BANK.x, 0.28, BANK.z);
+    cushion.position.set(BANK.x, SEAT_TOP + 0.025, BANK.z);
     scene.add(cushion);
 
     // ordinary monk scale (overnight pass 2), seated on the top of the mat:
-    // cushion centre 0.28 + half its 0.05 thickness
+    // everything on the dais derives from SEAT_TOP so raising the stone
+    // raises the whole stack together
     const buddha = makeBuddha({ height: 1.6 });
-    buddha.position.set(BANK.x, 0.305, BANK.z);
+    buddha.position.set(BANK.x, SEAT_TOP + 0.05, BANK.z);
     scene.add(buddha);
 
     // the monk who asked, on the near shore
