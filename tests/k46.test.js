@@ -137,7 +137,7 @@ test('module shape matches the koan contract', () => {
 
 // ---- the staging ----------------------------------------------------------
 
-test('one red sitter seated exactly on the cap, two grey watchers far below', () => {
+test('one ink sitter seated exactly on the red pole\'s cap, two grey watchers far below', () => {
   const built = k46.build(fakeCtx());
   const scene = built.scene;
   assert.ok(scene.isScene);
@@ -163,9 +163,10 @@ test('one red sitter seated exactly on the cap, two grey watchers far below', ()
   assert.ok(Math.abs(seatY - capTop) <= 0.02,
     `and topY is honest — the cap's real upper face is ${capTop}`);
 
-  // The red seal is the WHOLE VERTICAL — pole and sitter both (Frank's call:
-  // "the whole pole should be red"). Every accent mesh must belong to one or
-  // the other; the guy lines stay grey so the red reads as one unbroken line.
+  // The red seal is the POLE ALONE — the sitter went back to ink (Frank:
+  // "just the pole red, not the guy at the top"). Every accent mesh must
+  // belong to the pole; the guy lines stay grey so the red reads as one
+  // unbroken line, and the man on the cap is a dark mark on top of it.
   const accentMeshes = [];
   scene.traverse((o) => {
     if (o.isMesh && !o.userData.isOutline && o.material && o.material.color
@@ -174,14 +175,16 @@ test('one red sitter seated exactly on the cap, two grey watchers far below', ()
   assert.ok(accentMeshes.length > 0, 'the seal exists');
   const owned = (m, root) => { let p = m; while (p) { if (p === root) return true; p = p.parent; } return false; };
   for (const m of accentMeshes) {
-    assert.ok(owned(m, sitter) || owned(m, pole),
-      `every accent mesh is the sitter or the pole, found stray "${m.name}"`);
+    assert.ok(owned(m, pole),
+      `every accent mesh belongs to the pole, found stray "${m.name}"`);
   }
-  const sitterMeshCount = (() => { let n = 0; sitter.traverse((o) => { if (o.isMesh && !o.userData.isOutline) n++; }); return n; })();
-  assert.ok(accentMeshes.filter((m) => owned(m, sitter)).length === sitterMeshCount,
-    'the sitter is entirely red');
-  const poleAccent = accentMeshes.filter((m) => owned(m, pole));
-  assert.ok(poleAccent.some((m) => m.name === 'mast' || /pole|mast|shaft/.test(m.name) || inkBox(m).max.y > 7),
+  sitter.traverse((o) => {
+    if (o.isMesh && !o.userData.isOutline && o.material && o.material.color) {
+      assert.notEqual(o.material.color.getHexString(), ACCENT_HEX,
+        'the sitter is ink, not accent — one red voice, and it is the pole');
+    }
+  });
+  assert.ok(accentMeshes.some((m) => m.name === 'mast' || /pole|mast|shaft/.test(m.name) || inkBox(m).max.y > 7),
     'the pole itself carries the seal');
   const guys = [];
   pole.traverse((o) => {
@@ -190,7 +193,7 @@ test('one red sitter seated exactly on the cap, two grey watchers far below', ()
   for (const g of guys) {
     assert.notEqual(g.material.color.getHexString(), ACCENT_HEX, 'guy lines stay grey hairlines');
   }
-  assert.ok(inkBox(sitter).min.y > 6, 'the red figure is the one 8 units up');
+  assert.ok(inkBox(sitter).min.y > 6, 'the ink figure is the one 8 units up');
 
   // the watchers stay grey and stay on the ground
   for (const m of monks) {
@@ -256,7 +259,7 @@ test('the framing holds: sitter and watchers land in NDC at the home angles', ()
   assert.ok(baseV.y < -0.55 && baseV.y > -1.05, `the base hangs near the bottom edge: ${baseV.y.toFixed(2)}`);
 });
 
-test('clear paper behind the red at the home azimuth — no ridge, no tree', () => {
+test('clear paper behind the sitter at the home azimuth — no ridge, no tree', () => {
   const built = k46.build(fakeCtx());
   const scene = built.scene;
   scene.updateMatrixWorld(true);
@@ -292,10 +295,12 @@ test('clear paper behind the red at the home azimuth — no ridge, no tree', () 
 // ---- the moment -----------------------------------------------------------
 
 // the module raycasts the sitter's meshes first, then the pole's — answer by
-// what is in the list, the way the real raycaster would
+// what is in the list, the way the real raycaster would. The sitter is ink
+// now, so tell the lists apart by the pole's own shaft: the sitter's list is
+// the one WITHOUT it.
 const hitSitter = (cam, objects) => {
-  const m = objects.find((o) => o.material && o.material.color && o.material.color.getHexString() === ACCENT_HEX);
-  return m ? { object: m } : null;
+  if (!objects.length || objects.some((o) => o.name === 'shaft')) return null;
+  return { object: objects[0] };
 };
 const hitPole = (cam, objects) => {
   const m = objects.find((o) => o.name === 'shaft');

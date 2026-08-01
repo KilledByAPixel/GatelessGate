@@ -19,11 +19,13 @@ const ID = 46;
 // ground and the man seated on the cap. Nothing else is allowed to be tall:
 // three scatter trees, two small watchers, an empty field.
 //
-// The sitter is the red seal — the one red FIGURE in the book so far. At
-// thirteen units away a grey monk vanishes against the sky; full ACCENT (not
-// the deep mix — figure-sized mass at long range goes muddy) plus the seal's
-// own material glow keeps him the brightest mark on the page, which is right:
-// the man at the top is what the koan is about.
+// The POLE is the red seal — one red line rising out of the meadow — and the
+// man on top is INK, the same figure grammar as every monk in the book
+// (Frank: "just the pole red, not the guy at the top"). Two red things were
+// one too many: with the sitter red as well, mast and man fused into a single
+// red lollipop and the figure stopped reading as a figure. A dark seated mark
+// against clear paper at the top of the one red vertical is the stronger
+// image — the camera keeps the sky behind him for exactly this.
 const POLE = { x: 0.35, z: -0.9, height: 8 };
 const W1 = { x: -2.5, z: -2.9 };    // the two below, looking up
 const W2 = { x: -0.7, z: -5.2 };
@@ -98,10 +100,8 @@ export default {
     mast.position.set(POLE.x, 0, POLE.z);
     scene.add(mast);
 
-    // The WHOLE pole is red, not just the sitter — Frank's call on reviewing the
-    // batch plan, and the stronger image: one red line rising out of the meadow
-    // to a red figure against the sky. The koan is the pole AND the man; the guy
-    // lines stay grey hairlines so the red is one unbroken vertical.
+    // The pole carries the case's whole red; the guy lines stay grey
+    // hairlines so it reads as one unbroken vertical.
     const pole = makePole({ height: POLE.height, radius: 0.16, seed: ID, guys: 3, color: ACCENT });
     mast.add(pole);
 
@@ -114,7 +114,7 @@ export default {
     sitterPivot.position.y = pole.topY;
     sitterPivot.rotation.order = 'YXZ';
     sitterPivot.rotation.y = SITTER_YAW;
-    const sitter = makeMonk({ pose: 'sit', height: 1.3, color: ACCENT });
+    const sitter = makeMonk({ pose: 'sit', height: 1.3 });   // ink, like every monk
     sitterPivot.add(sitter);
     mast.add(sitterPivot);
 
