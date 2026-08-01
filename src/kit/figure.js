@@ -185,10 +185,19 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // the two authored poses; `kneel` is exactly halfway between them, which is
 // what kneeling is — the hem spread of a folded figure carried at most of a
 // standing figure's height.
+// `staffX` is where the elder's staff plants, laterally, in fractions of
+// height — and it is per-stance because the hem is. A standing hem reaches
+// 0.212h and the staff at 0.26h stands clear of it; a seated hem pools out to
+// 0.318h, so the same 0.26h planted the staff INSIDE the cloth and it emerged
+// through the robe like a stick stuck in a tent (k17's report — fixed there
+// by hand first, at 0.58/1.6h = 0.3625h, which is the number promoted here:
+// past the hem plus the staff's own radius, so it reads as the teacher's
+// staff set down beside him, within reach). Standing keeps 0.26 exactly —
+// every standing elder in the book is framed around it.
 const KNEEL = 0.5;
 const STANCES = {
-  stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.735, hat: 0.80, armZ: 0, staff: 1.2 },
-  sit: { profile: SIT_PROFILE, shoulder: 0.40, sleeve: 0.24, head: 0.50, hat: 0.545, armZ: 0.03, staff: 0.7 },
+  stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.735, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26 },
+  sit: { profile: SIT_PROFILE, shoulder: 0.40, sleeve: 0.24, head: 0.50, hat: 0.545, armZ: 0.03, staff: 0.7, staffX: 0.3625 },
   kneel: {
     profile: mixProfile(STAND_PROFILE, SIT_PROFILE, KNEEL),
     shoulder: mix(0.60, 0.40, KNEEL),
@@ -197,6 +206,7 @@ const STANCES = {
     hat: mix(0.80, 0.545, KNEEL),
     armZ: mix(0, 0.03, KNEEL),
     staff: mix(1.2, 0.7, KNEEL),
+    staffX: mix(0.26, 0.3625, KNEEL),
   },
 };
 
@@ -273,7 +283,7 @@ export function makeFigure({
     staffGeo.translate(0, staffLen / 2, 0);   // base at the local origin -> stands on the ground
     const staff = new THREE.Mesh(staffGeo, mat);
     staff.name = 'staff';
-    staff.position.set(0.26 * s * height, 0, 0.06 * height);
+    staff.position.set(st.staffX * s * height, 0, 0.06 * height);
     staff.rotation.z = 0.08;
     g.add(staff);
   }
