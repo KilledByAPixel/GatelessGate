@@ -60,3 +60,4 @@ export { makeHorse } from './horse.js';
 export { makeSnow } from './snowfall.js';
 export { makeKoi } from './koi.js';
 export { makeFan } from './fan.js';
+export { makeWalk, walkPose, walkHeading, pathLength } from './walk.js';
