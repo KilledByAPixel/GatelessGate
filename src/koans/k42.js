@@ -40,15 +40,16 @@ export default {
     scene.add(makeLights());
 
     // the Buddha, back and above, presiding over an argument he has already
-    // settled
+    // settled — the same ordinary figure as everyone in it (overnight pass 2);
+    // the raised stone and the distance are what set him back and above
     const seat = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.15, 1.3, 0.28, 9),
+      new THREE.CylinderGeometry(0.85, 0.95, 0.28, 9),
       toonMaterial({ color: wash(0.32), flat: true }));
     seat.name = 'seat';
     seat.position.set(0.4, 0.14, -4.6);
     scene.add(seat);
 
-    const buddha = makeBuddha({ height: 2.1 });
+    const buddha = makeBuddha({ height: 1.6 });
     buddha.position.set(0.4, 0.28, -4.6);
     scene.add(buddha);
 
@@ -91,7 +92,7 @@ export default {
     });
 
     for (const [p, rx, rz, op] of [
-      [seat.position, 1.3, 1.0, 0.34],
+      [seat.position, 0.95, 0.75, 0.34],
       [GIRL, 0.6, 0.48, 0.40],
       [manjusri.position, 0.68, 0.52, 0.42],
     ]) {

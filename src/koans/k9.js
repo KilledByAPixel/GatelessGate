@@ -82,8 +82,15 @@ export default {
     // Sunk to the hips in the top terrace: he was there before the ground was.
     // He is the seal: the one who sat ten cycles and did not become a Buddha is
     // the whole subject, so the accent is on him.
-    const SEAT_Y = y - 0.55;
-    const buddha = makeBuddha({ height: 6.2, color: ACCENT_DEEP });
+    //
+    // The SAME ordinary figure kit as every monk in the book (overnight pass
+    // 2 — no special buddha model), just carved colossal. The height param is
+    // a standing height now: the old statue's crown stood 6.08 above its seat
+    // (0.98 of its 6.2 param), and the figure kit's seated crown sits at
+    // 0.595·H, so 10.2 keeps the monument the size the whole case — camera,
+    // strata, the smallness of the two monks — was staged around.
+    const SEAT_Y = y - 0.9;      // deeper: the wider pooled hem is the buried part
+    const buddha = makeBuddha({ height: 10.2, color: ACCENT_DEEP });
     buddha.position.set(0.4, SEAT_Y, -3.0);
     scene.add(buddha);
 
@@ -124,11 +131,11 @@ export default {
     addOutlines(scene, { width: 0.038, wobble: 0.7 });
 
     const hit = new THREE.Mesh(
-      new THREE.CylinderGeometry(2.4, 2.8, 5.0, 8),
+      new THREE.CylinderGeometry(2.4, 2.8, 6.0, 8),
       new THREE.MeshBasicMaterial({ visible: false }));
     hit.name = 'buddha-hit';
     hit.userData.noOutline = true;
-    hit.position.set(0.4, SEAT_Y + 2.2, -3.0);
+    hit.position.set(0.4, SEAT_Y + 3.0, -3.0);   // covers the taller crown too
     scene.add(hit);
 
     // ---- the moment: the oldest sound in the book -------------------------

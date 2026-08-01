@@ -41,15 +41,17 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.028);
     scene.add(makeLights());
 
-    // a low stone seat, and the Buddha on it, saying nothing
+    // a low stone seat, and the Buddha on it, saying nothing. Both came down
+    // to human scale in overnight pass 2 — he is the same figure kit as the
+    // philosopher facing him, and the silence reads better between equals.
     const seat = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.25, 1.4, 0.30, 9),
+      new THREE.CylinderGeometry(0.85, 1.0, 0.30, 9),
       toonMaterial({ color: wash(0.32), flat: true }));
     seat.name = 'seat';
     seat.position.set(0.6, 0.15, -3.6);
     scene.add(seat);
 
-    const buddha = makeBuddha({ height: 2.2 });
+    const buddha = makeBuddha({ height: 1.6 });
     buddha.position.set(0.6, 0.30, -3.6);
     scene.add(buddha);
 
@@ -94,7 +96,7 @@ export default {
     });
 
     for (const [p, rx, rz, op] of [
-      [seat.position, 1.4, 1.05, 0.34],
+      [seat.position, 1.0, 0.75, 0.34],
       [philosopher.position, 0.68, 0.52, 0.42],
       [ananda.position, 0.62, 0.5, 0.40],
     ]) {

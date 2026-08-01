@@ -2,7 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeBuddha } from '../src/kit/buddha.js';
+import { makeFigure } from '../src/kit/figure.js';
 import { makeAssembly } from '../src/kit/assembly.js';
+import { ACCENT } from '../src/palette.js';
 
 // The widest radius the mesh's own geometry reaches inside a y band —
 // how the tests read a silhouette back off a lathe.
@@ -17,45 +19,74 @@ function maxRadiusInBand(mesh, y0, y1) {
   return r;
 }
 
-test('makeBuddha is a seated MAN — lap, waist step, shoulders, arms — on the ground', () => {
-  const H = 2.0;
+// The Buddha is NOT special (Frank, overnight pass 2): the same seated figure
+// kit as every monk, ordinary human size, bare-headed, with ONE mark — the
+// urna, a small accent dot sunk into the forehead. These tests pin exactly
+// that: same robe as everyone (byte-for-byte), no hat, no bespoke anatomy,
+// and a dot that is a buried join on the skull, not a floating bead.
+test('makeBuddha is the same seated figure as every monk — no hat, ordinary size', () => {
+  const H = 1.6;
   const b = makeBuddha({ height: H });
   assert.equal(b.name, 'buddha');
   const names = b.children.map((c) => c.name);
-  assert.ok(names.includes('body') && names.includes('head') && names.includes('ushnisha'));
-  assert.ok(names.includes('hands'), 'hands resting in the lap');
-  assert.equal(names.filter((n) => n === 'arm').length, 2, 'two arms — what makes it a man');
-  assert.equal(names.filter((n) => n === 'ear').length, 2, 'the long ears');
+  assert.ok(names.includes('body') && names.includes('head'));
+  assert.equal(names.filter((n) => n === 'arm').length, 2, 'the folded sleeves');
+  assert.ok(!names.includes('hat'), 'a buddha is bare-headed');
+  // the old bespoke statue's parts are gone with it
+  for (const dead of ['hands', 'ushnisha', 'ear']) {
+    assert.ok(!names.includes(dead), `no bespoke '${dead}' — the special model is deleted`);
+  }
 
+  // the robe IS the figure kit's seated robe — identical geometry, not a copy
+  // that could drift: any retune of SIT_PROFILE must flow through here
+  const ref = makeFigure({ height: H, stance: 'sit', arms: 'fold', hat: false });
+  const bodyPos = b.children.find((c) => c.name === 'body').geometry.attributes.position.array;
+  const refPos = ref.children.find((c) => c.name === 'body').geometry.attributes.position.array;
+  assert.deepEqual([...bodyPos], [...refPos], 'the same robe as everyone');
+
+  // ordinary size: a seated 1.6 man, on the ground, not a colossus
   const box = new THREE.Box3().setFromObject(b);
   assert.ok(box.min.y > -0.02, `on the ground: ${box.min.y}`);
-  assert.ok(box.max.y > 1.0 && box.max.y < 2.2, `seated proportion: ${box.max.y}`);
+  assert.ok(box.max.y > 0.85 && box.max.y < 1.1, `seated monk scale: ${box.max.y}`);
+});
 
-  // upright and slim: noticeably taller than wide, lap under 0.6·H
-  const width = box.max.x - box.min.x;
-  assert.ok(width < 0.6 * H, `lap width under 0.6·H: ${width}`);
-  assert.ok(box.max.y / width > 1.4, `taller than wide: ${(box.max.y / width).toFixed(2)}`);
+test('the urna: one small accent dot, sunk into the forehead, no outline', () => {
+  const H = 1.6;
+  const b = makeBuddha({ height: H });
+  const head = b.children.find((c) => c.name === 'head');
+  const urna = head.children.find((c) => c.name === 'urna');
+  assert.ok(urna, 'the urna is a child of the head — it travels with the skull');
+  assert.equal(urna.userData.noOutline, true);
+  assert.equal(urna.material.color.getHexString(),
+    new THREE.Color(ACCENT).getHexString(), 'the dot is the accent');
 
-  // the silhouette discontinuities, read off the body geometry itself. Three
-  // events (each was missing once, and the figure collapsed into "a big
-  // round thing" / "a fire hydrant"):
-  //   knees — the crossed legs push the base out past the lathe's own hem;
-  //   the waist — narrowest ring, visibly inset from the lap;
-  //   the shoulder shelf — the torso tapers DOWN to the waist, so the
-  //   shoulders must be decisively wider than it (a shelf, not a pipe).
-  const body = b.children.find((c) => c.name === 'body');
-  const lap = maxRadiusInBand(body, 0, 0.25 * H);
-  const waist = maxRadiusInBand(body, 0.23 * H, 0.28 * H);
-  const shoulder = maxRadiusInBand(body, 0.6 * H, 0.72 * H);
-  assert.ok(lap > 0.25 * H, `the knees spread past the robe lathe: ${lap}`);
-  assert.ok(waist < lap * 0.7, `waist steps in from the lap: ${waist} vs ${lap}`);
-  assert.ok(shoulder < lap * 0.75, `shoulders narrower than the lap: ${shoulder} vs ${lap}`);
-  assert.ok(shoulder > waist * 1.3, `a shoulder shelf over the waist, not a pipe: ${shoulder} vs ${waist}`);
+  const rHead = head.geometry.parameters.radius;
+  const rUrna = urna.geometry.parameters.radius;
+  assert.ok(rUrna < 0.3 * rHead, `a dot, not a lamp: ${rUrna} vs head ${rHead}`);
 
-  // and the head sits proud on a neck notch: the body's neck opening is far
-  // slimmer than both the skull above it and the shelf below it
-  const neck = maxRadiusInBand(body, 0.72 * H, 0.77 * H);
-  assert.ok(neck < shoulder * 0.5 && neck < 0.115 * H, `a notched neck under the skull: ${neck}`);
+  // buried join: the centre stays inside the skull, the crest shows proud
+  const d = urna.position.length();
+  assert.ok(d < rHead, `centre inside the head: ${d} vs ${rHead}`);
+  assert.ok(d + rUrna > rHead, `the crest shows: ${d + rUrna} vs ${rHead}`);
+  // and it is on the FOREHEAD: forward (+z, the way a seated figure faces)
+  // and above the head's equator, on the centre line
+  assert.equal(urna.position.x, 0, 'centred');
+  assert.ok(urna.position.z > 0, 'on the face side');
+  assert.ok(urna.position.y > 0 && urna.position.y < rHead * 0.7,
+    `mid-forehead, not the scalp: ${urna.position.y}`);
+});
+
+test('makeBuddha keeps its signature: height scales it, color robes it, urna stays red', () => {
+  const tall = makeBuddha({ height: 3.2, color: '#402020' });
+  const small = makeBuddha({ height: 1.6, color: '#402020' });
+  const boxT = new THREE.Box3().setFromObject(tall);
+  const boxS = new THREE.Box3().setFromObject(small);
+  assert.ok(Math.abs(boxT.max.y - 2 * boxS.max.y) < 1e-6, 'height is a scale');
+  const body = tall.children.find((c) => c.name === 'body');
+  assert.equal(body.material.color.getHexString(), '402020', 'the robe takes the colour');
+  const urna = tall.children.find((c) => c.name === 'head').children[0];
+  assert.equal(urna.material.color.getHexString(),
+    new THREE.Color(ACCENT).getHexString(), 'the mark is not recoloured with the robe');
 });
 
 test('makeAssembly is one instanced, grounded, deterministic crowd', () => {

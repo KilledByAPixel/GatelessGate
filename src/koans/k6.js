@@ -31,15 +31,20 @@ export default {
     scene.add(makeLights());
 
     // Vulture Peak: the Buddha raised on a low stone, the assembly below him.
+    // The stone came down with the statue (overnight pass 2: he is the same
+    // ordinary figure as everyone now, so the 1.5-radius platform of the
+    // 2.35 colossus would read as a stage under a man).
     const seat = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.5, 1.7, 0.34, 9),
+      new THREE.CylinderGeometry(0.95, 1.1, 0.34, 9),
       toonMaterial({ color: WASH.stone, flat: true }));
     seat.name = 'seat';
     const SEAT_Z = -5.0;                  // far enough back that the assembly can sit between
     seat.position.set(1.2, 0.17, SEAT_Z);
     scene.add(seat);
 
-    const buddha = makeBuddha({ height: 2.35 });   // he must still read at the back of the scene
+    // ordinary monk scale — the raised stone, not his size, is what sets him
+    // apart at the back of the scene
+    const buddha = makeBuddha({ height: 1.6 });
     buddha.position.set(1.2, 0.34, SEAT_Z);
     scene.add(buddha);
 
@@ -49,11 +54,11 @@ export default {
     // Sized against his HEAD, not against a real lotus: the case is staged wide,
     // and at this distance anything smaller than the skull is a red dot.
     const flower = makeFlower({ height: 0.42, bloom: 0.52, petals: 7 });
-    // Raised when the buddha stopped being a mountain: the rebuilt figure's
-    // hands rest at 0.235·H (~0.89 world here), so the bloom rides just above
-    // them — at the old 0.52 it sat at the new figure's knees, lying on the
-    // stone instead of held.
-    flower.position.set(1.2, 0.72, SEAT_Z + 0.72);   // held over the hands, clear of the lap
+    // Re-derived for the figure-kit buddha: his folded cuffs come down at
+    // 0.187·H above the seat (0.40·H shoulder minus 0.24·H sleeve at the
+    // seated fold angle) and 0.141·H forward — world (0.64, −4.775) here —
+    // so the bloom (base + 0.42) rides just over the joined hands.
+    flower.position.set(1.2, 0.40, SEAT_Z + 0.34);   // held over the hands, clear of the lap
     flower.rotation.z = -0.14;
     scene.add(flower);
 
@@ -89,16 +94,16 @@ export default {
       groundSeed: 21,
       trees: 4,
       keepout: [
-        { x: 1.2, z: SEAT_Z, r: 2.6 },   // the seat
+        { x: 1.2, z: SEAT_Z, r: 2.0 },   // the seat
         { x: 1.2, z: -2.2, r: 4.0 },     // the assembly
         { x: 3.05, z: -0.7, r: 1.2 },    // Kasyapa
       ],
       // only the stone platform covers ground; the assembly sits in the grass
-      grassKeepout: [{ x: 1.2, z: SEAT_Z, r: 1.6 }],
+      grassKeepout: [{ x: 1.2, z: SEAT_Z, r: 1.2 }],
     });
 
     for (const [p, rx, rz, op] of [
-      [seat.position, 1.7, 1.2, 0.34],
+      [seat.position, 1.1, 0.85, 0.34],
       [kasyapa.position, 0.7, 0.55, 0.4],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
