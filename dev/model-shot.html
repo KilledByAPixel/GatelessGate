@@ -24,38 +24,11 @@
   -->
   <script type="module">
     import * as THREE from '../lib/three.module.js';
-    import {
-      makeDog, makeFox, makeCat, makeHorse, makeBuffalo, makeKoi, makeBird, makeBirds,
-      makeMonk, makeBuddha, makeHangingMonk, makeAssembly, makeRaisedFinger,
-      makeTree, makePine, makeOak, makeFlower, makeWildflowers,
-      makeGate, makeHut, makeVeranda, makeLantern, makeBell, makeFlag, makeScreen,
-      makeBowl, makeVase, makeBasin, makeBundle, makeDrum, makeRack, makeStall,
-      makeWheel, makeFurin, makePole, makeFan, makeScale, makeMoon, makeCave,
-      makeLights,
-    } from '../src/kit/index.js';
+    import * as KIT from '../src/kit/index.js';
     import { PAPER } from '../src/palette.js';
-
-    // name -> lazy builder. Only the requested entry ever runs. Variants that
-    // matter to the polish work (poses, stances) get their own keys.
-    const MODELS = {
-      dog: () => makeDog({}), fox: () => makeFox({}), cat: () => makeCat({}),
-      horse: () => makeHorse({}), buffalo: () => makeBuffalo({}),
-      koi: () => makeKoi({}), bird: () => makeBird({}), birds: () => makeBirds({}),
-      monk: () => makeMonk({}), 'monk-sit': () => makeMonk({ pose: 'sit' }),
-      'monk-point': () => makeMonk({ pose: 'point' }), 'monk-raise': () => makeMonk({ pose: 'raise' }),
-      buddha: () => makeBuddha({}), hangingmonk: () => makeHangingMonk({}),
-      assembly: () => makeAssembly({ count: 6, radius: 1.6 }),
-      finger: () => makeRaisedFinger({}),
-      tree: () => makeTree({}), pine: () => makePine({}), oak: () => makeOak({}),
-      flower: () => makeFlower({}), wildflowers: () => makeWildflowers({}),
-      gate: () => makeGate({}), hut: () => makeHut({}), veranda: () => makeVeranda({}),
-      lantern: () => makeLantern({}), bell: () => makeBell({}), flag: () => makeFlag({}),
-      screen: () => makeScreen({}), bowl: () => makeBowl({}), vase: () => makeVase({}),
-      basin: () => makeBasin({}), bundle: () => makeBundle({}), drum: () => makeDrum({}),
-      rack: () => makeRack({}), stall: () => makeStall({}), wheel: () => makeWheel({}),
-      furin: () => makeFurin({}), pole: () => makePole({}), fan: () => makeFan({}),
-      scale: () => makeScale({}), moon: () => makeMoon({}), cave: () => makeCave({}),
-    };
+    // ONE registry, shared with model-viewer.html, so the two can't drift
+    import { ROSTER, instantiate } from '../src/modelviewer/roster.js';
+    const { makeLights } = KIT;
 
     const params = new URLSearchParams(location.search);
     const modelName = params.get('model') || 'dog';
@@ -74,11 +47,9 @@
     let center = new THREE.Vector3();
     let radius = 1;
     try {
-      const built = MODELS[modelName] ? MODELS[modelName]() : null;
-      if (!built) throw new Error(`unknown model "${modelName}" — keys: ${Object.keys(MODELS).join(' ')}`);
-      const obj = built.isObject3D ? built : (built.group || built.mesh);
-      if (!obj || !obj.isObject3D) throw new Error('builder returned no Object3D');
-      if (built.update) built.update(0, 0);      // settle handle-style models into their rest pose
+      const entry = ROSTER.find((e) => e.key === modelName);
+      if (!entry) throw new Error(`unknown model "${modelName}" — keys: ${ROSTER.map((e) => e.key).join(' ')}`);
+      const { obj } = instantiate(entry, KIT);   // normalizes + settles rest pose
 
       if (mode === 'silhouette') {
         // flat ink, no lights, outline shells hidden: the naked shape
