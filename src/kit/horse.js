@@ -66,7 +66,7 @@ export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
     // the slimmest legs in the kit; legTaper > 1 narrows toward the FOOT
     // (a slender cannon bone, not a post — quadruped.js's own note)
     legBury: .2,
-    legH: LEG_H, legR: 0.04, legTaper: 1.5, hipX: 0.1, hipZ: 0.31,
+    legH: LEG_H, legR: 0.05, legTaper: 1.5, hipX: 0.09, hipZ: 0.31,
     legs: { knee: KNEE },
     // r/len still size the plan's mesh; the wedge taper is re-cut below
     neck: { r: 0.10, len: 0.50 },
@@ -118,7 +118,7 @@ export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
   const headMesh = group.children.find((c) => c.name === 'head');
   {
     const SEG = 8, pos = [], idx = [];
-    const ringScale = 1.3;
+    const ringScale = 1.5;
     for (const [z, w, hh, yo] of HEAD_RINGS) {
       for (let j = 0; j < SEG; j++) {
         const a = ((j + 0.5) / SEG) * Math.PI * 2;
@@ -156,7 +156,7 @@ export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
   // transform (the plan already aimed it chest -> head), same name/material.
   const neck = group.children.find((c) => c.name === 'neck');
   neck.geometry.dispose();
-  neck.geometry = new THREE.CylinderGeometry(0.043 * height, 0.10 * height, 0.40 * height, 7);
+  neck.geometry = new THREE.CylinderGeometry(0.043 * height, 0.15 * height, 0.40 * height, 7);
   // a horse's neck is deep fore-aft but narrow across — thin it laterally
   neck.scale.x = 0.8;
 
