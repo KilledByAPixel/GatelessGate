@@ -70,7 +70,7 @@ test('the field wears the grassfield name and wiring the debug panel expects', (
   assert.equal(f.mesh.name, 'grassfield');
   assert.ok(f.mesh.userData.noOutline);
   const u = f.mesh.userData.uniforms;
-  for (const k of ['uTime', 'uWind', 'uWindDir', 'uGustScale', 'uGustSpeed', 'uPokePos', 'uPokeAmt', 'uPokeR']) {
+  for (const k of ['uTime', 'uWind', 'uWindDir', 'uGustScale', 'uGustSpeed', 'uPokePos', 'uPokeDir', 'uPokeAmt', 'uPokeR']) {
     assert.ok(u[k], `exposes ${k}`);
   }
   // the pointer's breeze is OFF until a pointer actually moves: an unpoked

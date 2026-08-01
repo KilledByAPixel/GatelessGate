@@ -99,20 +99,37 @@ test('the breeze is invisible until a pointer moves', () => {
   const u = f.mesh.userData.uniforms;
   assert.equal(u.uPokeAmt.value, 0, 'born still');
   assert.ok(u.uPokePos, 'poke position uniform exists');
+  assert.ok(u.uPokeDir, 'poke direction uniform exists — v2 is directional');
   assert.ok(u.uPokeR.value > 0, 'poke radius uniform exists');
   for (let i = 0; i < 240; i++) f.update(1 / 60, i / 60);
   assert.equal(u.uPokeAmt.value, 0, 'stays exactly zero with no pointer — not drifting');
+  clearBreeze();
+});
 
-  // and a genuine sweep wakes it, then stopping lets it settle back
+test('a sweep brushes the field ALONG the stroke, and release springs it back', () => {
+  clearBreeze();
+  const f = makeGrassField({ count: 300, radius: 20, seed: 2349 });
+  const u = f.mesh.userData.uniforms;
+  // a full second of brisk +x sweeping, so the spring settles on the stroke
   let x = 0;
-  for (let i = 0; i < 30; i++) { x += 8 / 60; setBreezePointer(x, 0, 1 / 60); f.update(1 / 60, 4 + i / 60); }
+  for (let i = 0; i < 60; i++) { x += 8 / 60; setBreezePointer(x, 0, 1 / 60); f.update(1 / 60, 4 + i / 60); }
   assert.ok(u.uPokeAmt.value > 0.3, `a swipe is felt: ${u.uPokeAmt.value.toFixed(3)}`);
+  assert.ok(u.uPokeDir.value.x > 0.99 && Math.abs(u.uPokeDir.value.y) < 0.01,
+    `and it points the way the pointer moved: (${u.uPokeDir.value.x.toFixed(3)}, ${u.uPokeDir.value.y.toFixed(3)})`);
   assert.ok(Math.abs(u.uPokePos.value.x - x) < 1e-9, 'the poke rides the pointer');
+
+  // hand lifts: the response must cross ZERO along the old stroke (the spring
+  // swings past rest — uPokeDir flips) before settling exactly still
   clearBreeze();
   const atRelease = u.uPokeAmt.value;
-  f.update(1 / 60, 5);
-  assert.ok(u.uPokeAmt.value < atRelease, 'release starts at once');
-  for (let i = 0; i < 600; i++) f.update(1 / 60, 6 + i / 60);
+  let minAlong = Infinity;
+  for (let i = 0; i < 240; i++) {
+    f.update(1 / 60, 6 + i / 60);
+    minAlong = Math.min(minAlong, u.uPokeAmt.value * u.uPokeDir.value.x);
+  }
+  assert.ok(minAlong < -atRelease * 0.05,
+    `swings back past rest: min along-stroke ${minAlong.toFixed(4)} of held ${atRelease.toFixed(3)}`);
+  for (let i = 0; i < 600; i++) f.update(1 / 60, 12 + i / 60);
   assert.ok(u.uPokeAmt.value < 0.01, `and the wake settles: ${u.uPokeAmt.value}`);
   clearBreeze();
 });

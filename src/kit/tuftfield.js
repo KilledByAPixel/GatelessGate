@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { toonRamp } from '../render/toon.js';
 import { hash1 } from '../util/noise.js';
 import { grassPlacements, GRASS_TONE } from './grassfield.js';
-import { breezeState, easePoke, GRASS_POKE_RADIUS } from './breeze.js';
+import { breezeState, makePokeSpring, pokeSpringStep, GRASS_POKE_RADIUS } from './breeze.js';
 
 // Frank's tuft grass: instead of one chunky geometric spear per grass plant,
 // each instance is a single camera-facing QUAD carrying a baked texture of a
@@ -116,12 +116,15 @@ export function makeTuftField({
     uWindDir: { value: new THREE.Vector2(windDir[0], windDir[1]).normalize() },
     uGustScale: { value: gustScale },
     uGustSpeed: { value: gustSpeed },
-    // the pointer's breeze — same trio as grassfield.js, kept in lockstep.
+    // the pointer's breeze — same quartet as grassfield.js, kept in lockstep.
     // uPokeAmt defaults to 0: an unpoked scene renders exactly as before.
     uPokePos: { value: new THREE.Vector2(0, 0) },
+    uPokeDir: { value: new THREE.Vector2(0, 0) },
     uPokeAmt: { value: 0 },
     uPokeR: { value: GRASS_POKE_RADIUS },
   };
+  // The response spring: one per field, integrated once per tick in update().
+  const poke = makePokeSpring();
 
   // Toon material built by hand rather than via toonMaterial(): it needs the
   // atlas as an alpha-tested map, and cutout (not blending) is the point — no
@@ -146,6 +149,7 @@ export function makeTuftField({
       uniform float uGustScale;
       uniform float uGustSpeed;
       uniform vec2 uPokePos;
+      uniform vec2 uPokeDir;
       uniform float uPokeAmt;
       uniform float uPokeR;
 
@@ -216,16 +220,20 @@ export function makeTuftField({
         float swing = gust * 2.0 - 1.0;
         vec2 swayW = uWindDir * (uWind * 0.26 * swing * stiff);
 
-        // the pointer's breeze: a radial push AWAY from the poke point, larger
-        // than the wind's own amplitude — the grass gets the MOST motion. A
-        // world vector like swayW, so the projection below keeps it on the
-        // card's own axis; falloff mirrors breezeFalloff in breeze.js.
+        // the pointer's brush: tufts near the stroke lean ALONG the drag
+        // direction (uPokeDir flips when the fields' spring overshoots, so
+        // the release reads as a swing-back), with a small radial share for
+        // volume — larger than the wind's own amplitude, the grass gets the
+        // MOST motion. A world vector like swayW, so the projection below
+        // keeps it on the card's own axis; falloff mirrors breezeFalloff in
+        // breeze.js.
         vec2 pokeD = iw.xz - uPokePos;
         float pokeDist = length(pokeD);
         float pokeT = clamp(1.0 - pokeDist / uPokeR, 0.0, 1.0);
         float pokeFall = pokeT * pokeT * (3.0 - 2.0 * pokeT);
-        vec2 pokeDir = pokeDist > 1e-4 ? pokeD / pokeDist : vec2(0.0, 0.0);
-        vec2 pokeW = pokeDir * (uPokeAmt * pokeFall * (0.45 + 0.20 * gust) * stiff);
+        vec2 radialDir = pokeDist > 1e-4 ? pokeD / pokeDist : vec2(0.0);
+        vec2 pokeW = (uPokeDir + radialDir * 0.18)
+                   * (uPokeAmt * pokeFall * (0.50 + 0.15 * gust) * stiff);
         swayW += pokeW;
 
         // ...projected onto the CARD'S OWN axis. This was the "stretchy" glitch
@@ -235,6 +243,15 @@ export function makeTuftField({
         // renders as smearing. A billboard may only ever shear along its own
         // right axis; that is what "left and right" means on a card.
         float sw = dot((viewMatrix * vec4(swayW.x, 0.0, swayW.y, 0.0)).xyz, rightV) + lean;
+
+        // tip micro-flutter, in lockstep with grassfield.js: a second, faster,
+        // smaller ripple with a seeded per-tuft phase and detuned frequency,
+        // added to the shear — the t^2 weighting below keeps it at the tips —
+        // so the field shimmers instead of swaying as one. Rides uWind and the
+        // gust: a windless scene stays bit-identical to the pre-flutter render.
+        float flPhase = ggHash(iw.xz * 3.71 + 7.13) * 6.2832;
+        float flFreq = 5.7 + 2.6 * ggHash(iw.xz * 1.93 + 2.17);
+        sw += sin(uTime * flFreq + flPhase) * uWind * 0.035 * (0.35 + 0.65 * gust);
 
         // Bend, don't stretch: plain shear lengthens the card's diagonal by
         // sqrt(1+s^2), which is exactly the rubbery look the blade field was
@@ -258,7 +275,7 @@ export function makeTuftField({
       '#include <dithering_fragment>\n  gl_FragColor.a = 0.0;   // ink-mask marker',
     );
   };
-  mat.customProgramCacheKey = () => 'tuftfield-billboard-poke';
+  mat.customProgramCacheKey = () => 'tuftfield-billboard-poke-v2';
 
   const spots = grassPlacements({ count, radius, inner, seed, groundSeed, keepout });
   const mesh = new THREE.InstancedMesh(geo, mat, Math.max(1, spots.length));
@@ -301,10 +318,13 @@ export function makeTuftField({
     },
     update(dt, simTime) {
       uniforms.uTime.value = simTime;
-      // same three uniform writes as grassfield.js — see the note there
+      // same spring + uniform writes as grassfield.js — see the note there
       const b = breezeState();
+      pokeSpringStep(poke, b.strength * b.dirX, b.strength * b.dirZ, dt);
+      const amt = Math.hypot(poke.px, poke.pz);
       uniforms.uPokePos.value.set(b.x, b.z);
-      uniforms.uPokeAmt.value = easePoke(uniforms.uPokeAmt.value, b.strength, dt);
+      uniforms.uPokeAmt.value = amt;
+      if (amt > 1e-6) uniforms.uPokeDir.value.set(poke.px / amt, poke.pz / amt);
     },
   };
 }

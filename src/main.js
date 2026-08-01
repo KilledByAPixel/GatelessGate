@@ -721,13 +721,14 @@ addEventListener('pointerdown', () => {
 // ---- loop ----
 // The pointer's breeze (src/kit/breeze.js): each tick, drop the pointer onto
 // the y=0 ground plane and hand the point to the shared breeze state, which
-// the grass fields and composeWorld's trees read back. One unproject, no
-// allocation — the two vectors are reused. Koan pages only: the menu, the
-// intro, sitting and the free cam clear it — WASD flying especially must not
-// read as a gale through the meadow.
+// the grass fields read back. One unproject, no allocation — the two vectors
+// are reused. Koan pages AND the contents: the hub's meadow idles behind the
+// menu and must answer the pointer exactly like a case's (Frank, breeze v2).
+// The intro, sitting and the free cam still clear it — WASD flying especially
+// must not read as a gale through the meadow.
 const breezeVec = new THREE.Vector3();
 function feedBreeze() {
-  if (mode !== 'koan' || !rig || freeCam.enabled()) { clearBreeze(); return; }
+  if ((mode !== 'koan' && mode !== 'menu') || !rig || freeCam.enabled()) { clearBreeze(); return; }
   const p = input.pointerNDC();
   if (!p) { clearBreeze(); return; }
   breezeVec.set(p.x, p.y, 0.5).unproject(camera).sub(camera.position).normalize();
