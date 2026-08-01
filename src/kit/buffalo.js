@@ -24,7 +24,7 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // legTaper 1.05: the shared limb profile wants a thigh to start from —
     // at the old default 0.82 the heaviest animal in the book had the
     // thinnest leg tops
-    legH: 0.46, legR: 0.125, legTaper: 1.05, hipX: 0.24, hipZ: 0.34,
+    legH: 0.46, legR: 0.125, legTaper: 1.05, hipX: 0.15, hipZ: 0.34,
     hump: { r: 0.40, scaleY: 0.86, scaleZ: 1.00, up: 0.24, fwd: 0.18 },
     // up + r*scaleY must clear bodyR (0.40) for these to stand PROUD of the
     // barrel line rather than sit flush inside it — the same trap the hump
@@ -61,7 +61,7 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // back over the neck like local/refs/buffaloHead.png. Short (0.52, was
     // 1.10) and fat at the base (0.10, was 0.055): a devil's horn, not a
     // fencepost.
-    horns: { r: 0.11, len: 0.85, x: 0.16, up: -0.07, fwd: 0.54, sweep: 0.55, back: 0.25, curve: 0.60 },
+    horns: { r: 0.1, len: 0.5, x: 0.1, up: -0.02, fwd: 0.7, sweep: 0.55, back: 0.25, curve: -0.50 },
     tail: { kind: 'strand', segments: 7, length: 0.74, thickness: 0.05, up: 0.16, back: 0.62, color: tailColor },
   });
   group.name = 'buffalo';

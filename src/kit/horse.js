@@ -46,7 +46,7 @@ const BODY_PITCH = 0.06;         // rad nose-down: deep chest, belly climbs aft
 const KNEE = 0.28;               // rad, hind hock fold (low: THIGH_RUN in the plan)
 
 // The shared plan's proportions this file derives against (quadruped.js).
-const LEG_H = 0.62, BODY_DROP = 0.05, BODY_LEN = 0.64, BODY_R = 0.195;
+const LEG_H = 0.62, BODY_DROP = 0.05, BODY_LEN = 0.6, BODY_R = 0.195;
 
 export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
   // The plan's own neck anchor, in units of height: mid-chest, forward.
@@ -58,14 +58,14 @@ export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
   const headFwd = cz + NECK_RISE * Math.tan(NECK_LEAN);
 
   // A SMALL head, nosed down so the muzzle keeps falling along the neck's line.
-  const head = { shape: 'box', w: 0.08, hh: 0.105, d: 0.21, fwd: headFwd, up: headUp, tilt: 0.88 };
+  const head = { shape: 'box', w: 0.08, hh: 0.105, d: 0.21, fwd: headFwd, up: headUp, tilt: 0.58 };
 
   const { group, tail } = makeQuadruped({
     height, color, seed,
     bodyR: BODY_R, bodyLen: BODY_LEN, bodyDrop: BODY_DROP,
     // the slimmest legs in the kit; legTaper > 1 narrows toward the FOOT
     // (a slender cannon bone, not a post — quadruped.js's own note)
-    legH: LEG_H, legR: 0.034, legTaper: 1.3, hipX: 0.115, hipZ: 0.31,
+    legH: LEG_H, legR: 0.04, legTaper: 1.5, hipX: 0.08, hipZ: 0.31,
     legs: { knee: KNEE },
     // r/len still size the plan's mesh; the wedge taper is re-cut below
     neck: { r: 0.10, len: 0.50 },
@@ -74,11 +74,11 @@ export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
     // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): rooted on the
     // poll — just inside the tilted crown of the head loft — and laid well
     // out (1.135 off vertical), the pinned-back read the reference has.
-    ears: { r: 0.022, h: 0.085, x: 0.037, y: 0.031, z: 0.037, tilt: 1.135 },
+    ears: { r: 0.025, h: 0.085, x: 0.02, y: 0.06, z: -0.04, tilt: .5 },
     // off the CROUP: root on the rump's top-rear, just under the pitched
     // barrel's surface, so the strand falls from the top line — not a stub
     // stuck at rear-centre height (the old read)
-    tail: { kind: 'strand', segments: 3, length: 0.62, thickness: 0.07, up: 0.135, back: 0.46 },
+    tail: { kind: 'strand', segments: 3, length: 0.4, thickness: 0.04, up: 0.135, back: 0.41 },
   });
   group.name = 'horse';
 
@@ -95,7 +95,7 @@ export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
   // matters (k45 sees the horse rear-three-quarter). The strand settles in its
   // group's LOCAL frame, so sweeping the whole group back turns "hanging
   // string" into "tail carried off the buttock", and the idle sway rides along.
-  if (tail) tail.group.rotation.x = 0.4;
+  if (tail) tail.group.rotation.x = 0.6;
 
   // ---- ONE head: poll to nostril in a single loft -------------------------
   // The box skull + cylinder muzzle read as two parts bolted together; this
@@ -117,10 +117,11 @@ export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
   const headMesh = group.children.find((c) => c.name === 'head');
   {
     const SEG = 8, pos = [], idx = [];
+    const ringScale = 1.3;
     for (const [z, w, hh, yo] of HEAD_RINGS) {
       for (let j = 0; j < SEG; j++) {
         const a = ((j + 0.5) / SEG) * Math.PI * 2;
-        pos.push(Math.sin(a) * w * height, (Math.cos(a) * hh + yo) * height, z * height);
+        pos.push(ringScale * Math.sin(a) * w * height, ringScale * (Math.cos(a) * hh + yo) * height, z * height);
       }
     }
     for (let i = 0; i < HEAD_RINGS.length - 1; i++) {
@@ -154,7 +155,7 @@ export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
   // transform (the plan already aimed it chest -> head), same name/material.
   const neck = group.children.find((c) => c.name === 'neck');
   neck.geometry.dispose();
-  neck.geometry = new THREE.CylinderGeometry(0.043 * height, 0.10 * height, 0.50 * height, 7);
+  neck.geometry = new THREE.CylinderGeometry(0.043 * height, 0.10 * height, 0.40 * height, 7);
   // a horse's neck is deep fore-aft but narrow across — thin it laterally
   neck.scale.x = 0.8;
 

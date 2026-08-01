@@ -39,7 +39,7 @@ import { hash1 } from '../util/noise.js';
 
 const P = {
   bodyR: 0.25, bodyLen: 0.62, bodyDrop: 0.18,
-  legH: 0.46, legR: 0.068, legTaper: 1.0, hipX: 0.13, hipZ: 0.26,
+  legH: 0.46, legR: 0.068, legTaper: 1.0, hipX: 0.1, hipZ: 0.36,
 };
 
 const SIT_TILT = 0.80;      // radians the spine pitches up off horizontal
@@ -58,12 +58,12 @@ const SIT_HEAD_FWD = 0.26;  // in heights, horizontally
 const SIT_CLEAR = 0.05;     // rump rides this far off the ground, in heights
 const SIT_REAR_Z = -0.10;   // tucked forward of the standing hip
 const SIT_REAR_X = 0.155;   // and splayed a little wider
-const BURY = 0.90;          // leg top sits this deep inside the barrel, as a fraction of R
+const BURY = 0.70;          // leg top sits this deep inside the barrel, as a fraction of R
 
 const TAIL_SEGS = 7;
 const TAIL_LEN = 0.95;
-const TAIL_R0 = 0.034;      // root
-const TAIL_R1 = 0.015;      // tip
+const TAIL_R0 = 0.054;      // root
+const TAIL_R1 = 0.045;      // tip
 // Cumulative pitch of each joint off horizontal-backward. Seated, the tail lies
 // low behind the haunch and lifts at the tip; standing, it carries high.
 const SIT_TAIL = [-0.35, -0.20, -0.05, 0.05, 0.15, 0.35, 0.60];
@@ -83,8 +83,6 @@ export function makeCat({ height = 0.32, color = INK, seed = 14, pose = 'sit' } 
     height, color, seed,
     bodyR: P.bodyR, bodyLen: P.bodyLen, bodyDrop: P.bodyDrop,
     legH: P.legH, legR: P.legR, legTaper: P.legTaper, hipX: P.hipX, hipZ: P.hipZ,
-    // short neck — a cat carries its head almost on the shoulders
-    neck: { r: 0.095, len: 0.22 },
     head: { shape: 'sphere', r: 0.175, fwd: 0.44, up: 0.24 },
     // blunt and short: a cat's muzzle barely leaves the skull
     snout: { r0: 0.058, r1: 0.100, len: 0.16, fwd: 0.60, up: 0.205 },
@@ -94,7 +92,7 @@ export function makeCat({ height = 0.32, color = INK, seed = 14, pose = 'sit' } 
     // the skull in BOTH directions: standing above it is what says "cat",
     // but a pair no wider than the head reads as two bumps at distance,
     // which is the failure the buffalo's horns shipped with.
-    ears: { r: 0.075, h: 0.25, x: 0.093, y: 0.131, z: 0.009, tilt: 0.53 },
+    ears: { r: 0.075, h: 0.2, x: 0.073, y: 0.111, z: 0.009, tilt: 0.53 },
     // NO haunch, NO shoulder. The polish pass hung both masses on this barrel
     // to sell a crouch, and seated — the only pose the book ever shows — the
     // pitched-torso transform below swung them up into "weird things sticking

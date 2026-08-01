@@ -31,8 +31,8 @@ const BODY_R = 0.16, BODY_LEN = 0.82;
 // the thick end poking out of the back, anchor the buried end ON the barrel's
 // axis at TAIL_ROOT_Z and solve for the centre the quadruped wants. The tail
 // then emerges cleanly from the rump at any length or angle.
-const TAIL_TILT = -1.72;                 // rad: sends the tail back, and a touch down
-const TAIL_LEN = 1.20;
+const TAIL_TILT = -1.2;                 // rad: sends the tail back, and a touch down
+const TAIL_LEN = 0.90;
 const TAIL_ROOT_Z = -0.30;
 const TAIL_AXIS_Y = Math.cos(TAIL_TILT);
 const TAIL_AXIS_Z = Math.sin(TAIL_TILT);
@@ -62,14 +62,14 @@ export function makeFox({ height = 0.45, color = INK, seed = 2 } = {}) {
     head: { shape: 'sphere', r: 0.125, fwd: 0.55, up: 0.26 },
     // long and narrow, and set a little below the head's centre — the muzzle,
     // not the skull, is what should be sticking out
-    snout: { r0: 0.028, r1: 0.078, len: 0.28, fwd: 0.78, up: 0.235 },
+    snout: { r0: 0.028, r1: 0.078, len: 0.28, fwd: 0.73, up: 0.235 },
     // twice the head's radius tall: on a fox the ears are half the head.
     // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): base offsets
     // from the skull's centre — high on top with a touch of forward, inside
     // the 0.125 radius so the join is buried — leaning 0.44 out.
-    ears: { r: 0.092, h: 0.28, x: 0.051, y: 0.102, z: 0.019, tilt: 0.44 },
+    ears: { r: 0.05, h: 0.3, x: 0.051, y: 0.09, z: 0.0, tilt: 0.44 },
     tail: {
-      kind: 'stiff', r0: 0.075,
+      kind: 'stiff', r0: 0.05,
       // the root end (buried in the barrel — see THE BRUSH above) reads as
       // "two thirds as thick as the body": r1 solved directly against
       // BODY_R rather than left at a hand-tuned value that drifts the moment

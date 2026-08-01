@@ -33,7 +33,7 @@ import { makeQuadruped } from './quadruped.js';
 // cocked tail emerges from inside the body at any length or angle.
 const TAIL_TILT = -1.0;                  // rad: up and back — the cocked tail is the read
 const TAIL_LEN = 0.38;
-const TAIL_ROOT = [0.13, -0.30];         // [above the barrel axis, z] — 0.07 under the surface
+const TAIL_ROOT = [0.13, -0.40];         // [above the barrel axis, z] — 0.07 under the surface
 const TAIL_UP = TAIL_ROOT[0] + (TAIL_LEN / 2) * Math.cos(TAIL_TILT);
 const TAIL_BACK = -(TAIL_ROOT[1] + (TAIL_LEN / 2) * Math.sin(TAIL_TILT));
 
@@ -56,7 +56,7 @@ export function makeDog({ height = 0.5, color = INK, seed = 1 } = {}) {
     // keep the offsets inside that to bury the join), tilt = outward lean.
     // These numbers reproduce the old aim-ray placement exactly (45° out on
     // the crown); they are a starting point to tune, not a keeper.
-    ears: { r: 0.07, h: 0.15, x: 0.107, y: 0.107, z: 0, tilt: 0.77 },
+    ears: { r: 0.07, h: 0.15, x: 0.07, y: 0.09, z: -.03, tilt: 0.77 },
     // rump: `back` (0.28) sits just short of `hipZ` (0.30) so the mass
     // gathers where the hind legs actually drive into the barrel. LOW AND
     // LONG: an earlier round stood it 0.04h proud of the barrel line and the
