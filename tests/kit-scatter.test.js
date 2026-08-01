@@ -43,48 +43,50 @@ test('rocks/bushes/grass are single instanced meshes sitting on the ground', () 
 test('lantern stacks its stones above y=0', () => {
   const l = makeLantern({});
   assert.equal(l.name, 'lantern');
-  assert.ok(l.children.length >= 5, 'base/post/firebox/window/roof/jewel at least');
+  assert.ok(l.children.length >= 5, 'base/post/firebox/candle/roof/jewel at least');
   const box = new THREE.Box3().setFromObject(l);
   assert.ok(box.min.y > -0.02, `sits on ground, got ${box.min.y}`);
   assert.ok(box.max.y > 0.7, `tall enough, got ${box.max.y}`);
 });
 
-test('lantern firebox is a real opening onto a darker interior, with a candle', () => {
-  // Fix round 2 (Frank: "I want it to be open — I wanna see the red candle
-  // inside"): the firebox is no longer a solid box with dark panels painted
-  // on. 'window' is now the chamber's own BackSide interior, and a pale
-  // candle stands inside it.
+test('lantern firebox is a truly open chamber — no interior box, candle inside', () => {
+  // Fix round 3 (Frank: "there's something like a glass effect on the lantern
+  // walls — make it just an open lantern so we can see the flame better"):
+  // round 2's dark BackSide interior box read as smoked-glass panes, so it is
+  // deleted outright. Open now means OPEN — a level ray through a face sails
+  // clean out the far side and lands on nothing at all.
   const l = makeLantern({});
   const firebox = l.children.find((c) => c.name === 'firebox');
-  const win = l.children.find((c) => c.name === 'window');
   const candle = l.children.find((c) => c.name === 'candle');
-  assert.ok(firebox && win && candle, 'firebox, window (interior) and candle meshes present');
-  // luminance proxy: sum of RGB channels — the interior must sit closer to
-  // ink than the firebox stone does, and the wax must sit well above it.
+  assert.ok(firebox && candle, 'firebox and candle meshes present');
+  assert.ok(!l.getObjectByName('window'), 'the interior box (the "glass") is gone');
+  // luminance proxy: sum of RGB channels — the wax must read well paler than
+  // the stone, the one colour step the open chamber keeps.
   const lum = (mat) => mat.color.r + mat.color.g + mat.color.b;
-  assert.ok(lum(win.material) < lum(firebox.material) - 0.15,
-    `interior (${lum(win.material).toFixed(3)}) should read darker than the firebox stone (${lum(firebox.material).toFixed(3)})`);
   assert.ok(lum(candle.material) > lum(firebox.material) + 0.3,
     `candle (${lum(candle.material).toFixed(3)}) should read paler than the stone (${lum(firebox.material).toFixed(3)})`);
-  // the interior lines the cavity: inward-facing, and inside the firebox span
-  assert.equal(win.material.side, THREE.BackSide, 'interior is drawn inward (BackSide)');
-  const fBox = new THREE.Box3().setFromObject(firebox);
-  const wBox = new THREE.Box3().setFromObject(win);
-  assert.ok(wBox.min.y >= fBox.min.y - 1e-6 && wBox.max.y <= fBox.max.y + 1e-6,
-    'interior stays within the firebox height');
-  assert.ok(wBox.max.x < fBox.max.x, 'interior is inset behind the stonework, not proud of it');
-  // and the opening is REAL: a level ray through the chamber (offset a hair
-  // in z so it passes beside the candle) must sail past the near face and
-  // land on the interior's FAR wall, beyond the lantern's own axis. Against
-  // the closed box this ray stopped on the front panel at x=+0.14.
+  // Reproduce the builder's own proportions (H = 1.15 default; same disclosed
+  // reproduce-the-formula tradeoff the roof-rim test uses) to aim two rays at
+  // chamber mid-height — the midpoint of the open span between sill top and
+  // header bottom, above the candle's tip:
+  const H = 1.15;
+  const FBOX_BOT = (0.09 + 0.27 + 0.045) * H;              // base + post + platform
+  const midY = FBOX_BOT + ((0.055 + (0.40 - 0.05)) / 2) * H; // (sill top + header bottom) / 2
   l.updateMatrixWorld(true);
-  const midY = (wBox.min.y + wBox.max.y) / 2;
-  const ray = new THREE.Raycaster(new THREE.Vector3(2, midY, 0.045), new THREE.Vector3(-1, 0, 0));
-  const hits = ray.intersectObject(l, true);
-  assert.ok(hits.length, 'the ray meets the lantern');
-  assert.equal(hits[0].object.name, 'window', `first hit should be the interior, got '${hits[0].object.name}'`);
-  assert.ok(hits[0].point.x < 0,
-    `first hit should be the FAR wall (x<0), got x=${hits[0].point.x.toFixed(3)} — the chamber is not open`);
+  // ray A, through the face opening (z offset clear of the pillars and the
+  // candle's axis): with the chamber truly open it exits the far side and
+  // hits NOTHING. Against round 2's interior box it stopped inside.
+  const open = new THREE.Raycaster(new THREE.Vector3(2, midY, 0.045), new THREE.Vector3(-1, 0, 0));
+  assert.equal(open.intersectObject(l, true).length, 0,
+    'a level ray through the opening must pass clean through and out the far side');
+  // ray B, aimed down a corner pillar's line at the same height, DOES meet
+  // stone — so ray A passing through proves openness, not a missing lantern.
+  const PILLAR_Z = (0.125 - 0.042 / 2) * H;                // pillar centreline
+  const blocked = new THREE.Raycaster(new THREE.Vector3(2, midY, PILLAR_Z), new THREE.Vector3(-1, 0, 0));
+  const hits = blocked.intersectObject(l, true);
+  assert.ok(hits.length, 'the pillar ray meets the lantern');
+  assert.equal(hits[0].object.name, 'firebox', `pillar ray should hit stone first, got '${hits[0].object.name}'`);
+  assert.ok(hits[0].point.x > 0, `and the NEAR pillar (x>0), got x=${hits[0].point.x.toFixed(3)}`);
 });
 
 test('case 28\'s flame is visible from the case\'s own home camera', () => {

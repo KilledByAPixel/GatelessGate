@@ -86,7 +86,16 @@ export default {
     flameMat.transparent = true;
     flameMat.fog = false;                    // a flame is not dimmed by distance
     if (flameMat.emissive) { flameMat.emissive = new THREE.Color(ACCENT); flameMat.emissiveIntensity = 1.0; }
-    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.20, 7), flameMat);
+    // a soft teardrop, not a cone (Frank, round 2: "the flame is like a weird
+    // triangle or cone") — a lathe whose belly swells just above the wick and
+    // whose tip is pulled up and rounded off, the shape a still flame holds
+    const flameProfile = [
+      [0, 0], [0.050, 0.028], [0.072, 0.072], [0.060, 0.122],
+      [0.032, 0.164], [0.010, 0.196], [0, 0.21],
+    ].map(([r, y]) => new THREE.Vector2(r, y));
+    const flameGeo = new THREE.LatheGeometry(flameProfile, 8);
+    flameGeo.translate(0, -0.10, 0);         // keep the old cone's centre so nothing re-frames
+    const flame = new THREE.Mesh(flameGeo, flameMat);
     flame.name = 'flame';
     flame.userData.noOutline = true;
     flame.position.set(0.5, 0.78, -1.7);     // base at 0.68 — the kit candle's tip

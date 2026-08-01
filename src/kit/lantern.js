@@ -11,44 +11,35 @@ import { WASH, PAPER, INK, mixHex } from '../palette.js';
 // separate meshes at a fixed world height, so nothing here may rename the
 // group or drift its rough silhouette/scale out from under it.
 //
-// THE FIREBOX IS A REAL OPENING NOW (Frank, on case 28: "I want it to be open
-// — I wanna see the red candle inside"). The previous pass built it as a solid
-// box with dark panels painted on, which read as a closed crate from the
-// case's own camera and buried the one flame the book has. It is now a sill
-// band, four corner pillars, and a header band — a chamber you can genuinely
-// see into from every side, the way a real hibukuro takes its hi-guchi.
+// THE FIREBOX IS TRULY OPEN NOW (Frank, round 2: "I feel like there's
+// something like a glass effect on the lantern walls — make it just an open
+// lantern so we can see the flame better"). Round 1 opened the chamber into
+// a sill band, four corner pillars, and a header band, but lined the cavity
+// with a dark BackSide interior box so nothing showed through — and that
+// lining read as smoked-glass panes from the case camera. It is deleted
+// entirely: through any face you now see the candle, the flame, and clean
+// out the far side between the pillars, the way a real hibukuro takes its
+// hi-guchi. The flame reads against whatever the scene puts behind it, which
+// in case 28 is the night itself — darker than any painted void was.
 //
-// The old "open box = see-through blowout against the sky" worry is answered
-// by the `window` mesh: no longer panels standing proud of a wall, it is the
-// chamber's own dark INTERIOR — a slightly-inset box rendered BackSide, so
-// through any opening you see its far wall, ceiling and floor in near-ink and
-// never the sky behind the lantern. Same dark-void idea as hut.js's recessed
-// doorway, turned inside out. It is marked noOutline (an inverted hull of an
-// inward-facing box would ink the cavity shut).
-//
-// And since the chamber is visible, it holds a CANDLE — a stub of pale wax on
-// the sill floor, sized so its tip meets the flame k28 hangs at world y=0.78
-// on its height:1.15 lantern (candle top lands at 0.59*H = 0.678 there, the
-// flame cone's own base). Every other case just gets an unlit candle in an
-// open lantern, which is what a tōrō by a path looks like in daylight; it and
-// the interior are the two genuine colour steps on the one-stone rule.
+// The visible chamber holds a CANDLE — a stub of pale wax on the sill floor,
+// sized so its tip meets the flame k28 hangs at world y=0.78 on its
+// height:1.15 lantern (candle top lands at 0.59*H = 0.678 there, the flame's
+// own base). Every other case just gets an unlit candle in an open lantern,
+// which is what a tōrō by a path looks like in daylight; the wax is the one
+// genuine colour step on the one-stone rule.
 //
 // One material still colours all the stone, so the parts separate by SHADE,
 // not hue: base/post/jewel keep round toon shading, the firebox stonework and
 // roof are flat-shaded — the same round-vs-flat rhythm gate.js and hut.js use.
-// Mesh count: seven (base, post, firebox, window, candle, roof, jewel) — the
-// platform, sill, header and four pillars all merge into the one 'firebox'
-// mesh, so opening the chamber costs exactly one mesh (the candle) over the
-// closed version.
+// Mesh count: six (base, post, firebox, candle, roof, jewel) — the platform,
+// sill, header and four pillars all merge into the one 'firebox' mesh.
 export function makeLantern({ height = 1.15, color = WASH.stone } = {}) {
   const H = height;
   const g = new THREE.Group();
   g.name = 'lantern';
   const mat = toonMaterial({ color });
   const flat = toonMaterial({ color, flat: true });
-  // the chamber's interior — a true dark void, deeper than the old painted
-  // panels (0.78 vs 0.62 toward ink) so a flame has real night to sit against
-  const voidMat = toonMaterial({ color: mixHex(color, INK, 0.78), flat: true, side: THREE.BackSide });
   // wax — barely off the paper, the palest thing on the lantern
   const waxMat = toonMaterial({ color: mixHex(PAPER, INK, 0.05) });
 
@@ -110,18 +101,6 @@ export function makeLantern({ height = 1.15, color = WASH.stone } = {}) {
   firebox.name = 'firebox';
   firebox.position.y = PLAT_BOT;
   g.add(firebox);
-
-  // WINDOW — the name survives from the closed version (k28 and the tests key
-  // off it), but it is now the dark interior itself: an inset box drawn
-  // BackSide, so every opening looks into a near-ink cavity instead of
-  // through to whatever stands behind the lantern.
-  const IN_HW = 0.115 * H;
-  const IN_H = FBOX_H - 0.03 * H;
-  const windowMesh = new THREE.Mesh(new THREE.BoxGeometry(IN_HW * 2, IN_H, IN_HW * 2), voidMat);
-  windowMesh.name = 'window';
-  windowMesh.position.y = FBOX_BOT + FBOX_H / 2;
-  windowMesh.userData.noOutline = true;
-  g.add(windowMesh);
 
   // CANDLE — pale wax standing on the sill floor, sunk a hair so it reads as
   // set into the chamber rather than balanced on the lip. noOutline: at this
