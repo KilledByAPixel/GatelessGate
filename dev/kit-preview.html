@@ -22,6 +22,7 @@
       makeTree, makePine, makeOak, makeForest, makeGrassField, makeTuftField, makeWildflowers,
       makeGate, makeVeranda, makeLantern, makeBell, makeDrum, makeStall,
       makeBasin, makeFurin, makeWheel, makeVase, makeRack, makePole, makeBundle,
+      makeFan,
     } from '../src/kit/index.js';
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -169,6 +170,11 @@
     place(makeWheel({}), 10, 22, 0, 'wheel');
     place(makeVase({}), 14, 22, 0, 'vase');
     place(makeRack({}), 17, 22, 0, 'rack');
+    // held at hand height, face to the camera — a fan is a held prop (k48 puts
+    // it in a cuff), never a floor prop, so the workbench shows it the way a
+    // case stages it, same reasoning as the furin's eave-height hang
+    const fanProp = place(makeFan({}), 20.5, 22, 0, 'fan');
+    fanProp.position.y = 1.0;
     place(makePole({}), 24, 22, 0, 'pole');
     place(makeBundle({}), 30, 22, 0, 'bundle');
 
@@ -382,6 +388,16 @@
       // (-1.8, 0.2, 1.2).
       'vase-side': { p: [12.2, 0.55, 23.2], t: [14, 0.35, 22] },
       rack:    { p: [20.5, 1.2, 26], t: [17, 0.8, 22] },
+      // the fan is held at (20.5, 1.0, 22) with its face toward +z (ry=0 — the
+      // leaf opens along +Y, face on +Z), so a slightly-high near-frontal
+      // camera reads the wedge silhouette and the scalloped rim; framed close
+      // since the whole prop is ~0.8 tall (grip 0.16 + leaf 0.5).
+      fan:     { p: [20.9, 1.75, 23.7], t: [20.5, 1.40, 22] },
+      // profile view: edge-on to the leaf, so the pleat zigzag's actual depth
+      // (±0.045·radius) and the grip's sink past the pivot are readable — the
+      // face-on view can't show either. Same rotate-90 formula as basin-side/
+      // vase-side: offset from target (0.4, 0.35, 1.7) -> (-1.7, 0.35, 0.4).
+      'fan-side': { p: [18.8, 1.75, 22.4], t: [20.5, 1.40, 22] },
       pole:    { p: [14, 2.4, 32], t: [24, 3.5, 22] },
       bundle:  { p: [31.2, 0.4, 23.6], t: [30, 0.2, 22] },
       // profile view, added for D5 (bundle.js): the near view can't show the
@@ -417,6 +433,7 @@
     soloGroups['basin-side'] = soloGroups.basin;
     soloGroups['vase-side'] = soloGroups.vase;
     soloGroups['bundle-side'] = soloGroups.bundle;
+    soloGroups['fan-side'] = soloGroups.fan;
 
     // below and out from his anchor, looking up across the canopy's underside
     // rather than into it — the anchor sits ON the crown mass, so a close
