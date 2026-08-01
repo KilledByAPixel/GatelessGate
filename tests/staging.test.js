@@ -207,12 +207,14 @@ const OVER_BUDGET_BY_HISTORY = {};
 
 // Accents that are deliberately not a compact thing in the middle distance:
 // 24's is the whole flowering meadow (an instanced field); 27's is the moon,
-// sixty units out beyond the mountains; 22's and 34's is the PATH, a ground-
-// spanning ribbon whose mesh origin is not a meaningful point to project (the
-// road is inherently in frame — it is the ground you are looking at). 36 used
-// to be here while its master opened far off in the fog; he now opens a
-// stride past the traveller, so the ordinary check covers him again.
-const ACCENT_NOT_IN_FRAME = [22, 24, 27, 34];
+// sixty units out beyond the mountains; 22's is the PATH, a ground-spanning
+// ribbon whose mesh origin is not a meaningful point to project (the road is
+// inherently in frame — it is the ground you are looking at). 36 used to be
+// here while its master opened far off in the fog; he now opens a stride
+// past the traveller, so the ordinary check covers him again — and 34 while
+// its path carried the red; the seal moved to the hut (Frank: the house is
+// his home), so the ordinary check covers it too.
+const ACCENT_NOT_IN_FRAME = [22, 24, 27];
 
 test('the seal of each case is actually in the picture', async () => {
   // Every case puts its one accent on the thing the case turns on. If that
