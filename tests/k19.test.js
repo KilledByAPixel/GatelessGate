@@ -291,14 +291,29 @@ const tiltOf = (m4) => {
   return Math.acos(Math.max(-1, Math.min(1, up.y)));
 };
 
-test('wildflowers place exactly the count asked for, in one instanced draw', () => {
+test('wildflowers place exactly the count asked for, in two instanced draws (red heads, ink stems)', () => {
   const f = makeWildflowers({ count: 60, radius: 18, rMin: 3, seed: 19, groundSeed: 21 });
   assert.equal(f.mesh.name, 'wildflowers');
-  assert.ok(f.mesh.isInstancedMesh, 'one instanced mesh = one draw call');
+  assert.ok(f.mesh.isInstancedMesh, 'the heads are one instanced mesh');
   assert.equal(f.mesh.userData.noOutline, true, 'an inverted hull on a five-pixel bloom is a smudge');
   assert.equal(f.mesh.count, 60, `asked for 60, got ${f.mesh.count}`);
   assert.equal(f.blooms, 60);
   assert.equal(f.points.length, 60);
+
+  // ONLY THE HEAD IS RED (Frank: "just the top part of the flower... the
+  // stalk should still be black"). The stems ride as a child instanced mesh
+  // in ink, sharing every instance matrix with the heads.
+  const stems = f.mesh.children.find((c) => c.name === 'wildflower-stems');
+  assert.ok(stems && stems.isInstancedMesh, 'the stems are their own instanced mesh');
+  assert.equal(stems.count, f.mesh.count, 'one stem per head');
+  assert.notEqual(stems.material.color.getHexString(), f.mesh.material.color.getHexString(),
+    'stems do not wear the accent');
+  assert.equal(stems.material.emissive.getHexString(), '000000', 'and the seal glow stays off the stalks');
+  const ma = new THREE.Matrix4(), mb = new THREE.Matrix4();
+  f.update(0.5, 1.7);                    // mid-sway, not just the planted frame
+  f.mesh.getMatrixAt(31, ma);
+  stems.getMatrixAt(31, mb);
+  assert.deepEqual(ma.elements, mb.elements, 'head and stem move as one bloom');
 
   // deterministic — no Math.random anywhere in the placement
   const g = makeWildflowers({ count: 60, radius: 18, rMin: 3, seed: 19, groundSeed: 21 });

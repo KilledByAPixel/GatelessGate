@@ -3,7 +3,7 @@ import { hash1 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
 import { mergeSimple } from './scatter.js';
 import { groundHeight } from './ground.js';
-import { ACCENT } from '../palette.js';
+import { ACCENT, INK } from '../palette.js';
 
 // "In spring, hundreds of flowers." Tiny blooms scattered through the meadow as
 // ONE InstancedMesh — a single draw call, seeded, conforming to the terrain and
@@ -37,14 +37,22 @@ const GUST_WIDTH = 3.4;   // how broad the front is, so it passes rather than sn
 const GUST_LIFE = 2.8;    // seconds before it has crossed the meadow and gone
 const MAX_GUSTS = 4;
 
-// one bloom: a hair-thin stem and a small faceted head sitting on top of it.
-// The stem's base is at the local origin, so an instance plants exactly on the
-// terrain and leans from its own foot.
-function bloomGeometry(seed = 1) {
-  const parts = [];
+// One bloom, in TWO geometries: a hair-thin stem and a small faceted head
+// sitting on top of it. They are separate because only the HEAD is red — "we
+// want just the top part of the flower to be red, not the stalk; that should
+// still be black" (Frank) — and the seal-glow emissive on accent materials
+// (toon.js) cannot be split per-vertex inside one mesh. The two instanced
+// meshes share every instance matrix, so they stay one bloom in motion.
+// The stem's base is at the local origin, so an instance plants exactly on
+// the terrain and leans from its own foot.
+function stemGeometry() {
   const stem = new THREE.ConeGeometry(0.008, 0.185, 3, 1, true);  // open: no base cap
   stem.translate(0, 0.0925, 0);
-  parts.push(stem);
+  return stem;
+}
+
+function headGeometry(seed = 1) {
+  const parts = [];
   for (let i = 0; i < 3; i++) {
     const petal = new THREE.OctahedronGeometry(0.040, 0);
     petal.scale(1, 0.5, 1);                                        // flattened: a bloom, not a bead
@@ -96,13 +104,23 @@ export function makeWildflowers({
     pts.push({ x, z, u: hash1(tries * 5 + 4, seed) });
   }
 
-  const geo = bloomGeometry(seed);
-  const mat = toonMaterial({ color, flat: true });
-  const mesh = new THREE.InstancedMesh(geo, mat, Math.max(1, pts.length));
+  // the HEADS are the red; the mesh carrying them stays the handle's `mesh`
+  const mesh = new THREE.InstancedMesh(
+    headGeometry(seed), toonMaterial({ color, flat: true }), Math.max(1, pts.length));
   mesh.count = pts.length;
   mesh.name = 'wildflowers';
   mesh.userData.noOutline = true;   // an inverted hull on a five-pixel bloom is a smudge
   mesh.castShadow = false;
+
+  // the STEMS ride as a child of the heads mesh — one scene.add carries both —
+  // in ink, one extra draw call for the whole field
+  const stems = new THREE.InstancedMesh(
+    stemGeometry(), toonMaterial({ color: INK, flat: true }), Math.max(1, pts.length));
+  stems.count = pts.length;
+  stems.name = 'wildflower-stems';
+  stems.userData.noOutline = true;
+  stems.castShadow = false;
+  mesh.add(stems);
 
   // the axis that tips a stem toward the wind: perpendicular to it, in the
   // ground plane, so every bloom leans the same way in WORLD space whatever its
@@ -181,13 +199,16 @@ export function makeWildflowers({
       _s.set(b.sc, b.sc * b.tall, b.sc);
       _m4.compose(_p, _q, _s);
       mesh.setMatrixAt(i, _m4);
+      stems.setMatrixAt(i, _m4);      // the same transform: one bloom, two draws
     }
     mesh.instanceMatrix.needsUpdate = true;
+    stems.instanceMatrix.needsUpdate = true;
     meanLean = blooms.length ? sum / blooms.length : 0;
   }
 
   update(0, 0);           // plant them, so the first frame is not a heap at the origin
   mesh.computeBoundingSphere();
+  stems.computeBoundingSphere();
 
   return {
     mesh,
