@@ -54,9 +54,8 @@ function bodyGeometry(s) {
 
   // a short tail fanned flat behind
   const tail = new THREE.ConeGeometry(0.14 * s, 0.30 * s, 3);
-  tail.rotateX(-Math.PI / 2);
   tail.scale(1, 0.22, 1);
-  tail.translate(0, 0.02 * s, -0.5 * s);
+  tail.translate(0, 0.02 * s, -0.4 * s);
   parts.push(tail);
 
   return mergeSimple(parts);
