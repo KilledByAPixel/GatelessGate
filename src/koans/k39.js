@@ -35,15 +35,26 @@ const FIRST_RED = STONES - 1;   // the crossing starts with the FAR stone red
 // scene. `red` is the index currently carrying it, `tapped` the stone that
 // just went under, `sunk` the per-stone sunk flags AFTER that sink. Sinking
 // any stone but the red one moves nothing; sinking the red one hands it to
-// the next survivor in build order (near shore → far), wrapping past the end.
+// the NEAREST surviving stone, and on a tie to the one nearer the near shore.
+//
+// Nearest, not "next in build order wrapping round": the stones run in a line
+// from the near shore out, so wrapping sent the red from the far end all the
+// way back to the first stone — the length of the crossing away (Frank: "the
+// next red one that appears is on the opposite direction, all the way on the
+// other side, and that's wrong — we want the closest one to turn red next,
+// and then they keep coming from the same side"). Walking outward from the
+// red one by index IS walking outward by distance here, and the near-shore
+// tie-break is what keeps the red marching steadily down the line it started
+// on instead of hopping across the water.
+//
 // When the last survivor goes down there is nobody left to take it: -1, and
 // the red vanishes with the crossing until the stones surface again.
 export function nextRed(red, tapped, sunk) {
   if (tapped !== red) return red;
   const n = sunk.length;
-  for (let k = 1; k <= n; k++) {
-    const i = (red + k) % n;
-    if (!sunk[i]) return i;
+  for (let k = 1; k < n; k++) {
+    if (red - k >= 0 && !sunk[red - k]) return red - k;
+    if (red + k < n && !sunk[red + k]) return red + k;
   }
   return -1;
 }
@@ -165,6 +176,8 @@ export default {
     let sunk = 0;
     let allDownAt = -99;
 
+    const surface = water.group.children.find((c) => c.name === 'surface');
+
     input.onTap(() => {
       if (!camera) return;
       for (let i = 0; i < stones.length; i++) {
@@ -183,6 +196,18 @@ export default {
         if (sunk === stones.length) allDownAt = clock;
         return;
       }
+
+      // THE WATER IS TOUCHABLE TOO. Every other pond in the book rings when
+      // you touch it, and this one — the widest sheet of open water in the
+      // whole case list — simply did not: the tap handler only ever looked at
+      // the stones, so a miss did nothing at all (Frank: "I can't seem to
+      // touch the water there, it's not letting me create ripples").
+      if (!surface) return;
+      const hit = input.raycastFirst(camera, [surface]);
+      if (!hit) return;
+      const local = water.group.worldToLocal(hit.point.clone());
+      water.ripple(local.x, local.z);
+      audio && audio.drip({ loud: false });
     });
 
     return {
@@ -200,6 +225,13 @@ export default {
           // the crossing resets whole: the red returns to the far stone
           red = FIRST_RED;
           paint();
+          // and coming back up MOVES THE WATER (Frank) — seven stones
+          // surfacing at once is the biggest thing that happens in this
+          // scene, and it used to happen in dead silence on a flat sheet
+          for (const s of stones) {
+            water.ripple(s.pivot.position.x - 0.4, s.pivot.position.z + 1.6);
+          }
+          audio && audio.drip({ loud: true });
         }
 
         for (const s of stones) {

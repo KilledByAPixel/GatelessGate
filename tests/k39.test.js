@@ -23,13 +23,32 @@ test('nextRed: sinking a stone that is not red moves nothing', () => {
   assert.equal(nextRed(0, 5, [false, false, false, false, false, true, false]), 0);
 });
 
-test('nextRed: sinking the red hands it to the next survivor in build order, wrapping', () => {
-  // red on the far stone, everything else standing: wraps to the near shore
-  assert.equal(nextRed(6, 6, [false, false, false, false, false, false, true]), 0);
-  // mid-line, with the immediate neighbour already gone: skips to the survivor
-  assert.equal(nextRed(1, 1, [false, true, true, false, false, false, false]), 3);
-  // wrap over the end past sunk stones
+test('nextRed: sinking the red hands it to the NEAREST survivor, not across the pond', () => {
+  // Frank: "the next red one that appears is on the opposite direction, all
+  // the way on the other side, and that's wrong — we want the closest one to
+  // turn red next, and then they keep coming from the same side."
+  // red on the far stone, everything else standing: its own neighbour takes it
+  assert.equal(nextRed(6, 6, [false, false, false, false, false, false, true]), 5);
+  // mid-line, with the near-side neighbour gone: the far-side one is nearest
+  assert.equal(nextRed(1, 1, [false, true, true, false, false, false, false]), 0);
+  // both neighbours gone: keep stepping out, near shore first on a tie
+  assert.equal(nextRed(3, 3, [false, false, true, true, true, false, false]), 1);
+  // only one survivor left, wherever it is
   assert.equal(nextRed(5, 5, [true, false, true, true, true, true, true]), 1);
+});
+
+test('nextRed: the red walks DOWN the line it started on, never hopping the pond', () => {
+  // sink the red one every time, from the far stone: it should step 6,5,4...
+  const n = 7;
+  const sunk = Array(n).fill(false);
+  let red = n - 1;
+  const walk = [red];
+  for (let k = 0; k < n - 1; k++) {
+    sunk[red] = true;
+    red = nextRed(red, red, sunk);
+    walk.push(red);
+  }
+  assert.deepEqual(walk, [6, 5, 4, 3, 2, 1, 0], `the red marches in order, got ${walk}`);
 });
 
 test('nextRed: when the last survivor goes down the red vanishes', () => {
@@ -138,30 +157,30 @@ test('case 39: sinking a plain stone leaves the red where it was', () => {
   assert.equal(redTops(tops), 1);
 });
 
-test('case 39: sinking the red hands it to the next survivor — one red all the way down', () => {
+test('case 39: sinking the red hands it to the NEAREST survivor — one red all the way down', () => {
   const { root, tops, tap } = staged();
   let t = 1;
   const step = () => { t += 0.5; root.update(1 / 60, t); };
 
   step(); tap(2);                        // plain stone first: red stays on 6
-  step(); tap(6);                        // the red goes under: wraps to 0
-  assert.equal(root.fragment().red, 0);
-  assert.equal(tops[0].material.color.getHexString(), RED);
+  step(); tap(6);                        // the red goes under: its neighbour takes it
+  assert.equal(root.fragment().red, 5);
+  assert.equal(tops[5].material.color.getHexString(), RED);
   assert.equal(redTops(tops), 1, 'the red MOVED — it did not duplicate');
 
-  step(); tap(0);                        // red again: 1 survives, takes it
+  step(); tap(5);                        // red again: 4 is next along the line
+  assert.equal(root.fragment().red, 4);
+  step(); tap(4);                        // red again: 3 takes it (2 is already down)
+  assert.equal(root.fragment().red, 3);
+  assert.equal(redTops(tops), 1);
+
+  step(); tap(0);                        // plain: red stays on 3
+  assert.equal(root.fragment().red, 3);
+  step(); tap(3);                        // red: 2 and 0 are sunk, so 1 takes it
   assert.equal(root.fragment().red, 1);
-  step(); tap(1);                        // red again: 2 is sunk, so 3 takes it
-  assert.equal(root.fragment().red, 3);
   assert.equal(redTops(tops), 1);
 
-  step(); tap(4);                        // plain: red stays on 3
-  assert.equal(root.fragment().red, 3);
-  step(); tap(3);                        // red: 4 is sunk, 5 takes it
-  assert.equal(root.fragment().red, 5);
-  assert.equal(redTops(tops), 1);
-
-  step(); tap(5);                        // the last survivor goes down
+  step(); tap(1);                        // the last survivor goes down
   assert.equal(root.fragment().red, -1, 'no survivors, no red');
   assert.equal(root.fragment().sunk, 7);
 });
