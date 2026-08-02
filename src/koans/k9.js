@@ -134,8 +134,8 @@ export default {
       treeRing: [13, 22],
       keepout: [
         { x: CX, z: CZ, r: 9.4 },          // the whole monument (tree included)
-        { x: 2.8, z: 1.6, r: 1.2 },
-        { x: 4.4, z: 0.6, r: 1.2 },
+        { at: monk, r: 1.2 },
+        { at: seijo, r: 1.2 },
         // the near flank's footprint: a scatter tree that spawns inside the
         // mountain pokes its crown through the slope and reads as a hole
         { x: -22.7, z: -15.3, r: 19 },

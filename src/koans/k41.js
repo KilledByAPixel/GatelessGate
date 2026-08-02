@@ -157,7 +157,7 @@ export default {
       rocks: 7,
       bushes: 2,
       keepout: [
-        { x: -0.4, z: -5.2, r: 3.0 },
+        { at: cave, r: 3.0 },
         { x: 1.5, z: -1.9, r: 1.2 },
         { x: PINE.x, z: PINE.z, r: 1.6 },
       ],

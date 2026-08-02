@@ -88,17 +88,17 @@ export default {
       trees: 4,
       keepout: [
         ...path.keepout(24, 1.0),
-        { x: -0.4, z: -4.2, r: 3.0 },   // the hut
-        { x: 2.15, z: 0.9, r: 1.5 },    // basin + bowl
-        { x: 0.55, z: 1.75, r: 1.1 },   // the monk
-        { x: 3.75, z: 0.15, r: 1.2 },   // the deer-scarer and its flume
+        { at: hut, r: 3.0 },
+        { at: basin, r: 1.5 },          // basin + bowl
+        { at: monk, r: 1.1 },
+        { at: odoshi.group, r: 1.2 },   // the deer-scarer and its flume
       ],
       // the trail, the hut's footprint and the basin's stone cover ground;
       // the monk stands in the grass like anyone would
       grassKeepout: [
         ...path.keepout(24, 0.95),
-        { x: -0.4, z: -4.2, r: 1.9 },
-        { x: 2.15, z: 0.9, r: 0.62 },
+        { at: hut, r: 1.9 },
+        { at: basin, r: 0.62 },
       ],
     });
 

@@ -128,9 +128,9 @@ export default {
       groundSeed: 21,
       trees: 4,
       keepout: [
-        { x: 0.2, z: -3.4, r: 4.2 },
-        { x: 1.5, z: 0.3, r: 1.2 },
-        { x: -2.9, z: -0.4, r: 0.9 },
+        { at: veranda, r: 4.2 },
+        { at: wakuan, r: 1.2 },
+        { at: lantern, r: 0.9 },
       ],
       grassKeepout: [{ x: 0.2, z: -2.6, r: 3.2 }],
     });

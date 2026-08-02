@@ -56,8 +56,8 @@ export default {
       trees: 5,
       keepout: [
         ...path.keepout(24, 1.0),
-        { x: 0.8, z: 0.6, r: 1.3 },
-        { x: 3.1, z: 2.2, r: 1.2 },
+        { at: fuketsu, r: 1.3 },
+        { at: monk, r: 1.2 },
       ],
       grassKeepout: path.keepout(24, 0.9),
     });
@@ -75,8 +75,8 @@ export default {
       groundSeed: 21,
       keepout: [
         ...path.keepout(24, 0.8),
-        { x: 0.8, z: 0.6, r: 0.9 },
-        { x: 3.1, z: 2.2, r: 0.8 },
+        { at: fuketsu, r: 0.9 },
+        { at: monk, r: 0.8 },
       ],
     });
     scene.add(flowers.mesh);

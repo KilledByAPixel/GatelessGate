@@ -97,8 +97,8 @@ export default {
         ...path.keepout(24, 1.1),
         { x: 1.2, z: 0.6, r: 1.9 },
         { x: 3.3, z: 1.0, r: 1.4 },
-        { x: -0.5, z: 1.1, r: 1.1 },
-        { x: 0.4, z: 3.2, r: 1.1 },
+        { at: tozan, r: 1.1 },
+        { at: monk, r: 1.1 },
       ],
       grassKeepout: [
         ...path.keepout(24, 0.95),

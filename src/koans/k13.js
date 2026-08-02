@@ -83,7 +83,7 @@ export default {
         { x: hall.position.x, z: hall.position.z, r: 3.5 },
         { x: -3.5, z: 0.4, r: 1.9 },
         { x: 3.9, z: -0.4, r: 1.7 },
-        { x: 0.8, z: 1.5, r: 1.2 },
+        { at: tokusan, r: 1.2 },
         { x: seppo.position.x, z: seppo.position.z, r: 1.1 },
       ],
       grassKeepout: [

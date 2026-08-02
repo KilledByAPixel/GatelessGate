@@ -174,8 +174,8 @@ export default {
       trees: 4,
       keepout: [
         ...path.keepout(24, 1.1),
-        { x: -0.8, z: -3.8, r: 3.6 },
-        { x: 1.5, z: -0.6, r: 1.2 },
+        { at: veranda, r: 3.6 },
+        { at: tokusan, r: 1.2 },
         { x: 0.5, z: -1.7, r: 0.9 },
       ],
       grassKeepout: [

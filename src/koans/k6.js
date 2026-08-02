@@ -116,7 +116,7 @@ export default {
       keepout: [
         { x: 1.2, z: SEAT_Z, r: 2.0 },   // the seat
         { x: 1.2, z: -2.2, r: 4.0 },     // the assembly
-        { x: 3.05, z: -0.7, r: 1.2 },    // Kasyapa
+        { at: kasyapa, r: 1.2 },    // Kasyapa
       ],
       // the stone platform covers ground, and the meadow steps back from the
       // grounded lotus so the bloom is not buried in blades; the assembly

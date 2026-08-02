@@ -90,15 +90,15 @@ export default {
       keepout: [
         ...path.keepout(24, 1.1),
         { x: 1.3, z: 0.4, r: 2.0 },
-        { x: -1.9, z: -1.5, r: 1.6 },
-        { x: -0.5, z: 2.1, r: 1.1 },
-        { x: 3.5, z: 1.5, r: 1.1 },
+        { at: trestle, r: 1.6 },
+        { at: master, r: 1.1 },
+        { at: student, r: 1.1 },
       ],
       // the working yard is trodden bare around the stand and the bench
       grassKeepout: [
         ...path.keepout(24, 0.95),
         { x: 1.3, z: 0.4, r: 1.5 },
-        { x: -1.9, z: -1.5, r: 1.1 },
+        { at: trestle, r: 1.1 },
       ],
     });
 

@@ -115,8 +115,8 @@ export default {
       keepout: [
         { x: POND.x, z: POND.z, r: POND.size * 0.62 },
         { x: BANK.x, z: BANK.z, r: 1.8 },
-        { x: 3.4, z: 2.2, r: 1.2 },
-        { x: -3.2, z: -0.6, r: 0.9 },
+        { at: monk, r: 1.2 },
+        { at: lantern, r: 0.9 },
       ],
       grassKeepout: [
         { x: POND.x, z: POND.z, r: POND.size * 0.60 },

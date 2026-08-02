@@ -102,9 +102,9 @@ export default {
       groundSeed: 21,
       trees: 4,
       keepout: [
-        { x: -2.6, z: -3.6, r: 3.8 },
+        { at: veranda, r: 3.8 },
         { x: OSHIN_POS.x, z: OSHIN_POS.z, r: 1.2 },
-        { x: 1.4, z: -3.2, r: 0.9 },
+        { at: lantern, r: 0.9 },
         { x: 0.4, z: -0.6, r: 2.6 },      // the courtyard between them stays open
       ],
       // Grass is cleared UNDER THE PLATFORM and nowhere else. There used to be
@@ -115,7 +115,7 @@ export default {
       // should be just where the platform is"). The veranda's own circle is
       // centred on the veranda now, not offset forward of it.
       grassKeepout: [
-        { x: -2.6, z: -3.6, r: 3.0 },
+        { at: veranda, r: 3.0 },
       ],
     });
 

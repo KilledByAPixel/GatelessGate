@@ -118,9 +118,9 @@ export default {
       trees: 4,
       keepout: [
         ...road.keepout(26, 1.4),
-        { x: -1.2, z: -0.6, r: 1.3 },
-        { x: 3.2, z: 2.4, r: 1.2 },
-        { x: -3.3, z: 1.6, r: 1.0 },
+        { at: kembo, r: 1.3 },
+        { at: pupil, r: 1.2 },
+        { at: rock, r: 1.0 },
       ],
       grassKeepout: road.keepout(28, 1.0),
     });

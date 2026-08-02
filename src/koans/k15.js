@@ -82,14 +82,14 @@ export default {
       trees: 5,
       keepout: [
         ...path.keepout(24, 1.3),
-        { x: 0.5, z: -1.2, r: 2.4 },
-        { x: 1.5, z: 0.9, r: 1.1 },
-        { x: -1.4, z: -1.8, r: 1.1 },
-        { x: 2.6, z: -2.4, r: 0.9 },
+        { at: gate, r: 2.4 },
+        { at: tozan, r: 1.1 },
+        { at: ummon, r: 1.1 },
+        { at: lantern, r: 0.9 },
       ],
       grassKeepout: [
         ...path.keepout(26, 0.95),
-        { x: 0.5, z: -1.2, r: 1.2 },
+        { at: gate, r: 1.2 },
       ],
     });
 

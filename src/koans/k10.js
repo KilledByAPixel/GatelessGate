@@ -95,12 +95,12 @@ export default {
       keepout: [
         ...path.keepout(24, 1.1),
         { x: hut.position.x, z: hut.position.z, r: 2.7 },
-        { x: 0.7, z: 0.5, r: 2.2 },
+        { at: mat, r: 2.2 },
       ],
       grassKeepout: [
         ...path.keepout(24, 0.95),
         { x: hut.position.x, z: hut.position.z, r: 1.8 },
-        { x: 0.7, z: 0.5, r: 1.7 },
+        { at: mat, r: 1.7 },
       ],
     });
 

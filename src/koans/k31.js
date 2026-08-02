@@ -117,8 +117,8 @@ export default {
         ...branch.keepout(18, 1.1),
         { x: stall.position.x, z: stall.position.z, r: 2.8 },
         { x: WOMAN.x, z: WOMAN.z, r: 1.2 },
-        { x: 2.4, z: 1.5, r: 1.2 },
-        { x: 1.0, z: -3.2, r: 0.9 },
+        { at: traveller, r: 1.2 },
+        { at: lantern, r: 0.9 },
       ],
       grassKeepout: [
         ...road.keepout(26, 1.0),

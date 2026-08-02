@@ -108,13 +108,13 @@ export default {
       rocks: 5,
       bushes: 3,
       keepout: [
-        { x: 0.8, z: 0.2, r: 6.0 },   // the swept yard: nothing scatters into it
-        { x: -1.9, z: -0.6, r: 1.2 },
-        { x: 2.6, z: 2.4, r: 1.2 },
+        { at: stick, r: 6.0 },   // the swept yard: nothing scatters into it
+        { at: ummon, r: 1.2 },
+        { at: monk, r: 1.2 },
       ],
       // and the yard is swept to bare earth, which is the one thing this scene
       // has instead of scenery
-      grassKeepout: [{ x: 0.8, z: 0.2, r: 5.2 }],
+      grassKeepout: [{ at: stick, r: 5.2 }],
     });
 
     for (const [p, rx, rz, op] of [

@@ -8,7 +8,7 @@ export { makeGrassField } from './grassfield.js';
 export { makeTuftField } from './tuftfield.js';
 export { makeLantern } from './lantern.js';
 export { makePath } from './path.js';
-export { composeWorld } from './scenery.js';
+export { composeWorld, around } from './scenery.js';
 export { makeMonk, aimMonk, faceMonk } from './monk.js';
 export { makeFigure, robeLathe, sleeve, sphereHead, neckBetween } from './figure.js';
 export { makeTree } from './tree.js';

@@ -83,7 +83,7 @@ export default {
       keepout: [
         { x: 0.5, z: -3.3, r: 2.0 },
         { x: GIRL.x, z: GIRL.z, r: 1.4 },
-        { x: -0.55, z: -0.25, r: 1.2 },
+        { at: manjusri, r: 1.2 },
         { x: MOMYO.x, z: MOMYO.z, r: 1.2 },
       ],
       // the floor of the assembly hall is swept — and it has to be bare where

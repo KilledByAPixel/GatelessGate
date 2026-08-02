@@ -99,9 +99,9 @@ export default {
       trees: 4,
       keepout: [
         ...path.keepout(24, 1.2),
-        { x: -1.5, z: -1.2, r: 1.4 },
-        { x: 2.3, z: 1.2, r: 1.2 },
-        { x: 1.6, z: 2.6, r: 1.2 },
+        { at: shuzan, r: 1.4 },
+        { at: near, r: 1.2 },
+        { at: second, r: 1.2 },
         { x: 2.6, z: 3.6, r: 3.4 },
       ],
       grassKeepout: path.keepout(24, 0.95),

@@ -92,7 +92,7 @@ export default {
         ...path.keepout(24, 1.1),
         { x: hut.position.x, z: hut.position.z, r: 3.0 },
         { x: 0.7, z: -0.9, r: 2.2 },
-        { x: 3.4, z: 1.9, r: 1.2 },
+        { at: nansen, r: 1.2 },
       ],
       grassKeepout: [
         ...path.keepout(24, 0.95),

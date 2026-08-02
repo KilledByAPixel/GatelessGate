@@ -88,8 +88,8 @@ export default {
       trees: 4,
       keepout: [
         { x: 0.6, z: -3.6, r: 2.4 },
-        { x: 2.0, z: 0.5, r: 1.2 },
-        { x: -2.3, z: -0.9, r: 1.2 },
+        { at: philosopher, r: 1.2 },
+        { at: ananda, r: 1.2 },
         { x: -0.6, z: 2.6, r: 3.0 },
         // clear the sightline: the home camera sits out around (6, 7), and a
         // scatter tree landed square between it and the Buddha (Frank couldn't

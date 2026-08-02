@@ -57,14 +57,28 @@ function lookDown(scene, x, z) {
   return hits.length ? hits[0].object : null;
 }
 
-for (const [label, mod, x, z] of [
-  ['case 7 basin', k7, 2.15, 0.9],
-  ['case 30 pond', k30, POND.x, POND.z],
-  ['case 33 pond', k33, POND.x, POND.z],
+// WHERE to look is read off the water itself, not written down beside it. Case
+// 7's basin used to be a pair of literals here, and when Frank moved the basin a
+// unit across the garden the ray went on staring at the old spot and reported
+// that the vessel was full of footpath. A test that has to be edited every time
+// a prop moves is a test that will one day be edited wrongly.
+const over = (root, name) => {
+  let found = null;
+  root.scene.traverse((o) => { if (!found && o.name === name) found = o; });
+  const p = new THREE.Vector3();
+  found.getWorldPosition(p);
+  return p;
+};
+
+for (const [label, mod] of [
+  ['case 7 basin', k7],
+  ['case 30 pond', k30],
+  ['case 33 pond', k33],
 ]) {
   test(`${label}: looking down into the vessel, you see water`, () => {
     const root = staged(mod);
-    const seen = lookDown(root.scene, x, z);
+    const p = over(root, 'water');
+    const seen = lookDown(root.scene, p.x, p.z);
     assert.ok(seen, 'the ray hit something at all');
     assert.equal(seen.name, 'surface',
       `looking into the vessel shows "${seen.name}", not the water`);

@@ -196,8 +196,8 @@ export default {
         // the same 0.7 / 0.3 margins past the water's nominal radius (6.25)
         // that the old square sheet kept past its half-width
         { x: 0.4, z: -1.6, r: 6.95 },
-        { x: 4.9, z: 3.0, r: 1.2 },
-        { x: -4.2, z: -4.4, r: 1.2 },
+        { at: student, r: 1.2 },
+        { at: ummon, r: 1.2 },
       ],
       grassKeepout: [{ x: 0.4, z: -1.6, r: 6.55 }],
     });

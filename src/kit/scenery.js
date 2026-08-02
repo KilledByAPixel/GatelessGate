@@ -17,10 +17,35 @@ import { makeTree } from './tree.js';
 import { hash1 } from '../util/noise.js';
 import { wash } from '../palette.js';
 
+// A keepout circle, written the way a case actually thinks about it: "keep the
+// scatter off THIS THING". Pass anything with a `.position` — a monk, a hut, a
+// group — and it reads the coordinates off it.
+//
+// The alternative was writing them twice: `monk.position.set(3.6, 0, 3.4)` and
+// then `{ x: 3.6, z: 3.4, r: 1.2 }` a few lines later, two sets of numbers for
+// one fact (Frank: "we do want the grass keepout to be based on the object
+// position, but the position is not passed in, so you have to maintain two
+// different sets of numbers, and it's not ideal"). They drift the moment anyone
+// nudges a figure, and nothing fails — the scatter just quietly stops respecting
+// something, or clears a bald patch of grass where nothing stands any more.
+//
+// Still takes plain `{x, z, r}` for the circles that are not objects: a path's
+// own keepout(), a swathe of open water, the air over a gorge.
+export function around(obj, r) {
+  const p = obj && obj.position ? obj.position : obj;
+  return { x: p.x, z: p.z, r };
+}
+
+// And the same thing accepted inline, so `{ at: monk, r: 1.2 }` works in the
+// list without a wrapping call. Normalised once here, so everything downstream
+// — rocks, bushes, both grass fields — still sees nothing but {x, z, r}.
+const asCircle = (k) => (k && k.at ? around(k.at, k.r) : k);
+
 // The shared scene grammar: every case sits in the same kind of world —
 // rolling ground, mountains and forest in the fog, and a dressed midground
 // (scatter trees, rocks, bushes, grass). Foreground staging stays per-koan.
-// `keepout` circles ({x, z, r}) protect staging and paths from scatter.
+// `keepout` circles ({x, z, r}, or {at: object, r}) protect staging and paths
+// from scatter.
 export function composeWorld(scene, {
   seed = 1,
   groundSeed = 21,
@@ -59,6 +84,10 @@ export function composeWorld(scene, {
     { count: 5, distance: 33, arcSpan: 2.4, color: wash(0.28), hScale: 0.65 },
   ],
 } = {}) {
+  // one shape from here down, whichever way the case wrote them
+  keepout = keepout.map(asCircle);
+  if (grassKeepout) grassKeepout = grassKeepout.map(asCircle);
+
   scene.add(makeGround({ seed: groundSeed, ...(groundColor ? { color: groundColor } : {}) }));
   mountains.forEach((m, i) => scene.add(makeMountains({ seed: seed * 31 + i * 7, ...m })));
   forests.forEach((f, i) => scene.add(makeForest({ seed: seed * 41 + i * 11, ...f })));

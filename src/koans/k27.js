@@ -104,14 +104,14 @@ export default {
       trees: 3,
       keepout: [
         ...path.keepout(24, 1.2),
-        { x: -2.2, z: -4.4, r: 3.2 },
+        { at: hall, r: 3.2 },
         { x: TREE.x, z: TREE.z, r: 3.0 },
-        { x: 1.0, z: 2.6, r: 1.2 },
-        { x: -1.0, z: 1.2, r: 1.2 },
+        { at: monk, r: 1.2 },
+        { at: nansen, r: 1.2 },
       ],
       grassKeepout: [
         ...path.keepout(24, 0.95),
-        { x: -2.2, z: -4.4, r: 2.1 },
+        { at: hall, r: 2.1 },
       ],
     });
 

@@ -72,9 +72,9 @@ export default {
         ...path.keepout(24, 1.2),
         { x: hall.position.x, z: hall.position.z, r: 3.2 },
         { x: 0.9, z: 0.6, r: 1.5 },
-        { x: -1.2, z: 1.4, r: 1.1 },
-        { x: 2.9, z: 2.0, r: 1.1 },
-        { x: -3.0, z: -1.4, r: 0.9 },
+        { at: basho, r: 1.1 },
+        { at: disciple, r: 1.1 },
+        { at: lantern, r: 0.9 },
       ],
       grassKeepout: [
         ...path.keepout(24, 0.95),

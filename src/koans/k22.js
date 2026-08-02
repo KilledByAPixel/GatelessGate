@@ -78,9 +78,9 @@ export default {
         ...path.keepout(24, 1.3),
         { x: gate.position.x, z: gate.position.z, r: 2.4 },
         { x: flag.group.position.x, z: flag.group.position.z, r: 1.4 },
-        { x: -0.2, z: 1.5, r: 1.2 },
-        { x: 1.1, z: 2.9, r: 1.2 },
-        { x: -2.8, z: 0.6, r: 0.9 },
+        { at: kashapa, r: 1.2 },
+        { at: ananda, r: 1.2 },
+        { at: lantern, r: 0.9 },
       ],
       grassKeepout: [
         ...path.keepout(26, 0.95),
