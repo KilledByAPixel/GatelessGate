@@ -5,7 +5,7 @@ import * as THREE from '../lib/three.module.js';
 import k7 from '../src/koans/k7.js';
 import k30, { POND } from '../src/koans/k30.js';
 import k33 from '../src/koans/k33.js';
-import { ACCENT, ACCENT_DEEP } from '../src/palette.js';
+import { ACCENT, ACCENT_LIGHT } from '../src/palette.js';
 
 // Cases 7, 30 and 33 each held their water in a solid cylinder and set the
 // surface a couple of centimetres below its top face — so the cap covered the
@@ -116,7 +116,7 @@ test('case 33: the koi carry the red and the mat has gone to ink', () => {
 test('case 30: the reds are the urna and the water sheet — koi ink, stone bare, no glow on the water', () => {
   const root = staged(k30);
   const red = new THREE.Color(ACCENT).getHexString();
-  const deep = new THREE.Color(ACCENT_DEEP).getHexString();
+  const pink = new THREE.Color(ACCENT_LIGHT).getHexString();
   let urna = null;
   let lip = null;
   const bodies = [];
@@ -127,12 +127,13 @@ test('case 30: the reds are the urna and the water sheet — koi ink, stone bare
   });
   assert.ok(urna, 'the seated buddha carries his forehead dot');
   assert.equal(urna.material.color.getHexString(), red, 'the urna keeps its red');
-  // Frank: "the surface of the water itself" — the sheet is red, but the DEEP
-  // mix, because full accent over a pond-sized area read as blood ("a little
-  // bit too red... it looks like the blood almost")
+  // Frank: "the surface of the water itself" — the sheet is red, but the LIGHT
+  // mix. Full accent over a pond-sized area read as blood ("a little bit too
+  // red... it looks like the blood almost"), and the deep mix then read as too
+  // dark ("more like a pinkish red... slightly more pinkish").
   const surface = surfaceMesh(root.scene);
-  assert.equal(surface.material.color.getHexString(), deep,
-    'the pond sheet wears the deep accent (Frank\'s ruling)');
+  assert.equal(surface.material.color.getHexString(), pink,
+    'the pond sheet wears the LIGHT accent (Frank\'s ruling)');
   // and it does NOT take the seal glow: emissive light is the same from every
   // angle, so it flattens the toon ramp and the ripples stop reading — which
   // is exactly what Frank saw ("I barely see it do anything")
