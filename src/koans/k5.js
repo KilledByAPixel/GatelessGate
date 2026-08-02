@@ -6,6 +6,7 @@ import { mergeSimple } from '../kit/scatter.js';
 import { makeOak } from '../kit/oak.js';
 import { makeCliff } from '../kit/cliff.js';
 import { makeHangingMonk } from '../kit/hangingmonk.js';
+import { makeMonk, faceMonk } from '../kit/monk.js';
 import { makeLights, toonMaterial } from '../render/toon.js';
 import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
@@ -16,11 +17,12 @@ const ID = 5;
 // away west of the broken rock lip (see the cut in build), falls a cliff face
 // into a mist-filled gorge, and rises again as a fogged far wall. One grey oak
 // leans its stout limb out over the drop. From the limb, by his teeth, hangs
-// the man — alone; Frank cut the questioner, and the question lives in the
-// text where it belongs — tipped back off his own bite, arms at his sides,
-// feet together, as composed as it is possible to be while hanging from a
-// tree by your teeth. His sedge hat sits upright on the grass at the edge
-// where it landed. Nobody answers anything.
+// the man — tipped back off his own bite, arms at his sides, feet together, as
+// composed as it is possible to be while hanging from a tree by your teeth.
+// His sedge hat sits upright on the grass at the edge where it landed. And
+// under the tree, on the ground, stands the one who came to ask (Frank, round
+// 12): hands in his sleeves, looking up at a man who cannot open his mouth.
+// Nobody answers anything.
 const CLIFF = { x: -3.4, z: -2.0, yaw: Math.PI / 2 };   // void faces -x
 // seed 13 at this yaw, from a scan of eighty: widest gap between the crown's
 // worst lobe and the hanging man (1.55 — he can take his fullest swing and
@@ -29,6 +31,13 @@ const CLIFF = { x: -3.4, z: -2.0, yaw: Math.PI / 2 };   // void faces -x
 const OAK = { x: -2.2, z: -2.0, height: 5.0, seed: 13, yaw: 4.9 };
 const BRANCH = { base: [-2.35, 3.34, -2.0], len: 3.9, tilt: 0.062 };
 const HAT = { x: -2.55, z: -3.3 };
+// The questioner. East of the lip, because LIP_X is -3.75 and there is no
+// ground west of it — and forward of the trunk on the camera's side, under the
+// crown's outer reach. He is ink and so is the oak, so the spot is chosen for
+// SILHOUETTE as much as for staging: a step left of the bole and a step nearer
+// the lens, he stands against the pale lip stones instead of disappearing into
+// the trunk behind him.
+const ASKER = { x: -3.65, z: 0.55 };
 
 // the branch runs from its base toward -x, drooping a little at the tip
 const branchDir = [-Math.cos(BRANCH.tilt), -Math.sin(BRANCH.tilt), 0];
@@ -133,10 +142,22 @@ export default {
     dangler.group.rotation.y = -0.45;   // three-quarter to the home lens
     scene.add(dangler.group);
 
-    // No questioner. Frank cut him, and the cut is right: the case's question
-    // hangs in the text beside the scene, and the picture is stronger as one
-    // man alone over the drop with nobody to answer to. The whole predicament
-    // is his.
+    // ---- the questioner --------------------------------------------------
+    // Back, at Frank's word: "there's supposed to be someone under the tree,
+    // another person standing under the tree looking at them, talking to
+    // them." He is the case — a man arrives beneath the tree and asks why
+    // Bodhidharma came from the West, and the answer would cost the hanging
+    // man his teeth. So: ON the safe ground under the crown, at the lip, ink
+    // like everything else (the one red hangs over the drop and stays there),
+    // hands folded in his sleeves, and FACED at the man above him.
+    //
+    // faceMonk, not aimMonk: nothing is being pointed at here. The two verbs
+    // turn different axes and the sleeve one would leave him staring off at
+    // right angles to the only thing in the scene worth looking at.
+    const asker = makeMonk({ height: 1.62, pose: 'fold' });
+    asker.position.set(ASKER.x, 0, ASKER.z);
+    faceMonk(asker, { x: grip[0], z: grip[2] });
+    scene.add(asker);
 
     // and the hat that did not stay on, upright on the grass at the very edge
     const hat = new THREE.Mesh(
@@ -174,12 +195,14 @@ export default {
         ...gorgeMask,
         { x: OAK.x, z: OAK.z, r: 4.6 },
         { x: HAT.x, z: HAT.z, r: 0.8 },
+        { x: ASKER.x, z: ASKER.z, r: 0.7 },
       ],
       grassKeepout: [
         ...cliff.footprint(0.15),
         ...cliff.voidFootprint(0.3),
         ...gorgeMask,
         { x: HAT.x, z: HAT.z, r: 0.42 },
+        { x: ASKER.x, z: ASKER.z, r: 0.34 },
       ],
     });
 
@@ -224,6 +247,7 @@ export default {
     scene.add(boleShadow);
     for (const [x, z, rx, rz, op] of [
       [HAT.x - 0.06, HAT.z - 0.05, 0.35, 0.3, 0.30],
+      [ASKER.x - 0.05, ASKER.z - 0.06, 0.42, 0.36, 0.30],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = x; s.position.z = z;

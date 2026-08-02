@@ -123,7 +123,10 @@ export function buildHub({
   };
 }
 
-const INTRO_SECONDS = 7;
+// Longer than the old 7, for the longer road: the dolly now carries on through
+// the gate instead of stopping short of it, and the pace is meant to stay a
+// walk (Frank: "just a little bit longer").
+const INTRO_SECONDS = 9;
 
 // Returns the title-screen panel view + the dolly driver.
 // camera is a THREE.PerspectiveCamera. Options: onDone(), onSound(bool).

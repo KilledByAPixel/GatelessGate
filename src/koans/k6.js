@@ -23,6 +23,25 @@ export default {
   ambience: ['wind:0.12', 'music'],
   mood: 'yo',      // the flower and the smile — the gentlest case in the book
 
+  // Its own lens. The generic diorama shot pivots on [1.2, 1.35, 0.3], which in
+  // THIS scene is bare grass in front of the crowd: everything that matters —
+  // the raised stone at z -5, the lotus at -4, Kasyapa apart at +x — sat eleven
+  // degrees off the middle of the frame with the subject shoved into a corner
+  // (Frank: "the camera is not centred very well, it's way off to the side; it
+  // should be centred more like where the flower is"). So the pivot IS the
+  // flower. The azimuth comes in from 0.55 for the same reason — a squarer look
+  // down the scene's own axis — and the distance goes out to hold the assembly
+  // back off the lens, since pulling the target four units deeper pulls the
+  // camera with it.
+  // The numbers are derived, not dialled: they put the camera on the exact spot
+  // the default lens already stood on (6.94, 4.74, 9.67) and turn it to look at
+  // the flower instead of at the grass in front of the crowd. Same shot, same
+  // sizes, same distance from the front row — only the aim moves. Re-aiming by
+  // moving the target alone would have dragged the camera four units deeper
+  // into the assembly and stood the front row in the lens, which is the trap
+  // the arc's own comment warns about below.
+  camera: { distance: 15.26, target: [1.2, 1.1, -4.0], azimuth: 0.398, polar: 1.33 },
+
   build(ctx) {
     const { audio, input } = ctx;
     const scene = new THREE.Scene();

@@ -23,13 +23,40 @@ export function samplePath(points, u) {
   return catmullRom(p0, p1, p2, p3, t);
 }
 
+// The dolly down the road and THROUGH the gate. It used to stop at z -3, and
+// the gate stands at z -6 — so the book opened by walking up to its own door
+// and halting three metres short of it (Frank: "it doesn't go quite through the
+// gate all the way"). The fourth-from-last knot IS the gate's centre line, x and
+// all, so the camera passes between the posts rather than near them, and the
+// last two carry it out the far side.
+//
+// The knots also shorten as they approach it — 4.4, 4.4, 4.4, 3.8, 3.0, 3.0
+// units — because samplePath is uniform in PARAMETER, not in arc length: equal
+// time per segment means a shorter segment is a slower one. So the walk eases
+// as it arrives, instead of hurrying through the one image the book is named
+// for.
 export const INTRO_POINTS = [
-  [0, 1.6, 14],
-  [0, 1.5, 7],
-  [0.3, 1.5, 1.5],
-  [0.6, 1.4, -3],
+  [0, 1.60, 14],
+  [0, 1.52, 9.6],
+  [0.22, 1.50, 5.2],
+  [0.45, 1.48, 0.8],
+  [0.70, 1.46, -3.0],
+  [0.86, 1.43, -6.0],   // the gate: dead centre of the opening
+  [1.00, 1.38, -9.0],   // and out the other side
 ];
 
+const LOOK_AHEAD = 0.06;
+
 export function introPath(u) {
-  return { pos: samplePath(INTRO_POINTS, u), look: samplePath(INTRO_POINTS, Math.min(1, u + 0.06)) };
+  const pos = samplePath(INTRO_POINTS, u);
+  // Look down the road, not at your own eye. Sampling u + LOOK_AHEAD and
+  // clamping meant the last frame looked AT its own position, which is a
+  // degenerate lookAt — the camera snapped to an arbitrary heading on the very
+  // frame the title screen ends. Taking the difference over a window that is
+  // always LOOK_AHEAD wide keeps the final heading pointing the way the path
+  // was going.
+  const a = Math.min(1, u + LOOK_AHEAD);
+  const p1 = samplePath(INTRO_POINTS, a);
+  const p0 = samplePath(INTRO_POINTS, Math.max(0, a - LOOK_AHEAD));
+  return { pos, look: [pos[0] + p1[0] - p0[0], pos[1] + p1[1] - p0[1], pos[2] + p1[2] - p0[2]] };
 }

@@ -187,9 +187,32 @@ test('build stages the predicament: cliff, grey oak, one man alone over a real d
   assert.equal(found.oak.length, 1, 'one tree at its lip');
   assert.equal(found.branch.length, 1, 'one stout limb over the drop');
   assert.equal(found.hangingmonk.length, 1, 'one man hanging by his teeth');
-  // No questioner — Frank cut him. One man, alone, and the question in the
-  // text beside the scene.
-  assert.equal(found.monk.length, 0, 'nobody else about');
+  // The questioner is back (Frank, round 12) — and where he stands is the whole
+  // point of him: on GROUND, east of the lip, under the crown, turned to face
+  // the man over the drop. A questioner hovering above the gorge, or aimed at
+  // the horizon by the wrong one of monk.js's two verbs, is not a questioner.
+  assert.equal(found.monk.length, 1, 'one man came to ask');
+  const asker = found.monk[0];
+  assert.ok(asker.position.x > -3.75, `he stands on the meadow side of the lip, got ${asker.position.x}`);
+  // "under the tree" is measured off the CANOPY, not off a copied radius: the
+  // oak grows where its seed tells it to, and a hardcoded number here would go
+  // stale the next time that seed or height is touched.
+  const crown = box(found.oak[0].children.find((c) => c.name === 'canopy'));
+  assert.ok(asker.position.x > crown.min.x && asker.position.x < crown.max.x
+    && asker.position.z > crown.min.z && asker.position.z < crown.max.z,
+  `he stands under the crown (${JSON.stringify(crown.min.toArray().map((n) => +n.toFixed(1)))}`
+  + `..${JSON.stringify(crown.max.toArray().map((n) => +n.toFixed(1)))}), got `
+  + `${asker.position.x.toFixed(2)}, ${asker.position.z.toFixed(2)}`);
+  const ab = box(asker);
+  assert.ok(Math.abs(ab.min.y) < 0.06, `his feet are on the ground, got ${ab.min.y}`);
+  // faceMonk fronts local +z, so his facing is (sin y, cos y): it has to point
+  // at the hanging man, not merely be some rotation or other
+  const dang = found.hangingmonk[0];
+  const fx = Math.sin(asker.rotation.y), fz = Math.cos(asker.rotation.y);
+  const tx = dang.position.x - asker.position.x, tz = dang.position.z - asker.position.z;
+  const len = Math.hypot(tx, tz);
+  assert.ok((fx * tx + fz * tz) / len > 0.985,
+    'he is turned toward the man in the tree, not past him');
   assert.equal(found.fallenhat.length, 1, 'and the hat that did not stay on');
 
   // the seal: HIS robe, deepened for a person-sized mass — and nothing else red
