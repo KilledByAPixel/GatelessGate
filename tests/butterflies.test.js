@@ -60,6 +60,39 @@ test('the wings flap — a seeded beat, wings mirrored about the body line', () 
   assert.ok(Math.min(...angles) < 0.2, 'and spread nearly flat again');
 });
 
+// Frank, on the perched ones: "they can still move their wings a little even
+// though they're stationary — really slowly, so they're not fully not moving."
+// So the pause is a change of PACE, not a freeze: the wings must keep opening
+// and closing, far slower and far shallower than a beat, and never sit still.
+test('a perched butterfly keeps breathing with its wings, very slowly', () => {
+  const flock = makeButterflies({ count: 1, seed: 4 });
+  const [b] = butterflies(flock);
+  const perched = [];
+  for (let i = 0; i < 60 * 40; i++) {
+    flock.update(1 / 60, i / 60);
+    if (flock.lift()[0] === 0) perched.push({ i, z: b.children[1].rotation.z });
+  }
+  assert.ok(perched.length > 120, `it has to actually sit down, got ${perched.length} frames`);
+
+  const zs = perched.map((s) => s.z);
+  const lo = Math.min(...zs), hi = Math.max(...zs);
+  assert.ok(hi - lo > 0.08, `the perched wings are frozen solid (swing ${(hi - lo).toFixed(3)})`);
+  assert.ok(hi - lo < 0.6, `that is a beat, not a breath (swing ${(hi - lo).toFixed(3)})`);
+  // and they are HELD UP, folded together — not spread flat like a flying one
+  assert.ok(lo > 0.6, `perched wings stand folded, got a low of ${lo.toFixed(2)}`);
+
+  // slow: no single frame may move them anywhere near a wingbeat's worth.
+  // Compared only across ADJACENT frames — the samples span several separate
+  // sits, and the step from the end of one to the start of the next is not a
+  // frame of movement at all.
+  let worst = 0;
+  for (let k = 1; k < perched.length; k++) {
+    if (perched[k].i !== perched[k - 1].i + 1) continue;
+    worst = Math.max(worst, Math.abs(perched[k].z - perched[k - 1].z));
+  }
+  assert.ok(worst < 0.004, `the breath is not slow, ${worst.toFixed(4)} rad in a frame`);
+});
+
 test('they fly, they stay in their box, and they COME DOWN to the grass', () => {
   // Frank asked for a round rather than a hover: "changing height as well,
   // like kinda landing on the grass for a little bit and flying away." So the

@@ -27,6 +27,42 @@ const ID = 12;
 const ECHO = 0.62;
 const LINES = 3;
 
+// The cliff, turned to face the camera. A half turn maps its local void side
+// (−z) onto world +z, so the drop is between the reader and the figure.
+const CLIFF = { x: 0.6, z: 1.4, yaw: Math.PI };
+// Where the ground stops being ground. The rock's lip course overhangs this by
+// about a unit, which is what a brink looks like: stone at the edge with the
+// turf falling away just under it.
+const LIP_Z = CLIFF.z + 0.35;
+const DROP = 6.5;
+// He stands on the lip, a stride back from the brink, looking out over it.
+const ZUIGAN = { x: 0.9, z: 0.35 };
+
+const SS = (a, b, v) => {
+  const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
+// How far out the chasm runs before the ground climbs back. NARROW on purpose,
+// and it is the number the whole shot turns on: a gorge between the reader and
+// the subject is only a gorge if the camera stands on the FAR rim of it. At the
+// case's own distance the lens sits around z = 8, so the ground has to be back
+// up by then — otherwise the camera hangs over the middle of the hole, the drop
+// falls away directly beneath the frame, and the picture is exactly what it was
+// before: a man on some rocks with nothing under them.
+const GORGE = 8.0;
+
+// Grass keeps off the air over the chasm, and off nothing else. Circles, because
+// that is what composeWorld takes — a chain dense enough to blanket the gap with
+// no seam for a blade to grow through and stand on nothing.
+function voidStrip(lipZ) {
+  const out = [];
+  for (let z = lipZ + 1.6; z < lipZ + GORGE + 1; z += 3.0) {
+    for (let x = -20; x <= 20; x += 3.0) out.push({ x, z, r: 2.3 });
+  }
+  return out;
+}
+
 export default {
   id: ID,
   slug: 'zuigan-calls-his-own-master',
@@ -36,7 +72,23 @@ export default {
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.32', 'echo', 'music'],
   mood: 'yo',      // it is a daily, cheerful, slightly ridiculous habit
-  camera: { distance: 12.0, target: [0.6, 2.2, -0.6], azimuth: 0.70, polar: 1.20 },
+  // STANDING ON THE FAR RIM. With the drop between the reader and the man, the
+  // lens has to clear it: the camera's ground track must be past the far edge
+  // of the chasm, and high enough that the near rim does not cut off the mist
+  // lying in it. At the old 11.5 the camera hung over the middle of the hole
+  // and the whole gorge fell below the bottom of the frame — the picture was a
+  // man on some rocks with nothing under them, which is exactly what it looked
+  // like before the ground was carved at all.
+  //
+  // Derived, not dialled: put the eye at (6.5, 7.8, 14.0) and aim it at his
+  // chest. From there the nearest mist bank sits 39.6 degrees below horizontal
+  // and the frame's lower edge reaches 42.8, so the chasm is inside the picture
+  // with a little to spare. maxDist goes out with it, or the rig would clamp
+  // the shot it was given.
+  camera: {
+    distance: 16.1, target: [0.9, 1.3, 0.35], azimuth: 0.39, polar: 1.16,
+    minDist: 11, maxDist: 21,
+  },
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -45,8 +97,20 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
     scene.add(makeLights());
 
-    // the ledge, and the air past it
-    const cliff = makeCliff({ width: 13, drop: 6.5, depth: 2.6, seed: ID, origin: [0.4, -2.0], yaw: 0.22 });
+    // THE LEDGE, and the air past it — ON THIS SIDE now (Frank: "it could look
+    // cool if that was a ledge, but the cliff should be on the opposite side —
+    // toward us"). Yawed a half turn, so the void that used to face away into
+    // the middle distance now falls toward the camera: the reader looks ACROSS
+    // the gorge at a man calling into it, with the drop in the near foreground
+    // and the meadow running away behind him. `origin` and `yaw` mirror the
+    // group's own placement, which is how makeCliff samples the rolling ground
+    // under its lumps.
+    const cliff = makeCliff({
+      width: 13, drop: 6.5, depth: 2.6, seed: ID,
+      origin: [CLIFF.x, CLIFF.z], yaw: CLIFF.yaw,
+    });
+    cliff.position.set(CLIFF.x, 0, CLIFF.z);
+    cliff.rotation.y = CLIFF.yaw;
     scene.add(cliff);
 
     // ZUIGAN, alone, near the edge. `elder` gives him the kit's own staff, held
@@ -55,7 +119,7 @@ export default {
     // staff; maybe he could be holding a staff, a normal pose, but it won't be
     // red"). Nothing about the man is the seal any more.
     const zuigan = makeMonk({ height: 1.64, elder: true });
-    zuigan.position.set(0.9, 0, -0.5);
+    zuigan.position.set(ZUIGAN.x, 0, ZUIGAN.z);
     zuigan.rotation.y = .2;
     scene.add(zuigan);
 
@@ -86,24 +150,43 @@ export default {
       keepout: [
         ...cliff.footprint(1.0),
         ...cliff.voidFootprint(0.5),
-        { x: 0.9, z: -0.5, r: 1.4 },
+        { x: ZUIGAN.x, z: ZUIGAN.z, r: 1.4 },
       ],
-      // NO GRASS MASK AT ALL, and that took two goes to understand.
-      //
-      // The mask existed to keep grass from growing out over the drop. But this
-      // case never carves its ground the way case 5 does: the cliff is a prop
-      // standing ON a flat plain, and with drop 6.5 its face, skirt and every
-      // mist bank hang BELOW y = 0 — under the ground, invisible. So there was
-      // no drop on screen to keep grass off; there was only a bald patch,
-      // covering more than half the near field, standing in for one.
-      //
-      // A ray down the centre column of the shipped lens proves it: from the
-      // horizon down to his shoulder, every sample lands on plain ground at
-      // y ≈ 0, out at (-3, -5) to (-12, -16). That is the whole middle of the
-      // picture, and it was bare (Frank: "the grass is not where the camera is
-      // looking — there's just an empty space there"). It is meadow now.
-      grassKeepout: [],
+      // The mask is worth having again now that there is something to mask. It
+      // was doing nothing but harm while the drop was invisible — a bald patch
+      // standing in for a gorge that was entirely below the ground plane — but
+      // the ground is genuinely carved below, so grass out here really would
+      // hang in mid-air over the chasm. A straight half-plane past the lip, not
+      // the cliff's own circles: those overshoot onto the standing ground by
+      // more than a unit and it was them that ate the meadow.
+      grassKeepout: voidStrip(LIP_Z),
     });
+
+    // ---- THE CUT: the ledge is REAL --------------------------------------
+    // Case 5's trick, mirrored. makeCliff draws a face and hangs mist, but it
+    // cannot move the ground the scene stands on, and with drop 6.5 all of that
+    // hung BELOW y = 0 — under the plain, invisible. There was no ledge here at
+    // all, only rocks on a field (Frank could not tell which way the man was
+    // facing, which is the tell). So the case carves its own ground: every
+    // vertex past the lip sinks on a steep smoothstep — the face — runs a floor,
+    // and climbs back out over the last two units of GORGE as the near rim the
+    // camera stands on, with the mist lying in the gap between. A bay window
+    // along x keeps the cut
+    // inside the dressed run of lip stones, so past them the meadow wraps around
+    // instead of tearing on an unrocked edge.
+    const groundMesh = scene.getObjectByName('ground');
+    const gpos = groundMesh.geometry.attributes.position;
+    for (let i = 0; i < gpos.count; i++) {
+      const d = gpos.getZ(i) - LIP_Z;             // how far out over the air
+      if (d <= 0) continue;
+      const wx = gpos.getX(i);
+      const bay = SS(-9.5, -5.0, wx) * (1 - SS(5.0, 9.5, wx));
+      if (bay <= 0) continue;
+      const sink = DROP * SS(0, 1.4, d) * (1 - SS(GORGE - 2.0, GORGE, d)) * bay;
+      if (sink > 0) gpos.setY(i, gpos.getY(i) - sink);
+    }
+    gpos.needsUpdate = true;
+    groundMesh.geometry.computeVertexNormals();
 
     for (const [p, rx, rz, op] of [
       [zuigan.position, 0.68, 0.52, 0.42],
@@ -120,7 +203,7 @@ export default {
       new THREE.MeshBasicMaterial({ visible: false }));
     hit.name = 'zuigan-hit';
     hit.userData.noOutline = true;
-    hit.position.set(0.9, 1.0, -0.5);
+    hit.position.set(ZUIGAN.x, 1.0, ZUIGAN.z);
     scene.add(hit);
 
     // ---- the moment: call, and answer yourself ---------------------------

@@ -62,6 +62,55 @@ test('module shape matches the koan contract', () => {
   assert.equal(typeof k12.build, 'function');
 });
 
+// The ledge is the case: "a voice comes back" needs somewhere for it to come
+// back FROM. It is carved into the ground mesh, not drawn by the cliff prop, and
+// the two failure modes are silent — a drop that is all below the ground plane
+// (which is what this case shipped with for months), and a camera that hangs
+// over the middle of the hole so the whole gorge falls out of the bottom of the
+// frame.
+test('there is a real drop, on the camera\'s side, and the lens stands clear of it', () => {
+  const root = staged();
+  const ground = root.scene.getObjectByName('ground');
+  const gp = ground.geometry.attributes.position;
+
+  let voidMin = Infinity, meadowMin = Infinity, rimMin = Infinity;
+  const cam = rigCamera().position;
+  for (let i = 0; i < gp.count; i++) {
+    const x = gp.getX(i), z = gp.getZ(i), y = gp.getY(i);
+    if (Math.abs(x) > 3) continue;                     // down the middle of the bay
+    if (z > 3 && z < 7) voidMin = Math.min(voidMin, y);        // out over the air
+    if (z < -2 && z > -12) meadowMin = Math.min(meadowMin, y); // behind him
+    if (Math.abs(z - cam.z) < 1.5) rimMin = Math.min(rimMin, y); // under the camera
+  }
+  assert.ok(voidMin < -4, `the gorge is genuinely down: ${voidMin.toFixed(2)}`);
+  assert.ok(meadowMin > -0.6, `the meadow behind him keeps its ground: ${meadowMin.toFixed(2)}`);
+  // THE ONE THE SHOT DEPENDS ON. The camera's own ground track has to be back on
+  // solid rim, past the far side of the chasm — from over the hole there is
+  // nothing to see, because the drop is then straight down out of frame.
+  assert.ok(rimMin > -0.6,
+    `the camera hangs over the chasm (ground at ${rimMin.toFixed(2)} under z=${cam.z.toFixed(1)})`);
+
+  // he stands on the solid side, near the brink but not past it
+  const zuigan = root.scene.getObjectByName('monk');
+  const feet = new THREE.Box3().setFromObject(zuigan).min.y;
+  assert.ok(Math.abs(feet) < 0.15, `his feet are on the ground, got ${feet.toFixed(2)}`);
+
+  // and nothing grows out over the air
+  const grass = root.scene.getObjectByName('grassfield');
+  const m4 = new THREE.Matrix4(), p = new THREE.Vector3();
+  let floating = 0;
+  grass.traverse((o) => {
+    if (!o.isInstancedMesh) return;
+    for (let i = 0; i < o.count; i++) {
+      o.getMatrixAt(i, m4);
+      p.setFromMatrixPosition(m4);
+      o.localToWorld(p);
+      if (p.z > 3 && p.z < 7 && Math.abs(p.x) < 6) floating++;
+    }
+  });
+  assert.equal(floating, 0, `${floating} blades are growing on air over the gorge`);
+});
+
 test('the man carries no red: his staff is his own, and ink', () => {
   const root = staged();
   const zuigan = root.scene.getObjectByName('monk');
@@ -192,10 +241,14 @@ test('a landed butterfly is landed — it holds its spot, then leaves it', () =>
     if (best < 60) continue;                       // never settled in this window
     landed++;
     assert.ok(best < path.length - 60, 'it landed and never took off again');
-    // and it was ON the grass while it sat there, not stalled in mid-air
+    // and it was ON the grass while it sat there, not stalled in mid-air. Grass
+    // TIP height, not the dirt: grassfield's blade is 0.34, and a butterfly at
+    // 0.16 settled halfway down inside the field (Frank: "put them a little bit
+    // above the ground — like they've landed on a grass puff").
     const p = path[bestEnd];
     const gh = groundHeight(p.x, p.z, { seed: 21 });
-    assert.ok(p.y - gh < 0.2, `it stopped ${(p.y - gh).toFixed(2)} up in the air`);
+    const sit = p.y - gh;
+    assert.ok(sit > 0.2 && sit < 0.45, `it stopped ${sit.toFixed(2)} off the turf`);
     // it moves again afterwards
     const after = path[Math.min(path.length - 1, bestEnd + 120)];
     assert.ok(after.distanceTo(p) > 0.05, 'it never left the spot it landed on');

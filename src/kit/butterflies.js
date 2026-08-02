@@ -70,7 +70,13 @@ export function makeButterflies({
   radius = 3.2,                    // how far the wander may stray from the centre
   height = [0.7, 2.4],             // the band they play in, above the ground
   rate = 0.16,                     // wander speed — a flutter, not a bee-line
-  perch = 0.16,                    // how high a landed one sits — grass-top, not ground
+  // How high a landed one sits. GRASS-TIP, not ground: grassfield's blade is
+  // 0.34 tall, and at 0.16 a butterfly settled halfway down inside the field and
+  // read as landing in the dirt between the blades (Frank: "put them a little
+  // bit above the ground — or have them land on a grass puff, since there's
+  // grass all over"). At the tip height it perches ON the meadow wherever it
+  // comes down, which is the same effect without picking a blade to sit on.
+  perch = 0.32,
   groundFn = null,                 // (x, z) => terrain height; flat ground without one
 } = {}) {
   const g = new THREE.Group();
@@ -219,9 +225,13 @@ export function makeButterflies({
       const lift = liftAt(b, clock);
       const beat = b.beat * (1 + E * 0.6);
       const stroke = Math.sin(clock * beat * Math.PI * 2 + b.beatPh);
-      // PERCHED, the wings stop beating and stand folded up together, with a
-      // slow breath in them — the pause that makes the flight read as flight.
-      const rest = 1.02 + 0.05 * Math.sin(clock * 0.9 + b.beatPh);
+      // PERCHED, the wings stop BEATING but they do not stop moving: they stand
+      // folded up together and open and close very slowly, about a sixth of a
+      // radian either way once every ten seconds or so (Frank: "when they're
+      // stationary they can still move their wings a little — really slowly, so
+      // they're not fully not moving"). Each one breathes on its own phase, so a
+      // row of perched butterflies never pulses in unison.
+      const rest = 1.02 + 0.17 * Math.sin(clock * 0.55 + b.beatPh);
       const flying = 0.55 + 0.62 * stroke;           // -0.07 .. 1.17 rad
       const flap = rest + (flying - rest) * lift;
 
