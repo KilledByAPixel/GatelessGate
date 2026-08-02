@@ -56,7 +56,7 @@ export default {
     // courtyard that wanted to be red (it is two people and a call), so the
     // teacher on the platform takes the accent; deepened, since a whole figure
     // at full accent glares (Frank's call).
-    const chu = makeMonk({ height: 1.6, pose: 'sit', elder: true, color: ACCENT_DEEP });
+    const chu = makeMonk({ height: 1.6, pose: 'sit', elder: true, color: ACCENT_DEEP, cushion: false });
     const CHU_POS = new THREE.Vector3(-1.9, 0.34, -2.7);
     const OSHIN_POS = new THREE.Vector3(3.1, 0, 1.6);
     chu.position.copy(CHU_POS);
@@ -68,15 +68,16 @@ export default {
     // lean goes the way he faces.
     chu.rotation.order = 'YXZ';
     chu.rotation.y = Math.atan2(OSHIN_POS.x - CHU_POS.x, OSHIN_POS.z - CHU_POS.z);
-    // His staff rests on the boards BESIDE him. The kit plants it at 0.26h,
-    // which is inside a seated robe's hem (0.318h) — it emerged through the
-    // cloth like a stick stuck in him (Frank). Out past the hem it reads as
-    // what it is: the teacher's staff, set down within reach.
-    const staff = chu.getObjectByName('staff');
-    if (staff) staff.position.set(0.58, 0, 0.06);
+    // His staff rests on the boards beside him — the kit LAYS a seated
+    // elder's staff down now, so the hand-placement that used to live here
+    // (which only moved it clear of the hem, still upright) is gone: it
+    // would have put the lying shaft back at y = 0, half sunk in the deck.
     scene.add(chu);
 
-    // a plain reed mat under him now, not a red one
+    // a plain reed mat under him now, not a red one. He sits on it with the
+    // kit's own zabuton switched OFF (cushion: false above) — the two slabs
+    // were nearly the same size, so stacked they read as one thing doubled
+    // (Frank: "an extra thin rectangular shaped thing below this guy").
     const mat = new THREE.Mesh(
       new THREE.CylinderGeometry(0.46, 0.46, 0.035, 4),
       toonMaterial({ color: WASH.dry, flat: true }));

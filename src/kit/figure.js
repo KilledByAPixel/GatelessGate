@@ -244,7 +244,13 @@ const KNEE = { r: 0.09, scale: [1.5, 0.75, 1.1], x: 0.18, y: 0.095, z: 0.095, ya
 // lathe and the cushion around the axis and carries the mass centres inward,
 // but the flesh masses keep their own size — at fog distance the knees and
 // the cushion rim are the events that must survive.
-export function seatedBodyGeometry({ height, width = 1, segments = 10 } = {}) {
+// `cushion: false` drops the zabuton — for a case that already lays its own
+// mat under the figure (k10/k17/k30/k34). Two slabs of nearly the same size
+// stacked read as one thing doubled, not as a cushion on a mat: Frank found
+// exactly that in case 17 ("an extra thin rectangular shaped thing below this
+// guy"). The body's other masses are unchanged, so he still sits on his own
+// legs at the same height either way.
+export function seatedBodyGeometry({ height, width = 1, segments = 10, cushion: withCushion = true } = {}) {
   const lathe = new THREE.LatheGeometry(
     SIT_PROFILE.map(([r, y], i) => new THREE.Vector2((i ? r * width : r) * height, y * height)),
     segments);
@@ -261,7 +267,9 @@ export function seatedBodyGeometry({ height, width = 1, segments = 10 } = {}) {
     k.translate(side * KNEE.x * width * height, KNEE.y * height, KNEE.z * height);
     return k;
   });
-  return mergeSimple([lathe, cushion, shins, ...knees]);
+  return mergeSimple(withCushion
+    ? [lathe, cushion, shins, ...knees]
+    : [lathe, shins, ...knees]);
 }
 
 // The sedge hat, authored in its own local space (y = 0 is where the old
@@ -357,6 +365,7 @@ const STANCES = {
 export function makeFigure({
   height = 1.6, color = INK, stance = 'stand', arms = 'rest',
   hat = true, stout = 1, elder = false, staffAng, mat: matIn,
+  cushion = true,          // seated only — false where the case lays its own mat
 } = {}) {
   const g = new THREE.Group();
   g.name = 'figure';
@@ -367,7 +376,7 @@ export function makeFigure({
 
   if (seated) {
     // the seated body is NOT a pure lathe — the knees are merged in
-    const body = new THREE.Mesh(seatedBodyGeometry({ height, width: s }), mat);
+    const body = new THREE.Mesh(seatedBodyGeometry({ height, width: s, cushion }), mat);
     body.name = 'body';
     g.add(body);
   } else {

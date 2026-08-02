@@ -110,7 +110,7 @@ export default {
     // ordinary monk scale (overnight pass 2), seated on the top of the mat:
     // everything on the dais derives from SEAT_TOP so raising the stone
     // raises the whole stack together
-    const buddha = makeBuddha({ height: 1.6 });
+    const buddha = makeBuddha({ height: 1.6, cushion: false });
     buddha.position.set(BANK.x, SEAT_TOP + 0.05, BANK.z);
     scene.add(buddha);
 

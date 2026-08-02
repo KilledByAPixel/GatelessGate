@@ -69,7 +69,7 @@ export default {
     // mat, just kinda sitting there"). He faces the shut study — the one who
     // stayed with the books while Nansen walked off. Seated on the mat's top
     // face; the sit pose brings its own zabuton.
-    const student = makeMonk({ height: 1.6, pose: 'sit' });
+    const student = makeMonk({ height: 1.6, pose: 'sit', cushion: false });
     student.position.set(-0.1, 0.05, -0.7);
     faceMonk(student, hut.position);
     scene.add(student);

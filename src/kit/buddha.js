@@ -44,9 +44,9 @@ const URNA_SINK = 0.90;     // centre at 0.90·r: buried join, only the crest sh
                             // 0.90 the face-on disc keeps ~90% of its width
                             // while the profile bump drops by a third.
 
-export function makeBuddha({ height = 1.6, color = INK } = {}) {
+export function makeBuddha({ height = 1.6, color = INK, cushion = true } = {}) {
   // the same seated figure every monk is; seated figures face local +z
-  const g = makeFigure({ height, color, stance: 'sit', arms: 'fold', hat: false });
+  const g = makeFigure({ height, color, stance: 'sit', arms: 'fold', hat: false, cushion });
   g.name = 'buddha';
 
   const head = g.children.find((c) => c.name === 'head');
