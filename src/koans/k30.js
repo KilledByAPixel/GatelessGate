@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, ACCENT_LIGHT, WASH } from '../palette.js';
+import { PAPER, ACCENT, ACCENT_PALE, WASH } from '../palette.js';
 import {
   composeWorld, makeBuddha, makeBasin, makeWater, makeKoi, makeMonk, faceMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
@@ -63,7 +63,7 @@ export default {
     // the koi stay ink, so the red is the water answering, not the pond
     // dressing up. The urna keeps its dot; Frank knowingly doubles the red here.
     const water = makeWater({
-      shape: 'round', size: POND.size, color: ACCENT_LIGHT, seed: ID, strike: 0.135, opacity: 0.5,
+      shape: 'round', size: POND.size, color: ACCENT_PALE, seed: ID, strike: 0.135, opacity: 0.5,
     });
     water.group.position.set(POND.x, POND.surface, POND.z);
     scene.add(water.group);

@@ -160,6 +160,8 @@ export function makeWater({
                            // a ripple under a rim it must not slop over
   opacity = 0.72,          // how much the surface hides what is under it — a
                            // pond with koi wants this lower so the fish read
+  specular = 0.55,         // the white glint; 0 drops back to the toon ramp
+  shininess = 64,
 } = {}) {
   const round = shape === 'round';
   const blob = shape === 'blob';
@@ -180,9 +182,25 @@ export function makeWater({
   geo.setIndex(idx);
   geo.computeVertexNormals();
 
-  // never a seal, whatever colour it is painted: water is a big lit surface
-  // and the accent glow would flatten its shading (and with it, its ripples)
-  const mat = toonMaterial({ color, side: THREE.DoubleSide, glow: false });
+  // WATER IS THE ONE SURFACE THAT GLINTS. Everything else in the book wears
+  // the toon ramp, which has no specular at all, so a pond lit from the side
+  // was a flat coloured disc — and on a RED pond that reads as paint rather
+  // than water (Frank: "we want a high specular on the water... the white
+  // specular of the light where the surface of the water is red"). Phong for
+  // this one mesh: the diffuse keeps the case's colour, the highlight stays
+  // white, and it travels with the camera the way a real sheet does.
+  //
+  // Never a seal either, whatever colour it is painted: an emissive lift is
+  // the same from every angle, so it would flatten the shading and take the
+  // ripples down with it.
+  const mat = specular > 0
+    ? new THREE.MeshPhongMaterial({
+      color,
+      side: THREE.DoubleSide,
+      specular: new THREE.Color(0xffffff).multiplyScalar(specular),
+      shininess,
+    })
+    : toonMaterial({ color, side: THREE.DoubleSide, glow: false });
   mat.transparent = true;
   mat.opacity = opacity;
   // when the water is see-through, stop it writing depth — otherwise the fish
@@ -191,6 +209,10 @@ export function makeWater({
   const surface = new THREE.Mesh(geo, mat);
   surface.name = 'surface';
   surface.userData.noOutline = true;
+  // The debug workbench rebuilds every material as a plain Lambert on the
+  // shipped default, which would drop the specular on the floor. This is
+  // exactly what keepMaterial is for — the moon learned it the hard way.
+  surface.userData.keepMaterial = true;
   group.add(surface);
 
   const count = position.length / 3;

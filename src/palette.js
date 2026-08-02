@@ -41,6 +41,14 @@ export const ACCENT_DEEP = mixHex(ACCENT, INK, 0.30);
 // paper keeps the hue and buys back the luminance.
 export const ACCENT_LIGHT = mixHex(ACCENT, PAPER, 0.22);
 
+// And further still, for an accent spread over a WHOLE SURFACE rather than an
+// object. Case 30's pond went full ACCENT (read as blood), then ACCENT_DEEP
+// (dried blood), then ACCENT_LIGHT (still "such a dark red"); Frank asked for
+// "somewhere between where it is now and white... slightly more pinkish". At
+// nearly half paper the hue survives — it is unmistakably the book's red — but
+// it reads as water with red in it rather than a pool of pigment.
+export const ACCENT_PALE = mixHex(ACCENT, PAPER, 0.46);
+
 // The one tone ABOVE the ramp, and the only thing in the book allowed up there.
 //
 // Everything else is a step between PAPER and INK because everything else
