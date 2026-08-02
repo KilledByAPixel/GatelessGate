@@ -1,7 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { mergeSimple } from './scatter.js';
-import { INK } from '../palette.js';
+import { INK_FIGURE } from '../palette.js';
 
 // The shared human vocabulary — the makeQuadruped of people.
 //
@@ -363,7 +363,7 @@ const STANCES = {
 // are API: cases reach in by name to re-pose a sleeve, recolour a staff, or
 // remove an arm.
 export function makeFigure({
-  height = 1.6, color = INK, stance = 'stand', arms = 'rest',
+  height = 1.6, color = INK_FIGURE, stance = 'stand', arms = 'rest',
   hat = true, stout = 1, elder = false, staffAng, mat: matIn,
   cushion = true,          // seated only — false where the case lays its own mat
   bow = 0,                 // radians bent FORWARD at the waist; see bendForward

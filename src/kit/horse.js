@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { INK } from '../palette.js';
+import { INK_FIGURE } from '../palette.js';
 import { makeQuadruped } from './quadruped.js';
 import { mergeSimple } from './scatter.js';
 
@@ -48,7 +48,7 @@ const KNEE = 0.28;               // rad, hind hock fold (low: THIGH_RUN in the p
 // The shared plan's proportions this file derives against (quadruped.js).
 const LEG_H = 0.62, BODY_DROP = 0.05, BODY_LEN = 0.6, BODY_R = 0.195;
 
-export function makeHorse({ height = 1.5, color = INK, seed = 45 } = {}) {
+export function makeHorse({ height = 1.5, color = INK_FIGURE, seed = 45 } = {}) {
   // The plan's own neck anchor, in units of height: mid-chest, forward.
   const bodyY = LEG_H + BODY_DROP;
   const cy = bodyY + 0.04;

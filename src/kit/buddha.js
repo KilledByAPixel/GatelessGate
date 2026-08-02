@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
-import { INK, ACCENT } from '../palette.js';
+import { INK_FIGURE, ACCENT } from '../palette.js';
 import { makeFigure, HEAD_OBLONG } from './figure.js';
 
 // The Buddha is NOT special (Frank, overnight pass 2: "Buddha is not supposed
@@ -44,7 +44,7 @@ const URNA_SINK = 0.90;     // centre at 0.90·r: buried join, only the crest sh
                             // 0.90 the face-on disc keeps ~90% of its width
                             // while the profile bump drops by a third.
 
-export function makeBuddha({ height = 1.6, color = INK, cushion = true } = {}) {
+export function makeBuddha({ height = 1.6, color = INK_FIGURE, cushion = true } = {}) {
   // the same seated figure every monk is; seated figures face local +z
   const g = makeFigure({ height, color, stance: 'sit', arms: 'fold', hat: false, cushion });
   g.name = 'buddha';

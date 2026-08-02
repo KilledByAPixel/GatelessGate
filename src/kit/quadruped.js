@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
-import { INK } from '../palette.js';
+import { INK_FIGURE } from '../palette.js';
 import { makeTail } from './tail.js';
 import { mergeSimple } from './scatter.js';
 
@@ -35,7 +35,7 @@ import { mergeSimple } from './scatter.js';
 // Everything scales off `height` (withers height) and faces +z.
 export function makeQuadruped({
   height = 1,
-  color = INK,
+  color = INK_FIGURE,
   // barrel
   bodyR = 0.22, bodyLen = 0.72, bodyDrop = 0.16,
   // legs

@@ -61,6 +61,26 @@ export const ACCENT_PALE = mixHex(ACCENT, PAPER, 0.46);
 // white-on-a-warm-page rather than a cold blue-white punched through it.
 export const SNOW = mixHex(PAPER, '#FFFFFF', 0.85);
 
+// EVERY LIVING THING IN THE BOOK, and why it is not quite INK.
+//
+// Figures were painted at INK itself — the darkest tone the palette owns — and
+// at that value the toon ramp has nothing to work with. The shared ramp
+// multiplies the surface by 0.31 / 0.63 / 1.0, so an INK robe's three bands land
+// on levels 9, 19 and 30 out of 255: a ten-level spread that no screen shows and
+// no eye reads. Every monk came out as a flat black cut-out while the rest of
+// the scene had visible form (Frank: "they're a lot darker black than everything
+// else... make them slightly less dark so we could see some of their shadows").
+//
+// Lifted a fifth of the way back toward the paper, the same ramp lands on
+// 22 / 46 / 73 — three times the separation, and enough that the crown of a hat,
+// its brim and the shoulder under it are three different tones. Judged by
+// rendering case 4 at 1.00, 0.86 and 0.78 and looking: at 0.86 the shading is
+// technically there and still not visible, which is the trap this constant
+// exists to avoid. It is still the darkest thing anyone is painted in; it is
+// simply paint rather than a hole in the page. Creatures only — the gate's
+// timber, a flag pole, a fan handle are props and stay at INK.
+export const INK_FIGURE = mixHex(PAPER, INK, 0.80);
+
 export const WASH = {
   mist: wash(0.10),     // farthest peaks, barely there
   ground: wash(0.22),   // the earth underfoot

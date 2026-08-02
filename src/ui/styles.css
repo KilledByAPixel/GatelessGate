@@ -200,7 +200,9 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 
 /* ---- the look's controls: the panel's own row, for when there is no panel ----
    Directly under the toolbar and right-aligned with it, so the two read as one
-   stack of controls rather than buttons dropped on the picture. The page arrows
+   stack of controls rather than buttons dropped on the picture. ONE row: the
+   arrows were stacked beneath the read button for a round and taken back out —
+   two short rows in a corner read as more furniture than one. The page arrows
    are square like the tools; "Read aloud" is a whole word wide, which is the
    distinction — the tools are settings, that one does something to the page.
    Only there when the look is on and there is a page behind it; display:none

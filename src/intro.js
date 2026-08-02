@@ -35,6 +35,14 @@ export function buildHub({
   gate: withGate = true, path: withPath = true,
   monk: withMonk = true, lanterns: withLanterns = true,
   seed = 10, groundSeed = 7, pathSeed = 93,
+  // The horizon, passed straight to composeWorld. Out here because no seed can
+  // fix a wall: fourteen peaks over this arc leave no bearing the road can run
+  // out on without ending in one, so a scene that wants its road to vanish into
+  // haze has to thin the band, not reroll it.
+  mountains = [
+    { count: 9, distance: 55, arcSpan: 3.8, color: wash(0.16) },
+    { count: 5, distance: 35, arcSpan: 2.6, color: wash(0.28), hScale: 0.7 },
+  ],
 } = {}) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
@@ -118,10 +126,7 @@ export function buildHub({
     treeRing: [7, 20],
     keepout,
     grassKeepout: withPath ? path.keepout(26, 1.15) : [],   // only the lane clears grass
-    mountains: [
-      { count: 9, distance: 55, arcSpan: 3.8, color: wash(0.16) },
-      { count: 5, distance: 35, arcSpan: 2.6, color: wash(0.28), hScale: 0.7 },
-    ],
+    mountains,
   });
 
   // Kept in the original order — gate, monk, lanterns — so the default scene's

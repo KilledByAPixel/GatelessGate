@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { INK } from '../palette.js';
+import { INK_FIGURE } from '../palette.js';
 import { hash1, noise1 } from '../util/noise.js';
 import { makeQuadruped } from './quadruped.js';
 
@@ -52,7 +52,7 @@ const STIR = 2.4;                        // seconds for one whole response
 // there is nothing stopping the fold here.
 const KNEE = 0.4;                        // rad, hind hock bend
 
-export function makeFox({ height = 0.45, color = INK, seed = 2 } = {}) {
+export function makeFox({ height = 0.45, color = INK_FIGURE, seed = 2 } = {}) {
   const { group } = makeQuadruped({
     height, color, seed,
     bodyR: BODY_R, bodyLen: BODY_LEN, bodyDrop: BODY_DROP,

@@ -276,8 +276,10 @@ function setAmbient(on) {
 
 // THE PANEL'S OWN CONTROLS, for when there is no panel — the page arrows and
 // "Read aloud", in the panel's own order (paging on the left, actions on the
-// right), on one row directly under the toolbar. Without these the look was a
-// place you could only leave: to turn a page you had to bring the text back,
+// right), on ONE row directly under the toolbar. Stacking the arrows beneath
+// the read button was tried and taken back out: the corner is a corner, and two
+// short rows read as more furniture than one. Without these the look was a
+// place you could only leave — to turn a page you had to bring the text back,
 // turn it, and hide it again. Only there when there is a page behind them.
 const lookBar = document.createElement('div');
 lookBar.className = 'gg-look-bar';
