@@ -108,7 +108,12 @@ export function makeButterflies({
       // each butterfly owns a lane of the noise field and a beat of its own
       ph: h(1) * 64,                       // where in the field its path starts
       chan: seed + i * 3,                  // its private noise channels
-      beat: 7.5 + h(2) * 4.5,              // wingbeats per second-ish, seeded
+      // Wingbeats per second-ish, seeded. HALVED from 7.5-12 (Frank: "the wings
+      // are flapping a bit fast — about half as fast"): a real butterfly does
+      // beat this quickly, but at diorama scale the wings blur into a flicker,
+      // and the whole point of the piece is that you can see the shape opening
+      // and closing.
+      beat: 3.75 + h(2) * 2.25,
       beatPh: h(3) * Math.PI * 2,
       yBias: 0.25 + h(4) * 0.5,            // some play low, some high
       roll: (h(5) - 0.5) * 0.5,            // a lazy constant bank, each its own
@@ -149,14 +154,41 @@ export function makeButterflies({
     return 1;
   }
 
-  // the wander path, a pure function of time — sampled twice per frame so the
-  // butterfly can face the way it is going. x/z drift around its OWN home;
-  // the height rides its round, from the perch in the grass up into the band.
-  function pathAt(b, t, out) {
+  // A LANDED BUTTERFLY IS LANDED. The wander is a function of time, so while one
+  // was perched its x/z kept drifting and it slid across the grass with its
+  // wings shut (Frank: "they still kinda slide along the ground — they need to
+  // actually stop in place, like they've landed on top of one of the grass").
+  //
+  // Fixed by stopping the PATH'S OWN CLOCK for the duration of the perch, rather
+  // than by clamping the position: subtract every second this butterfly has
+  // spent on the ground, completed rounds included. dt/dt is 0 while it sits, so
+  // it holds its spot exactly; it is monotonic and continuous everywhere else,
+  // so there is no jump on take-off and it resumes precisely where it stopped.
+  // Still a pure function of t, which is what keeps the whole flight replayable.
+  function pathTime(b, t) {
+    const w = t / b.cyc + b.cycPh;
+    const rounds = Math.floor(w);
+    const u = w - rounds;
+    const perched = rounds * b.down + clamp(u - 0.5, 0, b.down);   // downStart = 0.5
+    return t - perched * b.cyc;
+  }
+
+  // where it is over the ground, from the path's clock — its own local drift
+  // around its own home
+  function xzAt(b, tp, out) {
     const wander = radius * 0.42;    // the local excursion, around home
-    out.x = b.home[0] + (noise1(t * rate + b.ph, b.chan + 1) - 0.5) * 2 * wander;
-    out.z = b.home[1] + (noise1(t * rate + b.ph + 17, b.chan + 2) - 0.5) * 2 * wander;
-    const u = clamp(noise1(t * (rate * 1.6) + b.ph + 39, b.chan + 3) * 0.6 + b.yBias * 0.7, 0, 1);
+    out.x = b.home[0] + (noise1(tp * rate + b.ph, b.chan + 1) - 0.5) * 2 * wander;
+    out.z = b.home[1] + (noise1(tp * rate + b.ph + 17, b.chan + 2) - 0.5) * 2 * wander;
+    return out;
+  }
+
+  // the whole path: x/z on the path clock, height on the ROUND's clock, since
+  // the descent and the take-off are the round and must keep running while the
+  // wander is stopped.
+  function pathAt(b, t, out) {
+    const tp = pathTime(b, t);
+    xzAt(b, tp, out);
+    const u = clamp(noise1(tp * (rate * 1.6) + b.ph + 39, b.chan + 3) * 0.6 + b.yBias * 0.7, 0, 1);
     const g = groundFn ? groundFn(out.x, out.z) : 0;
     const air = g + yLo + (yHi - yLo) * u;
     const sat = g + perch;
@@ -171,7 +203,11 @@ export function makeButterflies({
     const E = energy();
     for (const b of flock) {
       pathAt(b, clock, _p);
-      pathAt(b, clock - HEAD_EPS, _q);
+      // The heading is sampled back along the PATH clock, not wall time: while
+      // it is perched those two are the same point, atan2(0, 0) collapses to
+      // zero, and the butterfly would spin to face north the moment it landed.
+      // Stepping back in path time gives the heading it came in on and holds it.
+      xzAt(b, pathTime(b, clock) - HEAD_EPS, _q);
 
       // THE WINGS ARE A HINGE, AND ONLY A HINGE. The body used to ride the
       // stroke (position.y += 0.05·stroke), which at ten beats a second read

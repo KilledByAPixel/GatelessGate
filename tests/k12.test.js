@@ -1,21 +1,21 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import k12, { clipToLip } from '../src/koans/k12.js';
+import k12 from '../src/koans/k12.js';
 import { ACCENT } from '../src/palette.js';
 import { groundHeight } from '../src/kit/ground.js';
 
 // Zuigan on his ledge, calling himself. Two things this file guards, both of
 // them Frank's round-12 notes:
 //
-//   * THE GIANT CLEARING. The cliff's void keepout is meant to stop grass
-//     growing out over the drop, but its nearest mist circle is ~8 across and
-//     centred only 2.7 back from the edge, so at full radius it reached onto
-//     the standing ground and stripped the meadow off the whole ledge — the
-//     bald ring around him.
-//   * THE BUTTERFLIES, moved here out of case 19. They must not carry a second
-//     red (the staff is the seal), and they must not land past the lip: the
-//     ground formula they perch on knows nothing about the gorge drawn over it.
+//   * THE EMPTY MIDDLE. The cliff's void keepout was stripping grass off more
+//     than half the near field to keep it from growing "over the drop" — but
+//     this case never carves its ground, so the drop is entirely below y = 0
+//     and invisible. There was no gorge on screen, only a bald patch standing
+//     in for one, right where the lens points.
+//   * THE BUTTERFLIES, moved here out of case 19. They are this case's seal
+//     now, so they have to be red, they have to be where the camera is looking,
+//     and — the part that was wrong — a landed one must actually STOP.
 
 function fakeCtx() {
   const taps = [];
@@ -31,6 +31,22 @@ function fakeCtx() {
   };
 }
 
+// a camera exactly where the case's own `camera` block puts it
+function rigCamera(aspect = 0.87) {
+  const c = k12.camera;
+  const cam = new THREE.PerspectiveCamera(38, aspect, 0.1, 100);
+  const [tx, ty, tz] = c.target;
+  const sp = Math.sin(c.polar), cp = Math.cos(c.polar);
+  cam.position.set(
+    tx + c.distance * sp * Math.sin(c.azimuth),
+    ty + c.distance * cp,
+    tz + c.distance * sp * Math.cos(c.azimuth),
+  );
+  cam.lookAt(tx, ty, tz);
+  cam.updateMatrixWorld(true);
+  return cam;
+}
+
 const staged = () => {
   const root = k12.build(fakeCtx());
   root.update(1 / 60, 0);
@@ -44,6 +60,25 @@ test('module shape matches the koan contract', () => {
   assert.equal(k12.accent, ACCENT);
   assert.equal(k12.mood, 'yo');
   assert.equal(typeof k12.build, 'function');
+});
+
+test('the man carries no red: his staff is his own, and ink', () => {
+  const root = staged();
+  const zuigan = root.scene.getObjectByName('monk');
+  assert.ok(zuigan, 'there is one figure up here');
+  const staff = zuigan.getObjectByName('staff');
+  assert.ok(staff, 'he holds a staff — the kit\'s, not a shaft planted beside him');
+  assert.notEqual('#' + staff.material.color.getHexString(), ACCENT.toLowerCase(),
+    'the staff gave up the red (Frank) — the butterflies carry it now');
+  // and nothing else on him took it either
+  zuigan.traverse((o) => {
+    if (!o.isMesh || o.userData.isOutline) return;
+    assert.notEqual('#' + o.material.color.getHexString(), ACCENT.toLowerCase(),
+      `${o.name} is wearing the accent`);
+  });
+  // the free-standing shaft is gone from the scene root as well
+  assert.ok(!root.scene.children.some((o) => o.name === 'staff'),
+    'the planted red staff is gone');
 });
 
 test('the grass reaches him: no bald ring around the one figure in the scene', () => {
@@ -71,79 +106,109 @@ test('the grass reaches him: no bald ring around the one figure in the scene', (
   assert.ok(near.length > 100,
     `only ${near.length} blades within three units of him — the clearing is back`);
 
-  // and the ledge is the DENSE part: past the lip the mask still thins it out,
-  // so the meadow reads as stopping at the edge rather than carrying on over it
-  const ledge = pts.filter((p) => p.z >= -1.3 && p.z < 2).length;
-  const beyond = pts.filter((p) => p.z >= -8 && p.z < -4).length;
-  assert.ok(ledge > beyond, `the drop should be barer than the ledge: ${ledge} vs ${beyond}`);
+  // AND THE MIDDLE OF THE PICTURE. A ray down the centre column of the shipped
+  // lens lands on plain ground from (-3, -5) out to (-12, -16); that whole strip
+  // used to be masked bare, and it is the part Frank was looking at.
+  const mid = pts.filter((p) => p.x > -13 && p.x < -2 && p.z > -17 && p.z < -4);
+  assert.ok(mid.length > 500,
+    `only ${mid.length} blades where the camera is actually pointed`);
 });
 
-// The mask itself, away from a whole staged scene. Pulling a circle back must
-// move ONLY its near edge — anything that shrinks the far edge as well would
-// quietly unmask a strip of the gorge for grass to grow out over.
-test('clipToLip pins the near edge to the line and leaves the far edge alone', () => {
-  const before = [
-    { x: 0, z: -2.7, r: 4.0 },     // reaches well past the lip
-    { x: 6, z: -5.5, r: 4.8 },     // reaches a little past it
-    { x: -6, z: -12.3, r: 5.4 },   // nowhere near it
-    { x: 1, z: -1.6, r: 0.5 },     // so small that clipping would erase it
-  ];
-  const LIP = -1.3;
-  const after = clipToLip(before, LIP);
-
-  for (const c of after) {
-    assert.ok(c.z + c.r <= LIP + 1e-9, `circle still reaches the ledge: ${c.z + c.r}`);
-    assert.ok(c.r > 0, 'no inside-out circles');
-    const orig = before.find((o) => o.x === c.x);
-    assert.ok(Math.abs((c.z - c.r) - (orig.z - orig.r)) < 1e-9,
-      `the far edge moved: ${c.z - c.r} vs ${orig.z - orig.r}`);
-  }
-  // the one that could not survive the clip is dropped rather than kept at a
-  // negative radius
-  assert.ok(!after.some((c) => c.x === 1), 'a circle clipped to nothing is dropped');
-  // and one that never reached the lip is passed through untouched
-  assert.deepEqual(after.find((c) => c.x === -6), before[2]);
-});
-
-test('the butterflies are here, they are not a second red, and they never perch past the lip', () => {
+test('the butterflies are the seal, and they play where the lens is pointed', () => {
   const root = staged();
   const group = root.scene.getObjectByName('butterflies');
   assert.ok(group, 'the butterflies moved here from case 19');
 
   const each = [];
   group.traverse((o) => { if (o.name === 'butterfly') each.push(o); });
-  assert.ok(each.length >= 4 && each.length <= 8, `a handful, got ${each.length}`);
+  assert.ok(each.length >= 5 && each.length <= 9, `a handful, got ${each.length}`);
   for (const b of each) {
     b.traverse((o) => {
       if (!o.isMesh) return;
-      assert.notEqual('#' + o.material.color.getHexString(), ACCENT.toLowerCase(),
-        'the staff is this case\'s one red thing');
-      assert.equal(o.material.emissive.getHexString(), '000000', 'and only a seal glows');
+      assert.equal('#' + o.material.color.getHexString(), ACCENT.toLowerCase(),
+        'they carry this case\'s one red');
       assert.equal(o.userData.noOutline, true, 'a hull on a paper-thin wing is a blot');
     });
   }
 
-  // Drive a long stretch of the flight: they fly, they land, they fly again, and
-  // at no point in the round may one of them be out over the drop — where a
-  // "landing" would put it on an invisible floor five units above the gorge.
-  let lowest = Infinity;
-  for (let i = 0; i < 60 * 40; i++) {
+  // in frame, and out over the open ground rather than knotted beside him
+  const cam = rigCamera();
+  let inFrame = 0;
+  let sumZ = 0;
+  for (let i = 0; i < 60 * 30; i++) {
     root.update(1 / 60, i / 60);
-    if (i % 20) continue;
+    if (i % 300) continue;
     root.scene.updateMatrixWorld(true);
     for (const b of each) {
       const p = b.getWorldPosition(new THREE.Vector3());
-      assert.ok(p.z > -1.3, `a butterfly strayed over the drop at z=${p.z.toFixed(2)}`);
-      assert.ok(Number.isFinite(p.x) && Number.isFinite(p.y));
+      sumZ += p.z;
+      const v = p.clone().project(cam);
+      if (Math.abs(v.x) < 0.9 && Math.abs(v.y) < 0.9 && v.z > 0 && v.z < 1) inFrame++;
+      assert.ok(Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.z));
       // whenever one is down, it is down on the ground the meadow actually has
-      if (p.y < 0.5) {
+      if (p.y < 0.4) {
         const gh = groundHeight(p.x, p.z, { seed: 21 });
         assert.ok(p.y > gh - 0.05, `perched below the turf: ${p.y.toFixed(2)} vs ${gh.toFixed(2)}`);
-        lowest = Math.min(lowest, p.y);
       }
     }
   }
-  assert.ok(lowest < Infinity, 'they never came down at all — the perching is the good part');
+  assert.ok(inFrame > each.length * 4, `mostly in the picture, got ${inFrame}`);
+  assert.ok(sumZ / (each.length * 6) < -1.5, 'the flight is out over the open ground, not at his feet');
+});
+
+// Frank: "when they land they should actually stop in place — like they've
+// landed on top of one of the grass. They still kinda slide along the ground."
+// The wander is a function of time, so a perched butterfly kept drifting with
+// its wings shut. Stopping the PATH's clock for the perch is what fixes it, and
+// this is the pin: while a butterfly is down, it does not move at all.
+test('a landed butterfly is landed — it holds its spot, then leaves it', () => {
+  const root = staged();
+  const each = [];
+  root.scene.getObjectByName('butterflies').traverse((o) => {
+    if (o.name === 'butterfly') each.push(o);
+  });
+
+  const track = each.map(() => []);
+  for (let i = 0; i < 60 * 45; i++) {
+    root.update(1 / 60, i / 60);
+    root.scene.updateMatrixWorld(true);
+    each.forEach((b, k) => track[k].push(b.getWorldPosition(new THREE.Vector3())));
+  }
+
+  // Asked the other way round on purpose: rather than deciding which frames
+  // "count as landed" from a height threshold — the last frame of a descent
+  // sits a fraction of a micron above perch height, and any tolerance either
+  // swallows it or trips on it — find the stretches where the butterfly does
+  // not move AT ALL, and check those are real. That is the property Frank
+  // asked for, stated directly.
+  let landed = 0;
+  for (const path of track) {
+    let run = 0, best = 0, bestEnd = -1;
+    for (let i = 1; i < path.length; i++) {
+      const still = Math.hypot(path[i].x - path[i - 1].x, path[i].z - path[i - 1].z) < 1e-12;
+      run = still ? run + 1 : 0;
+      if (run > best) { best = run; bestEnd = i; }
+    }
+    if (best < 60) continue;                       // never settled in this window
+    landed++;
+    assert.ok(best < path.length - 60, 'it landed and never took off again');
+    // and it was ON the grass while it sat there, not stalled in mid-air
+    const p = path[bestEnd];
+    const gh = groundHeight(p.x, p.z, { seed: 21 });
+    assert.ok(p.y - gh < 0.2, `it stopped ${(p.y - gh).toFixed(2)} up in the air`);
+    // it moves again afterwards
+    const after = path[Math.min(path.length - 1, bestEnd + 120)];
+    assert.ok(after.distanceTo(p) > 0.05, 'it never left the spot it landed on');
+  }
+  assert.ok(landed >= 3, `most of them should get a full sit inside 45s, got ${landed}`);
+
+  // and no jump at the moment of take-off: the path resumes where it stopped
+  for (const path of track) {
+    for (let i = 1; i < path.length; i++) {
+      assert.ok(path[i].distanceTo(path[i - 1]) < 0.25,
+        'the flight teleports somewhere — the path clock is discontinuous');
+    }
+  }
 });
 
 test('calling startles them, and the fragment stays finite', () => {

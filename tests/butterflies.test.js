@@ -69,7 +69,10 @@ test('they fly, they stay in their box, and they COME DOWN to the grass', () => 
   const each = butterflies(flock);
   let minY = Infinity, maxY = -Infinity, worstR = 0;
   const roam = each.map(() => ({ minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity }));
-  for (let i = 0; i < 60 * 30; i++) {
+  // A minute, not thirty seconds: a perched butterfly's path clock STOPS (that
+  // is the point of it), so a third of any window is time it spends covering no
+  // ground at all, and the roam figures below need real flying time behind them.
+  for (let i = 0; i < 60 * 60; i++) {
     flock.update(1 / 60, i / 60);
     each.forEach((b, k) => {
       minY = Math.min(minY, b.position.y);

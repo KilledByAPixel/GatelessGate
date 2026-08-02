@@ -3,11 +3,10 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makeCliff, makeMonk,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 import { makeButterflies } from '../kit/butterflies.js';
 import { groundHeight } from '../kit/ground.js';
-import { wash } from '../palette.js';
 
 const ID = 12;
 
@@ -22,29 +21,11 @@ const ID = 12;
 // voice, a little quieter. Call three times and you get the whole exchange,
 // and then it starts over, every day, the way he did it.
 //
-// The staff planted beside him is the seal: the one thing up here that is not
-// him and not the weather.
+// The red butterflies over the open ground are the seal: the one thing up here
+// that is not him and not the weather. His staff is his own, and ink.
 
 const ECHO = 0.62;
 const LINES = 3;
-
-// The front of the lip course: half the cliff's depth, which is where the rock
-// stops being something you can stand on. Grass grows up to here and no further.
-const LIP_Z = -1.3;
-
-// Pull a set of keepout circles back so none of them reaches past `lipZ` onto
-// the standing ground. Shifting the centre and shrinking the radius by the same
-// amount pins the near edge to the line while leaving the far edge untouched, so
-// nothing that was masked out over the drop becomes unmasked. Circles that end
-// up too small to matter are dropped.
-export function clipToLip(circles, lipZ) {
-  return circles
-    .map((c) => {
-      const over = (c.z + c.r) - lipZ;
-      return over <= 0 ? c : { x: c.x, z: c.z - over / 2, r: c.r - over / 2 };
-    })
-    .filter((c) => c.r > 0.4);
-}
 
 export default {
   id: ID,
@@ -68,43 +49,26 @@ export default {
     const cliff = makeCliff({ width: 13, drop: 6.5, depth: 2.6, seed: ID, origin: [0.4, -2.0], yaw: 0.22 });
     scene.add(cliff);
 
-    // ZUIGAN, alone, near the edge, facing out over the drop
-    const zuigan = makeMonk({ height: 1.64 });
+    // ZUIGAN, alone, near the edge. `elder` gives him the kit's own staff, held
+    // the ordinary way and in his own ink — the free-standing vermillion shaft
+    // that used to be planted beside him is gone (Frank: "get rid of the red
+    // staff; maybe he could be holding a staff, a normal pose, but it won't be
+    // red"). Nothing about the man is the seal any more.
+    const zuigan = makeMonk({ height: 1.64, elder: true });
     zuigan.position.set(0.9, 0, -0.5);
     zuigan.rotation.y = .2;
     scene.add(zuigan);
 
-    // his staff, planted in the rock beside him. NOT at (1.75, 0.5): the
-    // shipped camera's sight line to Zuigan passes through that exact spot
-    // (solve the camera ray — it crosses (1.75, 0.80, 0.55)), so the red shaft
-    // used to slice through his robe. Offset perpendicular to that line, down
-    // the lip he points along, where it reads planted and clear of him.
-    const staff = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.028, 0.034, 1.5, 7),
-      toonMaterial({ color: ACCENT, flat: true }));
-    staff.name = 'staff';
-    staff.position.set(2.25, 0.72, 0.15);
-    staff.rotation.z = 0.10;
-    scene.add(staff);
-
-    // Butterflies playing on the ledge beside him (Frank moved them here out of
-    // case 19, which has its blooms back). INK, not accent: the staff above is
-    // this case's one red thing, and a second seal would split it. They are
-    // right in the foreground of the shipped lens — the camera stands out at
-    // (7.8, 6.6, 8.0) — so a wash reads perfectly well at that range.
-    //
-    // Kept east of the lip: they land, and the ground formula they land on has
-    // no idea a gorge is drawn over it, so a butterfly settling past the edge
-    // would perch in mid-air on an invisible floor.
-    // PALE, not ink, and that is a contrast decision rather than a colour one.
-    // They play in the near foreground of the shipped lens, which is dense dark
-    // meadow — ink wings in there were ink on ink and simply could not be found.
-    // White cabbage butterflies over a dark field read at a glance, and the red
-    // stays where it belongs. Not accent either way: the staff is this case's
-    // one seal, and a second would split it.
+    // THE BUTTERFLIES ARE THE SEAL now, and they play over the open ground the
+    // lens is actually pointed at rather than tucked in beside him. The camera
+    // stands at (7.8, 6.6, 8.0) and looks down the diagonal past his shoulder,
+    // so the middle of the frame is the plain around (-3, -5); a ray down the
+    // centre column lands there at every height. Seven of them over a wide disc
+    // is a scattering across the whole open half of the picture rather than a
+    // knot in one corner of it.
     const butterflies = makeButterflies({
-      count: 6, seed: ID, color: wash(0.06), size: 0.42,
-      center: [1.8, 1.6], radius: 2.8, height: [0.8, 2.4],
+      count: 7, seed: ID, color: ACCENT, size: 0.42,
+      center: [-2.2, -4.4], radius: 5.0, height: [0.7, 2.6],
       groundFn: (x, z) => groundHeight(x, z, { seed: 21 }),
     });
     scene.add(butterflies.group);
@@ -124,21 +88,21 @@ export default {
         ...cliff.voidFootprint(0.5),
         { x: 0.9, z: -0.5, r: 1.4 },
       ],
-      // THE GIANT CLEARING (Frank: "rework that scene so the grass spawns more
-      // around him — for some reason there is a giant clearing there").
+      // NO GRASS MASK AT ALL, and that took two goes to understand.
       //
-      // The void mask is meant to keep grass off the air past the lip. But the
-      // nearest mist bank sits only 2.7 back from the edge with a circle nearly
-      // 8 across, so at full radius it reached 1.3 units onto the STANDING
-      // ground — over the whole ledge, Zuigan's own feet included. It was
-      // eating 55% of the near meadow, and the bald ring around him was that,
-      // not the rock.
+      // The mask existed to keep grass from growing out over the drop. But this
+      // case never carves its ground the way case 5 does: the cliff is a prop
+      // standing ON a flat plain, and with drop 6.5 its face, skirt and every
+      // mist bank hang BELOW y = 0 — under the ground, invisible. So there was
+      // no drop on screen to keep grass off; there was only a bald patch,
+      // covering more than half the near field, standing in for one.
       //
-      // So each circle's near edge is pushed back to the lip line: shift the
-      // centre and shrink the radius by the same amount, which leaves the far
-      // edge exactly where it was. The air past the drop stays masked; the
-      // ledge grows grass again.
-      grassKeepout: clipToLip(cliff.voidFootprint(0.4), LIP_Z),
+      // A ray down the centre column of the shipped lens proves it: from the
+      // horizon down to his shoulder, every sample lands on plain ground at
+      // y ≈ 0, out at (-3, -5) to (-12, -16). That is the whole middle of the
+      // picture, and it was bare (Frank: "the grass is not where the camera is
+      // looking — there's just an empty space there"). It is meadow now.
+      grassKeepout: [],
     });
 
     for (const [p, rx, rz, op] of [
