@@ -34,18 +34,42 @@ const DENSITY = 0.85;      // Garden preset
 const REFRACTORY = 0.45;   // a tube cannot restrike faster than this
 const NUDGE_TAU = 0.5;
 
-export function makeFurin({ size = 0.17, tubes = 5, seed = 5, phase = null, couple = 0, onStrike = null } = {}) {
+export function makeFurin({
+  size = 0.17, tubes = 5, seed = 5, phase = null, couple = 0, onStrike = null,
+  cord = 0.62,             // the hanging string, in units of size; 0 for none
+} = {}) {
   const S = size;
   const g = new THREE.Group();
   g.name = 'furin';
+
+  const wood = toonMaterial({ color: WASH.dark, flat: true });
+  const metal = toonMaterial({ color: WASH.stone });
 
   // everything below the hang point swings as one piece
   const swing = new THREE.Group();
   swing.name = 'swing';
   g.add(swing);
 
-  const wood = toonMaterial({ color: WASH.dark, flat: true });
-  const metal = toonMaterial({ color: WASH.stone });
+  // THE STRING IT HANGS BY. A furin is tied up under an eave, and without
+  // the cord the cap simply floated at the hang point with nothing holding
+  // it (Frank: 'the furin should have a string attached to the top of it,
+  // and rotate around the string attach point'). The swing group already
+  // pivots at y = 0, which IS the knot, so the cord hangs from the pivot
+  // and the whole chime swings from its top end like the real thing.
+  const CORD = cord * S;
+  if (CORD > 0) {
+    const line = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.018 * S, 0.018 * S, CORD, 4), wood);
+    line.name = 'cord';
+    line.position.y = -CORD / 2;
+    swing.add(line);
+  }
+
+  // and the chime itself hangs off the bottom of it
+  const body = new THREE.Group();
+  body.name = 'chime';
+  body.position.y = -CORD;
+  swing.add(body);
 
   // the cap the tubes hang from — a shade deeper and more sharply tapered
   // than the first pass (0.1S, barely tapered), so it reads as a small roof
@@ -54,7 +78,7 @@ export function makeFurin({ size = 0.17, tubes = 5, seed = 5, phase = null, coup
   const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.46 * S, 0.58 * S, CAP_H, 8), wood);
   cap.name = 'cap';
   cap.position.y = -CAP_H / 2;                // top face stays AT the hang point
-  swing.add(cap);
+  body.add(cap);
 
   // tubes in a ring; the longer the tube the deeper the note — index 0 is the
   // longest, matching the engine's degree mapping. Thickened from the first
@@ -67,7 +91,7 @@ export function makeFurin({ size = 0.17, tubes = 5, seed = 5, phase = null, coup
     const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.075 * S, 0.075 * S, len, 6), metal);
     tube.name = 'tube';
     tube.position.set(Math.cos(angle) * 0.33 * S, -(0.18 * S + len / 2), Math.sin(angle) * 0.33 * S);
-    swing.add(tube);
+    body.add(tube);
     state.push({
       r1: 0.61 + 0.083 * i, r2: 0.44 + 0.037 * i,       // the tube's excitation
       l1: 0.021 + 0.006 * i, l2: 0.034 + 0.004 * i,     // its slow local eddy
@@ -89,7 +113,7 @@ export function makeFurin({ size = 0.17, tubes = 5, seed = 5, phase = null, coup
   tag.name = 'tag';
   tag.userData.noOutline = true;      // an open surface; the inverted hull doesn't suit it
   tag.position.y = -0.95 * S;
-  swing.add(clapper, tag);
+  body.add(clapper, tag);
 
   // a forgiving invisible target: a tap wants the chime, not a particular
   // tube. Sized to end exactly at the hang point.
@@ -99,7 +123,7 @@ export function makeFurin({ size = 0.17, tubes = 5, seed = 5, phase = null, coup
   hit.name = 'furin-hit';
   hit.userData.noOutline = true;
   hit.position.y = -1.05 * S;
-  swing.add(hit);
+  body.add(hit);
 
   // a small per-instance offset so two chimes in one scene never move in step
   const off = phase === null ? hash1(3, seed) * 3 : phase;

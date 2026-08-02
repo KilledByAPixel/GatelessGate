@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import * as THREE from '../lib/three.module.js';
 import { makeFurin, chimeActivity } from '../src/kit/furin.js';
 
 // drive the component across sim time; returns the end time so runs can chain
@@ -103,4 +104,36 @@ test('a tap knocks the clapper through two tubes, whatever the weather', () => {
   assert.notEqual(hits[0][0], hits[1][0], 'both knocks hit the same tube');
   assert.ok(hits[1][1] < hits[0][1], 'the second knock should be the softer one');
   assert.ok(f.pickTargets().length > 0);
+});
+
+test('it hangs by a STRING, and swings from the knot at the top of it', () => {
+  // Frank: "the furin should have a string attached to the top of it, and
+  // rotate around the string attach point — that is the rotation point."
+  const S = 0.2;
+  const f = makeFurin({ size: S, seed: 5 });
+  const cord = f.group.getObjectByName('cord');
+  assert.ok(cord, 'there is a cord');
+
+  const swing = f.group.getObjectByName('swing');
+  // the hinge is the KNOT: the swing group sits at the origin, and the cord
+  // hangs from it — so the whole chime arcs about the top of the string
+  assert.equal(swing.position.y, 0, 'the swing pivots at the hang point');
+  cord.geometry.computeBoundingBox();
+  const top = cord.geometry.boundingBox.max.y + cord.position.y;
+  assert.ok(Math.abs(top) < 1e-6, `the cord starts AT the knot: ${top}`);
+
+  // and the chime proper hangs off the far end of it, not at the knot
+  f.group.updateMatrixWorld(true);
+  const cap = f.group.getObjectByName('cap');
+  const capTop = new THREE.Box3().setFromObject(cap).max.y;
+  assert.ok(capTop < -0.4 * S, `the cap hangs below the cord: ${capTop}`);
+
+  // swinging the knot carries the cap sideways — it is a pendulum, not a
+  // thing that spins in place
+  const rest = new THREE.Box3().setFromObject(cap).getCenter(new THREE.Vector3());
+  swing.rotation.z = 0.3;
+  f.group.updateMatrixWorld(true);
+  const swung = new THREE.Box3().setFromObject(cap).getCenter(new THREE.Vector3());
+  assert.ok(Math.abs(swung.x - rest.x) > 0.1 * S, 'the cap travels when the knot turns');
+  assert.ok(swung.y > rest.y, 'and rises, the way anything on a string does');
 });
