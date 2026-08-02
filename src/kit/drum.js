@@ -3,9 +3,18 @@ import { toonMaterial } from '../render/toon.js';
 import { WASH, wash } from '../palette.js';
 import { mergeSimple } from './scatter.js';
 
-// The dinner drum (case 13) — a barrel drum slung in its own frame, the
+// The dinner drum (case 13) — a barrel drum SITTING on a low saddle stand, the
 // companion piece to the bonshō. Tokusan's whole mistake is that this has not
 // been beaten yet.
+//
+// It used to hang: two posts rising past the barrel to a beam overhead, with
+// the drum slung under it by a pair of cords. Frank: "it should be sitting on
+// kind of a saddle, on a seat — instead of hanging from the middle of it. The
+// drum itself should be above the thing it's settled on, and the thing it's on
+// should be a lot shorter — the bottom of where the drum currently is." So the
+// barrel stays exactly where it was and everything ABOVE it is gone: two short
+// hewn legs carry saddle caps that meet the belly, the belly bulges between
+// them, and nothing in the piece is taller than the drum any more.
 //
 // The drum's axis runs along local ±X, so the near skin faces local +X: aim
 // that at the camera. Origin on the ground under the frame.
@@ -33,7 +42,18 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
   const flat = toonMaterial({ color, flat: true });
   const stone = toonMaterial({ color: WASH.stone, flat: true });
 
-  const PIVOT_Y = R * 2.3;
+  // Where the barrel's middle sits. Unchanged from the slung version — the
+  // stand came DOWN to meet it, the drum did not come down to the stand.
+  const BARREL_Y = 2.26 * R;
+  const DEPTH = 1.34 * R;
+
+  // The barrel is lathed, so its radius varies along its own axis; the legs
+  // stand in from the ends and must meet the belly THERE, not at its widest.
+  // Read off the profile rather than copied from it, so retuning the barrel's
+  // bulge can never leave the drum floating over its own stand.
+  const barrelR = (x) => R * (0.80 + 0.20 * Math.sin(Math.PI * ((x + DEPTH / 2) / DEPTH)));
+  const LEG_X = 0.45 * R;
+  const SEAT_Y = BARREL_Y - barrelR(LEG_X);
 
   const padH = 0.14 * R;
   const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.25 * R, 1.42 * R, padH, 9), stone);
@@ -41,63 +61,59 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
   pad.position.y = padH / 2;
   g.add(pad);
 
-  // two posts flanking the barrel along its axis, carrying a beam — a shade
-  // stouter than the first pass, so the stand reads as a frame built to carry
-  // a barrel rather than two sticks it happens to hang between
-  const STAND_H = PIVOT_Y + 0.2 * R;
+  // Two short hewn legs UNDER the barrel — four-sided so they read as sawn
+  // timber rather than dowel, and SPLAYED: each meets the belly at LEG_X and
+  // plants its foot a third of a radius further out. Straight legs under a
+  // barrel this wide read as a perch; a splayed pair reads as a stand built to
+  // take a beating, which is what this drum is for. They stop at the saddle
+  // caps — nothing here rises past the drum.
+  const capH = 0.09 * R;
+  const legH = SEAT_Y - capH;
+  const SPLAY = 0.35 * R;                       // how far the foot steps out
+  const legTilt = Math.atan2(SPLAY, legH);
+  const legLen = Math.hypot(legH, SPLAY);
   for (const sx of [-1, 1]) {
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.105 * R, 0.145 * R, STAND_H, 7), timber);
+    const legGeo = new THREE.CylinderGeometry(0.17 * R, 0.25 * R, legLen, 4);
+    legGeo.rotateY(Math.PI / 4);          // faces square to the axes
+    const post = new THREE.Mesh(legGeo, timber);
     post.name = 'post';
-    post.position.set(sx * 1.02 * R, STAND_H / 2, 0);
+    post.position.set(sx * (LEG_X + SPLAY / 2), legH / 2, 0);
+    post.rotation.z = sx * legTilt;       // top inward, foot outward
     g.add(post);
   }
-  const beam = new THREE.Mesh(new THREE.BoxGeometry(2.5 * R, 0.19 * R, 0.19 * R), flat);
-  beam.name = 'beam';
-  beam.position.y = STAND_H;
-  g.add(beam);
 
-  // FRAME JOINERY — a low footrail tying the two posts together at the base
-  // (the first pass left them planted with nothing between, which read as a
-  // drum balanced on two sticks rather than standing in a built frame), and a
-  // small saddle block atop each post where the beam actually bears — the
-  // post-and-beam hint hut.js uses at its own corners. One merged mesh, so
-  // the joinery costs a single extra outline.
-  const saddleW = 0.30 * R, saddleH = 0.10 * R;
+  // THE SADDLE, and the footrail tying the legs together at the ankle — the
+  // caps are what the belly actually rests in, and the rail is what stops the
+  // pair reading as two sticks the drum happens to balance on. Merged, so the
+  // whole joinery costs one extra outline.
+  const capW = 0.40 * R;
   const trimParts = [
-    new THREE.BoxGeometry(2.14 * R, 0.09 * R, 0.16 * R).translate(0, 0.07 * R, 0),
+    // spans the legs where they actually are at ankle height, splay included
+    new THREE.BoxGeometry(2 * (LEG_X + SPLAY * (1 - 0.26 * R / legH)) + 0.1 * R, 0.10 * R, 0.17 * R)
+      .translate(0, 0.26 * R, 0),
   ];
   for (const sx of [-1, 1]) {
-    trimParts.push(new THREE.BoxGeometry(saddleW, saddleH, saddleW)
-      .translate(sx * 1.02 * R, STAND_H - saddleH / 2, 0));
+    trimParts.push(new THREE.BoxGeometry(capW, capH, capW)
+      .translate(sx * LEG_X, SEAT_Y - capH / 2, 0));
   }
   const trim = new THREE.Mesh(mergeSimple(trimParts), flat);
   trim.name = 'stand-trim';
   g.add(trim);
 
-  // the barrel hangs under the beam and rocks about it
+  // The barrel rocks in its cradle, so the pivot is the CONTACT — the saddle
+  // line it sits on — not a beam overhead it no longer hangs from.
   const rock = new THREE.Group();
   rock.name = 'rock';
-  rock.position.y = PIVOT_Y + 0.2 * R;
+  rock.position.y = SEAT_Y;
   g.add(rock);
-
-  const DROP = 0.2 * R + R * 0.02;
-  for (const sx of [-1, 1]) {
-    const slingGeo = new THREE.CylinderGeometry(0.022 * R, 0.022 * R, DROP + R * 0.55, 5);
-    slingGeo.translate(0, -(DROP + R * 0.55) / 2, 0);
-    const sling = new THREE.Mesh(slingGeo, flat);
-    sling.name = 'sling';
-    sling.position.x = sx * 0.62 * R;
-    rock.add(sling);
-  }
 
   const barrel = new THREE.Group();
   barrel.name = 'barrel';
-  barrel.position.y = -DROP - R * 0.02;
+  barrel.position.y = BARREL_Y - SEAT_Y;
   rock.add(barrel);
 
   // The body: a lathed barrel — widest at the middle, the way a taiko is
   // hollowed — laid on its side so the heads face ±x.
-  const DEPTH = 1.34 * R;
   const prof = [];
   for (let i = 0; i <= 8; i++) {
     const t = i / 8;
@@ -146,7 +162,7 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
   hit.geometry.rotateZ(Math.PI / 2);
   hit.name = 'drum-hit';
   hit.userData.noOutline = true;
-  hit.position.y = PIVOT_Y - DROP - R * 0.02 + 0.2 * R;
+  hit.position.y = BARREL_Y;
   g.add(hit);
 
   let clock = 0;

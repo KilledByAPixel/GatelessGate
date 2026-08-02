@@ -123,10 +123,11 @@ export function buildHub({
   };
 }
 
-// Longer than the old 7, for the longer road: the dolly now carries on through
-// the gate instead of stopping short of it, and the pace is meant to stay a
-// walk (Frank: "just a little bit longer").
-const INTRO_SECONDS = 9;
+// Frank set this by eye, twice: 9 for the longer road read as too long ("cut
+// off another two seconds"), so it is back to the original 7 — over a road that
+// is now a third longer and goes all the way through the gate. Same length of
+// time, more ground covered, so the walk is brisker than it used to be.
+const INTRO_SECONDS = 7;
 
 // Returns the title-screen panel view + the dolly driver.
 // camera is a THREE.PerspectiveCamera. Options: onDone(), onSound(bool).

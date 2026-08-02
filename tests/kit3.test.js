@@ -119,10 +119,43 @@ test('the drum is grounded, named, and takes a tap', () => {
   d.group.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(d.group);
   assert.ok(box.min.y > -0.05, `it digs in: ${box.min.y}`);
-  for (const n of ['body', 'head', 'post', 'beam', 'sling', 'drum-hit']) {
+  for (const n of ['body', 'head', 'post', 'stand-trim', 'pad', 'drum-hit']) {
     assert.ok(d.group.getObjectByName(n), `${n} missing`);
   }
   assert.ok(d.pickTargets().length > 0);
+});
+
+// Frank: "it should be sitting on a saddle, on a seat — the drum itself above
+// the thing it's settled on, and the thing it's on a lot shorter." It used to
+// hang from a beam that stood over it, so the two things this pins are that
+// nothing rises past the barrel any more, and that the timber actually REACHES
+// the belly (the barrel is lathed, so the legs meet a narrower radius than its
+// widest, and a stand cut to the wrong one leaves the drum floating).
+test('the drum SITS on its stand: nothing above it, and the saddle touches', () => {
+  const d = makeDrum();
+  d.update(1 / 60, 0);
+  d.group.updateMatrixWorld(true);
+  const boxOf = (o) => new THREE.Box3().setFromObject(o);
+
+  const barrel = boxOf(d.group.getObjectByName('barrel'));
+  for (const name of ['post', 'stand-trim', 'pad']) {
+    for (const o of d.group.children.filter((c) => c.name === name)) {
+      assert.ok(boxOf(o).max.y <= barrel.max.y + 1e-6,
+        `${name} rises past the drum it is supposed to be holding up`);
+    }
+  }
+  assert.ok(!d.group.getObjectByName('beam'), 'the beam overhead is gone');
+  assert.ok(!d.group.getObjectByName('sling'), 'and so are the cords it hung by');
+
+  // the saddle caps are the top of the stand, and the belly rests ON them
+  const trim = boxOf(d.group.getObjectByName('stand-trim'));
+  assert.ok(trim.max.y > barrel.min.y,
+    `the saddle at ${trim.max.y} never reaches the belly at ${barrel.min.y}`);
+  assert.ok(trim.max.y < barrel.getCenter(new THREE.Vector3()).y,
+    'the stand swallows the drum instead of carrying it');
+  // and it is a LOW stand: shorter than the drum it holds
+  assert.ok(trim.max.y < barrel.max.y - barrel.min.y,
+    'the stand is taller than the drum is deep — that is a frame, not a saddle');
 });
 
 // ---- the rack ----------------------------------------------------------
