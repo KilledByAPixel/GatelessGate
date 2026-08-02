@@ -55,12 +55,15 @@ const CUFF_FLARE = 1.14;
 //
 // `r0` is the shoulder, `r1` the wrist; everything between is expressed in
 // terms of those two so a caller retuning either still gets the same shape.
-export function sleeve({ height = 1.6, len = 0.34 * 1.6, r0 = 0.035, r1 = 0.065, mat }) {
+// `flare` overrides the cuff lip: 1 = a flush mouth — what an ELBOW wants,
+// since the flare is a sleeve-mouth thing and a joint wearing one reads as
+// a second wrist (Frank, on the folded arms).
+export function sleeve({ height = 1.6, len = 0.34 * 1.6, r0 = 0.035, r1 = 0.065, flare = CUFF_FLARE, mat }) {
   const a = r0 * height;              // shoulder
   const b = r1 * height;              // wrist
   const profile = [
     [0, -len],                        // the mouth of the cuff, closed
-    [b * CUFF_FLARE, -len],           // THE CUFF LIP — the widest cloth on the arm
+    [b * flare, -len],                // THE CUFF LIP — the widest cloth on the arm
     [b * 0.99, -len * 0.930],         // the flare rolling back in
     [b * 0.76, -len * 0.840],         // the nip above it
     [b * 0.88, -len * 0.620],         // the belly of the sleeve
@@ -302,13 +305,13 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // The inward swing (the cuffs crossing to the centre) is the same for all.
 const KNEEL = 0.5;
 const STANCES = {
-  stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.735, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.9, foldUpper: -0.12, foldFore: -1.45 },
+  stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.735, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.9, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.92 },
   // Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did:
   // the chest run in SIT_PROFILE was lengthened and steepened so a meditator
   // sits STRAIGHT ("they should all kinda look like Buddha") — the crown now
   // tops out at 0.610·h, still comfortably a seated man, and the fold angle
   // eases to -0.44 so the cuffs keep landing in the lap the knees now frame.
-  sit: { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, head: 0.515, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31 },
+  sit: { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, head: 0.515, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31, foldCross: 1.1 },
   kneel: {
     profile: mixProfile(STAND_PROFILE, SIT_PROFILE, KNEEL),
     shoulder: mix(0.60, 0.40, KNEEL),
@@ -321,6 +324,7 @@ const STANCES = {
     staffAng: mix(0.9, 0, KNEEL),
     foldUpper: mix(-0.12, -0.22, KNEEL),
     foldFore: mix(-1.45, -0.31, KNEEL),
+    foldCross: mix(0.92, 1.1, KNEEL),
   },
 };
 
@@ -388,15 +392,17 @@ export function makeFigure({
   // joint at any bend, the same way the upper's covers the shoulder.
   const makeFoldedArm = (side) => {
     const upperLen = sleeveL * 0.55;
-    const arm = sleeve({ height, len: upperLen, r1: 0.052, mat });
+    // the upper's mouth is an ELBOW, not a wrist: flush, no cuff lip
+    const arm = sleeve({ height, len: upperLen, r1: 0.052, flare: 1, mat });
     arm.position.set(side * 0.115 * s * height, shoulderY, st.armZ * height);
     arm.rotation.x = st.foldUpper;          // the upper hangs, only a little forward
     arm.rotation.z = side * 0.12;           // elbows just clear of the body
-    const fore = sleeve({ height, len: sleeveL * 0.62, mat });
+    // a quieter mouth than a hanging sleeve: gathered hands, not trumpets
+    const fore = sleeve({ height, len: sleeveL * 0.62, r1: 0.056, flare: 1.07, mat });
     fore.name = 'forearm';
     fore.position.y = -upperLen;            // hinged at the elbow, in the upper's frame
     fore.rotation.x = st.foldFore;          // seated: down into the lap; standing: up to the waist
-    fore.rotation.z = -side * 0.9;          // and across the body, cuff to the centre
+    fore.rotation.z = -side * st.foldCross; // and across the body, until the cuffs all but touch
     arm.add(fore);
     g.add(arm);
     return arm;
