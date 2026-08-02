@@ -121,36 +121,49 @@ test('the seated figure folds real legs — knees at ±x, lap valley, torso inse
   }
 });
 
-test('the elder\'s staff plants outside the seated hem, and the standing plant is untouched', () => {
-  // The seated figure's widest cloth is now the KNEE reach — the merged
-  // ellipsoids at ±x: x-offset 0.21·h (scaled by stout) plus the knee's own
-  // half-width 0.1275·h (which is not). The standing plant at 0.26·h sat
-  // INSIDE the old hem, so every seated elder's staff emerged through the
-  // cloth (k1/k10/k17/k26/k28). The seated plant must clear the knee by at
-  // least the staff's own radius (0.018·h).
-  const kneeReach = (stout) => 0.21 * stout + 0.1275;
+test('a seated elder SETS HIS STAFF DOWN; the standing plant is untouched', () => {
+  // Planted upright beside a man on the ground, the staff read as a pole
+  // stuck in the earth next to him (Frank: "their staff is appearing kinda
+  // like just sticking up out of the ground next to them, it makes it look
+  // kinda weird"). Seated, it now LIES on the ground within reach: the shaft
+  // horizontal, resting on the plane rather than sunk into it, and every
+  // point of it clear of the CUSHION it lies beside (radius 0.26·h, scaled
+  // by stout) — at ground level the zabuton is what it could foul, the way
+  // the upright plant had to clear the hem.
+  const seatReach = (stout) => 0.26 * stout;
   const STAFF_R = 0.018;
   for (const [height, stout] of [[1.6, 1], [1.72, 1], [1.56, 1.04], [1.62, 1.08]]) {
     const g = makeFigure({ stance: 'sit', elder: true, height, stout });
     const staff = g.getObjectByName('staff');
     assert.ok(staff, 'seated elder still carries a staff named "staff"');
-    assert.ok(staff.position.x > (kneeReach(stout) + STAFF_R) * height,
-      `seated staff inside the knee at h=${height} s=${stout}: ${staff.position.x}`);
-    assert.strictEqual(staff.position.z, 0.06 * height, 'set beside, not behind');
+    const near = new THREE.Box3().setFromObject(staff, true).min.x;
+    assert.ok(near > (seatReach(stout) + STAFF_R) * height,
+      `seated staff over the cushion at h=${height} s=${stout}: ${near}`);
+    // LYING DOWN: the whole shaft is within a couple of radii of the ground
+    const box = new THREE.Box3().setFromObject(staff, true);
+    assert.ok(box.max.y < 3 * STAFF_R * height,
+      `the staff lies flat at h=${height}: top at ${box.max.y}`);
+    assert.ok(box.min.y > -1e-6, `and rests ON the ground, not in it: ${box.min.y}`);
+    // and it is a real length of wood laid out, not a stub seen end-on
+    const run = Math.max(box.max.x - box.min.x, box.max.z - box.min.z);
+    assert.ok(run > 0.5 * height, `laid out at its full length: ${run}`);
   }
 
   // The standing transform is regression-sensitive — every standing elder in
-  // the book is framed around it. Bit-exact against the shipped values:
-  // the same 0.26·h out, but planted 0.9 rad off the facing axis, because
-  // an on-axis plant sat exactly on the camera→figure→target line whenever
-  // a case aimed the elder up-scene (the grip audit: the staff "grew out of
-  // his hat" in nine cases). Lean is 0.02, near-vertical — the old 0.08
-  // walked the top back over the brim.
+  // the book is framed around it. Bit-exact against the shipped values: the
+  // same 0.26·h out on a polar plant swung `STAND_ANG` off the facing axis,
+  // because an on-axis plant sat exactly on the camera→figure→target line
+  // whenever a case aimed the elder up-scene (the grip audit: the staff "grew
+  // out of his hat" in nine cases). Lean is 0.02, near-vertical — the old 0.08
+  // walked the top back over the brim. (Frank retuned the bearing 0.9 -> 0.2
+  // and dropped the old +0.06·h forward nudge in 0165d91; the invariant that
+  // matters — planted, upright, outside the hem — is asserted below.)
+  const STAND_ANG = 0.2;
   for (const [height, stout] of [[1.6, 1], [1.66, 1], [1.72, 1.05]]) {
     const staff = makeFigure({ stance: 'stand', elder: true, height, stout }).getObjectByName('staff');
-    assert.strictEqual(staff.position.x, Math.cos(0.9) * 0.26 * stout * height);
+    assert.strictEqual(staff.position.x, Math.cos(STAND_ANG) * 0.26 * stout * height);
     assert.strictEqual(staff.position.y, 0);
-    assert.strictEqual(staff.position.z, Math.sin(0.9) * 0.26 * stout * height + 0.06 * height);
+    assert.strictEqual(staff.position.z, Math.sin(STAND_ANG) * 0.26 * stout * height);
     assert.strictEqual(staff.rotation.z, 0.02);
     // the plant still clears the standing hem (0.212·h) by the staff's own
     // radius, in the plant's own direction
@@ -158,10 +171,10 @@ test('the elder\'s staff plants outside the seated hem, and the standing plant i
     assert.ok(dist > (0.212 + 0.018) * stout * height, `standing staff outside the hem: ${dist}`);
   }
 
-  // staffAng is an override: 0 restores the old on-axis plant bit-exactly
+  // staffAng is an override: 0 puts the plant straight out along +x
   const onAxis = makeFigure({ stance: 'stand', elder: true, height: 1.6, staffAng: 0 }).getObjectByName('staff');
   assert.strictEqual(onAxis.position.x, 0.26 * 1.6);
-  assert.strictEqual(onAxis.position.z, 0.06 * 1.6);
+  assert.strictEqual(onAxis.position.z, 0);
 
   // kneel sits between the two, and still clears its own (blended) hem
   const kneel = makeFigure({ stance: 'kneel', elder: true, height: 1.6 }).getObjectByName('staff');

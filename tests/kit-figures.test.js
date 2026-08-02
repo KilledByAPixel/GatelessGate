@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeBuddha } from '../src/kit/buddha.js';
-import { makeFigure, seatedBodyGeometry } from '../src/kit/figure.js';
+import { makeFigure, seatedBodyGeometry, HEAD_OBLONG } from '../src/kit/figure.js';
 import { makeAssembly } from '../src/kit/assembly.js';
 import { ACCENT } from '../src/palette.js';
 
@@ -65,13 +65,19 @@ test('the topknot: one bun on the crown, proud of the skull line, in the figure\
   // on k9's colossus, so it is much bigger than the urna
   assert.ok(rKnot > 0.3 * rHead && rKnot < 0.6 * rHead, `a bun: ${rKnot} vs head ${rHead}`);
 
-  // on the crown, centred, buried join: centre inside the skull, crest proud
+  // On the crown, centred, join still covered, crest proud. Measured against
+  // the head's ACTUAL shell — sphereHead bakes HEAD_OBLONG into the geometry,
+  // so the crown stands at r·1.10, not r — and Frank's own retune (KNOT_SINK
+  // 0.82 -> 1.1) seats the bun higher on that crown. What must hold either
+  // way: the bun's underside stays inside the skull (no floating hat) and its
+  // top breaks the crown line (it is the silhouette event).
+  const crown = rHead * HEAD_OBLONG[1];
   assert.equal(knot.position.x, 0, 'centred');
   assert.equal(knot.position.z, 0, 'on the crown, not the brow');
-  assert.ok(knot.position.y > 0.6 * rHead && knot.position.y < rHead,
-    `sunk into the crown: ${knot.position.y}`);
-  assert.ok(knot.position.y + rKnot > rHead * 1.15,
-    `the crest breaks the crown line: ${knot.position.y + rKnot} vs ${rHead}`);
+  assert.ok(knot.position.y - rKnot < crown,
+    `the join stays buried in the skull: ${knot.position.y - rKnot} vs crown ${crown}`);
+  assert.ok(knot.position.y + rKnot > crown * 1.15,
+    `the crest breaks the crown line: ${knot.position.y + rKnot} vs ${crown}`);
 
   // hair on an ink man, stone on a statue: the knot wears the head's own
   // material (recolour the figure and the knot follows), and unlike the
@@ -107,7 +113,9 @@ test('the urna: one small accent dot, sunk into the forehead, no outline', () =>
   // and above the head's equator, on the centre line
   assert.equal(urna.position.x, 0, 'centred');
   assert.ok(urna.position.z > 0, 'on the face side');
-  assert.ok(urna.position.y > 0 && urna.position.y < rHead * 0.7,
+  // above the equator but well below the crown (which stands at r·HEAD_OBLONG
+  // y) — Frank raised URNA_ELEV 0.5 -> 0.8, so this reads high on the brow now
+  assert.ok(urna.position.y > 0 && urna.position.y < rHead * HEAD_OBLONG[1] * 0.85,
     `mid-forehead, not the scalp: ${urna.position.y}`);
 });
 

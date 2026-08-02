@@ -460,6 +460,34 @@ export function makeFigure({
     staff.position.set(
       Math.cos(ang) * st.staffX * s * height, 0,
       Math.sin(ang) * st.staffX * s * height);
+
+    // A SEATED ELDER SETS HIS STAFF DOWN. Planted upright beside a man on the
+    // ground it read as a pole stuck in the earth next to him — "their staff
+    // is appearing kinda like just sticking up out of the ground next to
+    // them, it makes it look kinda weird" (Frank). Laid flat it becomes what
+    // it is: the thing he was carrying, put down within reach. Tipped a full
+    // quarter turn about z so the shaft lies along the ground, lifted by its
+    // own radius so it RESTS on the plane rather than sinking half into it,
+    // and swung a little off the figure's facing axis so it reads as dropped
+    // rather than squared up like a ruler. Standing/kneeling plants are
+    // untouched — a man on his feet still leans on it.
+    if (seated) {
+      // rotation.z = π/2 lays the shaft (local +y) down onto local -x; the
+      // y-turn then swings that lying shaft around the compass. π/2 + skew
+      // puts it FORE-AFT beside him (running past his knees, not across his
+      // lap), skewed a little so it reads dropped rather than squared up.
+      const SKEW = 0.18;
+      const yaw = Math.PI / 2 + SKEW;
+      staff.rotation.z = Math.PI / 2;
+      staff.rotation.y = yaw;
+      // where the shaft now runs, from its base: RY(yaw) applied to -x
+      const dz = Math.sin(yaw);
+      staff.position.y = 0.018 * height;       // resting ON the ground, not buried
+      // slide it half a length AFT only — the plant distance (staffX) still
+      // sets how far out it lies, so the shaft stays clear of the cushion the
+      // way the upright plant stayed clear of the hem
+      staff.position.z -= dz * staffLen * 0.5;
+    } else {
     // NEAR-VERTICAL, not leaned in. The old 0.08 rad lean tipped the top
     // toward the figure, which put the shaft at ~0.194·h off the axis right
     // at hat-brim height — the brim reaches 0.192·h — so from roughly half
@@ -469,7 +497,8 @@ export function makeFigure({
     // still passes within a hand's reach of the resting cuff, so it reads
     // as the same planted, gripped staff — just beside the monk instead of
     // through his hat. The plant distances (staffX) are untouched.
-    staff.rotation.z = 0.02;
+      staff.rotation.z = 0.02;
+    }
     g.add(staff);
   }
   return g;
