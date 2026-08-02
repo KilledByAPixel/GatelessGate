@@ -32,10 +32,18 @@ const SEAL = new Set([ACCENT, ACCENT_DEEP, ACCENT_LIGHT]
   .map((c) => new THREE.Color(c).getHexString()));
 const SEAL_GLOW = 0.5;
 
-export function toonMaterial({ color = '#ffffff', flat = false, side = THREE.FrontSide } = {}) {
+// `glow: false` opts a surface OUT of the seal glow even when it is painted in
+// an accent colour. The glow exists for a small held thing — a bowl, a dot, a
+// bloom — that has to keep its brightness against the wash. Spread over a big
+// lit SURFACE it does the opposite of its job: emissive light is the same from
+// every angle, so it flattens the toon ramp to one tone and the form stops
+// reading. Case 30's pond is where that showed — red water came out as a flat
+// luminous disc and its ripples became invisible (Frank: "I barely see it do
+// anything... for the red one the specular should still be white").
+export function toonMaterial({ color = '#ffffff', flat = false, side = THREE.FrontSide, glow = true } = {}) {
   const m = new THREE.MeshToonMaterial({ color, gradientMap: toonRamp(), side });
   m.flatShading = flat;
-  if (SEAL.has(m.color.getHexString())) {
+  if (glow && SEAL.has(m.color.getHexString())) {
     m.emissive.copy(m.color);
     m.emissiveIntensity = SEAL_GLOW;
   }

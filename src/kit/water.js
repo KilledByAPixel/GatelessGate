@@ -180,7 +180,9 @@ export function makeWater({
   geo.setIndex(idx);
   geo.computeVertexNormals();
 
-  const mat = toonMaterial({ color, side: THREE.DoubleSide });
+  // never a seal, whatever colour it is painted: water is a big lit surface
+  // and the accent glow would flatten its shading (and with it, its ripples)
+  const mat = toonMaterial({ color, side: THREE.DoubleSide, glow: false });
   mat.transparent = true;
   mat.opacity = opacity;
   // when the water is see-through, stop it writing depth — otherwise the fish
