@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, wash } from '../palette.js';
 import {
-  composeWorld, makeBuddha, makeMonk, aimMonk, makeFlower, makeAssembly,
+  composeWorld, makeBuddha, makeMonk, faceMonk, makeFlower, makeAssembly,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -58,13 +58,13 @@ export default {
     // THE PHILOSOPHER, standing at a respectful distance, waiting for an answer
     const philosopher = makeMonk({ height: 1.66, hat: false, stout: 1.05 });
     philosopher.position.set(2.0, 0, 0.5);
-    aimMonk(philosopher, buddha.position);
+    faceMonk(philosopher, buddha.position);
     scene.add(philosopher);
 
     // Ananda, off to the side, who will ask afterwards what just happened
     const ananda = makeMonk({ height: 1.58 });
     ananda.position.set(-2.3, 0, -0.9);
-    aimMonk(ananda, buddha.position);
+    faceMonk(ananda, buddha.position);
     scene.add(ananda);
 
     // one flower set down before the seat — the seal, and the only thing in

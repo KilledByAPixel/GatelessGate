@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeHut, makeBasin, makeBowl, makeWater, makeMonk, aimMonk,
+  composeWorld, makePath, makeHut, makeBasin, makeBowl, makeWater, makeMonk, faceMonk,
   makeOdoshi, makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -64,7 +64,7 @@ export default {
     // the monk who has eaten, and been told to go wash
     const monk = makeMonk({ height: 1.58 });
     monk.position.set(0.55, 0, 1.75);
-    aimMonk(monk, basin.position);
+    faceMonk(monk, basin.position);
     scene.add(monk);
 
     // The shishi-odoshi, set back from the basin with its mouth turned toward

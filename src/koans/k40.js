@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
-import { makeMonk, aimMonk } from '../kit/monk.js';
+import { makeMonk, aimMonk, faceMonk } from '../kit/monk.js';
 import { makeAssembly } from '../kit/assembly.js';
 import { makeHut } from '../kit/hut.js';
 import { makeVase } from '../kit/vase.js';
@@ -105,7 +105,7 @@ export default {
     // composition says who he is — the only one already moving.
     const isan = makeMonk({ height: 1.58 });
     isan.position.set(ISAN.x, 0, ISAN.z);
-    aimMonk(isan, { x: VASE.x, z: VASE.z });
+    faceMonk(isan, { x: VASE.x, z: VASE.z });
     isan.rotation.z = -0.07;   // applied before the yaw: a lean toward what he faces
     scene.add(isan);
 

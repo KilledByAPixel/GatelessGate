@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
-  composeWorld, makePath, makeLantern, makeMonk, aimMonk, makeGate, makeFlag,
+  composeWorld, makePath, makeLantern, makeMonk, aimMonk, faceMonk, makeGate, makeFlag,
   makeLights, makeBlobShadow, addOutlines, makeFurin,
 } from '../kit/index.js';
 import { clothEnergy } from '../sim/verlet.js';
@@ -75,7 +75,7 @@ export default {
     aimMonk(monkA, flag.group.position);      // raised sleeve aims at the flag
     const monkB = makeMonk({ stout: 1.12 });
     monkB.position.set(mp.x - mp.perp.x * 0.8, 0, mp.z - mp.perp.z * 0.8);
-    aimMonk(monkB, monkA.position);           // turns toward monkA — the argument
+    faceMonk(monkB, monkA.position);           // turns toward monkA — the argument
     scene.add(monkA, monkB);
 
     // the rest of the world: mountains, forest, midground trees, scatter —

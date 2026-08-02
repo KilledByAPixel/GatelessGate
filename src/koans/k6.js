@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 
 import {
-  composeWorld, makeBuddha, makeMonk, aimMonk, makeFlower, makeAssembly,
+  composeWorld, makeBuddha, makeMonk, faceMonk, makeFlower, makeAssembly,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 import { hash1 } from '../util/noise.js';
@@ -66,7 +66,7 @@ export default {
     // Mahakasyapa sits nearest, apart from the rest — the one who understands.
     const kasyapa = makeMonk({ pose: 'sit', height: 1.55 });
     kasyapa.position.set(3.05, 0, -0.7);
-    aimMonk(kasyapa, buddha.position);
+    faceMonk(kasyapa, buddha.position);
     scene.add(kasyapa);
 
     // "A smile is an event": the ONLY face rendered anywhere in this book. It is

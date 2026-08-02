@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
-  composeWorld, makePath, makeMonk, aimMonk, makeAssembly,
+  composeWorld, makePath, makeMonk, aimMonk, faceMonk, makeAssembly,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -77,12 +77,12 @@ export default {
     // the monks it is being held out to
     const near = makeMonk({ height: 1.56, pose: 'sit' });
     near.position.set(2.3, 0, 1.2);
-    aimMonk(near, shuzan.position);
+    faceMonk(near, shuzan.position);
     scene.add(near);
 
     const second = makeMonk({ height: 1.60, pose: 'sit', stout: 1.05 });
     second.position.set(1.6, 0, 2.6);
-    aimMonk(second, shuzan.position);
+    faceMonk(second, shuzan.position);
     scene.add(second);
 
     aimMonk(shuzan, near.position);

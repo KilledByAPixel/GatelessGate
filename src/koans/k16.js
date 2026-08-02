@@ -6,7 +6,7 @@ import { makePath } from '../kit/path.js';
 import { makeHut } from '../kit/hut.js';
 import { makeLantern } from '../kit/lantern.js';
 import { makeBell } from '../kit/bell.js';
-import { makeMonk, aimMonk } from '../kit/monk.js';
+import { makeMonk, aimMonk, faceMonk } from '../kit/monk.js';
 import { makeLights } from '../render/toon.js';
 import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
@@ -14,9 +14,12 @@ import { addOutlines } from '../render/outlines.js';
 const ID = 16;
 
 // the elder's turn is a bearing eased toward another bearing, so two helpers
-// in aimMonk's convention (rotation.y = atan2(-dz, dx) aims local +x)
+// in faceMonk's convention (rotation.y = atan2(dx, dz) turns the BODY's own
+// front, local +z, onto the target). It used to be aimMonk's (atan2(-dz, dx),
+// which aims the pointing +x sleeve) — so the elder turning toward the bell
+// ended up presenting his shoulder to it.
 const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a));
-const bearing = (from, to) => Math.atan2(-(to.z - from.z), to.x - from.x);
+const bearing = (from, to) => Math.atan2(to.x - from.x, to.z - from.z);
 
 // Ummon's question is the daily monastery moment itself: the bell sounds, and
 // monks everywhere stop what they are doing and turn toward the hall. So the
@@ -98,7 +101,7 @@ export default {
     const front = { x: Math.sin(hall.rotation.y), z: Math.cos(hall.rotation.y) };
     const hallMonk = makeMonk({ height: 1.62, stout: 1.04 });
     hallMonk.position.set(hall.position.x + front.x * 1.9, 0, hall.position.z + front.z * 1.9);
-    aimMonk(hallMonk, bell.group.position);
+    faceMonk(hallMonk, bell.group.position);
     scene.add(hallMonk);
 
     const world = composeWorld(scene, {

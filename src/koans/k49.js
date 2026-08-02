@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeBasin, makeWater, makeKoi, makeBirds, makeMonk, aimMonk,
+  composeWorld, makePath, makeBasin, makeWater, makeKoi, makeBirds, makeMonk, faceMonk,
   makeGate, makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
@@ -121,7 +121,7 @@ export default {
     // face him on down the road, away from us — he has gone through (aimed after
     // outlines, since it is a pure transform)
     const away = road.sample(0.62);
-    aimMonk(you, { x: away.x, z: away.z });
+    faceMonk(you, { x: away.x, z: away.z });
 
     // ---- the moment: pass through -----------------------------------------
     // Touch the gate and a bell sounds, once, the way a temple bell marks a

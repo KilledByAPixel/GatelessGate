@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeWheel, makeMonk, aimMonk,
+  composeWorld, makePath, makeWheel, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -75,12 +75,12 @@ export default {
     // Getsuan, who asked, and the student he asked
     const master = makeMonk({ height: 1.66, elder: true });
     master.position.set(-0.5, 0, 2.1);
-    aimMonk(master, wheel.group.position);
+    faceMonk(master, wheel.group.position);
     scene.add(master);
 
     const student = makeMonk({ height: 1.56, pose: 'sit' });
     student.position.set(3.5, 0, 1.5);
-    aimMonk(student, wheel.group.position);
+    faceMonk(student, wheel.group.position);
     scene.add(student);
 
     const world = composeWorld(scene, {

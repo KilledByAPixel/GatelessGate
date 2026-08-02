@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeHut, makeBirds, makeMonk, aimMonk,
+  composeWorld, makePath, makeHut, makeBirds, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -12,8 +12,9 @@ const ID = 34;
 // says Nansen was getting old and forgot to be ashamed.
 //
 // The scene is the study the second sentence walks out of — the RED house
-// the old man has turned his back on — a bare reading mat before its door,
-// and Nansen standing apart from all of it. Overhead, birds.
+// the old man has turned his back on — a reading mat before its door with a
+// monk still seated on it, and Nansen standing apart from all of it.
+// Overhead, birds.
 //
 // Touch the mat and the birds scatter. That is the whole of what the words
 // do when they leave the paper — they go up, they wheel around, and they
@@ -49,13 +50,12 @@ export default {
     hut.rotation.y = 0.46;
     scene.add(hut);
 
-    // THE MAT, bare. Lifted just clear of the ground and drawn in front of it
+    // THE MAT. Lifted just clear of the ground and drawn in front of it
     // (polygonOffset) so it never z-fights the terrain or the path. The
     // scrolls that used to cover it — 22 loose cylinders, then a cord-wood
     // pile with part-unrolled ribbons — are GONE entirely: three rounds of
     // Frank asking what the cylinders were is the answer to whether they ever
-    // read as scrolls. An empty reading mat before a shut-up study says
-    // "learning, abandoned" better than any prop pile did.
+    // read as scrolls.
     const matMat = toonMaterial({ color: WASH.dry, flat: true });
     matMat.polygonOffset = true;
     matMat.polygonOffsetFactor = -2;
@@ -65,10 +65,19 @@ export default {
     mat.rotation.y = 0.2;
     scene.add(mat);
 
+    // ...and a student on it (Frank: "let's put a monk sitting down on that
+    // mat, just kinda sitting there"). He faces the shut study — the one who
+    // stayed with the books while Nansen walked off. Seated on the mat's top
+    // face; the sit pose brings its own zabuton.
+    const student = makeMonk({ height: 1.6, pose: 'sit' });
+    student.position.set(-0.1, 0.05, -0.7);
+    faceMonk(student, hut.position);
+    scene.add(student);
+
     // NANSEN, apart from it, facing away — he said the sentence and walked off
     const nansen = makeMonk({ height: 1.66, elder: true });
     nansen.position.set(3.4, 0, 1.9);
-    aimMonk(nansen, { x: 8.0, z: 4.0 });
+    faceMonk(nansen, { x: 8.0, z: 4.0 });
     scene.add(nansen);
 
     // THE BIRDS: the words that have already left, crossing the sky

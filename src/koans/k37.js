@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP } from '../palette.js';
 import {
-  composeWorld, makeBuffalo, makePen, makeMonk, aimMonk,
+  composeWorld, makeBuffalo, makePen, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
@@ -47,7 +47,7 @@ export default {
     // a monk watching the impossible thing, set back so he doesn't fill the lens
     const monk = makeMonk({ height: 1.6 });
     monk.position.set(4.9, 0, 1.4);
-    aimMonk(monk, buffalo.group.position);
+    faceMonk(monk, buffalo.group.position);
     scene.add(monk);
 
     const world = composeWorld(scene, {

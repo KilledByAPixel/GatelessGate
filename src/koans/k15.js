@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
-  composeWorld, makePath, makeGate, makeLantern, makeMonk, aimMonk,
+  composeWorld, makePath, makeGate, makeLantern, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -51,14 +51,14 @@ export default {
     // TOZAN, in the gateway, bowing — he came back the next day to ask why
     const tozan = makeMonk({ height: 1.58 });
     tozan.position.set(1.5, 0, 0.9);
-    aimMonk(tozan, { x: -1.4, z: -1.8 });
+    faceMonk(tozan, { x: -1.4, z: -1.8 });
     tozan.rotation.z = -0.17;                 // caught mid-bow
     scene.add(tozan);
 
     // UMMON, beyond the gate, holding the stick he is not going to use
     const ummon = makeMonk({ height: 1.68, elder: true });
     ummon.position.set(-1.4, 0, -1.8);
-    aimMonk(ummon, tozan.position);
+    faceMonk(ummon, tozan.position);
     const stick = ummon.getObjectByName('staff');
     if (stick) stick.material = toonMaterial({ color: ACCENT, flat: true });
     scene.add(ummon);

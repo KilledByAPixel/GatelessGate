@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK, WASH, wash, mixHex } from '../palette.js';
 import {
-  composeWorld, makePath, makeMonk, aimMonk,
+  composeWorld, makePath, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 import { mergeSimple } from '../kit/scatter.js';
@@ -56,7 +56,7 @@ export default {
     const H = 4.4;
     const colossus = makeMonk({ height: H, stout: 1.12, color: wash(0.80), elder: true });
     colossus.position.set(0.4, 0, -0.8);
-    aimMonk(colossus, { x: 5.0, z: 5.0 });
+    faceMonk(colossus, { x: 5.0, z: 5.0 });
     // the staff is the seal: thin enough to take full accent at this size
     const staff = colossus.getObjectByName('staff');
     if (staff) staff.material = toonMaterial({ color: ACCENT, flat: true });
@@ -71,7 +71,7 @@ export default {
     // a traveller who stopped to look up at him, for scale
     const monk = makeMonk({ height: 1.58 });
     monk.position.set(3.6, 0, 3.4);
-    aimMonk(monk, colossus.position);
+    faceMonk(monk, colossus.position);
     moving.add(monk);
 
     // A stone waymarker beside the road, worn down by everyone who has tried.

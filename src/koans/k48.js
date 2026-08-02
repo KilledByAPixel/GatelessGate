@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeMonk, aimMonk, makeFan,
+  composeWorld, makePath, makeMonk, faceMonk, makeFan,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -61,7 +61,7 @@ export default {
     const KH = 1.68;
     const kembo = makeMonk({ height: KH, pose: 'raise' });
     kembo.position.set(-1.2, 0, -0.6);
-    aimMonk(kembo, { x: 4.0, z: 2.6 });
+    faceMonk(kembo, { x: 4.0, z: 2.6 });
     const raisedArm = kembo.children
       .filter((c) => c.name === 'arm')
       .sort((a, b) => b.position.x - a.position.x)[0];
@@ -100,7 +100,7 @@ export default {
     const PH = 1.6;
     const pupil = makeMonk({ height: PH });
     pupil.position.set(3.2, 0, 2.4);
-    aimMonk(pupil, kembo.position);
+    faceMonk(pupil, kembo.position);
     scene.add(pupil);
 
     // a roadside stone, now just scenery

@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
 import { makePath } from '../kit/path.js';
-import { makeMonk, aimMonk } from '../kit/monk.js';
+import { makeMonk, aimMonk, faceMonk } from '../kit/monk.js';
 import { makeTree } from '../kit/tree.js';
 import { makeOak } from '../kit/oak.js';
 import { makeLights, toonMaterial } from '../render/toon.js';
@@ -109,7 +109,7 @@ export default {
     const mp = path.sample(0.255);
     const monk = makeMonk({ height: 1.58 });
     monk.position.set(mp.x + mp.perp.x * 0.85, 0, mp.z + mp.perp.z * 0.85);
-    aimMonk(monk, joshu.position);
+    faceMonk(monk, joshu.position);
     scene.add(monk);
 
     const world = composeWorld(scene, {

@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
-  composeWorld, makeWater, makeMonk, aimMonk,
+  composeWorld, makeWater, makeMonk, aimMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -19,13 +19,34 @@ const ID = 39;
 // and black with nothing to walk on — and then, after a while, they surface
 // again for the next person who wants to quote something.
 //
-// The far stone is vermillion: the end of the line, which nobody in this case
-// ever reaches.
+// One stone is always vermillion — it starts as the far one, the end of the
+// line nobody in this case ever reaches. Sink the red one and the red moves to
+// the next surviving stone (Frank: "when you push one under, the next one
+// turns red, since that one disappears — so there's always exactly one red").
+// The point you were making is never the stone you are standing on.
 
 const SINK = 1.1;         // seconds for a stone to go under
 const SURFACE_AFTER = 6;  // and how long the water stays empty
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const STONES = 7;
+const FIRST_RED = STONES - 1;   // the crossing starts with the FAR stone red
+
+// Where the red goes when a stone sinks — pure, so it is testable without a
+// scene. `red` is the index currently carrying it, `tapped` the stone that
+// just went under, `sunk` the per-stone sunk flags AFTER that sink. Sinking
+// any stone but the red one moves nothing; sinking the red one hands it to
+// the next survivor in build order (near shore → far), wrapping past the end.
+// When the last survivor goes down there is nobody left to take it: -1, and
+// the red vanishes with the crossing until the stones surface again.
+export function nextRed(red, tapped, sunk) {
+  if (tapped !== red) return red;
+  const n = sunk.length;
+  for (let k = 1; k <= n; k++) {
+    const i = (red + k) % n;
+    if (!sunk[i]) return i;
+  }
+  return -1;
+}
 
 export default {
   id: ID,
@@ -46,9 +67,13 @@ export default {
 
     // dark water, wide enough that the crossing matters
     const WY = 0.10;
-    // open water, so a square sheet — and now the rim is pinned, so a stone
-    // dropped near the bank no longer throws its ring out over the grass
-    const water = makeWater({ shape: 'square', size: 11.0, color: wash(0.72), seed: ID });
+    // open water — a BLOB now, not a square (Frank: "make that pond less
+    // square-shaped, more organically shaped, kinda roundish"): a seeded
+    // wobbled outline from the kit, sized up so every stone still stands well
+    // inside the shore at this seed (pinned by tests/k39.test.js). The rim is
+    // pinned as before, so a stone dropped near the bank still cannot throw
+    // its ring out over the grass.
+    const water = makeWater({ shape: 'blob', size: 12.5, color: wash(0.72), seed: ID });
     water.group.position.set(0.4, WY, -1.6);
     scene.add(water.group);
 
@@ -56,20 +81,25 @@ export default {
     // An arc from the near shore out into the middle, each one a phrase of a
     // borrowed line. They are placed on a curve so the crossing reads as a
     // sentence going somewhere rather than a row of blocks.
+    // The red is a material STATE now, not a stone: exactly one stone carries
+    // it at a time (see nextRed above), so every top is built in stone and the
+    // shared seal material is swapped onto whichever one holds the red. One
+    // shared red material rather than a tint: toonMaterial gives seal colours
+    // their emissive lift at construction, which a color.set() would miss.
+    const redMat = toonMaterial({ color: ACCENT, flat: true });
     const stones = [];
     for (let i = 0; i < STONES; i++) {
       const t = i / (STONES - 1);
       const x = 3.6 - t * 6.6;
       const z = 1.9 - t * 5.2 + Math.sin(t * Math.PI) * 0.9;
       const r = 0.30 + hash1(i * 3 + 1, ID) * 0.10;
-      const last = i === STONES - 1;
       const pivot = new THREE.Group();
       pivot.name = 'stone';
       pivot.position.set(x, WY + 0.05, z);
       const top = new THREE.Mesh(
         new THREE.CylinderGeometry(r, r * 1.12, 0.20, 7),
-        toonMaterial({ color: last ? ACCENT : WASH.stone, flat: true }));
-      top.name = last ? 'far-stone' : 'stone-top';
+        toonMaterial({ color: WASH.stone, flat: true }));
+      top.name = 'stone-top';
       top.rotation.y = hash1(i * 3 + 2, ID) * Math.PI;
       pivot.add(top);
       scene.add(pivot);
@@ -81,8 +111,16 @@ export default {
       hit.userData.noOutline = true;
       pivot.add(hit);
 
-      stones.push({ pivot, hit, y0: WY + 0.05, sunkAt: -99 });
+      stones.push({ pivot, top, hit, stoneMat: top.material, y0: WY + 0.05, sunkAt: -99 });
     }
+
+    let red = FIRST_RED;
+    const paint = () => {
+      for (let i = 0; i < stones.length; i++) {
+        stones[i].top.material = i === red ? redMat : stones[i].stoneMat;
+      }
+    };
+    paint();
 
     // the student, on the near shore, mid-sentence
     const student = makeMonk({ height: 1.58, pose: 'point' });
@@ -93,7 +131,7 @@ export default {
     // Ummon, on the far side, who has already stopped listening
     const ummon = makeMonk({ height: 1.66, elder: true });
     ummon.position.set(-4.2, 0, -4.4);
-    aimMonk(ummon, student.position);
+    faceMonk(ummon, student.position);
     scene.add(ummon);
 
     const world = composeWorld(scene, {
@@ -101,11 +139,13 @@ export default {
       groundSeed: 21,
       trees: 4,
       keepout: [
-        { x: 0.4, z: -1.6, r: 6.2 },
+        // the same 0.7 / 0.3 margins past the water's nominal radius (6.25)
+        // that the old square sheet kept past its half-width
+        { x: 0.4, z: -1.6, r: 6.95 },
         { x: 4.9, z: 3.0, r: 1.2 },
         { x: -4.2, z: -4.4, r: 1.2 },
       ],
-      grassKeepout: [{ x: 0.4, z: -1.6, r: 5.8 }],
+      grassKeepout: [{ x: 0.4, z: -1.6, r: 6.55 }],
     });
 
     for (const [p, rx, rz, op] of [
@@ -127,7 +167,8 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
-      for (const s of stones) {
+      for (let i = 0; i < stones.length; i++) {
+        const s = stones[i];
         if (s.sunkAt > -99) continue;
         if (!input.raycastFirst(camera, [s.hit])) continue;
         s.sunkAt = clock;
@@ -135,6 +176,10 @@ export default {
         // it goes under where you were about to put your weight
         audio && audio.drip({ loud: true });
         water.ripple(s.pivot.position.x - 0.4, s.pivot.position.z + 1.6);
+        // ...and if it was carrying the red, the red steps to the next
+        // survivor — always exactly one red while anything is still standing
+        red = nextRed(red, i, stones.map((q) => q.sunkAt > -99));
+        paint();
         if (sunk === stones.length) allDownAt = clock;
         return;
       }
@@ -152,6 +197,9 @@ export default {
           for (const s of stones) s.sunkAt = -99;
           sunk = 0;
           allDownAt = -99;
+          // the crossing resets whole: the red returns to the far stone
+          red = FIRST_RED;
+          paint();
         }
 
         for (const s of stones) {
@@ -162,7 +210,7 @@ export default {
         }
       },
       fragment() {
-        return { sunk, standing: stones.length - sunk, ripples: water.rippleCount() };
+        return { sunk, standing: stones.length - sunk, red, ripples: water.rippleCount() };
       },
       dispose() {},
     };

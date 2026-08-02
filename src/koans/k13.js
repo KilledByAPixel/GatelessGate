@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeBell, makeDrum, makeBowl,
-  makeMonk, aimMonk, makeLights, makeBlobShadow, addOutlines,
+  makeMonk, faceMonk, makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
 const ID = 13;
@@ -60,7 +60,7 @@ export default {
     // his bowls to dinner is not also carrying a stick.
     const tokusan = makeMonk({ height: 1.64, pose: 'fold' });
     tokusan.position.set(0.8, 0, 1.5);
-    aimMonk(tokusan, hall.position);
+    faceMonk(tokusan, hall.position);
     const bowl = makeBowl({ radius: 0.16, color: ACCENT });
     bowl.name = 'held-bowl';
     bowl.position.set(0.0, 0.52, .36);           // held out before him at the waist, clear of the robe
@@ -71,7 +71,7 @@ export default {
     const seppo = makeMonk({ height: 1.58, stout: 1.04 });
     const front = { x: Math.sin(hall.rotation.y), z: Math.cos(hall.rotation.y) };
     seppo.position.set(hall.position.x + front.x * 2.0, 0, hall.position.z + front.z * 2.0);
-    aimMonk(seppo, tokusan.position);
+    faceMonk(seppo, tokusan.position);
     scene.add(seppo);
 
     const world = composeWorld(scene, {

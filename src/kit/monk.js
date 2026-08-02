@@ -39,12 +39,31 @@ export function makeMonk({
   return g;
 }
 
-// Turn a monk so its pointing sleeve (local +x, raised by pose:'point') aims at
-// a target {x,z} in the monk's parent space. rotation.y = atan2(-dz, dx) maps
-// local +x → the world direction (cos, 0, -sin) onto the target bearing.
+// Two different verbs, two different axes — mixing them up is the book's
+// oldest staging bug (the k42 girl sat a quarter turn away from the Buddha
+// she was supposed to be absorbed in, and a dozen cases hand-compensated).
+//
+// aimMonk = aim the POINTING ARM. The 'point' pose extends its sleeve along
+// local +x, so this turns local +x onto a target {x,z} in the monk's parent
+// space: rotation.y = atan2(-dz, dx) maps local +x → the world direction
+// (cos y, 0, -sin y). Correct ONLY when the raised/pointing sleeve is the
+// thing being laid on the target; it leaves the BODY facing 90° away.
 export function aimMonk(monk, target) {
   const dx = target.x - monk.position.x;
   const dz = target.z - monk.position.z;
   monk.rotation.y = Math.atan2(-dz, dx);
+  return monk;
+}
+
+// faceMonk = face the BODY. The figure kit's bodies front local +z — the
+// seated fold, the folded hands, the collar step all live on +z (proved
+// empirically in walk.js's walkHeading, the same convention). rotation.y =
+// atan2(dx, dz) maps local +z → the world direction (sin y, 0, cos y), so
+// the figure looks AT the target. This is what every non-pointing figure
+// wants; use aimMonk only for a 'point'/'raise' sleeve laid on its object.
+export function faceMonk(monk, target) {
+  const dx = target.x - monk.position.x;
+  const dz = target.z - monk.position.z;
+  monk.rotation.y = Math.atan2(dx, dz);
   return monk;
 }

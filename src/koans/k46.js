@@ -1,7 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, wash } from '../palette.js';
-import { makeMonk, aimMonk } from '../kit/monk.js';
+import { makeMonk, faceMonk } from '../kit/monk.js';
 import { makePole } from '../kit/pole.js';
 import { composeWorld } from '../kit/scenery.js';
 import { makeLights } from '../render/toon.js';
@@ -125,7 +125,7 @@ export default {
     for (const [pos, tip] of [[W1, 0.11], [W2, 0.09]]) {
       const w = makeMonk({ height: 1.5 });
       w.position.set(pos.x, 0, pos.z);
-      aimMonk(w, { x: POLE.x, z: POLE.z });
+      faceMonk(w, { x: POLE.x, z: POLE.z });
       w.rotateZ(tip);                        // craning back to look up
       scene.add(w);
       watchers.push(w);

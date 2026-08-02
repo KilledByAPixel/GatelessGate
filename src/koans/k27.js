@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_LIGHT, mixHex } from '../palette.js';
 import {
-  composeWorld, makePath, makeHut, makeOak, makeMoon, makeMonk, aimMonk,
+  composeWorld, makePath, makeHut, makeOak, makeMoon, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
@@ -89,13 +89,13 @@ export default {
     // the monk who asked, left standing in whatever is left
     const monk = makeMonk({ height: 1.58 });
     monk.position.set(1.0, 0, 2.6);
-    aimMonk(monk, { x: -2.2, z: -4.4 });
+    faceMonk(monk, { x: -2.2, z: -4.4 });
     scene.add(monk);
 
     // Nansen, who is about to do this to him
     const nansen = makeMonk({ height: 1.66, elder: true });
     nansen.position.set(-1.0, 0, 1.2);
-    aimMonk(nansen, monk.position);
+    faceMonk(nansen, monk.position);
     scene.add(nansen);
 
     const world = composeWorld(scene, {

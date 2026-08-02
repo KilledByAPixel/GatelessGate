@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
-  composeWorld, makePath, makeScale, makeMonk, aimMonk,
+  composeWorld, makePath, makeScale, makeMonk, aimMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -86,7 +86,7 @@ export default {
 
     const monk = makeMonk({ height: 1.56 });
     monk.position.set(0.4, 0, 3.2);
-    aimMonk(monk, tozan.position);
+    faceMonk(monk, tozan.position);
     scene.add(monk);
 
     const world = composeWorld(scene, {

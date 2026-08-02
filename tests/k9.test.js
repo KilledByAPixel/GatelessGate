@@ -128,8 +128,13 @@ test('everything anchored to the statue moved with it', () => {
   const monks = [];
   scene.traverse((o) => { if (o.name === 'monk') monks.push(o); });
   assert.equal(monks.length, 2, 'the asking monk and Seijo');
+  // FACE, not aim: the body fronts local +z, so the bearing is atan2(dx, dz).
+  // This pinned aimMonk's atan2(-dz, dx) — which turns the POINTING SLEEVE —
+  // and so pinned the monk standing a quarter turn off the colossus he is
+  // asking about (Frank: "this aimMonk function is wrong... it's applying
+  // basically everywhere"). See faceMonk in src/kit/monk.js.
   const asking = monks[0];
-  const want = Math.atan2(-(bp.z - asking.position.z), bp.x - asking.position.x);
+  const want = Math.atan2(bp.x - asking.position.x, bp.z - asking.position.z);
   assert.ok(Math.abs(asking.rotation.y - want) < 1e-6, 'the asking monk no longer faces the statue');
 });
 

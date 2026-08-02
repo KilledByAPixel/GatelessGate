@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
-import { makeMonk, aimMonk } from '../kit/monk.js';
+import { makeMonk, aimMonk, faceMonk } from '../kit/monk.js';
 import { makeAssembly } from '../kit/assembly.js';
 import { makeHut } from '../kit/hut.js';
 import { makeCat } from '../kit/cat.js';
@@ -133,7 +133,7 @@ export default {
     for (const [p, stout] of [[EAST_ONE, 1.0], [WEST_ONE, 1.1]]) {
       const m = makeMonk({ height: 1.6, stout });
       m.position.set(p.x, 0, p.z);
-      aimMonk(m, { x: STONE.x, z: STONE.z });
+      faceMonk(m, { x: STONE.x, z: STONE.z });
       scene.add(m);
     }
 

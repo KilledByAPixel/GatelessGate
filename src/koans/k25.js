@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import {
-  composeWorld, makeVeranda, makeAssembly, makeMonk, aimMonk,
+  composeWorld, makeVeranda, makeAssembly, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 import { mergeSimple } from '../kit/scatter.js';
@@ -94,7 +94,7 @@ export default {
 
     const kyozan = makeMonk({ height: 1.62, pose: 'raise' });
     kyozan.position.set(seats[2].position.x, SEAT_TOP, seats[2].position.z);
-    aimMonk(kyozan, { x: 1.0, z: 4.0 });
+    faceMonk(kyozan, { x: 1.0, z: 4.0 });
     hall.add(kyozan);
 
     // the two who are already seated — book-normal height, not the 1.42 they
@@ -102,7 +102,7 @@ export default {
     for (let i = 0; i < 2; i++) {
       const sitter = makeMonk({ height: 1.54, pose: 'sit' });
       sitter.position.set(seats[i].position.x, SEAT_TOP, seats[i].position.z);
-      aimMonk(sitter, { x: 0.6, z: 4.0 });
+      faceMonk(sitter, { x: 0.6, z: 4.0 });
       hall.add(sitter);
     }
 

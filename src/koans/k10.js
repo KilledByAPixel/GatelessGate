@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeHut, makeMonk, aimMonk,
+  composeWorld, makePath, makeHut, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -65,8 +65,8 @@ export default {
     const sozan = makeMonk({ height: 1.56, pose: 'sit', elder: true, stout: 1.04 });
     sozan.position.set(-0.35, 0.035, 0.0);
     scene.add(sozan);
-    aimMonk(seizei, sozan.position);
-    aimMonk(sozan, seizei.position);
+    faceMonk(seizei, sozan.position);
+    faceMonk(sozan, seizei.position);
 
     // THE THREE CUPS, between them. Small, held, already drunk.
     const cupMat = toonMaterial({ color: ACCENT, flat: true });

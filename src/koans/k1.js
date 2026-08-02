@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
-  composeWorld, makePath, makeMonk, aimMonk, makeDog,
+  composeWorld, makePath, makeMonk, faceMonk, makeDog,
   makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
@@ -34,11 +34,11 @@ export default {
     const mp = path.sample(0.19);
     const joshu = makeMonk({ pose: 'sit', elder: true, height: 1.72 });
     joshu.position.set(mp.x - mp.perp.x * 1.45, 0, mp.z - mp.perp.z * 1.45);
-    aimMonk(joshu, { x: mp.x + mp.perp.x * 1.3, z: mp.z + mp.perp.z * 1.3 });
+    faceMonk(joshu, { x: mp.x + mp.perp.x * 1.3, z: mp.z + mp.perp.z * 1.3 });
 
     const monk = makeMonk({ height: 1.6 });
     monk.position.set(mp.x + mp.perp.x * 0.85, 0, mp.z + mp.perp.z * 0.85);
-    aimMonk(monk, joshu.position);
+    faceMonk(monk, joshu.position);
     scene.add(joshu, monk);
 
     // The dog: nearer the camera than anything else, and — alone in the scene —

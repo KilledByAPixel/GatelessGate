@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
-import { makeMonk, aimMonk } from '../kit/monk.js';
+import { makeMonk, faceMonk } from '../kit/monk.js';
 import { makeFox } from '../kit/fox.js';
 import { makeCave } from '../kit/cave.js';
 import { makeLights } from '../render/toon.js';
@@ -91,14 +91,14 @@ export default {
     // Hyakujo, with the staff. He is not doing anything with it.
     const hyakujo = makeMonk({ height: 1.72, elder: true });
     hyakujo.position.set(HYAKUJO.x, 0, HYAKUJO.z);
-    aimMonk(hyakujo, fox.group.position);
+    faceMonk(hyakujo, fox.group.position);
     scene.add(hyakujo);
 
     // and the monks who followed him round the mountain
     const monks = MONKS.map((m, i) => {
       const k = makeMonk({ height: 1.58 + i * 0.05, stout: 1 + i * 0.08 });
       k.position.set(m.x, 0, m.z);
-      aimMonk(k, fox.group.position);
+      faceMonk(k, fox.group.position);
       scene.add(k);
       return k;
     });

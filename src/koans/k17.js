@@ -23,7 +23,10 @@ const BOW = 0.16;               // radians of lean
 const BOW_IN = 1.1, BOW_HOLD = 1.9, BOW_OUT = 1.2;
 
 const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a));
-const bearing = (from, to) => Math.atan2(-(to.z - from.z), to.x - from.x);
+// FACE convention (atan2(dx, dz) turns local +z, the body's front, onto the
+// target) — what faceMonk does, and what chu's hand-rolled turn below already
+// did. It was aimMonk's (atan2(-dz, dx)), so Oshin faced a quarter turn off.
+const bearing = (from, to) => Math.atan2(to.x - from.x, to.z - from.z);
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 export default {

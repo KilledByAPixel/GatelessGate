@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK, WASH, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
-  composeWorld, makeCave, makeSnow, makePine, makeMonk, aimMonk,
+  composeWorld, makeCave, makeSnow, makePine, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -50,10 +50,33 @@ export default {
     cave.rotation.y = 0.18;
     scene.add(cave);
 
-    // BODHIDHARMA, inside, turned to the wall — his back to the whole case
-    const bodhidharma = makeMonk({ height: 1.56, pose: 'sit', hat: false });
-    bodhidharma.position.set(-0.4, 0, -5.6);
-    aimMonk(bodhidharma, { x: -0.8, z: -8.0 });
+    // BODHIDHARMA, turned to the wall — his back to the whole case.
+    //
+    // He used to sit at z -5.6, which is BEHIND the cave's throat: makeCave
+    // fills the opening with an unlit pure-INK box (the honest way to paint an
+    // absence of light — see cave.js), so an ink monk placed inside it was
+    // ink-on-ink and simply gone. Frank: "we're supposed to be able to see
+    // Buddha inside the cave, but we can't see anything — it's just a
+    // completely solid thing." Two fixes, both needed: sit him ON the
+    // threshold apron, just forward of the throat's face, so the black is
+    // BEHIND him rather than around him; and lift his tone off ink so his
+    // back reads as a shape against it. He is still inside the mouth, still
+    // facing the wall, still the smallest thing in the frame.
+    // makeCave's throat is a SOLID box spanning local z -2.41..+0.56 (its
+    // front face is depth·1.35/2 - depth·0.42 forward of the cave's origin),
+    // so anything at a smaller z is not merely dark, it is inside a solid.
+    // 0.75 sits him just clear of that face and still well back under the
+    // brow — on the threshold apron, with the black directly behind him.
+    const CAVE = { x: -0.4, z: -5.2, yaw: 0.18 };
+    const IN = 0.75;                       // along the cave's own axis, from its origin
+    const bodhidharma = makeMonk({
+      height: 1.56, pose: 'sit', hat: false, color: WASH.mid,
+    });
+    bodhidharma.position.set(
+      CAVE.x + Math.sin(CAVE.yaw) * IN,
+      0.30,                                // the apron's top face
+      CAVE.z + Math.cos(CAVE.yaw) * IN);
+    faceMonk(bodhidharma, { x: -0.8, z: -8.0 });
     scene.add(bodhidharma);
 
     // EKA, outside in the snow — and MISSING ONE ARM. The text is what it is;
@@ -63,7 +86,7 @@ export default {
     // body, no gore — an absence and one seal, which is all the case needs.
     const eka = makeMonk({ height: 1.62 });
     eka.position.set(.6, 0, -2.3);
-    aimMonk(eka, cave.position);
+    faceMonk(eka, cave.position);
     // remove the arm on the side toward the cave (the hand he offered)
     const ekaArms = eka.children.filter((c) => c.name === 'arm');
     const goneArm = ekaArms.sort((a, b) => a.position.x - b.position.x)[0];  // his left

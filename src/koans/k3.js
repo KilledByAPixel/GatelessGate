@@ -1,7 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
-import { makeMonk, aimMonk } from '../kit/monk.js';
+import { makeMonk, faceMonk } from '../kit/monk.js';
 import { makeRaisedFinger } from '../kit/finger.js';
 import { composeWorld } from '../kit/scenery.js';
 import { makePath } from '../kit/path.js';
@@ -196,13 +196,13 @@ export default {
     // and the boy is where both gestures live and nothing else belongs in it.
     const visitor = makeMonk({ height: 1.58, stout: 0.96 });
     visitor.position.set(VISITOR.x, 0, VISITOR.z);
-    aimMonk(visitor, boy.position);
+    faceMonk(visitor, boy.position);
     scene.add(visitor);
 
     // seated, deliberately: a low silhouette cannot crowd a raised finger
     const resident = makeMonk({ height: 1.55, pose: 'sit' });
     resident.position.set(RESIDENT.x, 0, RESIDENT.z);
-    aimMonk(resident, gutei.position);
+    faceMonk(resident, gutei.position);
     scene.add(resident);
 
     const world = composeWorld(scene, {

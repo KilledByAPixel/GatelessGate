@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeGate, makeFlag, makeMonk, aimMonk, makeLantern,
+  composeWorld, makePath, makeGate, makeFlag, makeMonk, faceMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 import { clothEnergy } from '../sim/verlet.js';
@@ -63,8 +63,8 @@ export default {
     const ananda = makeMonk({ height: 1.60 });
     ananda.position.set(1.1, 0, 2.9);
     scene.add(ananda);
-    aimMonk(kashapa, ananda.position);
-    aimMonk(ananda, kashapa.position);
+    faceMonk(kashapa, ananda.position);
+    faceMonk(ananda, kashapa.position);
 
     const lantern = makeLantern({ height: 1.1 });
     lantern.position.set(-2.8, 0, 0.6);

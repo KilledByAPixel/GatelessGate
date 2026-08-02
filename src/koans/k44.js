@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
-  composeWorld, makePath, makeHut, makeRack, makeLantern, makeMonk, aimMonk,
+  composeWorld, makePath, makeHut, makeRack, makeLantern, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
@@ -51,13 +51,13 @@ export default {
     // taking, so he cannot be carrying one himself
     const basho = makeMonk({ height: 1.66 });
     basho.position.set(-1.2, 0, 1.4);
-    aimMonk(basho, rack.group.position);
+    faceMonk(basho, rack.group.position);
     scene.add(basho);
 
     // the disciple, come to be given or relieved of something
     const disciple = makeMonk({ height: 1.56 });
     disciple.position.set(2.9, 0, 2.0);
-    aimMonk(disciple, rack.group.position);
+    faceMonk(disciple, rack.group.position);
     scene.add(disciple);
 
     const lantern = makeLantern({ height: 1.05 });

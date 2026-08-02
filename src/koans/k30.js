@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makeBuddha, makeBasin, makeWater, makeKoi, makeMonk, aimMonk, makeLantern,
+  composeWorld, makeBuddha, makeBasin, makeWater, makeKoi, makeMonk, faceMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -57,9 +57,13 @@ export default {
     lip.position.set(POND.x, 0, POND.z);
     scene.add(lip);
 
-    // round, to match the stone basin it sits inside
+    // round, to match the stone basin it sits inside — and RED (Frank: "make
+    // the pond water red — the surface of the water itself, not the fish, not
+    // the sides"). Only the sheet takes the accent: the basin stays stone and
+    // the koi stay ink, so the red is the water answering, not the pond
+    // dressing up. The urna keeps its dot; Frank knowingly doubles the red here.
     const water = makeWater({
-      shape: 'round', size: POND.size, color: WASH.ground, seed: ID, strike: 0.08, opacity: 0.5,
+      shape: 'round', size: POND.size, color: ACCENT, seed: ID, strike: 0.08, opacity: 0.5,
     });
     water.group.position.set(POND.x, POND.surface, POND.z);
     scene.add(water.group);
@@ -113,7 +117,7 @@ export default {
     // the monk who asked, on the near shore
     const daibai = makeMonk({ height: 1.58 });
     daibai.position.set(3.4, 0, 2.2);
-    aimMonk(daibai, buddha.position);
+    faceMonk(daibai, buddha.position);
     scene.add(daibai);
 
     const lantern = makeLantern({ height: 1.1 });

@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
-  composeWorld, makePath, makeWildflowers, makeBirds, makeMonk, aimMonk,
+  composeWorld, makePath, makeWildflowers, makeBirds, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
@@ -41,13 +41,13 @@ export default {
     // FUKETSU, sitting in the middle of the answer
     const fuketsu = makeMonk({ height: 1.58, pose: 'sit' });
     fuketsu.position.set(0.8, 0, 0.6);
-    aimMonk(fuketsu, { x: 4.0, z: 4.0 });
+    faceMonk(fuketsu, { x: 4.0, z: 4.0 });
     scene.add(fuketsu);
 
     // the monk who asked the question, standing over him
     const monk = makeMonk({ height: 1.60 });
     monk.position.set(3.1, 0, 2.2);
-    aimMonk(monk, fuketsu.position);
+    faceMonk(monk, fuketsu.position);
     scene.add(monk);
 
     const world = composeWorld(scene, {
@@ -62,11 +62,14 @@ export default {
       grassKeepout: path.keepout(24, 0.9),
     });
 
-    // INNUMERABLE KINDS OF FRAGRANT FLOWERS — the seal of the case, spread
-    // across the whole meadow rather than gathered on one object. This is the
-    // one scene in the book where the accent is the ground itself.
+    // INNUMERABLE KINDS OF FRAGRANT FLOWERS — a meadow genuinely in bloom, on
+    // the kit's default palette: whitish petals off the paper, stalks in the
+    // grass tone. Scaled up from the kit default and a little denser, so the
+    // blooming reads at this camera instead of dissolving into grass texture.
+    // The accent belongs to the birds below, not to the ground.
     const flowers = makeWildflowers({
-      count: 150,
+      count: 175,
+      scale: 2,
       radius: 17,
       seed: ID,
       groundSeed: 21,

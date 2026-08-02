@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
-  composeWorld, makePath, makeMonk, aimMonk, makeStall, makeHorse,
+  composeWorld, makePath, makeMonk, faceMonk, makeStall, makeHorse,
   makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
@@ -92,7 +92,7 @@ export default {
         const kz = sz - faceZ / Math.hypot(faceX, faceZ) * back;
         const keeper = makeMonk({ height: 1.5 + hash1(i, ID) * 0.1, hat: hash1(i + 3, ID) > 0.5, stout: 1.05 });
         keeper.position.set(kx, 0, kz);
-        aimMonk(keeper, { x: p.x, z: p.z });
+        faceMonk(keeper, { x: p.x, z: p.z });
         scene.add(keeper);
         keepers.push(keeper);
         stallKeepout.push({ x: kx, z: kz, r: 0.7 });

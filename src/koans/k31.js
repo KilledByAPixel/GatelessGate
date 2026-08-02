@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeHut, makeMonk, aimMonk, makeLantern,
+  composeWorld, makePath, makeHut, makeMonk, aimMonk, faceMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -101,7 +101,7 @@ export default {
     // and the traveller currently receiving it
     const traveller = makeMonk({ height: 1.6, elder: true });
     traveller.position.set(2.4, 0, 1.5);
-    aimMonk(traveller, WOMAN);
+    faceMonk(traveller, WOMAN);
     scene.add(traveller);
 
     const lantern = makeLantern({ height: 1.0 });

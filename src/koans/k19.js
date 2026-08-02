@@ -3,9 +3,9 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_LIGHT, wash } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
 import { makePath } from '../kit/path.js';
-import { makeMonk, aimMonk } from '../kit/monk.js';
+import { makeMonk, faceMonk } from '../kit/monk.js';
 import { makeMoon } from '../kit/moon.js';
-import { makeWildflowers } from '../kit/wildflowers.js';
+import { makeButterflies } from '../kit/butterflies.js';
 import { makeLights } from '../render/toon.js';
 import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
@@ -26,9 +26,11 @@ const BREEZE_TAU = 1.7;   // how long a crossing breath stays in the sound
 //     In summer, a refreshing breeze; in winter, snow will accompany you.
 //
 // which gives the case two seals rather than one, and both of them are weather:
-// the wildflowers along the verge (ACCENT — each bloom is a few pixels) and the
-// moon over the hills (ACCENT_LIGHT — see the note at the moon itself).
-// Everything else stays on the grey wash, as always.
+// red butterflies playing over the meadow (ACCENT — each is a few pixels of
+// wing) and the moon over the hills (ACCENT_LIGHT — see the note at the moon
+// itself). The meadow itself stays on the grey wash, as always. The blooms
+// used to carry this seal; Frank swapped them for butterflies — spring as
+// something alive in the air, not pigment on the ground.
 export default {
   id: ID,
   slug: 'everyday-life-is-the-path',
@@ -75,11 +77,11 @@ export default {
     const nansen = makeMonk({ height: 1.68, elder: true });
     nansen.position.set(np.x + np.perp.x * 0.40, 0, np.z + np.perp.z * 0.40);
     const upRoad = path.sample(0.42);
-    aimMonk(nansen, { x: upRoad.x, z: upRoad.z });
+    faceMonk(nansen, { x: upRoad.x, z: upRoad.z });
 
     const joshu = makeMonk({ height: 1.56 });
     joshu.position.set(jp.x - jp.perp.x * 0.46, 0, jp.z - jp.perp.z * 0.46);
-    aimMonk(joshu, nansen.position);
+    faceMonk(joshu, nansen.position);
     scene.add(nansen, joshu);
 
     // The harvest moon: beyond the mountains and low, just clear of the ridge.
@@ -98,30 +100,15 @@ export default {
     const moon = makeMoon({ radius: 2.7, color: ACCENT_LIGHT, distance: 60, height: 6.4, azimuth: MOON_BEARING });
     scene.add(moon);
 
-    // Wildflower drifts along the verge, plus a few out in the meadow so the
-    // blooms are not one tidy corridor either side of the track.
-    const verge = [];
-    for (let i = 0; i <= 15; i++) {
-      const p = path.sample(0.04 + (i / 15) * 0.46);
-      verge.push({ x: p.x, z: p.z });
-    }
-    verge.push({ x: -5.6, z: 2.4 }, { x: 6.0, z: -3.4 }, { x: -2.4, z: -7.6 }, { x: 7.2, z: 3.2 });
-
-    const flowers = makeWildflowers({
-      count: 130, radius: 19, seed: 19, groundSeed: 21, color: ACCENT,
-      along: verge, spread: 2.3,
-      // the only thing blooms are kept out of is the worn track itself and the
-      // two pairs of feet — they grow right up to both. The circle chain has to
-      // be dense enough to actually OVERLAP along a 40-unit road: at r = 0.8 the
-      // spacing must stay under 1.6, or blooms sprout through the gaps between
-      // the circles and stand in the middle of the track.
-      keepout: [
-        ...path.keepout(40, 0.80),
-        { x: nansen.position.x, z: nansen.position.z, r: 0.42 },
-        { x: joshu.position.x, z: joshu.position.z, r: 0.42 },
-      ],
+    // Red butterflies playing over the verge — the near seal of the case,
+    // centred a stride off the walkers so they flutter through the frame's
+    // foreground band without mobbing the two figures. The band tops out low:
+    // butterflies play at flower height, they do not cruise with the birds.
+    const butterflies = makeButterflies({
+      count: 6, seed: 19, color: ACCENT,
+      center: [2.6, 0.4], radius: 3.4, height: [0.6, 2.2],
     });
-    scene.add(flowers.mesh);
+    scene.add(butterflies.group);
 
     const world = composeWorld(scene, {
       seed: 19,
@@ -133,7 +120,7 @@ export default {
         { x: joshu.position.x, z: joshu.position.z, r: 1.7 },
       ],
       // stingy, on purpose: only the trodden track clears the grass. The monks
-      // walk in it and the flowers grow in it.
+      // walk in it and the grass grows right up to its rim.
       grassKeepout: path.keepout(30, 0.95),
 
       // THE RIDGELINE IS SHAPED AROUND THE MOON, and it has to be.
@@ -167,9 +154,9 @@ export default {
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
     // ---- the moment: the weather ------------------------------------------
-    // Touch the meadow and a breath crosses it, the blooms nodding as the front
-    // reaches them and standing back up behind it. Touch the moon and the light
-    // shifts, and the same breath goes out across the whole field.
+    // Touch the meadow and a breath crosses it in the sound, and the
+    // butterflies lift and quicken, then settle back to playing. Touch the moon
+    // and the light shifts, and the same breath stirs them from up there.
     //
     // Neither is a puzzle and neither is a goal. It is an evening walk; the only
     // thing to find is that the place answers when you touch it.
@@ -178,20 +165,19 @@ export default {
     let breeze = 0;
     let touches = 0;
     const ground = scene.getObjectByName('ground');
-    const meadow = ground ? [flowers.mesh, ground] : [flowers.mesh];
+    const meadow = ground ? [ground] : [];
 
     input.onTap(() => {
       if (!camera) return;
       if (input.raycastFirst(camera, [moon])) {
         if (glowPhase < 0) glowPhase = 0;
-        flowers.gustAt(moon.position.x * 0.10, moon.position.z * 0.10, 0.30);
+        butterflies.flit();
         breeze = 1;
         touches++;
         return;
       }
-      const hit = input.raycastFirst(camera, meadow);
-      if (hit) {
-        flowers.gustAt(hit.point.x, hit.point.z, 0.44);
+      if (input.raycastFirst(camera, meadow)) {
+        butterflies.flit();
         breeze = 1;
         touches++;
       }
@@ -202,7 +188,7 @@ export default {
       setCamera(c) { camera = c; },
       update(dt, simTime) {
         world.update(dt, simTime);           // drives the meadow's wind
-        flowers.update(dt, simTime);
+        butterflies.update(dt, simTime);
 
         if (glowPhase >= 0) {
           glowPhase += dt;
@@ -223,9 +209,8 @@ export default {
       fragment() {
         return {
           glow: +moon.glow().toFixed(4),
-          lean: +flowers.lean().toFixed(4),
-          gusts: flowers.gustCount(),
-          blooms: flowers.blooms,
+          flutter: +butterflies.energy().toFixed(4),
+          butterflies: butterflies.count(),
           breeze: +breeze.toFixed(4),
           touches,
         };

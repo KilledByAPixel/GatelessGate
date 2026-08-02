@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT_DEEP, wash } from '../palette.js';
 import {
-  composeWorld, makeBuddha, makeMonk, aimMonk, makeTree,
+  composeWorld, makeBuddha, makeMonk, faceMonk, makeTree,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -118,13 +118,13 @@ export default {
     // the monk who came to ask why, at the foot of the lowest terrace
     const monk = makeMonk({ height: 1.58 });
     monk.position.set(2.8, 0, 1.6);
-    aimMonk(monk, buddha.position);
+    faceMonk(monk, buddha.position);
     scene.add(monk);
 
     // and Seijo, who answered that the question answers itself
     const seijo = makeMonk({ height: 1.64, elder: true });
     seijo.position.set(4.4, 0, 0.6);
-    aimMonk(seijo, monk.position);
+    faceMonk(seijo, monk.position);
     scene.add(seijo);
 
     const world = composeWorld(scene, {

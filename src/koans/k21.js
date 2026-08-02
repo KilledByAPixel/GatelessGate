@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
-  composeWorld, makeMonk, aimMonk,
+  composeWorld, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -92,12 +92,12 @@ export default {
     // between them is doing as much work as they are.
     const ummon = makeMonk({ height: 1.66, elder: true });
     ummon.position.set(-1.9, 0, -0.6);
-    aimMonk(ummon, stick.position);
+    faceMonk(ummon, stick.position);
     scene.add(ummon);
 
     const monk = makeMonk({ height: 1.56 });
     monk.position.set(2.6, 0, 2.4);
-    aimMonk(monk, ummon.position);
+    faceMonk(monk, ummon.position);
     scene.add(monk);
 
     const world = composeWorld(scene, {

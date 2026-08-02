@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK, mixHex, hexToRgb } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
-  composeWorld, makePath, makeVeranda, makeLantern, makeMonk, aimMonk,
+  composeWorld, makePath, makeVeranda, makeLantern, makeMonk, aimMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -68,7 +68,7 @@ export default {
     tokusan.position.set(1.5, 0, -0.6);
     aimMonk(tokusan, ryutan.position);
     scene.add(tokusan);
-    aimMonk(ryutan, tokusan.position);
+    faceMonk(ryutan, tokusan.position);
 
     // THE LANTERN, between them, and the flame in it — the only light in the
     // book that anything depends on. The firebox is a real open chamber now

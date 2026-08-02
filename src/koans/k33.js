@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makeBasin, makeWater, makeKoi, makeMonk, aimMonk, makeLantern,
+  composeWorld, makeBasin, makeWater, makeKoi, makeMonk, faceMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 import { POND, BANK } from './k30.js';
@@ -100,7 +100,7 @@ export default {
     // and the same monk, still standing there
     const monk = makeMonk({ height: 1.58 });
     monk.position.set(3.4, 0, 2.2);
-    aimMonk(monk, { x: BANK.x, z: BANK.z });
+    faceMonk(monk, { x: BANK.x, z: BANK.z });
     scene.add(monk);
 
     const lantern = makeLantern({ height: 1.1 });

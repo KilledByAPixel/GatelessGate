@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT_DEEP, wash } from '../palette.js';
 import {
-  composeWorld, makeBuddha, makeMonk, aimMonk,
+  composeWorld, makeBuddha, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -59,13 +59,13 @@ export default {
     const GIRL = new THREE.Vector3(0.9, 0, -1.3);
     const girl = makeMonk({ height: 1.24, pose: 'sit', hat: false, color: ACCENT_DEEP });
     girl.position.copy(GIRL);
-    aimMonk(girl, buddha.position);
+    faceMonk(girl, buddha.position);
     scene.add(girl);
 
     // MANJUSRI, standing over her with his hand up, having just snapped it
     const manjusri = makeMonk({ height: 1.72, pose: 'raise' });
     manjusri.position.set(-1.5, 0, 0.2);
-    aimMonk(manjusri, GIRL);
+    faceMonk(manjusri, GIRL);
     scene.add(manjusri);
 
     // MOMYO, still under the floor. He is placed and posed from the start and
@@ -73,7 +73,7 @@ export default {
     const momyo = makeMonk({ height: 1.5, pose: 'raise' });
     const MOMYO = new THREE.Vector3(2.9, 0, 0.4);
     momyo.position.set(MOMYO.x, -1.8, MOMYO.z);
-    aimMonk(momyo, GIRL);
+    faceMonk(momyo, GIRL);
     scene.add(momyo);
 
     const world = composeWorld(scene, {
