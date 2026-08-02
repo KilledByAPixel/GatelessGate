@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, INK, ACCENT, ACCENT_DEEP, GRAY_DARK, WASH } from '../palette.js';
+import { PAPER, INK_LIT, ACCENT, ACCENT_DEEP, GRAY_DARK, WASH } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
 import { mergeSimple } from '../kit/scatter.js';
 import { makeOak } from '../kit/oak.js';
@@ -162,7 +162,10 @@ export default {
     // and the hat that did not stay on, upright on the grass at the very edge
     const hat = new THREE.Mesh(
       new THREE.ConeGeometry(0.185 * 1.6, 0.10 * 1.6, 12),
-      toonMaterial({ color: INK, flat: true }));
+      // the same ink every figure is painted in — it is a monk's hat, and one
+      // lying on the grass darker than the one still on his head reads as a
+      // different object entirely
+      toonMaterial({ color: INK_LIT, flat: true }));
     hat.name = 'fallenhat';   // the questioner's own 'hat' stays on his head
     hat.position.set(HAT.x, 0.05 * 1.6, HAT.z);
     hat.rotation.y = 0.8;

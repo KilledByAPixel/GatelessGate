@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, WASH, INK } from '../palette.js';
+import { PAPER, ACCENT, WASH, INK_LIT } from '../palette.js';
 import {
   composeWorld, makeVeranda, makeMonk, aimMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
@@ -99,7 +99,7 @@ export default {
     // THE BEARD THAT WILL NOT TAKE. Present from the start and invisible; a
     // tap gathers it and it drains away again. Never outlined — an outline
     // would draw a hard edge round something that is meant to be wet ink.
-    const beardMat = toonMaterial({ color: INK, flat: true });
+    const beardMat = toonMaterial({ color: INK_LIT, flat: true });
     beardMat.transparent = true;
     beardMat.opacity = 0;
     const beard = new THREE.Mesh(new THREE.ConeGeometry(0.115, 0.34, 7), beardMat);

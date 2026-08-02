@@ -2,11 +2,11 @@ import * as THREE from '../../lib/three.module.js';
 import { createCloth, stepCloth, clothEnergy } from '../sim/verlet.js';
 import { noise3 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
-import { INK_FIGURE } from '../palette.js';
+import { INK_LIT } from '../palette.js';
 
 // A hanging tail: the verlet cloth as a 1-column strand, pinned at the root.
 // Reused by the buffalo (case 37). A tap swishes it; it never breaks free.
-export function makeTail({ segments = 7, length = 1.0, thickness = 0.06, color = INK_FIGURE, seed = 3, warmup = 90 } = {}) {
+export function makeTail({ segments = 7, length = 1.0, thickness = 0.06, color = INK_LIT, seed = 3, warmup = 90 } = {}) {
   const spacing = length / (segments - 1);
   const cloth = createCloth(1, segments, spacing, (c, r) => r === 0); // pin the top node
   const group = new THREE.Group();

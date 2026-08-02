@@ -1,5 +1,5 @@
 import { makeFigure } from './figure.js';
-import { INK_FIGURE } from '../palette.js';
+import { INK_LIT } from '../palette.js';
 
 // The monk: the book's default person, and the one nearly every case stages.
 //
@@ -31,7 +31,7 @@ const POSES = {
 };
 
 export function makeMonk({
-  height = 1.6, stout = 1, color = INK_FIGURE, hat = true, pose = 'stand', elder = false, arms = true,
+  height = 1.6, stout = 1, color = INK_LIT, hat = true, pose = 'stand', elder = false, arms = true,
   staffAng,   // optional plant-bearing override, passed through to the figure
   cushion = true,   // seated only — false where the case lays its own mat
   bow,              // true = hinge him at the waist; a number also sets the angle

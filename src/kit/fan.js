@@ -1,7 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { hash1 } from '../util/noise.js';
-import { INK, WASH } from '../palette.js';
+import { INK_LIT, WASH } from '../palette.js';
 
 // The folding fan (ōgi) — Ummon's answer in case 48, and a prop any figure can
 // hold. An open paper sector on a short grip: the whole read is the wedge
@@ -30,7 +30,7 @@ export function makeFan({
   radius = 0.5,              // pivot to rim
   angle = Math.PI * 0.72,    // the open wedge, ~130 degrees, centred on +Y
   color = WASH.dry,          // the paper; the accent when the fan is the case's seal
-  handleColor = INK,
+  handleColor = INK_LIT,
   handleLen = 0.16,
   pleats = 12,               // radial bands; even, so both guard edges fold outward
   seed = 0,

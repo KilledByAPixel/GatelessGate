@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { INK_FIGURE } from '../palette.js';
+import { INK_LIT } from '../palette.js';
 import { makeQuadruped } from './quadruped.js';
 import { hash1 } from '../util/noise.js';
 
@@ -75,7 +75,7 @@ const TAIL_SWEEP = 0.10;    // and the sideways sweep that goes with it
 const EAR_SWIVEL = 0.50;
 const EAR_SPREAD = 0.12;
 
-export function makeCat({ height = 0.32, color = INK_FIGURE, seed = 14, pose = 'sit' } = {}) {
+export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit' } = {}) {
   const h = height;
   const seated = pose === 'sit';
 

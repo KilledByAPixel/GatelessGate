@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, INK, WASH, wash } from '../palette.js';
+import { PAPER, ACCENT, INK, INK_LIT, WASH, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makeCave, makeSnow, makePine, makeMonk, faceMonk,
@@ -62,6 +62,14 @@ export default {
     // BEHIND him rather than around him; and lift his tone off ink so his
     // back reads as a shape against it. He is still inside the mouth, still
     // facing the wall, still the smallest thing in the frame.
+    //
+    // That lift used to be an EXPLICIT one — WASH.mid, a mid grey — and it made
+    // him the one visibly pale person in the book (Frank: "the Buddha is not the
+    // right colour, he's like a lighter grey"). It is unnecessary now: every
+    // figure sits a step off ink, and the cave's throat is still an unlit box at
+    // INK itself, so his lit bands stand at 46 and 73 against its flat 30. Only
+    // his shadow side merges into the black behind him, which is what an ink
+    // painting of a man in a cave mouth should do.
     // makeCave's throat is a SOLID box (an absence of light has to be opaque),
     // so he cannot be IN it — he sits in the room the mouth opens onto,
     // between the brow overhead and the black behind. That room only exists
@@ -71,9 +79,7 @@ export default {
     // just a wall there, there's not any kind of depth to the cave").
     const CAVE = { x: -0.4, z: -5.2, yaw: 0.18 };
     const IN = 0.5;                       // along the cave's own axis, from its origin
-    const bodhidharma = makeMonk({
-      height: 1.56, pose: 'sit', hat: false, color: WASH.mid,
-    });
+    const bodhidharma = makeMonk({ height: 1.56, pose: 'sit', hat: false });
     bodhidharma.position.set(
       CAVE.x + Math.sin(CAVE.yaw) * IN,
       0.30,                                // the apron's top face
@@ -99,7 +105,9 @@ export default {
     // lying on the ground, the cut end toward the seal.
     const arm = new THREE.Mesh(
       new THREE.CylinderGeometry(0.05, 0.07, 0.5, 8),
-      toonMaterial({ color: INK, flat: true }));
+      // his own sleeve, so his own ink — at INK it was a darker object than the
+      // man it came off
+      toonMaterial({ color: INK_LIT, flat: true }));
     arm.name = 'severed-arm';
     arm.rotation.z = Math.PI / 2;                 // lying flat
     arm.rotation.y = 0.6;

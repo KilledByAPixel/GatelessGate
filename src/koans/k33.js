@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, INK, WASH } from '../palette.js';
+import { PAPER, ACCENT, INK_LIT, WASH } from '../palette.js';
 import {
   composeWorld, makeBasin, makeWater, makeKoi, makeMonk, faceMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
@@ -93,7 +93,7 @@ export default {
     const Z = 1.6;                       // the height case 30's Buddha is built at
     const cushion = new THREE.Mesh(
       new THREE.CylinderGeometry(0.235 * Z, 0.26 * Z, 0.042 * Z, 10),
-      toonMaterial({ color: INK, flat: true }));
+      toonMaterial({ color: INK_LIT, flat: true }));
     cushion.name = 'cushion';
     cushion.position.set(BANK.x, SEAT_TOP + 0.05 + 0.021 * Z, BANK.z);
     scene.add(cushion);

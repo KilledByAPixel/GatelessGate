@@ -1,7 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { noise2 } from '../util/noise.js';
-import { WASH, INK } from '../palette.js';
+import { WASH, INK_LIT } from '../palette.js';
 
 // A hanging bamboo screen — a sudare — on a roller (case 26).
 //
@@ -24,7 +24,7 @@ export function makeScreen({
   height = 2.4,
   slats = 12,
   color = WASH.dark,
-  cordColor = INK,
+  cordColor = INK_LIT,
   cordDrop = 0,          // how far the pull cords hang below the rail; 0 = half the drop
   cordZ = 0,             // how far in front of the slats the cords hang; 0 = just clear
   seed = 26,

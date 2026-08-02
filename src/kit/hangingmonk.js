@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
-import { INK_FIGURE } from '../palette.js';
+import { INK_LIT } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import { sphereHead, neckBetween, sleeve } from './figure.js';
 
@@ -19,7 +19,7 @@ import { sphereHead, neckBetween, sleeve } from './figure.js';
 // sway() gives him one small decaying swing — a man nudged, not a man
 // answering. Everything is driven off simTime, so a replayed session swings
 // exactly the same way.
-export function makeHangingMonk({ height = 1.6, color = INK_FIGURE, seed = 5 } = {}) {
+export function makeHangingMonk({ height = 1.6, color = INK_LIT, seed = 5 } = {}) {
   const g = new THREE.Group();
   g.name = 'hangingmonk';
   const mat = toonMaterial({ color, flat: true });

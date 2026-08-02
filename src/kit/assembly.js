@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { mergeSimple } from './scatter.js';
 import { hash1 } from '../util/noise.js';
-import { INK_FIGURE } from '../palette.js';
+import { INK_LIT } from '../palette.js';
 import { seatedBodyGeometry, HAT_PROFILE } from './figure.js';
 
 // A seated crowd as one InstancedMesh (one draw call): a simplified seated
@@ -25,7 +25,7 @@ const SLIM = 0.8;     // radial squeeze — figure.js's `stout`, run below 1: a
                       //   axis — but the KNEES keep their size (see figure.js:
                       //   the crowd spends its width on the one event fog
                       //   can't erase)
-export function makeAssembly({ count = 8, radius = 3.0, center = [0, 0], facing = [0, 0], spread = 1.4, color = INK_FIGURE, seed = 6 } = {}) {
+export function makeAssembly({ count = 8, radius = 3.0, center = [0, 0], facing = [0, 0], spread = 1.4, color = INK_LIT, seed = 6 } = {}) {
   // the seated body comes from figure.js WITH its knees merged in — a crowd
   // member folds the same legs the hero monks do, at crowd polycount
   const bodyGeo = seatedBodyGeometry({ height: FIG_H, width: SLIM, segments: 8 });

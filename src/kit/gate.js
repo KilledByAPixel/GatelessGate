@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
-import { INK } from '../palette.js';
+import { INK_LIT } from '../palette.js';
 import { mergeSimple } from './scatter.js';
 
 // A freestanding gate with no door: a torii. Two tapered posts (hashira)
@@ -19,7 +19,7 @@ import { mergeSimple } from './scatter.js';
 // (nuki) anchor heights for its own invisible tap slabs — those two mesh
 // positions are load-bearing for a file this task cannot touch and must not
 // move.
-export function makeGate({ width = 2.4, height = 2.6, color = INK } = {}) {
+export function makeGate({ width = 2.4, height = 2.6, color = INK_LIT } = {}) {
   const g = new THREE.Group();
   g.name = 'gate';
   const mat = toonMaterial({ color });

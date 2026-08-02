@@ -1,4 +1,4 @@
-import { INK_FIGURE } from '../palette.js';
+import { INK_LIT } from '../palette.js';
 import { makeQuadruped } from './quadruped.js';
 
 // Joshu's dog (case 1). A small ink quadruped, featureless by design — the koan
@@ -37,7 +37,7 @@ const TAIL_ROOT = [0.13, -0.40];         // [above the barrel axis, z] — 0.07 
 const TAIL_UP = TAIL_ROOT[0] + (TAIL_LEN / 2) * Math.cos(TAIL_TILT);
 const TAIL_BACK = -(TAIL_ROOT[1] + (TAIL_LEN / 2) * Math.sin(TAIL_TILT));
 
-export function makeDog({ height = 0.5, color = INK_FIGURE, seed = 1 } = {}) {
+export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
   // Taller legs and a slimmer barrel: the first pass was short-legged and
   // fat-bodied, which read as a pig rather than a dog. The neck lifts the head
   // off the shoulders, which is most of what separates the two silhouettes.
