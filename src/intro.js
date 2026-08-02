@@ -89,6 +89,18 @@ export function buildHub({
   const world = composeWorld(scene, {
     seed: 7,
     groundSeed: 7,
+    // THE TREES OF THE TITLE SCREEN AND THE CONTENTS, spelled out rather than
+    // left to composeWorld's defaults, because this is the scene most likely to
+    // want them moved and they were invisible knobs before. How many, and the
+    // ring of radii they may stand on around the origin — scenery.js places them
+    // by seeded rejection sampling on that ring, skipping anything inside a
+    // `keepout` circle or nearer than z = 6 (the open foreground). So there are
+    // three ways to move them and they are all here: change the count, widen or
+    // narrow the ring, or push one off a spot with a keepout circle. `seed: 7`
+    // above is the fourth and bluntest — it reshuffles the rocks, bushes and
+    // grass with them.
+    trees: 5,
+    treeRing: [7, 20],
     keepout,
     grassKeepout: withPath ? path.keepout(26, 1.15) : [],   // only the lane clears grass
     mountains: [

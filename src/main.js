@@ -25,7 +25,7 @@ import { makeSit } from './sit.js';
 import { makeThemeButton } from './ui/theme.js';
 import { readTheme, nextTheme } from './ui/theme_state.js';
 import { makeRouter } from './router.js';
-import { readingOrder, neighborSlug, nextInLoop } from './spine.js';
+import { readingOrder, neighborSlug } from './spine.js';
 
 const STEP = 1 / 60;
 
@@ -70,8 +70,8 @@ let rig = null;
 let koan = null;
 let koanSlug = null;
 // What the CURRENT page's narration is keyed by — a case number or a matter
-// page's slug. buildKoan sets it; the continuous reading uses it to start the
-// page it has just turned to.
+// page's slug. buildKoan sets it; the read-aloud button on the stage uses it to
+// read the page it is standing in front of, without reaching back into `mod`.
 let koanNarrationId = null;
 // What the reading's title card says for the current page — its number, if it
 // has one, and its name. Built with the page so the card does not have to reach
@@ -168,9 +168,9 @@ const toolbar = document.createElement('div');
 toolbar.className = 'gg-toolbar';
 stage.appendChild(toolbar);
 
-// The reading's title card. Lives on the stage rather than in the panel, since
-// the panel is exactly what is not there when it is wanted. Built once and
-// reused; readPageAloud is the only thing that shows it.
+// The look's title card. Lives on the stage rather than in the panel, since the
+// panel is exactly what is not there when it is wanted. Built once and reused;
+// it goes up when the look opens and again on every page turn under it.
 const pageCard = makePageCard();
 stage.appendChild(pageCard.el);
 
@@ -230,7 +230,7 @@ setFsLabel();
 // where the browser is honest enough to say so up front, take it at its word.
 if (document.fullscreenEnabled === false) fsBtn.remove();
 
-// ---- ambient view: just the picture ----
+// ---- the look: just the picture ----
 // The text steps aside, the diorama takes the whole window, and the camera
 // drifts on its own. Deliberately NOT a `mode`: the reader is still in whatever
 // case they were reading, still being read to, still sitting if they were
@@ -238,89 +238,66 @@ if (document.fullscreenEnabled === false) fsBtn.remove();
 // have to be answered for in every `mode ===` check in this file and would buy
 // nothing. Composes with the fullscreen button rather than requesting it: if
 // they are already fullscreen, the whole window IS the whole screen.
+//
+// It used to BE a reading: the eye started the book aloud and turned its own
+// pages, on through the afterword and round to the preface again. Frank pulled
+// those apart — looking and being read to are two different wants, and one of
+// them should not conscript the other. So the eye now changes only how you are
+// looking. If you want a voice there is a button for it under the toolbar, and
+// it reads THIS page and stops, exactly like the one on the panel does.
 const app = document.getElementById('gg-app');
 let ambient = false;
-// Whether the ambient view is also READING — the book aloud, page after page,
-// looping at the end. Kept apart from `readingAll` because that one is cleared
-// on every page turn (stopReading runs in buildKoan) and this one has to
-// survive the turn: it is the thing that asks for the next page.
-let readingBook = false;
-// AN EYE — "an i as in an actual eye, on someone's face" (Frank), for the
-// hands-free reading the button turns on: the text steps aside and you just
-// watch. It was ◉, a circle with a dot, which reads as a target or a record
-// button and never as looking. Unicode's only real eye is an emoji that
-// renders in colour on half the platforms this ships to, so this one glyph is
-// inline SVG: an almond lid and a pupil, in currentColor, so it inverts with
-// the button like the others do.
+// AN EYE — "an i as in an actual eye, on someone's face" (Frank). It was ◉, a
+// circle with a dot, which reads as a target or a record button and never as
+// looking. Unicode's only real eye is an emoji that renders in colour on half
+// the platforms this ships to, so this one glyph is inline SVG: an almond lid
+// and a pupil, in currentColor, so it inverts with the button like the others.
 const EYE = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" '
   + 'fill="none" stroke="currentColor" stroke-width="1.7" '
   + 'stroke-linecap="round" stroke-linejoin="round">'
   + '<path d="M1.8 12S5.4 5.8 12 5.8 22.2 12 22.2 12 18.6 18.2 12 18.2 1.8 12 1.8 12Z"/>'
   + '<circle cx="12" cy="12" r="3.1"/></svg>';
-const ambientBtn = tool(EYE, 'Read the book', () => setAmbient(!ambient));
+const ambientBtn = tool(EYE, 'Look at the scene', () => setAmbient(!ambient));
 function setAmbient(on) {
   ambient = !!on;
   ambientBtn.classList.toggle('active', ambient);
-  ambientBtn.title = ambient ? 'Stop reading' : 'Read the book';
+  ambientBtn.title = ambient ? 'Back to the text' : 'Look at the scene';
   applyStageOnly();
-  if (ambient) startReadingBook(); else stopReadingBook();
+  // With the panel gone there is nothing on screen naming the page, so the card
+  // says it once and gets out of the way. A reading already running is left
+  // strictly alone in both directions: it belongs to the reader, not to the
+  // panel, and neither hiding nor restoring the text is an instruction about it.
+  if (ambient && koanCard) pageCard.show(koanCard);
+  if (!ambient) pageCard.hide();
 }
 
+// The panel's "Read aloud", for when there is no panel. Same action, same page,
+// same ending — it reads this page through and stops (Frank: "it'll just read
+// that whole page and then stop when it gets to the end; don't go to the next
+// page automatically"). Sits on the stage directly under the toolbar, and is
+// only there when there is a page behind it to read.
+const lookRead = document.createElement('button');
+lookRead.className = 'gg-look-read';
+lookRead.onclick = () => toggleReadAll();
+stage.appendChild(lookRead);
+function syncLookRead() {
+  lookRead.classList.toggle('on', ambient && mode === 'koan' && !!scroll);
+  lookRead.textContent = readingAll ? '■ Stop' : '▶ Read aloud';
+}
+syncLookRead();
+
 // Just the picture, no text beside it. TWO things ask for this and they are
-// unrelated — the hands-free reading, and the timer, which needs the same empty
-// stage for the opposite reason (nothing to read at all). So the layout is its
-// own switch, derived from both, rather than a thing the reading owns and the
-// timer borrows: leaving a sit while the reading view is on must not pull the
-// panel back over it.
+// unrelated — the look, and the timer, which needs the same empty stage for the
+// opposite reason (nothing to read at all). So the layout is its own switch,
+// derived from both, rather than a thing the look owns and the timer borrows:
+// leaving a sit while the look is on must not pull the panel back over it.
 function stageOnly() { return ambient || mode === 'sit'; }
 function applyStageOnly() {
   app.classList.toggle('ambient', stageOnly());
   app.classList.toggle('sitting', mode === 'sit');   // the toolbar steps aside too
   applyStageSize();          // the panel just left or returned; see the comment there
   if (rig) rig.setWander(stageOnly());
-}
-
-// Hands-free reading: the text steps aside, the camera drifts, and the book
-// reads itself from wherever the reader is — through the sections of this page,
-// on to the next, and round to the preface again after the afterword. Sitting is
-// left alone: someone who asked for silence gets the picture, not a voice.
-function startReadingBook() {
-  // Sitting asks for silence, and the title screen's dolly owns the camera until
-  // it finishes — entering a page from under it would leave the intro's own
-  // update() fighting the new rig. In both, ◉ stays what it always was: a view.
-  if (mode === 'sit' || mode === 'intro') return;
-  readingBook = true;
-  // From the Contents there is no page open to read, so the book starts where a
-  // book starts. enter() brings the preface up and buildKoan starts reading it.
-  if (mode !== 'koan') { enter(SPINE[0]); return; }
-  readPageAloud();
-}
-
-function stopReadingBook() {
-  readingBook = false;
-  pageCard.hide();
-  stopReading();
-}
-
-// Start this page's narration, if any of it is baked. Called on entering the
-// reading and again by buildKoan on every page turn.
-async function readPageAloud() {
-  if (!readingBook || !scroll || koanNarrationId === null) return;
-  // The name goes up FIRST, before the manifest is consulted: it belongs to the
-  // page turning, not to the audio, and it should be there whether or not this
-  // page has anything baked.
-  if (koanCard) pageCard.show(koanCard);
-  const id = koanNarrationId;
-  const mine = scroll;
-  const playable = await narration.queue(id, scroll.queue());
-  // Two ways this can be stale by the time the manifest answers: the reader left
-  // the reading, or the page turned under it. Neither is an error; both mean the
-  // work this call was about no longer exists.
-  if (!readingBook || scroll !== mine) return;
-  if (!playable.length) { pageDone(); return; } // nothing baked here — turn the page anyway
-  startReading(true);
-  scroll.setReading(true);
-  speakAll(id, playable);
+  syncLookRead();            // sitting takes the button with the toolbar
 }
 
 // ---- debug workbench (top-right of the stage) ----
@@ -510,16 +487,7 @@ function buildKoan(mod, slug) {
       // so this onEnd is never called for a cancelled read)
       narration.speak(narrationId, key, { onEnd: () => { sectionChime(key); stopReading(); } });
     },
-    onSpeakAll: async () => {
-      if (readingAll) { stopReading(); return; }
-      // Same no-op guard as above, but for the whole page: an unbaked page (or
-      // one with nothing left to read after a partial bake) does nothing at all.
-      const order = await narration.queue(narrationId, scroll.queue());
-      if (!order.length) return;
-      startReading(true);
-      scroll.setReading(true);
-      speakAll(narrationId, order);
-    },
+    onSpeakAll: () => toggleReadAll(),
     onBack: () => exit(),
     onSit: (m) => startSit(m),
     themeEl: themeButton(),
@@ -532,10 +500,12 @@ function buildKoan(mod, slug) {
   panel.appendChild(scroll.el);
   showView(scroll.el);
   mode = 'koan';
-  // The continuous reading turned to this page — so read it. buildKoan's
-  // stopReading() above has already cleared `readingAll`, which is why this
-  // cannot simply carry over: every page starts its own reading.
-  if (readingBook) readPageAloud();
+  // Paging while the look is on: there is a new page behind the button, and its
+  // name should go up the way it does on arriving. buildKoan's stopReading()
+  // above has already cleared `readingAll` — a reading never carries across a
+  // page turn, so the button comes back saying "Read aloud".
+  if (ambient && koanCard) pageCard.show(koanCard);
+  syncLookRead();
 }
 
 // One paging hop, driven by the nav queue. Unlike the generic transition(), the
@@ -585,10 +555,7 @@ async function exit() {
   if (mode === 'intro') { skipIntro(); return; }
   if (mode === 'sit') { sit.end(); return; }
   nav.cancel();      // a queued page must not fire after we've asked for Contents
-  // Asking for the Contents ends the continuous reading — otherwise pageDone's
-  // pending turn would drag the reader straight back into the book.
-  readingBook = false;
-  pageCard.hide();
+  pageCard.hide();   // no page open, so nothing for the card to name
   router.set({ view: 'contents' });   // both paths below land on Contents
   if (mode !== 'koan') { menu.open(); showView(menu.el); return; }
   stopReading();
@@ -605,6 +572,10 @@ async function exit() {
     debugApply();
     if (prev && prev !== hub) { disposeRoot(prev); prev.dispose && prev.dispose(); }
     koan = null; koanSlug = null;
+    // The page's name and its narration key go with it. Leaving koanCard set
+    // would have opening the look on the Contents announce the case the reader
+    // just left, over a scene it has nothing to do with.
+    koanCard = null; koanNarrationId = null;
     if (scroll) { scroll.dispose(); scroll = null; }
     mode = 'menu';
     makeRig({ distance: 14, target: hub.gateTarget, azimuth: 0.5, polar: 1.3 });
@@ -652,11 +623,6 @@ const router = makeRouter({
 // comment reads as one continuous text; the pause is what says a different voice in
 // the book has taken over. Long enough to land, short enough not to feel broken.
 const SECTION_GAP_MS = 1500;
-// Longer between PAGES than between sections of one page. Turning to the next
-// koan is a bigger move than turning from the case to Mumon's comment, and the
-// ink dissolve runs inside this gap — the reading should feel like a page being
-// turned, not like the tape running on.
-const PAGE_GAP_MS = 2600;
 
 // Punctuation for the reading: one tube note when a section ends, descending
 // as the reading deepens — the case highest, the verse lowest. The matter
@@ -673,6 +639,7 @@ function startReading(all) {
   readingAll = all;
   if (readTimer) { clearTimeout(readTimer); readTimer = null; }
   audio.duck(true);
+  syncLookRead();
 }
 
 function stopReading() {
@@ -681,6 +648,26 @@ function stopReading() {
   narration.stop();
   audio.duck(false);
   if (scroll) { scroll.highlight(null); scroll.setReading(false); }
+  syncLookRead();
+}
+
+// Read this page aloud, all of it, and stop at the end of it. ONE function
+// behind two buttons — the panel's and the stage's — so whichever one is in
+// front of the reader stops what the other one started, and both show the same
+// "■ Stop" while it runs.
+async function toggleReadAll() {
+  if (readingAll) { stopReading(); return; }
+  if (!scroll || koanNarrationId === null) return;
+  // An unbaked page (or one with nothing left to read after a partial bake) is
+  // a genuine no-op — checked before touching any reading state, so there is no
+  // chime, no highlight and no "■ Stop" left hanging over silence.
+  const id = koanNarrationId;
+  const mine = scroll;
+  const order = await narration.queue(id, scroll.queue());
+  if (!order.length || scroll !== mine) return;   // or the page turned under it
+  startReading(true);
+  scroll.setReading(true);
+  speakAll(id, order);
 }
 
 function speakAll(id, order) {
@@ -692,49 +679,37 @@ function speakAll(id, order) {
       onEnd: () => {
         if (!readingAll) return;                  // stopped, or switched to one section
         sectionChime(key);
-        if (i >= order.length) { pageDone(); return; }
+        // The end of the page is the end of the reading — it does NOT turn over
+        // into the next one. The book used to read on and on from here; a page
+        // read aloud now finishes where the page finishes, whichever button
+        // started it.
+        if (i >= order.length) { stopReading(); return; }
         // The highlight stays on the section just read through the gap — clearing it
         // would flash the panel between every part.
         readTimer = setTimeout(() => { readTimer = null; if (readingAll) step(); }, SECTION_GAP_MS);
       },
     });
   };
-  if (order.length) step(); else pageDone();
-}
-
-// The end of a page. On its own that is the end of the reading; under the
-// continuous reading it is a page turn, and the book keeps going.
-function pageDone() {
-  if (!readingBook) { stopReading(); return; }
-  const next = nextInLoop(SPINE, koanSlug);   // past the afterword, begin again
-  if (!next) { stopReadingBook(); return; }   // not a page of this book
-  // A beat before the turn so the last chime lands in silence rather than under
-  // the dissolve. stopReading() unducks; the next page ducks again when it starts.
-  stopReading();
-  readTimer = setTimeout(() => {
-    readTimer = null;
-    if (readingBook) enter(next);
-  }, PAGE_GAP_MS);
+  if (order.length) step(); else stopReading();
 }
 
 function startSit(minutes = 10) {
   if (mode !== 'koan') return;
   mode = 'sit';
-  // Sitting ends the continuous reading outright rather than pausing it: the
-  // timer is the one part of this book that asks for silence, and a voice
-  // resuming partway through it would be the worst possible interruption.
-  readingBook = false;
+  // Sitting stops a reading outright rather than pausing it: the timer is the
+  // one part of this book that asks for silence, and a voice resuming partway
+  // through it would be the worst possible interruption.
   pageCard.hide();
   stopReading();
   // The text doesn't dim, it LEAVES: the whole window becomes the diorama, the
-  // way it does for the hands-free reading. A sitting is the one time this book
-  // has nothing to say.
+  // way it does for the look. A sitting is the one time this book has nothing
+  // to say.
   applyStageOnly();
   sit.start(minutes);
 }
 function resumeKoan() {
   mode = 'koan';
-  applyStageOnly();   // the page comes back — unless the reading view is holding it out
+  applyStageOnly();   // the page comes back — unless the look is holding it out
 }
 
 // ---- input / keys ----
@@ -744,7 +719,7 @@ addEventListener('keydown', (e) => {
   // is no prompt any more to do this for us)
   audio.unlock();
   if (mode === 'intro') { skipIntro(); return; }
-  // Ambient first: Escape should give the reader their text back, not take the
+  // The look first: Escape should give the reader their text back, not take the
   // case away from them. Leaving the view is the smaller undo, so it goes first.
   if (e.key === 'Escape') {
     if (ambient) { setAmbient(false); return; }
@@ -856,7 +831,9 @@ window.gate = {
       freeze: { active: freeze.active, progress: +freeze.progress.toFixed(4) },
       camera: rig ? rig.state() : null,
       progress: { read: { ...save.state().read }, sat: { ...save.state().sat } },
-      reading: { ambient, book: readingBook, all: readingAll, slug: koanSlug },
+      // `look` is the view; `all` is whether this page is being read aloud.
+      // They are independent now — either, both, or neither.
+      reading: { look: ambient, all: readingAll, slug: koanSlug },
       // 'off' | 'sitting' | 'done' — 'done' is the timer run out with the reader
       // still in the scene, which is a state the mode alone cannot report.
       sit: sit.status(),
@@ -883,7 +860,10 @@ window.gate = {
   markRead(slug) { save.markRead(slug); menu.refresh(save.state()); },
   markSat(slug) { save.markSat(slug); menu.refresh(save.state()); },
   setSound(on) { audio.setSound(on); setSoundLabel(); },
-  ambient(on) { setAmbient(on === undefined ? !ambient : on); return ambient; },
+  look(on) { setAmbient(on === undefined ? !ambient : on); return ambient; },
+  // Awaits the manifest before it can start, so it hands back the promise —
+  // `state().reading.all` is only true once that has resolved.
+  readAloud() { return toggleReadAll(); },
   // Voice and delivery are baked, not chosen at runtime. This reports what shipped.
   voice() { const m = narration.manifest(); return m ? `${m.voice} / ${m.preset}` : null; },
   audio() { return audio.debugState(); },   // live ambience layers, for headless probes

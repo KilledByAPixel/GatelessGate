@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { CASES } from '../src/koans/index.js';
 import { loadKoan, isRegistered, isStaged } from '../src/koans/registry.js';
-import { readingOrder, readingEntries, neighborSlug, nextInLoop } from '../src/spine.js';
+import { readingOrder, readingEntries, neighborSlug } from '../src/spine.js';
 import MATTER from '../src/koans/text/matter.js';
 import { SHOWCASE_SLUG, DEV_PAGES, isDevPage } from '../src/koans/dev/index.js';
 import { PAPER } from '../src/palette.js';
@@ -50,13 +50,11 @@ test('the sit guard has what it needs — isDevPage(showcase) is true', () => {
 
 test('the showcase is not in the book', async () => {
   // The spine is the reading order; the showcase is not in it, so nothing pages
-  // into it, the arrow keys stop before it, and the continuous reading cannot
-  // wander in.
+  // into it and the arrow keys stop before it.
   const spine = readingOrder(CASES);
   assert.ok(!spine.includes(SHOWCASE_SLUG), 'not in the reading spine');
   assert.equal(neighborSlug(spine, SHOWCASE_SLUG, +1), null);
   assert.equal(neighborSlug(spine, SHOWCASE_SLUG, -1), null);
-  assert.equal(nextInLoop(spine, SHOWCASE_SLUG), null, 'the continuous reading stops rather than looping in');
 
   const entries = readingEntries(CASES, MATTER);
   assert.ok(!entries.some((e) => e.slug === SHOWCASE_SLUG), 'not a row of the contents');

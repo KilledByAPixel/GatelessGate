@@ -36,12 +36,8 @@ export function neighborSlug(order, slug, dir) {
   return order[i + dir] || null;
 }
 
-// The next page for the CONTINUOUS reading, which does not stop at the end: the
-// afterword turns back to the preface and the book begins again. Deliberately a
-// different rule from neighborSlug — paging by hand still stops at both ends,
-// because an arrow that wrapped would lose the reader their place in the book.
-// A slug that is not in the book returns null rather than silently starting over.
-export function nextInLoop(order, slug) {
-  if (order.indexOf(slug) < 0) return null;
-  return neighborSlug(order, slug, +1) || order[0] || null;
-}
+// There was a nextInLoop() here — the same walk, but wrapping past the afterword
+// back to the preface, for the hands-free reading that turned its own pages. The
+// look does not read on its own any more (a page read aloud stops at the end of
+// that page), so nothing wraps and nothing wanted it. The book has a last page
+// again.

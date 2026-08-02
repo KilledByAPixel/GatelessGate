@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  readingOrder, readingEntries, neighborSlug, nextInLoop, PREFACE_SLUG, AFTERWORD_SLUG,
+  readingOrder, readingEntries, neighborSlug, PREFACE_SLUG, AFTERWORD_SLUG,
 } from '../src/spine.js';
 import { CASES } from '../src/koans/index.js';
 import MATTER from '../src/koans/text/matter.js';
@@ -40,35 +40,24 @@ test('an unknown slug has no neighbours rather than throwing', () => {
   assert.equal(neighborSlug(ORDER, 'no-such-page', -1), null);
 });
 
-test('the continuous reading turns from the afterword back to the preface', () => {
-  // This is the whole difference between nextInLoop and neighborSlug, and the
-  // reason the reading can run unattended: the book has no last page.
-  assert.equal(neighborSlug(ORDER, AFTERWORD_SLUG, +1), null, 'paging by hand still stops');
-  assert.equal(nextInLoop(ORDER, AFTERWORD_SLUG), PREFACE_SLUG, 'the reading begins again');
+test('the book ends — nothing wraps from the afterword back to the preface', () => {
+  // There used to be a nextInLoop() beside neighborSlug that did wrap, for the
+  // hands-free reading that turned its own pages. That reading is gone: a page
+  // read aloud stops at the end of that page. So there is exactly ONE walk
+  // through the book now, and it stops at both ends.
+  assert.equal(neighborSlug(ORDER, AFTERWORD_SLUG, +1), null);
+  assert.equal(neighborSlug(ORDER, PREFACE_SLUG, -1), null);
 });
 
-test('the continuous reading walks the book in order everywhere else', () => {
-  assert.equal(nextInLoop(ORDER, PREFACE_SLUG), CASES[0].slug);
-  assert.equal(nextInLoop(ORDER, CASES.at(-1).slug), AFTERWORD_SLUG);
-  for (let i = 0; i < CASES.length - 1; i++) {
-    assert.equal(nextInLoop(ORDER, CASES[i].slug), CASES[i + 1].slug, `after ${CASES[i].slug}`);
-  }
-});
-
-test('the loop visits every page of the book exactly once before repeating', () => {
-  // Walking from the preface should return to it after ORDER.length steps, having
-  // touched all fifty-one pages. A duplicated or skipped slug in readingOrder
-  // would show up here as a short cycle rather than as a wrong neighbour.
+test('the walk touches every page of the book exactly once', () => {
+  // Stepping forward from the preface should reach the afterword having touched
+  // all fifty-one pages. A duplicated or skipped slug in readingOrder would show
+  // up here as a short walk rather than as a wrong neighbour.
   const seen = [];
   let slug = PREFACE_SLUG;
-  for (let i = 0; i < ORDER.length; i++) { seen.push(slug); slug = nextInLoop(ORDER, slug); }
-  assert.equal(slug, PREFACE_SLUG, 'the walk closes back on the first page');
+  while (slug) { seen.push(slug); slug = neighborSlug(ORDER, slug, +1); }
   assert.deepEqual(seen, ORDER);
-  assert.equal(new Set(seen).size, ORDER.length, 'no page is visited twice in one pass');
-});
-
-test('a slug outside the book does not silently start the reading over', () => {
-  assert.equal(nextInLoop(ORDER, 'no-such-page'), null);
+  assert.equal(new Set(seen).size, ORDER.length, 'no page is visited twice');
 });
 
 test('the reading entries carry a title and a null id for the matter pages', () => {

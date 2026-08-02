@@ -197,6 +197,25 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 }
 .gg-tool:hover, .gg-debug-toggle:hover { border-color: rgba(30,30,36,0.55); }
 .gg-tool.active, .gg-debug-toggle.active { background: var(--ink); color: var(--paper); }
+
+/* ---- read aloud, in the look ----
+   The panel's "Read aloud" for when there is no panel: directly under the
+   toolbar, right-aligned with it, so the two read as one stack of controls
+   rather than a button dropped on the picture. Only there when the look is on
+   and there is a page behind it — display:none rather than hidden, so it takes
+   no room and catches no clicks the rest of the time. It is a whole word wide
+   where the tools are square, which is the point: the tools are settings, this
+   one does something to the page. */
+.gg-look-read {
+  position: absolute; top: 52px; right: 14px; z-index: 9; display: none;
+  font-family: Georgia, serif; font-size: 13px; letter-spacing: 0.04em;
+  padding: 6px 12px; cursor: pointer; color: var(--ink);
+  background: rgba(243,237,223,0.82); border: 1px solid rgba(30,30,36,0.28);
+  border-radius: 3px; backdrop-filter: blur(2px);
+}
+.gg-look-read.on { display: block; }
+.gg-look-read:hover { border-color: rgba(30,30,36,0.55); }
+#gg-app.sitting .gg-look-read { display: none; }
 /* ---- debug workbench: panel sliding out under the toolbar ---- */
 .gg-debug {
   position: absolute; top: 0; right: 0; bottom: 0; width: 232px; z-index: 8;
