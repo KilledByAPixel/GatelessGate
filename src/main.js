@@ -168,9 +168,10 @@ const toolbar = document.createElement('div');
 toolbar.className = 'gg-toolbar';
 stage.appendChild(toolbar);
 
-// The look's title card. Lives on the stage rather than in the panel, since the
-// panel is exactly what is not there when it is wanted. Built once and reused;
-// it goes up when the look opens and again on every page turn under it.
+// The reading's title card. Lives on the stage rather than in the panel, since
+// the panel is exactly what is not there when it is wanted. Built once and
+// reused; toggleReadAll is the only thing that shows it, and only in the look —
+// opening the look on its own says nothing.
 const pageCard = makePageCard();
 stage.appendChild(pageCard.el);
 
@@ -263,11 +264,12 @@ function setAmbient(on) {
   ambientBtn.classList.toggle('active', ambient);
   ambientBtn.title = ambient ? 'Back to the text' : 'Look at the scene';
   applyStageOnly();
-  // With the panel gone there is nothing on screen naming the page, so the card
-  // says it once and gets out of the way. A reading already running is left
-  // strictly alone in both directions: it belongs to the reader, not to the
-  // panel, and neither hiding nor restoring the text is an instruction about it.
-  if (ambient && koanCard) pageCard.show(koanCard);
+  // Nothing else happens. Entering the look does NOT announce the page (Frank:
+  // "when you first go in, there's no title; it just goes into look mode") —
+  // the card belongs to the reading now, and toggleReadAll puts it up. And a
+  // reading already running is left strictly alone in both directions: it
+  // belongs to the reader, not to the panel, and neither hiding nor restoring
+  // the text is an instruction about it.
   if (!ambient) pageCard.hide();
 }
 
@@ -500,11 +502,9 @@ function buildKoan(mod, slug) {
   panel.appendChild(scroll.el);
   showView(scroll.el);
   mode = 'koan';
-  // Paging while the look is on: there is a new page behind the button, and its
-  // name should go up the way it does on arriving. buildKoan's stopReading()
-  // above has already cleared `readingAll` — a reading never carries across a
-  // page turn, so the button comes back saying "Read aloud".
-  if (ambient && koanCard) pageCard.show(koanCard);
+  // No card on a page turn either: a reading never carries across one (buildKoan's
+  // stopReading() above cleared `readingAll`), so nothing here is announcing
+  // itself. The button just comes back saying "Read aloud" for the new page.
   syncLookRead();
 }
 
@@ -665,6 +665,12 @@ async function toggleReadAll() {
   const mine = scroll;
   const order = await narration.queue(id, scroll.queue());
   if (!order.length || scroll !== mine) return;   // or the page turned under it
+  // THE NAME GOES UP WITH THE VOICE. With the panel gone there is nothing on
+  // screen saying which page this is, so the card announces it as the reading
+  // begins and then gets out of the way — it belongs to the reading being
+  // started, not to the view being opened. In the panel view the title is
+  // already on the page, so there is nothing for it to tell anyone.
+  if (ambient && koanCard) pageCard.show(koanCard);
   startReading(true);
   scroll.setReading(true);
   speakAll(id, order);
