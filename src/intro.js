@@ -23,7 +23,15 @@ export function buildHub({
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.03);
-  scene.add(makeLights());
+  // The hub frames deeper than a case: the rig orbits gateTarget at distance
+  // 14, so its foreground starts ~12 units camera-side of the gate. At the
+  // default shadow fit (focus [1.2,0,0.3], r 10) every near tree's canopy sat
+  // outside the frustum and its shadow truncated mid-ground — Frank: "the
+  // shadow of the tree right in front of the camera is cut off." Centered
+  // between the gate and the camera side and widened just enough that every
+  // caster whose shadow can land in frame fits; 2048/30 ≈ 68 texels/unit,
+  // still contact-shadow territory, not the 56-unit mush toon.js warns about.
+  scene.add(makeLights({ focus: [4.5, 0, 0], radius: 15 }));
 
   // The path is ALWAYS built: it is the placement maths for the gate, the
   // lanterns and the monk, and gateTarget is a point on it. Only whether it is
