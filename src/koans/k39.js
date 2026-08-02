@@ -76,15 +76,23 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
     scene.add(makeLights());
 
-    // dark water, wide enough that the crossing matters
-    const WY = 0.10;
+    // dark water, wide enough that the crossing matters.
+    //
+    // The sheet sits HIGHER than it used to (0.10) and strikes a little
+    // softer. This pond is open water with no basin around it, so its whole
+    // amplitude is spent against the ground plane: a ripple trough reached
+    // exactly y = 0 and punched through the earth (Frank: "the water on 39
+    // can go a little bit through the bottom of the ground... if the wave is
+    // too big. We could just raise it up a tiny bit"). At 0.18 with a 0.085
+    // crest there is twice the clearance a trough can use.
+    const WY = 0.18;
     // open water — a BLOB now, not a square (Frank: "make that pond less
     // square-shaped, more organically shaped, kinda roundish"): a seeded
     // wobbled outline from the kit, sized up so every stone still stands well
     // inside the shore at this seed (pinned by tests/k39.test.js). The rim is
     // pinned as before, so a stone dropped near the bank still cannot throw
     // its ring out over the grass.
-    const water = makeWater({ shape: 'blob', size: 12.5, color: wash(0.72), seed: ID });
+    const water = makeWater({ shape: 'blob', size: 12.5, color: wash(0.72), seed: ID, strike: 0.085 });
     water.group.position.set(0.4, WY, -1.6);
     scene.add(water.group);
 
