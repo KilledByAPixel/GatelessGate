@@ -143,10 +143,14 @@ stage.appendChild(toolbar);
 const pageCard = makePageCard();
 stage.appendChild(pageCard.el);
 
+// `label` is normally one glyph in the page's own font (♪, ⛶). A label that
+// starts with '<' is inline SVG instead — for an icon Unicode has no decent
+// monochrome character for. It is drawn in currentColor, so it inverts with
+// the button exactly as a glyph would, and it is still nothing to download.
 const tool = (label, title, onClick) => {
   const b = document.createElement('button');
   b.className = 'gg-tool';
-  b.textContent = label;
+  if (label.charAt(0) === '<') b.innerHTML = label; else b.textContent = label;
   b.title = title;
   b.setAttribute('aria-label', title);
   b.onclick = onClick;
@@ -210,12 +214,19 @@ let ambient = false;
 // on every page turn (stopReading runs in buildKoan) and this one has to
 // survive the turn: it is the thing that asks for the next page.
 let readingBook = false;
-// ℹ, not ◉: a circle with a dot in it says nothing, while the information "i"
-// is the one glyph everybody already reads as "tell me about this" (Frank:
-// "if it was an i, that would sell it better"). Same family as ♪ and ⛶ —
-// every tool here is one Unicode character in the page's own font, not an
-// icon set: nothing to download, and it inherits the toolbar's colour.
-const ambientBtn = tool('ℹ', 'Read the book', () => setAmbient(!ambient));
+// AN EYE — "an i as in an actual eye, on someone's face" (Frank), for the
+// hands-free reading the button turns on: the text steps aside and you just
+// watch. It was ◉, a circle with a dot, which reads as a target or a record
+// button and never as looking. Unicode's only real eye is an emoji that
+// renders in colour on half the platforms this ships to, so this one glyph is
+// inline SVG: an almond lid and a pupil, in currentColor, so it inverts with
+// the button like the others do.
+const EYE = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" '
+  + 'fill="none" stroke="currentColor" stroke-width="1.7" '
+  + 'stroke-linecap="round" stroke-linejoin="round">'
+  + '<path d="M1.8 12S5.4 5.8 12 5.8 22.2 12 22.2 12 18.6 18.2 12 18.2 1.8 12 1.8 12Z"/>'
+  + '<circle cx="12" cy="12" r="3.1"/></svg>';
+const ambientBtn = tool(EYE, 'Read the book', () => setAmbient(!ambient));
 function setAmbient(on) {
   ambient = !!on;
   app.classList.toggle('ambient', ambient);
