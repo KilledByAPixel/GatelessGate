@@ -16,7 +16,7 @@ export { makePine, pineGeometry } from './pine.js';
 export { makeGate } from './gate.js';
 export { makeFlag } from './flag.js';
 export { makeBlobShadow } from '../render/blobshadow.js';
-export { makeLights, toonMaterial } from '../render/toon.js';
+export { makeLights, toonMaterial, setSeal } from '../render/toon.js';
 export { addOutlines, setInkScale, getInkScale } from '../render/outlines.js';
 export { makeDog } from './dog.js';
 export { makeTail } from './tail.js';

@@ -4,7 +4,7 @@ import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makeWater, makeMonk, aimMonk, faceMonk,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, makeBlobShadow, addOutlines, toonMaterial, setSeal,
 } from '../kit/index.js';
 
 const ID = 39;
@@ -92,12 +92,20 @@ export default {
     // An arc from the near shore out into the middle, each one a phrase of a
     // borrowed line. They are placed on a curve so the crossing reads as a
     // sentence going somewhere rather than a row of blocks.
-    // The red is a material STATE now, not a stone: exactly one stone carries
-    // it at a time (see nextRed above), so every top is built in stone and the
-    // shared seal material is swapped onto whichever one holds the red. One
-    // shared red material rather than a tint: toonMaterial gives seal colours
-    // their emissive lift at construction, which a color.set() would miss.
-    const redMat = toonMaterial({ color: ACCENT, flat: true });
+    // The red is a material STATE, not a stone: exactly one stone carries it
+    // at a time (see nextRed above).
+    //
+    // It is applied by RECOLOURING each stone's own material rather than by
+    // swapping a shared red one in. Swapping looked identical in isolation and
+    // was wrong in the app: the debug workbench caches a plain-Lambert clone
+    // per mesh, and on the shipped default that clone is what actually
+    // renders — so assigning a fresh toonMaterial at runtime dropped a
+    // differently-lit material into a scene of clones, and every stone the
+    // repaint touched changed tone at once (Frank: "the other rocks change
+    // their colour a little bit... they suddenly turn a more bright colour",
+    // and the red itself "looks a little more red than the other red
+    // objects"). Recolour whatever material is on the mesh — and both cached
+    // copies, so toggling the toon shader cannot resurrect a stale colour.
     const stones = [];
     for (let i = 0; i < STONES; i++) {
       const t = i / (STONES - 1);
@@ -122,13 +130,19 @@ export default {
       hit.userData.noOutline = true;
       pivot.add(hit);
 
-      stones.push({ pivot, top, hit, stoneMat: top.material, y0: WY + 0.05, sunkAt: -99 });
+      stones.push({ pivot, top, hit, y0: WY + 0.05, sunkAt: -99 });
     }
 
     let red = FIRST_RED;
     const paint = () => {
       for (let i = 0; i < stones.length; i++) {
-        stones[i].top.material = i === red ? redMat : stones[i].stoneMat;
+        const top = stones[i].top;
+        const isRed = i === red;
+        for (const m of [top.material, top.userData._matToon, top.userData._matPlain]) {
+          if (!m || !m.color) continue;
+          m.color.set(isRed ? ACCENT : WASH.stone);
+          setSeal(m, isRed);
+        }
       }
     };
     paint();

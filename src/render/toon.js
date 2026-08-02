@@ -40,6 +40,26 @@ const SEAL_GLOW = 0.5;
 // reading. Case 30's pond is where that showed — red water came out as a flat
 // luminous disc and its ripples became invisible (Frank: "I barely see it do
 // anything... for the red one the specular should still be white").
+// Put the seal's glow on (or take it off) an EXISTING material, so a scene can
+// move its red from one object to another without swapping material objects
+// around. Swapping is a trap: the debug workbench caches a plain-Lambert clone
+// per mesh and, on the shipped default, that clone is what actually renders —
+// so a case that assigns a fresh toonMaterial at runtime puts a differently-lit
+// material into a scene full of clones, and every object it touches visibly
+// changes tone (Frank, on case 39's stones: "the other rocks change their
+// colour a little bit... they suddenly turn a more bright colour").
+export function setSeal(material, on, color = ACCENT) {
+  if (!material || !material.emissive) return material;
+  if (on) {
+    material.emissive.set(color);
+    material.emissiveIntensity = SEAL_GLOW;
+  } else {
+    material.emissive.set(0x000000);
+    material.emissiveIntensity = 1;
+  }
+  return material;
+}
+
 export function toonMaterial({ color = '#ffffff', flat = false, side = THREE.FrontSide, glow = true } = {}) {
   const m = new THREE.MeshToonMaterial({ color, gradientMap: toonRamp(), side });
   m.flatShading = flat;
