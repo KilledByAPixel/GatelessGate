@@ -204,3 +204,79 @@ test('case 39: when the stones surface again the red is back on the far one', ()
   assert.equal(redTops(tops), 1);
   for (const s of tops) assert.ok(s.parent.visible, 'every stone is standing again');
 });
+
+// ---- the pond is a HOLE ------------------------------------------------------
+// Frank: "we've got the water lifted up above the ground to fix the z-fighting...
+// we could deform the ground where the water is, so it rapidly slopes down and
+// is deep enough that there's no z-fighting, and we wouldn't have this weird
+// thing where it's floating above the ground."
+//
+// Both halves of that have to hold at once, and neither shows up as an error if
+// it breaks — a sheet back above the meadow just looks slightly wrong, and a bed
+// that rises through the water just flickers. So: measured against the water's
+// OWN outline, which is the only thing that knows where the shore is.
+
+function pondParts() {
+  const root = k39.build(fakeCtx());
+  root.scene.updateMatrixWorld(true);
+  let ground = null, surface = null, water = null;
+  root.scene.traverse((o) => {
+    if (o.name === 'ground') ground = o;
+    if (o.name === 'water') water = o;
+    if (o.name === 'surface') surface = o;
+  });
+  return { root, ground, water, surface };
+}
+
+test('case 39: the water sits BELOW the meadow, not above it', () => {
+  const { water } = pondParts();
+  assert.ok(water, 'the pond is in the scene');
+  assert.ok(water.position.y < 0,
+    `the sheet must sit under the bank, got y ${water.position.y}`);
+  assert.ok(water.position.y > -0.25,
+    `and only just under it — a pond, not a well (y ${water.position.y})`);
+});
+
+test('case 39: the bed is dug out under the water and untouched outside it', () => {
+  const { ground, water } = pondParts();
+  const pos = ground.geometry.attributes.position;
+  const wy = water.position.y;
+  // shoreDistance lives in the water's local space; the surface mesh shares it
+  const cx = water.position.x, cz = water.position.z;
+
+  let insideChecked = 0, worstInside = -Infinity;
+  let outsideChecked = 0, worstOutside = Infinity;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i), y = pos.getY(i);
+    const r = Math.hypot(x - cx, z - cz);
+    if (r > 9) continue;                       // far from the pond either way
+    if (r < 4.0) {                             // safely inside the blob's min radius
+      insideChecked++;
+      worstInside = Math.max(worstInside, y);
+    } else if (r > 6.0) {                      // safely outside its max radius
+      outsideChecked++;
+      worstOutside = Math.min(worstOutside, y);
+    }
+  }
+  assert.ok(insideChecked > 8 && outsideChecked > 8, 'the sample found real ground');
+  assert.ok(worstInside < wy - 0.5,
+    `the bed under the water must be well below it (highest ${worstInside.toFixed(2)} vs water ${wy})`);
+  assert.ok(worstOutside > wy,
+    `and the bank outside must stay above it (lowest ${worstOutside.toFixed(2)} vs water ${wy})`);
+});
+
+test('case 39: the fish are unlit, or they vanish under the sheet', () => {
+  // A submerged koi is composited at (1 - opacity) of itself, and the toon ramp
+  // then spends most of that on shading: lit, repainting one from mid grey to
+  // nearly paper moves the rendered pixel by three levels and the fish reads as
+  // nothing but its own depth-ink outline. This is that fix, pinned.
+  const { root } = pondParts();
+  const bodies = [];
+  root.scene.traverse((o) => { if (o.name === 'koi-body') bodies.push(o); });
+  assert.ok(bodies.length >= 3, `there are fish in the pond, got ${bodies.length}`);
+  for (const b of bodies) {
+    assert.ok(b.material.isMeshBasicMaterial, 'unlit — the water eats toon shading');
+    assert.equal(b.userData.keepMaterial, true, 'and the workbench must not relight it');
+    assert.equal(b.userData.noOutline, true, 'no ink hull on a thing seen through water');
+  }
+});

@@ -2,8 +2,9 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
+
 import {
-  composeWorld, makeWater, makeMonk, aimMonk, faceMonk,
+  composeWorld, makeWater, makeKoi, makeMonk, aimMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial, setSeal,
 } from '../kit/index.js';
 
@@ -78,14 +79,26 @@ export default {
 
     // dark water, wide enough that the crossing matters.
     //
-    // The sheet sits HIGHER than it used to (0.10) and strikes a little
-    // softer. This pond is open water with no basin around it, so its whole
-    // amplitude is spent against the ground plane: a ripple trough reached
-    // exactly y = 0 and punched through the earth (Frank: "the water on 39
-    // can go a little bit through the bottom of the ground... if the wave is
-    // too big. We could just raise it up a tiny bit"). At 0.18 with a 0.085
-    // crest there is twice the clearance a trough can use.
-    const WY = 0.18;
+    // IT SITS IN A HOLE NOW. The sheet used to be lifted to 0.18 — above the
+    // meadow — because there was no basin under it and a ripple trough reached
+    // y = 0 and punched through the earth. That bought clearance and cost the
+    // picture: a pond hovering a hand's width over the field it is supposed to
+    // be in (Frank: "we've got the water lifted up above the ground to fix the
+    // z-fighting... we could deform the ground where the water is, so it rapidly
+    // slopes down and is deep enough that there's no z-fighting, and we can
+    // maybe even put fish there").
+    //
+    // So the ground is carved instead, and the sheet drops to just UNDER the
+    // bank — the lip overhangs it by a few centimetres, which is what the edge
+    // of a pond looks like. The carve is below, after composeWorld has built the
+    // ground it cuts.
+    const WY = -0.05;
+    const DEPTH = 1.3;      // how far the bed falls below the meadow
+    const BANK = 1.5;       // and how fast — "rapidly slopes down"
+    const SS = (a, b, v) => {
+      const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
+      return t * t * (3 - 2 * t);
+    };
     // open water — a BLOB now, not a square (Frank: "make that pond less
     // square-shaped, more organically shaped, kinda roundish"): a seeded
     // wobbled outline from the kit, sized up so every stone still stands well
@@ -123,6 +136,14 @@ export default {
       const pivot = new THREE.Group();
       pivot.name = 'stone';
       pivot.position.set(x, WY + 0.05, z);
+      // Still a plain cap, and deliberately: digging the bed out from under them
+      // raised the obvious question of whether a 20cm disc now floats over a
+      // metre of water, so each one grew a shaft down to the bottom — and it was
+      // a clear loss. The shafts are pale stone under a dark sheet that lets a
+      // quarter of them through, so seven of them read as stilts and the
+      // crossing turned into a row of mushrooms. The water hides what is under
+      // it well enough that the question never comes up; the stones sit ON the
+      // surface, which is all this case ever asks of them.
       const top = new THREE.Mesh(
         new THREE.CylinderGeometry(r, r * 1.12, 0.20, 7),
         toonMaterial({ color: WASH.stone, flat: true }));
@@ -180,6 +201,45 @@ export default {
       ],
       grassKeepout: [{ x: 0.4, z: -1.6, r: 6.55 }],
     });
+
+    // ---- THE BED: the pond is a HOLE, not a sheet ------------------------
+    // Case 5's and case 12's trick again, and easier here because the ground
+    // under this pond is dead flat: groundHeight's flatRadius is 9 and the whole
+    // basin sits inside it, so there is no terrain roll to fight and the bank is
+    // level all the way round.
+    //
+    // Cut from the water's OWN outline rather than a circle — makeWater exposes
+    // shoreDistance for exactly this, and it is the only way the bed and the
+    // surface can be guaranteed to agree about where the shore is. A circle
+    // would have the bed crossing the blob's wobble twice per lobe.
+    const groundMesh = scene.getObjectByName('ground');
+    const gpos = groundMesh.geometry.attributes.position;
+    for (let i = 0; i < gpos.count; i++) {
+      const d = water.shoreDistance(gpos.getX(i) - 0.4, gpos.getZ(i) + 1.6);
+      if (d <= 0) continue;                       // dry land, untouched
+      gpos.setY(i, gpos.getY(i) - DEPTH * SS(0, BANK, d));
+    }
+    gpos.needsUpdate = true;
+    groundMesh.geometry.computeVertexNormals();
+
+    // ---- AND FISH, now that there is water to put them in ----------------
+    // The whole point of digging it (Frank). They ride the surface's own height
+    // field, so a stone going under lifts the school that happens to be under
+    // the ring. Held well below the sheet — there is more than a metre of water
+    // beneath them, so nothing can surface unasked.
+    const koi = makeKoi({
+      count: 4, seed: ID, length: 0.8, color: wash(0.16), unlit: true,
+      radius: 3.4, depth: 0.34, surfaceAt: water.heightAt,
+    });
+    koi.group.position.set(0.4, WY, -1.6);
+    // NO HULLS ON A SUBMERGED FISH. addOutlines gives everything an inverted
+    // ink hull, which is right for a thing standing in the light and wrong for
+    // one lying under a dark sheet: the body blends almost into the water and
+    // the hull does not, so four koi came out as four ink scratches with
+    // nothing inside them. Bodies only, and they read as what they are — a
+    // paleness moving under the surface.
+    koi.group.traverse((o) => { o.userData.noOutline = true; });
+    scene.add(koi.group);
 
     for (const [p, rx, rz, op] of [
       [student.position, 0.62, 0.5, 0.40],
@@ -240,6 +300,7 @@ export default {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
         water.update(dt, simTime);
+        koi.update(dt, simTime);
 
         if (allDownAt > -99 && clock - allDownAt > SURFACE_AFTER) {
           for (const s of stones) s.sunkAt = -99;

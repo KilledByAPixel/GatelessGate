@@ -133,6 +133,21 @@ export function makeKoi({
   // surface, which in a pond this shallow lets a dorsal fin cross it in a
   // trough — the fish must never surface unasked.
   ride = 1,
+  // UNLIT, for a fish under a sheet you can only partly see through.
+  //
+  // A submerged koi is composited as (1 - opacity) of itself, so whatever
+  // contrast it has left is already cut to a fraction — and the toon ramp then
+  // spends most of that fraction on shading. A lit fish under case 39's pond
+  // arrives as 0.28 x 0.31 x its own colour: repainting it from mid grey to
+  // nearly paper moved the rendered result by three levels out of 255, and the
+  // fish read as nothing but the post pass's depth-ink outline, a fish-shaped
+  // scratch with pond showing through it. Unlit, the same fish keeps its full
+  // value through the water and reads as what it is: a paleness moving down
+  // there. It costs the shading, which nobody can see under water anyway.
+  //
+  // keepMaterial goes with it, or the debug workbench's plain-Lambert rebuild
+  // (the shipped default) quietly puts the lighting straight back.
+  unlit = false,
 } = {}) {
   const g = new THREE.Group();
   g.name = 'koi';
@@ -141,7 +156,9 @@ export function makeKoi({
   // defaults to FrontSide — a single-sided fin vanishes for half of every lap,
   // whenever the yaw swings its back face toward the camera. Shared by the
   // whole fish so body and fins keep one material identity.
-  const mat = toonMaterial({ color, flat: true, side: THREE.DoubleSide });
+  const mat = unlit
+    ? new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide })
+    : toonMaterial({ color, flat: true, side: THREE.DoubleSide });
 
   // One template geometry; each fish clones it (its vertices flex on its own
   // phase) but they all displace from this single shared base, with the wave
@@ -165,6 +182,7 @@ export function makeKoi({
     f.name = 'fish';
     const mesh = new THREE.Mesh(template.clone(), mat);
     mesh.name = 'koi-body';
+    if (unlit) mesh.userData.keepMaterial = true;
     // the wave displaces vertices past the rest pose; pad the culling sphere
     // so a fish at the frame's edge doesn't pop out mid-tailbeat
     mesh.geometry.computeBoundingSphere();
