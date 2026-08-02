@@ -366,6 +366,7 @@ export function makeFigure({
   height = 1.6, color = INK, stance = 'stand', arms = 'rest',
   hat = true, stout = 1, elder = false, staffAng, mat: matIn,
   cushion = true,          // seated only — false where the case lays its own mat
+  bow = 0,                 // radians bent FORWARD at the waist; see bendForward
 } = {}) {
   const g = new THREE.Group();
   g.name = 'figure';
@@ -454,6 +455,54 @@ export function makeFigure({
     brim.name = 'hat';
     brim.position.y = st.hat * height;
     g.add(brim);
+  }
+
+  // ---- THE WAIST ----------------------------------------------------------
+  // A bow is BENT AT THE WAIST, not tipped over at the feet. Cases used to do
+  // it by rotating the whole figure, which leans a rigid post — and case 32
+  // leaned it about the wrong axis besides, so its philosopher listed sideways
+  // (Frank: "he's bowing along the wrong axis... he should be bowing forward,
+  // and ideally bent at the waist... it could be a separate pose").
+  //
+  // `bow` opts a figure into a HINGE: everything above the sash — the torso
+  // rings of the robe, the head, the hat, the arms — is re-parented into a
+  // group named 'waist', standing at the sash line. The lathe is split there
+  // and the two halves share their boundary ring, so the cloth stays sealed at
+  // any angle. A case bows by turning that one group about x (bodies front
+  // local +z, so a positive angle carries the chest forward), which means the
+  // bow can ANIMATE — case 32's happens slowly, after twenty seconds of not
+  // being touched. Costs one extra mesh, and only for figures that ask.
+  let waist = null;
+  if (bow !== false && bow !== 0 && !seated) {
+    const waistY = 0.452;                     // fraction of height: just under the obi
+    const rows = st.profile;
+    // the first ring at or above the sash — the two halves share it
+    let k = rows.findIndex(([, y]) => y >= waistY);
+    if (k < 1) k = 1;
+
+    const lower = rows.slice(0, k + 1).map(([r, y], i) => [i === 0 ? r : r * s, y]);
+    const upper = rows.slice(k - 1).map(([r, y]) => [r * s, y - rows[k - 1][1]]);
+
+    const oldBody = g.children.find((c) => c.name === 'body');
+    if (oldBody) { g.remove(oldBody); oldBody.geometry.dispose(); }
+    g.add(robeLathe(lower, height, mat));
+
+    waist = new THREE.Group();
+    waist.name = 'waist';
+    waist.position.y = rows[k - 1][1] * height;
+    const torso = robeLathe(upper, height, mat);
+    torso.name = 'torso';
+    waist.add(torso);
+
+    // everything that rode on the torso moves with it, in the waist's frame
+    for (const child of [...g.children]) {
+      if (child === waist || child.name === 'body') continue;
+      child.position.y -= waist.position.y;
+      g.remove(child);
+      waist.add(child);
+    }
+    g.add(waist);
+    if (typeof bow === 'number') waist.rotation.x = bow;
   }
 
   if (elder) {

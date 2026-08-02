@@ -193,3 +193,40 @@ test('monk keeps its contract: poses, arms:false, point/raise angles distinct', 
   assert.notStrictEqual(arm(makeMonk({ pose: 'point' })).rotation.z.toFixed(3),
                         arm(makeMonk({ pose: 'raise' })).rotation.z.toFixed(3));
 });
+
+test('the bow is a HINGE AT THE WAIST, forward, with the hem left standing', () => {
+  // Frank, on case 32's philosopher: "he's bowing along the wrong axis... he
+  // should be bowing forward, and ideally bent at the waist would be perfect.
+  // It could be a separate pose." So `bow` gives the figure a group named
+  // 'waist' holding everything above the sash, and turning it IS the bow.
+  const H = 1.66;
+  const upright = makeFigure({ height: H, arms: 'fold', hat: false, bow: true });
+  const waist = upright.getObjectByName('waist');
+  assert.ok(waist, 'a bowing figure carries a waist hinge');
+  assert.ok(waist.getObjectByName('head'), 'the head rides above the hinge');
+  assert.ok(waist.getObjectByName('torso'), 'and so does the torso');
+  assert.ok(upright.getObjectByName('body'), 'the skirt stays on the figure itself');
+
+  // an ordinary figure is untouched — no hinge, one body, same as it ever was
+  assert.equal(makeFigure({ height: H }).getObjectByName('waist'), undefined);
+
+  const headAt = (angle) => {
+    const g = makeFigure({ height: H, arms: 'fold', hat: false, bow: true });
+    g.getObjectByName('waist').rotation.x = angle;
+    g.updateMatrixWorld(true);
+    return {
+      head: g.getObjectByName('head').getWorldPosition(new THREE.Vector3()),
+      box: new THREE.Box3().setFromObject(g),
+    };
+  };
+  const up = headAt(0);
+  const bowed = headAt(0.62);
+  // FORWARD (+z, the way a body fronts) and DOWN — not sideways, which is
+  // exactly what the old whole-figure rotation.z did
+  assert.ok(bowed.head.z > up.head.z + 0.2 * H,
+    `the head travels forward: ${up.head.z.toFixed(2)} -> ${bowed.head.z.toFixed(2)}`);
+  assert.ok(bowed.head.y < up.head.y - 0.05 * H, 'and drops as he bends');
+  assert.ok(Math.abs(bowed.head.x - up.head.x) < 1e-6, 'and never leans sideways');
+  // the hem is still planted: he bent, he did not topple
+  assert.ok(Math.abs(bowed.box.min.y) < 1e-6, `the hem stays on the ground: ${bowed.box.min.y}`);
+});

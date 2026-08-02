@@ -28,6 +28,11 @@ export const ROSTER = [
   { key: 'monk-point', section: 'figures', build: (kit) => kit.makeMonk({ pose: 'point' }) },
   { key: 'monk-raise', section: 'figures', build: (kit) => kit.makeMonk({ pose: 'raise' }) },
   { key: 'monk-fold', section: 'figures', build: (kit) => kit.makeMonk({ pose: 'fold' }) },
+  { key: 'monk-bow', section: 'figures', build: (kit) => {
+    const m = kit.makeMonk({ pose: 'bow', hat: false });
+    m.getObjectByName('waist').rotation.x = 0.62;   // mid-bow, so the pose reads
+    return m;
+  } },
   { key: 'buddha', section: 'figures', build: (kit) => kit.makeBuddha({}) },
   { key: 'hangingmonk', section: 'figures', build: (kit) => kit.makeHangingMonk({}) },
   { key: 'assembly', section: 'figures', build: (kit) => kit.makeAssembly({ count: 6, radius: 1.6 }) },

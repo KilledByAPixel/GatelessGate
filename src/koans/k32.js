@@ -20,7 +20,7 @@ const ID = 32;
 
 const QUIET = 20;         // seconds of not touching anything
 const BOW_IN = 3.2;       // and then, slowly
-const BOW = 0.30;
+const BOW = 0.62;         // radians at the waist — a real bow, not a nod
 
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
@@ -56,7 +56,11 @@ export default {
     scene.add(buddha);
 
     // THE PHILOSOPHER, standing at a respectful distance, waiting for an answer
-    const philosopher = makeMonk({ height: 1.66, hat: false, stout: 1.05 });
+    // pose 'bow' hinges him at the sash: makeFigure hands back a group named
+    // 'waist' carrying the torso, head and arms, and turning it forward IS the
+    // bow. He is built upright; the movement below is the whole case.
+    const philosopher = makeMonk({ height: 1.66, hat: false, stout: 1.05, pose: 'bow' });
+    const philWaist = philosopher.getObjectByName('waist');
     philosopher.position.set(2.0, 0, 0.5);
     faceMonk(philosopher, buddha.position);
     scene.add(philosopher);
@@ -131,7 +135,12 @@ export default {
         const still = clock - lastTouch;
         const u = clamp01((still - QUIET) / BOW_IN);
         const lean = u * u * (3 - 2 * u);
-        philosopher.rotation.z = -BOW * lean;
+        // FORWARD, at the waist. This was rotation.z on the whole figure, so
+        // he listed sideways like a felled post (Frank: "he's bowing along the
+        // wrong axis... he should be bowing forward, and ideally bent at the
+        // waist"). Bodies front local +z and a positive turn about x carries
+        // the chest that way, so this is a bow from the sash up.
+        philWaist.rotation.x = BOW * lean;
         if (!bowed && u >= 1) {
           bowed = true;
           // the one sound in the case, and it arrives only if you let it
@@ -143,7 +152,7 @@ export default {
           reaches,
           bowed,
           still: +Math.min(999, clock - lastTouch).toFixed(1),
-          lean: +Math.abs(philosopher.rotation.z).toFixed(4),
+          lean: +Math.abs(philWaist.rotation.x).toFixed(4),
         };
       },
       dispose() {},

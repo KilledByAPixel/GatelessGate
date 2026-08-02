@@ -23,18 +23,25 @@ const POSES = {
   point: { stance: 'stand', arms: 'point' },
   raise: { stance: 'stand', arms: 'raise' },
   fold: { stance: 'stand', arms: 'fold' },
+  // Standing, hands folded, hinged at the sash so the case can bend him
+  // forward: makeFigure puts a group named 'waist' in the figure, and turning
+  // its rotation.x IS the bow. Built upright (bow: true, angle 0) so a scene
+  // can play the movement rather than staging a man already bent double.
+  bow: { stance: 'stand', arms: 'fold', bow: true },
 };
 
 export function makeMonk({
   height = 1.6, stout = 1, color = INK, hat = true, pose = 'stand', elder = false, arms = true,
   staffAng,   // optional plant-bearing override, passed through to the figure
   cushion = true,   // seated only — false where the case lays its own mat
+  bow,              // true = hinge him at the waist; a number also sets the angle
 } = {}) {
   const p = POSES[pose] || POSES.stand;
   const g = makeFigure({
     height, stout, color, hat, elder, staffAng, cushion,
     stance: p.stance,
     arms: arms ? p.arms : null,
+    bow: bow !== undefined ? bow : (p.bow || 0),
   });
   g.name = 'monk';
   return g;
