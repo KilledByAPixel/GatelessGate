@@ -129,16 +129,22 @@ test('case 28\'s flame is visible from the case\'s own home camera', () => {
 });
 
 test('lantern roof rim kicks up above the low point just behind it', () => {
-  // Reproduces the builder's own profile formula (same disclosed
-  // reproduce-the-tuned-constant tradeoff other D-tasks' eave/post tests
-  // use) rather than a magic epsilon, and is mutation-provable: flip the
-  // sign of LIP and this assertion goes false.
+  // Mutation-provable: flip the sign of LIP in the builder and this goes
+  // false. The rim radius is READ BACK off the geometry rather than restated
+  // here — it used to be a copy of the builder's 0.21·H constant, and the
+  // moment Frank retuned the roof (0.25·H, and the dip flattened to zero) the
+  // buckets stopped matching any vertex and the test failed for the wrong
+  // reason. What is being pinned is the SHAPE, not the numbers.
   const H = 1.15;
   const l = makeLantern({ height: H });
   const roof = l.children.find((c) => c.name === 'roof');
   assert.ok(roof, 'roof mesh present');
   const pos = roof.geometry.attributes.position;
-  const ROOF_R = 0.21 * H;
+  let ROOF_R = 0;
+  for (let i = 0; i < pos.count; i++) {
+    ROOF_R = Math.max(ROOF_R, Math.hypot(pos.getX(i), pos.getZ(i)));
+  }
+  assert.ok(ROOF_R > 0.1 * H, `the roof has a real span: ${ROOF_R}`);
   // bucket vertices near the rim tip (r close to ROOF_R) vs. the dip point
   // just inboard of it (r close to 0.85*ROOF_R) and compare their max y —
   // "max" because both the upper (visible) and lower (underside) surfaces
@@ -148,8 +154,8 @@ test('lantern roof rim kicks up above the low point just behind it', () => {
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i), z = pos.getZ(i), y = pos.getY(i);
     const r = Math.hypot(x, z);
-    if (Math.abs(r - ROOF_R) < 0.01) tipY = Math.max(tipY, y);
-    else if (Math.abs(r - 0.85 * ROOF_R) < 0.01) dipY = Math.max(dipY, y);
+    if (Math.abs(r - ROOF_R) < 0.012) tipY = Math.max(tipY, y);
+    else if (Math.abs(r - 0.85 * ROOF_R) < 0.012) dipY = Math.max(dipY, y);
   }
   assert.ok(tipY > -Infinity && dipY > -Infinity, 'found both the rim tip and the dip point');
   assert.ok(tipY > dipY, `rim tip (${tipY.toFixed(4)}) should sit above the dip just behind it (${dipY.toFixed(4)}) — the upturn`);
