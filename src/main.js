@@ -210,7 +210,12 @@ let ambient = false;
 // on every page turn (stopReading runs in buildKoan) and this one has to
 // survive the turn: it is the thing that asks for the next page.
 let readingBook = false;
-const ambientBtn = tool('◉', 'Read the book', () => setAmbient(!ambient));
+// ℹ, not ◉: a circle with a dot in it says nothing, while the information "i"
+// is the one glyph everybody already reads as "tell me about this" (Frank:
+// "if it was an i, that would sell it better"). Same family as ♪ and ⛶ —
+// every tool here is one Unicode character in the page's own font, not an
+// icon set: nothing to download, and it inherits the toolbar's colour.
+const ambientBtn = tool('ℹ', 'Read the book', () => setAmbient(!ambient));
 function setAmbient(on) {
   ambient = !!on;
   app.classList.toggle('ambient', ambient);

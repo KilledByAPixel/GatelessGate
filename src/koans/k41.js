@@ -70,7 +70,7 @@ export default {
     // the lip (Frank: "he'd be further into the cave... it feels like there's
     // just a wall there, there's not any kind of depth to the cave").
     const CAVE = { x: -0.4, z: -5.2, yaw: 0.18 };
-    const IN = 0.35;                       // along the cave's own axis, from its origin
+    const IN = 0.5;                       // along the cave's own axis, from its origin
     const bodhidharma = makeMonk({
       height: 1.56, pose: 'sit', hat: false, color: WASH.mid,
     });

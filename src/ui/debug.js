@@ -18,8 +18,10 @@ import { setInkScale } from '../render/outlines.js';
 // back live (Frank). One red seal per koan.
 // bumped when a default LOOK changes, since a stored state would otherwise
 // mask it: v3 turned the ink outlines on, v4 dropped ink strength to 0.5,
-// v5 turned the hull off by default (ink width 0) (all Frank)
-const KEY = 'gateless-gate-debug-v5';
+// v5 turned the hull off by default (ink width 0), v6 is Frank's live tune
+// of the weather: more wind in the grass, a broader and slower-drifting
+// gust, patchier placement, and a hairline of hull ink back on (all Frank)
+const KEY = 'gateless-gate-debug-v6';
 // Persistence is opt-in. By default the workbench opens on the shipped defaults
 // every reload, so a quick test can never quietly leave the look changed the next
 // time round. The "Keep settings on reload" toggle (below "reset all") turns it
@@ -47,10 +49,10 @@ const CONTROLS = [
   { group: 'Scene' },
   { key: 'grass', label: 'Grass field', type: 'bool', def: true },
   { key: 'grassTufts', label: 'Grass tufts (re-enter)', type: 'bool', def: true },
-  { key: 'grassWind', label: 'Grass wind', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
-  { key: 'grassPatch', label: 'Grass patch (re-enter)', type: 'range', def: 0.42, min: 0, max: 0.8, step: 0.02 },
-  { key: 'gustScale', label: 'Gust patch', type: 'range', def: 0.055, min: 0.01, max: 0.25, step: 0.005 },
-  { key: 'gustSpeed', label: 'Gust drift', type: 'range', def: 2.4, min: 0, max: 12, step: 0.1 },
+  { key: 'grassWind', label: 'Grass wind', type: 'range', def: 1.5, min: 0, max: 3, step: 0.05 },
+  { key: 'grassPatch', label: 'Grass patch (re-enter)', type: 'range', def: 0.7, min: 0, max: 0.8, step: 0.02 },
+  { key: 'gustScale', label: 'Gust patch', type: 'range', def: 0.2, min: 0.01, max: 0.25, step: 0.005 },
+  { key: 'gustSpeed', label: 'Gust drift', type: 'range', def: 0.7, min: 0, max: 12, step: 0.1 },
   { key: 'trees', label: 'Trees', type: 'bool', def: true },
   { key: 'forest', label: 'Forest', type: 'bool', def: true },
   { key: 'mountains', label: 'Mountains', type: 'bool', def: true },
@@ -64,7 +66,7 @@ const CONTROLS = [
   { group: 'Render' },
   { key: 'toon', label: 'Toon shader', type: 'bool', def: false },
   { key: 'outlines', label: 'Ink outlines (hull)', type: 'bool', def: true },
-  { key: 'inkWidth', label: 'Ink width', type: 'range', def: 0, min: 0, max: 3, step: 0.05 },
+  { key: 'inkWidth', label: 'Ink width', type: 'range', def: 0.1, min: 0, max: 3, step: 0.05 },
   { key: 'grain', label: 'Paper texture', type: 'bool', def: true },   // master: off = no paper at all
   { key: 'blobs', label: 'Blob shadows', type: 'bool', def: false },
   { key: 'shadows', label: 'Real shadows', type: 'bool', def: true },
