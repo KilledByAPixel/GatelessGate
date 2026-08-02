@@ -5,13 +5,19 @@ import k19 from '../src/koans/k19.js';
 import { makeMoon } from '../src/kit/moon.js';
 import { makeWildflowers } from '../src/kit/wildflowers.js';
 import { groundHeight } from '../src/kit/ground.js';
-import { ACCENT, ACCENT_DEEP } from '../src/palette.js';
+import { ACCENT, ACCENT_DEEP, wash, WASH } from '../src/palette.js';
 
 // Case 19 has no object at its centre, so its two red seals are weather: the
-// harvest moon and the wildflowers of Mumon's verse. Both are easy to get
-// subtly wrong in ways nothing else in the suite would catch — a moon that the
-// fog quietly erases, or that a pale invisible slope stands in front of; blooms
-// floating flat at y=0 over rolling ground, or sprouting through the road.
+// harvest moon and the butterflies playing over the meadow (they replaced the
+// red wildflowers — Frank wanted spring alive in the air, not pigment on the
+// ground). Both are easy to get subtly wrong in ways nothing else in the suite
+// would catch — a moon that the fog quietly erases, or that a pale invisible
+// slope stands in front of; butterflies that drift out of the frame or down
+// into the grass.
+//
+// The kit-level wildflower tests at the bottom stay here even though the case
+// no longer places a field: they pin makeWildflowers itself (placement, ground
+// conformance, keepouts, the gust front), which case 24's meadow rides on.
 
 function fakeCtx() {
   const taps = [], hovers = [];
@@ -68,7 +74,7 @@ test('the diorama is a road, two walkers, a moon and a meadow', () => {
   const monks = [];
   root.scene.traverse((o) => { if (o.name === 'monk') monks.push(o); });
   assert.equal(monks.length, 2, 'Joshu and Nansen, walking');
-  for (const name of ['path', 'moon', 'wildflowers', 'ground', 'grassfield']) {
+  for (const name of ['path', 'moon', 'butterflies', 'ground', 'grassfield']) {
     assert.ok(root.scene.getObjectByName(name), `${name} missing from the scene`);
   }
 
@@ -136,32 +142,33 @@ test('the moon sits in frame, above the horizon, at the home angle', () => {
   assert.ok(moon.position.y - cam.position.y < 9, 'and low over the hills, not overhead');
 });
 
-test('no bloom stands in the middle of the worn track', () => {
-  // A path is a ribbon and a keepout is a chain of circles, so the chain has to
-  // be dense enough to actually overlap. At the resolution this started with,
-  // blooms sprouted straight through the gaps and stood in the road.
+test('the butterflies wear the case red and play low over the meadow, in frame', () => {
   const root = k19.build(fakeCtx());
-  const path = root.scene.getObjectByName('path');
-  const flowers = root.scene.getObjectByName('wildflowers');
-  const m4 = new THREE.Matrix4();
-  const p = new THREE.Vector3();
-  const centre = [];
-  for (let t = 0; t <= 240; t++) centre.push(path.sample(t / 240));
+  for (let i = 0; i < 90; i++) root.update(1 / 60, i / 60);
+  root.scene.updateMatrixWorld(true);
+  const group = root.scene.getObjectByName('butterflies');
+  const each = [];
+  group.traverse((o) => { if (o.name === 'butterfly') each.push(o); });
+  assert.ok(each.length >= 5 && each.length <= 7, `a handful, got ${each.length}`);
 
-  let worst = Infinity;
-  for (let i = 0; i < flowers.count; i++) {
-    flowers.getMatrixAt(i, m4);
-    p.setFromMatrixPosition(m4);
-    let d = Infinity;
-    for (const s of centre) d = Math.min(d, Math.hypot(p.x - s.x, p.z - s.z));
-    worst = Math.min(worst, d);
+  const cam = rigCamera();
+  let inFrame = 0;
+  for (const b of each) {
+    // red — the seal has to be ON them, and wings never take an inverted hull
+    b.traverse((o) => {
+      if (!o.isMesh) return;
+      assert.equal('#' + o.material.color.getHexString(), ACCENT.toLowerCase(), 'butterflies wear the accent');
+      assert.equal(o.userData.noOutline, true, 'a hull on a paper-thin wing is a blot');
+    });
+    // at flower height, not up with the moon and not in the grass
+    assert.ok(b.position.y > 0.3 && b.position.y < 3.5, `plays low, got y=${b.position.y.toFixed(2)}`);
+    const v = b.getWorldPosition(new THREE.Vector3()).project(cam);
+    if (Math.abs(v.x) < 0.9 && Math.abs(v.y) < 0.9 && v.z > 0 && v.z < 1) inFrame++;
   }
-  // the ribbon's half-width runs 0.64..0.86; blooms may crowd its rim, but none
-  // may stand in the rut
-  assert.ok(worst > 0.6, `a bloom is ${worst.toFixed(2)} from the centreline — that is in the road`);
+  assert.ok(inFrame >= 3, `most of the flight is in the picture, got ${inFrame}/${each.length}`);
 });
 
-test('touching the meadow sends a breeze; touching the moon shifts the light', () => {
+test('touching the meadow stirs the butterflies; touching the moon shifts the light', () => {
   const ctx = fakeCtx();
   const root = k19.build(ctx);
   root.setCamera(rigCamera());
@@ -174,23 +181,24 @@ test('touching the meadow sends a breeze; touching the moon shifts the light', (
   assert.equal(root.fragment().touches, 0);
 
   // tap the meadow
-  ctx.input.raycastFirst = (cam, objs) => (objs.includes(ground) || objs.includes(root.scene.getObjectByName('wildflowers'))
+  ctx.input.raycastFirst = (cam, objs) => (objs.includes(ground)
     ? { object: ground, point: new THREE.Vector3(2, 0, 1) }
     : null);
   ctx._taps.forEach((cb) => cb(10, 10));
   let frag = root.fragment();
   assert.equal(frag.touches, 1);
-  assert.equal(frag.gusts, 1, 'a breath is crossing the field');
+  assert.ok(frag.flutter > 0.9, 'the butterflies startle at once');
   assert.ok(frag.breeze > 0.9, 'and it is in the wind sound too');
 
-  // it passes on its own. The breeze decays on a ~1.7 s time constant, so five
-  // seconds is three of them — most of the way down, not all of it.
+  // it passes on its own. The breeze decays on a ~1.7 s time constant and the
+  // flutter on ~2.2 s, so five seconds is most of the way down for both.
   for (let i = 0; i < 300; i++) root.update(1 / 60, i / 60);
   frag = root.fragment();
-  assert.equal(frag.gusts, 0, 'the gust expires');
+  assert.ok(frag.flutter < 0.15, `the flight settles, got ${frag.flutter}`);
   assert.ok(frag.breeze < 0.1, `the wind settles back, got ${frag.breeze}`);
   for (let i = 0; i < 600; i++) root.update(1 / 60, 5 + i / 60);
   assert.equal(root.fragment().breeze, 0, 'and reaches rest exactly, rather than creeping');
+  assert.ok(root.fragment().flutter < 0.02, 'the butterflies go back to playing');
 
   // tap the moon
   ctx.input.raycastFirst = (cam, objs) => (objs.includes(moon) ? { object: moon, point: moon.position.clone() } : null);
@@ -291,7 +299,7 @@ const tiltOf = (m4) => {
   return Math.acos(Math.max(-1, Math.min(1, up.y)));
 };
 
-test('wildflowers place exactly the count asked for, in two instanced draws (red heads, ink stems)', () => {
+test('wildflowers place exactly the count asked for, in two instanced draws (pale heads, grass stems)', () => {
   const f = makeWildflowers({ count: 60, radius: 18, rMin: 3, seed: 19, groundSeed: 21 });
   assert.equal(f.mesh.name, 'wildflowers');
   assert.ok(f.mesh.isInstancedMesh, 'the heads are one instanced mesh');
@@ -300,15 +308,25 @@ test('wildflowers place exactly the count asked for, in two instanced draws (red
   assert.equal(f.blooms, 60);
   assert.equal(f.points.length, 60);
 
-  // ONLY THE HEAD IS RED (Frank: "just the top part of the flower... the
-  // stalk should still be black"). The stems ride as a child instanced mesh
-  // in ink, sharing every instance matrix with the heads.
+  // BY DEFAULT NOTHING IS RED (Frank: "the petals should be whitish, the same
+  // colour family as the ground, and the stalk the same kind of colour as the
+  // grass"). Heads sit just off the paper, stems wear the grass tone, and
+  // neither may trip the seal-glow emissive that accent-family colours get.
+  assert.equal(f.mesh.material.color.getHexString(), new THREE.Color(wash(0.10)).getHexString(),
+    'default petals are whitish, in the ground family');
+  assert.equal(f.mesh.material.emissive.getHexString(), '000000', 'pale petals must not glow');
   const stems = f.mesh.children.find((c) => c.name === 'wildflower-stems');
   assert.ok(stems && stems.isInstancedMesh, 'the stems are their own instanced mesh');
   assert.equal(stems.count, f.mesh.count, 'one stem per head');
-  assert.notEqual(stems.material.color.getHexString(), f.mesh.material.color.getHexString(),
-    'stems do not wear the accent');
+  assert.equal(stems.material.color.getHexString(), new THREE.Color(WASH.dry).getHexString(),
+    'stalks wear the grass tone');
   assert.equal(stems.material.emissive.getHexString(), '000000', 'and the seal glow stays off the stalks');
+
+  // `color` stays an override for a case that puts its seal on the meadow —
+  // and an accent head DOES glow, exactly as any accent material would
+  const red = makeWildflowers({ count: 8, radius: 10, seed: 19, groundSeed: 21, color: ACCENT });
+  assert.equal('#' + red.mesh.material.color.getHexString(), ACCENT.toLowerCase());
+  assert.ok(red.mesh.material.emissiveIntensity > 0, 'an accented meadow keeps the seal glow');
   const ma = new THREE.Matrix4(), mb = new THREE.Matrix4();
   f.update(0.5, 1.7);                    // mid-sway, not just the planted frame
   f.mesh.getMatrixAt(31, ma);
@@ -379,6 +397,25 @@ test('`along` clusters the blooms into drifts instead of an even sprinkle', () =
   // every drift actually got used
   for (const c of along) {
     assert.ok(f.points.some((p) => Math.hypot(p.x - c.x, p.z - c.z) <= spread), `nothing grew at ${JSON.stringify(c)}`);
+  }
+});
+
+test('`scale` grows every bloom in place — same roots, doubled size', () => {
+  // case 24 runs the meadow at scale 2; the option must never MOVE a bloom,
+  // only grow it where it stands
+  const a = makeWildflowers({ count: 40, radius: 15, rMin: 2, seed: 9, groundSeed: 21 });
+  const b = makeWildflowers({ count: 40, radius: 15, rMin: 2, seed: 9, groundSeed: 21, scale: 2 });
+  assert.deepEqual(b.points, a.points, 'size never moves a bloom');
+  const pa = new THREE.Vector3(), qa = new THREE.Quaternion(), sa = new THREE.Vector3();
+  const pb = new THREE.Vector3(), qb = new THREE.Quaternion(), sb = new THREE.Vector3();
+  const ma = new THREE.Matrix4(), mb = new THREE.Matrix4();
+  for (let i = 0; i < a.mesh.count; i++) {
+    a.mesh.getMatrixAt(i, ma); ma.decompose(pa, qa, sa);
+    b.mesh.getMatrixAt(i, mb); mb.decompose(pb, qb, sb);
+    assert.ok(pa.distanceTo(pb) < 1e-6, 'planted in the same spot');
+    for (const k of ['x', 'y', 'z']) {
+      assert.ok(Math.abs(sb[k] - 2 * sa[k]) < 1e-6, `scale doubles ${k}: ${sa[k]} -> ${sb[k]}`);
+    }
   }
 });
 

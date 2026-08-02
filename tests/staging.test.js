@@ -206,7 +206,10 @@ test('every staged interaction reaches the audio engine', async () => {
 const OVER_BUDGET_BY_HISTORY = {};
 
 // Accents that are deliberately not a compact thing in the middle distance:
-// 24's is the whole flowering meadow (an instanced field); 27's is the moon,
+// 24's is the BIRDS (the meadow's blooms went to the kit's pale default when
+// Frank ruled petals whitish by default) — a flock circling at altitude that
+// crosses the frame rather than sitting in it, so its world positions at t=0
+// prove nothing; 27's is the moon,
 // sixty units out beyond the mountains; 22's is the PATH, a ground-spanning
 // ribbon whose mesh origin is not a meaningful point to project (the road is
 // inherently in frame — it is the ground you are looking at). 36 used to be

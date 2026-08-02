@@ -3,7 +3,7 @@ import { hash1 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
 import { mergeSimple } from './scatter.js';
 import { groundHeight } from './ground.js';
-import { ACCENT, INK } from '../palette.js';
+import { wash, WASH } from '../palette.js';
 
 // "In spring, hundreds of flowers." Tiny blooms scattered through the meadow as
 // ONE InstancedMesh — a single draw call, seeded, conforming to the terrain and
@@ -38,11 +38,13 @@ const GUST_LIFE = 2.8;    // seconds before it has crossed the meadow and gone
 const MAX_GUSTS = 4;
 
 // One bloom, in TWO geometries: a hair-thin stem and a small faceted head
-// sitting on top of it. They are separate because only the HEAD is red — "we
-// want just the top part of the flower to be red, not the stalk; that should
-// still be black" (Frank) — and the seal-glow emissive on accent materials
-// (toon.js) cannot be split per-vertex inside one mesh. The two instanced
-// meshes share every instance matrix, so they stay one bloom in motion.
+// sitting on top of it. They are separate because head and stalk never share a
+// tone — "by default the petals should be whitish, kind of the same colour
+// family as the ground, and the stalk the same kind of colour as the grass"
+// (Frank) — and when a case DOES put its accent on the heads (pass `color`),
+// the seal-glow emissive on accent materials (toon.js) could not be split
+// per-vertex inside one mesh anyway. The two instanced meshes share every
+// instance matrix, so they stay one bloom in motion.
 // The stem's base is at the local origin, so an instance plants exactly on
 // the terrain and leans from its own foot.
 function stemGeometry() {
@@ -73,7 +75,11 @@ export function makeWildflowers({
   rMin = 2,              // even-scatter mode only: the bare middle
   seed = 71,
   groundSeed = 21,
-  color = ACCENT,        // each bloom is tiny, so full accent is right here
+  color = wash(0.10),    // whitish petals, a shade off the paper — pale enough to
+                         // stay OUT of the seal set, so default blooms never glow.
+                         // A case that owns the meadow as its seal overrides this.
+  stemColor = WASH.dry,  // the stalks read as more grass, not inked wire
+  scale = 1,             // multiplies every instance's base size (k24 runs ~2)
   keepout = [],
   along = null,          // [{x, z}] — cluster into drifts around these instead
   spread = 2.2,          // how far from a centre a bloom may stray
@@ -104,7 +110,7 @@ export function makeWildflowers({
     pts.push({ x, z, u: hash1(tries * 5 + 4, seed) });
   }
 
-  // the HEADS are the red; the mesh carrying them stays the handle's `mesh`
+  // the HEADS carry the petal tone; the mesh carrying them stays the handle's `mesh`
   const mesh = new THREE.InstancedMesh(
     headGeometry(seed), toonMaterial({ color, flat: true }), Math.max(1, pts.length));
   mesh.count = pts.length;
@@ -113,9 +119,9 @@ export function makeWildflowers({
   mesh.castShadow = false;
 
   // the STEMS ride as a child of the heads mesh — one scene.add carries both —
-  // in ink, one extra draw call for the whole field
+  // in the grass tone, one extra draw call for the whole field
   const stems = new THREE.InstancedMesh(
-    stemGeometry(), toonMaterial({ color: INK, flat: true }), Math.max(1, pts.length));
+    stemGeometry(), toonMaterial({ color: stemColor, flat: true }), Math.max(1, pts.length));
   stems.count = pts.length;
   stems.name = 'wildflower-stems';
   stems.userData.noOutline = true;
@@ -156,7 +162,7 @@ export function makeWildflowers({
     // variety; two clusters with a visible gap between them read as bud vs
     // bloom even at a case's real distance.
     const big = hash1(i * 9 + 21, seed) < 0.32;
-    const sc = big ? 1.05 + 0.35 * pt.u : 0.52 + 0.30 * pt.u;
+    const sc = (big ? 1.05 + 0.35 * pt.u : 0.52 + 0.30 * pt.u) * scale;
 
     return {
       x: pt.x,
