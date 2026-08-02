@@ -22,6 +22,8 @@ import { makeAbout } from './ui/about.js';
 import { makeScroll } from './ui/scroll.js';
 import { makePageCard, pageCardLabel } from './ui/page_card.js';
 import { makeSit } from './sit.js';
+import { makeThemeButton } from './ui/theme.js';
+import { readTheme, nextTheme } from './ui/theme_state.js';
 import { makeRouter } from './router.js';
 import { readingOrder, neighborSlug, nextInLoop } from './spine.js';
 
@@ -99,12 +101,38 @@ function showView(el) {
 // With it off nothing below this line ever runs: no menu section, no dev route.
 let devMode = devModeOn();
 
+// ---- the reading light ----
+// A page setting, not an app setting: the class goes on the PANEL, so the dark
+// page never reaches the diorama, the toolbar or the timer (see styles.css).
+// Two buttons wear it at once — one on the contents, one in every page's
+// toolbar — so a toggle from either has to repaint the other. Buttons whose
+// view has been disposed are dropped on the way past rather than tracked.
+let theme = readTheme(save.state().theme);
+let themeBtns = [];
+function applyTheme() {
+  panel.classList.toggle('dark', theme === 'dark');
+  themeBtns = themeBtns.filter((b) => b.el.isConnected || !b.el.parentNode);
+  for (const b of themeBtns) b.refresh();
+}
+function toggleTheme() {
+  theme = nextTheme(theme);
+  save.setTheme(theme);
+  applyTheme();
+}
+function themeButton() {
+  const b = makeThemeButton({ getTheme: () => theme, onToggle: toggleTheme });
+  themeBtns.push(b);
+  return b.el;
+}
+applyTheme();
+
 const menu = makeMenu({
   cases: CASES, progress: save.state(), isStaged,
   onSelect: (slug) => enter(slug),
   onAbout: () => showView(about.el),
   devMode,
   onDev: (slug) => enter(slug),
+  themeEl: themeButton(),
 });
 panel.appendChild(menu.el);
 
@@ -117,13 +145,16 @@ panel.appendChild(about.el);
 
 const sit = makeSit({
   audio,
+  // The bell has rung and the sitting is recorded — and that is ALL that happens
+  // here. Being thrown back into the text the instant the timer expired was the
+  // worst-timed interruption in the book; the reader is left in the scene now,
+  // and leaves it with the tap that calls onExit below.
   onComplete: () => {
     // Same guard buildKoan uses for markRead: a dev page's Sit button exists
     // for judging the timer, not for the reader's progress. Without this, a
     // completed sit on the showcase would persist sat['showcase'] into save
     // state — a tool leaking into the book the same way an unmarked read would.
     if (koanSlug && !isDevPage(koanSlug)) { save.markSat(koanSlug); menu.refresh(save.state()); }
-    resumeKoan();
   },
   onExit: () => resumeKoan(),
 });
@@ -229,12 +260,24 @@ const EYE = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" 
 const ambientBtn = tool(EYE, 'Read the book', () => setAmbient(!ambient));
 function setAmbient(on) {
   ambient = !!on;
-  app.classList.toggle('ambient', ambient);
   ambientBtn.classList.toggle('active', ambient);
   ambientBtn.title = ambient ? 'Stop reading' : 'Read the book';
-  applyStageSize();          // the panel just left or returned; see the comment there
-  if (rig) rig.setWander(ambient);
+  applyStageOnly();
   if (ambient) startReadingBook(); else stopReadingBook();
+}
+
+// Just the picture, no text beside it. TWO things ask for this and they are
+// unrelated — the hands-free reading, and the timer, which needs the same empty
+// stage for the opposite reason (nothing to read at all). So the layout is its
+// own switch, derived from both, rather than a thing the reading owns and the
+// timer borrows: leaving a sit while the reading view is on must not pull the
+// panel back over it.
+function stageOnly() { return ambient || mode === 'sit'; }
+function applyStageOnly() {
+  app.classList.toggle('ambient', stageOnly());
+  app.classList.toggle('sitting', mode === 'sit');   // the toolbar steps aside too
+  applyStageSize();          // the panel just left or returned; see the comment there
+  if (rig) rig.setWander(stageOnly());
 }
 
 // Hands-free reading: the text steps aside, the camera drifts, and the book
@@ -347,9 +390,9 @@ function makeRig(opts) {
   const r = makeCameraRig(camera, renderer.domElement, opts);
   rig = r;
   applyLens();
-  // every scene builds a fresh rig, so an ambient view already running has to be
-  // re-applied to it — otherwise paging while ambient silently stops the drift
-  r.setWander(ambient);
+  // every scene builds a fresh rig, so a stage-only view already running has to
+  // be re-applied to it — otherwise paging while ambient silently stops the drift
+  r.setWander(stageOnly());
   return r;
 }
 
@@ -479,6 +522,7 @@ function buildKoan(mod, slug) {
     },
     onBack: () => exit(),
     onSit: (m) => startSit(m),
+    themeEl: themeButton(),
     // page through the book one case at a time (Contents stays the way out)
     hasPrev: !!neighbor(slug, -1),
     hasNext: !!neighbor(slug, +1),
@@ -682,12 +726,15 @@ function startSit(minutes = 10) {
   readingBook = false;
   pageCard.hide();
   stopReading();
-  panel.classList.add('fading');   // the text recedes while sitting
+  // The text doesn't dim, it LEAVES: the whole window becomes the diorama, the
+  // way it does for the hands-free reading. A sitting is the one time this book
+  // has nothing to say.
+  applyStageOnly();
   sit.start(minutes);
 }
 function resumeKoan() {
-  panel.classList.remove('fading');
   mode = 'koan';
+  applyStageOnly();   // the page comes back — unless the reading view is holding it out
 }
 
 // ---- input / keys ----
@@ -810,6 +857,10 @@ window.gate = {
       camera: rig ? rig.state() : null,
       progress: { read: { ...save.state().read }, sat: { ...save.state().sat } },
       reading: { ambient, book: readingBook, all: readingAll, slug: koanSlug },
+      // 'off' | 'sitting' | 'done' — 'done' is the timer run out with the reader
+      // still in the scene, which is a state the mode alone cannot report.
+      sit: sit.status(),
+      theme,
     };
     if (koan && koan.fragment) s.koan = koan.fragment();
     return s;
@@ -828,6 +879,7 @@ window.gate = {
   },
   sit(minutes) { startSit(minutes); },
   endSit() { sit.end(); },
+  theme(t) { if (t !== undefined && readTheme(t) !== theme) toggleTheme(); return theme; },
   markRead(slug) { save.markRead(slug); menu.refresh(save.state()); },
   markSat(slug) { save.markSat(slug); menu.refresh(save.state()); },
   setSound(on) { audio.setSound(on); setSoundLabel(); },

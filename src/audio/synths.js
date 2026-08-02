@@ -286,6 +286,42 @@ export function strikeBell(ctx, dest, { f0 = 62, gain = 1 } = {}) {
   strike(ctx, dest, { partials: bellPartials(f0), gain });
 }
 
+// ---- the sit bell ----
+// The inkin: the small hand bell that opens and closes a sitting. It is NOT the
+// book's temple bell. The timer used to ring bellPartials at 70 Hz straight into
+// master, and Frank heard it for what it was — "such a low thud... it should be
+// a nice ting, a ding kind of bell". Three things make that difference and all
+// three are here: a small bell's pitch (degree 15 is the root four octaves up,
+// the same note in either mood), a hard bright tick for the mallet, and a heavy
+// send to the room. A dry bell reads as a thud at ANY pitch.
+export const SIT_BELL = { degree: 15, level: 0.45, verbMix: 0.8 };
+
+// A small bell's modes are near-harmonic with a slight stretch — that stretch is
+// the shimmer. Long on the fundamental (a struck inkin rings for ten seconds),
+// and the upper modes die away quickly, which is what leaves a clean pitch
+// hanging in the room instead of a clang.
+export function sitBellPartials(f0 = 1174) {
+  return [
+    [1.0, 1.0, 9], [2.02, 0.5, 5], [3.01, 0.26, 3], [4.21, 0.14, 1.8], [5.43, 0.07, 1.1],
+  ].map(([r, a, d]) => ({ freq: f0 * r, amp: a, decay: d }));
+}
+
+export function strikeSitBell(ctx, dry, verbIn, { f0 = 1174, gain = SIT_BELL.level, verbMix = SIT_BELL.verbMix } = {}) {
+  const out = ctx.createGain();
+  out.gain.value = 1;
+  const dryG = ctx.createGain(); dryG.gain.value = 1 - verbMix * 0.7;
+  out.connect(dryG); dryG.connect(dry);
+  if (verbIn) {
+    const sendG = ctx.createGain(); sendG.gain.value = verbMix * 1.2;
+    out.connect(sendG); sendG.connect(verbIn);
+  }
+  strike(ctx, out, {
+    partials: sitBellPartials(f0),
+    gain,
+    transient: { dur: 0.02, freq: f0 * 2.6, q: 1.0, amp: 0.35 },
+  });
+}
+
 export function strikeBar(ctx, dry, verbIn, { f0, gain = 1, decay = CHIME.decay, bright = CHIME.bright, verbMix = CHIME.verbMix } = {}) {
   const t = ctx.currentTime;
   const out = ctx.createGain();

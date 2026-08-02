@@ -1,7 +1,9 @@
 // Injectable-storage progress + settings. Pure logic; the browser passes localStorage.
 
 export function createSave(storage, key = 'gateless-gate-v1') {
-  const blank = () => ({ read: {}, sat: {}, soundOn: true, lastSlug: null, onboarded: false });
+  const blank = () => ({
+    read: {}, sat: {}, soundOn: true, lastSlug: null, onboarded: false, theme: 'light',
+  });
   let state;
   try {
     const raw = storage.getItem(key);
@@ -18,6 +20,7 @@ export function createSave(storage, key = 'gateless-gate-v1') {
     markRead(slug) { state.read[slug] = true; state.lastSlug = slug; persist(); },
     markSat(slug) { state.sat[slug] = true; persist(); },
     setSound(on) { state.soundOn = !!on; persist(); },
+    setTheme(t) { state.theme = t === 'dark' ? 'dark' : 'light'; persist(); },
     setOnboarded() { state.onboarded = true; persist(); },
   };
 }

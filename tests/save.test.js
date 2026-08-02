@@ -9,7 +9,26 @@ function fakeStorage(seed = {}) {
 
 test('blank state when empty', () => {
   const s = createSave(fakeStorage());
-  assert.deepEqual(s.state(), { read: {}, sat: {}, soundOn: true, lastSlug: null, onboarded: false });
+  assert.deepEqual(s.state(), {
+    read: {}, sat: {}, soundOn: true, lastSlug: null, onboarded: false, theme: 'light',
+  });
+});
+
+test('the reading light is remembered, and a junk one reads as light', () => {
+  const st = fakeStorage();
+  const s = createSave(st);
+  s.setTheme('dark');
+  assert.equal(s.state().theme, 'dark');
+  assert.equal(JSON.parse(st.d['gateless-gate-v1']).theme, 'dark', 'not persisted');
+  assert.equal(createSave(st).state().theme, 'dark', 'not read back');
+  s.setTheme('sepia');
+  assert.equal(s.state().theme, 'light', 'only the two skins exist');
+});
+
+// A save written before the setting existed must not open the book in the dark.
+test('an old save with no theme opens light', () => {
+  const st = fakeStorage({ 'gateless-gate-v1': JSON.stringify({ read: { a: true }, sat: {} }) });
+  assert.equal(createSave(st).state().theme, 'light');
 });
 
 test('markRead sets read + lastSlug and persists', () => {

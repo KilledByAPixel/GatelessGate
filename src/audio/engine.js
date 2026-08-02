@@ -1,6 +1,6 @@
 import {
   makeWind, strikeBell, strikeBar, CHIME, strikeDrip, makeWaterBed, WATER,
-  strike, bambooPartials, ODOSHI, pourBurst,
+  strike, bambooPartials, ODOSHI, pourBurst, strikeSitBell, SIT_BELL,
 } from './synths.js';
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
@@ -232,6 +232,16 @@ export function createAudio(save) {
       ensureCtx();
       if (ctx.state !== 'running') return;
       strikeBell(ctx, master, opts);
+    },
+    // The timer's bell, opening and closing a sitting. Its own voice rather than
+    // an option on bell(): every other bell in the book belongs to a case and is
+    // struck by something you can see, and this one belongs to the reader.
+    // Pitched to the mood like everything else — degree 15 is the root four
+    // octaves up, so it is the same note in both scales.
+    sitBell() {
+      ensureCtx();
+      if (ctx.state !== 'running') return;
+      strikeSitBell(ctx, master, verb.in, { f0: hz(SIT_BELL.degree, mood) });
     },
     // tube index -> scale degree -> Hz. The engine owns the mapping so the kit
     // never needs to know what a hertz is.

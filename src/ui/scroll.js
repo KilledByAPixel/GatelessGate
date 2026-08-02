@@ -5,7 +5,7 @@ import { pageShape, narrationQueue } from './scroll_state.js';
 // A quiet toolbar carries "Contents" (back) and "Sit"; the case seal appears once.
 export function makeScroll({
   id, title, text, sections, labels, accent = ACCENT, onSpeak, onSpeakAll, onBack, onSit,
-  onPrev, onNext, hasPrev = true, hasNext = true,
+  onPrev, onNext, hasPrev = true, hasNext = true, themeEl = null,
 } = {}) {
   const shape = pageShape({ id, sections, labels, text });
   const el = document.createElement('div');
@@ -56,7 +56,11 @@ export function makeScroll({
   }
   sit.onclick = () => pop.classList.toggle('open');
   sitWrap.append(sit, pop);
-  bar.append(back, nav, spacer, sitWrap);
+  // The reading light goes beside Sit, on the text's own toolbar rather than the
+  // stage's: it is a setting for the page, and the stage is not affected by it.
+  bar.append(back, nav, spacer);
+  if (themeEl) bar.appendChild(themeEl);
+  bar.appendChild(sitWrap);
   el.appendChild(bar);
 
   const head = document.createElement('div');

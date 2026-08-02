@@ -5,7 +5,9 @@ import { readingEntries } from '../spine.js';
 
 // The table of contents — a left-panel view over the idling stage scene.
 // Reads as a book's contents, not a level select.
-export function makeMenu({ cases, progress, isStaged, onSelect, onAbout, devMode = false, onDev } = {}) {
+export function makeMenu({
+  cases, progress, isStaged, onSelect, onAbout, devMode = false, onDev, themeEl = null,
+} = {}) {
   const el = document.createElement('div');
   el.className = 'gg-view gg-menu hidden';
 
@@ -41,7 +43,14 @@ export function makeMenu({ cases, progress, isStaged, onSelect, onAbout, devMode
   about.textContent = 'About';
   about.title = 'The translation, the lineage, and the credits';
   about.onclick = () => onAbout && onAbout();
-  backMatter.appendChild(about);
+  // The colophon line carries the reading light too: it is the one control the
+  // contents needs, and a book's light switch belongs at the end of the page
+  // rather than over its title. Same button as the one beside Sit.
+  const colophon = document.createElement('div');
+  colophon.className = 'gg-colophon';
+  colophon.appendChild(about);
+  if (themeEl) colophon.appendChild(themeEl);
+  backMatter.appendChild(colophon);
 
   // The Developer section, after About — the tools, not the book. Rebuilt from
   // scratch on every render and EMPTY unless developer mode is on: with the

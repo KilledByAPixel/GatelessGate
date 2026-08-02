@@ -1,6 +1,23 @@
 :root {
   --paper: #F3EDDF; --ink: #1E1E24; --gray: #55555E; --accent: #C73E3A;
   --panel-w: clamp(320px, 40%, 560px);
+  /* The ink as a bare triple, so every hairline, hover wash and dimmed line on
+     the page can be written rgba(var(--ink-rgb), a) and invert with the theme
+     at its own weight. Changing one number here re-inks the whole page. */
+  --ink-rgb: 30,30,36;
+  --seal-ink: var(--paper);   /* the glyph cut out of the seal */
+}
+/* ---- the dark page ----
+   Scoped to the panel ON PURPOSE, not to :root. This is the reading light over
+   the text and nothing else — the diorama beside it is a painting on paper and
+   stays lit that way, and so do the toolbar and the timer that sit over it
+   (Frank: "it really only applies to the text area"). Everything inside the
+   panel inherits these; nothing outside it can see them. */
+#gg-panel.dark {
+  color-scheme: dark;   /* the page's own scrollbar, which is not ours to draw */
+  --paper: #17171B; --ink: #E9E3D5; --gray: #9C978C; --accent: #DD5B54;
+  --ink-rgb: 233,227,213;
+  --seal-ink: #F3EDDF;   /* the numeral stays paper-white: dark-on-red is unreadable */
 }
 * { box-sizing: border-box; }
 
@@ -9,7 +26,7 @@
 #gg-panel {
   width: var(--panel-w); flex: none; position: relative; overflow: hidden;
   background: var(--paper); color: var(--ink);
-  border-right: 1px solid rgba(30,30,36,0.12);
+  border-right: 1px solid rgba(var(--ink-rgb),0.12);
   font-family: Georgia, 'Times New Roman', serif;
   transition: opacity 0.35s ease;
 }
@@ -26,10 +43,10 @@
 .gg-view.hidden { display: none; }
 
 button.gg-btn, .gg-view button {
-  font-family: Georgia, serif; background: none; border: 1px solid rgba(30,30,36,0.3);
+  font-family: Georgia, serif; background: none; border: 1px solid rgba(var(--ink-rgb),0.3);
   color: var(--ink); padding: 6px 14px; border-radius: 3px; cursor: pointer;
 }
-button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
+button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.05); }
 
 /* ---- title screen (intro), in the left panel ---- */
 .gg-title-view { display: flex; flex-direction: column; justify-content: center; }
@@ -43,7 +60,7 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
 .gg-menu h1 { font-weight: normal; letter-spacing: 0.04em; font-size: 30px; margin: 0 0 4px; }
 .gg-menu .lede { color: var(--gray); font-style: italic; margin: 0 0 18px; }
 .gg-menu ol { list-style: none; padding: 0; margin: 12px 0 0; }
-.gg-menu li { display: flex; align-items: baseline; gap: 12px; padding: 9px 0; border-bottom: 1px solid rgba(30,30,36,0.08); }
+.gg-menu li { display: flex; align-items: baseline; gap: 12px; padding: 9px 0; border-bottom: 1px solid rgba(var(--ink-rgb),0.08); }
 .gg-menu li .num { font-size: 13px; color: var(--gray); width: 24px; text-align: right; flex: none; }
 .gg-menu li .ttl { flex: 1; font-size: 18px; }
 /* Every case opens. `unstaged` means it has no diorama of its own yet, so it
@@ -51,7 +68,7 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
    be `locked` at 0.32 opacity, which read as unavailable. */
 .gg-menu li .ttl { cursor: pointer; }
 .gg-menu li .ttl:hover { color: var(--accent); }
-.gg-menu li.unstaged .ttl { color: rgba(30,30,36,0.62); }
+.gg-menu li.unstaged .ttl { color: rgba(var(--ink-rgb),0.62); }
 .gg-menu li .mark { width: 18px; text-align: center; flex: none; }
 .gg-menu li .dot::before { content: '·'; color: var(--gray); font-size: 22px; line-height: 0; }
 .gg-menu li .stamp { color: var(--accent); }
@@ -65,11 +82,11 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
   font: italic 16px/1.4 var(--serif, Georgia, 'Times New Roman', serif);
   color: var(--ink, #1E1E24);
   background: transparent;
-  border: 0; border-bottom: 1px solid rgba(30,30,36,0.18);
+  border: 0; border-bottom: 1px solid rgba(var(--ink-rgb),0.18);
   outline: none;
   -webkit-appearance: none; appearance: none;
 }
-.gg-find::placeholder { color: rgba(30,30,36,0.34); font-style: italic; }
+.gg-find::placeholder { color: rgba(var(--ink-rgb),0.34); font-style: italic; }
 .gg-find:focus { border-bottom-color: var(--accent); }
 .gg-find::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
 .gg-found { font-size: 12px; color: var(--gray); margin: 6px 0 0; min-height: 14px; letter-spacing: 0.04em; }
@@ -77,12 +94,14 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
 .gg-menu li .ttl .hit {
   display: block; margin-top: 3px;
   font-size: 13px; font-style: italic; line-height: 1.45;
-  color: rgba(30,30,36,0.55);
+  color: rgba(var(--ink-rgb),0.55);
 }
 
 /* Back matter, under the contents: the About link sits where a printed book
    puts its colophon. Hidden while searching, like Continue. */
-.gg-backmatter { margin: 18px 0 4px; padding-top: 14px; border-top: 1px solid rgba(30,30,36,0.12); }
+.gg-backmatter { margin: 18px 0 4px; padding-top: 14px; border-top: 1px solid rgba(var(--ink-rgb),0.12); }
+/* the colophon line: About at the margin, the reading light at the far edge */
+.gg-colophon { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 /* the About link: quiet, italic, and set apart from the numbered rows */
 .gg-about-link {
   background: none; border: none; padding: 0; cursor: pointer;
@@ -93,7 +112,7 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
 /* Developer mode's own section, under the back matter. Never rendered at all
    unless the workbench's "Developer mode" box is ticked, so nothing here is
    part of the book's ordinary look. Deliberately drab: it is a tool shelf. */
-.gg-dev { margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(30,30,36,0.15); }
+.gg-dev { margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(var(--ink-rgb),0.15); }
 .gg-dev-head {
   font-family: Georgia, serif; font-size: 11px; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--gray); opacity: 0.7; margin-bottom: 6px;
@@ -115,14 +134,26 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
   border: none; background: none; color: var(--gray);
   font-size: 20px; line-height: 1; padding: 2px 8px; border-radius: 6px;
 }
-.gg-page:hover:not(:disabled) { color: var(--accent); background: rgba(30,30,36,0.05); }
+.gg-page:hover:not(:disabled) { color: var(--accent); background: rgba(var(--ink-rgb),0.05); }
 .gg-page:disabled { opacity: 0.28; cursor: default; }
+/* the reading light, beside Sit and on the colophon line: a glyph, no chrome —
+   it must not read as a third page-turn button */
+/* The reading light. Deliberately the SAME button as its neighbours in the bar
+   rather than a bare glyph: `.gg-view button` above is one class and one
+   element, so it outranks every bare `.gg-back`/`.gg-page` class in this file
+   and the whole toolbar renders boxed — a chrome-less moon in the middle of it
+   would be the odd one out. Selector matched to that specificity so these
+   three properties land; fixed width so the bar cannot jump when ☾ becomes ☼. */
+.gg-view .gg-theme {
+  min-width: 40px; padding: 6px 10px; text-align: center; color: var(--gray);
+}
+.gg-view .gg-theme:hover { color: var(--accent); }
 .gg-scroll-bar .spacer { flex: 1; }
 .gg-scroll-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .gg-scroll-head h2 { font-weight: normal; font-size: 25px; margin: 0; flex: 1 1 60%; }
 .gg-seal {
   display: inline-grid; place-items: center; width: 34px; height: 34px; flex: none;
-  background: var(--accent); color: var(--paper); border-radius: 3px; font-size: 17px;
+  background: var(--accent); color: var(--seal-ink); border-radius: 3px; font-size: 17px;
 }
 .gg-play-all { margin-top: 10px; }
 .gg-section { margin-top: 24px; }
@@ -184,24 +215,51 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(30,30,36,0.05); }
 .gg-debug-keep { margin-top: 8px; opacity: 0.75; }
 
 .gg-sit-wrap { position: relative; display: inline-block; }
-.gg-sit-pop { position: absolute; top: 112%; right: 0; display: none; gap: 4px; z-index: 6; background: var(--paper); padding: 4px; border: 1px solid rgba(30,30,36,0.2); border-radius: 3px; box-shadow: 0 4px 14px rgba(30,30,36,0.14); }
+.gg-sit-pop { position: absolute; top: 112%; right: 0; display: none; gap: 4px; z-index: 6; background: var(--paper); padding: 4px; border: 1px solid rgba(var(--ink-rgb),0.2); border-radius: 3px; box-shadow: 0 4px 14px rgba(30,30,36,0.14); }
 .gg-sit-pop.open { display: flex; }
 .gg-sit-pop button { padding: 4px 8px; }
 
-/* ---- sit overlay: over everything ---- */
+/* ---- sitting: the scene, a clock, and a way out ----
+   No wash over the picture and nothing to breathe along with — the overlay is
+   here to hold the clock and to catch the tap that ends the sitting. The text
+   panel has already stepped aside (main.js), so the diorama IS the page.
+   Deliberately NOT themed: it lies over the painting, not over the text. */
 .gg-sit {
-  position: fixed; inset: 0; z-index: 55; display: grid; place-items: center;
-  background: rgba(243,237,223,0.65); color: var(--ink); font-family: Georgia, serif; cursor: pointer;
+  position: fixed; inset: 0; z-index: 55;
+  color: var(--ink); font-family: Georgia, serif; cursor: pointer;
 }
 .gg-sit.hidden { display: none; }
-.gg-enso-breath { width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--ink); animation: gg-breathe 6s ease-in-out infinite; }
-.gg-sit .hint { position: absolute; bottom: 8vh; color: var(--gray); font-size: 14px; }
-@keyframes gg-breathe { 0%,100% { transform: scale(0.7); opacity: 0.5; } 50% { transform: scale(1); opacity: 1; } }
+/* Set like the reading's title card and in the same place, since it is the same
+   kind of thing: one quiet line over the top of the picture. */
+.gg-sit-clock {
+  position: absolute; top: 8vh; left: 0; right: 0; text-align: center;
+  font-size: clamp(30px, 4.6vw, 52px); letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums; opacity: 0.62;
+}
+/* Ink, not grey, and letterspaced like the title card's number: the foot of a
+   diorama is its darkest ground — grass, stone, a figure — and a grey caption
+   laid on that is a caption nobody finds. */
+.gg-sit .hint {
+  position: absolute; bottom: 8vh; left: 0; right: 0; text-align: center;
+  color: var(--ink); opacity: 0.8; font-size: 14px; letter-spacing: 0.2em;
+}
+/* Both lines lie over a painting, not over paper. The same halo REPEATED — each
+   copy compounds the one under it — burns a soft paper hole around the letters,
+   which is what keeps them readable over dense grass without putting a chip or
+   a scrim on the picture. One pass at low alpha does nothing there. */
+.gg-sit-clock, .gg-sit .hint {
+  text-shadow:
+    0 0 3px var(--paper), 0 0 3px var(--paper), 0 0 3px var(--paper),
+    0 0 10px var(--paper), 0 0 10px var(--paper), 0 0 20px var(--paper);
+}
+/* Nothing to press but the picture. Every tap ends the sitting, so the toolbar
+   is unreachable while it runs — leaving it drawn would only promise otherwise. */
+#gg-app.sitting .gg-toolbar { display: none; }
 
 /* ---- narrow screens: stack scene over content ---- */
 @media (max-width: 820px) {
   #gg-app { flex-direction: column; }
-  #gg-panel { width: 100%; height: 52%; flex: none; order: 2; border-right: none; border-top: 1px solid rgba(30,30,36,0.12); }
+  #gg-panel { width: 100%; height: 52%; flex: none; order: 2; border-right: none; border-top: 1px solid rgba(var(--ink-rgb),0.12); }
   #gg-stage { order: 1; flex: 1; }
   .gg-view { padding: 22px 24px 40px; }
 }
