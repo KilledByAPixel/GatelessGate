@@ -274,13 +274,17 @@ function setAmbient(on) {
   if (!ambient) pageCard.hide();
 }
 
-// THE PANEL'S OWN CONTROLS, for when there is no panel — the page arrows and
-// "Read aloud", in the panel's own order (paging on the left, actions on the
-// right), on ONE row directly under the toolbar. Stacking the arrows beneath
-// the read button was tried and taken back out: the corner is a corner, and two
-// short rows read as more furniture than one. Without these the look was a
-// place you could only leave — to turn a page you had to bring the text back,
-// turn it, and hide it again. Only there when there is a page behind them.
+// THE LOOK'S OWN TOOLBAR, top-LEFT, opposite the stage tools in the other
+// corner: leave, back, forward, read aloud. The settings live on the right and
+// the things you DO to the book live on the left, so the two never read as one
+// long row of unrelated buttons.
+//
+// It went through the corner the long way round — under the right-hand tools,
+// then stacked, then back to a row — before Frank asked for its own toolbar
+// here, with the way out as its first button. That is the part that makes it a
+// mode rather than a trapdoor: without these the look was a place you could
+// only leave by pressing the same eye you came in by, and to turn a page you
+// had to bring the text back, turn it, and hide it again.
 const lookBar = document.createElement('div');
 lookBar.className = 'gg-look-bar';
 const lookBtn = (cls, label, title, onClick) => {
@@ -293,23 +297,42 @@ const lookBtn = (cls, label, title, onClick) => {
   lookBar.appendChild(b);
   return b;
 };
+// ↺, an arrow circling back on itself (Frank's "arrow kind of circling back"):
+// it undoes the view rather than going anywhere, which is not what ‹ means.
+lookBtn('gg-look-exit', '↺', 'Back to the text', () => setAmbient(false));
 // Same walk as the panel's arrows and the keyboard's: it stops at both ends of
-// the book rather than wrapping, so the ends stay the ends.
+// the book rather than wrapping, so the ends stay the ends. From the Contents
+// there is no current page, so forward means the book's first — the same thing
+// the right arrow key does on that screen.
 const lookPrev = lookBtn('gg-look-page', '‹', 'Previous page',
-  () => { const p = koanSlug && neighbor(koanSlug, -1); if (p) enter(p); });
+  () => { const p = lookNeighbor(-1); if (p) enter(p); });
 const lookNext = lookBtn('gg-look-page', '›', 'Next page',
-  () => { const n = koanSlug && neighbor(koanSlug, +1); if (n) enter(n); });
+  () => { const n = lookNeighbor(+1); if (n) enter(n); });
 // Reads this page through and stops (Frank: "it'll just read that whole page
 // and then stop when it gets to the end; don't go to the next page
 // automatically").
 const lookRead = lookBtn('gg-look-read', '', 'Read this page aloud', () => toggleReadAll());
 stage.appendChild(lookBar);
 
+// Where ‹ and › go from wherever the reader is. On a page it is the spine walk;
+// on the Contents only forward exists, into the first page of the book.
+function lookNeighbor(dir) {
+  if (mode === 'koan' && koanSlug) return neighbor(koanSlug, dir);
+  if (mode === 'menu') return dir > 0 ? SPINE[0] : null;
+  return null;
+}
+
+// The whole bar stays PUT and stays VISIBLE, on the Contents as much as on a
+// page — Frank: "that way at least it's consistent; you could click right, and
+// they would stay in the same place, and read aloud would become available."
+// Buttons that cannot do anything grey out rather than disappearing, so nothing
+// ever moves under the reader's cursor.
 function syncLookRead() {
-  lookBar.classList.toggle('on', ambient && mode === 'koan' && !!scroll);
+  lookBar.classList.toggle('on', ambient && mode !== 'sit');
   lookRead.textContent = readingAll ? '■ Stop' : '▶ Read aloud';
-  lookPrev.disabled = !(koanSlug && neighbor(koanSlug, -1));
-  lookNext.disabled = !(koanSlug && neighbor(koanSlug, +1));
+  lookRead.disabled = !(mode === 'koan' && scroll);
+  lookPrev.disabled = !lookNeighbor(-1);
+  lookNext.disabled = !lookNeighbor(+1);
 }
 syncLookRead();
 
@@ -611,6 +634,9 @@ async function exit() {
     menu.open();
     showView(menu.el);
     menuMusic();
+    // The look survives the trip back to the Contents, so its bar has to be
+    // told where it now is: nothing to read, nowhere to go but forward.
+    syncLookRead();
   });
 }
 

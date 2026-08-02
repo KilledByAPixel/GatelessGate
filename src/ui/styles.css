@@ -198,17 +198,19 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 .gg-tool:hover, .gg-debug-toggle:hover { border-color: rgba(30,30,36,0.55); }
 .gg-tool.active, .gg-debug-toggle.active { background: var(--ink); color: var(--paper); }
 
-/* ---- the look's controls: the panel's own row, for when there is no panel ----
-   Directly under the toolbar and right-aligned with it, so the two read as one
-   stack of controls rather than buttons dropped on the picture. ONE row: the
-   arrows were stacked beneath the read button for a round and taken back out —
-   two short rows in a corner read as more furniture than one. The page arrows
-   are square like the tools; "Read aloud" is a whole word wide, which is the
-   distinction — the tools are settings, that one does something to the page.
-   Only there when the look is on and there is a page behind it; display:none
-   rather than hidden, so it takes no room and catches no clicks otherwise. */
+/* ---- the look's toolbar: TOP-LEFT, opposite the stage tools ----
+   Leave, back, forward, read aloud. The right-hand corner holds settings
+   (sound, fullscreen, the workbench); this corner holds the things you do to
+   the book, so the two never read as one long row of unrelated buttons. The
+   leave button comes first and is what makes the look a mode rather than a
+   trapdoor.
+
+   The whole bar stays put and stays visible wherever the look is on — on the
+   Contents as much as on a page. Buttons that cannot do anything grey out
+   rather than disappearing, so nothing ever moves under the cursor. display:none
+   only when the look is off, where it takes no room and catches no clicks. */
 .gg-look-bar {
-  position: absolute; top: 52px; right: 14px; z-index: 9; display: none;
+  position: absolute; top: 14px; left: 14px; z-index: 9; display: none;
   gap: 6px; align-items: center;
 }
 .gg-look-bar.on { display: flex; }
@@ -219,13 +221,15 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
   border-radius: 3px; backdrop-filter: blur(2px);
 }
 .gg-look-bar button:hover:not(:disabled) { border-color: rgba(30,30,36,0.55); }
-/* Kept, not hidden, at the ends of the book: an arrow that vanished would slide
-   the rest of the row sideways under the reader's cursor. */
 .gg-look-bar button:disabled { opacity: 0.35; cursor: default; }
-.gg-look-page {
+/* Square like the stage tools; "Read aloud" is a whole word wide, which is the
+   distinction — those three move you, that one does something to the page. */
+.gg-look-exit, .gg-look-page {
   width: 30px; height: 31px; padding: 0; font-size: 17px; line-height: 1;
   display: flex; align-items: center; justify-content: center;
 }
+/* A little air after the way out, so it does not read as part of the paging. */
+.gg-look-exit { margin-right: 4px; font-size: 16px; }
 .gg-look-read { font-size: 13px; letter-spacing: 0.04em; padding: 6px 12px; }
 /* ---- debug workbench: panel sliding out under the toolbar ---- */
 .gg-debug {
