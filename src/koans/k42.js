@@ -46,17 +46,17 @@ export default {
       new THREE.CylinderGeometry(0.85, 0.95, 0.28, 9),
       toonMaterial({ color: wash(0.32), flat: true }));
     seat.name = 'seat';
-    seat.position.set(0.4, 0.14, -4.6);
+    seat.position.set(0.5, 0.14, -3.3);
     scene.add(seat);
 
     const buddha = makeBuddha({ height: 1.6 });
-    buddha.position.set(0.4, 0.28, -4.6);
+    buddha.position.set(0.5, 0.28, -3.3);
     scene.add(buddha);
 
     // THE GIRL, unmoved, in the middle of the floor. She is the seal: the one
     // figure in the book rendered in the accent, because she is the only thing
     // in this case that nobody can shift.
-    const GIRL = new THREE.Vector3(0.9, 0, -1.3);
+    const GIRL = new THREE.Vector3(0.85, 0, -1.15);
     const girl = makeMonk({ height: 1.24, pose: 'sit', hat: false, color: ACCENT_DEEP });
     girl.position.copy(GIRL);
     faceMonk(girl, buddha.position);
@@ -64,14 +64,14 @@ export default {
 
     // MANJUSRI, standing over her with his hand up, having just snapped it
     const manjusri = makeMonk({ height: 1.72, pose: 'raise' });
-    manjusri.position.set(-1.5, 0, 0.2);
+    manjusri.position.set(-0.55, 0, -0.25);
     faceMonk(manjusri, GIRL);
     scene.add(manjusri);
 
     // MOMYO, still under the floor. He is placed and posed from the start and
     // simply has not come up yet — the earth hides him.
     const momyo = makeMonk({ height: 1.5, pose: 'raise' });
-    const MOMYO = new THREE.Vector3(2.9, 0, 0.4);
+    const MOMYO = new THREE.Vector3(2.25, 0, -0.1);
     momyo.position.set(MOMYO.x, -1.8, MOMYO.z);
     faceMonk(momyo, GIRL);
     scene.add(momyo);
@@ -81,14 +81,14 @@ export default {
       groundSeed: 21,
       trees: 4,
       keepout: [
-        { x: 0.4, z: -4.6, r: 2.2 },
+        { x: 0.5, z: -3.3, r: 2.0 },
         { x: GIRL.x, z: GIRL.z, r: 1.4 },
-        { x: -1.5, z: 0.2, r: 1.2 },
+        { x: -0.55, z: -0.25, r: 1.2 },
         { x: MOMYO.x, z: MOMYO.z, r: 1.2 },
       ],
       // the floor of the assembly hall is swept — and it has to be bare where
       // Momyo comes through it
-      grassKeepout: [{ x: 0.8, z: -1.6, r: 4.4 }],
+      grassKeepout: [{ x: 0.8, z: -1.8, r: 3.1 }],
     });
 
     for (const [p, rx, rz, op] of [

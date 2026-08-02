@@ -62,12 +62,19 @@ export function makeCave({
   // surface, it is an ABSENCE of light, so the honest material is one the lights
   // never touch. MeshBasicMaterial at flat INK is the darkest thing the book
   // owns, and it stays that way at every hour and every angle.
+  // DEEPER, and set FURTHER BACK. The box used to reach depth*1.35 with its
+  // front face only depth*0.25 behind the mouth, which put the dark almost in
+  // the opening: there was nowhere inside to BE, so a figure meant to be
+  // sitting in the cave either vanished into the box or perched on its lip
+  // (Frank: "he'd be further into the cave... it feels like there's just a
+  // wall there, there's not any kind of depth"). Longer, and its face pushed
+  // back to depth*0.62 behind the origin, so the mouth opens onto a room.
   const throat = new THREE.Mesh(
-    new THREE.BoxGeometry(width * 0.85, height * 0.75, depth * 1.35),
+    new THREE.BoxGeometry(width * 0.85, height * 0.75, depth * 1.9),
     new THREE.MeshBasicMaterial({ color: INK }));
   throat.name = 'throat';
   throat.userData.noOutline = true;    // an ink hull around a hole in the light
-  throat.position.set(0, height * 0.34, -depth * 0.42);
+  throat.position.set(0, height * 0.34, -depth * 0.95);
   g.add(throat);
 
   // the threshold: stone the daylight still reaches, so the black behind it has

@@ -45,7 +45,7 @@ export default {
     scene.add(makeLights());
 
     // the cave he sat in, facing its wall for nine years
-    const cave = makeCave({ width: 3.0, height: 2.8, depth: 2.2, seed: ID });
+    const cave = makeCave({ width: 3.0, height: 2.8, depth: 3.2, seed: ID });
     cave.position.set(-0.4, 0, -5.2);
     cave.rotation.y = 0.18;
     scene.add(cave);
@@ -62,13 +62,15 @@ export default {
     // BEHIND him rather than around him; and lift his tone off ink so his
     // back reads as a shape against it. He is still inside the mouth, still
     // facing the wall, still the smallest thing in the frame.
-    // makeCave's throat is a SOLID box spanning local z -2.41..+0.56 (its
-    // front face is depth·1.35/2 - depth·0.42 forward of the cave's origin),
-    // so anything at a smaller z is not merely dark, it is inside a solid.
-    // 0.75 sits him just clear of that face and still well back under the
-    // brow — on the threshold apron, with the black directly behind him.
+    // makeCave's throat is a SOLID box (an absence of light has to be opaque),
+    // so he cannot be IN it — he sits in the room the mouth opens onto,
+    // between the brow overhead and the black behind. That room only exists
+    // because the cave is deeper now and its dark set further back: at 0.35
+    // he is well under the brow and genuinely inside, rather than perched on
+    // the lip (Frank: "he'd be further into the cave... it feels like there's
+    // just a wall there, there's not any kind of depth to the cave").
     const CAVE = { x: -0.4, z: -5.2, yaw: 0.18 };
-    const IN = 0.75;                       // along the cave's own axis, from its origin
+    const IN = 0.35;                       // along the cave's own axis, from its origin
     const bodhidharma = makeMonk({
       height: 1.56, pose: 'sit', hat: false, color: WASH.mid,
     });
