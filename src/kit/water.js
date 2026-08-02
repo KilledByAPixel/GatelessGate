@@ -80,19 +80,25 @@ function squareGrid(size, n) {
 // uniform density everywhere and no singularity; the price is a few irregular
 // triangles around the rim, and those are exactly the ones pinned flat, so
 // nobody ever sees them move.
-function discGrid(radius, n) {
+//
+// `radiusAt` (optional) makes the wall a function of angle instead of a
+// constant — that one generalization is the whole of the 'blob' shape. When it
+// is absent the math below is bit-for-bit what it always was for 'round'.
+function discGrid(radius, n, radiusAt) {
   const step = (radius * 2) / n;
   const gx = [];
   const gz = [];
-  const over = [];                     // did this grid point overhang the circle?
+  const gr = [];                       // the wall radius along this point's angle
+  const over = [];                     // did this grid point overhang the outline?
   for (let i = 0; i <= n; i++) {
     for (let j = 0; j <= n; j++) {
       let x = -radius + step * j;
       let z = -radius + step * i;
       const r = Math.hypot(x, z);
-      const out = r > radius;
-      if (out && r > 1e-12) { const k = radius / r; x *= k; z *= k; }
-      gx.push(x); gz.push(z); over.push(out);
+      const R = radiusAt ? radiusAt(Math.atan2(z, x)) : radius;
+      const out = r > R;
+      if (out && r > 1e-12) { const k = R / r; x *= k; z *= k; }
+      gx.push(x); gz.push(z); gr.push(R); over.push(out);
     }
   }
 
@@ -108,7 +114,7 @@ function discGrid(radius, n) {
       remap[o] = pos.length / 3;
       pos.push(gx[o], 0, gz[o]);
       // pulled-in vertices ARE the wall, so their distance to it is exactly 0
-      edge.push(over[o] ? 0 : radius - Math.hypot(gx[o], gz[o]));
+      edge.push(over[o] ? 0 : gr[o] - Math.hypot(gx[o], gz[o]));
     }
     return remap[o];
   };
@@ -123,8 +129,28 @@ function discGrid(radius, n) {
   return { pos, idx, edge };
 }
 
+// ---- the blob outline ------------------------------------------------------
+// A natural pond edge for open water (Frank, case 39: "make that pond less
+// square-shaped — more organically shaped, kinda roundish"). Three low
+// harmonics with seeded phases, and the wobble only ever pulls INWARD from the
+// stated radius — the sum of the amplitudes is subtracted up front — so `size`
+// stays an honest bound: a blob never reaches past where a round surface of
+// the same size would. Low orders only: harmonic 2 makes it an oval, 3 leans
+// it, 5 breaks the symmetry. Anything higher reads as a scalloped cookie.
+const BLOB_HARMONICS = [[2, 0.07], [3, 0.05], [5, 0.03]];
+
+function blobOutline(radius, seed) {
+  const slack = BLOB_HARMONICS.reduce((s, [, a]) => s + a, 0) * radius;
+  const terms = BLOB_HARMONICS.map(([h, a], i) => [h, a * radius, hash1(20 + i, seed) * Math.PI * 2]);
+  return (theta) => {
+    let r = radius - slack;
+    for (const [h, a, p] of terms) r += a * Math.sin(h * theta + p);
+    return r;
+  };
+}
+
 export function makeWater({
-  shape = 'square',        // 'square' | 'round'
+  shape = 'square',        // 'square' | 'round' | 'blob' (a seeded organic outline)
   size = 2.0,              // full width, or the DIAMETER of a round surface
   color = WASH.ground,
   seed = 7,
@@ -136,11 +162,14 @@ export function makeWater({
                            // pond with koi wants this lower so the fish read
 } = {}) {
   const round = shape === 'round';
+  const blob = shape === 'blob';
   const half = size / 2;
+  // the wall as a function of angle — constant for 'round', wobbled for 'blob'
+  const radiusAt = blob ? blobOutline(half, seed) : null;
   // enough vertices that a ripple reads as a curve, capped so a big lake does
   // not cost more per frame than it is worth
   const n = segments || Math.max(12, Math.min(30, Math.round(size * 3.2)));
-  const { pos, idx, edge } = round ? discGrid(half, n) : squareGrid(size, n);
+  const { pos, idx, edge } = round || blob ? discGrid(half, n, radiusAt) : squareGrid(size, n);
 
   const group = new THREE.Group();
   group.name = 'water';
@@ -221,14 +250,24 @@ export function makeWater({
     return h;
   }
 
+  // Signed distance to the wall: positive inside, 0 on it, negative out. This
+  // is what the edge mask reads through, and it is exposed as `shoreDistance`
+  // so a case can ask whether something it wants to stand in the water is
+  // actually IN the water — with a blob outline that is no longer obvious.
+  // (For the blob it is the radial gap, not the true normal distance, but at
+  // these gentle wobbles the two agree to within the edge band.)
+  function wallDistance(x, z) {
+    if (blob) return radiusAt(Math.atan2(z, x)) - Math.hypot(x, z);
+    return round
+      ? half - Math.hypot(x, z)
+      : Math.min(half - Math.abs(x), half - Math.abs(z));
+  }
+
   // How free a point is to move: 1 well inside, falling to exactly 0 at the
   // wall. The `> 0` guards below are what make the pinning absolute — they also
   // keep a negative wave from writing -0 into the buffer at the rim.
   function maskAt(x, z) {
-    const e = round
-      ? half - Math.hypot(x, z)
-      : Math.min(half - Math.abs(x), half - Math.abs(z));
-    return smooth(clamp01(e / band));
+    return smooth(clamp01(wallDistance(x, z) / band));
   }
 
   function heightAt(x, z, t = clock) {
@@ -255,9 +294,10 @@ export function makeWater({
     ripple(x, z, amp = STRIKE) {
       let cx = x;
       let cz = z;
-      if (round) {
+      if (round || blob) {
+        const R = blob ? radiusAt(Math.atan2(z, x)) : half;
         const d = Math.hypot(x, z);
-        if (d > half) { const k = half / d; cx = x * k; cz = z * k; }
+        if (d > R) { const k = R / d; cx = x * k; cz = z * k; }
       } else {
         cx = Math.max(-half, Math.min(half, x));
         cz = Math.max(-half, Math.min(half, z));
@@ -270,6 +310,9 @@ export function makeWater({
     // the water's height in local space — so koi, petals and anything else
     // floating can ride the surface instead of hovering over it
     heightAt,
+    // signed distance to the shore in local space (positive = in the water):
+    // how a case checks its stepping stones actually stand in a blob pond
+    shoreDistance: wallDistance,
     update(dt, simTime) {
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
       displace();

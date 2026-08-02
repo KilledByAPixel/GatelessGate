@@ -85,11 +85,13 @@ for (const [label, mod, x, z] of [
   });
 }
 
-// The pair's reds (Frank, overnight pass 2 + morning notes): in case 33 the
-// koi wear the case's one red; in case 30 the red is the URNA on the seated
-// buddha's forehead. The mat is dark in BOTH scenes — same mat, same spot,
+// The pair's reds (Frank, overnight pass 2 + morning notes + polish round 2):
+// in case 33 the koi wear the case's one red; in case 30 the red is the urna
+// AND — Frank's later ruling, knowingly doubling it — the pond sheet itself
+// ("make the pond water red — the surface of the water itself, not the fish,
+// not the sides"). The mat is dark in BOTH scenes — same mat, same spot,
 // occupied in 30 and bare in 33 — so the check is written against both:
-// same pond, opposite carriers, and the mat never competes with either.
+// same pond, different carriers, and the mat never competes with either.
 test('case 33: the koi carry the red and the mat has gone to ink', () => {
   const root = staged(k33);
   const red = new THREE.Color(ACCENT).getHexString();
@@ -104,26 +106,43 @@ test('case 33: the koi carry the red and the mat has gone to ink', () => {
   assert.ok(cushion, 'the bare mat is still on the seat');
   assert.notEqual(cushion.material.color.getHexString(), red,
     'the mat gave the red up — one accent per koan');
+  // case 30's red water must NOT leak into 33: this pond builds its own sheet,
+  // and here the red belongs to the koi alone
+  const surface = surfaceMesh(root.scene);
+  assert.notEqual(surface.material.color.getHexString(), red,
+    'case 33 water stays ink-wash — its red is the koi');
 });
 
-test('case 30: the red is the urna alone — mat dark, koi ink', () => {
+test('case 30: the reds are the urna and the water sheet — mat dark, koi ink, stone bare', () => {
   const root = staged(k30);
   const red = new THREE.Color(ACCENT).getHexString();
   let cushion = null;
   let urna = null;
+  let lip = null;
   const bodies = [];
   root.scene.traverse((o) => {
     if (o.name === 'cushion' && !cushion) cushion = o;
     if (o.name === 'urna' && !urna) urna = o;
     if (o.name === 'koi-body') bodies.push(o);
+    if (o.name === 'lip' && !lip) lip = o;
   });
   assert.ok(urna, 'the seated buddha carries his forehead dot');
-  assert.equal(urna.material.color.getHexString(), red, 'the urna is the case\'s red');
+  assert.equal(urna.material.color.getHexString(), red, 'the urna keeps its red');
+  // Frank: "the surface of the water itself" — the sheet is red...
+  const surface = surfaceMesh(root.scene);
+  assert.equal(surface.material.color.getHexString(), red,
+    'the pond sheet wears the accent (Frank\'s ruling)');
+  // ...and NOT the fish, NOT the sides, NOT the mat
   assert.notEqual(cushion.material.color.getHexString(), red,
     'the mat under him is not red (Frank\'s morning note)');
   for (const b of bodies) {
     assert.notEqual(b.material.color.getHexString(), red, 'case 30 koi are ink, not accent');
   }
+  let stoneRed = false;
+  lip.traverse((o) => {
+    if (o.isMesh && o.material.color && o.material.color.getHexString() === red) stoneRed = true;
+  });
+  assert.ok(!stoneRed, 'the basin stone stays stone — "not the sides"');
 });
 
 for (const [label, mod] of [['case 30', k30], ['case 33', k33]]) {

@@ -85,6 +85,64 @@ test('a ripple at the very edge never lifts the rim — square', () => {
   assert.equal(Math.max(...rim), 0);
 });
 
+// The blob (Frank, case 39: "less square-shaped, more organically shaped,
+// kinda roundish"): a seeded wobbled outline. Its contract is the round
+// surface's contract — honest bound, pinned rim — plus an outline that
+// actually varies, or it would just be a circle with extra steps.
+test('blob water stays inside its stated circle — the wobble only pulls inward', () => {
+  const R = 6.25;
+  const w = makeWater({ shape: 'blob', size: R * 2, seed: 39 });
+  for (const v of verts(w)) {
+    assert.ok(Math.hypot(v.x, v.z) <= R + 1e-6,
+      `vertex at r=${Math.hypot(v.x, v.z)} escapes the stated radius ${R}`);
+  }
+});
+
+test('a blob outline is organic: the shore radius genuinely varies with angle', () => {
+  const R = 6.25;
+  const w = makeWater({ shape: 'blob', size: R * 2, seed: 39 });
+  // recover R(θ) through shoreDistance: at any probe point along θ, the wall
+  // sits at probe distance + signed shore distance
+  const radii = [];
+  for (let a = 0; a < 48; a++) {
+    const th = (a / 48) * Math.PI * 2;
+    radii.push(1 + w.shoreDistance(Math.cos(th), Math.sin(th)));
+  }
+  const spread = Math.max(...radii) - Math.min(...radii);
+  assert.ok(spread > 0.08 * R, `shore spread ${spread} — reads as a plain circle`);
+  assert.ok(Math.min(...radii) > 0.5 * R, 'the wobble stays gentle — a pond, not a splat');
+});
+
+test('blob water is seeded: same seed same shore, different seed different shore', () => {
+  const a = makeWater({ shape: 'blob', size: 12.5, seed: 39 });
+  const b = makeWater({ shape: 'blob', size: 12.5, seed: 39 });
+  const c = makeWater({ shape: 'blob', size: 12.5, seed: 40 });
+  assert.deepEqual(Array.from(posOf(a)), Array.from(posOf(b)));
+  assert.notDeepEqual(Array.from(posOf(a)), Array.from(posOf(c)));
+});
+
+test('a ripple at the very edge never lifts the rim — blob', () => {
+  const w = makeWater({ shape: 'blob', size: 12.5, seed: 39 });
+  w.ripple(6.0, 0, 0.4);                       // outside some lobes, near others
+  const rim = [];
+  for (let t = 0; t < 6; t += 0.1) {
+    w.update(0.1, t);
+    for (const v of verts(w)) {
+      if (w.shoreDistance(v.x, v.z) < 1e-6) rim.push(Math.abs(v.y));
+    }
+  }
+  assert.ok(rim.length > 0, 'there are rim vertices to check');
+  assert.ok(Math.max(...rim) < 1e-9, `the rim moved by ${Math.max(...rim)}`);
+});
+
+test('a tap outside a blob is pulled inside it, and heightAt is zero past the shore', () => {
+  const w = makeWater({ shape: 'blob', size: 12.5, seed: 39 });
+  const s = w.ripple(20, -14);
+  assert.ok(w.shoreDistance(s.x, s.z) >= -1e-9, 'the ripple origin was clamped to the shore');
+  w.update(0.5, 0.5);
+  assert.equal(w.heightAt(8.8, 0), 0, 'past the shore nothing moves');
+});
+
 test('heightAt is zero on the wall and non-zero inside after a strike', () => {
   const R = 2.0;
   const w = makeWater({ shape: 'round', size: R * 2, seed: 7 });
