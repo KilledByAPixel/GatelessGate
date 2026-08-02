@@ -168,10 +168,11 @@ const toolbar = document.createElement('div');
 toolbar.className = 'gg-toolbar';
 stage.appendChild(toolbar);
 
-// The reading's title card. Lives on the stage rather than in the panel, since
-// the panel is exactly what is not there when it is wanted. Built once and
-// reused; toggleReadAll is the only thing that shows it, and only in the look —
-// opening the look on its own says nothing.
+// The page's title card. Lives on the stage rather than in the panel, since the
+// panel is exactly what is not there when it is wanted. Built once and reused,
+// and shown only in the look, by the two things that give it something to say:
+// a page turn, and a read-aloud starting. Opening the look says nothing — the
+// reader knows what page they were on a moment ago.
 const pageCard = makePageCard();
 stage.appendChild(pageCard.el);
 
@@ -273,18 +274,40 @@ function setAmbient(on) {
   if (!ambient) pageCard.hide();
 }
 
-// The panel's "Read aloud", for when there is no panel. Same action, same page,
-// same ending — it reads this page through and stops (Frank: "it'll just read
-// that whole page and then stop when it gets to the end; don't go to the next
-// page automatically"). Sits on the stage directly under the toolbar, and is
-// only there when there is a page behind it to read.
-const lookRead = document.createElement('button');
-lookRead.className = 'gg-look-read';
-lookRead.onclick = () => toggleReadAll();
-stage.appendChild(lookRead);
+// THE PANEL'S OWN CONTROLS, for when there is no panel — the page arrows and
+// "Read aloud", in the panel's own order (paging on the left, actions on the
+// right), on one row directly under the toolbar. Without these the look was a
+// place you could only leave: to turn a page you had to bring the text back,
+// turn it, and hide it again. Only there when there is a page behind them.
+const lookBar = document.createElement('div');
+lookBar.className = 'gg-look-bar';
+const lookBtn = (cls, label, title, onClick) => {
+  const b = document.createElement('button');
+  b.className = cls;
+  b.textContent = label;
+  b.title = title;
+  b.setAttribute('aria-label', title);
+  b.onclick = onClick;
+  lookBar.appendChild(b);
+  return b;
+};
+// Same walk as the panel's arrows and the keyboard's: it stops at both ends of
+// the book rather than wrapping, so the ends stay the ends.
+const lookPrev = lookBtn('gg-look-page', '‹', 'Previous page',
+  () => { const p = koanSlug && neighbor(koanSlug, -1); if (p) enter(p); });
+const lookNext = lookBtn('gg-look-page', '›', 'Next page',
+  () => { const n = koanSlug && neighbor(koanSlug, +1); if (n) enter(n); });
+// Reads this page through and stops (Frank: "it'll just read that whole page
+// and then stop when it gets to the end; don't go to the next page
+// automatically").
+const lookRead = lookBtn('gg-look-read', '', 'Read this page aloud', () => toggleReadAll());
+stage.appendChild(lookBar);
+
 function syncLookRead() {
-  lookRead.classList.toggle('on', ambient && mode === 'koan' && !!scroll);
+  lookBar.classList.toggle('on', ambient && mode === 'koan' && !!scroll);
   lookRead.textContent = readingAll ? '■ Stop' : '▶ Read aloud';
+  lookPrev.disabled = !(koanSlug && neighbor(koanSlug, -1));
+  lookNext.disabled = !(koanSlug && neighbor(koanSlug, +1));
 }
 syncLookRead();
 
@@ -502,9 +525,12 @@ function buildKoan(mod, slug) {
   panel.appendChild(scroll.el);
   showView(scroll.el);
   mode = 'koan';
-  // No card on a page turn either: a reading never carries across one (buildKoan's
-  // stopReading() above cleared `readingAll`), so nothing here is announcing
-  // itself. The button just comes back saying "Read aloud" for the new page.
+  // A PAGE TURNED UNDER THE LOOK, so say which page it is now (Frank: "we would
+  // display the title when you click next or previous, because it's going to a
+  // new one"). This cannot fire on merely opening the look — buildKoan only runs
+  // when the page actually changes — which is the whole distinction: the card
+  // answers a page turn or a reading starting, never a change of view.
+  if (ambient && koanCard) pageCard.show(koanCard);
   syncLookRead();
 }
 

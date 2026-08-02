@@ -198,24 +198,33 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 .gg-tool:hover, .gg-debug-toggle:hover { border-color: rgba(30,30,36,0.55); }
 .gg-tool.active, .gg-debug-toggle.active { background: var(--ink); color: var(--paper); }
 
-/* ---- read aloud, in the look ----
-   The panel's "Read aloud" for when there is no panel: directly under the
-   toolbar, right-aligned with it, so the two read as one stack of controls
-   rather than a button dropped on the picture. Only there when the look is on
-   and there is a page behind it — display:none rather than hidden, so it takes
-   no room and catches no clicks the rest of the time. It is a whole word wide
-   where the tools are square, which is the point: the tools are settings, this
-   one does something to the page. */
-.gg-look-read {
+/* ---- the look's controls: the panel's own row, for when there is no panel ----
+   Directly under the toolbar and right-aligned with it, so the two read as one
+   stack of controls rather than buttons dropped on the picture. The page arrows
+   are square like the tools; "Read aloud" is a whole word wide, which is the
+   distinction — the tools are settings, that one does something to the page.
+   Only there when the look is on and there is a page behind it; display:none
+   rather than hidden, so it takes no room and catches no clicks otherwise. */
+.gg-look-bar {
   position: absolute; top: 52px; right: 14px; z-index: 9; display: none;
-  font-family: Georgia, serif; font-size: 13px; letter-spacing: 0.04em;
-  padding: 6px 12px; cursor: pointer; color: var(--ink);
+  gap: 6px; align-items: center;
+}
+.gg-look-bar.on { display: flex; }
+#gg-app.sitting .gg-look-bar { display: none; }
+.gg-look-bar button {
+  font-family: Georgia, serif; cursor: pointer; color: var(--ink);
   background: rgba(243,237,223,0.82); border: 1px solid rgba(30,30,36,0.28);
   border-radius: 3px; backdrop-filter: blur(2px);
 }
-.gg-look-read.on { display: block; }
-.gg-look-read:hover { border-color: rgba(30,30,36,0.55); }
-#gg-app.sitting .gg-look-read { display: none; }
+.gg-look-bar button:hover:not(:disabled) { border-color: rgba(30,30,36,0.55); }
+/* Kept, not hidden, at the ends of the book: an arrow that vanished would slide
+   the rest of the row sideways under the reader's cursor. */
+.gg-look-bar button:disabled { opacity: 0.35; cursor: default; }
+.gg-look-page {
+  width: 30px; height: 31px; padding: 0; font-size: 17px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.gg-look-read { font-size: 13px; letter-spacing: 0.04em; padding: 6px 12px; }
 /* ---- debug workbench: panel sliding out under the toolbar ---- */
 .gg-debug {
   position: absolute; top: 0; right: 0; bottom: 0; width: 232px; z-index: 8;

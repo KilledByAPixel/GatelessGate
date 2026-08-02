@@ -13,7 +13,15 @@ import { buildHub } from '../../intro.js';
 // the one scene in the book with no accent object in it, because the gate was
 // the red thing — the text panel beside it still carries the usual accent red,
 // since makeScroll defaults to it (src/ui/scroll.js).
+//
+// Its own three seeds, because taking the gate out was not enough to tell this
+// page apart from the Contents it opens from — same hills, same trees, same
+// bend in the road, so it read as the Contents with a prop missing rather than
+// as a page (Frank: "right now it looks exactly the same"). Different land,
+// different scatter, a road that bends the other way. Still the same valley,
+// the way two drawings of one place are.
 const page = MATTER.preface;
+const SEEDS = { seed: 23, groundSeed: 41, pathSeed: 61 };
 
 export default {
   id: null,
@@ -27,6 +35,6 @@ export default {
   mood: 'in',
   camera: { distance: 14, azimuth: 0.5, polar: 1.3 },
   build() {
-    return buildHub({ gate: false });
+    return buildHub({ gate: false, ...SEEDS });
   },
 };

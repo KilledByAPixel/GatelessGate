@@ -11,14 +11,30 @@ import { introPath } from './intro_rails.js';
 // gate, lanterns, a monk on the way, mountains and forest in the fog beyond.
 //
 // The pieces are optional so the matter pages can each have a scene of their
-// own without a second copy of this world. Every default is `true`, so
-// buildHub() with no arguments is the title screen exactly as it was.
+// own without a second copy of this world. Every default is what the title
+// screen uses, so buildHub() with no arguments is the title screen exactly as
+// it was.
 //   preface   — no gate. "No gate as the gate of the teaching": the camera
 //               still frames where it stood, and the subject is its absence.
 //   afterword — nothing but nature. The stage clears as the book closes.
+//
+// THE THREE SEEDS are the other half of that. Taking the gate out was not
+// enough to tell the three scenes apart — same hills, same trees, same bend in
+// the road, so the preface read as the Contents with a prop missing (Frank:
+// "right now it looks exactly the same"). Each of them now rolls its own
+// ground, scatters its own trees and bends its own road, and they stay the
+// same PLACE in the way three drawings of one valley do:
+//   seed        — trees, rocks, bushes, grass, mountains, forest
+//   groundSeed  — the roll of the land itself
+//   pathSeed    — how the road wanders, and so where the gate, the lanterns and
+//                 the monk stand on it (gateTarget is a point on this path)
+// The title screen's three are FIXED by the intro dolly, which is hand-aimed at
+// the gate on this road (src/intro_rails.js) — change them and the opening shot
+// walks past the gate instead of through it.
 export function buildHub({
   gate: withGate = true, path: withPath = true,
   monk: withMonk = true, lanterns: withLanterns = true,
+  seed = 10, groundSeed = 7, pathSeed = 93,
 } = {}) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
@@ -37,7 +53,7 @@ export function buildHub({
   // lanterns and the monk, and gateTarget is a point on it. Only whether it is
   // drawn is optional — and when it is not drawn its keepout must go too, or
   // the scatter leaves a bald strip where it used to be.
-  const path = makePath({ from: [0, 14], to: [0, -36], width: 2.0, seed: 93, groundSeed: 7, wander: 1.0 });
+  const path = makePath({ from: [0, 14], to: [0, -36], width: 2.0, seed: pathSeed, groundSeed, wander: 1.0 });
   if (withPath) scene.add(path);
 
   const gp = path.sample(0.4);
@@ -87,18 +103,17 @@ export function buildHub({
   }
 
   const world = composeWorld(scene, {
-    seed: 7,
-    groundSeed: 7,
-    // THE TREES OF THE TITLE SCREEN AND THE CONTENTS, spelled out rather than
-    // left to composeWorld's defaults, because this is the scene most likely to
-    // want them moved and they were invisible knobs before. How many, and the
-    // ring of radii they may stand on around the origin — scenery.js places them
-    // by seeded rejection sampling on that ring, skipping anything inside a
-    // `keepout` circle or nearer than z = 6 (the open foreground). So there are
-    // three ways to move them and they are all here: change the count, widen or
-    // narrow the ring, or push one off a spot with a keepout circle. `seed: 7`
-    // above is the fourth and bluntest — it reshuffles the rocks, bushes and
-    // grass with them.
+    seed,
+    groundSeed,
+    // THE TREES OF THIS SCENE, spelled out rather than left to composeWorld's
+    // defaults, because this is the world most likely to want them moved and
+    // they were invisible knobs before. How many, and the ring of radii they may
+    // stand on around the origin — scenery.js places them by seeded rejection
+    // sampling on that ring, skipping anything inside a `keepout` circle or
+    // nearer than z = 6 (the open foreground). So there are three ways to move
+    // them and they are all here: change the count, widen or narrow the ring, or
+    // push one off a spot with a keepout circle. `seed` is the fourth and
+    // bluntest — it reshuffles the rocks, bushes and grass with them.
     trees: 5,
     treeRing: [7, 20],
     keepout,
@@ -130,6 +145,14 @@ export function buildHub({
     // orbit swung around empty road while the gate drifted off-axis. The matter
     // pages keep the same centre even with the gate gone.
     gateTarget: [gp.x, 1.9, gp.z],
+    // What the scatter actually did, for a caller that has to put something
+    // beside it — the afterword seats its Buddha under one of these trees, and
+    // it used to do that by holding a copy of a coordinate this function
+    // produced. Which was wrong the moment anyone touched a seed, silently: the
+    // tree moved and the meditator stayed, sitting in open grass. Handing back
+    // the trees and the seed means that pairing is DERIVED, and survives.
+    trees: world.trees,
+    groundSeed,
     update: (dt, t) => { world.update(dt, t); },
     dispose() {},
   };

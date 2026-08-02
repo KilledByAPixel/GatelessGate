@@ -19,13 +19,26 @@ import { makeBuddha, groundHeight, toonMaterial, addOutlines } from '../../kit/i
 // everyone else left by. The camera is not on him; he is found, not shown.
 const page = MATTER.afterword;
 
-// The tree: hub world seed 7 places its five scatter trees deterministically,
-// and this one — at (3.04, −11.7) — is the only one sitting near the initial
-// camera's view axis (lateral offset ~4.6 against ~7–10 for the rest). The mat
-// sits a step out from the trunk on its camera side, under the canopy edge.
-const TREE = { x: 3.04, z: -11.7 };
-const GATE_SPOT = { x: 0.861, z: -6 };        // buildHub's gateTarget, on the ground
-const MAT = { x: 2.65, z: -10.68, r: 0.55, h: 0.05 };
+// Its own three seeds, for the same reason the preface has its own: the book
+// should not close on the picture it opened from. The stage clears AND the land
+// is different — a valley the reader has not stood in, which is what the end of
+// a book looks like.
+const SEEDS = { seed: 34, groundSeed: 58, pathSeed: 17 };
+
+// The mat: a step out from a tree's trunk on its camera side, under the canopy
+// edge. WHICH tree is chosen at build time, not written down. It used to be a
+// coordinate copied out of one particular seed's scatter — "(3.04, −11.7), the
+// only one near the camera's view axis" — and the day the hub's seed changed
+// that tree moved and the meditator did not: he sat in open grass, under
+// nothing, and no test or screenshot said a word. So the pairing is derived
+// now. It cannot come apart.
+const MAT_R = 0.55, MAT_H = 0.05;
+// How far out from the trunk the mat sits, toward the camera. About a canopy
+// radius: under the edge of the leaves rather than against the bark.
+const OFF = 1.1;
+// Named, because build() has to solve the rig's own equation to know where the
+// reader is standing before it can put anything to one side of them.
+const CAM = { distance: 16, azimuth: 0.5, polar: 1.3 };
 
 export default {
   id: null,
@@ -37,27 +50,69 @@ export default {
   accent: undefined,
   ambience: ['wind:0.30', 'music'],
   mood: 'in',
-  camera: { distance: 16, azimuth: 0.5, polar: 1.3 },
+  camera: CAM,
   build() {
-    const built = buildHub({ gate: false, path: false, monk: false, lanterns: false });
+    const built = buildHub({ gate: false, path: false, monk: false, lanterns: false, ...SEEDS });
     const scene = built.scene;
+
+    // WHERE THE GATE STOOD, and where the reader is standing to look at it —
+    // both read off the scene rather than written down, so they follow the road
+    // wherever this page's pathSeed bends it. The eye is the rig's own maths
+    // (src/camera.js): target + distance along the azimuth/polar direction.
+    const [gx, , gz] = built.gateTarget;
+    const eye = {
+      x: gx + CAM.distance * Math.sin(CAM.polar) * Math.sin(CAM.azimuth),
+      z: gz + CAM.distance * Math.sin(CAM.polar) * Math.cos(CAM.azimuth),
+    };
+
+    // HIS TREE: of the scatter trees standing well beyond the gate spot, the one
+    // whose offset from the view axis is nearest SIDE. Not the one NEAREST the
+    // axis — that is the middle of the picture, and the whole point of him is
+    // that the camera is not on him. SIDE is where the old hand-picked tree sat
+    // (about four and a half units off the centre line), which is far enough to
+    // be beside the shot and near enough to still be in it.
+    const SIDE = 4.5, PAST = 1.5;
+    const ax = gx - eye.x, az = gz - eye.z;
+    const axisLen = Math.hypot(ax, az) || 1;
+    const candidates = built.trees.map((t) => {
+      const dx = t.position.x - eye.x, dz = t.position.z - eye.z;
+      return {
+        t,
+        along: (dx * ax + dz * az) / axisLen,               // depth into the shot
+        lateral: Math.abs(dx * az - dz * ax) / axisLen,     // off the centre line
+      };
+    });
+    const bySide = (pool) =>
+      pool.slice().sort((a, b) => Math.abs(a.lateral - SIDE) - Math.abs(b.lateral - SIDE))[0];
+    const tree = bySide(candidates.filter((c) => c.along > axisLen + PAST))
+      // A seed can put every tree short of the gate spot. Then the deepest of
+      // them is still a tree to sit under, and no meditator at all is not an
+      // option — this page has exactly one figure in it.
+      || candidates.slice().sort((a, b) => b.along - a.along)[0];
+
+    // The mat sits a step out from that trunk, on the camera's side of it, so
+    // he is under the canopy edge rather than behind the tree.
+    const tx = tree.t.position.x, tz = tree.t.position.z;
+    const ox = eye.x - tx, oz = eye.z - tz;
+    const olen = Math.hypot(ox, oz) || 1;
+    const MAT = { x: tx + (ox / olen) * OFF, z: tz + (oz / olen) * OFF };
 
     // the mat: the same four-sided cylinder every mat in the book is (k30,
     // k33), in the dark wash — the quiet version, not a seal
-    const y0 = groundHeight(MAT.x, MAT.z, { seed: 7 });   // the hub's groundSeed
+    const y0 = groundHeight(MAT.x, MAT.z, { seed: built.groundSeed });
     const mat = new THREE.Mesh(
-      new THREE.CylinderGeometry(MAT.r, MAT.r, MAT.h, 4),
+      new THREE.CylinderGeometry(MAT_R, MAT_R, MAT_H, 4),
       toonMaterial({ color: WASH.dark, flat: true }));
     mat.name = 'mat';
     mat.rotation.y = Math.PI / 4;
-    mat.position.set(MAT.x, y0 + MAT.h / 2, MAT.z);
+    mat.position.set(MAT.x, y0 + MAT_H / 2, MAT.z);
     scene.add(mat);
 
     // the meditator, ordinary monk scale, facing where the gate was: seated
     // figures face local +z, so swing +z onto the mat→gate bearing
     const buddha = makeBuddha({ height: 1.6 });
-    buddha.position.set(MAT.x, y0 + MAT.h, MAT.z);
-    buddha.rotation.y = Math.atan2(GATE_SPOT.x - MAT.x, GATE_SPOT.z - MAT.z);
+    buddha.position.set(MAT.x, y0 + MAT_H, MAT.z);
+    buddha.rotation.y = Math.atan2(gx - MAT.x, gz - MAT.z);
     scene.add(buddha);
     // buildHub outlined its scene before these two existed; the call is
     // per-mesh idempotent, so scoping a second one to the additions is safe

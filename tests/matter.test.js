@@ -156,10 +156,79 @@ test('a scene can be built without its gate, path, monk or lanterns', () => {
   assert.equal(typeof bare.dispose, 'function');
 });
 
-test('the preface scene and the hub frame the same point', async () => {
-  // The gate is absent on the preface page and the camera still centres where
-  // it stood: the composition is unchanged and the subject is its absence.
-  assert.deepEqual(buildHub({ gate: false }).gateTarget, buildHub().gateTarget);
+test('the preface still centres on the spot where its gate would have stood', async () => {
+  // The gate is absent and the camera centres where it stood — the subject is
+  // its absence. That USED to be checkable by comparing gateTarget with the
+  // hub's, back when every hub scene shared one road. The preface bends its own
+  // road now, so the invariant has to be stated about the scene itself: the two
+  // lanterns flank gateTarget, which is what makes the empty middle read as a
+  // missing gate rather than as nothing in particular.
+  const mod = await loadKoan(PREFACE_SLUG);
+  const built = mod.build();
+  const [gx, , gz] = built.gateTarget;
+  assert.ok(built.gateTarget.every(Number.isFinite));
+  const lanterns = built.scene.children.filter((c) => c.name === 'lantern');
+  assert.equal(lanterns.length, 2);
+  const d = lanterns.map((l) => Math.hypot(l.position.x - gx, l.position.z - gz));
+  assert.ok(Math.abs(d[0] - d[1]) < 1e-6, `the lanterns straddle the spot evenly, got ${d}`);
+  assert.ok(Math.abs(d[0] - 2.0) < 1e-6, `and at the width the gate had, got ${d[0].toFixed(3)}`);
+});
+
+// Frank: "how do we have this set up differently at all? because right now it
+// looks exactly the same." Removing the gate was the ONLY difference between
+// the Contents and the preface — same hills, same trees, same bend in the road
+// — so the preface read as the Contents with a prop missing. Each scene rolls
+// its own land now. This is what stops the three quietly converging again if
+// someone tidies the seeds into one shared constant.
+test('the three hub scenes are three different pictures, not one with pieces removed', async () => {
+  const xz = (built) => built.trees.map((t) => `${t.position.x.toFixed(3)},${t.position.z.toFixed(3)}`);
+  const contents = buildHub();
+  const preface = (await loadKoan(PREFACE_SLUG)).build();
+  const afterword = (await loadKoan(AFTERWORD_SLUG)).build();
+
+  for (const [a, b, names] of [
+    [contents, preface, 'contents vs preface'],
+    [contents, afterword, 'contents vs afterword'],
+    [preface, afterword, 'preface vs afterword'],
+  ]) {
+    const shared = xz(a).filter((p) => xz(b).includes(p));
+    assert.equal(shared.length, 0, `${names}: ${shared.length} trees stand in the same place`);
+    // and the road itself bends differently, which moves the gate spot with it
+    assert.notDeepEqual(a.gateTarget, b.gateTarget, `${names}: the same road`);
+  }
+});
+
+test('the afterword seats its meditator UNDER a tree, whatever the seed does', async () => {
+  // The one invariant that broke silently: the mat's coordinate was copied out
+  // of one particular seed's scatter, and when the seed changed the tree moved
+  // and the meditator did not — he sat in open grass under nothing, and no test
+  // and no screenshot said a word. Stated against the trees the scene actually
+  // built, so it cannot come apart again.
+  const built = (await loadKoan(AFTERWORD_SLUG)).build();
+  const mat = built.scene.children.find((c) => c.name === 'mat');
+  const buddha = built.scene.children.find((c) => c.name === 'buddha');
+  assert.ok(mat && buddha, 'the afterword has exactly one figure in it');
+  assert.ok(Math.hypot(mat.position.x - buddha.position.x, mat.position.z - buddha.position.z) < 1e-9,
+    'and he is on the mat');
+
+  const near = Math.min(...built.trees.map((t) =>
+    Math.hypot(t.position.x - mat.position.x, t.position.z - mat.position.z)));
+  assert.ok(near < 1.6, `under the canopy, not in open grass — nearest trunk ${near.toFixed(2)}`);
+  assert.ok(near > 0.6, `beside the trunk, not inside it — nearest trunk ${near.toFixed(2)}`);
+
+  // He is OFF TO THE SIDE of the shot, not in the middle of it: "he is found,
+  // not shown". Measured against the rig's own eye for this page's camera.
+  const [gx, , gz] = built.gateTarget;
+  const cam = (await loadKoan(AFTERWORD_SLUG)).camera;
+  const ex = gx + cam.distance * Math.sin(cam.polar) * Math.sin(cam.azimuth);
+  const ez = gz + cam.distance * Math.sin(cam.polar) * Math.cos(cam.azimuth);
+  const ax = gx - ex, az = gz - ez, len = Math.hypot(ax, az);
+  const dx = mat.position.x - ex, dz = mat.position.z - ez;
+  const lateral = Math.abs(dx * az - dz * ax) / len;
+  const along = (dx * ax + dz * az) / len;
+  assert.ok(along > len, `past the gate spot, deeper in the shot (${along.toFixed(1)} vs ${len.toFixed(1)})`);
+  assert.ok(lateral > 1.5, `off the centre line — the camera is not on him (${lateral.toFixed(2)})`);
+  assert.ok(lateral < 8, `and still inside the frame (${lateral.toFixed(2)})`);
 });
 
 // The four tests above hold for a return-value shape that a fully-dressed
