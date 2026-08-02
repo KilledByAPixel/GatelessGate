@@ -160,27 +160,35 @@ test('case 39: sinking a plain stone leaves the red where it was', () => {
 test('case 39: sinking the red hands it to the NEAREST survivor — one red all the way down', () => {
   const { root, tops, tap } = staged();
   let t = 1;
-  const step = () => { t += 0.5; root.update(1 / 60, t); };
+  // THE HANDOVER WAITS FOR THE SINK. The red stays on the stone you touched
+  // until it has actually gone under (Frank: "the next one turns red a bit
+  // too early — it shouldn't turn red until that one has gone under"), so
+  // every tap here is followed by a step past SINK (1.1s) before reading.
+  const sink = (i) => { tap(i); t += 1.6; root.update(1 / 60, t); };
 
-  step(); tap(2);                        // plain stone first: red stays on 6
-  step(); tap(6);                        // the red goes under: its neighbour takes it
-  assert.equal(root.fragment().red, 5);
+  sink(2);                               // plain stone: red stays on 6
+  assert.equal(root.fragment().red, 6);
+
+  tap(6);                                // the red one, touched...
+  assert.equal(root.fragment().red, 6, 'still red while it is on its way down');
+  t += 1.6; root.update(1 / 60, t);       // ...and now under
+  assert.equal(root.fragment().red, 5, 'its neighbour takes it');
   assert.equal(tops[5].material.color.getHexString(), RED);
   assert.equal(redTops(tops), 1, 'the red MOVED — it did not duplicate');
 
-  step(); tap(5);                        // red again: 4 is next along the line
+  sink(5);                               // red again: 4 is next along the line
   assert.equal(root.fragment().red, 4);
-  step(); tap(4);                        // red again: 3 takes it (2 is already down)
+  sink(4);                               // red again: 3 takes it (2 is already down)
   assert.equal(root.fragment().red, 3);
   assert.equal(redTops(tops), 1);
 
-  step(); tap(0);                        // plain: red stays on 3
+  sink(0);                               // plain: red stays on 3
   assert.equal(root.fragment().red, 3);
-  step(); tap(3);                        // red: 2 and 0 are sunk, so 1 takes it
+  sink(3);                               // red: 2 and 0 are sunk, so 1 takes it
   assert.equal(root.fragment().red, 1);
   assert.equal(redTops(tops), 1);
 
-  step(); tap(1);                        // the last survivor goes down
+  sink(1);                               // the last survivor goes down
   assert.equal(root.fragment().red, -1, 'no survivors, no red');
   assert.equal(root.fragment().sunk, 7);
 });
@@ -188,7 +196,7 @@ test('case 39: sinking the red hands it to the NEAREST survivor — one red all 
 test('case 39: when the stones surface again the red is back on the far one', () => {
   const { root, tops, tap } = staged();
   let t = 1;
-  for (const i of [0, 1, 2, 3, 4, 5, 6]) { t += 0.5; root.update(1 / 60, t); tap(i); }
+  for (const i of [0, 1, 2, 3, 4, 5, 6]) { tap(i); t += 1.6; root.update(1 / 60, t); }
   assert.equal(root.fragment().red, -1);
   root.update(1 / 60, t + 30);           // long past SURFACE_AFTER
   assert.equal(root.fragment().sunk, 0, 'the crossing came back');

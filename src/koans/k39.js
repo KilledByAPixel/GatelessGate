@@ -189,10 +189,11 @@ export default {
         // it goes under where you were about to put your weight
         audio && audio.drip({ loud: true });
         water.ripple(s.pivot.position.x - 0.4, s.pivot.position.z + 1.6);
-        // ...and if it was carrying the red, the red steps to the next
-        // survivor — always exactly one red while anything is still standing
-        red = nextRed(red, i, stones.map((q) => q.sunkAt > -99));
-        paint();
+        // The red does NOT move yet. It waits until this stone has actually
+        // gone under (see update, below): handing it over on the tap lit the
+        // next stone while the tapped one was still standing there in plain
+        // sight wearing nothing (Frank: "the next one turns red a bit too
+        // early — it shouldn't turn red until that one has gone under").
         if (sunk === stones.length) allDownAt = clock;
         return;
       }
@@ -239,6 +240,15 @@ export default {
           const e = u * u * (3 - 2 * u);
           s.pivot.position.y = s.y0 - 0.85 * e;
           s.pivot.visible = e < 0.995;
+        }
+
+        // ...and only once the stone carrying the red has FINISHED going
+        // under does the red step to the nearest survivor. Driven from here
+        // rather than from the tap, so the handover lands on the beat the
+        // stone actually disappears rather than the beat you touched it.
+        if (red >= 0 && stones[red].sunkAt > -99 && clock - stones[red].sunkAt >= SINK) {
+          red = nextRed(red, red, stones.map((q) => q.sunkAt > -99));
+          paint();
         }
       },
       fragment() {
