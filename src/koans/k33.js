@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, WASH } from '../palette.js';
+import { PAPER, ACCENT, INK, WASH } from '../palette.js';
 import {
   composeWorld, makeBasin, makeWater, makeKoi, makeMonk, faceMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
@@ -48,7 +48,7 @@ export default {
 
     // the same round pond as case 30, down to the seed
     const water = makeWater({
-      shape: 'round', size: POND.size, color: WASH.ground, seed: 30, strike: 0.08, opacity: 0.5,
+      shape: 'round', size: POND.size, color: WASH.ground, seed: 30, strike: 0.135, opacity: 0.5,
     });
     water.group.position.set(POND.x, POND.surface, POND.z);
     scene.add(water.group);
@@ -84,17 +84,18 @@ export default {
     seat.position.set(BANK.x, SEAT_TOP / 2, BANK.z);
     scene.add(seat);
 
-    // and the same mat, in the same place, bare — but in ink. In case 30 the
-    // mat is vermillion under the one sitting on it; here the koi carry the
-    // case's one red (above), so the mat goes to a dark wash: the same shape
-    // in the same spot with the warmth gone out of it, which is what "not
-    // Buddha" looks like as furniture. One accent per koan holds.
+    // and the same cushion, in the same place, bare. Case 30 no longer builds
+    // one — its Buddha sits on the figure kit's own zabuton — so this one is
+    // cut to that zabuton's exact dimensions (figure.js CUSHION, at his 1.6
+    // height: 0.26/0.235 radius, 0.042 tall, ten sides) and set at the height
+    // his would sit. That is the whole pairing: the same seat, one with a man
+    // on it and one without, and nothing else different. In ink, like his.
+    const Z = 1.6;                       // the height case 30's Buddha is built at
     const cushion = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.62, 0.62, 0.05, 4),
-      toonMaterial({ color: WASH.dark, flat: true }));
+      new THREE.CylinderGeometry(0.235 * Z, 0.26 * Z, 0.042 * Z, 10),
+      toonMaterial({ color: INK, flat: true }));
     cushion.name = 'cushion';
-    cushion.rotation.y = Math.PI / 4;
-    cushion.position.set(BANK.x, SEAT_TOP + 0.025, BANK.z);
+    cushion.position.set(BANK.x, SEAT_TOP + 0.05 + 0.021 * Z, BANK.z);
     scene.add(cushion);
 
     // and the same monk, still standing there

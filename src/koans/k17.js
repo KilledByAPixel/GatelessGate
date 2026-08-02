@@ -56,7 +56,7 @@ export default {
     // courtyard that wanted to be red (it is two people and a call), so the
     // teacher on the platform takes the accent; deepened, since a whole figure
     // at full accent glares (Frank's call).
-    const chu = makeMonk({ height: 1.6, pose: 'sit', elder: true, color: ACCENT_DEEP, cushion: false });
+    const chu = makeMonk({ height: 1.6, pose: 'sit', elder: true, color: ACCENT_DEEP });
     const CHU_POS = new THREE.Vector3(-1.9, 0.34, -2.7);
     const OSHIN_POS = new THREE.Vector3(3.1, 0, 1.6);
     chu.position.copy(CHU_POS);
@@ -74,17 +74,12 @@ export default {
     // would have put the lying shaft back at y = 0, half sunk in the deck.
     scene.add(chu);
 
-    // a plain reed mat under him now, not a red one. He sits on it with the
-    // kit's own zabuton switched OFF (cushion: false above) — the two slabs
-    // were nearly the same size, so stacked they read as one thing doubled
-    // (Frank: "an extra thin rectangular shaped thing below this guy").
-    const mat = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.46, 0.46, 0.035, 4),
-      toonMaterial({ color: WASH.dry, flat: true }));
-    mat.name = 'mat';
-    mat.rotation.y = Math.PI / 4;
-    mat.position.set(CHU_POS.x, CHU_POS.y + 0.018, CHU_POS.z);
-    scene.add(mat);
+    // The reed mat that used to lie under him is GONE: the seated figure
+    // brings its own zabuton now, and the two were nearly the same size, so
+    // stacked they read as one thing doubled (Frank: "an extra thin
+    // rectangular shaped thing below this guy... I don't know why there needs
+    // to be the art-directed cushion any more — just the regular default
+    // cushion would probably be fine").
 
     // OSHIN, across the yard, turned to his own work — the whole point is that
     // he is not already looking
@@ -109,9 +104,15 @@ export default {
         { x: 1.4, z: -3.2, r: 0.9 },
         { x: 0.4, z: -0.6, r: 2.6 },      // the courtyard between them stays open
       ],
+      // Grass is cleared UNDER THE PLATFORM and nowhere else. There used to be
+      // a second circle out at (0.4, -0.6) to keep the courtyard between the
+      // two of them open, and with nothing standing there it read as a bald
+      // patch of ground in the middle of the meadow (Frank: "the grass is
+      // emptied out in a weird circle... it's kind of between them, but it
+      // should be just where the platform is"). The veranda's own circle is
+      // centred on the veranda now, not offset forward of it.
       grassKeepout: [
-        { x: -2.6, z: -3.0, r: 2.8 },
-        { x: 0.4, z: -0.6, r: 2.4 },
+        { x: -2.6, z: -3.6, r: 3.0 },
       ],
     });
 

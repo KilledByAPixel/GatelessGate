@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, WASH } from '../palette.js';
+import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
   composeWorld, makeBuddha, makeBasin, makeWater, makeKoi, makeMonk, faceMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
@@ -63,7 +63,7 @@ export default {
     // the koi stay ink, so the red is the water answering, not the pond
     // dressing up. The urna keeps its dot; Frank knowingly doubles the red here.
     const water = makeWater({
-      shape: 'round', size: POND.size, color: ACCENT, seed: ID, strike: 0.08, opacity: 0.5,
+      shape: 'round', size: POND.size, color: ACCENT_DEEP, seed: ID, strike: 0.135, opacity: 0.5,
     });
     water.group.position.set(POND.x, POND.surface, POND.z);
     scene.add(water.group);
@@ -94,23 +94,18 @@ export default {
     seat.position.set(BANK.x, SEAT_TOP / 2, BANK.z);
     scene.add(seat);
 
-    // the mat on the stone — the same mat as case 33, where nobody is sitting
-    // on it, so the two scenes share not just a pond but the exact spot the
-    // answer is or is not occupying. DARK in both cases now (Frank: "the mat
-    // underneath Buddha should not be red"): the pair's reds live elsewhere —
-    // here the urna on his forehead, in 33 the koi under the water.
-    const cushion = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.62, 0.62, 0.05, 4),
-      toonMaterial({ color: WASH.dark, flat: true }));
-    cushion.name = 'cushion';
-    cushion.rotation.y = Math.PI / 4;
-    cushion.position.set(BANK.x, SEAT_TOP + 0.025, BANK.z);
-    scene.add(cushion);
+    // The mat that used to lie on the stone is GONE: the seated figure brings
+    // its own zabuton now, so an art-directed one under him was a second slab
+    // saying the same thing (Frank: "I don't know why there needs to be the
+    // art-directed cushion any more — just the regular default cushion would
+    // probably be fine"). Case 33 still builds one, because THERE the cushion
+    // has to exist with nobody on it; it is sized to this zabuton exactly, so
+    // the pair still reads as one seat occupied and the same seat empty.
 
     // ordinary monk scale (overnight pass 2), seated on the top of the mat:
     // everything on the dais derives from SEAT_TOP so raising the stone
     // raises the whole stack together
-    const buddha = makeBuddha({ height: 1.6, cushion: false });
+    const buddha = makeBuddha({ height: 1.6 });
     buddha.position.set(BANK.x, SEAT_TOP + 0.05, BANK.z);
     scene.add(buddha);
 

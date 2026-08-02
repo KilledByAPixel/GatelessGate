@@ -57,12 +57,12 @@ export default {
     scene.add(mat);
 
     // SEIZEI, sitting on it with nothing
-    const seizei = makeMonk({ height: 1.5, pose: 'sit', cushion: false });
+    const seizei = makeMonk({ height: 1.5, pose: 'sit' });
     seizei.position.set(1.75, 0.035, 1.0);
     scene.add(seizei);
 
     // SOZAN, sitting across from him, who has been counting
-    const sozan = makeMonk({ height: 1.56, pose: 'sit', elder: true, stout: 1.04, cushion: false });
+    const sozan = makeMonk({ height: 1.56, pose: 'sit', elder: true, stout: 1.04 });
     sozan.position.set(-0.35, 0.035, 0.0);
     scene.add(sozan);
     faceMonk(seizei, sozan.position);
