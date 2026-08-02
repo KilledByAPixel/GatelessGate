@@ -35,8 +35,8 @@ export default {
 
     // the monastery threshold he has just entered
     const hut = makeHut({ width: 3.0, height: 2.3, depth: 2.4 });
-    hut.position.set(-0.4, 0, -4.2);
-    hut.rotation.y = 0.28;
+    hut.position.set(-1.4, 0, -4.2);
+    hut.rotation.y = 0.15;
     scene.add(hut);
 
     // The stone basin, and the water in it. Taller than it is wide, or it reads
@@ -47,23 +47,23 @@ export default {
     const basin = makeBasin({
       inner: 0.44, outer: 0.56, rim: BASIN_H, floor: 0.30, color: WASH.stone, segments: 12,
     });
-    basin.position.set(2.15, 0, 0.9);
+    basin.position.set(3.15, 0, 1.5);
     scene.add(basin);
 
     // round, because the basin is: a square sheet also used to poke its corners
     // out through the stone
     const water = makeWater({ shape: 'round', size: 0.86, color: WASH.ground });
-    water.group.position.set(2.15, BASIN_H - 0.10, 0.9);   // below the rim, clear of it
+    water.group.position.set(3.15, BASIN_H - 0.10, 1.5);   // below the rim, clear of it
     scene.add(water.group);
 
     // the bowl, set down beside the basin where he left it
     const bowl = makeBowl({ radius: 0.19, color: ACCENT });   // the seal of this koan
-    bowl.position.set(1.42, 0, 1.5);
+    bowl.position.set(2.42, 0, 2.1);
     scene.add(bowl);
 
     // the monk who has eaten, and been told to go wash
     const monk = makeMonk({ height: 1.58 });
-    monk.position.set(0.55, 0, 1.75);
+    monk.position.set(1.55, 0, 1.75);
     faceMonk(monk, basin.position);
     scene.add(monk);
 

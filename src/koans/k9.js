@@ -109,7 +109,7 @@ export default {
     // rooted on the lowest stratum at the statue's flank: its whole life fits
     // inside the newest band of his time, and its crown barely clears his
     // elbow. Ink like every other tree; the accent stays his.
-    const TREE_X = CX + 7.8, TREE_Z = CZ + 2.2;   // radius ~8.1: on band 0's top
+    const TREE_X = CX + 7.2, TREE_Z = CZ - 1.2;   // radius ~8.1: on band 0's top
     const tree = makeTree({ height: 3.5, seed: 907 });
     tree.position.set(TREE_X, BANDS[0].h, TREE_Z);
     tree.rotation.y = 2.1;

@@ -36,21 +36,21 @@ export default {
 
     // the dining hall he is walking to, too early
     const hall = makeHut({ width: 3.6, height: 2.5, depth: 2.8 });
-    hall.position.set(-0.6, 0, -5.4);
-    hall.rotation.y = 0.34;
+    hall.position.set(-4.2, 0, -4.4);
+    hall.rotation.y = 1.24;
     scene.add(hall);
 
     // the bell on one side of the yard — dark bronze, NOT the seal: the bowl
     // Tokusan carries is the one red thing here (Frank's note: the bell was
     // competing with it). It still swings and rings when struck.
     const bell = makeBell({ height: 0.95, seed: ID, color: WASH.mid });
-    bell.group.position.set(-3.5, 0, 0.4);
+    bell.group.position.set(-4.5, 0, 0.4);
     bell.group.rotation.y = 0.7;
     scene.add(bell.group);
 
     // ...and the drum on the other, its near head turned toward the yard
     const drum = makeDrum({ radius: 0.5, seed: ID });
-    drum.group.position.set(3.9, 0, -0.4);
+    drum.group.position.set(1.9, 0, -0.4);
     drum.group.rotation.y = -1.15;
     scene.add(drum.group);
 
@@ -89,8 +89,8 @@ export default {
       grassKeepout: [
         ...path.keepout(26, 0.9),
         { x: hall.position.x, z: hall.position.z, r: 2.1 },
-        { x: -3.5, z: 0.4, r: 0.8 },
-        { x: 3.9, z: -0.4, r: 0.8 },
+        { x: -4.5, z: 0.4, r: 1.1 },
+        { x: 1.9, z: -0.4, r: 0.8 },
       ],
     });
 
