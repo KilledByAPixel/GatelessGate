@@ -48,9 +48,9 @@ export default {
     scene.add(cliff);
 
     // ZUIGAN, alone, near the edge, facing out over the drop
-    const zuigan = makeMonk({ height: 1.64, pose: 'point' });
+    const zuigan = makeMonk({ height: 1.64 });
     zuigan.position.set(0.9, 0, -0.5);
-    zuigan.rotation.y = Math.PI * 0.5 + 0.22;      // pointing out into the air
+    zuigan.rotation.y = .2;
     scene.add(zuigan);
 
     // his staff, planted in the rock beside him. NOT at (1.75, 0.5): the
