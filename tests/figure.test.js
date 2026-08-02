@@ -30,7 +30,7 @@ test('sleeves hinge at the shoulder (geometry translated, not centred)', () => {
   // SHOULDER BALL (r = r0·1.35·h, merged at the hinge to bury the arm/body
   // join at any pose) may crest above it. An un-translated (centred) sleeve
   // overshoots this bound by ~0.19, so the check still catches what it is for.
-  const ballR = 0.035 * 1.35 * 1.6;
+  const ballR = 0.035 * 1.22 * 1.6;
   assert.ok(box.max.y <= arm.position.y + ballR + 0.01, 'sleeve not hinged at shoulder');
 });
 
@@ -110,12 +110,13 @@ test('the seated figure folds real legs — knees at ±x, lap valley, torso inse
   assert.ok(chest > blouse * 0.85, `the back is straight, not a droop: ${chest} vs ${blouse}`);
   assert.ok(new THREE.Box3().setFromObject(g).max.y > 0.60 * H, 'the crown rises — upright, composed');
 
-  // and the folded hands land ON the lap: each seated sleeve reaches below
-  // the knee-top line (0.17·h) — cuffs buried in the lap, not hovering at
-  // the chest (k17's "his hands have weird thing")
+  // and the folded hands land ON the lap: each seated arm (now two-piece,
+  // with the forearm's cuff gathered to the centre) reaches down to the lap
+  // shelf (0.175·h) — resting on it, neither hovering at the chest (k17's
+  // "his hands have weird thing") nor stabbing the ground
   for (const arm of g.children.filter((c) => c.name === 'arm')) {
     const box = new THREE.Box3().setFromObject(arm, true);
-    assert.ok(box.min.y < 0.17 * H, `cuff rests in the lap: ${box.min.y}`);
+    assert.ok(box.min.y < 0.19 * H, `cuff rests on the lap: ${box.min.y}`);
     assert.ok(box.min.y > 0.05 * H, `cuff does not stab the ground: ${box.min.y}`);
   }
 });

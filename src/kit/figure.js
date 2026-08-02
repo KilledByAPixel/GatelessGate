@@ -61,7 +61,11 @@ const CUFF_FLARE = 1.14;
 export function sleeve({ height = 1.6, len = 0.34 * 1.6, r0 = 0.035, r1 = 0.065, flare = CUFF_FLARE, mat }) {
   const a = r0 * height;              // shoulder
   const b = r1 * height;              // wrist
-  const profile = [
+  // flare <= 1 means the mouth is a JOINT (an elbow), not a cuff: the whole
+  // lip-nip-belly shaping goes with it — even a flush lip kept the roll and
+  // read as "still kind of a weird flare on their elbow" (Frank). A joint
+  // sleeve is a plain taper, nothing else.
+  const rows = flare > 1 ? [
     [0, -len],                        // the mouth of the cuff, closed
     [b * flare, -len],                // THE CUFF LIP — the widest cloth on the arm
     [b * 0.99, -len * 0.930],         // the flare rolling back in
@@ -70,14 +74,21 @@ export function sleeve({ height = 1.6, len = 0.34 * 1.6, r0 = 0.035, r1 = 0.065,
     [b * 0.81, -len * 0.320],
     [a, 0],                           // THE SHOULDER — origin, and the top of the bounds
     [0, 0],                           // closed
-  ].map(([r, y]) => new THREE.Vector2(r, y));
+  ] : [
+    [0, -len],
+    [b, -len],                        // a plain taper down to the joint
+    [b * 0.94, -len * 0.55],
+    [a, 0],
+    [0, 0],
+  ];
+  const profile = rows.map(([r, y]) => new THREE.Vector2(r, y));
   // THE SHOULDER BALL. The sleeve hinges at its origin, and any rotation
   // tips its top ring away from the robe — a wedge of daylight at every
   // posed arm ("the joints show there's a gap where the arm attaches" —
   // Frank). A ball centred exactly on the hinge is rotation-invariant, so
   // the join stays covered at ANY arm pose; merged into the sleeve's own
   // geometry, it costs no mesh.
-  const ball = new THREE.SphereGeometry(a * 1.35, 7, 6);
+  const ball = new THREE.SphereGeometry(a * 1.22, 7, 6);   // 1.35 read as bulky pauldrons on the seated figure
   const arm = new THREE.Mesh(
     mergeSimple([new THREE.LatheGeometry(profile, 7), ball]), mat);
   arm.name = 'arm';
@@ -201,11 +212,14 @@ export const SIT_PROFILE = [
                     //   thing that's their whole bottom part... a little smaller")
   [0.150, 0.150],   // rising over the leg block toward the lap
   [0.140, 0.175],   // THE LAP — a near-horizontal shelf in to the waist
-  [0.126, 0.220],   // OBI — the tie
-  [0.142, 0.265],   // the blouse pushed up over the knot
-  [0.128, 0.425],   // chest — one long VERTICAL run: a meditator sits straight
-  [0.103, 0.458],   // COLLAR
-  [0.064, 0.478],   // the neck opening
+  // torso rows carry the STANDING profile's widths (round seven: "the upper
+  // torso should be shaped more like the standing one, similar size" — the
+  // seated blouse/chest ran ~6% fatter and read as a heavier man)
+  [0.112, 0.220],   // OBI — the tie
+  [0.134, 0.265],   // the blouse pushed up over the knot
+  [0.121, 0.425],   // chest — one long VERTICAL run: a meditator sits straight
+  [0.097, 0.458],   // COLLAR
+  [0.058, 0.478],   // the neck opening
 ];
 
 // THE SEAT, in fractions of height. Frank's reading, round five: the base
@@ -398,7 +412,7 @@ export function makeFigure({
     arm.rotation.x = st.foldUpper;          // the upper hangs, only a little forward
     arm.rotation.z = side * 0.12;           // elbows just clear of the body
     // a quieter mouth than a hanging sleeve: gathered hands, not trumpets
-    const fore = sleeve({ height, len: sleeveL * 0.62, r1: 0.056, flare: 1.07, mat });
+    const fore = sleeve({ height, len: sleeveL * 0.62, r1: 0.052, flare: 1.04, mat });
     fore.name = 'forearm';
     fore.position.y = -upperLen;            // hinged at the elbow, in the upper's frame
     fore.rotation.x = st.foldFore;          // seated: down into the lap; standing: up to the waist
