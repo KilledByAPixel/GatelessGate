@@ -6,6 +6,7 @@ import { makePath } from '../kit/path.js';
 import { makeMonk, faceMonk } from '../kit/monk.js';
 import { makeMoon } from '../kit/moon.js';
 import { makeButterflies } from '../kit/butterflies.js';
+import { groundHeight } from '../kit/ground.js';
 import { makeLights } from '../render/toon.js';
 import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
@@ -106,7 +107,10 @@ export default {
     // butterflies play at flower height, they do not cruise with the birds.
     const butterflies = makeButterflies({
       count: 6, seed: 19, color: ACCENT,
-      center: [2.6, 0.4], radius: 3.4, height: [0.6, 2.2],
+      center: [2.6, 0.4], radius: 4.2, height: [0.6, 2.2],
+      // they come down into the meadow and sit a while, so they need the
+      // meadow's own height under them
+      groundFn: (x, z) => groundHeight(x, z, { seed: 21 }),
     });
     scene.add(butterflies.group);
 

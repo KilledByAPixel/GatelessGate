@@ -53,7 +53,11 @@ test('the wings flap — a seeded beat, wings mirrored about the body line', () 
   assert.ok(Math.min(...angles) < 0.2, 'and spread nearly flat again');
 });
 
-test('they fly, they stay in their box, and they never land', () => {
+test('they fly, they stay in their box, and they COME DOWN to the grass', () => {
+  // Frank asked for a round rather than a hover: "changing height as well,
+  // like kinda landing on the grass for a little bit and flying away." So the
+  // old "never lands" claim is exactly inverted — what has to hold now is
+  // that they use the whole band, touch down, and never sink through it.
   const flock = makeButterflies({ count: 5, seed: 19, center: [2, -1], radius: 3, height: [0.6, 2.2] });
   const each = butterflies(flock);
   let minY = Infinity, maxY = -Infinity, worstR = 0;
@@ -69,8 +73,14 @@ test('they fly, they stay in their box, and they never land', () => {
       r.minZ = Math.min(r.minZ, b.position.z); r.maxZ = Math.max(r.maxZ, b.position.z);
     });
   }
-  assert.ok(minY > 0.4, `never in the grass (min y ${minY.toFixed(2)})`);
+  assert.ok(minY > 0.05, `settles ON the grass, never through it (min y ${minY.toFixed(2)})`);
+  assert.ok(minY < 0.35, `and genuinely comes down (min y ${minY.toFixed(2)})`);
   assert.ok(maxY < 2.8, `never up with the birds (max y ${maxY.toFixed(2)})`);
+  // somebody is perched, and somebody is flying, at some point in the round
+  const lifts = [];
+  for (let i = 0; i < 60 * 30; i += 17) { flock.update(1 / 60, i / 60); lifts.push(...flock.lift()); }
+  assert.ok(Math.min(...lifts) === 0, 'at least one is fully perched at some point');
+  assert.ok(Math.max(...lifts) === 1, 'and at least one fully airborne');
   assert.ok(worstR <= 3 * Math.SQRT2 + 1e-6, `the wander stays near home, worst ${worstR.toFixed(2)}`);
   // and each one genuinely plays around rather than hovering at one bloom
   roam.forEach((r, k) => {

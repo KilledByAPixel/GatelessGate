@@ -160,8 +160,9 @@ test('the butterflies wear the case red and play low over the meadow, in frame',
       assert.equal('#' + o.material.color.getHexString(), ACCENT.toLowerCase(), 'butterflies wear the accent');
       assert.equal(o.userData.noOutline, true, 'a hull on a paper-thin wing is a blot');
     });
-    // at flower height, not up with the moon and not in the grass
-    assert.ok(b.position.y > 0.3 && b.position.y < 3.5, `plays low, got y=${b.position.y.toFixed(2)}`);
+    // at flower height, not up with the moon — and low enough to include the
+    // ones currently perched in the grass (they land now, and stay a while)
+    assert.ok(b.position.y > 0.05 && b.position.y < 3.5, `plays low, got y=${b.position.y.toFixed(2)}`);
     const v = b.getWorldPosition(new THREE.Vector3()).project(cam);
     if (Math.abs(v.x) < 0.9 && Math.abs(v.y) < 0.9 && v.z > 0 && v.z < 1) inFrame++;
   }
