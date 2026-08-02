@@ -85,7 +85,15 @@ export default {
     // kinds of fragrant flowers": the birds are what the whole answer is, so
     // they carry the accent. Small marks against the sky, so full accent reads
     // as seals rather than glare.
-    const birds = makeBirds({ count: 9, seed: ID, center: [0.5, -1.0], height: 6.0, spread: 5.6, color: ACCENT });
+    // LOWER, and at MIXED altitudes. At height 6 with the stock 2.6 spread
+    // they all cruised in one narrow band near the top of the frame, which
+    // read as a row rather than a flock and half-left the picture (Frank:
+    // "all the birds are kind of the exact same height... a little bit
+    // lower, because they're kind of almost off the top of the camera").
+    const birds = makeBirds({
+      count: 9, seed: ID, center: [0.5, -1.0], color: ACCENT,
+      height: 4.4, heightVary: 4.4, spread: 5.6,
+    });
     scene.add(birds.group);
 
     for (const [p, rx, rz, op] of [

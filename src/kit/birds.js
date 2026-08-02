@@ -23,6 +23,7 @@ export function makeBirds({
   color = WASH.deep,
   center = [0, 0],
   height = 6.2,
+  heightVary = 2.6,                // spread of cruise altitudes about `height`
   spread = 5.0,
   rate = 0.5,                      // angular speed of the circuit, rad/s-ish
 } = {}) {
@@ -43,7 +44,7 @@ export function makeBirds({
       radius: spread * (0.8 + h(3) * 0.9),
       dir: h(4) < 0.4 ? -1 : 1,
       angRate: rate * (0.7 + h(5) * 0.6),
-      cruiseY: height + (h(6) - 0.5) * 2.6,
+      cruiseY: height + (h(6) - 0.5) * heightVary,
       phase: h(7) * Math.PI * 2,
       beat: 7 + h(8) * 3,
       // a slow wander of the whole circuit, so paths cross the scene instead of

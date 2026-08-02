@@ -23,24 +23,40 @@ const TAU_E = 2.2;                 // e-folding of a flit, seconds
 const HEAD_EPS = 0.12;             // seconds between the two path samples a heading needs
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
-// One wing: a quad (two triangles) in the local xz plane, hinged at the body
-// line x = 0 so rotation.z alone is the flap. Forewing corner leads, hindwing
-// corner trails — enough asymmetry that the silhouette reads butterfly rather
-// than bow-tie, and nothing more.
+// One wing, in the local xz plane, hinged at the body line x = 0 so
+// rotation.z alone is the flap.
+//
+// A REAL WING OUTLINE, not a quad. The first pass was two triangles making a
+// swept rectangle, which reads as a bow-tie once you can see it at all
+// (Frank: "could we make the butterfly wings a little more shaped like a
+// butterfly wing?"). This is the actual silhouette in the fewest points that
+// can carry it: a long forewing sweeping up and out to a squared tip, a NOTCH
+// where the two wings meet, and a rounder hindwing lobe trailing behind it.
+// Eight boundary points, fanned from the root — six triangles, still nothing.
+const WING = [
+  [0.00, 0.11],    // root, at the head end
+  [0.22, 0.20],    // forewing leading edge, sweeping up and out
+  [0.38, 0.15],    // the squared forewing tip
+  [0.42, 0.01],    // and its outer trailing corner
+  [0.27, -0.05],   // THE NOTCH between forewing and hindwing
+  [0.32, -0.17],   // the hindwing lobe, rounder and further back
+  [0.17, -0.24],   // its trailing point
+  [0.00, -0.13],   // root, at the tail end
+];
 function wingGeometry(s, side) {
   const g = new THREE.BufferGeometry();
-  const t = side;
-  const v = new Float32Array([
-    // hindwing triangle
-    0, 0, 0.10 * s,               // root, at the head end
-    0, 0, -0.11 * s,              // root, at the tail end
-    0.30 * s * t, 0, -0.16 * s,   // outer trailing corner
-    // forewing triangle
-    0, 0, 0.10 * s,
-    0.30 * s * t, 0, -0.16 * s,
-    0.36 * s * t, 0, 0.10 * s,    // outer leading corner — the long forewing
-  ]);
-  g.setAttribute('position', new THREE.BufferAttribute(v, 3));
+  const v = [];
+  // fan from the root's head-end corner: the outline is star-shaped about it,
+  // so a fan triangulates the whole wing without an ear-clipping pass
+  const [ax, az] = WING[0];
+  for (let i = 1; i < WING.length - 1; i++) {
+    const [bx, bz] = WING[i];
+    const [cx, cz] = WING[i + 1];
+    v.push(ax * s * side, 0, az * s,
+      bx * s * side, 0, bz * s,
+      cx * s * side, 0, cz * s);
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(v), 3));
   g.computeVertexNormals();
   return g;
 }

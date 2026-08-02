@@ -14,7 +14,7 @@ function butterflies(flock) {
   return out;
 }
 
-test('a butterfly is two wing quads and nothing else, red, unhulled, double-sided', () => {
+test('a butterfly is two shaped wings and nothing else, red, unhulled, double-sided', () => {
   const flock = makeButterflies({ count: 6, seed: 19 });
   assert.equal(flock.group.name, 'butterflies');
   const each = butterflies(flock);
@@ -23,15 +23,22 @@ test('a butterfly is two wing quads and nothing else, red, unhulled, double-side
 
   for (const b of each) {
     const wings = b.children.filter((c) => c.isMesh);
-    assert.equal(wings.length, 2, 'two quads basically stuck together');
+    assert.equal(wings.length, 2, 'two wings basically stuck together');
     assert.equal(b.children.length, 2, 'and NOTHING else — no body, no antennae');
     for (const w of wings) {
       assert.equal(w.name, 'butterfly-wing');
       assert.equal(w.userData.noOutline, true, 'a hull on a paper-thin wing is a blot');
       assert.equal(w.material.side, THREE.DoubleSide, 'wings read from both faces');
       assert.equal('#' + w.material.color.getHexString(), ACCENT.toLowerCase(), 'red by default');
-      // a quad: two triangles, six vertices, hinged at the body line x = 0
-      assert.equal(w.geometry.getAttribute('position').count, 6);
+      // A SHAPED wing, not a quad: eight outline points fanned into six
+      // triangles (Frank asked for a wing shape rather than a bow-tie), still
+      // hinged on the body line so every root vertex sits at x = 0.
+      const pos = w.geometry.getAttribute('position');
+      assert.equal(pos.count, 18, 'eight outline points, fanned');
+      let onHinge = 0, offHinge = 0;
+      for (let i = 0; i < pos.count; i++) (Math.abs(pos.getX(i)) < 1e-9 ? onHinge++ : offHinge++);
+      assert.ok(onHinge > 0, 'the wing is rooted on the body line');
+      assert.ok(offHinge > onHinge, 'and most of it reaches out from there');
     }
     // the two wings share ONE material — six butterflies is twelve draws, one program
     assert.equal(wings[0].material, wings[1].material);
