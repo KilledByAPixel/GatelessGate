@@ -5,6 +5,9 @@ import {
   composeWorld, makeCliff, makeMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
+import { makeButterflies } from '../kit/butterflies.js';
+import { groundHeight } from '../kit/ground.js';
+import { wash } from '../palette.js';
 
 const ID = 12;
 
@@ -24,6 +27,24 @@ const ID = 12;
 
 const ECHO = 0.62;
 const LINES = 3;
+
+// The front of the lip course: half the cliff's depth, which is where the rock
+// stops being something you can stand on. Grass grows up to here and no further.
+const LIP_Z = -1.3;
+
+// Pull a set of keepout circles back so none of them reaches past `lipZ` onto
+// the standing ground. Shifting the centre and shrinking the radius by the same
+// amount pins the near edge to the line while leaving the far edge untouched, so
+// nothing that was masked out over the drop becomes unmasked. Circles that end
+// up too small to matter are dropped.
+export function clipToLip(circles, lipZ) {
+  return circles
+    .map((c) => {
+      const over = (c.z + c.r) - lipZ;
+      return over <= 0 ? c : { x: c.x, z: c.z - over / 2, r: c.r - over / 2 };
+    })
+    .filter((c) => c.r > 0.4);
+}
 
 export default {
   id: ID,
@@ -66,6 +87,28 @@ export default {
     staff.rotation.z = 0.10;
     scene.add(staff);
 
+    // Butterflies playing on the ledge beside him (Frank moved them here out of
+    // case 19, which has its blooms back). INK, not accent: the staff above is
+    // this case's one red thing, and a second seal would split it. They are
+    // right in the foreground of the shipped lens — the camera stands out at
+    // (7.8, 6.6, 8.0) — so a wash reads perfectly well at that range.
+    //
+    // Kept east of the lip: they land, and the ground formula they land on has
+    // no idea a gorge is drawn over it, so a butterfly settling past the edge
+    // would perch in mid-air on an invisible floor.
+    // PALE, not ink, and that is a contrast decision rather than a colour one.
+    // They play in the near foreground of the shipped lens, which is dense dark
+    // meadow — ink wings in there were ink on ink and simply could not be found.
+    // White cabbage butterflies over a dark field read at a glance, and the red
+    // stays where it belongs. Not accent either way: the staff is this case's
+    // one seal, and a second would split it.
+    const butterflies = makeButterflies({
+      count: 6, seed: ID, color: wash(0.06), size: 0.42,
+      center: [1.8, 1.6], radius: 2.8, height: [0.8, 2.4],
+      groundFn: (x, z) => groundHeight(x, z, { seed: 21 }),
+    });
+    scene.add(butterflies.group);
+
     // The pine that used to stand on the lip at (-2.9, -0.4) is GONE — a
     // different species growing right beside the one figure, and it never
     // read as well as the ordinary trees (Frank: "get rid of it"). The rock
@@ -81,7 +124,21 @@ export default {
         ...cliff.voidFootprint(0.5),
         { x: 0.9, z: -0.5, r: 1.4 },
       ],
-      grassKeepout: [...cliff.voidFootprint(0.4)],
+      // THE GIANT CLEARING (Frank: "rework that scene so the grass spawns more
+      // around him — for some reason there is a giant clearing there").
+      //
+      // The void mask is meant to keep grass off the air past the lip. But the
+      // nearest mist bank sits only 2.7 back from the edge with a circle nearly
+      // 8 across, so at full radius it reached 1.3 units onto the STANDING
+      // ground — over the whole ledge, Zuigan's own feet included. It was
+      // eating 55% of the near meadow, and the bald ring around him was that,
+      // not the rock.
+      //
+      // So each circle's near edge is pushed back to the lip line: shift the
+      // centre and shrink the radius by the same amount, which leaves the far
+      // edge exactly where it was. The air past the drop stays masked; the
+      // ledge grows grass again.
+      grassKeepout: clipToLip(cliff.voidFootprint(0.4), LIP_Z),
     });
 
     for (const [p, rx, rz, op] of [
@@ -117,6 +174,7 @@ export default {
       line = (line % LINES) + 1;
       calls++;
       pending = clock + ECHO;
+      butterflies.flit();               // a man shouting on a clifftop startles them
       // each line of the daily exercise is pitched a little lower than the last
       audio && audio.knock({ force: 0.9 - (line - 1) * 0.12 });
     });
@@ -127,6 +185,7 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
+        butterflies.update(dt, simTime);
 
         if (pending >= 0 && clock >= pending) {
           pending = -1;
@@ -142,7 +201,7 @@ export default {
         zuigan.rotation.z = -0.07 * lean;
       },
       fragment() {
-        return { calls, answers, line };
+        return { calls, answers, line, flutter: +butterflies.energy().toFixed(4) };
       },
       dispose() {},
     };

@@ -8,16 +8,12 @@ import { groundHeight } from '../src/kit/ground.js';
 import { ACCENT, ACCENT_DEEP, wash, WASH } from '../src/palette.js';
 
 // Case 19 has no object at its centre, so its two red seals are weather: the
-// harvest moon and the butterflies playing over the meadow (they replaced the
-// red wildflowers — Frank wanted spring alive in the air, not pigment on the
-// ground). Both are easy to get subtly wrong in ways nothing else in the suite
+// harvest moon and the wildflowers along the verge — spring and autumn, the
+// verse's first two lines, in the same picture. (Butterflies held the near seal
+// for a round; Frank has since put the blooms back and moved the butterflies to
+// case 12.) Both are easy to get subtly wrong in ways nothing else in the suite
 // would catch — a moon that the fog quietly erases, or that a pale invisible
-// slope stands in front of; butterflies that drift out of the frame or down
-// into the grass.
-//
-// The kit-level wildflower tests at the bottom stay here even though the case
-// no longer places a field: they pin makeWildflowers itself (placement, ground
-// conformance, keepouts, the gust front), which case 24's meadow rides on.
+// slope stands in front of; blooms that grow in the middle of the road.
 
 function fakeCtx() {
   const taps = [], hovers = [];
@@ -74,7 +70,7 @@ test('the diorama is a road, two walkers, a moon and a meadow', () => {
   const monks = [];
   root.scene.traverse((o) => { if (o.name === 'monk') monks.push(o); });
   assert.equal(monks.length, 2, 'Joshu and Nansen, walking');
-  for (const name of ['path', 'moon', 'butterflies', 'ground', 'grassfield']) {
+  for (const name of ['path', 'moon', 'wildflowers', 'ground', 'grassfield']) {
     assert.ok(root.scene.getObjectByName(name), `${name} missing from the scene`);
   }
 
@@ -142,34 +138,38 @@ test('the moon sits in frame, above the horizon, at the home angle', () => {
   assert.ok(moon.position.y - cam.position.y < 9, 'and low over the hills, not overhead');
 });
 
-test('the butterflies wear the case red and play low over the meadow, in frame', () => {
+test('the blooms carry the red, the stalks do not, and none of them grows in the road', () => {
   const root = k19.build(fakeCtx());
-  for (let i = 0; i < 90; i++) root.update(1 / 60, i / 60);
   root.scene.updateMatrixWorld(true);
-  const group = root.scene.getObjectByName('butterflies');
-  const each = [];
-  group.traverse((o) => { if (o.name === 'butterfly') each.push(o); });
-  assert.ok(each.length >= 5 && each.length <= 7, `a handful, got ${each.length}`);
+  const heads = root.scene.getObjectByName('wildflowers');
+  assert.ok(heads && heads.isInstancedMesh, 'one instanced drift of blooms');
+  assert.equal('#' + heads.material.color.getHexString(), ACCENT.toLowerCase(),
+    'the near seal is the flowers');
+  // ...and ONLY the heads. A red stalk turns a drift into red grass — the whole
+  // reason the kit splits the two meshes.
+  const stems = heads.children.find((c) => c.name === 'wildflower-stems');
+  assert.ok(stems, 'the stems ride along as their own mesh');
+  assert.notEqual('#' + stems.material.color.getHexString(), ACCENT.toLowerCase(),
+    'stalks stay in the meadow family');
 
+  // the track is walked, not planted: the keepout chain has to actually overlap
+  // along the whole run of it, or blooms sprout between the circles
+  const path = root.scene.getObjectByName('path');
+  assert.ok(path, 'there is a road to keep clear');
+  const m4 = new THREE.Matrix4();
+  const p = new THREE.Vector3();
   const cam = rigCamera();
   let inFrame = 0;
-  for (const b of each) {
-    // red — the seal has to be ON them, and wings never take an inverted hull
-    b.traverse((o) => {
-      if (!o.isMesh) return;
-      assert.equal('#' + o.material.color.getHexString(), ACCENT.toLowerCase(), 'butterflies wear the accent');
-      assert.equal(o.userData.noOutline, true, 'a hull on a paper-thin wing is a blot');
-    });
-    // at flower height, not up with the moon — and low enough to include the
-    // ones currently perched in the grass (they land now, and stay a while)
-    assert.ok(b.position.y > 0.05 && b.position.y < 3.5, `plays low, got y=${b.position.y.toFixed(2)}`);
-    const v = b.getWorldPosition(new THREE.Vector3()).project(cam);
+  for (let i = 0; i < heads.count; i++) {
+    heads.getMatrixAt(i, m4);
+    p.setFromMatrixPosition(m4);
+    const v = p.clone().project(cam);
     if (Math.abs(v.x) < 0.9 && Math.abs(v.y) < 0.9 && v.z > 0 && v.z < 1) inFrame++;
   }
-  assert.ok(inFrame >= 3, `most of the flight is in the picture, got ${inFrame}/${each.length}`);
+  assert.ok(inFrame > 20, `the drift has to be IN the picture, got ${inFrame}/${heads.count}`);
 });
 
-test('touching the meadow stirs the butterflies; touching the moon shifts the light', () => {
+test('touching the meadow stirs the blooms; touching the moon shifts the light', () => {
   const ctx = fakeCtx();
   const root = k19.build(ctx);
   root.setCamera(rigCamera());
@@ -188,18 +188,19 @@ test('touching the meadow stirs the butterflies; touching the moon shifts the li
   ctx._taps.forEach((cb) => cb(10, 10));
   let frag = root.fragment();
   assert.equal(frag.touches, 1);
-  assert.ok(frag.flutter > 0.9, 'the butterflies startle at once');
+  assert.equal(frag.gusts, 1, 'a breath sets off across the field');
   assert.ok(frag.breeze > 0.9, 'and it is in the wind sound too');
 
-  // it passes on its own. The breeze decays on a ~1.7 s time constant and the
-  // flutter on ~2.2 s, so five seconds is most of the way down for both.
+  // it passes on its own. The breeze decays on a ~1.7 s time constant, and the
+  // gust front expires rather than accumulating.
   for (let i = 0; i < 300; i++) root.update(1 / 60, i / 60);
   frag = root.fragment();
-  assert.ok(frag.flutter < 0.15, `the flight settles, got ${frag.flutter}`);
+  assert.equal(frag.gusts, 0, 'the gust crosses and is gone');
   assert.ok(frag.breeze < 0.1, `the wind settles back, got ${frag.breeze}`);
   for (let i = 0; i < 600; i++) root.update(1 / 60, 5 + i / 60);
   assert.equal(root.fragment().breeze, 0, 'and reaches rest exactly, rather than creeping');
-  assert.ok(root.fragment().flutter < 0.02, 'the butterflies go back to playing');
+  assert.ok(root.fragment().lean > 0 && root.fragment().lean < 0.5,
+    'the field goes back to its resting sway');
 
   // tap the moon
   ctx.input.raycastFirst = (cam, objs) => (objs.includes(moon) ? { object: moon, point: moon.position.clone() } : null);

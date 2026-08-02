@@ -119,7 +119,13 @@ export default {
     // JOSHU, down on the path, who will make up his mind about it
     const JOSHU = new THREE.Vector3(3.0, 0, 1.6);
     faceMonk(monk, JOSHU);
-    const joshu = makeMonk({ height: 1.64, elder: true });
+    // `bow: true` hinges him at the sash without changing his arms: makeFigure
+    // hands back a group named 'waist' carrying the torso, head and sleeves,
+    // and turning THAT forward is the bow. He used to bow by rolling the whole
+    // figure on z, which lists a body sideways rather than bending it — the
+    // fault Frank caught in cases 32 and 15.
+    const joshu = makeMonk({ height: 1.64, elder: true, bow: true });
+    const joshuWaist = joshu.getObjectByName('waist');
     joshu.position.copy(JOSHU);
     const AT_MONK = bearing(JOSHU, monk.position);
     const AWAY = bearing(JOSHU, { x: 7.0, z: 4.5 });      // back down the road
@@ -203,13 +209,15 @@ export default {
           lean = Math.min(1, u / 0.7, (2.6 - u) / 0.9);
           lean = lean * lean * (3 - 2 * lean);
         }
-        joshu.rotation.z = -BOW * lean;
+        // forward, at the waist — bodies front local +z, so a positive turn
+        // about x carries the chest that way whatever his yaw is doing
+        joshuWaist.rotation.x = BOW * lean;
       },
       fragment() {
         return {
           visits,
           approved: visits > 0 && visits % 2 === 0,
-          bow: +Math.abs(joshu.rotation.z).toFixed(4),
+          bow: +Math.abs(joshuWaist.rotation.x).toFixed(4),
         };
       },
       dispose() {},

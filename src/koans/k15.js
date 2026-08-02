@@ -20,6 +20,10 @@ const ID = 15;
 
 const BLOWS = 3;
 const BLOW_GAP = 0.62;
+// Radians at the waist. Deeper than a nod — he is bowing to the master who has
+// just told him he has earned a beating — and held, not animated: the movement
+// in this case is the three blows, and they land on nothing.
+const BOW = 0.55;
 
 export default {
   id: ID,
@@ -48,11 +52,16 @@ export default {
     gate.rotation.y = -0.16;
     scene.add(gate);
 
-    // TOZAN, in the gateway, bowing — he came back the next day to ask why
-    const tozan = makeMonk({ height: 1.58 });
+    // TOZAN, in the gateway, bowing — he came back the next day to ask why.
+    // He used to bow by rotation.z on the whole figure, which is a ROLL: he
+    // listed sideways like a man on a slope, not a man bowing (Frank: "in 15
+    // he is also tilted wrong and should be bowing pose" — the same fault k32's
+    // philosopher had). pose 'bow' hinges him at the sash instead, and a number
+    // sets how far: bodies front local +z, so the waist's turn about x carries
+    // the chest forward, along whatever way faceMonk has already turned him.
+    const tozan = makeMonk({ height: 1.58, pose: 'bow', bow: BOW });
     tozan.position.set(1.5, 0, 0.9);
     faceMonk(tozan, { x: -1.4, z: -1.8 });
-    tozan.rotation.z = -0.17;                 // caught mid-bow
     scene.add(tozan);
 
     // UMMON, beyond the gate, holding the stick he is not going to use

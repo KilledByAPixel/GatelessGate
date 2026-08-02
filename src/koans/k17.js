@@ -83,7 +83,10 @@ export default {
 
     // OSHIN, across the yard, turned to his own work — the whole point is that
     // he is not already looking
-    const oshin = makeMonk({ height: 1.58 });
+    // `bow: true` gives him the sash hinge without touching his arms — see the
+    // update loop, where the roll this used to be is corrected.
+    const oshin = makeMonk({ height: 1.58, bow: true });
+    const oshinWaist = oshin.getObjectByName('waist');
     oshin.position.copy(OSHIN_POS);
     const AWAY = bearing(OSHIN_POS, { x: 6.5, z: 3.0 });
     const TOWARD = bearing(OSHIN_POS, CHU_POS);
@@ -185,12 +188,16 @@ export default {
           else lean = 1 - clamp01((bowU - BOW_IN - BOW_HOLD) / BOW_OUT);
           lean = lean * lean * (3 - 2 * lean);
         }
-        oshin.rotation.z = -BOW * lean;             // local +x is his facing: lean along it
+        // Standing: bend at the sash. This was rotation.z on the whole figure,
+        // with a comment claiming local +x was his facing — a leftover from
+        // before the aimMonk audit. Bodies front +z, so a z-roll listed him
+        // sideways while his teacher bowed back correctly on x.
+        oshinWaist.rotation.x = BOW * lean;
         chu.rotation.x = BOW * 0.7 * lean;          // seated front is +z: pitch, inside the yaw
         if (done) { bowAt = -99; calls = 0; answered = 0; }
       },
       fragment() {
-        return { calls, answered, bowing: +Math.abs(oshin.rotation.z).toFixed(4) };
+        return { calls, answered, bowing: +Math.abs(oshinWaist.rotation.x).toFixed(4) };
       },
       dispose() {},
     };
