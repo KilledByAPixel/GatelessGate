@@ -51,9 +51,13 @@ const GATES = [
   // road, and the FOG does the hierarchy the grey was doing — the near gate
   // full-blooded, the far one a red ghost dissolving into the paper. Same deep
   // mix as the title screen's gate, so the echo lands.
-  { t: 0.22, width: 3.2, height: 3.4, color: ACCENT_DEEP }, // where is your true nature?
-  { t: 0.42, width: 3.0, height: 3.2, color: ACCENT_DEEP }, // how will you be free of life and death?
-  { t: 0.70, width: 2.8, height: 3.0, color: ACCENT_DEEP }, // where do you go?
+  // HUNG LOWER (Frank): at 3.4 the near gate's lintel ran off the top of the
+  // frame, so the barrier you are standing at read as two legs and no beam --
+  // and a torii is its crossbeam. A shade under three metres puts the whole
+  // frame in shot at the home camera and still walks a monk through it.
+  { t: 0.22, width: 3.2, height: 2.9, color: ACCENT_DEEP }, // where is your true nature?
+  { t: 0.42, width: 3.0, height: 2.75, color: ACCENT_DEEP }, // how will you be free of life and death?
+  { t: 0.70, width: 2.8, height: 2.6, color: ACCENT_DEEP }, // where do you go?
 ];
 const MONK_T = 0.31;   // mid-journey: past the first barrier, short of the second
 
