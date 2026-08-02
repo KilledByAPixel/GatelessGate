@@ -102,9 +102,9 @@ export default {
     const [tipX, tipY] = branchAt(BRANCH.len);
     const TIP_LOBES = [
       // [dx past the tip, dy off the branch line, dz, radius]
-      [-0.31, 0.30, 0.00, 0.36],
-      [-0.71, 0.05, -0.25, 0.30],
-      [-0.51, -0.05, 0.28, 0.26],
+      [-0.41, 0.40, 0.00, 0.36],
+      [-0.21, 0.1, -0.1, 0.30],
+      [-0.31, -0.05, 0.2, 0.26],
     ];
     const tipLeaves = new THREE.Mesh(
       mergeSimple(TIP_LOBES.map(([dx, dy, dz, r]) => {

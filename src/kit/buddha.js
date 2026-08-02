@@ -30,11 +30,11 @@ import { makeFigure, HEAD_OBLONG } from './figure.js';
 // own material — hair on an ink man, stone on k9's colossus. Monks keep
 // their hats and bare heads; buddha = bare head + topknot + urna.
 const KNOT_R = 0.44;        // fraction of the head's radius — a bun, not a second head
-const KNOT_SINK = 0.82;     // centre at 0.82·r: crest proud by ~0.26·r, enough
+const KNOT_SINK = 1.1;     // centre at 0.82·r: crest proud by ~0.26·r, enough
                             //   to break the crown line at case distance
                             //   without reading as a hat
 
-const URNA_ELEV = 0.5;      // radians above the head's equator — mid-forehead
+const URNA_ELEV = 0.8;      // radians above the head's equator — mid-forehead
 const URNA_R = 0.20;        // fraction of the head's own radius — a dot, not a lamp
 const URNA_SINK = 0.90;     // centre at 0.90·r: buried join, only the crest shows.
                             // Deeper than the usual 0.94–0.98 on purpose — on

@@ -58,12 +58,12 @@ export default {
     // thing in the scene that is out of time. No staff — both hands are on the
     // bowl, and the elder's staff was colliding with it (Frank): a man carrying
     // his bowls to dinner is not also carrying a stick.
-    const tokusan = makeMonk({ height: 1.64 });
+    const tokusan = makeMonk({ height: 1.64, pose: 'fold' });
     tokusan.position.set(0.8, 0, 1.5);
     aimMonk(tokusan, hall.position);
     const bowl = makeBowl({ radius: 0.16, color: ACCENT });
     bowl.name = 'held-bowl';
-    bowl.position.set(0.38, 0.58, 0);           // held out before him at the waist, clear of the robe
+    bowl.position.set(0.0, 0.52, .36);           // held out before him at the waist, clear of the robe
     tokusan.add(bowl);
     scene.add(tokusan);
 

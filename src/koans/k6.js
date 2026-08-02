@@ -58,7 +58,7 @@ export default {
     // distance a real-scale lotus is a red dot — big is fine; intersecting
     // is not.
     const flower = makeFlower({ height: 0.5, bloom: 0.62, petals: 7 });
-    const FLOWER_Z = SEAT_Z + 1.5;                   // just clear of the stone's skirt
+    const FLOWER_Z = SEAT_Z + 1.0;                   // just clear of the stone's skirt
     flower.position.set(1.2, 0, FLOWER_Z);
     flower.rotation.z = -0.14;
     scene.add(flower);

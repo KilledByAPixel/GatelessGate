@@ -319,7 +319,7 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // The inward swing (the cuffs crossing to the centre) is the same for all.
 const KNEEL = 0.5;
 const STANCES = {
-  stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.735, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.9, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.92 },
+  stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.735, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.2, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.92 },
   // Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did:
   // the chest run in SIT_PROFILE was lengthened and steepened so a meditator
   // sits STRAIGHT ("they should all kinda look like Buddha") — the crown now
@@ -459,7 +459,7 @@ export function makeFigure({
     const ang = staffAng !== undefined ? staffAng : st.staffAng;
     staff.position.set(
       Math.cos(ang) * st.staffX * s * height, 0,
-      Math.sin(ang) * st.staffX * s * height + 0.06 * height);
+      Math.sin(ang) * st.staffX * s * height);
     // NEAR-VERTICAL, not leaned in. The old 0.08 rad lean tipped the top
     // toward the figure, which put the shaft at ~0.194·h off the axis right
     // at hat-brim height — the brim reaches 0.192·h — so from roughly half

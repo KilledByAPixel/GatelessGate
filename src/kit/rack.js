@@ -69,8 +69,9 @@ export function makeRack({ height = 1.25, color = WASH.dark, staffColor = WASH.m
   staffGeo.translate(0, STAFF_H / 2, 0);
   const staff = new THREE.Mesh(staffGeo, toonMaterial({ color: staffColor, flat: true }));
   staff.name = 'staff';
-  staff.position.set(-0.16 * H, 0.085 * H, 0);
-  staff.rotation.z = -0.13;              // leaning against the rail
+  staff.position.set(-0.16 * H, 0, .2*H);
+  staff.rotation.z = -0.13;
+  staff.rotation.x = -0.16; 
   g.add(staff);
 
   const hit = new THREE.Mesh(

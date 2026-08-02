@@ -62,7 +62,7 @@ export default {
     // little way off, with a small red mark where it left him. No wound on the
     // body, no gore — an absence and one seal, which is all the case needs.
     const eka = makeMonk({ height: 1.62 });
-    eka.position.set(1.5, 0, -1.9);
+    eka.position.set(.6, 0, -2.3);
     aimMonk(eka, cave.position);
     // remove the arm on the side toward the cave (the hand he offered)
     const ekaArms = eka.children.filter((c) => c.name === 'arm');
