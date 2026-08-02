@@ -117,11 +117,11 @@ export function makeLantern({ height = 1.15, color = WASH.stone } = {}) {
   // has). The profile carries the same idea as the hut's own eave: steep off
   // the crown, a low point just inboard of the rim, then the rim itself
   // kicked back UP past that low point — the upturned tip.
-  const roofY = FBOX_BOT + FBOX_H;
-  const ROOF_R = 0.21 * H;
+  const ROOF_R = 0.25 * H;
   const RISE = 0.13 * H;
-  const LIP = 0.016 * H;
-  const DIP = 0.010 * H;
+  const LIP = 0.01 * H;
+  const DIP = 0.00 * H;
+  const roofY = FBOX_BOT + FBOX_H + DIP;
   const roofP = [
     [0, RISE],
     [0.16 * ROOF_R, RISE * 0.55],
@@ -129,12 +129,12 @@ export function makeLantern({ height = 1.15, color = WASH.stone } = {}) {
     [ROOF_R, LIP],
     [0.62 * ROOF_R, -DIP * 0.5],
     [0, -DIP * 0.5 - 0.02 * H],
-  ].map(([r, y]) => new THREE.Vector2(r, y));
+  ].reverse().map(([r, y]) => new THREE.Vector2(r, y));
   add(new THREE.LatheGeometry(roofP, 6), roofY, flat, 'roof');
 
   // JEWEL (hōju) — round-shaded, a small polished cap.
   const JEWEL_R = 0.04 * H;
-  add(new THREE.SphereGeometry(JEWEL_R, 8, 6), roofY + RISE + JEWEL_R + 0.012 * H, mat, 'jewel');
+  add(new THREE.SphereGeometry(JEWEL_R, 8, 6), roofY + RISE + JEWEL_R - 0.03 * H, mat, 'jewel');
 
   return g;
 }

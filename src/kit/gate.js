@@ -64,8 +64,9 @@ export function makeGate({ width = 2.4, height = 2.6, color = INK } = {}) {
     wg.translate(sx * CENTER_LEN / 2, 0, 0);  // flush against the centre span's own end
     return wg;
   };
+  const gapFix = .03  // the wings' inner edges are slightly wider than the centre span, so the join is buried
   const kasagiGeo = mergeSimple([
-    new THREE.BoxGeometry(CENTER_LEN, KASAGI_H, KASAGI_D),
+    new THREE.BoxGeometry(gapFix+CENTER_LEN, KASAGI_H, KASAGI_D),
     kasagiWing(-1), kasagiWing(1),
   ]);
   const top = new THREE.Mesh(kasagiGeo, flatMat);

@@ -81,13 +81,23 @@ export function makeScale({ height = 1.35, color = WASH.dark, panColor = WASH.st
   pan.position.y = -CORD - 0.035 * H;
   hang.add(pan);
 
+  const PAN_X2 = BEAM_L / 3 + 0.03 * H;
+  const hang2 = new THREE.Group();
+  hang2.name = 'hang2';
+  hang2.position.set(PAN_X2, 0, 0);
+  beam.add(hang2);
+  
+  const cord2 = new THREE.Mesh(cordGeo, flat);
+  cord2.name = 'cord2';
+  hang2.add(cord2);
+
   // the counterweight, slid out along the beam to where three pounds balances
   const weight = new THREE.Mesh(
     new THREE.CylinderGeometry(0.075 * H, 0.095 * H, 0.19 * H, 8),
     toonMaterial({ color, flat: true }));
   weight.name = 'weight';
-  weight.position.set(BEAM_L * 0.29, -0.085 * H, 0);
-  beam.add(weight);
+  weight.position.set(0, -0.25 * H, 0);
+  hang2.add(weight);
 
   const hit = new THREE.Mesh(
     new THREE.BoxGeometry(BEAM_L * 1.05, 0.62 * H, 0.4 * H),

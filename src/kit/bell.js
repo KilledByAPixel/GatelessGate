@@ -80,7 +80,7 @@ export function makeBell({ height = 1.1, color = ACCENT, frameColor = WASH.dark,
   // pivot — close enough to read as "this is what carries the weight"
   // without pretending to model a beam threaded through it.
   const linkLen = 0.14 * H;
-  const STUB_R = 0.050 * H, STUB_H = 0.060 * H;
+  const STUB_R = 0.150 * H, STUB_H = 0.070 * H;
   const LOOP_R = 0.085 * H, TUBE_R = 0.024 * H;
   const stubGeo = new THREE.CylinderGeometry(STUB_R * 0.85, STUB_R, STUB_H, 7);
   stubGeo.translate(0, -linkLen + STUB_H / 2, 0);
