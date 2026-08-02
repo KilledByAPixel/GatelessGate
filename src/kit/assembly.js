@@ -57,7 +57,17 @@ export function makeAssembly({ count = 8, radius = 3.0, center = [0, 0], facing 
       new THREE.Vector3(sc, sc, sc),
     );
     mesh.setMatrixAt(i, m);
-    col.set(color).offsetHSL(0, 0, (hash1(i * 2 + 3, seed) - 0.5) * 0.1);
+    // A MULTIPLIER, NOT A COLOUR. setColorAt feeds instanceColor, which the
+    // shader MULTIPLIES into the material's diffuse — so writing the crowd's own
+    // colour here painted every figure at that colour SQUARED. At the old INK
+    // that was (30/255)² ≈ level 3: pure black, which is why the seated crowds
+    // stayed flat cut-outs after every other figure in the book had been lifted
+    // off ink (Frank: "the small monks sitting on the ground still look a lot
+    // darker than the other ones"). Around 1.0 it does what it was always meant
+    // to: a tenth of a stop of variation between neighbours, so a row of them is
+    // not one stamped-out silhouette repeated.
+    const k = 1 + (hash1(i * 2 + 3, seed) - 0.5) * 0.2;
+    col.setScalar(k);
     mesh.setColorAt(i, col);
   }
   mesh.instanceMatrix.needsUpdate = true;
