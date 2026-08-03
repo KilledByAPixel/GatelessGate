@@ -191,6 +191,33 @@ test('touching one of them makes the other answer, a beat later', () => {
   }
 });
 
+test('a held pointer cannot re-strike inside the cooldown', () => {
+  // CODE REVIEW CAUGHT (Task 5C): the tap handler had no cooldown at all, so
+  // a held pointer stacked audio.bell() calls without limit. k49's idiom
+  // (`clock - lastRing > 0.5`) now gates the initiating tap.
+  const rings = [];
+  const audio = { bell: (o) => rings.push(o.f0) };
+  const ctx = fakeCtx();
+  ctx.audio = audio;
+  const root = k3.build(ctx);
+  const gutei = guteiOf(root.scene);
+  const guteiBody = gutei.children.find((c) => c.name === 'body');
+  root.setCamera(new THREE.PerspectiveCamera());
+  ctx.input.raycastFirst = (cam, list) => (list.includes(guteiBody) ? { object: guteiBody, point: new THREE.Vector3() } : null);
+
+  root.update(0, 0);
+  ctx._taps.forEach((cb) => cb());   // first strike
+  ctx._taps.forEach((cb) => cb());   // immediate repeat, inside the 0.5s cooldown
+  ctx._taps.forEach((cb) => cb());   // and again
+  assert.equal(root.fragment().taps, 1, 'repeats inside the cooldown must not stack');
+  assert.equal(rings.length, 1, 'only one bell actually rang');
+
+  root.update(0.52, 0.52);           // past the 0.5s cooldown, short of the 0.55s echo BEAT
+  ctx._taps.forEach((cb) => cb());
+  assert.equal(root.fragment().taps, 2, 'a tap after the cooldown answers again');
+  assert.equal(rings.length, 2, 'the first strike\'s own scripted echo has not fired yet at t=0.52');
+});
+
 test('the finger never dips below the shoulder while the gesture plays', () => {
   const ctx = fakeCtx();
   const root = k3.build(ctx);

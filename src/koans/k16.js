@@ -145,15 +145,24 @@ export default {
     // ---- the moment: answer the bell -------------------------------------
     // Tap the bell and it swings and RINGS — the first audible moment in the
     // book; the engine's bell was built for the sit timer and this is it rung
-    // in the open. Tap again while it is still moving and the strike stacks.
+    // in the open. Tap again while it is still moving and the strike stacks —
+    // that is still true here: the bonshō swings and audibly hums for several
+    // seconds (see kit/bell.js's own decay), so a genuine re-strike sits well
+    // outside the 0.5s cooldown below. CODE REVIEW CAUGHT (Task 5C): what was
+    // missing was a floor under a HELD pointer or a fast tapper, which had no
+    // limit at all — k49's idiom (`clock - lastRing > 0.5`).
     // The elder finishes his turn at the first sound. Nothing is scored.
     let camera = null;
+    let clock = 0;
     let strikes = 0;
     let turning = false;
+    let lastRing = -99;
 
     input.onTap(() => {
       if (!camera) return;
       if (!input.raycastFirst(camera, bell.pickTargets())) return;
+      if (clock - lastRing < 0.5) return;
+      lastRing = clock;
       bell.strike();
       strikes++;
       turning = true;
@@ -164,6 +173,7 @@ export default {
       scene,
       setCamera(c) { camera = c; },
       update(dt, simTime) {
+        clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
         bell.update(dt, simTime);
         if (turning) {

@@ -463,6 +463,14 @@ function buildKoan(mod, slug) {
   if (koan && koan.onExit) koan.onExit();
   stopReading();
   input.clear();
+  // A ringing one-shot (a `great` bell is 57s) must not follow the reader
+  // onto the next page. buildKoan runs for both a page turn AND a cold
+  // arrival from the menu; hushing here covers both with one call, since a
+  // hush against silence costs nothing. Not called from startSit or the
+  // look toggle — neither goes through buildKoan, which is exactly the point:
+  // the reader is still on the same page in both, and a bell cut short there
+  // would be wrong.
+  audio.hushVoices();
   // Ambience is main's job, not the koans': the module's `ambience` field is
   // the single source of truth, handed to audio.transition() below — so a
   // recipe can never drift from what actually plays. No stop here any more:
@@ -618,6 +626,9 @@ async function exit() {
   // REUSES a live one and silently drops its options, so this must be a stop,
   // never a hand-off
   audio.stopAmbience();
+  // and any ringing one-shot dies with it — the case's bell does not belong
+  // in the Contents any more than its wind does
+  audio.hushVoices();
   await transition(() => {
     const prev = scenes.active();
     scenes.setActive(hub);

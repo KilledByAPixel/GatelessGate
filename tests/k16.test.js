@@ -251,6 +251,35 @@ test('the diorama is a hall, a hanging bell, and three monks turned toward it', 
   root.dispose();
 });
 
+test('a held pointer cannot ring the bell without limit, though a genuine re-strike while it swings still works', () => {
+  // CODE REVIEW CAUGHT (Task 5C): no cooldown at all, so a held pointer or a
+  // fast tapper stacked audio.bell() calls without limit. The design comment
+  // ("tap again while it is still moving and the strike stacks") survives
+  // the fix intact — a real re-strike sits seconds after the first, far
+  // outside the 0.5s cooldown, as the second half of this test shows.
+  const rings = [];
+  const audio = { startAmbience() {}, stopAmbience() {}, setWindLevel() {}, bell: (o) => rings.push(o.f0) };
+  const ctx = fakeCtx();
+  ctx.audio = audio;
+  const root = k16.build(ctx);
+  root.setCamera(rigCamera());
+  ctx.input.raycastFirst = (cam, objs) => (objs.some((o) => o.name === 'bell-hit')
+    ? { object: objs[0], point: new THREE.Vector3() }
+    : null);
+
+  root.update(1 / 60, 0);
+  ctx._taps.forEach((cb) => cb());   // first strike
+  ctx._taps.forEach((cb) => cb());   // immediate repeat, inside the 0.5s cooldown
+  ctx._taps.forEach((cb) => cb());   // and again
+  assert.equal(root.fragment().strikes, 1, 'repeats inside the cooldown must not stack');
+  assert.equal(rings.length, 1, 'only one bell actually rang');
+
+  for (let i = 1; i <= 120; i++) root.update(1 / 60, i / 60);   // 2s on: still swinging
+  ctx._taps.forEach((cb) => cb());   // a genuine re-strike, well past the cooldown
+  assert.equal(root.fragment().strikes, 2, 'tapping it again while it still moves works as designed');
+  assert.equal(rings.length, 2);
+});
+
 test('the hall never stands between the camera and the bell across the orbit arc', () => {
   // The brief's staging trap: a tall prop behind the seal can eat it for half
   // the orbit. The reachable arc is home ±0.9 (camera.js azimuthRange); across

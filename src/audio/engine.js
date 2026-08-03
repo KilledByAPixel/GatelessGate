@@ -15,10 +15,21 @@ import { parseRecipe, emitterCount, diffAmbience } from './ambience_diff.js';
 // imports the recipe vocabulary from.
 export { parseRecipe, emitterCount } from './ambience_diff.js';
 
+// Pure timing for hushVoices, Node-testable without an AudioContext: ramp to
+// zero over `fade`, sit silent for `hold`, then the restore ramp begins.
+// Kept separate from the gain nodes themselves so the arithmetic can be
+// pinned down without faking a Web Audio graph to do it — same split as
+// parseRecipe/emitterCount above.
+export function hushSchedule(fade, hold) {
+  return { fadeEndsAt: fade, restoreAt: fade + hold };
+}
+
 // Browser-only. `save` is a createSave() instance.
 export function createAudio(save) {
   let ctx = null, master = null, music = null, musicGain = null;
   let wind = null, verb = null, water = null, dripTimer = null;
+  let voicesDry = null, voicesWet = null;   // the pair hushVoices() gates — see its own comment
+  let hushGen = 0;
   let playing = [];       // the recipe currently sounding — what transition() diffs against
   let musicChimed = false; // the live music is the menu's chiming variant, not a case bed
   // Creation counters for the headless probe: a layer that survived a page
@@ -60,6 +71,22 @@ export function createAudio(save) {
     // the room: one reverb for every pitched voice. Its wet return feeds
     // master, so narration ducking pulls the room back with everything else.
     verb = makeVerb(ctx, master);
+    // The pair every one-shot funnels through before master/verb.in, and the
+    // taps hushVoices() closes. `great` rings 57s; nothing before this could
+    // cut a ringing one-shot short, so a bell struck on the last tap of a
+    // page would follow the reader most of a minute into the next one.
+    // Gating only the dry leg would not be enough: makeSpatialBus's reverb
+    // send taps AFTER the panner, so a hushed-dry bell would keep feeding
+    // the room for its whole decay and ring on in the reverb regardless —
+    // both legs have to close. The sit bell, punctuated narration chimes,
+    // and the drift layer's far bell (music.js, routed straight to musicGain
+    // and verb.in, never through here) route around this pair on purpose:
+    // none of the three belong to the diorama, so none may go quiet just
+    // because the page turned.
+    voicesDry = ctx.createGain();
+    voicesDry.connect(master);
+    voicesWet = ctx.createGain();
+    voicesWet.connect(verb.in);
     return true;
   }
 
@@ -95,7 +122,7 @@ export function createAudio(save) {
     const f0 = hz(deg, mood);
     const gain = WATER.level * (loud ? 1.5 : 0.7 + Math.random() * 0.5);
     const bus = placed(at, WATER.verbMix, 1);
-    strikeDrip(ctx, bus ? bus.in : master, bus ? null : verb.in, { f0, gain, verbMix: bus ? 0 : WATER.verbMix });
+    strikeDrip(ctx, bus ? bus.in : voicesDry, bus ? null : voicesWet, { f0, gain, verbMix: bus ? 0 : WATER.verbMix });
   }
 
   const finiteAt = (a) => !!a && Number.isFinite(a.x) && Number.isFinite(a.y) && Number.isFinite(a.z);
@@ -108,7 +135,7 @@ export function createAudio(save) {
   // sixty call sites migrate one at a time instead of all at once.
   function placed(at, character, tail) {
     if (!listener || !finiteAt(at) || !ctx) return null;
-    const bus = makeSpatialBus(ctx, master, verb.in, { character });
+    const bus = makeSpatialBus(ctx, voicesDry, voicesWet, { character });
     bus.place(spatialFor(at, listener));
     bus.release(tail);
     return bus;
@@ -282,7 +309,7 @@ export function createAudio(save) {
         v = f0 === null ? bellVoice(size) : { f0, partials: bellPartials(f0) };
       }
       const bus = placed(at, verbMix, bellTail(v));
-      strikeBell(ctx, bus ? bus.in : master, bus ? null : verb.in,
+      strikeBell(ctx, bus ? bus.in : voicesDry, bus ? null : voicesWet,
         { partials: v.partials, gain, verbMix: bus ? 0 : verbMix, beam, ping, pingFreq });
     },
     // The timer's bell, opening and closing a sitting. Its own voice rather than
@@ -307,9 +334,14 @@ export function createAudio(save) {
       const gain = CHIME.level * force * comp;
       const f0 = hz(CHIME.degree + tube, mood);
       // Punctuation belongs to the READING, not the scene — it has no place
-      // in the diorama and is never spatialized, however it was called.
+      // in the diorama and is never spatialized, however it was called, and
+      // it goes straight to master/verb.in so hushVoices() cannot cut it off
+      // mid-sentence. An ambient (unpunctuated) strike takes the hush pair
+      // either through placed() or, with no listener/position, its fallback.
       const bus = punctuate ? null : placed(at, CHIME.verbMix, CHIME.decay + 1);
-      strikeBar(ctx, bus ? bus.in : master, bus ? null : verb.in, { f0, gain, verbMix: bus ? 0 : CHIME.verbMix });
+      const dry = punctuate ? master : (bus ? bus.in : voicesDry);
+      const wet = punctuate ? verb.in : (bus ? null : voicesWet);
+      strikeBar(ctx, dry, wet, { f0, gain, verbMix: bus ? 0 : CHIME.verbMix });
     },
     // a tap on the water (or the bowl set down in it) answers with a drip,
     // whatever the ambient schedule is doing
@@ -327,9 +359,9 @@ export function createAudio(save) {
       else {
         dest = ctx.createGain();
         const dryG = ctx.createGain(); dryG.gain.value = 1 - ODOSHI.verbMix * 0.8;
-        dest.connect(dryG); dryG.connect(master);
+        dest.connect(dryG); dryG.connect(voicesDry);
         const sendG = ctx.createGain(); sendG.gain.value = ODOSHI.verbMix * 1.1;
-        dest.connect(sendG); sendG.connect(verb.in);
+        dest.connect(sendG); sendG.connect(voicesWet);
       }
       // a knock is a THUMP, not a bell: it wants its own level scale rather
       // than the bell-sized default undone by a factor at the call site
@@ -343,10 +375,36 @@ export function createAudio(save) {
     pour({ at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
       const bus = placed(at, ODOSHI.verbMix * 0.6, 2);
-      pourBurst(ctx, bus ? bus.in : master, {});
+      pourBurst(ctx, bus ? bus.in : voicesDry, {});
     },
     playMusic,
     stopMusic,
     musicVolume(v) { if (musicGain) musicGain.gain.value = v; },
+    // Cuts every one-shot bell/chime/drip/knock/pour short at a page turn —
+    // see the hush pair's own comment in ensureCtx() for why gating only the
+    // dry leg is not enough. `hushGen` marks each call so a fast page-turner
+    // can hush again before the first restore fires without the two racing:
+    // a restore callback checks it is still the newest call before touching
+    // the gains, so an overtaken hush's restore is a silent no-op rather than
+    // stomping the newer hush's own fade.
+    hushVoices({ fade = 0.5, hold = 0.15 } = {}) {
+      if (!ensureCtx()) return;
+      const gen = ++hushGen;
+      const t = ctx.currentTime;
+      for (const g of [voicesDry, voicesWet]) {
+        g.gain.cancelScheduledValues(t);
+        g.gain.setValueAtTime(g.gain.value, t);
+        g.gain.linearRampToValueAtTime(0, t + fade);
+      }
+      setTimeout(() => {
+        if (gen !== hushGen) return;   // overtaken by a later hush; its own restore will run
+        const t2 = ctx.currentTime;
+        for (const g of [voicesDry, voicesWet]) {
+          g.gain.cancelScheduledValues(t2);
+          g.gain.setValueAtTime(g.gain.value, t2);
+          g.gain.linearRampToValueAtTime(1, t2 + fade);
+        }
+      }, hushSchedule(fade, hold).restoreAt * 1000);
+    },
   };
 }

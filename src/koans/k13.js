@@ -110,7 +110,13 @@ export default {
 
     // ---- the moment: two instruments, neither of them the answer ----------
     let camera = null;
+    let clock = 0;
     let rings = 0, beats = 0;
+    // CODE REVIEW CAUGHT (Task 5C): the bell had no tap cooldown, so a held
+    // pointer could stack audio.bell() calls without limit — k49's idiom
+    // (`clock - lastRing > 0.5`). The drum is a knock, not a bell, and is
+    // out of scope for this fix.
+    let lastRing = -99;
 
     input.onTap(() => {
       if (!camera) return;
@@ -121,6 +127,8 @@ export default {
         return;
       }
       if (input.raycastFirst(camera, bell.pickTargets())) {
+        if (clock - lastRing < 0.5) return;
+        lastRing = clock;
         bell.strike();
         rings++;
         audio && audio.bell({ f0: 104 });
@@ -131,6 +139,7 @@ export default {
       scene,
       setCamera(c) { camera = c; },
       update(dt, simTime) {
+        clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
         bell.update(dt, simTime);
         drum.update(dt, simTime);

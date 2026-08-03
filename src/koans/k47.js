@@ -217,7 +217,15 @@ export default {
     // the deepest. Nothing advances, nothing unlocks; each barrier simply has
     // its own note, and the far one is a longer reach, exactly as it looks.
     let camera = null;
+    let clock = 0;
     const taps = [0, 0, 0];
+    // Per-barrier cooldown, k49's idiom (`clock - lastRing > 0.5`): a bare
+    // audio.bell() call here has no size ceiling of its own, and CODE REVIEW
+    // CAUGHT that a held pointer or a fast tapper stacked strikes without
+    // limit — the shimmer cluster alone took one strike from 22 to 36
+    // oscillators. Each barrier gates independently, so tapping barrier 2
+    // does not silence barrier 1's own answer.
+    const lastRing = [-99, -99, -99];
     input.onTap(() => {
       if (!camera) return;
       // the chime first: its hit drum sits inside the first gate's lintel
@@ -229,6 +237,8 @@ export default {
       if (!hit) return;
       const i = slabGate.get(hit.object);
       if (i === undefined) return;
+      if (clock - lastRing[i] < 0.5) return;
+      lastRing[i] = clock;
       taps[i]++;
       audio && audio.bell({ f0: 62 + 18 * i });
     });
@@ -237,6 +247,7 @@ export default {
       scene,
       setCamera(c) { camera = c; },
       update(dt, simTime) {
+        clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);        // the meadow breathes
         furin.update(dt, simTime);        // and the near gate's chime rides it
       },

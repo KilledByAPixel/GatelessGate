@@ -169,6 +169,7 @@
   <script type="module">
     import {
       bellVoice, bellMacroPartials, BELL, BELL_PRESETS, TRANSIENT_SCALE, NAMED_MODE_COUNT, strike,
+      renormalizeSum,
     } from '../src/audio/synths.js';
     import { makeVerb } from '../src/audio/verb.js';
 
@@ -249,6 +250,13 @@
     // point of an audition page is to let you go too far and hear it), but
     // the REFERENCE point — what "1" on every slider sounds like — now
     // matches the game exactly.
+    //
+    // Task 5C carried item: this used to hand-copy applyBellPreset()'s
+    // renormalization formula instead of calling it — the two agreed only
+    // because the macros are an identity at their neutral positions, and a
+    // future change to the shipped formula would have silently not reached
+    // this page. Now imported as `renormalizeSum` from synths.js, one
+    // function for both call sites.
     function buildPartials() {
       const s = activeState();
       const voice = bellVoice(s.size);
@@ -256,17 +264,12 @@
       const baselined = { f0: voice.f0, partials: withBaseline(s, src) };
       const dressed = bellMacroPartials(baselined,
         { hum: s.humMacro, body: s.bodyMacro, clang: s.clangMacro, shimmer: s.shimmer, ring: s.ring });
-      // Same renormalization as applyBellPreset(): claw the dressed sum back
-      // to what the UNDRESSED `src` itself summed to. Using `src` (not
-      // always the full voice) means the A/B toggle's "named only" state
-      // renormalizes against a named-only reference rather than silently
-      // boosting the named modes to make up for the missing shimmer, which
-      // would defeat the toggle's entire purpose of letting the shimmer's
-      // own contribution be heard.
-      const rawSum = src.reduce((sum, p) => sum + p.amp, 0);
-      const dressedSum = dressed.reduce((sum, p) => sum + p.amp, 0);
-      const norm = rawSum / dressedSum;
-      const partials = dressed.map((p) => ({ ...p, amp: p.amp * norm }));
+      // Using `src` (not always the full voice) means the A/B toggle's
+      // "named only" state renormalizes against a named-only reference
+      // rather than silently boosting the named modes to make up for the
+      // missing shimmer, which would defeat the toggle's entire purpose of
+      // letting the shimmer's own contribution be heard.
+      const partials = renormalizeSum(src, dressed);
       return { f0: voice.f0, partials };
     }
 

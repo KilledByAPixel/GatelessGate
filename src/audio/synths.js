@@ -643,6 +643,23 @@ export const BELL_PRESETS = {
   },
 };
 
+// The shared last step of both applyBellPreset() below and
+// dev/bell-audition.html's own buildPartials(): claw a dressed partial set's
+// summed amplitude back to what `src` itself summed to, a per-call ratio
+// rather than a hardcoded constant. Task 5B's carried-over item: the
+// audition page used to hand-copy this exact formula rather than call it,
+// and the two agreed only because every macro sits at an identity multiplier
+// at its neutral (slider-at-1) position — a future change to this
+// arithmetic would silently not reach the page, the same latent-divergence
+// shape that cost that plan a fix round once already (see task-5b-report.md).
+// One function now, called from both places.
+export function renormalizeSum(src, dressed) {
+  const rawSum = src.reduce((s, p) => s + p.amp, 0);
+  const dressedSum = dressed.reduce((s, p) => s + p.amp, 0);
+  const norm = rawSum / dressedSum;
+  return dressed.map((p) => ({ ...p, amp: p.amp * norm }));
+}
+
 // Applies a BELL_PRESETS entry to a bellVoice() — exact per-mode multiply
 // for the named modes (`ampMult[i]`), one scalar for every surviving
 // shimmer mode, `ring` stretching only the named modes' decay (see
@@ -670,10 +687,7 @@ export function applyBellPreset(voice, preset) {
     const decay = i < NAMED_MODE_COUNT ? p.decay * preset.ring : p.decay;
     return { ...p, amp: p.amp * mult, decay };
   });
-  const rawSum = voice.partials.reduce((s, p) => s + p.amp, 0);
-  const dressedSum = dressed.reduce((s, p) => s + p.amp, 0);
-  const norm = rawSum / dressedSum;
-  return dressed.map((p) => ({ ...p, amp: p.amp * norm }));
+  return renormalizeSum(voice.partials, dressed);
 }
 
 export function strikeBell(ctx, dry, verbIn, { partials, gain = 1, verbMix = BELL.verbMix, beam = 0.30, ping = 0.34, pingFreq = 2800 } = {}) {

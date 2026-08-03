@@ -267,9 +267,16 @@ test('each barrier answers with its own note, the nearest the deepest', () => {
   ctx._taps.forEach((cb) => cb(10, 10));
   assert.deepEqual(root.fragment(), { taps1: 0, taps2: 0, taps3: 0 });
 
-  // tap each barrier and check the counter and the note both route to it
+  // tap each barrier and check the counter and the note both route to it.
+  // Each tap advances the clock past the per-bell cooldown first (see the
+  // cooldown test below) — index 1 is tapped twice here, and without the
+  // advance the second tap would land inside its own cooldown window and be
+  // silently swallowed rather than ringing a second time.
   const expect = [0, 0, 0];
+  let clock = 0;
   for (const [i, f0] of [[1, 80], [2, 98], [0, 62], [1, 80]]) {
+    clock += 0.6;
+    root.update(0, clock);
     ctx.input.raycastFirst = (cam, objs) => (objs.includes(slabOf(i)) ? { object: slabOf(i) } : null);
     ctx._taps.forEach((cb) => cb(10, 10));
     expect[i]++;
@@ -289,6 +296,43 @@ test('each barrier answers with its own note, the nearest the deepest', () => {
   quiet.input.raycastFirst = (cam, objs) => (objs.includes(qhit) ? { object: qhit } : null);
   quiet._taps.forEach((cb) => cb(10, 10));
   assert.equal(qroot.fragment().taps3, 1);
+});
+
+test('a bell cannot be re-struck inside its cooldown — holding the pointer down must not stack strikes without limit', () => {
+  // The bug found in review: k47 had no tap cooldown at all, and the shimmer
+  // cluster took a strike from 22 to 36 oscillators — so a held pointer or a
+  // fast tapper could stack strikes without limit. k49's idiom
+  // (`clock - lastRing > 0.5`) fixes it here per barrier.
+  const bells = [];
+  const audio = { bell: (o) => bells.push(o.f0), startAmbience() {}, stopAmbience() {}, setWindLevel() {} };
+  const ctx = fakeCtx(audio);
+  const root = k47.build(ctx);
+  root.setCamera(rigCamera());
+  const gates = gatesByDepth(root.scene);
+  const slab0 = gates[0].children.find((c) => c.name === 'gatehit');
+  const slab1 = gates[1].children.find((c) => c.name === 'gatehit');
+
+  root.update(0, 0);
+  ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab0) ? { object: slab0 } : null);
+  ctx._taps.forEach((cb) => cb(10, 10));    // first strike on barrier 1
+  ctx._taps.forEach((cb) => cb(10, 10));    // immediate repeat, inside the 0.5s cooldown
+  ctx._taps.forEach((cb) => cb(10, 10));    // and again
+  assert.equal(root.fragment().taps1, 1, 'repeats inside the cooldown must not stack');
+  assert.equal(bells.length, 1, 'only one strike actually rang');
+
+  // a different barrier is a DIFFERENT bell — its own cooldown, not blocked
+  // by barrier 1's
+  ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab1) ? { object: slab1 } : null);
+  ctx._taps.forEach((cb) => cb(10, 10));
+  assert.equal(root.fragment().taps2, 1, 'a different barrier rings on its own cooldown');
+  assert.equal(bells.length, 2);
+
+  // past the cooldown, barrier 1 answers again
+  root.update(0.6, 0.6);
+  ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab0) ? { object: slab0 } : null);
+  ctx._taps.forEach((cb) => cb(10, 10));
+  assert.equal(root.fragment().taps1, 2, 'a tap after the cooldown rings again');
+  assert.equal(bells.length, 3);
 });
 
 test('a furin hangs under the first barrier and its strikes reach the engine', () => {

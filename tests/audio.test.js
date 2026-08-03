@@ -4,7 +4,7 @@ import {
   windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B,
   gustPhase, STRIKE_SCALE, BELL_PRESETS, bellMacroPartials, applyBellPreset, NAMED_MODE_COUNT, strike,
 } from '../src/audio/synths.js';
-import { parseRecipe, emitterCount, createAudio } from '../src/audio/engine.js';
+import { parseRecipe, emitterCount, createAudio, hushSchedule } from '../src/audio/engine.js';
 import { hz, SCALES } from '../src/audio/tuning.js';
 
 test('windParams monotonic and bounded', () => {
@@ -533,4 +533,144 @@ test('strike() defaults transientGain to gain — every other voice is unaffecte
   });
   const at073 = ctx._gainValues().filter((v) => v === 0.73);
   assert.equal(at073.length, 2, `expected exactly two 0.73 gain nodes (partials bus + transient bus), got ${at073.length}`);
+});
+
+// ---- Task 5C: hushVoices — nothing follows the reader off the page --------
+//
+// `great` rings 57s and nothing before this task could cut a ringing one-shot
+// short at a page turn. hushVoices() closes two gain nodes every one-shot
+// funnels through; hushSchedule is the pure timing arithmetic behind it.
+
+test('hushSchedule: fade and restore are ordered, finite, and monotonic in both arguments', () => {
+  const a = hushSchedule(0.5, 0.15);
+  assert.ok(Number.isFinite(a.fadeEndsAt) && Number.isFinite(a.restoreAt));
+  assert.ok(a.fadeEndsAt > 0, 'fadeEndsAt must be positive');
+  assert.ok(a.restoreAt > a.fadeEndsAt, 'the restore cannot begin before the fade finishes');
+
+  // monotonic in fade: a longer fade pushes BOTH times later
+  const longerFade = hushSchedule(1.2, 0.15);
+  assert.ok(longerFade.fadeEndsAt > a.fadeEndsAt, 'a longer fade did not push fadeEndsAt later');
+  assert.ok(longerFade.restoreAt > a.restoreAt, 'a longer fade did not push restoreAt later');
+
+  // monotonic in hold: a longer hold pushes restoreAt later, but never touches
+  // fadeEndsAt — the two knobs are independent
+  const longerHold = hushSchedule(0.5, 0.6);
+  assert.ok(longerHold.restoreAt > a.restoreAt, 'a longer hold did not push restoreAt later');
+  assert.equal(longerHold.fadeEndsAt, a.fadeEndsAt, 'hold leaked into fadeEndsAt');
+
+  // a zero hold is legal — an instant hush-and-restore, still ordered
+  const noHold = hushSchedule(0.5, 0);
+  assert.equal(noHold.restoreAt, noHold.fadeEndsAt);
+});
+
+test('audio.hushVoices() is safe with no AudioContext', () => {
+  // createAudio(save) is contractually Node-safe until ensureCtx() succeeds,
+  // and there is no `window` under node --test — so this must be a clean
+  // no-op, not a crash, exactly like every other engine method's guard.
+  const save = { state: () => ({ soundOn: false }), setSound() {} };
+  const audio = createAudio(save);
+  assert.doesNotThrow(() => audio.hushVoices());
+  assert.doesNotThrow(() => audio.hushVoices({ fade: 2, hold: 1 }));
+  assert.doesNotThrow(() => audio.hushVoices({}));
+});
+
+// A fake AudioContext with enough surface for ensureCtx() to build the WHOLE
+// real graph (master, musicGain, the reverb, and the hush pair) rather than
+// the narrower fakeAudioCtx() above, which stops short of createConvolver
+// and createStereoPanner. Every connect() is recorded as a [from, to] edge so
+// a test can ask a real structural question — "does this node's output reach
+// that node?" — instead of trusting a comment. This is the harness the brief
+// asked for: proof by reachability, or an honest admission that none exists.
+function graphAudioContext() {
+  const edges = [];
+  const gains = [];
+  const gainParam = () => ({
+    value: 1,
+    setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {},
+    setTargetAtTime() {}, cancelScheduledValues() {},
+  });
+  const ctx = {
+    currentTime: 0,
+    sampleRate: 44100,
+    state: 'running',
+    destination: { connect() {} },
+    resume() {},
+    createGain() {
+      const n = { gain: gainParam(), connect(dst) { edges.push([n, dst]); }, disconnect() {} };
+      gains.push(n);
+      return n;
+    },
+    createOscillator() {
+      const n = { type: 'sine', frequency: { value: 0 }, connect(dst) { edges.push([n, dst]); }, start() {}, stop() {} };
+      return n;
+    },
+    createBufferSource() {
+      const n = { buffer: null, loop: false, connect(dst) { edges.push([n, dst]); }, start() {}, stop() {} };
+      return n;
+    },
+    createBuffer(channels, length) {
+      return { getChannelData: () => new Float32Array(length), copyToChannel() {} };
+    },
+    createBiquadFilter() {
+      const n = {
+        type: 'lowpass', frequency: { value: 0 }, Q: { value: 0 },
+        connect(dst) { edges.push([n, dst]); },
+      };
+      return n;
+    },
+    createConvolver() {
+      const n = { buffer: null, connect(dst) { edges.push([n, dst]); } };
+      return n;
+    },
+    createStereoPanner() {
+      const n = { pan: { value: 0 }, connect(dst) { edges.push([n, dst]); } };
+      return n;
+    },
+    _edges: edges,
+    _gains: gains,
+  };
+  return ctx;
+}
+
+test('structurally: the sit bell bypasses the hush pair; an ordinary bell does not', () => {
+  // See the brief's own warning: a test that cannot fail is worse than none.
+  // This one can — see task-5c-report.md for the break-it/fix-it proof (route
+  // sitBell() through voicesDry/voicesWet and this assertion trips).
+  const save = { state: () => ({ soundOn: true }), setSound() {} };
+  const priorWindow = global.window;
+  const hadWindow = Object.prototype.hasOwnProperty.call(global, 'window');
+  global.window = { AudioContext: function FakeAudioContext() { return graphAudioContext(); } };
+  try {
+    const audio = createAudio(save);
+    audio.setListener(null);   // no listener -> placed() is null -> every call below takes the unplaced fallback path
+    audio.sitBell();
+    const ctx = audio.ctx;
+    assert.ok(ctx, 'ensureCtx() did not build a context off the faked window');
+
+    // ensureCtx() creates exactly four gain nodes, in this order, before any
+    // voice is struck: master, musicGain, voicesDry, voicesWet. Pinning them
+    // by creation order is the same trade fakeAudioCtx() above already makes
+    // (reaching into strike()'s own graph because a param-table test cannot
+    // see a wiring mistake); if ensureCtx() ever creates a gain node in a
+    // different order this test's own assertion below on gains[0] catches it.
+    const [master, , voicesDry, voicesWet] = ctx._gains;
+    assert.equal(master, audio.master, 'gains[0] is not the exposed master — creation order assumption is wrong');
+    assert.ok(voicesDry && voicesWet, 'ensureCtx() did not build the hush pair');
+
+    const sitBellEdges = ctx._edges;
+    const sitBellTouchesHush = sitBellEdges.some(([, to]) => to === voicesDry || to === voicesWet);
+    assert.ok(!sitBellTouchesHush, 'the sit bell routed through a hush node — it would go quiet mid-sit on a page turn');
+    const sitBellReachesMaster = sitBellEdges.some(([, to]) => to === master);
+    assert.ok(sitBellReachesMaster, 'the sit bell never reached master at all — the harness is not wired right');
+
+    // Contrast: an ordinary bell, struck the same way (no listener), DOES
+    // route through the pair — this is what makes the assertion above mean
+    // something, rather than every node just never reaching voicesDry/Wet.
+    const before = ctx._edges.length;
+    audio.bell({ f0: 100 });
+    const bellEdges = ctx._edges.slice(before);
+    assert.ok(bellEdges.some(([, to]) => to === voicesDry), 'an ordinary bell must route through voicesDry, or hushVoices() would do nothing');
+  } finally {
+    if (hadWindow) global.window = priorWindow; else delete global.window;
+  }
 });
