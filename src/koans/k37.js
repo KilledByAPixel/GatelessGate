@@ -87,9 +87,13 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
-      if (input.raycastFirst(camera, tailMeshes)) {
+      const hit = input.raycastFirst(camera, tailMeshes);
+      if (hit) {
         buffalo.tail.impulse(1.2);
         tugs++;
+        // a heavier brush than a robe: this is a tail, and there is an animal
+        // on the other end of it
+        audio && audio.cloth({ force: 1.1, at: hit.point });
       }
     });
 

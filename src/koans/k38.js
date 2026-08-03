@@ -251,6 +251,9 @@ export default {
       if (!hit) return;
       taps++;
       for (let i = 0; i < PER_TAP; i++) release(hit.point);
+      // the trunk you touched, and the leaves letting go of it
+      audio && audio.wood({ force: 0.5, at: hit.point });
+      audio && audio.breath({ force: 0.7, at: hit.point });
     });
 
     let sinceAuto = AUTO_EVERY * 0.5;

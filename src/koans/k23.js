@@ -213,9 +213,11 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
-      if (!input.raycastFirst(camera, grabMeshes)) return;
+      const hit = input.raycastFirst(camera, grabMeshes);
+      if (!hit) return;
       taps++;
       bundle.budge(APPROACH + Math.PI);   // it leans toward the pull, and declines
+      audio && audio.cloth({ force: 0.9, at: hit.point });
     });
 
     return {

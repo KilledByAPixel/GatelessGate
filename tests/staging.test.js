@@ -26,6 +26,8 @@ const STUB_AUDIO = () => {
     calls,
     bell: rec('bell'), chimeStrike: rec('chime'), knock: rec('knock'),
     drip: rec('drip'), pour: rec('pour'),
+    // the touch voices: ceramic, wood, cloth, air
+    ceramic: rec('ceramic'), wood: rec('wood'), cloth: rec('cloth'), breath: rec('breath'),
     startAmbience: rec('start'), stopAmbience: rec('stop'), setWindLevel: rec('wind'),
     duck: rec('duck'),
   };
@@ -167,12 +169,14 @@ for (const entry of staged) {
   });
 }
 
-// Cases whose touch response is purely visual — a petal let go, a tail
-// swished, an ink splash, a stack of cloth that refuses to lift. All of them
-// were staged before the sound design landed, and none of them has been
-// through Frank's ears with a voice attached yet. They are listed rather than
-// fixed so the check below stays live for everything staged since.
-const SILENT_BY_HISTORY = [1, 2, 5, 6, 14, 23, 37, 38, 40];
+// The two cases that answer a touch with nothing ON PURPOSE, which is a
+// different thing from the seven that used to be on this list because no voice
+// existed for them yet. The man hanging by his teeth over the drop (5) and the
+// cat (14) are the book's two hardest pages, staged through ink metaphor and
+// never through literal harm — and a sound effect on either would be the exact
+// wrong note. They are also two of the three cases with no drift at all
+// (NO_DRIFT, above): "silence is right here."
+const SILENT_BY_HISTORY = [5, 14];
 
 test('every staged interaction reaches the audio engine', async () => {
   // A diorama that answers a touch with nothing is a bug we would otherwise
@@ -198,6 +202,37 @@ test('every staged interaction reaches the audio engine', async () => {
     }
   }
   assert.deepEqual(silent, [], `these cases answer a touch with nothing: ${silent}`);
+});
+
+test('every placed sound carries a position an AudioParam can take', async () => {
+  // A NaN reaching an AudioParam throws and kills the whole graph. The engine
+  // guards it, but a case that computes a bad position is still a bug — and
+  // one that only shows up as silence, which is the hardest kind to notice in
+  // a book this quiet.
+  const bad = [];
+  for (const entry of staged) {
+    const mod = await loadKoan(entry.slug);
+    const audio = STUB_AUDIO();
+    const ctx = fakeCtx(audio);
+    const root = mod.build(ctx);
+    root.setCamera(rigCamera(mod));
+    root.update(1 / 60, 0);
+    ctx.input.raycastFirst = (cam, objs) => (objs && objs.length
+      ? { object: objs[0], point: new THREE.Vector3(1, 0.5, -2), distance: 1 } : null);
+    for (let n = 0; n < 3; n++) {
+      ctx._taps.forEach((cb) => cb());
+      for (let i = 0; i < 60; i++) root.update(1 / 60, n + i / 60);
+    }
+    // STUB_AUDIO records each call as [kind, arg]
+    for (const [kind, arg] of audio.calls) {
+      const at = arg && arg.at;
+      if (at === undefined || at === null) continue;
+      if (!Number.isFinite(at.x) || !Number.isFinite(at.y) || !Number.isFinite(at.z)) {
+        bad.push(`${entry.id}:${kind}`);
+      }
+    }
+  }
+  assert.deepEqual(bad, [], `these cases place a sound at a non-finite position: ${bad}`);
 });
 
 // Case 37's pen used to sit at 185 draws — its lattice was dozens of separate
