@@ -409,6 +409,73 @@ export function makeWind(ctx, dest) {
   };
 }
 
+// ---- the touch voices ----
+// Seven cases answered a touch with nothing, listed for years in
+// tests/staging.test.js as SILENT_BY_HISTORY. What they wanted was not more
+// bells: they wanted a pot, a tree, a robe, and air. Two of these are the same
+// generalized resonator as bronze and bamboo with a different table; two have
+// no fundamental at all, which makes them the first pitchless voices in the
+// palette.
+
+// Glazed stoneware. Near-harmonic with a slight stretch (a pot is a shell, not
+// a bar), and SHORT — under a second and a half. A tipped vase is a tick and a
+// small hollow ring, not an instrument.
+export const CERAMIC = { f0: 520, level: 0.075, decay: 1.1, verbMix: 0.45, tail: 2 };
+
+export function ceramicPartials(f0 = CERAMIC.f0, decay = CERAMIC.decay) {
+  return [
+    [1.00, 1.00], [2.04, 0.42], [3.11, 0.17], [4.35, 0.06],
+  ].map(([r, a]) => ({ freq: f0 * r, amp: a, decay: decay * Math.pow(0.42, Math.log2(r)) }));
+}
+
+// Solid timber, struck. Distinct from the odoshi's bamboo, which is HOLLOW and
+// therefore has a low "aw" under the knock; this has almost no tail at all. A
+// tree trunk is the most inert thing in the book.
+export const WOOD = { f0: 190, level: 0.09, decay: 0.26, verbMix: 0.3, tail: 1 };
+
+export function woodPartials(f0 = WOOD.f0, decay = WOOD.decay) {
+  return [
+    [1.00, 1.00], [2.41, 0.30], [4.02, 0.10],
+  ].map(([r, a]) => ({ freq: f0 * r, amp: a, decay: decay * Math.pow(0.5, Math.log2(r)) }));
+}
+
+// Cloth: a brush, no pitch. The first voice in the palette with no fundamental
+// — a robe shifting is a band of noise swelling and dying, and any resonance at
+// all would turn it into a drum.
+export const CLOTH = { level: 0.055, freq: 2200, q: 0.7, dur: 0.30, attack: 0.05, verbMix: 0.25, seed: 90210 };
+
+// Breath: the quietest thing in the book. A petal let go, a fox's head turning,
+// leaves giving up a branch. A third of cloth's level and well below it in
+// register — felt rather than heard, which is the only honest way to give a
+// petal a sound at all.
+export const BREATH = { level: 0.018, freq: 620, q: 0.5, dur: 0.42, attack: 0.14, verbMix: 0.35, seed: 24680 };
+
+// One filtered noise swell for both pitchless voices. Seeded, so the same touch
+// makes the same sound — the audio layer is exempt from the determinism rule,
+// but there is no reason to spend the exemption where it buys nothing.
+export function noiseSwell(ctx, dest, {
+  level = CLOTH.level, dur = CLOTH.dur, freq = CLOTH.freq, q = CLOTH.q,
+  attack = CLOTH.attack, seed = CLOTH.seed,
+} = {}) {
+  const t0 = ctx.currentTime;
+  const n = Math.ceil(ctx.sampleRate * dur);
+  const nb = ctx.createBuffer(1, n, ctx.sampleRate);
+  const nd = nb.getChannelData(0);
+  const rand = mulberry32(seed);
+  for (let i = 0; i < n; i++) nd[i] = rand() * 2 - 1;
+
+  const src = ctx.createBufferSource(); src.buffer = nb;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
+  const g = ctx.createGain();
+  const rise = Math.min(attack, dur * 0.6);
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(level, t0 + rise);
+  g.gain.exponentialRampToValueAtTime(level * 0.001, t0 + dur);
+  src.connect(bp); bp.connect(g); g.connect(dest);
+  src.start(t0); src.stop(t0 + dur + 0.05);
+}
+
 // The peak level one partial reaches, per unit amplitude. Bell-sized, because
 // the bell is what strike() was written for — every other voice scales relative
 // to it. A parameter rather than a literal so a voice with a different natural

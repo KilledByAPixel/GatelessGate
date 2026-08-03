@@ -2,6 +2,7 @@ import {
   makeWind, strikeBell, strikeBar, CHIME, strikeDrip, makeWaterBed, WATER,
   strike, bambooPartials, ODOSHI, pourBurst, strikeSitBell, SIT_BELL, STRIKE_SCALE, BELL,
   bellVoice, bellPartials, bellTail, applyBellPreset, BELL_PRESETS,
+  CERAMIC, WOOD, CLOTH, BREATH, ceramicPartials, woodPartials, noiseSwell,
 } from './synths.js';
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
@@ -447,6 +448,44 @@ export function createAudio(save) {
       if (!ensureCtx() || ctx.state !== 'running') return;
       const bus = placed(at, ODOSHI.verbMix * 0.6, 2);
       pourBurst(ctx, bus ? bus.in : voicesDry, {});
+    },
+    // ---- the touch voices ----
+    // Each is the same shape: place it if it said where it is, otherwise the
+    // plain path. Every one of these is quiet on purpose — the book is an
+    // ambient thing and a touch response that demands attention is a game.
+    ceramic({ force = 1, at = null } = {}) {
+      if (!ensureCtx() || ctx.state !== 'running') return;
+      const bus = placed(at, CERAMIC.verbMix, CERAMIC.tail);
+      strike(ctx, bus ? bus.in : voicesDry, {
+        partials: ceramicPartials(),
+        gain: CERAMIC.level * force,
+        transient: { dur: 0.012, freq: 2500, q: 1.6, amp: 0.5 },
+      });
+    },
+    wood({ force = 1, at = null } = {}) {
+      if (!ensureCtx() || ctx.state !== 'running') return;
+      const bus = placed(at, WOOD.verbMix, WOOD.tail);
+      strike(ctx, bus ? bus.in : voicesDry, {
+        partials: woodPartials(),
+        gain: WOOD.level * force,
+        scale: STRIKE_SCALE * 4,
+        transient: { dur: 0.02, freq: 800, q: 1.1, amp: 0.55 },
+      });
+    },
+    cloth({ force = 1, at = null } = {}) {
+      if (!ensureCtx() || ctx.state !== 'running') return;
+      const bus = placed(at, CLOTH.verbMix, CLOTH.dur + 0.5);
+      noiseSwell(ctx, bus ? bus.in : voicesDry, { ...CLOTH, level: CLOTH.level * force });
+    },
+    // `dur` is why this one takes an argument the others don't: case 1's Mu is
+    // not a strike at all, it is the world thinning away over several seconds,
+    // and it wants one long breath shaped to that gesture rather than a hit.
+    breath({ force = 1, dur = BREATH.dur, at = null } = {}) {
+      if (!ensureCtx() || ctx.state !== 'running') return;
+      const bus = placed(at, BREATH.verbMix, dur + 0.5);
+      noiseSwell(ctx, bus ? bus.in : voicesDry, {
+        ...BREATH, dur, attack: dur * 0.35, level: BREATH.level * force,
+      });
     },
     playMusic,
     stopMusic,

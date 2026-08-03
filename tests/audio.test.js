@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B,
   gustPhase, STRIKE_SCALE, BELL_PRESETS, bellMacroPartials, applyBellPreset, NAMED_MODE_COUNT, strike,
+  ceramicPartials, woodPartials, CERAMIC, WOOD, CLOTH, BREATH,
 } from '../src/audio/synths.js';
 import {
   parseRecipe, emitterCount, createAudio, hushSchedule, masterLevel, shouldPauseForHide, MASTER, DUCKED,
@@ -94,6 +95,46 @@ test('the strike level scale is a named constant, not a magic number', () => {
   // fought the same number — so it is a parameter now.
   assert.equal(typeof STRIKE_SCALE, 'number');
   assert.ok(STRIKE_SCALE > 0 && STRIKE_SCALE < 1);
+});
+
+// ---- Task 9: the touch voices — ceramic, wood, cloth, breath --------------
+//
+// Seven cases answer a touch with silence (tests/staging.test.js's
+// SILENT_BY_HISTORY). The palette had bronze, struck bar, bamboo, and water,
+// and none of those is a robe, a pot, a tree, or a petal.
+
+test('ceramic and wood are struck objects, each with its own decay character', () => {
+  for (const [name, table] of [['ceramic', ceramicPartials(520)], ['wood', woodPartials(190)]]) {
+    assert.ok(table.length >= 3, `${name} has too few modes`);
+    for (const x of table) {
+      assert.ok(x.freq > 0 && x.amp > 0 && x.decay > 0, `${name} has a bad partial`);
+    }
+    // higher modes die first — true of every struck object in the palette
+    for (let i = 1; i < table.length; i++) {
+      assert.ok(table[i].decay < table[i - 1].decay, `${name} mode ${i} outlasts the one below it`);
+      assert.ok(table[i].amp < table[i - 1].amp, `${name} mode ${i} is louder than the one below it`);
+    }
+  }
+  // Wood is DEAD and ceramic RINGS: that difference is the whole point of
+  // having both. A quarter-second thunk versus a pot you can hear.
+  assert.ok(woodPartials(190)[0].decay < 0.4, 'wood rings like a bell');
+  assert.ok(ceramicPartials(520)[0].decay > 0.5, 'ceramic is as dead as wood');
+  assert.ok(ceramicPartials(520)[0].decay < 2.5, 'ceramic rings like bronze');
+});
+
+test('the noise voices are quiet and pitchless, and breath is the quietest thing in the book', () => {
+  // Cloth and breath have no fundamental at all — they are the only voices in
+  // the palette that are pure air. A petal genuinely does not make a sound;
+  // the most that is honest is a suggestion of one.
+  for (const v of [CLOTH, BREATH]) {
+    assert.ok(v.level > 0 && v.level < 0.2, `too loud to be ambient: ${v.level}`);
+    assert.ok(v.freq > 0 && v.dur > 0);
+    assert.equal(v.degree, undefined, 'a noise voice must not be pitched to the scale');
+  }
+  assert.ok(BREATH.level < CLOTH.level * 0.5, 'breath should be well under cloth');
+  assert.ok(BREATH.freq < CLOTH.freq, 'breath sits below cloth');
+  // and both stay under the chime, which is the book's reference for "quiet"
+  assert.ok(CLOTH.level < 0.08, `cloth is louder than a wind chime tube: ${CLOTH.level}`);
 });
 
 test('parseRecipe', () => {
@@ -672,6 +713,41 @@ test('structurally: the sit bell bypasses the hush pair; an ordinary bell does n
     audio.bell({ f0: 100 });
     const bellEdges = ctx._edges.slice(before);
     assert.ok(bellEdges.some(([, to]) => to === voicesDry), 'an ordinary bell must route through voicesDry, or hushVoices() would do nothing');
+  } finally {
+    if (hadWindow) global.window = priorWindow; else delete global.window;
+  }
+});
+
+test('structurally: the four touch voices route through the hush pair, not straight to master/verb', () => {
+  // The brief's own illustrative code for ceramic/wood/cloth/breath connected
+  // their unplaced fallback to `master` — exactly the bug the sit bell test
+  // above exists to catch on the OLD voices: a one-shot wired past
+  // voicesDry/voicesWet keeps sounding after hushVoices() (a page turn) has
+  // silenced everything else in the diorama. This pins the fix down.
+  const save = { state: () => ({ soundOn: true }), setSound() {} };
+  const priorWindow = global.window;
+  const hadWindow = Object.prototype.hasOwnProperty.call(global, 'window');
+  global.window = { AudioContext: function FakeAudioContext() { return graphAudioContext(); } };
+  try {
+    const audio = createAudio(save);
+    audio.setListener(null);   // no listener -> placed() is null -> every call below takes the unplaced fallback
+    audio.unlock();
+    const ctx = audio.ctx;
+    const [, , voicesDry] = ctx._gains;
+
+    for (const [name, call] of [
+      ['ceramic', () => audio.ceramic({})],
+      ['wood', () => audio.wood({})],
+      ['cloth', () => audio.cloth({})],
+      ['breath', () => audio.breath({})],
+    ]) {
+      const before = ctx._edges.length;
+      call();
+      const edges = ctx._edges.slice(before);
+      assert.ok(edges.length > 0, `${name} built no graph at all`);
+      assert.ok(edges.some(([, to]) => to === voicesDry),
+        `${name} did not reach voicesDry — it would keep sounding after the page turned`);
+    }
   } finally {
     if (hadWindow) global.window = priorWindow; else delete global.window;
   }
