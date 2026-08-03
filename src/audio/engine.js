@@ -24,6 +24,27 @@ export function hushSchedule(fade, hold) {
   return { fadeEndsAt: fade, restoreAt: fade + hold };
 }
 
+// Narration plays through an <audio> element, outside this graph, so ducking the
+// master only affects the ambience bed — which is exactly the intent.
+export const MASTER = 0.8;
+export const DUCKED = 0.32;
+
+// The three independent reasons the bed can be quiet, resolved to one number.
+// Pure so the interaction between them is testable: the one that matters is
+// that hidden and muted are SEPARATE reasons, so returning to a page you had
+// muted does not un-mute it.
+export function masterLevel({ soundOn, ducked, hidden }) {
+  if (!soundOn || hidden) return 0;
+  return ducked ? DUCKED : MASTER;
+}
+
+// Hidden means silent — except during a sitting. 'done' is the timer run out
+// with the reader still in the scene: the bell has already rung, so there is
+// nothing left to protect.
+export function shouldPauseForHide(hidden, sitPhase) {
+  return !!hidden && sitPhase !== 'sitting';
+}
+
 // Browser-only. `save` is a createSave() instance.
 export function createAudio(save) {
   let ctx = null, master = null, music = null, musicGain = null;
@@ -43,11 +64,9 @@ export function createAudio(save) {
   let ducked = false;     // ambience pulls back while narration is reading
   let mood = 'in';        // the case's editorial pick; every pitched voice reads it
   let listener = null;    // { pos, right, forward } — main.js feeds it from the camera each tick
+  let hidden = false;     // the page is not being looked at (visibilitychange)
 
-  // Narration plays through an <audio> element, outside this graph, so ducking the
-  // master only affects the ambience bed — which is exactly the intent.
-  const MASTER = 0.8, DUCKED = 0.32;
-  function masterTarget() { return soundOn ? (ducked ? DUCKED : MASTER) : 0; }
+  function masterTarget() { return masterLevel({ soundOn, ducked, hidden }); }
   function applyMaster() {
     if (master) master.gain.setTargetAtTime(masterTarget(), ctx.currentTime, 0.05);
   }
@@ -201,6 +220,46 @@ export function createAudio(save) {
     },
     isSoundOn() { return soundOn; },
     duck(on) { ducked = !!on; applyMaster(); },
+    // ---- the page went away ----
+    // Fade THEN suspend: ctx.suspend() on its own is a hard cut and can click.
+    // The fade rides masterTarget(), so mute and ducking are respected in both
+    // directions. `hidden` is set before the context guard so the state is
+    // readable in Node, where no context is ever created.
+    //
+    // This deliberately does NOT touch hushVoices()/hushGen. hushVoices is a
+    // fade-hold-RESTORE cycle sized for a page turn (~1.15s); a hidden tab can
+    // sit hidden for an hour, so reusing it would mean either duplicating its
+    // ramp under a different name or teaching its restore timer that some
+    // holds are indefinite — both fight the generation counter that makes
+    // overlapping page-turn hushes safe. Going through `master` instead sits
+    // one level higher than voicesDry/voicesWet: suspending ctx freezes EVERY
+    // node at once, including a hush that is mid-ramp, without either
+    // mechanism knowing the other exists. A hush's restore is a real
+    // setTimeout (wall-clock, not audio-clock), so it still fires while
+    // suspended; it schedules its ramp against a frozen ctx.currentTime, which
+    // simply resumes advancing — and the ramp with it — the moment resumeFromHide()
+    // calls ctx.resume(). Neither order (hush-then-hide or hide-then-hush)
+    // can leave voicesDry/voicesWet stuck at zero: their own restore always
+    // eventually runs, it just plays out across the suspend/resume boundary
+    // instead of within it.
+    pauseForHide() {
+      if (hidden) return;
+      hidden = true;
+      if (!ctx) return;
+      applyMaster();
+      // > 5 time constants of applyMaster's 0.05 tau — silent before the cut
+      setTimeout(() => {
+        if (hidden && ctx.state === 'running') ctx.suspend();
+      }, 300);
+    },
+    resumeFromHide() {
+      if (!hidden) return;
+      hidden = false;
+      if (!ctx) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      applyMaster();
+    },
+    isHidden() { return hidden; },
     // an unknown or absent mood falls back to the default rather than detuning
     setMood(m) { mood = SCALES[m] ? m : 'in'; },
     mood() { return mood; },

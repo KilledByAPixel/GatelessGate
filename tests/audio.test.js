@@ -4,7 +4,9 @@ import {
   windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B,
   gustPhase, STRIKE_SCALE, BELL_PRESETS, bellMacroPartials, applyBellPreset, NAMED_MODE_COUNT, strike,
 } from '../src/audio/synths.js';
-import { parseRecipe, emitterCount, createAudio, hushSchedule } from '../src/audio/engine.js';
+import {
+  parseRecipe, emitterCount, createAudio, hushSchedule, masterLevel, shouldPauseForHide, MASTER, DUCKED,
+} from '../src/audio/engine.js';
 import { hz, SCALES } from '../src/audio/tuning.js';
 
 test('windParams monotonic and bounded', () => {
@@ -670,6 +672,155 @@ test('structurally: the sit bell bypasses the hush pair; an ordinary bell does n
     audio.bell({ f0: 100 });
     const bellEdges = ctx._edges.slice(before);
     assert.ok(bellEdges.some(([, to]) => to === voicesDry), 'an ordinary bell must route through voicesDry, or hushVoices() would do nothing');
+  } finally {
+    if (hadWindow) global.window = priorWindow; else delete global.window;
+  }
+});
+
+// ---- Task 8: silence when nobody is listening ------------------------------
+//
+// Hidden means silent, everywhere, except during a running sitting — that
+// exemption is the owner's explicit call, not a default. `masterLevel` and
+// `shouldPauseForHide` are the pure rules; pauseForHide/resumeFromHide are the
+// wiring, deliberately NOT built on hushVoices() (see its own comment in
+// engine.js for why a fade/hold/restore CYCLE is the wrong shape for a hold
+// that can last an hour).
+
+test('masterLevel: hidden is silent, and coming back does not un-mute you', () => {
+  assert.equal(masterLevel({ soundOn: true, ducked: false, hidden: false }), MASTER);
+  assert.equal(masterLevel({ soundOn: true, ducked: true, hidden: false }), DUCKED);
+  assert.equal(masterLevel({ soundOn: true, ducked: false, hidden: true }), 0);
+  assert.equal(masterLevel({ soundOn: false, ducked: false, hidden: false }), 0);
+  // the one that matters: a muted page that was hidden and came back is STILL
+  // muted. Hidden and muted are separate reasons for silence, and clearing one
+  // must not clear the other.
+  assert.equal(masterLevel({ soundOn: false, ducked: false, hidden: true }), 0);
+  assert.equal(masterLevel({ soundOn: false, ducked: true, hidden: false }), 0);
+});
+
+test('a sitting keeps the sound alive when the page is hidden', () => {
+  // Someone who sets twenty minutes and puts the laptop down came here to sit,
+  // not to watch a screen. The closing bell has to ring whether or not the tab
+  // is in front. Everywhere else in the book, hidden means silent.
+  assert.equal(shouldPauseForHide(true, 'sitting'), false);
+  assert.equal(shouldPauseForHide(true, 'off'), true);
+  // 'done' is the timer run out with the reader still in the scene — the bell
+  // has already rung, so there is nothing left to protect
+  assert.equal(shouldPauseForHide(true, 'done'), true);
+  // and a visible page is never paused, sitting or not
+  assert.equal(shouldPauseForHide(false, 'sitting'), false);
+  assert.equal(shouldPauseForHide(false, 'off'), false);
+});
+
+test('the engine tracks hidden as state, readable before any context exists', () => {
+  const save = { state: () => ({ soundOn: true }), setSound() {} };
+  const audio = createAudio(save);
+  assert.equal(audio.isHidden(), false);
+  audio.pauseForHide();
+  assert.equal(audio.isHidden(), true, 'hidden must be set even with no AudioContext yet');
+  audio.resumeFromHide();
+  assert.equal(audio.isHidden(), false);
+});
+
+// The two tests above are pure-function truth tables; these two exercise the
+// actual wiring against a real (faked) AudioContext, because a correct
+// masterLevel() and a correct shouldPauseForHide() are worthless if
+// pauseForHide()/resumeFromHide() never call them, or call ctx.suspend()
+// before the fade has had time to reach silence (a click), or leave the
+// context permanently suspended when a resume was supposed to reverse it.
+
+test('pauseForHide rides the live master gain to silence; resumeFromHide restores it (not muted)', () => {
+  const save = { state: () => ({ soundOn: true }), setSound() {} };
+  const priorWindow = global.window;
+  const hadWindow = Object.prototype.hasOwnProperty.call(global, 'window');
+  global.window = { AudioContext: function FakeAudioContext() { return graphAudioContext(); } };
+  try {
+    const audio = createAudio(save);
+    audio.setListener(null);
+    audio.unlock();   // forces ensureCtx() so `master` exists to inspect
+    const master = audio.ctx._gains[0];
+    assert.equal(master, audio.master, 'creation-order assumption (gains[0] is master) no longer holds');
+
+    const targets = [];
+    const nativeSet = master.gain.setTargetAtTime.bind(master.gain);
+    master.gain.setTargetAtTime = (v, t, tau) => { targets.push(v); nativeSet(v, t, tau); };
+
+    audio.pauseForHide();
+    assert.deepEqual(targets, [0], 'hiding must ramp master toward silence at once, not wait on the suspend timer');
+
+    audio.resumeFromHide();
+    assert.deepEqual(targets, [0, MASTER], 'coming back unmuted must restore full volume, not leave master at 0');
+  } finally {
+    if (hadWindow) global.window = priorWindow; else delete global.window;
+  }
+});
+
+test('a page muted before it was hidden is still muted when resumeFromHide runs', () => {
+  // CODE REVIEW's own target case: if resumeFromHide forced master back up
+  // unconditionally instead of re-deriving it from masterLevel(), this is the
+  // scenario that would catch it — soundOn is false throughout, so every
+  // target pushed, hidden or not, must be 0.
+  const save = { state: () => ({ soundOn: true }), setSound() {} };
+  const priorWindow = global.window;
+  const hadWindow = Object.prototype.hasOwnProperty.call(global, 'window');
+  global.window = { AudioContext: function FakeAudioContext() { return graphAudioContext(); } };
+  try {
+    const audio = createAudio(save);
+    audio.setListener(null);
+    audio.unlock();
+    const master = audio.ctx._gains[0];
+    const targets = [];
+    const nativeSet = master.gain.setTargetAtTime.bind(master.gain);
+    master.gain.setTargetAtTime = (v, t, tau) => { targets.push(v); nativeSet(v, t, tau); };
+
+    audio.setSound(false);          // muted while still visible
+    audio.pauseForHide();
+    audio.resumeFromHide();
+    assert.ok(targets.every((v) => v === 0), `a muted+hidden page came back at a nonzero target: ${targets}`);
+  } finally {
+    if (hadWindow) global.window = priorWindow; else delete global.window;
+  }
+});
+
+test('the suspend is deferred behind the fade, and a quick un-hide cancels it entirely', async () => {
+  // Fade THEN suspend: a bare ctx.suspend() is a hard cut that can click, so
+  // the real suspend() call must not happen the instant pauseForHide() is
+  // called — only after the fade has had time to reach silence. And if the
+  // hide is reversed before that timer fires (the tab-hide/page-turn-speed
+  // overlap the brief calls out), the context must never actually suspend at
+  // all, or resumeFromHide would be undoing a suspend that hadn't happened
+  // yet and racing the deferred callback that still thinks it should.
+  const save = { state: () => ({ soundOn: true }), setSound() {} };
+  const priorWindow = global.window;
+  const hadWindow = Object.prototype.hasOwnProperty.call(global, 'window');
+  const ctx = graphAudioContext();
+  let suspendCalls = 0;
+  ctx.suspend = () => { suspendCalls++; ctx.state = 'suspended'; };
+  const nativeResume = ctx.resume.bind(ctx);
+  ctx.resume = () => { nativeResume(); ctx.state = 'running'; };
+  global.window = { AudioContext: function FakeAudioContext() { return ctx; } };
+  try {
+    const audio = createAudio(save);
+    audio.setListener(null);
+    audio.unlock();
+    assert.equal(ctx.state, 'running');
+
+    // Reversed well within the 300ms fade window: must never suspend at all.
+    audio.pauseForHide();
+    audio.resumeFromHide();
+    await new Promise((resolve) => setTimeout(resolve, 320));
+    assert.equal(suspendCalls, 0, 'a hide reversed before the fade finished still suspended the context');
+    assert.equal(ctx.state, 'running');
+
+    // Now let a hide run its full course.
+    audio.pauseForHide();
+    assert.equal(ctx.state, 'running', 'suspend fired before the fade had time to reach silence — that is the click');
+    await new Promise((resolve) => setTimeout(resolve, 320));
+    assert.equal(suspendCalls, 1);
+    assert.equal(ctx.state, 'suspended');
+
+    audio.resumeFromHide();
+    assert.equal(ctx.state, 'running', 'resumeFromHide must un-suspend the context');
   } finally {
     if (hadWindow) global.window = priorWindow; else delete global.window;
   }

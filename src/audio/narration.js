@@ -19,6 +19,7 @@ export function createNarration({ base = AUDIO_BASE } = {}) {
   let gen = 0;
   let speaking = false;
   let current = null;      // { id, section } being read, so callers can tell what's playing
+  let heldForHide = false;   // paused by the page going away, not by the reader
 
   // Fetched once at startup so the first tap on "read" doesn't wait on the network.
   const ready = fetch(base + 'manifest.json')
@@ -57,7 +58,24 @@ export function createNarration({ base = AUDIO_BASE } = {}) {
       gen++;
       speaking = false;
       current = null;
+      heldForHide = false;
       el.pause();
+    },
+
+    // The page went away. Narration is an <audio> element OUTSIDE the Web
+    // Audio graph, so suspending the context does nothing to it — it needs its
+    // own pause, and it holds its position. Pausing also stops the reading
+    // advancing: `onended` is what moves to the next section, and a paused
+    // element never fires it.
+    pauseForHide() {
+      if (!speaking || el.paused) return;
+      heldForHide = true;
+      el.pause();
+    },
+    resumeFromHide() {
+      if (!heldForHide) return;
+      heldForHide = false;
+      el.play().catch(() => {});
     },
 
     isSpeaking() { return speaking; },

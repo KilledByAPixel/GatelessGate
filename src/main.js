@@ -10,7 +10,7 @@ import { makeDebug, devModeOn } from './ui/debug.js';
 import { makeInput } from './input.js';
 import { setBreezePointer, clearBreeze } from './kit/breeze.js';
 import { createSave } from './save.js';
-import { createAudio } from './audio/engine.js';
+import { createAudio, shouldPauseForHide } from './audio/engine.js';
 import { gustPhase } from './audio/synths.js';
 import { createNarration } from './audio/narration.js';
 import { CASES } from './koans/index.js';
@@ -156,6 +156,12 @@ const sit = makeSit({
     // completed sit on the showcase would persist sat['showcase'] into save
     // state — a tool leaking into the book the same way an unmarked read would.
     if (koanSlug && !isDevPage(koanSlug)) { save.markSat(koanSlug); menu.refresh(save.state()); }
+    // 'sitting' was the one phase that held the visibilitychange pause off; the
+    // timer just reached 'done' and there is no fresh visibilitychange event to
+    // re-check it. If the tab is already hidden, apply the pause now — the bell
+    // has already rung (audio.sitBell() above), so there is nothing left for a
+    // continued run to protect.
+    if (shouldPauseForHide(document.hidden, sit.phase())) { narration.pauseForHide(); audio.pauseForHide(); }
   },
   onExit: () => resumeKoan(),
 });
@@ -826,6 +832,20 @@ addEventListener('keydown', (e) => {
 addEventListener('pointerdown', () => {
   audio.unlock();                 // first tap starts the sound; the mute button turns it off
   if (mode === 'intro') skipIntro();
+});
+
+// Nobody is looking: stop making noise. `blur` would be the wrong event — it
+// fires when any other window is clicked, including one that leaves this tab
+// fully visible on a second monitor, and killing an ambient page because
+// someone alt-tabbed to look something up is not what anyone wants.
+document.addEventListener('visibilitychange', () => {
+  if (shouldPauseForHide(document.hidden, sit.phase())) {
+    narration.pauseForHide();
+    audio.pauseForHide();
+  } else {
+    audio.resumeFromHide();
+    narration.resumeFromHide();
+  }
 });
 
 // ---- loop ----
