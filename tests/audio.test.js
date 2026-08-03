@@ -722,12 +722,13 @@ test('the engine tracks hidden as state, readable before any context exists', ()
   assert.equal(audio.isHidden(), false);
 });
 
-// The two tests above are pure-function truth tables; these two exercise the
-// actual wiring against a real (faked) AudioContext, because a correct
-// masterLevel() and a correct shouldPauseForHide() are worthless if
-// pauseForHide()/resumeFromHide() never call them, or call ctx.suspend()
-// before the fade has had time to reach silence (a click), or leave the
-// context permanently suspended when a resume was supposed to reverse it.
+// The three tests above are pure-function truth tables and no-context state
+// tracking; these three exercise the actual wiring against a real (faked)
+// AudioContext, because a correct masterLevel() and a correct
+// shouldPauseForHide() are worthless if pauseForHide()/resumeFromHide() never
+// call them, or call ctx.suspend() before the fade has had time to reach
+// silence (a click), or leave the context permanently suspended when a
+// resume was supposed to reverse it.
 
 test('pauseForHide rides the live master gain to silence; resumeFromHide restores it (not muted)', () => {
   const save = { state: () => ({ soundOn: true }), setSound() {} };
@@ -776,6 +777,9 @@ test('a page muted before it was hidden is still muted when resumeFromHide runs'
     audio.setSound(false);          // muted while still visible
     audio.pauseForHide();
     audio.resumeFromHide();
+    // Guards the assertion below from passing vacuously if nothing were ever
+    // recorded (e.g. a rewrite that stopped calling applyMaster() at all).
+    assert.ok(targets.length >= 3, `expected at least 3 target pushes (mute, hide, resume), got ${targets.length}`);
     assert.ok(targets.every((v) => v === 0), `a muted+hidden page came back at a nonzero target: ${targets}`);
   } finally {
     if (hadWindow) global.window = priorWindow; else delete global.window;
@@ -821,6 +825,57 @@ test('the suspend is deferred behind the fade, and a quick un-hide cancels it en
 
     audio.resumeFromHide();
     assert.equal(ctx.state, 'running', 'resumeFromHide must un-suspend the context');
+  } finally {
+    if (hadWindow) global.window = priorWindow; else delete global.window;
+  }
+});
+
+test('a hide/show/hide burst inside one fade window does not let the FIRST hide\'s stale timer suspend mid-way through the second fade', async () => {
+  // CODE REVIEW CAUGHT: an ordinary quick alt-tab (hide, show, hide again, all
+  // inside the 300ms fade-then-suspend window) used to leave the first hide's
+  // deferred timer live. It would fire at its own original ~300ms mark — by
+  // then only partway into the SECOND fade — and find `hidden` true and
+  // `ctx.state` still 'running', so it suspended right there: a quieter
+  // version of the exact click the defer exists to prevent. `hideGen` mirrors
+  // hushGen — only the most recently armed timer can still match it when it
+  // fires, so a superseded one is a silent no-op instead of an early cut.
+  //
+  // This has to use real waits (not just call the three methods back to back
+  // and check synchronously) — the bug is specifically about what happens
+  // when hide #1's timer callback actually FIRES at its original real-time
+  // mark, not about anything observable before then.
+  const save = { state: () => ({ soundOn: true }), setSound() {} };
+  const priorWindow = global.window;
+  const hadWindow = Object.prototype.hasOwnProperty.call(global, 'window');
+  const ctx = graphAudioContext();
+  let suspendCalls = 0;
+  ctx.suspend = () => { suspendCalls++; ctx.state = 'suspended'; };
+  const nativeResume = ctx.resume.bind(ctx);
+  ctx.resume = () => { nativeResume(); ctx.state = 'running'; };
+  global.window = { AudioContext: function FakeAudioContext() { return ctx; } };
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  try {
+    const audio = createAudio(save);
+    audio.setListener(null);
+    audio.unlock();
+
+    audio.pauseForHide();       // hide #1 at t=0 — arms a timer for real t~300
+    await wait(100);
+    audio.resumeFromHide();     // shown again at t=100, well inside that window
+    audio.pauseForHide();       // hide #2 at t=100 — arms its OWN timer for real t~400
+
+    // t~320: past hide #1's original mark, well before hide #2's. If hide
+    // #1's timer were not invalidated, THIS is where it would wrongly suspend
+    // — only ~220ms into hide #2's own fade.
+    await wait(220);
+    assert.equal(suspendCalls, 0, "hide #1's stale timer suspended before hide #2's own fade finished");
+    assert.equal(ctx.state, 'running');
+
+    // t~420: past hide #2's own mark — the mechanism must still work, not be
+    // permanently disabled by the guard.
+    await wait(120);
+    assert.equal(suspendCalls, 1, "hide #2's own timer never suspended at all");
+    assert.equal(ctx.state, 'suspended');
   } finally {
     if (hadWindow) global.window = priorWindow; else delete global.window;
   }

@@ -51,6 +51,7 @@ export function createAudio(save) {
   let wind = null, verb = null, water = null, dripTimer = null;
   let voicesDry = null, voicesWet = null;   // the pair hushVoices() gates — see its own comment
   let hushGen = 0;
+  let hideGen = 0;   // mirrors hushGen: invalidates a stale deferred suspend, see pauseForHide()
   let playing = [];       // the recipe currently sounding — what transition() diffs against
   let musicChimed = false; // the live music is the menu's chiming variant, not a case bed
   // Creation counters for the headless probe: a layer that survived a page
@@ -236,19 +237,30 @@ export function createAudio(save) {
     // node at once, including a hush that is mid-ramp, without either
     // mechanism knowing the other exists. A hush's restore is a real
     // setTimeout (wall-clock, not audio-clock), so it still fires while
-    // suspended; it schedules its ramp against a frozen ctx.currentTime, which
-    // simply resumes advancing — and the ramp with it — the moment resumeFromHide()
-    // calls ctx.resume(). Neither order (hush-then-hide or hide-then-hush)
-    // can leave voicesDry/voicesWet stuck at zero: their own restore always
-    // eventually runs, it just plays out across the suspend/resume boundary
-    // instead of within it.
+    // suspended: at that point it calls voicesDry/voicesWet's own
+    // cancelScheduledValues(), which drops the in-flight ramp entirely rather
+    // than holding it, so the gain SNAPS back to 1 (its pre-ramp
+    // setValueAtTime value) instead of continuing to ramp there. That snap is
+    // inaudible only because `master` is already at (or heading to) zero and
+    // ramps up from zero on its own schedule when resumeFromHide() runs.
+    // Neither order (hush-then-hide or hide-then-hush) can leave
+    // voicesDry/voicesWet stuck at zero: their own restore always eventually
+    // runs, whatever state the suspend/resume boundary catches it in.
     pauseForHide() {
       if (hidden) return;
       hidden = true;
       if (!ctx) return;
       applyMaster();
-      // > 5 time constants of applyMaster's 0.05 tau — silent before the cut
+      // > 5 time constants of applyMaster's 0.05 tau — silent before the cut.
+      // `gen` mirrors hushGen: a hide reversed and re-armed inside this same
+      // 300ms window (an ordinary quick alt-tab burst) must not let THIS
+      // stale timer suspend mid-way through the SECOND fade — a quieter
+      // version of the click the defer exists to prevent. Whichever
+      // pauseForHide() call ran last owns the only timer that can still
+      // match `hideGen` when it fires.
+      const gen = ++hideGen;
       setTimeout(() => {
+        if (gen !== hideGen) return;   // overtaken by a later hide; not this timer's suspend to make
         if (hidden && ctx.state === 'running') ctx.suspend();
       }, 300);
     },

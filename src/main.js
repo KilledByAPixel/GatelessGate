@@ -144,6 +144,14 @@ panel.appendChild(menu.el);
 const about = makeAbout({ onBack: () => { menu.refresh(save.state()); showView(menu.el); } });
 panel.appendChild(about.el);
 
+// sitBellPartials' fundamental decays over 9s (synths.js calls it "ten
+// seconds"); the room send stretches it a touch further. This is how long a
+// pause forced by the 'sitting'->'done' transition (below) waits before it is
+// allowed to actually fade `master` — arming it any sooner cuts the closing
+// bell, the one sound the sitting exemption exists to protect, down to the
+// ~300ms of pauseForHide's own fade-then-suspend window.
+const SIT_BELL_TAIL_MS = 10000;
+
 const sit = makeSit({
   audio,
   // The bell has rung and the sitting is recorded — and that is ALL that happens
@@ -158,10 +166,18 @@ const sit = makeSit({
     if (koanSlug && !isDevPage(koanSlug)) { save.markSat(koanSlug); menu.refresh(save.state()); }
     // 'sitting' was the one phase that held the visibilitychange pause off; the
     // timer just reached 'done' and there is no fresh visibilitychange event to
-    // re-check it. If the tab is already hidden, apply the pause now — the bell
-    // has already rung (audio.sitBell() above), so there is nothing left for a
-    // continued run to protect.
-    if (shouldPauseForHide(document.hidden, sit.phase())) { narration.pauseForHide(); audio.pauseForHide(); }
+    // re-check it — that is the gap this closes. But pausing on THIS tick would
+    // fade `master` right under the bell audio.sitBell() just struck (above),
+    // cutting its ten-second tail to a ~300ms blip: the exact silence the
+    // sitting exemption exists to prevent, just moved one phase later. Wait out
+    // the bell, then re-check with the SAME rule: if the reader is back by
+    // then, document.hidden is false and this is a no-op — a fresh hide after
+    // that is not this bell's problem, the visibilitychange listener below
+    // already owns it (and 'done' is no longer exempt, so it pauses at once,
+    // correctly, whatever is left of the tail at that point).
+    setTimeout(() => {
+      if (shouldPauseForHide(document.hidden, sit.phase())) { narration.pauseForHide(); audio.pauseForHide(); }
+    }, SIT_BELL_TAIL_MS);
   },
   onExit: () => resumeKoan(),
 });
