@@ -40,16 +40,15 @@ export function createAudio(save) {
     if (master) master.gain.setTargetAtTime(masterTarget(), ctx.currentTime, 0.05);
   }
 
+  // Returns whether ctx now exists, so every caller reads as "no audio here,
+  // do nothing" instead of assuming the postcondition and blowing up on it.
+  // There is no `window` under `node --test` — createAudio(save) is
+  // contractually Node-safe until a context exists — so this can genuinely
+  // fail, and a null ctx reaching an AudioParam call must be a clean no-op,
+  // not a ReferenceError that takes a whole test down with it.
   function ensureCtx() {
-    if (ctx) return;
-    // No AudioContext outside a browser. This used to be unreachable from
-    // Node — nothing called a one-shot without a browser in scope — but the
-    // spatial tests now call bell/drip/chimeStrike directly to pin that a bad
-    // `at` never throws, and they do it with no `window` anywhere. Every
-    // caller below already falls through safely on a null ctx, so leaving it
-    // null here is enough; the alternative is a ReferenceError that takes the
-    // whole test down before the thing being tested is even reached.
-    if (typeof window === 'undefined') return;
+    if (ctx) return true;
+    if (typeof window === 'undefined') return false;
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     master = ctx.createGain();
     master.gain.value = masterTarget();
@@ -60,10 +59,11 @@ export function createAudio(save) {
     // the room: one reverb for every pitched voice. Its wet return feeds
     // master, so narration ducking pulls the room back with everything else.
     verb = makeVerb(ctx, master, { seconds: 5 });
+    return true;
   }
 
   function playMusic(emitters = 0, opts = {}) {
-    ensureCtx();
+    if (!ensureCtx()) return;
     if (music) { music.setEmitters(emitters); return; }
     // pitch is a closure over `mood`, not a snapshot — a mood change mid-play
     // retunes from the very next note
@@ -165,7 +165,7 @@ export function createAudio(save) {
   return {
     get ctx() { return ctx; },
     get master() { return master; },
-    unlock() { ensureCtx(); if (ctx && ctx.state !== 'running') ctx.resume(); },
+    unlock() { if (ensureCtx() && ctx.state !== 'running') ctx.resume(); },
     setSound(on) {
       soundOn = !!on;
       save.setSound(soundOn);
@@ -181,7 +181,7 @@ export function createAudio(save) {
     setListener(l) { listener = l || null; },
     listener() { return listener; },
     startAmbience(recipe = []) {
-      ensureCtx();
+      if (!ensureCtx()) return;
       const emitters = emitterCount(recipe);
       for (const item of recipe) {
         const { type, level } = parseRecipe(item);
@@ -200,7 +200,7 @@ export function createAudio(save) {
     // silence it is a soft stopAmbience. Mood needs nothing here — it is
     // pitch-only and the music reads it through a live closure.
     transition(next = []) {
-      ensureCtx();
+      if (!ensureCtx()) return;
       const { keep, start, stop } = diffAmbience(playing, next);
       const emitters = emitterCount(next);
       for (const layer of stop) stopLayer(layer);
@@ -259,8 +259,7 @@ export function createAudio(save) {
     // as one cluster. A missed strike in a scene that was silent anyway costs
     // nothing.
     bell({ f0 = 62, gain = 1, at = null } = {}) {
-      ensureCtx();
-      if (!ctx || ctx.state !== 'running') return;
+      if (!ensureCtx() || ctx.state !== 'running') return;
       const bus = placed(at, BELL.verbMix, BELL.tail);
       strikeBell(ctx, bus ? bus.in : master, bus ? null : verb.in, { f0, gain, verbMix: bus ? 0 : BELL.verbMix });
     },
@@ -270,8 +269,7 @@ export function createAudio(save) {
     // Pitched to the mood like everything else — degree 15 is the root four
     // octaves up, so it is the same note in both scales.
     sitBell() {
-      ensureCtx();
-      if (!ctx || ctx.state !== 'running') return;
+      if (!ensureCtx() || ctx.state !== 'running') return;
       strikeSitBell(ctx, master, verb.in, { f0: hz(SIT_BELL.degree, mood) });
     },
     // tube index -> scale degree -> Hz. The engine owns the mapping so the kit
@@ -282,8 +280,7 @@ export function createAudio(save) {
     // lands at intended loudness — Frank could not hear the section chimes at
     // all under the duck. Ambient strikes stay ducked with everything else.
     chimeStrike({ tube = 0, force = 1, punctuate = false, at = null } = {}) {
-      ensureCtx();
-      if (!ctx || ctx.state !== 'running') return;
+      if (!ensureCtx() || ctx.state !== 'running') return;
       const comp = punctuate && ducked ? MASTER / DUCKED : 1;
       const gain = CHIME.level * force * comp;
       const f0 = hz(CHIME.degree + tube, mood);
@@ -295,15 +292,13 @@ export function createAudio(save) {
     // a tap on the water (or the bowl set down in it) answers with a drip,
     // whatever the ambient schedule is doing
     drip({ loud = false, at = null } = {}) {
-      ensureCtx();
-      if (!ctx || ctx.state !== 'running') return;
+      if (!ensureCtx() || ctx.state !== 'running') return;
       dripNow(loud, at);
     },
     // the shishi-odoshi: the kit object fires onKnock/onPour, the case wires
     // them here — the same indirection as the furin
     knock({ force = 1, at = null } = {}) {
-      ensureCtx();
-      if (!ctx || ctx.state !== 'running') return;
+      if (!ensureCtx() || ctx.state !== 'running') return;
       const bus = placed(at, ODOSHI.verbMix, ODOSHI.decay + 1);
       let dest;
       if (bus) dest = bus.in;
@@ -324,8 +319,7 @@ export function createAudio(save) {
       });
     },
     pour({ at = null } = {}) {
-      ensureCtx();
-      if (!ctx || ctx.state !== 'running') return;
+      if (!ensureCtx() || ctx.state !== 'running') return;
       const bus = placed(at, ODOSHI.verbMix * 0.6, 2);
       pourBurst(ctx, bus ? bus.in : master, {});
     },
