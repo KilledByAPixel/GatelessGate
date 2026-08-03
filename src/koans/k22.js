@@ -9,6 +9,11 @@ import { clothEnergy } from '../sim/verlet.js';
 
 const ID = 22;
 
+// The cloth is nested under flag.group, so its LOCAL position (poleH - 0.06)
+// is not where it sounds from once the group is placed in the scene — one
+// scratch vector, reused at the tap site below.
+const scratchPos = new THREE.Vector3();
+
 // Ananda asks what else the Buddha handed on besides the robe. Kashapa answers
 // by saying his name — "Ananda." "Yes, brother." — and then tells him to take
 // down the preaching sign and put up his own. The whole transmission happens
@@ -123,7 +128,11 @@ export default {
       if (!input.raycastFirst(camera, [flag.mesh])) return;
       const on = flag.toggleWind();
       stills++;
-      audio && audio.chimeStrike({ tube: on ? 3 : 0, force: 0.5, at: flag.group.position });
+      // flag.group.position is the pole's GROUND base (y = 0); the sound
+      // belongs to the cloth, which hangs near poleH. Read the cloth mesh's
+      // world position rather than hard-coding poleH here, so this keeps
+      // tracking the cloth if that offset ever changes.
+      audio && audio.chimeStrike({ tube: on ? 3 : 0, force: 0.5, at: flag.mesh.getWorldPosition(scratchPos) });
     });
 
     return {
