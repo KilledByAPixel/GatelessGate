@@ -453,12 +453,20 @@ export function createAudio(save) {
     // Each is the same shape: place it if it said where it is, otherwise the
     // plain path. Every one of these is quiet on purpose — the book is an
     // ambient thing and a touch response that demands attention is a game.
+    // CODE REVIEW CAUGHT: ceramic shipped with no scale override at all, so
+    // its effective peak (CERAMIC.level * STRIKE_SCALE = 0.0083) landed about
+    // 5x under wood's (0.09 * STRIKE_SCALE * 4 = 0.0396) and 13x under the
+    // odoshi's knock (0.109) — a tipped pot would have been all but inaudible,
+    // plausibly under the wind bed. `scale: STRIKE_SCALE * 5` brings its
+    // effective peak (0.04125) into the same ballpark as wood's; PROVISIONAL
+    // pending Frank's ear at the audition the next task's wiring gives it.
     ceramic({ force = 1, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
       const bus = placed(at, CERAMIC.verbMix, CERAMIC.tail);
       strike(ctx, bus ? bus.in : voicesDry, {
         partials: ceramicPartials(),
         gain: CERAMIC.level * force,
+        scale: STRIKE_SCALE * 5,
         transient: { dur: 0.012, freq: 2500, q: 1.6, amp: 0.5 },
       });
     },
@@ -472,6 +480,12 @@ export function createAudio(save) {
         transient: { dur: 0.02, freq: 800, q: 1.1, amp: 0.55 },
       });
     },
+    // noiseSwell has no separate wet leg the way strike()'s callers do — it
+    // takes one `dest` and plays its whole envelope into it. So CLOTH.verbMix
+    // and BREATH.verbMix only ever do anything on the PLACED path, as the
+    // spatial bus's `character`; the unplaced fallback below is bone dry,
+    // same as pour()'s. Spreading `...CLOTH`/`...BREATH` into noiseSwell reads
+    // as though verbMix were honoured either way — it is not.
     cloth({ force = 1, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
       const bus = placed(at, CLOTH.verbMix, CLOTH.dur + 0.5);

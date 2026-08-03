@@ -417,9 +417,15 @@ export function makeWind(ctx, dest) {
 // no fundamental at all, which makes them the first pitchless voices in the
 // palette.
 
-// Glazed stoneware. Near-harmonic with a slight stretch (a pot is a shell, not
-// a bar), and SHORT — under a second and a half. A tipped vase is a tick and a
-// small hollow ring, not an instrument.
+// Glazed stoneware. CODE REVIEW CAUGHT: the comment this replaced claimed a
+// distinct "near-harmonic with a slight stretch" shape, but this table's
+// ratios (1/2.04/3.11/4.35) are a near-twin of the sit bell's own
+// (sitBellPartials: 1/2.02/3.01/4.21) — a small near-harmonic shell rings the
+// same family of modes whether it's bronze or fired clay, so the ratio series
+// is not what makes this read as a pot. What does: the DECAY (dead inside a
+// second and a half, against the inkin's ten-second hum) and its own
+// TRANSIENT (a tick, not a bright mallet strike). A tipped vase is a tick and
+// a small hollow ring, not an instrument.
 export const CERAMIC = { f0: 520, level: 0.075, decay: 1.1, verbMix: 0.45, tail: 2 };
 
 export function ceramicPartials(f0 = CERAMIC.f0, decay = CERAMIC.decay) {
@@ -428,8 +434,14 @@ export function ceramicPartials(f0 = CERAMIC.f0, decay = CERAMIC.decay) {
   ].map(([r, a]) => ({ freq: f0 * r, amp: a, decay: decay * Math.pow(0.42, Math.log2(r)) }));
 }
 
-// Solid timber, struck. Distinct from the odoshi's bamboo, which is HOLLOW and
-// therefore has a low "aw" under the knock; this has almost no tail at all. A
+// Solid timber, struck. CODE REVIEW CAUGHT: the comment this replaced claimed
+// the difference from the odoshi's HOLLOW bamboo (bambooPartials) lived in
+// the modal series — it does not. Same 0.5 damping exponent, near-identical
+// ratios (1/2.41/4.02 here vs bamboo's 1/2.28/3.85), and this table's 190 Hz
+// fundamental actually sits BELOW bamboo's 220 Hz, so register isn't the tell
+// either. What actually separates the two is each voice's own TRANSIENT (its
+// own knock, tuned separately at its engine.js call site) and LEVEL, plus a
+// shorter decay here (0.26 vs the odoshi's 0.35) — almost no tail at all. A
 // tree trunk is the most inert thing in the book.
 export const WOOD = { f0: 190, level: 0.09, decay: 0.26, verbMix: 0.3, tail: 1 };
 
@@ -457,6 +469,13 @@ export function noiseSwell(ctx, dest, {
   level = CLOTH.level, dur = CLOTH.dur, freq = CLOTH.freq, q = CLOTH.q,
   attack = CLOTH.attack, seed = CLOTH.seed,
 } = {}) {
+  // CODE REVIEW CAUGHT: exponentialRampToValueAtTime cannot ramp to 0 — the
+  // Web Audio spec requires a non-zero target — and `level * 0.001` below is
+  // exactly 0 whenever `level` is. A caller passing `force: 0` (a computed
+  // touch strength reaching zero is exactly what Task 10's call sites can do)
+  // would otherwise throw and take the touch handler down with it. No force
+  // is silence, cleanly, not a crash.
+  if (level <= 0) return;
   const t0 = ctx.currentTime;
   const n = Math.ceil(ctx.sampleRate * dur);
   const nb = ctx.createBuffer(1, n, ctx.sampleRate);

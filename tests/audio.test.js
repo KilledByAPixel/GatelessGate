@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B,
   gustPhase, STRIKE_SCALE, BELL_PRESETS, bellMacroPartials, applyBellPreset, NAMED_MODE_COUNT, strike,
-  ceramicPartials, woodPartials, CERAMIC, WOOD, CLOTH, BREATH,
+  ceramicPartials, woodPartials, CERAMIC, WOOD, CLOTH, BREATH, WATER,
 } from '../src/audio/synths.js';
 import {
   parseRecipe, emitterCount, createAudio, hushSchedule, masterLevel, shouldPauseForHide, MASTER, DUCKED,
@@ -133,8 +133,18 @@ test('the noise voices are quiet and pitchless, and breath is the quietest thing
   }
   assert.ok(BREATH.level < CLOTH.level * 0.5, 'breath should be well under cloth');
   assert.ok(BREATH.freq < CLOTH.freq, 'breath sits below cloth');
-  // and both stay under the chime, which is the book's reference for "quiet"
-  assert.ok(CLOTH.level < 0.08, `cloth is louder than a wind chime tube: ${CLOTH.level}`);
+  // CODE REVIEW CAUGHT: this used to compare CLOTH.level against CHIME.level
+  // (0.03) with a bound of 0.08 — wrong twice over, since 0.08 does not even
+  // enforce "under the chime" (nearly 3x CHIME.level would still pass), and
+  // the two numbers were never commensurable anyway: CHIME/CERAMIC/WOOD/BELL
+  // all pick up a further downstream multiplier (STRIKE_SCALE, or strikeBar's
+  // own partial-amp split) that noiseSwell's raw `level` never does. WATER is
+  // the one voice built the same way noiseSwell is — strikeDrip ramps its
+  // envelope straight to `gain` (WATER.level's own downstream value), no
+  // scale constant in between — so it is the one genuinely comparable "quiet
+  // one-shot" reference in the palette: cloth must not outdo even a firm tap
+  // on the water (WATER.level's 1.5x "loud" ceiling).
+  assert.ok(CLOTH.level < WATER.level * 1.5, `cloth is louder than a firm tap on the water: ${CLOTH.level}`);
 });
 
 test('parseRecipe', () => {
@@ -733,7 +743,12 @@ test('structurally: the four touch voices route through the hush pair, not strai
     audio.setListener(null);   // no listener -> placed() is null -> every call below takes the unplaced fallback
     audio.unlock();
     const ctx = audio.ctx;
-    const [, , voicesDry] = ctx._gains;
+    // Same creation-order assumption as the sit-bell test above (master,
+    // musicGain, voicesDry, voicesWet) — pinned here too, so a future change
+    // to ensureCtx()'s node order fails this test loudly instead of quietly
+    // shifting which index "voicesDry" actually reads.
+    const [master, , voicesDry] = ctx._gains;
+    assert.equal(master, audio.master, 'gains[0] is not the exposed master — creation order assumption is wrong');
 
     for (const [name, call] of [
       ['ceramic', () => audio.ceramic({})],
