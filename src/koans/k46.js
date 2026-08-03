@@ -53,6 +53,9 @@ function leanShape(u) {
 // rides it, because he is up there and everything up there moves.
 const SWAY_AMP = 0.011;
 const swayShape = (u) => (u >= 0 ? Math.exp(-u * 1.1) * Math.sin(u * 4.6) : 0);
+// the sitter is nested under the swaying mast group, so his local position is
+// not his world position — reused rather than allocated per tap
+const scratchPos = new THREE.Vector3();
 
 export default {
   id: ID,
@@ -209,7 +212,10 @@ export default {
         // the faintest response: he leans toward the ten directions, and stays
         leanAt = now;
         taps++;
-        if (now - lastRing >= 0.5) { lastRing = now; audio && audio.bell({ f0: 88, gain: 0.06 }); }
+        if (now - lastRing >= 0.5) {
+          lastRing = now;
+          audio && audio.bell({ f0: 88, gain: 0.06, at: sitterPivot.getWorldPosition(scratchPos) });
+        }
       } else if (input.raycastFirst(camera, poleMeshes)) {
         swayAt = now;
         poleTaps++;

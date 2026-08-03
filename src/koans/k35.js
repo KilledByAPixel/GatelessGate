@@ -131,7 +131,7 @@ export default {
       // ease the phase toward the nearest meeting (phase 0 or 1 of the cycle)
       const target = Math.round(phase);
       phase += (target - phase) * 0.55;
-      audio && audio.chimeStrike({ tube: 2, force: 0.4 });
+      audio && audio.chimeStrike({ tube: 2, force: 0.4, at: hit.position });
     });
 
     return {

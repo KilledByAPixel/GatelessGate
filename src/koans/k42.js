@@ -137,13 +137,13 @@ export default {
       // her first: a snap aimed at the girl is Manjusri's, and it fails
       if (input.raycastFirst(camera, [girlHit])) {
         snaps++;
-        audio && audio.knock({ force: 0.75 });      // an excellent snap
+        audio && audio.knock({ force: 0.75, at: GIRL });      // an excellent snap
         return;
       }
       if (calledAt > -99) return;                   // he only needs asking once
       if (!input.raycastFirst(camera, [floorHit])) return;
       calledAt = clock;
-      audio && audio.knock({ force: 0.45 });
+      audio && audio.knock({ force: 0.45, at: MOMYO });
     });
 
     return {

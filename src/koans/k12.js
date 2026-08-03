@@ -223,7 +223,7 @@ export default {
       pending = clock + ECHO;
       butterflies.flit();               // a man shouting on a clifftop startles them
       // each line of the daily exercise is pitched a little lower than the last
-      audio && audio.knock({ force: 0.9 - (line - 1) * 0.12 });
+      audio && audio.knock({ force: 0.9 - (line - 1) * 0.12, at: hit.position });
     });
 
     return {
@@ -237,8 +237,11 @@ export default {
         if (pending >= 0 && clock >= pending) {
           pending = -1;
           answers++;
-          // "Yes, sir." — the same voice, from further away
-          audio && audio.knock({ force: 0.30 });
+          // "Yes, sir." — the same voice, from further away. There is no
+          // second position in the scene for the echo to come from — it is
+          // the same shout heard back — so it reuses his own spot rather than
+          // inventing a point out over the gorge.
+          audio && audio.knock({ force: 0.30, at: hit.position });
           if (line >= LINES) line = 0;      // and tomorrow he does it again
         }
 

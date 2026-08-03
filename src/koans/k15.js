@@ -139,7 +139,10 @@ export default {
         world.update(dt, simTime);
         if (startedAt > -99 && struck < BLOWS && clock - startedAt >= struck * BLOW_GAP) {
           struck++;
-          // wood on wood, out of the empty air. The stick has not moved.
+          // wood on wood, out of the empty air. The stick has not moved — the
+          // case's whole point is that these three blows land on NOTHING, so
+          // giving them a position would put a source exactly where the text
+          // insists there isn't one. Left unplaced on purpose.
           audio && audio.knock({ force: 0.85 });
         }
       },

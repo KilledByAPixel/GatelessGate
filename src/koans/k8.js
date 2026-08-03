@@ -125,7 +125,7 @@ export default {
       const whole = wheel.toggle();
       pulls++;
       // wood coming apart, and wood gathering itself back
-      audio && audio.knock({ force: whole ? 0.55 : 0.85 });
+      audio && audio.knock({ force: whole ? 0.55 : 0.85, at: wheel.group.position });
     });
 
     return {

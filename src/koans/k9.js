@@ -191,7 +191,7 @@ export default {
       if (clock - lastToll < 2.0) return;      // it does not hurry for anyone
       lastToll = clock;
       tolls++;
-      audio && audio.bell({ f0: 49 });         // an octave under the bonshō
+      audio && audio.bell({ f0: 49, at: hit.position });         // an octave under the bonshō
     });
 
     return {

@@ -167,7 +167,7 @@ export default {
       if (clock - strokeAt < STROKE) return;      // one refusal at a time
       strokeAt = clock;
       attempts++;
-      audio && audio.chimeStrike({ tube: 2, force: 0.4 });
+      audio && audio.chimeStrike({ tube: 2, force: 0.4, at: scroll.position });
     });
 
     return {

@@ -269,7 +269,7 @@ export default {
         s.sunkAt = clock;
         sunk++;
         // it goes under where you were about to put your weight
-        audio && audio.drip({ loud: true });
+        audio && audio.drip({ loud: true, at: s.pivot.position });
         water.ripple(s.pivot.position.x - 0.4, s.pivot.position.z + 1.6);
         // The red does NOT move yet. It waits until this stone has actually
         // gone under (see update, below): handing it over on the tap lit the
@@ -290,7 +290,7 @@ export default {
       if (!hit) return;
       const local = water.group.worldToLocal(hit.point.clone());
       water.ripple(local.x, local.z);
-      audio && audio.drip({ loud: false });
+      audio && audio.drip({ loud: false, at: hit.point });
     });
 
     return {
@@ -315,7 +315,7 @@ export default {
           for (const s of stones) {
             water.ripple(s.pivot.position.x - 0.4, s.pivot.position.z + 1.6);
           }
-          audio && audio.drip({ loud: true });
+          audio && audio.drip({ loud: true, at: water.group.position });
         }
 
         for (const s of stones) {

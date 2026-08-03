@@ -144,7 +144,7 @@ export default {
         if (!bowed && u >= 1) {
           bowed = true;
           // the one sound in the case, and it arrives only if you let it
-          audio && audio.chimeStrike({ tube: 0, force: 0.5 });
+          audio && audio.chimeStrike({ tube: 0, force: 0.5, at: philosopher.position });
         }
       },
       fragment() {

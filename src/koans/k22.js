@@ -123,7 +123,7 @@ export default {
       if (!input.raycastFirst(camera, [flag.mesh])) return;
       const on = flag.toggleWind();
       stills++;
-      audio && audio.chimeStrike({ tube: on ? 3 : 0, force: 0.5 });
+      audio && audio.chimeStrike({ tube: on ? 3 : 0, force: 0.5, at: flag.group.position });
     });
 
     return {

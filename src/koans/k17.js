@@ -154,7 +154,7 @@ export default {
       if (pending >= 0) return;                     // one call at a time
       calls++;
       pending = clock + ANSWER_DELAY;
-      audio && audio.knock({ force: 0.8 });         // "Oshin."
+      audio && audio.knock({ force: 0.8, at: CHU_POS });         // "Oshin."
     });
 
     return {
@@ -169,7 +169,7 @@ export default {
         if (pending >= 0 && clock >= pending) {
           pending = -1;
           answered++;
-          audio && audio.knock({ force: 0.35 });    // "Yes."
+          audio && audio.knock({ force: 0.35, at: OSHIN_POS });    // "Yes."
           if (answered >= 3) bowAt = clock;
         }
 

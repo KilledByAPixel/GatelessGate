@@ -161,7 +161,7 @@ export default {
       askedAt = clock;
       asked++;
       // the same four words, at the same volume, for everybody
-      audio && audio.knock({ force: 0.5 });
+      audio && audio.knock({ force: 0.5, at: WOMAN });
     });
 
     return {

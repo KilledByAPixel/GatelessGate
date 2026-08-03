@@ -7,6 +7,10 @@ import {
 } from '../kit/index.js';
 
 const ID = 43;
+// the staff's hit box is nested under the raised arm, itself under Shuzan —
+// its local position is not its world position — one scratch vector, reused
+// per tap rather than allocated
+const scratchPos = new THREE.Vector3();
 
 // Shuzan holds the short staff out and shuts both doors at once: name it and
 // you deny what it is, refuse to name it and you deny what it is. So the staff
@@ -139,7 +143,7 @@ export default {
       shakes.push(clock);
       if (shakes.length > 4) shakes.shift();
       taps++;
-      audio && audio.knock({ force: 0.5 });
+      audio && audio.knock({ force: 0.5, at: hold.getWorldPosition(scratchPos) });
     });
 
     return {

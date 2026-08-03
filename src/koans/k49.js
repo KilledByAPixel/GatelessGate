@@ -147,7 +147,7 @@ export default {
     input.onTap(() => {
       if (!camera) return;
       if (input.raycastFirst(camera, [gateHit])) {
-        if (clock - lastRing > 0.5) { lastRing = clock; rings++; audio && audio.bell({ f0: 210, gain: 0.5 }); }
+        if (clock - lastRing > 0.5) { lastRing = clock; rings++; audio && audio.bell({ f0: 210, gain: 0.5, at: gate.position }); }
         return;
       }
       if (surface) {
@@ -155,7 +155,7 @@ export default {
         if (hit) {
           const local = water.group.worldToLocal(hit.point.clone());
           water.ripple(local.x, local.z);
-          audio && audio.drip({ loud: true });
+          audio && audio.drip({ loud: true, at: hit.point });
           rippled++;
         }
       }

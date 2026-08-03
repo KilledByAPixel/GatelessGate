@@ -227,8 +227,8 @@ export default {
       changedAt = clock;
       blows++;
       // out is a breath; lit again is the smallest bell in the set
-      if (lit) audio && audio.chimeStrike({ tube: 4, force: 0.5 });
-      else audio && audio.knock({ force: 0.22 });
+      if (lit) audio && audio.chimeStrike({ tube: 4, force: 0.5, at: flame.position });
+      else audio && audio.knock({ force: 0.22, at: flame.position });
     });
 
     return {

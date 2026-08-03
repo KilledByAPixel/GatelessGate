@@ -142,7 +142,7 @@ export default {
         c.tippedAt = clock;
         tipped++;
         // ceramic, and lighter than you expected
-        audio && audio.knock({ force: 0.28 });
+        audio && audio.knock({ force: 0.28, at: c.pivot.position });
         if (tipped === cups.length) allDownAt = clock;
         return;
       }

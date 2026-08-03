@@ -280,7 +280,10 @@ export default {
       f.since = now;
       // the master's note is low, the boy's a fifth above it: the same gesture,
       // twice, in two voices
-      audio && audio.bell({ f0: f === master ? 62 : 93, gain: f === master ? 0.14 : 0.11 });
+      audio && audio.bell({
+        f0: f === master ? 62 : 93, gain: f === master ? 0.14 : 0.11,
+        at: f.monk.position,
+      });
     };
 
     input.onTap(() => {

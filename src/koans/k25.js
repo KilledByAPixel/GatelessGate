@@ -24,6 +24,9 @@ const ID = 25;
 // you assert something inside a dream.
 
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+// the gavel hangs off the dream's own rocking group (`hall`), so its local
+// position is not its world position — reused rather than allocated per tap
+const scratchPos = new THREE.Vector3();
 
 export default {
   id: ID,
@@ -205,7 +208,7 @@ export default {
       if (!input.raycastFirst(camera, [hit])) return;
       struckAt = clock;
       strikes++;
-      audio && audio.knock({ force: 0.7 });
+      audio && audio.knock({ force: 0.7, at: gavel.getWorldPosition(scratchPos) });
     });
 
     return {

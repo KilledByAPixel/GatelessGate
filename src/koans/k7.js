@@ -75,8 +75,8 @@ export default {
     // yard's clock; a tap tips it early.
     const odoshi = makeOdoshi({
       seed: 7,
-      onPour: () => audio && audio.pour(),
-      onKnock: (force) => audio && audio.knock({ force }),
+      onPour: () => audio && audio.pour({ at: odoshi.group.position }),
+      onKnock: (force) => audio && audio.knock({ force, at: odoshi.group.position }),
     });
     odoshi.group.position.set(3.75, 0, 0.15);
     odoshi.group.rotation.y = -2.70;
@@ -132,13 +132,13 @@ export default {
       if (onWater) {
         const local = water.group.worldToLocal(onWater.point.clone());
         water.ripple(local.x, local.z);
-        audio && audio.drip({ loud: true });   // the touch you see is the drop you hear
+        audio && audio.drip({ loud: true, at: onWater.point });   // the touch you see is the drop you hear
         rippled++;
         return;
       }
       if (input.raycastFirst(camera, bowlMeshes)) {
         water.ripple(0, 0);
-        audio && audio.drip({ loud: true });
+        audio && audio.drip({ loud: true, at: bowl.position });
         rippled++;
       }
     });

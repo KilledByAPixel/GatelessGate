@@ -158,7 +158,7 @@ export default {
       if (!hit) return;
       const local = water.group.worldToLocal(hit.point.clone());
       water.ripple(local.x, local.z);
-      audio && audio.drip({ loud: true });
+      audio && audio.drip({ loud: true, at: hit.point });
       rippled++;
     });
 

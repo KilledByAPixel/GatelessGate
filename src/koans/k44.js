@@ -107,7 +107,7 @@ export default {
       const given = rack.toggle();
       swaps++;
       // wood set down, or wood lifted away
-      audio && audio.knock({ force: given ? 0.6 : 0.35 });
+      audio && audio.knock({ force: given ? 0.6 : 0.35, at: rack.group.position });
     });
 
     return {

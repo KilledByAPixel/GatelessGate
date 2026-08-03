@@ -148,7 +148,7 @@ export default {
 
         while (song.length && clock >= song[0]) {
           song.shift();
-          audio && audio.chimeStrike({ tube: song.length, force: 0.5 });
+          audio && audio.chimeStrike({ tube: song.length, force: 0.5, at: fuketsu.position });
         }
       },
       fragment() {

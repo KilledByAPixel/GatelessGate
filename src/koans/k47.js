@@ -243,7 +243,7 @@ export default {
       if (clock - lastRing[i] < 0.5) return;
       lastRing[i] = clock;
       taps[i]++;
-      audio && audio.bell({ f0: 62 + 18 * i });
+      audio && audio.bell({ f0: 62 + 18 * i, at: gates[i].gate.position });
     });
 
     return {

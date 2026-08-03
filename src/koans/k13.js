@@ -123,7 +123,7 @@ export default {
       if (input.raycastFirst(camera, drum.pickTargets())) {
         drum.strike();
         beats++;
-        audio && audio.knock({ force: 1 });     // the dinner drum, beaten at last
+        audio && audio.knock({ force: 1, at: drum.group.position });     // the dinner drum, beaten at last
         return;
       }
       if (input.raycastFirst(camera, bell.pickTargets())) {
@@ -131,7 +131,7 @@ export default {
         lastRing = clock;
         bell.strike();
         rings++;
-        audio && audio.bell({ f0: 104 });
+        audio && audio.bell({ f0: 104, at: bell.group.position });
       }
     });
 

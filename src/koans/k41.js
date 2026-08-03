@@ -215,7 +215,7 @@ export default {
       graspAt = clock;
       grasps++;
       // barely a sound: what you reached for was never loud enough to have one
-      audio && audio.chimeStrike({ tube: 4, force: 0.22 });
+      audio && audio.chimeStrike({ tube: 4, force: 0.22, at: hit.point });
     });
 
     return {

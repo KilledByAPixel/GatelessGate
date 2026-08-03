@@ -134,7 +134,7 @@ export default {
       lastAt = clock;
       birds.scatter();
       disturbed++;
-      audio && audio.chimeStrike({ tube: 4, force: 0.45 });
+      audio && audio.chimeStrike({ tube: 4, force: 0.45, at: hit.position });
     });
 
     return {

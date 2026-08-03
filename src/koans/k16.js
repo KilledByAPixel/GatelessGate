@@ -166,7 +166,7 @@ export default {
       bell.strike();
       strikes++;
       turning = true;
-      audio && audio.bell({ f0: 98 });
+      audio && audio.bell({ f0: 98, at: bell.group.position });
     });
 
     return {

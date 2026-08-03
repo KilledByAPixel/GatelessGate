@@ -129,7 +129,7 @@ export default {
       // pumping it one way
       scale.disturb(nudges % 2 ? -1 : 1);
       nudges++;
-      audio && audio.knock({ force: 0.4 });
+      audio && audio.knock({ force: 0.4, at: scale.group.position });
     });
 
     return {
