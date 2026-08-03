@@ -204,6 +204,32 @@ test('every staged interaction reaches the audio engine', async () => {
   assert.deepEqual(silent, [], `these cases answer a touch with nothing: ${silent}`);
 });
 
+test('the two cases silent by editorial choice make no sound at all', async () => {
+  // SILENT_BY_HISTORY only SUPPRESSES a failure in the test above — it never
+  // asserts anything of its own, so a case could sit on that list without
+  // actually staying silent and nothing would catch it. Cases 5 and 14 are
+  // the book's two hardest pages, handled through ink metaphor rather than a
+  // sound effect; this proves the silence rather than merely excusing it.
+  for (const id of SILENT_BY_HISTORY) {
+    const entry = staged.find((e) => e.id === id);
+    assert.ok(entry, `case ${id} is not staged`);
+    const mod = await loadKoan(entry.slug);
+    const audio = STUB_AUDIO();
+    const ctx = fakeCtx(audio);
+    const root = mod.build(ctx);
+    root.setCamera(rigCamera(mod));
+    root.update(1 / 60, 0);
+    ctx.input.raycastFirst = (cam, objs) => (objs && objs.length
+      ? { object: objs[0], point: new THREE.Vector3(), distance: 1 } : null);
+    for (let n = 0; n < 3; n++) {
+      ctx._taps.forEach((cb) => cb());
+      for (let i = 0; i < 60; i++) root.update(1 / 60, n + i / 60);
+    }
+    assert.deepEqual(audio.calls, [],
+      `case ${id} is on SILENT_BY_HISTORY but made a sound: ${JSON.stringify(audio.calls)}`);
+  }
+});
+
 test('every placed sound carries a position an AudioParam can take', async () => {
   // A NaN reaching an AudioParam throws and kills the whole graph. The engine
   // guards it, but a case that computes a bad position is still a bug — and
