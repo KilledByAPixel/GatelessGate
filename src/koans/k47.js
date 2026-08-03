@@ -206,7 +206,10 @@ export default {
 
     // a furin under the first barrier's lintel — the near gate is the one you
     // stand before, so it is the one that carries a voice in the wind
-    const furin = makeFurin({ seed: 47, onStrike: (tube, force) => audio && audio.chimeStrike({ tube, force }) });
+    const furin = makeFurin({
+      seed: 47,
+      onStrike: (tube, force, pos) => audio && audio.chimeStrike({ tube, force, at: pos }),
+    });
     furin.group.position.set(1.2, GATES[0].height, 0);
     gates[0].gate.add(furin.group);
 
@@ -232,7 +235,7 @@ export default {
       // slab, and a tap aimed at a wind chime must never answer with the
       // gate's bell. Same probe order as k29.
       const chimeHit = input.raycastFirst(camera, furin.pickTargets());
-      if (chimeHit) { furin.ring(); return; }
+      if (chimeHit) { furin.ring(0.75, chimeHit.object.userData.tube); return; }
       const hit = input.raycastFirst(camera, hitSlabs);
       if (!hit) return;
       const i = slabGate.get(hit.object);

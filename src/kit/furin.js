@@ -49,6 +49,10 @@ const SWING_MAX = 0.30;    // mashing taps still stays a wind chime
 
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
+// scratch for reporting a struck tube's world position — shared across all
+// furin instances and every fire(), so a strike costs no allocation
+const WORLD = new THREE.Vector3();
+
 export function makeFurin({
   size = 0.17, tubes = 5, seed = 5, phase = null, couple = 0, onStrike = null,
   cord = 0.62,             // the hanging string, in units of size; 0 for none
@@ -86,34 +90,58 @@ export function makeFurin({
   body.position.y = -CORD;
   swing.add(body);
 
-  // the cap the tubes hang from — a shade deeper and more sharply tapered
-  // than the first pass (0.1S, barely tapered), so it reads as a small roof
-  // over the ring rather than a washer the tubes happen to hang from
-  const CAP_H = 0.14 * S;
-  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.46 * S, 0.58 * S, CAP_H, 8), wood);
-  cap.name = 'cap';
-  cap.position.y = -CAP_H / 2;                // top face stays AT the hang point
-  body.add(cap);
-
   // tubes in a ring; the longer the tube the deeper the note — index 0 is the
   // longest, matching the engine's degree mapping. Thickened from the first
   // pass (0.055S — a wire at this length-to-radius ratio) so they read as the
   // metal pipes a real furin hangs, not threads.
   const state = [];
+  const sleeves = [];
+  const single = tubes === 1;
   for (let i = 0; i < tubes; i++) {
     const angle = (i / tubes) * Math.PI * 2;
     const len = S * (1.7 - 0.14 * i);
+    // A lone tube hangs on the axis. A ring of one is not a ring — it is a
+    // tube mysteriously offset from the cord holding it up.
+    const rx = single ? 0 : Math.cos(angle) * 0.33 * S;
+    const rz = single ? 0 : Math.sin(angle) * 0.33 * S;
     const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.075 * S, 0.075 * S, len, 6), metal);
     tube.name = 'tube';
-    tube.position.set(Math.cos(angle) * 0.33 * S, -(0.18 * S + len / 2), Math.sin(angle) * 0.33 * S);
+    tube.position.set(rx, -(0.18 * S + len / 2), rz);
     body.add(tube);
+
+    // A tube is a wire at this scale — far too thin to hit on a phone. Each
+    // gets a forgiving invisible sleeve, and the sleeve is what says which
+    // tube it is: one tap, one tube, one tone.
+    const sleeve = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.20 * S, 0.20 * S, len * 1.05, 6),
+      new THREE.MeshBasicMaterial({ visible: false }));
+    sleeve.name = 'tube-hit';
+    sleeve.userData.noOutline = true;
+    sleeve.userData.tube = i;
+    sleeve.position.copy(tube.position);
+    body.add(sleeve);
+    sleeves.push(sleeve);
+
     state.push({
       r1: 0.61 + 0.083 * i, r2: 0.44 + 0.037 * i,       // the tube's excitation
       l1: 0.021 + 0.006 * i, l2: 0.034 + 0.004 * i,     // its slow local eddy
       p1: i * 2.17, p2: i * 3.71,
       last: -Infinity, prev: 0,
+      mesh: tube,
     });
   }
+
+  // the cap the tubes hang from — a shade deeper and more sharply tapered
+  // than the first pass (0.1S, barely tapered), so it reads as a small roof
+  // over the ring rather than a washer the tubes happen to hang from. Over a
+  // single tube it shrinks to read as the knot the cord ties to, not a roof
+  // over a ring that does not exist.
+  const CAP_H = single ? 0.08 * S : 0.14 * S;
+  const capR = single ? 0.16 * S : 0.46 * S;
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(capR, capR * 1.26, CAP_H, 8), wood);
+  cap.name = 'cap';
+  cap.position.y = -CAP_H / 2;                // top face stays AT the hang point
+  body.add(cap);
 
   // the clapper among the tubes, and the paper tag that catches the wind
   const clapper = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * S, 0.16 * S, 0.03 * S, 8), wood);
@@ -127,6 +155,7 @@ export function makeFurin({
   const tag = new THREE.Mesh(tagGeo, toonMaterial({ color: PAPER, side: THREE.DoubleSide }));
   tag.name = 'tag';
   tag.userData.noOutline = true;      // an open surface; the inverted hull doesn't suit it
+  tag.userData.tube = null;           // the whole chime, not any one tube
   tag.position.y = -0.95 * S;
   body.add(clapper, tag);
 
@@ -137,6 +166,7 @@ export function makeFurin({
     new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'furin-hit';
   hit.userData.noOutline = true;
+  hit.userData.tube = null;           // the whole chime, not any one tube
   hit.position.y = -1.05 * S;
   body.add(hit);
 
@@ -152,7 +182,12 @@ export function makeFurin({
   function fire(i, force) {
     strikes++;
     lastForce = force;
-    if (onStrike) onStrike(i, force);
+    if (onStrike) {
+      // REUSED vector — the engine reads x/y/z synchronously. A caller that
+      // wants to keep it must clone it.
+      state[i].mesh.getWorldPosition(WORLD);
+      onStrike(i, force, WORLD);
+    }
   }
 
   // one impulse's own contribution to the pose right now — shared by the
@@ -210,7 +245,9 @@ export function makeFurin({
 
   return {
     group: g,
-    pickTargets() { return [hit, tag]; },
+    // tubes first, so a tap that lands on both a tube and the forgiving drum
+    // resolves to the tube — the more specific target wins
+    pickTargets() { return [...sleeves, hit, tag]; },
 
     update(dt, simTime) {
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
@@ -245,14 +282,15 @@ export function makeFurin({
       }
     },
 
-    // a tap knocks the clapper through two adjacent tubes, whatever the
-    // weather, and sets it swinging — which tubes depends deterministically
-    // on when you tap
-    ring(force = 0.75) {
+    // A tap sets it swinging and rings ONE tube. Naming a tube is how a case
+    // says which one was touched (read hit.object.userData.tube); a null tube
+    // is the whole chime grabbed at once, and picks deterministically by when.
+    ring(force = 0.75, tube = null) {
       pushKnock(force);
-      const k = Math.abs(Math.floor(clock * 3)) % state.length;
+      const k = Number.isInteger(tube)
+        ? ((tube % state.length) + state.length) % state.length
+        : Math.abs(Math.floor(clock * 3)) % state.length;
       fire(k, force);
-      fire((k + 1) % state.length, force * 0.7);
     },
     // the pointer passing over: a nudge, not a knock — the same impulse at a
     // fraction of the force, and no strike

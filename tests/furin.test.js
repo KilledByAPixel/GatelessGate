@@ -95,15 +95,76 @@ test('hang point: every mesh hangs below the origin', () => {
   assert.ok(top <= 0.001, `geometry pokes above the hang point: ${top}`);
 });
 
-test('a tap knocks the clapper through two tubes, whatever the weather', () => {
+test('a tap rings ONE tube, not a burst across the whole ring', () => {
+  // THE BUG, pinned. ring() used to fire tube k AND k+1 on every tap: Frank
+  // — "just hitting, like, one of them, hitting this one thing causes a
+  // whole bunch of sounds." One tap now rings exactly one tube.
   const hits = [];
   const f = makeFurin({ seed: 1, onStrike: (i, force) => hits.push([i, force]) });
   f.setWindLevel(0);
   f.ring();
-  assert.equal(hits.length, 2);
-  assert.notEqual(hits[0][0], hits[1][0], 'both knocks hit the same tube');
-  assert.ok(hits[1][1] < hits[0][1], 'the second knock should be the softer one');
+  assert.equal(hits.length, 1, `one tap rang ${hits.length} tubes`);
   assert.ok(f.pickTargets().length > 0);
+});
+
+test('a tap rings ONE tube — the one you touched', () => {
+  // Frank: "just hitting, like, one of them, hitting this one thing causes a
+  // whole bunch of sounds." ring() fired tube k AND k+1, and the only pick
+  // target was a drum around the whole ring, so there was no way to touch a
+  // single tube even if it had wanted to.
+  const hits = [];
+  const f = makeFurin({ seed: 4, phase: 0, onStrike: (i, force) => hits.push({ i, force }) });
+  f.setWindLevel(0);
+  run(f, 1);
+  f.ring(0.8, 3);
+  assert.equal(hits.length, 1, `one tap rang ${hits.length} tubes`);
+  assert.equal(hits[0].i, 3, 'it rang a tube other than the one named');
+});
+
+test('every tube is its own pick target, in index order', () => {
+  const f = makeFurin({ seed: 4, tubes: 5, onStrike: () => {} });
+  const targets = f.pickTargets();
+  const tubes = targets.filter((o) => Number.isInteger(o.userData.tube));
+  assert.equal(tubes.length, 5, 'not one target per tube');
+  assert.deepEqual(tubes.map((o) => o.userData.tube), [0, 1, 2, 3, 4], 'out of index order');
+  // the forgiving whole-chime targets are still there and still say "no tube"
+  const whole = targets.filter((o) => o.userData.tube === null);
+  assert.equal(whole.length, 2, 'the drum and the tanzaku should still be pickable');
+});
+
+test('a strike reports where the struck tube is, so it can be placed in space', () => {
+  const seen = [];
+  const f = makeFurin({ seed: 4, phase: 0, onStrike: (i, force, pos) => seen.push({ i, x: pos.x, y: pos.y, z: pos.z }) });
+  f.group.position.set(10, 3, -4);
+  f.group.updateMatrixWorld(true);
+  f.setWindLevel(0);
+  run(f, 1);
+  f.ring(0.8, 0);
+  f.ring(0.8, 2);
+  assert.equal(seen.length, 2);
+  for (const s of seen) {
+    assert.ok(Number.isFinite(s.x) && Number.isFinite(s.y) && Number.isFinite(s.z));
+    // the chime hangs at x=10, and every tube is within its own small radius
+    assert.ok(Math.abs(s.x - 10) < 1, `tube ${s.i} is nowhere near the chime: x=${s.x}`);
+    assert.ok(s.y < 3, 'tubes hang BELOW the hang point');
+  }
+  assert.notEqual(seen[0].x === seen[1].x && seen[0].z === seen[1].z, true,
+    'two different tubes report the same position');
+});
+
+test('a single-tube chime is one tube on a cord, with no ring', () => {
+  const one = makeFurin({ tubes: 1, seed: 8, onStrike: () => {} });
+  const tubes = [];
+  one.group.traverse((o) => { if (o.name === 'tube') tubes.push(o); });
+  assert.equal(tubes.length, 1);
+  // on the axis, not offset onto a ring that isn't there
+  assert.ok(Math.abs(tubes[0].position.x) < 1e-9 && Math.abs(tubes[0].position.z) < 1e-9,
+    'the lone tube is still placed on a ring');
+  assert.equal(one.pickTargets().filter((o) => Number.isInteger(o.userData.tube)).length, 1);
+  // and it still swings and rings like any other
+  one.setWindLevel(0);
+  one.ring(1, 0);
+  assert.ok(one.swingAmp() > 0);
 });
 
 test('a knocked chime SWINGS — it crosses centre, it does not just lean back', () => {

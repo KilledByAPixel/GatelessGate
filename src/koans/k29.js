@@ -108,7 +108,10 @@ export default {
 
     // a wind chime under the lintel. Strikes are paced by the chime's own
     // weather; the wind still gates it, so stilling the flag stills the chime.
-    const furin = makeFurin({ seed: 29, onStrike: (tube, force) => audio && audio.chimeStrike({ tube, force }) });
+    const furin = makeFurin({
+      seed: 29,
+      onStrike: (tube, force, pos) => audio && audio.chimeStrike({ tube, force, at: pos }),
+    });
     furin.group.position.set(1.2, 2.6, 0);
     gate.add(furin.group);
 
@@ -129,7 +132,7 @@ export default {
     input.onTap(() => {
       if (!camera) return;
       const chimeHit = input.raycastFirst(camera, furin.pickTargets());
-      if (chimeHit) { furin.ring(); return; }
+      if (chimeHit) { furin.ring(0.75, chimeHit.object.userData.tube); return; }
       const hit = input.raycastFirst(camera, [flag.mesh]);
       if (hit) {
         const on = flag.toggleWind();
