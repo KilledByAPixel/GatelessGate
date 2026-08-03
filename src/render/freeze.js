@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { INK } from '../palette.js';
-import { INK_NOISE_GLSL, INK_DOMAIN_GLSL } from './inknoise.js';
+import { INK_NOISE_GLSL, INK_DOMAIN_GLSL, nextInkSeed } from './inknoise.js';
 
 // Hold the last frame of the outgoing scene on screen, swap the world behind it,
 // then fade the still away to reveal the new one.
@@ -48,11 +48,12 @@ uniform sampler2D tFrozen;
 uniform float uProgress;   // 0 held whole, 1 fully torn away
 uniform float uAspect;
 uniform vec3 uInk;
+uniform vec2 uSeed;
 varying vec2 vUv;
 ${INK_NOISE_GLSL}
 ${INK_DOMAIN_GLSL}
 void main() {
-  float n = inkFbm(inkDomain(vUv, uAspect));
+  float n = inkFbm(inkDomain(vUv, uAspect, uSeed));
   // the threshold runs past 1 so the last stubborn blotches clear completely
   float th = uProgress * 1.25 - 0.1;
   if (n < th) discard;                       // torn away — the new scene is behind
@@ -85,6 +86,7 @@ export function makeFreeze(renderer, post, width, height) {
       uProgress: { value: 0 },
       uAspect: { value: 1 },
       uInk: { value: new THREE.Color(INK) },
+      uSeed: { value: new THREE.Vector2(...nextInkSeed()) },
     },
     // no blending: the shader discards rather than fading, so a pixel is only
     // ever one scene or the other
@@ -151,6 +153,14 @@ export function makeFreeze(renderer, post, width, height) {
       const t = target; target = scratch; scratch = t;
       material.uniforms.tFrozen.value = target.texture;
       if (anim) { anim.res(); anim = null; }
+      // A NEW STAIN FOR THE NEW TEAR. Here and not a line earlier: step 2 above
+      // re-renders the tear exactly as far as it had got, and it has to do that
+      // with the seed it was drawn with or the baked composite would tear along
+      // a different edge than the one on screen. By this point that frame is
+      // pixels in a texture, progress goes back to 0, and the still covers
+      // everything — so the next tear can come apart anywhere it likes. THIS is
+      // the one the reader sees when they page quickly.
+      material.uniforms.uSeed.value.set(...nextInkSeed());
       material.uniforms.uProgress.value = 0;
       held = true;
       return true;
