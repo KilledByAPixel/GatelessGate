@@ -1,6 +1,6 @@
 import {
   makeWind, strikeBell, strikeBar, CHIME, strikeDrip, makeWaterBed, WATER,
-  strike, bambooPartials, ODOSHI, pourBurst, strikeSitBell, SIT_BELL,
+  strike, bambooPartials, ODOSHI, pourBurst, strikeSitBell, SIT_BELL, STRIKE_SCALE,
 } from './synths.js';
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
@@ -273,10 +273,12 @@ export function createAudio(save) {
       bus.connect(dryG); dryG.connect(master);
       const sendG = ctx.createGain(); sendG.gain.value = ODOSHI.verbMix * 1.1;
       bus.connect(sendG); sendG.connect(verb.in);
-      // strike()'s internal 0.11 scaling is bell-sized; a knock is a THUMP
+      // a knock is a THUMP, not a bell: it wants its own level scale rather
+      // than the bell-sized default undone by a factor at the call site
       strike(ctx, bus, {
         partials: bambooPartials(),
-        gain: ODOSHI.level * force * 9,
+        gain: ODOSHI.level * force,
+        scale: STRIKE_SCALE * 9,
         transient: { dur: 0.018, freq: 1100, q: 1.4, amp: 0.5 },
       });
     },

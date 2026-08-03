@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { windParams, bellPartials, barPartials, GUST_A, GUST_B, gustPhase } from '../src/audio/synths.js';
+import { windParams, bellPartials, barPartials, GUST_A, GUST_B, gustPhase, STRIKE_SCALE } from '../src/audio/synths.js';
 import { parseRecipe, emitterCount, createAudio } from '../src/audio/engine.js';
 import { hz, SCALES } from '../src/audio/tuning.js';
 
@@ -23,6 +23,15 @@ test('bellPartials are inharmonic and decaying', () => {
   // not a pure harmonic stack (some ratio is non-integer)
   const ratios = p.map((x) => x.freq / 62);
   assert.ok(ratios.some((r) => Math.abs(r - Math.round(r)) > 0.05));
+});
+
+test('the strike level scale is a named constant, not a magic number', () => {
+  // strike() used to hard-code 0.11 as the peak scaling for every partial,
+  // which is bell-sized. The odoshi's knock had to multiply its gain by 9 at
+  // the call site to undo it. With four more voices arriving, each would have
+  // fought the same number — so it is a parameter now.
+  assert.equal(typeof STRIKE_SCALE, 'number');
+  assert.ok(STRIKE_SCALE > 0 && STRIKE_SCALE < 1);
 });
 
 test('parseRecipe', () => {

@@ -247,11 +247,18 @@ export function makeWind(ctx, dest) {
   };
 }
 
+// The peak level one partial reaches, per unit amplitude. Bell-sized, because
+// the bell is what strike() was written for — every other voice scales relative
+// to it. A parameter rather than a literal so a voice with a different natural
+// loudness (a knock is a THUMP, a breath is barely there) says so in its own
+// table instead of undoing this number at its call site.
+export const STRIKE_SCALE = 0.11;
+
 // One struck resonator for the whole palette. Wood, glass, bronze, bamboo and
 // stone are this same function with a different partial table, decay and
 // transient — which is why generalizing it while there were two callers was
 // cheaper than doing it at six.
-export function strike(ctx, dest, { partials, gain = 1, transient = {} } = {}) {
+export function strike(ctx, dest, { partials, gain = 1, transient = {}, scale = STRIKE_SCALE } = {}) {
   const t = ctx.currentTime;
   const out = ctx.createGain();
   out.gain.value = gain;
@@ -262,7 +269,7 @@ export function strike(ctx, dest, { partials, gain = 1, transient = {} } = {}) {
       osc.type = 'sine';
       osc.frequency.value = p.freq + det;
       const g = ctx.createGain();
-      const peak = (p.amp * 0.11) / 2;
+      const peak = (p.amp * scale) / 2;
       g.gain.setValueAtTime(0, t);
       g.gain.linearRampToValueAtTime(peak, t + 0.015);
       g.gain.exponentialRampToValueAtTime(peak * 0.001, t + p.decay);
