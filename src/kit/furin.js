@@ -32,7 +32,22 @@ export function chimeActivity(t) {
 
 const DENSITY = 0.85;      // Garden preset
 const REFRACTORY = 0.45;   // a tube cannot restrike faster than this
-const NUDGE_TAU = 0.5;
+
+// THE SWING. A furin is a light thing dragging a paper tag through the air, so
+// it swings fast and settles fast — the bonshō in kit/bell.js is the same model
+// at period 1.9s and tau 1.35s, because it is a tonne of bronze.
+//
+// This replaced an exponential nudge with no oscillating term, which leaned the
+// chime toward a tap and eased it back without ever crossing centre. Each tap
+// is superposed as its own decaying impulse starting from zero, so a second tap
+// while it is still moving adds energy without any snap in the pose.
+const SWING_PERIOD = 0.85;
+const SWING_TAU = 1.8;
+const SWING_OMEGA = (2 * Math.PI) / SWING_PERIOD;
+const SWING_A0 = 0.13;     // radians at full force
+const SWING_MAX = 0.30;    // mashing taps still stays a wind chime
+
+const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
 export function makeFurin({
   size = 0.17, tubes = 5, seed = 5, phase = null, couple = 0, onStrike = null,
@@ -132,12 +147,30 @@ export function makeFurin({
   let windLevel = 1;
   let strikes = 0;
   let lastForce = 0;
-  let nudgeAt = -Infinity;
+  const knocked = [];        // { t0, force } of taps still moving it
 
   function fire(i, force) {
     strikes++;
     lastForce = force;
     if (onStrike) onStrike(i, force);
+  }
+
+  // where the tap's swing has the chime right now, on top of the wind's lean
+  function swingPose() {
+    let a = 0;
+    for (const k of knocked) {
+      const t = clock - k.t0;
+      if (t < 0) continue;
+      a += k.force * SWING_A0 * Math.exp(-t / SWING_TAU) * Math.sin(SWING_OMEGA * t);
+    }
+    return clamp(a, -SWING_MAX, SWING_MAX);
+  }
+
+  // total energy still in the swing: 0 at rest, ~SWING_A0 just after one tap
+  function swingAmp() {
+    let e = 0;
+    for (const k of knocked) if (clock >= k.t0) e += k.force * SWING_A0 * Math.exp(-(clock - k.t0) / SWING_TAU);
+    return e;
   }
 
   return {
@@ -149,12 +182,13 @@ export function makeFurin({
       const tt = clock + off;
       const v = gustPhase(tt);
 
-      // sway follows the REAL gust — the visible cause stays honest
-      // (before the first nudge this is exp(-Infinity) === 0, so it costs nothing)
-      const nudge = Math.exp(-(clock - nudgeAt) / NUDGE_TAU) * 0.035;
-      swing.rotation.z = v * 0.16 * windLevel + nudge;
+      // sway follows the REAL gust — the visible cause stays honest — and the
+      // tap's swing superposes on top of it as a separate, oscillating term
+      while (knocked.length && clock - knocked[0].t0 > 6 * SWING_TAU) knocked.shift();
+      const tapped = swingPose();
+      swing.rotation.z = v * 0.16 * windLevel + tapped;
       swing.rotation.x = gustPhase(clock * 0.7 + off + 11) * 0.09 * windLevel;
-      tag.rotation.y = v * 0.25 * windLevel;
+      tag.rotation.y = v * 0.25 * windLevel + tapped * 0.6;
 
       // strikes follow the chime's own weather, gated by the wind existing
       const act = chimeActivity(tt);
@@ -177,19 +211,27 @@ export function makeFurin({
     },
 
     // a tap knocks the clapper through two adjacent tubes, whatever the
-    // weather — which tubes depends deterministically on when you tap
+    // weather, and sets it swinging — which tubes depends deterministically
+    // on when you tap
     ring(force = 0.75) {
-      nudgeAt = clock;
+      knocked.push({ t0: clock, force });
+      if (knocked.length > 8) knocked.shift();
       const k = Math.abs(Math.floor(clock * 3)) % state.length;
       fire(k, force);
       fire((k + 1) % state.length, force * 0.7);
     },
-    hoverAt() { nudgeAt = clock; },
+    // the pointer passing over: a nudge, not a knock — the same impulse at a
+    // fraction of the force, and no strike
+    hoverAt() {
+      knocked.push({ t0: clock, force: 0.18 });
+      if (knocked.length > 8) knocked.shift();
+    },
 
     setWindLevel(v) { windLevel = Math.max(0, v); },
     windLevel() { return windLevel; },
     strikes() { return strikes; },
     lastForce() { return lastForce; },
+    swingAmp() { return swingAmp(); },
     activity() { return chimeActivity(clock + off); },
   };
 }
