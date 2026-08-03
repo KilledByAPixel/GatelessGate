@@ -219,6 +219,10 @@ test('the two cases silent by editorial choice make no sound at all', async () =
     const root = mod.build(ctx);
     root.setCamera(rigCamera(mod));
     root.update(1 / 60, 0);
+    // Without this, a case that lost its tap registration entirely would
+    // still pass — zero calls either way — and prove nothing about the
+    // editorial silence this test exists to check.
+    assert.ok(ctx._taps.length > 0, `case ${id} registered no tap at all`);
     ctx.input.raycastFirst = (cam, objs) => (objs && objs.length
       ? { object: objs[0], point: new THREE.Vector3(), distance: 1 } : null);
     for (let n = 0; n < 3; n++) {
