@@ -9,7 +9,7 @@ import {
   parseRecipe, emitterCount, createAudio, hushSchedule, masterLevel, shouldPauseForHide, MASTER, DUCKED,
 } from '../src/audio/engine.js';
 import { hz, SCALES } from '../src/audio/tuning.js';
-import { SPATIAL } from '../src/audio/spatial.js';
+import { spatialFor } from '../src/audio/spatial.js';
 import { graphAudioContext } from './helpers/audio-graph-context.js';
 
 test('windParams monotonic and bounded', () => {
@@ -740,13 +740,18 @@ test('structurally: a placed one-shot builds a real bus — both legs land, and 
     // off to the right and well away, so pan and gain both move off whatever
     // a construction-time default would read as
     const listener = { pos: { x: 0, y: 0, z: 0 }, right: { x: 1, y: 0, z: 0 }, forward: { x: 0, y: 0, z: -1 } };
+    const source = { x: 6, y: 0, z: -8 };
+    // the exact numbers place() must have applied — computed independently of
+    // engine.js, so a place() that got the geometry wrong (not just skipped a
+    // field) fails this too
+    const expected = spatialFor(source, listener);
     audio.setListener(listener);
     audio.unlock();
     const ctx = audio.ctx;
     const [master, , voicesDry, voicesWet] = ctx._gains;
     assert.equal(master, audio.master, 'gains[0] is not the exposed master — creation order assumption is wrong');
 
-    audio.bell({ f0: 300, at: { x: 6, y: 0, z: -8 } });
+    audio.bell({ f0: 300, at: source });
 
     // ensureCtx()'s four gains exist before this call; makeSpatialBus() then
     // creates exactly three more (input, dryG, sendG, in that order) before
@@ -763,8 +768,13 @@ test('structurally: a placed one-shot builds a real bus — both legs land, and 
     assert.ok(lp && pan, 'input did not chain lowpass -> panner the way makeSpatialBus wires it');
 
     assert.notEqual(pan.pan.value, 0, 'pan was never applied — still at its construction default');
-    assert.ok(lp.frequency.value > 0 && lp.frequency.value < SPATIAL.toneNear,
-      `tone was never applied — still at its construction default: ${lp.frequency.value}`);
+    // The fake's frequency param defaults to 1, which already satisfies a
+    // bare "0 < x < toneNear" range check — so a place() that set pan and
+    // gain but dropped the `lp.frequency.value = s.tone` line would pass
+    // that silently. Pin it to the actual number spatialFor computes for
+    // this source/listener pair instead.
+    assert.ok(Math.abs(lp.frequency.value - expected.tone) < 1e-9,
+      `tone was not the value spatialFor computed: got ${lp.frequency.value}, expected ${expected.tone}`);
 
     assert.ok(edgesFrom(dryG).includes(voicesDry), 'the dry leg does not reach voicesDry');
     assert.ok(edgesFrom(sendG).includes(voicesWet), 'the send leg does not reach voicesWet');
@@ -792,23 +802,31 @@ test('structurally: a punctuation chime bypasses the hush pair; an ordinary chim
   try {
     const audio = createAudio(save);
     audio.setListener(null);
-    audio.chimeStrike({ tube: 0, punctuate: true });
+    audio.unlock();
     const ctx = audio.ctx;
     assert.ok(ctx, 'ensureCtx() did not build a context off the faked window');
 
     const [master, , voicesDry, voicesWet] = ctx._gains;
     assert.equal(master, audio.master, 'gains[0] is not the exposed master — creation order assumption is wrong');
 
-    const chimeEdges = ctx._edges;
+    // CODE REVIEW CAUGHT: ensureCtx() already wires voicesDry/musicGain into
+    // master during setup, so reading ALL of ctx._edges here made
+    // reachesMaster true before chimeStrike ever ran — it would pass for an
+    // implementation that ignored `punctuate` entirely. Slice to only the
+    // edges this call actually creates, same as the ordinary-chime contrast
+    // below already does.
+    const before = ctx._edges.length;
+    audio.chimeStrike({ tube: 0, punctuate: true });
+    const chimeEdges = ctx._edges.slice(before);
     const touchesHush = chimeEdges.some(([, to]) => to === voicesDry || to === voicesWet);
     assert.ok(!touchesHush, 'a punctuation chime routed through a hush node — it would cut off mid-sentence at a page turn');
     const reachesMaster = chimeEdges.some(([, to]) => to === master);
     assert.ok(reachesMaster, 'a punctuation chime never reached master at all — the harness is not wired right');
 
     // Contrast: an ordinary (unpunctuated) chime DOES route through the pair
-    const before = ctx._edges.length;
+    const before2 = ctx._edges.length;
     audio.chimeStrike({ tube: 0 });
-    const ordinaryEdges = ctx._edges.slice(before);
+    const ordinaryEdges = ctx._edges.slice(before2);
     assert.ok(ordinaryEdges.some(([, to]) => to === voicesDry),
       'an ordinary chime must route through voicesDry, or hushVoices() would do nothing');
   } finally {
