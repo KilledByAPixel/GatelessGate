@@ -858,7 +858,17 @@ document.addEventListener('visibilitychange', () => {
   if (shouldPauseForHide(document.hidden, sit.phase())) {
     narration.pauseForHide();
     audio.pauseForHide();
-  } else {
+  } else if (!document.hidden) {
+    // shouldPauseForHide can also read false while STILL hidden — a sitting
+    // exempts hidden from pausing at all, so a hide event during a sit falls
+    // through to here too. resumeFromHide() sets its own `hidden` flag to
+    // false unconditionally (both audio's and narration's), so calling it
+    // here while document.hidden is actually true would leave that flag
+    // lying about the page's real visibility. Unreachable today — startSit()
+    // calls stopReading(), so nothing can be mid-speech for narration's
+    // pendingHide/heldForHide to mishandle — but the flag being honest is
+    // what Task 8's narration fix depends on, so guard it rather than lean
+    // on that coincidence.
     audio.resumeFromHide();
     narration.resumeFromHide();
   }
