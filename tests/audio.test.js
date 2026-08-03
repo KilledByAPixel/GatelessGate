@@ -80,14 +80,15 @@ test('the bell beats at different rates per mode, which is the shimmer', () => {
   // every partial of every voice. Because that offset is ABSOLUTE rather than
   // proportional, every mode beat at exactly the same 0.7 Hz whatever its
   // frequency — one uniform warble across the whole spectrum. Real bronze does
-  // not do that: the low modes swell slowly and the rate tightens as they
-  // climb, and that spread IS the shimmer.
+  // not do that: BELL_MODES' detune column runs 0.55 -> 0.06 as the modes
+  // climb (see its own comment in synths.js), so the HUM beats fastest
+  // (1.1 Hz) and the rate slows toward the top — that spread IS the shimmer.
   const p = bellPartials(62);
   const rates = p.map((x) => x.detune * 2);
   assert.ok(new Set(rates).size > 1, 'every mode still beats at the same rate');
   assert.ok(rates[0] >= 0.6 && rates[0] <= 2.6, `the hum tone's swell is wrong: ${rates[0]} Hz`);
-  // widest on the low partials, tightening upward
-  assert.ok(rates[0] > rates[rates.length - 1], 'the beat does not tighten as the modes climb');
+  // fastest on the hum, slowing upward
+  assert.ok(rates[0] > rates[rates.length - 1], 'the hum does not beat fastest — the beat should slow as the modes climb');
 });
 
 test('the strike level scale is a named constant, not a magic number', () => {
