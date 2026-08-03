@@ -100,6 +100,15 @@ export function createNarration({ base = AUDIO_BASE } = {}) {
       if (pendingHide) {
         const { myGen, src, onEnd } = pendingHide;
         pendingHide = null;
+        // A pending speak() overriding an earlier hide is not a resume of
+        // whatever pauseForHide() held — it is a fresh section starting.
+        // Clearing this here (rather than falling through to the
+        // `heldForHide` check below, which this `return` skips) is the fix
+        // for the bug the fresh speak() would otherwise leave behind: a
+        // later, unrelated hide/show finding `heldForHide` still true from
+        // the OLD held section and spuriously calling el.play() on whatever
+        // happens to be loaded by then.
+        heldForHide = false;
         if (myGen !== gen) return;   // stop() or a fresh speak() already superseded this
         el.onended = () => finish(myGen, onEnd);
         el.onerror = () => finish(myGen, onEnd);

@@ -114,3 +114,41 @@ test('stop() while hidden clears the deferred section, so a cancelled read does 
     assert.equal(playCount(el), before, 'a read stopped while hidden must not resume on return');
   });
 });
+
+// Carried bug: resumeFromHide() takes the `pendingHide` branch and returns
+// before ever reaching the `heldForHide` check further down. So a hide
+// mid-section (which sets heldForHide) followed — while STILL hidden — by a
+// fresh speak() (e.g. via gate.readAloud()) overriding that hide leaves
+// heldForHide stuck true after the override plays and finishes on its own.
+// A LATER, wholly unrelated hide/show cycle then finds heldForHide still
+// true, with nothing actually held, and spuriously calls el.play() again —
+// "replays stale audio" on whatever the element happens to have loaded.
+test('a fresh speak() that overrides a pending hide does not leave heldForHide stale for a later hide/show', async () => {
+  await withFakes(async (narration, el) => {
+    const ends = [];
+    // A section is mid-playback when the page hides.
+    await narration.speak(1, 'case', { onEnd: () => ends.push('case') });
+    narration.pauseForHide();
+    assert.deepEqual(el.calls.slice(-1), ['pause'], 'the mid-playback section must be paused, not left running');
+
+    // While STILL hidden, a fresh read arrives (gate.readAloud()) and
+    // overrides the pending hide rather than joining it.
+    await narration.speak(1, 'comment', { onEnd: () => ends.push('comment') });
+    narration.resumeFromHide();   // takes the pendingHide branch
+    assert.equal(playCount(el), 2, 'resumeFromHide must start the section that overrode the hide');
+    assert.equal(el.src, 'x/k01-comment.mp3');
+
+    // That section finishes on its own, same as any ordinary read.
+    el.onended();
+    assert.equal(narration.isSpeaking(), false);
+    assert.deepEqual(ends, ['comment'], "the overridden section's own onEnd must fire; the paused one's must not");
+
+    // A later, unrelated hide/show cycle: nothing is speaking and nothing is
+    // pending, so this must be a complete no-op on the element.
+    const before = playCount(el);
+    narration.pauseForHide();
+    narration.resumeFromHide();
+    assert.equal(playCount(el), before,
+      'a stale heldForHide from the overridden hide made an unrelated hide/show replay the last section');
+  });
+});
