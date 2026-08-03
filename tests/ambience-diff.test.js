@@ -166,3 +166,18 @@ test('debugState reads clean before any context exists', () => {
   assert.deepEqual(s.log, []);
   assert.equal(s.mood, 'in');
 });
+
+// startAmbience/transition/playMusic all open with `if (!ensureCtx()) return;`
+// and under `node --test` there is no `window`, so ensureCtx() is false and
+// every one of them should be a no-op rather than throw. Nothing exercised
+// that guard directly until now — only debugState's shape was checked above.
+test('startAmbience, transition and playMusic are no-ops with no AudioContext in scope', () => {
+  const save = { state: () => ({ soundOn: false }), setSound() {} };
+  const audio = createAudio(save);
+  assert.doesNotThrow(() => audio.startAmbience(['wind:0.2']));
+  assert.doesNotThrow(() => audio.transition(['water:0.3']));
+  assert.doesNotThrow(() => audio.playMusic(2));
+  const s = audio.debugState();
+  assert.deepEqual(s.recipe, []);
+  assert.deepEqual(s.layers, { wind: null, water: null, music: null });
+});
