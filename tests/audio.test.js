@@ -9,6 +9,8 @@ import {
   parseRecipe, emitterCount, createAudio, hushSchedule, masterLevel, shouldPauseForHide, MASTER, DUCKED,
 } from '../src/audio/engine.js';
 import { hz, SCALES } from '../src/audio/tuning.js';
+import { SPATIAL } from '../src/audio/spatial.js';
+import { graphAudioContext } from './helpers/audio-graph-context.js';
 
 test('windParams monotonic and bounded', () => {
   const lo = windParams(0), hi = windParams(1);
@@ -627,63 +629,11 @@ test('audio.hushVoices() is safe with no AudioContext', () => {
   assert.doesNotThrow(() => audio.hushVoices({}));
 });
 
-// A fake AudioContext with enough surface for ensureCtx() to build the WHOLE
-// real graph (master, musicGain, the reverb, and the hush pair) rather than
-// the narrower fakeAudioCtx() above, which stops short of createConvolver
-// and createStereoPanner. Every connect() is recorded as a [from, to] edge so
-// a test can ask a real structural question — "does this node's output reach
-// that node?" — instead of trusting a comment. This is the harness the brief
-// asked for: proof by reachability, or an honest admission that none exists.
-function graphAudioContext() {
-  const edges = [];
-  const gains = [];
-  const gainParam = () => ({
-    value: 1,
-    setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {},
-    setTargetAtTime() {}, cancelScheduledValues() {},
-  });
-  const ctx = {
-    currentTime: 0,
-    sampleRate: 44100,
-    state: 'running',
-    destination: { connect() {} },
-    resume() {},
-    createGain() {
-      const n = { gain: gainParam(), connect(dst) { edges.push([n, dst]); }, disconnect() {} };
-      gains.push(n);
-      return n;
-    },
-    createOscillator() {
-      const n = { type: 'sine', frequency: { value: 0 }, connect(dst) { edges.push([n, dst]); }, start() {}, stop() {} };
-      return n;
-    },
-    createBufferSource() {
-      const n = { buffer: null, loop: false, connect(dst) { edges.push([n, dst]); }, start() {}, stop() {} };
-      return n;
-    },
-    createBuffer(channels, length) {
-      return { getChannelData: () => new Float32Array(length), copyToChannel() {} };
-    },
-    createBiquadFilter() {
-      const n = {
-        type: 'lowpass', frequency: { value: 0 }, Q: { value: 0 },
-        connect(dst) { edges.push([n, dst]); },
-      };
-      return n;
-    },
-    createConvolver() {
-      const n = { buffer: null, connect(dst) { edges.push([n, dst]); } };
-      return n;
-    },
-    createStereoPanner() {
-      const n = { pan: { value: 0 }, connect(dst) { edges.push([n, dst]); } };
-      return n;
-    },
-    _edges: edges,
-    _gains: gains,
-  };
-  return ctx;
-}
+// graphAudioContext (the fake AudioContext ensureCtx()/makeSpatialBus() build
+// their whole graph against, with every connect() recorded as a [from, to]
+// edge) now lives in tests/helpers/audio-graph-context.js — spatial.test.js
+// needs the same harness for the `at` finiteness guard, and two drifting
+// copies of a fake Web Audio graph is worse than one shared one.
 
 test('structurally: the sit bell bypasses the hush pair; an ordinary bell does not', () => {
   // See the brief's own warning: a test that cannot fail is worse than none.
@@ -763,6 +713,103 @@ test('structurally: the four touch voices route through the hush pair, not strai
       assert.ok(edges.some(([, to]) => to === voicesDry),
         `${name} did not reach voicesDry — it would keep sounding after the page turned`);
     }
+  } finally {
+    if (hadWindow) global.window = priorWindow; else delete global.window;
+  }
+});
+
+// ---- the spatial bus itself: dry/send legs, pan/tone/wet applied ----------
+//
+// makeSpatialBus has no caller outside engine.js, and both structural tests
+// above deliberately setListener(null) to force the UNPLACED fallback — so
+// the placed path, which is the entire point of this branch, had no
+// graph-level coverage at all: verified by ear only. A listener off to one
+// side of the source gives a real pan/distance to check, so a wrong-but-
+// plausible implementation (bus.place() never called, dry and send both
+// wired to the same leg, tone/pan left at their construction-time defaults)
+// has somewhere to be caught.
+
+test('structurally: a placed one-shot builds a real bus — both legs land, and pan/tone/gain are actually applied', () => {
+  const save = { state: () => ({ soundOn: true }), setSound() {} };
+  const priorWindow = global.window;
+  const hadWindow = Object.prototype.hasOwnProperty.call(global, 'window');
+  global.window = { AudioContext: function FakeAudioContext() { return graphAudioContext(); } };
+  try {
+    const audio = createAudio(save);
+    // off to the right and well away, so pan and gain both move off whatever
+    // a construction-time default would read as
+    const listener = { pos: { x: 0, y: 0, z: 0 }, right: { x: 1, y: 0, z: 0 }, forward: { x: 0, y: 0, z: -1 } };
+    audio.setListener(listener);
+    audio.unlock();
+    const ctx = audio.ctx;
+    const [master, , voicesDry, voicesWet] = ctx._gains;
+    assert.equal(master, audio.master, 'gains[0] is not the exposed master — creation order assumption is wrong');
+
+    audio.bell({ f0: 300, at: { x: 6, y: 0, z: -8 } });
+
+    // ensureCtx()'s four gains exist before this call; makeSpatialBus() then
+    // creates exactly three more (input, dryG, sendG, in that order) before
+    // strikeBell() adds its own oscillator/gain nodes on top — so this slice
+    // is stable regardless of how many partials the voice has.
+    const [input, dryG, sendG] = ctx._gains.slice(4, 7);
+    assert.ok(input && dryG && sendG, 'the bus did not build its three gain nodes in the expected order');
+
+    // the panner and lowpass are not gain nodes and so are not in _gains, but
+    // every connect() is an edge: walk input -> lowpass -> panner
+    const edgesFrom = (n) => ctx._edges.filter(([from]) => from === n).map(([, to]) => to);
+    const lp = edgesFrom(input)[0];
+    const pan = edgesFrom(lp)[0];
+    assert.ok(lp && pan, 'input did not chain lowpass -> panner the way makeSpatialBus wires it');
+
+    assert.notEqual(pan.pan.value, 0, 'pan was never applied — still at its construction default');
+    assert.ok(lp.frequency.value > 0 && lp.frequency.value < SPATIAL.toneNear,
+      `tone was never applied — still at its construction default: ${lp.frequency.value}`);
+
+    assert.ok(edgesFrom(dryG).includes(voicesDry), 'the dry leg does not reach voicesDry');
+    assert.ok(edgesFrom(sendG).includes(voicesWet), 'the send leg does not reach voicesWet');
+
+    // and the split actually happened — a place() that forgot to set the
+    // gains would leave both at gainParam's default of 1
+    assert.notEqual(dryG.gain.value, 1, 'dry gain was never set from the placement');
+    assert.notEqual(sendG.gain.value, 1, 'send gain was never set from the placement');
+    assert.ok(dryG.gain.value > 0 && sendG.gain.value > 0, 'placement zeroed a leg out entirely');
+  } finally {
+    if (hadWindow) global.window = priorWindow; else delete global.window;
+  }
+});
+
+test('structurally: a punctuation chime bypasses the hush pair; an ordinary chime does not', () => {
+  // chimeStrike({ punctuate: true }) belongs to the READING, not the
+  // diorama — see its own comment in engine.js. A punctuation chime cut off
+  // mid-sentence by hushVoices() at a page turn would be a live regression
+  // this suite could not otherwise see. Same shape as the sit-bell test
+  // above: no listener, so every call below takes the unplaced fallback.
+  const save = { state: () => ({ soundOn: true }), setSound() {} };
+  const priorWindow = global.window;
+  const hadWindow = Object.prototype.hasOwnProperty.call(global, 'window');
+  global.window = { AudioContext: function FakeAudioContext() { return graphAudioContext(); } };
+  try {
+    const audio = createAudio(save);
+    audio.setListener(null);
+    audio.chimeStrike({ tube: 0, punctuate: true });
+    const ctx = audio.ctx;
+    assert.ok(ctx, 'ensureCtx() did not build a context off the faked window');
+
+    const [master, , voicesDry, voicesWet] = ctx._gains;
+    assert.equal(master, audio.master, 'gains[0] is not the exposed master — creation order assumption is wrong');
+
+    const chimeEdges = ctx._edges;
+    const touchesHush = chimeEdges.some(([, to]) => to === voicesDry || to === voicesWet);
+    assert.ok(!touchesHush, 'a punctuation chime routed through a hush node — it would cut off mid-sentence at a page turn');
+    const reachesMaster = chimeEdges.some(([, to]) => to === master);
+    assert.ok(reachesMaster, 'a punctuation chime never reached master at all — the harness is not wired right');
+
+    // Contrast: an ordinary (unpunctuated) chime DOES route through the pair
+    const before = ctx._edges.length;
+    audio.chimeStrike({ tube: 0 });
+    const ordinaryEdges = ctx._edges.slice(before);
+    assert.ok(ordinaryEdges.some(([, to]) => to === voicesDry),
+      'an ordinary chime must route through voicesDry, or hushVoices() would do nothing');
   } finally {
     if (hadWindow) global.window = priorWindow; else delete global.window;
   }
