@@ -146,27 +146,60 @@ test('swing energy accumulates across taps without snapping the pose', () => {
   const amp1 = f.swingAmp();
   assert.ok(amp1 > 0);
 
-  // a second tap while it is still moving must ADD energy, not jump the pose:
-  // each impulse starts from zero, so it contributes nothing at the instant it
-  // lands and pushes from there.
-  //
-  // NOTE the bound here is 0.06, not the tighter number a first draft reached
-  // for. With SWING_A0=0.13 and SWING_PERIOD=0.85, a single correctly-superposed
-  // impulse's OWN natural growth over one 1/60s frame this early in its swing is
-  // already ~0.015 rad, and two impulses one frame apart correctly sum to a
-  // measured ~0.031 rad step here — both real, continuous motion, not a snap. A
-  // tighter bound (e.g. 0.02) fails correct code at these constants, and — worse
-  // — a genuinely buggy implementation that OVERWRITES the pending tap instead
-  // of superposing it (dropping the first impulse's energy) lands a step near
-  // 1e-16 here, well under any such bound, so a tight number would have let that
-  // bug through on this assertion. 0.06 sits comfortably above correct motion
-  // (~0.03) and well below an actual snap, which lands near SWING_A0 (~0.13);
-  // the swingAmp() assertion below is what actually catches the dropped-energy
-  // bug, since an overwrite leaves amp1 and the post-tap amplitude equal.
+  // A second tap must contribute EXACTLY nothing at the instant it lands:
+  // its own term is force * A0 * exp(0) * sin(0) === 0, whatever the first
+  // impulse is doing. A first draft of this test sampled one frame LATER
+  // instead, and that buries the signal: the first impulse's own honest,
+  // fast-frame growth (SWING_PERIOD=0.85 means it moves ~0.0155 rad in a
+  // single 1/60s frame this early on) swamps whatever the second tap did,
+  // so any bound loose enough to tolerate that legitimate growth also
+  // tolerates a real "starts from some nonzero phase, not from rest" snap —
+  // measured offsets of 0.05/0.1/0.2 rad all landed under a 0.06 bound
+  // there. Re-reading at the SAME simTime instead isolates the new impulse
+  // cleanly: the first impulse's contribution is literally unchanged (same
+  // clock, same value as `before`), so correct code reproduces `before` to
+  // the bit, and any nonzero starting phase shows up immediately, at its
+  // own size, with nothing to hide behind.
   f.ring(1);
-  f.update(1 / 60, 1 + 1 / 60);
-  assert.ok(Math.abs(swing.rotation.z - before) < 0.06, 'the pose snapped on the second tap');
-  assert.ok(f.swingAmp() > amp1, 'the second tap added no energy');
+  f.update(1 / 60, 1);
+  assert.ok(Math.abs(swing.rotation.z - before) < 1e-12, 'the pose snapped on the second tap');
+  // 2 * amp1 * 0.99, not amp1 itself: a buggy implementation that OVERWRITES
+  // the pending tap instead of superposing it produces an amplitude equal to
+  // amp1 (same relative age, same force), which a plain `> amp1` bound only
+  // catches because both readings here happen to sit exactly 1/60s past their
+  // own t0 — change the frame spacing and that coincidence, and the catch,
+  // goes away. Requiring comfortably more than double survives that.
+  assert.ok(f.swingAmp() > 2 * amp1 * 0.99, 'the second tap added no energy');
+});
+
+test('a burst of taps evicts the impulse doing the least right now, not the oldest', () => {
+  // Nine taps inside half a second (a plausible mash) push the swing's array
+  // past its cap of 8. At this swing's fast period (0.85s) the OLDEST
+  // impulse is not necessarily the one contributing least to the pose right
+  // now — it can sit at a sine trough while a newer one sits near a zero
+  // crossing. Evicting strictly by age discards real motion: dropping the
+  // oldest here removes about -0.0518 * force rad of pose in a single frame
+  // (40% of SWING_A0 at force 1) while the impulse genuinely doing the least
+  // at that instant is worth only about -0.0094 * force. force is kept low
+  // (0.3) here so SWING_MAX never clamps the sum and the difference stays
+  // visible in rotation.z instead of being hidden by the ceiling.
+  const f = makeFurin({ seed: 3, phase: 0, onStrike: () => {} });
+  f.setWindLevel(0);
+  const swing = f.group.getObjectByName('swing');
+  const dt = 0.5 / 8;
+  for (let i = 0; i < 8; i++) {
+    f.update(1 / 600, i * dt);
+    f.ring(0.3);
+  }
+  f.update(1 / 600, 8 * dt);
+  const before = swing.rotation.z;
+
+  f.ring(0.3);                  // the 9th tap: forces an eviction
+  f.update(1 / 600, 8 * dt);    // same simTime it landed at, so its own
+                                 // contribution is exactly zero — any change
+                                 // here is the eviction's doing, not the tap's
+  const jump = Math.abs(swing.rotation.z - before);
+  assert.ok(jump < 0.008, `the cap snapped the pose on eviction: ${jump} rad`);
 });
 
 test('it hangs by a STRING, and swings from the knot at the top of it', () => {

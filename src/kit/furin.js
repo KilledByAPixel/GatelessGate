@@ -155,14 +155,18 @@ export function makeFurin({
     if (onStrike) onStrike(i, force);
   }
 
+  // one impulse's own contribution to the pose right now — shared by the
+  // pose sum below and by the eviction it feeds, so both agree on "small"
+  function poseTerm(k) {
+    const t = clock - k.t0;
+    if (t < 0) return 0;
+    return k.force * SWING_A0 * Math.exp(-t / SWING_TAU) * Math.sin(SWING_OMEGA * t);
+  }
+
   // where the tap's swing has the chime right now, on top of the wind's lean
   function swingPose() {
     let a = 0;
-    for (const k of knocked) {
-      const t = clock - k.t0;
-      if (t < 0) continue;
-      a += k.force * SWING_A0 * Math.exp(-t / SWING_TAU) * Math.sin(SWING_OMEGA * t);
-    }
+    for (const k of knocked) a += poseTerm(k);
     return clamp(a, -SWING_MAX, SWING_MAX);
   }
 
@@ -171,6 +175,37 @@ export function makeFurin({
     let e = 0;
     for (const k of knocked) if (clock >= k.t0) e += k.force * SWING_A0 * Math.exp(-(clock - k.t0) / SWING_TAU);
     return e;
+  }
+
+  const SWING_CAP = 8;
+
+  // A burst of taps can push past the cap. Evicting the OLDEST looks safe
+  // but isn't: at this swing's fast period (0.85s) an old impulse can sit at
+  // a sine trough while a newer one sits near a zero-crossing, so "oldest"
+  // and "least there right now" are different impulses. Nine taps inside
+  // about half a second leaves the oldest still worth -0.0518 rad — 40% of
+  // SWING_A0 — while the impulse that is genuinely doing the least at that
+  // instant is worth only -0.0094 rad (tests/furin.test.js pins both
+  // numbers). Evicting by age would snap the pose by exactly the amount
+  // this whole model exists to prevent; evicting by current contribution
+  // doesn't.
+  //
+  // The eviction has to run BEFORE the new knock is appended, against only
+  // the knocks already in flight: a term evaluated the instant it lands is
+  // exp(0)*sin(0) === 0 by construction — the smallest possible magnitude,
+  // always — so if the incoming knock were in the running it would evict
+  // itself on arrival, every time, silently swallowing every tap once the
+  // cap was reached.
+  function pushKnock(force) {
+    if (knocked.length >= SWING_CAP) {
+      let idx = 0, min = Infinity;
+      for (let i = 0; i < knocked.length; i++) {
+        const m = Math.abs(poseTerm(knocked[i]));
+        if (m < min) { min = m; idx = i; }
+      }
+      knocked.splice(idx, 1);
+    }
+    knocked.push({ t0: clock, force });
   }
 
   return {
@@ -214,8 +249,7 @@ export function makeFurin({
     // weather, and sets it swinging — which tubes depends deterministically
     // on when you tap
     ring(force = 0.75) {
-      knocked.push({ t0: clock, force });
-      if (knocked.length > 8) knocked.shift();
+      pushKnock(force);
       const k = Math.abs(Math.floor(clock * 3)) % state.length;
       fire(k, force);
       fire((k + 1) % state.length, force * 0.7);
@@ -223,8 +257,7 @@ export function makeFurin({
     // the pointer passing over: a nudge, not a knock — the same impulse at a
     // fraction of the force, and no strike
     hoverAt() {
-      knocked.push({ t0: clock, force: 0.18 });
-      if (knocked.length > 8) knocked.shift();
+      pushKnock(0.18);
     },
 
     setWindLevel(v) { windLevel = Math.max(0, v); },
