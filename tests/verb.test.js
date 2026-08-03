@@ -54,3 +54,30 @@ test('reverbIR channels decorrelate and the tail darkens', () => {
   const q = Math.floor(l.length / 4);
   assert.ok(zc(l.subarray(l.length - q)) < zc(l.subarray(0, q)) * 0.8, 'tail does not darken');
 });
+
+test('the room is outdoor air, not a stone cistern', () => {
+  // The book is a garden. A 5-second tail at 75% wet made every drip sound
+  // like a cistern (Frank: "it sounds almost like I'm in a cave"). Short and
+  // dark is what outdoors sounds like.
+  const ir = reverbIR(48000, 1.8, 1013);
+  assert.equal(ir.length, Math.round(1.8 * 48000));
+
+  // Darker at the HEAD than the old room was — the previous curve opened at
+  // 4.2 kHz, which is a tiled bathroom. Zero-crossing rate over the first
+  // 10 ms stands in for brightness.
+  const zc = (arr) => { let c = 0; for (let i = 1; i < arr.length; i++) if ((arr[i] >= 0) !== (arr[i - 1] >= 0)) c++; return c; };
+  // Zero-crossing rate over the first 10 ms as a brightness proxy. This is
+  // NOT "fc crossings a second" — that estimate assumed something closer to
+  // an ideal lowpass. This IR's tone control is a single-pole leaky
+  // integrator (6 dB/oct), which leaves much more high-frequency energy in
+  // than that heuristic predicts, so real counts run well above the naive
+  // fc-based guess. Measured directly rather than estimated a second time:
+  // the OLD curve (fc opening at 4.2 kHz) gives 162 crossings here; the NEW
+  // curve (fc opening at 3.2 kHz, this file's post-fix formula) gives 136.
+  // Upper bound sits between the two, close to the new number, so this test
+  // fails on the old curve and passes on the new one — a real discriminator,
+  // not the originally-estimated band of < 45, which neither curve clears.
+  const crossings = zc(ir.subarray(0, 480));
+  assert.ok(crossings > 5 && crossings < 150,
+    `the room's head is not outdoor air: ${crossings} crossings in 10ms`);
+});

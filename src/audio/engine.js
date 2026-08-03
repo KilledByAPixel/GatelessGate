@@ -58,7 +58,7 @@ export function createAudio(save) {
     musicGain.connect(master);
     // the room: one reverb for every pitched voice. Its wet return feeds
     // master, so narration ducking pulls the room back with everything else.
-    verb = makeVerb(ctx, master, { seconds: 5 });
+    verb = makeVerb(ctx, master);
     return true;
   }
 

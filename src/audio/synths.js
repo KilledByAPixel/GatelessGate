@@ -316,7 +316,11 @@ export function strikeBell(ctx, dry, verbIn, { f0 = 62, gain = 1, verbMix = BELL
 // three are here: a small bell's pitch (degree 15 is the root four octaves up,
 // the same note in either mood), a hard bright tick for the mallet, and a heavy
 // send to the room. A dry bell reads as a thud at ANY pitch.
-export const SIT_BELL = { degree: 15, level: 0.45, verbMix: 0.8 };
+//
+// Raised from 0.80 against the shorter room (verb.js went 5s -> 1.8s). The sit
+// bell belongs to the READER, not to any diorama — it is never spatialized and
+// it is the one sound in the book allowed to be pure room.
+export const SIT_BELL = { degree: 15, level: 0.45, verbMix: 0.92 };
 
 // A small bell's modes are near-harmonic with a slight stretch — that stretch is
 // the shimmer. Long on the fundamental (a struck inkin rings for ten seconds),
@@ -405,9 +409,13 @@ export function strikeBar(ctx, dry, verbIn, { f0, gain = 1, decay = CHIME.decay,
 // that already works — the chime's own bar, pitched low, at a fraction of the
 // chime's loudness, almost entirely room: someone far away touched a chime.
 //
-// gain calibrated to the WET path, which at verbMix 0.92 is the voice: the
+// gain calibrated to the WET path, which at verbMix 0.97 is the voice: the
 // verb send returns straight to master and never passes musicGain, so the
 // audition's 0.012 (into a 0.9 master) maps to 0.0135 here. The dry sliver
 // lands at half its audition level — inaudible at a 22% dry fraction, and a
 // first calibration to the dry path shipped the wet 6 dB hot (review catch).
-export const FARBELL = { gain: 0.0135, decay: 7, bright: 0.2, verbMix: 0.92 };
+//
+// Raised from 0.92 for the same reason. This voice is DEFINED as distance —
+// "someone far away touched a chime" — so it pins to the far end of the wet
+// curve and never moves, rather than being placed like a thing in the scene.
+export const FARBELL = { gain: 0.0135, decay: 7, bright: 0.2, verbMix: 0.97 };
