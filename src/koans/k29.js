@@ -131,8 +131,8 @@ export default {
     });
     input.onTap(() => {
       if (!camera) return;
-      const chimeHit = input.raycastFirst(camera, furin.pickTargets());
-      if (chimeHit) { furin.ring(0.75, chimeHit.object.userData.tube); return; }
+      const chimeHit = furin.pick(camera, input);
+      if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
       const hit = input.raycastFirst(camera, [flag.mesh]);
       if (hit) {
         const on = flag.toggleWind();

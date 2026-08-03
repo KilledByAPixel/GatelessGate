@@ -142,6 +142,12 @@ test('a strike reports where the struck tube is, so it can be placed in space', 
   f.ring(0.8, 0);
   f.ring(0.8, 2);
   assert.equal(seen.length, 2);
+  // MINOR gap closed: a bug reporting tube i+1's position instead of tube
+  // i's would still pass every check below (it's still finite, still near
+  // x=10, still below the hang point, still different from its neighbour),
+  // so pin the actual index each position was reported for.
+  assert.equal(seen[0].i, 0, `rang tube ${seen[0].i}, not the one named`);
+  assert.equal(seen[1].i, 2, `rang tube ${seen[1].i}, not the one named`);
   for (const s of seen) {
     assert.ok(Number.isFinite(s.x) && Number.isFinite(s.y) && Number.isFinite(s.z));
     // the chime hangs at x=10, and every tube is within its own small radius
@@ -165,6 +171,74 @@ test('a single-tube chime is one tube on a cord, with no ring', () => {
   one.setWindLevel(0);
   one.ring(1, 0);
   assert.ok(one.swingAmp() > 0);
+});
+
+test('the single tube does not run straight through the clapper', () => {
+  // Code review: the lone tube sits on the axis (x=z=0, above) and the
+  // clapper was ALSO built on the axis regardless of tube count — so a
+  // single-tube chime had its clapper disc impaled on its own tube rather
+  // than hanging beside it where it could plausibly strike it. Checked as
+  // a real cylinder-vs-disc clearance: the clapper's centre must clear the
+  // tube's radius by more than the clapper's own radius.
+  const S = 0.17;
+  const one = makeFurin({ tubes: 1, size: S, seed: 8 });
+  const tube = one.group.getObjectByName('tube');
+  const clapper = one.group.getObjectByName('clapper');
+  tube.geometry.computeBoundingSphere();
+  clapper.geometry.computeBoundingSphere();
+  const tubeR = 0.075 * S;                     // the tube's own cylinder radius
+  const clapperR = clapper.geometry.boundingSphere.radius;
+  const dx = tube.position.x - clapper.position.x;
+  const dz = tube.position.z - clapper.position.z;
+  const gap = Math.hypot(dx, dz);
+  assert.ok(gap > tubeR + clapperR,
+    `clapper interpenetrates the tube: centres ${gap} apart, need > ${tubeR + clapperR}`);
+});
+
+test('a real ray aimed at a specific tube resolves to that tube, not the whole-chime drum', () => {
+  // THE TRAP a reviewer caught in the shipped comment: pickTargets() was
+  // documented "tubes first, so a tap landing on both a tube and the
+  // forgiving drum resolves to the tube — the more specific target wins."
+  // False. input.raycastFirst calls THREE's ray.intersectObjects, which
+  // SORTS BY DISTANCE — array order is discarded. The whole-chime drum is
+  // a convex hex prism (circumradius 0.8S) that contains every sleeve
+  // (reach at most 0.53S), so any ray that touches a sleeve pierces the
+  // drum's nearer face first. A single combined raycast over
+  // pickTargets() therefore ALWAYS resolves to the drum, never a tube —
+  // demonstrated below with the exact raycasting logic src/input.js uses.
+  const f = makeFurin({ seed: 4, tubes: 5, onStrike: () => {} });
+  f.group.updateMatrixWorld(true);
+
+  const sleeve2 = f.pickTargets().find((o) => o.userData.tube === 2);
+  const world = sleeve2.getWorldPosition(new THREE.Vector3());
+
+  // a camera parked outside the chime, aimed dead-centre at that tube
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.01, 100);
+  camera.position.set(world.x, world.y, world.z + 3);
+  camera.lookAt(world);
+  camera.updateMatrixWorld(true);
+
+  const ndc = new THREE.Vector2(0, 0);
+  const ray = new THREE.Raycaster();
+  // the actual algorithm in src/input.js's raycastFirst — same sort order
+  const raycastFirst = (cam, objects) => {
+    ray.setFromCamera(ndc, cam);
+    const hits = ray.intersectObjects(objects, false);
+    return hits.length ? hits[0] : null;
+  };
+
+  // pins the trap itself: the naive combined call never names a tube
+  const naive = raycastFirst(camera, f.pickTargets());
+  assert.ok(naive, 'the naive combined raycast hit nothing at all');
+  assert.equal(naive.object.userData.tube, null,
+    'the naive combined raycast is expected to land on the drum, not a tube — ' +
+    'if this ever fires, the trap this test exists to document is gone');
+
+  // the fix: furin resolves its own picking, sleeves probed before the
+  // forgiving whole-chime targets, so the real hit test wins
+  const picked = f.pick(camera, { raycastFirst });
+  assert.ok(picked, 'a ray aimed straight at tube 2 hit nothing');
+  assert.equal(picked.tube, 2, `resolved to tube ${picked.tube}, not the one aimed at`);
 });
 
 test('a knocked chime SWINGS — it crosses centre, it does not just lean back', () => {

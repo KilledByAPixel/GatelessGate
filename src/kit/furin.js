@@ -143,10 +143,18 @@ export function makeFurin({
   cap.position.y = -CAP_H / 2;                // top face stays AT the hang point
   body.add(cap);
 
-  // the clapper among the tubes, and the paper tag that catches the wind
-  const clapper = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * S, 0.16 * S, 0.03 * S, 8), wood);
+  // the clapper among the tubes, and the paper tag that catches the wind.
+  // For a ring, the clapper sits at the centre and every tube is offset
+  // 0.33S clear of it. Code review caught that the single-tube variant left
+  // the clapper on the SAME axis as the one tube it hangs on — a 0.16S disc
+  // impaled on a 0.075S cylinder rather than hanging beside it where it
+  // could plausibly strike it. Nudge the clapper (and the tag paired with
+  // it) off-axis by enough to clear both radii with margin.
+  const clapperR = 0.16 * S;
+  const clapperOff = single ? clapperR + 0.075 * S + 0.065 * S : 0;
+  const clapper = new THREE.Mesh(new THREE.CylinderGeometry(clapperR, clapperR, 0.03 * S, 8), wood);
   clapper.name = 'clapper';
-  clapper.position.y = -0.9 * S;
+  clapper.position.set(clapperOff, -0.9 * S, 0);
   // the tanzaku — a long narrow poem-strip, not the stubby rectangle the
   // first pass drew (0.3S x 0.85S, ratio ~2.8:1). Real ones run closer to
   // 4-5:1: narrower, and reaching further past the clapper.
@@ -156,13 +164,17 @@ export function makeFurin({
   tag.name = 'tag';
   tag.userData.noOutline = true;      // an open surface; the inverted hull doesn't suit it
   tag.userData.tube = null;           // the whole chime, not any one tube
-  tag.position.y = -0.95 * S;
+  tag.position.set(clapperOff, -0.95 * S, 0);
   body.add(clapper, tag);
 
   // a forgiving invisible target: a tap wants the chime, not a particular
-  // tube. Sized to end exactly at the hang point.
+  // tube. Sized to end exactly at the hang point. A single tube has no ring
+  // to spread — its farthest reach is the offset clapper, not a 0.8S ring —
+  // so the drum shrinks with it rather than leaving a wide empty halo of
+  // "whole chime" around one thin tube.
+  const hitR = single ? clapperOff + clapperR + 0.08 * S : 0.8 * S;
   const hit = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.8 * S, 0.8 * S, 2.1 * S, 6),
+    new THREE.CylinderGeometry(hitR, hitR, 2.1 * S, 6),
     new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'furin-hit';
   hit.userData.noOutline = true;
@@ -245,9 +257,29 @@ export function makeFurin({
 
   return {
     group: g,
-    // tubes first, so a tap that lands on both a tube and the forgiving drum
-    // resolves to the tube — the more specific target wins
+    // Every pickable surface. NOTE: array order here does NOT decide what a
+    // single input.raycastFirst(camera, pickTargets()) call resolves to —
+    // that calls THREE's ray.intersectObjects, which sorts by DISTANCE, and
+    // the whole-chime drum is a convex hex prism that contains every sleeve,
+    // so a ray reaching a sleeve always pierces the drum's nearer face first.
+    // A prior version of this comment claimed "tubes first... more specific
+    // wins," which a real THREE.Raycaster proved false (tests/furin.test.js,
+    // 'a real ray aimed at a specific tube...'). Use pick() below, which
+    // resolves this correctly by raycasting the sleeves in their own call
+    // before falling back to the whole-chime targets.
     pickTargets() { return [...sleeves, hit, tag]; },
+    // Two-stage pick, done here rather than by every case (kit reuse rule):
+    // probe the tubes ALONE first — any hit there is unambiguous, a ray that
+    // geometrically touches a sleeve — and only fall back to the forgiving
+    // whole-chime targets (drum, tag) on a miss. Returns null on no touch,
+    // or { tube } where tube is an index for a tube or null for the whole
+    // chime grabbed at once (cap, tag).
+    pick(camera, input) {
+      const t = input.raycastFirst(camera, sleeves);
+      if (t) return { tube: t.object.userData.tube };
+      const w = input.raycastFirst(camera, [hit, tag]);
+      return w ? { tube: null } : null;
+    },
 
     update(dt, simTime) {
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
