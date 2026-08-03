@@ -58,6 +58,59 @@ const BELL_MODES = [
   [15.10,  0.11,  0.18, 0.06],   // the clang cluster — this is the ding
 ];
 
+// Task 5B, the third pass. Frank tuned three presets against the eleven modes
+// above and still heard it as only "okay" — the diagnosis (task-5b-brief.md
+// section on `brightness`) is that the named series stops at 15.1x, so a big
+// bell's ceiling falls with its pitch: `great` at 46.6 Hz has NOTHING above
+// 704 Hz, which is exactly why he hauled `brightness` to its stop on all
+// three presets and `clang` to 2.59 on `great` — those controls had nothing
+// left to lift. A real bell shell's modal density RISES with frequency; a
+// sparse 11-partial stack cannot fake that, however well it is tuned.
+//
+// So above the named modes, a SHIMMER cluster: ~14 more partials from about
+// 17x to about 70x, irregularly spaced (a regular series is a comb, not
+// bronze) so they interleave rather than standing in a row, falling steeply
+// in amplitude, and gone fast — 0.05s to 0.30s raw, so even `great` at its
+// 2.36 size (0.7s) clears well inside a second and leaves the hum clean. At
+// 46.6 Hz, 70x reaches 3.3 kHz: the first treble `great` has ever had.
+//
+// The ratios/amps/decays are a literal table, not a live RNG — generated
+// once offline with a seeded log-spaced-plus-jitter rule (irregular, not a
+// comb; steeply falling amplitude; decay shortening toward the top) and
+// pasted in, so there is no seeded generator to keep synchronized with the
+// house's Math.random exemption at strike time: two strikes of the same bell
+// read this same array and are the same bell, by construction.
+const SHIMMER_MODES = [
+  // ratio,  amp,     decay
+  [16.66, 0.114,  0.278],
+  [19.37, 0.0896, 0.282],
+  [21.97, 0.0735, 0.273],
+  [22.87, 0.0707, 0.300],
+  [26.91, 0.0523, 0.236],
+  [28.97, 0.0492, 0.268],
+  [31.42, 0.0517, 0.248],
+  [35.31, 0.0397, 0.242],
+  [42.38, 0.0367, 0.190],
+  [46.52, 0.0344, 0.159],
+  [52.37, 0.0298, 0.160],
+  [57.86, 0.0279, 0.108],
+  [64.14, 0.0234, 0.081],
+  [72.16, 0.0208, 0.060],
+];
+
+// How many entries of a voice's partials array are the NAMED modes — the
+// boundary bellMacroPartials() bands against, and where a shimmer mode
+// starts (partials.slice(NAMED_MODE_COUNT)). A constant rather than a
+// literal 11 so the two tables can never silently drift apart.
+export const NAMED_MODE_COUNT = BELL_MODES.length;
+
+// High modes speak almost instantly, the hum takes a beat to build — shared
+// by named and shimmer modes alike, so a shimmer partial arrives exactly as
+// fast as a named one at the same frequency.
+function attackFor(freq) {
+  return Math.max(0.0009, Math.min(0.012, 120 / freq * 0.01));
+}
+
 // Frequency goes as 1/size, decay goes as size: a bigger bell is lower AND
 // rings longer, and because one number drives both they can never contradict
 // each other the way a hand-set f0 and decay could.
@@ -68,17 +121,19 @@ export function bellVoice(size = 1) {
 }
 
 function modesAt(f0, s) {
-  return BELL_MODES.map(([r, a, d, det]) => {
+  const named = BELL_MODES.map(([r, a, d, det]) => {
     const freq = f0 * r;
-    return {
-      freq,
-      amp: a,
-      decay: d * s,
-      detune: det,
-      // high modes speak almost instantly, the hum takes a beat to build
-      attack: Math.max(0.0009, Math.min(0.012, 120 / freq * 0.01)),
-    };
+    return { freq, amp: a, decay: d * s, detune: det, attack: attackFor(freq) };
   });
+  // Shimmer modes are all `detune: 0` — see strike()'s handling of that value.
+  // A mode that dies in well under a second cannot afford a detuned pair: the
+  // beat it would produce needs several seconds just to become audible, so
+  // the second oscillator was pure waste, coincident with the first.
+  const shimmer = SHIMMER_MODES.map(([r, a, d]) => {
+    const freq = f0 * r;
+    return { freq, amp: a, decay: d * s, detune: 0, attack: attackFor(freq) };
+  });
+  return named.concat(shimmer);
 }
 
 // The pitch-addressed form. Eight case modules still call bell({ f0 }), and
@@ -337,37 +392,72 @@ export const STRIKE_SCALE = 0.11;
 // stone are this same function with a different partial table, decay and
 // transient — which is why generalizing it while there were two callers was
 // cheaper than doing it at six.
-export function strike(ctx, dest, { partials, gain = 1, transient = {}, scale = STRIKE_SCALE } = {}) {
+//
+// `transientGain` defaults to `gain` so every caller that never knew this
+// split existed (bar, bamboo, sit bell, drip — none of them pass it) keeps
+// behaving exactly as before, one number scaling the whole strike. Only
+// strikeBell() passes them apart now, so BELL.level — which moves whenever
+// the partial table does, as it just did for the shimmer cluster — can no
+// longer silently rescale the mallet too. See BELL's own comment and
+// TRANSIENT_SCALE for why that split exists.
+export function strike(ctx, dest, { partials, gain = 1, transient = {}, scale = STRIKE_SCALE, transientGain = gain } = {}) {
   const t = ctx.currentTime;
   const out = ctx.createGain();
-  out.gain.value = gain;
+  out.gain.value = 1;
   out.connect(dest);
+  const partialsBus = ctx.createGain();
+  partialsBus.gain.value = gain;
+  partialsBus.connect(out);
   for (const p of partials) {
-    // A partial is a PAIR, split either side of its centre; the difference is
-    // what beats. Per-partial when the table says so, otherwise the old fixed
-    // width, so bronze can breathe unevenly while bar and bamboo do not move.
+    // A partial is normally a PAIR, split either side of its centre; the
+    // difference is what beats. Per-partial when the table says so,
+    // otherwise the old fixed width, so bronze can breathe unevenly while
+    // bar and bamboo do not move. `detune: 0` is the one exception: an
+    // EXPLICIT zero (not the absent-field fallback) means a mode dies too
+    // fast for a beat to ever be heard — the shimmer cluster's case, at
+    // 0.05-0.30s a 0.3 Hz beat would need three seconds just to show up —
+    // so it gets a single oscillator at full peak instead of two coincident
+    // sines at half peak each (an earlier reviewer's catch: that pair was
+    // pure waste, not a beat).
+    const explicitZero = p.detune === 0;
     const det = Number.isFinite(p.detune) ? p.detune : 0.35;
-    for (const sign of [-1, 1]) {
+    // Per-partial attack, defaulting to the old fixed 15 ms so bar/bamboo/
+    // sit-bell — none of which sets `attack` — ramp exactly as before. Only
+    // the bonshō's table opts into a shorter, per-mode rise.
+    const rise = Number.isFinite(p.attack) ? p.attack : 0.015;
+    if (explicitZero) {
       const osc = ctx.createOscillator();
       osc.type = 'sine';
-      osc.frequency.value = p.freq + sign * det;
+      osc.frequency.value = p.freq;
       const g = ctx.createGain();
-      const peak = (p.amp * scale) / 2;
-      // Per-partial attack, defaulting to the old fixed 15 ms so bar/bamboo/
-      // sit-bell — none of which sets `attack` — ramp exactly as before. Only
-      // the bonshō's table opts into a shorter, per-mode rise.
-      const rise = Number.isFinite(p.attack) ? p.attack : 0.015;
+      const peak = p.amp * scale;
       g.gain.setValueAtTime(0, t);
       g.gain.linearRampToValueAtTime(peak, t + rise);
       g.gain.exponentialRampToValueAtTime(peak * 0.001, t + p.decay);
-      osc.connect(g); g.connect(out);
+      osc.connect(g); g.connect(partialsBus);
       osc.start(t); osc.stop(t + p.decay + 0.1);
+    } else {
+      for (const sign of [-1, 1]) {
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = p.freq + sign * det;
+        const g = ctx.createGain();
+        const peak = (p.amp * scale) / 2;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(peak, t + rise);
+        g.gain.exponentialRampToValueAtTime(peak * 0.001, t + p.decay);
+        osc.connect(g); g.connect(partialsBus);
+        osc.start(t); osc.stop(t + p.decay + 0.1);
+      }
     }
   }
   // the mallet: a short filtered noise burst, the part that says what hit what.
   // `transient` is one spec or an ARRAY of them — a real strike can be two
   // events at once (a beam's thump AND the bronze's own ping), which one bare
   // object could never express. A single spec keeps working unchanged.
+  const transientBus = ctx.createGain();
+  transientBus.gain.value = transientGain;
+  transientBus.connect(out);
   for (const spec of Array.isArray(transient) ? transient : [transient]) {
     const { dur = 0.08, freq = 620, q = 1.2, amp = 0.25 } = spec;
     const nb = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * dur), ctx.sampleRate);
@@ -376,7 +466,7 @@ export function strike(ctx, dest, { partials, gain = 1, transient = {}, scale = 
     const nsrc = ctx.createBufferSource(); nsrc.buffer = nb;
     const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
     const ng = ctx.createGain(); ng.gain.value = amp;
-    nsrc.connect(bp); bp.connect(ng); ng.connect(out);
+    nsrc.connect(bp); bp.connect(ng); ng.connect(transientBus);
     nsrc.start(t);
   }
 }
@@ -387,13 +477,15 @@ export function strike(ctx, dest, { partials, gain = 1, transient = {}, scale = 
 // and `level` sit alongside the routing fields for the callers that pitch and
 // gain by them, matching the shape of every other voice's table.
 //
-// `level`: the new BELL_MODES amplitude table sums to 4.7 against the old
-// table's 2.47 (a real bonshō's upper cluster is loud, not an afterthought),
-// so a straight swap would have played the rebuilt bell nearly twice as loud
-// and risked clipping. 2.47 / 4.7 = 0.5255 brings the new voice's summed peak
-// back to the old one's — level, not the table, is what changed to fix this,
-// so the shape Frank hears at audition is not fighting a second, unrelated
-// loudness jump.
+// `level`: the partial table (named + shimmer) now sums to 5.4137 against
+// the pre-Task-5A table's 2.47 (a real bonshō's upper register is loud, not
+// an afterthought), so a straight swap would have played the rebuilt bell
+// more than twice as loud and risked clipping. 2.47 / 5.4137 = 0.4563 brings
+// the voice's summed peak back to that same original reference — level, not
+// either table, is what moves to fix this, so what Frank hears at audition
+// is not also fighting an unrelated loudness jump. (Task 5A's own migration,
+// for the 11-mode-only table, landed on 0.5255 = 2.47 / 4.70 the same way;
+// the shimmer cluster's added 0.7137 is why this number moved again.)
 //
 // There used to be a `tail: 16` here for the spatial bus's release timer. A
 // code review caught it: k9's f0:49 implies a hum decay near 18s, so a flat
@@ -401,9 +493,69 @@ export function strike(ctx, dest, { partials, gain = 1, transient = {}, scale = 
 // gets a position (today none do, so it was latent — but the spatial
 // migration is a later task in this plan and would have hit it live). See
 // `bellTail()`, which derives the release from the voice actually struck.
-export const BELL = { degree: 0, level: 0.5255, size: 1, verbMix: 0.7 };
+export const BELL = { degree: 0, level: 0.4563, size: 1, verbMix: 0.7 };
 
-export function strikeBell(ctx, dry, verbIn, { partials, gain = 1, verbMix = BELL.verbMix } = {}) {
+// The mallet's OWN calibration, decoupled from BELL.level and frozen at what
+// it was worth when Frank tuned beam/ping/pingFreq on the audition page
+// (Task 5A's 0.5255). CODE REVIEW CAUGHT, deferred from Task 5A: the level
+// correction above is computed purely from the PARTIAL table's amplitude
+// sum, but strike() used to apply that single `gain` to the whole strike —
+// partials AND the mallet transient together — so every future change to
+// the partial table (this task's shimmer cluster included) silently
+// rescaled the mallet too, landing it well under what its own amp numbers
+// say. Freezing this constant means beam/ping keep meaning what Frank's ear
+// approved however BELL.level moves from here on — see strike()'s
+// `transientGain` param, which is how the two are kept apart.
+export const TRANSIENT_SCALE = 0.5255;
+
+// Non-overlapping macro bands over a struck voice's partials, by MODE INDEX
+// — never by an absolute Hz threshold, which is exactly what made the old
+// `brightness`/`clang` sliders (freq > 700, top four) impossible to reason
+// about: the same slider covered a different set of modes at every size.
+// `ring` only stretches the NAMED modes' decay — the sustained tone Frank
+// actually hears ring on — not the shimmer, whose entire design goal is to
+// be gone well inside a second (see SHIMMER_MODES' comment); letting `ring`
+// scale it too would stretch `great`'s shimmer past a second at its own
+// ring of 3.00, undoing that goal on the very first preset to use it.
+export function bellMacroPartials(voice, { hum = 1, body = 1, clang = 1, shimmer = 1, ring = 1 } = {}) {
+  return voice.partials.map((p, i) => {
+    const named = i < NAMED_MODE_COUNT;
+    const band = i === 0 ? hum : i <= 5 ? body : named ? clang : shimmer;
+    return { ...p, amp: p.amp * band, decay: named ? p.decay * ring : p.decay };
+  });
+}
+
+// Frank's audition numbers (task-5b-brief.md's top table), re-derived onto
+// the four non-overlapping bands above from what his ORIGINAL, overlapping
+// macros actually produced per mode — not copied across as-is, since
+// `brightness`/`clang` no longer mean what they meant when he tuned them.
+//
+// hum is exact: one mode, no overlap was possible under the old macros
+// either. body and clang are an amplitude-weighted fit (the macro that
+// preserves each band's TOTAL old-effective amplitude, since aggregate
+// energy is closer to what the ear tracks than any one partial) and land
+// within a few percent for most modes — but not all: the old `brightness`
+// threshold (freq > 700 Hz) fell MID-BAND on several presets, which no
+// single new macro number can close. Worst residuals against the old
+// per-mode amplitude: hand body idx1 (its own strike note) +140%; temple
+// body idx5 -57%; temple clang idx6 +36%; great clang idx6 +156%, idx10
+// -67%. Reported here rather than hidden — see task-5b-report.md for the
+// full per-mode table. A preset that no longer sounds like what Frank
+// approved is a failed task even with a green suite, and these bands
+// cannot be reproduced to "a few percent" as specified; that is a property
+// of collapsing an Hz-threshold macro onto a mode-index one, not a fitting
+// error.
+//
+// shimmer has no old-macro history to reproduce — it did not exist when
+// Frank tuned these three presets — so it ships at 1 (the cluster's own
+// designed balance) on all three, pending his ear on the A/B toggle.
+export const BELL_PRESETS = {
+  hand:   { size: 0.38, ring: 1.43, hum: 1.12, body: 2.40, clang: 2.96, shimmer: 1, beam: 0.18, ping: 0.30, pingFreq: 3400, verbMix: 0.50 },
+  temple: { size: 0.78, ring: 2.65, hum: 1.00, body: 1.30, clang: 4.07, shimmer: 1, beam: 0.30, ping: 0.34, pingFreq: 2800, verbMix: 0.70 },
+  great:  { size: 2.36, ring: 3.00, hum: 1.43, body: 1.00, clang: 2.56, shimmer: 1, beam: 0.42, ping: 0.30, pingFreq: 2200, verbMix: 0.85 },
+};
+
+export function strikeBell(ctx, dry, verbIn, { partials, gain = 1, verbMix = BELL.verbMix, beam = 0.30, ping = 0.34, pingFreq = 2800 } = {}) {
   const out = ctx.createGain();
   out.gain.value = 1;
   const dryG = ctx.createGain(); dryG.gain.value = 1 - verbMix * 0.7;
@@ -416,14 +568,18 @@ export function strikeBell(ctx, dry, verbIn, { partials, gain = 1, verbMix = BEL
   // half the event. Task 5 replaced the mallet's bright tick with the beam's
   // low thump instead of layering them, and that trade IS the thud Frank
   // heard: a real strike is wood landing AND bronze answering, at once.
+  // `beam`/`ping`/`pingFreq` default to the pre-preset hardcoded numbers, so
+  // the eight `bell({ f0 })` call sites (none of which pass these) sound
+  // exactly as before.
   strike(ctx, out, {
     partials,
-    gain,
+    gain: gain * BELL.level,
+    transientGain: gain * TRANSIENT_SCALE,
     transient: [
       // the beam: low, woody, with body
-      { dur: 0.055, freq: 350, q: 0.8, amp: 0.30 },
+      { dur: 0.055, freq: 350, q: 0.8, amp: beam },
       // and the bronze answering it
-      { dur: 0.006, freq: 2800, q: 0.9, amp: 0.34 },
+      { dur: 0.006, freq: pingFreq, q: 0.9, amp: ping },
     ],
   });
 }

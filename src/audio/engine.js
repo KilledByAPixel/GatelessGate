@@ -1,7 +1,7 @@
 import {
   makeWind, strikeBell, strikeBar, CHIME, strikeDrip, makeWaterBed, WATER,
   strike, bambooPartials, ODOSHI, pourBurst, strikeSitBell, SIT_BELL, STRIKE_SCALE, BELL,
-  bellVoice, bellPartials, bellTail,
+  bellVoice, bellPartials, bellTail, bellMacroPartials, BELL_PRESETS,
 } from './synths.js';
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
@@ -262,15 +262,28 @@ export function createAudio(save) {
     // `size` is the new way to ask for a bell; `f0` survives as an override so
     // the eight existing case call sites keep the exact pitches they shipped
     // with — Frank decides at audition whether they migrate to size instead.
+    // `preset` is the third form: one of BELL_PRESETS's tuned bells (hand /
+    // temple / great), voice AND macro dressing AND mallet balance together.
     // The spatial bus's release is `bellTail(v)`, not a constant — a flat
     // number cannot cover every size at once, since decay itself scales with
     // size (see bellTail's comment in synths.js).
-    bell({ size = BELL.size, f0 = null, gain = 1, at = null } = {}) {
+    // `gain` here is a plain velocity now — strikeBell applies BELL.level to
+    // the partials and TRANSIENT_SCALE to the mallet itself, so this call
+    // site never has to know either constant exists.
+    bell({ size = BELL.size, f0 = null, preset = null, gain = 1, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
-      const v = f0 === null ? bellVoice(size) : { f0, partials: bellPartials(f0) };
-      const bus = placed(at, BELL.verbMix, bellTail(v));
+      let v, verbMix = BELL.verbMix, beam, ping, pingFreq;
+      if (preset !== null) {
+        const p = BELL_PRESETS[preset];
+        const voice = bellVoice(p.size);
+        v = { f0: voice.f0, partials: bellMacroPartials(voice, p) };
+        ({ verbMix, beam, ping, pingFreq } = p);
+      } else {
+        v = f0 === null ? bellVoice(size) : { f0, partials: bellPartials(f0) };
+      }
+      const bus = placed(at, verbMix, bellTail(v));
       strikeBell(ctx, bus ? bus.in : master, bus ? null : verb.in,
-        { partials: v.partials, gain: gain * BELL.level, verbMix: bus ? 0 : BELL.verbMix });
+        { partials: v.partials, gain, verbMix: bus ? 0 : verbMix, beam, ping, pingFreq });
     },
     // The timer's bell, opening and closing a sitting. Its own voice rather than
     // an option on bell(): every other bell in the book belongs to a case and is

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B, gustPhase, STRIKE_SCALE } from '../src/audio/synths.js';
+import { windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B, gustPhase, STRIKE_SCALE, BELL_PRESETS } from '../src/audio/synths.js';
 import { parseRecipe, emitterCount, createAudio } from '../src/audio/engine.js';
 import { hz, SCALES } from '../src/audio/tuning.js';
 
@@ -273,4 +273,67 @@ test('bellTail tracks the voice actually struck, not a guess sized to one pitch'
   const hand = bellVoice(0.35);
   const great = bellVoice(2.2);
   assert.ok(bellTail(hand) < bellTail(great), 'tail did not vary with the voice it was given');
+});
+
+test('the shimmer cluster gives even a great bell some treble', () => {
+  // Frank pinned `brightness` at its maximum on all three presets — he was
+  // asking for treble the model could not make. The named series stops at
+  // 15.1x, so the ceiling falls with the pitch: the `great` bell at 46.6 Hz
+  // had NOTHING above 704 Hz, which is why he hauled its clang to 2.59 and
+  // its brightness to the stop. A real bell's modal density RISES with
+  // frequency; the shimmer cluster is that, and it is what fills the gaps a
+  // sparse sine stack leaves in the 1-6 kHz band.
+  const great = bellVoice(2.36);
+  const top = Math.max(...great.partials.map((p) => p.freq));
+  assert.ok(top > 2500, `a great bell still has no treble: tops out at ${Math.round(top)} Hz`);
+
+  const bright = great.partials.filter((p) => p.freq > 1000);
+  assert.ok(bright.length >= 8, `too sparse up top to read as bronze: ${bright.length} modes above 1 kHz`);
+
+  // the shimmer must get out of the way fast, or it is a cymbal
+  for (const p of bright) assert.ok(p.decay < 1.0, `a shimmer mode rings for ${p.decay}s`);
+});
+
+test('the shimmer is irregularly spaced — a regular series is a comb', () => {
+  const { partials } = bellVoice(1);
+  const high = partials.filter((p) => p.freq > partials[10].freq).map((p) => p.freq);
+  assert.ok(high.length >= 10, 'no shimmer cluster');
+  const gaps = high.slice(1).map((f, i) => f - high[i]);
+  const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+  const spread = Math.max(...gaps) / Math.min(...gaps);
+  assert.ok(spread > 1.4, `the shimmer is evenly spaced (spread ${spread.toFixed(2)}) — that is a comb, not a bell`);
+  assert.ok(mean > 0, 'shimmer frequencies are not ascending');
+});
+
+test('the shimmer is deterministic — the same bell twice is the same bell', () => {
+  // Audio is exempt from the no-Math.random rule, but a bell whose overtones
+  // moved between strikes would be a different bell each time.
+  const a = bellVoice(1).partials.map((p) => p.freq);
+  const b = bellVoice(1).partials.map((p) => p.freq);
+  assert.deepEqual(a, b);
+});
+
+test('shimmer modes are single oscillators, not wasted pairs', () => {
+  // A 0.3 Hz beat needs three seconds to be heard; a mode that dies in 0.1 s
+  // cannot use one. detune 0 now means ONE oscillator rather than two
+  // coincident sines.
+  const { partials } = bellVoice(1);
+  const shimmer = partials.slice(11);
+  assert.ok(shimmer.length > 0);
+  for (const p of shimmer) assert.equal(p.detune, 0, 'a shimmer mode still pays for a detuned pair');
+  // and the named modes keep their beat
+  for (const p of partials.slice(0, 11)) assert.ok(p.detune > 0);
+});
+
+test("the three presets are Frank's bells: bigger is lower, longer, clangier", () => {
+  // The family he arrived at by ear, which is real bell physics: a bigger bell
+  // is lower AND rings longer AND clangs harder AND pings LOWER AND sits in
+  // more room. If a change breaks this ordering it has broken his tuning.
+  const { hand, temple, great } = BELL_PRESETS;
+  assert.ok(hand.size < temple.size && temple.size < great.size);
+  assert.ok(hand.ring < temple.ring && temple.ring <= great.ring);
+  assert.ok(hand.pingFreq > temple.pingFreq && temple.pingFreq > great.pingFreq,
+    'a small bell must ping HIGHER than a great one');
+  assert.ok(hand.verbMix < temple.verbMix && temple.verbMix < great.verbMix);
+  assert.ok(hand.beam < temple.beam && temple.beam < great.beam);
 });
