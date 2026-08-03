@@ -13,12 +13,22 @@
     changes the very next strike, no reload, the same way lookdev.html's
     treatment() swaps a whole material set on the next render.
 
-    Task 5B: `brightness`/`clang` (Hz-threshold, overlapping macros) are gone,
-    replaced by four non-overlapping bands keyed to MODE INDEX — hum, body,
-    clang, shimmer — see bellMacroPartials() in synths.js. There is also a
-    high SHIMMER CLUSTER above the eleven named modes now, and an A/B toggle
-    below to switch it in and out on the same preset, which is the whole
-    point of this round: does the density buy anything.
+    Task 5B: a high SHIMMER CLUSTER above the eleven named modes, and an A/B
+    toggle below to switch it in and out on the same preset — does the
+    density buy anything.
+
+    Task 5B, fix round: a SHIPPED preset (BELL_PRESETS in synths.js) is no
+    longer a recipe of band-macro values — two boundary redefinitions in
+    three passes already changed what a stored macro value MEANT, silently,
+    and a lossy refit put its worst error on the loudest partial in the
+    table (`hand`'s own strike note). A preset is now an EXACT per-mode
+    `ampMult` array plus a `shimmer` scalar. The four macro sliders below
+    (hum/body/clang/shimmer) are still here — they're good controls for
+    exploring a bell by ear — but they now apply ON TOP of the active
+    preset's own exact baseline, as a further multiplier, so sliders at
+    neutral (1) reproduce the shipped preset exactly. "print" bakes
+    baseline * slider into a new exact array: what it PRODUCES, not where
+    the sliders sat.
 
     Keys: [space] ring   [1] hand   [2] temple   [3] great
     Serve over HTTP (npx -y http-server -p 8105 -c-1 .) so the ES module
@@ -37,7 +47,7 @@
       padding: 18px 16px 40px;
     }
     h1 { font-size: 15px; margin: 0 0 2px; }
-    #sub { color: var(--mid); font-size: 11px; margin-bottom: 16px; }
+    #sub { color: var(--mid); font-size: 11px; margin-bottom: 16px; max-width: 560px; text-align: center; }
     #hud {
       color: var(--mid); font-size: 12px; margin-bottom: 14px; white-space: pre;
       text-align: center;
@@ -66,6 +76,7 @@
     #panel input[type=range] { width: 100%; accent-color: var(--accent); }
     #panel output { text-align: right; color: var(--ink); }
     .sep { grid-column: 1 / -1; height: 1px; background: var(--line); margin: 4px 0; }
+    .note { grid-column: 1 / -1; color: var(--mid); font-size: 11px; margin: -2px 0 2px; }
     /* label/input/output are siblings in the grid, not wrapped in a row
        element, so a greyed-out control gets `row-off` on itself directly —
        see setShimmerOn() in the script below. */
@@ -81,14 +92,14 @@
     button:hover { border-color: var(--mid); color: var(--ink); }
     button.active { border-color: var(--accent); color: var(--ink); }
     #dump {
-      width: min(560px, 92vw); height: 14em; margin-top: 12px;
+      width: min(560px, 92vw); height: 20em; margin-top: 12px;
       font: 12px/1.4 ui-monospace, Consolas, monospace; display: none;
     }
   </style>
 </head>
 <body>
   <h1>Bell Audition</h1>
-  <div id="sub">the bonshō, rebuilt — additive synthesis, live-edited</div>
+  <div id="sub">the bonshō, rebuilt — additive synthesis, live-edited. hum/body/clang/shimmer multiply ON TOP of the active preset's own exact baseline; neutral (1) reproduces the shipped preset exactly.</div>
   <div id="hud">—</div>
   <button id="ring">Ring — [space]</button>
   <div id="ab">
@@ -106,6 +117,7 @@
     <output id="ring-mul-out"></output>
 
     <div class="sep"></div>
+    <div class="note">multiply ON TOP of the preset's own exact baseline — 1 = baseline, untouched</div>
 
     <label for="hum">hum</label>
     <input id="hum" type="range" min="0" max="4" step="0.01" value="1">
@@ -156,8 +168,7 @@
 
   <script type="module">
     import {
-      bellVoice, bellMacroPartials, BELL, BELL_PRESETS, TRANSIENT_SCALE,
-      NAMED_MODE_COUNT, strike,
+      bellVoice, bellMacroPartials, BELL, BELL_PRESETS, TRANSIENT_SCALE, NAMED_MODE_COUNT, strike,
     } from '../src/audio/synths.js';
     import { makeVerb } from '../src/audio/verb.js';
 
@@ -166,7 +177,10 @@
     // (dryG = 1 - verbMix*0.7, sendG = verbMix*1.2, partials at BELL.level,
     // the mallet at TRANSIENT_SCALE) so verbMix/beam/ping here mean exactly
     // what they mean in the shipped game — a slider here should feel like
-    // the real bell, not a proxy for it.
+    // the real bell, not a proxy for it. Deliberately NOT renormalized the
+    // way applyBellPreset() is at runtime (see synths.js) — an extreme macro
+    // setting can clip here, on purpose, so a slider's effect is heard
+    // directly rather than silently clawed back while auditioning.
     let ctx = null, master = null, verb = null;
     function ensureCtx() {
       if (ctx) return true;
@@ -181,29 +195,64 @@
 
     // ---- three independent live presets, not one shared state -------------
     // CODE REVIEW / FRANK CAUGHT: the old page had a single `state` object
-    // that every preset button overwrote wholesale (Object.assign(state,
-    // PRESETS[name])), so tuning "hand" and then switching to "temple" threw
-    // the hand edits away — there was never anywhere for three DIFFERENT
-    // tuned bells to live at once. "print preset" then dumped whatever was
-    // left in that one shared object, which is why Frank pasted the same
-    // snapshot three times believing they were three presets. Now each named
-    // preset is its own object, seeded from BELL_PRESETS and mutated in
-    // place by whichever sliders are touched while it is active — switching
-    // presets only changes which one the panel is looking at.
-    const live = {
-      hand: { ...BELL_PRESETS.hand },
-      temple: { ...BELL_PRESETS.temple },
-      great: { ...BELL_PRESETS.great },
-    };
+    // that every preset button overwrote wholesale, so tuning "hand" and
+    // then switching to "temple" threw the hand edits away — there was
+    // never anywhere for three DIFFERENTLY tuned bells to live at once, and
+    // "print preset" dumped whatever was left in that one shared object,
+    // which is why Frank pasted the same snapshot three times believing
+    // they were three presets. Each named preset is now its own object,
+    // seeded from the SHIPPED BELL_PRESETS (`ampMult`/`shimmer` are its
+    // exact baseline) plus four macro multipliers that start at 1 (neutral
+    // — baseline, untouched) and are mutated in place by whichever sliders
+    // are touched while that preset is active.
+    function seed(name) {
+      const p = BELL_PRESETS[name];
+      return {
+        size: p.size, ring: p.ring,
+        ampMult: p.ampMult.slice(),       // the exact, shipped baseline — read, never slider-edited directly
+        shimmer: p.shimmer,
+        humMacro: 1, bodyMacro: 1, clangMacro: 1,   // "on top of baseline" multipliers — see buildPartials()
+        beam: p.beam, ping: p.ping, pingFreq: p.pingFreq, verbMix: p.verbMix,
+      };
+    }
+    const live = { hand: seed('hand'), temple: seed('temple'), great: seed('great') };
     let activeName = 'temple';
     let shimmerOn = true;   // the A/B toggle: named modes only vs named + shimmer
 
     function activeState() { return live[activeName]; }
 
+    // baseline (ampMult[i], the exact shipped fidelity) dressed onto a bare
+    // voice first, THEN run through bellMacroPartials with the live slider
+    // values — the same banding function the shipped table itself used to
+    // go through, so there is exactly one place in the whole codebase that
+    // knows where the hum/body/clang boundaries fall. Shimmer has no
+    // baseline layer (there is nothing to protect there — see BELL_PRESETS'
+    // comment), so it is left at 1 here and the slider's own value is what
+    // bellMacroPartials' `shimmer` band multiplies.
+    function withBaseline(s, partials) {
+      return partials.map((p, i) => i < NAMED_MODE_COUNT ? { ...p, amp: p.amp * s.ampMult[i] } : p);
+    }
     function buildPartials() {
-      const v = bellVoice(activeState().size);
-      const src = shimmerOn ? v : { f0: v.f0, partials: v.partials.slice(0, NAMED_MODE_COUNT) };
-      return { f0: v.f0, partials: bellMacroPartials(src, activeState()) };
+      const s = activeState();
+      const voice = bellVoice(s.size);
+      const src = shimmerOn ? voice.partials : voice.partials.slice(0, NAMED_MODE_COUNT);
+      const baselined = { f0: voice.f0, partials: withBaseline(s, src) };
+      const partials = bellMacroPartials(baselined,
+        { hum: s.humMacro, body: s.bodyMacro, clang: s.clangMacro, shimmer: s.shimmer, ring: s.ring });
+      return { f0: voice.f0, partials };
+    }
+
+    // the array print() actually writes: baseline * macro, per named mode —
+    // the thing this whole rebuild exists to make possible without a
+    // fitting error, so the audition page and the shipped table use the
+    // exact same arithmetic (bellMacroPartials again, on a size-1 dummy
+    // voice whose amp is 1 per mode, so its band multiplier comes back out
+    // untouched by anything except `ampMult` and the slider).
+    function bakedAmpMult(s) {
+      const unit = Array.from({ length: NAMED_MODE_COUNT }, () => ({ amp: 1, decay: 1, freq: 1 }));
+      const dressed = bellMacroPartials({ partials: withBaseline(s, unit) },
+        { hum: s.humMacro, body: s.bodyMacro, clang: s.clangMacro });
+      return dressed.map((p) => +p.amp.toFixed(4));
     }
 
     function ringBell() {
@@ -234,9 +283,9 @@
     const fields = [
       ['size', 'size', (v) => v.toFixed(2)],
       ['ring-mul', 'ring', (v) => v.toFixed(2) + 'x'],
-      ['hum', 'hum', (v) => v.toFixed(2)],
-      ['body', 'body', (v) => v.toFixed(2)],
-      ['clang', 'clang', (v) => v.toFixed(2)],
+      ['hum', 'humMacro', (v) => v.toFixed(2) + 'x'],
+      ['body', 'bodyMacro', (v) => v.toFixed(2) + 'x'],
+      ['clang', 'clangMacro', (v) => v.toFixed(2) + 'x'],
       ['shimmer', 'shimmer', (v) => v.toFixed(2)],
       ['beam', 'beam', (v) => v.toFixed(3)],
       ['ping', 'ping', (v) => v.toFixed(3)],
@@ -273,10 +322,10 @@
         (shimmerOn ? '' : ' (shimmer off)');
     }
 
-    // ---- presets: hand/temple/great are BELL_PRESETS from synths.js — the
-    // same three bells Frank tuned and that are shipped. Switching presets
-    // does NOT reset a preset's live edits; it only changes which one the
-    // panel and the spacebar are pointed at.
+    // ---- presets: hand/temple/great seed from the SHIPPED BELL_PRESETS —
+    // the same three bells Frank tuned. Switching presets does NOT reset a
+    // preset's live macro edits; it only changes which one the panel and
+    // the spacebar are pointed at.
     function selectPreset(name) {
       activeName = name;
       syncControls();
@@ -313,12 +362,23 @@
     document.getElementById('ring').addEventListener('click', ringBell);
 
     // ---- print: all three named presets, in their current tuned state,
-    // live — see the comment on `live` above for why this used to be wrong.
+    // live, as an EXACT per-mode array — "bake what they produce, not where
+    // they sat": a stored preset must not mean something different the next
+    // time a macro band's definition moves (this is the second time it has).
     function dumpAllPresets() {
       return ['hand', 'temple', 'great'].map((name) => {
         const s = live[name];
-        const body = fields.map(([, key]) => `  ${key}: ${s[key]}`).join(',\n');
-        return `${name}:\n{\n${body},\n}`;
+        const lines = [
+          `  size: ${s.size},`,
+          `  ring: ${s.ring},`,
+          `  ampMult: [${bakedAmpMult(s).join(', ')}],`,
+          `  shimmer: ${s.shimmer},`,
+          `  beam: ${s.beam},`,
+          `  ping: ${s.ping},`,
+          `  pingFreq: ${s.pingFreq},`,
+          `  verbMix: ${s.verbMix},`,
+        ].join('\n');
+        return `${name}:\n{\n${lines}\n}`;
       }).join('\n\n');
     }
     let dumpOpen = false;
@@ -350,7 +410,7 @@
     });
 
     // console access, same convention as lookdev.html's window.lk
-    window.ba = { ring: ringBell, live, selectPreset, buildPartials, setShimmerOn, ctx: () => ctx };
+    window.ba = { ring: ringBell, live, selectPreset, buildPartials, bakedAmpMult, setShimmerOn, ctx: () => ctx };
 
     setShimmerOn(true);
     selectPreset('temple');

@@ -75,28 +75,51 @@ const BELL_MODES = [
 // 46.6 Hz, 70x reaches 3.3 kHz: the first treble `great` has ever had.
 //
 // The ratios/amps/decays are a literal table, not a live RNG — generated
-// once offline with a seeded log-spaced-plus-jitter rule (irregular, not a
-// comb; steeply falling amplitude; decay shortening toward the top) and
-// pasted in, so there is no seeded generator to keep synchronized with the
-// house's Math.random exemption at strike time: two strikes of the same bell
-// read this same array and are the same bell, by construction.
+// once offline and pasted in, so there is no seeded generator to keep
+// synchronized with the house's Math.random exemption at strike time: two
+// strikes of the same bell read this same array and are the same bell, by
+// construction.
+//
+// CODE REVIEW CAUGHT (second pass): the first version of this table used a
+// log-spaced grid plus +/-7% jitter, which the reviewer correctly called a
+// "jittered grid," not irregular — consecutive ratio QUOTIENTS (r[i+1]/r[i],
+// the thing that is constant for a true comb and varies for an irregular
+// one) only spread 1.15x, barely past the old test's threshold and visually
+// still a comb. This table instead draws its 13 gaps from an EXPONENTIAL
+// distribution (-ln(rand()), a Poisson point process — genuinely irregular
+// spacing, with real crowding and real gaps, floored so no two modes
+// collapse onto each other) over the same log(17)-log(70) span, then falls
+// back to a literal table the same way. Quotient spread 1.512x (see
+// tests/audio.test.js's rewritten comb test, which measures quotients, not
+// Hz gaps — a log-spaced series' Hz gaps widen with frequency regardless of
+// regularity, which is exactly why the first version of that test could not
+// fail).
 const SHIMMER_MODES = [
   // ratio,  amp,     decay
-  [16.66, 0.114,  0.278],
-  [19.37, 0.0896, 0.282],
-  [21.97, 0.0735, 0.273],
-  [22.87, 0.0707, 0.300],
-  [26.91, 0.0523, 0.236],
-  [28.97, 0.0492, 0.268],
-  [31.42, 0.0517, 0.248],
-  [35.31, 0.0397, 0.242],
-  [42.38, 0.0367, 0.190],
-  [46.52, 0.0344, 0.159],
-  [52.37, 0.0298, 0.160],
-  [57.86, 0.0279, 0.108],
-  [64.14, 0.0234, 0.081],
-  [72.16, 0.0208, 0.060],
+  [17.00, 0.1006, 0.273],
+  [17.22, 0.0946, 0.280],
+  [17.44, 0.0981, 0.280],
+  [26.71, 0.0680, 0.238],
+  [31.23, 0.0553, 0.216],
+  [34.39, 0.0397, 0.201],
+  [36.83, 0.0385, 0.217],
+  [40.00, 0.0403, 0.175],
+  [41.47, 0.0403, 0.197],
+  [46.09, 0.0329, 0.183],
+  [54.61, 0.0298, 0.142],
+  [56.80, 0.0281, 0.140],
+  [58.08, 0.0210, 0.110],
+  [70.00, 0.0188, 0.068],
 ];
+
+// Above this, a shimmer mode is wasted at best (most speakers/ears do
+// little with it) and aliased at worst: `bellVoice(0.2)` — the size slider's
+// low end — implies f0 550 Hz, and 72x of that cleared 39 kHz, well past a
+// 44.1 kHz context's 22.05 kHz Nyquist ceiling, folding back down as a
+// spurious tone rather than actually ringing. modesAt() drops any shimmer
+// mode above this per VOICE (not from the table itself), since the cutoff
+// in ratio-space depends on f0.
+const SHIMMER_MAX_HZ = 16000;
 
 // How many entries of a voice's partials array are the NAMED modes — the
 // boundary bellMacroPartials() bands against, and where a shimmer mode
@@ -129,10 +152,15 @@ function modesAt(f0, s) {
   // A mode that dies in well under a second cannot afford a detuned pair: the
   // beat it would produce needs several seconds just to become audible, so
   // the second oscillator was pure waste, coincident with the first.
-  const shimmer = SHIMMER_MODES.map(([r, a, d]) => {
-    const freq = f0 * r;
-    return { freq, amp: a, decay: d * s, detune: 0, attack: attackFor(freq) };
-  });
+  const shimmer = SHIMMER_MODES
+    .map(([r, a, d]) => {
+      const freq = f0 * r;
+      return { freq, amp: a, decay: d * s, detune: 0, attack: attackFor(freq) };
+    })
+    // dropped per VOICE, not from the table — see SHIMMER_MAX_HZ's comment.
+    // A hand-sized bell (high f0) loses its top few shimmer modes; a great
+    // bell (low f0) keeps all fourteen.
+    .filter((p) => p.freq <= SHIMMER_MAX_HZ);
   return named.concat(shimmer);
 }
 
@@ -517,6 +545,13 @@ export const TRANSIENT_SCALE = 0.5255;
 // be gone well inside a second (see SHIMMER_MODES' comment); letting `ring`
 // scale it too would stretch `great`'s shimmer past a second at its own
 // ring of 3.00, undoing that goal on the very first preset to use it.
+//
+// This stays as an AUDITION control — the four bands are a good way to
+// explore a bell by ear — but a SHIPPED preset no longer stores band values
+// (see BELL_PRESETS below for why: two boundary redefinitions in three
+// passes already changed what a stored band value meant, silently). The
+// audition page bakes whatever this function currently produces into an
+// exact per-mode array before it prints a preset.
 export function bellMacroPartials(voice, { hum = 1, body = 1, clang = 1, shimmer = 1, ring = 1 } = {}) {
   return voice.partials.map((p, i) => {
     const named = i < NAMED_MODE_COUNT;
@@ -525,35 +560,108 @@ export function bellMacroPartials(voice, { hum = 1, body = 1, clang = 1, shimmer
   });
 }
 
-// Frank's audition numbers (task-5b-brief.md's top table), re-derived onto
-// the four non-overlapping bands above from what his ORIGINAL, overlapping
-// macros actually produced per mode — not copied across as-is, since
-// `brightness`/`clang` no longer mean what they meant when he tuned them.
+// Frank's three audition presets, baked as an EXACT per-mode amplitude
+// multiplier per named mode — `ampMult[i]` is precisely the multiplier his
+// ORIGINAL, overlapping `brightness`/`hum`/`clang` sliders produced on mode
+// `i`, computed directly from that old formula (freq > 700 for brightness,
+// index 0 for hum, top-four-BY-INDEX for clang), not through any macro band
+// defined later. Zero residual, by construction — there is nothing to fit
+// or approximate here, which is the whole point: a stored preset must not
+// mean something different every time a macro's band boundary moves, and
+// this round moved one (see the correction below).
 //
-// hum is exact: one mode, no overlap was possible under the old macros
-// either. body and clang are an amplitude-weighted fit (the macro that
-// preserves each band's TOTAL old-effective amplitude, since aggregate
-// energy is closer to what the ear tracks than any one partial) and land
-// within a few percent for most modes — but not all: the old `brightness`
-// threshold (freq > 700 Hz) fell MID-BAND on several presets, which no
-// single new macro number can close. Worst residuals against the old
-// per-mode amplitude: hand body idx1 (its own strike note) +140%; temple
-// body idx5 -57%; temple clang idx6 +36%; great clang idx6 +156%, idx10
-// -67%. Reported here rather than hidden — see task-5b-report.md for the
-// full per-mode table. A preset that no longer sounds like what Frank
-// approved is a failed task even with a green suite, and these bands
-// cannot be reproduced to "a few percent" as specified; that is a property
-// of collapsing an Hz-threshold macro onto a mode-index one, not a fitting
-// error.
+// CODE REVIEW CAUGHT — this was shipped as a lossy amplitude-weighted fit
+// onto four bands, and TWO things about that were wrong, not one:
 //
-// shimmer has no old-macro history to reproduce — it did not exist when
-// Frank tuned these three presets — so it ships at 1 (the cluster's own
-// designed balance) on all three, pending his ear on the A/B toggle.
+// 1. The fit itself was the wrong shape of failure: an amplitude-weighted
+//    least-squares fit places its largest ERROR on the LOUDEST partial by
+//    construction (a large absolute deviation on a loud mode costs the same
+//    in the objective as a large deviation on a quiet one, so the fit
+//    "spends" its budget evening out relative error, not absolute). On
+//    `hand`, mode 1 — amp 0.90, the STRIKE NOTE, the pitch a bell is
+//    literally named by — shipped at a +140% multiplier (2.16 actual vs.
+//    the tuned 0.90). That is not a rounding drift; it is a different bell
+//    than the one Frank approved. Exact per-mode storage has no fitting
+//    error to place anywhere.
+//
+// 2. My own causal explanation for the worst residual (`great` mode 6,
+//    +156%) was WRONG and shipped anyway. I attributed it to the old
+//    `brightness > 700 Hz` threshold cutting across the new index-based
+//    clang band. It does not: `great` has exactly ONE mode above 700 Hz
+//    (mode 10, at 703.9 Hz — the diagnosis table's other, already-flagged
+//    inconsistency), and mode 6 (317 Hz) was never anywhere near that
+//    threshold. The real cause is a boundary the brief itself moved without
+//    saying so: the OLD `clang` macro was top-FOUR by index — modes 7-10 —
+//    while the brief defines the NEW `clang` band as modes 6-10, five wide.
+//    Mode 6 therefore received NEITHER macro under the old scheme (its old
+//    effective multiplier is 1, untouched) and receives the new `clang`
+//    band's fitted value under the new one. Had the new band matched the
+//    old grouping (modes 7-10, with mode 6 left in `body`) the fit would
+//    have been substantially better on every preset with no other change:
+//    `great` clang alone improves from {+156%, -67%} to roughly {+27%,
+//    -58%}, and `hand`/`temple` body improve too, since mode 6 stops being
+//    forced into whichever band it lands in. This stopped mattering for
+//    correctness the moment presets became exact arrays — but the WRONG
+//    explanation should not stand uncorrected in the historical record; see
+//    task-5b-report.md's fix section for the full recomputation.
+//
+// `shimmer` still has no old-macro history to reproduce — the cluster did
+// not exist when Frank tuned these three presets — so it stays a single
+// scalar (not folded into the array padded with fourteen 1s: there is no
+// fidelity target to encode for those modes, and a scalar says that
+// honestly) at 1, the cluster's own designed balance, pending his ear on
+// the A/B toggle.
+//
+// `size`/`ring`/`beam`/`ping`/`pingFreq`/`verbMix` are copied verbatim from
+// the brief's top table — untouched, as always.
 export const BELL_PRESETS = {
-  hand:   { size: 0.38, ring: 1.43, hum: 1.12, body: 2.40, clang: 2.96, shimmer: 1, beam: 0.18, ping: 0.30, pingFreq: 3400, verbMix: 0.50 },
-  temple: { size: 0.78, ring: 2.65, hum: 1.00, body: 1.30, clang: 4.07, shimmer: 1, beam: 0.30, ping: 0.34, pingFreq: 2800, verbMix: 0.70 },
-  great:  { size: 2.36, ring: 3.00, hum: 1.43, body: 1.00, clang: 2.56, shimmer: 1, beam: 0.42, ping: 0.30, pingFreq: 2200, verbMix: 0.85 },
+  hand: {
+    size: 0.38, ring: 1.43,
+    ampMult: [1.12, 1.00, 3.00, 3.00, 3.00, 3.00, 3.00, 2.94, 2.94, 2.94, 2.94],
+    shimmer: 1, beam: 0.18, ping: 0.30, pingFreq: 3400, verbMix: 0.50,
+  },
+  temple: {
+    size: 0.78, ring: 2.65,
+    ampMult: [1.00, 1.00, 1.00, 1.00, 1.00, 3.00, 3.00, 4.56, 4.56, 4.56, 4.56],
+    shimmer: 1, beam: 0.30, ping: 0.34, pingFreq: 2800, verbMix: 0.70,
+  },
+  great: {
+    size: 2.36, ring: 3.00,
+    ampMult: [1.43, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 2.59, 2.59, 2.59, 7.77],
+    shimmer: 1, beam: 0.42, ping: 0.30, pingFreq: 2200, verbMix: 0.85,
+  },
 };
+
+// Applies a BELL_PRESETS entry to a bellVoice() — exact per-mode multiply
+// for the named modes (`ampMult[i]`), one scalar for every surviving
+// shimmer mode, `ring` stretching only the named modes' decay (see
+// bellMacroPartials' comment for why).
+//
+// Then RENORMALIZED back to what the same, undressed voice would have
+// summed to (`rawSum`) — a per-voice ratio, not a hardcoded constant, so it
+// keeps working as the Nyquist trim removes a different number of shimmer
+// modes at every size. CODE REVIEW CAUGHT: `BELL.level` is calibrated
+// against that undressed sum (5.4137 at size 1 — see BELL's own comment),
+// but Frank's per-mode multipliers push a dressed voice's sum well past it
+// — measured at size 1's table: hand 2.24x, temple 1.85x, great 1.39x,
+// reaching a summed peak of ~0.60 against the 0.2717 reference BELL.level
+// was calibrated to hold, a real clip risk on a path no case calls yet.
+// Renormalizing here means BELL.level's calibration is valid for every
+// preset AND the bare `size`/`f0` forms, always, without a second constant
+// to keep in sync — and it changes nothing about the SHAPE Frank tuned: a
+// single scalar over the whole voice moves every mode by the same amount,
+// so every ratio between two of `ampMult`'s entries survives exactly.
+export function applyBellPreset(voice, preset) {
+  const dressed = voice.partials.map((p, i) => {
+    const mult = i < NAMED_MODE_COUNT ? preset.ampMult[i] : preset.shimmer;
+    const decay = i < NAMED_MODE_COUNT ? p.decay * preset.ring : p.decay;
+    return { ...p, amp: p.amp * mult, decay };
+  });
+  const rawSum = voice.partials.reduce((s, p) => s + p.amp, 0);
+  const dressedSum = dressed.reduce((s, p) => s + p.amp, 0);
+  const norm = rawSum / dressedSum;
+  return dressed.map((p) => ({ ...p, amp: p.amp * norm }));
+}
 
 export function strikeBell(ctx, dry, verbIn, { partials, gain = 1, verbMix = BELL.verbMix, beam = 0.30, ping = 0.34, pingFreq = 2800 } = {}) {
   const out = ctx.createGain();

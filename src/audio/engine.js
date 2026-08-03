@@ -1,7 +1,7 @@
 import {
   makeWind, strikeBell, strikeBar, CHIME, strikeDrip, makeWaterBed, WATER,
   strike, bambooPartials, ODOSHI, pourBurst, strikeSitBell, SIT_BELL, STRIKE_SCALE, BELL,
-  bellVoice, bellPartials, bellTail, bellMacroPartials, BELL_PRESETS,
+  bellVoice, bellPartials, bellTail, applyBellPreset, BELL_PRESETS,
 } from './synths.js';
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
@@ -276,7 +276,7 @@ export function createAudio(save) {
       if (preset !== null) {
         const p = BELL_PRESETS[preset];
         const voice = bellVoice(p.size);
-        v = { f0: voice.f0, partials: bellMacroPartials(voice, p) };
+        v = { f0: voice.f0, partials: applyBellPreset(voice, p) };
         ({ verbMix, beam, ping, pingFreq } = p);
       } else {
         v = f0 === null ? bellVoice(size) : { f0, partials: bellPartials(f0) };

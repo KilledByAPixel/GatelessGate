@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B, gustPhase, STRIKE_SCALE, BELL_PRESETS } from '../src/audio/synths.js';
+import {
+  windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B,
+  gustPhase, STRIKE_SCALE, BELL_PRESETS, bellMacroPartials, applyBellPreset, NAMED_MODE_COUNT, strike,
+} from '../src/audio/synths.js';
 import { parseRecipe, emitterCount, createAudio } from '../src/audio/engine.js';
 import { hz, SCALES } from '../src/audio/tuning.js';
 
@@ -236,9 +239,19 @@ test('size is one knob: a bigger bell is lower AND rings longer', () => {
   assert.ok(small.f0 > mid.f0 && mid.f0 > great.f0, 'bigger is not lower');
   const hum = (v) => v.partials[0].decay;
   assert.ok(hum(small) < hum(mid) && hum(mid) < hum(great), 'bigger does not ring longer');
-  // the ratios are the bell's identity and must not drift with size
+  // the ratios are the bell's identity and must not drift with size — but a
+  // SMALL bell (high f0) can legitimately have FEWER of them than a big one:
+  // the Nyquist trim (synths.js's SHIMMER_MAX_HZ) drops shimmer modes above
+  // ~16kHz per voice, and `small`'s higher f0 pushes more of them over that
+  // line than `mid`'s does. The trim only ever removes a trailing suffix of
+  // the (ascending-ratio) shimmer table, so the shorter list must still be
+  // an exact prefix of the longer one — that is what "did not drift" means
+  // once sizes are allowed to see different amounts of the same table.
   const ratios = (v) => v.partials.map((p) => +(p.freq / v.f0).toFixed(3));
-  assert.deepEqual(ratios(small), ratios(mid), 'the mode series changed with size');
+  const shortRatios = ratios(small), longRatios = ratios(mid);
+  assert.ok(shortRatios.length <= longRatios.length, 'the smaller bell somehow has MORE modes');
+  assert.deepEqual(shortRatios, longRatios.slice(0, shortRatios.length),
+    'the mode series changed with size');
   // a hand bell must not ring like a temple bell
   assert.ok(hum(small) < 4, `a small bell hums for ${hum(small)}s`);
   assert.ok(great.f0 < 90 && small.f0 > 250, `register is wrong: ${great.f0} / ${small.f0}`);
@@ -295,14 +308,27 @@ test('the shimmer cluster gives even a great bell some treble', () => {
 });
 
 test('the shimmer is irregularly spaced — a regular series is a comb', () => {
+  // CODE REVIEW CAUGHT (second pass): this test used to measure Hz GAPS
+  // between consecutive modes, which widen with frequency on ANY ascending
+  // log-spaced series regardless of regularity — a perfectly geometric comb
+  // from 17x to 70x scores a Hz-gap spread of 3.69, comfortably past the old
+  // 1.4 threshold, so this test could not fail no matter how regular the
+  // table was; it only proved the series ascends. The quantity that is
+  // CONSTANT for a geometric series and VARIES for an irregular one is the
+  // ratio QUOTIENT between consecutive modes (r[i+1]/r[i]) — a perfect comb
+  // scores exactly 1.0 on that measure regardless of range. See
+  // task-5b-report.md for the non-vacuity proof: a perfectly geometric
+  // SHIMMER_MODES table fails this rewritten test and passes the old one.
   const { partials } = bellVoice(1);
   const high = partials.filter((p) => p.freq > partials[10].freq).map((p) => p.freq);
   assert.ok(high.length >= 10, 'no shimmer cluster');
-  const gaps = high.slice(1).map((f, i) => f - high[i]);
-  const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
-  const spread = Math.max(...gaps) / Math.min(...gaps);
-  assert.ok(spread > 1.4, `the shimmer is evenly spaced (spread ${spread.toFixed(2)}) — that is a comb, not a bell`);
-  assert.ok(mean > 0, 'shimmer frequencies are not ascending');
+  // freq[i+1]/freq[i] === ratio[i+1]/ratio[i] exactly (f0 cancels), so the
+  // frequencies already in hand are enough — no need to divide out f0.
+  const quotients = high.slice(1).map((f, i) => f / high[i]);
+  assert.ok(quotients.every((q) => q > 1), 'shimmer frequencies are not ascending');
+  const spread = Math.max(...quotients) / Math.min(...quotients);
+  assert.ok(spread > 1.3,
+    `the shimmer's ratio steps are too even (spread ${spread.toFixed(2)}) — that is a comb, not a bell`);
 });
 
 test('the shimmer is deterministic — the same bell twice is the same bell', () => {
@@ -336,4 +362,175 @@ test("the three presets are Frank's bells: bigger is lower, longer, clangier", (
     'a small bell must ping HIGHER than a great one');
   assert.ok(hand.verbMix < temple.verbMix && temple.verbMix < great.verbMix);
   assert.ok(hand.beam < temple.beam && temple.beam < great.beam);
+});
+
+// ---- fix round: the faithfulness deliverable itself was uncovered — a
+// wrong-but-plausible refit passed every test above. These pin it down.
+
+test("preset ampMult is EXACT, not fit — zero residual against Frank's original macros", () => {
+  // CODE REVIEW CAUGHT: BELL_PRESETS used to store a lossy amplitude-weighted
+  // FIT onto four bands (worst case: hand idx1, the strike note, at +140%).
+  // ampMult must now reproduce EXACTLY what Frank's ORIGINAL, overlapping
+  // macros (task-5b-brief.md's top table: brightness on freq > 700 Hz, hum
+  // on mode 0 alone, clang on the top FOUR modes by INDEX) produced per
+  // named mode — recomputed here from that formula, independently of
+  // whatever synths.js currently ships, so a future refit that reintroduces
+  // error trips this rather than a green suite hiding it again.
+  const ORIGINAL = {
+    hand:   { size: 0.38, brightness: 3, hum: 1.12, clang: 0.98 },
+    temple: { size: 0.78, brightness: 3, hum: 1.00, clang: 1.52 },
+    great:  { size: 2.36, brightness: 3, hum: 1.43, clang: 2.59 },
+  };
+  for (const [name, o] of Object.entries(ORIGINAL)) {
+    const voice = bellVoice(o.size);
+    const expected = voice.partials.slice(0, NAMED_MODE_COUNT).map((p, i) => {
+      let mult = 1;
+      if (i === 0) mult *= o.hum;
+      if (p.freq > 700) mult *= o.brightness;
+      if (i >= NAMED_MODE_COUNT - 4) mult *= o.clang;   // top FOUR by index — the old grouping
+      return mult;
+    });
+    const actual = BELL_PRESETS[name].ampMult;
+    assert.equal(actual.length, NAMED_MODE_COUNT, `${name}: ampMult is not one entry per named mode`);
+    for (let i = 0; i < NAMED_MODE_COUNT; i++) {
+      assert.ok(Math.abs(actual[i] - expected[i]) < 1e-9,
+        `${name} mode ${i}: shipped ${actual[i]}, Frank's original macros produced ${expected[i]} — this is drift, not a rounding difference`);
+    }
+  }
+});
+
+test('bellMacroPartials bands partition every mode — no overlap, no gap', () => {
+  // hum = mode 0, body = modes 1-5, clang = modes 6..(NAMED_MODE_COUNT-1),
+  // shimmer = everything after. Verified with four DISTINCT prime
+  // multipliers: every partial's resulting amp must factor as EXACTLY one
+  // of the four primes — never a product of two (overlap) and never left at
+  // the base amp because no band reached it (a gap).
+  const voice = bellVoice(1);
+  const PRIMES = { hum: 2, body: 3, clang: 5, shimmer: 7 };
+  const dressed = bellMacroPartials(voice, PRIMES);
+  assert.equal(dressed.length, voice.partials.length);
+  const nameOf = { 2: 'hum', 3: 'body', 5: 'clang', 7: 'shimmer' };
+  for (let i = 0; i < dressed.length; i++) {
+    const factor = dressed[i].amp / voice.partials[i].amp;
+    const expected = i === 0 ? PRIMES.hum
+      : i <= 5 ? PRIMES.body
+      : i < NAMED_MODE_COUNT ? PRIMES.clang
+      : PRIMES.shimmer;
+    assert.ok(Math.abs(factor - expected) < 1e-9,
+      `mode ${i} factored as ${factor}, expected the ${nameOf[expected]} band's prime (${expected}) alone`);
+  }
+});
+
+test('shimmer modes above ~16kHz are dropped, not aliased', () => {
+  // `bellVoice(0.38)` is the coordinator's own example (hand's size): several
+  // top shimmer ratios clear 16 kHz there and must be gone, not just loud.
+  const hand = bellVoice(0.38);
+  for (const p of hand.partials) assert.ok(p.freq <= 16000, `a partial at ${Math.round(p.freq)} Hz survived the trim`);
+  assert.ok(hand.partials.length < bellVoice(1).partials.length,
+    'a high-pitched bell kept just as many shimmer modes as a low one — the trim did nothing');
+
+  // and the size slider's own low end (0.15, clamped) is the worst case
+  const tiny = bellVoice(0.15);
+  for (const p of tiny.partials) assert.ok(p.freq <= 16000);
+});
+
+test('applyBellPreset renormalizes so a dressed preset never sums louder than its own bare voice', () => {
+  // CODE REVIEW CAUGHT: BELL.level is calibrated against the UNDRESSED
+  // partial-table sum (see BELL's own comment). Frank's per-mode multipliers
+  // push a dressed sum well past that with no cap otherwise — measured:
+  // hand ~2.24x, temple ~1.85x, great ~1.39x — a real clip risk on a path no
+  // case calls yet. applyBellPreset must claw the sum back to parity, per
+  // voice, exactly, for every preset.
+  for (const [name, preset] of Object.entries(BELL_PRESETS)) {
+    const voice = bellVoice(preset.size);
+    const rawSum = voice.partials.reduce((s, p) => s + p.amp, 0);
+    const dressed = applyBellPreset(voice, preset);
+    const dressedSum = dressed.reduce((s, p) => s + p.amp, 0);
+    assert.ok(Math.abs(dressedSum - rawSum) < 1e-9,
+      `${name}: dressed sum ${dressedSum.toFixed(4)} != bare sum ${rawSum.toFixed(4)} — the preset path can clip`);
+  }
+});
+
+test('applyBellPreset renormalization preserves every ratio between two modes exactly', () => {
+  // A single scalar over the whole voice corrects the OVERALL level; it must
+  // not touch the SHAPE Frank tuned between any two of his own modes — the
+  // ratio of dressed amps must equal the ratio of (base amp * ampMult) for
+  // every pair, unchanged by whatever the normalizer turns out to be.
+  const preset = BELL_PRESETS.hand;
+  const voice = bellVoice(preset.size);
+  const dressed = applyBellPreset(voice, preset);
+  for (let i = 1; i < NAMED_MODE_COUNT; i++) {
+    const expected = (voice.partials[i].amp * preset.ampMult[i])
+      / (voice.partials[0].amp * preset.ampMult[0]);
+    const actual = dressed[i].amp / dressed[0].amp;
+    assert.ok(Math.abs(actual - expected) < 1e-9,
+      `renormalization distorted the shape at idx${i}: got ${actual}, expected ${expected}`);
+  }
+});
+
+// A minimal fake AudioContext — just enough surface for strike() to build
+// its graph without throwing, with every createGain() node RECORDED so a
+// test can see which numeric gains actually got wired to which bus. This
+// is the one place in this file that reaches into strike()'s own graph
+// rather than treating it as opaque/browser-only, because the thing under
+// test — transientGain is a SEPARATE bus from gain — is exactly the kind of
+// wiring mistake a param-table test cannot see.
+function fakeAudioCtx() {
+  const gains = [];
+  return {
+    currentTime: 0,
+    sampleRate: 44100,
+    createGain() {
+      const node = {
+        gain: { value: 1, setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} },
+        connect() {}, disconnect() {},
+      };
+      gains.push(node);
+      return node;
+    },
+    createOscillator() {
+      return { type: 'sine', frequency: { value: 0 }, connect() {}, start() {}, stop() {} };
+    },
+    createBufferSource() {
+      return { buffer: null, connect() {}, start() {}, stop() {} };
+    },
+    createBuffer(channels, length) {
+      return { getChannelData: () => new Float32Array(length) };
+    },
+    createBiquadFilter() {
+      return { type: 'lowpass', frequency: { value: 0 }, Q: { value: 0 }, connect() {} };
+    },
+    _gainValues() { return gains.map((g) => g.gain.value); },
+  };
+}
+
+test('strike() puts the mallet on its own gain bus, separate from the partials', () => {
+  // CODE REVIEW CAUGHT, deferred from Task 5A: strike() used to apply ONE
+  // `gain` to the whole strike, so BELL.level (a partial-table calibration)
+  // silently rescaled the mallet too. `transientGain` must land on a
+  // DIFFERENT bus than `gain` when the two differ.
+  const ctx = fakeAudioCtx();
+  strike(ctx, { connect() {} }, {
+    partials: [{ freq: 440, amp: 1, decay: 0.1, detune: 0.35 }],
+    gain: 0.4563,
+    transientGain: 0.5255,
+    transient: { dur: 0.01, freq: 500, amp: 0.3 },
+  });
+  const values = ctx._gainValues();
+  assert.ok(values.includes(0.4563), 'no bus carries the partials gain (BELL.level path)');
+  assert.ok(values.includes(0.5255), 'no bus carries the transient gain (TRANSIENT_SCALE path)');
+});
+
+test('strike() defaults transientGain to gain — every other voice is unaffected', () => {
+  // bar/bamboo/sit-bell/drip never pass transientGain, so both buses must
+  // still read the SAME single number, exactly as strike() behaved before
+  // this split existed.
+  const ctx = fakeAudioCtx();
+  strike(ctx, { connect() {} }, {
+    partials: [{ freq: 440, amp: 1, decay: 0.1 }],
+    gain: 0.73,
+    transient: { dur: 0.01, freq: 500, amp: 0.3 },
+  });
+  const at073 = ctx._gainValues().filter((v) => v === 0.73);
+  assert.equal(at073.length, 2, `expected exactly two 0.73 gain nodes (partials bus + transient bus), got ${at073.length}`);
 });
