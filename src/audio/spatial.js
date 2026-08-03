@@ -105,9 +105,23 @@ export function makeSpatialBus(ctx, dry, verbIn, { character = 1 } = {}) {
       dryG.gain.value = s.gain * (1 - s.wet);
       sendG.gain.value = s.gain * s.wet * character;
     },
-    // A page left open for an hour strikes a chime hundreds of times, and a
-    // bus still wired to master is still reachable from the graph. Cut it
-    // loose once the voice that owns it has certainly decayed.
+    // Not because a connected bus otherwise LEAKS — Web Audio reclaims a node
+    // once nothing references it and any source feeding it has stopped,
+    // disconnect() or not, so the unplaced fallback path (engine.js's
+    // knock(), which never releases its own dest/dryG/sendG trio) is not
+    // actually leaking either. This is belt-and-braces: cheap insurance so a
+    // page left open for an hour, striking hundreds of chimes, is not left
+    // holding hundreds of live buses wired into the graph at once.
+    //
+    // The timer is wall-clock (setTimeout), not audio-clock, so it keeps
+    // running even while pauseForHide() has suspended ctx: a bell struck
+    // shortly before the page is hidden can have this timer fire and cut its
+    // bus loose mid-ring while the context is frozen, so the tail that would
+    // have played on resume is silently gone instead. That is almost
+    // certainly the outcome we want — the ring was already faded to nothing
+    // by pauseForHide's own fade before the suspend ever landed — but it is
+    // the one place the disconnect itself, not just the sound, has an
+    // observable effect, so it is worth naming rather than leaving implicit.
     release(seconds) {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
