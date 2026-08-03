@@ -177,10 +177,9 @@
     // (dryG = 1 - verbMix*0.7, sendG = verbMix*1.2, partials at BELL.level,
     // the mallet at TRANSIENT_SCALE) so verbMix/beam/ping here mean exactly
     // what they mean in the shipped game — a slider here should feel like
-    // the real bell, not a proxy for it. Deliberately NOT renormalized the
-    // way applyBellPreset() is at runtime (see synths.js) — an extreme macro
-    // setting can clip here, on purpose, so a slider's effect is heard
-    // directly rather than silently clawed back while auditioning.
+    // the real bell, not a proxy for it. That parity used to be false: see
+    // buildPartials()'s own comment for the renormalization fix and why
+    // skipping it broke exactly the promise made in this sentence.
     let ctx = null, master = null, verb = null;
     function ensureCtx() {
       if (ctx) return true;
@@ -232,13 +231,42 @@
     function withBaseline(s, partials) {
       return partials.map((p, i) => i < NAMED_MODE_COUNT ? { ...p, amp: p.amp * s.ampMult[i] } : p);
     }
+    // CODE REVIEW CAUGHT: this used to skip the renormalization
+    // applyBellPreset() does at runtime (see synths.js), on the theory that
+    // hearing a slider clip on purpose was more honest than clawing it back
+    // silently. That was wrong — it meant the page's partials sat up to
+    // +7.0 dB hot relative to the mallet compared to what the shipped bell
+    // actually plays (a DIFFERENT amount per preset: hand +7.00 dB, temple
+    // +5.33 dB, great +2.84 dB, since each preset's ampMult array dresses
+    // the voice by a different total factor). Frank tunes beam/ping BY EAR
+    // against whatever balance this page plays, and if that balance is not
+    // the shipped one, every future tuning session produces numbers that
+    // mean something else in the game. Renormalizing here, identically to
+    // applyBellPreset, means the NEUTRAL case (sliders at 1, shimmer on) is
+    // bit-for-bit the same partial table the shipped preset strikes — see
+    // task-5b-report.md's fix-round section for the six ratios, before and
+    // after. Pushing a macro slider hard can still clip here (the whole
+    // point of an audition page is to let you go too far and hear it), but
+    // the REFERENCE point — what "1" on every slider sounds like — now
+    // matches the game exactly.
     function buildPartials() {
       const s = activeState();
       const voice = bellVoice(s.size);
       const src = shimmerOn ? voice.partials : voice.partials.slice(0, NAMED_MODE_COUNT);
       const baselined = { f0: voice.f0, partials: withBaseline(s, src) };
-      const partials = bellMacroPartials(baselined,
+      const dressed = bellMacroPartials(baselined,
         { hum: s.humMacro, body: s.bodyMacro, clang: s.clangMacro, shimmer: s.shimmer, ring: s.ring });
+      // Same renormalization as applyBellPreset(): claw the dressed sum back
+      // to what the UNDRESSED `src` itself summed to. Using `src` (not
+      // always the full voice) means the A/B toggle's "named only" state
+      // renormalizes against a named-only reference rather than silently
+      // boosting the named modes to make up for the missing shimmer, which
+      // would defeat the toggle's entire purpose of letting the shimmer's
+      // own contribution be heard.
+      const rawSum = src.reduce((sum, p) => sum + p.amp, 0);
+      const dressedSum = dressed.reduce((sum, p) => sum + p.amp, 0);
+      const norm = rawSum / dressedSum;
+      const partials = dressed.map((p) => ({ ...p, amp: p.amp * norm }));
       return { f0: voice.f0, partials };
     }
 

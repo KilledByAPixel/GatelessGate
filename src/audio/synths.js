@@ -505,15 +505,26 @@ export function strike(ctx, dest, { partials, gain = 1, transient = {}, scale = 
 // and `level` sit alongside the routing fields for the callers that pitch and
 // gain by them, matching the shape of every other voice's table.
 //
-// `level`: the partial table (named + shimmer) now sums to 5.4137 against
-// the pre-Task-5A table's 2.47 (a real bonshō's upper register is loud, not
-// an afterthought), so a straight swap would have played the rebuilt bell
-// more than twice as loud and risked clipping. 2.47 / 5.4137 = 0.4563 brings
-// the voice's summed peak back to that same original reference — level, not
-// either table, is what moves to fix this, so what Frank hears at audition
-// is not also fighting an unrelated loudness jump. (Task 5A's own migration,
-// for the 11-mode-only table, landed on 0.5255 = 2.47 / 4.70 the same way;
-// the shimmer cluster's added 0.7137 is why this number moved again.)
+// `level`: the partial table (named + shimmer) summed to 5.4137 when this
+// constant was computed, against the pre-Task-5A table's 2.47 (a real
+// bonshō's upper register is loud, not an afterthought) — a straight swap
+// would have played the rebuilt bell more than twice as loud and risked
+// clipping. 2.47 / 5.4137 = 0.4563 brought the voice's summed peak back to
+// that same original reference — level, not either table, is what moved to
+// fix this, so what Frank hears at audition is not also fighting an
+// unrelated loudness jump. (Task 5A's own migration, for the 11-mode-only
+// table, landed on 0.5255 = 2.47 / 4.70 the same way; the shimmer cluster's
+// added 0.7137 is why this number moved again.)
+//
+// CODE REVIEW CAUGHT: a later reshuffle of SHIMMER_MODES' own amplitudes
+// (still the same 14 ratios, different amp/decay values — see that table's
+// comment) moved the bare sum to 5.4060, which would recompute to 0.4569,
+// not 0.4563. The shipped constant is FROZEN at the value above rather than
+// chasing every subsequent table edit: the difference is 0.13%
+// (20*log10(0.4569/0.4563) = 0.011 dB), inaudible, and re-deriving it on
+// every future amplitude tweak would just be churn. If a future change
+// moves the bare sum by more than a percent or two, recompute for real —
+// this note is here so nobody trusts "5.4137" as this table's current sum.
 //
 // There used to be a `tail: 16` here for the spatial bus's release timer. A
 // code review caught it: k9's f0:49 implies a hum decay near 18s, so a flat
@@ -641,11 +652,13 @@ export const BELL_PRESETS = {
 // summed to (`rawSum`) — a per-voice ratio, not a hardcoded constant, so it
 // keeps working as the Nyquist trim removes a different number of shimmer
 // modes at every size. CODE REVIEW CAUGHT: `BELL.level` is calibrated
-// against that undressed sum (5.4137 at size 1 — see BELL's own comment),
-// but Frank's per-mode multipliers push a dressed voice's sum well past it
-// — measured at size 1's table: hand 2.24x, temple 1.85x, great 1.39x,
-// reaching a summed peak of ~0.60 against the 0.2717 reference BELL.level
-// was calibrated to hold, a real clip risk on a path no case calls yet.
+// against that undressed sum (5.4060 at size 1 today — see BELL's own
+// comment for why the constant itself is frozen at a value computed
+// against an earlier, slightly different sum), but Frank's per-mode
+// multipliers push a dressed voice's sum well past it — measured at size
+// 1's table: hand 2.24x, temple 1.85x, great 1.39x, reaching a summed peak
+// of ~0.60 against the ~0.271 reference BELL.level was calibrated to hold,
+// a real clip risk on a path no case calls yet.
 // Renormalizing here means BELL.level's calibration is valid for every
 // preset AND the bare `size`/`f0` forms, always, without a second constant
 // to keep in sync — and it changes nothing about the SHAPE Frank tuned: a
