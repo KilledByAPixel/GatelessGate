@@ -48,8 +48,8 @@ export default {
 
     // UMMON'S GATE, straddling the road
     const gate = makeGate({ width: 2.8, height: 3.0 });
-    gate.position.set(0.5, 0, -1.2);
-    gate.rotation.y = -0.16;
+    gate.position.set(1.5, 0, -2.2);
+    gate.rotation.y = 0.26;
     scene.add(gate);
 
     // TOZAN, in the gateway, bowing — he came back the next day to ask why.
@@ -60,20 +60,20 @@ export default {
     // sets how far: bodies front local +z, so the waist's turn about x carries
     // the chest forward, along whatever way faceMonk has already turned him.
     const tozan = makeMonk({ height: 1.58, pose: 'bow', bow: BOW });
-    tozan.position.set(1.5, 0, 0.9);
+    tozan.position.set(2.5, 0, 0.9);
     faceMonk(tozan, { x: -1.4, z: -1.8 });
     scene.add(tozan);
 
     // UMMON, beyond the gate, holding the stick he is not going to use
     const ummon = makeMonk({ height: 1.68, elder: true });
-    ummon.position.set(-1.4, 0, -1.8);
+    ummon.position.set(0.5, 0, -1.1);
     faceMonk(ummon, tozan.position);
     const stick = ummon.getObjectByName('staff');
     if (stick) stick.material = toonMaterial({ color: ACCENT, flat: true });
     scene.add(ummon);
 
     const lantern = makeLantern({ height: 1.2 });
-    lantern.position.set(2.6, 0, -2.4);
+    lantern.position.set(2.9, 0, -2.0);
     scene.add(lantern);
 
     const world = composeWorld(scene, {

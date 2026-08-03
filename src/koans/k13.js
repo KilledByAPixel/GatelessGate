@@ -44,14 +44,14 @@ export default {
     // Tokusan carries is the one red thing here (Frank's note: the bell was
     // competing with it). It still swings and rings when struck.
     const bell = makeBell({ height: 0.95, seed: ID, color: WASH.mid });
-    bell.group.position.set(-4.5, 0, 0.4);
+    bell.group.position.set(1.9, 0, -0.4);
     bell.group.rotation.y = 0.7;
     scene.add(bell.group);
 
     // ...and the drum on the other, its near head turned toward the yard
     const drum = makeDrum({ radius: 0.5, seed: ID });
-    drum.group.position.set(1.9, 0, -0.4);
-    drum.group.rotation.y = -1.15;
+    drum.group.position.set(-4.5, 0, 0.4);
+    drum.group.rotation.y = -1.75;
     scene.add(drum.group);
 
     // TOKUSAN, mid-yard, holding the bowl. The bowl is the seal: it is the one
@@ -59,8 +59,7 @@ export default {
     // bowl, and the elder's staff was colliding with it (Frank): a man carrying
     // his bowls to dinner is not also carrying a stick.
     const tokusan = makeMonk({ height: 1.64, pose: 'fold' });
-    tokusan.position.set(0.8, 0, 1.5);
-    faceMonk(tokusan, hall.position);
+    tokusan.position.set(-2.8, 0, -0.5);
     const bowl = makeBowl({ radius: 0.16, color: ACCENT });
     bowl.name = 'held-bowl';
     bowl.position.set(0.0, 0.52, .36);           // held out before him at the waist, clear of the robe
@@ -70,9 +69,10 @@ export default {
     // Seppo on duty at the hall door, who is about to ask him where he is going
     const seppo = makeMonk({ height: 1.58, stout: 1.04 });
     const front = { x: Math.sin(hall.rotation.y), z: Math.cos(hall.rotation.y) };
-    seppo.position.set(hall.position.x + front.x * 2.0, 0, hall.position.z + front.z * 2.0);
+    seppo.position.set(hall.position.x + front.x * 2.5, 0, hall.position.z + front.z * 2.5);
     faceMonk(seppo, tokusan.position);
     scene.add(seppo);
+    faceMonk(tokusan, seppo.position);
 
     const world = composeWorld(scene, {
       seed: ID,

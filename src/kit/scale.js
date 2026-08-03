@@ -68,11 +68,14 @@ export function makeScale({ height = 1.35, color = WASH.dark, panColor = WASH.st
   beam.add(hang);
 
   const CORD = 0.34 * H;
-  const cordGeo = new THREE.CylinderGeometry(0.012 * H, 0.012 * H, CORD, 5);
-  cordGeo.translate(0, -CORD / 2, 0);
-  const cord = new THREE.Mesh(cordGeo, flat);
-  cord.name = 'cord';
-  hang.add(cord);
+  const cordGeo = new THREE.CylinderGeometry(0.012 * H, 0.012 * H, CORD*1.1, 5);
+  cordGeo.translate(0, -CORD *.6, 0);
+  for(let i = 3; i--;)
+  {
+    const cord = new THREE.Mesh(cordGeo, flat).rotateY(i/3*Math.PI*2).rotateX(.5);
+    cord.name = 'cord';
+    hang.add(cord);
+  }
 
   const pan = new THREE.Mesh(
     new THREE.CylinderGeometry(0.26 * H, 0.20 * H, 0.07 * H, 10),
@@ -96,7 +99,7 @@ export function makeScale({ height = 1.35, color = WASH.dark, panColor = WASH.st
     new THREE.CylinderGeometry(0.075 * H, 0.095 * H, 0.19 * H, 8),
     toonMaterial({ color, flat: true }));
   weight.name = 'weight';
-  weight.position.set(0, -0.25 * H, 0);
+  weight.position.set(0, -0.35 * H, 0);
   hang2.add(weight);
 
   const hit = new THREE.Mesh(
