@@ -17,15 +17,23 @@ const BASE_WIND = 0.25;
 // The full ambience recipe, declared once. 'furin' carries no level of its own —
 // the chime's real gain comes from furin.setWindLevel(flag.windLevel()) in the
 // case's update loop — but its presence still matters: emitterCount() sees it
-// and thins the drift layer accordingly. Repeated four times: the ring chime
-// plus the three singles below are four separate objects that each make their
-// own noise when the wind moves them, not one chime with more tubes, so the
-// scene now has four emitters, not one — emitterCount() just filters and
-// counts (src/audio/ambience_diff.js), it does not dedupe by type, so this is
-// the honest way to tell it. Left as one 'furin' would keep the drift layer as
-// loud as if only the ring were hanging, which undersells how much is now
-// making sound under that lintel.
-const AMBIENCE = ['wind:' + BASE_WIND, 'furin', 'furin', 'furin', 'furin', 'music'];
+// and thins the drift layer accordingly (src/audio/music.js's density rule:
+// "the more a scene already sounds, the less the drift plays"). Repeated
+// TWICE, not once and not four times (one per chime hanging under the
+// lintel). density = min(3, 1 + 0.7*emitters) saturates at emitters >= 2.858,
+// so 3 and 4 are literally identical to each other in effect — the honest
+// choices were 1, 2, or capping the recipe's meaning outright. Four chimes
+// answering the same wind IS busier than the single chime this case shipped
+// with, which is why this is 2 and not 1; but it is not three times busier,
+// three of the four are single tubes that fire far less often than the
+// five-tube ring, so it is 2 and not 4 — the drift layer should thin, not
+// nearly vanish (at 4 the mean gap goes 13s -> 39s, worst case 68s -> 120s;
+// every OTHER case in the book tops out at 2 emitters, e.g. k7, k13, k49).
+// Repeating the token at all is still mechanically safe: emitterCount() just
+// filters and counts (src/audio/ambience_diff.js), it doesn't dedupe by type,
+// and diffAmbience() still reports 'music' as a keep across a page turn on
+// this recipe either way, so there's no restart, no seam.
+const AMBIENCE = ['wind:' + BASE_WIND, 'furin', 'furin', 'music'];
 
 export default {
   id: ID,
@@ -113,36 +121,62 @@ export default {
       scene.add(s);
     }
 
-    // a wind chime under the lintel. Strikes are paced by the chime's own
-    // weather; the wind still gates it, so stilling the flag stills the chime.
+    // The ring chime plus three single-tube furin, all hung under the same
+    // lintel — Frank asked for "single wind chimes that can hang that could
+    // get knocked individually ... a single tone. Much of them hanging":
+    // several separate voices answering the same wind in their own time is
+    // the koan's own argument (not the wind, not the flag) staged as sound.
+    //
+    // BURIED CHIME, FOUND DURING REVIEW: the ring used to hang at local
+    // (1.2, 2.6, 0) — exactly on the right post's own axis (post x = +-width/2
+    // = +-1.2, z = 0, same as the chime). Chasing why the task-7A brief's
+    // suggested single position (x -1.2, the mirror) buried a chime inside
+    // the LEFT post surfaced that the ring had been sitting inside the RIGHT
+    // post the same way since the case was first staged: the post's radius at
+    // y 2.6 is ~0.0913 (tapered from POST_BOTTOM_R 0.12 at the foot to
+    // POST_TOP_R 0.09 at the top, src/kit/gate.js), and the ring's widest
+    // point — the cap, 0.46*S = 0.078, rising toward ~0.096 lower in its hang
+    // range — never exceeds that, for its whole vertical extent (y 2.6 down
+    // to ~2.16, wholly inside the post's own 0-2.72 span). It had been
+    // invisible, not merely close, since the day it was staged. Moved here
+    // with the three singles rather than left where it was.
+    //
+    // POSITIONS, measured off src/kit/gate.js at this case's default width
+    // (2.4) and height (2.6): the kasagi's overall footprint is
+    // width*1.4 = 3.36, but only its flat CENTRE span is flush with
+    // y = height+0.09 - KASAGI_H/2 = 2.6 — that span is
+    // width*1.4 - 2*(width*1.4*0.24) = 1.7472 wide, so |x| < 0.8736 is flush
+    // underside with no gap to the wood. Past that the kasagi's wing tilts
+    // upward, and the posts stand at +-width/2 = +-1.2 under that wing. All
+    // four chimes hang on the flat span instead, spread -0.7 to 0.55:
+    //   ring    x -0.70  (visible reach ~0.078-0.098) - 0.31 clear of the left post,
+    //           0.17 clear of the flat span's own edge
+    //   single1 x -0.25  (visible reach ~0.070) - 0.28 clear of the ring
+    //   single2 x  0.15  - 0.26 clear of single1
+    //   single3 x  0.55  - 0.26 clear of single2, 0.49 clear of the right post,
+    //           0.32 clear of the flat span's own edge
+    // ("clear" = edge-to-edge, centre gap minus both chimes' visible reach —
+    // the tag's outer edge, not the wider forgiving pick drum underneath it.)
+    //
+    // TIE BEAM CLEARANCE: the nuki (src/kit/gate.js's cross-tie) sits at
+    // y = height*0.78 = 2.028, top face at 2.098, spanning the same x range
+    // as every chime here. A longer cord brings a chime's invisible pick drum
+    // (the deepest point, 2.1*S below the hang point) closer to that face.
+    // The ring's own default cord (0.62, unchanged) already clears it by only
+    // 0.040 — noted here rather than changed, since task-7A's review scoped
+    // this to the singles. The singles are capped BELOW that default
+    // (0.42/0.52/0.60, not 0.62-0.85) after the review caught the deepest
+    // draft cord (0.85) leaving the pick drum just 0.0005 from the beam —
+    // clearances now 0.074 / 0.057 / 0.043.
+    const RING_X = -0.70;
     const furin = makeFurin({
       seed: 29,
       onStrike: (tube, force, pos) => audio && audio.chimeStrike({ tube, force, at: pos }),
     });
-    furin.group.position.set(1.2, 2.6, 0);
+    furin.group.position.set(RING_X, 2.6, 0);
     gate.add(furin.group);
 
-    // three single-tube furin hung along the same lintel — Frank asked for
-    // "single wind chimes that can hang that could get knocked individually
-    // ... a single tone. Much of them hanging": several separate voices
-    // answering the same wind in their own time is the koan's own argument
-    // (not the wind, not the flag) staged as sound.
-    //
-    // POSITIONS, measured off src/kit/gate.js at this case's default width
-    // (2.4): the kasagi's overall footprint is width*1.4 = 3.36, but only
-    // its flat CENTRE span is flush with y = height+0.09 - KASAGI_H/2 = 2.6
-    // (exactly where the ring chime already hangs) — that span is width*1.4
-    // - 2*(width*1.4*0.24) = 1.7472 wide, so |x| < 0.8736 is flush underside
-    // with no gap to the wood. Past that the kasagi's wing tilts upward, and
-    // the posts stand at +-width/2 = +-1.2 under that wing with a radius of
-    // ~0.091 at y = 2.6 (tapered from 0.12 at the foot to 0.09 at the top) —
-    // wider than a whole single's reach (~0.07 to the tag's outer edge). The
-    // ring chime already hangs AT the right post (x 1.2); the brief's
-    // suggested mirror at -1.2 would seat a single's entire body inside the
-    // left post's own cylinder rather than beside it, so all three singles
-    // stay on the flat span instead, spread -0.8 to 0.55: clear of both
-    // posts (>=0.4 margin) and of the ring chime (>=0.65 margin).
-    const SINGLE_X = [-0.8, -0.25, 0.55];
+    const SINGLE_X = [-0.25, 0.15, 0.55];
     // NOTES: THE GOTCHA — a tubes:1 chime always reports tube index 0 to
     // onStrike, so three singles wired the obvious way would all sound the
     // SAME note. The case has to choose the pitch itself (as k4.js and
@@ -154,11 +188,12 @@ export default {
     // bridge — three individually-sited voices bracketing the ring's cluster
     // rather than folding into it.
     const SINGLE_NOTES = [-1, 5, 9];
+    const SINGLE_CORD = [0.42, 0.52, 0.60];   // see TIE BEAM CLEARANCE above
     const singles = SINGLE_X.map((x, i) => {
       const single = makeFurin({
         tubes: 1,
         seed: 293 + i,                 // distinct, though inert once phase is explicit below
-        cord: 0.45 + 0.2 * i,          // different string lengths -> different resting heights
+        cord: SINGLE_CORD[i],          // different string lengths -> different resting heights
         phase: 1.3 + 2.4 * i,          // own clock, so they never sway or strike in lockstep
         onStrike: (_, force, pos) => audio && audio.chimeStrike({ tube: SINGLE_NOTES[i], force, at: pos }),
       });
@@ -186,8 +221,11 @@ export default {
       const chimeHit = furin.pick(camera, input);
       if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
       // each single is its own object with its own pick() — probed in turn
-      // and returned on the first hit, so one tap can never ring more than
-      // one chime even where two singles' forgiving whole-chime drums overlap
+      // and returned on the first hit. The `return` matters twice over: it
+      // stops one tap from ringing more than one chime, AND it stops the
+      // handler falling through to the flag-mesh check below and toggling
+      // the wind on the same tap that just rang a chime (tests/k29.test.js
+      // mutation-verifies this second consequence by deleting the return).
       for (const single of singles) {
         const singleHit = single.pick(camera, input);
         if (singleHit) { single.ring(0.75, singleHit.tube); return; }
@@ -203,7 +241,7 @@ export default {
       scene,
       setCamera(c) { camera = c; },
       // the full recipe, not just wind: 'music' starts the drift layer, and
-      // 'furin' has to be present here too so emitterCount() sees the chime
+      // 'furin' has to be present here too so emitterCount() sees the chimes
       // and thins the drift accordingly
       update(dt, simTime) {
         flag.update(dt, simTime);

@@ -185,7 +185,7 @@ test('stilling the wind stills the singles too, not just the ring', () => {
     `a stilled scene must ring nothing, ring or single (${struck.length - settled} strikes after stilling)`);
 });
 
-test('a tap rings exactly one chime, even with several hanging', () => {
+test('a tap rings exactly one chime, even with several hanging, and never also toggles the wind', () => {
   const struck = [];
   const audio = {
     startAmbience() {}, stopAmbience() {}, setWindLevel() {},
@@ -207,14 +207,23 @@ test('a tap rings exactly one chime, even with several hanging', () => {
   let sleeve = null;
   single.traverse((o) => { if (o.name === 'tube-hit') sleeve = o; });
   assert.ok(sleeve, 'the single exposes a tube sleeve to pick');
+  const cloth = k.scene.getObjectByName('cloth');
 
-  // raycastFirst is keyed on object identity, like the fixtures above: a hit
-  // only when the queried array actually contains this one single's sleeve —
-  // so a tap that (wrongly) rang every chime hanging under the gate, not just
-  // the one under the cursor, is exactly what would make this fail
-  input.raycastFirst = (cam, targets) => (
-    targets.includes(sleeve) ? { object: sleeve, point: new THREE.Vector3() } : null
-  );
+  // raycastFirst is keyed on object identity: a hit ONLY when the queried
+  // array actually contains this one single's sleeve or the flag's cloth —
+  // never the ring's own sleeves/drum. Making the cloth hittable too (not
+  // just the sleeve, as a narrower version of this fixture once did) is what
+  // lets the test see the real consequence of a missing `return` after
+  // ringing a chime: the handler falling through to also treat the same tap
+  // as a hit on the flag and toggle the wind. A sleeve-only fixture can never
+  // observe that fallthrough, because the flag-mesh query would always miss
+  // regardless of whether the return is there.
+  input.raycastFirst = (cam, targets) => {
+    if (targets.includes(sleeve)) return { object: sleeve, point: new THREE.Vector3() };
+    if (targets.includes(cloth)) return { object: cloth, point: new THREE.Vector3(0, 3, 0) };
+    return null;
+  };
   taps.forEach((cb) => cb());
   assert.equal(struck.length, 1, `one tap on one chime's sleeve should ring exactly one chime, got ${struck.length}`);
+  assert.equal(k.fragment().windOn, true, 'ringing a chime must not also toggle the wind');
 });
