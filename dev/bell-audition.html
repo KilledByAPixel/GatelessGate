@@ -1,0 +1,277 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bell Audition — The Gateless Gate</title>
+  <!--
+    Task 5A's deliverable: the bonshō is additive synthesis, not a sample, and
+    two guesses at its voice have already missed (Frank: "a dull thud and then
+    a bit of reverb, rather than a ding and then a bit of a continued ring").
+    This page is how the third guess gets settled by ear instead of by a third
+    round of code review. Every macro control below edits a LIVE COPY of the
+    partial table built fresh from bellVoice() on every ring — moving a slider
+    changes the very next strike, no reload, the same way lookdev.html's
+    treatment() swaps a whole material set on the next render.
+
+    Keys: [space] ring   [1] hand   [2] temple   [3] great
+    Serve over HTTP (npx -y http-server -p 8105 -c-1 .) so the ES module
+    imports resolve — this fails from file://.
+  -->
+  <style>
+    :root {
+      --paper: #F3EDDF; --ink: #1E1E24; --line: #d8d0bf;
+      --mid: #5a5348; --accent: #C73E3A;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink);
+      font: 13px/1.5 ui-monospace, Consolas, monospace;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 18px 16px 40px;
+    }
+    h1 { font-size: 15px; margin: 0 0 2px; }
+    #sub { color: var(--mid); font-size: 11px; margin-bottom: 16px; }
+    #hud {
+      color: var(--mid); font-size: 12px; margin-bottom: 14px; white-space: pre;
+      text-align: center;
+    }
+    #ring {
+      font: 14px/1 ui-monospace, Consolas, monospace; padding: 12px 40px;
+      background: var(--ink); color: var(--paper); border: none; border-radius: 4px;
+      cursor: pointer; margin-bottom: 18px;
+    }
+    #ring:active { transform: translateY(1px); }
+    #panel {
+      display: grid; grid-template-columns: 90px 1fr 60px; gap: 6px 10px;
+      align-items: center; width: min(560px, 92vw);
+      border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px;
+      background: rgba(255,255,255,0.35);
+    }
+    #panel label { color: var(--mid); }
+    #panel input[type=range] { width: 100%; accent-color: var(--accent); }
+    #panel output { text-align: right; color: var(--ink); }
+    .sep { grid-column: 1 / -1; height: 1px; background: var(--line); margin: 4px 0; }
+    #presets, #extra {
+      display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; justify-content: center;
+    }
+    button {
+      font: inherit; color: var(--mid); background: transparent;
+      border: 1px solid var(--line); border-radius: 3px; padding: 5px 12px; cursor: pointer;
+    }
+    button:hover { border-color: var(--mid); color: var(--ink); }
+    #dump {
+      width: min(560px, 92vw); height: 6em; margin-top: 12px;
+      font: 12px/1.4 ui-monospace, Consolas, monospace; display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Bell Audition</h1>
+  <div id="sub">the bonshō, rebuilt — additive synthesis, live-edited</div>
+  <div id="hud">—</div>
+  <button id="ring">Ring — [space]</button>
+
+  <div id="panel">
+    <label for="size">size</label>
+    <input id="size" type="range" min="0.2" max="3.0" step="0.01" value="1">
+    <output id="size-out"></output>
+
+    <label for="ring-mul">ring</label>
+    <input id="ring-mul" type="range" min="0.2" max="3.0" step="0.01" value="1">
+    <output id="ring-mul-out"></output>
+
+    <label for="brightness">brightness</label>
+    <input id="brightness" type="range" min="0" max="3" step="0.01" value="1">
+    <output id="brightness-out"></output>
+
+    <label for="hum">hum</label>
+    <input id="hum" type="range" min="0" max="3" step="0.01" value="1">
+    <output id="hum-out"></output>
+
+    <label for="clang">clang</label>
+    <input id="clang" type="range" min="0" max="3" step="0.01" value="1">
+    <output id="clang-out"></output>
+
+    <div class="sep"></div>
+
+    <label for="beam">beam</label>
+    <input id="beam" type="range" min="0" max="1" step="0.005" value="0.30">
+    <output id="beam-out"></output>
+
+    <label for="ping">ping</label>
+    <input id="ping" type="range" min="0" max="1" step="0.005" value="0.34">
+    <output id="ping-out"></output>
+
+    <label for="ping-freq">ping freq</label>
+    <input id="ping-freq" type="range" min="800" max="5000" step="10" value="2800">
+    <output id="ping-freq-out"></output>
+
+    <div class="sep"></div>
+
+    <label for="verb-mix">verbMix</label>
+    <input id="verb-mix" type="range" min="0" max="1" step="0.01" value="0.7">
+    <output id="verb-mix-out"></output>
+  </div>
+
+  <div id="presets">
+    <button id="preset-hand" title="1">hand</button>
+    <button id="preset-temple" title="2">temple</button>
+    <button id="preset-great" title="3">great</button>
+  </div>
+  <div id="extra">
+    <button id="print-preset">print preset</button>
+  </div>
+  <textarea id="dump" readonly></textarea>
+
+  <script type="module">
+    import { bellVoice, BELL, strike } from '../src/audio/synths.js';
+    import { makeVerb } from '../src/audio/verb.js';
+
+    // ---- audio graph: a minimal standalone room, not the full engine -------
+    // Mirrors strikeBell's own dry/wet split exactly (dryG = 1 - verbMix*0.7,
+    // sendG = verbMix*1.2) so verbMix here means the same thing it means in
+    // the shipped game — a slider here should feel like the real bell.
+    let ctx = null, master = null, verb = null;
+    function ensureCtx() {
+      if (ctx) return true;
+      if (typeof window === 'undefined') return false;
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      master = ctx.createGain();
+      master.gain.value = 0.9;
+      master.connect(ctx.destination);
+      verb = makeVerb(ctx, master);
+      return true;
+    }
+
+    // ---- the live table ------------------------------------------------------
+    // Every field here is a MACRO over bellVoice()'s table, not a replacement
+    // for it — the mode ratios (the bell's identity, per synths.js) never move,
+    // only their amplitude/decay/transient dressing does. Defaults match the
+    // shipped BELL/strikeBell values exactly, so "hand"/"temple"/"great" plus
+    // the sliders at rest reproduce today's production bell.
+    const state = {
+      size: 1,
+      ring: 1,          // multiplies every partial's decay
+      brightness: 1,    // multiplies amp of every partial above 700 Hz
+      hum: 1,           // multiplies the fundamental's amp alone
+      clang: 1,          // multiplies the top four partials' amp
+      beam: 0.30,
+      ping: 0.34,
+      pingFreq: 2800,
+      verbMix: BELL.verbMix,
+    };
+
+    function buildPartials() {
+      const v = bellVoice(state.size);
+      const n = v.partials.length;
+      return {
+        f0: v.f0,
+        partials: v.partials.map((p, i) => {
+          let amp = p.amp;
+          if (p.freq > 700) amp *= state.brightness;
+          if (i === 0) amp *= state.hum;
+          if (i >= n - 4) amp *= state.clang;
+          return { ...p, amp, decay: p.decay * state.ring };
+        }),
+      };
+    }
+
+    function ringBell() {
+      if (!ensureCtx()) return;
+      if (ctx.state !== 'running') ctx.resume();
+      const { partials } = buildPartials();
+
+      const out = ctx.createGain();
+      out.gain.value = 1;
+      const dryG = ctx.createGain(); dryG.gain.value = 1 - state.verbMix * 0.7;
+      out.connect(dryG); dryG.connect(master);
+      const sendG = ctx.createGain(); sendG.gain.value = state.verbMix * 1.2;
+      out.connect(sendG); sendG.connect(verb.in);
+
+      strike(ctx, out, {
+        partials,
+        gain: BELL.level,
+        transient: [
+          { dur: 0.055, freq: 350, q: 0.8, amp: state.beam },
+          { dur: 0.006, freq: state.pingFreq, q: 0.9, amp: state.ping },
+        ],
+      });
+    }
+
+    // ---- controls --------------------------------------------------------
+    const fields = [
+      ['size', 'size', (v) => v.toFixed(2)],
+      ['ring-mul', 'ring', (v) => v.toFixed(2) + 'x'],
+      ['brightness', 'brightness', (v) => v.toFixed(2)],
+      ['hum', 'hum', (v) => v.toFixed(2)],
+      ['clang', 'clang', (v) => v.toFixed(2)],
+      ['beam', 'beam', (v) => v.toFixed(3)],
+      ['ping', 'ping', (v) => v.toFixed(3)],
+      ['ping-freq', 'pingFreq', (v) => Math.round(v) + ' Hz'],
+      ['verb-mix', 'verbMix', (v) => v.toFixed(2)],
+    ];
+    function syncControls() {
+      for (const [id, key, fmt] of fields) {
+        document.getElementById(id).value = state[key];
+        document.getElementById(id + '-out').textContent = fmt(state[key]);
+      }
+      updateHud();
+    }
+    for (const [id, key, fmt] of fields) {
+      const input = document.getElementById(id);
+      input.addEventListener('input', () => {
+        state[key] = parseFloat(input.value);
+        document.getElementById(id + '-out').textContent = fmt(state[key]);
+        updateHud();
+      });
+    }
+
+    function updateHud() {
+      const v = bellVoice(state.size);
+      const hum = v.partials[0].decay * state.ring;
+      document.getElementById('hud').textContent =
+        `size ${state.size.toFixed(2)} -> f0 ${v.f0.toFixed(1)} Hz` +
+        `   ·   hum decay ${hum.toFixed(1)}s   ·   ${v.partials.length} partials`;
+    }
+
+    // ---- presets: hand/temple/great share the size-1-knob test's own three
+    // sizes (0.35 / 1 / 2.2), so a preset here and the "size is one knob" unit
+    // test in tests/audio.test.js are the same three bells.
+    const PRESETS = {
+      hand:   { size: 0.35, ring: 0.7, brightness: 1.3, hum: 0.8, clang: 1.2, beam: 0.18, ping: 0.30, pingFreq: 3400, verbMix: 0.5 },
+      temple: { size: 1.0, ring: 1.0, brightness: 1.0, hum: 1.0, clang: 1.0, beam: 0.30, ping: 0.34, pingFreq: 2800, verbMix: 0.7 },
+      great:  { size: 2.2, ring: 1.3, brightness: 0.8, hum: 1.15, clang: 0.85, beam: 0.42, ping: 0.30, pingFreq: 2200, verbMix: 0.85 },
+    };
+    function applyPreset(name) {
+      Object.assign(state, PRESETS[name]);
+      syncControls();
+      ringBell();
+    }
+    document.getElementById('preset-hand').addEventListener('click', () => applyPreset('hand'));
+    document.getElementById('preset-temple').addEventListener('click', () => applyPreset('temple'));
+    document.getElementById('preset-great').addEventListener('click', () => applyPreset('great'));
+
+    document.getElementById('ring').addEventListener('click', ringBell);
+    document.getElementById('print-preset').addEventListener('click', () => {
+      const body = fields.map(([, key]) => `  ${key}: ${state[key]}`).join(',\n');
+      const dump = document.getElementById('dump');
+      dump.value = `{\n${body},\n}`;
+      dump.style.display = 'block';
+      dump.focus(); dump.select();
+    });
+
+    addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.code === 'Space') { e.preventDefault(); ringBell(); }
+      else if (e.key === '1') applyPreset('hand');
+      else if (e.key === '2') applyPreset('temple');
+      else if (e.key === '3') applyPreset('great');
+    });
+
+    // console access, same convention as lookdev.html's window.lk
+    window.ba = { ring: ringBell, state, applyPreset, buildPartials, ctx: () => ctx };
+
+    syncControls();
+  </script>
+</body>
+</html>

@@ -14,31 +14,77 @@ export function windParams(level) {
   };
 }
 
-// The temple bell (bonshō). Frank: "it's kind of like a thud more than like a
-// nice bell ring." The spectrum of a real bonshō, in the order the ear picks
-// it out:
-//   - a HUM TONE at the fundamental that outlasts everything. The real thing
-//     rings 20-40 seconds; 14 is enough here and stays out of the next page.
-//   - a STRIKE NOTE near the octave — the pitch by which the bell is named.
-//   - inharmonic upper modes that die FAST, under two seconds, so what hangs
-//     is a clean low pitch and not a clang. The old table topped out at 10s
-//     on the fundamental with the second partial at 8 — near enough to a
-//     clang to explain the thud.
+// A size-1 bell's fundamental. Bells are addressed by SIZE, not pitch — see
+// bellVoice — and this is the one number that anchors the scale.
+export const BELL_REF_HZ = 110;
+
+// The bonshō, rebuilt after Frank heard the first two attempts as "a dull thud
+// and then a bit of reverb, rather than a ding and then a bit of a continued
+// ring." The fault was not the ring, it was that there was nothing up there TO
+// ring: the old table stopped at 5.43x, so case 16's bell had no content above
+// 532 Hz, in a band where the ear is barely awake. He ranked the three bell
+// cases 26 > 16 > 9, which is precisely the order of their treble ceilings.
 //
-// `detune` is the half-width of the pair strike() splits each partial into,
-// so the mode beats at twice it. Widest on the low modes and tightening
-// upward: that spread is the slow breathing in the tail. A single fixed
-// offset — what strike() used to hard-code for every voice — makes every
-// mode beat at the same rate, which is the one thing bronze never does.
-export function bellPartials(f0 = 62) {
-  return [
-    [1.00, 1.00, 14.0, 0.55],   // hum tone
-    [2.00, 0.62, 8.0, 0.40],    // strike note
-    [2.66, 0.34, 3.2, 0.30],
-    [3.01, 0.26, 1.8, 0.24],
-    [4.13, 0.16, 1.2, 0.18],
-    [5.43, 0.09, 0.8, 0.14],
-  ].map(([r, a, d, det]) => ({ freq: f0 * r, amp: a, decay: d, detune: det }));
+// So the series now runs past 15x. The upper cluster is the CLANG — it speaks
+// first, dies inside a second, and leaves the hum behind; that sequence is the
+// "goーn" a temple bell is named for in Japanese. The strike note at 2x leads
+// the amplitude table rather than the fundamental, because a 110 Hz sine is
+// nearly inaudible on the speakers anyone will actually read this book on, and
+// letting it dominate spent all the headroom on something no one can hear.
+//
+// `attack` is per-partial and short at the top: a struck bell's high modes
+// arrive in under 2 ms and that onset is what the ear reads as METAL. strike()
+// used to ramp every mode over a uniform 15 ms, which turns a strike into a
+// swell — the third of the three causes of the thud.
+//
+// `detune` is the half-width of the pair strike() splits each partial into, so
+// the mode beats at twice it. NOTE: unlike the previous table's comment
+// claimed, the low modes here beat FASTEST. Real bronze splits roughly in
+// proportion to frequency, so this is worth revisiting at audition; it is left
+// as-is for now because only the hum and strike note live long enough to be
+// heard beating at all.
+const BELL_MODES = [
+  // ratio,  amp,  decay, detune
+  [1.00,   0.50,  8.0,  0.55],   // hum — present, not dominant
+  [2.00,   0.90,  5.5,  0.42],   // strike note — the pitch the bell is named by
+  [2.42,   0.60,  3.5,  0.34],   // tierce
+  [3.01,   0.50,  2.4,  0.28],
+  [4.10,   0.55,  1.6,  0.22],   // nominal
+  [5.43,   0.45,  1.0,  0.18],
+  [6.81,   0.38,  0.70, 0.15],
+  [8.21,   0.30,  0.50, 0.12],
+  [10.10,  0.24,  0.36, 0.10],
+  [12.40,  0.17,  0.26, 0.08],
+  [15.10,  0.11,  0.18, 0.06],   // the clang cluster — this is the ding
+];
+
+// Frequency goes as 1/size, decay goes as size: a bigger bell is lower AND
+// rings longer, and because one number drives both they can never contradict
+// each other the way a hand-set f0 and decay could.
+export function bellVoice(size = 1) {
+  const s = Math.max(0.15, Math.min(4, size));
+  const f0 = BELL_REF_HZ / s;
+  return { f0, partials: modesAt(f0, s) };
+}
+
+function modesAt(f0, s) {
+  return BELL_MODES.map(([r, a, d, det]) => {
+    const freq = f0 * r;
+    return {
+      freq,
+      amp: a,
+      decay: d * s,
+      detune: det,
+      // high modes speak almost instantly, the hum takes a beat to build
+      attack: Math.max(0.0009, Math.min(0.012, 120 / freq * 0.01)),
+    };
+  });
+}
+
+// The pitch-addressed form. Eight case modules still call bell({ f0 }), and
+// this keeps their pitches while giving them the new voice. Same table.
+export function bellPartials(f0 = BELL_REF_HZ) {
+  return modesAt(f0, BELL_REF_HZ / f0);
 }
 
 // A chime tube is a free-free bar, whose mode series is famously inharmonic:
@@ -294,23 +340,32 @@ export function strike(ctx, dest, { partials, gain = 1, transient = {}, scale = 
       osc.frequency.value = p.freq + sign * det;
       const g = ctx.createGain();
       const peak = (p.amp * scale) / 2;
+      // Per-partial attack, defaulting to the old fixed 15 ms so bar/bamboo/
+      // sit-bell — none of which sets `attack` — ramp exactly as before. Only
+      // the bonshō's table opts into a shorter, per-mode rise.
+      const rise = Number.isFinite(p.attack) ? p.attack : 0.015;
       g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(peak, t + 0.015);
+      g.gain.linearRampToValueAtTime(peak, t + rise);
       g.gain.exponentialRampToValueAtTime(peak * 0.001, t + p.decay);
       osc.connect(g); g.connect(out);
       osc.start(t); osc.stop(t + p.decay + 0.1);
     }
   }
-  // the mallet: a short filtered noise burst, the part that says what hit what
-  const { dur = 0.08, freq = 620, q = 1.2, amp = 0.25 } = transient;
-  const nb = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * dur), ctx.sampleRate);
-  const nd = nb.getChannelData(0);
-  for (let i = 0; i < nd.length; i++) nd[i] = (Math.random() * 2 - 1) * (1 - i / nd.length);
-  const nsrc = ctx.createBufferSource(); nsrc.buffer = nb;
-  const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
-  const ng = ctx.createGain(); ng.gain.value = amp;
-  nsrc.connect(bp); bp.connect(ng); ng.connect(out);
-  nsrc.start(t);
+  // the mallet: a short filtered noise burst, the part that says what hit what.
+  // `transient` is one spec or an ARRAY of them — a real strike can be two
+  // events at once (a beam's thump AND the bronze's own ping), which one bare
+  // object could never express. A single spec keeps working unchanged.
+  for (const spec of Array.isArray(transient) ? transient : [transient]) {
+    const { dur = 0.08, freq = 620, q = 1.2, amp = 0.25 } = spec;
+    const nb = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * dur), ctx.sampleRate);
+    const nd = nb.getChannelData(0);
+    for (let i = 0; i < nd.length; i++) nd[i] = (Math.random() * 2 - 1) * (1 - i / nd.length);
+    const nsrc = ctx.createBufferSource(); nsrc.buffer = nb;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
+    const ng = ctx.createGain(); ng.gain.value = amp;
+    nsrc.connect(bp); bp.connect(ng); ng.connect(out);
+    nsrc.start(t);
+  }
 }
 
 // The temple bell. The only pitched voice in the book that never took a room —
@@ -318,9 +373,17 @@ export function strike(ctx, dest, { partials, gain = 1, transient = {}, scale = 
 // a lesson learned on the inkin and never back-ported to the bonshō. `degree`
 // and `level` sit alongside the routing fields for the callers that pitch and
 // gain by them, matching the shape of every other voice's table.
-export const BELL = { degree: 0, level: 1, verbMix: 0.7, tail: 16 };
+//
+// `level`: the new BELL_MODES amplitude table sums to 4.7 against the old
+// table's 2.47 (a real bonshō's upper cluster is loud, not an afterthought),
+// so a straight swap would have played the rebuilt bell nearly twice as loud
+// and risked clipping. 2.47 / 4.7 = 0.5255 brings the new voice's summed peak
+// back to the old one's — level, not the table, is what changed to fix this,
+// so the shape Frank hears at audition is not fighting a second, unrelated
+// loudness jump.
+export const BELL = { degree: 0, level: 0.5255, size: 1, verbMix: 0.7, tail: 16 };
 
-export function strikeBell(ctx, dry, verbIn, { f0 = 62, gain = 1, verbMix = BELL.verbMix } = {}) {
+export function strikeBell(ctx, dry, verbIn, { partials, gain = 1, verbMix = BELL.verbMix } = {}) {
   const out = ctx.createGain();
   out.gain.value = 1;
   const dryG = ctx.createGain(); dryG.gain.value = 1 - verbMix * 0.7;
@@ -329,14 +392,19 @@ export function strikeBell(ctx, dry, verbIn, { f0 = 62, gain = 1, verbMix = BELL
     const sendG = ctx.createGain(); sendG.gain.value = verbMix * 1.2;
     out.connect(sendG); sendG.connect(verbIn);
   }
-  // The bonshō is struck with a suspended WOODEN BEAM, not a mallet — a low
-  // woody thud with body, around 350 Hz. The transient is roughly 40% of what
-  // identifies a struck object, and the generic 620 Hz default identified
-  // nothing bell-like at all.
+  // The bonshō is struck with a suspended WOODEN BEAM — but the beam is only
+  // half the event. Task 5 replaced the mallet's bright tick with the beam's
+  // low thump instead of layering them, and that trade IS the thud Frank
+  // heard: a real strike is wood landing AND bronze answering, at once.
   strike(ctx, out, {
-    partials: bellPartials(f0),
+    partials,
     gain,
-    transient: { dur: 0.055, freq: 350, q: 0.8, amp: 0.45 },
+    transient: [
+      // the beam: low, woody, with body
+      { dur: 0.055, freq: 350, q: 0.8, amp: 0.30 },
+      // and the bronze answering it
+      { dur: 0.006, freq: 2800, q: 0.9, amp: 0.34 },
+    ],
   });
 }
 

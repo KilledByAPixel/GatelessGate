@@ -1,6 +1,7 @@
 import {
   makeWind, strikeBell, strikeBar, CHIME, strikeDrip, makeWaterBed, WATER,
   strike, bambooPartials, ODOSHI, pourBurst, strikeSitBell, SIT_BELL, STRIKE_SCALE, BELL,
+  bellVoice, bellPartials,
 } from './synths.js';
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
@@ -258,10 +259,15 @@ export function createAudio(save) {
     // one-shot onto the same instant, and unlocking sound later fires them all
     // as one cluster. A missed strike in a scene that was silent anyway costs
     // nothing.
-    bell({ f0 = 62, gain = 1, at = null } = {}) {
+    // `size` is the new way to ask for a bell; `f0` survives as an override so
+    // the eight existing case call sites keep the exact pitches they shipped
+    // with — Frank decides at audition whether they migrate to size instead.
+    bell({ size = BELL.size, f0 = null, gain = 1, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
+      const v = f0 === null ? bellVoice(size) : { f0, partials: bellPartials(f0) };
       const bus = placed(at, BELL.verbMix, BELL.tail);
-      strikeBell(ctx, bus ? bus.in : master, bus ? null : verb.in, { f0, gain, verbMix: bus ? 0 : BELL.verbMix });
+      strikeBell(ctx, bus ? bus.in : master, bus ? null : verb.in,
+        { partials: v.partials, gain: gain * BELL.level, verbMix: bus ? 0 : BELL.verbMix });
     },
     // The timer's bell, opening and closing a sitting. Its own voice rather than
     // an option on bell(): every other bell in the book belongs to a case and is

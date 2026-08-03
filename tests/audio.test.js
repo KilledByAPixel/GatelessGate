@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { windParams, bellPartials, barPartials, GUST_A, GUST_B, gustPhase, STRIKE_SCALE } from '../src/audio/synths.js';
+import { windParams, bellPartials, bellVoice, BELL_REF_HZ, barPartials, GUST_A, GUST_B, gustPhase, STRIKE_SCALE } from '../src/audio/synths.js';
 import { parseRecipe, emitterCount, createAudio } from '../src/audio/engine.js';
 import { hz, SCALES } from '../src/audio/tuning.js';
 
@@ -30,10 +30,22 @@ test('bellPartials are a bonshō: hum tone, strike note, fast-dying upper modes'
   assert.equal(p[0].decay, Math.max(...p.map((x) => x.decay)), 'the fundamental is not the longest');
   assert.ok(p[0].decay >= 12, `the hum tone is too short: ${p[0].decay}s`);
 
-  // and the upper modes get out of the way fast
+  // and the upper modes get out of the way fast RELATIVE TO THE HUM. Task 5A
+  // (the treble rebuild) coupled decay to the bell's implied SIZE, and f0=62
+  // implies a size around 1.77 (BELL_REF_HZ / 62) — bigger than the size-1
+  // bell the fixed "<2s" bound here used to assume. A bigger bell's clang
+  // legitimately lasts more absolute seconds than a small one's, so a flat
+  // ceiling checked at one specific low pitch is no longer meaningful; what
+  // must hold at ANY size is that the clang is a small fraction of the hum's
+  // duration, since decay = tableValue * size scales every mode by the same
+  // factor and the ratio between modes cancels it out. See the size-1 version
+  // of this same claim in "the bell has treble — it can actually ding" below.
   const upper = p.filter((x) => x.freq / 62 > 3);
   assert.ok(upper.length >= 2, 'no upper modes to speak of');
-  for (const x of upper) assert.ok(x.decay < 2, `an upper mode rings for ${x.decay}s — that is the clang`);
+  for (const x of upper) {
+    assert.ok(x.decay < p[0].decay * 0.35,
+      `an upper mode rings for ${x.decay}s, too close to the hum's ${p[0].decay}s — that is the clang`);
+  }
 });
 
 test('the bell beats at different rates per mode, which is the shimmer', () => {
@@ -159,4 +171,66 @@ test('emitterCount counts sound sources, not beds', () => {
   assert.equal(emitterCount(['furin:0.4', 'furin:0.2']), 2);
   // water is an object that makes noise, not a bed: the basin thins the swells
   assert.equal(emitterCount(['wind:0.14', 'water', 'music']), 1);
+});
+
+test('the bell has treble — it can actually ding', () => {
+  // THE BUG Frank heard: "almost like a dull thud and then a bit of reverb,
+  // rather than a ding and then a bit of a continued ring." The old table
+  // stopped at 5.43x the fundamental, so case 16's bell (f0 98) had NOTHING
+  // above 532 Hz. The ear peaks at 2-5 kHz and a struck-metal ding lives at
+  // 1-4 kHz. It was not that the bell rang badly; there was no bell up there
+  // to ring. Frank ranked case 26 (f0 150) over 16 (f0 98) over 9 (f0 49) —
+  // exactly the order of their treble ceilings.
+  const { partials } = bellVoice(1);
+  const top = Math.max(...partials.map((p) => p.freq));
+  assert.ok(top > 1200, `still no treble: the voice tops out at ${Math.round(top)} Hz`);
+  assert.ok(partials.length >= 9, `too few modes for a clang: ${partials.length}`);
+
+  // and the bright cluster must get OUT of the way fast, or it is a clang and
+  // not a ding — the bell should leave a clean low pitch hanging
+  const bright = partials.filter((p) => p.freq > 700);
+  assert.ok(bright.length >= 3, 'no bright cluster to speak of');
+  for (const p of bright) assert.ok(p.decay < 1.2, `a bright mode rings for ${p.decay}s`);
+});
+
+test('the upper modes arrive first — the attack IS the metal', () => {
+  // strike() used to ramp every partial in over the same 15 ms. A struck
+  // bell's high modes arrive in under 2 ms, and that onset is what the ear
+  // reads as "metal struck" rather than "a tone swelled".
+  const { partials } = bellVoice(1);
+  for (const p of partials) {
+    assert.ok(Number.isFinite(p.attack) && p.attack > 0, 'a partial has no attack');
+    assert.ok(p.attack <= 0.014, `partial at ${Math.round(p.freq)} Hz swells over ${p.attack}s`);
+  }
+  const low = partials[0];
+  const high = partials[partials.length - 1];
+  assert.ok(high.attack < low.attack, 'the top mode does not arrive before the hum');
+  assert.ok(high.attack < 0.003, `the top mode takes ${high.attack}s to speak`);
+});
+
+test('size is one knob: a bigger bell is lower AND rings longer', () => {
+  // Real physics, and the reason a case names a size rather than a pitch and a
+  // decay it could set in contradiction. Frequency goes as 1/size, decay as
+  // size — they can never disagree.
+  const small = bellVoice(0.35);
+  const mid = bellVoice(1);
+  const great = bellVoice(2.2);
+  assert.ok(small.f0 > mid.f0 && mid.f0 > great.f0, 'bigger is not lower');
+  const hum = (v) => v.partials[0].decay;
+  assert.ok(hum(small) < hum(mid) && hum(mid) < hum(great), 'bigger does not ring longer');
+  // the ratios are the bell's identity and must not drift with size
+  const ratios = (v) => v.partials.map((p) => +(p.freq / v.f0).toFixed(3));
+  assert.deepEqual(ratios(small), ratios(mid), 'the mode series changed with size');
+  // a hand bell must not ring like a temple bell
+  assert.ok(hum(small) < 4, `a small bell hums for ${hum(small)}s`);
+  assert.ok(great.f0 < 90 && small.f0 > 250, `register is wrong: ${great.f0} / ${small.f0}`);
+});
+
+test('bellPartials still answers by pitch, from the same table', () => {
+  // Eight case modules call bell({ f0 }) and must keep their pitches.
+  const p = bellPartials(150);
+  assert.ok(Math.abs(p[0].freq - 150) < 1e-6, 'f0 is not honoured');
+  const v = bellVoice(1);
+  const ratios = (list, f0) => list.map((x) => +(x.freq / f0).toFixed(3));
+  assert.deepEqual(ratios(p, 150), ratios(v.partials, v.f0), 'two tables, not one');
 });
