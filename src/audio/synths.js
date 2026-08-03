@@ -14,11 +14,31 @@ export function windParams(level) {
   };
 }
 
+// The temple bell (bonshō). Frank: "it's kind of like a thud more than like a
+// nice bell ring." The spectrum of a real bonshō, in the order the ear picks
+// it out:
+//   - a HUM TONE at the fundamental that outlasts everything. The real thing
+//     rings 20-40 seconds; 14 is enough here and stays out of the next page.
+//   - a STRIKE NOTE near the octave — the pitch by which the bell is named.
+//   - inharmonic upper modes that die FAST, under two seconds, so what hangs
+//     is a clean low pitch and not a clang. The old table topped out at 10s
+//     on the fundamental with the second partial at 8 — near enough to a
+//     clang to explain the thud.
+//
+// `detune` is the half-width of the pair strike() splits each partial into,
+// so the mode beats at twice it. Widest on the low modes and tightening
+// upward: that spread is the slow breathing in the tail. A single fixed
+// offset — what strike() used to hard-code for every voice — makes every
+// mode beat at the same rate, which is the one thing bronze never does.
 export function bellPartials(f0 = 62) {
   return [
-    [1.0, 1.0, 10], [1.5, 0.6, 8], [2.0, 0.45, 6], [2.66, 0.3, 4.5],
-    [3.01, 0.22, 3], [4.13, 0.14, 2],
-  ].map(([r, a, d]) => ({ freq: f0 * r, amp: a, decay: d }));
+    [1.00, 1.00, 14.0, 0.55],   // hum tone
+    [2.00, 0.62, 8.0, 0.40],    // strike note
+    [2.66, 0.34, 3.2, 0.30],
+    [3.01, 0.26, 1.8, 0.24],
+    [4.13, 0.16, 1.2, 0.18],
+    [5.43, 0.09, 0.8, 0.14],
+  ].map(([r, a, d, det]) => ({ freq: f0 * r, amp: a, decay: d, detune: det }));
 }
 
 // A chime tube is a free-free bar, whose mode series is famously inharmonic:
@@ -264,10 +284,14 @@ export function strike(ctx, dest, { partials, gain = 1, transient = {}, scale = 
   out.gain.value = gain;
   out.connect(dest);
   for (const p of partials) {
-    for (const det of [-0.35, 0.35]) {
+    // A partial is a PAIR, split either side of its centre; the difference is
+    // what beats. Per-partial when the table says so, otherwise the old fixed
+    // width, so bronze can breathe unevenly while bar and bamboo do not move.
+    const det = Number.isFinite(p.detune) ? p.detune : 0.35;
+    for (const sign of [-1, 1]) {
       const osc = ctx.createOscillator();
       osc.type = 'sine';
-      osc.frequency.value = p.freq + det;
+      osc.frequency.value = p.freq + sign * det;
       const g = ctx.createGain();
       const peak = (p.amp * scale) / 2;
       g.gain.setValueAtTime(0, t);
@@ -291,10 +315,10 @@ export function strike(ctx, dest, { partials, gain = 1, transient = {}, scale = 
 
 // The temple bell. The only pitched voice in the book that never took a room —
 // see the sit bell's comment below: a dry bell reads as a thud at ANY pitch,
-// a lesson learned on the inkin and never back-ported to the bonshō. The voice
-// itself (partials, detune, mallet) is rebuilt in the task after this one; this
-// is the routing alone.
-export const BELL = { verbMix: 0.7, tail: 16 };
+// a lesson learned on the inkin and never back-ported to the bonshō. `degree`
+// and `level` sit alongside the routing fields for the callers that pitch and
+// gain by them, matching the shape of every other voice's table.
+export const BELL = { degree: 0, level: 1, verbMix: 0.7, tail: 16 };
 
 export function strikeBell(ctx, dry, verbIn, { f0 = 62, gain = 1, verbMix = BELL.verbMix } = {}) {
   const out = ctx.createGain();
@@ -305,7 +329,15 @@ export function strikeBell(ctx, dry, verbIn, { f0 = 62, gain = 1, verbMix = BELL
     const sendG = ctx.createGain(); sendG.gain.value = verbMix * 1.2;
     out.connect(sendG); sendG.connect(verbIn);
   }
-  strike(ctx, out, { partials: bellPartials(f0), gain });
+  // The bonshō is struck with a suspended WOODEN BEAM, not a mallet — a low
+  // woody thud with body, around 350 Hz. The transient is roughly 40% of what
+  // identifies a struck object, and the generic 620 Hz default identified
+  // nothing bell-like at all.
+  strike(ctx, out, {
+    partials: bellPartials(f0),
+    gain,
+    transient: { dur: 0.055, freq: 350, q: 0.8, amp: 0.45 },
+  });
 }
 
 // ---- the sit bell ----

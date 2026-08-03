@@ -13,16 +13,43 @@ test('windParams monotonic and bounded', () => {
   assert.deepEqual(windParams(2), windParams(1)); // clamps
 });
 
-test('bellPartials are inharmonic and decaying', () => {
+test('bellPartials are a bonshō: hum tone, strike note, fast-dying upper modes', () => {
   const p = bellPartials(62);
-  assert.ok(p.length >= 4);
-  assert.ok(p[0].freq > 0);
+  assert.ok(p.length >= 5);
   for (const x of p) {
     assert.ok(x.freq > 0 && x.amp > 0 && x.decay > 0);
+    assert.ok(Number.isFinite(x.detune));
   }
   // not a pure harmonic stack (some ratio is non-integer)
   const ratios = p.map((x) => x.freq / 62);
   assert.ok(ratios.some((r) => Math.abs(r - Math.round(r)) > 0.05));
+
+  // THE HUM TONE outlasts everything: a struck bonshō leaves a clean low pitch
+  // hanging, not a clang. The old table topped out at 10s on the fundamental
+  // with the second partial at 8 — near enough to a clang.
+  assert.equal(p[0].decay, Math.max(...p.map((x) => x.decay)), 'the fundamental is not the longest');
+  assert.ok(p[0].decay >= 12, `the hum tone is too short: ${p[0].decay}s`);
+
+  // and the upper modes get out of the way fast
+  const upper = p.filter((x) => x.freq / 62 > 3);
+  assert.ok(upper.length >= 2, 'no upper modes to speak of');
+  for (const x of upper) assert.ok(x.decay < 2, `an upper mode rings for ${x.decay}s — that is the clang`);
+});
+
+test('the bell beats at different rates per mode, which is the shimmer', () => {
+  // strike() detunes each partial by +/- its own `detune`, so the beat rate of
+  // a partial is 2x that number. The old code used one FIXED +/-0.35 Hz for
+  // every partial of every voice. Because that offset is ABSOLUTE rather than
+  // proportional, every mode beat at exactly the same 0.7 Hz whatever its
+  // frequency — one uniform warble across the whole spectrum. Real bronze does
+  // not do that: the low modes swell slowly and the rate tightens as they
+  // climb, and that spread IS the shimmer.
+  const p = bellPartials(62);
+  const rates = p.map((x) => x.detune * 2);
+  assert.ok(new Set(rates).size > 1, 'every mode still beats at the same rate');
+  assert.ok(rates[0] >= 0.6 && rates[0] <= 2.6, `the hum tone's swell is wrong: ${rates[0]} Hz`);
+  // widest on the low partials, tightening upward
+  assert.ok(rates[0] > rates[rates.length - 1], 'the beat does not tighten as the modes climb');
 });
 
 test('the strike level scale is a named constant, not a magic number', () => {
