@@ -70,3 +70,49 @@ export function spatialFor(source, listener, tune = SPATIAL) {
 
   return { d, pan, gain, tone, wet };
 }
+
+// ---- the bus (browser-only) ----
+// One of these per one-shot. The dry and wet legs are BOTH scaled by the
+// distance gain, and the wet/dry RATIO is what shifts with distance — that
+// ratio is the cue. Scaling only the dry leg would make a far sound swim in
+// room; scaling neither would make it as loud as a near one.
+//
+// The send taps after the panner so the room hears the placement too: a bell
+// on your left has its early reflections on your left.
+export function makeSpatialBus(ctx, dry, verbIn, { character = 1 } = {}) {
+  const input = ctx.createGain();
+
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.Q.value = 0.4;                    // gentle: air absorption is a slope, not a shelf
+
+  const pan = ctx.createStereoPanner();
+  const dryG = ctx.createGain();
+  const sendG = ctx.createGain();
+
+  input.connect(lp);
+  lp.connect(pan);
+  pan.connect(dryG); dryG.connect(dry);
+  if (verbIn) { pan.connect(sendG); sendG.connect(verbIn); }
+
+  let timer = null;
+
+  return {
+    in: input,
+    place(s) {
+      lp.frequency.value = s.tone;
+      pan.pan.value = s.pan;
+      dryG.gain.value = s.gain * (1 - s.wet);
+      sendG.gain.value = s.gain * s.wet * character;
+    },
+    // A page left open for an hour strikes a chime hundreds of times, and a
+    // bus still wired to master is still reachable from the graph. Cut it
+    // loose once the voice that owns it has certainly decayed.
+    release(seconds) {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        for (const n of [input, lp, pan, dryG, sendG]) { try { n.disconnect(); } catch { /* already gone */ } }
+      }, Math.max(0.1, seconds) * 1000);
+    },
+  };
+}

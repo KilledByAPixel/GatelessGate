@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spatialFor, SPATIAL } from '../src/audio/spatial.js';
+import { createAudio } from '../src/audio/engine.js';
 
 // A listener standing at the origin, looking down -Z (Three.js's camera
 // convention), so +X is to their right.
@@ -80,4 +81,28 @@ test('every output stays in range across a full sweep', () => {
         `tone out of range at ${x},${z}: ${s.tone}`);
     }
   }
+});
+
+const SAVE = { state: () => ({ soundOn: false }), setSound() {} };
+
+test('the engine carries a listener without needing a browser', () => {
+  // createAudio touches no AudioContext until ensureCtx, and the listener is
+  // plain state — so it is readable in Node exactly like mood is.
+  const audio = createAudio(SAVE);
+  assert.equal(audio.listener(), null, 'no listener until main.js sets one');
+  audio.setListener(AT_ORIGIN);
+  assert.deepEqual(audio.listener(), AT_ORIGIN);
+});
+
+test('an at with a non-finite coordinate is refused, not passed to an AudioParam', () => {
+  // A NaN reaching an AudioParam throws and takes the graph down. The engine
+  // is the last place that can catch a bad position cheaply, and a silent
+  // strike is a far better failure than a dead audio context.
+  const audio = createAudio(SAVE);
+  audio.setListener(AT_ORIGIN);
+  // no context has been created, so these are no-ops either way — what is
+  // being pinned is that they do not THROW on garbage input
+  assert.doesNotThrow(() => audio.bell({ at: { x: NaN, y: 0, z: 0 } }));
+  assert.doesNotThrow(() => audio.drip({ at: { x: 0, y: Infinity, z: 0 } }));
+  assert.doesNotThrow(() => audio.chimeStrike({ tube: 0, at: null }));
 });

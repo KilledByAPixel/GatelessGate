@@ -289,8 +289,23 @@ export function strike(ctx, dest, { partials, gain = 1, transient = {}, scale = 
   nsrc.start(t);
 }
 
-export function strikeBell(ctx, dest, { f0 = 62, gain = 1 } = {}) {
-  strike(ctx, dest, { partials: bellPartials(f0), gain });
+// The temple bell. The only pitched voice in the book that never took a room —
+// see the sit bell's comment below: a dry bell reads as a thud at ANY pitch,
+// a lesson learned on the inkin and never back-ported to the bonshō. The voice
+// itself (partials, detune, mallet) is rebuilt in the task after this one; this
+// is the routing alone.
+export const BELL = { verbMix: 0.7, tail: 16 };
+
+export function strikeBell(ctx, dry, verbIn, { f0 = 62, gain = 1, verbMix = BELL.verbMix } = {}) {
+  const out = ctx.createGain();
+  out.gain.value = 1;
+  const dryG = ctx.createGain(); dryG.gain.value = 1 - verbMix * 0.7;
+  out.connect(dryG); dryG.connect(dry);
+  if (verbIn) {
+    const sendG = ctx.createGain(); sendG.gain.value = verbMix * 1.2;
+    out.connect(sendG); sendG.connect(verbIn);
+  }
+  strike(ctx, out, { partials: bellPartials(f0), gain });
 }
 
 // ---- the sit bell ----

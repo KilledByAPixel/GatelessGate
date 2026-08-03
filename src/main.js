@@ -1,4 +1,5 @@
 import * as THREE from '../lib/three.module.js';
+import { listenerFrom } from './camera_listener.js';
 import { makeCameraRig, makeFreeCam } from './camera.js';
 import { makeDissolve } from './render/dissolve.js';
 import { installGrain } from './render/grain.js';
@@ -839,6 +840,7 @@ function feedBreeze() {
 function tick() {
   simTime += STEP;
   audio.setGust(gustPhase(simTime));
+  audio.setListener(listenerFrom(camera));
   feedBreeze();
   if (mode === 'intro' && intro) intro.update(STEP);
   else if (freeCam.enabled()) freeCam.update(STEP);

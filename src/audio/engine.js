@@ -1,10 +1,11 @@
 import {
   makeWind, strikeBell, strikeBar, CHIME, strikeDrip, makeWaterBed, WATER,
-  strike, bambooPartials, ODOSHI, pourBurst, strikeSitBell, SIT_BELL, STRIKE_SCALE,
+  strike, bambooPartials, ODOSHI, pourBurst, strikeSitBell, SIT_BELL, STRIKE_SCALE, BELL,
 } from './synths.js';
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
 import { hz, SCALES } from './tuning.js';
+import { spatialFor, makeSpatialBus } from './spatial.js';
 
 import { parseRecipe, emitterCount, diffAmbience } from './ambience_diff.js';
 
@@ -29,6 +30,7 @@ export function createAudio(save) {
   let windLevel = 0;      // last level a koan requested, so a scale change applies now
   let ducked = false;     // ambience pulls back while narration is reading
   let mood = 'in';        // the case's editorial pick; every pitched voice reads it
+  let listener = null;    // { pos, right, forward } — main.js feeds it from the camera each tick
 
   // Narration plays through an <audio> element, outside this graph, so ducking the
   // master only affects the ambience bed — which is exactly the intent.
@@ -40,6 +42,14 @@ export function createAudio(save) {
 
   function ensureCtx() {
     if (ctx) return;
+    // No AudioContext outside a browser. This used to be unreachable from
+    // Node — nothing called a one-shot without a browser in scope — but the
+    // spatial tests now call bell/drip/chimeStrike directly to pin that a bad
+    // `at` never throws, and they do it with no `window` anywhere. Every
+    // caller below already falls through safely on a null ctx, so leaving it
+    // null here is enough; the alternative is a ReferenceError that takes the
+    // whole test down before the thing being tested is even reached.
+    if (typeof window === 'undefined') return;
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     master = ctx.createGain();
     master.gain.value = masterTarget();
@@ -79,12 +89,28 @@ export function createAudio(save) {
 
   // one drip: pitched to the scale's high register through the case's mood.
   // Ambient drips wander a few degrees; a tap ("loud") is a touch firmer.
-  function dripNow(loud) {
+  function dripNow(loud, at = null) {
     const deg = WATER.degree + [0, 1, 2, 4][Math.floor(Math.random() * 4)];
-    strikeDrip(ctx, master, verb.in, {
-      f0: hz(deg, mood),
-      gain: WATER.level * (loud ? 1.5 : 0.7 + Math.random() * 0.5),
-    });
+    const f0 = hz(deg, mood);
+    const gain = WATER.level * (loud ? 1.5 : 0.7 + Math.random() * 0.5);
+    const bus = placed(at, WATER.verbMix, 1);
+    strikeDrip(ctx, bus ? bus.in : master, bus ? null : verb.in, { f0, gain, verbMix: bus ? 0 : WATER.verbMix });
+  }
+
+  const finiteAt = (a) => !!a && Number.isFinite(a.x) && Number.isFinite(a.y) && Number.isFinite(a.z);
+
+  // A placed one-shot: build a bus, aim it, and hand back its input for the
+  // voice to play into. Returns null when there is nothing to place against —
+  // no listener yet, no position given, or a position that would put a NaN
+  // into an AudioParam and kill the graph. Every caller falls back to the
+  // unplaced path on null, which is exactly today's behaviour, which is how
+  // sixty call sites migrate one at a time instead of all at once.
+  function placed(at, character, tail) {
+    if (!listener || !finiteAt(at) || !ctx) return null;
+    const bus = makeSpatialBus(ctx, master, verb.in, { character });
+    bus.place(spatialFor(at, listener));
+    bus.release(tail);
+    return bus;
   }
 
   function scheduleDrip() {
@@ -139,7 +165,7 @@ export function createAudio(save) {
   return {
     get ctx() { return ctx; },
     get master() { return master; },
-    unlock() { ensureCtx(); if (ctx.state !== 'running') ctx.resume(); },
+    unlock() { ensureCtx(); if (ctx && ctx.state !== 'running') ctx.resume(); },
     setSound(on) {
       soundOn = !!on;
       save.setSound(soundOn);
@@ -150,6 +176,10 @@ export function createAudio(save) {
     // an unknown or absent mood falls back to the default rather than detuning
     setMood(m) { mood = SCALES[m] ? m : 'in'; },
     mood() { return mood; },
+    // The camera IS the listener. main.js feeds this every tick from the
+    // camera's world matrix; the engine never sees a THREE object.
+    setListener(l) { listener = l || null; },
+    listener() { return listener; },
     startAmbience(recipe = []) {
       ensureCtx();
       const emitters = emitterCount(recipe);
@@ -228,10 +258,11 @@ export function createAudio(save) {
     // one-shot onto the same instant, and unlocking sound later fires them all
     // as one cluster. A missed strike in a scene that was silent anyway costs
     // nothing.
-    bell(opts = {}) {
+    bell({ f0 = 62, gain = 1, at = null } = {}) {
       ensureCtx();
-      if (ctx.state !== 'running') return;
-      strikeBell(ctx, master, opts);
+      if (!ctx || ctx.state !== 'running') return;
+      const bus = placed(at, BELL.verbMix, BELL.tail);
+      strikeBell(ctx, bus ? bus.in : master, bus ? null : verb.in, { f0, gain, verbMix: bus ? 0 : BELL.verbMix });
     },
     // The timer's bell, opening and closing a sitting. Its own voice rather than
     // an option on bell(): every other bell in the book belongs to a case and is
@@ -240,7 +271,7 @@ export function createAudio(save) {
     // octaves up, so it is the same note in both scales.
     sitBell() {
       ensureCtx();
-      if (ctx.state !== 'running') return;
+      if (!ctx || ctx.state !== 'running') return;
       strikeSitBell(ctx, master, verb.in, { f0: hz(SIT_BELL.degree, mood) });
     },
     // tube index -> scale degree -> Hz. The engine owns the mapping so the kit
@@ -250,42 +281,53 @@ export function createAudio(save) {
     // ambience: while narration ducks the bed, punctuation compensates so it
     // lands at intended loudness — Frank could not hear the section chimes at
     // all under the duck. Ambient strikes stay ducked with everything else.
-    chimeStrike({ tube = 0, force = 1, punctuate = false } = {}) {
+    chimeStrike({ tube = 0, force = 1, punctuate = false, at = null } = {}) {
       ensureCtx();
-      if (ctx.state !== 'running') return;
+      if (!ctx || ctx.state !== 'running') return;
       const comp = punctuate && ducked ? MASTER / DUCKED : 1;
-      strikeBar(ctx, master, verb.in, { f0: hz(CHIME.degree + tube, mood), gain: CHIME.level * force * comp });
+      const gain = CHIME.level * force * comp;
+      const f0 = hz(CHIME.degree + tube, mood);
+      // Punctuation belongs to the READING, not the scene — it has no place
+      // in the diorama and is never spatialized, however it was called.
+      const bus = punctuate ? null : placed(at, CHIME.verbMix, CHIME.decay + 1);
+      strikeBar(ctx, bus ? bus.in : master, bus ? null : verb.in, { f0, gain, verbMix: bus ? 0 : CHIME.verbMix });
     },
     // a tap on the water (or the bowl set down in it) answers with a drip,
     // whatever the ambient schedule is doing
-    drip({ loud = false } = {}) {
+    drip({ loud = false, at = null } = {}) {
       ensureCtx();
-      if (ctx.state !== 'running') return;
-      dripNow(loud);
+      if (!ctx || ctx.state !== 'running') return;
+      dripNow(loud, at);
     },
     // the shishi-odoshi: the kit object fires onKnock/onPour, the case wires
     // them here — the same indirection as the furin
-    knock({ force = 1 } = {}) {
+    knock({ force = 1, at = null } = {}) {
       ensureCtx();
-      if (ctx.state !== 'running') return;
-      const bus = ctx.createGain();
-      const dryG = ctx.createGain(); dryG.gain.value = 1 - ODOSHI.verbMix * 0.8;
-      bus.connect(dryG); dryG.connect(master);
-      const sendG = ctx.createGain(); sendG.gain.value = ODOSHI.verbMix * 1.1;
-      bus.connect(sendG); sendG.connect(verb.in);
+      if (!ctx || ctx.state !== 'running') return;
+      const bus = placed(at, ODOSHI.verbMix, ODOSHI.decay + 1);
+      let dest;
+      if (bus) dest = bus.in;
+      else {
+        dest = ctx.createGain();
+        const dryG = ctx.createGain(); dryG.gain.value = 1 - ODOSHI.verbMix * 0.8;
+        dest.connect(dryG); dryG.connect(master);
+        const sendG = ctx.createGain(); sendG.gain.value = ODOSHI.verbMix * 1.1;
+        dest.connect(sendG); sendG.connect(verb.in);
+      }
       // a knock is a THUMP, not a bell: it wants its own level scale rather
       // than the bell-sized default undone by a factor at the call site
-      strike(ctx, bus, {
+      strike(ctx, dest, {
         partials: bambooPartials(),
         gain: ODOSHI.level * force,
         scale: STRIKE_SCALE * 9,
         transient: { dur: 0.018, freq: 1100, q: 1.4, amp: 0.5 },
       });
     },
-    pour() {
+    pour({ at = null } = {}) {
       ensureCtx();
-      if (ctx.state !== 'running') return;
-      pourBurst(ctx, master, {});
+      if (!ctx || ctx.state !== 'running') return;
+      const bus = placed(at, ODOSHI.verbMix * 0.6, 2);
+      pourBurst(ctx, bus ? bus.in : master, {});
     },
     playMusic,
     stopMusic,
