@@ -1,7 +1,7 @@
 import {
   makeWind, strikeBell, strikeBar, CHIME, strikeDrip, makeWaterBed, WATER,
   strike, bambooPartials, ODOSHI, pourBurst, strikeSitBell, SIT_BELL, STRIKE_SCALE, BELL,
-  bellVoice, bellPartials,
+  bellVoice, bellPartials, bellTail,
 } from './synths.js';
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
@@ -262,10 +262,13 @@ export function createAudio(save) {
     // `size` is the new way to ask for a bell; `f0` survives as an override so
     // the eight existing case call sites keep the exact pitches they shipped
     // with — Frank decides at audition whether they migrate to size instead.
+    // The spatial bus's release is `bellTail(v)`, not a constant — a flat
+    // number cannot cover every size at once, since decay itself scales with
+    // size (see bellTail's comment in synths.js).
     bell({ size = BELL.size, f0 = null, gain = 1, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
       const v = f0 === null ? bellVoice(size) : { f0, partials: bellPartials(f0) };
-      const bus = placed(at, BELL.verbMix, BELL.tail);
+      const bus = placed(at, BELL.verbMix, bellTail(v));
       strikeBell(ctx, bus ? bus.in : master, bus ? null : verb.in,
         { partials: v.partials, gain: gain * BELL.level, verbMix: bus ? 0 : BELL.verbMix });
     },

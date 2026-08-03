@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { windParams, bellPartials, bellVoice, BELL_REF_HZ, barPartials, GUST_A, GUST_B, gustPhase, STRIKE_SCALE } from '../src/audio/synths.js';
+import { windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B, gustPhase, STRIKE_SCALE } from '../src/audio/synths.js';
 import { parseRecipe, emitterCount, createAudio } from '../src/audio/engine.js';
 import { hz, SCALES } from '../src/audio/tuning.js';
 
@@ -45,6 +45,24 @@ test('bellPartials are a bonshō: hum tone, strike note, fast-dying upper modes'
   for (const x of upper) {
     assert.ok(x.decay < p[0].decay * 0.35,
       `an upper mode rings for ${x.decay}s, too close to the hum's ${p[0].decay}s — that is the clang`);
+  }
+  // CODE REVIEW CAUGHT: the relative check above is where p[0].decay is ALSO
+  // tableValue * size, so the size factor cancels on both sides of the ratio
+  // and the assertion reduces to a statement about BELL_MODES's raw constants
+  // alone (rawX < rawHum * 0.35) — true or false identically at every f0, so
+  // testing it "at f0=62" added no coverage the table itself didn't already
+  // have. It also turned out to be LOOSE: it tolerates a scaled decay up to
+  // hum*0.35 = 4.968s at this pitch, nearly 2.5x the pre-Task-5A ceiling of
+  // 2s. An absolute ceiling closes both gaps, but only if it is actually
+  // TIGHTER than the relative one, or the relative check fails first and this
+  // one never gets exercised. Today's worst upper mode at f0=62 is the 3.01x
+  // tierce at 4.258s; 4.5s leaves ~6% headroom for a legitimate rebalance,
+  // which is below the relative bound's 4.968s, so this check has real,
+  // independent teeth (proven in the Task 5A code-review fix report: inflating
+  // the 3.01x mode's raw decay to 2.6 — scaled 4.613s — passes the relative
+  // check, which only trips past 2.8 raw, and fails THIS one).
+  for (const x of upper) {
+    assert.ok(x.decay < 4.5, `an upper mode rings for ${x.decay}s at f0=62 — the clang is lingering`);
   }
 });
 
@@ -233,4 +251,26 @@ test('bellPartials still answers by pitch, from the same table', () => {
   const v = bellVoice(1);
   const ratios = (list, f0) => list.map((x) => +(x.freq / f0).toFixed(3));
   assert.deepEqual(ratios(p, 150), ratios(v.partials, v.f0), 'two tables, not one');
+});
+
+test('bellTail tracks the voice actually struck, not a guess sized to one pitch', () => {
+  // CODE REVIEW CAUGHT: BELL used to carry a flat `tail: 16` for the spatial
+  // bus's release. Decay is now coupled to size, so the hum's real length
+  // varies per call — k9's f0:49 implies a hum decay near 18s, already past
+  // the old flat 16 — and spatial.js's bus.release() disconnects the bus
+  // unconditionally at whatever time it is given, with no second chance.
+  const k9Voice = { f0: 49, partials: bellPartials(49) };   // k9's actual call site
+  const longestPartial = Math.max(...k9Voice.partials.map((p) => p.decay));
+  assert.ok(longestPartial > 17, `expected a long hum at f0 49, got ${longestPartial}s`);
+  assert.ok(longestPartial > 16, 'this is exactly the case the flat tail:16 would have cut short');
+
+  const tail = bellTail(k9Voice);
+  assert.ok(tail > longestPartial, 'the release must outlast the longest partial');
+  assert.ok(tail < longestPartial + 2, 'and not by an arbitrary amount — a small, fixed margin');
+
+  // and it genuinely tracks the voice: a small bell does not carry a great
+  // bell's release, because the two have different longest partials
+  const hand = bellVoice(0.35);
+  const great = bellVoice(2.2);
+  assert.ok(bellTail(hand) < bellTail(great), 'tail did not vary with the voice it was given');
 });

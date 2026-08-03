@@ -260,8 +260,16 @@
       dump.focus(); dump.select();
     });
 
+    // CODE REVIEW CAUGHT: this used to bail out on ANY focused <input>,
+    // which meant touching a single slider silently killed the spacebar —
+    // "adjust a slider, then hit space to hear it" is the single most common
+    // interaction this whole page exists for. Only the printed-preset
+    // textarea needs to swallow keys (so its text can be selected/copied
+    // without ringing the bell on every keystroke); the range sliders do not
+    // bind Space or digit keys to anything themselves, so letting those two
+    // through is safe.
     addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.target.tagName === 'TEXTAREA') return;
       if (e.code === 'Space') { e.preventDefault(); ringBell(); }
       else if (e.key === '1') applyPreset('hand');
       else if (e.key === '2') applyPreset('temple');

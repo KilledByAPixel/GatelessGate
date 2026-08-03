@@ -87,6 +87,19 @@ export function bellPartials(f0 = BELL_REF_HZ) {
   return modesAt(f0, BELL_REF_HZ / f0);
 }
 
+// How long a spatial bus must stay open before it is safe to release — see
+// `BELL`'s own comment for why this used to be a flat constant and why that
+// was wrong: decay is now coupled to size, so the hum's actual length varies
+// per call (k9's f0:49 implies a hum decay near 18s) and a fixed number sized
+// to whatever pitch someone had in mind when they wrote it will silently cut
+// a bigger bell's tail short — release() in spatial.js disconnects the bus
+// unconditionally at the time it is given, so there is no second chance.
+// +0.5s covers strike()'s own `decay + 0.1` osc.stop() margin plus the last
+// sliver of its exponential ramp to -60dB, which is inaudible but not zero.
+export function bellTail(voice) {
+  return Math.max(...voice.partials.map((p) => p.decay)) + 0.5;
+}
+
 // A chime tube is a free-free bar, whose mode series is famously inharmonic:
 // 1 : 2.756 : 5.404 : 8.933. That series is WHY a wind chime sounds like a
 // wind chime and not a bell — the first voice here used bell-ish ratios at
@@ -381,7 +394,14 @@ export function strike(ctx, dest, { partials, gain = 1, transient = {}, scale = 
 // back to the old one's — level, not the table, is what changed to fix this,
 // so the shape Frank hears at audition is not fighting a second, unrelated
 // loudness jump.
-export const BELL = { degree: 0, level: 0.5255, size: 1, verbMix: 0.7, tail: 16 };
+//
+// There used to be a `tail: 16` here for the spatial bus's release timer. A
+// code review caught it: k9's f0:49 implies a hum decay near 18s, so a flat
+// 16s release would cut that hum audibly short the moment a bell call site
+// gets a position (today none do, so it was latent — but the spatial
+// migration is a later task in this plan and would have hit it live). See
+// `bellTail()`, which derives the release from the voice actually struck.
+export const BELL = { degree: 0, level: 0.5255, size: 1, verbMix: 0.7 };
 
 export function strikeBell(ctx, dry, verbIn, { partials, gain = 1, verbMix = BELL.verbMix } = {}) {
   const out = ctx.createGain();
