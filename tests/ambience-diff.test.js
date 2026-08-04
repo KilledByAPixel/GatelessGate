@@ -4,6 +4,7 @@ import {
   parseRecipe, emitterCount, AUDIBLE, recipeLayers, diffAmbience,
 } from '../src/audio/ambience_diff.js';
 import { createAudio } from '../src/audio/engine.js';
+import { graphAudioContext } from './helpers/audio-graph-context.js';
 
 // ---- the vocabulary (moved here from engine.js; the engine re-exports) ----
 
@@ -180,4 +181,64 @@ test('startAmbience, transition and playMusic are no-ops with no AudioContext in
   const s = audio.debugState();
   assert.deepEqual(s.recipe, []);
   assert.deepEqual(s.layers, { wind: null, water: null, music: null });
+});
+
+// ---- the Contents' own ambience (main.js's menuMusic) ----
+//
+// The Contents used to start only the chimed music (audio.playMusic(0,
+// { chimes: true })) and never a wind bed at all, so it was the one hub-world
+// page (alongside the preface and afterword, which both carry 'wind:0.30')
+// with no ambience under it. main.js's menuMusic() now also calls
+// audio.startAmbience(['wind:0.30']) — but startAmbience OVERWRITES `playing`
+// wholesale, so a wrong-but-plausible fix could restart the wind on every
+// menuMusic() call, or leave `playing` in a state where the next
+// audio.transition() into a case treats the wind as a fresh start (an
+// audible restart) rather than a continuing keep. This test drives the real
+// engine (fake AudioContext, real ambience_diff.js diff) through exactly the
+// sequence main.js runs — menuMusic() then a case's audio.transition() — and
+// reads the epoch counters, which is the one signal that survives a
+// suspended/clockless context: a KEPT layer's epoch does not move, a
+// restarted one's does.
+test('entering a case from the Contents keeps the wind (no restart) and swaps chimed music for the case drift', () => {
+  const save = { state: () => ({ soundOn: true }), setSound() {} };
+  const priorWindow = global.window;
+  const hadWindow = Object.prototype.hasOwnProperty.call(global, 'window');
+  global.window = { AudioContext: function FakeAudioContext() { return graphAudioContext(); } };
+  let audio;
+  try {
+    audio = createAudio(save);
+
+    // menuMusic()'s own sequence: mood reset, wind bed, chimed music.
+    audio.setMood('in');
+    audio.startAmbience(['wind:0.30']);
+    audio.playMusic(0, { chimes: true });
+
+    const menuState = audio.debugState();
+    assert.deepEqual(menuState.recipe, ['wind:0.30'], 'the Contents recipe must not carry the chimed music as a tracked layer — see menuMusic()\'s own comment on why');
+    assert.ok(menuState.layers.wind, 'the Contents built no wind bed at all');
+    assert.equal(menuState.layers.wind.level, 0.3);
+    assert.ok(menuState.layers.music && menuState.layers.music.chimes, 'the Contents music is not the chimed variant');
+    const windEpochInMenu = menuState.layers.wind.epoch;
+    const musicEpochInMenu = menuState.layers.music.epoch;
+
+    // buildKoan()'s own call, entering a case whose ambience recipe carries a
+    // louder wind and the plain drift.
+    audio.transition(['wind:0.6', 'music']);
+
+    const caseState = audio.debugState();
+    assert.equal(caseState.layers.wind.epoch, windEpochInMenu,
+      'the wind restarted on the Contents-to-case hop — it should have been kept and ramped');
+    assert.equal(caseState.layers.wind.level, 0.6, 'the wind did not ramp to the case level');
+    assert.notEqual(caseState.layers.music.epoch, musicEpochInMenu,
+      'the music never restarted — a genuinely kept scheduler could not have dropped its chimes');
+    assert.ok(!caseState.layers.music.chimes, 'the chimed menu music rode into the case');
+  } finally {
+    // makeMusic's scheduler reschedules itself on a real setTimeout chain
+    // (see its own comment in music.js) — nothing else in this file has ever
+    // called playMusic against a live context before, so nothing else has hit
+    // this. Left running, that timer outlives the test and keeps the process
+    // alive, which is what was hanging `node --test` on this file.
+    if (audio) audio.stopAmbience();
+    if (hadWindow) global.window = priorWindow; else delete global.window;
+  }
 });

@@ -457,11 +457,31 @@ function startIntro() {
   showView(intro.el);
 }
 
-// The menu's quiet life: the swells at full drift plus an occasional soft
-// chime — the barest "scene" in the app is the one with nothing else to sound.
+// The menu's quiet life: a wind bed under the swells at full drift plus an
+// occasional soft chime — the Contents renders the same hub world the preface
+// and afterword do (buildHub()), and both of those carry 'wind:0.30', so
+// leaving the Contents silent of wind read as a hole rather than a choice.
+// 0.30 matches the matter pages rather than sitting under them: unlike a
+// matter page, which is read start to end, the Contents is looked at through
+// a list and a text panel while the reader decides where to go, closer to a
+// case's own listening situation than to a page being read — so it takes the
+// same level a case would, not a hushed one.
+//
+// Music is deliberately NOT routed through startAmbience/transition's `music`
+// layer here: ensureCaseMusic() (see the engine) stops any chimed music and
+// restarts the plain drift, which would silently strip the chimes this
+// function exists to add. playMusic(0, { chimes: true }) is called directly
+// instead, exactly as before — only the wind gained a recipe. The two are not
+// out of step: startAmbience sets `playing` to ['wind:0.30'] alone, so a
+// later audio.transition(caseRecipe) diffs wind as a KEEP (ramped, not
+// restarted — the continuity transition() exists for) and finds music absent
+// from `playing` regardless of the diff, which routes it to startLayer ->
+// ensureCaseMusic -> the chime swap, same as it already did.
+//
 // Mood resets to the book's default; a case's pick belongs to the case.
 function menuMusic() {
   audio.setMood('in');
+  audio.startAmbience(['wind:0.30']);
   audio.playMusic(0, { chimes: true });
 }
 
@@ -644,12 +664,16 @@ async function exit() {
   input.clear();
   koan && koan.onExit && koan.onExit();
   // ambience is main's job (see enter()): the case's whole bed dies here, and
-  // menuMusic() below starts the menu's own with a fresh scheduler — playMusic
+  // menuMusic() below starts the Contents' own wind and music fresh — playMusic
   // REUSES a live one and silently drops its options, so this must be a stop,
-  // never a hand-off
+  // never a hand-off. (The Contents-from-Contents-adjacent hop the other
+  // direction, entering a case, goes through audio.transition() instead and
+  // KEEPS the wind — see menuMusic()'s own comment. This one is a hard stop on
+  // purpose: there is no case bed here to hand off to, only the Contents'
+  // fixed 0.30, so restarting fresh costs nothing and needs no diff.)
   audio.stopAmbience();
   // and any ringing one-shot dies with it — the case's bell does not belong
-  // in the Contents any more than its wind does
+  // in the Contents
   audio.hushVoices();
   await transition(() => {
     const prev = scenes.active();
