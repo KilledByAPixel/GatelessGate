@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { CASES, slugify } from '../src/koans/index.js';
 import { loadKoan, isStaged } from '../src/koans/registry.js';
+import { DEFAULT_HOME_DISTANCE } from '../src/camera.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT, PAPER } from '../src/palette.js';
 import { emitterCount } from '../src/audio/engine.js';
 
@@ -47,7 +48,7 @@ function fakeCtx(audio = null) {
 }
 
 function rigCamera(mod, azimuth = null) {
-  const home = { distance: 11.5, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27, ...(mod.camera || {}) };
+  const home = { distance: DEFAULT_HOME_DISTANCE, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27, ...(mod.camera || {}) };
   const cam = new THREE.PerspectiveCamera(38, 1.78, 0.1, 200);
   const [tx, ty, tz] = home.target;
   const az = azimuth === null ? home.azimuth : azimuth;

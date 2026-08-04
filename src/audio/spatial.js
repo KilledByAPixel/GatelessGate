@@ -95,7 +95,7 @@ export function wetAt(d, tune = SPATIAL) {
 // makeSpatialBus's placed path multiplies a SHARED distance curve (gain,
 // wet) by per-voice constants instead. calibrateMix() computes the pair that
 // makes the two paths agree exactly at SPATIAL.ref: gain is 1 there by
-// construction, so dryLevel/character only have to undo whatever
+// construction, so dryLevel/sendLevel only have to undo whatever
 // (1-wet)/wet the shared curve already contributes at that one distance,
 // landing on the voice's own old absolute dry/send. Away from ref the shared
 // curve still drives the shape (nearer drier, farther wetter, behind
@@ -104,7 +104,7 @@ export function calibrateMix(verbMix, kd, ks, tune = SPATIAL) {
   const w = wetAt(tune.ref, tune);
   return {
     dryLevel: (1 - verbMix * kd) / (1 - w),
-    character: w > 0 ? (verbMix * ks) / w : 0,
+    sendLevel: w > 0 ? (verbMix * ks) / w : 0,
   };
 }
 
@@ -114,18 +114,28 @@ export function calibrateMix(verbMix, kd, ks, tune = SPATIAL) {
 // ratio is the cue. Scaling only the dry leg would make a far sound swim in
 // room; scaling neither would make it as loud as a near one.
 //
-// `character` and `dryLevel` are per-voice calibration constants from
-// calibrateMix() above — not raw verbMix. Passing verbMix straight through
-// as `character` was the branch's second bug: it reused a number that used
-// to mean "how much of the signal is sent to the room" as though it meant
-// "how much MORE than the shared distance curve already sends", collapsing
-// the send by roughly an order of magnitude at the reference distance. Both
-// default to 1 (no correction) for voices with no pre-spatial history to
-// match — the four touch voices born on this branch need none.
+// `sendLevel` and `dryLevel` are per-voice calibration constants from
+// calibrateMix() above — never raw verbMix passed straight through. That
+// WAS the branch's second bug, caught in code review after this file first
+// shipped: `character` (this parameter's old name) took raw verbMix at
+// every call site, reusing a number that used to mean "how much of the
+// signal is sent to the room" as though it meant "how much MORE than the
+// shared distance curve already sends", collapsing the send by roughly an
+// order of magnitude at the reference distance for the calibrated voices —
+// and, because the four touch voices (ceramic/wood/cloth/breath, born on
+// this branch with no pre-spatial history to calibrate against) were left
+// on the raw-verbMix path even after the other five voices were fixed, the
+// exact same bug survived inside its own fix, one release later: those four
+// sat roughly three times too dry relative to everyone else at the
+// reference distance. `character` is renamed to `sendLevel` for the same
+// reason `dryLevel` is named what it is — every caller now goes through
+// calibrateMix(), touch voices included (see MIX_TOUCH in engine.js for
+// their judgment-call coefficients), so there is no longer a "just pass
+// verbMix" path left to fall into by omission.
 //
 // The send taps after the panner so the room hears the placement too: a bell
 // on your left has its early reflections on your left.
-export function makeSpatialBus(ctx, dry, verbIn, { character = 1, dryLevel = 1 } = {}) {
+export function makeSpatialBus(ctx, dry, verbIn, { sendLevel = 1, dryLevel = 1 } = {}) {
   const input = ctx.createGain();
 
   const lp = ctx.createBiquadFilter();
@@ -149,7 +159,7 @@ export function makeSpatialBus(ctx, dry, verbIn, { character = 1, dryLevel = 1 }
       lp.frequency.value = s.tone;
       pan.pan.value = s.pan;
       dryG.gain.value = s.gain * (1 - s.wet) * dryLevel;
-      sendG.gain.value = s.gain * s.wet * character;
+      sendG.gain.value = s.gain * s.wet * sendLevel;
     },
     // Not because a connected bus otherwise LEAKS — Web Audio reclaims a node
     // once nothing references it and any source feeding it has stopped,

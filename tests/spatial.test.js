@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { spatialFor, SPATIAL } from '../src/audio/spatial.js';
 import { createAudio } from '../src/audio/engine.js';
 import { graphAudioContext } from './helpers/audio-graph-context.js';
+import { CASES } from '../src/koans/index.js';
+import { loadKoan, isStaged } from '../src/koans/registry.js';
+import { DEFAULT_HOME_DISTANCE } from '../src/camera.js';
 
 // A listener standing at the origin, looking down -Z (Three.js's camera
 // convention), so +X is to their right.
@@ -144,16 +147,36 @@ test('an at with a non-finite coordinate is refused, not passed to an AudioParam
 // "A sound at its own case's camera distance must sound as it did before
 // this branch." These two tests are the ones that matter for that bug —
 // everything else in this file is unaffected by where `ref` sits.
-test('ref sits in the book\'s real camera range, not the old 2.5 anchor', () => {
-  // The bug: ref was 2.5, a distance nothing in the book is ever viewed
-  // from (camera.distance runs 8.6-17 across all 49 cases plus the matter
-  // pages and the hub — see task-12-report.md). This does not re-derive
-  // that range; it just refuses to let ref drift back inside it, which the
-  // dry/wet test just below would NOT catch on its own — calibrateMix()
-  // reads tune.ref dynamically, so it stays self-consistent at whatever ref
-  // is, 2.5 included, unless something also checks ref's actual value.
-  assert.ok(SPATIAL.ref >= 8 && SPATIAL.ref <= 18,
-    `SPATIAL.ref (${SPATIAL.ref}) has drifted outside the book's real camera range`);
+// CODE REVIEW CAUGHT: a range check (SPATIAL.ref >= 8 && <= 18) used to sit
+// here. It passes at ref=8 (+2.5dB dry at the median case) or ref=18
+// (about -2dB) just as happily as at 11.5 — a +/-35% drift with nothing to
+// notice — and it does not react at all if a case's camera moves and shifts
+// the real median. This asserts EQUALITY against the real, live median
+// instead: it builds all 49 staged cases (the same thing staging.test.js
+// does) and computes the actual distribution, so there is no daylight
+// between "what this test expects" and "what the book actually does."
+test('ref equals the median camera distance across the real book, not a range it can drift inside', async () => {
+  const distances = [];
+  for (const c of CASES) {
+    if (!isStaged(c.slug)) continue;
+    const mod = await loadKoan(c.slug);
+    // main.js's buildKoan gives a case with no camera field of its own this
+    // same DEFAULT_HOME_DISTANCE — five cases (k1, k7, k13, k16, k29) take
+    // it. Importing the constant rather than re-typing 11.5 here is the
+    // point: this test, main.js, and staging.test.js's own rigCamera() stub
+    // all now read the one number, so none of the three can drift from the
+    // others unnoticed.
+    distances.push(mod.camera ? mod.camera.distance : DEFAULT_HOME_DISTANCE);
+  }
+  assert.ok(distances.length >= 40,
+    `only ${distances.length} staged cases found — this test needs the real book, not a fragment of it`);
+  distances.sort((a, b) => a - b);
+  const mid = distances.length / 2;
+  const median = distances.length % 2
+    ? distances[Math.floor(mid)]
+    : (distances[mid - 1] + distances[mid]) / 2;
+  assert.equal(SPATIAL.ref, median,
+    `SPATIAL.ref (${SPATIAL.ref}) no longer matches the book's real median camera distance (${median})`);
 });
 
 test('at the reference distance, a placed one-shot matches the unplaced path (bell and drip)', () => {

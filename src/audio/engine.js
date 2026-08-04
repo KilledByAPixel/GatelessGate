@@ -21,8 +21,41 @@ const MIX_ODOSHI = { kd: 0.8, ks: 1.1 };    // knock's inline mix, below
 // pour() never had a wet leg pre-branch — pourBurst wrote straight into
 // `master` with nothing splitting it, so its old dry was undiscounted (kd 0)
 // and its old send was zero (ks 0). calibrateMix(_, 0, 0) reproduces exactly
-// that: dryLevel undoes the shared curve's (1-wet) at ref, character is 0.
+// that: dryLevel undoes the shared curve's (1-wet) at ref, sendLevel is 0.
+// CODE REVIEW CAUGHT: kd 0 also means pour is the one voice whose dryLevel
+// (1/(1-wetAt(ref)), 1.67 today) can push its dry leg ABOVE its pre-branch
+// absolute value at distances nearer than ref, where gain is still clamped
+// to 1 — up to 1.67x (+4.5dB) at point-blank. Every other calibrated voice's
+// kd is positive, so their dryLevel is <1 and dry can only ever fall short
+// of the old value, never exceed it. This is a real, understood consequence
+// of kd 0 being correct (pour never discounted its dry signal at all, so
+// there is nothing for dryLevel to claw back from except the shared curve's
+// own (1-wet) dip), not an oversight — and it is bounded (1.67x is the
+// ceiling, not a runaway) and quiet (ODOSHI.pourLevel is small to begin
+// with), so it is left as-is rather than papered over with a special case.
 const MIX_NONE = { kd: 0, ks: 0 };
+
+// The four touch voices (ceramic/wood/cloth/breath) were born on this
+// branch, so unlike the five families above there is no pre-branch absolute
+// dry/send to round-trip to — CERAMIC/WOOD/CLOTH/BREATH.verbMix never drove
+// anything but this same spatial bus, at every point in this branch's
+// history. kd 0 IS derived, not chosen: strike()/noiseSwell() write into a
+// single `dest` with no wet split of their own (see ceramic/wood/cloth/
+// breath's own comments below), so their unplaced fallback — voicesDry
+// alone — was always undiscounted, exactly pour's situation. ks 1.2 is the
+// judgment call: not fitted to anything, just picked (from the bell
+// family's own ks, the middle of the 1.1-1.4 spread the five real families
+// span) so these four land in the same ballpark
+// dry:send ratio as the calibrated voices at ref instead of the ~3x-too-dry
+// send raw verbMix produced (see spatial.js's makeSpatialBus comment for
+// that bug). See task-12-report.md's dry/wet-at-ref table for the numbers
+// this produces per voice — CERAMIC.level etc. were tuned by ear against
+// the OLD (uncalibrated, raw-verbMix) send, so if these four now read as
+// too wet at Frank's next audition pass, ks is the number to move, not the
+// levels themselves. Sharing kd 0 with MIX_NONE also means these four share
+// pour's dry-can-exceed-unity-at-point-blank property (see MIX_NONE's own
+// comment) — same bound (1.67x), same reasoning, not a separate concern.
+const MIX_TOUCH = { kd: 0, ks: 1.2 };
 
 import { parseRecipe, emitterCount, diffAmbience } from './ambience_diff.js';
 
@@ -157,8 +190,8 @@ export function createAudio(save) {
     const deg = WATER.degree + [0, 1, 2, 4][Math.floor(Math.random() * 4)];
     const f0 = hz(deg, mood);
     const gain = WATER.level * (loud ? 1.5 : 0.7 + Math.random() * 0.5);
-    const { dryLevel, character } = calibrateMix(WATER.verbMix, MIX_WATER.kd, MIX_WATER.ks);
-    const bus = placed(at, character, 1, dryLevel);
+    const { dryLevel, sendLevel } = calibrateMix(WATER.verbMix, MIX_WATER.kd, MIX_WATER.ks);
+    const bus = placed(at, sendLevel, 1, dryLevel);
     strikeDrip(ctx, bus ? bus.in : voicesDry, bus ? null : voicesWet, { f0, gain, verbMix: bus ? 0 : WATER.verbMix });
   }
 
@@ -170,9 +203,9 @@ export function createAudio(save) {
   // into an AudioParam and kill the graph. Every caller falls back to the
   // unplaced path on null, which is exactly today's behaviour, which is how
   // sixty call sites migrate one at a time instead of all at once.
-  function placed(at, character, tail, dryLevel = 1) {
+  function placed(at, sendLevel, tail, dryLevel = 1) {
     if (!listener || !finiteAt(at) || !ctx) return null;
-    const bus = makeSpatialBus(ctx, voicesDry, voicesWet, { character, dryLevel });
+    const bus = makeSpatialBus(ctx, voicesDry, voicesWet, { sendLevel, dryLevel });
     bus.place(spatialFor(at, listener));
     bus.release(tail);
     return bus;
@@ -396,8 +429,8 @@ export function createAudio(save) {
       } else {
         v = f0 === null ? bellVoice(size) : { f0, partials: bellPartials(f0) };
       }
-      const { dryLevel, character } = calibrateMix(verbMix, MIX_BELL.kd, MIX_BELL.ks);
-      const bus = placed(at, character, bellTail(v), dryLevel);
+      const { dryLevel, sendLevel } = calibrateMix(verbMix, MIX_BELL.kd, MIX_BELL.ks);
+      const bus = placed(at, sendLevel, bellTail(v), dryLevel);
       strikeBell(ctx, bus ? bus.in : voicesDry, bus ? null : voicesWet,
         { partials: v.partials, gain, verbMix: bus ? 0 : verbMix, beam, ping, pingFreq });
     },
@@ -429,8 +462,8 @@ export function createAudio(save) {
       // either through placed() or, with no listener/position, its fallback.
       let bus = null;
       if (!punctuate) {
-        const { dryLevel, character } = calibrateMix(CHIME.verbMix, MIX_CHIME.kd, MIX_CHIME.ks);
-        bus = placed(at, character, CHIME.decay + 1, dryLevel);
+        const { dryLevel, sendLevel } = calibrateMix(CHIME.verbMix, MIX_CHIME.kd, MIX_CHIME.ks);
+        bus = placed(at, sendLevel, CHIME.decay + 1, dryLevel);
       }
       const dry = punctuate ? master : (bus ? bus.in : voicesDry);
       const wet = punctuate ? verb.in : (bus ? null : voicesWet);
@@ -446,8 +479,8 @@ export function createAudio(save) {
     // them here — the same indirection as the furin
     knock({ force = 1, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
-      const { dryLevel, character } = calibrateMix(ODOSHI.verbMix, MIX_ODOSHI.kd, MIX_ODOSHI.ks);
-      const bus = placed(at, character, ODOSHI.decay + 1, dryLevel);
+      const { dryLevel, sendLevel } = calibrateMix(ODOSHI.verbMix, MIX_ODOSHI.kd, MIX_ODOSHI.ks);
+      const bus = placed(at, sendLevel, ODOSHI.decay + 1, dryLevel);
       let dest;
       if (bus) dest = bus.in;
       else {
@@ -469,8 +502,8 @@ export function createAudio(save) {
     pour({ at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
       // pourBurst has no wet leg pre-branch — see MIX_NONE's own comment.
-      const { dryLevel, character } = calibrateMix(0, MIX_NONE.kd, MIX_NONE.ks);
-      const bus = placed(at, character, 2, dryLevel);
+      const { dryLevel, sendLevel } = calibrateMix(0, MIX_NONE.kd, MIX_NONE.ks);
+      const bus = placed(at, sendLevel, 2, dryLevel);
       pourBurst(ctx, bus ? bus.in : voicesDry, {});
     },
     // ---- the touch voices ----
@@ -484,9 +517,18 @@ export function createAudio(save) {
     // plausibly under the wind bed. `scale: STRIKE_SCALE * 5` brings its
     // effective peak (0.04125) into the same ballpark as wood's; PROVISIONAL
     // pending Frank's ear at the audition the next task's wiring gives it.
+    //
+    // CODE REVIEW CAUGHT (task-12): these four used to pass their own
+    // verbMix straight through as `character` (this bus's sendLevel), the
+    // exact bug this task exists to kill, just surviving inside its own fix
+    // because these voices have no pre-branch history for calibrateMix() to
+    // round-trip to. They go through it now anyway, with MIX_TOUCH's
+    // judgment-call coefficients (see its own comment above) rather than a
+    // derived pair — the four sat roughly 3x too dry at ref before this.
     ceramic({ force = 1, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
-      const bus = placed(at, CERAMIC.verbMix, CERAMIC.tail);
+      const { dryLevel, sendLevel } = calibrateMix(CERAMIC.verbMix, MIX_TOUCH.kd, MIX_TOUCH.ks);
+      const bus = placed(at, sendLevel, CERAMIC.tail, dryLevel);
       strike(ctx, bus ? bus.in : voicesDry, {
         partials: ceramicPartials(),
         gain: CERAMIC.level * force,
@@ -496,7 +538,8 @@ export function createAudio(save) {
     },
     wood({ force = 1, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
-      const bus = placed(at, WOOD.verbMix, WOOD.tail);
+      const { dryLevel, sendLevel } = calibrateMix(WOOD.verbMix, MIX_TOUCH.kd, MIX_TOUCH.ks);
+      const bus = placed(at, sendLevel, WOOD.tail, dryLevel);
       strike(ctx, bus ? bus.in : voicesDry, {
         partials: woodPartials(),
         gain: WOOD.level * force,
@@ -507,12 +550,14 @@ export function createAudio(save) {
     // noiseSwell has no separate wet leg the way strike()'s callers do — it
     // takes one `dest` and plays its whole envelope into it. So CLOTH.verbMix
     // and BREATH.verbMix only ever do anything on the PLACED path, as the
-    // spatial bus's `character`; the unplaced fallback below is bone dry,
-    // same as pour()'s. Spreading `...CLOTH`/`...BREATH` into noiseSwell reads
-    // as though verbMix were honoured either way — it is not.
+    // spatial bus's sendLevel (via MIX_TOUCH — see its own comment); the
+    // unplaced fallback below is bone dry, same as pour()'s. Spreading
+    // `...CLOTH`/`...BREATH` into noiseSwell reads as though verbMix were
+    // honoured either way — it is not.
     cloth({ force = 1, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
-      const bus = placed(at, CLOTH.verbMix, CLOTH.dur + 0.5);
+      const { dryLevel, sendLevel } = calibrateMix(CLOTH.verbMix, MIX_TOUCH.kd, MIX_TOUCH.ks);
+      const bus = placed(at, sendLevel, CLOTH.dur + 0.5, dryLevel);
       noiseSwell(ctx, bus ? bus.in : voicesDry, { ...CLOTH, level: CLOTH.level * force });
     },
     // `dur` is why this one takes an argument the others don't: case 1's Mu is
@@ -520,7 +565,8 @@ export function createAudio(save) {
     // and it wants one long breath shaped to that gesture rather than a hit.
     breath({ force = 1, dur = BREATH.dur, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
-      const bus = placed(at, BREATH.verbMix, dur + 0.5);
+      const { dryLevel, sendLevel } = calibrateMix(BREATH.verbMix, MIX_TOUCH.kd, MIX_TOUCH.ks);
+      const bus = placed(at, sendLevel, dur + 0.5, dryLevel);
       noiseSwell(ctx, bus ? bus.in : voicesDry, {
         ...BREATH, dur, attack: dur * 0.35, level: BREATH.level * force,
       });

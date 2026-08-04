@@ -188,8 +188,22 @@
       return { x: 0, y: 0, z: -d };   // 'ahead'
     }
 
-    function strike(placed) {
+    // CODE REVIEW CAUGHT: audio.unlock() calls ctx.resume() without awaiting
+    // it (fire-and-forget — engine.js's own callers never needed to wait,
+    // since a strike arriving before resume completes is just dropped, see
+    // bell()'s own ctx.state guard). On an AUDITION page that reads as "this
+    // is broken": the very first click after load can land while the
+    // context is still 'suspended', resume() has not settled yet, and the
+    // strike is silently swallowed. Awaiting resume() here (a second,
+    // harmless call — resume() on an already-running context resolves
+    // immediately) means the first strike after load is only ever slightly
+    // late, never silent.
+    async function strike(placed) {
       audio.unlock();
+      const ctx = audio.ctx;
+      if (ctx && ctx.state !== 'running') {
+        try { await ctx.resume(); } catch { /* autoplay still blocked; next click will retry */ }
+      }
       audio.setListener(placed ? LISTENER : null);
       const at = posFor(point.d, point.mode);
       VOICES[voiceSelect.value].fire(at);
