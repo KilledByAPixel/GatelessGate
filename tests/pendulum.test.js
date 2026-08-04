@@ -43,13 +43,22 @@ test('STABILITY, mutation-verified: explicit Euler (position from the OLD veloci
     p.omega += alpha * SUBSTEP;
     p.clock += SUBSTEP;
   }
+  // DEMONSTRATION, not protection: explicitEulerStep is local to this test
+  // and nothing in src/ can ever make this assertion fail — it is not a
+  // regression guard. Its only job is proving the SCENARIO itself (this
+  // damping, this length, this duration) is one where the bug would be
+  // visible, so the real guard below (qLate) is trustworthy rather than
+  // passing by accident because 30s was too short to show anything either
+  // way.
   const p = createPendulum({ length: 0.5, g: 9.8, damping: 0, theta: 0.6 });
   const early = pendulumEnergy(p);
   for (let i = 0; i < Math.round(30 / SUBSTEP); i++) explicitEulerStep(p, 0);
   const late = pendulumEnergy(p);
   assert.ok(late > early * 3, `expected explicit Euler to visibly gain energy here as a sanity check on the test itself: ${early} -> ${late}`);
 
-  // and the real, shipped stepPendulum stays bounded under the same conditions
+  // THE REAL GUARD: the shipped stepPendulum, imported from src/kit/pendulum.js,
+  // stays bounded under the same conditions — this is the assertion a
+  // regression in src/ can actually break.
   const q = createPendulum({ length: 0.5, g: 9.8, damping: 0, theta: 0.6 });
   const qEarly = pendulumEnergy(q);
   for (let i = 0; i < Math.round(30 / SUBSTEP); i++) stepPendulum(q, 0);

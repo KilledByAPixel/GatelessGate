@@ -93,9 +93,12 @@ const TAP_PEAK = 0.13;
 // (SWING_MAX); this model has no pose to sum — a tap only ever adds
 // velocity — so the equivalent cap is on velocity: whatever hits land,
 // omega never exceeds what a real chime's air drag would let it reach. 0.30
-// is the fraction of a "one radian per unit omega0" swing that reproduces
-// the old SWING_MAX almost exactly at default size (measured: an omega
-// capped at 0.30*omega0 tops out around theta=0.30 rad on its first swing).
+// is chosen, via the SAME peak ~= omega/omega0 identity TAP_PEAK uses above,
+// to land the capped swing's first peak at the old SWING_MAX (0.30 rad) —
+// this is that identity applied a second time, not an independent
+// coincidence: MAX_OMEGA = SWING_MAX_FRAC*omega0 reproduces old_SWING_MAX by
+// construction, tautologically, the same way TAP_PEAK*omega0 reproduces
+// old_SWING_A0.
 const SWING_MAX_FRAC = 0.30;
 
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
@@ -143,12 +146,23 @@ export function makeFurin({
 
   // The pendulum's LENGTH is the pivot-to-mass-centre distance, derived from
   // geometry already on this object rather than tuned as its own number: the
-  // cord's own length (CORD, above) plus roughly six tenths of the way down
-  // the tube/clapper cluster below it (the tubes run to about 0.9S and the
-  // cap sits above them, so the swinging mass centres around six tenths of
-  // that reach). A bigger `size` or a longer `cord` therefore swings slower
+  // cord's own length (CORD, above) plus a fraction of the body hanging
+  // below it. That fraction (0.6) is EYEBALLED, not computed — this file has
+  // no density/mass model, only geometry, so there is no real centre-of-mass
+  // to derive it from. What IS on this object: the cap sits right at the
+  // cord's end (near y=0 in body-local space) and the tubes hang below it,
+  // tube 0 (the longest) centred at y=-1.03S and bottoming out at -1.88S, so
+  // the true centre of mass sits somewhere between those two extremes,
+  // closer to the tubes since they are the heavier metal parts — 0.6 lands
+  // in that range and reads right, which is as far as "derived" goes here.
+  // (A prior version of this comment claimed "the tubes run to about 0.9S,"
+  // which is actually the CLAPPER's y position, not the tubes' — fixed
+  // because the next task hangs a bronze cylinder on this same module and
+  // would otherwise copy the wrong basis onto an object where the number
+  // matters more.) A bigger `size` or a longer `cord` still swings slower
   // with nobody tuning a second number — that relationship is the physics,
-  // per the brief, and not a free parameter.
+  // per the brief — the exact value of 0.6 just isn't derived beyond "eyeballed
+  // to land inside the plausible range."
   const PEND_L = CORD + 0.6 * S;
   const omega0 = Math.sqrt(GRAVITY / PEND_L);   // small-angle natural frequency
   // torque coefficients: at v=1, windLevel=1, the small-angle equilibrium
@@ -264,7 +278,7 @@ export function makeFurin({
   // a small per-instance offset so two chimes in one scene never move in step
   const off = phase === null ? hash1(3, seed) * 3 : phase;
 
-  let clock = 0;
+  let clock = null;         // null until the first update() — see the seeding below
   let windLevel = 1;
   let strikes = 0;
   let lastForce = 0;
@@ -307,6 +321,39 @@ export function makeFurin({
     },
 
     update(dt, simTime) {
+      if (clock === null) {
+        // SEED, don't start at 0. simTime is main.js's GLOBAL clock and
+        // never resets across koan entries (main.js: simTime keeps
+        // accumulating from boot; tick() just adds STEP to it every frame,
+        // koan enter/exit does not touch it) — so a fūrin built when the
+        // reader is already deep into a session sees a large simTime on its
+        // very first update(). Starting `clock` at 0 made that first call's
+        // elapsed = simTime - 0, i.e. the ENTIRE session, integrated in one
+        // frame at the fixed substep: measured at case 29's scale (4
+        // instances x 2 pendulums each), 24ms at simTime=60s, 142ms at 600s,
+        // 750ms at 3600s, unbounded — landing exactly on the ink dissolve, and
+        // a multi-hour sitting with the book open is the normal case, not
+        // the edge case. A chime that has just been built has not been
+        // swinging; seeding `clock` to the incoming simTime makes THIS first
+        // call's elapsed exactly 0 instead.
+        //
+        // Seeding zPend/xPend's own `.clock` to the SAME value locks the
+        // pendulum's internal time base to this one: torqueAt below reads
+        // gustPhase at the pendulum's own p.clock, and the strikes/tag below
+        // read gustPhase at this `clock` — two different variables that must
+        // agree, or the wind driving the SWING desyncs from the wind driving
+        // the STRIKES and the tag's flutter. Before this fix they only
+        // "agreed" as a side effect of the runaway catch-up above walking
+        // p.clock up to meet `clock` in that one giant first frame; without
+        // that crutch they would start apart and stay apart, permanently
+        // offset by however far into the session the chime was built.
+        // tests/furin.test.js, 'the swing's wind phase stays locked...'
+        // pins this against an independent reproduction of the torque math.
+        const seed = Number.isFinite(simTime) ? simTime : 0;
+        clock = seed;
+        zPend.clock = seed;
+        xPend.clock = seed;
+      }
       const prevClock = clock;
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
       // The pendulum advances by however much the CLOCK actually moved, not
@@ -325,7 +372,11 @@ export function makeFurin({
       // axis reads gustPhase at its own (per-instance) phase offset so two
       // fūrin never sway in lockstep; X mirrors the old code's slower,
       // shifted copy of the same gust (never received taps before, still
-      // does not).
+      // does not). `t` here is the PENDULUM's own p.clock, seeded above to
+      // track this file's absolute `clock` (to within one physics substep —
+      // src/kit/pendulum.js's integratePendulum comment) rather than an
+      // independent time-since-creation, which is what keeps this in phase
+      // with `tt` below.
       integratePendulum(zPend, elapsed, (t) => windZTorque * gustPhase(t + off) * windLevel);
       integratePendulum(xPend, elapsed, (t) => windXTorque * gustPhase(t * 0.7 + off + 11) * windLevel);
       swing.rotation.z = zPend.theta;
@@ -367,7 +418,13 @@ export function makeFurin({
       fire(k, force);
     },
     // the pointer passing over: a nudge, not a knock — the same kick at a
-    // fraction of the force, and no strike
+    // fraction of the force, and no strike. CHANGED CHARACTER under the
+    // pendulum: the old model summed up to 8 superposed impulses, so
+    // spamming hoverAt() topped out around 0.05 rad; this model has one
+    // omega, and repeated hovers now saturate at MAX_OMEGA (a sustained
+    // ~0.30 rad, the same ceiling a full-force tap can reach). Latent today
+    // — no case calls hoverAt() — flagged here so it is not discovered by
+    // surprise if one starts to.
     hoverAt() {
       tapKick(0.18);
     },

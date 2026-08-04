@@ -29,9 +29,14 @@
 // swing's peak-to-peak amplitude to decay, never grow.
 export const SUBSTEP = 1 / 240;
 
-// length, g, damping are per-instance; theta/omega are the state.
-export function createPendulum({ length, g, damping, theta = 0, omega = 0 }) {
-  return { length, g, damping, theta, omega, acc: 0, clock: 0 };
+// length, g, damping are per-instance; theta/omega are the state. `clock`
+// defaults to 0 (a pendulum's own local elapsed time) but a caller whose
+// torqueAt needs to agree with some OTHER absolute clock it also reads
+// (furin.js's strikes and tag flutter, for one) should seed it explicitly —
+// see the "SEED, don't start at 0" block in furin.js's update() for why:
+// two clocks that start apart stay apart forever, not just at the start.
+export function createPendulum({ length, g, damping, theta = 0, omega = 0, clock = 0 }) {
+  return { length, g, damping, theta, omega, acc: 0, clock };
 }
 
 // One fixed physics tick. `torque` is the driving torque for THIS substep —
@@ -46,14 +51,20 @@ export function stepPendulum(p, torque) {
 
 // Advance by `dt` seconds, in fixed SUBSTEP increments, carrying the
 // remainder in p.acc. torqueAt(t) is called once per substep with p.clock —
-// the pendulum's OWN running total of integrated time, not the caller's dt
-// or any absolute wall/sim clock. In practice that coincides with the
-// caller's absolute time as long as integrate() is called on every frame
-// (the normal case for anything actually on screen); a chime whose update()
-// is skipped for a stretch — because it was not being rendered — simply
-// resumes its own clock where it left off rather than jumping, which keeps
-// it deterministic without the extra bookkeeping an exact absolute-time
-// substep grid would need for no visible benefit.
+// the pendulum's OWN running total of integrated time, seeded at 0 unless
+// the caller set it otherwise (createPendulum's `clock` option). If nothing
+// else on the caller's side reads a clock, p.clock=0-at-creation is fine and
+// the running total IS the caller's elapsed time. If something else DOES —
+// furin.js's strikes and tag flutter read a separately-tracked absolute
+// simTime that torqueAt's gustPhase call must agree with — that something
+// else's starting value has to be seeded into p.clock too, or the two drift
+// apart by exactly the gap between "pendulum created" and "first update()",
+// permanently, not just at the start (this was a real, shipped bug in
+// furin.js — see its update() for the fix and the numbers). A chime whose
+// update() is later skipped for a stretch — because it was not being
+// rendered — simply resumes its own clock where it left off rather than
+// jumping, which keeps it deterministic without the extra bookkeeping an
+// exact absolute-time substep grid would need for no visible benefit.
 export function integratePendulum(p, dt, torqueAt) {
   p.acc += dt;
   while (p.acc >= SUBSTEP) {

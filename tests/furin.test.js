@@ -2,6 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeFurin, chimeActivity } from '../src/kit/furin.js';
+import { createPendulum, integratePendulum } from '../src/kit/pendulum.js';
+import { gustPhase } from '../src/audio/synths.js';
 
 // drive the component across sim time; returns the end time so runs can chain
 function run(f, secs, t0 = 0, step = 1 / 60) {
@@ -271,7 +273,15 @@ test('a knocked chime SWINGS — it crosses centre, it does not just lean back',
   const early = Math.max(...zs.slice(0, 60).map(Math.abs));
   const late = Math.max(...zs.slice(-60).map(Math.abs));
   assert.ok(late < early * 0.2, `the swing does not settle: ${early} -> ${late}`);
-  assert.ok(early > 0.02, `the tap barely moves it: ${early} rad`);
+  // Bracketed, not just floored: `early > 0.02` alone left TAP_PEAK's actual
+  // value essentially unpinned — dropping the omega0 factor in tapKick
+  // (furin.js) gives a peak of ~0.019 rad, which is BELOW 0.02 and so was
+  // caught, but only by a margin that was luck rather than coverage (any
+  // slightly less broken mutant would have slipped through). Measured at
+  // TAP_PEAK=0.13, force=1: early ~0.115 rad (see tests/furin.test.js CI
+  // output if this ever needs re-deriving); 0.10-0.18 brackets that with
+  // headroom on both sides without being so loose it stops meaning anything.
+  assert.ok(early > 0.10 && early < 0.18, `the tap's first swing is not near TAP_PEAK: ${early} rad`);
 });
 
 test('wind actually drives the swing, not just the strikes', () => {
@@ -295,6 +305,65 @@ test('wind actually drives the swing, not just the strikes', () => {
     if (Math.abs(swing.rotation.z) > 0.01) sawMotion = true;
   }
   assert.ok(sawMotion, 'wind never visibly moves the chime');
+});
+
+test("the swing's wind phase stays locked to the absolute clock, even for a chime built mid-session", () => {
+  // CODE REVIEW CAUGHT a real bug: simTime is main.js's GLOBAL clock and
+  // never resets across koan entries, so a fūrin built when the reader is
+  // already deep into a session used to see a large simTime on its very
+  // first update() — and starting `clock` at 0 meant that first call's
+  // elapsed was the ENTIRE session, integrated in one frame (measured: 24ms
+  // at simTime=60s -> 750ms at 3600s, for case 29's 4 instances x 2
+  // pendulums each, landing exactly on the ink dissolve). Fixed by SEEDING
+  // `clock` — and, just as importantly, zPend/xPend's own internal `.clock`
+  // — from the first real simTime rather than starting both at 0.
+  //
+  // That second half matters on its own: torqueAt reads gustPhase at the
+  // PENDULUM's own p.clock, while the strikes and tag.rotation.y read
+  // gustPhase at this file's `clock`. Before the fix those two only agreed
+  // as a side effect of the runaway catch-up walking p.clock up to meet
+  // `clock` in that one giant first frame; fixing ONLY the outer `clock`
+  // seed (elapsed=0 on frame one) without ALSO seeding zPend.clock would
+  // leave the pendulum's own clock parked at 0 while the file's `clock`
+  // jumps straight to simTime — desynced forever after, not just at the
+  // start, since nothing ever makes them catch up again.
+  //
+  // Verified against an INDEPENDENT reproduction of the torque math (same
+  // shape as the raycastFirst reproduction test above): a bare pendulum,
+  // built with the same L/g/damping furin.js derives from `size`/`cord`,
+  // driven by the SAME public gustPhase evaluated at true absolute time
+  // (T0 + elapsed), starting from rest at the same simTime the real fūrin
+  // is built at. T0 is deliberately NOT a round number — gustPhase's two
+  // frequencies (0.043, 0.071) both happen to hit exact integer periods at
+  // T0=5000 (5000*0.043=215, 5000*0.071=355), which made an earlier draft
+  // of this test pass even with the fix reverted, silently.
+  const T0 = 5237.4;
+  const SIZE = 0.17, CORD_FRAC = 0.62, PHASE = 0.37;
+  const f = makeFurin({ size: SIZE, cord: CORD_FRAC, phase: PHASE, seed: 9, onStrike: () => {} });
+  f.setWindLevel(1);
+
+  // reproduces furin.js's own L = cord*size + 0.6*size, omega0 = sqrt(g/L),
+  // and windZTorque = (g/L)*WIND_Z_LEAN (WIND_Z_LEAN=0.16, g=9.8, damping
+  // =2/1.8 — all named constants in furin.js, duplicated here on purpose so
+  // this test does not import furin.js's private state, only its documented
+  // formulas)
+  const L = CORD_FRAC * SIZE + 0.6 * SIZE;
+  const G = 9.8;
+  const torqueCoeff = (G / L) * 0.16;
+  const damping = 2 / 1.8;
+  const reference = createPendulum({ length: L, g: G, damping });
+
+  const N = 180;   // 3 simulated seconds
+  for (let i = 0; i < N; i++) {
+    f.update(1 / 60, T0 + i / 60);
+    // absolute time, not time-since-reference-creation: T0 + t
+    integratePendulum(reference, 1 / 60, (t) => torqueCoeff * gustPhase(t + T0 + PHASE));
+  }
+
+  const swing = f.group.getObjectByName('swing');
+  const diff = Math.abs(swing.rotation.z - reference.theta);
+  assert.ok(diff < 0.01,
+    `swing diverged from the absolute-time reference: ${diff} rad (z=${swing.rotation.z}, ref=${reference.theta})`);
 });
 
 test('a tap kicks VELOCITY only — the pose does not snap at the instant it lands', () => {
