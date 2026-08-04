@@ -31,7 +31,10 @@ export default {
   accent: ACCENT,
   tier: 3,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.16', 'water:0.26', 'birds', 'music'],
+  // Used to carry a water bed (water:0.26); off for the same reason as every
+  // other pond and basin in the book — see makeWaterBed's comment in
+  // synths.js. A tap on the water still rings a drip.
+  ambience: ['wind:0.16', 'birds', 'music'],
   camera: { distance: 12.5, target: [0.2, 1.5, -2.4], azimuth: 0.42, polar: 1.2 },
 
   build(ctx) {

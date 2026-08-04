@@ -230,6 +230,10 @@ export function createAudio(save) {
       wind.setLevel(level * windScale);
     }
     if (type === 'music') ensureCaseMusic(emitters);
+    // No shipped koan's ambience recipe names 'water' any more (see
+    // makeWaterBed's own comment in synths.js for why), so this branch is
+    // plumbing rather than a live path today — left wired up rather than
+    // deleted, so a case that wants a bed again is one recipe token away.
     if (type === 'water' && !water) {
       water = makeWaterBed(ctx, master);
       waterEpoch++;
