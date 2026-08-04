@@ -3,6 +3,7 @@ import { toonMaterial } from '../render/toon.js';
 import { hash1 } from '../util/noise.js';
 import { gustPhase } from '../audio/synths.js';
 import { PAPER, WASH } from '../palette.js';
+import { createPendulum, integratePendulum, kickPendulum, pendulumEnergy } from './pendulum.js';
 
 // A wind chime: tubes hung in a ring under a wooden cap, a clapper, a paper
 // tag. The VISUAL sway follows the real gust — it is the wind that visibly
@@ -12,9 +13,15 @@ import { PAPER, WASH } from '../palette.js';
 // fills in the causality on its own. The wind still GATES it: a stilled scene
 // is a silent chime.
 //
-// Deterministic: closed forms over the simTime handed to update(). This is
-// kit, not audio — the no-Math.random rule applies in full. The only audio
-// import is gustPhase, a pure function (the sanctioned exception).
+// Deterministic: the strike weather below is a closed form over the simTime
+// handed to update(). The SWING is not closed-form any more — it is a real
+// pendulum with its own state (src/kit/pendulum.js) — but it is still fully
+// deterministic: the pendulum integrates on a fixed internal substep and
+// carries its own remainder, so the pose depends only on total elapsed sim
+// time and the sequence of taps, never on how update() gets called across
+// frames. This is kit, not audio — the no-Math.random rule applies in full.
+// The only audio import is gustPhase, a pure function (the sanctioned
+// exception).
 //
 // The group's origin is the HANG POINT: all geometry below y=0, so a case
 // positions it by where it hangs FROM.
@@ -33,19 +40,63 @@ export function chimeActivity(t) {
 const DENSITY = 0.85;      // Garden preset
 const REFRACTORY = 0.45;   // a tube cannot restrike faster than this
 
-// THE SWING. A furin is a light thing dragging a paper tag through the air, so
-// it swings fast and settles fast — the bonshō in kit/bell.js is the same model
-// at period 1.9s and tau 1.35s, because it is a tonne of bronze.
+// THE SWING. A driven, damped pendulum (src/kit/pendulum.js) — a furin is a
+// light thing dragging a paper tag through the air, so it swings fast and
+// settles fast; the bonshō in kit/bell.js is a heavier, slower thing (a
+// separate task will move it onto the same pendulum, at a much longer L and
+// a much smaller damping — a tonne of bronze rings a long time).
 //
-// This replaced an exponential nudge with no oscillating term, which leaned the
-// chime toward a tap and eased it back without ever crossing centre. Each tap
-// is superposed as its own decaying impulse starting from zero, so a second tap
-// while it is still moving adds energy without any snap in the pose.
-const SWING_PERIOD = 0.85;
-const SWING_TAU = 1.8;
-const SWING_OMEGA = (2 * Math.PI) / SWING_PERIOD;
-const SWING_A0 = 0.13;     // radians at full force
-const SWING_MAX = 0.30;    // mashing taps still stays a wind chime
+// This replaced a model where the wind curve was read STRAIGHT INTO the
+// rotation every frame — no inertia, no restoring force, nothing that could
+// ever swing, only ever be positioned (Frank: "it kinda gets held in
+// position weirdly"). Before that it was an exponential nudge with no
+// oscillating term either, which leaned the chime toward a tap and eased it
+// back without ever crossing centre. A real pendulum fixes both at once:
+// wind becomes a TORQUE the gravity term has to fight, so a steady wind
+// settles the chime at a lean it arrives at by swinging past it first, and a
+// tap is a velocity kick rather than a superposed decaying-sine term — see
+// ring()/hoverAt() below.
+
+// "Book gravity": src/sim/verlet.js's cloth already uses 9.8 as its own
+// tuning constant at this same scene scale (not real gravity — the book's
+// units are not metres), so the pendulum reuses that number rather than the
+// kit inventing a second "book gravity" that happens to differ for no
+// reason.
+const GRAVITY = 9.8;
+
+// DAMPING (1/s): a furin is light and drags a paper tag, so it settles
+// quickly. Chosen to land close to the old model's decay: for a lightly
+// damped oscillator (theta'' + c*theta' + omega0^2*theta = 0) the envelope
+// e-folds at tau = 2/c, and the old superposed-impulse model used tau=1.8s —
+// c = 2/1.8 reproduces that same settle time under the new model, which is
+// a useful reference point, not a hard requirement, since it is genuinely a
+// different model now.
+const SWING_DAMPING = 2 / 1.8;
+
+// The equilibrium lean (rad) a steady full gust settles the pendulum at, for
+// the primary swing plane (Z) and the smaller off-axis wobble (X) — same
+// visual scale the old kinematic code drew directly, kept so a default
+// fūrin still reads at the size Frank already approved, just arrived at by
+// swinging now instead of being placed.
+const WIND_Z_LEAN = 0.16;
+const WIND_X_LEAN = 0.09;
+
+// TAP_PEAK: the angle (rad) a full-force (1.0) tap swings the chime out to
+// on its first arc, matching the old model's SWING_A0. A knock is a
+// velocity kick, not a pose, so this gets converted to one per-instance
+// below (peak ~= kick / omega0 for a lightly damped oscillator, since the
+// kinetic energy at the kick converts to potential energy at the peak).
+const TAP_PEAK = 0.13;
+
+// However hard or however often it gets mashed, a fūrin should still read as
+// a fūrin and not a windmill. The old model capped the SUMMED pose
+// (SWING_MAX); this model has no pose to sum — a tap only ever adds
+// velocity — so the equivalent cap is on velocity: whatever hits land,
+// omega never exceeds what a real chime's air drag would let it reach. 0.30
+// is the fraction of a "one radian per unit omega0" swing that reproduces
+// the old SWING_MAX almost exactly at default size (measured: an omega
+// capped at 0.30*omega0 tops out around theta=0.30 rad on its first swing).
+const SWING_MAX_FRAC = 0.30;
 
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
@@ -89,6 +140,34 @@ export function makeFurin({
   body.name = 'chime';
   body.position.y = -CORD;
   swing.add(body);
+
+  // The pendulum's LENGTH is the pivot-to-mass-centre distance, derived from
+  // geometry already on this object rather than tuned as its own number: the
+  // cord's own length (CORD, above) plus roughly six tenths of the way down
+  // the tube/clapper cluster below it (the tubes run to about 0.9S and the
+  // cap sits above them, so the swinging mass centres around six tenths of
+  // that reach). A bigger `size` or a longer `cord` therefore swings slower
+  // with nobody tuning a second number — that relationship is the physics,
+  // per the brief, and not a free parameter.
+  const PEND_L = CORD + 0.6 * S;
+  const omega0 = Math.sqrt(GRAVITY / PEND_L);   // small-angle natural frequency
+  // torque coefficients: at v=1, windLevel=1, the small-angle equilibrium
+  // (g/L)*sin(theta_eq) = torque lands theta_eq at WIND_Z_LEAN / WIND_X_LEAN
+  const windZTorque = (GRAVITY / PEND_L) * WIND_Z_LEAN;
+  const windXTorque = (GRAVITY / PEND_L) * WIND_X_LEAN;
+  const MAX_OMEGA = SWING_MAX_FRAC * omega0;
+  // Z is the main swing plane a tap rings; X is the smaller off-axis wobble
+  // the old code drove from a phase-shifted, slower copy of the same gust —
+  // it never received taps before and does not gain them now.
+  const zPend = createPendulum({ length: PEND_L, g: GRAVITY, damping: SWING_DAMPING });
+  const xPend = createPendulum({ length: PEND_L, g: GRAVITY, damping: SWING_DAMPING });
+  // a tap's velocity kick, scaled so a full-force tap peaks near TAP_PEAK
+  // radians on its first swing (see TAP_PEAK above), then clamped so a
+  // burst of taps saturates instead of spinning the chime past plausibility
+  function tapKick(force) {
+    kickPendulum(zPend, force * TAP_PEAK * omega0);
+    zPend.omega = clamp(zPend.omega, -MAX_OMEGA, MAX_OMEGA);
+  }
 
   // tubes in a ring; the longer the tube the deeper the note — index 0 is the
   // longest, matching the engine's degree mapping. Thickened from the first
@@ -189,7 +268,6 @@ export function makeFurin({
   let windLevel = 1;
   let strikes = 0;
   let lastForce = 0;
-  const knocked = [];        // { t0, force } of taps still moving it
 
   function fire(i, force) {
     strikes++;
@@ -200,59 +278,6 @@ export function makeFurin({
       state[i].mesh.getWorldPosition(WORLD);
       onStrike(i, force, WORLD);
     }
-  }
-
-  // one impulse's own contribution to the pose right now — shared by the
-  // pose sum below and by the eviction it feeds, so both agree on "small"
-  function poseTerm(k) {
-    const t = clock - k.t0;
-    if (t < 0) return 0;
-    return k.force * SWING_A0 * Math.exp(-t / SWING_TAU) * Math.sin(SWING_OMEGA * t);
-  }
-
-  // where the tap's swing has the chime right now, on top of the wind's lean
-  function swingPose() {
-    let a = 0;
-    for (const k of knocked) a += poseTerm(k);
-    return clamp(a, -SWING_MAX, SWING_MAX);
-  }
-
-  // total energy still in the swing: 0 at rest, ~SWING_A0 just after one tap
-  function swingAmp() {
-    let e = 0;
-    for (const k of knocked) if (clock >= k.t0) e += k.force * SWING_A0 * Math.exp(-(clock - k.t0) / SWING_TAU);
-    return e;
-  }
-
-  const SWING_CAP = 8;
-
-  // A burst of taps can push past the cap. Evicting the OLDEST looks safe
-  // but isn't: at this swing's fast period (0.85s) an old impulse can sit at
-  // a sine trough while a newer one sits near a zero-crossing, so "oldest"
-  // and "least there right now" are different impulses. Nine taps inside
-  // about half a second leaves the oldest still worth -0.0518 rad — 40% of
-  // SWING_A0 — while the impulse that is genuinely doing the least at that
-  // instant is worth only -0.0094 rad (tests/furin.test.js pins both
-  // numbers). Evicting by age would snap the pose by exactly the amount
-  // this whole model exists to prevent; evicting by current contribution
-  // doesn't.
-  //
-  // The eviction has to run BEFORE the new knock is appended, against only
-  // the knocks already in flight: a term evaluated the instant it lands is
-  // exp(0)*sin(0) === 0 by construction — the smallest possible magnitude,
-  // always — so if the incoming knock were in the running it would evict
-  // itself on arrival, every time, silently swallowing every tap once the
-  // cap was reached.
-  function pushKnock(force) {
-    if (knocked.length >= SWING_CAP) {
-      let idx = 0, min = Infinity;
-      for (let i = 0; i < knocked.length; i++) {
-        const m = Math.abs(poseTerm(knocked[i]));
-        if (m < min) { min = m; idx = i; }
-      }
-      knocked.splice(idx, 1);
-    }
-    knocked.push({ t0: clock, force });
   }
 
   return {
@@ -282,17 +307,32 @@ export function makeFurin({
     },
 
     update(dt, simTime) {
+      const prevClock = clock;
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
+      // The pendulum advances by however much the CLOCK actually moved, not
+      // by the dt argument — same "closed form over simTime" reasoning as
+      // the rest of this file, extended to the one piece of state here that
+      // is not closed-form. max(0, ...) guards the integrator against ever
+      // seeing negative elapsed time from a caller that repeats or rewinds
+      // simTime (both happen in tests); integratePendulum itself is what
+      // folds this into the fixed substep that keeps it deterministic
+      // regardless of how a caller chops it up (src/kit/pendulum.js).
+      const elapsed = Math.max(0, clock - prevClock);
       const tt = clock + off;
       const v = gustPhase(tt);
 
-      // sway follows the REAL gust — the visible cause stays honest — and the
-      // tap's swing superposes on top of it as a separate, oscillating term
-      while (knocked.length && clock - knocked[0].t0 > 6 * SWING_TAU) knocked.shift();
-      const tapped = swingPose();
-      swing.rotation.z = v * 0.16 * windLevel + tapped;
-      swing.rotation.x = gustPhase(clock * 0.7 + off + 11) * 0.09 * windLevel;
-      tag.rotation.y = v * 0.25 * windLevel + tapped * 0.6;
+      // wind is a TORQUE now, not a position — see THE SWING above. Each
+      // axis reads gustPhase at its own (per-instance) phase offset so two
+      // fūrin never sway in lockstep; X mirrors the old code's slower,
+      // shifted copy of the same gust (never received taps before, still
+      // does not).
+      integratePendulum(zPend, elapsed, (t) => windZTorque * gustPhase(t + off) * windLevel);
+      integratePendulum(xPend, elapsed, (t) => windXTorque * gustPhase(t * 0.7 + off + 11) * windLevel);
+      swing.rotation.z = zPend.theta;
+      swing.rotation.x = xPend.theta;
+      // the tag keeps its own independent flutter in the wind, plus an echo
+      // of the main swing (taps and wind-lean both show up in zPend.theta)
+      tag.rotation.y = v * 0.25 * windLevel + zPend.theta * 0.6;
 
       // strikes follow the chime's own weather, gated by the wind existing
       const act = chimeActivity(tt);
@@ -317,24 +357,28 @@ export function makeFurin({
     // A tap sets it swinging and rings ONE tube. Naming a tube is how a case
     // says which one was touched (read hit.object.userData.tube); a null tube
     // is the whole chime grabbed at once, and picks deterministically by when.
+    // The knock is a VELOCITY kick (tapKick, above) — what a real knock
+    // physically is — not a pose superposed on top of one.
     ring(force = 0.75, tube = null) {
-      pushKnock(force);
+      tapKick(force);
       const k = Number.isInteger(tube)
         ? ((tube % state.length) + state.length) % state.length
         : Math.abs(Math.floor(clock * 3)) % state.length;
       fire(k, force);
     },
-    // the pointer passing over: a nudge, not a knock — the same impulse at a
+    // the pointer passing over: a nudge, not a knock — the same kick at a
     // fraction of the force, and no strike
     hoverAt() {
-      pushKnock(0.18);
+      tapKick(0.18);
     },
 
     setWindLevel(v) { windLevel = Math.max(0, v); },
     windLevel() { return windLevel; },
     strikes() { return strikes; },
     lastForce() { return lastForce; },
-    swingAmp() { return swingAmp(); },
+    // mechanical energy still in the main swing: 0 at rest, positive
+    // whenever it is displaced and/or moving (src/kit/pendulum.js)
+    swingAmp() { return pendulumEnergy(zPend); },
     activity() { return chimeActivity(clock + off); },
   };
 }

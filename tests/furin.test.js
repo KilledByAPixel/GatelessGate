@@ -242,13 +242,19 @@ test('a real ray aimed at a specific tube resolves to that tube, not the whole-c
 });
 
 test('a knocked chime SWINGS — it crosses centre, it does not just lean back', () => {
-  // THE BUG, pinned. The tap response was exp(-(t - nudgeAt) / 0.5) * 0.035:
+  // THE BUG, pinned, TWICE now. First it was exp(-(t - nudgeAt) / 0.5) * 0.035:
   // an exponential decay with no oscillating term, so the chime leaned toward
-  // the tap and eased back without ever passing through the middle. Frank:
-  // "it has, like, a weird dampening on its rotation. It doesn't swing back
-  // and forth, like, I would expect it to."
-  //
-  // A pendulum crosses centre. Wind off, so the only motion is the tap's.
+  // the tap and eased back without ever passing through the middle. That was
+  // replaced by a real superposed-impulse pendulum term (poseTerm), which DID
+  // cross centre — but the WIND lean was still read straight off the gust
+  // curve every frame with no inertia at all, which is what Frank was
+  // actually pointing at: "it kinda gets held in position weirdly." This test
+  // predates that second fix and still exercises the tap in isolation (wind
+  // off), so its assertions carry over unchanged onto the new model — a real
+  // driven pendulum (src/kit/pendulum.js) with taps as velocity kicks
+  // (ring()/tapKick) rather than a decaying-sine term superposed on a
+  // kinematic lean. Frank: "it has, like, a weird dampening on its rotation.
+  // It doesn't swing back and forth, like, I would expect it to."
   const f = makeFurin({ seed: 3, phase: 0, onStrike: () => {} });
   f.setWindLevel(0);
   const swing = f.group.getObjectByName('swing');
@@ -268,73 +274,116 @@ test('a knocked chime SWINGS — it crosses centre, it does not just lean back',
   assert.ok(early > 0.02, `the tap barely moves it: ${early} rad`);
 });
 
-test('swing energy accumulates across taps without snapping the pose', () => {
+test('wind actually drives the swing, not just the strikes', () => {
+  // Mutation-caught gap: every OTHER test in this file either turns wind off
+  // (isolating the tap) or only checks strikes()/activity() for wind's
+  // effect. Zeroing out the wind torque entirely (windZTorque -> 0) — i.e.
+  // wiring the pendulum up but never actually feeding it the gust, the
+  // easiest way to half-do this task — passed all 17 ORIGINAL tests and 15
+  // of the 17 in this rewritten file. Only this test catches it: a steady
+  // wind must eventually swing the chime out past a small threshold, not
+  // leave it sitting at theta=0 forever. (The overshoot/equilibrium shape of
+  // that response is pinned precisely on the pure core, with a real constant
+  // torque, in tests/pendulum.test.js — gustPhase's own slow drift here would
+  // make an exact equilibrium/overshoot assertion flaky at the furin level.)
+  const f = makeFurin({ seed: 6, phase: 0, onStrike: () => {} });
+  const swing = f.group.getObjectByName('swing');
+  f.setWindLevel(1);
+  let sawMotion = false;
+  for (let i = 0; i < 60 * 10 && !sawMotion; i++) {
+    f.update(1 / 60, i / 60);
+    if (Math.abs(swing.rotation.z) > 0.01) sawMotion = true;
+  }
+  assert.ok(sawMotion, 'wind never visibly moves the chime');
+});
+
+test('a tap kicks VELOCITY only — the pose does not snap at the instant it lands', () => {
+  // REWRITTEN for the pendulum model (src/kit/pendulum.js replaced the
+  // superposed-decaying-sine impulse this test used to pin). Old story: each
+  // tap superposed a NEW term starting at t0=clock, and this test proved a
+  // second such term contributes EXACTLY zero at the instant it lands
+  // (force * A0 * exp(0) * sin(0) === 0), so mashing taps never snapped the
+  // pose — it required reading at the SAME simTime twice to isolate that from
+  // the first impulse's own honest fast-frame growth (see the old comment,
+  // preserved in git history).
+  //
+  // The pendulum makes this trivial rather than delicate: a tap calls
+  // kickPendulum, which only ever touches omega (src/kit/pendulum.js). theta
+  // — and therefore swing.rotation.z — is untouched BY CONSTRUCTION, with no
+  // update() call and hence no time passing in between. No coincidental
+  // frame alignment to arrange; it is just true of the state.
+  //
+  // Each ring() below is followed by update(0, sameSimTime) — the render
+  // line (swing.rotation.z = zPend.theta) only runs inside update(), so
+  // without that zero-elapsed sync call this test would only ever be
+  // reading whatever rotation.z was left at from BEFORE the tap, and a kick
+  // that illicitly nudged theta as well as omega would slip through
+  // unnoticed until the next real frame — caught by mutation-testing this
+  // test with exactly that bug (kickPendulum also doing `theta += domega *
+  // SUBSTEP`) and finding it passed anyway.
+  const f = makeFurin({ seed: 3, phase: 0, onStrike: () => {} });
+  f.setWindLevel(0);
+  const swing = f.group.getObjectByName('swing');
+  // a single update(1, 1) rather than run(f, 1): run()'s last internal call
+  // lands just SHORT of simTime=1 (its loop is `i*step < secs`), so a later
+  // update(0, 1) would see a small nonzero elapsed time, not zero — exactly
+  // the gap a first draft of this test fell into (measured: 0.0147 rad of
+  // "the pose moved before any time passed" that should have read 0).
+  f.update(1, 1);
+  assert.equal(swing.rotation.z, 0, 'not at rest before anything touches it');
+  assert.equal(f.swingAmp(), 0, 'at rest before anything touches it');
+
+  f.ring(1);
+  f.update(0, 1);           // sync the render at the SAME simTime: zero elapsed physics time
+  const afterOne = swing.rotation.z;
+  const ampAfterOne = f.swingAmp();
+  assert.equal(afterOne, 0, 'the pose moved before any time passed');
+  assert.ok(ampAfterOne > 0, 'the tap added no energy');
+
+  f.ring(1);   // a second tap, still no elapsed time
+  f.update(0, 1);
+  assert.equal(swing.rotation.z, afterOne, 'the pose snapped on the second tap');
+  assert.ok(f.swingAmp() > ampAfterOne, 'the second tap added no energy');
+
+  // and once time actually passes, the stored energy shows up as motion
+  f.update(1 / 60, 1 + 1 / 60);
+  assert.notEqual(swing.rotation.z, 0, 'the kicks never turned into motion');
+});
+
+test('mashing taps saturates instead of spinning the chime past a wind chime', () => {
+  // REWRITTEN for the pendulum model. Old story: the swing summed up to 8
+  // superposed impulses and evicted whichever contributed LEAST to the pose
+  // right now when a 9th arrived, because evicting by age could discard real
+  // motion (see git history for the -0.0518 vs -0.0094 rad numbers that
+  // motivated it) — a mechanism that existed only because the old model kept
+  // an ARRAY of every tap still in flight.
+  //
+  // The pendulum has no array: a tap is one velocity kick added to the ONE
+  // omega the pendulum has (tapKick, furin.js), so there is nothing to evict.
+  // The equivalent protection is a velocity ceiling (MAX_OMEGA in furin.js):
+  // however many taps land, omega cannot exceed what a real chime's air drag
+  // would ever let it reach. Proven two ways: the stored energy after a
+  // saturating burst does not keep growing with more taps, and the resulting
+  // swing still reads as a wind chime rather than a windmill.
   const f = makeFurin({ seed: 3, phase: 0, onStrike: () => {} });
   f.setWindLevel(0);
   const swing = f.group.getObjectByName('swing');
   run(f, 1);
-  assert.equal(f.swingAmp(), 0, 'at rest before anything touches it');
 
-  f.ring(1);
-  f.update(1 / 60, 1);
-  const before = swing.rotation.z;
-  const amp1 = f.swingAmp();
-  assert.ok(amp1 > 0);
+  for (let i = 0; i < 9; i++) f.ring(1);      // all before any update(): a mash
+  const amp9 = f.swingAmp();
+  for (let i = 0; i < 41; i++) f.ring(1);     // 50 taps total
+  const amp50 = f.swingAmp();
+  assert.ok(amp9 > 0, 'nine taps added no energy at all');
+  // both bursts saturate the SAME velocity cap, so more taps buys nothing —
+  // a tight bound, not "less than double": a cap that leaked would show up
+  // here even a little
+  assert.ok(Math.abs(amp50 - amp9) < amp9 * 0.01,
+    `more taps kept adding energy past the cap: 9 taps -> ${amp9}, 50 taps -> ${amp50}`);
 
-  // A second tap must contribute EXACTLY nothing at the instant it lands:
-  // its own term is force * A0 * exp(0) * sin(0) === 0, whatever the first
-  // impulse is doing. A first draft of this test sampled one frame LATER
-  // instead, and that buries the signal: the first impulse's own honest,
-  // fast-frame growth (SWING_PERIOD=0.85 means it moves ~0.0155 rad in a
-  // single 1/60s frame this early on) swamps whatever the second tap did,
-  // so any bound loose enough to tolerate that legitimate growth also
-  // tolerates a real "starts from some nonzero phase, not from rest" snap —
-  // measured offsets of 0.05/0.1/0.2 rad all landed under a 0.06 bound
-  // there. Re-reading at the SAME simTime instead isolates the new impulse
-  // cleanly: the first impulse's contribution is literally unchanged (same
-  // clock, same value as `before`), so correct code reproduces `before` to
-  // the bit, and any nonzero starting phase shows up immediately, at its
-  // own size, with nothing to hide behind.
-  f.ring(1);
-  f.update(1 / 60, 1);
-  assert.ok(Math.abs(swing.rotation.z - before) < 1e-12, 'the pose snapped on the second tap');
-  // 2 * amp1 * 0.99, not amp1 itself: a buggy implementation that OVERWRITES
-  // the pending tap instead of superposing it produces an amplitude equal to
-  // amp1 (same relative age, same force), which a plain `> amp1` bound only
-  // catches because both readings here happen to sit exactly 1/60s past their
-  // own t0 — change the frame spacing and that coincidence, and the catch,
-  // goes away. Requiring comfortably more than double survives that.
-  assert.ok(f.swingAmp() > 2 * amp1 * 0.99, 'the second tap added no energy');
-});
-
-test('a burst of taps evicts the impulse doing the least right now, not the oldest', () => {
-  // Nine taps inside half a second (a plausible mash) push the swing's array
-  // past its cap of 8. At this swing's fast period (0.85s) the OLDEST
-  // impulse is not necessarily the one contributing least to the pose right
-  // now — it can sit at a sine trough while a newer one sits near a zero
-  // crossing. Evicting strictly by age discards real motion: dropping the
-  // oldest here removes about -0.0518 * force rad of pose in a single frame
-  // (40% of SWING_A0 at force 1) while the impulse genuinely doing the least
-  // at that instant is worth only about -0.0094 * force. force is kept low
-  // (0.3) here so SWING_MAX never clamps the sum and the difference stays
-  // visible in rotation.z instead of being hidden by the ceiling.
-  const f = makeFurin({ seed: 3, phase: 0, onStrike: () => {} });
-  f.setWindLevel(0);
-  const swing = f.group.getObjectByName('swing');
-  const dt = 0.5 / 8;
-  for (let i = 0; i < 8; i++) {
-    f.update(1 / 600, i * dt);
-    f.ring(0.3);
-  }
-  f.update(1 / 600, 8 * dt);
-  const before = swing.rotation.z;
-
-  f.ring(0.3);                  // the 9th tap: forces an eviction
-  f.update(1 / 600, 8 * dt);    // same simTime it landed at, so its own
-                                 // contribution is exactly zero — any change
-                                 // here is the eviction's doing, not the tap's
-  const jump = Math.abs(swing.rotation.z - before);
-  assert.ok(jump < 0.008, `the cap snapped the pose on eviction: ${jump} rad`);
+  let peak = 0;
+  for (let i = 0; i < 60 * 5; i++) { f.update(1 / 60, 1 + i / 60); peak = Math.max(peak, Math.abs(swing.rotation.z)); }
+  assert.ok(peak < 1.0, `a burst of taps spun the chime past a sane angle: ${peak} rad`);
 });
 
 test('it hangs by a STRING, and swings from the knot at the top of it', () => {
