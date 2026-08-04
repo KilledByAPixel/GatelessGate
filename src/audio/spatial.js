@@ -9,9 +9,16 @@
 
 export const SPATIAL = {
   // Distance at which gain is unity, and how fast it falls past that.
-  // Inverse-square (rolloff 2) is far too violent for a diorama spanning
-  // roughly +/-10 units — a bell across the yard would be inaudible.
-  ref: 2.5,
+  // Was 2.5 — a distance nothing in the book is ever viewed from. Every
+  // case's `camera.distance` (src/koans/k*.js, default 11.5 in main.js's
+  // buildKoan for the five cases that don't set their own) runs 8.6 to 17
+  // across all 49 cases plus the two matter pages and the hub/menu, with
+  // 11.5 both the median AND the single most common value (10 of 49 cases
+  // use it outright — see task-12-report.md for the full distribution). So
+  // every placed sound was being attenuated by the distance curve for no
+  // reason, permanently: Frank heard it on case 16's bell as "I could barely
+  // hear it." 11.5 is that measured value, not a round guess.
+  ref: 11.5,
   rolloff: 0.9,
 
   // Air absorption. Distance reads as FAR through the loss of highs more
@@ -66,9 +73,39 @@ export function spatialFor(source, listener, tune = SPATIAL) {
   const tone = (tune.toneFar + (tune.toneNear - tune.toneFar) * (tune.toneHalf / (tune.toneHalf + d)))
     * (behind ? tune.backTone : 1);
 
-  const wet = tune.nearWet + (tune.farWet - tune.nearWet) * (d / (d + tune.wetHalf));
+  const wet = wetAt(d, tune);
 
   return { d, pan, gain, tone, wet };
+}
+
+// The distance-only half of the wet curve, factored out of spatialFor so
+// calibrateMix() below can ask "what fraction would the shared curve send at
+// THIS distance" without a second copy of the formula.
+export function wetAt(d, tune = SPATIAL) {
+  return tune.nearWet + (tune.farWet - tune.nearWet) * (d / (d + tune.wetHalf));
+}
+
+// Pre-spatial one-shots split dry/send as `dry = 1 - verbMix*kd`,
+// `send = verbMix*ks` — see each strike*() function in synths.js. The two
+// coefficients are NOT uniform across voices: bell/sit-bell use 0.7/1.2,
+// drip/chime use 0.85/1.4, the odoshi's knock (built inline in engine.js)
+// uses 0.8/1.1. Read straight from git history at f5a12b7, the branch point
+// — do not assume a family's numbers from another family's.
+//
+// makeSpatialBus's placed path multiplies a SHARED distance curve (gain,
+// wet) by per-voice constants instead. calibrateMix() computes the pair that
+// makes the two paths agree exactly at SPATIAL.ref: gain is 1 there by
+// construction, so dryLevel/character only have to undo whatever
+// (1-wet)/wet the shared curve already contributes at that one distance,
+// landing on the voice's own old absolute dry/send. Away from ref the shared
+// curve still drives the shape (nearer drier, farther wetter, behind
+// duller) — only the anchor moves, per voice.
+export function calibrateMix(verbMix, kd, ks, tune = SPATIAL) {
+  const w = wetAt(tune.ref, tune);
+  return {
+    dryLevel: (1 - verbMix * kd) / (1 - w),
+    character: w > 0 ? (verbMix * ks) / w : 0,
+  };
 }
 
 // ---- the bus (browser-only) ----
@@ -77,9 +114,18 @@ export function spatialFor(source, listener, tune = SPATIAL) {
 // ratio is the cue. Scaling only the dry leg would make a far sound swim in
 // room; scaling neither would make it as loud as a near one.
 //
+// `character` and `dryLevel` are per-voice calibration constants from
+// calibrateMix() above — not raw verbMix. Passing verbMix straight through
+// as `character` was the branch's second bug: it reused a number that used
+// to mean "how much of the signal is sent to the room" as though it meant
+// "how much MORE than the shared distance curve already sends", collapsing
+// the send by roughly an order of magnitude at the reference distance. Both
+// default to 1 (no correction) for voices with no pre-spatial history to
+// match — the four touch voices born on this branch need none.
+//
 // The send taps after the panner so the room hears the placement too: a bell
 // on your left has its early reflections on your left.
-export function makeSpatialBus(ctx, dry, verbIn, { character = 1 } = {}) {
+export function makeSpatialBus(ctx, dry, verbIn, { character = 1, dryLevel = 1 } = {}) {
   const input = ctx.createGain();
 
   const lp = ctx.createBiquadFilter();
@@ -102,7 +148,7 @@ export function makeSpatialBus(ctx, dry, verbIn, { character = 1 } = {}) {
     place(s) {
       lp.frequency.value = s.tone;
       pan.pan.value = s.pan;
-      dryG.gain.value = s.gain * (1 - s.wet);
+      dryG.gain.value = s.gain * (1 - s.wet) * dryLevel;
       sendG.gain.value = s.gain * s.wet * character;
     },
     // Not because a connected bus otherwise LEAKS — Web Audio reclaims a node

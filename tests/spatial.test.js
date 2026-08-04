@@ -139,3 +139,79 @@ test('an at with a non-finite coordinate is refused, not passed to an AudioParam
     if (hadWindow) global.window = priorWindow; else delete global.window;
   }
 });
+
+// ---- task-12, Piece 1: the calibration principle ----
+// "A sound at its own case's camera distance must sound as it did before
+// this branch." These two tests are the ones that matter for that bug —
+// everything else in this file is unaffected by where `ref` sits.
+test('ref sits in the book\'s real camera range, not the old 2.5 anchor', () => {
+  // The bug: ref was 2.5, a distance nothing in the book is ever viewed
+  // from (camera.distance runs 8.6-17 across all 49 cases plus the matter
+  // pages and the hub — see task-12-report.md). This does not re-derive
+  // that range; it just refuses to let ref drift back inside it, which the
+  // dry/wet test just below would NOT catch on its own — calibrateMix()
+  // reads tune.ref dynamically, so it stays self-consistent at whatever ref
+  // is, 2.5 included, unless something also checks ref's actual value.
+  assert.ok(SPATIAL.ref >= 8 && SPATIAL.ref <= 18,
+    `SPATIAL.ref (${SPATIAL.ref}) has drifted outside the book's real camera range`);
+});
+
+test('at the reference distance, a placed one-shot matches the unplaced path (bell and drip)', () => {
+  // Drives the REAL engine down both paths for two different voice families
+  // (bell: kd/ks 0.7/1.2, drip: 0.85/1.4 — the two are NOT the same
+  // coefficients, so this also guards against a fix that only worked for
+  // one family) and reads the actual gain-node values each path builds,
+  // rather than re-deriving the expected numbers by hand: strikeBell() and
+  // strikeDrip()'s own dry/send formulas in synths.js are the independent
+  // "as it sounded before" reference this compares against.
+  const priorWindow = global.window;
+  const hadWindow = Object.prototype.hasOwnProperty.call(global, 'window');
+  global.window = { AudioContext: function FakeAudioContext() { return graphAudioContext(); } };
+  try {
+    const audio = createAudio(SAVE);
+    audio.unlock();
+    const ctx = audio.ctx;
+
+    // voicesDry/voicesWet are the last two gain nodes ensureCtx makes (see
+    // its own comment) — no public getter reaches them, but every dry/wet
+    // leg, placed or not, ends up connected to one of the two, which is
+    // enough to pick them out structurally rather than by a private name.
+    const voicesDry = ctx._gains[ctx._gains.length - 2];
+    const voicesWet = ctx._gains[ctx._gains.length - 1];
+    // The MOST RECENT edge into a node — a fresh strike adds a new one on
+    // top of whatever an earlier strike left behind, so `.find` (first
+    // match) would keep reading the very first strike's gain forever.
+    const gainInto = (node) => {
+      const edges = ctx._edges.filter(([, to]) => to === node);
+      assert.ok(edges.length > 0, 'nothing reached this bus at all');
+      return edges[edges.length - 1][0].gain.value;
+    };
+    const dB = (a, b) => 20 * Math.log10(a / b);
+    const assertMatch = (label, placedDry, placedWet, unplacedDry, unplacedWet) => {
+      assert.ok(Math.abs(dB(placedDry, unplacedDry)) < 0.05,
+        `${label} dry drifted ${dB(placedDry, unplacedDry).toFixed(3)} dB at ref: placed ${placedDry} vs unplaced ${unplacedDry}`);
+      assert.ok(Math.abs(dB(placedWet, unplacedWet)) < 0.05,
+        `${label} wet drifted ${dB(placedWet, unplacedWet).toFixed(3)} dB at ref: placed ${placedWet} vs unplaced ${unplacedWet}`);
+    };
+
+    // bell
+    audio.bell({ f0: 220 });   // unplaced: no listener set at all yet
+    const bellUnplacedDry = gainInto(voicesDry);
+    const bellUnplacedWet = gainInto(voicesWet);
+    audio.setListener(AT_ORIGIN);
+    audio.bell({ f0: 220, at: { x: 0, y: 0, z: -SPATIAL.ref } });
+    assertMatch('bell', gainInto(voicesDry), gainInto(voicesWet), bellUnplacedDry, bellUnplacedWet);
+
+    // drip — a different voice family (different kd/ks), placed through the
+    // same calibrateMix()/makeSpatialBus() machinery
+    audio.setListener(null);
+    audio.drip({});
+    const dripUnplacedDry = gainInto(voicesDry);
+    const dripUnplacedWet = gainInto(voicesWet);
+    audio.setListener(AT_ORIGIN);
+    audio.drip({ at: { x: 0, y: 0, z: -SPATIAL.ref } });
+    assertMatch('drip', gainInto(voicesDry), gainInto(voicesWet), dripUnplacedDry, dripUnplacedWet);
+  } finally {
+    if (hadWindow) global.window = priorWindow; else delete global.window;
+  }
+});

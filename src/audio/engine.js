@@ -7,7 +7,22 @@ import {
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
 import { hz, SCALES } from './tuning.js';
-import { spatialFor, makeSpatialBus } from './spatial.js';
+import { spatialFor, makeSpatialBus, calibrateMix } from './spatial.js';
+
+// Pre-spatial mix coefficients per voice family — dry = 1 - verbMix*kd,
+// send = verbMix*ks — read straight off each strike*() function in
+// synths.js (see calibrateMix()'s own comment in spatial.js for why these
+// are not interchangeable). Every placed() call below picks the family that
+// matches the voice it is about to strike.
+const MIX_BELL = { kd: 0.7, ks: 1.2 };      // strikeBell / strikeSitBell
+const MIX_WATER = { kd: 0.85, ks: 1.4 };    // strikeDrip
+const MIX_CHIME = { kd: 0.85, ks: 1.4 };    // strikeBar
+const MIX_ODOSHI = { kd: 0.8, ks: 1.1 };    // knock's inline mix, below
+// pour() never had a wet leg pre-branch — pourBurst wrote straight into
+// `master` with nothing splitting it, so its old dry was undiscounted (kd 0)
+// and its old send was zero (ks 0). calibrateMix(_, 0, 0) reproduces exactly
+// that: dryLevel undoes the shared curve's (1-wet) at ref, character is 0.
+const MIX_NONE = { kd: 0, ks: 0 };
 
 import { parseRecipe, emitterCount, diffAmbience } from './ambience_diff.js';
 
@@ -142,7 +157,8 @@ export function createAudio(save) {
     const deg = WATER.degree + [0, 1, 2, 4][Math.floor(Math.random() * 4)];
     const f0 = hz(deg, mood);
     const gain = WATER.level * (loud ? 1.5 : 0.7 + Math.random() * 0.5);
-    const bus = placed(at, WATER.verbMix, 1);
+    const { dryLevel, character } = calibrateMix(WATER.verbMix, MIX_WATER.kd, MIX_WATER.ks);
+    const bus = placed(at, character, 1, dryLevel);
     strikeDrip(ctx, bus ? bus.in : voicesDry, bus ? null : voicesWet, { f0, gain, verbMix: bus ? 0 : WATER.verbMix });
   }
 
@@ -154,9 +170,9 @@ export function createAudio(save) {
   // into an AudioParam and kill the graph. Every caller falls back to the
   // unplaced path on null, which is exactly today's behaviour, which is how
   // sixty call sites migrate one at a time instead of all at once.
-  function placed(at, character, tail) {
+  function placed(at, character, tail, dryLevel = 1) {
     if (!listener || !finiteAt(at) || !ctx) return null;
-    const bus = makeSpatialBus(ctx, voicesDry, voicesWet, { character });
+    const bus = makeSpatialBus(ctx, voicesDry, voicesWet, { character, dryLevel });
     bus.place(spatialFor(at, listener));
     bus.release(tail);
     return bus;
@@ -380,7 +396,8 @@ export function createAudio(save) {
       } else {
         v = f0 === null ? bellVoice(size) : { f0, partials: bellPartials(f0) };
       }
-      const bus = placed(at, verbMix, bellTail(v));
+      const { dryLevel, character } = calibrateMix(verbMix, MIX_BELL.kd, MIX_BELL.ks);
+      const bus = placed(at, character, bellTail(v), dryLevel);
       strikeBell(ctx, bus ? bus.in : voicesDry, bus ? null : voicesWet,
         { partials: v.partials, gain, verbMix: bus ? 0 : verbMix, beam, ping, pingFreq });
     },
@@ -410,7 +427,11 @@ export function createAudio(save) {
       // it goes straight to master/verb.in so hushVoices() cannot cut it off
       // mid-sentence. An ambient (unpunctuated) strike takes the hush pair
       // either through placed() or, with no listener/position, its fallback.
-      const bus = punctuate ? null : placed(at, CHIME.verbMix, CHIME.decay + 1);
+      let bus = null;
+      if (!punctuate) {
+        const { dryLevel, character } = calibrateMix(CHIME.verbMix, MIX_CHIME.kd, MIX_CHIME.ks);
+        bus = placed(at, character, CHIME.decay + 1, dryLevel);
+      }
       const dry = punctuate ? master : (bus ? bus.in : voicesDry);
       const wet = punctuate ? verb.in : (bus ? null : voicesWet);
       strikeBar(ctx, dry, wet, { f0, gain, verbMix: bus ? 0 : CHIME.verbMix });
@@ -425,7 +446,8 @@ export function createAudio(save) {
     // them here — the same indirection as the furin
     knock({ force = 1, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
-      const bus = placed(at, ODOSHI.verbMix, ODOSHI.decay + 1);
+      const { dryLevel, character } = calibrateMix(ODOSHI.verbMix, MIX_ODOSHI.kd, MIX_ODOSHI.ks);
+      const bus = placed(at, character, ODOSHI.decay + 1, dryLevel);
       let dest;
       if (bus) dest = bus.in;
       else {
@@ -446,7 +468,9 @@ export function createAudio(save) {
     },
     pour({ at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
-      const bus = placed(at, ODOSHI.verbMix * 0.6, 2);
+      // pourBurst has no wet leg pre-branch — see MIX_NONE's own comment.
+      const { dryLevel, character } = calibrateMix(0, MIX_NONE.kd, MIX_NONE.ks);
+      const bus = placed(at, character, 2, dryLevel);
       pourBurst(ctx, bus ? bus.in : voicesDry, {});
     },
     // ---- the touch voices ----
