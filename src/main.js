@@ -183,6 +183,33 @@ const sit = makeSit({
 });
 document.body.appendChild(sit.el);
 
+// A page that loads ALREADY hidden — reloaded in a background tab, opened by
+// a link into a background tab, a session restore that brings tabs back
+// behind the active one — gets no visibilitychange event at all: that
+// listener (below) is edge-triggered, and there is no edge to cross if the
+// page was never visible to begin with. Without this, `hidden` inside the
+// audio engine stays false forever and the ambience simply plays, unheard,
+// to a tab nobody is looking at. Read document.hidden once, here, through the
+// SAME shouldPauseForHide() rule the listener uses, so the boot path and the
+// event path can never disagree about what "hidden" means.
+//
+// Placed here rather than lower in the file because this is the first point
+// where audio, sit and narration all exist (sit needs audio itself, hence
+// the placement after it) — and, just as important, it is BEFORE anything
+// below this line can make a sound: openMenu()'s menuMusic() and
+// buildKoan()'s audio.transition() are both still ahead, in the boot block at
+// the very end of this file. audio.pauseForHide() sets its `hidden` flag
+// unconditionally even with no AudioContext yet (createAudio() is Node-safe
+// until ensureCtx() runs on the first user gesture) and returns early on the
+// context itself; ensureCtx() reads that same flag into master's initial
+// gain the moment a context IS built, so a page that loads hidden and later
+// unlocks starts already silent rather than blaring for a beat and then
+// being silenced.
+if (shouldPauseForHide(document.hidden, sit.phase())) {
+  narration.pauseForHide();
+  audio.pauseForHide();
+}
+
 // ---- stage toolbar (top-right, over the 3D and never over the text) ----
 // One row of square buttons: sound, fullscreen, and the debug workbench. They
 // share a shape so the corner reads as a toolbar rather than three unrelated

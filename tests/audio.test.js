@@ -970,6 +970,32 @@ test('the engine tracks hidden as state, readable before any context exists', ()
   assert.equal(audio.isHidden(), false);
 });
 
+test('a page that loads already hidden creates its AudioContext already silent', () => {
+  // The scenario main.js's boot-time hidden check exists for: a page loaded
+  // in a background tab never gets a visibilitychange event (nothing changed
+  // — it was never visible), so pauseForHide() has to be called once at boot,
+  // before any user gesture has built a context. If master's initial gain
+  // ignored `hidden`, the first unlock() (the reader's own later click, or
+  // the intro's own listeners) would build a context at full volume and only
+  // pull it down a beat afterward — audible. ensureCtx() reads `hidden` into
+  // master's OWN gain.value at construction, so this must hold with no ramp
+  // involved at all: hide, THEN build, and the context is born at 0.
+  const save = { state: () => ({ soundOn: true }), setSound() {} };
+  const priorWindow = global.window;
+  const hadWindow = Object.prototype.hasOwnProperty.call(global, 'window');
+  global.window = { AudioContext: function FakeAudioContext() { return graphAudioContext(); } };
+  try {
+    const audio = createAudio(save);
+    audio.pauseForHide();                 // no context yet — must still take
+    assert.equal(audio.isHidden(), true, 'hidden must be tracked with no context at all');
+    audio.unlock();                       // first gesture: ensureCtx() runs now
+    assert.ok(audio.ctx, 'a context was actually built');
+    assert.equal(audio.master.gain.value, 0, 'master must be born silent, not silenced a beat later');
+  } finally {
+    if (hadWindow) global.window = priorWindow; else delete global.window;
+  }
+});
+
 // The three tests above are pure-function truth tables and no-context state
 // tracking; these three exercise the actual wiring against a real (faked)
 // AudioContext, because a correct masterLevel() and a correct
