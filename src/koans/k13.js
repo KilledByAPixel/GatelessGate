@@ -131,7 +131,8 @@ export default {
         lastRing = clock;
         bell.strike();
         rings++;
-        audio && audio.bell({ f0: 104, at: bell.group.position });
+        // the monastery bell — task-12's migration to Frank's tuned presets
+        audio && audio.bell({ preset: 'temple', at: bell.group.position });
       }
     });
 

@@ -160,7 +160,9 @@ export default {
         screen.update(dt, simTime);
         // one soft strike as the opening clears, none on the way back down
         if (!rang && screen.rolled() > 0.8) {
-          audio && audio.bell({ f0: 150, gain: 0.45, at: screen.group.position });
+          // a small incidental strike beside the screen, not a hung temple
+          // fixture — task-12's migration to Frank's tuned presets
+          audio && audio.bell({ preset: 'hand', gain: 0.45, at: screen.group.position });
           rang = true;
         }
         if (screen.rolled() < 0.2) rang = false;

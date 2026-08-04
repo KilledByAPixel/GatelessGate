@@ -317,7 +317,7 @@ test('the bell sits in frame at the home angle', () => {
   }
 });
 
-test('tapping the bell swings it, rings it at f0 98, and the elder finishes his turn', () => {
+test('tapping the bell swings it, rings the temple preset, and the elder finishes his turn', () => {
   const rings = [];
   const audio = {
     startAmbience() {}, stopAmbience() {}, setWindLevel() {},
@@ -344,7 +344,7 @@ test('tapping the bell swings it, rings it at f0 98, and the elder finishes his 
   let frag = root.fragment();
   assert.equal(frag.strikes, 1, 'the strike lands');
   assert.equal(rings.length, 1, 'and it is AUDIBLE — one ring per strike');
-  assert.equal(rings[0].f0, 98, 'the bonshō speaks lower than the sit chime');
+  assert.equal(rings[0].preset, 'temple', 'the bonshō rings Frank\'s temple preset — see task-12');
 
   for (let i = 1; i <= 120; i++) root.update(1 / 60, i / 60);
   frag = root.fragment();

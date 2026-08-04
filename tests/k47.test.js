@@ -250,10 +250,10 @@ test('the tap zones are frames, not doorways — a tap through the arch falls th
   }
 });
 
-test('each barrier answers with its own note, the nearest the deepest', () => {
+test('each barrier answers with its own bell, the nearest the biggest', () => {
   const bells = [];
   const audio = {
-    bell: (o) => bells.push(o.f0),
+    bell: (o) => bells.push(o.preset),
     startAmbience: () => {}, stopAmbience: () => {}, setWindLevel: () => {},
   };
   const ctx = fakeCtx(audio);
@@ -267,23 +267,25 @@ test('each barrier answers with its own note, the nearest the deepest', () => {
   ctx._taps.forEach((cb) => cb(10, 10));
   assert.deepEqual(root.fragment(), { taps1: 0, taps2: 0, taps3: 0 });
 
-  // tap each barrier and check the counter and the note both route to it.
+  // tap each barrier and check the counter and the preset both route to it.
   // Each tap advances the clock past the per-bell cooldown first (see the
   // cooldown test below) — index 1 is tapped twice here, and without the
   // advance the second tap would land inside its own cooldown window and be
-  // silently swallowed rather than ringing a second time.
+  // silently swallowed rather than ringing a second time. Presets follow
+  // GATE_PRESETS in k47.js: near gate biggest bell, far gate smallest —
+  // task-12's migration off the raw f0 ramp (62 + 18*i).
   const expect = [0, 0, 0];
   let clock = 0;
-  for (const [i, f0] of [[1, 80], [2, 98], [0, 62], [1, 80]]) {
+  for (const [i, preset] of [[1, 'temple'], [2, 'hand'], [0, 'great'], [1, 'temple']]) {
     clock += 0.6;
     root.update(0, clock);
     ctx.input.raycastFirst = (cam, objs) => (objs.includes(slabOf(i)) ? { object: slabOf(i) } : null);
     ctx._taps.forEach((cb) => cb(10, 10));
     expect[i]++;
-    assert.equal(bells[bells.length - 1], f0, `barrier ${i + 1} rings f0=${f0}`);
+    assert.equal(bells[bells.length - 1], preset, `barrier ${i + 1} rings preset=${preset}`);
   }
   assert.deepEqual(root.fragment(), { taps1: expect[0], taps2: expect[1], taps3: expect[2] });
-  assert.ok(bells.includes(62) && bells.includes(80) && bells.includes(98), 'three notes, stepped');
+  assert.ok(bells.includes('great') && bells.includes('temple') && bells.includes('hand'), 'three bells, stepped by size');
 
   // and with no audio at all, the counter still counts and nothing throws.
   // Target-aware, like the loop above: the handler probes the furin first,

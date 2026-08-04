@@ -60,6 +60,9 @@ const GATES = [
   { t: 0.70, width: 2.8, height: 2.6, color: ACCENT_DEEP }, // where do you go?
 ];
 const MONK_T = 0.31;   // mid-journey: past the first barrier, short of the second
+// One bell size per gate, in the same near-to-far order as GATES — task-12's
+// migration off raw f0 (62 + 18*i) to Frank's tuned presets.
+const GATE_PRESETS = ['great', 'temple', 'hand'];
 
 export default {
   id: ID,
@@ -243,7 +246,11 @@ export default {
       if (clock - lastRing[i] < 0.5) return;
       lastRing[i] = clock;
       taps[i]++;
-      audio && audio.bell({ f0: 62 + 18 * i, at: gates[i].gate.position });
+      // GATES shrinks from the near barrier to the far one (width 3.2 -> 3.0
+      // -> 2.8, same order as GATES above) — task-12's migration to Frank's
+      // tuned presets follows the same shrink rather than the raw f0 ramp:
+      // near gate biggest bell, far gate smallest.
+      audio && audio.bell({ preset: GATE_PRESETS[i], at: gates[i].gate.position });
     });
 
     return {

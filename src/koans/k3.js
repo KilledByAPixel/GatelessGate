@@ -278,10 +278,13 @@ export default {
 
     const strike = (f) => {
       f.since = now;
-      // the master's note is low, the boy's a fifth above it: the same gesture,
-      // twice, in two voices
+      // the same gesture, twice, in two voices: the master's answer carries
+      // the room the way his authority does (temple), the boy's imitation is
+      // smaller and brighter (hand) — task-12's bell-preset migration, which
+      // trades the raw f0 pair (62 / a fifth above) for two of Frank's own
+      // tuned bells rather than two arbitrary pitches.
       audio && audio.bell({
-        f0: f === master ? 62 : 93, gain: f === master ? 0.14 : 0.11,
+        preset: f === master ? 'temple' : 'hand', gain: f === master ? 0.14 : 0.11,
         at: f.monk.position,
       });
     };

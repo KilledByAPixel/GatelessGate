@@ -166,7 +166,9 @@ export default {
       bell.strike();
       strikes++;
       turning = true;
-      audio && audio.bell({ f0: 98, at: bell.group.position });
+      // the book's canonical bonshō — task-12's migration to Frank's tuned
+      // presets; this IS the case the temple preset is named for
+      audio && audio.bell({ preset: 'temple', at: bell.group.position });
     });
 
     return {

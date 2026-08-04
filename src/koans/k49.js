@@ -147,7 +147,9 @@ export default {
     input.onTap(() => {
       if (!camera) return;
       if (input.raycastFirst(camera, [gateHit])) {
-        if (clock - lastRing > 0.5) { lastRing = clock; rings++; audio && audio.bell({ f0: 210, gain: 0.5, at: gate.position }); }
+        // a small bright strike at the torii, the seal the book closes on —
+        // task-12's migration to Frank's tuned presets
+        if (clock - lastRing > 0.5) { lastRing = clock; rings++; audio && audio.bell({ preset: 'hand', gain: 0.5, at: gate.position }); }
         return;
       }
       if (surface) {

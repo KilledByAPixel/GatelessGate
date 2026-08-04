@@ -191,7 +191,10 @@ export default {
       if (clock - lastToll < 2.0) return;      // it does not hurry for anyone
       lastToll = clock;
       tolls++;
-      audio && audio.bell({ f0: 49, at: hit.position });         // an octave under the bonshō
+      // the colossus's own bell: bigger and deeper than k16's temple bonshō,
+      // which is what "an octave under" was reaching for with a raw f0 —
+      // task-12's migration to Frank's tuned presets picks `great` outright
+      audio && audio.bell({ preset: 'great', at: hit.position });
     });
 
     return {

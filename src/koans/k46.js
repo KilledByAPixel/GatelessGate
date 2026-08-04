@@ -214,7 +214,9 @@ export default {
         taps++;
         if (now - lastRing >= 0.5) {
           lastRing = now;
-          audio && audio.bell({ f0: 88, gain: 0.06, at: sitterPivot.getWorldPosition(scratchPos) });
+          // very quiet, at the pole top — not a hung bell, so the smallest
+          // preset — task-12's migration to Frank's tuned presets
+          audio && audio.bell({ preset: 'hand', gain: 0.06, at: sitterPivot.getWorldPosition(scratchPos) });
         }
       } else if (input.raycastFirst(camera, poleMeshes)) {
         swayAt = now;

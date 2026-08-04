@@ -153,6 +153,6 @@ test('the tap still tolls the deepest bell, from the new position', () => {
     ? { object: hit, point: new THREE.Vector3(), distance: 1 } : null);
   taps.forEach((cb) => cb());
   assert.equal(rung.length, 1, 'the bell did not sound');
-  assert.equal(rung[0].f0, 49, 'an octave under the bonshō');
+  assert.equal(rung[0].preset, 'great', 'the colossus rings Frank\'s great preset — see task-12');
   assert.equal(root.fragment().tolls, 1);
 });
