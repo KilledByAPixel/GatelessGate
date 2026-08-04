@@ -172,15 +172,16 @@ export default {
     stars.frustumCulled = false;
     scene.add(stars);
 
-    // One bronze cylinder hung under the veranda's own beam, on the far
-    // side from Ryutan and Tokusan so it never competes with the candle for
-    // attention — local to the veranda group (case 29's idiom), x=-1.5
-    // sitting clear between the two posts nearest that side at this width.
+    // One bronze cylinder hung in the veranda's own corner bay — the far end
+    // from Ryutan and Tokusan, so it never competes with the candle for
+    // attention, and hugging the end post (x=-1.95, clear of it by 0.25)
+    // rather than sitting centred under the beam the way this pass's other
+    // eave chimes do. Local to the veranda group (case 29's idiom).
     const nightChime = makeCylinderChime({
       size: 0.85, seed: 28,
       onStrike: (note, force, pos) => audio && audio.cylinderStrike({ note, force, at: pos }),
     });
-    nightChime.group.position.set(-1.5, 2.8, -0.15);
+    nightChime.group.position.set(-1.95, 2.8, -0.15);
     veranda.add(nightChime.group);
 
     const world = composeWorld(scene, {

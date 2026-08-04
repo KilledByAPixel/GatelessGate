@@ -39,11 +39,13 @@ export default {
   // 'cylinder' names the pair hung under the teacher's own veranda — a real
   // teaching porch is exactly where a set of these would hang, at two sizes
   // so they read as a set rather than one repeating note. ONE token for both
-  // instances, not two: 'call' already occupies an emitter slot, and
-  // density = min(3, 1+0.7*e) saturates at e>=2.858 with no case in the book
-  // past e=2 — a book-wide norm this case has no reason to be the first to
-  // break for a pair of quiet bronze tubes, unlike case 29's four separably-
-  // busy voices, which earned its own second token on the actual numbers.
+  // instances, not two: the honest reason is RATE, not a token-per-object
+  // rule (there isn't one — case 29 declares two 'furin' tokens for FOUR
+  // physical chimes). kit/cylinder.js is tuned for "tens of strikes an hour"
+  // per instance from wind alone (its own WIND_LEAN comment); two of them
+  // together are nowhere near as busy a voice as 'birds' wheeling overhead
+  // or a flag rippling continuously in the breeze, the kind of emitter a
+  // second token is actually meant to flag as "busier now."
   ambience: ['wind:0.15', 'call', 'cylinder', 'music'],
   camera: { distance: 11.0, target: [0.6, 1.3, -0.4], azimuth: 0.60, polar: 1.26 },
 

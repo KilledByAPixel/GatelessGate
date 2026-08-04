@@ -32,11 +32,15 @@ export default {
   accent: ACCENT,
   tier: 3,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  // 'furin' names the ring hung under Ummon's own lintel — a temple gate at
-  // evening is exactly where a real fūrin would hang, and this case already
-  // gives the gate a voice ('gate'); the cluster's several small tubes read
-  // as an echo of the three blows Tozan never actually receives — a scatter
-  // of small sounds standing in for the strikes that were forgiven.
+  // 'furin' names the single tube hung under Ummon's own lintel — a temple
+  // gate at evening is exactly where a real fūrin would hang, and this case
+  // already gives the gate a voice ('gate'). REVISED FROM a five-tube
+  // cluster: code review called it "the busiest new voice in the book, on a
+  // case whose whole point is three blows that never land" — right. This is
+  // one of the book's quietest pages (tier 3, the fog "closes in earlier
+  // than anywhere else"), and a chattering ring reads as an ANSWER to the
+  // beating, competing with the whole point that nothing actually strikes.
+  // One spare, isolated voice sits the way the case does: forgiven, not busy.
   ambience: ['wind:0.20', 'gate', 'furin', 'music'],
   camera: { distance: 11.0, target: [0.6, 1.6, -0.8], azimuth: 0.50, polar: 1.25 },
 
@@ -81,14 +85,15 @@ export default {
     lantern.position.set(2.9, 0, -2.0);
     scene.add(lantern);
 
-    // The ring, hung under the gate's own kasagi (its flat centre span is
-    // flush underside for |x| < width*0.364 — see k29's comment for the
-    // derivation of that fraction, which is the same lintel geometry here).
-    // At this gate's width (2.8) that is |x| < 1.02, so -0.4 sits well clear
-    // of the wings on one side and off the road's own centreline.
+    // A single small tube, hung under the gate's own kasagi (its flat centre
+    // span is flush underside for |x| < width*0.364 — see k29's comment for
+    // the derivation of that fraction, which is the same lintel geometry
+    // here). At this gate's width (2.8) that is |x| < 1.02, so -0.4 sits
+    // well clear of the wings on one side and off the road's own
+    // centreline.
     const furin = makeFurin({
-      seed: 15,
-      onStrike: (tube, force, pos) => audio && audio.chimeStrike({ tube, force, at: pos }),
+      tubes: 1, seed: 15,
+      onStrike: (_, force, pos) => audio && audio.chimeStrike({ tube: 2, force, at: pos }),
     });
     furin.group.position.set(-0.4, 3.0, 0);
     gate.add(furin.group);

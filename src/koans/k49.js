@@ -101,15 +101,16 @@ export default {
     gate.rotation.y = ep.heading;    // its opening aligned down the path
     scene.add(gate);
 
-    // One bronze cylinder hung under the lintel, local to the gate so it
-    // stays square to it wherever the road happens to place it. |x| <
-    // width*0.364 stays flush underside (k29's own derivation); -0.4 sits
-    // well inside that at this width (2.6) and off the road's own centreline.
+    // One bronze cylinder hung toward one end of the lintel's own flat span,
+    // not dead centre over the road — local to the gate so it stays square
+    // to it wherever the road happens to place it. |x| < width*0.364 stays
+    // flush underside (k29's own derivation); -0.75 sits close to that edge
+    // at this width (2.6, span |x| < 0.946) rather than near the middle.
     const closingChime = makeCylinderChime({
       size: 0.9, seed: 49,
       onStrike: (note, force, pos) => audio && audio.cylinderStrike({ note, force, at: pos }),
     });
-    closingChime.group.position.set(-0.4, 3.0, 0);
+    closingChime.group.position.set(-0.75, 3.0, 0);
     gate.add(closingChime.group);
 
     const world = composeWorld(scene, {

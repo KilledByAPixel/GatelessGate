@@ -11,11 +11,11 @@ import { loadKoan } from '../src/koans/registry.js';
 // claims.
 //
 // Ask of every assertion here whether a case that hung the chime but never
-// called update()/setWindLevel() on it, or that let a tap fall through past
-// it, would still pass. A "the chime makes SOME sound eventually" test would
-// pass a case that built the object and forgot to wire it in at all, if
-// enough simulated time happened to trip some OTHER interaction — these
-// specifically isolate the chime's own path.
+// wired it in, or that let a tap fall through past it, would still pass. A
+// "the chime makes SOME sound eventually" test would pass a case that built
+// the object and forgot to call update() on it, if enough simulated time
+// happened to trip some OTHER interaction — these specifically isolate the
+// chime's own path.
 const CASES = [
   { slug: 'a-beardless-foreigner', kind: 'chime' },              // k4
   { slug: 'tozan-s-three-blows', kind: 'chime' },                // k15
@@ -24,7 +24,7 @@ const CASES = [
   { slug: 'kashapa-s-preaching-sign', kind: 'chime', windTied: true },   // k22
   { slug: 'blow-out-the-candle', kind: 'cylinder' },             // k28
   { slug: 'joshu-investigates', kind: 'chime' },                 // k31
-  { slug: 'learning-is-not-the-path', kind: 'cylinder' },        // k34
+  { slug: 'learning-is-not-the-path', kind: 'chime' },           // k34 (revised from a cylinder)
   { slug: 'basho-s-staff', kind: 'chime' },                      // k44
   { slug: 'amban-s-addition', kind: 'cylinder' },                // k49
 ];
@@ -35,8 +35,10 @@ function stubAudio() {
     calls,
     chimeStrike: (o) => calls.push(['chime', o]),
     cylinderStrike: (o) => calls.push(['cylinder', o]),
-    bell() {}, knock() {}, drip() {}, pour() {},
-    ceramic() {}, wood() {}, cloth() {}, breath() {},
+    bell: () => calls.push(['bell']), knock: () => calls.push(['knock']),
+    drip: () => calls.push(['drip']), pour: () => calls.push(['pour']),
+    ceramic: () => calls.push(['ceramic']), wood: () => calls.push(['wood']),
+    cloth: () => calls.push(['cloth']), breath: () => calls.push(['breath']),
     startAmbience() {}, stopAmbience() {}, setWindLevel() {}, duck() {},
   };
 }
@@ -54,18 +56,16 @@ function fakeCtx(audio) {
   };
 }
 
-// every mesh belonging to the FIRST (or only) chime object found in the
-// scene, collected by object identity rather than by name — cylinder.js's
-// own 'body' mesh name collides with bell.js's, so matching by name alone
-// across a whole scene would risk a false hit on an unrelated instrument
-function chimeTargets(scene, all = false) {
+// every mesh belonging to EACH chime object found in the scene, grouped by
+// instance and collected by object identity rather than by name —
+// cylinder.js's own 'body' mesh name collides with bell.js's, so matching by
+// name alone across a whole scene would risk a false hit on an unrelated
+// instrument
+function chimeInstances(scene) {
   const groups = [];
   scene.traverse((o) => { if (o.name === 'furin' || o.name === 'cylinder-chime') groups.push(o); });
   assert.ok(groups.length > 0, 'no chime object found in the scene');
-  if (all) return groups.map((g) => { const t = []; g.traverse((o) => { if (o.isMesh) t.push(o); }); return t; });
-  const targets = [];
-  groups[0].traverse((o) => { if (o.isMesh) targets.push(o); });
-  return targets;
+  return groups.map((g) => { const t = []; g.traverse((o) => { if (o.isMesh) t.push(o); }); return t; });
 }
 
 for (const { slug, kind, pair, windTied } of CASES) {
@@ -75,9 +75,12 @@ for (const { slug, kind, pair, windTied } of CASES) {
     const mod = await loadKoan(slug);
     const root = mod.build(ctx);
     // no camera, no taps: this exercises ONLY the ambient wind path, so a
-    // case that built the chime but never called chime.update()/
-    // setWindLevel() in its own update() loop leaves it motionless forever
-    // and this must fail.
+    // case that built the chime but never called chime.update() in its own
+    // update() loop leaves it motionless forever and this must fail. (Every
+    // case here also calls chime.setWindLevel(1) every frame — see the
+    // "wind level" test below for what that call actually does and does not
+    // prove; it is not what this assertion depends on, since both kit
+    // files' own windLevel already defaults to 1.)
     for (let i = 0; i < 60 * 400; i++) root.update(1 / 60, i / 60);
     const strikes = audio.calls.filter(([k]) => k === kind);
     assert.ok(strikes.length > 0,
@@ -98,7 +101,18 @@ for (const { slug, kind, pair, windTied } of CASES) {
     }
   });
 
-  test(`${slug}: a tap that hits only the chime rings exactly it, and never falls through to the case's other interaction`, async () => {
+  test(`${slug}: a tap that hits everything still rings the chime exactly once, and nothing else`, async () => {
+    // Deliberately crude — EVERY query, chime or not, returns a hit. This is
+    // the shape that actually exercises the missing-`return` bug: a stub
+    // that ONLY matches the chime's own meshes can never observe a fallback
+    // firing too, because the case's other pick (a hut-hall bell, a rack, a
+    // flag mesh, a gate's own big hit-box...) would always miss under that
+    // narrower stub regardless of whether the `return` is there. Nine of the
+    // ten cases also happen to guard their fallback with its own
+    // `if (!raycastFirst(...)) return;`, which a narrow stub would silently
+    // rely on — but k49's does not (its gate-ring branch has no such guard),
+    // so a narrow stub leaves that one case's probe order entirely unpinned.
+    // An always-hit stub closes both gaps at once, for all ten.
     const audio = stubAudio();
     const ctx = fakeCtx(audio);
     const mod = await loadKoan(slug);
@@ -106,11 +120,8 @@ for (const { slug, kind, pair, windTied } of CASES) {
     root.setCamera(new THREE.PerspectiveCamera());
     root.update(1 / 60, 0);
 
-    const targets = chimeTargets(root.scene);
-    ctx.input.raycastFirst = (cam, objs) => {
-      const hit = objs && objs.find((o) => targets.includes(o));
-      return hit ? { object: hit, point: new THREE.Vector3(), distance: 1 } : null;
-    };
+    ctx.input.raycastFirst = (cam, objs) => (objs && objs.length
+      ? { object: objs[0], point: new THREE.Vector3(), distance: 1 } : null);
     ctx._taps.forEach((cb) => cb());
     // A furin's ring() fires synchronously; a cylinder's does not — it only
     // kicks the clapper's velocity, and the actual contact (the thing that
@@ -124,20 +135,49 @@ for (const { slug, kind, pair, windTied } of CASES) {
     // exactly one call reached audio at all, and it was the chime's own —
     // a missing `return` after ringing the chime would let the SAME tap
     // fall through into the case's other tap response (a knock, a bell, a
-    // toggled flag) and show up here as a second call or the wrong kind
+    // toggled flag) and show up here as a second call
     assert.equal(audio.calls.length, 1,
-      `${slug}: one tap on the chime alone produced ${audio.calls.length} audio calls: ${JSON.stringify(audio.calls)}`);
+      `${slug}: one tap that hits everything produced ${audio.calls.length} audio calls: ${JSON.stringify(audio.calls)}`);
     assert.equal(audio.calls[0][0], kind, `${slug}: the one call was not a ${kind} strike`);
   });
+
+  if (pair) {
+    test(`${slug}: each chime in the pair answers its OWN tap, not just the first one probed`, async () => {
+      // The generic "hits everything" test above always satisfies the
+      // FIRST chime the case's onTap loop probes, so it can never reach the
+      // second one's own pick() — a broken chimeB.pick() (or a case that
+      // built two chimes but only ever wired the loop to the first) would
+      // be invisible there. Isolate each instance's own meshes in turn.
+      const audio = stubAudio();
+      const ctx = fakeCtx(audio);
+      const mod = await loadKoan(slug);
+      const root = mod.build(ctx);
+      root.setCamera(new THREE.PerspectiveCamera());
+      root.update(1 / 60, 0);
+      const instances = chimeInstances(root.scene);
+      assert.ok(instances.length >= 2, `${slug}: expected a pair, found ${instances.length}`);
+
+      for (const [i, targets] of instances.entries()) {
+        audio.calls.length = 0;
+        ctx.input.raycastFirst = (cam, objs) => {
+          const hit = objs && objs.find((o) => targets.includes(o));
+          return hit ? { object: hit, point: new THREE.Vector3(), distance: 1 } : null;
+        };
+        ctx._taps.forEach((cb) => cb());
+        for (let f = 0; f < 10; f++) root.update(1 / 60, f / 60);
+        const strikes = audio.calls.filter(([k]) => k === kind);
+        assert.equal(strikes.length, 1, `${slug}: tapping instance ${i} alone produced ${strikes.length} ${kind} strikes`);
+      }
+    });
+  }
 
   if (windTied) {
     test(`${slug}: stilling the case's own wind stills its chime too`, async () => {
       // k22 ties its chime's wind level to the same flag the reader can
       // toggle — case 29's own rule for a hanging voice sharing a scene with
-      // a wind toggle. A chime left at a constant windLevel (the default
-      // every OTHER case in this pass correctly uses) would keep ringing
-      // here even after the flag's wind is switched off, which is exactly
-      // the bug this pins.
+      // a wind toggle. A chime left at the kit's own constant default
+      // (every OTHER case in this pass) would keep ringing here even after
+      // the flag's wind is switched off, which is exactly the bug this pins.
       const audio = stubAudio();
       const ctx = fakeCtx(audio);
       const mod = await loadKoan(slug);
