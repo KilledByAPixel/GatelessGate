@@ -206,17 +206,34 @@ export const CHIME = { degree: 8, tubes: 5, decay: 5, level: 0.03, bright: 0.35,
 // it or leave this cylinder ringing at furin length.
 // `degree` sits a full register below CHIME's cluster (src/kit/cylinder.js's
 // noteForSize spans size 0.6-1.0 across one octave under this base, so the
-// two chime families never land on the same pitch). `decay` is several
-// times CHIME's 5s — a waist-high mass of bronze keeps ringing after a
-// wind-chime tube has already died. `bright` is pulled well down from
-// CHIME's 0.35: a wider tube's upper partials sit lower and duller than a
-// thin one's, so the same lowpass-brightness knob wants a smaller number to
-// read as the same kind of metal at this size. `level` and `verbMix` are
-// PROVISIONAL — picked to sit in the same ballpark as CHIME at this engine's
-// gain staging, pending Frank's ear at the next audition (see CERAMIC's own
+// two chime families never land on the same pitch) — but NOT as low as a
+// first draft put it. Code review caught the real risk: that draft used
+// degree -4, which spans roughly 39-78 Hz across the size range with amp
+// 1.0 sitting on the FUNDAMENTAL (barPartials, unlike BELL_MODES, does not
+// lead with a higher mode). This is exactly the failure the bonshō went
+// through three audition passes to fix — its series topped out at 532 Hz
+// and Frank said "I could barely hear it," ranking the three bell cases
+// precisely by their treble ceilings — except here it would have been the
+// FUNDAMENTAL itself below what most laptop and every phone speaker
+// reproduces, not just a missing treble ceiling. BELL_REF_HZ=110 is this
+// book's own low-end anchor, and even that is named "nearly inaudible" in
+// bellVoice's own comment above — a bar the bell only clears by leaning its
+// amplitude on the 2x mode instead of the fundamental, a trick barPartials'
+// amp-1.0-on-the-fundamental shape does not have available.
+// degree=6 instead: CHIME.degree - 2, landing the size range on 155.6 Hz
+// (size 1.0, the deepest note) to 311.1 Hz (size 0.6) — a full register
+// below CHIME's own 440-785 Hz with no overlap, and with real margin above
+// BELL_REF_HZ=110's demonstrated risk zone. `decay` is several times
+// CHIME's 5s — a waist-high mass of bronze keeps ringing after a wind-chime
+// tube has already died. `bright` is pulled well down from CHIME's 0.35: a
+// wider tube's upper partials sit lower and duller than a thin one's, so
+// the same lowpass-brightness knob wants a smaller number to read as the
+// same kind of metal at this size. `level` and `verbMix` are PROVISIONAL —
+// picked to sit in the same ballpark as CHIME at this engine's gain
+// staging, pending Frank's ear at the next audition (see CERAMIC's own
 // comment in engine.js for the precedent: a voice born without a live
 // audition gets a level flagged provisional rather than treated as final).
-export const BRONZE = { degree: -4, decay: 9, level: 0.032, bright: 0.18, verbMix: 0.85 };
+export const BRONZE = { degree: 6, decay: 9, level: 0.032, bright: 0.18, verbMix: 0.85 };
 
 // The shipped water — Frank's audition numbers (the "Basin" preset). Drips are
 // pitched to the scale in a high register, so every basin in the book is

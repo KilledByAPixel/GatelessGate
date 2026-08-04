@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import {
   windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B,
   gustPhase, STRIKE_SCALE, BELL_PRESETS, bellMacroPartials, applyBellPreset, NAMED_MODE_COUNT, strike,
-  ceramicPartials, woodPartials, CERAMIC, WOOD, CLOTH, BREATH, WATER,
+  ceramicPartials, woodPartials, CERAMIC, WOOD, CLOTH, BREATH, WATER, CHIME, BRONZE,
 } from '../src/audio/synths.js';
+import { noteForSize } from '../src/kit/cylinder.js';
 import {
   parseRecipe, emitterCount, createAudio, hushSchedule, masterLevel, shouldPauseForHide, MASTER, DUCKED,
 } from '../src/audio/engine.js';
@@ -850,7 +851,7 @@ test('structurally: cylinderStrike (the large hanging cylinder) routes through t
     audio.setListener(null);   // no listener -> placed() is null -> the unplaced fallback
     audio.unlock();
     const ctx = audio.ctx;
-    const [master, , voicesDry] = ctx._gains;
+    const [master, , voicesDry, voicesWet] = ctx._gains;
     assert.equal(master, audio.master, 'gains[0] is not the exposed master — creation order assumption is wrong');
 
     const before = ctx._edges.length;
@@ -860,20 +861,68 @@ test('structurally: cylinderStrike (the large hanging cylinder) routes through t
     assert.ok(edges.some(([, to]) => to === voicesDry),
       'an unplaced cylinderStrike did not reach voicesDry — it would keep ringing after the page turned');
 
-    // and a PLACED call reaches the spatial bus (not straight to master) —
-    // the same shape the placed-bell test above proves in full detail; this
-    // one just confirms cylinderStrike actually calls placed() at all
+    // and a PLACED call actually builds a real spatial bus — not just
+    // "doesn't reach master," which an implementation that silently ignored
+    // `at` and fell through to the unplaced voicesDry path would also
+    // satisfy (voicesDry != master already, so that check alone proves
+    // nothing about placement specifically). Same technique the placed-bell
+    // test above uses: an off-axis listener/source pair with a real
+    // expected pan/tone, and walk input -> lowpass -> panner to confirm
+    // THIS call's own bus actually applied them.
     const listener = { pos: { x: 0, y: 0, z: 0 }, right: { x: 1, y: 0, z: 0 }, forward: { x: 0, y: 0, z: -1 } };
+    const source = { x: 4, y: 0, z: -5 };
+    const expected = spatialFor(source, listener);
     audio.setListener(listener);
-    const before2 = ctx._edges.length;
-    audio.cylinderStrike({ note: -2, at: { x: 4, y: 0, z: -5 } });
-    const placedEdges = ctx._edges.slice(before2);
-    assert.ok(placedEdges.length > 0, 'a placed cylinderStrike built no graph at all');
-    assert.ok(!placedEdges.some(([, to]) => to === master),
-      'a placed cylinderStrike went straight to master, skipping the spatial bus entirely');
+
+    const gainsBefore = ctx._gains.length;
+    audio.cylinderStrike({ note: -2, at: source });
+    // makeSpatialBus() creates exactly three gain nodes (input, dryG, sendG)
+    // before strikeBar() adds its own oscillator/gain nodes on top — same
+    // assumption the placed-bell test makes, pinned the same way.
+    const [input, dryG, sendG] = ctx._gains.slice(gainsBefore, gainsBefore + 3);
+    assert.ok(input && dryG && sendG, 'a placed cylinderStrike did not build the bus\'s three gain nodes');
+
+    const edgesFrom = (n) => ctx._edges.filter(([from]) => from === n).map(([, to]) => to);
+    const lp = edgesFrom(input)[0];
+    const pan = edgesFrom(lp)[0];
+    assert.ok(lp && pan, 'input did not chain lowpass -> panner the way makeSpatialBus wires it');
+    assert.notEqual(pan.pan.value, 0, 'pan was never applied — still at its construction default');
+    assert.ok(Math.abs(lp.frequency.value - expected.tone) < 1e-9,
+      `tone was not the value spatialFor computed: got ${lp.frequency.value}, expected ${expected.tone}`);
+    assert.ok(edgesFrom(dryG).includes(voicesDry), 'the placed dry leg does not reach voicesDry');
+    assert.ok(edgesFrom(sendG).includes(voicesWet), 'the placed send leg does not reach voicesWet');
+    assert.notEqual(dryG.gain.value, 1, 'dry gain was never set from the placement');
+    assert.notEqual(sendG.gain.value, 1, 'send gain was never set from the placement');
   } finally {
     if (hadWindow) global.window = priorWindow; else delete global.window;
   }
+});
+
+test("BRONZE's register clears the 110Hz risk the bonshō's own history flagged, and stays below CHIME's", () => {
+  // Code review caught a real register bug: a first draft (BRONZE.degree=-4)
+  // put barPartials' amp-1.0 FUNDAMENTAL as low as ~39-78 Hz across the size
+  // range — below BELL_REF_HZ=110, which bellVoice's own comment already
+  // names "nearly inaudible" on typical speakers, and the bell only survives
+  // that by leaning its amplitude on the 2x mode instead of the fundamental
+  // (BELL_MODES), a trick barPartials does not have (CHIME shares the same
+  // amp-1.0-on-the-fundamental shape and is not spared either). This is
+  // exactly the failure the bonshō went through three audition passes to
+  // fix (532 Hz treble ceiling, "I could barely hear it") — except a
+  // register failure on the fundamental itself is worse than a missing
+  // treble ceiling.
+  //
+  // Pinned directly: every size in the brief's stated range (0.6-1.0) must
+  // clear 110 Hz with real margin, and the family must sit entirely below
+  // CHIME's own register (no shared pitch class at the two families'
+  // defaults).
+  const sizes = [0.6, 0.7, 0.8, 0.9, 1.0];
+  const freqs = sizes.map((s) => hz(BRONZE.degree + noteForSize(s), 'in'));
+  for (let i = 0; i < sizes.length; i++) {
+    assert.ok(freqs[i] > 140, `size ${sizes[i]} -> ${freqs[i].toFixed(1)} Hz, too close to the 110 Hz risk zone`);
+  }
+  const chimeMin = Math.min(hz(CHIME.degree, 'in'), hz(CHIME.degree + CHIME.tubes - 1, 'in'));
+  assert.ok(Math.max(...freqs) < chimeMin,
+    `BRONZE's highest note (${Math.max(...freqs).toFixed(1)} Hz) reaches into CHIME's own register (from ${chimeMin.toFixed(1)} Hz)`);
 });
 
 // ---- Task 8: silence when nobody is listening ------------------------------

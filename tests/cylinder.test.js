@@ -5,16 +5,28 @@ import { makeCylinderChime, noteForSize, forceForRelOmega } from '../src/kit/cyl
 import { createPendulum, integratePendulum } from '../src/kit/pendulum.js';
 import { gustPhase } from '../src/audio/synths.js';
 
-// The large hanging cylinder (task-cylinder-brief.md): a second pendulum (the
-// clapper) with a shorter, golden-ratio-related period than the cylinder's
-// own, so the two drift in and out of phase under a steady wind and the
-// resulting strikes are a physical consequence, not a scheduled event.
+// The large hanging cylinder (task-cylinder-brief.md): a second pendulum
+// (the clapper) whose torque reads a DIFFERENT phase/rate of the same wind
+// than the cylinder's own — that decorrelation, not the period difference
+// between them, is what makes the two drift in and out of phase under a
+// steady wind (see cylinder.js's header comment: the period-ratio story in
+// an earlier draft measured out false — 1:1, 2:1 and 1/phi all produced
+// comparable strike statistics once the decorrelated gust reading was in
+// place). The resulting strikes are a physical consequence of that
+// decorrelation, not a scheduled event.
 //
 // Several tests below reconstruct the physics INDEPENDENTLY from documented
 // formulas (same technique as tests/furin.test.js's "swing's wind phase
 // stays locked" test) rather than reaching into src/kit/cylinder.js's
 // private state — a wrong-but-plausible formula inside the real module
-// cannot make an independent reproduction agree with it by accident.
+// cannot make an independent reproduction agree with it by accident. The
+// reproduction includes THE WALL (see cylinder.js): a contact clamps the
+// clapper's angle to the cylinder's own +/- GAP_ANGLE and reflects its
+// velocity with RESTITUTION, so the clapper can never integrate through
+// the bronze the way an unconstrained kick briefly could (code review
+// caught that bug against the real module; this reproduction has to model
+// the fix, not just the original contact detection, or it would silently
+// stop matching the real module the moment a strong tap was involved).
 
 function run(f, secs, t0 = 0, step = 1 / 60) {
   for (let i = 0; i * step < secs; i++) f.update(step, t0 + i * step);
@@ -26,6 +38,9 @@ function run(f, secs, t0 = 0, step = 1 / 60) {
 // those constants ever change, this copy needs updating too) ----
 const PHI = (1 + Math.sqrt(5)) / 2;
 const GRAVITY = 9.8;
+const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
+const RESTITUTION = 0.35;
+
 function reference({ size = 0.8, T0 = 0 } = {}) {
   const S = size;
   const CORD = 0.30 * S, CAP_H = 0.07 * S, BODY_LEN = 0.85 * S, BODY_R = 0.15 * S, CLAP_R = 0.06 * S;
@@ -38,19 +53,49 @@ function reference({ size = 0.8, T0 = 0 } = {}) {
   const cyl = createPendulum({ length: L_cyl, g: GRAVITY, damping: 2 / 3.5, clock: T0 });
   const clap = createPendulum({ length: L_clap, g: GRAVITY, damping: 2 / 2.2, clock: T0 });
   const REFRACTORY = 0.5;
-  let lastAbsRel = 0, lastStrikeAt = -Infinity;
+  let lastStrikeAt = -Infinity;
+  // Mirrors cylinder.js's own `elapsed = clock - prevClock` bookkeeping
+  // exactly, rather than trusting the caller's `dt` argument directly. Found
+  // by mutation-verifying the seeding test at a large T0: trusting a clean
+  // literal `dt` (1/60) instead of re-deriving it via subtraction of two
+  // large absolute floats (T0 + i*dt) — (T0 + (i-1)*dt) put this reference a
+  // few ULPs off the real module's own arithmetic, and for the first ~10
+  // strikes (near-zero theta/omega, where a threshold crossing is most
+  // sensitive to a tiny timing difference) that was enough to land the
+  // strike in an adjacent 1/60s frame — a real, bounded floating-point
+  // artifact of comparing two different computation PATHS to the same
+  // elapsed time, same as pendulum.js's own documented "not bit-identical,
+  // but agree to a small tolerance" — not a bug in either module. Deriving
+  // `elapsed` here the exact same way cylinder.js does eliminates it
+  // entirely rather than just tolerating it: verified 0 diff, all strikes,
+  // both T0=0 and T0=5237.4 (see cylinder-report.md's addendum).
+  let prevT = T0;
   const strikes = [];
   return {
     L_cyl, L_clap, GAP_ANGLE, cyl, clap, strikes,
-    step(dt, t, windLevel = 1) {
-      integratePendulum(cyl, dt, (tt) => windCylTorque * gustPhase(tt) * windLevel);
-      integratePendulum(clap, dt, (tt) => windClapTorque * gustPhase(tt * 0.7 + 11) * windLevel);
-      const absRel = Math.abs(cyl.theta - clap.theta);
-      if (lastAbsRel <= GAP_ANGLE && absRel > GAP_ANGLE && t - lastStrikeAt > REFRACTORY) {
+    step(_dt, t, windLevel = 1) {
+      const elapsed = Math.max(0, t - prevT);
+      prevT = t;
+      integratePendulum(cyl, elapsed, (tt) => windCylTorque * gustPhase(tt) * windLevel);
+      integratePendulum(clap, elapsed, (tt) => windClapTorque * gustPhase(tt * 0.7 + 11) * windLevel);
+
+      // same level+refractory gating cylinder.js uses now (no separate edge
+      // flag needed — see its own comment for why THE WALL below makes that
+      // redundant)
+      const relTheta = cyl.theta - clap.theta;
+      if (Math.abs(relTheta) > GAP_ANGLE && t - lastStrikeAt > REFRACTORY) {
         lastStrikeAt = t;
         strikes.push({ t, force: forceForRelOmega(cyl.omega - clap.omega) });
       }
-      lastAbsRel = absRel;
+
+      // THE WALL: must be reproduced here too, or this reference silently
+      // stops matching the real module the moment a contact is hard enough
+      // to have tunnelled without it (code review's finding).
+      if (Math.abs(relTheta) > GAP_ANGLE) {
+        clap.theta = clamp(clap.theta, cyl.theta - GAP_ANGLE, cyl.theta + GAP_ANGLE);
+        const relOmega = clap.omega - cyl.omega;
+        clap.omega = cyl.omega - RESTITUTION * relOmega;
+      }
     },
   };
 }
@@ -82,11 +127,16 @@ test('the clapper and cylinder have different natural periods, related by the go
   assert.ok(Number.isFinite(cyl) && cyl > 0 && Number.isFinite(clap) && clap > 0);
   assert.ok(clap < cyl, `the brief requires a SHORTER clapper length: periods were cyl=${cyl}, clap=${clap}`);
   const ratio = clap / cyl;
+  // THE ONLY MEANINGFUL CHECK HERE: pinned to 1/phi within 1e-9, which
+  // already implies it is nowhere near 2:1 or 1:1 — a separate "not close
+  // to 0.5 or 2" assertion would be dead code given this one (code review
+  // caught an earlier draft carrying both). Kept as a straight regression
+  // pin on the constant, honestly: measured directly (cylinder-report.md),
+  // this ratio does NOT meaningfully change how often the cylinder rings
+  // under this design (1:1 and 2:1 both produced comparable strike
+  // statistics to 1/phi) — see cylinder.js's PERIOD_RATIO comment for why
+  // it is kept anyway.
   assert.ok(Math.abs(ratio - 1 / PHI) < 1e-9, `ratio ${ratio} is not 1/phi`);
-  // guards against the exact trap the brief warns about: a neat 2:1 (or 1:2)
-  // ratio locks the two pendulums in phase, so this pins the ratio is
-  // nowhere near either
-  assert.ok(Math.abs(ratio - 0.5) > 0.05 && Math.abs(ratio - 2) > 0.05, `ratio ${ratio} is suspiciously close to 2:1`);
 });
 
 test('bigger cylinder = lower note AND slower swing, both derived from size', () => {
@@ -137,39 +187,6 @@ test('a steady wind produces strikes that are IRREGULARLY spaced, not a metronom
   assert.ok(cv > 0.3, `gaps read as regular, not weather: mean ${mean}, cv ${cv}`);
   const min = Math.min(...gaps), max = Math.max(...gaps);
   assert.ok(max > min * 3, `spread too narrow to read as irregular: min ${min}, max ${max}`);
-});
-
-test('MUTATION-VERIFY scaffold: a single shared periodic driver (no decorrelation) fails the spacing test above', () => {
-  // Reproduces the exact mutant described in cylinder.js's own comment on
-  // CLAP_GUST_RATE/CLAP_GUST_OFFSET: drive BOTH pendulums from the identical
-  // gustPhase(t) (no *0.7, no +11). This is not exercising src/ — it is
-  // proof the STATISTIC above is discriminating, run inline so it can never
-  // silently rot out of sync with the real test.
-  const S = 0.8;
-  const CORD = 0.30 * S, CAP_H = 0.07 * S, BODY_LEN = 0.85 * S, BODY_R = 0.15 * S, CLAP_R = 0.06 * S;
-  const CONTACT_Y = (CORD + CAP_H) + 0.65 * BODY_LEN;
-  const L_cyl = CORD + 0.5 * BODY_LEN;
-  const L_clap = L_cyl * (1 / PHI) * (1 / PHI);
-  const GAP_ANGLE = ((BODY_R - CLAP_R) * 0.9) / CONTACT_Y;
-  const cyl = createPendulum({ length: L_cyl, g: GRAVITY, damping: 2 / 3.5 });
-  const clap = createPendulum({ length: L_clap, g: GRAVITY, damping: 2 / 2.2 });
-  const windCylTorque = (GRAVITY / L_cyl) * 0.07;
-  const windClapTorque = (GRAVITY / L_clap) * 0.11;
-  const dt = 1 / 60, secs = 7200;
-  let lastAbsRel = 0, lastStrikeAt = -Infinity;
-  const times = [];
-  for (let i = 0; i * dt < secs; i++) {
-    const t = i * dt;
-    integratePendulum(cyl, dt, (tt) => windCylTorque * gustPhase(tt));
-    integratePendulum(clap, dt, (tt) => windClapTorque * gustPhase(tt));   // MUTANT: identical signal
-    const absRel = Math.abs(cyl.theta - clap.theta);
-    if (lastAbsRel <= GAP_ANGLE && absRel > GAP_ANGLE && t - lastStrikeAt > 0.5) { lastStrikeAt = t; times.push(t); }
-    lastAbsRel = absRel;
-  }
-  // this mutant does not merely become "regular" — it goes silent, which
-  // the count check in the real test (`length > 20`) already catches; kept
-  // here as evidence for the report rather than a src/ regression guard
-  assert.ok(times.length < 20, `expected the undecorrelated mutant to under-strike, got ${times.length}`);
 });
 
 test('strike force is the clamped relative angular velocity at contact — pinned against an independent reproduction', () => {
@@ -223,10 +240,42 @@ test('the refractory period holds: no two strikes land closer together than it, 
     assert.ok(tapTimes[i] - tapTimes[i - 1] >= 0.5 - 1e-6,
       `two tap strikes landed ${tapTimes[i] - tapTimes[i - 1]}s apart, under the 0.5s refractory`);
   }
-  // and it is a REAL constraint, not one that just happens never to bind:
-  // the alternating mash crosses the gap far more often than 0.5s apart, so
-  // without the guard this would fire on nearly every re-tap
-  assert.ok(tapTimes.length < 3 / 0.5, 'refractory did not suppress anything — every crossing rang');
+  // this loop IS the real constraint — every one of potentially ~36 re-taps
+  // (every ~0.083s for 3s) had a chance to fire, and mutation-verified
+  // (cylinder-report.md addendum): setting REFRACTORY=0 makes the per-gap
+  // check above fail directly. A separate "total count is below some bound"
+  // assertion was tried here first and removed — 6 strikes in a 3s window
+  // at a 0.5s refractory is not evidence of anything broken, it is what
+  // correct spacing looks like, and the bound was tight enough to fail on
+  // exactly that correct behaviour.
+});
+
+test('THE WALL: a hard tap never swings the clapper visibly past the cylinder wall', () => {
+  // THE BUG code review found: MAX_CLAP_OMEGA (7.5 rad/s) against the
+  // clapper's own natural frequency (omega0 ~= 6.65 rad/s) implies a peak
+  // swing near 1.1 rad — more than 12x GAP_ANGLE (~0.088 rad). Before THE
+  // WALL, a hard ring() rendered the clapper straight through the solid
+  // bronze body to hang in open air on no visible cord: contact was
+  // detected (a strike fired) but never physically resolved. This measures
+  // the RENDERED relative angle every frame of a hard, repeated tap burst —
+  // under still air, so wind can never explain a large swing — and pins it
+  // to GAP_ANGLE with only a tiny float-tolerance margin.
+  const f = makeCylinderChime({ seed: 12, phase: 0 });
+  f.setWindLevel(0);
+  const swing = f.group.getObjectByName('swing');
+  const clapperPivot = f.group.getObjectByName('clapper-pivot');
+  const gap = f.gapAngle();
+  let maxRel = 0;
+  const dt = 1 / 240;
+  for (let i = 0; i * dt < 4; i++) {
+    const t = i * dt;
+    if (i % 30 === 0) f.ring(1);   // repeated hard taps, worst case for tunnelling
+    f.update(dt, t);
+    maxRel = Math.max(maxRel, Math.abs(swing.rotation.z - clapperPivot.rotation.z));
+  }
+  assert.ok(f.strikes() > 0, 'the tap burst never rang it at all — test is not exercising contact');
+  assert.ok(maxRel <= gap + 1e-6,
+    `the clapper swung ${maxRel} rad relative to the body, past the ${gap} rad gap — it rendered through the bronze wall`);
 });
 
 test('a tap rings through the SAME contact mechanism as the wind, not a bypass', () => {
@@ -275,10 +324,21 @@ test("a cylinder built mid-session does not integrate the whole session on its f
   // and the full reproduction (which starts its OWN reference pendulums'
   // clocks at T0 too) tracks it for a few thousand seconds afterward,
   // proving the seeding did not merely zero the first frame but kept both
-  // internal clocks locked to the absolute one from then on
-  const { realTimes, ref } = driveBoth({ seed: 10, T0, secs: 3600 });
+  // internal clocks locked to the absolute one from then on. Code review
+  // caught that a length-only check here is weak — the force test above
+  // already does the tight element-wise comparison, but at T0=0, where
+  // seeding is a no-op (clock starts at 0 either way), so it cannot tell a
+  // correctly-seeded module from one that silently reverted to starting at
+  // 0. Run the SAME element-wise comparison here, at this test's own
+  // non-zero T0, so a seeding regression that only breaks the T0!=0 case
+  // has somewhere to be caught.
+  const { realTimes, realForces, ref } = driveBoth({ seed: 10, T0, secs: 3600 });
   assert.ok(realTimes.length > 0, 'seeded at T0, the reproduction should still ring under a steady wind');
-  assert.equal(realTimes.length, ref.strikes.length);
+  assert.equal(realTimes.length, ref.strikes.length, 'strike counts diverged from the reference');
+  for (let i = 0; i < realTimes.length; i++) {
+    assert.ok(Math.abs(realTimes[i] - ref.strikes[i].t) < 1e-6, `strike ${i} timing diverged at T0=${T0}`);
+    assert.ok(Math.abs(realForces[i] - ref.strikes[i].force) < 1e-9, `strike ${i} force diverged at T0=${T0}`);
+  }
 });
 
 test('hang point: every mesh hangs at or below the origin, at rest', () => {
@@ -321,11 +381,22 @@ test('pick targets exist and a real ray aimed at the body resolves to a hit', ()
 });
 
 test('two cylinders in one scene do not strike in step', () => {
+  // Code review: an earlier draft recorded strikes() itself into the
+  // compared arrays — [1,2,3,...,n], so assert.notDeepEqual reduced to "the
+  // two ended with different TOTAL COUNTS," measuring no timing at all and
+  // liable to fail spuriously the day two differently-seeded instances
+  // happen to tie on count. Record actual strike TIMES instead (same
+  // pattern furin.test.js's own "two chimes... do not strike in step" uses).
   const ta = [], tb = [];
-  const a = makeCylinderChime({ seed: 1, onStrike: () => ta.push(a.strikes()) });
-  const b = makeCylinderChime({ seed: 2, onStrike: () => tb.push(b.strikes()) });
-  run(a, 3600);
-  run(b, 3600);
-  assert.ok(ta.length > 0 && tb.length > 0);
-  assert.notDeepEqual(ta, tb);
+  const a = makeCylinderChime({ seed: 1, onStrike: () => ta.push(simNow) });
+  const b = makeCylinderChime({ seed: 2, onStrike: () => tb.push(simNow) });
+  let simNow = 0;
+  const dt = 1 / 60;
+  for (let i = 0; i * dt < 3600; i++) {
+    simNow = i * dt;
+    a.update(dt, simNow);
+    b.update(dt, simNow);
+  }
+  assert.ok(ta.length > 0 && tb.length > 0, 'too quiet to judge timing');
+  assert.notDeepEqual(ta, tb, 'two differently-seeded cylinders struck at the identical times');
 });

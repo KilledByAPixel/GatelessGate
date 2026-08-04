@@ -10,15 +10,35 @@ import { createPendulum, integratePendulum, kickPendulum, pendulumEnergy } from 
 // neighbour. Frank: "those only play one single note, and occasionally, if
 // they get knocked by the wind, they will play one of those notes."
 //
-// THE IDEA. A clapper hung inside a swinging cylinder is a SECOND pendulum
-// with its own length and therefore its own natural period. Both are driven
-// by the same wind (src/kit/pendulum.js, the same equation the fūrin swings
-// by), but a different period means a different response to the same slow
-// gust — so the two drift in and out of phase on their own. When their
+// THE IDEA, CORRECTED DURING BUILD. A clapper hung inside a swinging
+// cylinder is a SECOND pendulum with its own length. The brief's story was
+// that the period difference ALONE would make the two drift in and out of
+// phase under a shared wind. Measured directly, that is false: with both
+// pendulums reading the identical gustPhase(t), the relative angle tops out
+// at 0.0399 rad against a 0.0878 rad gap — ZERO strikes over a simulated
+// hour — and setting the period ratio to 1:1 (the exact thing the brief
+// forbids) or a neat 2:1 changes essentially nothing (measured: 300-301
+// strikes either way, cv ~0.65). The reason is quasi-static: gustPhase's own
+// two frequencies are 10-25x slower than either pendulum's natural
+// frequency, so BOTH pendulums nearly TRACK their equilibrium angle
+// lean*gustPhase(t) regardless of period, and their difference is bounded by
+// a constant (leanCyl-leanClap)*2 that never reaches GAP_ANGLE. Two
+// UNCOUPLED pendulums (no back-reaction between them — see below) have
+// nothing to phase-lock in the first place, so this was never a KAM-type
+// resonance question.
+//
+// THE ACTUAL MECHANISM: the clapper's torque reads gustPhase at a DIFFERENT
+// reading of the same gust (CLAP_GUST_RATE/CLAP_GUST_OFFSET, below) — the
+// same decorrelation trick furin.js's xPend already uses to keep two things
+// "driven by the same wind" from moving in lockstep. THAT is what makes the
+// two drift in and out of phase; the period ratio does not meaningfully
+// contribute to it under this design. It is kept anyway — see
+// PERIOD_RATIO's own comment for why — but read as the brief's literal
+// instruction honoured, not as the cause of the irregularity. When the
 // relative angle crosses the physical clearance between clapper and wall,
 // they touch and the cylinder rings. No random number, no scheduled
 // weather, no threshold hack — "occasionally, if they get knocked by the
-// wind" falls out of the physics.
+// wind" falls out of the decorrelated-gust-reading physics.
 //
 // TWO PENDULUMS, NOT A DOUBLE PENDULUM. A real clapper's own mount rides
 // inside the swinging body, which would make this a true double pendulum —
@@ -41,14 +61,26 @@ import { createPendulum, integratePendulum, kickPendulum, pendulumEnergy } from 
 const GRAVITY = 9.8;   // "book gravity" — see furin.js's own comment; reused, not reinvented
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
-// THE PERIOD RATIO. "Give the clapper a shorter length than the cylinder...
-// it wants to be irrational-ish rather than a neat 2:1, or the two will
-// lock in phase and either never ring or ring every swing." The golden
-// ratio's reciprocal is the standard answer to "least lockable irrational" —
-// it is the number worst-approximated by any rational, which is exactly
-// KAM theory's condition for two coupled oscillators to resist settling
-// into a repeating beat. 1/phi ~= 0.618: the clapper's period is that
-// fraction of the cylinder's. Closed form, not a magic decimal.
+// THE PERIOD RATIO — COSMETIC, NOT THE MECHANISM. The brief asks for
+// "shorter [clapper] length... irrational-ish rather than a neat 2:1, or the
+// two will lock in phase." As the header comment above now says plainly:
+// under this design (uncoupled pendulums, quasi-static response to a slow
+// shared gust), the period ratio measurably does NOT change how often the
+// cylinder rings — 1:1, 2:1 and 1/phi all produced 300-301 strikes/7200s
+// with cv ~0.65 in direct comparison. There is no phase-locking here to
+// avoid: with no back-reaction between cylPend and clapPend, "locking in
+// phase" is not a thing two independent linear-ish oscillators driven by
+// different signals can even do, so the KAM-theory framing in an earlier
+// draft of this comment was wrong on its own terms, not just unconfirmed.
+//
+// Kept anyway, at 1/phi, for two real reasons rather than the disproved
+// one: (1) it is what the brief literally asked for, and honouring it costs
+// nothing; (2) it is not entirely inert — it still governs how snappily the
+// clapper responds to a TAP (see TAP_KICK below, where natural frequency
+// does matter, unlike the slow quasi-static wind response) and gives the
+// clapper a faint independent transient wobble on top of the quasi-static
+// tracking. 1/phi remains the closed-form choice for "shorter, not a neat
+// fraction" if either of those secondary effects ever does matter more.
 const PHI = (1 + Math.sqrt(5)) / 2;
 const PERIOD_RATIO = 1 / PHI;
 
@@ -76,20 +108,15 @@ const CLAP_DAMPING = 2 / 2.2;
 const WIND_LEAN_CYL = 0.07;
 const WIND_LEAN_CLAP = 0.11;
 
-// The clapper's torque reads gustPhase at a DIFFERENT reading of the same
-// gust — same trick furin.js's xPend uses (*0.7, +11) to keep two things
-// driven by "the same wind" from moving in lockstep. It matters more here
-// than it does there: measured directly (see cylinder-report.md), feeding
-// both pendulums the identical gustPhase(t) produces ZERO strikes over a
-// full simulated hour, at any of the lean pairs tried. The reason is
-// quasi-static: gustPhase's own frequencies (furin.js's GUST_A/GUST_B) are
-// far slower than either pendulum's natural frequency, so each pendulum
-// nearly TRACKS its equilibrium angle lean*gustPhase(t) rather than
-// oscillating independently of it — and with the same gustPhase(t) driving
-// both, their difference is just (leanCyl-leanClap)*gustPhase(t), bounded
-// by a constant that never reaches GAP_ANGLE. Two different periods alone
-// do not desynchronize two pendulums that are fed the identical signal; they
-// need the identical signal's PHASE to differ too.
+// THE MECHANISM (see the header comment for how this was found: not what
+// the brief predicted). The clapper's torque reads gustPhase at a DIFFERENT
+// reading of the same gust — same trick furin.js's xPend uses (*0.7, +11)
+// to keep two things driven by "the same wind" from moving in lockstep.
+// This, not the period ratio, is what makes the two drift in and out of
+// phase: remove it (feed both pendulums the identical gustPhase(t)) and
+// strikes drop to ZERO over a full simulated hour, regardless of period
+// ratio. Reused verbatim from furin.js rather than inventing new constants,
+// since it is already a proven decorrelation in this exact codebase.
 const CLAP_GUST_RATE = 0.7;
 const CLAP_GUST_OFFSET = 11;
 
@@ -100,13 +127,48 @@ const CLAP_GUST_OFFSET = 11;
 // touch").
 const REFRACTORY = 0.5;
 
+// THE WALL. Code review caught a real bug: nothing previously stopped the
+// clapper's angle from sailing past GAP_ANGLE once contact was DETECTED —
+// the strike fired, but clapPend.theta kept right on integrating outward, so
+// a hard tap (MAX_CLAP_OMEGA=7.5 against omega0~6.65) swung the clapper
+// disc roughly 1.1 rad against an ~0.09 rad gap: it rendered clean through
+// the bronze wall and hung in open air on no visible cord. Contact was
+// audible but never physically resolved.
+//
+// Fixed as a genuine (if simplified) collision: every update(), whenever
+// the integrated relative angle exceeds GAP_ANGLE, clapPend.theta is
+// clamped back to the wall (cylPend.theta +/- GAP_ANGLE) and its velocity
+// relative to the wall is REFLECTED and reduced by RESTITUTION — an
+// elastic-collision-off-an-effectively-infinite-mass-wall formula (the
+// bronze body is far more massive than the wooden clapper, so its own
+// velocity is left untouched by the bounce, same assumption real contact
+// mechanics makes for a light object hitting a heavy one). RESTITUTION well
+// under 1: most of the clapper's kinetic energy goes into the ring, not the
+// rebound, so it settles back toward free swinging rather than bouncing
+// indefinitely.
+//
+// This correction is UNCONDITIONAL — it runs every frame contact persists,
+// refractory window or not. Refractory only gates the SOUND event; the
+// bronze itself is solid regardless of whether this particular touch is
+// allowed to make another noise.
+const RESTITUTION = 0.35;
+
 // A tap is a shove: a velocity kick to the CLAPPER (not the body), so the
 // very same relative-angle contact check that the wind uses is what fires
 // the strike — "by the same mechanism," per the brief, not a separate
 // play-the-sound-now path. Sized so a full-force tap crosses GAP_ANGLE
 // (~0.098 rad) within a couple of frames: GAP_ANGLE / TAP_KICK ~= 0.04s.
 const TAP_KICK = 2.5;
-const MAX_CLAP_OMEGA = 3 * TAP_KICK;   // mashing taps saturates, as in furin.js
+// Mashing taps saturates, as in furin.js — but unlike furin.js this cap is
+// no longer what keeps the clapper physically plausible; THE WALL (below)
+// clamps its ANGLE regardless of how large omega gets, which is what fixes
+// the tunnelling bug review caught (a wall that only capped velocity, not
+// position, would still let one hard kick swing the clapper stories past
+// the bronze before damping ever caught up). MAX_CLAP_OMEGA is kept as a
+// cheaper, earlier cap on velocity itself, so a mashed burst of taps doesn't
+// approach the wall at implausible, glassy speed even for the one frame
+// before the wall would have caught it anyway.
+const MAX_CLAP_OMEGA = 3 * TAP_KICK;
 
 // UNDERSTOOD CONSEQUENCE: TAP_KICK sits roughly 30x FORCE_OMEGA_REF (below),
 // so essentially any deliberate tap (ring()'s default force 0.75, even
@@ -141,11 +203,18 @@ const FORCE_OMEGA_REF = 0.08;
 // audio/engine.js's cylinderStrike).
 const SIZE_MIN = 0.6, SIZE_MAX = 1.0, NOTE_SPAN = 5;
 export function noteForSize(size) {
+  // Clamped to the brief's own stated range: the formula is a straight
+  // line and would happily extrapolate a `size` of, say, 3 into a note
+  // many octaves off the family's register — code review flagged this as
+  // unclamped. `makeCylinderChime` never passes an out-of-range size today,
+  // but the function is exported and public, so it holds its own contract
+  // rather than trusting every future caller to.
+  const s = clamp(size, SIZE_MIN, SIZE_MAX);
   // -0 guard: at size===SIZE_MIN the raw round is 0, and negating a literal
   // 0 in JS produces -0 — harmless as a scale-degree offset (hz(-0) reads
   // identically to hz(0)) but a needless surprise for anything that
   // compares this against a plain 0 with strict equality.
-  const steps = Math.round(NOTE_SPAN * (size - SIZE_MIN) / (SIZE_MAX - SIZE_MIN));
+  const steps = Math.round(NOTE_SPAN * (s - SIZE_MIN) / (SIZE_MAX - SIZE_MIN));
   return steps === 0 ? 0 : -steps;
 }
 
@@ -242,6 +311,15 @@ export function makeCylinderChime({
   const clapper = new THREE.Mesh(new THREE.CylinderGeometry(CLAP_R, CLAP_R, 0.03 * S, 8), wood);
   clapper.name = 'clapper';
   clapper.position.y = -CONTACT_Y;
+  // Code review: unlike furin's clapper (visible in the open ring among the
+  // tubes), this one sits INSIDE a solid, opaque bronze cylinder — and now
+  // that THE WALL (below) keeps its swing physically bounded to within
+  // GAP_ANGLE of the body's own rotation, it can never swing clear of the
+  // body's silhouette the way an unbounded clapper briefly could. Always
+  // occluded means an inverted-hull outline draws every frame for nothing
+  // ever seen — the detail-floor rule, applied to a draw call rather than a
+  // vertex.
+  clapper.userData.noOutline = true;
   clapperPivot.add(clapper);
 
   // THE PHYSICS LENGTHS. L_cyl is a real derivation, not an eyeball: a
@@ -277,7 +355,6 @@ export function makeCylinderChime({
   let windLevel = 1;
   let strikes = 0;
   let lastForce = 0;
-  let lastAbsRel = 0;       // for edge-detecting a fresh contact, not a continuing overlap
   let lastStrikeAt = -Infinity;
 
   // A tap's velocity kick — see TAP_KICK's own comment for the sizing.
@@ -338,20 +415,35 @@ export function makeCylinderChime({
       integratePendulum(cylPend, elapsed, (t) => windCylTorque * gustPhase(t + off) * windLevel);
       integratePendulum(clapPend, elapsed,
         (t) => windClapTorque * gustPhase(t * CLAP_GUST_RATE + off + CLAP_GUST_OFFSET) * windLevel);
-      swing.rotation.z = cylPend.theta;
-      clapperPivot.rotation.z = clapPend.theta;
 
-      // CONTACT: a fresh crossing of GAP_ANGLE, not a continuing overlap —
-      // edge-detected on the real integrated angle (unlike furin's
-      // synthetic-oscillator threshold, this one is the actual physical
-      // relative angle, so a plain rising-edge check is exact, not a
-      // stand-in for one).
+      // CONTACT. Read the raw integrated relative angle BEFORE any
+      // correction — this is what actually happened this frame, and it is
+      // what both the strike decision and THE WALL below react to.
+      //
+      // No separate "was below GAP_ANGLE last frame" edge flag is needed:
+      // THE WALL (below) always leaves the relative angle at or under
+      // GAP_ANGLE by the END of every frame that ran it, so "still
+      // overlapping right now" already implies "still in the SAME contact,"
+      // and REFRACTORY is what stops that from re-firing every frame on its
+      // own — a level check, refractory-gated, rather than an edge check.
+      // (A version of this file that kept the old edge flag would have had
+      // to re-derive that invariant to know the flag was now redundant;
+      // simpler to just not carry state that the wall already makes true.)
       const relTheta = cylPend.theta - clapPend.theta;
-      const absRel = Math.abs(relTheta);
-      if (lastAbsRel <= GAP_ANGLE && absRel > GAP_ANGLE && clock - lastStrikeAt > REFRACTORY) {
+      if (Math.abs(relTheta) > GAP_ANGLE && clock - lastStrikeAt > REFRACTORY) {
         fire(forceForRelOmega(cylPend.omega - clapPend.omega));
       }
-      lastAbsRel = absRel;
+
+      // THE WALL — see its own comment above (RESTITUTION). Unconditional:
+      // the bronze is solid whether or not THIS touch is allowed to sound.
+      if (Math.abs(relTheta) > GAP_ANGLE) {
+        clapPend.theta = clamp(clapPend.theta, cylPend.theta - GAP_ANGLE, cylPend.theta + GAP_ANGLE);
+        const relOmega = clapPend.omega - cylPend.omega;
+        clapPend.omega = cylPend.omega - RESTITUTION * relOmega;
+      }
+
+      swing.rotation.z = cylPend.theta;
+      clapperPivot.rotation.z = clapPend.theta;
     },
 
     // A tap: a shove to the CLAPPER, the same mechanism a gust uses — see
