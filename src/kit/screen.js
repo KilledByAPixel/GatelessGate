@@ -19,6 +19,32 @@ import { WASH, INK_LIT } from '../palette.js';
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (t) => t * t * (3 - 2 * t);
 
+// THE CLATTER. A sudare is slats winding onto a rail, so the sound is one
+// quiet bamboo knock per slat that crosses onto (or off) the roller —
+// update()'s ease has its biggest step the instant a pull starts and shrinks
+// toward zero as `cur` nears `goal` (see below), so slat-boundary crossings
+// come fast through the early roll and thin out through the settle for free:
+// the click RATE follows the roll's own speed without a separate curve to
+// author or keep in step with `speed`. `onClack(force, worldPos)` reports it
+// the same way makeFurin (kit/furin.js) reports a tube strike via onStrike —
+// behaviour lives in the component, not in the case that hangs it.
+//
+// force is fixed and low on purpose: twelve of these across a full roll are a
+// texture the ear should register as "the screen is moving," not twelve
+// individual events — quieter than any existing audio.knock() call site in
+// the book (k28's 0.22 is the faintest "something happened" knock).
+// MAX_CLACKS_PER_UPDATE guards a stalled frame or an unrealistic dt (a huge
+// jump, not the fixed 1/60 step the app actually drives update() with) from
+// firing a whole roll's worth of knocks in one call — a machine gun a fast
+// toggle could otherwise trigger.
+const CLACK_FORCE = 0.12;
+const MAX_CLACKS_PER_UPDATE = 2;
+
+// world-position scratch, shared the way furin.js's WORLD is: onClack calls
+// straight into audio.knock(), which reads x/y/z synchronously before
+// returning, so one vector serves every screen instance without allocating.
+const CLACK_POS = new THREE.Vector3();
+
 export function makeScreen({
   width = 3.2,
   height = 2.4,
@@ -31,6 +57,7 @@ export function makeScreen({
   speed = 2.2,           // e-folding rate of the roll, per second
   cords = true,
   hit = true,            // an invisible pane so a tap anywhere on the screen lands
+  onClack = null,        // the roll's own clatter — see THE CLATTER, above
 } = {}) {
   const group = new THREE.Group();
   group.name = 'screen';
@@ -165,11 +192,30 @@ export function makeScreen({
 
     update(dt, simTime) {
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
+      const prevCur = cur;
       if (cur !== goal) {
         cur += (goal - cur) * (1 - Math.exp(-speed * Math.max(0, dt || 0)));
         if (Math.abs(goal - cur) < 5e-4) cur = goal;
       }
       place();
+
+      // One clack per slat boundary `cur*n` crosses this step (n = slats on
+      // the roller at cur=1). Comparing floors telescopes exactly to `n`
+      // clacks over a full 0->1 or 1->0 roll, whatever the frame timing,
+      // since cur only ever moves toward goal (see the "never runs
+      // backwards" property update() already keeps) — no separate counter to
+      // drift out of sync if a roll is interrupted and re-started. setRoll()
+      // moves `cur` outright, not through this path, so a staging pose is
+      // silent, as it should be: it poses the screen, it doesn't roll it.
+      if (onClack && cur !== prevCur) {
+        const before = Math.floor(prevCur * n + 1e-9);
+        const after = Math.floor(cur * n + 1e-9);
+        const crossed = Math.min(Math.abs(after - before), MAX_CLACKS_PER_UPDATE);
+        for (let k = 0; k < crossed; k++) {
+          rail.getWorldPosition(CLACK_POS);
+          onClack(CLACK_FORCE, CLACK_POS);
+        }
+      }
     },
   };
 }

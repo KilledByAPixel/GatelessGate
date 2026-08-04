@@ -103,6 +103,93 @@ test('update eases the roll toward its target instead of snapping', () => {
   assert.ok(s.coverHeight() > H * 0.9, 'and covers the bay again');
 });
 
+// ---- the clatter -----------------------------------------------------------
+
+test('rolling clacks once per slat, quietly, placed in world space', () => {
+  const clacks = [];
+  const s = screen({
+    onClack: (force, at) => clacks.push({ force, x: at.x, y: at.y, z: at.z }),
+  });
+  // off-origin, so a local-position bug (reading .position on a nested mesh
+  // instead of getWorldPosition — the exact trap this branch has hit five
+  // times, per CLAUDE.md) would show up as a report near (0, railY, 0)
+  // instead of carrying this offset.
+  s.group.position.set(2, 0.34, -1.4);
+
+  s.toggle();
+  for (let i = 0; i < 400 && !s.settled(); i++) s.update(1 / 60, i / 60);
+  assert.ok(s.settled(), 'reaches the top inside 400 frames');
+  assert.equal(clacks.length, N, `one clack per slat over the whole roll: ${clacks.length}`);
+
+  for (const c of clacks) {
+    assert.ok(Number.isFinite(c.force) && c.force > 0, 'a real, positive force');
+    // quiet on purpose: under every existing audio.knock() call site in the
+    // book (k28's 0.22 is the faintest "something happened" knock) — twelve
+    // of these are a texture, not an event.
+    assert.ok(c.force < 0.22, `too loud for a texture, not a drum roll: ${c.force}`);
+    assert.ok(Number.isFinite(c.x) && Number.isFinite(c.y) && Number.isFinite(c.z));
+    assert.ok(Math.abs(c.x - 2) < 0.5, `x carries the group's own world offset: ${c.x}`);
+    assert.ok(Math.abs(c.z - -1.4) < 0.5, `z carries the group's own world offset: ${c.z}`);
+  }
+
+  // rolling back down clatters the same run again — not stacked on top of
+  // the roll that already finished, and not silent the second time either
+  clacks.length = 0;
+  s.toggle();
+  for (let i = 0; i < 400 && !s.settled(); i++) s.update(1 / 60, 10 + i / 60);
+  assert.ok(s.settled());
+  assert.equal(clacks.length, N, `the same run of clicks, coming back down: ${clacks.length}`);
+});
+
+test('the clatter follows the roll\'s own speed: dense through the early roll, thinning sharply at the settle', () => {
+  // Clacks are evenly spaced in ROLL FRACTION — one per 1/N of the way onto
+  // the roller — but the roll itself eases toward its target exponentially
+  // (update()'s own `cur += (goal - cur) * (1 - exp(-speed*dt))`), so the
+  // same 1/N step takes far more real TIME once cur is close to goal than it
+  // does the instant a pull starts. That is what "the rate follows the roll's
+  // speed" means operationally: measure clacks in FRAMES, not in roll
+  // fraction (a value-gap measure would read as roughly constant, since the
+  // boundaries themselves are evenly spaced in value — that is not the claim
+  // being made).
+  const frames = [];
+  let i = 0;
+  const s = screen({ onClack: () => frames.push(i) });
+  s.toggle();
+  for (i = 0; i < 400 && !s.settled(); i++) s.update(1 / 60, i / 60);
+  assert.equal(frames.length, N);
+
+  const firstGap = frames[1] - frames[0];
+  const lastGap = frames[frames.length - 1] - frames[frames.length - 2];
+  assert.ok(firstGap < lastGap,
+    `expected the early frame gap (${firstGap}) to be tighter than the late one (${lastGap})`);
+  // not just marginally — the settle should thin out sharply (a bare "less
+  // than" would also pass a nearly-flat, effectively fixed-rate clatter,
+  // which is not what was asked for).
+  assert.ok(lastGap > firstGap * 5,
+    `expected a sharp thinning toward the settle, not a gentle taper: ${firstGap} frames -> ${lastGap} frames`);
+});
+
+test('setRoll poses the screen silently; a huge dt cannot machine-gun the clatter', () => {
+  const clacks = [];
+  const s = screen({ onClack: (force) => clacks.push(force) });
+
+  // a staging jump is a pose, not a roll — nothing should have "moved" to sound
+  s.setRoll(1);
+  assert.equal(clacks.length, 0, 'setRoll is silent going up');
+  s.setRoll(0);
+  assert.equal(clacks.length, 0, 'setRoll is silent going down');
+
+  // an absurd single dt (nothing in the app ever drives update() with
+  // anything but the fixed 1/60 step, but a stalled frame or a misuse
+  // elsewhere should not be free to fire a whole roll's worth of knocks
+  // at once)
+  s.toggle();
+  s.update(100, 0);
+  assert.ok(s.settled(), 'the ease still reaches the goal in one giant step');
+  assert.ok(clacks.length > 0, 'the giant step still clatters...');
+  assert.ok(clacks.length < N, `...but is capped well under a full roll's ${N}: ${clacks.length}`);
+});
+
 test('the screen is deterministic and renderer-free', () => {
   const a = screen();
   const b = screen();
