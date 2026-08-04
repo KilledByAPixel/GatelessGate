@@ -6,7 +6,10 @@ import { makeVeranda } from '../src/kit/veranda.js';
 import TEXT from '../src/koans/text/mumonkan.js';
 import k26 from '../src/koans/k26.js';
 
-const H = 2.4, W = 3.0, N = 12;
+// N matches k26.js's own slats: 11 — the book's one screen, and the real
+// count that ships — not makeScreen's generic default (12), which nothing in
+// this file was actually pinning against before.
+const H = 2.4, W = 3.0, N = 11;
 const screen = (opts = {}) => makeScreen({ width: W, height: H, slats: N, seed: 26, ...opts });
 
 // the material only — the rail and the invisible tap pane do not move, so they
@@ -124,7 +127,7 @@ test('rolling clacks once per slat, quietly, placed in world space', () => {
   for (const c of clacks) {
     assert.ok(Number.isFinite(c.force) && c.force > 0, 'a real, positive force');
     // quiet on purpose: under every existing audio.knock() call site in the
-    // book (k28's 0.22 is the faintest "something happened" knock) — twelve
+    // book (k28's 0.22 is the faintest "something happened" knock) — eleven
     // of these are a texture, not an event.
     assert.ok(c.force < 0.22, `too loud for a texture, not a drum roll: ${c.force}`);
     assert.ok(Number.isFinite(c.x) && Number.isFinite(c.y) && Number.isFinite(c.z));

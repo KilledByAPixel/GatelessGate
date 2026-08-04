@@ -29,14 +29,16 @@ const smooth = (t) => t * t * (3 - 2 * t);
 // the same way makeFurin (kit/furin.js) reports a tube strike via onStrike —
 // behaviour lives in the component, not in the case that hangs it.
 //
-// force is fixed and low on purpose: twelve of these across a full roll are a
-// texture the ear should register as "the screen is moving," not twelve
+// force is fixed and low on purpose: eleven of these across a full roll (the
+// book's one screen, case 26, is built with slats: 11 — see k26.js) are a
+// texture the ear should register as "the screen is moving," not eleven
 // individual events — quieter than any existing audio.knock() call site in
 // the book (k28's 0.22 is the faintest "something happened" knock).
-// MAX_CLACKS_PER_UPDATE guards a stalled frame or an unrealistic dt (a huge
-// jump, not the fixed 1/60 step the app actually drives update() with) from
-// firing a whole roll's worth of knocks in one call — a machine gun a fast
-// toggle could otherwise trigger.
+// MAX_CLACKS_PER_UPDATE guards a stalled or otherwise huge dt from firing a
+// whole roll's worth of knocks in a single call — the app itself never hands
+// update() one: main.js clamps dt and steps it at a fixed 1/60 regardless of
+// how fast a toggle fires, so this cap answers a caller other than the app,
+// not "a fast toggle" (which never enlarges dt in the first place).
 const CLACK_FORCE = 0.12;
 const MAX_CLACKS_PER_UPDATE = 2;
 
@@ -211,9 +213,11 @@ export function makeScreen({
         const before = Math.floor(prevCur * n + 1e-9);
         const after = Math.floor(cur * n + 1e-9);
         const crossed = Math.min(Math.abs(after - before), MAX_CLACKS_PER_UPDATE);
-        for (let k = 0; k < crossed; k++) {
+        if (crossed > 0) {
+          // the rail doesn't move within this loop, so its world position is
+          // the same for every clack this call reports — read it once
           rail.getWorldPosition(CLACK_POS);
-          onClack(CLACK_FORCE, CLACK_POS);
+          for (let k = 0; k < crossed; k++) onClack(CLACK_FORCE, CLACK_POS);
         }
       }
     },

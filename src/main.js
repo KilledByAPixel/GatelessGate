@@ -175,13 +175,31 @@ const sit = makeSit({
     // that is not this bell's problem, the visibilitychange listener below
     // already owns it (and 'done' is no longer exempt, so it pauses at once,
     // correctly, whatever is left of the tail at that point).
-    setTimeout(() => {
-      if (shouldPauseForHide(document.hidden, sit.phase())) { narration.pauseForHide(); audio.pauseForHide(); }
-    }, SIT_BELL_TAIL_MS);
+    setTimeout(pauseForHideIfNeeded, SIT_BELL_TAIL_MS);
   },
   onExit: () => resumeKoan(),
 });
 document.body.appendChild(sit.el);
+
+// The one call that pauses audio and narration together, whenever
+// shouldPauseForHide's rule says the page should be quiet right now. Three
+// call sites share this exact rule (the boot check just below, the sit-
+// completion timeout above, and the visibilitychange listener further down)
+// — they share it because they are all answering the SAME question ("is the
+// page hidden, per the rule sittings are exempt from"), not because they
+// happen to agree by coincidence, which is what pulling them onto one
+// function makes structural rather than merely claimed in a comment. A
+// fourth reason to pause has exactly one place to land, now. Returns the
+// same boolean shouldPauseForHide read, so the visibilitychange listener's
+// resume branch can react to it without evaluating the rule a second time.
+function pauseForHideIfNeeded() {
+  const pause = shouldPauseForHide(document.hidden, sit.phase());
+  if (pause) {
+    narration.pauseForHide();
+    audio.pauseForHide();
+  }
+  return pause;
+}
 
 // A page that loads ALREADY hidden — reloaded in a background tab, opened by
 // a link into a background tab, a session restore that brings tabs back
@@ -205,10 +223,7 @@ document.body.appendChild(sit.el);
 // gain the moment a context IS built, so a page that loads hidden and later
 // unlocks starts already silent rather than blaring for a beat and then
 // being silenced.
-if (shouldPauseForHide(document.hidden, sit.phase())) {
-  narration.pauseForHide();
-  audio.pauseForHide();
-}
+pauseForHideIfNeeded();
 
 // ---- stage toolbar (top-right, over the 3D and never over the text) ----
 // One row of square buttons: sound, fullscreen, and the debug workbench. They
@@ -906,10 +921,7 @@ addEventListener('pointerdown', () => {
 // fully visible on a second monitor, and killing an ambient page because
 // someone alt-tabbed to look something up is not what anyone wants.
 document.addEventListener('visibilitychange', () => {
-  if (shouldPauseForHide(document.hidden, sit.phase())) {
-    narration.pauseForHide();
-    audio.pauseForHide();
-  } else if (!document.hidden) {
+  if (!pauseForHideIfNeeded() && !document.hidden) {
     // shouldPauseForHide can also read false while STILL hidden — a sitting
     // exempts hidden from pausing at all, so a hide event during a sit falls
     // through to here too. resumeFromHide() sets its own `hidden` flag to
