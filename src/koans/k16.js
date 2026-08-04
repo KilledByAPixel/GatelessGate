@@ -6,6 +6,7 @@ import { makePath } from '../kit/path.js';
 import { makeHut } from '../kit/hut.js';
 import { makeLantern } from '../kit/lantern.js';
 import { makeBell } from '../kit/bell.js';
+import { makeCylinderChime } from '../kit/cylinder.js';
 import { makeMonk, aimMonk, faceMonk } from '../kit/monk.js';
 import { makeLights } from '../render/toon.js';
 import { makeBlobShadow } from '../render/blobshadow.js';
@@ -39,8 +40,13 @@ export default {
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   // 'bell' names the bonsho as an emitter: it has a real voice here, so the
-  // density rule thins the swells around it without anyone mixing by hand
-  ambience: ['wind:0.14', 'bell', 'music'],
+  // density rule thins the swells around it without anyone mixing by hand.
+  // 'cylinder' names the small bronze hung under the hall's own eave — the
+  // hall is a real lived-in building here, and a single quiet voice by its
+  // door reads as the monastery's own everyday sound, distinct enough from
+  // the bonsho (a single note, only occasionally wind-struck) that it never
+  // competes with the summons that is this case's whole subject.
+  ambience: ['wind:0.14', 'bell', 'cylinder', 'music'],
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -104,6 +110,19 @@ export default {
     faceMonk(hallMonk, bell.group.position);
     scene.add(hallMonk);
 
+    // A single small bronze under the hall's own front eave, well clear of
+    // the doorway (door spans |x| < ~0.78 at this width) and tucked close
+    // to the wall — the everyday sound a lived-in monastery corner already
+    // has, quite apart from the bonsho this case turns on. Hung as a child
+    // of the hall so it stays square to the building at whatever angle the
+    // scene places it, the same idiom case 29 uses for its gate.
+    const eaveChime = makeCylinderChime({
+      size: 0.7, seed: 16,
+      onStrike: (note, force, pos) => audio && audio.cylinderStrike({ note, force, at: pos }),
+    });
+    eaveChime.group.position.set(1.3, 2.4, 1.35);
+    hall.add(eaveChime.group);
+
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
@@ -160,6 +179,11 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
+      // the eave chime first: it hangs well clear of the bell's own pick
+      // targets, but probing it first (and returning) keeps the two voices
+      // from ever being ambiguous about which tap rang which one
+      const chimeHit = eaveChime.pick(camera, input);
+      if (chimeHit) { eaveChime.ring(0.75); return; }
       if (!input.raycastFirst(camera, bell.pickTargets())) return;
       if (clock - lastRing < 0.5) return;
       lastRing = clock;
@@ -178,6 +202,8 @@ export default {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
         bell.update(dt, simTime);
+        eaveChime.setWindLevel(1);     // a steady yard breeze — see k47's furin
+        eaveChime.update(dt, simTime);
         if (turning) {
           const diff = wrapPi(yBell - elder.rotation.y);
           elder.rotation.y += diff * (1 - Math.exp(-2.6 * Math.max(0, dt || 0)));
@@ -190,6 +216,7 @@ export default {
           strikes,
           swing: +bell.swinging().toFixed(4),
           turn: +turn.toFixed(4),
+          chimeStrikes: eaveChime.strikes(),
         };
       },
       dispose() {},

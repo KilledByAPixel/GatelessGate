@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeRack, makeLantern, makeMonk, faceMonk,
-  makeLights, makeBlobShadow, addOutlines,
+  makeLights, makeBlobShadow, addOutlines, makeFurin,
 } from '../kit/index.js';
 
 const ID = 44;
@@ -22,7 +22,11 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.18', 'rack', 'music'],
+  // 'furin' names the small three-tube cluster hung under the hall's own
+  // eave, by the door the rack already stands outside of — several small
+  // voices for a case that is itself a small back-and-forth, given, taken,
+  // given again.
+  ambience: ['wind:0.18', 'rack', 'furin', 'music'],
   camera: { distance: 9.2, target: [0.9, 1.15, 0.6], azimuth: 0.55, polar: 1.25 },
 
   build(ctx) {
@@ -59,6 +63,17 @@ export default {
     disciple.position.set(2.9, 0, 2.0);
     faceMonk(disciple, rack.group.position);
     scene.add(disciple);
+
+    // A small three-tube cluster hung under the hall's own front eave, clear
+    // of the doorway (|x| < ~0.74 at this width) and the corner post
+    // (x ~ 1.6) — a modest cluster, not the full five-tube ring case 29
+    // hangs at a gate, since this case's own back-and-forth is small too.
+    const furin = makeFurin({
+      tubes: 3, seed: 44,
+      onStrike: (tube, force, pos) => audio && audio.chimeStrike({ tube, force, at: pos }),
+    });
+    furin.group.position.set(1.2, 2.4, 1.30);
+    hall.add(furin.group);
 
     const lantern = makeLantern({ height: 1.05 });
     lantern.position.set(-3.0, 0, -1.4);
@@ -103,6 +118,9 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
+      // the eave cluster first, so a tap aimed at it never also swaps the staff
+      const chimeHit = furin.pick(camera, input);
+      if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
       if (!input.raycastFirst(camera, rack.pickTargets())) return;
       const given = rack.toggle();
       swaps++;
@@ -116,12 +134,15 @@ export default {
       update(dt, simTime) {
         world.update(dt, simTime);
         rack.update(dt, simTime);
+        furin.setWindLevel(1);     // a steady dooryard wind — see k47's furin
+        furin.update(dt, simTime);
       },
       fragment() {
         return {
           swaps,
           holding: rack.holding(),
           presence: +rack.presence().toFixed(3),
+          chimeStrikes: furin.strikes(),
         };
       },
       dispose() {},

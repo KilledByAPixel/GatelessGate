@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeBasin, makeWater, makeKoi, makeBirds, makeMonk, faceMonk,
-  makeGate, makeLights, makeBlobShadow, addOutlines,
+  makeGate, makeLights, makeBlobShadow, addOutlines, makeCylinderChime,
 } from '../kit/index.js';
 
 const ID = 49;
@@ -34,7 +34,11 @@ export default {
   // Used to carry a water bed (water:0.26); off for the same reason as every
   // other pond and basin in the book — see makeWaterBed's comment in
   // synths.js. A tap on the water still rings a drip.
-  ambience: ['wind:0.16', 'birds', 'music'],
+  // 'cylinder' names the single deep bronze hung under the closing gate's
+  // own lintel — the same red torii the intro opens on, so it earns a
+  // settled, single note rather than the lively cluster case 29 and case 47
+  // give their own gates: the book is at rest, not arguing about the wind.
+  ambience: ['wind:0.16', 'birds', 'cylinder', 'music'],
   camera: { distance: 12.5, target: [0.2, 1.5, -2.4], azimuth: 0.42, polar: 1.2 },
 
   build(ctx) {
@@ -97,6 +101,17 @@ export default {
     gate.rotation.y = ep.heading;    // its opening aligned down the path
     scene.add(gate);
 
+    // One bronze cylinder hung under the lintel, local to the gate so it
+    // stays square to it wherever the road happens to place it. |x| <
+    // width*0.364 stays flush underside (k29's own derivation); -0.4 sits
+    // well inside that at this width (2.6) and off the road's own centreline.
+    const closingChime = makeCylinderChime({
+      size: 0.9, seed: 49,
+      onStrike: (note, force, pos) => audio && audio.cylinderStrike({ note, force, at: pos }),
+    });
+    closingChime.group.position.set(-0.4, 3.0, 0);
+    gate.add(closingChime.group);
+
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
@@ -149,6 +164,10 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
+      // the closing chime first: it hangs inside the gate's own big
+      // forgiving hit-box, so it has to be probed and returned on before
+      // that box gets a chance to ring the passage-bell instead
+      if (closingChime.pick(camera, input)) { closingChime.ring(0.75); return; }
       if (input.raycastFirst(camera, [gateHit])) {
         // a small bright strike at the torii, the seal the book closes on —
         // task-12's migration to Frank's tuned presets
@@ -175,9 +194,14 @@ export default {
         water.update(dt, simTime);
         koi.update(dt, simTime);
         birds.update(dt, simTime);
+        closingChime.setWindLevel(1);   // a settled wind — see k47's furin
+        closingChime.update(dt, simTime);
       },
       fragment() {
-        return { rings, rippled, koi: koi.fishCount(), birds: birds.count() };
+        return {
+          rings, rippled, koi: koi.fishCount(), birds: birds.count(),
+          chimeStrikes: closingChime.strikes(),
+        };
       },
       dispose() {},
     };

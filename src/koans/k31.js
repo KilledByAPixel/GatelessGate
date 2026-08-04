@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeMonk, aimMonk, faceMonk, makeLantern,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, makeBlobShadow, addOutlines, toonMaterial, makeFurin,
 } from '../kit/index.js';
 
 const ID = 31;
@@ -28,7 +28,13 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.20', 'stall', 'music'],
+  // 'furin' names the single tube hung under the stall's own eave — a
+  // wayside tea stall is a business somebody keeps, and the eave over a
+  // bench is exactly where a real one hangs. One small quiet voice, not a
+  // cluster: the woman's answer is a machine, always the same; the chime
+  // stays a background murmur so it never reads as a second, competing
+  // "reply."
+  ambience: ['wind:0.20', 'stall', 'furin', 'music'],
   mood: 'yo',
   camera: { distance: 10.4, target: [0.7, 1.3, -0.2], azimuth: 0.55, polar: 1.25 },
 
@@ -108,6 +114,17 @@ export default {
     lantern.position.set(1.0, 0, -3.2);
     scene.add(lantern);
 
+    // A single small tube on a cord, under the stall's own front eave — the
+    // eave overhangs `over` past the wall (see kit/hut.js), so z=depth/2+0.05
+    // sits just inside that overhang. x=0.9 clears both the doorway (|x| <
+    // ~0.6 at this width) and the corner post (x ~ 1.3).
+    const furin = makeFurin({
+      tubes: 1, seed: 31,
+      onStrike: (_, force, pos) => audio && audio.chimeStrike({ tube: 0, force, at: pos }),
+    });
+    furin.group.position.set(0.9, 2.0, 1.1);
+    stall.add(furin.group);
+
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
@@ -156,6 +173,9 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
+      // the eave chime first, so a tap aimed at it never starts an asking
+      const chimeHit = furin.pick(camera, input);
+      if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
       if (!input.raycastFirst(camera, [hit])) return;
       if (clock - askedAt < POINT) return;
       askedAt = clock;
@@ -170,6 +190,8 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
+        furin.setWindLevel(1);      // a steady roadside wind — see k47's furin
+        furin.update(dt, simTime);
         const u = askedAt > -99 ? clamp01((clock - askedAt) / POINT) : 1;
         // up quickly, held, and lowered — identical every time
         const lift = (u >= 1) ? 0 : Math.min(1, u / 0.16, (1 - u) / 0.42);
@@ -181,6 +203,7 @@ export default {
           asked,
           // whatever the count, the answer is the same size
           lift: arm ? +(arm.rotation.z - ARM_REST).toFixed(4) : 0,
+          chimeStrikes: furin.strikes(),
         };
       },
       dispose() {},

@@ -25,7 +25,7 @@ const STUB_AUDIO = () => {
   const rec = (kind) => (arg) => calls.push([kind, arg]);
   return {
     calls,
-    bell: rec('bell'), chimeStrike: rec('chime'), knock: rec('knock'),
+    bell: rec('bell'), chimeStrike: rec('chime'), cylinderStrike: rec('cylinder'), knock: rec('knock'),
     drip: rec('drip'), pour: rec('pour'),
     // the touch voices: ceramic, wood, cloth, air
     ceramic: rec('ceramic'), wood: rec('wood'), cloth: rec('cloth'), breath: rec('breath'),

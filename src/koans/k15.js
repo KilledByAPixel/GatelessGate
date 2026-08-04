@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeGate, makeLantern, makeMonk, faceMonk,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, makeBlobShadow, addOutlines, toonMaterial, makeFurin,
 } from '../kit/index.js';
 
 const ID = 15;
@@ -32,7 +32,12 @@ export default {
   accent: ACCENT,
   tier: 3,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.20', 'gate', 'music'],
+  // 'furin' names the ring hung under Ummon's own lintel — a temple gate at
+  // evening is exactly where a real fūrin would hang, and this case already
+  // gives the gate a voice ('gate'); the cluster's several small tubes read
+  // as an echo of the three blows Tozan never actually receives — a scatter
+  // of small sounds standing in for the strikes that were forgiven.
+  ambience: ['wind:0.20', 'gate', 'furin', 'music'],
   camera: { distance: 11.0, target: [0.6, 1.6, -0.8], azimuth: 0.50, polar: 1.25 },
 
   build(ctx) {
@@ -75,6 +80,18 @@ export default {
     const lantern = makeLantern({ height: 1.2 });
     lantern.position.set(2.9, 0, -2.0);
     scene.add(lantern);
+
+    // The ring, hung under the gate's own kasagi (its flat centre span is
+    // flush underside for |x| < width*0.364 — see k29's comment for the
+    // derivation of that fraction, which is the same lintel geometry here).
+    // At this gate's width (2.8) that is |x| < 1.02, so -0.4 sits well clear
+    // of the wings on one side and off the road's own centreline.
+    const furin = makeFurin({
+      seed: 15,
+      onStrike: (tube, force, pos) => audio && audio.chimeStrike({ tube, force, at: pos }),
+    });
+    furin.group.position.set(-0.4, 3.0, 0);
+    gate.add(furin.group);
 
     const world = composeWorld(scene, {
       seed: ID,
@@ -124,6 +141,11 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
+      // the chime first: its own hit drum sits inside the gate's big
+      // forgiving hit-box, so it has to be probed and returned on before
+      // that box ever gets a chance to start a beating instead
+      const chimeHit = furin.pick(camera, input);
+      if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
       if (!input.raycastFirst(camera, [hit])) return;
       if (startedAt > -99 && struck < BLOWS) return;      // let the three finish
       startedAt = clock;
@@ -137,6 +159,8 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
+        furin.setWindLevel(1);      // a steady evening wind — see k47's furin
+        furin.update(dt, simTime);
         if (startedAt > -99 && struck < BLOWS && clock - startedAt >= struck * BLOW_GAP) {
           struck++;
           // wood on wood, out of the empty air. The stick has not moved — the
@@ -147,7 +171,7 @@ export default {
         }
       },
       fragment() {
-        return { beatings, struck, forgiven: struck >= BLOWS };
+        return { beatings, struck, forgiven: struck >= BLOWS, chimeStrikes: furin.strikes() };
       },
       dispose() {},
     };

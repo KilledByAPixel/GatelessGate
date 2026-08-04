@@ -201,8 +201,9 @@ test('module shape matches the koan contract', () => {
   assert.equal(k16.title, 'Bells and Robes');
   assert.equal(k16.accent, ACCENT);
   assert.equal(k16.tier, 1);
-  // the roster: the bonsho is a real emitter here, so the swells thin around it
-  assert.deepEqual(k16.ambience, ['wind:0.14', 'bell', 'music']);
+  // the roster: the bonsho and the eave chime are both real emitters here,
+  // so the swells thin around them
+  assert.deepEqual(k16.ambience, ['wind:0.14', 'bell', 'cylinder', 'music']);
   for (const f of ['case', 'comment', 'verse']) {
     assert.ok(k16.text[f] && k16.text[f].trim().length > 0, `text.${f} empty`);
   }
@@ -258,7 +259,10 @@ test('a held pointer cannot ring the bell without limit, though a genuine re-str
   // the fix intact — a real re-strike sits seconds after the first, far
   // outside the 0.5s cooldown, as the second half of this test shows.
   const rings = [];
-  const audio = { startAmbience() {}, stopAmbience() {}, setWindLevel() {}, bell: (o) => rings.push(o.f0) };
+  const audio = {
+    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, cylinderStrike() {},
+    bell: (o) => rings.push(o.f0),
+  };
   const ctx = fakeCtx();
   ctx.audio = audio;
   const root = k16.build(ctx);
@@ -320,7 +324,7 @@ test('the bell sits in frame at the home angle', () => {
 test('tapping the bell swings it, rings the temple preset, and the elder finishes his turn', () => {
   const rings = [];
   const audio = {
-    startAmbience() {}, stopAmbience() {}, setWindLevel() {},
+    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, cylinderStrike() {},
     bell: (o) => rings.push(o),
   };
   const ctx = fakeCtx();
@@ -357,12 +361,17 @@ test('tapping the bell swings it, rings the temple preset, and the elder finishe
   assert.equal(rings.length, 2);
   root.onExit && root.onExit();
 
-  // and the whole moment survives having no audio engine at all
+  // and the whole moment survives having no audio engine at all. Targeted at
+  // the bell's own pick targets specifically now that the case also probes
+  // the eave chime first on every tap — an untargeted "hit anything" stub
+  // would ring the chime instead and never reach the bell at all.
   const mute = fakeCtx();
   const quiet = k16.build(mute);
   quiet.setCamera(rigCamera());
   quiet.update(1 / 60, 0);
-  mute.input.raycastFirst = () => ({ point: new THREE.Vector3() });
+  mute.input.raycastFirst = (cam, objs) => (objs.some((o) => o.name === 'bell-hit')
+    ? { object: objs[0], point: new THREE.Vector3() }
+    : null);
   assert.doesNotThrow(() => mute._taps.forEach((cb) => cb()));
   assert.equal(quiet.fragment().strikes, 1, 'the bell still swings, silently');
 });

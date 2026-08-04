@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeGate, makeFlag, makeMonk, faceMonk, makeLantern,
-  makeLights, makeBlobShadow, addOutlines,
+  makeLights, makeBlobShadow, addOutlines, makeFurin,
 } from '../kit/index.js';
 import { clothEnergy } from '../sim/verlet.js';
 
@@ -31,7 +31,13 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.30', 'flag', 'music'],
+  // 'furin' names the single tube hung under the gate's own lintel — a
+  // temple gate is exactly where a real fūrin hangs, and this case already
+  // has a flag whose wind is the reader's to toggle: the chime rides the
+  // SAME wind (see furin.setWindLevel(flag.windLevel()) below), so stilling
+  // the sign also stills the small voice answering it, the way case 29's
+  // chimes and flag already agree to.
+  ambience: ['wind:0.30', 'flag', 'furin', 'music'],
   mood: 'yo',      // "This spring does not belong to the ordinary season."
   camera: { distance: 11.5, target: [0.9, 1.9, -0.2], azimuth: 0.55, polar: 1.24 },
 
@@ -74,6 +80,18 @@ export default {
     const lantern = makeLantern({ height: 1.1 });
     lantern.position.set(-2.8, 0, 0.6);
     scene.add(lantern);
+
+    // One small tube on a cord, hung under the gate's own flat lintel span
+    // (|x| < width*0.364 stays flush underside — k29's own derivation of
+    // that fraction). A single quiet voice, not a cluster: the preaching
+    // sign is the one thing changing hands here, and a busy chorus would
+    // upstage the plain banner it hangs beside.
+    const furin = makeFurin({
+      tubes: 1, seed: 22,
+      onStrike: (_, force, pos) => audio && audio.chimeStrike({ tube: 3, force, at: pos }),
+    });
+    furin.group.position.set(0.5, 3.1, 0);
+    gate.add(furin.group);
 
     const world = composeWorld(scene, {
       seed: ID,
@@ -125,6 +143,10 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
+      // the gate chime first: probed and returned on before the flag-mesh
+      // check below, so ringing the chime never also toggles the wind
+      const chimeHit = furin.pick(camera, input);
+      if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
       if (!input.raycastFirst(camera, [flag.mesh])) return;
       const on = flag.toggleWind();
       stills++;
@@ -141,6 +163,11 @@ export default {
       update(dt, simTime) {
         world.update(dt, simTime);
         flag.update(dt, simTime);
+        // the chime rides the SAME wind the flag does, so stilling the sign
+        // stills it too — case 29's own rule for a hanging voice sharing a
+        // scene with a wind toggle
+        furin.setWindLevel(flag.windLevel());
+        furin.update(dt, simTime);
       },
       fragment() {
         return {
@@ -148,6 +175,7 @@ export default {
           windOn: flag.isWindOn(),
           windLevel: +flag.windLevel().toFixed(4),
           clothEnergy: +clothEnergy(flag.cloth).toFixed(6),
+          chimeStrikes: furin.strikes(),
         };
       },
       dispose() {},

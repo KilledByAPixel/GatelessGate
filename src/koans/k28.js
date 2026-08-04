@@ -4,7 +4,7 @@ import { PAPER, ACCENT, INK, mixHex, hexToRgb } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makePath, makeVeranda, makeLantern, makeMonk, aimMonk, faceMonk,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, makeBlobShadow, addOutlines, toonMaterial, makeCylinderChime,
 } from '../kit/index.js';
 
 const ID = 28;
@@ -37,7 +37,11 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.12', 'flame', 'music'],
+  // 'cylinder' names the single bronze hung under Ryutan's own veranda —
+  // late as it is, a hall someone actually lives in still carries this one
+  // small everyday sound; a lone deep voice, occasional and quiet, suits the
+  // night's hush far better than a chattering cluster would.
+  ambience: ['wind:0.12', 'flame', 'cylinder', 'music'],
   camera: { distance: 9.6, target: [0.6, 1.5, -1.2], azimuth: 0.52, polar: 1.26 },
 
   build(ctx) {
@@ -168,6 +172,17 @@ export default {
     stars.frustumCulled = false;
     scene.add(stars);
 
+    // One bronze cylinder hung under the veranda's own beam, on the far
+    // side from Ryutan and Tokusan so it never competes with the candle for
+    // attention — local to the veranda group (case 29's idiom), x=-1.5
+    // sitting clear between the two posts nearest that side at this width.
+    const nightChime = makeCylinderChime({
+      size: 0.85, seed: 28,
+      onStrike: (note, force, pos) => audio && audio.cylinderStrike({ note, force, at: pos }),
+    });
+    nightChime.group.position.set(-1.5, 2.8, -0.15);
+    veranda.add(nightChime.group);
+
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
@@ -219,6 +234,10 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
+      // the night chime first: it hangs well clear of the candle's own
+      // generous hit cylinder, but probed and returned on regardless, same
+      // ordering every case with more than one voice uses
+      if (nightChime.pick(camera, input)) { nightChime.ring(0.75); return; }
       // the generous invisible cylinder is still the real target (a flame is
       // a sliver to hit on a phone), but the flame and the kit's candle are
       // listed too so a dead-on tap works even if the cylinder ever moves
@@ -237,6 +256,8 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
+        nightChime.setWindLevel(1);    // a still night, but see k47's furin
+        nightChime.update(dt, simTime);
 
         // 0 = the lamp is burning, 1 = it is out and the sky has arrived
         const k = clamp01((clock - changedAt) / FADE);
@@ -268,6 +289,7 @@ export default {
           blows,
           lit,
           dark: +(starMat.opacity / 0.92).toFixed(3),
+          chimeStrikes: nightChime.strikes(),
         };
       },
       // the glow sprite sits outside the mesh graph the scene manager's
