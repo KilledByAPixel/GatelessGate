@@ -834,6 +834,48 @@ test('structurally: a punctuation chime bypasses the hush pair; an ordinary chim
   }
 });
 
+test('structurally: cylinderStrike (the large hanging cylinder) routes through the hush pair, unplaced and placed', () => {
+  // task-cylinder-brief.md's own warning, twice-shipped already on this
+  // branch: a voice wired past voicesDry/voicesWet keeps ringing after a
+  // page turn, and a voice that never reaches placed()'s bus is never
+  // spatialised. Same two checks the ordinary-chime and placed-bell tests
+  // above run, aimed at the new voice specifically rather than trusting it
+  // by resemblance.
+  const save = { state: () => ({ soundOn: true }), setSound() {} };
+  const priorWindow = global.window;
+  const hadWindow = Object.prototype.hasOwnProperty.call(global, 'window');
+  global.window = { AudioContext: function FakeAudioContext() { return graphAudioContext(); } };
+  try {
+    const audio = createAudio(save);
+    audio.setListener(null);   // no listener -> placed() is null -> the unplaced fallback
+    audio.unlock();
+    const ctx = audio.ctx;
+    const [master, , voicesDry] = ctx._gains;
+    assert.equal(master, audio.master, 'gains[0] is not the exposed master — creation order assumption is wrong');
+
+    const before = ctx._edges.length;
+    audio.cylinderStrike({ note: 0 });
+    const edges = ctx._edges.slice(before);
+    assert.ok(edges.length > 0, 'cylinderStrike built no graph at all');
+    assert.ok(edges.some(([, to]) => to === voicesDry),
+      'an unplaced cylinderStrike did not reach voicesDry — it would keep ringing after the page turned');
+
+    // and a PLACED call reaches the spatial bus (not straight to master) —
+    // the same shape the placed-bell test above proves in full detail; this
+    // one just confirms cylinderStrike actually calls placed() at all
+    const listener = { pos: { x: 0, y: 0, z: 0 }, right: { x: 1, y: 0, z: 0 }, forward: { x: 0, y: 0, z: -1 } };
+    audio.setListener(listener);
+    const before2 = ctx._edges.length;
+    audio.cylinderStrike({ note: -2, at: { x: 4, y: 0, z: -5 } });
+    const placedEdges = ctx._edges.slice(before2);
+    assert.ok(placedEdges.length > 0, 'a placed cylinderStrike built no graph at all');
+    assert.ok(!placedEdges.some(([, to]) => to === master),
+      'a placed cylinderStrike went straight to master, skipping the spatial bus entirely');
+  } finally {
+    if (hadWindow) global.window = priorWindow; else delete global.window;
+  }
+});
+
 // ---- Task 8: silence when nobody is listening ------------------------------
 //
 // Hidden means silent, everywhere, except during a running sitting — that

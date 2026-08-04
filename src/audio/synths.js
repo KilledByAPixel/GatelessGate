@@ -197,6 +197,27 @@ export function barPartials(f0, decay = 5) {
 // The shipped chime — Frank's audition numbers (the "Garden" preset).
 export const CHIME = { degree: 8, tubes: 5, decay: 5, level: 0.03, bright: 0.35, verbMix: 0.7 };
 
+// The large hanging cylinder (task-cylinder-brief.md) — same series as CHIME
+// (barPartials, below: the free-free bar's 1:2.756:5.404:8.933 is what makes
+// either of these read as struck metal rather than a bell), but its own
+// voice, not an overload of CHIME/chimeStrike: chimeStrike's `tube` index
+// maps into the fūrin's own register and its decay is sized for a small
+// tube, so reusing it here would either pull the fūrin's pitches down with
+// it or leave this cylinder ringing at furin length.
+// `degree` sits a full register below CHIME's cluster (src/kit/cylinder.js's
+// noteForSize spans size 0.6-1.0 across one octave under this base, so the
+// two chime families never land on the same pitch). `decay` is several
+// times CHIME's 5s — a waist-high mass of bronze keeps ringing after a
+// wind-chime tube has already died. `bright` is pulled well down from
+// CHIME's 0.35: a wider tube's upper partials sit lower and duller than a
+// thin one's, so the same lowpass-brightness knob wants a smaller number to
+// read as the same kind of metal at this size. `level` and `verbMix` are
+// PROVISIONAL — picked to sit in the same ballpark as CHIME at this engine's
+// gain staging, pending Frank's ear at the next audition (see CERAMIC's own
+// comment in engine.js for the precedent: a voice born without a live
+// audition gets a level flagged provisional rather than treated as final).
+export const BRONZE = { degree: -4, decay: 9, level: 0.032, bright: 0.18, verbMix: 0.85 };
+
 // The shipped water — Frank's audition numbers (the "Basin" preset). Drips are
 // pitched to the scale in a high register, so every basin in the book is
 // quietly a suikinkutsu.

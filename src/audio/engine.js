@@ -1,5 +1,5 @@
 import {
-  makeWind, strikeBell, strikeBar, CHIME, strikeDrip, makeWaterBed, WATER,
+  makeWind, strikeBell, strikeBar, CHIME, BRONZE, strikeDrip, makeWaterBed, WATER,
   strike, bambooPartials, ODOSHI, pourBurst, strikeSitBell, SIT_BELL, STRIKE_SCALE, BELL,
   bellVoice, bellPartials, bellTail, applyBellPreset, BELL_PRESETS,
   CERAMIC, WOOD, CLOTH, BREATH, ceramicPartials, woodPartials, noiseSwell,
@@ -17,6 +17,17 @@ import { spatialFor, makeSpatialBus, calibrateMix } from './spatial.js';
 const MIX_BELL = { kd: 0.7, ks: 1.2 };      // strikeBell / strikeSitBell
 const MIX_WATER = { kd: 0.85, ks: 1.4 };    // strikeDrip
 const MIX_CHIME = { kd: 0.85, ks: 1.4 };    // strikeBar
+// Same numbers as MIX_CHIME on purpose, not a coincidence needing its own
+// pair: cylinderStrike() calls the SAME strikeBar() function chimeStrike()
+// does (see BRONZE's own comment in synths.js for why it is a separate
+// voice with its own degree/decay/level and not an overload of CHIME), and
+// strikeBar's dry/send split (`1 - verbMix*0.85`, `verbMix*1.4`) is fixed
+// inside that one function regardless of which caller's constants drove it.
+// Named separately anyway, matching MIX_WATER/MIX_CHIME already sharing
+// these exact numbers for the same reason (strikeDrip uses the identical
+// formula) — one constant per voice family reads better at the call site
+// than remembering which families happen to coincide.
+const MIX_BRONZE = { kd: 0.85, ks: 1.4 };   // strikeBar, via cylinderStrike
 const MIX_ODOSHI = { kd: 0.8, ks: 1.1 };    // knock's inline mix, below
 // pour() never had a wet leg pre-branch — pourBurst wrote straight into
 // `master` with nothing splitting it, so its old dry was undiscounted (kd 0)
@@ -472,6 +483,28 @@ export function createAudio(save) {
       const dry = punctuate ? master : (bus ? bus.in : voicesDry);
       const wet = punctuate ? verb.in : (bus ? null : voicesWet);
       strikeBar(ctx, dry, wet, { f0, gain, verbMix: bus ? 0 : CHIME.verbMix });
+    },
+    // The large hanging cylinder (task-cylinder-brief.md) — its own voice,
+    // not chimeStrike with different numbers: see BRONZE's comment in
+    // synths.js for why sharing chimeStrike's register/decay would be
+    // wrong. `note` is the scale-degree offset src/kit/cylinder.js derives
+    // from the instance's own size (bigger cylinder, lower note) and
+    // reports back on every onStrike — this method never sees a size, only
+    // the note already decided, the same "engine owns Hz, kit owns degrees"
+    // split chimeStrike documents above. No `punctuate` path: unlike the
+    // furin's tube chimes, nothing in the reading narrates through this
+    // voice today, so there is nothing yet to compensate for the duck.
+    cylinderStrike({ note = 0, force = 1, at = null } = {}) {
+      if (!ensureCtx() || ctx.state !== 'running') return;
+      const f0 = hz(BRONZE.degree + note, mood);
+      const { dryLevel, sendLevel } = calibrateMix(BRONZE.verbMix, MIX_BRONZE.kd, MIX_BRONZE.ks);
+      const bus = placed(at, sendLevel, BRONZE.decay + 1, dryLevel);
+      const dry = bus ? bus.in : voicesDry;
+      const wet = bus ? null : voicesWet;
+      strikeBar(ctx, dry, wet, {
+        f0, gain: BRONZE.level * force, decay: BRONZE.decay, bright: BRONZE.bright,
+        verbMix: bus ? 0 : BRONZE.verbMix,
+      });
     },
     // a tap on the water (or the bowl set down in it) answers with a drip,
     // whatever the ambient schedule is doing
