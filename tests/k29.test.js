@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import * as THREE from '../lib/three.module.js';
 import k29 from '../src/koans/k29.js';
 import { clothEnergy } from '../src/sim/verlet.js';
-import { noteForSize } from '../src/kit/furin.js';
+import { noteForSize, makeFurin, SWING } from '../src/kit/furin.js';
 
 function fakeCtx() {
   const taps = [], hovers = [];
@@ -229,6 +229,93 @@ test("each single's reported note is derived from its own built size, not a numb
     assert.ok(best < 0.3, `strike at x=${s.x} did not land near any known single (nearest ${best} away)`);
     assert.equal(s.tube, nearest.expectedNote,
       `a single at x~${nearest.worldX.toFixed(2)} (measured size ${nearest.size.toFixed(3)}) reported note ${s.tube}, expected noteForSize(size)=${nearest.expectedNote}`);
+  }
+});
+
+test("case 29's chimes stay clear of each other at the LIVE swing cap, counter-phase, worst case", () => {
+  // FOLLOW-UP CAUGHT: the collision-free result in swing-tune-report.md
+  // (RING_X=-0.79, SINGLE_X=[-0.17,0.39,0.80], checked against
+  // SWING.maxOmegaFrac=0.65) was only ever asserted in a k29.js COMMENT.
+  // Nothing re-derived it against the LIVE constant, so raising
+  // SWING.maxOmegaFrac — which is exactly what Frank is likely to do; he
+  // complained the swing was too SMALL, not too big — would silently
+  // reopen the counter-phase collision this branch already found once,
+  // with nothing anywhere failing to say so. This recomputes the real
+  // worst-case counter-phase gap from the ACTUAL staged scene and the
+  // LIVE SWING.maxOmegaFrac/tapPeak/damping every time the suite runs, so
+  // raising the cap past what case 29's spacing tolerates fails HERE,
+  // not silently in the harness or, worse, not at all until Frank notices
+  // two chimes passing through each other.
+  //
+  // theta (the saturated-burst peak) does not depend on which chime's own
+  // size measures it: at saturation, pendulumEnergy's omega0^2 term
+  // cancels — 1-cos(theta) = 0.5*maxOmegaFrac^2 has no L in it — so ONE
+  // probe furin (size-independent constants only: SWING.tapPeak/
+  // maxOmegaFrac/damping) driven with the exact same burst-mash a real
+  // chime saturates under stands in for the ring and all three
+  // differently-sized singles at once.
+  const probe = makeFurin({ seed: 999, phase: 0, onStrike: () => {} });
+  probe.setWindLevel(0);
+  const probeSwing = probe.group.getObjectByName('swing');
+  for (let i = 0; i < 50; i++) probe.ring(1);   // burst, before any update() — the saturating scenario
+  let theta = 0;
+  for (let i = 0; i < 60 * 5; i++) {
+    probe.update(1 / 60, 1 + i / 60);
+    theta = Math.max(theta, Math.abs(probeSwing.rotation.z));
+  }
+  assert.ok(theta > 0.1, `probe never swung — cannot judge case 29's clearance: ${theta}`);
+
+  // the REAL staged scene, not a reproduction with guessed parameters
+  const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
+  const audio = { startAmbience() {}, stopAmbience() {}, setWindLevel() {}, chimeStrike() {} };
+  const k = k29.build({ audio, input });
+  const gate = k.scene.getObjectByName('gate');
+  const chimes = gate.children.filter((c) => c.name === 'furin');
+  assert.equal(chimes.length, 4, 'the ring plus three singles');
+  k.scene.updateMatrixWorld(true);
+  // left to right by world x, so adjacent entries in this array are the
+  // real physical neighbours hanging under the gate
+  const ordered = chimes
+    .map((group) => ({ group, x: group.getWorldPosition(new THREE.Vector3()).x }))
+    .sort((a, b) => a.x - b.x);
+
+  const VISIBLE_NAMES = new Set(['cord', 'tube', 'cap', 'clapper', 'tag']);
+  function boxAtSign(chimeGroup, sign) {
+    const swing = chimeGroup.getObjectByName('swing');
+    const before = swing.rotation.z;
+    swing.rotation.z = sign * theta;
+    chimeGroup.updateMatrixWorld(true);
+    const box = new THREE.Box3();
+    chimeGroup.traverse((node) => {
+      if (node.isMesh && VISIBLE_NAMES.has(node.name)) box.union(new THREE.Box3().setFromObject(node));
+    });
+    swing.rotation.z = before;   // leave the real scene exactly as found
+    chimeGroup.updateMatrixWorld(true);
+    return box;
+  }
+  // TRUE worst case per pair: each neighbour's phase is uncorrelated with
+  // the other's in the real case (independent `phase` per single, and the
+  // ring's own clock), so any sign combination is physically reachable —
+  // try both signs on each side independently and keep the smallest gap
+  function worstGap(a, b) {
+    let worst = Infinity;
+    for (const sa of [1, -1]) {
+      for (const sb of [1, -1]) {
+        const gap = boxAtSign(b.group, sb).min.x - boxAtSign(a.group, sa).max.x;
+        worst = Math.min(worst, gap);
+      }
+    }
+    return worst;
+  }
+
+  // a real, if modest, safety margin — not just "technically not touching"
+  const MIN_MARGIN = 0.02;
+  for (let i = 0; i < ordered.length - 1; i++) {
+    const gap = worstGap(ordered[i], ordered[i + 1]);
+    assert.ok(gap > MIN_MARGIN,
+      `chimes at x=${ordered[i].x.toFixed(3)} and x=${ordered[i + 1].x.toFixed(3)} come within ${gap.toFixed(4)} of ` +
+      `each other at the LIVE SWING.maxOmegaFrac=${SWING.maxOmegaFrac} (saturated-burst theta=${theta.toFixed(4)} rad) — ` +
+      `need > ${MIN_MARGIN}. Either widen case 29's spacing (RING_X/SINGLE_X in src/koans/k29.js) or lower SWING.maxOmegaFrac.`);
   }
 });
 
