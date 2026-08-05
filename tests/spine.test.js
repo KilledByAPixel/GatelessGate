@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  readingOrder, readingEntries, neighborSlug, PREFACE_SLUG, AFTERWORD_SLUG,
+  readingOrder, readingEntries, neighborSlug, pageTarget, PREFACE_SLUG, AFTERWORD_SLUG,
 } from '../src/spine.js';
 import { CASES } from '../src/koans/index.js';
 import MATTER from '../src/koans/text/matter.js';
@@ -82,4 +82,59 @@ test('every case entry keeps its own number', () => {
   const numbered = entries.filter((e) => e.id !== null);
   assert.equal(numbered.length, 49);
   assert.deepEqual(numbered.map((e) => e.id), CASES.map((c) => c.id));
+});
+
+test('backing off the front of the book returns to the Contents', () => {
+  // THE BUG, pinned. Frank, having opened the preface from the Contents: "I
+  // can go right and it goes to the preface, but then I can't go back left
+  // again... it's not just in the look at the scene, it's also in the text
+  // itself." Both sets of arrows and the left arrow key all bottomed out in
+  // neighborSlug's own null, so the first page of the book was somewhere you
+  // could enter and then not leave the way you came in.
+  //
+  // The Contents is not IN the reading order — it is not a page of the book —
+  // which is why this is a rule layered on top of the walk rather than an
+  // extra entry in the list.
+  assert.deepEqual(pageTarget(ORDER, PREFACE_SLUG, -1), { contents: true });
+
+  // and the arrow is ENABLED, which is the half a reader actually sees: a
+  // truthy return is what un-greys it (main.js's hasPrev)
+  assert.ok(pageTarget(ORDER, PREFACE_SLUG, -1), 'the back arrow should not be greyed out on the preface');
+});
+
+test('the far end is NOT symmetric — the book still has a last page', () => {
+  // Deliberate, not an oversight. Going BACK to where you came from is a
+  // retreat and the Contents is the honest answer; walking FORWARD off the
+  // afterword into the index would be the book eating its own tail, which is
+  // the exact thing removing nextInLoop() was about.
+  assert.equal(pageTarget(ORDER, AFTERWORD_SLUG, +1), null);
+});
+
+test('pageTarget agrees with the plain spine walk everywhere in between', () => {
+  // The new rule must touch ONE cell of the table and no others — a version
+  // that returned {contents:true} for any missing neighbour, or that shifted
+  // the walk by one, would still pass the two tests above.
+  for (const slug of ORDER) {
+    for (const dir of [-1, +1]) {
+      const walked = neighborSlug(ORDER, slug, dir);
+      const target = pageTarget(ORDER, slug, dir);
+      if (walked) {
+        assert.deepEqual(target, { slug: walked },
+          `${slug} ${dir > 0 ? 'forward' : 'back'} should page to ${walked}`);
+      } else {
+        // the only place the walk runs out and the reader still goes somewhere
+        const isFrontEdge = dir < 0 && slug === ORDER[0];
+        assert.deepEqual(target, isFrontEdge ? { contents: true } : null,
+          `${slug} ${dir > 0 ? 'forward' : 'back'} should ${isFrontEdge ? 'reach the Contents' : 'go nowhere'}`);
+      }
+    }
+  }
+});
+
+test('a slug that is not in the book pages nowhere, in either direction', () => {
+  // Including backward: the front-edge rule keys off "is this the FIRST page",
+  // not "did the walk fail", so an unknown slug must not fall into it.
+  assert.equal(pageTarget(ORDER, 'not-a-page', -1), null);
+  assert.equal(pageTarget(ORDER, 'not-a-page', +1), null);
+  assert.equal(pageTarget([], 'anything', -1), null, 'an empty book has no front edge to back off');
 });

@@ -36,6 +36,37 @@ export function neighborSlug(order, slug, dir) {
   return order[i + dir] || null;
 }
 
+// WHERE A PAGE-TURN ACTUALLY GOES, which is not quite the spine walk.
+//
+// The Contents is not a page of the book, so it is not in `order` — but it IS
+// where the reader came from, and backing off the FRONT of the book has to
+// land somewhere. It didn't: Frank, on the preface, "I can go right and it
+// goes to the preface, but then I can't go back left again... it's not just
+// in the look at the scene, it's also in the text itself." Both arrows and
+// the left arrow key all bottomed out in neighborSlug's own null, so the
+// first page of the book was a place you could enter and not leave the way
+// you came.
+//
+// Backing off the front now returns to the Contents — "it will do the exact
+// same thing as clicking go back to contents, because it's just going back."
+//
+// THE FAR END IS DELIBERATELY NOT SYMMETRIC. Forward from the afterword still
+// stops. Going back to where you came from is a retreat and the Contents is
+// the honest answer; walking FORWARD off the last page into the index would
+// be the book eating its own tail, which is the exact thing the removal of
+// nextInLoop() (below) was about. The book has a last page.
+//
+// Returns null (nowhere to go — grey the arrow out), or an object naming one
+// of the two destinations. An object rather than a magic string because every
+// string here is a slug, and a sentinel that could collide with a real one is
+// a bug waiting for someone to add a case called 'contents'.
+export function pageTarget(order, slug, dir) {
+  const next = neighborSlug(order, slug, dir);
+  if (next) return { slug: next };
+  if (dir < 0 && order.length > 0 && slug === order[0]) return { contents: true };
+  return null;
+}
+
 // There was a nextInLoop() here — the same walk, but wrapping past the afterword
 // back to the preface, for the hands-free reading that turned its own pages. The
 // look does not read on its own any more (a page read aloud stops at the end of

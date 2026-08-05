@@ -26,7 +26,7 @@ import { makeSit } from './sit.js';
 import { makeThemeButton } from './ui/theme.js';
 import { readTheme, nextTheme } from './ui/theme_state.js';
 import { makeRouter } from './router.js';
-import { readingOrder, neighborSlug } from './spine.js';
+import { readingOrder, pageTarget } from './spine.js';
 
 const STEP = 1 / 60;
 
@@ -85,7 +85,17 @@ let intro = null;
 // and the arrow keys walk this, not CASES — the matter pages are pages of the
 // book but not cases, and nothing that counts cases should see them.
 const SPINE = readingOrder(CASES);
-const neighbor = (slug, dir) => neighborSlug(SPINE, slug, dir);
+// Where ‹ and › actually go, which is the spine walk plus one rule: backing
+// off the FRONT of the book returns to the Contents the reader came from (see
+// pageTarget in spine.js). Every pager goes through this pair — the panel's
+// arrows, the look bar's, and the arrow keys — so the three cannot disagree
+// about what the ends of the book do, which is exactly how the preface came
+// to be a page you could enter and not leave the way you came.
+const pageTo = (slug, dir) => pageTarget(SPINE, slug, dir);
+function goPage(target) {
+  if (!target) return;
+  if (target.contents) exit(); else enter(target.slug);
+}
 let readingAll = false;   // whether the current read is "read all" or a single section
 let readTimer = null;     // the pause between sections of a read-all
 
@@ -370,20 +380,23 @@ lookBtn('gg-look-exit', '↺', 'Back to the text', () => setAmbient(false));
 // there is no current page, so forward means the book's first — the same thing
 // the right arrow key does on that screen.
 const lookPrev = lookBtn('gg-look-page', '‹', 'Previous page',
-  () => { const p = lookNeighbor(-1); if (p) enter(p); });
+  () => goPage(lookNeighbor(-1)));
 const lookNext = lookBtn('gg-look-page', '›', 'Next page',
-  () => { const n = lookNeighbor(+1); if (n) enter(n); });
+  () => goPage(lookNeighbor(+1)));
 // Reads this page through and stops (Frank: "it'll just read that whole page
 // and then stop when it gets to the end; don't go to the next page
 // automatically").
 const lookRead = lookBtn('gg-look-read', '', 'Read this page aloud', () => toggleReadAll());
 stage.appendChild(lookBar);
 
-// Where ‹ and › go from wherever the reader is. On a page it is the spine walk;
-// on the Contents only forward exists, into the first page of the book.
+// Where ‹ and › go from wherever the reader is. On a page it is the spine walk
+// plus the back-to-Contents rule (pageTo); on the Contents only forward exists,
+// into the first page of the book — there is nothing behind the index. Returns
+// the same {slug}/{contents}/null shape pageTo does, so goPage handles all of
+// it in one place.
 function lookNeighbor(dir) {
-  if (mode === 'koan' && koanSlug) return neighbor(koanSlug, dir);
-  if (mode === 'menu') return dir > 0 ? SPINE[0] : null;
+  if (mode === 'koan' && koanSlug) return pageTo(koanSlug, dir);
+  if (mode === 'menu') return dir > 0 ? { slug: SPINE[0] } : null;
   return null;
 }
 
@@ -635,10 +648,10 @@ function buildKoan(mod, slug) {
     onSit: (m) => startSit(m),
     themeEl: themeButton(),
     // page through the book one case at a time (Contents stays the way out)
-    hasPrev: !!neighbor(slug, -1),
-    hasNext: !!neighbor(slug, +1),
-    onPrev: () => { const p = neighbor(slug, -1); if (p) enter(p); },
-    onNext: () => { const n = neighbor(slug, +1); if (n) enter(n); },
+    hasPrev: !!pageTo(slug, -1),
+    hasNext: !!pageTo(slug, +1),
+    onPrev: () => goPage(pageTo(slug, -1)),
+    onNext: () => goPage(pageTo(slug, +1)),
   });
   panel.appendChild(scroll.el);
   showView(scroll.el);
@@ -897,8 +910,9 @@ addEventListener('keydown', (e) => {
   }
   // page the book with the arrow keys while reading a case
   if (mode === 'koan' && koanSlug && !typing) {
-    if (e.key === 'ArrowRight') { const n = neighbor(koanSlug, +1); if (n) enter(n); }
-    else if (e.key === 'ArrowLeft') { const p = neighbor(koanSlug, -1); if (p) enter(p); }
+    // same walk as both sets of arrows, back-to-Contents rule included
+    if (e.key === 'ArrowRight') goPage(pageTo(koanSlug, +1));
+    else if (e.key === 'ArrowLeft') goPage(pageTo(koanSlug, -1));
   }
   // and open the book from its cover: on the contents page the right arrow
   // walks straight into the preface — the spine's first page — so a keyboard
