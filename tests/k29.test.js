@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import * as THREE from '../lib/three.module.js';
 import k29 from '../src/koans/k29.js';
 import { clothEnergy } from '../src/sim/verlet.js';
-import { noteForSize, makeFurin, SWING } from '../src/kit/furin.js';
+import { noteForSize, makeFurin, SWING, SINGLE_BODY_LEN } from '../src/kit/furin.js';
 
 function fakeCtx() {
   const taps = [], hovers = [];
@@ -188,7 +188,7 @@ test("each single's reported note is derived from its own built size, not a numb
   // storing the object/vector by reference would read back whatever the
   // NEXT strike overwrote it with), and require each captured note to equal
   // noteForSize(measuredSize), where measuredSize is read off the real
-  // built tube geometry (length/1.7, furin.js's own single-tube formula),
+  // built tube geometry (length / furin.js's own exported SINGLE_BODY_LEN),
   // never retyped from k29.js.
   const struck = [];
   const audio = {
@@ -215,7 +215,7 @@ test("each single's reported note is derived from its own built size, not a numb
     c.traverse((o) => {
       if (o.name === 'tube') {
         worldX = o.getWorldPosition(new THREE.Vector3()).x;
-        size = o.geometry.parameters.height / 1.7;
+        size = o.geometry.parameters.height / SINGLE_BODY_LEN;
       }
     });
     return { worldX, size, expectedNote: noteForSize(size) };

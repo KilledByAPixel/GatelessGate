@@ -134,6 +134,12 @@
         <div id="clap-force-fields"></div>
       </section>
 
+      <section id="spin-section">
+        <h2>tanzaku spin (SPIN, kit/furin.js)</h2>
+        <div class="note">the paper strip below a SINGLE turns on its own thread — a torsional pendulum, so a hard enough knock carries it over the top and spinning before it settles back to a twist. Where that happens is well above the undamped 2·√stiffness: at the shipped stiffness a full tap turns 0.4 of a revolution at kick 6 and 1.4 at kick 10, because the strip loses better than half its energy on the way up. Rings are untouched — their tag keeps the flutter it has.</div>
+        <div id="spin-fields"></div>
+      </section>
+
       <section id="cyl-swing-section">
         <h2>cylinder swing (CYL_SWING, kit/cylinder.js)</h2>
         <div class="note">tap kick swings the BODY (not the clapper) — raising it swings it further AND makes the ring-down last longer (more re-strikes at the body's own ~0.78s half-period, unrelated to amplitude); the force law is what makes those re-strikes fade instead of hammering at full volume, so a bigger kick should still sound like one settling ring, not a louder loop.</div>
@@ -163,7 +169,7 @@
       <section>
         <h2>print preset</h2>
         <div class="row">
-          <button id="print-preset">print SWING / CLAP_FORCE / CYL_SWING / CYL_FORCE / BRONZE / CLATTER</button>
+          <button id="print-preset">print SWING / CLAP_FORCE / SPIN / CYL_SWING / CYL_FORCE / BRONZE / CLATTER</button>
         </div>
         <textarea id="dump" readonly></textarea>
       </section>
@@ -174,7 +180,7 @@
     import * as THREE from '../lib/three.module.js';
     import { PAPER } from '../src/palette.js';
     import { makeLights, toonMaterial, addOutlines } from '../src/kit/index.js';
-    import { makeFurin, SWING, CLAP_FORCE } from '../src/kit/furin.js';
+    import { makeFurin, SWING, CLAP_FORCE, SPIN, SINGLE_BODY_LEN } from '../src/kit/furin.js';
     import { makeCylinderChime, CYL_SWING, CYL_FORCE } from '../src/kit/cylinder.js';
     import { makeScreen, CLATTER } from '../src/kit/screen.js';
     import { BRONZE } from '../src/audio/synths.js';
@@ -351,7 +357,7 @@
     const CASE29_LAYOUT = {
       singleX: [-0.72, 0, 0.72],
       singleSizes: [0.18, 0.12, 0.09],
-      singleCord: [0.08, 0.18, 0.25],   // ABSOLUTE lengths now, not fractions of size
+      singleCord: [0.095, 0.156, 0.187],   // ABSOLUTE lengths now, not fractions of size
     };
     // slider-controlled sizes, per mode — persisted across mode switches so
     // dialing a size in, leaving, and coming back doesn't lose it
@@ -366,7 +372,13 @@
     // ones are not hanging low enough." These bring all three bottom edges
     // to roughly the same line, so the set reads as three SIZES rather than
     // three heights.
-    const SIZES3_CORD = [0.08, 0.18, 0.25];
+    // ...and SOLVED from the size rather than listed, so dragging a size
+    // slider keeps the three bells on one line instead of only working at
+    // the three sizes case 29 happens to stage. Same target k29.js solves
+    // for by hand; 0.18 + SINGLE_BODY_LEN is the bell's own bottom in units
+    // of size (furin.js).
+    const SIZES3_TARGET = 0.28;
+    const cordForSize = (s) => Math.max(0.02, SIZES3_TARGET - (0.18 + SINGLE_BODY_LEN) * s);
 
     // CODE REVIEW CAUGHT A REAL BUG: this used to rebuild the SIZE FIELD DOM
     // (buildSizeFields(), below) on every single size-slider `input` event,
@@ -392,7 +404,7 @@
       else if (mode === 'sizes3') {
         const xs = [-0.9, 0, 0.9];
         sizeState.sizes3.forEach((s, i) => addFurin({
-          tubes: 1, size: s, cordLength: SIZES3_CORD[i], seed: 90 + i, phase: 1.3 + 2.4 * i,
+          tubes: 1, size: s, cordLength: cordForSize(s), seed: 90 + i, phase: 1.3 + 2.4 * i,
         }, xs[i]));
       } else if (mode === 'case29') {
         CASE29_LAYOUT.singleX.forEach((x, i) => addFurin({
@@ -621,6 +633,16 @@
     liveField(clapWrap, CLAP_FORCE, 'gamma', 'shape', 0.3, 2.0, 0.05, (v) => v.toFixed(2));
     liveField(clapWrap, CLAP_FORCE, 'minForce', 'stops below', 0.02, 0.6, 0.01, (v) => v.toFixed(2));
 
+    // SPIN — the tanzaku's twist, new with the single-tube fūrin's real
+    // shape. `stiffness` and `damping` are re-read every frame so they reach
+    // an already-hanging chime; `wind` and `kick` are read at the moment
+    // they're used, so they do too.
+    const spinWrap = document.getElementById('spin-fields');
+    liveField(spinWrap, SPIN, 'stiffness', 'stiffness', 0.5, 30, 0.1, (v) => v.toFixed(1));
+    liveField(spinWrap, SPIN, 'damping', 'settle (tau, s)', 0.5, 15, 0.1, (v) => v.toFixed(2) + 's', fromTau, tau);
+    liveField(spinWrap, SPIN, 'wind', 'wind torque', 0, 12, 0.1, (v) => v.toFixed(1));
+    liveField(spinWrap, SPIN, 'kick', 'tap kick', 0, 20, 0.5, (v) => v.toFixed(1));
+
     // BRONZE.level — BUG FIX: "the bronze cylinder is not as loud as the
     // other ones." Same live-object-write pattern as CYL_SWING above, just
     // reaching into audio/synths.js instead of kit/cylinder.js — cylinderStrike()
@@ -673,6 +695,7 @@
       // sizes a print-preset click was presumably meant to capture.
       return `SWING (kit/furin.js):\n{\n${fmt(SWING)}\n}\n\n` +
              `CLAP_FORCE (kit/furin.js):\n{\n${fmt(CLAP_FORCE)}\n}\n\n` +
+             `SPIN (kit/furin.js):\n{\n${fmt(SPIN)}\n}\n\n` +
              `CYL_SWING (kit/cylinder.js):\n{\n${fmt(CYL_SWING)}\n}\n\n` +
              `CYL_FORCE (kit/cylinder.js):\n{\n${fmt(CYL_FORCE)}\n}\n\n` +
              `BRONZE (audio/synths.js):\n{\n${fmt(BRONZE)}\n}\n\n` +
@@ -709,7 +732,7 @@
     requestAnimationFrame(loop);
 
     // console access, same convention as kit-preview.html's window.kp
-    window.ha = { scene, camera, renderer, live: () => live, setMode, SWING, CLAP_FORCE, CYL_SWING, CYL_FORCE, CLATTER, audio };
+    window.ha = { scene, camera, renderer, live: () => live, setMode, SWING, CLAP_FORCE, SPIN, CYL_SWING, CYL_FORCE, CLATTER, audio };
   </script>
 </body>
 </html>

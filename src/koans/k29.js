@@ -202,13 +202,16 @@ export default {
     // hanging low enough." They weren't, and a size-relative cord is exactly
     // why: it gives the SMALLEST chime the SHORTEST string, so the one that
     // most needs to reach down to join the group is the one pinned tightest
-    // to the beam. These three instead bring all three bottom edges to
-    // within about 0.015 of each other (visible extents, at rest:
-    // -0.418 / -0.406 / -0.419 below the lintel), so the set reads as one
-    // row of chimes at three sizes rather than three chimes at three
-    // heights — and every one of them still clears the nuki's top face by
-    // ~0.085 (see TIE BEAM CLEARANCE above; rest is the worst case).
-    const SINGLE_CORD = [0.08, 0.18, 0.25];
+    // to the beam.
+    //
+    // Solved so the three BELLS hang on one line — bottoms within 0.001 of
+    // each other, at CORD + (0.18 + SINGLE_BODY_LEN)*size below the lintel —
+    // rather than the paper below them, which is meant to vary. That reads
+    // as one row of chimes at three sizes instead of three chimes at three
+    // heights. Total reach including the tanzaku is CORD + 1.98*size, worst
+    // 0.451 on the biggest, against the nuki's own 0.502 (TIE BEAM CLEARANCE
+    // above; rest is the worst case, since swinging only shortens the drop).
+    const SINGLE_CORD = [0.095, 0.156, 0.187];
     const singles = SINGLE_X.map((x, i) => {
       const single = makeFurin({
         tubes: 1,

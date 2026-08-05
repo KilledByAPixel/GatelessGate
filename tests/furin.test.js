@@ -260,66 +260,136 @@ test('a single-tube chime is one tube on a cord, with no ring', () => {
   assert.ok(one.swingAmp() > 0);
 });
 
-test('the single tube does not run straight through the clapper', () => {
-  // Code review: the lone tube sits on the axis (x=z=0, above) and the
-  // clapper was ALSO built on the axis regardless of tube count — so a
-  // single-tube chime had its clapper disc impaled on its own tube rather
-  // than hanging beside it where it could plausibly strike it. Checked as
-  // a real cylinder-vs-disc clearance: the clapper's centre must clear the
-  // tube's radius by more than the clapper's own radius.
-  const S = 0.17;
-  const one = makeFurin({ tubes: 1, size: S, seed: 8 });
-  const tube = one.group.getObjectByName('tube');
-  const clapper = one.group.getObjectByName('clapper');
-  tube.geometry.computeBoundingSphere();
-  clapper.geometry.computeBoundingSphere();
-  const tubeR = 0.075 * S;                     // the tube's own cylinder radius
-  const clapperR = clapper.geometry.boundingSphere.radius;
-  const dx = tube.position.x - clapper.position.x;
-  const dz = tube.position.z - clapper.position.z;
-  const gap = Math.hypot(dx, dz);
-  assert.ok(gap > tubeR + clapperR,
-    `clapper interpenetrates the tube: centres ${gap} apart, need > ${tubeR + clapperR}`);
+test('a single is a BELL with the clapper hidden inside it, and the paper hangs below', () => {
+  // THE SHAPE, replacing two tests that measured the thing this is not.
+  // Frank, having gone and looked real ones up: "the clapper is kind of next
+  // to the chime, but it's not actually connected to anything... widen the
+  // chime's radius a bit and get rid of the separate clapper, and it'd be
+  // like the bronze cylinder where the clapper is just inside and we don't
+  // render it. Below the chime there's a hanging rectangular piece of paper."
+  //
+  // What was there was a Western tubular chime — a 22:1 wire — carrying a
+  // tanzaku bolted to its SIDE, because the single-tube variant began life
+  // as "the ring with four tubes deleted" and inherited a clapper that had
+  // to be nudged off-axis to avoid being impaled on the one tube left. The
+  // two tests this replaces both measured that off-axis nudge, so they were
+  // pinning the workaround rather than anything anyone wanted.
+  for (const S of [0.08, 0.09, 0.12, 0.17, 0.18, 0.24, 0.34]) {
+    const one = makeFurin({ tubes: 1, size: S, seed: 8 });
+
+    // no clapper MESH — invisible inside an opaque body, so drawing one is a
+    // draw call spent on nothing that can also poke through a wall
+    assert.equal(one.group.getObjectByName('clapper'), undefined,
+      `size ${S}: a single should have no clapper mesh — it is inside the bell`);
+
+    // A BELL, not a wire: the body's own aspect ratio is what changed, from
+    // 22:1 to between 1.3:1 and 3.3:1 across the whole clamp range. It is not
+    // constant, because the radius keeps scaling WEAKLY with size
+    // (DIAM_WEAK_EXP) while the length scales straight — so a small fūrin
+    // comes out relatively rounder and a big one more slender, which is both
+    // what real ones do and a second, independent reading of "the lower ones
+    // are bigger."
+    const tube = one.group.getObjectByName('tube');
+    const ratio = tube.geometry.parameters.height / (2 * tube.geometry.parameters.radiusTop);
+    assert.ok(ratio > 1.2 && ratio < 8,
+      `size ${S}: body is ${ratio.toFixed(1)}:1 — a wire (was 22:1), not a bell`);
+
+    // the clapper still FITS inside, with room to swing, at every size —
+    // singleTubeR scales weakly with size (DIAM_WEAK_EXP) while the clapper
+    // is a fraction OF it, so this is the property a re-hardcoded radius
+    // anywhere in that chain would break
+    assert.ok(one.gapAngle() > 0,
+      `size ${S}: no clearance between clapper and wall — it cannot swing`);
+
+    // the paper hangs BELOW the mouth, on the axis, not off to one side
+    const tag = one.group.getObjectByName('tag');
+    const spin = one.group.getObjectByName('spin-pivot');
+    assert.ok(spin, `size ${S}: the paper has no pivot to turn on`);
+    one.group.updateMatrixWorld(true);
+    const tagBox = new THREE.Box3().setFromObject(tag);
+    const tubeBox = new THREE.Box3().setFromObject(tube);
+    assert.ok(tagBox.max.y <= tubeBox.min.y + 1e-9,
+      `size ${S}: the paper overlaps the bell instead of hanging below it`);
+    assert.ok(Math.abs(tagBox.getCenter(new THREE.Vector3()).x) < 1e-6,
+      `size ${S}: the paper hangs off to one side, not on the axis`);
+  }
 });
 
-test('the clapper still clears the tube across the whole size range, not just the book default', () => {
-  // task-swing-tune-brief.md, PROBLEM 1: a single tube's diameter now scales
-  // WEAKLY with size (DIAM_WEAK_EXP in furin.js) rather than in lockstep
-  // with everything else, which is exactly the kind of change that could
-  // silently break a fixed clearance margin computed against the OLD
-  // lockstep formula (0.075*size) at any size other than the one it was
-  // measured at. The test above only proves this at size=0.17 (the book
-  // default, where the weak formula and the lockstep formula happen to
-  // agree by construction — see singleTubeR's own comment in furin.js). This
-  // checks the geometry directly (not a formula copied from src/) across the
-  // sizes this task actually stages (case 29: 0.09, 0.12, 0.18) plus the
-  // extremes noteForSize itself clamps to, so a wrong-but-plausible fix that
-  // re-hardcodes 0.075*size somewhere in the clapper-offset math would show
-  // up as a real, measured collision at the sizes that formula gets wrong.
-  //
-  // MUTATION-VERIFIED that a bare "clearance > 0" bound is NOT enough here:
-  // re-hardcoding clapperOff's own margin term to the old 0.075*S (instead of
-  // the real singleTubeR) still leaves clearance barely POSITIVE at every
-  // size in this list (as low as ~10% of the tube+clapper radii, down from
-  // ~24% with the real fix) — a strict `>` catches nothing. Requiring at
-  // least 15% of (tubeR+clapperR) as real margin sits between those two
-  // measured numbers, so it fails on the reintroduced bug and passes on the
-  // fix, rather than merely failing on an outright interpenetration.
-  const MIN_MARGIN_FRAC = 0.15;
-  for (const S of [0.08, 0.09, 0.12, 0.18, 0.24, 0.34]) {
-    const one = makeFurin({ tubes: 1, size: S, seed: 8 });
-    const tube = one.group.getObjectByName('tube');
-    const clapper = one.group.getObjectByName('clapper');
-    const tubeR = tube.geometry.parameters.radiusTop;
-    clapper.geometry.computeBoundingSphere();
-    const clapperR = clapper.geometry.boundingSphere.radius;
-    const dx = tube.position.x - clapper.position.x;
-    const dz = tube.position.z - clapper.position.z;
-    const gap = Math.hypot(dx, dz);
-    const needed = (tubeR + clapperR) * (1 + MIN_MARGIN_FRAC);
-    assert.ok(gap > needed,
-      `size ${S}: clapper clearance too thin (or interpenetrating): centres ${gap} apart, need > ${needed} (${MIN_MARGIN_FRAC * 100}% margin over ${tubeR + clapperR})`);
-  }
+test("the paper turns on its thread, harder for a harder knock, and never winds up", () => {
+  // Frank: "that could also rotate around the vertical axis as a swing, so
+  // it kind of starts spinning, and it has a kind of a spin parameter."
+  const turns = (force) => {
+    const f = makeFurin({ tubes: 1, size: 0.17, seed: 8 });
+    const pivot = f.group.getObjectByName('spin-pivot');
+    f.setWindLevel(0);                       // still air: isolate the tap
+    let t = 0;
+    f.update(1 / 60, t);
+    f.ring(force);
+    let peak = 0;
+    for (let k = 0; k < 60 * 25; k++) { t += 1 / 60; f.update(1 / 60, t); peak = Math.max(peak, Math.abs(pivot.rotation.y)); }
+    return { peak, rest: pivot.rotation.y };
+  };
+
+  // A LIGHT touch rocks it; a SOLID one carries it round. The spread is the
+  // point — every tap turning the same amount would make the force
+  // illegible, and it is what the first `kick` (set from the undamped
+  // over-the-top threshold, which the damping makes irrelevant) got wrong:
+  // it produced 0.08 vs 0.40 of a turn, both just a twist.
+  const light = turns(0.25), hard = turns(1.0);
+  assert.ok(hard.peak > 2 * Math.PI,
+    `a full-force knock only turned the paper ${(hard.peak / (2 * Math.PI)).toFixed(2)} of a turn — that is a twist, not a spin`);
+  assert.ok(light.peak < Math.PI,
+    `a light touch spun the paper ${(light.peak / (2 * Math.PI)).toFixed(2)} of a turn — it should only rock`);
+
+  // ...and it comes to REST rather than parking mid-turn. Rest is the
+  // nearest whole revolution, not zero: a knock hard enough to carry the
+  // strip over the top leaves it settling around the NEXT equilibrium of
+  // -stiffness*sin(theta), which is 2*pi away and renders identically. (The
+  // measured value here is 6.2831 — one full turn, not a failure to unwind,
+  // which is what a first draft of this assertion mistook it for.)
+  const TWO_PI = 2 * Math.PI;
+  let fromRest = hard.rest % TWO_PI;
+  if (fromRest > Math.PI) fromRest -= TWO_PI;
+  if (fromRest < -Math.PI) fromRest += TWO_PI;
+  assert.ok(Math.abs(fromRest) < 0.02,
+    `the paper settled at ${hard.rest} — ${Math.abs(fromRest)} away from a whole turn, so it is parked mid-swing`);
+
+  // WIND ALONE turns it but cannot wind it up — the integrator-stability
+  // property, and the one a spin implemented as a free rotation (rather than
+  // a restoring torsion) would fail outright: the strip would just keep
+  // accelerating in a steady gust.
+  const f = makeFurin({ tubes: 1, size: 0.17, seed: 8 });
+  const pivot = f.group.getObjectByName('spin-pivot');
+  f.setWindLevel(1);
+  let t = 0, peak = 0;
+  for (let k = 0; k < 60 * 1800; k++) { t += 1 / 60; f.update(1 / 60, t); peak = Math.max(peak, Math.abs(pivot.rotation.y)); }
+  assert.ok(peak > 0.05, 'the wind never turned the paper at all');
+  assert.ok(peak < Math.PI, `thirty simulated minutes of wind wound the paper to ${peak} rad — it is not restoring`);
+
+  // a RING has no spin pivot: its tag hangs beside the clapper and keeps the
+  // flutter it always had ("for the other ones, I think we could keep them
+  // the way they are")
+  assert.equal(makeFurin({ tubes: 5, seed: 8 }).group.getObjectByName('spin-pivot'), undefined,
+    'a ring should not have grown a spin pivot');
+});
+
+test('a single reaches no deeper than the shape it replaced', () => {
+  // Five other cases hang one of these under an eave or a gate with their
+  // own clearances (k4, k15, k22, k31, k34), and the reshape moved the paper
+  // from beside the body to below it — which is exactly the change that
+  // could quietly push a chime through a veranda floor somewhere with
+  // nothing failing. The old assembly reached 1.95*S below the cord; the
+  // proportions were picked to land at 1.98*S rather than wherever they
+  // happened to fall.
+  const S = 0.17;
+  const one = makeFurin({ tubes: 1, size: S, cord: 0, seed: 8 });
+  one.group.updateMatrixWorld(true);
+  const box = new THREE.Box3();
+  one.group.traverse((o) => {
+    if (o.isMesh && o.material.visible !== false) box.union(new THREE.Box3().setFromObject(o));
+  });
+  const depth = -box.min.y / S;
+  assert.ok(depth < 2.1, `a single now reaches ${depth.toFixed(2)}*S below its cord, was 1.95*S`);
 });
 
 test('a bigger single-tube furin sounds a LOWER note, and the length ratio matches the free-free-bar model', () => {
