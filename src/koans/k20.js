@@ -91,9 +91,10 @@ export default {
     colossus.name = 'immovable-man';
     colossus.position.set(0.4, 0, -0.8);
     faceMonk(colossus, { x: 5.0, z: 5.0 });
-    // the staff is the seal: thin enough to take full accent at this size
-    const staff = colossus.getObjectByName('staff');
-    if (staff) staff.material = toonMaterial({ color: ACCENT, flat: true });
+    // The staff stays ink: the seal moved to the sea (see the water below).
+    // One warm note per page, and this page's is the great ocean itself.
+    // Restore `staff.material = toonMaterial({ color: ACCENT, flat: true })`
+    // if the seal ever comes back to his hand.
     // caught mid-stride: leaned into the step, one sleeve swung forward
     colossus.rotation.z = -0.05;
     const arms = [];
@@ -137,14 +138,17 @@ export default {
     // whose far edges die in the fog, with one slow swell rolling shoreward.
     // It sits in `moving` with everything else: push the man, and the sea
     // itself gives.
-    // A DARK sea — monk-dark (Frank: "a dark blackish kind of color similar
-    // to how the monks are"), which is INK_LIT, the deepest paint the light
-    // may touch; the Phong glints stay white on it, which is what says water
-    // rather than tar. It went invisible once as WASH.stone — a pale sheet at
-    // grazing distance is eaten whole by the fog — and ran ACCENT red for a
-    // day as a marker while the coast was tuned. (Frank is still weighing red
-    // as this case's actual seal — the great ocean as the accent, the case-30
-    // move — so the red may yet return as ACCENT_PALE.)
+    // THE RED SEA IS THE SEAL. The verse turns on the great ocean — "if the
+    // feet of enlightenment moved, the great ocean would overflow" — so the
+    // ocean takes the case's accent, not the staff (Frank: "it might even be
+    // cool for the ocean to be red instead of his stick... let's make the
+    // ocean red in that one"). Full ACCENT, which is what Frank approved on
+    // sight; if it ever reads as pigment rather than water at this size, the
+    // case-30 lesson says ACCENT_PALE is the step to take. The white Phong
+    // glints stay — they are what says water. (For the record: this sheet was
+    // WASH.stone once and the fog ate it whole at grazing distance, then
+    // monk-dark INK_LIT for a day; the red began as a where-is-it marker and
+    // got promoted.)
     //
     // Segments 64: the default cap (30) gave 3-unit cells across 90 units,
     // and a single shoreward sine on that grid rendered as parallel bars
@@ -153,7 +157,7 @@ export default {
     // gentler obliques at ±~20° with their own wavelengths and periods — is
     // what breaks the crests into a sea.
     const water = makeWater({
-      shape: 'square', size: 90, color: INK_LIT, seed: ID,
+      shape: 'square', size: 90, color: ACCENT, seed: ID,
       opacity: 0.85, segments: 64,
       drift: [
         { dx: 0, dz: 1, amp: 0.045, wavelength: 8, period: 6 },
