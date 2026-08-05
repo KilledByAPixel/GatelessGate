@@ -77,8 +77,10 @@ export default {
     moving.name = 'moving-world';
     scene.add(moving);
 
-    // a coast road, running along the shore rather than into it
-    const path = makePath({ from: [-8.5, 5.2], to: [8.5, 2.2], width: 1.8, seed: ID, groundSeed: 21, wander: 0.7 });
+    // a coast road, running parallel with the shoreline — the reader looks
+    // across it to the sea, and it dead-ends into nothing (Frank: a road
+    // aimed at the water "is going to be a dead end into the ocean")
+    const path = makePath({ from: [-9, 3.8], to: [9, 3.8], width: 1.8, seed: ID, groundSeed: 21, wander: 0.7 });
     moving.add(path);
 
     // THE IMMOVABLE MAN — mid-stride, one sleeve forward, and not going
@@ -136,8 +138,8 @@ export default {
     // It sits in `moving` with everything else: push the man, and the sea
     // itself gives.
     const water = makeWater({
-      shape: 'square', size: 90, color: WASH.stone, seed: ID,
-      opacity: 0.72,
+      shape: 'square', size: 90, color: wash(0.55), seed: ID,
+      opacity: 0.85,
       drift: { dx: 0, dz: 1, amp: 0.05, wavelength: 8, period: 6 },
     });
     water.group.position.set(0, SHORE.sea, -(SHORE.dist + 43));
