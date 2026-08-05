@@ -67,8 +67,31 @@ export function pageTarget(order, slug, dir) {
   return null;
 }
 
-// There was a nextInLoop() here — the same walk, but wrapping past the afterword
-// back to the preface, for the hands-free reading that turned its own pages. The
-// look does not read on its own any more (a page read aloud stops at the end of
-// that page), so nothing wraps and nothing wanted it. The book has a last page
-// again.
+// THE WRAP, and why it exists again.
+//
+// There was a nextInLoop() here once: the same walk, wrapping past the
+// afterword back to the preface, for a hands-free reading that turned its own
+// pages. It was removed because that reading was not opt-in — pressing "read
+// aloud" silently turned the page when it finished, so a reader who wanted
+// one page read lost their place with no way to say so. Nothing wrapped after
+// that, and nothing wanted to.
+//
+// Auto mode wants to. Frank: "you could just leave it on, and it would go
+// continuously around from the back, all around to the front again." That is
+// the opposite case from the one that was removed — a labelled switch the
+// reader throws on purpose, and the endless circle IS the thing they asked
+// for, not a side effect of a button that said something else.
+//
+// So the wrap is back, and it is deliberately NOT what neighborSlug or
+// pageTarget do. The arrows still stop at both ends; only the machine that
+// the reader has explicitly set running goes round. An unknown slug starts
+// the circle at the beginning rather than returning null, because there is
+// no such thing as "nowhere to go next" once auto mode is on — it either
+// advances or it stalls, and a stall is the one outcome with no way out
+// except noticing.
+export function loopNextSlug(order, slug) {
+  if (!order.length) return null;
+  const i = order.indexOf(slug);
+  if (i < 0) return order[0];
+  return order[(i + 1) % order.length];
+}

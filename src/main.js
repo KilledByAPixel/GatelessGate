@@ -26,7 +26,7 @@ import { makeSit } from './sit.js';
 import { makeThemeButton } from './ui/theme.js';
 import { readTheme, nextTheme } from './ui/theme_state.js';
 import { makeRouter } from './router.js';
-import { readingOrder, pageTarget } from './spine.js';
+import { readingOrder, pageTarget, loopNextSlug } from './spine.js';
 
 const STEP = 1 / 60;
 
@@ -98,6 +98,31 @@ function goPage(target) {
 }
 let readingAll = false;   // whether the current read is "read all" or a single section
 let readTimer = null;     // the pause between sections of a read-all
+
+// ---- AUTO MODE ----
+// Frank: "an automatic mode... it will read the scene, and then after a few
+// seconds it will go to the next scene doing the regular transition, and then
+// start reading that scene. And when it gets to the end of the book, after it
+// reads the afterword, it would circle back around and start again at the
+// preface. So you could just leave it on, and it would go continuously."
+//
+// This is the book reading itself, and it is deliberately the ONE thing that
+// does. A read-aloud still ends at the end of its page (see speakAll) — that
+// rule was fought for and it stands, because the button that starts a reading
+// says "read aloud" and turning the page is not what it says. Auto mode is a
+// different promise made by a different, labelled switch, and the reader
+// throws it on purpose.
+//
+// TWO GAPS, not one. The pause AFTER a page finishes is the "few seconds"
+// Frank asked for — long enough that the last verse lands before the ink
+// starts to dissolve. The pause after ARRIVING somewhere is much shorter and
+// exists for a different reason: the page turn fires its reveal without
+// awaiting it (showKoan), and the title card goes up with it, so the voice
+// wants to come in just behind the picture rather than on top of it.
+const AUTO_TURN_MS = 4000;
+const AUTO_SPEAK_MS = 1200;
+let autoMode = false;
+let autoTimer = null;     // the pending turn or the pending first word — never both
 
 // ---- panel views ----
 function showView(el) {
@@ -347,6 +372,12 @@ function setAmbient(on) {
   // belongs to the reader, not to the panel, and neither hiding nor restoring
   // the text is an instruction about it.
   if (!ambient) pageCard.hide();
+  // Auto mode's switch lives in the look bar, and the look bar only exists in
+  // the look — so leaving takes the mode with it. Otherwise the book would
+  // keep turning its own pages behind the text with the only control that
+  // could stop it off screen, which is the one way a mode like this becomes
+  // something that happens TO the reader.
+  if (!ambient && autoMode) setAuto(false);
 }
 
 // THE LOOK'S OWN TOOLBAR, top-LEFT, opposite the stage tools in the other
@@ -387,6 +418,10 @@ const lookNext = lookBtn('gg-look-page', '›', 'Next page',
 // and then stop when it gets to the end; don't go to the next page
 // automatically").
 const lookRead = lookBtn('gg-look-read', '', 'Read this page aloud', () => toggleReadAll());
+// AUTO MODE's switch. Last in the row because it is the only thing here that
+// keeps acting after you stop touching it — the other three do one thing and
+// are done.
+const lookAuto = lookBtn('gg-look-auto', '', 'Read the whole book, page after page', () => setAuto(!autoMode));
 stage.appendChild(lookBar);
 
 // Where ‹ and › go from wherever the reader is. On a page it is the spine walk
@@ -400,6 +435,69 @@ function lookNeighbor(dir) {
   return null;
 }
 
+// ---- auto mode's own machinery ----
+//
+// ONE PLACE decides "we are standing on a page with auto on, so read it":
+// autoPump(), called at the end of buildKoan. Automatic page turns and the
+// reader's own arrow clicks therefore take the identical path, which is what
+// stops a manual turn mid-loop from leaving the mode running with nothing
+// pending and no way to notice — the failure this shape exists to prevent.
+function clearAutoTimer() {
+  if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+}
+
+function setAuto(on) {
+  autoMode = !!on;
+  clearAutoTimer();
+  syncLookRead();
+  if (!autoMode) { stopReading(); return; }
+  // Switched on from the Contents: open the book at its first page and let
+  // buildKoan's own pump take it from there.
+  if (mode === 'menu') { enter(SPINE[0]); return; }
+  autoPump();
+}
+
+// A page has settled (or the switch has just been thrown while standing on
+// one). Start reading it, unless something already is.
+function autoPump() {
+  if (!autoMode || mode !== 'koan' || !koanSlug) return;
+  if (readingAll || autoTimer) return;
+  const mine = koanSlug;
+  autoTimer = setTimeout(async () => {
+    autoTimer = null;
+    if (!autoMode || mode !== 'koan') return;
+    const started = await toggleReadAll();
+    // THE PAGE MAY HAVE TURNED across that await — the reader has arrows and
+    // this is a mode that runs for as long as they leave it running. If it
+    // did, whatever arrived has its own pump and this call has no business
+    // advancing on its behalf; without this check a page turned during the
+    // await would be skipped straight past, because `started` is false for
+    // the page that is no longer here.
+    if (koanSlug !== mine) return;
+    // NOTHING BAKED HERE IS NOT A STALL. Narration degrades to silence by
+    // design — a page with no audio is a genuine no-op, and toggleReadAll
+    // returns false for it — so auto mode has to keep walking on its own
+    // rather than waiting forever for an onEnd that will never come. This is
+    // the single most important line in the mode: without it, one unbaked
+    // page anywhere in the book silently ends the loop.
+    if (autoMode && !started) autoAdvance();
+  }, AUTO_SPEAK_MS);
+}
+
+// The page is done being read. Wait a few seconds, then turn it.
+function autoAdvance() {
+  clearAutoTimer();
+  if (!autoMode) return;
+  autoTimer = setTimeout(() => {
+    autoTimer = null;
+    if (!autoMode || mode !== 'koan' || !koanSlug) return;
+    // The WRAPPING walk, and the only caller of it — the arrows still stop at
+    // both ends of the book. Past the afterword this comes round to the
+    // preface, which is the whole point of leaving it on.
+    enter(loopNextSlug(SPINE, koanSlug));
+  }, AUTO_TURN_MS);
+}
+
 // The whole bar stays PUT and stays VISIBLE, on the Contents as much as on a
 // page — Frank: "that way at least it's consistent; you could click right, and
 // they would stay in the same place, and read aloud would become available."
@@ -411,6 +509,15 @@ function syncLookRead() {
   lookRead.disabled = !(mode === 'koan' && scroll);
   lookPrev.disabled = !lookNeighbor(-1);
   lookNext.disabled = !lookNeighbor(+1);
+  // Auto mode says what it will DO next, not what state it is in — "on"/"off"
+  // makes the reader work out which is which. It is the one control here that
+  // is never disabled: from the Contents it opens the book and starts, which
+  // is a perfectly good thing for it to mean there.
+  lookAuto.textContent = autoMode ? '■ Stop reading on' : '∞ Read on';
+  lookAuto.classList.toggle('active', autoMode);
+  lookAuto.title = autoMode
+    ? 'Stop reading the book page after page'
+    : 'Read the whole book, page after page, round and round';
 }
 syncLookRead();
 
@@ -663,6 +770,19 @@ function buildKoan(mod, slug) {
   // answers a page turn or a reading starting, never a change of view.
   if (ambient && koanCard) pageCard.show(koanCard);
   syncLookRead();
+  // The page has settled. If auto mode is on, this is what starts it reading —
+  // and it runs for EVERY arrival, the mode's own turns and the reader's alike,
+  // so taking the arrows mid-loop moves where it is reading rather than
+  // stranding it.
+  //
+  // Clearing first is not tidiness, it is the fix for a real skip: a pending
+  // TURN belongs to the page it was scheduled from, and arriving anywhere
+  // invalidates it. Without this, a reader who pressed › during the few
+  // seconds between a page finishing and the mode turning it would land on
+  // their page and then be carried straight off it when the stale timer
+  // fired.
+  clearAutoTimer();
+  autoPump();
 }
 
 // One paging hop, driven by the nav queue. Unlike the generic transition(), the
@@ -711,6 +831,12 @@ function enter(slug) {
 async function exit() {
   if (mode === 'intro') { skipIntro(); return; }
   if (mode === 'sit') { sit.end(); return; }
+  // Asking for the Contents is asking to be out of the book, so it ends auto
+  // mode too — and it must happen BEFORE nav.cancel() below, or the mode's
+  // own pending turn would fire into a Contents screen the reader just asked
+  // for. (This also covers backing off the front of the book, which is now a
+  // route to the Contents rather than a dead arrow.)
+  if (autoMode) setAuto(false);
   nav.cancel();      // a queued page must not fire after we've asked for Contents
   pageCard.hide();   // no page open, so nothing for the card to name
   router.set({ view: 'contents' });   // both paths below land on Contents
@@ -822,16 +948,22 @@ function stopReading() {
 // behind two buttons — the panel's and the stage's — so whichever one is in
 // front of the reader stops what the other one started, and both show the same
 // "■ Stop" while it runs.
+//
+// RETURNS whether a reading actually began. Every early return below is a
+// legitimate no-op rather than an error — no scroll, nothing baked, the page
+// turned underneath — but auto mode has to tell "reading now, expect an
+// onEnd" apart from "there was nothing to read here," because in the second
+// case it must walk on by itself or the loop ends on the first unbaked page.
 async function toggleReadAll() {
-  if (readingAll) { stopReading(); return; }
-  if (!scroll || koanNarrationId === null) return;
+  if (readingAll) { stopReading(); return false; }
+  if (!scroll || koanNarrationId === null) return false;
   // An unbaked page (or one with nothing left to read after a partial bake) is
   // a genuine no-op — checked before touching any reading state, so there is no
   // chime, no highlight and no "■ Stop" left hanging over silence.
   const id = koanNarrationId;
   const mine = scroll;
   const order = await narration.queue(id, scroll.queue());
-  if (!order.length || scroll !== mine) return;   // or the page turned under it
+  if (!order.length || scroll !== mine) return false;   // or the page turned under it
   // THE NAME GOES UP WITH THE VOICE. With the panel gone there is nothing on
   // screen saying which page this is, so the card announces it as the reading
   // begins and then gets out of the way — it belongs to the reading being
@@ -841,6 +973,7 @@ async function toggleReadAll() {
   startReading(true);
   scroll.setReading(true);
   speakAll(id, order);
+  return true;
 }
 
 function speakAll(id, order) {
@@ -856,7 +989,11 @@ function speakAll(id, order) {
         // into the next one. The book used to read on and on from here; a page
         // read aloud now finishes where the page finishes, whichever button
         // started it.
-        if (i >= order.length) { stopReading(); return; }
+        // ...unless auto mode is on, which is the one thing in the book that
+        // may turn a page on its own — and it does it HERE, from a reading
+        // that finished by itself, never from stopReading(), which is also
+        // what a page turn and the Stop button call.
+        if (i >= order.length) { stopReading(); if (autoMode) autoAdvance(); return; }
         // The highlight stays on the section just read through the gap — clearing it
         // would flash the panel between every part.
         readTimer = setTimeout(() => { readTimer = null; if (readingAll) step(); }, SECTION_GAP_MS);
@@ -871,8 +1008,11 @@ function startSit(minutes = 10) {
   mode = 'sit';
   // Sitting stops a reading outright rather than pausing it: the timer is the
   // one part of this book that asks for silence, and a voice resuming partway
-  // through it would be the worst possible interruption.
+  // through it would be the worst possible interruption. Auto mode goes with
+  // it, for the same reason and more so — a sitting interrupted several
+  // minutes in by the book turning its own page would be worse than a voice.
   pageCard.hide();
+  if (autoMode) setAuto(false);
   stopReading();
   // The text doesn't dim, it LEAVES: the whole window becomes the diorama, the
   // way it does for the look. A sitting is the one time this book has nothing
@@ -1027,9 +1167,12 @@ window.gate = {
       freeze: { active: freeze.active, progress: +freeze.progress.toFixed(4) },
       camera: rig ? rig.state() : null,
       progress: { read: { ...save.state().read }, sat: { ...save.state().sat } },
-      // `look` is the view; `all` is whether this page is being read aloud.
-      // They are independent now — either, both, or neither.
-      reading: { look: ambient, all: readingAll, slug: koanSlug },
+      // `look` is the view; `all` is whether this page is being read aloud;
+      // `auto` is whether the book is reading ITSELF, page after page. All
+      // three are independent — auto implies the look today only because the
+      // look is where its switch lives, not because anything here couples
+      // them.
+      reading: { look: ambient, all: readingAll, slug: koanSlug, auto: autoMode },
       // 'off' | 'sitting' | 'done' — 'done' is the timer run out with the reader
       // still in the scene, which is a state the mode alone cannot report.
       sit: sit.status(),
@@ -1060,6 +1203,8 @@ window.gate = {
   // Awaits the manifest before it can start, so it hands back the promise —
   // `state().reading.all` is only true once that has resolved.
   readAloud() { return toggleReadAll(); },
+  // auto mode, for driving the loop headlessly — state().reading.auto reports it
+  auto(on) { setAuto(on === undefined ? !autoMode : on); },
   // Voice and delivery are baked, not chosen at runtime. This reports what shipped.
   voice() { const m = narration.manifest(); return m ? `${m.voice} / ${m.preset}` : null; },
   audio() { return audio.debugState(); },   // live ambience layers, for headless probes

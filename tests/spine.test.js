@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  readingOrder, readingEntries, neighborSlug, pageTarget, PREFACE_SLUG, AFTERWORD_SLUG,
+  readingOrder, readingEntries, neighborSlug, pageTarget, loopNextSlug, PREFACE_SLUG, AFTERWORD_SLUG,
 } from '../src/spine.js';
 import { CASES } from '../src/koans/index.js';
 import MATTER from '../src/koans/text/matter.js';
@@ -137,4 +137,44 @@ test('a slug that is not in the book pages nowhere, in either direction', () => 
   assert.equal(pageTarget(ORDER, 'not-a-page', -1), null);
   assert.equal(pageTarget(ORDER, 'not-a-page', +1), null);
   assert.equal(pageTarget([], 'anything', -1), null, 'an empty book has no front edge to back off');
+});
+
+test('auto mode circles: the afterword comes round to the preface', () => {
+  // Frank: "when it gets to the end of the book, after it reads the afterword,
+  // it would circle back around and start again at the preface. So you could
+  // just leave it on, and it would go continuously around from the back, all
+  // around to the front again."
+  assert.equal(loopNextSlug(ORDER, AFTERWORD_SLUG), PREFACE_SLUG);
+});
+
+test('the wrap belongs to auto mode ALONE — the arrows still stop at the ends', () => {
+  // This is the distinction that got nextInLoop() deleted the first time. It
+  // wrapped for a reading that turned its own pages without being asked, so a
+  // reader who wanted one page read lost their place. The walk the ARROWS use
+  // must still have two ends, or that comes back with it.
+  assert.equal(neighborSlug(ORDER, AFTERWORD_SLUG, +1), null, 'the forward arrow must stop at the afterword');
+  assert.equal(pageTarget(ORDER, AFTERWORD_SLUG, +1), null, 'paging forward must stop at the afterword');
+  // ...while the mode the reader switched on deliberately does not
+  assert.equal(loopNextSlug(ORDER, AFTERWORD_SLUG), PREFACE_SLUG);
+});
+
+test('the circle visits every page exactly once before repeating', () => {
+  // The property that makes it a CIRCLE rather than a walk that happens to
+  // wrap: no page skipped, none visited twice, and back where it started after
+  // exactly one book. A mutant that wrapped to ORDER[1], or that advanced by
+  // two anywhere, passes both tests above and fails this.
+  const seen = [];
+  let slug = ORDER[0];
+  for (let i = 0; i < ORDER.length; i++) { seen.push(slug); slug = loopNextSlug(ORDER, slug); }
+  assert.deepEqual(seen, ORDER, 'one lap should be the book in reading order');
+  assert.equal(slug, ORDER[0], 'and it should land back on the first page');
+});
+
+test('auto mode always has somewhere to go, even from nowhere', () => {
+  // Unlike the arrows, "nowhere to go next" is not a state auto mode can sit
+  // in — it either advances or it stalls, and a stalled loop looks exactly
+  // like a finished one. An unknown slug starts the circle at the beginning.
+  assert.equal(loopNextSlug(ORDER, 'not-a-page'), ORDER[0]);
+  // the one honest null: there is no book to walk
+  assert.equal(loopNextSlug([], 'anything'), null);
 });

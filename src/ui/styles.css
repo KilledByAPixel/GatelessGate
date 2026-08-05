@@ -230,7 +230,14 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 }
 /* A little air after the way out, so it does not read as part of the paging. */
 .gg-look-exit { margin-right: 4px; font-size: 16px; }
-.gg-look-read { font-size: 13px; letter-spacing: 0.04em; padding: 6px 12px; }
+.gg-look-read, .gg-look-auto { font-size: 13px; letter-spacing: 0.04em; padding: 6px 12px; }
+/* Auto mode is the one control here that keeps acting after you let go of it,
+   so unlike the other four it holds a lit state — the same accent the stage
+   tools use for "this is on", so "on" reads the same everywhere in the book. */
+.gg-look-auto.active {
+  background: rgba(199,62,58,0.14); border-color: rgba(199,62,58,0.55);
+}
+.gg-look-auto.active:hover:not(:disabled) { border-color: rgba(199,62,58,0.8); }
 /* ---- debug workbench: panel sliding out under the toolbar ---- */
 .gg-debug {
   position: absolute; top: 0; right: 0; bottom: 0; width: 232px; z-index: 8;
