@@ -174,7 +174,7 @@ export default {
       pushes.push({ t: clock, dx: dir.x, dz: dir.z });
       if (pushes.length > 5) pushes.shift();
       shoves++;
-      audio && audio.knock({ force: 0.9 });
+      audio && audio.knock({ force: 0.9, at: colossus.position });
     });
 
     return {

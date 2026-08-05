@@ -67,7 +67,12 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.14', 'water:0.55', 'music'],
+  // Used to carry the loudest water bed in the book (water:0.55, the deepest
+  // crossing). Frank: "the moving water sound was not good... it sounds like
+  // we're at a beach or something" — there is no ocean or beach in any scene
+  // here, so it's off (see makeWaterBed's comment in synths.js). A tap on a
+  // stone or the water itself still rings a drip.
+  ambience: ['wind:0.14', 'music'],
   camera: { distance: 11.0, target: [0.4, 0.9, -1.0], azimuth: 0.62, polar: 1.18 },
 
   build(ctx) {
@@ -269,7 +274,7 @@ export default {
         s.sunkAt = clock;
         sunk++;
         // it goes under where you were about to put your weight
-        audio && audio.drip({ loud: true });
+        audio && audio.drip({ loud: true, at: s.pivot.position });
         water.ripple(s.pivot.position.x - 0.4, s.pivot.position.z + 1.6);
         // The red does NOT move yet. It waits until this stone has actually
         // gone under (see update, below): handing it over on the tap lit the
@@ -290,7 +295,7 @@ export default {
       if (!hit) return;
       const local = water.group.worldToLocal(hit.point.clone());
       water.ripple(local.x, local.z);
-      audio && audio.drip({ loud: false });
+      audio && audio.drip({ loud: false, at: hit.point });
     });
 
     return {
@@ -315,7 +320,7 @@ export default {
           for (const s of stones) {
             water.ripple(s.pivot.position.x - 0.4, s.pivot.position.z + 1.6);
           }
-          audio && audio.drip({ loud: true });
+          audio && audio.drip({ loud: true, at: water.group.position });
         }
 
         for (const s of stones) {

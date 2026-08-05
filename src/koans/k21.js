@@ -150,7 +150,7 @@ export default {
       knocks.push(clock);
       if (knocks.length > 4) knocks.shift();
       taps++;
-      audio && audio.knock({ force: 0.45 });
+      audio && audio.knock({ force: 0.45, at: hit.position });
     });
 
     return {

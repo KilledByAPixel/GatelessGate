@@ -24,6 +24,10 @@ const ID = 27;
 const GONE = 1.6;         // seconds to leave
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const ease = (k) => k * k * (3 - 2 * k);
+// each thing's hit box is nested under its own group (hallGroup/treeGroup/
+// moonGroup), so its local position is not its world position — one scratch
+// vector, reused across all three
+const scratchPos = new THREE.Vector3();
 
 export default {
   id: ID,
@@ -181,7 +185,10 @@ export default {
         removed++;
         // each thing goes with a lower, softer sound than the last, until
         // there is nothing left to make one
-        audio && audio.chimeStrike({ tube: Math.min(4, removed), force: 0.6 - removed * 0.12 });
+        audio && audio.chimeStrike({
+          tube: Math.min(4, removed), force: 0.6 - removed * 0.12,
+          at: t.hit.getWorldPosition(scratchPos),
+        });
         return;
       }
       // touching what is left brings them back
@@ -189,7 +196,7 @@ export default {
         restoredAt = clock;
         for (const t of THINGS) { t.gone = false; t.at = -99; }
         removed = 0;
-        audio && audio.chimeStrike({ tube: 0, force: 0.5 });
+        audio && audio.chimeStrike({ tube: 0, force: 0.5, at: groundHit.position });
       }
     });
 

@@ -35,7 +35,11 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.12', 'water:0.35', 'music'],
+  // Used to carry a water bed (water:0.35); Frank on case 39's version of the
+  // same sound: "it sounds like we're at a beach or something" — this is
+  // still water too, so the wash is gone (see makeWaterBed's comment in
+  // synths.js). A tap on the pond still rings a drip.
+  ambience: ['wind:0.12', 'music'],
   mood: 'yo',      // "Under blue sky, in bright sunlight"
   camera: { distance: 11.5, target: [0.6, 1.2, -2.2], azimuth: 0.55, polar: 1.19 },
 
@@ -158,7 +162,7 @@ export default {
       if (!hit) return;
       const local = water.group.worldToLocal(hit.point.clone());
       water.ripple(local.x, local.z);
-      audio && audio.drip({ loud: true });
+      audio && audio.drip({ loud: true, at: hit.point });
       rippled++;
     });
 

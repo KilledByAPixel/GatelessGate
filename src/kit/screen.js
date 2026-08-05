@@ -19,6 +19,52 @@ import { WASH, INK_LIT } from '../palette.js';
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (t) => t * t * (3 - 2 * t);
 
+// THE CLATTER. A sudare is slats winding onto a rail, so the sound is one
+// quiet bamboo knock per slat that crosses onto (or off) the roller —
+// update()'s ease has its biggest step the instant a pull starts and shrinks
+// toward zero as `cur` nears `goal` (see below), so slat-boundary crossings
+// come fast through the early roll and thin out through the settle for free:
+// the click RATE follows the roll's own speed without a separate curve to
+// author or keep in step with `speed`. `onClack(force, worldPos)` reports it
+// the same way makeFurin (kit/furin.js) reports a tube strike via onStrike —
+// behaviour lives in the component, not in the case that hangs it.
+//
+// force is fixed and, on purpose, on the QUIET side of the book's knocks:
+// eleven of these across a full roll (the book's one screen, case 26, is
+// built with slats: 11 — see k26.js) are a texture the ear should register
+// as "the screen is moving," not eleven individual events like k13's dinner
+// drum. PROBLEM 3, task-swing-tune-brief.md: the first cut (0.12) undershot
+// that goal into silence — it sat UNDER k28's 0.22, the quietest of the
+// book's other 20 audio.knock() call sites (a typical knock runs ~0.9), and
+// Frank heard nothing: "the clatter fires correctly... but Frank hears
+// nothing." Erring quiet the first time erred past audible. Raised well
+// clear of 0.22 (see CLATTER's own comment for the exact starting number) —
+// still a texture, not a drum roll, but one that is actually there.
+//
+// Exported as a mutable object, not a bare const, so
+// dev/hanging-audition.html can write straight into it (SPATIAL's own
+// pattern, src/audio/spatial.js) and hear the very next roll change, no
+// reload; onClack reads CLATTER.force fresh on every clack rather than
+// capturing it once, so a slider reaches a roll already in progress.
+export const CLATTER = {
+  // STARTING POINT, not a final value — the owner sets this by ear through
+  // the harness. 0.35 sits comfortably above k28's 0.22 (about 1.6x) while
+  // staying well under a typical knock's 0.9 (about 0.4x) — audible as a
+  // quiet run of eleven, not a event-sized bang.
+  force: 0.35,
+};
+// guards a stalled or otherwise huge dt from firing a whole roll's worth of
+// knocks in a single call — the app itself never hands update() one:
+// main.js clamps dt and steps it at a fixed 1/60 regardless of how fast a
+// toggle fires, so this cap answers a caller other than the app, not "a
+// fast toggle" (which never enlarges dt in the first place).
+const MAX_CLACKS_PER_UPDATE = 2;
+
+// world-position scratch, shared the way furin.js's WORLD is: onClack calls
+// straight into audio.knock(), which reads x/y/z synchronously before
+// returning, so one vector serves every screen instance without allocating.
+const CLACK_POS = new THREE.Vector3();
+
 export function makeScreen({
   width = 3.2,
   height = 2.4,
@@ -31,6 +77,7 @@ export function makeScreen({
   speed = 2.2,           // e-folding rate of the roll, per second
   cords = true,
   hit = true,            // an invisible pane so a tap anywhere on the screen lands
+  onClack = null,        // the roll's own clatter — see THE CLATTER, above
 } = {}) {
   const group = new THREE.Group();
   group.name = 'screen';
@@ -165,11 +212,33 @@ export function makeScreen({
 
     update(dt, simTime) {
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
+      const prevCur = cur;
       if (cur !== goal) {
         cur += (goal - cur) * (1 - Math.exp(-speed * Math.max(0, dt || 0)));
         if (Math.abs(goal - cur) < 5e-4) cur = goal;
       }
       place();
+
+      // One clack per slat boundary `cur*n` crosses this step (n = slats on
+      // the roller at cur=1). Comparing floors telescopes exactly to `n`
+      // clacks over a full 0->1 or 1->0 roll, whatever the frame timing,
+      // since cur only ever moves toward goal (see the "never runs
+      // backwards" property update() already keeps) — no separate counter to
+      // drift out of sync if a roll is interrupted and re-started. setRoll()
+      // moves `cur` outright, not through this path, so a staging pose is
+      // silent, as it should be: it poses the screen, it doesn't roll it.
+      if (onClack && cur !== prevCur) {
+        const before = Math.floor(prevCur * n + 1e-9);
+        const after = Math.floor(cur * n + 1e-9);
+        const crossed = Math.min(Math.abs(after - before), MAX_CLACKS_PER_UPDATE);
+        if (crossed > 0) {
+          // the rail doesn't move within this loop, so its world position is
+          // the same for every clack this call reports — read it once
+          rail.getWorldPosition(CLACK_POS);
+          // read live, not captured — see CLATTER's own comment
+          for (let k = 0; k < crossed; k++) onClack(CLATTER.force, CLACK_POS);
+        }
+      }
     },
   };
 }

@@ -6,6 +6,18 @@ import { noise1 } from './util/noise.js';
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
+// The distance a case gets when it names no `camera` of its own — main.js's
+// buildKoan passes this as the `distance` in its makeRig({...}) call, which
+// is NOT the same thing as makeCameraRig's own `distance = 11` default just
+// below: that one only applies if makeRig is ever called with no options
+// object at all, which main.js never does (it always passes at least this
+// value). One named export, so main.js, staging.test.js's own rigCamera()
+// stub, and spatial.test.js's ref-median test all read the SAME number
+// instead of three independent literal 11.5s that could drift apart with
+// nothing to notice — which is exactly the shape of bug task-12 exists to
+// fix everywhere else in this file's neighbourhood.
+export const DEFAULT_HOME_DISTANCE = 11.5;
+
 // The ambient drift: seconds in, a rig goal out. Pure, so the whole of the
 // motion can be tested in plain Node, and seeded rather than random because the
 // determinism rule covers the camera like everything else.

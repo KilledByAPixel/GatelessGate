@@ -32,7 +32,11 @@ export function reverbIR(sampleRate, seconds, seed) {
   let lp = 0;
   for (let i = 0; i < n; i++) {
     const white = rand() * 2 - 1;
-    const fc = 4200 * Math.pow(0.25, i / n) + 250;     // ~4.4 kHz closing to ~1.3 kHz
+    // ~3 kHz closing to ~0.7 kHz. The first room opened at 4.2 kHz and closed
+    // to 1.3 kHz over five seconds, which is a tiled interior — correct for a
+    // cave case and wrong for the other forty-eight. Outdoor air is darker at
+    // the head and swallows the rest fast.
+    const fc = 3000 * Math.pow(0.18, i / n) + 200;
     const a = 1 - Math.exp(-2 * Math.PI * fc / sampleRate);
     lp += (white - lp) * a;
     out[i] = lp * Math.exp(k * i) * 3;
@@ -42,12 +46,21 @@ export function reverbIR(sampleRate, seconds, seed) {
 
 // Browser-only. L and R get different seeds so the image decorrelates — the
 // stereo width IS the difference between the ears.
-export function makeVerb(ctx, dest, { seconds = 5 } = {}) {
+//
+// 1.8 seconds, not five. Distance is what decides how much room a sound picks
+// up now (see spatial.js) rather than a fixed per-voice mix into a long tail,
+// and a long tail under a distance-driven send is just mud. The highpass on
+// the RETURN is the other half of staying out of the mud: lows dry, mids and
+// highs carry the space.
+export function makeVerb(ctx, dest, { seconds = 1.8 } = {}) {
   const conv = ctx.createConvolver();
   const buf = ctx.createBuffer(2, Math.round(seconds * ctx.sampleRate), ctx.sampleRate);
   buf.copyToChannel(reverbIR(ctx.sampleRate, seconds, 1013), 0);
   buf.copyToChannel(reverbIR(ctx.sampleRate, seconds, 7331), 1);
   conv.buffer = buf;
-  conv.connect(dest);
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 300;
+  conv.connect(hp); hp.connect(dest);
   return { in: conv };
 }

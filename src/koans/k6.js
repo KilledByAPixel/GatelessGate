@@ -162,7 +162,15 @@ export default {
     flower.traverse((o) => { if (o.isMesh && !o.userData.isOutline) flowerMeshes.push(o); });
     input.onTap(() => {
       if (!camera) return;
-      if (input.raycastFirst(camera, flowerMeshes)) releasePetal();
+      const hit = input.raycastFirst(camera, flowerMeshes);
+      if (hit && releasePetal()) {
+        // A petal genuinely makes no sound. The most that is honest is a
+        // suggestion of one, and this is the quietest call in the book — and
+        // it must not fire once the flower is bare: releasePetal() returns
+        // false with nothing left to drop, and this case is the one place an
+        // uncaused sound was explicitly ruled out.
+        audio && audio.breath({ force: 0.35, at: hit.point });
+      }
     });
 
     let sinceAuto = 0;

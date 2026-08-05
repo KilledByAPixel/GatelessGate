@@ -53,6 +53,9 @@ function leanShape(u) {
 // rides it, because he is up there and everything up there moves.
 const SWAY_AMP = 0.011;
 const swayShape = (u) => (u >= 0 ? Math.exp(-u * 1.1) * Math.sin(u * 4.6) : 0);
+// the sitter is nested under the swaying mast group, so his local position is
+// not his world position — reused rather than allocated per tap
+const scratchPos = new THREE.Vector3();
 
 export default {
   id: ID,
@@ -187,6 +190,13 @@ export default {
     let now = 0;
     let taps = 0, poleTaps = 0;
     let leanAt = -1, swayAt = -1;
+    // CODE REVIEW CAUGHT (Task 5C): audio.bell() had no cooldown, so a held
+    // pointer stacked strikes without limit. Gated on its own — k49's idiom
+    // (`clock - lastRing > 0.5`) — rather than folded into leanAt, because
+    // the lean is meant to retrigger on every tap (the case's own design:
+    // "he leans toward the ten directions, and stays"); only the BELL needs
+    // the ceiling.
+    let lastRing = -99;
 
     const pick = (o) => {
       const out = [];
@@ -202,7 +212,12 @@ export default {
         // the faintest response: he leans toward the ten directions, and stays
         leanAt = now;
         taps++;
-        audio && audio.bell({ f0: 88, gain: 0.06 });
+        if (now - lastRing >= 0.5) {
+          lastRing = now;
+          // very quiet, at the pole top — not a hung bell, so the smallest
+          // preset — task-12's migration to Frank's tuned presets
+          audio && audio.bell({ preset: 'hand', gain: 0.06, at: sitterPivot.getWorldPosition(scratchPos) });
+        }
       } else if (input.raycastFirst(camera, poleMeshes)) {
         swayAt = now;
         poleTaps++;

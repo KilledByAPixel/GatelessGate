@@ -52,9 +52,18 @@ export default {
     // four metres of bamboo stops reading as a seal and starts reading as glare,
     // so it takes the deeper mix. It fills the bay: when it is down the country
     // is shut out, and that is the whole of the case.
+    //
+    // onClack is the roll's own voice — see THE CLATTER in kit/screen.js — a
+    // quiet run of bamboo knocks at a rate that follows the roll rather than
+    // one sound marking the moment. `at` is the position the component
+    // already reports in WORLD space (getWorldPosition on the rail, inside
+    // screen.js), not read back here — this group is not nested under
+    // anything else, but the component owns the behaviour and its own
+    // placement rather than handing this case a local position to get wrong.
     const screen = makeScreen({
       width: SCREEN_W, height: SCREEN_H, slats: 11,
       color: ACCENT_DEEP, cordDrop: 1.07, seed: ID,
+      onClack: (force, at) => audio && audio.knock({ force, at }),
     });
     screen.group.position.set(0, DECK, FRONT);
     scene.add(screen.group);
@@ -140,10 +149,16 @@ export default {
 
     // ---- the moment: the screen goes up, and the sky is there ---------------
     // Tap it and it rolls; tap it again and it comes down. Nothing is scored and
-    // nothing is announced — the payoff is only that the country appears.
+    // nothing is announced — the payoff is only that the country appears. The
+    // roll used to mark its own arrival with a struck bell (preset 'hand') —
+    // a stand-in from before the kit had a voice for the thing actually
+    // making the sound. What is actually moving is bamboo winding onto a
+    // rail, not a temple fixture beside it, so that one-shot is gone: the
+    // screen now speaks through its own onClack (above) the whole time it is
+    // moving, which is the sound this object should have been making all
+    // along, not an event added on top of it.
     let camera = null;
     let pulls = 0;
-    let rang = false;
 
     input.onTap(() => {
       if (!camera) return;
@@ -158,12 +173,6 @@ export default {
       update(dt, simTime) {
         world.update(dt, simTime);
         screen.update(dt, simTime);
-        // one soft strike as the opening clears, none on the way back down
-        if (!rang && screen.rolled() > 0.8) {
-          audio && audio.bell({ f0: 150, gain: 0.45 });
-          rang = true;
-        }
-        if (screen.rolled() < 0.2) rang = false;
       },
       fragment() {
         return {

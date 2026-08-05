@@ -180,13 +180,14 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
-      if (!input.raycastFirst(camera, [hit])) return;
+      const tap = input.raycastFirst(camera, [hit]);
+      if (!tap) return;
       visits++;
       if (visits % 2 === 0) {
         bowAt = clock;
-        audio && audio.chimeStrike({ tube: 1, force: 0.55 });   // well given, well taken
+        audio && audio.chimeStrike({ tube: 1, force: 0.55, at: tap.point });   // well given, well taken
       } else {
-        audio && audio.knock({ force: 0.4 });                   // and he walks off
+        audio && audio.knock({ force: 0.4, at: tap.point });                   // and he walks off
       }
     });
 

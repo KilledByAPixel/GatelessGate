@@ -163,7 +163,7 @@ export default {
       if (!input.raycastFirst(camera, [hit])) return;
       reaches++;
       runStart = clock;                 // he starts the approach again
-      audio && audio.chimeStrike({ tube: 3, force: 0.35 });
+      audio && audio.chimeStrike({ tube: 3, force: 0.35, at: hit.position });
     });
 
     return {

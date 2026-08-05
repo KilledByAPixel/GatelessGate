@@ -146,7 +146,11 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
-      if (input.raycastFirst(camera, foxMeshes)) fox.notice();
+      const hit = input.raycastFirst(camera, foxMeshes);
+      if (hit) {
+        fox.notice();
+        audio && audio.breath({ force: 0.6, at: hit.point });
+      }
     });
 
     return {

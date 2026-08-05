@@ -30,6 +30,9 @@ const ID = 48;
 const DRAW = 0.9;
 const HOLD = 3.4;
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+// the stroke's hit box is nested under the stroke group, which carries its
+// own hand's-tilt rotation — reused rather than allocated per tap
+const scratchPos = new THREE.Vector3();
 
 export default {
   id: ID,
@@ -157,7 +160,7 @@ export default {
       if (clock - drawnAt < DRAW) return;
       drawnAt = clock;
       draws++;
-      audio && audio.chimeStrike({ tube: 2, force: 0.55 });
+      audio && audio.chimeStrike({ tube: 2, force: 0.55, at: hit.getWorldPosition(scratchPos) });
     });
 
     return {

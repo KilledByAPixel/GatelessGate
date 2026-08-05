@@ -3,10 +3,11 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, INK_LIT } from '../palette.js';
 import {
   composeWorld, makeVeranda, makeMonk, aimMonk, makeLantern,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, makeBlobShadow, addOutlines, toonMaterial, makeFurin,
 } from '../kit/index.js';
 
 const ID = 4;
+const VERANDA_H = 3.2;   // shared with the chime hang point below
 
 // Wakuan looks at a painting of Bodhidharma — who every painter in China gave
 // an enormous beard — and complains that the fellow hasn't got one.
@@ -23,7 +24,11 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.14', 'scroll', 'music'],
+  // 'furin' names the single chime hung under the veranda's own eave: this is
+  // exactly the bay a real fūrin would hang in (a teaching hall's open porch,
+  // not a hillside), and one quiet voice suits a case about a picture that
+  // refuses to be added to — a chattering cluster would be too many opinions.
+  ambience: ['wind:0.14', 'scroll', 'furin', 'music'],
   camera: { distance: 9.0, target: [0.4, 1.7, -1.4], azimuth: 0.42, polar: 1.30 },
 
   build(ctx) {
@@ -34,7 +39,7 @@ export default {
     scene.add(makeLights());
 
     // the bay the scroll hangs in
-    const veranda = makeVeranda({ width: 4.6, depth: 3.6, height: 3.2 });
+    const veranda = makeVeranda({ width: 4.6, depth: 3.6, height: VERANDA_H });
     veranda.position.set(0.2, 0, -3.4);
     scene.add(veranda);
 
@@ -123,6 +128,21 @@ export default {
     lantern.position.set(-2.9, 0, -0.4);
     scene.add(lantern);
 
+    // A single small tube on a cord, hung under the veranda's own beam — the
+    // one voice a bay like this would actually carry. Local to the veranda
+    // group (like a torii's chimes in case 29) so it stays square to the
+    // porch however the scene is placed. x=1.5 sits between the two posts
+    // nearest that side (px ~ 0.77 and 2.3 at this width), clear of both;
+    // y is the beam's own underside (height-0.20); z sits a hand's width
+    // proud of the post line, under the eave's own shadow rather than flush
+    // with the beam face.
+    const furin = makeFurin({
+      tubes: 1, seed: 4,
+      onStrike: (_, force, pos) => audio && audio.chimeStrike({ tube: 1, force, at: pos }),
+    });
+    furin.group.position.set(1.5, VERANDA_H - 0.20, -0.15);
+    veranda.add(furin.group);
+
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
@@ -163,11 +183,15 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
+      // the chime first, so a tap aimed at it never falls through to the
+      // scroll's own refusal — same probe-then-return order as case 29
+      const chimeHit = furin.pick(camera, input);
+      if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
       if (!input.raycastFirst(camera, [hit])) return;
       if (clock - strokeAt < STROKE) return;      // one refusal at a time
       strokeAt = clock;
       attempts++;
-      audio && audio.chimeStrike({ tube: 2, force: 0.4 });
+      audio && audio.chimeStrike({ tube: 2, force: 0.4, at: scroll.position });
     });
 
     return {
@@ -176,6 +200,12 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
+        // a steady porch breeze — see k47's furin for the same untouched
+        // default (this case has no flag or screen to derive a live level
+        // from, so the chime reads the wind at its own full range, same as
+        // every other static-wind case that carries one)
+        furin.setWindLevel(1);
+        furin.update(dt, simTime);
         const u = (clock - strokeAt) / STROKE;
         // up fast, held a moment, then drained away
         const a = (u <= 0 || u >= 1) ? 0 : Math.min(1, u / 0.18, (1 - u) / 0.45);
@@ -183,7 +213,7 @@ export default {
         beard.scale.y = 0.6 + 0.4 * a;
       },
       fragment() {
-        return { attempts, ink: +beardMat.opacity.toFixed(3) };
+        return { attempts, ink: +beardMat.opacity.toFixed(3), chimeStrikes: furin.strikes() };
       },
       dispose() {},
     };

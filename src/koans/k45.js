@@ -227,7 +227,10 @@ export default {
       caught++;
       if (clock - lastChime > 0.6) {
         lastChime = clock;
-        // you did not catch him. Something sounds a long way off.
+        // you did not catch him. Something sounds a long way off — left
+        // unplaced on purpose: the whole point of this case is that he has no
+        // fixed spot to answer from, and giving the sound one would be lying
+        // about the koan.
         audio && audio.chimeStrike({ tube: 0, force: 0.3 });
       }
     });

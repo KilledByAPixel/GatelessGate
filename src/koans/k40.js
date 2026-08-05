@@ -162,7 +162,13 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
-      if (input.raycastFirst(camera, vaseMeshes)) vase.nudge();
+      const hit = input.raycastFirst(camera, vaseMeshes);
+      if (hit) {
+        vase.nudge();
+        // stoneware, tipped and righting itself — the seal of this koan is the
+        // only thing in the scene that could make a noise
+        audio && audio.ceramic({ force: 0.8, at: hit.point });
+      }
     });
 
     return {

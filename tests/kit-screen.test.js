@@ -1,12 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { makeScreen } from '../src/kit/screen.js';
+import { makeScreen, CLATTER } from '../src/kit/screen.js';
 import { makeVeranda } from '../src/kit/veranda.js';
 import TEXT from '../src/koans/text/mumonkan.js';
 import k26 from '../src/koans/k26.js';
 
-const H = 2.4, W = 3.0, N = 12;
+// N matches k26.js's own slats: 11 — the book's one screen, and the real
+// count that ships — not makeScreen's generic default (12), which nothing in
+// this file was actually pinning against before.
+const H = 2.4, W = 3.0, N = 11;
 const screen = (opts = {}) => makeScreen({ width: W, height: H, slats: N, seed: 26, ...opts });
 
 // the material only — the rail and the invisible tap pane do not move, so they
@@ -101,6 +104,131 @@ test('update eases the roll toward its target instead of snapping', () => {
   for (let i = 0; i < 400; i++) s.update(1 / 60, 7 + i / 60);
   assert.equal(s.rolled(), 0);
   assert.ok(s.coverHeight() > H * 0.9, 'and covers the bay again');
+});
+
+// ---- the clatter -----------------------------------------------------------
+
+test('rolling clacks once per slat, quietly, placed in world space', () => {
+  const clacks = [];
+  const s = screen({
+    onClack: (force, at) => clacks.push({ force, x: at.x, y: at.y, z: at.z }),
+  });
+  // off-origin, so a local-position bug (reading .position on a nested mesh
+  // instead of getWorldPosition — the exact trap this branch has hit five
+  // times, per CLAUDE.md) would show up as a report near (0, railY, 0)
+  // instead of carrying this offset.
+  s.group.position.set(2, 0.34, -1.4);
+
+  s.toggle();
+  for (let i = 0; i < 400 && !s.settled(); i++) s.update(1 / 60, i / 60);
+  assert.ok(s.settled(), 'reaches the top inside 400 frames');
+  assert.equal(clacks.length, N, `one clack per slat over the whole roll: ${clacks.length}`);
+
+  for (const c of clacks) {
+    assert.ok(Number.isFinite(c.force) && c.force > 0, 'a real, positive force');
+    // task-swing-tune-brief.md, PROBLEM 3: CLACK_FORCE=0.12 was the QUIETEST
+    // of all 21 audio.knock() call sites in the book — UNDER k28's 0.22 (the
+    // next quietest), not just close to it — and Frank heard nothing: "the
+    // clatter fires correctly... but Frank hears nothing." THIS ASSERTION
+    // USED TO PIN THE BUG: `c.force < 0.22` — the exact inversion of what the
+    // brief now asks for, written when the instruction was "err quiet" and
+    // never revisited once that erred past audible. Flipped: still a quiet
+    // texture (eleven of these should read as "the screen is moving," not a
+    // drum roll — see the upper bound), but no longer able to pass at a
+    // level nobody can hear.
+    assert.ok(c.force > 0.22, `at or under the book's next-quietest knock (k28's 0.22) — inaudible: ${c.force}`);
+    // still a texture, not an event: comfortably under a typical knock's 0.9
+    assert.ok(c.force < 0.6, `too loud for a texture, not a drum roll: ${c.force}`);
+    assert.equal(c.force, CLATTER.force, 'onClack should report the live CLATTER.force, not a stale captured copy');
+    assert.ok(Number.isFinite(c.x) && Number.isFinite(c.y) && Number.isFinite(c.z));
+    assert.ok(Math.abs(c.x - 2) < 0.5, `x carries the group's own world offset: ${c.x}`);
+    assert.ok(Math.abs(c.z - -1.4) < 0.5, `z carries the group's own world offset: ${c.z}`);
+  }
+
+  // rolling back down clatters the same run again — not stacked on top of
+  // the roll that already finished, and not silent the second time either
+  clacks.length = 0;
+  s.toggle();
+  for (let i = 0; i < 400 && !s.settled(); i++) s.update(1 / 60, 10 + i / 60);
+  assert.ok(s.settled());
+  assert.equal(clacks.length, N, `the same run of clicks, coming back down: ${clacks.length}`);
+});
+
+test('CLATTER.force is a live, mutable export — a harness slider reaches a roll already in progress', () => {
+  // "Make it reachable from the harness so Frank can set it by ear"
+  // (task-swing-tune-brief.md, PROBLEM 3) means dev/hanging-audition.html
+  // has to be able to write CLATTER.force = x and hear the very next clack
+  // change — same pattern SPATIAL (src/audio/spatial.js) already proves out
+  // for bell-audition/spatial-audition. Pinned directly: change it mid-roll,
+  // on an ALREADY-BUILT screen, and confirm the next clack reports the new
+  // value, not whatever was captured when makeScreen() ran.
+  const original = CLATTER.force;
+  try {
+    const clacks = [];
+    const s = screen({ onClack: (force) => clacks.push(force) });
+    s.toggle();
+    // advance partway — a few clacks at the ORIGINAL force
+    for (let i = 0; i < 40; i++) s.update(1 / 60, i / 60);
+    assert.ok(clacks.length > 0, 'no clacks landed before the mutation — test cannot prove liveness');
+    assert.ok(clacks.every((f) => f === original), 'clacks before the mutation should read the original value');
+
+    CLATTER.force = 0.9;
+    for (let i = 40; i < 400 && !s.settled(); i++) s.update(1 / 60, i / 60);
+    const afterCount = clacks.length;
+    assert.ok(afterCount > 0, 'no more clacks landed after the mutation to observe');
+    assert.ok(clacks.slice(-1)[0] === 0.9, `a clack after the mutation still reported the old value: ${clacks.slice(-1)[0]}`);
+  } finally {
+    CLATTER.force = original;   // never leak a mutated live export into another test file
+  }
+});
+
+test('the clatter follows the roll\'s own speed: dense through the early roll, thinning sharply at the settle', () => {
+  // Clacks are evenly spaced in ROLL FRACTION — one per 1/N of the way onto
+  // the roller — but the roll itself eases toward its target exponentially
+  // (update()'s own `cur += (goal - cur) * (1 - exp(-speed*dt))`), so the
+  // same 1/N step takes far more real TIME once cur is close to goal than it
+  // does the instant a pull starts. That is what "the rate follows the roll's
+  // speed" means operationally: measure clacks in FRAMES, not in roll
+  // fraction (a value-gap measure would read as roughly constant, since the
+  // boundaries themselves are evenly spaced in value — that is not the claim
+  // being made).
+  const frames = [];
+  let i = 0;
+  const s = screen({ onClack: () => frames.push(i) });
+  s.toggle();
+  for (i = 0; i < 400 && !s.settled(); i++) s.update(1 / 60, i / 60);
+  assert.equal(frames.length, N);
+
+  const firstGap = frames[1] - frames[0];
+  const lastGap = frames[frames.length - 1] - frames[frames.length - 2];
+  assert.ok(firstGap < lastGap,
+    `expected the early frame gap (${firstGap}) to be tighter than the late one (${lastGap})`);
+  // not just marginally — the settle should thin out sharply (a bare "less
+  // than" would also pass a nearly-flat, effectively fixed-rate clatter,
+  // which is not what was asked for).
+  assert.ok(lastGap > firstGap * 5,
+    `expected a sharp thinning toward the settle, not a gentle taper: ${firstGap} frames -> ${lastGap} frames`);
+});
+
+test('setRoll poses the screen silently; a huge dt cannot machine-gun the clatter', () => {
+  const clacks = [];
+  const s = screen({ onClack: (force) => clacks.push(force) });
+
+  // a staging jump is a pose, not a roll — nothing should have "moved" to sound
+  s.setRoll(1);
+  assert.equal(clacks.length, 0, 'setRoll is silent going up');
+  s.setRoll(0);
+  assert.equal(clacks.length, 0, 'setRoll is silent going down');
+
+  // an absurd single dt (nothing in the app ever drives update() with
+  // anything but the fixed 1/60 step, but a stalled frame or a misuse
+  // elsewhere should not be free to fire a whole roll's worth of knocks
+  // at once)
+  s.toggle();
+  s.update(100, 0);
+  assert.ok(s.settled(), 'the ease still reaches the goal in one giant step');
+  assert.ok(clacks.length > 0, 'the giant step still clatters...');
+  assert.ok(clacks.length < N, `...but is capped well under a full roll's ${N}: ${clacks.length}`);
 });
 
 test('the screen is deterministic and renderer-free', () => {

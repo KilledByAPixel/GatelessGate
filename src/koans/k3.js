@@ -261,6 +261,12 @@ export default {
     let now = 0;
     let taps = 0, answers = 0;
     let echo = null, echoAt = 0;
+    // CODE REVIEW CAUGHT (Task 5C): no cooldown at all here, so a held pointer
+    // stacked audio.bell() calls without limit — k49's idiom
+    // (`clock - lastRing > 0.5`) gates the TAP that starts a gesture; the
+    // scripted echo it schedules (BEAT later) is a single, already-bounded
+    // follow-up and is left alone.
+    let lastTap = -99;
 
     const pick = (o) => {
       const out = [];
@@ -272,9 +278,15 @@ export default {
 
     const strike = (f) => {
       f.since = now;
-      // the master's note is low, the boy's a fifth above it: the same gesture,
-      // twice, in two voices
-      audio && audio.bell({ f0: f === master ? 62 : 93, gain: f === master ? 0.14 : 0.11 });
+      // the same gesture, twice, in two voices: the master's answer carries
+      // the room the way his authority does (temple), the boy's imitation is
+      // smaller and brighter (hand) — task-12's bell-preset migration, which
+      // trades the raw f0 pair (62 / a fifth above) for two of Frank's own
+      // tuned bells rather than two arbitrary pitches.
+      audio && audio.bell({
+        preset: f === master ? 'temple' : 'hand', gain: f === master ? 0.14 : 0.11,
+        at: f.monk.position,
+      });
     };
 
     input.onTap(() => {
@@ -282,6 +294,8 @@ export default {
       const onGutei = input.raycastFirst(camera, guteiMeshes);
       const onBoy = onGutei ? null : input.raycastFirst(camera, boyMeshes);
       if (!onGutei && !onBoy) return;
+      if (now - lastTap < 0.5) return;
+      lastTap = now;
       taps++;
       strike(onGutei ? master : pupil);
       echo = onGutei ? pupil : master;      // and after a beat, so does the other

@@ -1,0 +1,450 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bell Audition — The Gateless Gate</title>
+  <!--
+    Task 5A's deliverable: the bonshō is additive synthesis, not a sample, and
+    two guesses at its voice have already missed (Frank: "a dull thud and then
+    a bit of reverb, rather than a ding and then a bit of a continued ring").
+    This page is how the third guess gets settled by ear instead of by a third
+    round of code review. Every macro control below edits a LIVE COPY of the
+    partial table built fresh from bellVoice() on every ring — moving a slider
+    changes the very next strike, no reload, the same way lookdev.html's
+    treatment() swaps a whole material set on the next render.
+
+    Task 5B: a high SHIMMER CLUSTER above the eleven named modes, and an A/B
+    toggle below to switch it in and out on the same preset — does the
+    density buy anything.
+
+    Task 5B, fix round: a SHIPPED preset (BELL_PRESETS in synths.js) is no
+    longer a recipe of band-macro values — two boundary redefinitions in
+    three passes already changed what a stored macro value MEANT, silently,
+    and a lossy refit put its worst error on the loudest partial in the
+    table (`hand`'s own strike note). A preset is now an EXACT per-mode
+    `ampMult` array plus a `shimmer` scalar. The four macro sliders below
+    (hum/body/clang/shimmer) are still here — they're good controls for
+    exploring a bell by ear — but they now apply ON TOP of the active
+    preset's own exact baseline, as a further multiplier, so sliders at
+    neutral (1) reproduce the shipped preset exactly. "print" bakes
+    baseline * slider into a new exact array: what it PRODUCES, not where
+    the sliders sat.
+
+    Keys: [space] ring   [1] hand   [2] temple   [3] great
+    Serve over HTTP (npx -y http-server -p 8105 -c-1 .) so the ES module
+    imports resolve — this fails from file://.
+  -->
+  <style>
+    :root {
+      --paper: #F3EDDF; --ink: #1E1E24; --line: #d8d0bf;
+      --mid: #5a5348; --accent: #C73E3A;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink);
+      font: 13px/1.5 ui-monospace, Consolas, monospace;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 18px 16px 40px;
+    }
+    h1 { font-size: 15px; margin: 0 0 2px; }
+    #sub { color: var(--mid); font-size: 11px; margin-bottom: 16px; max-width: 560px; text-align: center; }
+    #hud {
+      color: var(--mid); font-size: 12px; margin-bottom: 14px; white-space: pre;
+      text-align: center;
+    }
+    #ring {
+      font: 14px/1 ui-monospace, Consolas, monospace; padding: 12px 40px;
+      background: var(--ink); color: var(--paper); border: none; border-radius: 4px;
+      cursor: pointer; margin-bottom: 14px;
+    }
+    #ring:active { transform: translateY(1px); }
+    #ab {
+      display: flex; gap: 0; margin-bottom: 18px; border: 1px solid var(--line);
+      border-radius: 4px; overflow: hidden;
+    }
+    #ab button {
+      border: none; border-radius: 0; margin: 0; background: transparent;
+    }
+    #ab button.on { background: var(--ink); color: var(--paper); }
+    #panel {
+      display: grid; grid-template-columns: 90px 1fr 60px; gap: 6px 10px;
+      align-items: center; width: min(560px, 92vw);
+      border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px;
+      background: rgba(255,255,255,0.35);
+    }
+    #panel label { color: var(--mid); }
+    #panel input[type=range] { width: 100%; accent-color: var(--accent); }
+    #panel output { text-align: right; color: var(--ink); }
+    .sep { grid-column: 1 / -1; height: 1px; background: var(--line); margin: 4px 0; }
+    .note { grid-column: 1 / -1; color: var(--mid); font-size: 11px; margin: -2px 0 2px; }
+    /* label/input/output are siblings in the grid, not wrapped in a row
+       element, so a greyed-out control gets `row-off` on itself directly —
+       see setShimmerOn() in the script below. */
+    label.row-off, output.row-off { color: #b8b0a0; }
+    input.row-off[type=range] { opacity: 0.4; }
+    #presets, #extra {
+      display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; justify-content: center;
+    }
+    button {
+      font: inherit; color: var(--mid); background: transparent;
+      border: 1px solid var(--line); border-radius: 3px; padding: 5px 12px; cursor: pointer;
+    }
+    button:hover { border-color: var(--mid); color: var(--ink); }
+    button.active { border-color: var(--accent); color: var(--ink); }
+    #dump {
+      width: min(560px, 92vw); height: 20em; margin-top: 12px;
+      font: 12px/1.4 ui-monospace, Consolas, monospace; display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Bell Audition</h1>
+  <div id="sub">the bonshō, rebuilt — additive synthesis, live-edited. hum/body/clang/shimmer multiply ON TOP of the active preset's own exact baseline; neutral (1) reproduces the shipped preset exactly.</div>
+  <div id="hud">—</div>
+  <button id="ring">Ring — [space]</button>
+  <div id="ab">
+    <button id="ab-named" title="named modes only">named only</button>
+    <button id="ab-shimmer" title="named + shimmer">named + shimmer</button>
+  </div>
+
+  <div id="panel">
+    <label for="size">size</label>
+    <input id="size" type="range" min="0.2" max="3.0" step="0.01" value="1">
+    <output id="size-out"></output>
+
+    <label for="ring-mul">ring</label>
+    <input id="ring-mul" type="range" min="0.2" max="5.0" step="0.01" value="1">
+    <output id="ring-mul-out"></output>
+
+    <div class="sep"></div>
+    <div class="note">multiply ON TOP of the preset's own exact baseline — 1 = baseline, untouched</div>
+
+    <label for="hum">hum</label>
+    <input id="hum" type="range" min="0" max="4" step="0.01" value="1">
+    <output id="hum-out"></output>
+
+    <label for="body">body</label>
+    <input id="body" type="range" min="0" max="6" step="0.01" value="1">
+    <output id="body-out"></output>
+
+    <label for="clang">clang</label>
+    <input id="clang" type="range" min="0" max="8" step="0.01" value="1">
+    <output id="clang-out"></output>
+
+    <label for="shimmer" id="shimmer-label">shimmer</label>
+    <input id="shimmer" type="range" min="0" max="6" step="0.01" value="1">
+    <output id="shimmer-out"></output>
+
+    <div class="sep"></div>
+
+    <label for="beam">beam</label>
+    <input id="beam" type="range" min="0" max="1" step="0.005" value="0.30">
+    <output id="beam-out"></output>
+
+    <label for="ping">ping</label>
+    <input id="ping" type="range" min="0" max="1" step="0.005" value="0.34">
+    <output id="ping-out"></output>
+
+    <label for="ping-freq">ping freq</label>
+    <input id="ping-freq" type="range" min="800" max="5000" step="10" value="2800">
+    <output id="ping-freq-out"></output>
+
+    <div class="sep"></div>
+
+    <label for="verb-mix">verbMix</label>
+    <input id="verb-mix" type="range" min="0" max="1" step="0.01" value="0.7">
+    <output id="verb-mix-out"></output>
+  </div>
+
+  <div id="presets">
+    <button id="preset-hand" title="1">hand</button>
+    <button id="preset-temple" title="2">temple</button>
+    <button id="preset-great" title="3">great</button>
+  </div>
+  <div id="extra">
+    <button id="print-preset">print all three presets</button>
+  </div>
+  <textarea id="dump" readonly></textarea>
+
+  <script type="module">
+    import {
+      bellVoice, bellMacroPartials, BELL, BELL_PRESETS, TRANSIENT_SCALE, NAMED_MODE_COUNT, strike,
+      renormalizeSum,
+    } from '../src/audio/synths.js';
+    import { makeVerb } from '../src/audio/verb.js';
+
+    // ---- audio graph: a minimal standalone room, not the full engine -------
+    // Mirrors strikeBell's own dry/wet split AND its gain split exactly
+    // (dryG = 1 - verbMix*0.7, sendG = verbMix*1.2, partials at BELL.level,
+    // the mallet at TRANSIENT_SCALE) so verbMix/beam/ping here mean exactly
+    // what they mean in the shipped game — a slider here should feel like
+    // the real bell, not a proxy for it. That parity used to be false: see
+    // buildPartials()'s own comment for the renormalization fix and why
+    // skipping it broke exactly the promise made in this sentence.
+    let ctx = null, master = null, verb = null;
+    function ensureCtx() {
+      if (ctx) return true;
+      if (typeof window === 'undefined') return false;
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      master = ctx.createGain();
+      master.gain.value = 0.9;
+      master.connect(ctx.destination);
+      verb = makeVerb(ctx, master);
+      return true;
+    }
+
+    // ---- three independent live presets, not one shared state -------------
+    // CODE REVIEW / FRANK CAUGHT: the old page had a single `state` object
+    // that every preset button overwrote wholesale, so tuning "hand" and
+    // then switching to "temple" threw the hand edits away — there was
+    // never anywhere for three DIFFERENTLY tuned bells to live at once, and
+    // "print preset" dumped whatever was left in that one shared object,
+    // which is why Frank pasted the same snapshot three times believing
+    // they were three presets. Each named preset is now its own object,
+    // seeded from the SHIPPED BELL_PRESETS (`ampMult`/`shimmer` are its
+    // exact baseline) plus four macro multipliers that start at 1 (neutral
+    // — baseline, untouched) and are mutated in place by whichever sliders
+    // are touched while that preset is active.
+    function seed(name) {
+      const p = BELL_PRESETS[name];
+      return {
+        size: p.size, ring: p.ring,
+        ampMult: p.ampMult.slice(),       // the exact, shipped baseline — read, never slider-edited directly
+        shimmer: p.shimmer,
+        humMacro: 1, bodyMacro: 1, clangMacro: 1,   // "on top of baseline" multipliers — see buildPartials()
+        beam: p.beam, ping: p.ping, pingFreq: p.pingFreq, verbMix: p.verbMix,
+      };
+    }
+    const live = { hand: seed('hand'), temple: seed('temple'), great: seed('great') };
+    let activeName = 'temple';
+    let shimmerOn = true;   // the A/B toggle: named modes only vs named + shimmer
+
+    function activeState() { return live[activeName]; }
+
+    // baseline (ampMult[i], the exact shipped fidelity) dressed onto a bare
+    // voice first, THEN run through bellMacroPartials with the live slider
+    // values — the same banding function the shipped table itself used to
+    // go through, so there is exactly one place in the whole codebase that
+    // knows where the hum/body/clang boundaries fall. Shimmer has no
+    // baseline layer (there is nothing to protect there — see BELL_PRESETS'
+    // comment), so it is left at 1 here and the slider's own value is what
+    // bellMacroPartials' `shimmer` band multiplies.
+    function withBaseline(s, partials) {
+      return partials.map((p, i) => i < NAMED_MODE_COUNT ? { ...p, amp: p.amp * s.ampMult[i] } : p);
+    }
+    // CODE REVIEW CAUGHT: this used to skip the renormalization
+    // applyBellPreset() does at runtime (see synths.js), on the theory that
+    // hearing a slider clip on purpose was more honest than clawing it back
+    // silently. That was wrong — it meant the page's partials sat up to
+    // +7.0 dB hot relative to the mallet compared to what the shipped bell
+    // actually plays (a DIFFERENT amount per preset: hand +7.00 dB, temple
+    // +5.33 dB, great +2.84 dB, since each preset's ampMult array dresses
+    // the voice by a different total factor). Frank tunes beam/ping BY EAR
+    // against whatever balance this page plays, and if that balance is not
+    // the shipped one, every future tuning session produces numbers that
+    // mean something else in the game. Renormalizing here, identically to
+    // applyBellPreset, means the NEUTRAL case (sliders at 1, shimmer on) is
+    // bit-for-bit the same partial table the shipped preset strikes — see
+    // task-5b-report.md's fix-round section for the six ratios, before and
+    // after. Pushing a macro slider hard can still clip here (the whole
+    // point of an audition page is to let you go too far and hear it), but
+    // the REFERENCE point — what "1" on every slider sounds like — now
+    // matches the game exactly.
+    //
+    // Task 5C carried item: this used to hand-copy applyBellPreset()'s
+    // renormalization formula instead of calling it — the two agreed only
+    // because the macros are an identity at their neutral positions, and a
+    // future change to the shipped formula would have silently not reached
+    // this page. Now imported as `renormalizeSum` from synths.js, one
+    // function for both call sites.
+    function buildPartials() {
+      const s = activeState();
+      const voice = bellVoice(s.size);
+      const src = shimmerOn ? voice.partials : voice.partials.slice(0, NAMED_MODE_COUNT);
+      const baselined = { f0: voice.f0, partials: withBaseline(s, src) };
+      const dressed = bellMacroPartials(baselined,
+        { hum: s.humMacro, body: s.bodyMacro, clang: s.clangMacro, shimmer: s.shimmer, ring: s.ring });
+      // Using `src` (not always the full voice) means the A/B toggle's
+      // "named only" state renormalizes against a named-only reference
+      // rather than silently boosting the named modes to make up for the
+      // missing shimmer, which would defeat the toggle's entire purpose of
+      // letting the shimmer's own contribution be heard.
+      const partials = renormalizeSum(src, dressed);
+      return { f0: voice.f0, partials };
+    }
+
+    // the array print() actually writes: baseline * macro, per named mode —
+    // the thing this whole rebuild exists to make possible without a
+    // fitting error, so the audition page and the shipped table use the
+    // exact same arithmetic (bellMacroPartials again, on a size-1 dummy
+    // voice whose amp is 1 per mode, so its band multiplier comes back out
+    // untouched by anything except `ampMult` and the slider).
+    function bakedAmpMult(s) {
+      const unit = Array.from({ length: NAMED_MODE_COUNT }, () => ({ amp: 1, decay: 1, freq: 1 }));
+      const dressed = bellMacroPartials({ partials: withBaseline(s, unit) },
+        { hum: s.humMacro, body: s.bodyMacro, clang: s.clangMacro });
+      return dressed.map((p) => +p.amp.toFixed(4));
+    }
+
+    function ringBell() {
+      if (!ensureCtx()) return;
+      if (ctx.state !== 'running') ctx.resume();
+      const { partials } = buildPartials();
+      const s = activeState();
+
+      const out = ctx.createGain();
+      out.gain.value = 1;
+      const dryG = ctx.createGain(); dryG.gain.value = 1 - s.verbMix * 0.7;
+      out.connect(dryG); dryG.connect(master);
+      const sendG = ctx.createGain(); sendG.gain.value = s.verbMix * 1.2;
+      out.connect(sendG); sendG.connect(verb.in);
+
+      strike(ctx, out, {
+        partials,
+        gain: BELL.level,
+        transientGain: TRANSIENT_SCALE,
+        transient: [
+          { dur: 0.055, freq: 350, q: 0.8, amp: s.beam },
+          { dur: 0.006, freq: s.pingFreq, q: 0.9, amp: s.ping },
+        ],
+      });
+    }
+
+    // ---- controls --------------------------------------------------------
+    const fields = [
+      ['size', 'size', (v) => v.toFixed(2)],
+      ['ring-mul', 'ring', (v) => v.toFixed(2) + 'x'],
+      ['hum', 'humMacro', (v) => v.toFixed(2) + 'x'],
+      ['body', 'bodyMacro', (v) => v.toFixed(2) + 'x'],
+      ['clang', 'clangMacro', (v) => v.toFixed(2) + 'x'],
+      ['shimmer', 'shimmer', (v) => v.toFixed(2)],
+      ['beam', 'beam', (v) => v.toFixed(3)],
+      ['ping', 'ping', (v) => v.toFixed(3)],
+      ['ping-freq', 'pingFreq', (v) => Math.round(v) + ' Hz'],
+      ['verb-mix', 'verbMix', (v) => v.toFixed(2)],
+    ];
+    function syncControls() {
+      const s = activeState();
+      for (const [id, key, fmt] of fields) {
+        document.getElementById(id).value = s[key];
+        document.getElementById(id + '-out').textContent = fmt(s[key]);
+      }
+      updateHud();
+      updateDumpIfOpen();
+    }
+    for (const [id, key, fmt] of fields) {
+      const input = document.getElementById(id);
+      input.addEventListener('input', () => {
+        activeState()[key] = parseFloat(input.value);
+        document.getElementById(id + '-out').textContent = fmt(activeState()[key]);
+        updateHud();
+        updateDumpIfOpen();
+      });
+    }
+
+    function updateHud() {
+      const s = activeState();
+      const v = bellVoice(s.size);
+      const hum = v.partials[0].decay * s.ring;
+      const n = shimmerOn ? v.partials.length : NAMED_MODE_COUNT;
+      document.getElementById('hud').textContent =
+        `${activeName} · size ${s.size.toFixed(2)} -> f0 ${v.f0.toFixed(1)} Hz` +
+        `   ·   hum decay ${hum.toFixed(1)}s   ·   ${n} partials` +
+        (shimmerOn ? '' : ' (shimmer off)');
+    }
+
+    // ---- presets: hand/temple/great seed from the SHIPPED BELL_PRESETS —
+    // the same three bells Frank tuned. Switching presets does NOT reset a
+    // preset's live macro edits; it only changes which one the panel and
+    // the spacebar are pointed at.
+    function selectPreset(name) {
+      activeName = name;
+      syncControls();
+      for (const n of ['hand', 'temple', 'great']) {
+        document.getElementById('preset-' + n).classList.toggle('active', n === name);
+      }
+      ringBell();
+    }
+    document.getElementById('preset-hand').addEventListener('click', () => selectPreset('hand'));
+    document.getElementById('preset-temple').addEventListener('click', () => selectPreset('temple'));
+    document.getElementById('preset-great').addEventListener('click', () => selectPreset('great'));
+
+    // ---- the A/B toggle: named modes only vs named + shimmer --------------
+    // Switches without a reload and without touching any other control — the
+    // whole point is to flip it on the SAME preset and hear precisely what
+    // the density buys. The shimmer slider greys out when the cluster isn't
+    // even in the table, so it reads as inert rather than lying about having
+    // an effect.
+    function setShimmerOn(on) {
+      shimmerOn = on;
+      document.getElementById('ab-named').classList.toggle('on', !on);
+      document.getElementById('ab-shimmer').classList.toggle('on', on);
+      // the shimmer slider's label/input/output are siblings in the grid,
+      // not wrapped in a common element — grey each directly
+      for (const id of ['shimmer-label', 'shimmer', 'shimmer-out']) {
+        document.getElementById(id).classList.toggle('row-off', !on);
+      }
+      document.getElementById('shimmer').disabled = !on;
+      updateHud();
+    }
+    document.getElementById('ab-named').addEventListener('click', () => { setShimmerOn(false); ringBell(); });
+    document.getElementById('ab-shimmer').addEventListener('click', () => { setShimmerOn(true); ringBell(); });
+
+    document.getElementById('ring').addEventListener('click', ringBell);
+
+    // ---- print: all three named presets, in their current tuned state,
+    // live, as an EXACT per-mode array — "bake what they produce, not where
+    // they sat": a stored preset must not mean something different the next
+    // time a macro band's definition moves (this is the second time it has).
+    function dumpAllPresets() {
+      return ['hand', 'temple', 'great'].map((name) => {
+        const s = live[name];
+        const lines = [
+          `  size: ${s.size},`,
+          `  ring: ${s.ring},`,
+          `  ampMult: [${bakedAmpMult(s).join(', ')}],`,
+          `  shimmer: ${s.shimmer},`,
+          `  beam: ${s.beam},`,
+          `  ping: ${s.ping},`,
+          `  pingFreq: ${s.pingFreq},`,
+          `  verbMix: ${s.verbMix},`,
+        ].join('\n');
+        return `${name}:\n{\n${lines}\n}`;
+      }).join('\n\n');
+    }
+    let dumpOpen = false;
+    function updateDumpIfOpen() {
+      if (dumpOpen) document.getElementById('dump').value = dumpAllPresets();
+    }
+    document.getElementById('print-preset').addEventListener('click', () => {
+      dumpOpen = true;
+      const dump = document.getElementById('dump');
+      dump.value = dumpAllPresets();
+      dump.style.display = 'block';
+      dump.focus(); dump.select();
+    });
+
+    // CODE REVIEW CAUGHT: this used to bail out on ANY focused <input>,
+    // which meant touching a single slider silently killed the spacebar —
+    // "adjust a slider, then hit space to hear it" is the single most common
+    // interaction this whole page exists for. Only the printed-preset
+    // textarea needs to swallow keys (so its text can be selected/copied
+    // without ringing the bell on every keystroke); the range sliders do not
+    // bind Space or digit keys to anything themselves, so letting those two
+    // through is safe.
+    addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'TEXTAREA') return;
+      if (e.code === 'Space') { e.preventDefault(); ringBell(); }
+      else if (e.key === '1') selectPreset('hand');
+      else if (e.key === '2') selectPreset('temple');
+      else if (e.key === '3') selectPreset('great');
+    });
+
+    // console access, same convention as lookdev.html's window.lk
+    window.ba = { ring: ringBell, live, selectPreset, buildPartials, bakedAmpMult, setShimmerOn, ctx: () => ctx };
+
+    setShimmerOn(true);
+    selectPreset('temple');
+  </script>
+</body>
+</html>

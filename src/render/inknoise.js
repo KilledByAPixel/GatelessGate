@@ -30,7 +30,31 @@ const float INK_EDGE = 0.16;
 `;
 
 // vUv -> noise domain. Aspect-corrected so the blotches stay round on any shape
-// of window instead of stretching with it.
+// of window instead of stretching with it, and OFFSET by a per-transition seed
+// so no two dissolves in a session spread the same stain (see nextInkSeed).
 export const INK_DOMAIN_GLSL = /* glsl */`
-vec2 inkDomain(vec2 uv, float aspect) { return uv * vec2(aspect, 1.0) * 4.0; }
+vec2 inkDomain(vec2 uv, float aspect, vec2 seed) {
+  return uv * vec2(aspect, 1.0) * 4.0 + seed;
+}
 `;
+
+// A FRESH STAIN EVERY TIME. The field is a fixed function of position, so with a
+// fixed domain every transition in the book spread ink through the paper in
+// exactly the same blotches — which nobody notices once and everybody notices
+// when they page quickly (Frank: "if you press the button rapidly, it's not
+// doing the exact same effect, the exact same noise"). Sliding the domain far
+// enough lands the same fbm on unrelated ground and costs one uniform.
+//
+// A COUNTER, NOT Math.random. The determinism rule is the whole reason this book
+// can be driven headlessly and screenshotted reproducibly — same steps, same
+// state — and it holds here: the Nth transition of a run always gets the Nth
+// seed. Different every press, identical every replay.
+//
+// The strides are large and share no common factor with the lattice's integer
+// cells, so consecutive seeds land in genuinely different regions rather than
+// one cell over, where the pattern would look like the same stain nudged.
+let inkSeedN = 0;
+export function nextInkSeed() {
+  inkSeedN += 1;
+  return [(inkSeedN * 137.31) % 977, (inkSeedN * 51.77) % 613];
+}

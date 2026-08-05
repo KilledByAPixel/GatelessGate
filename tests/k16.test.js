@@ -201,8 +201,9 @@ test('module shape matches the koan contract', () => {
   assert.equal(k16.title, 'Bells and Robes');
   assert.equal(k16.accent, ACCENT);
   assert.equal(k16.tier, 1);
-  // the roster: the bonsho is a real emitter here, so the swells thin around it
-  assert.deepEqual(k16.ambience, ['wind:0.14', 'bell', 'music']);
+  // the roster: the bonsho and the eave chime are both real emitters here,
+  // so the swells thin around them
+  assert.deepEqual(k16.ambience, ['wind:0.14', 'bell', 'cylinder', 'music']);
   for (const f of ['case', 'comment', 'verse']) {
     assert.ok(k16.text[f] && k16.text[f].trim().length > 0, `text.${f} empty`);
   }
@@ -251,6 +252,38 @@ test('the diorama is a hall, a hanging bell, and three monks turned toward it', 
   root.dispose();
 });
 
+test('a held pointer cannot ring the bell without limit, though a genuine re-strike while it swings still works', () => {
+  // CODE REVIEW CAUGHT (Task 5C): no cooldown at all, so a held pointer or a
+  // fast tapper stacked audio.bell() calls without limit. The design comment
+  // ("tap again while it is still moving and the strike stacks") survives
+  // the fix intact — a real re-strike sits seconds after the first, far
+  // outside the 0.5s cooldown, as the second half of this test shows.
+  const rings = [];
+  const audio = {
+    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, cylinderStrike() {},
+    bell: (o) => rings.push(o.f0),
+  };
+  const ctx = fakeCtx();
+  ctx.audio = audio;
+  const root = k16.build(ctx);
+  root.setCamera(rigCamera());
+  ctx.input.raycastFirst = (cam, objs) => (objs.some((o) => o.name === 'bell-hit')
+    ? { object: objs[0], point: new THREE.Vector3() }
+    : null);
+
+  root.update(1 / 60, 0);
+  ctx._taps.forEach((cb) => cb());   // first strike
+  ctx._taps.forEach((cb) => cb());   // immediate repeat, inside the 0.5s cooldown
+  ctx._taps.forEach((cb) => cb());   // and again
+  assert.equal(root.fragment().strikes, 1, 'repeats inside the cooldown must not stack');
+  assert.equal(rings.length, 1, 'only one bell actually rang');
+
+  for (let i = 1; i <= 120; i++) root.update(1 / 60, i / 60);   // 2s on: still swinging
+  ctx._taps.forEach((cb) => cb());   // a genuine re-strike, well past the cooldown
+  assert.equal(root.fragment().strikes, 2, 'tapping it again while it still moves works as designed');
+  assert.equal(rings.length, 2);
+});
+
 test('the hall never stands between the camera and the bell across the orbit arc', () => {
   // The brief's staging trap: a tall prop behind the seal can eat it for half
   // the orbit. The reachable arc is home ±0.9 (camera.js azimuthRange); across
@@ -288,10 +321,10 @@ test('the bell sits in frame at the home angle', () => {
   }
 });
 
-test('tapping the bell swings it, rings it at f0 98, and the elder finishes his turn', () => {
+test('tapping the bell swings it, rings the temple preset, and the elder finishes his turn', () => {
   const rings = [];
   const audio = {
-    startAmbience() {}, stopAmbience() {}, setWindLevel() {},
+    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, cylinderStrike() {},
     bell: (o) => rings.push(o),
   };
   const ctx = fakeCtx();
@@ -315,7 +348,7 @@ test('tapping the bell swings it, rings it at f0 98, and the elder finishes his 
   let frag = root.fragment();
   assert.equal(frag.strikes, 1, 'the strike lands');
   assert.equal(rings.length, 1, 'and it is AUDIBLE — one ring per strike');
-  assert.equal(rings[0].f0, 98, 'the bonshō speaks lower than the sit chime');
+  assert.equal(rings[0].preset, 'temple', 'the bonshō rings Frank\'s temple preset — see task-12');
 
   for (let i = 1; i <= 120; i++) root.update(1 / 60, i / 60);
   frag = root.fragment();
@@ -328,12 +361,17 @@ test('tapping the bell swings it, rings it at f0 98, and the elder finishes his 
   assert.equal(rings.length, 2);
   root.onExit && root.onExit();
 
-  // and the whole moment survives having no audio engine at all
+  // and the whole moment survives having no audio engine at all. Targeted at
+  // the bell's own pick targets specifically now that the case also probes
+  // the eave chime first on every tap — an untargeted "hit anything" stub
+  // would ring the chime instead and never reach the bell at all.
   const mute = fakeCtx();
   const quiet = k16.build(mute);
   quiet.setCamera(rigCamera());
   quiet.update(1 / 60, 0);
-  mute.input.raycastFirst = () => ({ point: new THREE.Vector3() });
+  mute.input.raycastFirst = (cam, objs) => (objs.some((o) => o.name === 'bell-hit')
+    ? { object: objs[0], point: new THREE.Vector3() }
+    : null);
   assert.doesNotThrow(() => mute._taps.forEach((cb) => cb()));
   assert.equal(quiet.fragment().strikes, 1, 'the bell still swings, silently');
 });

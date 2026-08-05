@@ -1,0 +1,313 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Spatial Audition — The Gateless Gate</title>
+  <!--
+    task-12's third deliverable: an ear on SPATIAL (src/audio/spatial.js),
+    the same idea as bell-audition.html but for the distance/pan/room curves
+    rather than the bell voice. Every slider below writes straight into the
+    live SPATIAL object that src/audio/engine.js imports and reads at strike
+    time — moving one changes the very next strike, no reload, because
+    spatialFor()/calibrateMix() are never cached, they read SPATIAL fresh
+    every call.
+
+    This page drives the REAL engine (createAudio in src/audio/engine.js),
+    not a reimplementation, so it can never drift from what the game
+    actually plays: the voice buttons call audio.bell()/.chimeStrike()/etc.
+    exactly as a case does, with a listener this page moves around instead
+    of a camera.
+
+    Piece 1 of task-12 is the reason this page's most important control is
+    the A/B row: SPATIAL.ref used to be anchored at 2.5 units, a distance
+    nothing in the book is ever viewed from, so every placed sound was
+    quietly ~15dB under where it should have been (case 16's bell — "I
+    could barely hear it"). At the reference distance, straight ahead,
+    A (unplaced — how every sound worked before this branch existed) and
+    B (placed, at the current test point) should be indistinguishable. Off
+    to a side, or nearer/farther than ref, they should differ exactly as
+    much as the distance/angle controls say.
+
+    Serve over HTTP (npx -y http-server -p 8105 -c-1 .) so the ES module
+    imports resolve — this fails from file://.
+  -->
+  <style>
+    :root {
+      --paper: #F3EDDF; --ink: #1E1E24; --line: #d8d0bf;
+      --mid: #5a5348; --accent: #C73E3A;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink);
+      font: 13px/1.5 ui-monospace, Consolas, monospace;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 18px 16px 40px;
+    }
+    h1 { font-size: 15px; margin: 0 0 2px; }
+    #sub { color: var(--mid); font-size: 11px; margin-bottom: 16px; max-width: 620px; text-align: center; }
+    #hud {
+      color: var(--mid); font-size: 12px; margin-bottom: 14px; white-space: pre;
+      text-align: center;
+    }
+    section {
+      width: min(620px, 94vw); border: 1px solid var(--line); border-radius: 6px;
+      padding: 12px 16px; margin-bottom: 14px; background: rgba(255,255,255,0.35);
+    }
+    section > h2 {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+      color: var(--mid); margin: 0 0 10px;
+    }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    button {
+      font: inherit; color: var(--mid); background: transparent;
+      border: 1px solid var(--line); border-radius: 3px; padding: 6px 12px; cursor: pointer;
+    }
+    button:hover { border-color: var(--mid); color: var(--ink); }
+    button.active { border-color: var(--accent); color: var(--ink); }
+    button.ref { border-color: var(--accent); border-width: 2px; font-weight: 600; }
+    button.big { padding: 10px 22px; }
+    select {
+      font: inherit; color: var(--ink); background: var(--paper);
+      border: 1px solid var(--line); border-radius: 3px; padding: 6px 10px;
+    }
+    #panel {
+      display: grid; grid-template-columns: 90px 1fr 70px; gap: 6px 10px;
+      align-items: center;
+    }
+    #panel label { color: var(--mid); }
+    #panel input[type=range] { width: 100%; accent-color: var(--accent); }
+    #panel output { text-align: right; color: var(--ink); }
+    #ab { display: flex; gap: 10px; justify-content: center; }
+    #ab button { flex: 1; max-width: 220px; }
+    #dump {
+      width: 100%; height: 12em; margin-top: 10px;
+      font: 12px/1.4 ui-monospace, Consolas, monospace; display: none;
+    }
+    .note { color: var(--mid); font-size: 11px; margin: 4px 0 10px; }
+  </style>
+</head>
+<body>
+  <h1>Spatial Audition</h1>
+  <div id="sub">where a sound is — distance, pan, room, tone. A/B against unplaced is the control that matters: at the reference distance the two should be indistinguishable.</div>
+  <div id="hud">—</div>
+
+  <section>
+    <h2>voice</h2>
+    <div class="row">
+      <select id="voice"></select>
+    </div>
+  </section>
+
+  <section>
+    <h2>distance (straight ahead — brackets the real camera range, 8.6-17)</h2>
+    <div class="row" id="distances"></div>
+  </section>
+
+  <section>
+    <h2>angle (fixed distance)</h2>
+    <div class="row">
+      <label style="color:var(--mid)">distance
+        <input id="angle-dist" type="number" min="1" max="40" step="0.5" value="11.5" style="width:5em">
+      </label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button id="ang-left">hard left</button>
+      <button id="ang-ahead">ahead</button>
+      <button id="ang-right">hard right</button>
+      <button id="ang-behind">behind</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>A / B — placed vs. unplaced, at the current test point</h2>
+    <div id="ab">
+      <button id="ab-a" class="big">A — unplaced (old sound)</button>
+      <button id="ab-b" class="big">B — placed</button>
+    </div>
+    <div class="note" id="point-note">current test point: —</div>
+  </section>
+
+  <section>
+    <h2>SPATIAL — live, mutates the real module</h2>
+    <div id="panel"></div>
+  </section>
+
+  <div class="row">
+    <button id="print-spatial">print SPATIAL</button>
+  </div>
+  <textarea id="dump" readonly></textarea>
+
+  <script type="module">
+    import { createAudio } from '../src/audio/engine.js';
+    import { SPATIAL, spatialFor } from '../src/audio/spatial.js';
+
+    // ---- a listener that never moves; the SOURCE moves around it instead,
+    // same convention as tests/spatial.test.js's AT_ORIGIN --------------------
+    const LISTENER = {
+      pos: { x: 0, y: 0, z: 0 },
+      right: { x: 1, y: 0, z: 0 },
+      forward: { x: 0, y: 0, z: -1 },
+    };
+
+    const SAVE = { state: () => ({ soundOn: true }), setSound() {} };
+    const audio = createAudio(SAVE);
+
+    // ---- voices: every one goes through the REAL engine call a case would
+    // make, `at` and all — this page can never drift from what the game
+    // actually plays, because it never reimplements a strike.
+    const VOICES = {
+      'bell-hand': { label: 'bell — hand', fire: (at) => audio.bell({ preset: 'hand', at }) },
+      'bell-temple': { label: 'bell — temple', fire: (at) => audio.bell({ preset: 'temple', at }) },
+      'bell-great': { label: 'bell — great', fire: (at) => audio.bell({ preset: 'great', at }) },
+      chime: { label: 'chime', fire: (at) => audio.chimeStrike({ tube: 0, at }) },
+      drip: { label: 'drip', fire: (at) => audio.drip({ at }) },
+      knock: { label: 'knock', fire: (at) => audio.knock({ at }) },
+      ceramic: { label: 'ceramic', fire: (at) => audio.ceramic({ at }) },
+      wood: { label: 'wood', fire: (at) => audio.wood({ at }) },
+      cloth: { label: 'cloth', fire: (at) => audio.cloth({ at }) },
+      breath: { label: 'breath', fire: (at) => audio.breath({ at }) },
+    };
+    const voiceSelect = document.getElementById('voice');
+    for (const [key, v] of Object.entries(VOICES)) {
+      const opt = document.createElement('option');
+      opt.value = key; opt.textContent = v.label;
+      voiceSelect.appendChild(opt);
+    }
+    voiceSelect.value = 'bell-temple';
+    voiceSelect.addEventListener('change', updateHud);
+
+    // ---- the current test point: every distance/angle button updates this,
+    // and the A/B row always strikes AT it (A ignores it — unplaced never
+    // reads `at` — but keeping one shared point means "compare" always means
+    // the same thing regardless of which control set it last).
+    const point = { d: SPATIAL.ref, mode: 'ahead' };
+    function posFor(d, mode) {
+      if (mode === 'left') return { x: -d, y: 0, z: 0 };
+      if (mode === 'right') return { x: d, y: 0, z: 0 };
+      if (mode === 'behind') return { x: 0, y: 0, z: d };
+      return { x: 0, y: 0, z: -d };   // 'ahead'
+    }
+
+    // CODE REVIEW CAUGHT: audio.unlock() calls ctx.resume() without awaiting
+    // it (fire-and-forget — engine.js's own callers never needed to wait,
+    // since a strike arriving before resume completes is just dropped, see
+    // bell()'s own ctx.state guard). On an AUDITION page that reads as "this
+    // is broken": the very first click after load can land while the
+    // context is still 'suspended', resume() has not settled yet, and the
+    // strike is silently swallowed. Awaiting resume() here (a second,
+    // harmless call — resume() on an already-running context resolves
+    // immediately) means the first strike after load is only ever slightly
+    // late, never silent.
+    async function strike(placed) {
+      audio.unlock();
+      const ctx = audio.ctx;
+      if (ctx && ctx.state !== 'running') {
+        try { await ctx.resume(); } catch { /* autoplay still blocked; next click will retry */ }
+      }
+      audio.setListener(placed ? LISTENER : null);
+      const at = posFor(point.d, point.mode);
+      VOICES[voiceSelect.value].fire(at);
+      updateHud();
+    }
+
+    function updateHud() {
+      const at = posFor(point.d, point.mode);
+      const s = spatialFor(at, LISTENER);
+      document.getElementById('hud').textContent =
+        `${VOICES[voiceSelect.value].label}   ·   d ${s.d.toFixed(2)}   pan ${s.pan.toFixed(2)}   ` +
+        `gain ${s.gain.toFixed(3)}   tone ${Math.round(s.tone)} Hz   wet ${s.wet.toFixed(3)}` +
+        (Math.abs(point.d - SPATIAL.ref) < 1e-6 && point.mode === 'ahead' ? '   [at ref]' : '');
+      document.getElementById('point-note').textContent =
+        `current test point: ${point.mode}, d=${point.d.toFixed(2)}` +
+        (point.mode === 'ahead' && Math.abs(point.d - SPATIAL.ref) < 1e-6 ? ' — the calibration anchor' : '');
+    }
+
+    // ---- distance row: brackets the real camera range (8.6-17), ref always
+    // present and visually marked since it is the calibration anchor. Rebuilt
+    // whenever the ref slider moves, so the marked button always tracks it.
+    const DISTANCE_BRACKET = [4, 8.6, 14, 17, 22];
+    function renderDistances() {
+      const wrap = document.getElementById('distances');
+      wrap.innerHTML = '';
+      const ds = [...DISTANCE_BRACKET, SPATIAL.ref].sort((a, b) => a - b);
+      for (const d of ds) {
+        const isRef = Math.abs(d - SPATIAL.ref) < 1e-6;
+        const btn = document.createElement('button');
+        btn.textContent = isRef ? `${d.toFixed(1)} (ref)` : d.toFixed(1);
+        if (isRef) btn.classList.add('ref');
+        btn.addEventListener('click', () => {
+          point.d = d; point.mode = 'ahead';
+          strike(true);
+        });
+        wrap.appendChild(btn);
+      }
+    }
+
+    // ---- angle row: fixed distance, four bearings ---------------------------
+    const angleDist = document.getElementById('angle-dist');
+    function fireAngle(mode) {
+      point.d = parseFloat(angleDist.value) || SPATIAL.ref;
+      point.mode = mode;
+      strike(true);
+    }
+    document.getElementById('ang-left').addEventListener('click', () => fireAngle('left'));
+    document.getElementById('ang-ahead').addEventListener('click', () => fireAngle('ahead'));
+    document.getElementById('ang-right').addEventListener('click', () => fireAngle('right'));
+    document.getElementById('ang-behind').addEventListener('click', () => fireAngle('behind'));
+
+    // ---- A / B ---------------------------------------------------------------
+    document.getElementById('ab-a').addEventListener('click', () => strike(false));
+    document.getElementById('ab-b').addEventListener('click', () => strike(true));
+
+    // ---- SPATIAL sliders — direct, live mutation of the imported object -----
+    const FIELDS = [
+      ['ref', 2, 25, 0.1, (v) => v.toFixed(1)],
+      ['rolloff', 0.1, 2.5, 0.05, (v) => v.toFixed(2)],
+      ['toneNear', 4000, 20000, 100, (v) => Math.round(v) + ' Hz'],
+      ['toneFar', 500, 8000, 50, (v) => Math.round(v) + ' Hz'],
+      ['toneHalf', 1, 30, 0.5, (v) => v.toFixed(1)],
+      ['nearWet', 0, 1, 0.01, (v) => v.toFixed(2)],
+      ['farWet', 0, 1, 0.01, (v) => v.toFixed(2)],
+      ['wetHalf', 1, 30, 0.5, (v) => v.toFixed(1)],
+      ['panWidth', 0, 1, 0.01, (v) => v.toFixed(2)],
+      ['backGain', 0, 1, 0.01, (v) => v.toFixed(2)],
+      ['backTone', 0, 1, 0.01, (v) => v.toFixed(2)],
+    ];
+    const panel = document.getElementById('panel');
+    for (const [key, min, max, step, fmt] of FIELDS) {
+      const label = document.createElement('label');
+      label.textContent = key; label.htmlFor = 'sp-' + key;
+      const input = document.createElement('input');
+      input.type = 'range'; input.id = 'sp-' + key;
+      input.min = min; input.max = max; input.step = step; input.value = SPATIAL[key];
+      const out = document.createElement('output');
+      out.id = 'sp-' + key + '-out'; out.textContent = fmt(SPATIAL[key]);
+      input.addEventListener('input', () => {
+        SPATIAL[key] = parseFloat(input.value);   // writes straight into the live module
+        out.textContent = fmt(SPATIAL[key]);
+        if (key === 'ref') renderDistances();
+        updateHud();
+      });
+      panel.append(label, input, out);
+    }
+
+    // ---- print: SPATIAL as a pasteable literal -------------------------------
+    function dumpSpatial() {
+      const lines = Object.entries(SPATIAL).map(([k, v]) => `  ${k}: ${v},`);
+      return `export const SPATIAL = {\n${lines.join('\n')}\n};`;
+    }
+    document.getElementById('print-spatial').addEventListener('click', () => {
+      const dump = document.getElementById('dump');
+      dump.value = dumpSpatial();
+      dump.style.display = 'block';
+      dump.focus(); dump.select();
+    });
+
+    renderDistances();
+    updateHud();
+
+    // console access, same convention as bell-audition.html's window.ba
+    window.sa = { audio, SPATIAL, point, strike, posFor, LISTENER };
+  </script>
+</body>
+</html>

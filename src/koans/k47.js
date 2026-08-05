@@ -60,6 +60,9 @@ const GATES = [
   { t: 0.70, width: 2.8, height: 2.6, color: ACCENT_DEEP }, // where do you go?
 ];
 const MONK_T = 0.31;   // mid-journey: past the first barrier, short of the second
+// One bell size per gate, in the same near-to-far order as GATES — task-12's
+// migration off raw f0 (62 + 18*i) to Frank's tuned presets.
+const GATE_PRESETS = ['great', 'temple', 'hand'];
 
 export default {
   id: ID,
@@ -206,7 +209,10 @@ export default {
 
     // a furin under the first barrier's lintel — the near gate is the one you
     // stand before, so it is the one that carries a voice in the wind
-    const furin = makeFurin({ seed: 47, onStrike: (tube, force) => audio && audio.chimeStrike({ tube, force }) });
+    const furin = makeFurin({
+      seed: 47,
+      onStrike: (tube, force, pos) => audio && audio.chimeStrike({ tube, force, at: pos }),
+    });
     furin.group.position.set(1.2, GATES[0].height, 0);
     gates[0].gate.add(furin.group);
 
@@ -217,26 +223,41 @@ export default {
     // the deepest. Nothing advances, nothing unlocks; each barrier simply has
     // its own note, and the far one is a longer reach, exactly as it looks.
     let camera = null;
+    let clock = 0;
     const taps = [0, 0, 0];
+    // Per-barrier cooldown, k49's idiom (`clock - lastRing > 0.5`): a bare
+    // audio.bell() call here has no size ceiling of its own, and CODE REVIEW
+    // CAUGHT that a held pointer or a fast tapper stacked strikes without
+    // limit — the shimmer cluster alone took one strike from 22 to 36
+    // oscillators. Each barrier gates independently, so tapping barrier 2
+    // does not silence barrier 1's own answer.
+    const lastRing = [-99, -99, -99];
     input.onTap(() => {
       if (!camera) return;
       // the chime first: its hit drum sits inside the first gate's lintel
       // slab, and a tap aimed at a wind chime must never answer with the
       // gate's bell. Same probe order as k29.
-      const chimeHit = input.raycastFirst(camera, furin.pickTargets());
-      if (chimeHit) { furin.ring(); return; }
+      const chimeHit = furin.pick(camera, input);
+      if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
       const hit = input.raycastFirst(camera, hitSlabs);
       if (!hit) return;
       const i = slabGate.get(hit.object);
       if (i === undefined) return;
+      if (clock - lastRing[i] < 0.5) return;
+      lastRing[i] = clock;
       taps[i]++;
-      audio && audio.bell({ f0: 62 + 18 * i });
+      // GATES shrinks from the near barrier to the far one (width 3.2 -> 3.0
+      // -> 2.8, same order as GATES above) — task-12's migration to Frank's
+      // tuned presets follows the same shrink rather than the raw f0 ramp:
+      // near gate biggest bell, far gate smallest.
+      audio && audio.bell({ preset: GATE_PRESETS[i], at: gates[i].gate.position });
     });
 
     return {
       scene,
       setCamera(c) { camera = c; },
       update(dt, simTime) {
+        clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);        // the meadow breathes
         furin.update(dt, simTime);        // and the near gate's chime rides it
       },

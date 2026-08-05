@@ -94,7 +94,14 @@ export default {
 
     input.onTap(() => {
       if (!camera || muPhase >= 0) return;
-      if (input.raycastFirst(camera, hitTargets)) muPhase = 0;
+      const hit = input.raycastFirst(camera, hitTargets);
+      if (!hit) return;
+      muPhase = 0;
+      // Not a strike — nothing here is touched. The world thins away and
+      // comes back, and the sound is that shape: one long breath over the
+      // whole gesture. There was no voice in the palette that was not an
+      // impact, which is why this case was silent for so long.
+      audio && audio.breath({ force: 0.8, dur: MU_DUR * 0.8, at: hit.point });
     });
 
     return {

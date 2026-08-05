@@ -1,5 +1,6 @@
 import * as THREE from '../lib/three.module.js';
-import { makeCameraRig, makeFreeCam } from './camera.js';
+import { listenerFrom } from './camera_listener.js';
+import { makeCameraRig, makeFreeCam, DEFAULT_HOME_DISTANCE } from './camera.js';
 import { makeDissolve } from './render/dissolve.js';
 import { installGrain } from './render/grain.js';
 import { makePost } from './render/post.js';
@@ -9,7 +10,7 @@ import { makeDebug, devModeOn } from './ui/debug.js';
 import { makeInput } from './input.js';
 import { setBreezePointer, clearBreeze } from './kit/breeze.js';
 import { createSave } from './save.js';
-import { createAudio } from './audio/engine.js';
+import { createAudio, shouldPauseForHide } from './audio/engine.js';
 import { gustPhase } from './audio/synths.js';
 import { createNarration } from './audio/narration.js';
 import { CASES } from './koans/index.js';
@@ -143,6 +144,14 @@ panel.appendChild(menu.el);
 const about = makeAbout({ onBack: () => { menu.refresh(save.state()); showView(menu.el); } });
 panel.appendChild(about.el);
 
+// sitBellPartials' fundamental decays over 9s (synths.js calls it "ten
+// seconds"); the room send stretches it a touch further. This is how long a
+// pause forced by the 'sitting'->'done' transition (below) waits before it is
+// allowed to actually fade `master` — arming it any sooner cuts the closing
+// bell, the one sound the sitting exemption exists to protect, down to the
+// ~300ms of pauseForHide's own fade-then-suspend window.
+const SIT_BELL_TAIL_MS = 10000;
+
 const sit = makeSit({
   audio,
   // The bell has rung and the sitting is recorded — and that is ALL that happens
@@ -155,10 +164,66 @@ const sit = makeSit({
     // completed sit on the showcase would persist sat['showcase'] into save
     // state — a tool leaking into the book the same way an unmarked read would.
     if (koanSlug && !isDevPage(koanSlug)) { save.markSat(koanSlug); menu.refresh(save.state()); }
+    // 'sitting' was the one phase that held the visibilitychange pause off; the
+    // timer just reached 'done' and there is no fresh visibilitychange event to
+    // re-check it — that is the gap this closes. But pausing on THIS tick would
+    // fade `master` right under the bell audio.sitBell() just struck (above),
+    // cutting its ten-second tail to a ~300ms blip: the exact silence the
+    // sitting exemption exists to prevent, just moved one phase later. Wait out
+    // the bell, then re-check with the SAME rule: if the reader is back by
+    // then, document.hidden is false and this is a no-op — a fresh hide after
+    // that is not this bell's problem, the visibilitychange listener below
+    // already owns it (and 'done' is no longer exempt, so it pauses at once,
+    // correctly, whatever is left of the tail at that point).
+    setTimeout(pauseForHideIfNeeded, SIT_BELL_TAIL_MS);
   },
   onExit: () => resumeKoan(),
 });
 document.body.appendChild(sit.el);
+
+// The one call that pauses audio and narration together, whenever
+// shouldPauseForHide's rule says the page should be quiet right now. Three
+// call sites share this exact rule (the boot check just below, the sit-
+// completion timeout above, and the visibilitychange listener further down)
+// — they share it because they are all answering the SAME question ("is the
+// page hidden, per the rule sittings are exempt from"), not because they
+// happen to agree by coincidence, which is what pulling them onto one
+// function makes structural rather than merely claimed in a comment. A
+// fourth reason to pause has exactly one place to land, now. Returns the
+// same boolean shouldPauseForHide read, so the visibilitychange listener's
+// resume branch can react to it without evaluating the rule a second time.
+function pauseForHideIfNeeded() {
+  const pause = shouldPauseForHide(document.hidden, sit.phase());
+  if (pause) {
+    narration.pauseForHide();
+    audio.pauseForHide();
+  }
+  return pause;
+}
+
+// A page that loads ALREADY hidden — reloaded in a background tab, opened by
+// a link into a background tab, a session restore that brings tabs back
+// behind the active one — gets no visibilitychange event at all: that
+// listener (below) is edge-triggered, and there is no edge to cross if the
+// page was never visible to begin with. Without this, `hidden` inside the
+// audio engine stays false forever and the ambience simply plays, unheard,
+// to a tab nobody is looking at. Read document.hidden once, here, through the
+// SAME shouldPauseForHide() rule the listener uses, so the boot path and the
+// event path can never disagree about what "hidden" means.
+//
+// Placed here rather than lower in the file because this is the first point
+// where audio, sit and narration all exist (sit needs audio itself, hence
+// the placement after it) — and, just as important, it is BEFORE anything
+// below this line can make a sound: openMenu()'s menuMusic() and
+// buildKoan()'s audio.transition() are both still ahead, in the boot block at
+// the very end of this file. audio.pauseForHide() sets its `hidden` flag
+// unconditionally even with no AudioContext yet (createAudio() is Node-safe
+// until ensureCtx() runs on the first user gesture) and returns early on the
+// context itself; ensureCtx() reads that same flag into master's initial
+// gain the moment a context IS built, so a page that loads hidden and later
+// unlocks starts already silent rather than blaring for a beat and then
+// being silenced.
+pauseForHideIfNeeded();
 
 // ---- stage toolbar (top-right, over the 3D and never over the text) ----
 // One row of square buttons: sound, fullscreen, and the debug workbench. They
@@ -434,11 +499,31 @@ function startIntro() {
   showView(intro.el);
 }
 
-// The menu's quiet life: the swells at full drift plus an occasional soft
-// chime — the barest "scene" in the app is the one with nothing else to sound.
+// The menu's quiet life: a wind bed under the swells at full drift plus an
+// occasional soft chime — the Contents renders the same hub world the preface
+// and afterword do (buildHub()), and both of those carry 'wind:0.30', so
+// leaving the Contents silent of wind read as a hole rather than a choice.
+// 0.30 matches the matter pages rather than sitting under them: unlike a
+// matter page, which is read start to end, the Contents is looked at through
+// a list and a text panel while the reader decides where to go, closer to a
+// case's own listening situation than to a page being read — so it takes the
+// same level a case would, not a hushed one.
+//
+// Music is deliberately NOT routed through startAmbience/transition's `music`
+// layer here: ensureCaseMusic() (see the engine) stops any chimed music and
+// restarts the plain drift, which would silently strip the chimes this
+// function exists to add. playMusic(0, { chimes: true }) is called directly
+// instead, exactly as before — only the wind gained a recipe. The two are not
+// out of step: startAmbience sets `playing` to ['wind:0.30'] alone, so a
+// later audio.transition(caseRecipe) diffs wind as a KEEP (ramped, not
+// restarted — the continuity transition() exists for) and finds music absent
+// from `playing` regardless of the diff, which routes it to startLayer ->
+// ensureCaseMusic -> the chime swap, same as it already did.
+//
 // Mood resets to the book's default; a case's pick belongs to the case.
 function menuMusic() {
   audio.setMood('in');
+  audio.startAmbience(['wind:0.30']);
   audio.playMusic(0, { chimes: true });
 }
 
@@ -462,6 +547,14 @@ function buildKoan(mod, slug) {
   if (koan && koan.onExit) koan.onExit();
   stopReading();
   input.clear();
+  // A ringing one-shot (a `great` bell is 57s) must not follow the reader
+  // onto the next page. buildKoan runs for both a page turn AND a cold
+  // arrival from the menu; hushing here covers both with one call, since a
+  // hush against silence costs nothing. Not called from startSit or the
+  // look toggle — neither goes through buildKoan, which is exactly the point:
+  // the reader is still on the same page in both, and a bell cut short there
+  // would be wrong.
+  audio.hushVoices();
   // Ambience is main's job, not the koans': the module's `ambience` field is
   // the single source of truth, handed to audio.transition() below — so a
   // recipe can never drift from what actually plays. No stop here any more:
@@ -503,7 +596,7 @@ function buildKoan(mod, slug) {
   // around empty road. A case's own `camera` still overrides, so this changes
   // nothing for the forty-nine.
   makeRig({
-    distance: 11.5, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27,
+    distance: DEFAULT_HOME_DISTANCE, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27,
     ...(built.gateTarget ? { target: built.gateTarget } : {}),
     ...(mod.camera || {}),
   });
@@ -613,10 +706,17 @@ async function exit() {
   input.clear();
   koan && koan.onExit && koan.onExit();
   // ambience is main's job (see enter()): the case's whole bed dies here, and
-  // menuMusic() below starts the menu's own with a fresh scheduler — playMusic
+  // menuMusic() below starts the Contents' own wind and music fresh — playMusic
   // REUSES a live one and silently drops its options, so this must be a stop,
-  // never a hand-off
+  // never a hand-off. (The Contents-from-Contents-adjacent hop the other
+  // direction, entering a case, goes through audio.transition() instead and
+  // KEEPS the wind — see menuMusic()'s own comment. This one is a hard stop on
+  // purpose: there is no case bed here to hand off to, only the Contents'
+  // fixed 0.30, so restarting fresh costs nothing and needs no diff.)
   audio.stopAmbience();
+  // and any ringing one-shot dies with it — the case's bell does not belong
+  // in the Contents
+  audio.hushVoices();
   await transition(() => {
     const prev = scenes.active();
     scenes.setActive(hub);
@@ -816,6 +916,27 @@ addEventListener('pointerdown', () => {
   if (mode === 'intro') skipIntro();
 });
 
+// Nobody is looking: stop making noise. `blur` would be the wrong event — it
+// fires when any other window is clicked, including one that leaves this tab
+// fully visible on a second monitor, and killing an ambient page because
+// someone alt-tabbed to look something up is not what anyone wants.
+document.addEventListener('visibilitychange', () => {
+  if (!pauseForHideIfNeeded() && !document.hidden) {
+    // shouldPauseForHide can also read false while STILL hidden — a sitting
+    // exempts hidden from pausing at all, so a hide event during a sit falls
+    // through to here too. resumeFromHide() sets its own `hidden` flag to
+    // false unconditionally (both audio's and narration's), so calling it
+    // here while document.hidden is actually true would leave that flag
+    // lying about the page's real visibility. Unreachable today — startSit()
+    // calls stopReading(), so nothing can be mid-speech for narration's
+    // pendingHide/heldForHide to mishandle — but the flag being honest is
+    // what Task 8's narration fix depends on, so guard it rather than lean
+    // on that coincidence.
+    audio.resumeFromHide();
+    narration.resumeFromHide();
+  }
+});
+
 // ---- loop ----
 // The pointer's breeze (src/kit/breeze.js): each tick, drop the pointer onto
 // the y=0 ground plane and hand the point to the shared breeze state, which
@@ -839,6 +960,7 @@ function feedBreeze() {
 function tick() {
   simTime += STEP;
   audio.setGust(gustPhase(simTime));
+  audio.setListener(listenerFrom(camera));
   feedBreeze();
   if (mode === 'intro' && intro) intro.update(STEP);
   else if (freeCam.enabled()) freeCam.update(STEP);

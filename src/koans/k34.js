@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeBirds, makeMonk, faceMonk,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, makeBlobShadow, addOutlines, toonMaterial, makeFurin,
 } from '../kit/index.js';
 
 const ID = 34;
@@ -26,7 +26,15 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.16', 'birds', 'music'],
+  // 'furin' names the single small tube hung under the study's own eave —
+  // the red house is somebody's home (the seal says so), so it earns the
+  // one ordinary domestic sound a lived-in study would have, indifferent to
+  // the sentence that just walked out its door. REVISED from a bronze
+  // cylinder to a tubes:1 fūrin (code review: four of the five cylinder
+  // cases hung the same object in the same beam-underside spot, sizes
+  // 0.7-0.9 the only thing distinguishing them) — a lighter, higher voice,
+  // the other half of the kit's own vocabulary, still one quiet tube.
+  ambience: ['wind:0.16', 'birds', 'furin', 'music'],
   camera: { distance: 10.5, target: [0.7, 1.5, -0.8], azimuth: 0.55, polar: 1.22 },
 
   build(ctx) {
@@ -80,6 +88,17 @@ export default {
     faceMonk(nansen, { x: 8.0, z: 4.0 });
     scene.add(nansen);
 
+    // One small tube on a cord, hung under the study's own front eave, clear
+    // of the doorway (|x| < ~0.69 at this width) and the corner post
+    // (x ~ 1.5). Local to the hut so it stays square to the house's own
+    // facing.
+    const eaveChime = makeFurin({
+      tubes: 1, seed: 34,
+      onStrike: (_, force, pos) => audio && audio.chimeStrike({ tube: -1, force, at: pos }),
+    });
+    eaveChime.group.position.set(1.1, 2.3, 1.25);
+    hut.add(eaveChime.group);
+
     // THE BIRDS: the words that have already left, crossing the sky
     const birds = makeBirds({ count: 8, seed: ID, center: [0.6, -1.2], height: 6.4, spread: 5.2 });
     scene.add(birds.group);
@@ -129,12 +148,15 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
+      // the eave chime first, so a tap aimed at it never also scatters the birds
+      const chimeHit = eaveChime.pick(camera, input);
+      if (chimeHit) { eaveChime.ring(0.75, chimeHit.tube); return; }
       if (!input.raycastFirst(camera, [hit])) return;
       if (clock - lastAt < 0.5) return;
       lastAt = clock;
       birds.scatter();
       disturbed++;
-      audio && audio.chimeStrike({ tube: 4, force: 0.45 });
+      audio && audio.chimeStrike({ tube: 4, force: 0.45, at: hit.position });
     });
 
     return {
@@ -144,12 +166,15 @@ export default {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
         birds.update(dt, simTime);
+        eaveChime.setWindLevel(1);   // the kit's own default; see k47's furin
+        eaveChime.update(dt, simTime);
       },
       fragment() {
         return {
           disturbed,
           birds: birds.count(),
           aloft: +birds.energy().toFixed(4),
+          chimeStrikes: eaveChime.strikes(),
         };
       },
       dispose() {},

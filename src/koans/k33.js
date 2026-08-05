@@ -27,7 +27,10 @@ export default {
   accent: ACCENT,
   tier: 3,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.12', 'water:0.35', 'music'],
+  // Same pond, same call as case 30's own ambience comment: the water bed
+  // read as surf on still water, so it's off (see makeWaterBed's comment in
+  // synths.js). A tap on the pond still rings a drip.
+  ambience: ['wind:0.12', 'music'],
   camera: { distance: 11.5, target: [0.6, 1.2, -2.2], azimuth: 0.55, polar: 1.19 },
 
   build(ctx) {
@@ -147,7 +150,7 @@ export default {
       if (!hit) return;
       const local = water.group.worldToLocal(hit.point.clone());
       water.ripple(local.x, local.z);
-      audio && audio.drip({ loud: true });
+      audio && audio.drip({ loud: true, at: hit.point });
       rippled++;
     });
 

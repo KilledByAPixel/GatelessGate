@@ -341,6 +341,34 @@ test('tap the monk: he leans forward, holds a moment, and settles back', () => {
   assert.equal(built.fragment().lean, 0, 'he does not take the step');
 });
 
+test('a held pointer on the sitter cannot ring the bell without limit', () => {
+  // CODE REVIEW CAUGHT (Task 5C): audio.bell() had no cooldown, so a held
+  // pointer stacked strikes without limit — k49's idiom
+  // (`clock - lastRing > 0.5`) now caps the bell, though the lean itself
+  // still retriggers on every tap by design ("he leans toward the ten
+  // directions, and stays").
+  const rings = [];
+  const audio = { bell: (o) => rings.push(o.f0) };
+  const ctx = fakeCtx();
+  ctx.audio = audio;
+  const built = k46.build(ctx);
+  built.setCamera(new THREE.PerspectiveCamera());
+  ctx.input.raycastFirst = hitSitter;
+
+  let t = 0;
+  const step = (n) => { for (let i = 0; i < n; i++) { built.update(1 / 60, t); t += 1 / 60; } };
+
+  ctx._taps.forEach((cb) => cb(400, 300));   // first strike
+  ctx._taps.forEach((cb) => cb(400, 300));   // immediate repeat, inside the cooldown
+  ctx._taps.forEach((cb) => cb(400, 300));   // and again
+  assert.equal(built.fragment().taps, 3, 'the lean itself still retriggers on every tap');
+  assert.equal(rings.length, 1, 'but only one bell actually rang');
+
+  step(40);                                  // past the 0.5s cooldown (40/60 ~= 0.67s)
+  ctx._taps.forEach((cb) => cb(400, 300));
+  assert.equal(rings.length, 2, 'a tap after the cooldown rings again');
+});
+
 test('tap the pole: a small sway runs through the mast — and through the man on it', () => {
   const ctx = fakeCtx();
   const built = k46.build(ctx);

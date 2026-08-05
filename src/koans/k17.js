@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
   composeWorld, makeVeranda, makeMonk, makeLantern,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, makeBlobShadow, addOutlines, toonMaterial, makeCylinderChime,
 } from '../kit/index.js';
 
 const ID = 17;
@@ -36,7 +36,17 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.15', 'call', 'music'],
+  // 'cylinder' names the pair hung under the teacher's own veranda — a real
+  // teaching porch is exactly where a set of these would hang, at two sizes
+  // so they read as a set rather than one repeating note. ONE token for both
+  // instances, not two: the honest reason is RATE, not a token-per-object
+  // rule (there isn't one — case 29 declares two 'furin' tokens for FOUR
+  // physical chimes). kit/cylinder.js is tuned for "tens of strikes an hour"
+  // per instance from wind alone (its own WIND_LEAN comment); two of them
+  // together are nowhere near as busy a voice as 'birds' wheeling overhead
+  // or a flag rippling continuously in the breeze, the kind of emitter a
+  // second token is actually meant to flag as "busier now."
+  ambience: ['wind:0.15', 'call', 'cylinder', 'music'],
   camera: { distance: 11.0, target: [0.6, 1.3, -0.4], azimuth: 0.60, polar: 1.26 },
 
   build(ctx) {
@@ -97,6 +107,27 @@ export default {
     lantern.position.set(1.4, 0, -3.2);
     scene.add(lantern);
 
+    // A pair of hanging bronze cylinders under the teacher's own eave, sized
+    // differently (0.65 / 0.95) so they answer with two distinct notes
+    // rather than one repeated — several of different sizes hung near each
+    // other reads as a set, per the kit's own note on the piece. Local to the
+    // veranda group, one either side of its centre post (px ~0, +-2.1 at
+    // this width), so both stay clear of the timber and square to the porch
+    // however the scene is placed.
+    const chimeA = makeCylinderChime({
+      size: 0.65, seed: 17,
+      onStrike: (note, force, pos) => audio && audio.cylinderStrike({ note, force, at: pos }),
+    });
+    chimeA.group.position.set(-1.1, 2.8, -0.15);
+    veranda.add(chimeA.group);
+    const chimeB = makeCylinderChime({
+      size: 0.95, seed: 173,
+      onStrike: (note, force, pos) => audio && audio.cylinderStrike({ note, force, at: pos }),
+    });
+    chimeB.group.position.set(1.1, 2.8, -0.15);
+    veranda.add(chimeB.group);
+    const chimes = [chimeA, chimeB];
+
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
@@ -149,12 +180,17 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
+      // the pair of cylinders first: probed and returned on before the big
+      // call-hit box below ever gets a chance to start a call
+      for (const c of chimes) {
+        if (c.pick(camera, input)) { c.ring(0.75); return; }
+      }
       if (!input.raycastFirst(camera, [hit])) return;
       if (bowAt > -99 && clock - bowAt < BOW_IN + BOW_HOLD + BOW_OUT) return;  // let it finish
       if (pending >= 0) return;                     // one call at a time
       calls++;
       pending = clock + ANSWER_DELAY;
-      audio && audio.knock({ force: 0.8 });         // "Oshin."
+      audio && audio.knock({ force: 0.8, at: CHU_POS });         // "Oshin."
     });
 
     return {
@@ -163,13 +199,14 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
+        for (const c of chimes) { c.setWindLevel(1); c.update(dt, simTime); }
         const step = Math.max(0, dt || 0);
 
         // the answer, a beat after the call
         if (pending >= 0 && clock >= pending) {
           pending = -1;
           answered++;
-          audio && audio.knock({ force: 0.35 });    // "Yes."
+          audio && audio.knock({ force: 0.35, at: OSHIN_POS });    // "Yes."
           if (answered >= 3) bowAt = clock;
         }
 
@@ -197,7 +234,10 @@ export default {
         if (done) { bowAt = -99; calls = 0; answered = 0; }
       },
       fragment() {
-        return { calls, answered, bowing: +Math.abs(oshinWaist.rotation.x).toFixed(4) };
+        return {
+          calls, answered, bowing: +Math.abs(oshinWaist.rotation.x).toFixed(4),
+          chimeStrikes: chimes.reduce((n, c) => n + c.strikes(), 0),
+        };
       },
       dispose() {},
     };

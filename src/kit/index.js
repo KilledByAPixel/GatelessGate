@@ -47,6 +47,7 @@ export { makeVeranda } from './veranda.js';
 export { makeRaisedFinger } from './finger.js';
 export { makeAssembly } from './assembly.js';
 export { makeFurin } from './furin.js';
+export { makeCylinderChime, noteForSize } from './cylinder.js';
 export { makeOdoshi } from './odoshi.js';
 // the third chapter: the objects the remaining cases turn on
 export { makeWheel } from './wheel.js';

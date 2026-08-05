@@ -1,0 +1,738 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Hanging Audition — The Gateless Gate</title>
+  <!--
+    task-swing-tune-brief.md's main deliverable. Unlike bell-audition.html and
+    spatial-audition.html, this one has to be WATCHED, not just heard — the
+    owner's complaint ("they don't really swing like I'd expect them to with
+    gravity... very slow, like they have a lot of dampening") is about how the
+    MOTION LOOKS, so a slider-only page cannot settle it. This page renders the
+    real hanging objects with the project's real renderer and materials
+    (src/render/toon.js, src/render/outlines.js — the same toonMaterial/
+    addOutlines every case uses, not a stand-in), drives the real audio engine
+    exactly as spatial-audition.html does (so a strike heard here is the strike
+    the book plays), and click-to-taps through src/input.js the same way a
+    case does.
+
+    THREE CONNECTED PROBLEMS this settles:
+      1. a single-tube furin's size now implies its note (kit/furin.js's
+         noteForSize) — the SIZES panel shows three singles of different
+         sizes side by side, the specific thing that problem is about.
+      2. the swing was tuned to the model it replaced — TAP_PEAK/DAMPING/
+         MAX_OMEGA (furin) and TAP_KICK/CYL_DAMPING/CLAP_DAMPING (cylinder)
+         are opened up here as SWING/CYL_SWING, live objects this page writes
+         straight into (SPATIAL's own pattern, src/audio/spatial.js) — no
+         reload, the very next tap feels the new number.
+      3. case 26's clatter (CLACK_FORCE) was inaudible — CLATTER.force is
+         live here too, with a roll/unroll button on a real screen instance.
+
+    DO NOT pick final values here and call it done — this page exists so the
+    owner can. Starting points are just starting points.
+
+    Keys: [w]/[s] nudge wind down/up a step. Tapping is click/touch on the
+    object itself, exactly as in the book — there is no keyboard tap, on
+    purpose, since the whole point is judging the real pick geometry.
+    Serve over HTTP (npx -y http-server -p 8105 -c-1 .) so the ES module
+    imports resolve — this fails from file://.
+  -->
+  <style>
+    :root {
+      --paper: #F3EDDF; --ink: #1E1E24; --line: #d8d0bf;
+      --mid: #5a5348; --accent: #C73E3A;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; height: 100%; background: var(--paper); color: var(--ink);
+      font: 13px/1.5 ui-monospace, Consolas, monospace;
+      overflow: hidden;
+    }
+    #app { display: flex; height: 100%; }
+    #stage { position: relative; flex: 1 1 auto; min-width: 0; }
+    #stage canvas { display: block; width: 100%; height: 100%; }
+    #hud {
+      position: absolute; top: 10px; left: 12px; color: var(--paper);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-size: 12px; white-space: pre;
+      pointer-events: none;
+    }
+    #sidebar {
+      width: 340px; flex: 0 0 auto; overflow-y: auto; padding: 14px 14px 40px;
+      border-left: 1px solid var(--line); background: rgba(255,255,255,0.5);
+    }
+    h1 { font-size: 14px; margin: 0 0 2px; }
+    #sub { color: var(--mid); font-size: 11px; margin-bottom: 12px; }
+    section {
+      border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px;
+      margin-bottom: 10px; background: rgba(255,255,255,0.4);
+    }
+    section > h2 {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--mid); margin: 0 0 8px;
+    }
+    .row { display: flex; gap: 6px; flex-wrap: wrap; }
+    button {
+      font: inherit; color: var(--mid); background: transparent;
+      border: 1px solid var(--line); border-radius: 3px; padding: 5px 10px;
+      cursor: pointer; font-size: 12px;
+    }
+    button:hover { border-color: var(--mid); color: var(--ink); }
+    button.active { border-color: var(--accent); color: var(--ink); background: rgba(199,62,58,0.08); }
+    .field {
+      display: grid; grid-template-columns: 78px 1fr 56px; gap: 6px 8px;
+      align-items: center; margin: 5px 0;
+    }
+    .field label { color: var(--mid); font-size: 11px; }
+    .field input[type=range] { width: 100%; accent-color: var(--accent); }
+    .field output { text-align: right; font-size: 11px; }
+    .derived { font-size: 11px; color: var(--mid); white-space: pre-line; margin-top: 6px; line-height: 1.6; }
+    .note { color: var(--mid); font-size: 10.5px; margin: 4px 0; }
+    #dump {
+      width: 100%; height: 10em; margin-top: 8px; font: 11px/1.4 ui-monospace, Consolas, monospace;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="stage">
+      <div id="hud">—</div>
+    </div>
+    <div id="sidebar">
+      <h1>Hanging Audition</h1>
+      <div id="sub">click/tap an object to knock it. watch the swing, not just hear it.</div>
+
+      <section>
+        <h2>what's hanging</h2>
+        <div class="row" id="mode-buttons"></div>
+      </section>
+
+      <section id="size-section">
+        <h2>size (rebuilds the geometry)</h2>
+        <div id="size-fields"></div>
+        <div class="derived" id="derived-out"></div>
+      </section>
+
+      <section>
+        <h2>wind</h2>
+        <div class="field">
+          <label for="wind">still &lt;-&gt; strong</label>
+          <input id="wind" type="range" min="0" max="1.6" step="0.01" value="0.6">
+          <output id="wind-out"></output>
+        </div>
+      </section>
+
+      <section id="furin-swing-section">
+        <h2>fūrin swing (SWING, kit/furin.js)</h2>
+        <div class="note">tap kick, settle time, and swing cap — the three PROBLEM 2 opened up. live: takes effect on the very next tap / next frame, no reload.</div>
+        <div id="furin-swing-fields"></div>
+      </section>
+
+      <section id="clap-force-section">
+        <h2>fūrin ring-down (CLAP_FORCE, kit/furin.js)</h2>
+        <div class="note">the clapper is a second pendulum now, so a tap rings a cluster and keeps ringing as the swing settles. "full-force at" is measured in units of this chime's OWN full-force tap velocity, so it holds across sizes; "stops below" is where a contact gets too soft to speak — that is what ends the ring-down (without it: 32 contacts, 81 strikes, still going 15s later).</div>
+        <div id="clap-force-fields"></div>
+      </section>
+
+      <section id="spin-section">
+        <h2>tanzaku spin (SPIN, kit/furin.js)</h2>
+        <div class="note">the paper strip below a SINGLE turns on its own thread — a torsional pendulum, so a hard enough knock carries it over the top and spinning before it settles back to a twist. Where that happens is well above the undamped 2·√stiffness: at the shipped stiffness a full tap turns 0.4 of a revolution at kick 6 and 1.4 at kick 10, because the strip loses better than half its energy on the way up. Rings are untouched — their tag keeps the flutter it has.</div>
+        <div id="spin-fields"></div>
+      </section>
+
+      <section id="cyl-swing-section">
+        <h2>cylinder swing (CYL_SWING, kit/cylinder.js)</h2>
+        <div class="note">tap kick swings the BODY (not the clapper) — raising it swings it further AND makes the ring-down last longer (more re-strikes at the body's own ~0.78s half-period, unrelated to amplitude); the force law is what makes those re-strikes fade instead of hammering at full volume, so a bigger kick should still sound like one settling ring, not a louder loop.</div>
+        <div id="cyl-swing-fields"></div>
+      </section>
+
+      <section id="cyl-force-section">
+        <h2>cylinder ring-down (CYL_FORCE, kit/cylinder.js)</h2>
+        <div class="note">these two ARE the diminuendo — starting points, not audited by ear. "knee level" is how loud a strike gets before it's past wind's own range (raise it and typical wind knocks get louder, taps start closer to full volume already); "cap (rad/s)" is how hard a contact has to be to report full force — lower it and a tap's ring-down saturates sooner (fewer strikes taper, more sit near max); raise it and the tail fades further/faster. Live: the very next strike hears it, no reload.</div>
+        <div id="cyl-force-fields"></div>
+      </section>
+
+      <section id="cyl-voice-section">
+        <h2>cylinder voice (BRONZE, audio/synths.js)</h2>
+        <div class="note">level only — bright/decay/degree are settled, see synths.js. Live: the very next strike hears it, no reload.</div>
+        <div id="cyl-voice-fields"></div>
+      </section>
+
+      <section id="screen-section">
+        <h2>case 26 — the sudare's clatter (CLATTER, kit/screen.js)</h2>
+        <div id="screen-fields"></div>
+        <div class="row" style="margin-top:6px">
+          <button id="screen-roll">roll / unroll</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>print preset</h2>
+        <div class="row">
+          <button id="print-preset">print SWING / CLAP_FORCE / SPIN / CYL_SWING / CYL_FORCE / BRONZE / CLATTER</button>
+        </div>
+        <textarea id="dump" readonly></textarea>
+      </section>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from '../lib/three.module.js';
+    import { PAPER } from '../src/palette.js';
+    import { makeLights, toonMaterial, addOutlines } from '../src/kit/index.js';
+    import { makeFurin, SWING, CLAP_FORCE, SPIN, SINGLE_BODY_LEN } from '../src/kit/furin.js';
+    import { makeCylinderChime, CYL_SWING, CYL_FORCE } from '../src/kit/cylinder.js';
+    import { makeScreen, CLATTER } from '../src/kit/screen.js';
+    import { BRONZE } from '../src/audio/synths.js';
+    import { makeInput } from '../src/input.js';
+    import { createAudio } from '../src/audio/engine.js';
+
+    // ---- renderer, matching kit-preview.html's convention: the project's
+    // real toon materials and inverted-hull outlines, no post-processing
+    // pipeline (that's the main app's cinematic tone-mapping, not needed to
+    // judge geometry/motion) --------------------------------------------
+    const stage = document.getElementById('stage');
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+    function sizeRenderer() {
+      const w = stage.clientWidth, h = stage.clientHeight;
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    stage.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(PAPER);
+    scene.fog = new THREE.FogExp2(PAPER, 0.05);
+    scene.add(makeLights());
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.05, 100);
+
+    // a small lintel block so the hang point reads as hanging FROM
+    // something, not floating — same visual role gate.js's kasagi plays
+    // in the real cases
+    const lintelMat = toonMaterial({ color: '#3a352c', flat: true });
+    const LINTEL_Y = 2.4, LINTEL_H = 0.16;
+    const lintel = new THREE.Mesh(new THREE.BoxGeometry(3.4, LINTEL_H, 0.32), lintelMat);
+    lintel.position.set(0, LINTEL_Y, 0);
+    scene.add(lintel);
+    // THE HANG POINT — a real bug Frank caught by eye: "their pivot point
+    // should be the connection point where they're connected to the thing
+    // above, and it's not set up properly. So the lowest one is right now
+    // actually inside the top of the wall, or the ceiling." Every hanging
+    // object was placed at LINTEL_Y — the beam's CENTRE — so the top of every
+    // cord was buried half a beam deep, and a small chime (whose cord scales
+    // with its size) disappeared into the wood entirely. A thing hangs from
+    // the UNDERSIDE of what it is tied to.
+    const HANG_Y = LINTEL_Y - LINTEL_H / 2;
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), toonMaterial({ color: '#CFC7B2' }));
+    ground.rotation.x = -Math.PI / 2;
+    ground.userData.noOutline = true;
+    scene.add(ground);
+    // addOutlines() (src/render/outlines.js) is a one-time traverse — see the
+    // longer comment near addFurin()/addCylinder() below for why every
+    // dynamically-added hanging object gets its OWN call instead of relying
+    // on this one. This call covers only the static set-dressing built so far
+    // (the lintel; the ground opts out via noOutline).
+    addOutlines(scene, { width: 0.035, wobble: 0.7 });
+
+    // ---- audio: the REAL engine, exactly as spatial-audition.html drives
+    // it, so a tap heard here is the tap the book plays --------------------
+    const SAVE = { state: () => ({ soundOn: true }), setSound() {} };
+    const audio = createAudio(SAVE);
+    const LISTENER = { pos: { x: 0, y: 1.5, z: 6 }, right: { x: 1, y: 0, z: 0 }, forward: { x: 0, y: 0, z: -1 } };
+    let audioReady = false;
+    async function ensureAudio() {
+      audio.unlock();
+      if (audio.ctx && audio.ctx.state !== 'running') {
+        try { await audio.ctx.resume(); } catch { /* next tap retries */ }
+      }
+      if (!audioReady) {
+        audio.setListener(LISTENER);
+        audio.startAmbience(['wind:0']);   // creates the wind node; level driven by the slider below
+        audioReady = true;
+      }
+    }
+
+    // ---- input: the real picker, against the real canvas ------------------
+    const input = makeInput(renderer.domElement);
+
+    // ---- component bookkeeping ---------------------------------------------
+    // `live.objs` holds whatever hanging object(s) are on screen right now —
+    // one or more makeFurin()/makeCylinderChime() instances, each already
+    // shaped {group, ring, pick, update, setWindLevel, note, periods,
+    // tubeLengths?}. Rebuilt whenever the mode or a SIZE slider changes
+    // (geometry is baked at construction) — SWING/CYL_SWING/CLATTER are the
+    // live-WITHOUT-rebuild ones, per the brief's own split between "motion
+    // tuning" (live) and "size" (structural, needs a fresh build).
+    let live = { objs: [] };
+    let screenObj = null;   // the case-26 screen, built once, independent of `mode`
+
+    function clearLive() {
+      for (const o of live.objs) scene.remove(o.group);
+      live = { objs: [] };
+    }
+
+    // addOutlines() (src/render/outlines.js) does a ONE-TIME traverse of
+    // whatever root it's given — it does not track objects added to the
+    // scene LATER. This harness rebuilds its hanging object on every mode
+    // switch and every size-slider change, so the once-per-case pattern
+    // (call it once on the whole scene after everything is built) would
+    // leave every furin/cylinder built after the first page load with no
+    // outline at all. Instead, outline each new group the moment it is
+    // added — the static lintel/ground get theirs once at startup (see the
+    // bottom of this file), everything built afterward gets its own call
+    // right here.
+    const OUTLINE_OPTS = { width: 0.035, wobble: 0.7 };
+    function addFurin(opts, x) {
+      const f = makeFurin({
+        ...opts,
+        onStrike: (tube, force, pos) => { audio.chimeStrike({ tube, force, at: pos }); },
+      });
+      f.group.position.set(x, HANG_Y, 0);
+      scene.add(f.group);
+      addOutlines(f.group, OUTLINE_OPTS);
+      live.objs.push(f);
+      return f;
+    }
+    function addCylinder(opts, x) {
+      const c = makeCylinderChime({
+        ...opts,
+        onStrike: (note, force, pos) => { audio.cylinderStrike({ note, force, at: pos }); },
+      });
+      c.group.position.set(x, HANG_Y, 0);
+      scene.add(c.group);
+      addOutlines(c.group, OUTLINE_OPTS);
+      live.objs.push(c);
+      return c;
+    }
+
+    // ---- the case-26 screen: built once, shown only in 'screen' mode but
+    // kept alive so its own roll state (and CLATTER.force) can be driven from
+    // its own always-visible panel regardless of which hanging object mode
+    // is selected -------------------------------------------------------
+    function buildScreen() {
+      const s = makeScreen({
+        width: 2.6, height: 2.2, slats: 11, seed: 26,
+        onClack: (force, at) => { audio.knock({ force, at }); },
+      });
+      s.group.position.set(0, 0, 0);
+      s.group.visible = false;
+      scene.add(s.group);
+      addOutlines(s.group, OUTLINE_OPTS);
+      return s;
+    }
+    screenObj = buildScreen();
+
+    // ---- modes ---------------------------------------------------------
+    const CAMERAS = {
+      ring5:   { p: [0, 1.7, 2.0], t: [0, 1.9, 0] },
+      tubes3:  { p: [0, 1.8, 1.8], t: [0, 2.0, 0] },
+      single:  { p: [0, 1.9, 1.4], t: [0, 2.1, 0] },
+      sizes3:  { p: [0, 1.6, 2.6], t: [0, 1.9, 0] },
+      case29:  { p: [0, 1.7, 3.2], t: [0, 1.9, 0] },
+      cylinder:{ p: [0, 1.2, 2.4], t: [0, 1.6, 0] },
+      screen:  { p: [0, 1.3, 3.6], t: [0, 1.1, 0] },
+    };
+    let mode = 'ring5';
+
+    // CASE 29 AS STAGED — follow-up review: the collision risk this task
+    // found (and fixed) is specifically about the ring plus three singles
+    // hanging TOGETHER under case 29's own gate, and the harness had no
+    // scene composing them that way — sizes3 mode uses unrelated x-positions
+    // ([-0.9, 0, 0.9]), so the one arrangement the geometry check is about
+    // was the one thing this harness could not show. These four numbers are
+    // src/koans/k29.js's own RING_X/SINGLE_X/SINGLE_SIZES/SINGLE_CORD,
+    // copied here BY HAND (k29.js keeps them as local consts inside build(),
+    // not exported — a dev tool reading them off a running case would need
+    // to reach into its closure, which is more machinery than a copy-and-
+    // comment for four numbers that anyone touching case 29 will grep for
+    // anyway). If k29.js's own numbers move, this mode drifts until someone
+    // updates it here too — no test enforces this pairing; tests/k29.test.js
+    // checks the REAL case, this is only what the harness shows.
+    // (The five-tube ring that used to hang here alongside them is gone —
+    // Frank's own call: "for case twenty nine, let's get rid of the five-tube
+    // ring that's placed. So it's just gonna have three, the three different
+    // sizes.")
+    const CASE29_LAYOUT = {
+      singleX: [-0.72, 0, 0.72],
+      singleSizes: [0.18, 0.12, 0.09],
+      singleCord: [0.095, 0.156, 0.187],   // ABSOLUTE lengths now, not fractions of size
+    };
+    // slider-controlled sizes, per mode — persisted across mode switches so
+    // dialing a size in, leaving, and coming back doesn't lose it
+    const sizeState = {
+      single: 0.17,
+      sizes3: [0.18, 0.12, 0.09],   // case 29's own current staging, as a starting point
+      cylinder: 0.8,
+    };
+    // Absolute cord lengths for the "three sizes" mode, matching what k29
+    // now does. With cord measured in units of SIZE the smallest chime gets
+    // the shortest string and ends up pinned to the beam — Frank: "the small
+    // ones are not hanging low enough." These bring all three bottom edges
+    // to roughly the same line, so the set reads as three SIZES rather than
+    // three heights.
+    // ...and SOLVED from the size rather than listed, so dragging a size
+    // slider keeps the three bells on one line instead of only working at
+    // the three sizes case 29 happens to stage. Same target k29.js solves
+    // for by hand; 0.18 + SINGLE_BODY_LEN is the bell's own bottom in units
+    // of size (furin.js).
+    const SIZES3_TARGET = 0.28;
+    const cordForSize = (s) => Math.max(0.02, SIZES3_TARGET - (0.18 + SINGLE_BODY_LEN) * s);
+
+    // CODE REVIEW CAUGHT A REAL BUG: this used to rebuild the SIZE FIELD DOM
+    // (buildSizeFields(), below) on every single size-slider `input` event,
+    // via each slider's onChange calling setMode() rather than a narrower
+    // rebuild. buildSizeFields() does `wrap.innerHTML = ''` and creates
+    // fresh <input> elements — which detaches the very <input> the pointer
+    // is dragging, so a real mouse/touch drag died after one tick (the
+    // pointer capture is tied to a DOM node that no longer exists; a
+    // synthetic `dispatchEvent(new Event('input'))`, which is what a script
+    // uses, never notices because it never HELD the node across two calls).
+    // This is precisely the control the brief asked to be "legible while
+    // dragging." Split in two: rebuildObject() below does ONLY what a size
+    // change needs (clear and re-add the 3D object) and is what the size
+    // sliders call; setMode() calls it too, but ALSO rebuilds the field DOM
+    // (buildSizeFields()) — safe there, since a mode switch is a discrete
+    // click, not a drag gesture holding a specific <input> under the pointer.
+    function rebuildObject() {
+      clearLive();
+      screenObj.group.visible = (mode === 'screen');
+      if (mode === 'ring5') addFurin({ tubes: 5, seed: 29 }, 0);
+      else if (mode === 'tubes3') addFurin({ tubes: 3, seed: 11 }, 0);
+      else if (mode === 'single') addFurin({ tubes: 1, size: sizeState.single, seed: 8 }, 0);
+      else if (mode === 'sizes3') {
+        const xs = [-0.9, 0, 0.9];
+        sizeState.sizes3.forEach((s, i) => addFurin({
+          tubes: 1, size: s, cordLength: cordForSize(s), seed: 90 + i, phase: 1.3 + 2.4 * i,
+        }, xs[i]));
+      } else if (mode === 'case29') {
+        CASE29_LAYOUT.singleX.forEach((x, i) => addFurin({
+          tubes: 1, size: CASE29_LAYOUT.singleSizes[i], cordLength: CASE29_LAYOUT.singleCord[i],
+          seed: 293 + i, phase: 1.3 + 2.4 * i,
+        }, x));
+      } else if (mode === 'cylinder') addCylinder({ size: sizeState.cylinder, seed: 11 }, 0);
+      // screen mode has no `live` hanging object — the lintel/ground stay,
+      // the ring/cylinder are cleared, and the screen itself is a separate,
+      // always-built object toggled visible above
+      applyWind();
+      updateDerived();
+      render();
+    }
+
+    function setMode(name) {
+      mode = name;
+      for (const [key, btn] of Object.entries(modeButtons)) btn.classList.toggle('active', key === name);
+      const cam = CAMERAS[name];
+      camera.position.set(...cam.p);
+      camera.lookAt(...cam.t);
+      buildSizeFields();
+      rebuildObject();
+    }
+
+    // ---- wind: drives every currently-visible component AND the real
+    // audible wind bed, so "the steady-state lean and the gusting can both
+    // be judged" — furin/cylinder's own setWindLevel takes the swing TORQUE,
+    // audio.setWindLevel takes the actual wind synth's level (0 harmless if
+    // one is missing, e.g. the screen has neither) ------------------------
+    function applyWind() {
+      const v = parseFloat(document.getElementById('wind').value);
+      document.getElementById('wind-out').textContent = v.toFixed(2);
+      for (const o of live.objs) o.setWindLevel(v);
+      audio.setWindLevel(Math.min(1, v));
+    }
+    document.getElementById('wind').addEventListener('input', applyWind);
+
+    // ---- mode buttons ----------------------------------------------------
+    const MODE_LABELS = {
+      ring5: '5-tube ring', tubes3: '3-tube', single: 'single tube',
+      sizes3: 'three sizes', case29: 'case 29 (as staged)',
+      cylinder: 'bronze cylinder', screen: 'case 26 screen',
+    };
+    const modeButtons = {};
+    const modeWrap = document.getElementById('mode-buttons');
+    for (const key of Object.keys(MODE_LABELS)) {
+      const b = document.createElement('button');
+      b.textContent = MODE_LABELS[key];
+      b.addEventListener('click', () => setMode(key));
+      modeWrap.appendChild(b);
+      modeButtons[key] = b;
+    }
+
+    // ---- size fields: rebuild-on-change, per mode -------------------------
+    function buildSizeFields() {
+      const wrap = document.getElementById('size-fields');
+      wrap.innerHTML = '';
+      // case29 has no size sliders of its own (its sizes are fixed to match
+      // k29.js — see CASE29_LAYOUT) but the section still has to show: it's
+      // also where the derived readout (including case29's own live minimum-
+      // gap line, below) renders, and hiding the section would hide that too.
+      document.getElementById('size-section').style.display =
+        (mode === 'single' || mode === 'sizes3' || mode === 'cylinder' || mode === 'case29') ? '' : 'none';
+      // each onChange touches ONLY sizeState + rebuildObject() — never
+      // setMode() / buildSizeFields() — see rebuildObject()'s own comment
+      // for why: rebuilding the field DOM mid-drag kills the drag.
+      if (mode === 'single') {
+        wrap.appendChild(sizeSlider('size', 0.08, 0.34, 0.005, sizeState.single,
+          (v) => { sizeState.single = v; rebuildObject(); }));
+      } else if (mode === 'cylinder') {
+        wrap.appendChild(sizeSlider('size', 0.6, 1.0, 0.01, sizeState.cylinder,
+          (v) => { sizeState.cylinder = v; rebuildObject(); }));
+      } else if (mode === 'sizes3') {
+        ['low (left)', 'mid (centre)', 'high (right)'].forEach((label, i) => {
+          wrap.appendChild(sizeSlider(label, 0.08, 0.34, 0.005, sizeState.sizes3[i],
+            (v) => { sizeState.sizes3[i] = v; rebuildObject(); }));
+        });
+      } else if (mode === 'case29') {
+        const note = document.createElement('div');
+        note.className = 'note';
+        note.textContent = 'sizes fixed to match src/koans/k29.js — this mode is for watching them swing NEAR each other, not for resizing.';
+        wrap.appendChild(note);
+      }
+    }
+    function sizeSlider(label, min, max, step, value, onChange) {
+      const div = document.createElement('div');
+      div.className = 'field';
+      div.innerHTML = `<label>${label}</label><input type="range" min="${min}" max="${max}" step="${step}" value="${value}"><output>${value.toFixed(3)}</output>`;
+      const input = div.querySelector('input'), out = div.querySelector('output');
+      input.addEventListener('input', () => {
+        const v = parseFloat(input.value);
+        out.textContent = v.toFixed(3);
+        onChange(v);
+      });
+      return div;
+    }
+
+    // ---- derived readouts: period, note, tube length — live while dragging
+    // The saturated-burst peak angle, CHEAPLY: at the energy cap's own
+    // saturation point, pendulumEnergy's omega0^2 term cancels out of
+    // 1-cos(theta) = 0.5*maxOmegaFrac^2 (same identity tests/k29.test.js's
+    // own collision-guard test derives and relies on), so this needs no
+    // simulation loop, just the live SWING.maxOmegaFrac. It runs a hair
+    // HOTTER than the real damped peak (measured: theoretical 0.664 rad vs
+    // simulated 0.627 rad at maxOmegaFrac=0.65) — the right direction for a
+    // live warning readout to round toward, not the wrong one. Clamped
+    // because maxOmegaFrac dragged past ~2 makes 0.5*frac^2 exceed 2, which
+    // has no real acos.
+    function theoreticalPeakTheta() {
+      const x = 1 - 0.5 * SWING.maxOmegaFrac * SWING.maxOmegaFrac;
+      return Math.acos(Math.max(-1, Math.min(1, x)));
+    }
+
+    // case29's own live minimum-gap readout — task-swing-tune-brief.md
+    // follow-up: "surface the live minimum gap... so he can see the margin
+    // shrink as he drags." Reuses the exact worst-case-per-pair, visible-
+    // geometry method tests/k29.test.js's own collision guard uses, on
+    // CASE29_LAYOUT's numbers (kept in sync with k29.js by hand — see its
+    // own comment). Cheap: a handful of makeFurin() calls with no rendering,
+    // not a physics simulation, so this can run on every slider tick.
+    const CASE29_VISIBLE = new Set(['cord', 'tube', 'cap', 'clapper', 'tag']);
+    function visibleBoxAt(spec, theta) {
+      const f = makeFurin({ tubes: spec.tubes, size: spec.size, seed: spec.seed, cordLength: spec.cord, phase: spec.phase, onStrike: () => {} });
+      f.group.position.set(spec.x, 0, 0);
+      const swing = f.group.getObjectByName('swing');
+      swing.rotation.z = theta;
+      f.group.updateMatrixWorld(true);
+      const box = new THREE.Box3();
+      f.group.traverse((n) => { if (n.isMesh && CASE29_VISIBLE.has(n.name)) box.union(new THREE.Box3().setFromObject(n)); });
+      return box;
+    }
+    function case29MinGap() {
+      const theta = theoreticalPeakTheta();
+      const specs = CASE29_LAYOUT.singleX.map((x, i) => ({
+        name: `single${i + 1}`, x, size: CASE29_LAYOUT.singleSizes[i], cord: CASE29_LAYOUT.singleCord[i],
+        seed: 293 + i, tubes: 1, phase: 1.3 + 2.4 * i,
+      }));
+      let worst = Infinity, worstPair = '';
+      for (let i = 0; i < specs.length - 1; i++) {
+        for (const sa of [1, -1]) for (const sb of [1, -1]) {
+          const gap = visibleBoxAt(specs[i + 1], sb * theta).min.x - visibleBoxAt(specs[i], sa * theta).max.x;
+          if (gap < worst) { worst = gap; worstPair = `${specs[i].name}<->${specs[i + 1].name}`; }
+        }
+      }
+      return { worst, worstPair, theta };
+    }
+
+    function updateDerived() {
+      const out = document.getElementById('derived-out');
+      const lines = [];
+      for (const o of live.objs) {
+        if (o.tubeLengths) {
+          const lens = o.tubeLengths().map((l) => l.toFixed(4)).join(', ');
+          const per = o.periods();
+          const noteStr = o.note() === null ? '(ring, index-based)' : o.note();
+          lines.push(`furin: note=${noteStr}  period(z)=${per.z.toFixed(3)}s  tube length(s)=[${lens}]`);
+        } else if (o.note) {
+          const per = o.periods();
+          lines.push(`cylinder: note=${o.note()}  period(cyl)=${per.cyl.toFixed(3)}s  period(clap)=${per.clap.toFixed(3)}s`);
+        }
+      }
+      if (mode === 'case29') {
+        const { worst, worstPair, theta } = case29MinGap();
+        const verdict = worst > 0 ? 'clear' : 'COLLISION';
+        lines.push(`minimum swing gap: ${worst.toFixed(4)} (${worstPair}) at theta~=${theta.toFixed(3)} rad — ${verdict}`);
+      }
+      out.textContent = lines.join('\n');
+    }
+
+    // ---- SWING / CYL_SWING / CLATTER sliders — live, direct writes into
+    // the exported objects, same pattern SPATIAL uses in spatial-audition.html
+    function liveField(container, obj, key, label, min, max, step, fmt, transform, untransform) {
+      const div = document.createElement('div');
+      div.className = 'field';
+      const initial = untransform ? untransform(obj[key]) : obj[key];
+      div.innerHTML = `<label>${label}</label><input type="range" min="${min}" max="${max}" step="${step}" value="${initial}"><output></output>`;
+      const input = div.querySelector('input'), out = div.querySelector('output');
+      const sync = () => { out.textContent = fmt(untransform ? untransform(obj[key]) : obj[key]); };
+      sync();
+      input.addEventListener('input', () => {
+        const raw = parseFloat(input.value);
+        obj[key] = transform ? transform(raw) : raw;
+        sync();
+        // case29's own minimum-gap readout depends on SWING.maxOmegaFrac —
+        // "surface the live minimum gap... so he can see the margin shrink
+        // as he drags," not just when he switches modes or resizes. Cheap
+        // and harmless for every OTHER field/mode too (updateDerived() only
+        // does the case29 gap work when mode==='case29').
+        updateDerived();
+      });
+      container.appendChild(div);
+    }
+    const tau = (damping) => 2 / damping;          // damping -> settle time, for a readable slider
+    const fromTau = (t) => 2 / t;
+    const furinWrap = document.getElementById('furin-swing-fields');
+    liveField(furinWrap, SWING, 'tapPeak', 'tap kick (rad)', 0.05, 1.2, 0.01, (v) => v.toFixed(2));
+    liveField(furinWrap, SWING, 'damping', 'settle (tau, s)', 0.3, 12, 0.1, (v) => v.toFixed(2) + 's', fromTau, tau);
+    liveField(furinWrap, SWING, 'maxOmegaFrac', 'swing cap (xomega0)', 0.1, 2.0, 0.01, (v) => v.toFixed(2));
+
+    const cylWrap = document.getElementById('cyl-swing-fields');
+    liveField(cylWrap, CYL_SWING, 'tapKick', 'tap kick (rad/s)', 0.5, 15, 0.1, (v) => v.toFixed(2));
+    liveField(cylWrap, CYL_SWING, 'cylDamping', 'body settle (tau, s)', 0.5, 20, 0.1, (v) => v.toFixed(2) + 's', fromTau, tau);
+    liveField(cylWrap, CYL_SWING, 'clapDamping', 'clapper settle (tau, s)', 0.5, 20, 0.1, (v) => v.toFixed(2) + 's', fromTau, tau);
+
+    // CYL_FORCE.kneeLevel/cap — code review, task-cylinder-fix-brief.md
+    // follow-up: these two numbers ARE the ring-down's diminuendo shape
+    // (cylinder.js's own FORCE NORMALISATION comment has the measured
+    // before/after), and until now they were plain consts a slider on this
+    // page couldn't reach — the exact thing Frank needs to judge whether the
+    // taper reads as a bell fading or a sustained ring that just softens
+    // near the tail. Same live-object-write pattern as CYL_SWING/BRONZE.
+    const cylForceWrap = document.getElementById('cyl-force-fields');
+    liveField(cylForceWrap, CYL_FORCE, 'kneeLevel', 'knee level', 0.05, 0.95, 0.01, (v) => v.toFixed(2));
+    liveField(cylForceWrap, CYL_FORCE, 'windGamma', 'wind shape', 0.2, 1.5, 0.05, (v) => v.toFixed(2));
+    liveField(cylForceWrap, CYL_FORCE, 'cap', 'cap (rad/s)', 0.3, 6, 0.1, (v) => v.toFixed(2));
+    liveField(cylForceWrap, CYL_FORCE, 'tapGamma', 'tap shape', 0.4, 2.5, 0.05, (v) => v.toFixed(2));
+
+    // CLAP_FORCE — the fūrin's own clapper, new in this pass. A tap now
+    // rings a CLUSTER and keeps ringing as the swing settles (kit/furin.js,
+    // THE CLAPPER); these three decide how loud each contact is and where
+    // the ring-down stops. Same live-object-write pattern as everything
+    // else on this page.
+    const clapWrap = document.getElementById('clap-force-fields');
+    liveField(clapWrap, CLAP_FORCE, 'capFrac', 'full-force at (xtap)', 0.3, 2.5, 0.05, (v) => v.toFixed(2));
+    liveField(clapWrap, CLAP_FORCE, 'gamma', 'shape', 0.3, 2.0, 0.05, (v) => v.toFixed(2));
+    liveField(clapWrap, CLAP_FORCE, 'minForce', 'stops below', 0.02, 0.6, 0.01, (v) => v.toFixed(2));
+
+    // SPIN — the tanzaku's twist, new with the single-tube fūrin's real
+    // shape. `stiffness` and `damping` are re-read every frame so they reach
+    // an already-hanging chime; `wind` and `kick` are read at the moment
+    // they're used, so they do too.
+    const spinWrap = document.getElementById('spin-fields');
+    liveField(spinWrap, SPIN, 'stiffness', 'stiffness', 0.5, 30, 0.1, (v) => v.toFixed(1));
+    liveField(spinWrap, SPIN, 'damping', 'settle (tau, s)', 0.5, 15, 0.1, (v) => v.toFixed(2) + 's', fromTau, tau);
+    liveField(spinWrap, SPIN, 'wind', 'wind torque', 0, 12, 0.1, (v) => v.toFixed(1));
+    liveField(spinWrap, SPIN, 'kick', 'tap kick', 0, 20, 0.5, (v) => v.toFixed(1));
+
+    // BRONZE.level — BUG FIX: "the bronze cylinder is not as loud as the
+    // other ones." Same live-object-write pattern as CYL_SWING above, just
+    // reaching into audio/synths.js instead of kit/cylinder.js — cylinderStrike()
+    // (src/audio/engine.js) reads BRONZE.level fresh on every strike, so this
+    // slider reaches the very next tap with no reload, same contract as
+    // every other field on this page.
+    const cylVoiceWrap = document.getElementById('cyl-voice-fields');
+    liveField(cylVoiceWrap, BRONZE, 'level', 'level (peak gain)', 0.01, 0.25, 0.005, (v) => v.toFixed(3));
+
+    const screenWrap = document.getElementById('screen-fields');
+    liveField(screenWrap, CLATTER, 'force', 'clack force', 0.05, 1.0, 0.01, (v) => v.toFixed(2));
+    document.getElementById('screen-roll').addEventListener('click', () => {
+      screenObj.toggle();
+    });
+
+    // ---- click-to-tap: pick against whatever is currently live, exactly as
+    // a case does (component.pick(camera, input) then component.ring(...)) -
+    input.onTap(async () => {
+      await ensureAudio();
+      if (mode === 'screen') return;   // the screen rolls via its own button, not a tap
+      for (const o of live.objs) {
+        const hit = o.pick(camera, input);
+        if (hit) {
+          if (Number.isInteger(hit.tube) || hit.tube === null) o.ring(0.9, hit.tube);
+          else o.ring(0.9);   // the cylinder's pick() returns true, not {tube}
+          return;
+        }
+      }
+    });
+    // first pointerdown anywhere also unlocks audio, so the very first tap
+    // is not silently dropped waiting on an async resume()
+    renderer.domElement.addEventListener('pointerdown', () => { ensureAudio(); }, { once: false });
+    addEventListener('keydown', (e) => {
+      if (e.code === 'Space') { e.preventDefault(); }
+      if (e.key === 'w') {
+        const el = document.getElementById('wind');
+        el.value = Math.max(0, parseFloat(el.value) - 0.1); applyWind();
+      } else if (e.key === 's') {
+        const el = document.getElementById('wind');
+        el.value = Math.min(1.6, parseFloat(el.value) + 0.1); applyWind();
+      }
+    });
+
+    // ---- print preset ------------------------------------------------------
+    function dumpPresets() {
+      const fmt = (o) => Object.entries(o).map(([k, v]) => `  ${k}: ${v},`).join('\n');
+      // sizeState included on purpose: Problem 1's actual deliverable is a
+      // SIZE (case 29's own SINGLE_SIZES/single/cylinder size), not just the
+      // swing constants above — omitting it left no way to copy out the
+      // sizes a print-preset click was presumably meant to capture.
+      return `SWING (kit/furin.js):\n{\n${fmt(SWING)}\n}\n\n` +
+             `CLAP_FORCE (kit/furin.js):\n{\n${fmt(CLAP_FORCE)}\n}\n\n` +
+             `SPIN (kit/furin.js):\n{\n${fmt(SPIN)}\n}\n\n` +
+             `CYL_SWING (kit/cylinder.js):\n{\n${fmt(CYL_SWING)}\n}\n\n` +
+             `CYL_FORCE (kit/cylinder.js):\n{\n${fmt(CYL_FORCE)}\n}\n\n` +
+             `BRONZE (audio/synths.js):\n{\n${fmt(BRONZE)}\n}\n\n` +
+             `CLATTER (kit/screen.js):\n{\n${fmt(CLATTER)}\n}\n\n` +
+             `sizeState (this harness's own size sliders, mode "${mode}"):\n${JSON.stringify(sizeState, null, 2)}`;
+    }
+    document.getElementById('print-preset').addEventListener('click', () => {
+      const dump = document.getElementById('dump');
+      dump.value = dumpPresets();
+      dump.style.display = 'block';
+      dump.focus(); dump.select();
+    });
+
+    // ---- render loop ---------------------------------------------------
+    let simTime = 0, t0 = performance.now();
+    function render() { renderer.render(scene, camera); }
+    function loop(now) {
+      requestAnimationFrame(loop);
+      const dt = Math.min(0.05, (now - t0) / 1000); t0 = now;
+      simTime += dt;
+      for (const o of live.objs) o.update(dt, simTime);
+      screenObj.update(dt, simTime);
+      updateHud();
+      render();
+    }
+    function updateHud() {
+      document.getElementById('hud').textContent =
+        `mode: ${MODE_LABELS[mode]}   ·   click/tap to knock   ·   [w]/[s] wind`;
+    }
+
+    sizeRenderer();
+    addEventListener('resize', sizeRenderer);
+    setMode('ring5');
+    requestAnimationFrame(loop);
+
+    // console access, same convention as kit-preview.html's window.kp
+    window.ha = { scene, camera, renderer, live: () => live, setMode, SWING, CLAP_FORCE, SPIN, CYL_SWING, CYL_FORCE, CLATTER, audio };
+  </script>
+</body>
+</html>

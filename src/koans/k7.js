@@ -14,10 +14,14 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  // water:0 = drips with no bed (a basin at rest is nearly silent). The
-  // shishi-odoshi is the yard's second emitter, so the swells thin further
-  // here than anywhere — this garden already keeps its own time.
-  ambience: ['wind:0.14', 'water:0', 'odoshi', 'music'],
+  // Used to declare water:0 — drips with no bed (a basin at rest is nearly
+  // silent) — but that also scheduled random ambient drips, which Frank
+  // decided he didn't want (see makeWaterBed's comment in synths.js: the
+  // bed and its drip schedule are switched off everywhere, not just here).
+  // A tap on the water or the bowl still answers with one (audio.drip(),
+  // below) — that response was never on this token, only the ambient
+  // schedule was. The shishi-odoshi is the yard's one declared emitter now.
+  ambience: ['wind:0.14', 'odoshi', 'music'],
   // the first bright case: washing a bowl is domestic, morning work — yo, not
   // hirajoshi
   mood: 'yo',
@@ -75,8 +79,8 @@ export default {
     // yard's clock; a tap tips it early.
     const odoshi = makeOdoshi({
       seed: 7,
-      onPour: () => audio && audio.pour(),
-      onKnock: (force) => audio && audio.knock({ force }),
+      onPour: () => audio && audio.pour({ at: odoshi.group.position }),
+      onKnock: (force) => audio && audio.knock({ force, at: odoshi.group.position }),
     });
     odoshi.group.position.set(3.75, 0, 0.15);
     odoshi.group.rotation.y = -2.70;
@@ -132,13 +136,13 @@ export default {
       if (onWater) {
         const local = water.group.worldToLocal(onWater.point.clone());
         water.ripple(local.x, local.z);
-        audio && audio.drip({ loud: true });   // the touch you see is the drop you hear
+        audio && audio.drip({ loud: true, at: onWater.point });   // the touch you see is the drop you hear
         rippled++;
         return;
       }
       if (input.raycastFirst(camera, bowlMeshes)) {
         water.ripple(0, 0);
-        audio && audio.drip({ loud: true });
+        audio && audio.drip({ loud: true, at: bowl.position });
         rippled++;
       }
     });
