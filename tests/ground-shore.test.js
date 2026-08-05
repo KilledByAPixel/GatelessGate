@@ -64,3 +64,18 @@ test('makeGround drapes the mesh over the shore', () => {
   assert.ok(sank > 50, `only ${sank} seaward vertices sank`);
   assert.ok(held > 50, `only ${held} landward vertices held still`);
 });
+
+test('composeWorld passes shore through to the ground it builds', async () => {
+  const { composeWorld } = await import('../src/kit/scenery.js');
+  const THREE = await import('../lib/three.module.js');
+  const scene = new THREE.Group();
+  composeWorld(scene, { seed: 20, groundSeed: 21, shore: SHORE, trees: 0, rocks: 0, bushes: 0, grass: 0 });
+  const ground = scene.children.find((c) => c.name === 'ground');
+  assert.ok(ground, 'composeWorld built a ground');
+  const pos = ground.geometry.attributes.position;
+  let sank = 0;
+  for (let i = 0; i < pos.count; i++) {
+    if (pos.getZ(i) < -14 && pos.getY(i) < SHORE.sea - 1e-6) sank++;
+  }
+  assert.ok(sank > 50, `the composed ground did not sink seaward (${sank})`);
+});

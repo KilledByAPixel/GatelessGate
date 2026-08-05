@@ -53,6 +53,10 @@ export function composeWorld(scene, {
   // is a scene where the ground has gone pale, and that is one parameter, not
   // a second world grammar.
   groundColor = null,
+  // A coast, passed straight through to the ground (see groundHeight). The
+  // case is responsible for keeping scatter and grass off the water with
+  // keepout circles — placement never samples the shore itself.
+  shore = null,
   keepout = [],
   // Grass wants a DIFFERENT mask from props. A rock must not spawn inside a
   // monk, but grass should grow right up around his feet — clearing a wide
@@ -88,7 +92,11 @@ export function composeWorld(scene, {
   keepout = keepout.map(asCircle);
   if (grassKeepout) grassKeepout = grassKeepout.map(asCircle);
 
-  scene.add(makeGround({ seed: groundSeed, ...(groundColor ? { color: groundColor } : {}) }));
+  scene.add(makeGround({
+    seed: groundSeed,
+    ...(groundColor ? { color: groundColor } : {}),
+    ...(shore ? { shore } : {}),
+  }));
   mountains.forEach((m, i) => scene.add(makeMountains({ seed: seed * 31 + i * 7, ...m })));
   forests.forEach((f, i) => scene.add(makeForest({ seed: seed * 41 + i * 11, ...f })));
 
