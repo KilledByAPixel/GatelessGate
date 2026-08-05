@@ -80,7 +80,7 @@ export default {
     // a coast road, running parallel with the shoreline — the reader looks
     // across it to the sea, and it dead-ends into nothing (Frank: a road
     // aimed at the water "is going to be a dead end into the ocean")
-    const path = makePath({ from: [-9, 3.8], to: [9, 3.8], width: 1.8, seed: ID, groundSeed: 21, wander: 0.7 });
+    const path = makePath({ from: [-25, -.9], to: [15, 3.8], width: 1.8, seed: ID, groundSeed: 21, wander: 2.7 });
     moving.add(path);
 
     // THE IMMOVABLE MAN — mid-stride, one sleeve forward, and not going
@@ -111,7 +111,7 @@ export default {
     // A stone waymarker beside the road, worn down by everyone who has tried:
     // a square pillar that tapers as it rises, a pyramid cap, a half-buried
     // plinth, a step darker than the road so it stands against the ribbon.
-    const MARKER = { x: -0.95, z: 1.55 };
+    const MARKER = { x: -0.95, z: 1.0 };
     const markerParts = [];
     const shaft = new THREE.CylinderGeometry(0.145, 0.185, 0.82, 4);
     shaft.translate(0, 0.41, 0);
