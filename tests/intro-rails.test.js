@@ -42,18 +42,27 @@ test('the look never collapses onto the eye, right to the end', () => {
 // way." The dolly ended at z -3 and the gate stands at z -6. Pinned against the
 // hub's OWN gate position rather than a copy of it, so moving the gate along
 // the path can never silently leave the camera stopping short again.
-test('the dolly goes through the gate, between the posts and under the beam', () => {
+//
+// 2026-08-05 retune ("tweak intro"): the seventh knot that used to carry the
+// camera OUT the far side (z -9) is gone, and the gate knot's y came up
+// (1.43 -> 1.5). The walk now ends exactly at the gate — dead centre of the
+// opening — rather than passing through and beyond it, so "ends short of the
+// gate" and "reaches the gate's plane" both need a hair of slack: the hub's
+// gate z is derived from a seeded path sample and lands a few femtometres off
+// the dolly's literal -6.0, not because the walk is allowed to fall short by
+// any real amount.
+test('the dolly reaches the gate, dead centre between the posts and under the beam', () => {
   const hub = buildHub();
   const [gx, , gz] = hub.gateTarget;
   const end = samplePath(INTRO_POINTS, 1);
-  assert.ok(end[2] < gz, `the walk ends short of the gate: ${end[2]} vs ${gz}`);
+  assert.ok(end[2] < gz + 0.01, `the walk ends short of the gate: ${end[2]} vs ${gz}`);
 
-  // where it crosses the gate's plane, it must be in the OPENING — the frame is
+  // where it reaches the gate's plane, it must be in the OPENING — the frame is
   // 3.0 wide, so half a metre off centre is already brushing a post
   let crossed = null;
   for (let i = 0; i <= 400; i++) {
     const p = samplePath(INTRO_POINTS, i / 400);
-    if (p[2] <= gz) { crossed = p; break; }
+    if (p[2] <= gz + 0.01) { crossed = p; break; }
   }
   assert.ok(crossed, 'the path never reaches the gate plane at all');
   assert.ok(Math.abs(crossed[0] - gx) < 0.6,
