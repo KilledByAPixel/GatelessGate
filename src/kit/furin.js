@@ -96,13 +96,22 @@ const GRAVITY = 9.8;
 //     visible arc on a full-force tap rather than a flinch.
 //   damping tau 1.8s -> 4.5s (c = 2/4.5) — well over double the ring-out;
 //     several visible swings before it settles rather than two.
-//   maxOmegaFrac 0.30 -> 0.85 — has to clear the new tapPeak (see MAX_OMEGA's
+//   maxOmegaFrac 0.30 -> 0.65 — has to clear the new tapPeak (see tapKick's
 //     own comment below) with real headroom for a couple of stacked taps,
-//     not just barely avoid clipping the first one.
+//     not just barely avoid clipping the first one. CODE REVIEW: a first
+//     draft shipped 0.85 here, picked for swing "feel" alone with no
+//     reference to what case 29 can actually fit four chimes under. Checked
+//     against real geometry (k29.js's own MAX-AMPLITUDE CHECK comment), 0.85
+//     put the ring and its nearest single visibly through each other in
+//     counter-phase (two independent taps landing about half a period
+//     apart — not a contrived scenario). 0.65 is the largest cap that still
+//     clears every case-29 neighbour with real margin at the saturated-burst
+//     peak it produces (~0.63 rad) — still 2.17x the old 0.30, still a real
+//     "much bigger" cap, just not bigger than the room under the gate.
 export const SWING = {
   tapPeak: 0.55,
   damping: 2 / 4.5,
-  maxOmegaFrac: 0.85,
+  maxOmegaFrac: 0.65,
 };
 
 // The equilibrium lean (rad) a steady full gust settles the pendulum at, for
@@ -255,12 +264,46 @@ export function makeFurin({
   // plausibility. Both SWING fields read LIVE (not captured at construction)
   // so a harness slider changes the very next tap. MAX_OMEGA has to clear
   // tapPeak*omega0 or it clips the very tap it is meant to only cap on a
-  // MASHED burst — see SWING's own comment for why maxOmegaFrac (0.85) sits
-  // well above tapPeak (0.55), not just above it.
+  // MASHED burst — see SWING's own comment for why maxOmegaFrac sits
+  // meaningfully above tapPeak, not just above it.
+  //
+  // THE ENERGY CAP, below. Code review caught that the velocity clamp ALONE
+  // does not deliver the promise two paragraphs up: it bounds omega at the
+  // INSTANT of a kick, not the pendulum's accumulated motion, so a real,
+  // sustained mash — taps landing every frame or two, with real elapsed
+  // time and therefore real theta motion IN BETWEEN them — re-arms omega to
+  // the ceiling on every single kick regardless of how much gravity had
+  // already fought it down since the last one. That is "holding the
+  // throttle open," not "capping a burst": measured, 20 taps/sec for 3s
+  // drove the swing to 16+ rad — multiple full rotations — a literal
+  // windmill, the exact thing this comment has always claimed could not
+  // happen. A cap on velocity alone cannot fix this; the pendulum's actual
+  // mechanical energy is what has to stay bounded regardless of how many
+  // kicks land or how far apart in time.
+  //
+  // maxEnergy is pendulumEnergy() at theta=0, omega=maxOmega — the energy a
+  // single, maximally-hard tap from rest reaches. Capping TOTAL energy to
+  // that ceiling on every kick means no amount of mashing, at any rate, can
+  // ever exceed what one perfect tap already could — the invariant the file
+  // names above, now actually held. Velocity is still what gets adjusted
+  // (never theta — a kick is a velocity event, per kickPendulum's own
+  // contract), just solved from the ENERGY budget rather than a flat
+  // ceiling: keAllowed is whatever is left after the pose's own potential
+  // energy at the CURRENT theta, so a kick landing while already swung out
+  // wide is capped harder than one landing near the bottom, which is
+  // exactly the physical picture (there is less "room" left to add).
   function tapKick(force) {
     const maxOmega = SWING.maxOmegaFrac * omega0;
     kickPendulum(zPend, force * SWING.tapPeak * omega0);
     zPend.omega = clamp(zPend.omega, -maxOmega, maxOmega);
+    const maxEnergy = 0.5 * maxOmega * maxOmega;
+    if (pendulumEnergy(zPend) > maxEnergy) {
+      const pe = (GRAVITY / PEND_L) * (1 - Math.cos(zPend.theta));
+      const keAllowed = Math.max(0, maxEnergy - pe);
+      const omegaAllowed = Math.sqrt(2 * keAllowed);
+      const sign = zPend.omega === 0 ? 1 : Math.sign(zPend.omega);
+      zPend.omega = sign * Math.min(Math.abs(zPend.omega), omegaAllowed);
+    }
   }
 
   // tubes in a ring; the longer the tube the deeper the note — index 0 is the

@@ -306,28 +306,47 @@
       cylinder: 0.8,
     };
 
-    function setMode(name) {
-      mode = name;
+    // CODE REVIEW CAUGHT A REAL BUG: this used to rebuild the SIZE FIELD DOM
+    // (buildSizeFields(), below) on every single size-slider `input` event,
+    // via each slider's onChange calling setMode() rather than a narrower
+    // rebuild. buildSizeFields() does `wrap.innerHTML = ''` and creates
+    // fresh <input> elements — which detaches the very <input> the pointer
+    // is dragging, so a real mouse/touch drag died after one tick (the
+    // pointer capture is tied to a DOM node that no longer exists; a
+    // synthetic `dispatchEvent(new Event('input'))`, which is what a script
+    // uses, never notices because it never HELD the node across two calls).
+    // This is precisely the control the brief asked to be "legible while
+    // dragging." Split in two: rebuildObject() below does ONLY what a size
+    // change needs (clear and re-add the 3D object) and is what the size
+    // sliders call; setMode() calls it too, but ALSO rebuilds the field DOM
+    // (buildSizeFields()) — safe there, since a mode switch is a discrete
+    // click, not a drag gesture holding a specific <input> under the pointer.
+    function rebuildObject() {
       clearLive();
-      screenObj.group.visible = (name === 'screen');
-      for (const [key, btn] of Object.entries(modeButtons)) btn.classList.toggle('active', key === name);
-      if (name === 'ring5') addFurin({ tubes: 5, seed: 29 }, 0);
-      else if (name === 'tubes3') addFurin({ tubes: 3, seed: 11 }, 0);
-      else if (name === 'single') addFurin({ tubes: 1, size: sizeState.single, seed: 8 }, 0);
-      else if (name === 'sizes3') {
+      screenObj.group.visible = (mode === 'screen');
+      if (mode === 'ring5') addFurin({ tubes: 5, seed: 29 }, 0);
+      else if (mode === 'tubes3') addFurin({ tubes: 3, seed: 11 }, 0);
+      else if (mode === 'single') addFurin({ tubes: 1, size: sizeState.single, seed: 8 }, 0);
+      else if (mode === 'sizes3') {
         const xs = [-0.9, 0, 0.9];
         sizeState.sizes3.forEach((s, i) => addFurin({ tubes: 1, size: s, seed: 90 + i, phase: 1.3 + 2.4 * i }, xs[i]));
-      } else if (name === 'cylinder') addCylinder({ size: sizeState.cylinder, seed: 11 }, 0);
+      } else if (mode === 'cylinder') addCylinder({ size: sizeState.cylinder, seed: 11 }, 0);
       // screen mode has no `live` hanging object — the lintel/ground stay,
       // the ring/cylinder are cleared, and the screen itself is a separate,
       // always-built object toggled visible above
+      applyWind();
+      updateDerived();
+      render();
+    }
+
+    function setMode(name) {
+      mode = name;
+      for (const [key, btn] of Object.entries(modeButtons)) btn.classList.toggle('active', key === name);
       const cam = CAMERAS[name];
       camera.position.set(...cam.p);
       camera.lookAt(...cam.t);
-      applyWind();
       buildSizeFields();
-      updateDerived();
-      render();
+      rebuildObject();
     }
 
     // ---- wind: drives every currently-visible component AND the real
@@ -364,16 +383,19 @@
       wrap.innerHTML = '';
       document.getElementById('size-section').style.display =
         (mode === 'single' || mode === 'sizes3' || mode === 'cylinder') ? '' : 'none';
+      // each onChange touches ONLY sizeState + rebuildObject() — never
+      // setMode() / buildSizeFields() — see rebuildObject()'s own comment
+      // for why: rebuilding the field DOM mid-drag kills the drag.
       if (mode === 'single') {
         wrap.appendChild(sizeSlider('size', 0.08, 0.34, 0.005, sizeState.single,
-          (v) => { sizeState.single = v; setMode('single'); }));
+          (v) => { sizeState.single = v; rebuildObject(); }));
       } else if (mode === 'cylinder') {
         wrap.appendChild(sizeSlider('size', 0.6, 1.0, 0.01, sizeState.cylinder,
-          (v) => { sizeState.cylinder = v; setMode('cylinder'); }));
+          (v) => { sizeState.cylinder = v; rebuildObject(); }));
       } else if (mode === 'sizes3') {
         ['low (left)', 'mid (centre)', 'high (right)'].forEach((label, i) => {
           wrap.appendChild(sizeSlider(label, 0.08, 0.34, 0.005, sizeState.sizes3[i],
-            (v) => { sizeState.sizes3[i] = v; setMode('sizes3'); }));
+            (v) => { sizeState.sizes3[i] = v; rebuildObject(); }));
         });
       }
     }
@@ -474,9 +496,14 @@
     // ---- print preset ------------------------------------------------------
     function dumpPresets() {
       const fmt = (o) => Object.entries(o).map(([k, v]) => `  ${k}: ${v},`).join('\n');
+      // sizeState included on purpose: Problem 1's actual deliverable is a
+      // SIZE (case 29's own SINGLE_SIZES/single/cylinder size), not just the
+      // swing constants above — omitting it left no way to copy out the
+      // sizes a print-preset click was presumably meant to capture.
       return `SWING (kit/furin.js):\n{\n${fmt(SWING)}\n}\n\n` +
              `CYL_SWING (kit/cylinder.js):\n{\n${fmt(CYL_SWING)}\n}\n\n` +
-             `CLATTER (kit/screen.js):\n{\n${fmt(CLATTER)}\n}`;
+             `CLATTER (kit/screen.js):\n{\n${fmt(CLATTER)}\n}\n\n` +
+             `sizeState (this harness's own size sliders, mode "${mode}"):\n${JSON.stringify(sizeState, null, 2)}`;
     }
     document.getElementById('print-preset').addEventListener('click', () => {
       const dump = document.getElementById('dump');

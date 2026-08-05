@@ -1,8 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import * as THREE from '../lib/three.module.js';
 import k29 from '../src/koans/k29.js';
 import { clothEnergy } from '../src/sim/verlet.js';
+import { noteForSize } from '../src/kit/furin.js';
 
 function fakeCtx() {
   const taps = [], hovers = [];
@@ -156,23 +158,31 @@ test('the three singles sound three different notes, not the ring index', () => 
   }
 });
 
-test("each single's reported note matches noteForSize of its own size, not a number k29.js chose independently", () => {
+test("each single's reported note is derived from its own built size, not a number k29.js chose independently", () => {
   // PROBLEM 1, task-swing-tune-brief.md: "the case asks for a size, and the
-  // note follows" — this is the property that distinguishes the fix from
-  // just moving the same three magic numbers into a differently-named
-  // constant. A wrong-but-plausible implementation could still hardcode
-  // SINGLE_NOTES = [-1, 5, 9] alongside SINGLE_SIZES that don't actually
-  // agree with noteForSize(size) — the previous test alone would not catch
-  // that, since it only checks the note VALUES arrived, not that they were
-  // DERIVED from the sizes actually built. Import noteForSize directly and
-  // recompute against k29.js's own SINGLE_SIZES via its build output.
+  // note follows" — the property that distinguishes the fix from just
+  // moving the same three magic numbers into a differently-named constant.
+  //
+  // CODE REVIEW CAUGHT that an earlier draft of this test, despite its own
+  // name, never drove update(), never captured a strike, and never imported
+  // noteForSize — it only checked that three built tube lengths were
+  // distinct and near a 2x ratio, a real property but not the one the name
+  // promises. Fixed: drive the real case, capture what actually reaches the
+  // audio stub (copying x/y/z out of the shared WORLD scratch vector
+  // SYNCHRONOUSLY, in the callback — see furin.js's own onStrike comment;
+  // storing the object/vector by reference would read back whatever the
+  // NEXT strike overwrote it with), and require each captured note to equal
+  // noteForSize(measuredSize), where measuredSize is read off the real
+  // built tube geometry (length/1.7, furin.js's own single-tube formula),
+  // never retyped from k29.js.
   const struck = [];
   const audio = {
     startAmbience() {}, stopAmbience() {}, setWindLevel() {},
-    chimeStrike: (o) => struck.push(o),
+    chimeStrike: (o) => struck.push({ tube: o.tube, x: o.at.x }),
   };
   const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
   const k = k29.build({ audio, input });
+
   const gate = k.scene.getObjectByName('gate');
   const chimes = gate.children.filter((c) => c.name === 'furin');
   const singles = chimes.filter((c) => {
@@ -180,25 +190,63 @@ test("each single's reported note matches noteForSize of its own size, not a num
     c.traverse((o) => { if (o.name === 'tube') tubes++; });
     return tubes === 1;
   });
-  // three distinct tube lengths — the physical size difference the brief
-  // asked to make visible, measured off the real built geometry
-  const lengths = singles.map((c) => {
-    let len = null;
+  assert.equal(singles.length, 3, 'exactly three single-tube chimes');
+
+  k.scene.updateMatrixWorld(true);
+  // each single's real, built size AND world x — both read off the actual
+  // geometry, never a constant copied out of k29.js
+  const known = singles.map((c) => {
+    let worldX = null, size = null;
     c.traverse((o) => {
       if (o.name === 'tube') {
-        o.geometry.computeBoundingBox();
-        len = o.geometry.boundingBox.max.y - o.geometry.boundingBox.min.y;
+        worldX = o.getWorldPosition(new THREE.Vector3()).x;
+        size = o.geometry.parameters.height / 1.7;
       }
     });
-    return len;
+    return { worldX, size, expectedNote: noteForSize(size) };
   });
-  const distinctLengths = new Set(lengths.map((l) => l.toFixed(4)));
-  assert.equal(distinctLengths.size, 3, `three singles should have three different tube lengths, got ${lengths}`);
-  // the biggest single's tube is close to 2x the smallest's — the brief's
-  // own worked example for this case's spread ("the lowest is about twice
-  // the length of the highest")
-  const ratio = Math.max(...lengths) / Math.min(...lengths);
-  assert.ok(ratio > 1.8 && ratio < 2.2, `lowest/highest length ratio should read as "about twice": ${ratio}`);
+  // three distinct expected notes is itself a real property this test would
+  // be vacuous without — if the three measured sizes ever collapsed to one,
+  // there would be nothing left to distinguish below
+  assert.equal(new Set(known.map((k) => k.expectedNote)).size, 3,
+    `the three measured sizes should imply three different notes, got ${known.map((k) => k.expectedNote)}`);
+
+  // long enough for every chime's own slow weather to strike at least once
+  // (matches the existing "three different notes" test's own drive length)
+  for (let i = 0; i < 60 * 400; i++) k.update(1 / 60, i / 60);
+  const singleStrikes = struck.filter((s) => !Number.isInteger(s.tube) || s.tube < 0 || s.tube > 4);
+  assert.ok(singleStrikes.length > 3, `too few single-tube strikes to judge: ${singleStrikes.length}`);
+
+  // match each single-tube strike to the single nearest it (world x), and
+  // require the reported note to equal noteForSize of THAT single's own
+  // measured size — not a value copied from this test's own expectations
+  for (const s of singleStrikes) {
+    let nearest = known[0], best = Infinity;
+    for (const kObj of known) {
+      const d = Math.abs(kObj.worldX - s.x);
+      if (d < best) { best = d; nearest = kObj; }
+    }
+    assert.ok(best < 0.3, `strike at x=${s.x} did not land near any known single (nearest ${best} away)`);
+    assert.equal(s.tube, nearest.expectedNote,
+      `a single at x~${nearest.worldX.toFixed(2)} (measured size ${nearest.size.toFixed(3)}) reported note ${s.tube}, expected noteForSize(size)=${nearest.expectedNote}`);
+  }
+});
+
+test('k29.js carries no note table of its own — the single-tube notes come from noteForSize, not a local constant', () => {
+  // Closes a gap the behavioural test above CANNOT close by itself: k29.js's
+  // SINGLE_SIZES (0.18/0.12/0.09) were deliberately chosen to reproduce the
+  // previously-approved -1/5/9 spread exactly (see k29.js's own SIZES
+  // comment), so a mutant that reintroduces a hardcoded
+  // `SINGLE_NOTES = [-1, 5, 9]` table and switches onStrike back to reading
+  // it produces BYTE-IDENTICAL stub output to the correct, derived version —
+  // a genuine equivalent mutant, not a loophole in the arithmetic above. No
+  // behavioural check of what reaches the stub can tell "derived" apart from
+  // "hardcoded to the same numbers" when the numbers already agree. Same
+  // technique tests/walk.test.js already uses for "no Math.random" — read
+  // the source text and require the removed mechanism stays removed.
+  const src = readFileSync(new URL('../src/koans/k29.js', import.meta.url), 'utf8');
+  assert.ok(!/SINGLE_NOTES/.test(src),
+    "k29.js should not carry its own per-single note table any more — the note comes from makeFurin's noteForSize(size)");
 });
 
 test('stilling the wind stills the singles too, not just the ring', () => {

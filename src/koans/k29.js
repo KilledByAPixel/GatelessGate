@@ -148,18 +148,17 @@ export default {
     // width*1.4 - 2*(width*1.4*0.24) = 1.7472 wide, so |x| < 0.8736 is flush
     // underside with no gap to the wood. Past that the kasagi's wing tilts
     // upward, and the posts stand at +-width/2 = +-1.2 under that wing. All
-    // four chimes hang on the flat span instead, spread -0.7 to 0.55.
-    // "clear" below is edge-to-edge (real THREE.Box3 unions of the hit drum
-    // and tag, not a hand estimate), at REST — see MAX-AMPLITUDE CHECK below
-    // for how those margins hold up once the new, much bigger swing (task-
-    // swing-tune-brief.md, PROBLEM 2) is actually in motion:
-    //   ring     x -0.70  (S=0.17)  - 0.25 clear of single1, 0.31 clear of
-    //            the left post, 0.17 clear of the flat span's own edge
-    //   single1  x -0.25  (S=0.18, the DEEPEST single — see SIZES below)
-    //            - 0.26 clear of single2
-    //   single2  x  0.15  (S=0.12) - 0.30 clear of single3
-    //   single3  x  0.55  (S=0.09, the HIGHEST single) - 0.49 clear of the
-    //            right post, 0.32 clear of the flat span's own edge
+    // four chimes hang on the flat span, spread -0.79 to 0.80 (widened from
+    // an earlier draft's -0.70..0.55 — see MAX-AMPLITUDE CHECK below for
+    // why). "clear" below is edge-to-edge (real THREE.Box3 unions of the hit
+    // drum and tag, not a hand estimate), at REST:
+    //   ring     x -0.79  (S=0.17)  - 0.42 clear of single1, 0.20 clear of
+    //            the left post, 0.08 clear of the flat span's own edge
+    //   single1  x -0.17  (S=0.18, the DEEPEST single — see SIZES below)
+    //            - 0.42 clear of single2
+    //   single2  x  0.39  (S=0.12) - 0.31 clear of single3
+    //   single3  x  0.80  (S=0.09, the HIGHEST single) - 0.26 clear of the
+    //            right post, 0.07 clear of the flat span's own edge
     //
     // MAX-AMPLITUDE CHECK (task-swing-tune-brief.md: "a bigger fūrin swing
     // must not push tubes through the cap or through each other"). Every
@@ -168,17 +167,44 @@ export default {
     // independent motion the way the bronze cylinder's clapper does), so a
     // bigger swing can never make a furin collide with ITSELF at any angle;
     // the real risk is external — a bigger swing displacing the whole rigid
-    // assembly sideways, into a NEIGHBOUR. Checked directly (real module,
-    // real Box3 unions, not hand math) at theta=0.55 rad (a single full-force
-    // tap's peak under the new SWING.tapPeak) and theta=0.83 rad (nine-plus
-    // taps mashed into the new SWING.maxOmegaFrac cap, worst case, all three
-    // swung the SAME direction at once — an unrealistic pile-up since each
-    // chime carries its own phase and nothing actually correlates them, but
-    // the honest worst-case envelope): every gap stays positive at both
-    // angles. Tightest at theta=0.83: ring-single1 down to 0.029, single1-
-    // single2 down to 0.016 — real margin, not zero, but visibly tighter
-    // than the 0.25-0.26 at rest, worth knowing if the harness settles on an
-    // even bigger cap than 0.85.
+    // assembly sideways, into a NEIGHBOUR.
+    //
+    // CODE REVIEW CAUGHT A REAL, MEASURED COLLISION in the first draft of
+    // this check. It swung every chime the SAME direction — nearly the BEST
+    // case, since adjacent chimes then displace together and the gap barely
+    // changes. The actual worst case is COUNTER-phase (adjacent chimes
+    // swung toward EACH OTHER), which needs no special engineering to
+    // reach: two ordinary taps landing about half a period apart, or one
+    // tap against an existing wind lean, both do it. Checked properly (real
+    // module, VISIBLE meshes only — cord/tube/cap/clapper/tag, excluding
+    // the invisible oversized pick targets, since a forgiving tap zone
+    // overlapping another isn't a visual bug — each pair's own worst-case
+    // sign combination, independent phases): at the FIRST draft's positions
+    // (-0.70/-0.25/0.15/0.55) and SWING.maxOmegaFrac=0.85, a single plain
+    // tap (theta=0.55) already put the ring and single1 visibly through
+    // each other (gap -0.055), and the saturated-burst peak (theta=0.83)
+    // put THREE of the four pairs through each other. Not a near miss.
+    //
+    // Fixed two ways together, since spacing alone did not fit inside the
+    // gate's own post-to-post budget at the first draft's swing values:
+    // SWING.maxOmegaFrac came down from 0.85 to 0.65 (see its own comment
+    // in furin.js — still 2.17x the old 0.30, just no longer bigger than
+    // the room under this gate), and every position here widened to use
+    // the recovered space. Re-checked at both the single-tap peak
+    // (theta=0.528, measured) and the new saturated-burst peak
+    // (theta=0.627, measured) with the SAME counter-phase, visible-geometry
+    // method:
+    //   ring <-> single1:    0.130 clear (tap)   0.064 clear (burst)
+    //   single1 <-> single2: 0.128 clear (tap)   0.073 clear (burst)
+    //   single2 <-> single3: 0.096 clear (tap)   0.056 clear (burst)
+    // every pair positive at both angles, with the tightest (single2<->
+    // single3 at the burst peak) still a real 0.056 rad-equivalent margin,
+    // not a hairline. Post clearance re-checked the same way: ring's own
+    // worst-case reach at the burst peak stays 0.047 clear of the left
+    // post's own surface, single3 stays 0.141 clear of the right post.
+    // THIS ASSUMES SWING.maxOmegaFrac STAYS AT 0.65 — it is still a live,
+    // owner-tunable starting point (dev/hanging-audition.html), and a much
+    // bigger cap chosen later would need this check re-run, not assumed.
     //
     // TIE BEAM CLEARANCE: the nuki (src/kit/gate.js's cross-tie) sits at
     // y = height*0.78 = 2.028, top face at 2.098, spanning the same x range
@@ -186,16 +212,16 @@ export default {
     // (the deepest point, 2.1*S below the hang point) closer to that face —
     // and swinging the assembly away from vertical only ever SHORTENS that
     // drop (cos(theta) < 1), so rest is the worst case for this particular
-    // clearance, unlike the sideways neighbour check above. The ring's own
-    // default cord (0.62, unchanged) already clears it by only 0.040 — noted
-    // here rather than changed, since task-7A's review scoped this to the
-    // singles. SIZES below changed what the singles' own clearances are
-    // (cord length is CORD_FRAC * SIZE, and size no longer matches across
-    // the three): 0.048 / 0.188 / 0.259 — single1, the biggest single, now
-    // carries the tightest margin of the three (previously single3, the
-    // deepest cord FRACTION, was tightest, back when every single shared the
-    // same size).
-    const RING_X = -0.70;
+    // clearance (X position is irrelevant to it — the nuki spans the whole
+    // width). The ring's own default cord (0.62, unchanged) already clears
+    // it by only 0.040 — noted here rather than changed, since task-7A's
+    // review scoped this to the singles. SIZES below set the singles' own
+    // clearances (cord length is CORD_FRAC * SIZE, and size no longer
+    // matches across the three): 0.048 / 0.188 / 0.259 — single1, the
+    // biggest single, carries the tightest margin of the three (previously
+    // single3, the deepest cord FRACTION, was tightest, back when every
+    // single shared the same size). Unaffected by the X repositioning above.
+    const RING_X = -0.79;
     const furin = makeFurin({
       seed: 29,
       onStrike: (tube, force, pos) => audio && audio.chimeStrike({ tube, force, at: pos }),
@@ -203,7 +229,7 @@ export default {
     furin.group.position.set(RING_X, 2.6, 0);
     gate.add(furin.group);
 
-    const SINGLE_X = [-0.25, 0.15, 0.55];
+    const SINGLE_X = [-0.17, 0.39, 0.80];
     // SIZES: PROBLEM 1, task-swing-tune-brief.md — "the lower ones are
     // bigger... probably the length, maybe a little bit of both." Each
     // single now hangs a DIFFERENT size and reports whatever note that size

@@ -552,23 +552,33 @@ test('mashing taps saturates instead of spinning the chime past a wind chime', (
   //
   // The pendulum has no array: a tap is one velocity kick added to the ONE
   // omega the pendulum has (tapKick, furin.js), so there is nothing to evict.
-  // The equivalent protection is a velocity ceiling (SWING.maxOmegaFrac *
-  // omega0, furin.js): however many taps land, omega cannot exceed what a
-  // real chime's air drag would ever let it reach. Proven two ways: the
-  // stored energy after a saturating burst does not keep growing with more
-  // taps, and the resulting swing still reads as a wind chime rather than a
-  // windmill. NOTE: this only covers a burst that lands before any update()
-  // runs (elapsed time = 0 between kicks) — SWING.maxOmegaFrac was raised
-  // from 0.30 to 0.85 for this task, and the saturated peak here rose with
-  // it (~0.30 rad -> ~0.83 rad, still under the 1.0 rad sanity bound below).
-  // A DIFFERENT scenario — real, rapid re-tapping with time actually
-  // elapsing BETWEEN kicks (a human mashing the screen, not a single instant
-  // burst) — is not what this test exercises and is not bounded by
-  // maxOmegaFrac at all, since the cap only ever limits INSTANTANEOUS
-  // velocity, not accumulated angle under sustained re-kicking; see
-  // swing-tune-report.md's "watch the interactions" section for measured
-  // numbers (sustained mashing at plausible human tap rates can run the
-  // swing well past a full rotation at this task's starting maxOmegaFrac).
+  // The protection is a velocity ceiling (SWING.maxOmegaFrac * omega0,
+  // furin.js): however many taps land, omega cannot exceed what a real
+  // chime's air drag would ever let it reach. Proven two ways: the stored
+  // energy after a saturating burst does not keep growing with more taps,
+  // and the resulting swing still reads as a wind chime rather than a
+  // windmill. This covers a burst that lands before any update() runs
+  // (elapsed time = 0 between kicks) — saturated peak here is ~0.62-0.66 rad
+  // at the current SWING.maxOmegaFrac=0.65, comfortably under the 1.0 rad
+  // sanity bound below.
+  //
+  // CODE REVIEW CAUGHT that a velocity ceiling ALONE does not protect a
+  // DIFFERENT, real scenario: sustained re-tapping with time actually
+  // elapsing BETWEEN kicks (a human mashing the screen, not one instant
+  // burst). MAX_OMEGA only bounds omega at the INSTANT of a kick — it says
+  // nothing about accumulated theta, and a kick re-arms omega to the
+  // ceiling every time regardless of how much gravity had already fought it
+  // down since the last one. Measured at maxOmegaFrac=0.85 (this task's
+  // first-draft value): 20 taps/sec for 3s reached 16+ rad, multiple full
+  // rotations — a literal windmill, falsifying the promise this file's own
+  // header comment makes ("however often it gets mashed... not a
+  // windmill"). Fixed in tapKick() with an ENERGY cap (see its own comment
+  // in furin.js) alongside the velocity one: total mechanical energy after
+  // any kick can never exceed what a single maximally-hard tap from rest
+  // would reach, so no amount of sustained mashing, at any rate, can carry
+  // the swing further than one perfect tap already could. Pinned below as
+  // its own test, driven with REAL elapsed time between kicks (unlike the
+  // burst above) at a rate no burst-only test would ever exercise.
   const f = makeFurin({ seed: 3, phase: 0, onStrike: () => {} });
   f.setWindLevel(0);
   const swing = f.group.getObjectByName('swing');
@@ -588,6 +598,62 @@ test('mashing taps saturates instead of spinning the chime past a wind chime', (
   let peak = 0;
   for (let i = 0; i < 60 * 5; i++) { f.update(1 / 60, 1 + i / 60); peak = Math.max(peak, Math.abs(swing.rotation.z)); }
   assert.ok(peak < 1.0, `a burst of taps spun the chime past a sane angle: ${peak} rad`);
+});
+
+test('SUSTAINED rapid mashing — real elapsed time between kicks, not an instant burst — still saturates, not a windmill', () => {
+  // CODE REVIEW CAUGHT a real bug the test above cannot see: it mashes 9-50
+  // taps with ZERO elapsed time between them (every ring() lands before the
+  // first update()), so theta never has a chance to move between kicks and
+  // the velocity ceiling alone is sufficient. A human mashing a touchscreen
+  // does not do that — real time passes between taps, theta moves in that
+  // time, and tapKick's old velocity-only clamp re-armed omega to the
+  // ceiling on EVERY kick regardless of how far gravity had already pulled
+  // it down since the last one. That is "holding the throttle open," and it
+  // measurably span the chime past a full rotation (20 taps/sec for 3s
+  // reached 16+ rad at this task's first-draft maxOmegaFrac=0.85) —
+  // falsifying this file's own header promise ("however often it gets
+  // mashed... not a windmill"). tapKick's energy cap (furin.js) is what
+  // fixes it: this drives taps interleaved with real update() calls, at a
+  // rate (20/sec) well above anything the velocity-only clamp was ever
+  // exercised against, for a full simulated 10s of continuous mashing.
+  const f = makeFurin({ seed: 3, phase: 0, onStrike: () => {} });
+  f.setWindLevel(0);
+  const swing = f.group.getObjectByName('swing');
+  let simTime = 0;
+  const dt = 1 / 60;
+  const tapsPerSec = 20;
+  const framesPerTap = Math.round(60 / tapsPerSec);
+  let maxTheta = 0;
+  for (let i = 0; i < 60 * 10; i++) {
+    if (i % framesPerTap === 0) f.ring(1);
+    simTime += dt;
+    f.update(dt, simTime);
+    maxTheta = Math.max(maxTheta, Math.abs(swing.rotation.z));
+  }
+  // a full rotation is 2*PI (~6.28 rad); the old bug reached 16+ rad (2.6
+  // full turns) under this exact drive. 1.2 rad (~69 deg) is comfortably
+  // above SWING.tapPeak's own single-tap peak (~0.53) and the burst-only
+  // saturated peak (~0.62-0.66), so a real fix has real headroom here, not
+  // a bound tuned to just barely pass.
+  assert.ok(maxTheta < 1.2,
+    `sustained mashing at ${tapsPerSec}/sec spun the chime like a windmill: ${maxTheta} rad`);
+  // and the promise is a genuine PHYSICAL cap, not a coincidence of this one
+  // rate — halving and doubling the rate should not blow through it either
+  for (const rate of [10, 40]) {
+    const g = makeFurin({ seed: 3, phase: 0, onStrike: () => {} });
+    g.setWindLevel(0);
+    const gSwing = g.group.getObjectByName('swing');
+    let t = 0;
+    const fpt = Math.max(1, Math.round(60 / rate));
+    let gMax = 0;
+    for (let i = 0; i < 60 * 10; i++) {
+      if (i % fpt === 0) g.ring(1);
+      t += dt;
+      g.update(dt, t);
+      gMax = Math.max(gMax, Math.abs(gSwing.rotation.z));
+    }
+    assert.ok(gMax < 1.2, `sustained mashing at ${rate}/sec spun the chime like a windmill: ${gMax} rad`);
+  }
 });
 
 test('it hangs by a STRING, and swings from the knot at the top of it', () => {
