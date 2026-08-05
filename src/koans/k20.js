@@ -137,8 +137,12 @@ export default {
     // whose far edges die in the fog, with one slow swell rolling shoreward.
     // It sits in `moving` with everything else: push the man, and the sea
     // itself gives.
+    // RED FOR NOW at Frank's request — a can't-miss marker of where the sheet
+    // sits while the coast is being tuned. (Frank is also weighing red as this
+    // case's actual seal — the great ocean as the accent instead of the staff,
+    // the case-30 move — so this may become ACCENT_PALE rather than revert.)
     const water = makeWater({
-      shape: 'square', size: 90, color: wash(0.55), seed: ID,
+      shape: 'square', size: 90, color: ACCENT, seed: ID,
       opacity: 0.85,
       drift: { dx: 0, dz: 1, amp: 0.05, wavelength: 8, period: 6 },
     });
