@@ -286,3 +286,37 @@ test('ripples still ride on top of the drift, and the rim pinning still holds fo
   }
   assert.ok(moved, 'the strike vanished under the drift');
 });
+
+// A real sea is never one sine (Frank: "the waves are mostly horizontal...
+// they don't look like normal waves") — drift accepts an array of crossing
+// components. The contract: an object and a one-element array are the SAME
+// surface, and a multi-component sea stays inside the sum of its amplitudes.
+test('drift: an object and a one-element array produce the identical surface', () => {
+  const surface = (drift) => {
+    const w = makeWater({ shape: 'square', size: 40, swell: 0, seed: 20, drift });
+    w.update(0.5, 1.7);
+    return Array.from(posOf(w));
+  };
+  assert.deepEqual(surface(DRIFT), surface([DRIFT]));
+});
+
+test('crossing drift components: bounded by the sum of amplitudes, and genuinely crossed', () => {
+  const CROSS = [
+    DRIFT,
+    { dx: 0.2764, dz: 0.9611, amp: 0.02, wavelength: 5.2, period: 4.6 },
+  ];
+  const w = makeWater({ shape: 'square', size: 40, swell: 0, seed: 20, drift: CROSS });
+  let peak = 0;
+  for (let t = 0; t < 7; t += 0.25) {
+    w.update(0.25, t);
+    for (const v of verts(w)) peak = Math.max(peak, Math.abs(v.y));
+  }
+  assert.ok(peak <= DRIFT.amp + 0.02 + 1e-9, `peak ${peak} exceeds the summed amplitude`);
+  // crossed means NOT constant along x the way a single shoreward sine is:
+  // two points at the same z must disagree somewhere in time
+  let varies = false;
+  for (let t = 0; t < 7; t += 0.5) {
+    if (Math.abs(w.heightAt(-8, 3, t) - w.heightAt(8, 3, t)) > 1e-4) varies = true;
+  }
+  assert.ok(varies, 'the crests are still parallel bars');
+});

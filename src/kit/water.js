@@ -162,14 +162,18 @@ export function makeWater({
                            // pond with koi wants this lower so the fish read
   specular = 0.55,         // the white glint; 0 drops back to the toon ramp
   shininess = 64,
-  // The free-ocean term (case 20): one long slow wave traveling toward
-  // (dx, dz) at wavelength/period units/sec. DELIBERATELY UNMASKED — it
-  // ignores the rim pinning, because an ocean has no rim to protect: the near
-  // edge is buried under the sand ribbon and the far edges die in the fog. A
-  // contained surface (basin, pond) must leave this off, and off is the
-  // default, so every existing caller is byte-identical. (dx, dz) must be a
-  // unit vector — anything else silently scales the wave speed away from the
-  // wavelength/period you dialled in.
+  // The free-ocean term (case 20): slow waves traveling toward (dx, dz) at
+  // wavelength/period units/sec. One component object, or an ARRAY of them —
+  // a real sea is never one sine: a single component renders as parallel
+  // bars (Frank: "the waves are mostly horizontal... they don't look like
+  // normal waves"), and it takes two or three crossing swells at slightly
+  // different headings to break the crests into water. DELIBERATELY
+  // UNMASKED — it ignores the rim pinning, because an ocean has no rim to
+  // protect: the near edge is buried under the sand ribbon and the far
+  // edges die in the fog. A contained surface (basin, pond) must leave this
+  // off, and off is the default, so every existing caller is byte-identical.
+  // Each (dx, dz) must be a unit vector — anything else silently scales
+  // that component's speed away from the wavelength/period you dialled in.
   drift = null,
 } = {}) {
   const round = shape === 'round';
@@ -246,12 +250,21 @@ export function makeWater({
   const k1 = 1.7 / Math.max(1, half);
   const k2 = 2.3 / Math.max(1, half);
 
-  // the drift's phase is the seed's, like everything else here
-  const dp = hash1(3, seed) * Math.PI * 2;
-  const driftAt = drift
+  // Each drift component's phase is the seed's, like everything else here.
+  // Hoisted once — the per-call destructure used to run per vertex per frame.
+  // A single component keeps the phase index it always had (3), so an object
+  // and a one-element array produce the identical surface.
+  const driftComps = (Array.isArray(drift) ? drift : drift ? [drift] : []).map((c, i) => {
+    const { dx = 0, dz = 1, amp = 0.05, wavelength = 8, period = 6 } = c;
+    return { dx, dz, amp, wavelength, period, phase: hash1(3 + i, seed) * Math.PI * 2 };
+  });
+  const driftAt = driftComps.length
     ? (x, z, t) => {
-      const { dx = 0, dz = 1, amp = 0.05, wavelength = 8, period = 6 } = drift;
-      return amp * Math.sin(((x * dx + z * dz) / wavelength - t / period) * Math.PI * 2 + dp);
+      let h = 0;
+      for (const c of driftComps) {
+        h += c.amp * Math.sin(((x * c.dx + z * c.dz) / c.wavelength - t / c.period) * Math.PI * 2 + c.phase);
+      }
+      return h;
     }
     : () => 0;
 

@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, INK, WASH, mixHex, wash } from '../palette.js';
+import { PAPER, ACCENT, INK, INK_LIT, WASH, mixHex, wash } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeWater, makeSand,
   makeLights, makeBlobShadow, addOutlines, toonMaterial, groundHeight,
@@ -137,14 +137,29 @@ export default {
     // whose far edges die in the fog, with one slow swell rolling shoreward.
     // It sits in `moving` with everything else: push the man, and the sea
     // itself gives.
-    // RED FOR NOW at Frank's request — a can't-miss marker of where the sheet
-    // sits while the coast is being tuned. (Frank is also weighing red as this
-    // case's actual seal — the great ocean as the accent instead of the staff,
-    // the case-30 move — so this may become ACCENT_PALE rather than revert.)
+    // A DARK sea — monk-dark (Frank: "a dark blackish kind of color similar
+    // to how the monks are"), which is INK_LIT, the deepest paint the light
+    // may touch; the Phong glints stay white on it, which is what says water
+    // rather than tar. It went invisible once as WASH.stone — a pale sheet at
+    // grazing distance is eaten whole by the fog — and ran ACCENT red for a
+    // day as a marker while the coast was tuned. (Frank is still weighing red
+    // as this case's actual seal — the great ocean as the accent, the case-30
+    // move — so the red may yet return as ACCENT_PALE.)
+    //
+    // Segments 64: the default cap (30) gave 3-unit cells across 90 units,
+    // and a single shoreward sine on that grid rendered as parallel bars
+    // (Frank: "the waves are mostly horizontal... there's no tessellation").
+    // A finer grid plus three crossing swells — one main set rolling in, two
+    // gentler obliques at ±~20° with their own wavelengths and periods — is
+    // what breaks the crests into a sea.
     const water = makeWater({
-      shape: 'square', size: 90, color: ACCENT, seed: ID,
-      opacity: 0.85,
-      drift: { dx: 0, dz: 1, amp: 0.05, wavelength: 8, period: 6 },
+      shape: 'square', size: 90, color: INK_LIT, seed: ID,
+      opacity: 0.85, segments: 64,
+      drift: [
+        { dx: 0, dz: 1, amp: 0.045, wavelength: 8, period: 6 },
+        { dx: 0.2764, dz: 0.9611, amp: 0.022, wavelength: 5.2, period: 4.6 },
+        { dx: -0.3429, dz: 0.9394, amp: 0.017, wavelength: 3.4, period: 3.5 },
+      ],
     });
     water.group.position.set(0, SHORE.sea, -(SHORE.dist + 43));
     moving.add(water.group);
