@@ -15,24 +15,22 @@ const ID = 29;
 const BASE_WIND = 0.25;
 
 // The full ambience recipe, declared once. 'furin' carries no level of its own —
-// the chime's real gain comes from furin.setWindLevel(flag.windLevel()) in the
-// case's update loop — but its presence still matters: emitterCount() sees it
-// and thins the drift layer accordingly (src/audio/music.js's density rule:
+// each chime's real gain comes from single.setWindLevel(flag.windLevel()) in
+// the case's update loop — but its presence still matters: emitterCount() sees
+// it and thins the drift layer accordingly (src/audio/music.js's density rule:
 // "the more a scene already sounds, the less the drift plays"). Repeated
-// TWICE, not once and not four times (one per chime hanging under the
+// TWICE, not once and not three times (one per chime hanging under the
 // lintel). density = min(3, 1 + 0.7*emitters) saturates at emitters >= 2.858,
-// so 3 and 4 are literally identical to each other in effect — the honest
-// choices were 1, 2, or capping the recipe's meaning outright. Four chimes
-// answering the same wind IS busier than the single chime this case shipped
-// with, which is why this is 2 and not 1; but it is not three times busier,
-// three of the four are single tubes that fire far less often than the
-// five-tube ring, so it is 2 and not 4 — the drift layer should thin, not
-// nearly vanish (at 4 the mean gap goes 13s -> 39s, worst case 68s -> 120s;
-// every OTHER case in the book tops out at 2 emitters, e.g. k7, k13, k49).
-// Repeating the token at all is still mechanically safe: emitterCount() just
-// filters and counts (src/audio/ambience_diff.js), it doesn't dedupe by type,
-// and diffAmbience() still reports 'music' as a keep across a page turn on
-// this recipe either way, so there's no restart, no seam.
+// so the third token is worth almost nothing anyway — the honest choices were
+// 1 or 2. Three chimes answering the same wind IS busier than the single
+// chime this case shipped with, which is why this is 2 and not 1; but three
+// single tubes fire far less often than a five-tube ring did, so the drift
+// layer should thin, not nearly vanish (every OTHER case in the book tops out
+// at 2 emitters, e.g. k7, k13, k49). Repeating the token at all is still
+// mechanically safe: emitterCount() just filters and counts
+// (src/audio/ambience_diff.js), it doesn't dedupe by type, and diffAmbience()
+// still reports 'music' as a keep across a page turn on this recipe either
+// way, so there's no restart, no seam.
 const AMBIENCE = ['wind:' + BASE_WIND, 'furin', 'furin', 'music'];
 
 export default {
@@ -121,25 +119,30 @@ export default {
       scene.add(s);
     }
 
-    // The ring chime plus three single-tube furin, all hung under the same
-    // lintel — Frank asked for "single wind chimes that can hang that could
-    // get knocked individually ... a single tone. Much of them hanging":
-    // several separate voices answering the same wind in their own time is
-    // the koan's own argument (not the wind, not the flag) staged as sound.
+    // THREE single-tube fūrin under the gate's lintel, one size each —
+    // Frank asked for "single wind chimes that can hang that could get
+    // knocked individually ... a single tone. Much of them hanging": three
+    // separate voices answering the same wind in their own time is the
+    // koan's own argument (not the wind, not the flag) staged as sound.
     //
-    // BURIED CHIME, FOUND DURING REVIEW: the ring used to hang at local
-    // (1.2, 2.6, 0) — exactly on the right post's own axis (post x = +-width/2
-    // = +-1.2, z = 0, same as the chime). Chasing why the task-7A brief's
-    // suggested single position (x -1.2, the mirror) buried a chime inside
-    // the LEFT post surfaced that the ring had been sitting inside the RIGHT
-    // post the same way since the case was first staged: the post's radius at
-    // y 2.6 is ~0.0913 (tapered from POST_BOTTOM_R 0.12 at the foot to
-    // POST_TOP_R 0.09 at the top, src/kit/gate.js), and the ring's widest
-    // point — the cap, 0.46*S = 0.078, rising toward ~0.096 lower in its hang
-    // range — never exceeds that, for its whole vertical extent (y 2.6 down
-    // to ~2.16, wholly inside the post's own 0-2.72 span). It had been
-    // invisible, not merely close, since the day it was staged. Moved here
-    // with the three singles rather than left where it was.
+    // THE RING IS GONE, on Frank's own call after seeing it staged: "for
+    // case twenty nine, let's get rid of the five-tube ring that's placed.
+    // So it's just gonna have three, the three different sizes. That's what
+    // it's gonna have." A five-note cluster and three single notes under one
+    // beam was two ideas competing; three singles at three sizes is the one
+    // idea, and the sizes are visible from the road. (Its removal also
+    // returns 6 draws and the whole left end of the lintel, which is why
+    // every position below could be respread.)
+    //
+    // BURIED CHIME, FOUND DURING AN EARLIER REVIEW and worth keeping on the
+    // record: the ring used to hang at local (1.2, 2.6, 0) — exactly on the
+    // right post's own axis (post x = +-width/2 = +-1.2, z = 0, same as the
+    // chime), and the post's radius there (~0.0913, tapered from
+    // POST_BOTTOM_R 0.12 to POST_TOP_R 0.09, src/kit/gate.js) exceeded the
+    // ring's own widest point for its whole vertical extent. It had been
+    // invisible, not merely close, since the day the case was staged. The
+    // lesson generalises to anything hung on a gate: check the post radius
+    // at the hang height, not at the foot.
     //
     // POSITIONS, measured off src/kit/gate.js at this case's default width
     // (2.4) and height (2.6): the kasagi's overall footprint is
@@ -148,111 +151,70 @@ export default {
     // width*1.4 - 2*(width*1.4*0.24) = 1.7472 wide, so |x| < 0.8736 is flush
     // underside with no gap to the wood. Past that the kasagi's wing tilts
     // upward, and the posts stand at +-width/2 = +-1.2 under that wing. All
-    // four chimes hang on the flat span, spread -0.79 to 0.80 (widened from
-    // an earlier draft's -0.70..0.55 — see MAX-AMPLITUDE CHECK below for
-    // why). "clear" below is edge-to-edge (real THREE.Box3 unions of the hit
-    // drum and tag, not a hand estimate), at REST:
-    //   ring     x -0.79  (S=0.17)  - 0.42 clear of single1, 0.20 clear of
-    //            the left post, 0.08 clear of the flat span's own edge
-    //   single1  x -0.17  (S=0.18, the DEEPEST single — see SIZES below)
-    //            - 0.42 clear of single2
-    //   single2  x  0.39  (S=0.12) - 0.31 clear of single3
-    //   single3  x  0.80  (S=0.09, the HIGHEST single) - 0.26 clear of the
-    //            right post, 0.07 clear of the flat span's own edge
+    // three hang on the flat span, evenly spread across it now that the ring
+    // no longer takes its left end.
     //
     // MAX-AMPLITUDE CHECK (task-swing-tune-brief.md: "a bigger fūrin swing
-    // must not push tubes through the cap or through each other"). Every
-    // piece of a furin — cord, cap, tubes, clapper, tag — is ONE rigid body
-    // that pivots together at the hang point (none of them has its own
-    // independent motion the way the bronze cylinder's clapper does), so a
-    // bigger swing can never make a furin collide with ITSELF at any angle;
-    // the real risk is external — a bigger swing displacing the whole rigid
-    // assembly sideways, into a NEIGHBOUR.
+    // must not push tubes through the cap or through each other"). A fūrin's
+    // cord, cap, tubes and tag are ONE rigid body pivoting at the hang
+    // point, so a bigger swing can never make one collide with ITSELF; the
+    // risk is external — the whole assembly displacing sideways into a
+    // NEIGHBOUR. (The clapper does now swing independently inside that
+    // assembly — see THE CLAPPER in kit/furin.js — but it is bounded to the
+    // tubes' own clearance by a real collision, so it never widens the
+    // silhouette this check measures.)
     //
-    // CODE REVIEW CAUGHT A REAL, MEASURED COLLISION in the first draft of
-    // this check. It swung every chime the SAME direction — nearly the BEST
+    // A CODE REVIEW ONCE CAUGHT A REAL, MEASURED COLLISION here by noticing
+    // that the check swung every chime the SAME direction — nearly the BEST
     // case, since adjacent chimes then displace together and the gap barely
-    // changes. The actual worst case is COUNTER-phase (adjacent chimes
-    // swung toward EACH OTHER), which needs no special engineering to
-    // reach: two ordinary taps landing about half a period apart, or one
-    // tap against an existing wind lean, both do it. Checked properly (real
-    // module, VISIBLE meshes only — cord/tube/cap/clapper/tag, excluding
-    // the invisible oversized pick targets, since a forgiving tap zone
-    // overlapping another isn't a visual bug — each pair's own worst-case
-    // sign combination, independent phases): at the FIRST draft's positions
-    // (-0.70/-0.25/0.15/0.55) and SWING.maxOmegaFrac=0.85, a single plain
-    // tap (theta=0.55) already put the ring and single1 visibly through
-    // each other (gap -0.055), and the saturated-burst peak (theta=0.83)
-    // put THREE of the four pairs through each other. Not a near miss.
-    //
-    // Fixed two ways together, since spacing alone did not fit inside the
-    // gate's own post-to-post budget at the first draft's swing values:
-    // SWING.maxOmegaFrac came down from 0.85 to 0.65 (see its own comment
-    // in furin.js — still 2.17x the old 0.30, just no longer bigger than
-    // the room under this gate), and every position here widened to use
-    // the recovered space. Re-checked at both the single-tap peak
-    // (theta=0.528, measured) and the new saturated-burst peak
-    // (theta=0.627, measured) with the SAME counter-phase, visible-geometry
-    // method:
-    //   ring <-> single1:    0.130 clear (tap)   0.064 clear (burst)
-    //   single1 <-> single2: 0.128 clear (tap)   0.073 clear (burst)
-    //   single2 <-> single3: 0.096 clear (tap)   0.056 clear (burst)
-    // every pair positive at both angles, with the tightest (single2<->
-    // single3 at the burst peak) still a real 0.056 rad-equivalent margin,
-    // not a hairline. Post clearance re-checked the same way: ring's own
-    // worst-case reach at the burst peak stays 0.047 clear of the left
-    // post's own surface, single3 stays 0.141 clear of the right post.
-    // THIS ASSUMES SWING.maxOmegaFrac STAYS AT 0.65 — it is still a live,
-    // owner-tunable starting point (dev/hanging-audition.html), and a much
-    // bigger cap chosen later would need this check re-run, not assumed.
+    // changes. The worst case is COUNTER-phase (adjacent chimes swung toward
+    // EACH OTHER), which needs no special engineering to reach: two ordinary
+    // taps landing about half a period apart, or one tap against an existing
+    // wind lean. tests/k29.test.js checks it that way — real module, VISIBLE
+    // meshes only (the invisible oversized pick drums are allowed to
+    // overlap; a forgiving tap zone is not a visual bug), every pair's own
+    // worst-case sign combination — against the LIVE SWING.maxOmegaFrac
+    // rather than a copied number, so raising the swing cap fails the test
+    // rather than silently pushing two chimes through each other.
     //
     // TIE BEAM CLEARANCE: the nuki (src/kit/gate.js's cross-tie) sits at
     // y = height*0.78 = 2.028, top face at 2.098, spanning the same x range
-    // as every chime here. A longer cord brings a chime's invisible pick drum
-    // (the deepest point, 2.1*S below the hang point) closer to that face —
-    // and swinging the assembly away from vertical only ever SHORTENS that
-    // drop (cos(theta) < 1), so rest is the worst case for this particular
-    // clearance (X position is irrelevant to it — the nuki spans the whole
-    // width). The ring's own default cord (0.62, unchanged) already clears
-    // it by only 0.040 — noted here rather than changed, since task-7A's
-    // review scoped this to the singles. SIZES below set the singles' own
-    // clearances (cord length is CORD_FRAC * SIZE, and size no longer
-    // matches across the three): 0.048 / 0.188 / 0.259 — single1, the
-    // biggest single, carries the tightest margin of the three (previously
-    // single3, the deepest cord FRACTION, was tightest, back when every
-    // single shared the same size). Unaffected by the X repositioning above.
-    const RING_X = -0.79;
-    const furin = makeFurin({
-      seed: 29,
-      onStrike: (tube, force, pos) => audio && audio.chimeStrike({ tube, force, at: pos }),
-    });
-    furin.group.position.set(RING_X, 2.6, 0);
-    gate.add(furin.group);
-
-    const SINGLE_X = [-0.17, 0.39, 0.80];
+    // as every chime here. Swinging away from vertical only ever SHORTENS a
+    // chime's drop (cos(theta) < 1), so REST is the worst case for this
+    // clearance, and X is irrelevant to it (the nuki spans the whole width).
+    // SINGLE_CORD below is what sets it — see its own comment.
+    const SINGLE_X = [-0.72, 0, 0.72];
     // SIZES: PROBLEM 1, task-swing-tune-brief.md — "the lower ones are
     // bigger... probably the length, maybe a little bit of both." Each
-    // single now hangs a DIFFERENT size and reports whatever note that size
-    // implies (makeFurin's own noteForSize, kit/furin.js) — the case no
-    // longer picks a note independent of geometry, it picks a size and the
-    // note follows, matching audio.bell() and makeCylinderChime everywhere
-    // else in the book. Chosen so the sounding notes land EXACTLY where the
-    // previously-approved spread already sat (-1, 5, 9 — one scale step
-    // below the ring's own five-note cluster, one step above it bridging the
-    // next octave, and a further octave up from that bridge): 0.18 -> -1,
-    // 0.12 -> 5, 0.09 -> 9 (noteForSize(0.18)===-1 etc., pinned in
-    // tests/k29.test.js). The lowest (0.18) is exactly 2x the highest
-    // (0.09) — the brief's own worked example for a ~2-octave spread ("the
-    // lowest is about twice the length of the highest"), landed here by
-    // solving for size, not by picking a round number and hoping.
+    // single hangs a DIFFERENT size and reports whatever note that size
+    // implies (makeFurin's own noteForSize, kit/furin.js) — the case does
+    // not pick a note independent of geometry, it picks a size and the note
+    // follows, matching audio.bell() and makeCylinderChime everywhere else
+    // in the book. Chosen so the sounding notes land on the spread already
+    // approved by ear (-1, 5, 9): 0.18 -> -1, 0.12 -> 5, 0.09 -> 9
+    // (pinned in tests/k29.test.js). The lowest (0.18) is exactly 2x the
+    // highest (0.09) — the brief's own worked example for a ~2-octave
+    // spread, landed here by solving for size rather than picking a round
+    // number and hoping.
     const SINGLE_SIZES = [0.18, 0.12, 0.09];
-    const SINGLE_CORD = [0.42, 0.52, 0.60];   // see TIE BEAM CLEARANCE above
+    // ABSOLUTE cord lengths, in world units, not fractions of size — Frank,
+    // watching three sizes hang side by side: "the small ones are not
+    // hanging low enough." They weren't, and a size-relative cord is exactly
+    // why: it gives the SMALLEST chime the SHORTEST string, so the one that
+    // most needs to reach down to join the group is the one pinned tightest
+    // to the beam. These three instead bring all three bottom edges to
+    // within about 0.015 of each other (visible extents, at rest:
+    // -0.418 / -0.406 / -0.419 below the lintel), so the set reads as one
+    // row of chimes at three sizes rather than three chimes at three
+    // heights — and every one of them still clears the nuki's top face by
+    // ~0.085 (see TIE BEAM CLEARANCE above; rest is the worst case).
+    const SINGLE_CORD = [0.08, 0.18, 0.25];
     const singles = SINGLE_X.map((x, i) => {
       const single = makeFurin({
         tubes: 1,
         size: SINGLE_SIZES[i],
         seed: 293 + i,                 // distinct, though inert once phase is explicit below
-        cord: SINGLE_CORD[i],          // different string lengths -> different resting heights
+        cordLength: SINGLE_CORD[i],
         phase: 1.3 + 2.4 * i,          // own clock, so they never sway or strike in lockstep
         onStrike: (tube, force, pos) => audio && audio.chimeStrike({ tube, force, at: pos }),
       });
@@ -277,8 +239,6 @@ export default {
     });
     input.onTap(() => {
       if (!camera) return;
-      const chimeHit = furin.pick(camera, input);
-      if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
       // each single is its own object with its own pick() — probed in turn
       // and returned on the first hit. The `return` matters twice over: it
       // stops one tap from ringing more than one chime, AND it stops the
@@ -307,10 +267,8 @@ export default {
         world.update(dt, simTime);            // drives the meadow's wind
         const level = flag.windLevel() * baseWind;
         audio && audio.setWindLevel(level);
-        furin.setWindLevel(flag.windLevel());
-        furin.update(dt, simTime);
-        // the singles answer the same wind as the ring — stilling the flag
-        // has to still all four, or the case's whole conceit breaks
+        // all three answer the same wind — stilling the flag has to still
+        // every one of them, or the case's whole conceit breaks
         for (const single of singles) {
           single.setWindLevel(flag.windLevel());
           single.update(dt, simTime);
@@ -321,7 +279,6 @@ export default {
           windOn: flag.isWindOn(),
           windLevel: +flag.windLevel().toFixed(4),
           clothEnergy: +clothEnergy(flag.cloth).toFixed(6),
-          strikes: furin.strikes(),
           // summed, not per-chime — a debug-panel fragment is finite numbers
           // and booleans only (tests/staging.test.js), no arrays
           singleStrikes: singles.reduce((n, s) => n + s.strikes(), 0),

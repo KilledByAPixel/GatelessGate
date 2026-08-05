@@ -127,6 +127,119 @@ const WIND_X_LEAN = 0.09;
 
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
+// THE CLAPPER, as a second pendulum — the fix for Frank's "when I click on
+// it, I only ever hear one sound. I never hear more than one sound on the
+// five tube ring... you would expect it would make multiple different sounds
+// at once. That's kind of the whole point of those multi ones," and, for the
+// singles, "I would expect it would maybe get knocked more than once while
+// it's getting knocked around."
+//
+// Until now the clapper was a decoration: a disc parented into `body`, rigid
+// with the tubes, unable to approach them at any angle. Every sound came from
+// one of two places — the ambient weather loop, or ring() firing exactly one
+// tube per tap. So a tap was one tone, always, and the swing it kicked off
+// was silent.
+//
+// Now the clapper hangs on its own pendulum and the tubes are what stop it.
+// A tap kicks the BODY only (a knock is a shove on the thing you touched);
+// the clapper is left behind; the two cross the physical clearance between
+// them and the tubes on the contact side ring together. As the swing decays
+// the contacts recur, weaker each time — a real chime's ring-down, out of
+// the same physics the bronze cylinder already rings by (kit/cylinder.js),
+// not a scripted burst.
+//
+// THE INVARIANT THAT PROTECTS THE AMBIENT PACING. Frank auditioned and
+// approved the chime's strike weather (chimeActivity, above) — the sound
+// pacing is settled and this must not disturb it. The clapper is a TAP
+// mechanism; the weather stays the only thing that rings this chime in the
+// wind. TWO independent things hold that, and it is worth knowing both,
+// because the first alone is not as strong as it first looks:
+//
+//   1. EQUAL LEANS. The clapper reads the SAME gustPhase at the SAME
+//      per-instance offset as the body, with its torque coefficient scaled
+//      by its own (g/L) so both settle at the same equilibrium angle, and
+//      update()'s seeding starts both AT that angle rather than hanging
+//      straight down. In a steady wind the relative angle is therefore
+//      exactly zero. But a gust is not steady, and the two have different
+//      natural frequencies: measured, the transient peaks at 0.033 rad
+//      under full wind, which is 53% of a five-ring's clearance and 78% of
+//      a single tube's. Real margin, not a guarantee — and a `windLevel`
+//      past about 1.3 does put a single tube's clapper on the wood.
+//   2. THE FORCE FLOOR. Those contacts close far too slowly to clear
+//      CLAP_FORCE.minForce, so they never sound. Swept to 3x full wind,
+//      where a single tube's relative angle reaches 2.3x its own gap:
+//      still zero audible contacts.
+//
+// Cases only ever pass 0..1, so in the book the first mechanism is never
+// even tested. The second is what makes it safe for a dev harness (whose
+// wind slider runs to 1.6) or a future case to push past that without
+// quietly doubling the chime's own pacing.
+//
+// Same "two independent pendulums, not a real double pendulum" simplification
+// cylinder.js commits to, and for the same reason (a true double pendulum is
+// chaotic and much harder to keep deterministic-by-construction): both hang
+// from the group origin, and what gets RENDERED is their difference, applied
+// to a pivot parented under the body — so on screen the clapper reads as
+// hanging from the cap and swinging inside the ring, which is what it is.
+const CLAP_RESTITUTION = 0.35;   // most of a contact's energy goes into the ring, not the rebound
+// A contact cannot re-trigger every frame while the clapper is still resting
+// against a tube. Sized well under the swing's own half-period (~0.5s at the
+// default size) so it never suppresses a genuine separate contact — it only
+// stops one touch stuttering.
+const CONTACT_REFRACTORY = 0.16;
+// Which tubes a contact rings. The clapper touches the side of the ring it
+// has swung toward; `dot` is each tube's own direction against the contact
+// direction, so 1 is dead-on and 0 is side-on. A threshold of 0.1 rings the
+// touched tube plus its two neighbours on a five-ring (dots 1.0, 0.31, 0.31)
+// or the touched tube alone on the opposite phase (0.81, 0.81) — a cluster
+// that varies rather than a fixed chord, which is what a real chime does as
+// the clapper wanders round the ring.
+const CLUSTER_DOT = 0.1;
+
+// A contact's force from the relative angular velocity at the moment of
+// contact — a hard meeting rings loudly, a graze barely sounds. Unlike the
+// bronze cylinder's own force law (kit/cylinder.js's forceForRelOmega, which
+// has to serve wind contacts AND tap contacts on one curve, two regimes 150x
+// apart), this one only ever sees taps: the invariant above means wind never
+// produces a clapper contact at all. One regime, so one plain power curve.
+//
+// THE REFERENCE IS PER-INSTANCE, NOT A CONSTANT. A fixed cap in rad/s is
+// wrong here for the same reason a fixed note would be: a small chime hangs
+// on a short pendulum, so its natural frequency — and therefore every
+// velocity it can ever reach — is higher. Measured with one fixed cap of
+// 3.4: the default ring's ring-down peaked at 0.89 while a size-0.09 single
+// (omega0 ~9.5 against the ring's ~6.9) pinned at 1.00 for its first three
+// contacts, the exact saturation the cylinder's own force law had to be
+// rewritten to escape. `capFrac` instead scales the reference by the
+// instance's OWN full-force tap velocity (SWING.tapPeak * omega0), so every
+// chime in the book, at every size, reports ~1 for a hard knock and fades
+// from there.
+//
+// `gamma` below 1 keeps the tail of a long ring-down audible rather than
+// letting it vanish while the tubes are still visibly moving.
+//
+// `minForce` is where a contact stops being a sound. Without it the ring-down
+// runs as long as the swing stays above the (tiny) clearance between clapper
+// and tube — measured, 32 contacts and 81 separate tube strikes from a single
+// tap, still going 15 seconds later. That is a machine, not a chime. This is
+// the same judgment as "a graze barely sounds," carried to its conclusion:
+// below this the clapper still meets the tube (THE WALL still resolves it,
+// so nothing passes through anything) but the touch is too soft to speak.
+//
+// Live, like SWING — dev/hanging-audition.html writes straight into it and
+// clapForce() re-reads all of it on every contact.
+export const CLAP_FORCE = {
+  capFrac: 1.0,
+  gamma: 0.7,
+  minForce: 0.22,
+};
+export function clapForce(relOmega, capOmega) {
+  const { capFrac, gamma } = CLAP_FORCE;
+  const cap = capOmega * capFrac;
+  if (!(cap > 0)) return 0;
+  return Math.pow(clamp(Math.abs(relOmega) / cap, 0, 1), gamma);
+}
+
 // NOTE FROM SIZE — the single-tube variant only (task-swing-tune-brief.md,
 // PROBLEM 1: "In twenty nine, there are three wind chimes that play
 // different sounds... but the actual size of them doesn't change"). A
@@ -190,6 +303,17 @@ const WORLD = new THREE.Vector3();
 export function makeFurin({
   size = 0.17, tubes = 5, seed = 5, phase = null, couple = 0, onStrike = null,
   cord = 0.62,             // the hanging string, in units of size; 0 for none
+  // ...or an ABSOLUTE length, in world units, which wins when given. Frank,
+  // on three chimes of different sizes hung from one beam: "the small ones
+  // are not hanging low enough." They weren't — with cord measured in units
+  // of size, a small chime gets a proportionally short string, so the
+  // smallest of a set is pinned tightest to the beam exactly when it should
+  // hang furthest to balance the group. A size-relative cord is still right
+  // for a chime hung ALONE (it keeps the whole object one shape at any
+  // size); an absolute one is right whenever a case is composing several,
+  // because then the hang depth is a fact about the beam, not about the
+  // chime.
+  cordLength = null,
 } = {}) {
   const S = size;
   const g = new THREE.Group();
@@ -209,7 +333,7 @@ export function makeFurin({
   // and rotate around the string attach point'). The swing group already
   // pivots at y = 0, which IS the knot, so the cord hangs from the pivot
   // and the whole chime swings from its top end like the real thing.
-  const CORD = cord * S;
+  const CORD = cordLength === null ? cord * S : Math.max(0, cordLength);
   if (CORD > 0) {
     const line = new THREE.Mesh(
       new THREE.CylinderGeometry(0.018 * S, 0.018 * S, CORD, 4), wood);
@@ -390,6 +514,20 @@ export function makeFurin({
   // silently stop clearing the tube at the small end of the size range,
   // where singleTubeR runs relatively THICKER than 0.075*S would predict.
   const clapperOff = single ? clapperR + singleTubeR + 0.065 * S : 0;
+  // The clapper (and the tag hanging off it) get their OWN pivot, parented
+  // under the body rather than fixed in it — see THE CLAPPER at the top of
+  // this file. Parenting it here, at the cap, means its local rotation IS
+  // the clapper's angle relative to the body, which is exactly the quantity
+  // the contact check works in; and on screen it reads as hanging from the
+  // cap and swinging inside the ring, which is what a fūrin's clapper does.
+  // (The physics models both as pendulums from the group origin, so the
+  // render's pivot sits one cord-length below where the model's does. At the
+  // cord lengths this kit uses — a tenth of a unit — that displacement is
+  // smaller than the clapper disc itself, and paying for it would mean a real
+  // double pendulum.)
+  const clapperPivot = new THREE.Group();
+  clapperPivot.name = 'clapper-pivot';
+  body.add(clapperPivot);
   const clapper = new THREE.Mesh(new THREE.CylinderGeometry(clapperR, clapperR, 0.03 * S, 8), wood);
   clapper.name = 'clapper';
   clapper.position.set(clapperOff, -0.9 * S, 0);
@@ -403,7 +541,45 @@ export function makeFurin({
   tag.userData.noOutline = true;      // an open surface; the inverted hull doesn't suit it
   tag.userData.tube = null;           // the whole chime, not any one tube
   tag.position.set(clapperOff, -0.95 * S, 0);
-  body.add(clapper, tag);
+  clapperPivot.add(clapper, tag);
+
+  // THE CLAPPER'S OWN PHYSICS. Its pendulum length is the real hang depth
+  // (cord plus the 0.9*S the clapper sits below the cap), so it swings a
+  // little slower than the body whose own length stops at the assembly's
+  // centre of mass — the lag that makes a tap ring at all.
+  const CONTACT_Y = CORD + 0.9 * S;
+  // How far the clapper has to travel, in a straight line, before it touches
+  // a tube. A ring's tubes stand 0.33*S off the axis with the clapper
+  // centred between them; a single tube stands ON the axis with the clapper
+  // nudged 0.065*S clear of it (clapperOff's own construction, above), so
+  // the two cases are the same subtraction with different terms and the
+  // clearance comes out about a third as wide for a single. That is why a
+  // single tube answers a tap with a tighter, faster patter than a ring
+  // does, without anything being tuned to make it.
+  const CONTACT_CLEAR = single
+    ? clapperOff - clapperR - singleTubeR
+    : 0.33 * S - clapperR - 0.075 * S;
+  const GAP_ANGLE = CONTACT_CLEAR / CONTACT_Y;
+  const clapZ = createPendulum({ length: CONTACT_Y, g: GRAVITY, damping: SWING.damping });
+  const clapX = createPendulum({ length: CONTACT_Y, g: GRAVITY, damping: SWING.damping });
+  // The torque coefficients are scaled by the clapper's OWN g/L against the
+  // SAME lean the body uses, which is what makes the equilibrium angles
+  // identical and the steady-wind relative angle exactly zero — the
+  // invariant in THE CLAPPER, above, that keeps the approved ambient pacing
+  // untouched. Getting this wrong (reusing the body's coefficient rather
+  // than its lean) would leave the clapper permanently resting against a
+  // tube in any wind at all.
+  const windClapZTorque = (GRAVITY / CONTACT_Y) * WIND_Z_LEAN;
+  const windClapXTorque = (GRAVITY / CONTACT_Y) * WIND_X_LEAN;
+  // Each tube's own direction around the ring, unit length, for deciding
+  // which of them a contact rings. A single tube has no ring direction —
+  // its clapper always arrives from the same side — so it gets none and the
+  // cluster logic short-circuits for it.
+  const tubeDirs = single ? null : state.map((tb) => {
+    const x = tb.mesh.position.x, z = tb.mesh.position.z;
+    const r = Math.hypot(x, z) || 1;
+    return { x: x / r, z: z / r };
+  });
 
   // a forgiving invisible target: a tap wants the chime, not a particular
   // tube. Sized to end exactly at the hang point. A single tube has no ring
@@ -426,11 +602,17 @@ export function makeFurin({
   let clock = null;         // null until the first update() — see the seeding below
   let windLevel = 1;
   let strikes = 0;
+  let contacts = 0;
   let lastForce = 0;
+  let lastContactAt = -Infinity;
 
   function fire(i, force) {
     strikes++;
     lastForce = force;
+    // A clapper contact holds off the weather's own next strike on the same
+    // tube, the same way one weather strike holds off the next: the tube is
+    // already ringing, and the weather has no idea a hand just touched it.
+    if (clock !== null) state[i].last = clock;
     if (onStrike) {
       // REUSED vector — the engine reads x/y/z synchronously. A caller that
       // wants to keep it must clone it.
@@ -443,6 +625,28 @@ export function makeFurin({
       // note, the kit already worked it out from the size the case chose.
       onStrike(single ? note : i, force, WORLD);
     }
+  }
+
+  // One contact, several tubes: the clapper touches the side of the ring it
+  // has swung toward, and everything on that side speaks. `dirX`/`dirZ` is
+  // the contact direction in the ring's own plane; each tube's force falls
+  // off with how square-on it was struck. This is the cluster Frank means by
+  // "the whole point of those multi ones" — and it VARIES, because the
+  // contact direction wanders with the swing rather than being a fixed chord.
+  function fireCluster(dirX, dirZ, force) {
+    if (!tubeDirs) { fire(0, force); return; }
+    let best = -Infinity, bestI = 0, any = false;
+    for (let i = 0; i < tubeDirs.length; i++) {
+      const dot = tubeDirs[i].x * dirX + tubeDirs[i].z * dirZ;
+      if (dot > best) { best = dot; bestI = i; }
+      if (dot <= CLUSTER_DOT) continue;
+      any = true;
+      fire(i, force * (0.55 + 0.45 * dot));
+    }
+    // A ring wide enough to leave a gap in every direction (a two-tube ring
+    // struck square between them) would otherwise swallow the contact
+    // silently. Ring the nearest tube instead: a touch always sounds.
+    if (!any) fire(bestI, force * 0.55);
   }
 
   return {
@@ -504,6 +708,40 @@ export function makeFurin({
         clock = seed;
         zPend.clock = seed;
         xPend.clock = seed;
+        // the clapper's two pendulums seed identically, and MUST: they read
+        // the same gustPhase at the same offsets as the body's, and the
+        // steady-wind-relative-angle-is-zero invariant is exactly the claim
+        // that those four torque signals stay in step. A missed seed here
+        // would leave the clapper permanently leaning against a tube.
+        clapZ.clock = seed;
+        clapX.clock = seed;
+
+        // ...AND START AT THE LEAN, not hanging straight down. A chime that
+        // has been hanging under a gate all afternoon is already leaning
+        // wherever the wind has it; starting every pendulum at theta=0 makes
+        // the whole set snap from vertical to its lean over the first second
+        // of a case — during the ink dissolve, which is when the reader is
+        // looking straight at it.
+        //
+        // It is also the one thing that could break the clapper's wind
+        // invariant (THE CLAPPER, top of file). Both pendulums start from
+        // rest but respond at different natural frequencies, so the startup
+        // transient separates them by more than the steady state ever does:
+        // measured, a five-ring built at simTime 3600 rang one clapper
+        // contact it should never have rung. Seeding both to the SAME
+        // equilibrium angle — which is the same number, because the leans
+        // are equal by construction — starts the relative angle at exactly
+        // zero and there is no transient to separate.
+        //
+        // theta_eq solves (g/L) sin(theta) = torque; the torque
+        // coefficients above are themselves (g/L)*lean, so the g/L cancels
+        // and the equilibrium is just asin(lean * gust * windLevel). Clamped
+        // because a windLevel past 1/lean has no real asin — the pendulum
+        // simply starts at its horizontal extreme there, which is the
+        // correct limit of "leaning as far as it can."
+        const eq = (lean, phase) => Math.asin(clamp(lean * gustPhase(phase) * windLevel, -1, 1));
+        zPend.theta = clapZ.theta = eq(WIND_Z_LEAN, seed + off);
+        xPend.theta = clapX.theta = eq(WIND_X_LEAN, seed * 0.7 + off + 11);
       }
       const prevClock = clock;
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
@@ -525,6 +763,8 @@ export function makeFurin({
       // bell voice.
       zPend.damping = SWING.damping;
       xPend.damping = SWING.damping;
+      clapZ.damping = SWING.damping;
+      clapX.damping = SWING.damping;
 
       // wind is a TORQUE now, not a position — see THE SWING above. Each
       // axis reads gustPhase at its own (per-instance) phase offset so two
@@ -537,8 +777,77 @@ export function makeFurin({
       // with `tt` below.
       integratePendulum(zPend, elapsed, (t) => windZTorque * gustPhase(t + off) * windLevel);
       integratePendulum(xPend, elapsed, (t) => windXTorque * gustPhase(t * 0.7 + off + 11) * windLevel);
+      // The clapper reads the SAME gust at the SAME offsets — that identity
+      // is what holds the steady-wind relative angle at zero and keeps the
+      // approved ambient pacing out of this mechanism entirely (THE CLAPPER,
+      // top of file). Only the torque COEFFICIENT differs, and only because
+      // its own g/L does.
+      integratePendulum(clapZ, elapsed, (t) => windClapZTorque * gustPhase(t + off) * windLevel);
+      integratePendulum(clapX, elapsed, (t) => windClapXTorque * gustPhase(t * 0.7 + off + 11) * windLevel);
+
+      // CONTACT. How far the clapper has swung toward a tube, and from which
+      // side. A ring is symmetric — the clapper sits at its centre and can
+      // reach any tube — so the approach is the full magnitude across both
+      // swing planes. A single tube stands ON the axis with the clapper
+      // nudged to one side of it, so only one sign of relZ closes that gap;
+      // the other swings the clapper away into open air and must not ring
+      // anything. Keeping `m` SIGNED for a single is what expresses that, in
+      // the same comparison, with no second branch.
+      // this instance's own full-force tap velocity — the reference every
+      // contact's force is measured against, read live so a harness slider
+      // on SWING.tapPeak moves it too (see CLAP_FORCE's own comment for why
+      // it must not be a constant in rad/s)
+      const capOmega = SWING.tapPeak * omega0;
+      const relZ = zPend.theta - clapZ.theta;
+      const relX = xPend.theta - clapX.theta;
+      const m = single ? relZ : Math.hypot(relZ, relX);
+      const uz = single ? 1 : (Math.abs(m) > 1e-9 ? relZ / m : 0);
+      const ux = single ? 0 : (Math.abs(m) > 1e-9 ? relX / m : 0);
+      if (m > GAP_ANGLE) {
+        if (clock - lastContactAt > CONTACT_REFRACTORY) {
+          lastContactAt = clock;
+          // The radial closing speed — how hard the two actually met, not
+          // how fast either is travelling. Sideways drift along the wall
+          // rings nothing.
+          const closing = (zPend.omega - clapZ.omega) * uz + (xPend.omega - clapX.omega) * ux;
+          const force = clapForce(closing, capOmega);
+          // Below minForce the two still MET — the wall below resolves it
+          // either way — but too softly to speak. This is what ends a
+          // ring-down; see CLAP_FORCE's own comment.
+          if (force >= CLAP_FORCE.minForce) {
+            contacts++;
+            // +theta_z carries a hanging point toward +x and +theta_x
+            // carries it toward -z (THREE's own rotation conventions), so a
+            // body leading in +relZ leaves the clapper on the -x side: the
+            // contact direction is the negation of the first, the plain
+            // value of the second.
+            fireCluster(-uz, ux, force);
+          }
+        }
+        // THE WALL. Unconditional, refractory or not — the tube is solid
+        // whether or not this particular touch is allowed to sound. Clamp
+        // the clapper back to the surface and reflect whatever part of its
+        // velocity was still driving into it, most of the energy going into
+        // the ring rather than the rebound (CLAP_RESTITUTION). Without this
+        // the clapper integrates straight on through the tubes it just rang,
+        // which at a full-force tap's amplitudes is a disc visibly passing
+        // through metal.
+        clapZ.theta = zPend.theta - GAP_ANGLE * uz;
+        if (!single) clapX.theta = xPend.theta - GAP_ANGLE * ux;
+        const vn = -((clapZ.omega - zPend.omega) * uz + (clapX.omega - xPend.omega) * ux);
+        if (vn > 0) {
+          const k = (1 + CLAP_RESTITUTION) * vn;
+          clapZ.omega += k * uz;
+          if (!single) clapX.omega += k * ux;
+        }
+      }
+
       swing.rotation.z = zPend.theta;
       swing.rotation.x = xPend.theta;
+      // the clapper's pivot is parented under the body, so its LOCAL
+      // rotation is the relative angle the physics above works in
+      clapperPivot.rotation.z = clapZ.theta - zPend.theta;
+      clapperPivot.rotation.x = clapX.theta - xPend.theta;
       // the tag keeps its own independent flutter in the wind, plus an echo
       // of the main swing (taps and wind-lean both show up in zPend.theta)
       tag.rotation.y = v * 0.25 * windLevel + zPend.theta * 0.6;
@@ -570,10 +879,25 @@ export function makeFurin({
     // physically is — not a pose superposed on top of one.
     ring(force = 0.75, tube = null) {
       tapKick(force);
-      const k = Number.isInteger(tube)
-        ? ((tube % state.length) + state.length) % state.length
-        : Math.abs(Math.floor(clock * 3)) % state.length;
-      fire(k, force);
+      // The hand IS the first contact. Without this the clapper's own first
+      // meeting lands about a thirtieth of a second later — the body has
+      // barely moved, so it arrives at nearly full force — and the tap reads
+      // as a flam rather than a knock. Charging it to the refractory makes
+      // the physics pick up where the hand left off instead of doubling it.
+      if (clock !== null) lastContactAt = clock;
+      if (Number.isInteger(tube)) {
+        fire(((tube % state.length) + state.length) % state.length, force);
+        return;
+      }
+      // The whole chime grabbed at once. This used to pick ONE tube by the
+      // clock — Frank: "when I click on it, I only ever hear one sound" — but
+      // a hand closing on a ring brushes everything on the side it came from,
+      // so it rings a cluster. -x, because that is the side the clapper is
+      // about to arrive from too: tapKick() kicks zPend positive, the body
+      // leads toward +x, and the clapper is left behind on the other side.
+      // The hand and the physics agree, and the ring-down carries on from
+      // the same place the first sound came from.
+      fireCluster(-1, 0, force);
     },
     // the pointer passing over: a nudge, not a knock — the same kick at a
     // fraction of the force, and no strike. CHANGED CHARACTER under the
@@ -591,6 +915,12 @@ export function makeFurin({
     setWindLevel(v) { windLevel = Math.max(0, v); },
     windLevel() { return windLevel; },
     strikes() { return strikes; },
+    // clapper contacts, as distinct from strikes: one contact rings a
+    // CLUSTER, so strikes climbs faster than this does. Exposed for the same
+    // reason cylinder.js exposes its own introspection — tests and the
+    // harness need to see the mechanism without reaching into the closure.
+    contacts() { return contacts; },
+    gapAngle() { return GAP_ANGLE; },
     lastForce() { return lastForce; },
     // mechanical energy still in the main swing: 0 at rest, positive
     // whenever it is displaced and/or moving (src/kit/pendulum.js)

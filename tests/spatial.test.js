@@ -79,12 +79,45 @@ test('every output stays in range across a full sweep', () => {
     for (let z = -40; z <= 40; z += 3.5) {
       const s = spatialFor({ x, y: 1.4, z }, AT_ORIGIN);
       assert.ok(s.pan >= -1 && s.pan <= 1, `pan out of range at ${x},${z}: ${s.pan}`);
-      assert.ok(s.gain >= 0 && s.gain <= 1, `gain out of range at ${x},${z}: ${s.gain}`);
+      // Gain is no longer bounded by 1 — being NEARER than the reference
+      // distance is now louder than the reference, which is the whole point
+      // of SPATIAL.nearClamp (Frank: "the minimum and the maximum sound
+      // about the same to me," because the old max(ref,d) pinned every
+      // distance inside `ref` to exactly 1). What must still hold is that it
+      // is BOUNDED: the clamp is the only thing standing between a sound
+      // approaching the camera and a divide-by-zero into the master bus.
+      // Derived from the live constants, so moving nearClamp moves the
+      // ceiling with it, but removing the clamp fails here.
+      const ceiling = Math.pow(SPATIAL.ref / SPATIAL.nearClamp, SPATIAL.rolloff);
+      assert.ok(s.gain >= 0 && s.gain <= ceiling, `gain out of range at ${x},${z}: ${s.gain} (ceiling ${ceiling})`);
       assert.ok(s.wet >= 0 && s.wet <= 1, `wet out of range at ${x},${z}: ${s.wet}`);
       assert.ok(s.tone >= SPATIAL.toneFar * 0.5 && s.tone <= SPATIAL.toneNear,
         `tone out of range at ${x},${z}: ${s.tone}`);
     }
   }
+});
+
+test('nearer is louder, across the whole range the book is viewed from', () => {
+  // THE BUG Frank heard in dev/spatial-audition.html: "there's not that much
+  // of a difference at all between the distance between four and twenty two.
+  // The minimum and the maximum sound about the same to me." `gain` was
+  // `(ref / max(ref, d))^rolloff`, so every distance nearer than the
+  // reference produced EXACTLY 1 — the near half of the range was one flat
+  // level, and the far half only moved 5dB.
+  //
+  // MUTATION-VERIFIED: restore `Math.max(tune.ref, d)` and the strict
+  // monotonicity below fails immediately at the first pair inside `ref`
+  // (4 and 6 both return 1).
+  const gainAt = (d) => spatialFor({ x: 0, y: 0, z: -d }, AT_ORIGIN).gain;
+  const sweep = [SPATIAL.nearClamp, 6, 8, SPATIAL.ref, 14, 17, 22, 30];
+  for (let i = 1; i < sweep.length; i++) {
+    assert.ok(gainAt(sweep[i]) < gainAt(sweep[i - 1]),
+      `${sweep[i]} units is not quieter than ${sweep[i - 1]}: ${gainAt(sweep[i])} vs ${gainAt(sweep[i - 1])}`);
+  }
+  // and the span across the harness's own audition range is a real one, not
+  // a technicality — this is what "they sound about the same" was about
+  const dB = 20 * Math.log10(gainAt(4) / gainAt(22));
+  assert.ok(dB > 10, `4 to 22 units is only ${dB.toFixed(1)}dB of level — that reads as no distance cue at all`);
 });
 
 const SAVE = { state: () => ({ soundOn: false }), setSound() {} };

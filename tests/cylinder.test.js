@@ -368,17 +368,38 @@ test('a decaying tap ring-down reports DECREASING force, not a column of 1.00s',
     `${saturated}/${forces.length} strikes still saturate near 1.0 — the force law isn't tracking the decay: ${forces}`);
 
   // The ring-down's own transient is not monotone strike-to-strike (the
-  // physics itself has a quiet near-miss early on and a stronger return
-  // swing right after — measured: 0.954, 0.69, 0.759, 0.87, then a real
-  // decline), so a strict "every strike quieter than the last" pin would be
-  // fighting the physics, not the force law. What IS robustly true of a
-  // genuine diminuendo, and false of "saturated then a cliff to near-zero"
-  // (the OLD law's actual shape): the LAST strike of the ring-down reads
-  // meaningfully quieter than the LOUDEST strike anywhere in it.
+  // physics has a quiet near-miss right after the tap and a stronger return
+  // swing behind it), so a strict "every strike quieter than the last" pin
+  // would be fighting the physics rather than the force law. Two robust
+  // properties instead.
+  //
+  // FIRST: the last strike is meaningfully quieter than the loudest. The
+  // threshold here was 0.75 — only -2.5dB — and that is exactly how a law
+  // whose whole upper segment spanned 0.7 to 1.0 passed this test while
+  // Frank heard "every time it knocks, it doesn't sound less loud." -7dB is
+  // the difference between a fade and a technicality.
   const max = Math.max(...forces);
   const last = forces[forces.length - 1];
-  assert.ok(last < max * 0.75,
+  assert.ok(last < max * 0.45,
     `the ring-down's last strike (${last}) isn't meaningfully quieter than its loudest (${max}) — no audible diminuendo: ${forces}`);
+
+  // SECOND, and the one that actually catches a PLATEAU: compare the halves.
+  // The old law's real shape was loud, then eleven strikes inside a 1.6dB
+  // band, then a late drop — which satisfies any first-vs-last check while
+  // sounding like a machine that stops rather than a bell that fades.
+  //
+  // The threshold is loose (0.85) on purpose. The first half always carries
+  // the physics' own rebound — a near-miss contact a fraction of a second
+  // after the tap, at a fraction of its velocity — which drags the early
+  // mean DOWN and so works against this assertion rather than for it.
+  // Measured both ways at seed 20: old law 0.909, this law 0.766. 0.85 sits
+  // between them with margin on each side rather than splitting the
+  // difference of two numbers that happen to be close.
+  const mid = Math.floor(forces.length / 2);
+  const mean = (a) => a.reduce((s, v) => s + v, 0) / a.length;
+  const early = mean(forces.slice(0, mid)), late = mean(forces.slice(mid));
+  assert.ok(late < early * 0.85,
+    `the ring-down plateaus: first half averaged ${early.toFixed(3)}, second half ${late.toFixed(3)} — ${forces}`);
 });
 
 test('a tap rings through the SAME contact mechanism as the wind, not a bypass', () => {

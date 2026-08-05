@@ -128,6 +128,12 @@
         <div id="furin-swing-fields"></div>
       </section>
 
+      <section id="clap-force-section">
+        <h2>fūrin ring-down (CLAP_FORCE, kit/furin.js)</h2>
+        <div class="note">the clapper is a second pendulum now, so a tap rings a cluster and keeps ringing as the swing settles. "full-force at" is measured in units of this chime's OWN full-force tap velocity, so it holds across sizes; "stops below" is where a contact gets too soft to speak — that is what ends the ring-down (without it: 32 contacts, 81 strikes, still going 15s later).</div>
+        <div id="clap-force-fields"></div>
+      </section>
+
       <section id="cyl-swing-section">
         <h2>cylinder swing (CYL_SWING, kit/cylinder.js)</h2>
         <div class="note">tap kick swings the BODY (not the clapper) — raising it swings it further AND makes the ring-down last longer (more re-strikes at the body's own ~0.78s half-period, unrelated to amplitude); the force law is what makes those re-strikes fade instead of hammering at full volume, so a bigger kick should still sound like one settling ring, not a louder loop.</div>
@@ -157,7 +163,7 @@
       <section>
         <h2>print preset</h2>
         <div class="row">
-          <button id="print-preset">print SWING / CYL_SWING / CYL_FORCE / BRONZE / CLATTER</button>
+          <button id="print-preset">print SWING / CLAP_FORCE / CYL_SWING / CYL_FORCE / BRONZE / CLATTER</button>
         </div>
         <textarea id="dump" readonly></textarea>
       </section>
@@ -168,7 +174,7 @@
     import * as THREE from '../lib/three.module.js';
     import { PAPER } from '../src/palette.js';
     import { makeLights, toonMaterial, addOutlines } from '../src/kit/index.js';
-    import { makeFurin, SWING } from '../src/kit/furin.js';
+    import { makeFurin, SWING, CLAP_FORCE } from '../src/kit/furin.js';
     import { makeCylinderChime, CYL_SWING, CYL_FORCE } from '../src/kit/cylinder.js';
     import { makeScreen, CLATTER } from '../src/kit/screen.js';
     import { BRONZE } from '../src/audio/synths.js';
@@ -200,9 +206,19 @@
     // something, not floating — same visual role gate.js's kasagi plays
     // in the real cases
     const lintelMat = toonMaterial({ color: '#3a352c', flat: true });
-    const lintel = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.16, 0.32), lintelMat);
-    lintel.position.set(0, 2.4, 0);
+    const LINTEL_Y = 2.4, LINTEL_H = 0.16;
+    const lintel = new THREE.Mesh(new THREE.BoxGeometry(3.4, LINTEL_H, 0.32), lintelMat);
+    lintel.position.set(0, LINTEL_Y, 0);
     scene.add(lintel);
+    // THE HANG POINT — a real bug Frank caught by eye: "their pivot point
+    // should be the connection point where they're connected to the thing
+    // above, and it's not set up properly. So the lowest one is right now
+    // actually inside the top of the wall, or the ceiling." Every hanging
+    // object was placed at LINTEL_Y — the beam's CENTRE — so the top of every
+    // cord was buried half a beam deep, and a small chime (whose cord scales
+    // with its size) disappeared into the wood entirely. A thing hangs from
+    // the UNDERSIDE of what it is tied to.
+    const HANG_Y = LINTEL_Y - LINTEL_H / 2;
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), toonMaterial({ color: '#CFC7B2' }));
     ground.rotation.x = -Math.PI / 2;
     ground.userData.noOutline = true;
@@ -267,7 +283,7 @@
         ...opts,
         onStrike: (tube, force, pos) => { audio.chimeStrike({ tube, force, at: pos }); },
       });
-      f.group.position.set(x, 2.4, 0);
+      f.group.position.set(x, HANG_Y, 0);
       scene.add(f.group);
       addOutlines(f.group, OUTLINE_OPTS);
       live.objs.push(f);
@@ -278,7 +294,7 @@
         ...opts,
         onStrike: (note, force, pos) => { audio.cylinderStrike({ note, force, at: pos }); },
       });
-      c.group.position.set(x, 2.35, 0);
+      c.group.position.set(x, HANG_Y, 0);
       scene.add(c.group);
       addOutlines(c.group, OUTLINE_OPTS);
       live.objs.push(c);
@@ -328,11 +344,14 @@
     // anyway). If k29.js's own numbers move, this mode drifts until someone
     // updates it here too — no test enforces this pairing; tests/k29.test.js
     // checks the REAL case, this is only what the harness shows.
+    // (The five-tube ring that used to hang here alongside them is gone —
+    // Frank's own call: "for case twenty nine, let's get rid of the five-tube
+    // ring that's placed. So it's just gonna have three, the three different
+    // sizes.")
     const CASE29_LAYOUT = {
-      ringX: -0.79,
-      singleX: [-0.17, 0.39, 0.80],
+      singleX: [-0.72, 0, 0.72],
       singleSizes: [0.18, 0.12, 0.09],
-      singleCord: [0.42, 0.52, 0.60],
+      singleCord: [0.08, 0.18, 0.25],   // ABSOLUTE lengths now, not fractions of size
     };
     // slider-controlled sizes, per mode — persisted across mode switches so
     // dialing a size in, leaving, and coming back doesn't lose it
@@ -341,6 +360,13 @@
       sizes3: [0.18, 0.12, 0.09],   // case 29's own current staging, as a starting point
       cylinder: 0.8,
     };
+    // Absolute cord lengths for the "three sizes" mode, matching what k29
+    // now does. With cord measured in units of SIZE the smallest chime gets
+    // the shortest string and ends up pinned to the beam — Frank: "the small
+    // ones are not hanging low enough." These bring all three bottom edges
+    // to roughly the same line, so the set reads as three SIZES rather than
+    // three heights.
+    const SIZES3_CORD = [0.08, 0.18, 0.25];
 
     // CODE REVIEW CAUGHT A REAL BUG: this used to rebuild the SIZE FIELD DOM
     // (buildSizeFields(), below) on every single size-slider `input` event,
@@ -365,11 +391,12 @@
       else if (mode === 'single') addFurin({ tubes: 1, size: sizeState.single, seed: 8 }, 0);
       else if (mode === 'sizes3') {
         const xs = [-0.9, 0, 0.9];
-        sizeState.sizes3.forEach((s, i) => addFurin({ tubes: 1, size: s, seed: 90 + i, phase: 1.3 + 2.4 * i }, xs[i]));
+        sizeState.sizes3.forEach((s, i) => addFurin({
+          tubes: 1, size: s, cordLength: SIZES3_CORD[i], seed: 90 + i, phase: 1.3 + 2.4 * i,
+        }, xs[i]));
       } else if (mode === 'case29') {
-        addFurin({ tubes: 5, seed: 29, cord: 0.62 }, CASE29_LAYOUT.ringX);
         CASE29_LAYOUT.singleX.forEach((x, i) => addFurin({
-          tubes: 1, size: CASE29_LAYOUT.singleSizes[i], cord: CASE29_LAYOUT.singleCord[i],
+          tubes: 1, size: CASE29_LAYOUT.singleSizes[i], cordLength: CASE29_LAYOUT.singleCord[i],
           seed: 293 + i, phase: 1.3 + 2.4 * i,
         }, x));
       } else if (mode === 'cylinder') addCylinder({ size: sizeState.cylinder, seed: 11 }, 0);
@@ -489,7 +516,7 @@
     // not a physics simulation, so this can run on every slider tick.
     const CASE29_VISIBLE = new Set(['cord', 'tube', 'cap', 'clapper', 'tag']);
     function visibleBoxAt(spec, theta) {
-      const f = makeFurin({ tubes: spec.tubes, size: spec.size, seed: spec.seed, cord: spec.cord, phase: spec.phase, onStrike: () => {} });
+      const f = makeFurin({ tubes: spec.tubes, size: spec.size, seed: spec.seed, cordLength: spec.cord, phase: spec.phase, onStrike: () => {} });
       f.group.position.set(spec.x, 0, 0);
       const swing = f.group.getObjectByName('swing');
       swing.rotation.z = theta;
@@ -500,13 +527,10 @@
     }
     function case29MinGap() {
       const theta = theoreticalPeakTheta();
-      const specs = [
-        { name: 'ring', x: CASE29_LAYOUT.ringX, size: 0.17, cord: 0.62, seed: 29, tubes: 5, phase: null },
-        ...CASE29_LAYOUT.singleX.map((x, i) => ({
-          name: `single${i + 1}`, x, size: CASE29_LAYOUT.singleSizes[i], cord: CASE29_LAYOUT.singleCord[i],
-          seed: 293 + i, tubes: 1, phase: 1.3 + 2.4 * i,
-        })),
-      ];
+      const specs = CASE29_LAYOUT.singleX.map((x, i) => ({
+        name: `single${i + 1}`, x, size: CASE29_LAYOUT.singleSizes[i], cord: CASE29_LAYOUT.singleCord[i],
+        seed: 293 + i, tubes: 1, phase: 1.3 + 2.4 * i,
+      }));
       let worst = Infinity, worstPair = '';
       for (let i = 0; i < specs.length - 1; i++) {
         for (const sa of [1, -1]) for (const sb of [1, -1]) {
@@ -582,8 +606,20 @@
     // taper reads as a bell fading or a sustained ring that just softens
     // near the tail. Same live-object-write pattern as CYL_SWING/BRONZE.
     const cylForceWrap = document.getElementById('cyl-force-fields');
-    liveField(cylForceWrap, CYL_FORCE, 'kneeLevel', 'knee level', 0.1, 0.95, 0.01, (v) => v.toFixed(2));
+    liveField(cylForceWrap, CYL_FORCE, 'kneeLevel', 'knee level', 0.05, 0.95, 0.01, (v) => v.toFixed(2));
+    liveField(cylForceWrap, CYL_FORCE, 'windGamma', 'wind shape', 0.2, 1.5, 0.05, (v) => v.toFixed(2));
     liveField(cylForceWrap, CYL_FORCE, 'cap', 'cap (rad/s)', 0.3, 6, 0.1, (v) => v.toFixed(2));
+    liveField(cylForceWrap, CYL_FORCE, 'tapGamma', 'tap shape', 0.4, 2.5, 0.05, (v) => v.toFixed(2));
+
+    // CLAP_FORCE — the fūrin's own clapper, new in this pass. A tap now
+    // rings a CLUSTER and keeps ringing as the swing settles (kit/furin.js,
+    // THE CLAPPER); these three decide how loud each contact is and where
+    // the ring-down stops. Same live-object-write pattern as everything
+    // else on this page.
+    const clapWrap = document.getElementById('clap-force-fields');
+    liveField(clapWrap, CLAP_FORCE, 'capFrac', 'full-force at (xtap)', 0.3, 2.5, 0.05, (v) => v.toFixed(2));
+    liveField(clapWrap, CLAP_FORCE, 'gamma', 'shape', 0.3, 2.0, 0.05, (v) => v.toFixed(2));
+    liveField(clapWrap, CLAP_FORCE, 'minForce', 'stops below', 0.02, 0.6, 0.01, (v) => v.toFixed(2));
 
     // BRONZE.level — BUG FIX: "the bronze cylinder is not as loud as the
     // other ones." Same live-object-write pattern as CYL_SWING above, just
@@ -636,6 +672,7 @@
       // swing constants above — omitting it left no way to copy out the
       // sizes a print-preset click was presumably meant to capture.
       return `SWING (kit/furin.js):\n{\n${fmt(SWING)}\n}\n\n` +
+             `CLAP_FORCE (kit/furin.js):\n{\n${fmt(CLAP_FORCE)}\n}\n\n` +
              `CYL_SWING (kit/cylinder.js):\n{\n${fmt(CYL_SWING)}\n}\n\n` +
              `CYL_FORCE (kit/cylinder.js):\n{\n${fmt(CYL_FORCE)}\n}\n\n` +
              `BRONZE (audio/synths.js):\n{\n${fmt(BRONZE)}\n}\n\n` +
@@ -672,7 +709,7 @@
     requestAnimationFrame(loop);
 
     // console access, same convention as kit-preview.html's window.kp
-    window.ha = { scene, camera, renderer, live: () => live, setMode, SWING, CYL_SWING, CYL_FORCE, CLATTER, audio };
+    window.ha = { scene, camera, renderer, live: () => live, setMode, SWING, CLAP_FORCE, CYL_SWING, CYL_FORCE, CLATTER, audio };
   </script>
 </body>
 </html>

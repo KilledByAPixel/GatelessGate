@@ -97,16 +97,101 @@ test('hang point: every mesh hangs below the origin', () => {
   assert.ok(top <= 0.001, `geometry pokes above the hang point: ${top}`);
 });
 
-test('a tap rings ONE tube, not a burst across the whole ring', () => {
-  // THE BUG, pinned. ring() used to fire tube k AND k+1 on every tap: Frank
-  // — "just hitting, like, one of them, hitting this one thing causes a
-  // whole bunch of sounds." One tap now rings exactly one tube.
+test('grabbing the WHOLE ring rings a cluster — several tubes, one side', () => {
+  // THE TWO COMPLAINTS THIS SITS BETWEEN, because they sound contradictory
+  // and are not. Frank, originally: "hitting this one thing causes a whole
+  // bunch of sounds" — that was ring() firing tube k AND an arbitrary k+1
+  // with no way to touch a specific tube at all, and the answer was per-tube
+  // picking (the test below this one). Frank, after that shipped: "when I
+  // click on it, I only ever hear one sound. I never hear more than one
+  // sound on the five tube ring... that's kind of the whole point of those
+  // multi ones." The distinction is WHAT WAS TOUCHED: naming a tube rings
+  // that tube alone; closing your hand on the whole chime brushes the side
+  // it came from and several speak.
+  //
+  // Asserted as "more than one, fewer than all," not an exact count: the
+  // cluster is whichever tubes lie on the contact side (CLUSTER_DOT), so
+  // pinning 2 or 3 here would pin the ring's own geometry into a test about
+  // the contract.
   const hits = [];
-  const f = makeFurin({ seed: 1, onStrike: (i, force) => hits.push([i, force]) });
+  const f = makeFurin({ seed: 1, tubes: 5, onStrike: (i, force) => hits.push([i, force]) });
   f.setWindLevel(0);
   f.ring();
-  assert.equal(hits.length, 1, `one tap rang ${hits.length} tubes`);
+  assert.ok(hits.length > 1, `grabbing the whole ring rang only ${hits.length} tube`);
+  assert.ok(hits.length < 5, `it rang all ${hits.length} tubes — that is the burst, not a cluster`);
+  // distinct tubes, distinct notes — a cluster of one note played twice
+  // would pass a bare count check and is exactly the failure worth excluding
+  assert.equal(new Set(hits.map((h) => h[0])).size, hits.length, 'the same tube rang twice');
   assert.ok(f.pickTargets().length > 0);
+});
+
+test('a tap keeps ringing as it settles, and the ring-down fades out', () => {
+  // Frank, on the singles: "I would expect it would maybe get knocked more
+  // than once while it's getting knocked around." The clapper is a second
+  // pendulum now, so the swing a tap kicks off keeps meeting the tubes —
+  // and each meeting is softer than the last, because the force tracks the
+  // closing velocity and the swing is decaying.
+  //
+  // Still air throughout, so nothing here can come from the weather loop:
+  // every strike counted is the clapper's.
+  const hits = [];
+  let t = 0;
+  const f = makeFurin({ seed: 4, tubes: 1, size: 0.17, phase: 0, onStrike: (i, force) => hits.push({ t, force }) });
+  f.setWindLevel(0);
+  f.update(1 / 60, t);
+  f.ring(1.0);
+  for (let k = 0; k < 60 * 12; k++) { t += 1 / 60; f.update(1 / 60, t); }
+
+  assert.ok(f.contacts() >= 4, `a full-force tap produced only ${f.contacts()} clapper contacts`);
+  // and it STOPS — a chime that never stops knocking is the machine this
+  // replaced (32 contacts and 81 strikes, still going 15s later, before
+  // CLAP_FORCE.minForce ended it)
+  assert.ok(f.contacts() <= 20, `${f.contacts()} contacts from one tap — that is a machine, not a chime`);
+
+  // the fade, measured between the halves rather than first-vs-last, so one
+  // outlying rebound cannot carry the assertion
+  const mid = Math.floor(hits.length / 2);
+  const mean = (a) => a.reduce((s, h) => s + h.force, 0) / a.length;
+  const early = mean(hits.slice(0, mid)), late = mean(hits.slice(mid));
+  assert.ok(late < early * 0.8,
+    `the ring-down does not fade: first half averaged ${early.toFixed(3)}, second half ${late.toFixed(3)}`);
+});
+
+test('the wind never rings the clapper — the ambient pacing belongs to the weather', () => {
+  // THE INVARIANT the clapper's torque is designed around (kit/furin.js, THE
+  // CLAPPER). Frank auditioned and approved the chime's strike weather; the
+  // clapper is a TAP mechanism and must not start contributing wind strikes
+  // behind its back.
+  //
+  // WHAT ACTUALLY HOLDS IT, measured rather than assumed — because the first
+  // draft of this comment claimed a guarantee stronger than the one the code
+  // has. Both pendulums read the same gust at the same offset with leans
+  // scaled to their own g/L, so a STEADY wind holds the relative angle at
+  // exactly zero. A GUSTING one does not: the two have different natural
+  // frequencies, and the transient peaks at 0.033 rad under full wind —
+  // real, and 53% of a five-ring's clearance, 78% of a single tube's. Past
+  // full wind the clapper does touch. What stops it SOUNDING there is the
+  // second, independent mechanism: those contacts close far too slowly to
+  // clear CLAP_FORCE.minForce. Swept to 3x full wind, where a single tube's
+  // relative angle reaches 2.3x its gap: still zero audible contacts.
+  //
+  // Started deep into a session on purpose. simTime is main.js's global
+  // clock and never resets, so a chime built mid-session sees a large
+  // simTime on its first update() — and the clapper's own pendulum clocks
+  // have to be seeded to it, or its gust reading sits permanently offset
+  // from the body's and the equal-lean argument above collapses.
+  // MUTATION-CHECKED: dropping the two `clapZ.clock = seed` lines from
+  // update()'s seeding block fails this; at t0 = 0 it would not, which is
+  // exactly why t0 is not 0.
+  const t0 = 3600;
+  for (const tubes of [5, 3, 1]) {
+    let t = t0;
+    const f = makeFurin({ tubes, seed: 4, phase: 0, onStrike: () => {} });
+    f.setWindLevel(1);                       // full wind, the loudest a case can ask for
+    for (let k = 0; k < 60 * 600; k++) { t += 1 / 60; f.update(1 / 60, t); }
+    assert.equal(f.contacts(), 0,
+      `${tubes}-tube chime: wind alone produced ${f.contacts()} clapper contacts in ten simulated minutes`);
+  }
 });
 
 test('a tap rings ONE tube — the one you touched', () => {

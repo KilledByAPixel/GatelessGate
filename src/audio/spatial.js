@@ -19,14 +19,35 @@ export const SPATIAL = {
   // reason, permanently: Frank heard it on case 16's bell as "I could barely
   // hear it." 11.5 is that measured value, not a round guess.
   ref: 11.5,
-  rolloff: 0.9,
+  rolloff: 1.0,
+
+  // THE NEAR END. `gain` used to be `(ref / max(ref, d))^rolloff` — that
+  // max() pins gain to exactly 1 for EVERY distance nearer than the
+  // reference, so the whole near half of the book's range was one flat
+  // level. Frank, auditioning it: "there's not that much of a difference at
+  // all between the distance between four and twenty two. The minimum and
+  // the maximum sound about the same to me." He is describing the flat
+  // stretch precisely — 4 and 11.5 were bit-identical, and 11.5 to 22 was
+  // only 5dB at the old 0.9 rolloff.
+  //
+  // The clamp moves in to nearClamp instead, so approaching gets LOUDER the
+  // way it should, and rolloff goes to a true 1.0 (inverse-distance, the
+  // physical law). Together that is 4 -> 22 at about 13dB rather than 5dB.
+  // The clamp still has to exist: gain diverges as d -> 0, and a sound
+  // standing on the camera would otherwise take the master with it. At 5
+  // units the ceiling is 2.3x (+7.2dB) over the calibrated reference —
+  // audibly "right here", bounded, and only reachable by something genuinely
+  // at arm's length.
+  nearClamp: 5,
 
   // Air absorption. Distance reads as FAR through the loss of highs more
   // strongly than through the loss of level, which is why this matters as much
-  // as the gain curve does.
+  // as the gain curve does. toneHalf came 9 -> 7 in the same pass as the gain
+  // curve above and for the same reason: it puts more of the filter's own
+  // travel inside the range the book is actually viewed from.
   toneNear: 20000,
   toneFar: 2500,
-  toneHalf: 9,        // distance at which tone sits halfway between the two
+  toneHalf: 7,        // distance at which tone sits halfway between the two
 
   // How much room a sound picks up. The near end is what stops a drip at
   // arm's length sounding like a cistern; the far end is what puts a bell
@@ -67,7 +88,10 @@ export function spatialFor(source, listener, tune = SPATIAL) {
   // dead ahead from across the field, because from there it IS nearly ahead.
   const pan = clamp(side * tune.panWidth, -1, 1);
 
-  const gain = Math.pow(tune.ref / Math.max(tune.ref, d), tune.rolloff)
+  // Clamped at the NEAR end only — see SPATIAL.nearClamp. Past the
+  // reference this is plain inverse-distance; inside it, it keeps rising
+  // until nearClamp stops it.
+  const gain = Math.pow(tune.ref / Math.max(tune.nearClamp, d), tune.rolloff)
     * (behind ? tune.backGain : 1);
 
   const tone = (tune.toneFar + (tune.toneNear - tune.toneFar) * (tune.toneHalf / (tune.toneHalf + d)))

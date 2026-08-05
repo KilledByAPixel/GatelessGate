@@ -82,21 +82,22 @@ test('the chime hangs under the gate and answers the flag', async () => {
   // Driving the whole case (cloth, meadow) for 600s cost 61s of a 66s suite.
   for (let i = 0; i < 60 * 180; i++) k.update(1 / 60, i / 60);
   assert.ok(struck.length > 5, `the chime never struck: ${struck.length}`);
-  // the ring reports its own tube index (0-4); the three singles report the
-  // note their OWN size implies (kit/furin.js's noteForSize — k29.js's
-  // SINGLE_SIZES are 0.18/0.12/0.09, which noteForSize maps to -1/5/9) in
-  // place of the index a tubes:1 chime always reports, so a real strike
-  // lands on one of these eight values and never anything else
+  // Each single reports the note its OWN size implies (kit/furin.js's
+  // noteForSize — k29.js's SINGLE_SIZES are 0.18/0.12/0.09, which map to
+  // -1/5/9) in place of the index a tubes:1 chime would otherwise report, so
+  // a real strike lands on exactly one of these three values and never
+  // anything else. A raw tube index (always 0 for a single tube) would fail
+  // here, which is the specific regression this excludes.
   for (const s of struck) {
-    assert.ok([-1, 0, 1, 2, 3, 4, 5, 9].includes(s.tube), `unexpected tube ${s.tube}`);
+    assert.ok([-1, 5, 9].includes(s.tube), `unexpected tube ${s.tube}`);
     assert.ok(s.force > 0 && s.force <= 1);
   }
   const frag = k.fragment();
-  assert.equal(frag.strikes + frag.singleStrikes, struck.length,
-    'every strike reaching audio came from either the ring or a single');
+  assert.equal(frag.singleStrikes, struck.length,
+    'every strike reaching audio came from one of the three singles');
 });
 
-test('three single-tube chimes hang under the gate at three different heights', () => {
+test('three single-tube chimes hang under the gate, on three different cords, reaching the same line', () => {
   const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
   const audio = { startAmbience() {}, stopAmbience() {}, setWindLevel() {}, chimeStrike() {} };
   const k = k29.build({ audio, input });
@@ -104,29 +105,43 @@ test('three single-tube chimes hang under the gate at three different heights', 
   const gate = k.scene.getObjectByName('gate');
   assert.ok(gate, 'gate present');
   const chimes = gate.children.filter((c) => c.name === 'furin');
-  assert.equal(chimes.length, 4, 'the ring plus three singles, all children of the gate');
+  assert.equal(chimes.length, 3, 'three chimes, all children of the gate — the five-tube ring is gone');
 
-  // a single carries exactly one 'tube' mesh; the ring carries five — this is
-  // how the test tells them apart without reaching into k29's own closure
-  const singles = chimes.filter((c) => {
+  // every one of them is a SINGLE tube: the ring Frank asked to be removed
+  // carried five, so counting tube meshes is what would catch it coming back
+  for (const c of chimes) {
     let tubes = 0;
     c.traverse((o) => { if (o.name === 'tube') tubes++; });
-    return tubes === 1;
-  });
-  assert.equal(singles.length, 3, 'exactly three single-tube chimes');
+    assert.equal(tubes, 1, 'a multi-tube ring is hanging under case 29 again');
+  }
 
   k.scene.updateMatrixWorld(true);
-  const heights = singles.map((c) => {
-    let y = null;
-    c.traverse((o) => { if (o.name === 'tube') y = o.getWorldPosition(new THREE.Vector3()).y; });
-    return y;
+  // THE CORDS DIFFER — a build that forgot cordLength entirely, or passed
+  // one value three times, would hang them all off the same string
+  const cords = chimes.map((c) => {
+    let len = null;
+    c.traverse((o) => { if (o.name === 'cord') len = o.geometry.parameters.height; });
+    return len;
   });
-  // a wrong-but-plausible implementation that gives every single the same
-  // default cord (or forgets to vary it) would still satisfy "three singles
-  // exist" but hang dead level — checking the SET of heights, not just that
-  // three numbers were produced, is what catches that
-  const distinct = new Set(heights.map((h) => h.toFixed(4)));
-  assert.equal(distinct.size, 3, `singles should hang at three different heights, got ${heights}`);
+  assert.equal(new Set(cords.map((v) => v.toFixed(4))).size, 3,
+    `the three should hang on three different cords, got ${cords}`);
+
+  // ...AND THE BOTTOMS LINE UP, which is the point of the cords differing.
+  // Frank: "the small ones are not hanging low enough." With cord measured
+  // in units of SIZE — the previous implementation, and the one a future
+  // edit would most plausibly slip back to — the smallest chime gets the
+  // shortest string and sits highest of the three, which is backwards. Here
+  // the bottoms are within a fifth of the biggest chime's own tube length
+  // of each other. Mutation-checked: reverting to `cord: [0.42, 0.52, 0.60]`
+  // spreads them by 0.13 and fails this.
+  const bottoms = chimes.map((c) => {
+    const box = new THREE.Box3();
+    c.traverse((o) => { if (o.isMesh && o.name === 'tube') box.union(new THREE.Box3().setFromObject(o)); });
+    return box.min.y;
+  });
+  const spread = Math.max(...bottoms) - Math.min(...bottoms);
+  assert.ok(spread < 0.07,
+    `the three should reach roughly the same line; their bottoms spread ${spread.toFixed(4)} (${bottoms})`);
 });
 
 test('the three singles sound three different notes, not the ring index', () => {
@@ -271,7 +286,7 @@ test("case 29's chimes stay clear of each other at the LIVE swing cap, counter-p
   const k = k29.build({ audio, input });
   const gate = k.scene.getObjectByName('gate');
   const chimes = gate.children.filter((c) => c.name === 'furin');
-  assert.equal(chimes.length, 4, 'the ring plus three singles');
+  assert.equal(chimes.length, 3, 'the three singles');
   k.scene.updateMatrixWorld(true);
   // left to right by world x, so adjacent entries in this array are the
   // real physical neighbours hanging under the gate
