@@ -133,6 +133,12 @@
         <div id="cyl-swing-fields"></div>
       </section>
 
+      <section id="cyl-voice-section">
+        <h2>cylinder voice (BRONZE, audio/synths.js)</h2>
+        <div class="note">level only — bright/decay/degree are settled, see synths.js. Live: the very next strike hears it, no reload.</div>
+        <div id="cyl-voice-fields"></div>
+      </section>
+
       <section id="screen-section">
         <h2>case 26 — the sudare's clatter (CLATTER, kit/screen.js)</h2>
         <div id="screen-fields"></div>
@@ -144,7 +150,7 @@
       <section>
         <h2>print preset</h2>
         <div class="row">
-          <button id="print-preset">print SWING / CYL_SWING / CLATTER</button>
+          <button id="print-preset">print SWING / CYL_SWING / BRONZE / CLATTER</button>
         </div>
         <textarea id="dump" readonly></textarea>
       </section>
@@ -158,6 +164,7 @@
     import { makeFurin, SWING } from '../src/kit/furin.js';
     import { makeCylinderChime, CYL_SWING } from '../src/kit/cylinder.js';
     import { makeScreen, CLATTER } from '../src/kit/screen.js';
+    import { BRONZE } from '../src/audio/synths.js';
     import { makeInput } from '../src/input.js';
     import { createAudio } from '../src/audio/engine.js';
 
@@ -560,6 +567,15 @@
     liveField(cylWrap, CYL_SWING, 'cylDamping', 'body settle (tau, s)', 0.5, 20, 0.1, (v) => v.toFixed(2) + 's', fromTau, tau);
     liveField(cylWrap, CYL_SWING, 'clapDamping', 'clapper settle (tau, s)', 0.5, 20, 0.1, (v) => v.toFixed(2) + 's', fromTau, tau);
 
+    // BRONZE.level — BUG FIX: "the bronze cylinder is not as loud as the
+    // other ones." Same live-object-write pattern as CYL_SWING above, just
+    // reaching into audio/synths.js instead of kit/cylinder.js — cylinderStrike()
+    // (src/audio/engine.js) reads BRONZE.level fresh on every strike, so this
+    // slider reaches the very next tap with no reload, same contract as
+    // every other field on this page.
+    const cylVoiceWrap = document.getElementById('cyl-voice-fields');
+    liveField(cylVoiceWrap, BRONZE, 'level', 'level (peak gain)', 0.01, 0.25, 0.005, (v) => v.toFixed(3));
+
     const screenWrap = document.getElementById('screen-fields');
     liveField(screenWrap, CLATTER, 'force', 'clack force', 0.05, 1.0, 0.01, (v) => v.toFixed(2));
     document.getElementById('screen-roll').addEventListener('click', () => {
@@ -603,6 +619,7 @@
       // sizes a print-preset click was presumably meant to capture.
       return `SWING (kit/furin.js):\n{\n${fmt(SWING)}\n}\n\n` +
              `CYL_SWING (kit/cylinder.js):\n{\n${fmt(CYL_SWING)}\n}\n\n` +
+             `BRONZE (audio/synths.js):\n{\n${fmt(BRONZE)}\n}\n\n` +
              `CLATTER (kit/screen.js):\n{\n${fmt(CLATTER)}\n}\n\n` +
              `sizeState (this harness's own size sliders, mode "${mode}"):\n${JSON.stringify(sizeState, null, 2)}`;
     }

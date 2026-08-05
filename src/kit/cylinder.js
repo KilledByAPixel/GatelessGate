@@ -75,12 +75,15 @@ const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 //
 // Kept anyway, at 1/phi, for two real reasons rather than the disproved
 // one: (1) it is what the brief literally asked for, and honouring it costs
-// nothing; (2) it is not entirely inert — it still governs how snappily the
-// clapper responds to a TAP (see CYL_SWING.tapKick below, where natural frequency
-// does matter, unlike the slow quasi-static wind response) and gives the
-// clapper a faint independent transient wobble on top of the quasi-static
-// tracking. 1/phi remains the closed-form choice for "shorter, not a neat
-// fraction" if either of those secondary effects ever does matter more.
+// nothing; (2) it is not entirely inert — even though a tap now shoves the
+// BODY rather than the clapper (BUG 1's fix, see tapKick() below), THE WALL
+// still hands the clapper a velocity on every contact (RESTITUTION
+// reflecting cylPend's own motion at the moment of impact), and L_clap's
+// natural frequency is what governs how briskly the clapper swings back off
+// the wall afterward and how much of an independent transient wobble it
+// shows on top of the quasi-static wind tracking. 1/phi remains the
+// closed-form choice for "shorter, not a neat fraction" if that secondary
+// effect ever does matter more.
 const PHI = (1 + Math.sqrt(5)) / 2;
 const PERIOD_RATIO = 1 / PHI;
 
@@ -103,15 +106,55 @@ const PERIOD_RATIO = 1 / PHI;
 // longer):
 //   cylDamping tau 3.5s -> 7s (c = 2/7)
 //   clapDamping tau 2.2s -> 4.5s (c = 2/4.5)
-//   tapKick 2.5 -> 6.0 rad/s — a markedly bigger shove; THE WALL (below)
-//     bounds the RENDERED swing regardless of how hard the kick is, so this
-//     mainly changes how briskly the clapper visibly recoils and how fast it
-//     reaches contact, not whether it tunnels (tests/cylinder.test.js's own
-//     WALL test already covers that at a hard, repeated tap).
+//
+// tapKick 6.0 -> 0.9 rad/s — BUG FIX, found in the owner's own live audition
+// of this exact harness: "when I click on it, it also doesn't seem like it
+// swings at all." tapKick() (below) used to kick the CLAPPER, sized against
+// the CLAPPER's own natural frequency (omega0~6.65 rad/s at the default
+// size) — that is backwards. A real tap is a shove on the CYLINDER; the
+// cylinder swings, the clapper lags, and the two ring by their RELATIVE
+// motion, exactly the mechanism a wind gust already uses (see the header
+// comment). Kicking the striker directly is what you'd fake a ring WITHOUT
+// motion with, which is precisely what the owner saw. tapKick() now kicks
+// cylPend (the body), so 6.0 rad/s — tuned for the clapper's ~6.65 rad/s
+// natural frequency — has to be re-derived against the BODY's own, much
+// slower one (omega0~4.11 rad/s at size=0.8), and NOT simply toward a
+// fūrin-matching swing either — see the paragraph below for the real
+// constraint that set this number.
+//
+// WHY 0.9, NOT SOMETHING BIGGER (measured directly, not eyeballed): GAP_ANGLE
+// (~0.088 rad, ~5 degrees) is tiny next to ANY real swing, so once the body
+// is genuinely oscillating (not quasi-statically tracking a slow wind lean,
+// but ringing down over several natural periods at cylDamping's tau=7s), the
+// lagging clapper re-crosses that tiny threshold roughly every half-period —
+// a real, physically plausible "clapper clacking the wall on each swing
+// until it settles," not a bug in the strike-detection logic (verified: an
+// edge-triggered rewrite of the contact check, tried as a diagnostic, gave
+// nearly the SAME strike count — these are genuinely separate contacts, not
+// one stuck level-check re-firing). Chasing a fūrin-scale swing here (0.55
+// rad, SWING.tapPeak) measured out to 12-18 of these re-strikes spread over
+// 8-13 SECONDS, nearly all at saturated force (FORCE_OMEGA_REF, below, is
+// calibrated for wind-scale contact velocities two orders of magnitude
+// smaller than a tap-driven one, so it can't discriminate a decaying settle
+// from the original hit) — audibly a stuck-sounding wall of full-volume
+// ringing, not "tap it and it rings." 0.9 rad/s instead lands a full-force
+// tap's peak swing at ~0.21 rad (~12 degrees, measured in
+// tests/cylinder.test.js) with 8 strikes decaying over ~5.7s — a real,
+// clearly visible swing (the owner's actual complaint was zero motion, not
+// an under-sized one) with a settle a listener can plausibly follow as one
+// event rather than a loop. Smaller than a fūrin's own tap (SWING.tapPeak
+// 0.55 rad) by design, not by oversight — GAP_ANGLE/cylDamping/RESTITUTION
+// bound how big a swing this WALL model can take before the re-strike count
+// runs away, and none of those are this fix's to retune (see their own
+// comments; all three are either shared with the wind-driven swing or were
+// already reviewed and shipped by an earlier task). Flagged for the owner's
+// own audition alongside tapKick, same "starting point" contract as the rest
+// of CYL_SWING — a bigger swing IS reachable by raising this live, the
+// trade-off is just no longer invisible.
 export const CYL_SWING = {
   cylDamping: 2 / 7,
   clapDamping: 2 / 4.5,
-  tapKick: 6.0,
+  tapKick: 0.9,
 };
 
 // WIND LEAN (rad): the equilibrium angle a full, steady gust settles each
@@ -171,41 +214,55 @@ const REFRACTORY = 0.5;
 // allowed to make another noise.
 const RESTITUTION = 0.35;
 
-// A tap is a shove: a velocity kick to the CLAPPER (not the body), so the
-// very same relative-angle contact check that the wind uses is what fires
-// the strike — "by the same mechanism," per the brief, not a separate
-// play-the-sound-now path. Sized (CYL_SWING.tapKick, above) so a full-force
-// tap crosses GAP_ANGLE (~0.098 rad) well inside a second even at the old,
-// smaller value; the new one crosses it faster still. Read LIVE inside
-// tapKick() below (not captured at construction), same reasoning as
+// A tap is a shove: a velocity kick to the CYLINDER BODY (cylPend), not the
+// clapper — BUG FIX (owner's live audition, see CYL_SWING.tapKick's own
+// comment above for the full story). The very same relative-angle contact
+// check the wind uses is what fires the strike from there — "by the same
+// mechanism," per the brief, not a separate play-the-sound-now path — the
+// body swings, the clapper (at rest, feeling no torque of its own at
+// theta=0) is momentarily left behind, and the two cross GAP_ANGLE from
+// their RELATIVE motion exactly as a gust drives them together. Read LIVE
+// inside tapKick() below (not captured at construction), same reasoning as
 // furin.js's own tapKick().
 //
-// Mashing taps saturates, as in furin.js — but unlike furin.js this cap is
-// no longer what keeps the clapper physically plausible; THE WALL (below)
-// clamps its ANGLE regardless of how large omega gets, which is what fixes
-// the tunnelling bug review caught (a wall that only capped velocity, not
-// position, would still let one hard kick swing the clapper stories past
-// the bronze before damping ever caught up). The velocity cap below is kept
-// as a cheaper, earlier guard, so a mashed burst of taps doesn't approach
-// the wall at implausible, glassy speed even for the one frame before the
-// wall would have caught it anyway — sized as a fixed multiple of the LIVE
-// tapKick, so raising the kick from the harness raises its own cap with it
-// rather than leaving a stale ceiling behind.
-const MAX_CLAP_OMEGA_MULT = 3;
+// Mashing taps saturates, as in furin.js — and unlike the clapper (which
+// THE WALL, below, bounds unconditionally regardless of its own velocity),
+// nothing else stops the BODY itself from swinging arbitrarily far under a
+// sustained mash: there is no wall for cylPend's own absolute angle, only
+// for the clapper's angle relative to it. furin.js's own file documents why
+// a velocity-only clamp does not actually solve this ("holding the
+// throttle open" — each kick re-arms omega to the ceiling regardless of how
+// far damping had pulled it down since the last one, measured there at 16+
+// rad, several full rotations, from a sustained mash). tapKick() below uses
+// the identical ENERGY cap furin.js's own tapKick() does, for the identical
+// reason, sized as a fixed multiple of the LIVE tapKick so raising the kick
+// from the harness raises its own cap with it rather than leaving a stale
+// ceiling behind.
+const MAX_CYL_OMEGA_MULT = 1.3;
 
-// UNDERSTOOD CONSEQUENCE: CYL_SWING.tapKick sits roughly 75x FORCE_OMEGA_REF
-// (below) at its new starting value (30x at the old one — already true,
-// only more so now), so essentially any deliberate tap (ring()'s default
-// force 0.75, even hoverAt's 0.25) reaches the wall fast enough to saturate the reported
-// strike force at 1 — a tap always rings clearly, never as a graze. That
-// reads as correct rather than as a bug: a tap is a deliberate touch, not
-// weather, and furin.js's own ring() has the same character (it reports the
-// CALLER's force directly, with no physics in between at all). The "hard
-// meeting vs a graze" dynamic range this file's force law provides is real,
-// it just lives almost entirely in the WIND-driven contacts, where relOmega
-// naturally spans well below FORCE_OMEGA_REF up to it (see
-// cylinder-report.md's measured distribution) — which is the case the
-// brief's "a gust feels different from a breeze" is actually about.
+// UNDERSTOOD CONSEQUENCE: CYL_SWING.tapKick sits roughly 11x FORCE_OMEGA_REF
+// (below) at its new starting value, so essentially any deliberate tap
+// (ring()'s default force 0.75, even hoverAt's 0.25) reaches the wall fast
+// enough to saturate the reported strike force at 1 — a tap always rings
+// clearly, never as a graze. That reads as correct rather than as a bug: a
+// tap is a deliberate touch, not weather, and furin.js's own ring() has the
+// same character (it reports the CALLER's force directly, with no physics
+// in between at all). The "hard meeting vs a graze" dynamic range this
+// file's force law provides is real, it just lives almost entirely in the
+// WIND-driven contacts, where relOmega naturally spans well below
+// FORCE_OMEGA_REF up to it (see cylinder-report.md's measured
+// distribution) — which is the case the brief's "a gust feels different
+// from a breeze" is actually about. Still true after BUG 1's fix: contact
+// fires early in the body's swing (GAP_ANGLE, ~0.088 rad, is a sizeable but
+// not dominant fraction of a single tap's ~0.21 rad peak — see
+// CYL_SWING.tapKick's own comment for why the peak itself was kept modest),
+// so the reported relOmega at the FIRST strike is still essentially the
+// body's own tap-kicked omega. The re-strikes that follow as the tap's swing
+// rings down (the same comment) also saturate at or near force=1 for most of
+// their run, for the identical reason (their contact velocities are still
+// well above FORCE_OMEGA_REF until the swing has nearly died out) — a real,
+// understood limitation of reusing the wind-calibrated force law for a
+// tap-energy regime, not something this fix silently hides.
 
 // FORCE NORMALISATION. "Strike force should scale with the relative angular
 // VELOCITY at contact." REF is chosen from the same tuning run: the 90th
@@ -317,34 +374,50 @@ export function makeCylinderChime({
   // model this file commits to (see the header comment). It hangs at
   // CONTACT_Y below the SAME origin the body swings from.
   //
-  // CONTACT_Y is a purely geometric choice — where the clapper visually
-  // sits and where contact is measured — kept deliberately separate from
-  // L_clap (the pendulum length that sets the clapper's natural frequency,
-  // below). Forcing them to be the same number was tried first: solving for
-  // a cord length that puts a golden-ratio-period clapper deep enough in
-  // the tube to look right has no positive solution (L_clap grows only
-  // 0.38x as fast as CONTACT_Y needs to, for any cord length — see
-  // cylinder-report.md). Two honestly-separate eyeballed numbers, the same
-  // spirit as furin.js's own acknowledged COM fraction, beat one number
-  // that cannot satisfy both jobs at once.
+  // CONTACT_Y is a purely geometric choice — where the clapper's contact
+  // with the wall is measured — kept deliberately separate from L_clap (the
+  // pendulum length that sets the clapper's natural frequency, below).
+  // Forcing them to be the same number was tried first: solving for a cord
+  // length that puts a golden-ratio-period clapper deep enough in the tube
+  // to look right has no positive solution (L_clap grows only 0.38x as fast
+  // as CONTACT_Y needs to, for any cord length — see cylinder-report.md).
+  // Two honestly-separate eyeballed numbers, the same spirit as furin.js's
+  // own acknowledged COM fraction, beat one number that cannot satisfy both
+  // jobs at once.
   const CONTACT_Y = (CORD + CAP_H) + 0.65 * BODY_LEN;   // 65% down the tube, well inside it
-  const CLAP_R = 0.06 * S;
+  const CLAP_R = 0.06 * S;   // physics-only now (GAP_LINEAR, below) — see the deletion note
+
+  // NO CLAPPER MESH — deleted per the owner's own live audition: "there
+  // might be something you're trying to hang inside the bronze cylinder,
+  // because I can kind of see it go through the side when I click on it...
+  // if it's inside of it, you're not gonna be able to see that, it's better
+  // not have it at all." An earlier review had already flagged the mesh as
+  // "permanently occluded by the opaque body at rest" (unlike furin's
+  // clapper, visible in the open ring among the tubes, this one sits INSIDE
+  // a solid, opaque bronze cylinder and — now that THE WALL, below, keeps
+  // its swing bounded to GAP_ANGLE of the body's own rotation — can never
+  // swing clear of the body's silhouette either) and marked it noOutline on
+  // those grounds, which only ever saved the outline's own draw call, not
+  // the clapper's own. Deleting the mesh outright removes both: the book
+  // was spending a draw rendering something nobody could ever see, and the
+  // thing occasionally visible poking through the wall (a rendering
+  // artifact of a solid disc swinging inside a low-poly, unlined tube, not
+  // a physics bug — THE WALL already keeps the underlying angle bounded)
+  // goes with it.
+  //
+  // clapPend (below) is untouched — "the clapper pendulum is what decides
+  // when the thing rings and must stay exactly as it is," the owner's own
+  // words. clapperPivot survives too, as a bookkeeping node only: it has no
+  // geometry of its own now (an empty THREE.Group costs nothing in the
+  // draw-call count — tests/staging.test.js's own rule only counts meshes),
+  // but update() still writes clapPend.theta into its rotation.z every
+  // frame, which is what lets tests (and the harness) read the clapper's
+  // pose via getObjectByName('clapper-pivot') without reaching into this
+  // closure's private state — the same Node-testable-introspection contract
+  // periods()/gapAngle() already give the physics.
   const clapperPivot = new THREE.Group();
   clapperPivot.name = 'clapper-pivot';
   g.add(clapperPivot);
-  const clapper = new THREE.Mesh(new THREE.CylinderGeometry(CLAP_R, CLAP_R, 0.03 * S, 8), wood);
-  clapper.name = 'clapper';
-  clapper.position.y = -CONTACT_Y;
-  // Code review: unlike furin's clapper (visible in the open ring among the
-  // tubes), this one sits INSIDE a solid, opaque bronze cylinder — and now
-  // that THE WALL (below) keeps its swing physically bounded to within
-  // GAP_ANGLE of the body's own rotation, it can never swing clear of the
-  // body's silhouette the way an unbounded clapper briefly could. Always
-  // occluded means an inverted-hull outline draws every frame for nothing
-  // ever seen — the detail-floor rule, applied to a draw call rather than a
-  // vertex.
-  clapper.userData.noOutline = true;
-  clapperPivot.add(clapper);
 
   // THE PHYSICS LENGTHS. L_cyl is a real derivation, not an eyeball: a
   // uniform cylinder's own centre of mass sits at exactly half its length,
@@ -383,14 +456,34 @@ export function makeCylinderChime({
   let lastForce = 0;
   let lastStrikeAt = -Infinity;
 
-  // A tap's velocity kick — see CYL_SWING.tapKick's own comment for the
-  // sizing. Shared by ring() and hoverAt() below, same split furin.js uses.
-  // Both CYL_SWING.tapKick and its cap are read LIVE, not captured at
-  // construction, so a harness slider reaches an already-hanging cylinder.
+  // A tap's velocity kick — to cylPend, the BODY, per BUG 1's fix (see
+  // CYL_SWING.tapKick's own comment for the sizing story). Shared by ring()
+  // and hoverAt() below, same split furin.js uses. Both CYL_SWING.tapKick
+  // and MAX_CYL_OMEGA_MULT are read LIVE, not captured at construction, so a
+  // harness slider reaches an already-hanging cylinder.
+  //
+  // THE ENERGY CAP — identical technique to furin.js's own tapKick(), for
+  // the identical reason (see MAX_CYL_OMEGA_MULT's own comment above): a
+  // plain velocity clamp bounds one kick but not a sustained mash, since
+  // each kick re-arms omega to the ceiling regardless of how far damping
+  // had already pulled it down since the last one. Capping the pendulum's
+  // total mechanical ENERGY to what one maximally-hard single tap could
+  // reach means no amount of mashing, at any rate, can ever exceed that —
+  // solved from the energy budget rather than a flat ceiling, so a kick
+  // landing while the body is already swung out wide is capped harder than
+  // one landing near the bottom (there is less "room" left to add).
   function tapKick(force) {
-    const maxClapOmega = MAX_CLAP_OMEGA_MULT * CYL_SWING.tapKick;
-    kickPendulum(clapPend, force * CYL_SWING.tapKick);
-    clapPend.omega = clamp(clapPend.omega, -maxClapOmega, maxClapOmega);
+    const maxOmega = MAX_CYL_OMEGA_MULT * CYL_SWING.tapKick;
+    kickPendulum(cylPend, force * CYL_SWING.tapKick);
+    cylPend.omega = clamp(cylPend.omega, -maxOmega, maxOmega);
+    const maxEnergy = 0.5 * maxOmega * maxOmega;
+    if (pendulumEnergy(cylPend) > maxEnergy) {
+      const pe = (GRAVITY / L_cyl) * (1 - Math.cos(cylPend.theta));
+      const keAllowed = Math.max(0, maxEnergy - pe);
+      const omegaAllowed = Math.sqrt(2 * keAllowed);
+      const sign = cylPend.omega === 0 ? 1 : Math.sign(cylPend.omega);
+      cylPend.omega = sign * Math.min(Math.abs(cylPend.omega), omegaAllowed);
+    }
   }
 
   function fire(force) {
@@ -482,9 +575,11 @@ export function makeCylinderChime({
       clapperPivot.rotation.z = clapPend.theta;
     },
 
-    // A tap: a shove to the CLAPPER, the same mechanism a gust uses — see
-    // CYL_SWING.tapKick's own comment. Rings through the SAME contact check
-    // above on the next update(), not a separate "play now" path.
+    // A tap: a shove to the CYLINDER BODY, the same mechanism a gust uses —
+    // see CYL_SWING.tapKick's own comment for why this was the bug (it used
+    // to shove the clapper instead, ringing the voice with nothing visibly
+    // moving). Rings through the SAME contact check above on the next
+    // update(), not a separate "play now" path.
     ring(force = 0.75) { tapKick(force); },
     // the pointer passing over: a nudge, not a knock — same shape as
     // furin's hoverAt(), a fraction of a tap's force through the same path

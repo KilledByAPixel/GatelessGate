@@ -228,12 +228,34 @@ export const CHIME = { degree: 8, tubes: 5, decay: 5, level: 0.03, bright: 0.35,
 // tube has already died. `bright` is pulled well down from CHIME's 0.35: a
 // wider tube's upper partials sit lower and duller than a thin one's, so
 // the same lowpass-brightness knob wants a smaller number to read as the
-// same kind of metal at this size. `level` and `verbMix` are PROVISIONAL —
-// picked to sit in the same ballpark as CHIME at this engine's gain
-// staging, pending Frank's ear at the next audition (see CERAMIC's own
-// comment in engine.js for the precedent: a voice born without a live
-// audition gets a level flagged provisional rather than treated as final).
-export const BRONZE = { degree: 6, decay: 9, level: 0.032, bright: 0.18, verbMix: 0.85 };
+// same kind of metal at this size. `verbMix` is PROVISIONAL — picked to sit
+// in the same ballpark as CHIME at this engine's gain staging (see
+// CERAMIC's own comment in engine.js for the precedent: a voice born
+// without a live audition gets a level flagged provisional rather than
+// treated as final).
+//
+// `level`: BUG FIX (owner's live audition, dev/hanging-audition.html —
+// "I also think the bronze cylinder is not as loud as the other ones... the
+// other ones seem pretty good, actually"). The original 0.032 was the same
+// provisional guess described above — picked to merely match CHIME.level
+// (0.03), which turns out to be exactly the wrong target: cylinderStrike()
+// feeds this straight into strikeBar() as `gain` with no further scale
+// factor (same as chimeStrike()'s CHIME.level, so the two ARE directly
+// comparable as "effective peak" — see engine.js's own CERAMIC/WOOD
+// comparison for the convention), but BRONZE's `bright` (0.18) is
+// deliberately duller than CHIME's (0.35, more upper-partial content is
+// perceptually louder for the same peak amplitude) and `decay` is nearly
+// 2x longer (9s vs 5s, so the same energy is spread thinner over time) —
+// two reasons a matched peak reads as quieter, not the same, next to a
+// brighter and shorter voice. Raised to 0.07: still well under the odoshi
+// knock's own effective peak (ODOSHI.level=0.11, ~knock()'s reported 0.109 —
+// task-9-report.md), and a bit above the bonshō bell's (~0.050, same
+// report's reference point) — a big, heavy mass of bronze reads at least as
+// present as the bell, without landing on the odoshi's percussive
+// knock-force ballpark. STARTING POINT, not final — dev/hanging-audition.html
+// now has its own live slider for this (see that file), same "the owner
+// settles it by ear" contract CYL_SWING's own tunables carry.
+export const BRONZE = { degree: 6, decay: 9, level: 0.07, bright: 0.18, verbMix: 0.85 };
 
 // The shipped water — Frank's audition numbers (the "Basin" preset). Drips are
 // pitched to the scale in a high register, so every basin in the book is

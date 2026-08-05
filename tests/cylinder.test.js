@@ -284,35 +284,60 @@ test('THE WALL: a hard tap never swings the clapper visibly past the cylinder wa
     `the clapper swung ${maxRel} rad relative to the body, past the ${gap} rad gap — it rendered through the bronze wall`);
 });
 
-test('CYL_SWING.tapKick is a real increase over the shipped-before value, and THE WALL still holds at it', () => {
-  // task-swing-tune-brief.md, PROBLEM 2: "a much larger tap kick... on the
-  // fūrin AND the cylinder." Pinned two ways: the starting value itself is
-  // meaningfully bigger than the 2.5 rad/s this task opened up (so a future
-  // change back toward the old number fails here, the same "pin the new
-  // peak" property the brief asks for on the fūrin), and — since a bigger
-  // kick is worthless if it just tunnels through the bronze — THE WALL
-  // (tested above at whatever CYL_SWING.tapKick happens to be) is re-checked
-  // explicitly AT this specific value, not just "whatever the module ships."
-  assert.ok(CYL_SWING.tapKick > 2.5 * 1.5,
-    `CYL_SWING.tapKick (${CYL_SWING.tapKick}) is not meaningfully bigger than the old 2.5 rad/s`);
-
+test('a full-force tap swings the CYLINDER BODY a real, visible amount, and THE WALL still holds at CYL_SWING.tapKick', () => {
+  // CHANGED (task-cylinder-fix-brief.md BUG 1). This test used to be titled
+  // "CYL_SWING.tapKick is a real increase over the shipped-before value" and
+  // pinned tapKick against the PRE-swing-tuning value (2.5 rad/s), because
+  // tapKick() used to kick the CLAPPER directly, sized against the
+  // clapper's own natural frequency. Now that a tap kicks the BODY
+  // (cylPend) instead — the actual bug the owner found in a live audition:
+  // "when I click on it, it also doesn't seem like it swings at all" — that
+  // old comparison is meaningless: 6.0 rad/s against the clapper's
+  // ~6.65 rad/s natural frequency and 0.9 rad/s against the body's own,
+  // much slower ~4.11 rad/s are unrelated numbers answering unrelated
+  // questions, and the raw-value pin failed the moment the target pendulum
+  // changed. What still matters, and is pinned here instead: a full-force
+  // tap measurably moves the BODY (not just the clapper — this is the
+  // actual regression guard for BUG 1, nothing before this fix caught a
+  // reversion to kicking the clapper), the resulting swing lands in a real,
+  // plausible range — deliberately SMALLER than a fūrin's own tap, see
+  // CYL_SWING.tapKick's own "WHY 0.9, NOT SOMETHING BIGGER" comment for the
+  // measured reason (a bigger swing here re-strikes the wall many times
+  // over many seconds as it rings down, not once) — and THE WALL still
+  // holds the clapper inside GAP_ANGLE at whatever CYL_SWING.tapKick
+  // currently is, not just "whatever the module shipped with."
   const f = makeCylinderChime({ seed: 13, phase: 0 });
   f.setWindLevel(0);
-  const before = f.clapperAmp();
-  f.ring(1);
-  const afterOneTap = f.clapperAmp();
-  assert.ok(afterOneTap > before, 'a full-force tap added no energy to the clapper');
-
   const swing = f.group.getObjectByName('swing');
   const clapperPivot = f.group.getObjectByName('clapper-pivot');
+
+  const before = f.swingAmp();
+  f.ring(1);
+  const afterOneTap = f.swingAmp();
+  assert.ok(afterOneTap > before,
+    'a full-force tap added no energy to the BODY — this is BUG 1: a tap must move the cylinder, not (only) the clapper');
+
   const gap = f.gapAngle();
-  let maxRel = 0;
-  for (let i = 0; i * (1 / 240) < 2; i++) {
+  let maxRel = 0, maxSwing = 0;
+  for (let i = 0; i * (1 / 240) < 3; i++) {
     f.update(1 / 240, i / 240);
     maxRel = Math.max(maxRel, Math.abs(swing.rotation.z - clapperPivot.rotation.z));
+    maxSwing = Math.max(maxSwing, Math.abs(swing.rotation.z));
   }
   assert.ok(maxRel <= gap + 1e-6,
-    `at CYL_SWING.tapKick=${CYL_SWING.tapKick}, the clapper swung ${maxRel} rad past the ${gap} rad gap`);
+    `at CYL_SWING.tapKick=${CYL_SWING.tapKick}, the clapper swung ${maxRel} rad relative to the body, past the ${gap} rad gap`);
+  // A plausibility BAND, not a tight pin against today's exact number (today:
+  // ~0.208 rad) — it has to survive the owner retuning CYL_SWING.tapKick by
+  // ear through the harness, per that field's own "starting point, not
+  // final" comment. Low end catches "barely moves" (a BUG 1 regression,
+  // kicking the clapper again produces ~0 here under zero wind); high end
+  // catches both an implausible windmill AND a slide back into the
+  // many-re-strikes-over-many-seconds problem CYL_SWING.tapKick's own
+  // comment measures at fūrin scale (0.55 rad).
+  assert.ok(maxSwing > 0.05,
+    `a full-force tap swung the body only ${maxSwing} rad — reads as barely moving, the exact bug this fix addresses`);
+  assert.ok(maxSwing < 0.4,
+    `a full-force tap swung the body ${maxSwing} rad — past the range measured safe from the many-re-strikes problem (see CYL_SWING.tapKick's own comment)`);
 });
 
 test('a tap rings through the SAME contact mechanism as the wind, not a bypass', () => {
@@ -324,9 +349,15 @@ test('a tap rings through the SAME contact mechanism as the wind, not a bypass',
   // directly (a "play it now" bypass) would show a strike here, before any
   // physics has run at all.
   assert.equal(hits.length, 0, 'ring() fired the strike immediately, bypassing the physics');
-  assert.ok(f.clapperAmp() > 0, 'the tap did not add any energy to the clapper');
+  // CHANGED (BUG 1's fix): a tap now kicks the BODY, not the clapper (see
+  // cylinder.js's own CYL_SWING comment) — kickPendulum only ever touches
+  // omega, never theta, so nothing here MOVES until update() runs, but the
+  // ENERGY should already be on the body the instant ring() returns. This is
+  // the mutation-catching half: reverting tapKick() to kick clapPend again
+  // would leave swingAmp() at 0 here while clapperAmp() jumped instead.
+  assert.ok(f.swingAmp() > 0, 'the tap did not add any energy to the BODY');
 
-  run(f, 1);   // a second's worth of frames for the kicked clapper to reach the wall
+  run(f, 1);   // a second's worth of frames for the kicked body to swing the clapper into the wall
   assert.equal(hits.length, 1, `one tap should ring once, got ${hits.length}`);
   assert.equal(hits[0].note, f.note());
   assert.ok(hits[0].force > 0 && hits[0].force <= 1);
