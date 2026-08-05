@@ -24,7 +24,7 @@ import { makeQuadruped } from './quadruped.js';
 // DERIVED from them — hand-tuned offsets drift the moment anything changes.
 const LEG_H = 0.42, BODY_DROP = 0.16;
 const BODY_Y = LEG_H + BODY_DROP;        // height of the barrel's axis
-const BODY_R = 0.16, BODY_LEN = 0.82;
+const BODY_R = 0.19, BODY_LEN = 0.6;
 
 // THE BRUSH. A 'stiff' tail is a cylinder centred on its own origin, so half of
 // its length lives inside the animal. Rather than guess an offset and discover
@@ -56,9 +56,10 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
   const { group } = makeQuadruped({
     height, color, seed,
     bodyR: BODY_R, bodyLen: BODY_LEN, bodyDrop: BODY_DROP,
-    legH: LEG_H, legR: 0.062, legTaper: 1.0, hipX: 0.105, hipZ: 0.31,
+    legBury: .15,
+    legH: LEG_H, legR: 0.07, legTaper: 1.0, hipX: 0.085, hipZ: 0.31,
     legs: { knee: KNEE },
-    neck: { r: 0.078, len: 0.30 },
+    neck: { r: 0.1, len: 0.30 },
     head: { shape: 'sphere', r: 0.125, fwd: 0.55, up: 0.26 },
     // long and narrow, and set a little below the head's centre — the muzzle,
     // not the skull, is what should be sticking out
@@ -69,12 +70,12 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     // the 0.125 radius so the join is buried — leaning 0.44 out.
     ears: { r: 0.05, h: 0.3, x: 0.051, y: 0.09, z: 0.0, tilt: 0.44 },
     tail: {
-      kind: 'stiff', r0: 0.05,
+      kind: 'stiff', r0: 0.06,
       // the root end (buried in the barrel — see THE BRUSH above) reads as
       // "two thirds as thick as the body": r1 solved directly against
       // BODY_R rather than left at a hand-tuned value that drifts the moment
       // the barrel's own radius changes.
-      r1: BODY_R * 2 / 3,
+      r1: 0.1,
       length: TAIL_LEN, up: TAIL_UP, back: TAIL_BACK, tilt: TAIL_TILT,
     },
   });

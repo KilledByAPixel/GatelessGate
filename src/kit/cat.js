@@ -38,7 +38,7 @@ import { hash1 } from '../util/noise.js';
 // Faces +z, like its siblings. Returns a handle: the cat has moving parts.
 
 const P = {
-  bodyR: 0.25, bodyLen: 0.62, bodyDrop: 0.18,
+  bodyR: 0.23, bodyLen: 0.6, bodyDrop: 0.18,
   legH: 0.46, legR: 0.068, legTaper: 1.0, hipX: 0.1, hipZ: 0.36,
 };
 
@@ -85,7 +85,7 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     legH: P.legH, legR: P.legR, legTaper: P.legTaper, hipX: P.hipX, hipZ: P.hipZ,
     head: { shape: 'sphere', r: 0.175, fwd: 0.44, up: 0.24 },
     // blunt and short: a cat's muzzle barely leaves the skull
-    snout: { r0: 0.058, r1: 0.100, len: 0.16, fwd: 0.60, up: 0.205 },
+    snout: { r0: 0.058, r1: 0.100, len: 0.1, fwd: 0.60, up: 0.205 },
     // Tall, wide-set and leaning OUT. DIRECT dials (quadruped.js, EARS ARE
     // PLACED DIRECTLY): base offsets from the skull's centre, high and wide
     // on the 0.175 sphere with the join buried inside it. They have to clear

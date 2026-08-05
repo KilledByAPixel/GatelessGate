@@ -46,7 +46,7 @@ const BODY_PITCH = 0.06;         // rad nose-down: deep chest, belly climbs aft
 const KNEE = 0.28;               // rad, hind hock fold (low: THIGH_RUN in the plan)
 
 // The shared plan's proportions this file derives against (quadruped.js).
-const LEG_H = 0.62, BODY_DROP = 0.05, BODY_LEN = 0.6, BODY_R = 0.195;
+const LEG_H = 0.62, BODY_DROP = 0.05, BODY_LEN = 0.52, BODY_R = 0.195;
 
 export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // The plan's own neck anchor, in units of height: mid-chest, forward.
@@ -66,7 +66,7 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     // the slimmest legs in the kit; legTaper > 1 narrows toward the FOOT
     // (a slender cannon bone, not a post — quadruped.js's own note)
     legBury: .2,
-    legH: LEG_H, legR: 0.05, legTaper: 1.5, hipX: 0.09, hipZ: 0.31,
+    legH: LEG_H, legR: 0.06, legTaper: 1.2, hipX: 0.09, hipZ: 0.31,
     legs: { knee: KNEE },
     // r/len still size the plan's mesh; the wedge taper is re-cut below
     neck: { r: 0.10, len: 0.50 },
@@ -156,7 +156,7 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // transform (the plan already aimed it chest -> head), same name/material.
   const neck = group.children.find((c) => c.name === 'neck');
   neck.geometry.dispose();
-  neck.geometry = new THREE.CylinderGeometry(0.043 * height, 0.15 * height, 0.40 * height, 7);
+  neck.geometry = new THREE.CylinderGeometry(0.06 * height, 0.15 * height, 0.40 * height, 7);
   // a horse's neck is deep fore-aft but narrow across — thin it laterally
   neck.scale.x = 0.8;
 
