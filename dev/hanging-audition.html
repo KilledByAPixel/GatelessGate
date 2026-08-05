@@ -134,6 +134,12 @@
         <div id="cyl-swing-fields"></div>
       </section>
 
+      <section id="cyl-force-section">
+        <h2>cylinder ring-down (CYL_FORCE, kit/cylinder.js)</h2>
+        <div class="note">these two ARE the diminuendo — starting points, not audited by ear. "knee level" is how loud a strike gets before it's past wind's own range (raise it and typical wind knocks get louder, taps start closer to full volume already); "cap (rad/s)" is how hard a contact has to be to report full force — lower it and a tap's ring-down saturates sooner (fewer strikes taper, more sit near max); raise it and the tail fades further/faster. Live: the very next strike hears it, no reload.</div>
+        <div id="cyl-force-fields"></div>
+      </section>
+
       <section id="cyl-voice-section">
         <h2>cylinder voice (BRONZE, audio/synths.js)</h2>
         <div class="note">level only — bright/decay/degree are settled, see synths.js. Live: the very next strike hears it, no reload.</div>
@@ -151,7 +157,7 @@
       <section>
         <h2>print preset</h2>
         <div class="row">
-          <button id="print-preset">print SWING / CYL_SWING / BRONZE / CLATTER</button>
+          <button id="print-preset">print SWING / CYL_SWING / CYL_FORCE / BRONZE / CLATTER</button>
         </div>
         <textarea id="dump" readonly></textarea>
       </section>
@@ -163,7 +169,7 @@
     import { PAPER } from '../src/palette.js';
     import { makeLights, toonMaterial, addOutlines } from '../src/kit/index.js';
     import { makeFurin, SWING } from '../src/kit/furin.js';
-    import { makeCylinderChime, CYL_SWING } from '../src/kit/cylinder.js';
+    import { makeCylinderChime, CYL_SWING, CYL_FORCE } from '../src/kit/cylinder.js';
     import { makeScreen, CLATTER } from '../src/kit/screen.js';
     import { BRONZE } from '../src/audio/synths.js';
     import { makeInput } from '../src/input.js';
@@ -568,6 +574,17 @@
     liveField(cylWrap, CYL_SWING, 'cylDamping', 'body settle (tau, s)', 0.5, 20, 0.1, (v) => v.toFixed(2) + 's', fromTau, tau);
     liveField(cylWrap, CYL_SWING, 'clapDamping', 'clapper settle (tau, s)', 0.5, 20, 0.1, (v) => v.toFixed(2) + 's', fromTau, tau);
 
+    // CYL_FORCE.kneeLevel/cap — code review, task-cylinder-fix-brief.md
+    // follow-up: these two numbers ARE the ring-down's diminuendo shape
+    // (cylinder.js's own FORCE NORMALISATION comment has the measured
+    // before/after), and until now they were plain consts a slider on this
+    // page couldn't reach — the exact thing Frank needs to judge whether the
+    // taper reads as a bell fading or a sustained ring that just softens
+    // near the tail. Same live-object-write pattern as CYL_SWING/BRONZE.
+    const cylForceWrap = document.getElementById('cyl-force-fields');
+    liveField(cylForceWrap, CYL_FORCE, 'kneeLevel', 'knee level', 0.1, 0.95, 0.01, (v) => v.toFixed(2));
+    liveField(cylForceWrap, CYL_FORCE, 'cap', 'cap (rad/s)', 0.3, 6, 0.1, (v) => v.toFixed(2));
+
     // BRONZE.level — BUG FIX: "the bronze cylinder is not as loud as the
     // other ones." Same live-object-write pattern as CYL_SWING above, just
     // reaching into audio/synths.js instead of kit/cylinder.js — cylinderStrike()
@@ -620,6 +637,7 @@
       // sizes a print-preset click was presumably meant to capture.
       return `SWING (kit/furin.js):\n{\n${fmt(SWING)}\n}\n\n` +
              `CYL_SWING (kit/cylinder.js):\n{\n${fmt(CYL_SWING)}\n}\n\n` +
+             `CYL_FORCE (kit/cylinder.js):\n{\n${fmt(CYL_FORCE)}\n}\n\n` +
              `BRONZE (audio/synths.js):\n{\n${fmt(BRONZE)}\n}\n\n` +
              `CLATTER (kit/screen.js):\n{\n${fmt(CLATTER)}\n}\n\n` +
              `sizeState (this harness's own size sliders, mode "${mode}"):\n${JSON.stringify(sizeState, null, 2)}`;
@@ -654,7 +672,7 @@
     requestAnimationFrame(loop);
 
     // console access, same convention as kit-preview.html's window.kp
-    window.ha = { scene, camera, renderer, live: () => live, setMode, SWING, CYL_SWING, CLATTER, audio };
+    window.ha = { scene, camera, renderer, live: () => live, setMode, SWING, CYL_SWING, CYL_FORCE, CLATTER, audio };
   </script>
 </body>
 </html>

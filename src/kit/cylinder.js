@@ -245,38 +245,65 @@ const MAX_CYL_OMEGA_MULT = 1.3;
 // ~0.24 rad/s — cylinder-report.md and a fresh 7200s measurement agree) and
 // a straight `clamp(|w|/REF, 0, 1)` saturates at 1 for ANY tap-scale contact
 // (measured: a tap's re-strikes span roughly 0.02-2.9 rad/s as they decay,
-// i.e. 25-3600% of REF) — every one of them pinned at maximum, so a
+// i.e. 25-3600% of REF) — nearly every one of them pinned at maximum, so a
 // genuinely decaying ring-down sounded like a machine hammering at full
-// volume until it abruptly stopped, not a bell settling. Measured directly
-// on a real tap decay (kick=2.2, still air): the OLD law's relOmega sequence
-// 2.15, 0.02, 0.56, 1.42, 1.33, ... 0.06 rad/s reported force
-// 1, 1(ish), 1, 1, 1, ... 1 — the underlying physics already diminuendos,
-// the force law just couldn't see it.
+// volume until it abruptly stopped, not a bell settling.
+//
+// MEASURED, BEFORE AND AFTER, ON THE SAME RELOMEGA SEQUENCE — same seed,
+// same tap; the force law never feeds back into the pendulums, so running
+// the real module once per law and checking each one's OWN second value
+// against the other's (0.0505 rad/s reads as 0.63 under the old law, 0.44
+// under this one — 0.442/0.7*0.08 = 0.0505, exactly) confirms both runs hit
+// the identical strike sequence, not two independent reproductions that
+// drifted apart the way tests/cylinder.test.js's own `reference()` warns
+// two computation paths near a threshold crossing can. Full-force tap, seed
+// 7, still air, 18 strikes over ~13.4s (numbers rounded to 2dp):
+//   OLD law (single reference): 1, 0.63, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+//     1, 1, 1, 1, 0.78 — seventeen of eighteen strikes pinned at exactly 1.
+//   NEW law (this knee):        0.96, 0.44, 0.76, 0.87, 0.86, 0.85, 0.84,
+//     0.83, 0.82, 0.81, 0.79, 0.78, 0.79, 0.78, 0.75, 0.73, 0.71, 0.55 —
+//     none saturated, a real taper from ~0.96 down to ~0.55. The reviewer's
+//     own read of this exact sequence: peak-to-last is a real ~4.8dB drop,
+//     but strikes 5-16 plateau within a ~1.6dB band before the late fall —
+//     "a sustained ring that softens near the tail" more than a bell fading.
+//     CYL_FORCE (below) is exactly the knob that shape depends on, which is
+//     why it is live rather than fixed.
 //
 // The fix keeps FORCE_OMEGA_REF exactly as wind-tuned it (below REF, force
-// is still literally `(|w|/REF) * FORCE_KNEE_LEVEL` — same shape, same
+// is still literally `(|w|/REF) * CYL_FORCE.kneeLevel` — same shape, same
 // relative ordering among wind strikes as before, just scaled down by the
-// KNEE_LEVEL factor to leave headroom above) and adds a SECOND segment above
-// it, rising from FORCE_KNEE_LEVEL up to 1 as |w| climbs from REF to
-// FORCE_OMEGA_CAP — a genuinely tap-scale reference (~2.5 rad/s, near the
-// hardest contact velocity a full-force tap actually reaches; see
-// tests/cylinder.test.js's own decay-sequence test) rather than a wind-scale
-// one. A tap's whole ring-down now lands mostly in this upper segment and
-// visibly, audibly tapers as it decays; wind's own dynamic range is
-// preserved in SHAPE (still quiet-to-loud in the same relative order) at a
-// deliberate, documented ~30% overall reduction from before — the honest
-// cost of sharing one continuous, monotonic law across two regimes this far
-// apart, rather than silently degrading one of them by picking a reference
-// that only serves the other. `BRONZE.level` (audio/synths.js) may want
-// revisiting now that typical wind strikes run quieter than the level it was
-// last judged against — flagged there, not fixed here, since it needs ears,
-// not arithmetic.
+// knee-level factor to leave headroom above) and adds a SECOND segment above
+// it, rising from CYL_FORCE.kneeLevel up to 1 as |w| climbs from REF to
+// CYL_FORCE.cap — a genuinely tap-scale reference (~2.5 rad/s, near the
+// hardest contact velocity a full-force tap actually reaches) rather than a
+// wind-scale one. A tap's whole ring-down now lands mostly in this upper
+// segment and visibly, audibly tapers as it decays; wind's own dynamic
+// range is preserved in SHAPE (still quiet-to-loud in the same relative
+// order) at a deliberate, documented ~30% overall reduction from before —
+// the honest cost of sharing one continuous, monotonic law across two
+// regimes this far apart, rather than silently degrading one of them by
+// picking a reference that only serves the other. `BRONZE.level`
+// (audio/synths.js) may want revisiting now that typical wind strikes run
+// quieter than the level it was last judged against — flagged there, not
+// fixed here, since it needs ears, not arithmetic.
 //
 // Deliberately no floor, unlike furin's tapKick force: "a graze barely
 // sounds" is the point, not a defect to pad away.
+//
+// CYL_FORCE — live, not frozen, same pattern as CYL_SWING above (mutable
+// object, dev/hanging-audition.html writes straight into it, forceForRelOmega
+// re-reads both fields on every call so a slider reaches the very next
+// strike). STARTING POINTS, not final values, and not yet audited by ear —
+// these two numbers ARE the diminuendo (how much headroom wind keeps below
+// the knee, and how hard a tap has to hit to reach full force), so the
+// owner needs to be able to turn them, not just watch the swing. REF stays
+// a plain const: it is wind's own already-tuned reference, not part of what
+// this fix changed.
 const FORCE_OMEGA_REF = 0.08;
-const FORCE_KNEE_LEVEL = 0.7;
-const FORCE_OMEGA_CAP = 2.5;
+export const CYL_FORCE = {
+  kneeLevel: 0.7,
+  cap: 2.5,
+};
 
 // NOTE FROM SIZE. "Size and pitch must move together... derive one from the
 // other rather than letting a case set both and contradict itself." A
@@ -312,18 +339,21 @@ export function noteForSize(size) {
 // TWO SEGMENTS, ONE CONTINUOUS CURVE (see FORCE NORMALISATION, above, for
 // why one linear reference can't serve both wind and tap scales at once).
 // Below FORCE_OMEGA_REF: identical shape to the original wind-only law
-// (|w|/REF), scaled down by FORCE_KNEE_LEVEL so it never exceeds the knee.
-// At and above FORCE_OMEGA_REF: rises linearly from FORCE_KNEE_LEVEL to 1 as
-// |w| runs from REF to FORCE_OMEGA_CAP, then clamps — this is where a tap's
-// whole ring-down lives, so this is the segment that actually diminuendos.
-// The two segments agree exactly at |w|=REF (both evaluate to
-// FORCE_KNEE_LEVEL there), so the curve has no discontinuity, only a change
-// of slope — the "knee."
+// (|w|/REF), scaled down by CYL_FORCE.kneeLevel so it never exceeds the
+// knee. At and above FORCE_OMEGA_REF: rises linearly from CYL_FORCE.kneeLevel
+// to 1 as |w| runs from REF to CYL_FORCE.cap, then clamps — this is where a
+// tap's whole ring-down lives, so this is the segment that actually
+// diminuendos. The two segments agree exactly at |w|=REF (both evaluate to
+// CYL_FORCE.kneeLevel there), so the curve has no discontinuity, only a
+// change of slope — the "knee." Both fields are read fresh on every call
+// (CYL_FORCE is live — see its own comment above), so a harness slider
+// reaches the very next strike.
 export function forceForRelOmega(relOmega) {
   const w = Math.abs(relOmega);
-  if (w <= FORCE_OMEGA_REF) return (w / FORCE_OMEGA_REF) * FORCE_KNEE_LEVEL;
-  const t = clamp((w - FORCE_OMEGA_REF) / (FORCE_OMEGA_CAP - FORCE_OMEGA_REF), 0, 1);
-  return FORCE_KNEE_LEVEL + (1 - FORCE_KNEE_LEVEL) * t;
+  const { kneeLevel, cap } = CYL_FORCE;
+  if (w <= FORCE_OMEGA_REF) return (w / FORCE_OMEGA_REF) * kneeLevel;
+  const t = clamp((w - FORCE_OMEGA_REF) / (cap - FORCE_OMEGA_REF), 0, 1);
+  return kneeLevel + (1 - kneeLevel) * t;
 }
 
 // scratch for reporting the struck body's world position — shared across
