@@ -41,8 +41,7 @@ export const INTRO_POINTS = [
   [0.22, 1.50, 5.2],
   [0.45, 1.48, 0.8],
   [0.70, 1.46, -3.0],
-  [0.86, 1.43, -6.0],   // the gate: dead centre of the opening
-  [1.00, 1.38, -9.0],   // and out the other side
+  [0.86, 1.5, -6.0],   // the gate: dead centre of the opening
 ];
 
 const LOOK_AHEAD = 0.06;
