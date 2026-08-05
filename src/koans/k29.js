@@ -148,26 +148,53 @@ export default {
     // width*1.4 - 2*(width*1.4*0.24) = 1.7472 wide, so |x| < 0.8736 is flush
     // underside with no gap to the wood. Past that the kasagi's wing tilts
     // upward, and the posts stand at +-width/2 = +-1.2 under that wing. All
-    // four chimes hang on the flat span instead, spread -0.7 to 0.55:
-    //   ring    x -0.70  (visible reach ~0.078-0.098) - 0.31 clear of the left post,
-    //           0.17 clear of the flat span's own edge
-    //   single1 x -0.25  (visible reach ~0.070) - 0.28 clear of the ring
-    //   single2 x  0.15  - 0.26 clear of single1
-    //   single3 x  0.55  - 0.26 clear of single2, 0.49 clear of the right post,
-    //           0.32 clear of the flat span's own edge
-    // ("clear" = edge-to-edge, centre gap minus both chimes' visible reach —
-    // the tag's outer edge, not the wider forgiving pick drum underneath it.)
+    // four chimes hang on the flat span instead, spread -0.7 to 0.55.
+    // "clear" below is edge-to-edge (real THREE.Box3 unions of the hit drum
+    // and tag, not a hand estimate), at REST — see MAX-AMPLITUDE CHECK below
+    // for how those margins hold up once the new, much bigger swing (task-
+    // swing-tune-brief.md, PROBLEM 2) is actually in motion:
+    //   ring     x -0.70  (S=0.17)  - 0.25 clear of single1, 0.31 clear of
+    //            the left post, 0.17 clear of the flat span's own edge
+    //   single1  x -0.25  (S=0.18, the DEEPEST single — see SIZES below)
+    //            - 0.26 clear of single2
+    //   single2  x  0.15  (S=0.12) - 0.30 clear of single3
+    //   single3  x  0.55  (S=0.09, the HIGHEST single) - 0.49 clear of the
+    //            right post, 0.32 clear of the flat span's own edge
+    //
+    // MAX-AMPLITUDE CHECK (task-swing-tune-brief.md: "a bigger fūrin swing
+    // must not push tubes through the cap or through each other"). Every
+    // piece of a furin — cord, cap, tubes, clapper, tag — is ONE rigid body
+    // that pivots together at the hang point (none of them has its own
+    // independent motion the way the bronze cylinder's clapper does), so a
+    // bigger swing can never make a furin collide with ITSELF at any angle;
+    // the real risk is external — a bigger swing displacing the whole rigid
+    // assembly sideways, into a NEIGHBOUR. Checked directly (real module,
+    // real Box3 unions, not hand math) at theta=0.55 rad (a single full-force
+    // tap's peak under the new SWING.tapPeak) and theta=0.83 rad (nine-plus
+    // taps mashed into the new SWING.maxOmegaFrac cap, worst case, all three
+    // swung the SAME direction at once — an unrealistic pile-up since each
+    // chime carries its own phase and nothing actually correlates them, but
+    // the honest worst-case envelope): every gap stays positive at both
+    // angles. Tightest at theta=0.83: ring-single1 down to 0.029, single1-
+    // single2 down to 0.016 — real margin, not zero, but visibly tighter
+    // than the 0.25-0.26 at rest, worth knowing if the harness settles on an
+    // even bigger cap than 0.85.
     //
     // TIE BEAM CLEARANCE: the nuki (src/kit/gate.js's cross-tie) sits at
     // y = height*0.78 = 2.028, top face at 2.098, spanning the same x range
     // as every chime here. A longer cord brings a chime's invisible pick drum
-    // (the deepest point, 2.1*S below the hang point) closer to that face.
-    // The ring's own default cord (0.62, unchanged) already clears it by only
-    // 0.040 — noted here rather than changed, since task-7A's review scoped
-    // this to the singles. The singles are capped BELOW that default
-    // (0.42/0.52/0.60, not 0.62-0.85) after the review caught the deepest
-    // draft cord (0.85) leaving the pick drum just 0.0005 from the beam —
-    // clearances now 0.074 / 0.057 / 0.043.
+    // (the deepest point, 2.1*S below the hang point) closer to that face —
+    // and swinging the assembly away from vertical only ever SHORTENS that
+    // drop (cos(theta) < 1), so rest is the worst case for this particular
+    // clearance, unlike the sideways neighbour check above. The ring's own
+    // default cord (0.62, unchanged) already clears it by only 0.040 — noted
+    // here rather than changed, since task-7A's review scoped this to the
+    // singles. SIZES below changed what the singles' own clearances are
+    // (cord length is CORD_FRAC * SIZE, and size no longer matches across
+    // the three): 0.048 / 0.188 / 0.259 — single1, the biggest single, now
+    // carries the tightest margin of the three (previously single3, the
+    // deepest cord FRACTION, was tightest, back when every single shared the
+    // same size).
     const RING_X = -0.70;
     const furin = makeFurin({
       seed: 29,
@@ -177,25 +204,31 @@ export default {
     gate.add(furin.group);
 
     const SINGLE_X = [-0.25, 0.15, 0.55];
-    // NOTES: THE GOTCHA — a tubes:1 chime always reports tube index 0 to
-    // onStrike, so three singles wired the obvious way would all sound the
-    // SAME note. The case has to choose the pitch itself (as k4.js and
-    // k22.js already do), so onStrike below substitutes SINGLE_NOTES[i] for
-    // the reported index. The ring already sounds CHIME.degree + 0..4, a
-    // tight five-note cluster; -1 sits one scale step BELOW that cluster (a
-    // deep single answering from underneath), 5 sits one step ABOVE it
-    // (bridges into the next octave), and 9 is a further octave up from that
-    // bridge — three individually-sited voices bracketing the ring's cluster
-    // rather than folding into it.
-    const SINGLE_NOTES = [-1, 5, 9];
+    // SIZES: PROBLEM 1, task-swing-tune-brief.md — "the lower ones are
+    // bigger... probably the length, maybe a little bit of both." Each
+    // single now hangs a DIFFERENT size and reports whatever note that size
+    // implies (makeFurin's own noteForSize, kit/furin.js) — the case no
+    // longer picks a note independent of geometry, it picks a size and the
+    // note follows, matching audio.bell() and makeCylinderChime everywhere
+    // else in the book. Chosen so the sounding notes land EXACTLY where the
+    // previously-approved spread already sat (-1, 5, 9 — one scale step
+    // below the ring's own five-note cluster, one step above it bridging the
+    // next octave, and a further octave up from that bridge): 0.18 -> -1,
+    // 0.12 -> 5, 0.09 -> 9 (noteForSize(0.18)===-1 etc., pinned in
+    // tests/k29.test.js). The lowest (0.18) is exactly 2x the highest
+    // (0.09) — the brief's own worked example for a ~2-octave spread ("the
+    // lowest is about twice the length of the highest"), landed here by
+    // solving for size, not by picking a round number and hoping.
+    const SINGLE_SIZES = [0.18, 0.12, 0.09];
     const SINGLE_CORD = [0.42, 0.52, 0.60];   // see TIE BEAM CLEARANCE above
     const singles = SINGLE_X.map((x, i) => {
       const single = makeFurin({
         tubes: 1,
+        size: SINGLE_SIZES[i],
         seed: 293 + i,                 // distinct, though inert once phase is explicit below
         cord: SINGLE_CORD[i],          // different string lengths -> different resting heights
         phase: 1.3 + 2.4 * i,          // own clock, so they never sway or strike in lockstep
-        onStrike: (_, force, pos) => audio && audio.chimeStrike({ tube: SINGLE_NOTES[i], force, at: pos }),
+        onStrike: (tube, force, pos) => audio && audio.chimeStrike({ tube, force, at: pos }),
       });
       single.group.position.set(x, 2.6, 0);
       gate.add(single.group);

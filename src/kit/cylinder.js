@@ -76,7 +76,7 @@ const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 // Kept anyway, at 1/phi, for two real reasons rather than the disproved
 // one: (1) it is what the brief literally asked for, and honouring it costs
 // nothing; (2) it is not entirely inert — it still governs how snappily the
-// clapper responds to a TAP (see TAP_KICK below, where natural frequency
+// clapper responds to a TAP (see CYL_SWING.tapKick below, where natural frequency
 // does matter, unlike the slow quasi-static wind response) and gives the
 // clapper a faint independent transient wobble on top of the quasi-static
 // tracking. 1/phi remains the closed-form choice for "shorter, not a neat
@@ -84,17 +84,35 @@ const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 const PHI = (1 + Math.sqrt(5)) / 2;
 const PERIOD_RATIO = 1 / PHI;
 
-// DAMPING (1/s), e-folding tau = 2/c (see furin.js's SWING_DAMPING comment
-// for the derivation). The cylinder is a mass of bronze, heavier than a
-// fūrin's tubes-and-tag (tau 1.8s) and heavier than the bonshō's own swing
-// envelope (bell.js's TAU 1.35s is an impulse envelope, not this kind of
-// damping, but it is the same "big and slow" object this cylinder answers
-// to) — tau 3.5s settles noticeably slower. The clapper is lighter and rides
-// inside the body rather than out in the open air, so it settles faster,
-// tau 2.2s — still slower than a fūrin tube, since it is a solid knocker,
-// not a paper tag.
-const CYL_DAMPING = 2 / 3.5;
-const CLAP_DAMPING = 2 / 2.2;
+// SWING TUNING — live, not frozen (task-swing-tune-brief.md, PROBLEM 2: the
+// same "tuned to the model it replaced" mistake furin.js's own SWING made,
+// the brief flags this file by name for the identical fix). Exported as a
+// mutable object, SPATIAL's own pattern (src/audio/spatial.js) — the binding
+// stays const, its fields don't — so dev/hanging-audition.html can write
+// straight into it and hear the very next tap change, no reload; update()
+// re-reads cylDamping/clapDamping every frame and tapKick() re-reads
+// tapKick every call, so a slider reaches an already-hanging cylinder, not
+// just the next one built.
+//
+// STARTING POINTS, not final values — the owner settles these by ear through
+// the harness. Damping tau = 2/c (see furin.js's own SWING comment for the
+// e-folding derivation); both roughly doubled from the shipped values, same
+// "much longer settle" direction furin.js's own retune took, keeping the
+// cylinder's existing relationship to the clapper (body settles slower than
+// its own clapper, both slower than any fūrin tube — a heavier object drags
+// longer):
+//   cylDamping tau 3.5s -> 7s (c = 2/7)
+//   clapDamping tau 2.2s -> 4.5s (c = 2/4.5)
+//   tapKick 2.5 -> 6.0 rad/s — a markedly bigger shove; THE WALL (below)
+//     bounds the RENDERED swing regardless of how hard the kick is, so this
+//     mainly changes how briskly the clapper visibly recoils and how fast it
+//     reaches contact, not whether it tunnels (tests/cylinder.test.js's own
+//     WALL test already covers that at a hard, repeated tap).
+export const CYL_SWING = {
+  cylDamping: 2 / 7,
+  clapDamping: 2 / 4.5,
+  tapKick: 6.0,
+};
 
 // WIND LEAN (rad): the equilibrium angle a full, steady gust settles each
 // pendulum at (see furin.js's WIND_Z_LEAN for the same identity). Chosen by
@@ -130,7 +148,7 @@ const REFRACTORY = 0.5;
 // THE WALL. Code review caught a real bug: nothing previously stopped the
 // clapper's angle from sailing past GAP_ANGLE once contact was DETECTED —
 // the strike fired, but clapPend.theta kept right on integrating outward, so
-// a hard tap (MAX_CLAP_OMEGA=7.5 against omega0~6.65) swung the clapper
+// a hard tap (the then-fixed MAX_CLAP_OMEGA=7.5 against omega0~6.65) swung the clapper
 // disc roughly 1.1 rad against an ~0.09 rad gap: it rendered clean through
 // the bronze wall and hung in open air on no visible cord. Contact was
 // audible but never physically resolved.
@@ -156,23 +174,29 @@ const RESTITUTION = 0.35;
 // A tap is a shove: a velocity kick to the CLAPPER (not the body), so the
 // very same relative-angle contact check that the wind uses is what fires
 // the strike — "by the same mechanism," per the brief, not a separate
-// play-the-sound-now path. Sized so a full-force tap crosses GAP_ANGLE
-// (~0.098 rad) within a couple of frames: GAP_ANGLE / TAP_KICK ~= 0.04s.
-const TAP_KICK = 2.5;
+// play-the-sound-now path. Sized (CYL_SWING.tapKick, above) so a full-force
+// tap crosses GAP_ANGLE (~0.098 rad) well inside a second even at the old,
+// smaller value; the new one crosses it faster still. Read LIVE inside
+// tapKick() below (not captured at construction), same reasoning as
+// furin.js's own tapKick().
+//
 // Mashing taps saturates, as in furin.js — but unlike furin.js this cap is
 // no longer what keeps the clapper physically plausible; THE WALL (below)
 // clamps its ANGLE regardless of how large omega gets, which is what fixes
 // the tunnelling bug review caught (a wall that only capped velocity, not
 // position, would still let one hard kick swing the clapper stories past
-// the bronze before damping ever caught up). MAX_CLAP_OMEGA is kept as a
-// cheaper, earlier cap on velocity itself, so a mashed burst of taps doesn't
-// approach the wall at implausible, glassy speed even for the one frame
-// before the wall would have caught it anyway.
-const MAX_CLAP_OMEGA = 3 * TAP_KICK;
+// the bronze before damping ever caught up). The velocity cap below is kept
+// as a cheaper, earlier guard, so a mashed burst of taps doesn't approach
+// the wall at implausible, glassy speed even for the one frame before the
+// wall would have caught it anyway — sized as a fixed multiple of the LIVE
+// tapKick, so raising the kick from the harness raises its own cap with it
+// rather than leaving a stale ceiling behind.
+const MAX_CLAP_OMEGA_MULT = 3;
 
-// UNDERSTOOD CONSEQUENCE: TAP_KICK sits roughly 30x FORCE_OMEGA_REF (below),
-// so essentially any deliberate tap (ring()'s default force 0.75, even
-// hoverAt's 0.25) reaches the wall fast enough to saturate the reported
+// UNDERSTOOD CONSEQUENCE: CYL_SWING.tapKick sits roughly 75x FORCE_OMEGA_REF
+// (below) at its new starting value (30x at the old one — already true,
+// only more so now), so essentially any deliberate tap (ring()'s default
+// force 0.75, even hoverAt's 0.25) reaches the wall fast enough to saturate the reported
 // strike force at 1 — a tap always rings clearly, never as a graze. That
 // reads as correct rather than as a bug: a tap is a deliberate touch, not
 // weather, and furin.js's own ring() has the same character (it reports the
@@ -340,8 +364,10 @@ export function makeCylinderChime({
   const GAP_LINEAR = (BODY_R - CLAP_R) * 0.9;
   const GAP_ANGLE = GAP_LINEAR / CONTACT_Y;
 
-  const cylPend = createPendulum({ length: L_cyl, g: GRAVITY, damping: CYL_DAMPING });
-  const clapPend = createPendulum({ length: L_clap, g: GRAVITY, damping: CLAP_DAMPING });
+  // damping starts at CYL_SWING's current value but is re-read live every
+  // update() (below), same reasoning as furin.js's own zPend/xPend.damping
+  const cylPend = createPendulum({ length: L_cyl, g: GRAVITY, damping: CYL_SWING.cylDamping });
+  const clapPend = createPendulum({ length: L_clap, g: GRAVITY, damping: CYL_SWING.clapDamping });
   const windCylTorque = (GRAVITY / L_cyl) * WIND_LEAN_CYL;
   const windClapTorque = (GRAVITY / L_clap) * WIND_LEAN_CLAP;
 
@@ -357,11 +383,14 @@ export function makeCylinderChime({
   let lastForce = 0;
   let lastStrikeAt = -Infinity;
 
-  // A tap's velocity kick — see TAP_KICK's own comment for the sizing.
-  // Shared by ring() and hoverAt() below, same split furin.js uses.
+  // A tap's velocity kick — see CYL_SWING.tapKick's own comment for the
+  // sizing. Shared by ring() and hoverAt() below, same split furin.js uses.
+  // Both CYL_SWING.tapKick and its cap are read LIVE, not captured at
+  // construction, so a harness slider reaches an already-hanging cylinder.
   function tapKick(force) {
-    kickPendulum(clapPend, force * TAP_KICK);
-    clapPend.omega = clamp(clapPend.omega, -MAX_CLAP_OMEGA, MAX_CLAP_OMEGA);
+    const maxClapOmega = MAX_CLAP_OMEGA_MULT * CYL_SWING.tapKick;
+    kickPendulum(clapPend, force * CYL_SWING.tapKick);
+    clapPend.omega = clamp(clapPend.omega, -maxClapOmega, maxClapOmega);
   }
 
   function fire(force) {
@@ -405,6 +434,13 @@ export function makeCylinderChime({
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
       const elapsed = Math.max(0, clock - prevClock);
 
+      // CYL_SWING.cylDamping/clapDamping read fresh every frame, not just at
+      // construction — same reasoning as furin.js's own SWING.damping: a
+      // harness slider dragged mid-scene has to reach an already-hanging
+      // cylinder.
+      cylPend.damping = CYL_SWING.cylDamping;
+      clapPend.damping = CYL_SWING.clapDamping;
+
       // `t` in each callback is the PENDULUM's own p.clock, seeded above to
       // track this file's absolute `clock` (furin.js's same pattern, and
       // the same reason: torqueAt must read gustPhase at a clock that stays
@@ -447,8 +483,8 @@ export function makeCylinderChime({
     },
 
     // A tap: a shove to the CLAPPER, the same mechanism a gust uses — see
-    // TAP_KICK's own comment. Rings through the SAME contact check above on
-    // the next update(), not a separate "play now" path.
+    // CYL_SWING.tapKick's own comment. Rings through the SAME contact check
+    // above on the next update(), not a separate "play now" path.
     ring(force = 0.75) { tapKick(force); },
     // the pointer passing over: a nudge, not a knock — same shape as
     // furin's hoverAt(), a fraction of a tap's force through the same path

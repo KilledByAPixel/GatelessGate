@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { makeCylinderChime, noteForSize, forceForRelOmega } from '../src/kit/cylinder.js';
+import { makeCylinderChime, noteForSize, forceForRelOmega, CYL_SWING } from '../src/kit/cylinder.js';
 import { createPendulum, integratePendulum } from '../src/kit/pendulum.js';
 import { gustPhase } from '../src/audio/synths.js';
 
@@ -50,8 +50,14 @@ function reference({ size = 0.8, T0 = 0 } = {}) {
   const GAP_ANGLE = ((BODY_R - CLAP_R) * 0.9) / CONTACT_Y;
   const windCylTorque = (GRAVITY / L_cyl) * 0.07;
   const windClapTorque = (GRAVITY / L_clap) * 0.11;
-  const cyl = createPendulum({ length: L_cyl, g: GRAVITY, damping: 2 / 3.5, clock: T0 });
-  const clap = createPendulum({ length: L_clap, g: GRAVITY, damping: 2 / 2.2, clock: T0 });
+  // damping reads the real, LIVE CYL_SWING object rather than a hardcoded
+  // copy — CYL_SWING.cylDamping/clapDamping are exported, mutable tunables
+  // now (task-swing-tune-brief.md, the harness writes into them directly),
+  // so a hardcoded literal here would silently stop matching the real module
+  // the moment the starting value changes again (same reasoning furin.test.js
+  // applies to SWING.damping).
+  const cyl = createPendulum({ length: L_cyl, g: GRAVITY, damping: CYL_SWING.cylDamping, clock: T0 });
+  const clap = createPendulum({ length: L_clap, g: GRAVITY, damping: CYL_SWING.clapDamping, clock: T0 });
   const REFRACTORY = 0.5;
   let lastStrikeAt = -Infinity;
   // Mirrors cylinder.js's own `elapsed = clock - prevClock` bookkeeping
@@ -276,6 +282,37 @@ test('THE WALL: a hard tap never swings the clapper visibly past the cylinder wa
   assert.ok(f.strikes() > 0, 'the tap burst never rang it at all — test is not exercising contact');
   assert.ok(maxRel <= gap + 1e-6,
     `the clapper swung ${maxRel} rad relative to the body, past the ${gap} rad gap — it rendered through the bronze wall`);
+});
+
+test('CYL_SWING.tapKick is a real increase over the shipped-before value, and THE WALL still holds at it', () => {
+  // task-swing-tune-brief.md, PROBLEM 2: "a much larger tap kick... on the
+  // fūrin AND the cylinder." Pinned two ways: the starting value itself is
+  // meaningfully bigger than the 2.5 rad/s this task opened up (so a future
+  // change back toward the old number fails here, the same "pin the new
+  // peak" property the brief asks for on the fūrin), and — since a bigger
+  // kick is worthless if it just tunnels through the bronze — THE WALL
+  // (tested above at whatever CYL_SWING.tapKick happens to be) is re-checked
+  // explicitly AT this specific value, not just "whatever the module ships."
+  assert.ok(CYL_SWING.tapKick > 2.5 * 1.5,
+    `CYL_SWING.tapKick (${CYL_SWING.tapKick}) is not meaningfully bigger than the old 2.5 rad/s`);
+
+  const f = makeCylinderChime({ seed: 13, phase: 0 });
+  f.setWindLevel(0);
+  const before = f.clapperAmp();
+  f.ring(1);
+  const afterOneTap = f.clapperAmp();
+  assert.ok(afterOneTap > before, 'a full-force tap added no energy to the clapper');
+
+  const swing = f.group.getObjectByName('swing');
+  const clapperPivot = f.group.getObjectByName('clapper-pivot');
+  const gap = f.gapAngle();
+  let maxRel = 0;
+  for (let i = 0; i * (1 / 240) < 2; i++) {
+    f.update(1 / 240, i / 240);
+    maxRel = Math.max(maxRel, Math.abs(swing.rotation.z - clapperPivot.rotation.z));
+  }
+  assert.ok(maxRel <= gap + 1e-6,
+    `at CYL_SWING.tapKick=${CYL_SWING.tapKick}, the clapper swung ${maxRel} rad past the ${gap} rad gap`);
 });
 
 test('a tap rings through the SAME contact mechanism as the wind, not a bypass', () => {

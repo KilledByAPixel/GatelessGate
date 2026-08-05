@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { makeFurin, chimeActivity } from '../src/kit/furin.js';
+import { makeFurin, chimeActivity, noteForSize, SWING } from '../src/kit/furin.js';
 import { createPendulum, integratePendulum } from '../src/kit/pendulum.js';
 import { gustPhase } from '../src/audio/synths.js';
 
@@ -197,6 +197,84 @@ test('the single tube does not run straight through the clapper', () => {
     `clapper interpenetrates the tube: centres ${gap} apart, need > ${tubeR + clapperR}`);
 });
 
+test('the clapper still clears the tube across the whole size range, not just the book default', () => {
+  // task-swing-tune-brief.md, PROBLEM 1: a single tube's diameter now scales
+  // WEAKLY with size (DIAM_WEAK_EXP in furin.js) rather than in lockstep
+  // with everything else, which is exactly the kind of change that could
+  // silently break a fixed clearance margin computed against the OLD
+  // lockstep formula (0.075*size) at any size other than the one it was
+  // measured at. The test above only proves this at size=0.17 (the book
+  // default, where the weak formula and the lockstep formula happen to
+  // agree by construction — see singleTubeR's own comment in furin.js). This
+  // checks the geometry directly (not a formula copied from src/) across the
+  // sizes this task actually stages (case 29: 0.09, 0.12, 0.18) plus the
+  // extremes noteForSize itself clamps to, so a wrong-but-plausible fix that
+  // re-hardcodes 0.075*size somewhere in the clapper-offset math would show
+  // up as a real, measured collision at the sizes that formula gets wrong.
+  //
+  // MUTATION-VERIFIED that a bare "clearance > 0" bound is NOT enough here:
+  // re-hardcoding clapperOff's own margin term to the old 0.075*S (instead of
+  // the real singleTubeR) still leaves clearance barely POSITIVE at every
+  // size in this list (as low as ~10% of the tube+clapper radii, down from
+  // ~24% with the real fix) — a strict `>` catches nothing. Requiring at
+  // least 15% of (tubeR+clapperR) as real margin sits between those two
+  // measured numbers, so it fails on the reintroduced bug and passes on the
+  // fix, rather than merely failing on an outright interpenetration.
+  const MIN_MARGIN_FRAC = 0.15;
+  for (const S of [0.08, 0.09, 0.12, 0.18, 0.24, 0.34]) {
+    const one = makeFurin({ tubes: 1, size: S, seed: 8 });
+    const tube = one.group.getObjectByName('tube');
+    const clapper = one.group.getObjectByName('clapper');
+    const tubeR = tube.geometry.parameters.radiusTop;
+    clapper.geometry.computeBoundingSphere();
+    const clapperR = clapper.geometry.boundingSphere.radius;
+    const dx = tube.position.x - clapper.position.x;
+    const dz = tube.position.z - clapper.position.z;
+    const gap = Math.hypot(dx, dz);
+    const needed = (tubeR + clapperR) * (1 + MIN_MARGIN_FRAC);
+    assert.ok(gap > needed,
+      `size ${S}: clapper clearance too thin (or interpenetrating): centres ${gap} apart, need > ${needed} (${MIN_MARGIN_FRAC * 100}% margin over ${tubeR + clapperR})`);
+  }
+});
+
+test('a bigger single-tube furin sounds a LOWER note, and the length ratio matches the free-free-bar model', () => {
+  // task-swing-tune-brief.md, PROBLEM 1: "the physics is a free-free bar:
+  // f ~ thickness/length^2... an octave down is a tube 1.41x longer, two
+  // octaves is 2x longer." noteForSize is the pure function that formula
+  // lives in (furin.js) — pinned directly here, on its documented contract,
+  // not on the internal log2 expression, so a mutant that gets the SIGN
+  // right but the SCALE wrong (a plausible off-by-a-constant-factor bug)
+  // still gets caught by the length-ratio check below.
+  assert.equal(noteForSize(0.17), 0, 'the book default should sound exactly as it always has');
+  assert.ok(noteForSize(0.24) < noteForSize(0.17), 'a bigger tube should sound LOWER, not higher');
+  assert.ok(noteForSize(0.12) > noteForSize(0.17), 'a smaller tube should sound HIGHER, not lower');
+
+  // root-2 longer -> one octave (5 degrees) lower; twice as long -> two
+  // octaves (10 degrees) lower. SIZE_REF=0.17 is exported implicitly via
+  // noteForSize(0.17)===0 above, so root(2)*0.17 and 2*0.17 exercise the
+  // formula at exactly the brief's own worked ratios.
+  const oneOctaveDown = noteForSize(0.17 * Math.SQRT2);
+  const twoOctavesDown = noteForSize(0.17 * 2);
+  assert.equal(oneOctaveDown, -5, `root-2-longer should read one octave (5 degrees) lower, got ${oneOctaveDown}`);
+  assert.equal(twoOctavesDown, -10, `2x-longer should read two octaves (10 degrees) lower, got ${twoOctavesDown}`);
+
+  // and the inverse: a tube built at exactly the note-implied size actually
+  // measures out to the length ratio the note implies, within a tolerance
+  // justified by noteForSize's own rounding to an integer degree (each
+  // degree step covers a length ratio of about 2^(1/10) ~ 1.0718, so a
+  // ratio measured off REAL geometry should land within that same relative
+  // step of the theoretical root-2 / 2x targets, not exactly on them, since
+  // rounding to the nearest degree is lossy by design)
+  const lenAt = (size) => {
+    const f = makeFurin({ tubes: 1, size, seed: 1 });
+    return f.group.getObjectByName('tube').geometry.parameters.height;
+  };
+  const ratio1oct = lenAt(0.17 * Math.SQRT2) / lenAt(0.17);
+  const ratio2oct = lenAt(0.17 * 2) / lenAt(0.17);
+  assert.ok(Math.abs(ratio1oct - Math.SQRT2) < 0.08, `one-octave length ratio ${ratio1oct} strayed too far from root-2`);
+  assert.ok(Math.abs(ratio2oct - 2) < 0.08, `two-octave length ratio ${ratio2oct} strayed too far from 2x`);
+});
+
 test('a real ray aimed at a specific tube resolves to that tube, not the whole-chime drum', () => {
   // THE TRAP a reviewer caught in the shipped comment: pickTargets() was
   // documented "tubes first, so a tap landing on both a tube and the
@@ -269,19 +347,61 @@ test('a knocked chime SWINGS — it crosses centre, it does not just lean back',
   const crossings = signs.filter((s, i) => i > 0 && s !== signs[i - 1]).length;
   assert.ok(crossings >= 3, `it leans, it does not swing: ${crossings} centre crossings in 5s`);
 
-  // and it dies down rather than ringing forever
+  // and it dies down rather than ringing forever — but SWING.damping was
+  // opened up (task-swing-tune-brief.md, PROBLEM 2: "a much longer settle")
+  // from tau=1.8s to tau=4.5s specifically so it lingers through several
+  // audible swings instead of two, so the old late<early*0.2 bound (tuned
+  // for the SHORT settle) now fails on correct behaviour — measured ratio at
+  // the new damping is ~0.395 (see swing-tune-report.md). 0.5 leaves real
+  // margin above that while still catching a damping mutation: doubling
+  // SWING.damping's tau (halving the coefficient) measured ~0.79, and
+  // near-zero damping measured ~0.997 — both comfortably fail this bound,
+  // so it is discriminating a real regression, not just loose enough to pass
+  // anything. The genuinely tight "does it monotonically settle" property is
+  // pinned separately, below, on the energy itself rather than a ratio of
+  // two 1-second windows.
   const early = Math.max(...zs.slice(0, 60).map(Math.abs));
   const late = Math.max(...zs.slice(-60).map(Math.abs));
-  assert.ok(late < early * 0.2, `the swing does not settle: ${early} -> ${late}`);
+  assert.ok(late < early * 0.5, `the swing does not settle: ${early} -> ${late}`);
   // Bracketed, not just floored: `early > 0.02` alone left TAP_PEAK's actual
   // value essentially unpinned — dropping the omega0 factor in tapKick
   // (furin.js) gives a peak of ~0.019 rad, which is BELOW 0.02 and so was
   // caught, but only by a margin that was luck rather than coverage (any
-  // slightly less broken mutant would have slipped through). Measured at
-  // TAP_PEAK=0.13, force=1: early ~0.115 rad (see tests/furin.test.js CI
-  // output if this ever needs re-deriving); 0.10-0.18 brackets that with
-  // headroom on both sides without being so loose it stops meaning anything.
-  assert.ok(early > 0.10 && early < 0.18, `the tap's first swing is not near TAP_PEAK: ${early} rad`);
+  // slightly less broken mutant would have slipped through). SWING.tapPeak
+  // was raised from 0.13 to 0.55 rad (task-swing-tune-brief.md, PROBLEM 2 —
+  // "a much larger tap kick"); measured at the new value, force=1:
+  // early ~0.528 rad. 0.45-0.60 brackets that with headroom on both sides
+  // without being so loose it stops meaning anything, and would still catch
+  // a future change back toward the old 0.13 (which would land near 0.115).
+  assert.ok(early > 0.45 && early < 0.60, `the tap's first swing is not near SWING.tapPeak: ${early} rad`);
+});
+
+test('the swing SETTLES: mechanical energy decays monotonically once a tap stops feeding it', () => {
+  // "Worth pinning... the swing still settles — energy decays monotonically
+  // with no input" (task-swing-tune-brief.md's Tests section). The early/
+  // late ratio test above is a coarse, two-window version of this claim;
+  // this pins the tight version directly on pendulumEnergy() (src/kit/
+  // pendulum.js), sampled every real frame for 15s after a single tap in
+  // still air — semi-implicit Euler with damping and no driving torque
+  // should never let mechanical energy tick UP between frames.
+  const f = makeFurin({ seed: 3, phase: 0, onStrike: () => {} });
+  f.setWindLevel(0);
+  run(f, 1);
+  f.ring(1);
+  let prev = f.swingAmp();
+  assert.ok(prev > 0, 'the tap added no energy to settle from');
+  let violations = 0;
+  for (let i = 0; i < 60 * 15; i++) {
+    f.update(1 / 60, 1 + i / 60);
+    const e = f.swingAmp();
+    // float tolerance only — this is not "roughly decreasing," it is a real
+    // physical invariant of a damped, undriven oscillator under semi-implicit
+    // Euler (see pendulum.js's own STABILITY discussion)
+    if (e > prev + 1e-9) violations++;
+    prev = e;
+  }
+  assert.equal(violations, 0, `mechanical energy increased between frames ${violations} times with no input`);
+  assert.ok(prev < 0.05, `still ringing after 15s in still air: energy=${prev}`);
 });
 
 test('wind actually drives the swing, not just the strikes', () => {
@@ -343,15 +463,18 @@ test("the swing's wind phase stays locked to the absolute clock, even for a chim
   f.setWindLevel(1);
 
   // reproduces furin.js's own L = cord*size + 0.6*size, omega0 = sqrt(g/L),
-  // and windZTorque = (g/L)*WIND_Z_LEAN (WIND_Z_LEAN=0.16, g=9.8, damping
-  // =2/1.8 — all named constants in furin.js, duplicated here on purpose so
-  // this test does not import furin.js's private state, only its documented
-  // formulas)
+  // and windZTorque = (g/L)*WIND_Z_LEAN (WIND_Z_LEAN=0.16, g=9.8 — both
+  // named constants in furin.js, duplicated here on purpose so this test
+  // does not import furin.js's private state, only its documented formulas).
+  // damping is the one exception: SWING.damping is a LIVE, exported tunable
+  // now (task-swing-tune-brief.md — the harness writes into it directly), so
+  // a hardcoded copy here would silently stop matching the real module the
+  // moment the starting value changes again; importing the real SWING object
+  // is the public, documented way to read it.
   const L = CORD_FRAC * SIZE + 0.6 * SIZE;
   const G = 9.8;
   const torqueCoeff = (G / L) * 0.16;
-  const damping = 2 / 1.8;
-  const reference = createPendulum({ length: L, g: G, damping });
+  const reference = createPendulum({ length: L, g: G, damping: SWING.damping });
 
   const N = 180;   // 3 simulated seconds
   for (let i = 0; i < N; i++) {
@@ -429,11 +552,23 @@ test('mashing taps saturates instead of spinning the chime past a wind chime', (
   //
   // The pendulum has no array: a tap is one velocity kick added to the ONE
   // omega the pendulum has (tapKick, furin.js), so there is nothing to evict.
-  // The equivalent protection is a velocity ceiling (MAX_OMEGA in furin.js):
-  // however many taps land, omega cannot exceed what a real chime's air drag
-  // would ever let it reach. Proven two ways: the stored energy after a
-  // saturating burst does not keep growing with more taps, and the resulting
-  // swing still reads as a wind chime rather than a windmill.
+  // The equivalent protection is a velocity ceiling (SWING.maxOmegaFrac *
+  // omega0, furin.js): however many taps land, omega cannot exceed what a
+  // real chime's air drag would ever let it reach. Proven two ways: the
+  // stored energy after a saturating burst does not keep growing with more
+  // taps, and the resulting swing still reads as a wind chime rather than a
+  // windmill. NOTE: this only covers a burst that lands before any update()
+  // runs (elapsed time = 0 between kicks) — SWING.maxOmegaFrac was raised
+  // from 0.30 to 0.85 for this task, and the saturated peak here rose with
+  // it (~0.30 rad -> ~0.83 rad, still under the 1.0 rad sanity bound below).
+  // A DIFFERENT scenario — real, rapid re-tapping with time actually
+  // elapsing BETWEEN kicks (a human mashing the screen, not a single instant
+  // burst) — is not what this test exercises and is not bounded by
+  // maxOmegaFrac at all, since the cap only ever limits INSTANTANEOUS
+  // velocity, not accumulated angle under sustained re-kicking; see
+  // swing-tune-report.md's "watch the interactions" section for measured
+  // numbers (sustained mashing at plausible human tap rates can run the
+  // swing well past a full rotation at this task's starting maxOmegaFrac).
   const f = makeFurin({ seed: 3, phase: 0, onStrike: () => {} });
   f.setWindLevel(0);
   const swing = f.group.getObjectByName('swing');

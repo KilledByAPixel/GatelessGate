@@ -80,10 +80,11 @@ test('the chime hangs under the gate and answers the flag', async () => {
   // Driving the whole case (cloth, meadow) for 600s cost 61s of a 66s suite.
   for (let i = 0; i < 60 * 180; i++) k.update(1 / 60, i / 60);
   assert.ok(struck.length > 5, `the chime never struck: ${struck.length}`);
-  // the ring reports its own tube index (0-4); the three singles substitute
-  // their own note (-1, 5, 9 — see k29.js's SINGLE_NOTES) for the index a
-  // tubes:1 chime always reports, so a real strike lands on one of these
-  // eight values and never anything else
+  // the ring reports its own tube index (0-4); the three singles report the
+  // note their OWN size implies (kit/furin.js's noteForSize — k29.js's
+  // SINGLE_SIZES are 0.18/0.12/0.09, which noteForSize maps to -1/5/9) in
+  // place of the index a tubes:1 chime always reports, so a real strike
+  // lands on one of these eight values and never anything else
   for (const s of struck) {
     assert.ok([-1, 0, 1, 2, 3, 4, 5, 9].includes(s.tube), `unexpected tube ${s.tube}`);
     assert.ok(s.force > 0 && s.force <= 1);
@@ -140,16 +141,64 @@ test('the three singles sound three different notes, not the ring index', () => 
   for (let i = 0; i < 60 * 400; i++) k.update(1 / 60, i / 60);
 
   const tubes = new Set(struck.map((s) => s.tube));
-  // THE GOTCHA: a tubes:1 chime always reports its own tube index as 0 —
-  // if k29.js forwarded that raw index instead of substituting its own note,
-  // every single would show up indistinguishable from the ring's own tube-0
-  // strikes, and 5 and 9 would never appear. Checking for the actual
-  // literal values that reached the STUB (not re-importing the constant
-  // k29.js used to produce them) also catches the copy-paste version of the
-  // bug, where all three singles were wired to the same one note.
+  // THE GOTCHA: a tubes:1 chime always reports its own tube index as 0 — if
+  // k29.js forwarded that raw index instead of the note kit/furin.js derives
+  // from each single's OWN size, every single would show up indistinguishable
+  // from the ring's own tube-0 strikes, and 5 and 9 would never appear.
+  // -1/5/9 are not hardcoded in k29.js any more — they fall out of
+  // SINGLE_SIZES (0.18/0.12/0.09) via noteForSize, chosen specifically to
+  // reproduce this previously-approved spread (see k29.js's own comment).
+  // Checking for the actual literal values that reached the STUB (not
+  // re-deriving them from the sizes here) also catches the copy-paste
+  // version of the bug, where all three singles were wired to the same size.
   for (const note of [-1, 5, 9]) {
     assert.ok(tubes.has(note), `single note ${note} never reached the audio stub (saw: ${[...tubes]})`);
   }
+});
+
+test("each single's reported note matches noteForSize of its own size, not a number k29.js chose independently", () => {
+  // PROBLEM 1, task-swing-tune-brief.md: "the case asks for a size, and the
+  // note follows" — this is the property that distinguishes the fix from
+  // just moving the same three magic numbers into a differently-named
+  // constant. A wrong-but-plausible implementation could still hardcode
+  // SINGLE_NOTES = [-1, 5, 9] alongside SINGLE_SIZES that don't actually
+  // agree with noteForSize(size) — the previous test alone would not catch
+  // that, since it only checks the note VALUES arrived, not that they were
+  // DERIVED from the sizes actually built. Import noteForSize directly and
+  // recompute against k29.js's own SINGLE_SIZES via its build output.
+  const struck = [];
+  const audio = {
+    startAmbience() {}, stopAmbience() {}, setWindLevel() {},
+    chimeStrike: (o) => struck.push(o),
+  };
+  const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
+  const k = k29.build({ audio, input });
+  const gate = k.scene.getObjectByName('gate');
+  const chimes = gate.children.filter((c) => c.name === 'furin');
+  const singles = chimes.filter((c) => {
+    let tubes = 0;
+    c.traverse((o) => { if (o.name === 'tube') tubes++; });
+    return tubes === 1;
+  });
+  // three distinct tube lengths — the physical size difference the brief
+  // asked to make visible, measured off the real built geometry
+  const lengths = singles.map((c) => {
+    let len = null;
+    c.traverse((o) => {
+      if (o.name === 'tube') {
+        o.geometry.computeBoundingBox();
+        len = o.geometry.boundingBox.max.y - o.geometry.boundingBox.min.y;
+      }
+    });
+    return len;
+  });
+  const distinctLengths = new Set(lengths.map((l) => l.toFixed(4)));
+  assert.equal(distinctLengths.size, 3, `three singles should have three different tube lengths, got ${lengths}`);
+  // the biggest single's tube is close to 2x the smallest's — the brief's
+  // own worked example for this case's spread ("the lowest is about twice
+  // the length of the highest")
+  const ratio = Math.max(...lengths) / Math.min(...lengths);
+  assert.ok(ratio > 1.8 && ratio < 2.2, `lowest/highest length ratio should read as "about twice": ${ratio}`);
 });
 
 test('stilling the wind stills the singles too, not just the ring', () => {

@@ -64,44 +64,115 @@ const REFRACTORY = 0.45;   // a tube cannot restrike faster than this
 // reason.
 const GRAVITY = 9.8;
 
-// DAMPING (1/s): a furin is light and drags a paper tag, so it settles
-// quickly. Chosen to land close to the old model's decay: for a lightly
-// damped oscillator (theta'' + c*theta' + omega0^2*theta = 0) the envelope
-// e-folds at tau = 2/c, and the old superposed-impulse model used tau=1.8s —
-// c = 2/1.8 reproduces that same settle time under the new model, which is
-// a useful reference point, not a hard requirement, since it is genuinely a
-// different model now.
-const SWING_DAMPING = 2 / 1.8;
+// SWING TUNING — live, not frozen. Every number below used to be tuned
+// to MATCH THE OLD MODEL: SWING_DAMPING's tau=1.8s reproduced the old
+// superposed-impulse decay, TAP_PEAK=0.13 rad reproduced the old SWING_A0,
+// SWING_MAX_FRAC=0.30 reproduced the old SWING_MAX position clamp. That was
+// the wrong target — the old model is the BROKEN thing this pendulum
+// replaced (Frank: "it kinda gets held in position weirdly"), so tuning the
+// new, correct physics to sound like the old, wrong physics just re-imported
+// the old physics's amplitudes wearing a real equation. Frank's actual
+// complaint, once the pendulum shipped: "they don't really swing like I'd
+// expect them to with gravity. They're very slow. Like they have a lot of
+// dampening" — a 7.4-degree tap and a two-swing settle reads as heavily
+// damped no matter how correct theta'' = -(g/L)sin(theta) - c*theta' +
+// torque is underneath it.
+//
+// Exported as a mutable object, not individual consts, so
+// dev/hanging-audition.html can write straight into it (SPATIAL's own
+// pattern in src/audio/spatial.js — the object binding stays const, its
+// fields don't) and hear the very next tap change, no reload. update() below
+// re-reads `damping` every frame and tapKick() re-reads `tapPeak`/
+// `maxOmegaFrac` every call, rather than baking them into the pendulum at
+// construction, so a slider takes effect on an ALREADY-hanging chime, not
+// just the next one built.
+//
+// STARTING POINTS, not final values — the brief is explicit that the owner
+// settles these by eye/ear through the harness, the way the bell's own
+// voice was settled after two guesses missed. Chosen to be UNAMBIGUOUSLY
+// bigger/longer than the old numbers so the harness starts from "too much"
+// rather than "still too little, is this even different":
+//   tapPeak 0.13 -> 0.55 rad (~31.5 degrees) — over 4x the old kick; a solid,
+//     visible arc on a full-force tap rather than a flinch.
+//   damping tau 1.8s -> 4.5s (c = 2/4.5) — well over double the ring-out;
+//     several visible swings before it settles rather than two.
+//   maxOmegaFrac 0.30 -> 0.85 — has to clear the new tapPeak (see MAX_OMEGA's
+//     own comment below) with real headroom for a couple of stacked taps,
+//     not just barely avoid clipping the first one.
+export const SWING = {
+  tapPeak: 0.55,
+  damping: 2 / 4.5,
+  maxOmegaFrac: 0.85,
+};
 
 // The equilibrium lean (rad) a steady full gust settles the pendulum at, for
 // the primary swing plane (Z) and the smaller off-axis wobble (X) — same
 // visual scale the old kinematic code drew directly, kept so a default
 // fūrin still reads at the size Frank already approved, just arrived at by
-// swinging now instead of being placed.
+// swinging now instead of being placed. Not part of this task's "open it up"
+// list (the brief names tap kick, damping, and the swing cap only) — wind
+// lean is already live per-instance via setWindLevel(), so there is nothing
+// frozen here to open.
 const WIND_Z_LEAN = 0.16;
 const WIND_X_LEAN = 0.09;
 
-// TAP_PEAK: the angle (rad) a full-force (1.0) tap swings the chime out to
-// on its first arc, matching the old model's SWING_A0. A knock is a
-// velocity kick, not a pose, so this gets converted to one per-instance
-// below (peak ~= kick / omega0 for a lightly damped oscillator, since the
-// kinetic energy at the kick converts to potential energy at the peak).
-const TAP_PEAK = 0.13;
-
-// However hard or however often it gets mashed, a fūrin should still read as
-// a fūrin and not a windmill. The old model capped the SUMMED pose
-// (SWING_MAX); this model has no pose to sum — a tap only ever adds
-// velocity — so the equivalent cap is on velocity: whatever hits land,
-// omega never exceeds what a real chime's air drag would let it reach. 0.30
-// is chosen, via the SAME peak ~= omega/omega0 identity TAP_PEAK uses above,
-// to land the capped swing's first peak at the old SWING_MAX (0.30 rad) —
-// this is that identity applied a second time, not an independent
-// coincidence: MAX_OMEGA = SWING_MAX_FRAC*omega0 reproduces old_SWING_MAX by
-// construction, tautologically, the same way TAP_PEAK*omega0 reproduces
-// old_SWING_A0.
-const SWING_MAX_FRAC = 0.30;
-
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
+
+// NOTE FROM SIZE — the single-tube variant only (task-swing-tune-brief.md,
+// PROBLEM 1: "In twenty nine, there are three wind chimes that play
+// different sounds... but the actual size of them doesn't change"). A
+// tubes:1 chime always reports tube index 0 — there is only one tube — so
+// cases used to choose the pitch themselves regardless of geometry (k29.js
+// substituted three explicit notes in onStrike, the last place in the book
+// where a case picked a note independent of the size that's supposed to
+// imply it: audio.bell() already takes a size and derives pitch, and
+// src/kit/cylinder.js's own noteForSize already does this for the bronze
+// cylinder). Now the case asks for a `size` and the note follows, the same
+// rule everywhere else.
+//
+// THE PHYSICS: a free-free bar's fundamental runs f ~ thickness/length^2.
+// Modelled here holding thickness CONSTANT — the actual tube geometry below
+// scales diameter too, but only WEAKLY and on purpose (DIAM_WEAK_EXP), and
+// that weak cosmetic term is deliberately left OUT of the pitch model: the
+// "note" reported to onStrike is a picked synth parameter, not a
+// measurement taken off the mesh, so there is nothing to reconcile by
+// making the model track a decoration. A length ratio r therefore implies a
+// frequency ratio of 1/r^2; the book's scale runs NOTE_PER_OCTAVE=5 degrees
+// per octave (src/audio/tuning.js's SCALES are each five notes long,
+// matching cylinder.js's own NOTE_SPAN comment), so a length ratio maps to
+// a degree shift of -2*NOTE_PER_OCTAVE*log2(r) — the 2 is the square in
+// f~1/L^2, NOTE_PER_OCTAVE converts an octave of frequency into degrees.
+// Checks out against the brief's own worked example: r=1.41 (root-2) gives
+// a 5-degree (one octave) shift, r=2 gives 10 degrees (two octaves) — "an
+// octave down is a tube 1.41x longer, two octaves is 2x longer."
+//
+// SIZE_REF is the book's long-standing furin default — every staged chime
+// used this size before this task — so note 0 falls at the size a case has
+// always used, and a case that never touches size sounds exactly as it
+// always has; SIZE_MIN/MAX bound the exported function the same way
+// cylinder.js's own noteForSize bounds itself, so a future caller outside
+// the sizes this task actually exercises can't extrapolate into an
+// implausible octave.
+const SIZE_REF = 0.17;
+const SIZE_MIN = 0.08, SIZE_MAX = 0.34;
+const NOTE_PER_OCTAVE = 5;
+export function noteForSize(size) {
+  const s = clamp(size, SIZE_MIN, SIZE_MAX);
+  const steps = Math.round(2 * NOTE_PER_OCTAVE * Math.log2(SIZE_REF / s));
+  return steps === 0 ? 0 : steps;   // -0 guard, same reasoning as cylinder.js's noteForSize
+}
+
+// The weak diameter term Frank asked for: "probably the length, I guess.
+// Maybe a little bit of both, just kinda scaling them up... a modest
+// diameter scaling keeps them reading as a matched set" rather than "one
+// tube stretched." The ring's own tube radius (0.075*S, in the loop below)
+// scales fully with S; a SINGLE tube's radius instead scales at
+// S^DIAM_WEAK_EXP — noticeably thicker on the biggest single than the
+// smallest, never as dramatically as the length difference between them.
+// 0.35 was picked by eye against the length exponent (1, i.e. length scales
+// directly with S): at case 29's own 2x length spread (k29.js) it produces
+// about a 1.27x diameter spread — "a little," not "the same amount."
+const DIAM_WEAK_EXP = 0.35;
 
 // scratch for reporting a struck tube's world position — shared across all
 // furin instances and every fire(), so a strike costs no allocation
@@ -169,18 +240,27 @@ export function makeFurin({
   // (g/L)*sin(theta_eq) = torque lands theta_eq at WIND_Z_LEAN / WIND_X_LEAN
   const windZTorque = (GRAVITY / PEND_L) * WIND_Z_LEAN;
   const windXTorque = (GRAVITY / PEND_L) * WIND_X_LEAN;
-  const MAX_OMEGA = SWING_MAX_FRAC * omega0;
   // Z is the main swing plane a tap rings; X is the smaller off-axis wobble
   // the old code drove from a phase-shifted, slower copy of the same gust —
-  // it never received taps before and does not gain them now.
-  const zPend = createPendulum({ length: PEND_L, g: GRAVITY, damping: SWING_DAMPING });
-  const xPend = createPendulum({ length: PEND_L, g: GRAVITY, damping: SWING_DAMPING });
-  // a tap's velocity kick, scaled so a full-force tap peaks near TAP_PEAK
-  // radians on its first swing (see TAP_PEAK above), then clamped so a
-  // burst of taps saturates instead of spinning the chime past plausibility
+  // it never received taps before and does not gain them now. damping is
+  // read fresh every update() (below), not baked in here, so SWING.damping
+  // is live even on an already-hanging chime.
+  const zPend = createPendulum({ length: PEND_L, g: GRAVITY, damping: SWING.damping });
+  const xPend = createPendulum({ length: PEND_L, g: GRAVITY, damping: SWING.damping });
+  // a tap's velocity kick, scaled so a full-force tap peaks near
+  // SWING.tapPeak radians on its first swing (peak ~= kick/omega0 for a
+  // lightly damped oscillator, since the kick's kinetic energy converts
+  // almost entirely to potential energy at the first peak), then clamped so
+  // a burst of taps saturates instead of spinning the chime past
+  // plausibility. Both SWING fields read LIVE (not captured at construction)
+  // so a harness slider changes the very next tap. MAX_OMEGA has to clear
+  // tapPeak*omega0 or it clips the very tap it is meant to only cap on a
+  // MASHED burst — see SWING's own comment for why maxOmegaFrac (0.85) sits
+  // well above tapPeak (0.55), not just above it.
   function tapKick(force) {
-    kickPendulum(zPend, force * TAP_PEAK * omega0);
-    zPend.omega = clamp(zPend.omega, -MAX_OMEGA, MAX_OMEGA);
+    const maxOmega = SWING.maxOmegaFrac * omega0;
+    kickPendulum(zPend, force * SWING.tapPeak * omega0);
+    zPend.omega = clamp(zPend.omega, -maxOmega, maxOmega);
   }
 
   // tubes in a ring; the longer the tube the deeper the note — index 0 is the
@@ -190,6 +270,21 @@ export function makeFurin({
   const state = [];
   const sleeves = [];
   const single = tubes === 1;
+  // Derived once, at build time — a single tube's note follows its size (see
+  // noteForSize above); a ring keeps reporting its raw tube index, exactly
+  // as before, since the ring's pitch is the engine's degree mapping over
+  // that index, not a size-derived note (see the "check the ring" note in
+  // this task's report for why that is a DIFFERENT, already-approved rule).
+  const note = single ? noteForSize(S) : null;
+  // Radius scales fully with S for a ring (unchanged); a single tube uses
+  // the weak DIAM_WEAK_EXP term instead — see its own comment above for why
+  // the pitch model above does not (and should not) track this. Computed
+  // once, outside the loop, so the clapper-clearance offset below (which
+  // needs the SAME number) cannot drift from what the tube mesh actually
+  // uses — at S===SIZE_REF this equals the ring's own 0.075*S exactly (base
+  // 1 to any exponent is 1), which is why the existing geometry tests at the
+  // book's default size see no change.
+  const singleTubeR = single ? 0.075 * SIZE_REF * Math.pow(S / SIZE_REF, DIAM_WEAK_EXP) : 0;
   for (let i = 0; i < tubes; i++) {
     const angle = (i / tubes) * Math.PI * 2;
     const len = S * (1.7 - 0.14 * i);
@@ -197,7 +292,8 @@ export function makeFurin({
     // tube mysteriously offset from the cord holding it up.
     const rx = single ? 0 : Math.cos(angle) * 0.33 * S;
     const rz = single ? 0 : Math.sin(angle) * 0.33 * S;
-    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.075 * S, 0.075 * S, len, 6), metal);
+    const tubeR = single ? singleTubeR : 0.075 * S;
+    const tube = new THREE.Mesh(new THREE.CylinderGeometry(tubeR, tubeR, len, 6), metal);
     tube.name = 'tube';
     tube.position.set(rx, -(0.18 * S + len / 2), rz);
     body.add(tube);
@@ -244,7 +340,13 @@ export function makeFurin({
   // could plausibly strike it. Nudge the clapper (and the tag paired with
   // it) off-axis by enough to clear both radii with margin.
   const clapperR = 0.16 * S;
-  const clapperOff = single ? clapperR + 0.075 * S + 0.065 * S : 0;
+  // clearance uses the tube's OWN actual radius (singleTubeR), not a fixed
+  // 0.075*S — the two coincide at S===SIZE_REF (see singleTubeR's comment)
+  // but diverge at every other size now that a single tube's diameter scales
+  // weakly rather than fully with S, and a hardcoded margin here would
+  // silently stop clearing the tube at the small end of the size range,
+  // where singleTubeR runs relatively THICKER than 0.075*S would predict.
+  const clapperOff = single ? clapperR + singleTubeR + 0.065 * S : 0;
   const clapper = new THREE.Mesh(new THREE.CylinderGeometry(clapperR, clapperR, 0.03 * S, 8), wood);
   clapper.name = 'clapper';
   clapper.position.set(clapperOff, -0.9 * S, 0);
@@ -290,7 +392,13 @@ export function makeFurin({
       // REUSED vector — the engine reads x/y/z synchronously. A caller that
       // wants to keep it must clone it.
       state[i].mesh.getWorldPosition(WORLD);
-      onStrike(i, force, WORLD);
+      // A ring reports its raw tube index (0..tubes-1) — the engine adds it
+      // straight to CHIME.degree, which is what makes a ring a five-note
+      // cluster. A single tube instead reports its SIZE-DERIVED note (i is
+      // always 0 here, the only tube there is) — this is the whole point of
+      // noteForSize above: the case no longer has to know or substitute a
+      // note, the kit already worked it out from the size the case chose.
+      onStrike(single ? note : i, force, WORLD);
     }
   }
 
@@ -368,6 +476,13 @@ export function makeFurin({
       const tt = clock + off;
       const v = gustPhase(tt);
 
+      // SWING.damping is read fresh every frame, not just at construction —
+      // a harness slider dragged mid-scene has to reach an already-hanging
+      // chime, the same "no reload" promise bell-audition.html makes for the
+      // bell voice.
+      zPend.damping = SWING.damping;
+      xPend.damping = SWING.damping;
+
       // wind is a TORQUE now, not a position — see THE SWING above. Each
       // axis reads gustPhase at its own (per-instance) phase offset so two
       // fūrin never sway in lockstep; X mirrors the old code's slower,
@@ -421,10 +536,11 @@ export function makeFurin({
     // fraction of the force, and no strike. CHANGED CHARACTER under the
     // pendulum: the old model summed up to 8 superposed impulses, so
     // spamming hoverAt() topped out around 0.05 rad; this model has one
-    // omega, and repeated hovers now saturate at MAX_OMEGA (a sustained
-    // ~0.30 rad, the same ceiling a full-force tap can reach). Latent today
-    // — no case calls hoverAt() — flagged here so it is not discovered by
-    // surprise if one starts to.
+    // omega, and repeated hovers now saturate at SWING.maxOmegaFrac*omega0
+    // rad (a live value, currently 0.85 — see SWING's own comment — the same
+    // ceiling a full-force tap can reach). Latent today — no case calls
+    // hoverAt() — flagged here so it is not discovered by surprise if one
+    // starts to.
     hoverAt() {
       tapKick(0.18);
     },
@@ -437,5 +553,23 @@ export function makeFurin({
     // whenever it is displaced and/or moving (src/kit/pendulum.js)
     swingAmp() { return pendulumEnergy(zPend); },
     activity() { return chimeActivity(clock + off); },
+    // the size-derived note a single tube reports (null for a ring, which
+    // reports raw tube index instead) — exposed for the harness and tests,
+    // same role as cylinder.js's own note()
+    note() { return note; },
+    // the two swing planes' natural periods (seconds), read off the SAME
+    // state the physics runs on — matching cylinder.js's own periods(),
+    // added here for the harness ("the derived values shown live — period,
+    // note, tube length")
+    periods() {
+      return {
+        z: 2 * Math.PI * Math.sqrt(PEND_L / GRAVITY),
+        x: 2 * Math.PI * Math.sqrt(PEND_L / GRAVITY),
+      };
+    },
+    // every tube's built length, in build order (index 0 first) — the
+    // harness reads this to show the size/length relationship live; a ring
+    // has `tubes` entries, a single tube has one
+    tubeLengths() { return state.map((_, i) => S * (1.7 - 0.14 * i)); },
   };
 }

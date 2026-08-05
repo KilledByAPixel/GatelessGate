@@ -29,17 +29,35 @@ const smooth = (t) => t * t * (3 - 2 * t);
 // the same way makeFurin (kit/furin.js) reports a tube strike via onStrike —
 // behaviour lives in the component, not in the case that hangs it.
 //
-// force is fixed and low on purpose: eleven of these across a full roll (the
-// book's one screen, case 26, is built with slats: 11 — see k26.js) are a
-// texture the ear should register as "the screen is moving," not eleven
-// individual events — quieter than any existing audio.knock() call site in
-// the book (k28's 0.22 is the faintest "something happened" knock).
-// MAX_CLACKS_PER_UPDATE guards a stalled or otherwise huge dt from firing a
-// whole roll's worth of knocks in a single call — the app itself never hands
-// update() one: main.js clamps dt and steps it at a fixed 1/60 regardless of
-// how fast a toggle fires, so this cap answers a caller other than the app,
-// not "a fast toggle" (which never enlarges dt in the first place).
-const CLACK_FORCE = 0.12;
+// force is fixed and, on purpose, on the QUIET side of the book's knocks:
+// eleven of these across a full roll (the book's one screen, case 26, is
+// built with slats: 11 — see k26.js) are a texture the ear should register
+// as "the screen is moving," not eleven individual events like k13's dinner
+// drum. PROBLEM 3, task-swing-tune-brief.md: the first cut (0.12) undershot
+// that goal into silence — it sat UNDER k28's 0.22, the quietest of the
+// book's other 20 audio.knock() call sites (a typical knock runs ~0.9), and
+// Frank heard nothing: "the clatter fires correctly... but Frank hears
+// nothing." Erring quiet the first time erred past audible. Raised well
+// clear of 0.22 (see CLATTER's own comment for the exact starting number) —
+// still a texture, not a drum roll, but one that is actually there.
+//
+// Exported as a mutable object, not a bare const, so
+// dev/hanging-audition.html can write straight into it (SPATIAL's own
+// pattern, src/audio/spatial.js) and hear the very next roll change, no
+// reload; onClack reads CLATTER.force fresh on every clack rather than
+// capturing it once, so a slider reaches a roll already in progress.
+export const CLATTER = {
+  // STARTING POINT, not a final value — the owner sets this by ear through
+  // the harness. 0.35 sits comfortably above k28's 0.22 (about 1.6x) while
+  // staying well under a typical knock's 0.9 (about 0.4x) — audible as a
+  // quiet run of eleven, not a event-sized bang.
+  force: 0.35,
+};
+// guards a stalled or otherwise huge dt from firing a whole roll's worth of
+// knocks in a single call — the app itself never hands update() one:
+// main.js clamps dt and steps it at a fixed 1/60 regardless of how fast a
+// toggle fires, so this cap answers a caller other than the app, not "a
+// fast toggle" (which never enlarges dt in the first place).
 const MAX_CLACKS_PER_UPDATE = 2;
 
 // world-position scratch, shared the way furin.js's WORLD is: onClack calls
@@ -217,7 +235,8 @@ export function makeScreen({
           // the rail doesn't move within this loop, so its world position is
           // the same for every clack this call reports — read it once
           rail.getWorldPosition(CLACK_POS);
-          for (let k = 0; k < crossed; k++) onClack(CLACK_FORCE, CLACK_POS);
+          // read live, not captured — see CLATTER's own comment
+          for (let k = 0; k < crossed; k++) onClack(CLATTER.force, CLACK_POS);
         }
       }
     },
