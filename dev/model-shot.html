@@ -28,11 +28,17 @@
     import { PAPER } from '../src/palette.js';
     // ONE registry, shared with model-viewer.html, so the two can't drift
     import { ROSTER, instantiate } from '../src/modelviewer/roster.js';
-    const { makeLights } = KIT;
+    // ...and one light rig, for the same reason: a toon shot is how the
+    // viewer's lighting gets judged, so it has to BE the viewer's lighting.
+    import { makeViewerLights } from '../src/modelviewer/lights.js';
+    import { applyBookShading } from '../src/modelviewer/shading.js';
 
     const params = new URLSearchParams(location.search);
     const modelName = params.get('model') || 'dog';
     const mode = params.get('mode') || 'silhouette';
+    // ?lights=book drops the viewer's two extra fills and shows the model
+    // under the book's rig alone — the A/B, and the same thing L does live.
+    const bookLights = params.get('lights') === 'book';
 
     const CELL = 640;
     const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
@@ -60,7 +66,10 @@
           o.material = ink;
         });
       } else {
-        scene.add(makeLights());
+        // Same shading and same rig as the model viewer — a toon-mode shot is
+        // how the viewer's look gets judged, so it has to BE the viewer's look.
+        applyBookShading(obj);
+        scene.add(makeViewerLights(KIT, { extra: !bookLights }));
       }
       scene.add(obj);
 

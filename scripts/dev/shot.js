@@ -49,7 +49,8 @@ if (flag('jobs')) {
   jobs = JSON.parse(await readFile(flag('jobs'), 'utf8'));
 } else if (flag('model') || flag('kit') || flag('case') || flag('expr')) {
   jobs = [{
-    model: flag('model'), mode: flag('mode'), kit: flag('kit'), case: flag('case'),
+    model: flag('model'), mode: flag('mode'), lights: flag('lights'),
+    kit: flag('kit'), case: flag('case'),
     expr: flag('expr'), view: flag('view'), out: flag('out'),
     url: flag('url'), pageshot: argv.includes('--pageshot') || undefined,
   }];
@@ -86,8 +87,12 @@ await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const BASE = `http://127.0.0.1:${server.address().port}`;
 
 // ---- one headless chrome, killed hard on the way out -------------------
+// "lights": "book" drops the viewer's two extra fills from a toon shot, for
+// the A/B against the light the case will actually be lit by. Silhouette mode
+// has no lights at all, so it ignores this.
 const pageUrlFor = (job) => job.model
   ? `${BASE}/dev/model-shot.html?model=${encodeURIComponent(job.model)}&mode=${job.mode || 'silhouette'}`
+    + (job.lights ? `&lights=${encodeURIComponent(job.lights)}` : '')
   : job.kit
     ? `${BASE}/dev/kit-preview.html?ink=0`
     : job.case

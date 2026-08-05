@@ -15,13 +15,15 @@
 import * as THREE from '../../lib/three.module.js';
 import { PAPER } from '../palette.js';
 import { instantiate } from './roster.js';
+import { makeViewerLights } from './lights.js';
+import { applyBookShading } from './shading.js';
 import * as checklist from './checklist.js';
 
 const SPACING = 120;            // wide vs the narrow FOV: neighbors stay out of frame
 const RENDER_MARGIN_PX = 200;   // build cells a little past the viewport edge
 const YAW = 40 * Math.PI / 180, PITCH = 18 * Math.PI / 180;   // the judging 3/4 view
 
-export function createGallery({ getKit, getRoster, toast, onChecklistChange, openSource }) {
+export function createGallery({ getKit, getRoster, getFills, toast, onChecklistChange, openSource }) {
   let mounted = false, visible = false, dirty = true;
   let renderer, scene, camera, lightRig;
   let container, grid, canvas;
@@ -106,7 +108,7 @@ export function createGallery({ getKit, getRoster, toast, onChecklistChange, ope
     cells.clear();
     grid.innerHTML = '';
     if (lightRig) scene.remove(lightRig);
-    lightRig = getKit().makeLights();
+    lightRig = makeViewerLights(getKit(), { extra: getFills() });
     scene.add(lightRig);
 
     const roster = getRoster();
@@ -123,6 +125,7 @@ export function createGallery({ getKit, getRoster, toast, onChecklistChange, ope
       grid.append(dom.root);
       try {
         const { obj } = instantiate(entry, getKit());
+        applyBookShading(obj);       // the shipped Lambert, same as single view
         const group = new THREE.Group();
         group.add(obj);
         group.position.x = i * SPACING;

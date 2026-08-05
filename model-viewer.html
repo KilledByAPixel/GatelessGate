@@ -17,7 +17,12 @@
       ?sweep      build+dispose everything once, result on window.__mvSweepResult
 
     Keys: up/down step models · drag orbit · wheel zoom · T turntable
-          R reset view · S silhouette · G gallery
+          R reset view · S silhouette · L fill lights · G gallery
+
+    Shading is the book's SHIPPED look — plain Lambert, because the book runs
+    with the toon toggle off (debug.js). L adds/removes two dim tinted fills
+    that are the viewer's own, for the far side of an orbit; off is the book's
+    rig alone. See src/modelviewer/shading.js for why that matters.
     Serve over HTTP (npx -y http-server -p 8105 -c-1 .) — ES modules and the
     hot-reload poll both fail from file://.
   -->
@@ -157,6 +162,7 @@
         <button id="btn-gallery" title="G">gallery</button>
         <button id="btn-sil" title="S">silhouette</button>
         <button id="btn-turn" title="T">turntable</button>
+        <button id="btn-lights" title="L — off shows the book's own rig alone">fills</button>
       </div>
     </div>
     <div id="side-list"></div>
@@ -167,7 +173,7 @@
     </div>
   </div>
   <div id="err"></div>
-  <div id="hud">&uarr;&darr; model &middot; drag orbit &middot; wheel zoom &middot; T turntable &middot; S silhouette &middot; R reset &middot; G gallery</div>
+  <div id="hud">&uarr;&darr; model &middot; drag orbit &middot; wheel zoom &middot; T turntable &middot; S silhouette &middot; L fills &middot; R reset &middot; G gallery</div>
   <div id="toast"></div>
   <script type="module" src="src/modelviewer/main.js"></script>
 </body>

@@ -21,6 +21,8 @@ import * as THREE from '../../lib/three.module.js';
 import { PAPER, wash } from '../palette.js';
 import { ROSTER as STATIC_ROSTER, instantiate } from './roster.js';
 import * as STATIC_KIT from '../kit/index.js';
+import { makeViewerLights } from './lights.js';
+import { applyBookShading } from './shading.js';
 import { createGallery } from './gallery.js';
 import * as checklist from './checklist.js';
 
@@ -37,6 +39,10 @@ let currentBuilt = null;        // the builder's handle, for live update(dt)
 let updateBroken = false;       // stop retrying a throwing update()
 let silhouette = false;
 let turntable = false;
+// The viewer's two extra fill lights (lights.js). On by default because a
+// model you are orbiting needs them; L drops them, which is the honest look at
+// a model under the book's own rig alone before calling it finished.
+let fills = true;
 let simTime = 0;
 
 // ---- single-view scene ----------------------------------------------------
@@ -49,7 +55,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(PAPER);
 const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 400);
 
-let lightRig = liveKit.makeLights();
+let lightRig = makeViewerLights(liveKit, { extra: fills });
 scene.add(lightRig);
 
 const ground = new THREE.Mesh(
@@ -224,6 +230,9 @@ function showModel(index) {
 
   try {
     const { obj, built } = instantiate(entry, liveKit);
+    // Before the silhouette check: silhouette flattens everything to ink
+    // anyway, and the shading swap would only be thrown away.
+    if (!silhouette) applyBookShading(obj);
     if (silhouette) {
       obj.traverse((o) => {
         if (!o.isMesh) return;
@@ -308,6 +317,7 @@ addEventListener('resize', () => { onResize(); if (mode === 'gallery') gallery.r
 const gallery = createGallery({
   getKit: () => liveKit,
   getRoster: () => liveRoster,
+  getFills: () => fills,
   toast,
   onChecklistChange: refreshMarks,
   openSource,
@@ -360,6 +370,8 @@ addEventListener('keydown', (e) => {
     localStorage.setItem(CAM_LS, JSON.stringify(cams));
   } else if (e.key === 's' || e.key === 'S') {
     setSilhouette(!silhouette);
+  } else if (e.key === 'l' || e.key === 'L') {
+    setFills(!fills);
   } else if (e.key === 'g' || e.key === 'G') {
     location.hash = mode === 'gallery' ? (currentKey || liveRoster[0].key) : 'gallery';
   }
@@ -370,7 +382,21 @@ function setSilhouette(on) {
   $('btn-sil').classList.toggle('on', on);
   if (mode === 'single') showModel(currentIndex);
 }
+// The rig is rebuilt rather than dimmed: makeViewerLights is the one place
+// that knows what the fills are, and a second copy of those numbers here is
+// how the button and the rig would eventually disagree.
+function setFills(on) {
+  fills = on;
+  $('btn-lights').classList.toggle('on', on);
+  scene.remove(lightRig);
+  lightRig = makeViewerLights(liveKit, { extra: fills });
+  lightRig.visible = !silhouette;
+  scene.add(lightRig);
+  gallery.markDirty();               // its rig is built at rebuild() time
+}
 $('btn-sil').onclick = () => setSilhouette(!silhouette);
+$('btn-lights').onclick = () => setFills(!fills);
+$('btn-lights').classList.toggle('on', fills);
 $('btn-turn').onclick = () => { turntable = !turntable; $('btn-turn').classList.toggle('on', turntable); };
 $('btn-gallery').onclick = () => { location.hash = 'gallery'; };
 
@@ -447,7 +473,7 @@ async function doReload() {
     watched = texts;
     rebuildSourceMap(texts.get(KIT_URL));
     scene.remove(lightRig);
-    lightRig = liveKit.makeLights();
+    lightRig = makeViewerLights(liveKit, { extra: fills });
     lightRig.visible = !silhouette;
     scene.add(lightRig);
     buildSidebar();

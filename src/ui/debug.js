@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { setGrassPatchiness } from '../kit/grassfield.js';
 import { setGrassStyle } from '../kit/scenery.js';
 import { setInkScale } from '../render/outlines.js';
+import { plainMaterial } from '../render/toon.js';
 
 // A workbench: a toolbar button top-right of the stage, and a plain panel that
 // slides out under it. Deliberately unstyled beyond the minimum — this is for
@@ -244,39 +245,13 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
   // ---- application --------------------------------------------------------
   // Authored values are captured the first time a scene is seen, so the sliders
   // act as multipliers over whatever each case intended rather than flat values.
+  // The clone itself is plainMaterial() in render/toon.js — the model viewer
+  // needs the identical one, and the list of properties it has been caught
+  // dropping is long enough that a second copy would repeat it. This is only
+  // the cache: one plain material per mesh, built the first time it is asked
+  // for and reused for every later toggle.
   function plainMaterialFor(mesh) {
-    if (!mesh.userData._matPlain) {
-      const src = mesh.userData._matToon;
-      const m = new THREE.MeshLambertMaterial({
-        color: src.color,
-        side: src.side,
-        flatShading: !!src.flatShading,
-        transparent: !!src.transparent,
-        opacity: src.opacity ?? 1,
-      });
-      m.fog = src.fog;
-      // Carry the seal's glow across — this clone runs on the SHIPPED default
-      // ("toon off"), so any property it drops never renders at all. That is
-      // exactly how the moon spent a week secretly lit; see keepMaterial below.
-      if (src.emissive) {
-        m.emissive.copy(src.emissive);
-        m.emissiveIntensity = src.emissiveIntensity ?? 1;
-      }
-      // ...and visibility. Invisible tap proxies (bell-hit, screen-hit) hide at
-      // the MATERIAL level so the raycaster still sees their meshes; dropping
-      // this flag resurrected them as big white shells around the things they
-      // wrap. Third property this clone has been caught losing (flatShading was
-      // designed in, emissive and visible were not): the clone must copy
-      // EVERYTHING that affects rendering, not the properties someone thought of.
-      m.visible = src.visible;
-      // ...and the texture. A material with a map cloned WITHOUT it renders as
-      // a bare tinted quad — the cliff's mist sprites shipped that way and
-      // nobody could tell what the pale rectangles were. (Fourth property this
-      // clone has been caught dropping.)
-      if (src.map !== undefined) m.map = src.map;
-      if (src.alphaTest) m.alphaTest = src.alphaTest;
-      mesh.userData._matPlain = m;
-    }
+    if (!mesh.userData._matPlain) mesh.userData._matPlain = plainMaterial(mesh.userData._matToon);
     return mesh.userData._matPlain;
   }
 

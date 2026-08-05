@@ -70,6 +70,56 @@ export function toonMaterial({ color = '#ffffff', flat = false, side = THREE.Fro
   return m;
 }
 
+// THE SHIPPED SHADING, and the reason it lives here rather than in the
+// workbench that used to own it.
+//
+// The book renders with the toon shader OFF (debug.js: `toon`, def false) —
+// every lit material is rebuilt as a plain Lambert before it reaches the
+// screen. The 3-step ramp above is an experiment knob, not the reader's view.
+// So "what a model actually looks like" is THIS material, and anything that
+// wants to show a model honestly — the workbench, the model viewer, a shot —
+// has to build the same clone.
+//
+// It was built in one place and needed in two, which is the moment to move it:
+// the comments below are a four-item list of properties this clone has been
+// caught dropping, and a second hand-written copy elsewhere would start that
+// list again from the top.
+//
+// `src` is the authored material; the result carries everything of it that
+// affects rendering.
+export function plainMaterial(src) {
+  const m = new THREE.MeshLambertMaterial({
+    color: src.color,
+    side: src.side,
+    flatShading: !!src.flatShading,
+    transparent: !!src.transparent,
+    opacity: src.opacity ?? 1,
+  });
+  m.fog = src.fog;
+  // Carry the seal's glow across — this clone runs on the SHIPPED default
+  // ("toon off"), so any property it drops never renders at all. That is
+  // exactly how the moon spent a week secretly lit; see keepMaterial, which
+  // is the caller's half of this and is documented at debug.js's traverse.
+  if (src.emissive) {
+    m.emissive.copy(src.emissive);
+    m.emissiveIntensity = src.emissiveIntensity ?? 1;
+  }
+  // ...and visibility. Invisible tap proxies (bell-hit, screen-hit) hide at
+  // the MATERIAL level so the raycaster still sees their meshes; dropping
+  // this flag resurrected them as big white shells around the things they
+  // wrap. Third property this clone has been caught losing (flatShading was
+  // designed in, emissive and visible were not): the clone must copy
+  // EVERYTHING that affects rendering, not the properties someone thought of.
+  m.visible = src.visible;
+  // ...and the texture. A material with a map cloned WITHOUT it renders as
+  // a bare tinted quad — the cliff's mist sprites shipped that way and
+  // nobody could tell what the pale rectangles were. (Fourth property this
+  // clone has been caught dropping.)
+  if (src.map !== undefined) m.map = src.map;
+  if (src.alphaTest) m.alphaTest = src.alphaTest;
+  return m;
+}
+
 // Key + fill. Two things matter here:
 //
 // 1. The shadow camera is fitted TIGHT to the staging footprint. A 2k map spread
