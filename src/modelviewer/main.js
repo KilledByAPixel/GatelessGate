@@ -1,4 +1,4 @@
-// The model viewer (model-viewer.html) — a standalone art-iteration tool.
+// The model viewer (dev/model-viewer.html) — a standalone art-iteration tool.
 //
 // It is NOT the game: no main.js boot, no sim, no save, no audio, no router.
 // It is a plain three.js page that imports exactly one thing from the app —

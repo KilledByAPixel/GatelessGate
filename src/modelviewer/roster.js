@@ -1,5 +1,5 @@
 // The one registry of viewable kit models, shared by the model viewer
-// (model-viewer.html) and the screenshot harness (dev/model-shot.html) so the
+// (dev/model-viewer.html) and the screenshot harness (dev/model-shot.html) so the
 // two can never drift apart. Every entry's build() receives the KIT NAMESPACE
 // as an argument rather than importing it — that indirection is what lets the
 // viewer hot-swap a freshly re-imported kit under every builder (see main.js).

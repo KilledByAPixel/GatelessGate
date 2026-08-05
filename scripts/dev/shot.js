@@ -100,7 +100,7 @@ const pageUrlFor = (job) => job.model
       : job.page === 'kit'
         ? `${BASE}/dev/kit-preview.html?ink=0`
         : job.url
-          ? `${BASE}${job.url}`      // any page in the repo, e.g. /model-viewer.html?sweep#dog
+          ? `${BASE}${job.url}`      // any page in the repo, e.g. /dev/model-viewer.html?sweep#dog
           : `${BASE}/`;
 
 const debugPort = 9300 + (process.pid % 600);

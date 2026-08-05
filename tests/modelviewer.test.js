@@ -1,5 +1,5 @@
 // The model-viewer roster (src/modelviewer/roster.js) is the ONE registry of
-// viewable kit models, shared by model-viewer.html and dev/model-shot.html —
+// viewable kit models, shared by dev/model-viewer.html and dev/model-shot.html —
 // shot.js --model resolves its keys, and checklist notes are stored under
 // them. These pins hold the contract that makes that sharing safe.
 import test from 'node:test';
