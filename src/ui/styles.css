@@ -223,7 +223,9 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 .gg-look-bar button:hover:not(:disabled) { border-color: rgba(30,30,36,0.55); }
 .gg-look-bar button:disabled { opacity: 0.35; cursor: default; }
 /* Square like the stage tools; "Read aloud" is a whole word wide, which is the
-   distinction — those three move you, that one does something to the page. */
+   distinction — those three move you, that one does something to the page.
+   The word is a .gg-look-word span so a narrow window can drop it; see the
+   640px block at the foot of this file. */
 .gg-look-exit, .gg-look-page {
   width: 30px; height: 31px; padding: 0; font-size: 17px; line-height: 1;
   display: flex; align-items: center; justify-content: center;
@@ -303,4 +305,32 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
   #gg-panel { width: 100%; height: 52%; flex: none; order: 2; border-right: none; border-top: 1px solid rgba(var(--ink-rgb),0.12); }
   #gg-stage { order: 1; flex: 1; }
   .gg-view { padding: 22px 24px 40px; }
+}
+
+/* ---- narrower still: the look's toolbar in short form ----
+   Both corners are pinned and only the middle is empty, so the look's bar and
+   the stage tools run into each other well before anything else about the
+   layout complains — Frank, on a tall phone: "the buttons are overlapping".
+   The long form wants around 560px of window; below that the read button drops
+   to its glyph and auto mode goes entirely, which is the whole of what has to
+   give: those two carry the only words in either corner.
+
+   WIDTH, not aspect ratio, even though a tall screen is what turns it up. What
+   collides is two rows of buttons across the window, so a short WIDE window at
+   500px overlaps exactly the same and an aspect query would sail straight past
+   it. Every phone held upright is caught by the width anyway.
+
+   Auto mode is hidden, not disabled: if it is already running when the window
+   narrows it keeps going, and ↺ — leaving the look — stops it, the same way
+   leaving the look stops it at any size. So the switch can vanish without
+   stranding the reader inside the thing it switches. */
+@media (max-width: 640px) {
+  .gg-look-word { display: none; }
+  .gg-look-auto { display: none; }
+  /* Square, like the three beside it: with the word gone there is nothing left
+     to make it a different shape from the buttons it sits next to. */
+  .gg-look-read {
+    width: 30px; height: 31px; padding: 0; font-size: 15px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
 }

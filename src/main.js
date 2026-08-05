@@ -403,6 +403,22 @@ const lookBtn = (cls, label, title, onClick) => {
   lookBar.appendChild(b);
   return b;
 };
+// A LABEL THAT CAN LOSE ITS WORD. The glyph is a bare text node and the word is
+// its own element, so the narrow-window rule hides the word in CSS and nothing
+// here ever has to know how wide the window is — no resize listener, no layout
+// read, and no second copy of the label that could drift from this one.
+//
+// The title carries the whole meaning either way, because in short form the
+// glyph is all there is to read.
+const setLookLabel = (btn, glyph, word, title) => {
+  btn.textContent = glyph;
+  const w = document.createElement('span');
+  w.className = 'gg-look-word';
+  w.textContent = ' ' + word;   // NBSP: the gap belongs to the word, and goes with it
+  btn.appendChild(w);
+  btn.title = title;
+  btn.setAttribute('aria-label', title);
+};
 // ↺, an arrow circling back on itself (Frank's "arrow kind of circling back"):
 // it undoes the view rather than going anywhere, which is not what ‹ means.
 lookBtn('gg-look-exit', '↺', 'Back to the text', () => setAmbient(false));
@@ -505,7 +521,8 @@ function autoAdvance() {
 // ever moves under the reader's cursor.
 function syncLookRead() {
   lookBar.classList.toggle('on', ambient && mode !== 'sit');
-  lookRead.textContent = readingAll ? '■ Stop' : '▶ Read aloud';
+  setLookLabel(lookRead, readingAll ? '■' : '▶', readingAll ? 'Stop' : 'Read aloud',
+    readingAll ? 'Stop reading this page' : 'Read this page aloud');
   lookRead.disabled = !(mode === 'koan' && scroll);
   lookPrev.disabled = !lookNeighbor(-1);
   lookNext.disabled = !lookNeighbor(+1);
@@ -513,11 +530,11 @@ function syncLookRead() {
   // makes the reader work out which is which. It is the one control here that
   // is never disabled: from the Contents it opens the book and starts, which
   // is a perfectly good thing for it to mean there.
-  lookAuto.textContent = autoMode ? '■ Stop reading on' : '∞ Read on';
+  setLookLabel(lookAuto, autoMode ? '■' : '∞', autoMode ? 'Stop reading on' : 'Read All',
+    autoMode
+      ? 'Stop reading the book page after page'
+      : 'Read the whole book, page after page, round and round');
   lookAuto.classList.toggle('active', autoMode);
-  lookAuto.title = autoMode
-    ? 'Stop reading the book page after page'
-    : 'Read the whole book, page after page, round and round';
 }
 syncLookRead();
 
