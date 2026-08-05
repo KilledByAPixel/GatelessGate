@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK, WASH, mixHex, wash } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeWater, makeSand,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, makeBlobShadow, addOutlines, toonMaterial, groundHeight,
 } from '../kit/index.js';
 import { mergeSimple } from '../kit/scatter.js';
 
@@ -38,9 +38,15 @@ const TAU = 0.9;
 // ribbon and the water's resting height — the beach lives here and nowhere
 // else.
 const SHORE = { dx: 0, dz: -1, dist: 8, width: 4, sea: -0.35, depth: 1.4 };
-// keep scatter, grass and trees out of the sea and off the beach — two rows
-// of circles laid along the coast, feathered by the fields themselves
+// keep scatter, grass and trees out of the sea and off the beach — three rows
+// of circles laid along the coast, feathered by the fields themselves. Rows
+// two and three sit well out in the water and leave gaps between circles at
+// their spacing (14/16 m radius, 12 m spacing dips to z ≈ -7.35 at the worst
+// seam) — nowhere near enough to cover the beach taper itself (z = -4..-8,
+// see SHORE above). Row one hugs that taper directly (z = -10, r = 6, 8 m
+// spacing) so nothing plants on the shored, lowered sand.
 const SEA_KEEP = [
+  ...[-24, -16, -8, 0, 8, 16, 24].map((x) => ({ x, z: -10, r: 6 })),
   ...[-24, -12, 0, 12, 24].map((x) => ({ x, z: -20, r: 14 })),
   ...[-18, -6, 6, 18].map((x) => ({ x, z: -34, r: 16 })),
 ];
@@ -144,6 +150,12 @@ export default {
       seed: ID,
       groundSeed: 21,
       shore: SHORE,
+      // grass plants at plain groundHeight(groundSeed) by default; without
+      // this the shore's own dip never reaches it, so any tuft that survives
+      // near the keepout's feathered edge would still stand on the unshored
+      // surface. Pass the TRUE shored surface so it plants where the sand
+      // actually is.
+      groundFn: (x, z) => groundHeight(x, z, { seed: 21, shore: SHORE }),
       trees: 4,
       // the coast at the reader's back: both mountain bands re-aimed behind
       // and beside the staging — nothing stands in the sea

@@ -365,20 +365,19 @@ export function pourBurst(ctx, dest, { level = ODOSHI.pourLevel, dur = 1.3 } = {
 // RNG is a comb filter wearing a noise costume. Dry, like the wind — beds
 // stay out of the room.
 //
-// NOTHING CURRENTLY CALLS THIS. Frank on case 39's stepping stones: "it
-// sounds like we're at a beach or something" — every scene that ever used
-// the water layer (7, 30, 33, 39, 49) is STILL water, a basin or a pond, and
-// a continuous staticky wash read as surf or a running stream under it, the
-// wrong sound for the picture. The five koan recipes had their water tokens
-// removed rather than this function deleted: the engine's water-layer
-// plumbing (startLayer/stopLayer/debugState in engine.js) is untouched and
-// ready the moment a recipe names 'water' again. What would justify
-// switching it back on is a scene with genuinely MOVING water — an ocean or
-// a stream is mentioned in a couple of the cases and could get one of these
-// someday — not a still pond or basin. Tap-triggered drips (audio.drip(),
-// case tap handlers) are a separate code path through strikeDrip below and
-// were never coupled to this bed; they still ring on touch everywhere they
-// did before.
+// The bed found its scene: case 20's ocean, the coast where the great sea
+// itself lurches when the immovable man is pushed, calls this now. Frank on
+// case 39's stepping stones, back when nothing called it: "it sounds like
+// we're at a beach or something" — every scene that used to carry the water
+// layer (7, 30, 33, 39, 49) is STILL water, a basin or a pond, and this
+// continuous staticky wash read as surf or a running stream under it, the
+// wrong sound for the picture. Those five koan recipes had their water
+// tokens removed rather than this function deleted, on the bet that what
+// would justify switching it back on was a scene with genuinely MOVING
+// water — an ocean or a stream. Case 20 is that scene. Tap-triggered drips
+// (audio.drip(), case tap handlers) are a separate code path through
+// strikeDrip below and were never coupled to this bed; they still ring on
+// touch everywhere they did before.
 export function makeWaterBed(ctx, dest) {
   const SR = ctx.sampleRate, LOOP = 14, XF = 1.2;
   const n = Math.floor(SR * LOOP), x = Math.floor(SR * XF);

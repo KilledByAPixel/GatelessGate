@@ -241,10 +241,11 @@ export function createAudio(save) {
       wind.setLevel(level * windScale);
     }
     if (type === 'music') ensureCaseMusic(emitters);
-    // No shipped koan's ambience recipe names 'water' any more (see
-    // makeWaterBed's own comment in synths.js for why), so this branch is
-    // plumbing rather than a live path today — left wired up rather than
-    // deleted, so a case that wants a bed again is one recipe token away.
+    // Case 20's ocean is the live caller now — see makeWaterBed's own
+    // comment in synths.js for the scene that finally justified it. The
+    // other five koans that once carried 'water' (7, 30, 33, 39, 49) are
+    // still water, a basin or a pond, and dropped the token because a
+    // continuous staticky wash read as surf under a picture with none.
     if (type === 'water' && !water) {
       water = makeWaterBed(ctx, master);
       waterEpoch++;

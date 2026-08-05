@@ -167,7 +167,9 @@ export function makeWater({
   // ignores the rim pinning, because an ocean has no rim to protect: the near
   // edge is buried under the sand ribbon and the far edges die in the fog. A
   // contained surface (basin, pond) must leave this off, and off is the
-  // default, so every existing caller is byte-identical.
+  // default, so every existing caller is byte-identical. (dx, dz) must be a
+  // unit vector — anything else silently scales the wave speed away from the
+  // wavelength/period you dialled in.
   drift = null,
 } = {}) {
   const round = shape === 'round';
