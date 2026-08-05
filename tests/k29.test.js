@@ -294,7 +294,7 @@ test("case 29's chimes stay clear of each other at the LIVE swing cap, counter-p
     .map((group) => ({ group, x: group.getWorldPosition(new THREE.Vector3()).x }))
     .sort((a, b) => a.x - b.x);
 
-  const VISIBLE_NAMES = new Set(['cord', 'tube', 'cap', 'clapper', 'tag']);
+  const VISIBLE_NAMES = new Set(['cord', 'tube', 'cap', 'clapper', 'tag', 'tag-thread']);
   function boxAtSign(chimeGroup, sign) {
     const swing = chimeGroup.getObjectByName('swing');
     const before = swing.rotation.z;

@@ -32,16 +32,33 @@ export default {
   accent: ACCENT,
   tier: 3,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  // 'furin' names the single tube hung under Ummon's own lintel — a temple
+  // 'furin' names the three tubes hung under Ummon's own lintel — a temple
   // gate at evening is exactly where a real fūrin would hang, and this case
-  // already gives the gate a voice ('gate'). REVISED FROM a five-tube
-  // cluster: code review called it "the busiest new voice in the book, on a
-  // case whose whole point is three blows that never land" — right. This is
-  // one of the book's quietest pages (tier 3, the fog "closes in earlier
-  // than anywhere else"), and a chattering ring reads as an ANSWER to the
-  // beating, competing with the whole point that nothing actually strikes.
-  // One spare, isolated voice sits the way the case does: forgiven, not busy.
-  ambience: ['wind:0.20', 'gate', 'furin', 'music'],
+  // already gives the gate a voice ('gate').
+  //
+  // THE HISTORY IS WORTH KEEPING, because this has now gone in both
+  // directions. It started as a FIVE-TUBE cluster; code review called that
+  // "the busiest new voice in the book, on a case whose whole point is three
+  // blows that never land" — right, and it came down to a single tube. Frank
+  // then asked for three: "for number fifteen it talks about three blows. So
+  // we could have three chimes hanging there." That is not a reversal of the
+  // review, it is the distinction the review was actually about. A ring is a
+  // CHORD — one clapper, five tubes, a chatter that reads as an ANSWER to
+  // the beating. Three separate chimes are three separate single tones, and
+  // they rhyme with the three blows rather than competing with them.
+  //
+  // MEASURED, so the trade is on the record rather than assumed: the ring
+  // this case rejected sounded 1567 times an hour, one note every 2.3s.
+  // Three singles sound 749, one every 4.8s — half as busy as the thing that
+  // was too busy, and each note isolated instead of part of a cluster. Wind
+  // level is NOT the lever here: the chime's weather barely tracks it (250/hr
+  // at windLevel 1 down to only 142 at 0.3), so turning the wind down would
+  // cost the swing without buying quiet.
+  //
+  // 'furin' repeated TWICE, k29's own reasoning: emitterCount() sees it and
+  // thins the drift layer accordingly (src/audio/music.js), which is exactly
+  // what a page that just gained two voices wants.
+  ambience: ['wind:0.20', 'gate', 'furin', 'furin', 'music'],
   camera: { distance: 11.0, target: [0.6, 1.6, -0.8], azimuth: 0.50, polar: 1.25 },
 
   build(ctx) {
@@ -85,18 +102,47 @@ export default {
     lantern.position.set(2.9, 0, -2.0);
     scene.add(lantern);
 
-    // A single small tube, hung under the gate's own kasagi (its flat centre
-    // span is flush underside for |x| < width*0.364 — see k29's comment for
-    // the derivation of that fraction, which is the same lintel geometry
-    // here). At this gate's width (2.8) that is |x| < 1.02, so -0.4 sits
-    // well clear of the wings on one side and off the road's own
-    // centreline.
-    const furin = makeFurin({
-      tubes: 1, seed: 15,
-      onStrike: (_, force, pos) => audio && audio.chimeStrike({ tube: 2, force, at: pos }),
+    // THREE fūrin, three sizes, hung under the gate's own kasagi — one for
+    // each of Ummon's three blows (see the ambience note above for why three
+    // singles are not the five-tube ring this case turned down).
+    //
+    // POSITIONS. The kasagi's flat centre span is flush underside for
+    // |x| < width*0.364 — see k29's comment for the derivation, which is the
+    // same lintel geometry. At this gate's width (2.8) that is |x| < 1.02.
+    // Spread across it at 0.68 apart: the swing cap displaces a chime about
+    // 0.26 sideways at this hang depth, so two neighbours swung toward each
+    // other close by 0.53, and 0.68 clears that with their own half-widths
+    // and real margin. tests/k15.test.js re-derives it from the LIVE
+    // SWING.maxOmegaFrac rather than trusting this paragraph.
+    const CHIME_X = [-0.68, 0, 0.68];
+    // SIZES, and therefore notes — the case asks for a size and kit/furin.js's
+    // noteForSize decides the pitch, the rule everywhere else in the book.
+    // This case used to override it, reporting a flat `tube: 2` whatever it
+    // had built. 0.15 is the size that lands back on exactly that note, so
+    // the voice already heard here is kept and the other two are hung either
+    // side of it: -2, 2, 6.
+    const CHIME_SIZES = [0.20, 0.15, 0.11];
+    // Absolute cords, solved so the three BELLS hang on one line (bottoms at
+    // 0.30 below the lintel, within 0.001 of each other) rather than the
+    // paper below them, which is meant to vary — k29's own reasoning. Deepest
+    // total reach is 0.490 including the tanzaku, against the nuki's top face
+    // 0.59 below the hang point (this gate is 3.0 high, so its cross-tie sits
+    // at 2.34 with a 0.07 half-thickness). Rest is the worst case: swinging
+    // only ever shortens the drop.
+    const CHIME_CORD = [0.094, 0.146, 0.187];
+    const chimes = CHIME_X.map((x, i) => {
+      const f = makeFurin({
+        tubes: 1,
+        size: CHIME_SIZES[i],
+        cordLength: CHIME_CORD[i],
+        seed: 150 + i,
+        phase: 1.1 + 2.3 * i,        // own clock, so the three never sway or strike in step
+        onStrike: (note, force, pos) => audio && audio.chimeStrike({ tube: note, force, at: pos }),
+      });
+      f.group.position.set(x, 3.0, 0);
+      gate.add(f.group);
+      return f;
     });
-    furin.group.position.set(-0.4, 3.0, 0);
-    gate.add(furin.group);
 
     const world = composeWorld(scene, {
       seed: ID,
@@ -146,11 +192,14 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
-      // the chime first: its own hit drum sits inside the gate's big
-      // forgiving hit-box, so it has to be probed and returned on before
-      // that box ever gets a chance to start a beating instead
-      const chimeHit = furin.pick(camera, input);
-      if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
+      // the chimes first: their own hit drums sit inside the gate's big
+      // forgiving hit-box, so they have to be probed and returned on before
+      // that box ever gets a chance to start a beating instead. Returning on
+      // the FIRST hit also stops one tap ringing two of them.
+      for (const c of chimes) {
+        const chimeHit = c.pick(camera, input);
+        if (chimeHit) { c.ring(0.75, chimeHit.tube); return; }
+      }
       if (!input.raycastFirst(camera, [hit])) return;
       if (startedAt > -99 && struck < BLOWS) return;      // let the three finish
       startedAt = clock;
@@ -164,8 +213,10 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
-        furin.setWindLevel(1);      // a steady evening wind — see k47's furin
-        furin.update(dt, simTime);
+        for (const c of chimes) {
+          c.setWindLevel(1);        // a steady evening wind — see k47's furin
+          c.update(dt, simTime);
+        }
         if (startedAt > -99 && struck < BLOWS && clock - startedAt >= struck * BLOW_GAP) {
           struck++;
           // wood on wood, out of the empty air. The stick has not moved — the
@@ -176,7 +227,12 @@ export default {
         }
       },
       fragment() {
-        return { beatings, struck, forgiven: struck >= BLOWS, chimeStrikes: furin.strikes() };
+        // summed, not per-chime — a debug-panel fragment is finite numbers and
+        // booleans only (tests/staging.test.js), no arrays
+        return {
+          beatings, struck, forgiven: struck >= BLOWS,
+          chimeStrikes: chimes.reduce((n, c) => n + c.strikes(), 0),
+        };
       },
       dispose() {},
     };
