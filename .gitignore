@@ -7,3 +7,5 @@ local/
 # CLAUDE.md stays tracked at the root; this is the working notes around it.
 .claude/
 docs/
+.worktrees/
+.superpowers/
