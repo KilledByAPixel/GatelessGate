@@ -107,7 +107,7 @@ const PERIOD_RATIO = 1 / PHI;
 //   cylDamping tau 3.5s -> 7s (c = 2/7)
 //   clapDamping tau 2.2s -> 4.5s (c = 2/4.5)
 //
-// tapKick 6.0 -> 0.9 rad/s — BUG FIX, found in the owner's own live audition
+// tapKick 6.0 -> 2.2 rad/s — BUG FIX, found in the owner's own live audition
 // of this exact harness: "when I click on it, it also doesn't seem like it
 // swings at all." tapKick() (below) used to kick the CLAPPER, sized against
 // the CLAPPER's own natural frequency (omega0~6.65 rad/s at the default
@@ -118,43 +118,39 @@ const PERIOD_RATIO = 1 / PHI;
 // motion with, which is precisely what the owner saw. tapKick() now kicks
 // cylPend (the body), so 6.0 rad/s — tuned for the clapper's ~6.65 rad/s
 // natural frequency — has to be re-derived against the BODY's own, much
-// slower one (omega0~4.11 rad/s at size=0.8), and NOT simply toward a
-// fūrin-matching swing either — see the paragraph below for the real
-// constraint that set this number.
+// slower one (omega0~4.11 rad/s at size=0.8). 2.2 rad/s lands a full-force
+// tap's peak swing at ~0.51 rad (~29 degrees, measured in
+// tests/cylinder.test.js) — the same ballpark as a fūrin's own full-force
+// tap (SWING.tapPeak=0.55 rad, measured peak ~0.53 rad), the owner's own
+// named reference for "how this should feel."
 //
-// WHY 0.9, NOT SOMETHING BIGGER (measured directly, not eyeballed): GAP_ANGLE
-// (~0.088 rad, ~5 degrees) is tiny next to ANY real swing, so once the body
-// is genuinely oscillating (not quasi-statically tracking a slow wind lean,
-// but ringing down over several natural periods at cylDamping's tau=7s), the
-// lagging clapper re-crosses that tiny threshold roughly every half-period —
-// a real, physically plausible "clapper clacking the wall on each swing
-// until it settles," not a bug in the strike-detection logic (verified: an
-// edge-triggered rewrite of the contact check, tried as a diagnostic, gave
-// nearly the SAME strike count — these are genuinely separate contacts, not
-// one stuck level-check re-firing). Chasing a fūrin-scale swing here (0.55
-// rad, SWING.tapPeak) measured out to 12-18 of these re-strikes spread over
-// 8-13 SECONDS, nearly all at saturated force (FORCE_OMEGA_REF, below, is
-// calibrated for wind-scale contact velocities two orders of magnitude
-// smaller than a tap-driven one, so it can't discriminate a decaying settle
-// from the original hit) — audibly a stuck-sounding wall of full-volume
-// ringing, not "tap it and it rings." 0.9 rad/s instead lands a full-force
-// tap's peak swing at ~0.21 rad (~12 degrees, measured in
-// tests/cylinder.test.js) with 8 strikes decaying over ~5.7s — a real,
-// clearly visible swing (the owner's actual complaint was zero motion, not
-// an under-sized one) with a settle a listener can plausibly follow as one
-// event rather than a loop. Smaller than a fūrin's own tap (SWING.tapPeak
-// 0.55 rad) by design, not by oversight — GAP_ANGLE/cylDamping/RESTITUTION
-// bound how big a swing this WALL model can take before the re-strike count
-// runs away, and none of those are this fix's to retune (see their own
-// comments; all three are either shared with the wind-driven swing or were
-// already reviewed and shipped by an earlier task). Flagged for the owner's
-// own audition alongside tapKick, same "starting point" contract as the rest
-// of CYL_SWING — a bigger swing IS reachable by raising this live, the
-// trade-off is just no longer invisible.
+// A FIRST DRAFT OF THIS FIX SHRANK THE SWING INSTEAD, TO 0.9 rad/s (~12
+// degrees) — WRONG DIAGNOSIS, caught in review. GAP_ANGLE (~0.088 rad) is
+// tiny next to any real swing, so once the body genuinely oscillates (not
+// quasi-statically tracking a slow wind lean, but ringing down over several
+// natural periods at cylDamping's tau=7s), the lagging clapper re-crosses
+// that threshold roughly every half-period as it settles — a real,
+// physically plausible "clapper clacking the wall on each swing until it
+// settles" (verified: an edge-triggered rewrite of the contact check gave
+// nearly the SAME strike count, so these are genuinely separate contacts,
+// not one stuck level-check re-firing). Measured directly: the RATE of
+// these re-strikes is the same ~0.78s (the body's own half-period)
+// regardless of tapKick — 0.9 rad/s gives 8 strikes over 5.75s, 2.2 rad/s
+// gives 17 over 12.6s, 3.0 rad/s gives 20 over 14.3s. Amplitude only changes
+// how LONG the ring-down keeps crossing GAP_ANGLE, never how DENSE the
+// strikes are, so shrinking the swing bought a shorter loop, not a quieter
+// one — the wrong knob. The actual defect was that every one of those
+// re-strikes reported force~1: FORCE_OMEGA_REF (below) was calibrated for
+// wind-scale contact velocities, two orders of magnitude below a tap's, so
+// it saturated at any tap-scale hit and couldn't tell a decaying settle from
+// the original blow. Fixed there instead (FORCE NORMALISATION, below) — a
+// real bell's re-strikes diminuendo, so the RIGHT fix teaches the force law
+// to track a decaying swing, not shrink the swing until the flaw is out of
+// earshot.
 export const CYL_SWING = {
   cylDamping: 2 / 7,
   clapDamping: 2 / 4.5,
-  tapKick: 0.9,
+  tapKick: 2.2,
 };
 
 // WIND LEAN (rad): the equilibrium angle a full, steady gust settles each
@@ -240,39 +236,47 @@ const RESTITUTION = 0.35;
 // ceiling behind.
 const MAX_CYL_OMEGA_MULT = 1.3;
 
-// UNDERSTOOD CONSEQUENCE: CYL_SWING.tapKick sits roughly 11x FORCE_OMEGA_REF
-// (below) at its new starting value, so essentially any deliberate tap
-// (ring()'s default force 0.75, even hoverAt's 0.25) reaches the wall fast
-// enough to saturate the reported strike force at 1 — a tap always rings
-// clearly, never as a graze. That reads as correct rather than as a bug: a
-// tap is a deliberate touch, not weather, and furin.js's own ring() has the
-// same character (it reports the CALLER's force directly, with no physics
-// in between at all). The "hard meeting vs a graze" dynamic range this
-// file's force law provides is real, it just lives almost entirely in the
-// WIND-driven contacts, where relOmega naturally spans well below
-// FORCE_OMEGA_REF up to it (see cylinder-report.md's measured
-// distribution) — which is the case the brief's "a gust feels different
-// from a breeze" is actually about. Still true after BUG 1's fix: contact
-// fires early in the body's swing (GAP_ANGLE, ~0.088 rad, is a sizeable but
-// not dominant fraction of a single tap's ~0.21 rad peak — see
-// CYL_SWING.tapKick's own comment for why the peak itself was kept modest),
-// so the reported relOmega at the FIRST strike is still essentially the
-// body's own tap-kicked omega. The re-strikes that follow as the tap's swing
-// rings down (the same comment) also saturate at or near force=1 for most of
-// their run, for the identical reason (their contact velocities are still
-// well above FORCE_OMEGA_REF until the swing has nearly died out) — a real,
-// understood limitation of reusing the wind-calibrated force law for a
-// tap-energy regime, not something this fix silently hides.
-
-// FORCE NORMALISATION. "Strike force should scale with the relative angular
-// VELOCITY at contact." REF is chosen from the same tuning run: the 90th
-// percentile of contact relative-velocity was ~0.037 rad/s and the observed
-// max ~0.15 rad/s (cylinder-report.md) — 0.08 lands most wind strikes in the
-// low-to-middle of the range with real headroom, so only a genuinely hard
-// beat pins force at 1, and a graze (small relOmega) reports close to 0.
+// FORCE NORMALISATION — A SOFT KNEE, not one reference. "Strike force should
+// scale with the relative angular VELOCITY at contact" was always right;
+// what was wrong (code review, on the first draft of BUG 1's fix) was a
+// SINGLE linear reference doing that job for two regimes 20-40x apart in
+// scale. FORCE_OMEGA_REF=0.08 was tuned against wind alone (the 90th
+// percentile of wind-driven contact velocity was ~0.037 rad/s, observed max
+// ~0.24 rad/s — cylinder-report.md and a fresh 7200s measurement agree) and
+// a straight `clamp(|w|/REF, 0, 1)` saturates at 1 for ANY tap-scale contact
+// (measured: a tap's re-strikes span roughly 0.02-2.9 rad/s as they decay,
+// i.e. 25-3600% of REF) — every one of them pinned at maximum, so a
+// genuinely decaying ring-down sounded like a machine hammering at full
+// volume until it abruptly stopped, not a bell settling. Measured directly
+// on a real tap decay (kick=2.2, still air): the OLD law's relOmega sequence
+// 2.15, 0.02, 0.56, 1.42, 1.33, ... 0.06 rad/s reported force
+// 1, 1(ish), 1, 1, 1, ... 1 — the underlying physics already diminuendos,
+// the force law just couldn't see it.
+//
+// The fix keeps FORCE_OMEGA_REF exactly as wind-tuned it (below REF, force
+// is still literally `(|w|/REF) * FORCE_KNEE_LEVEL` — same shape, same
+// relative ordering among wind strikes as before, just scaled down by the
+// KNEE_LEVEL factor to leave headroom above) and adds a SECOND segment above
+// it, rising from FORCE_KNEE_LEVEL up to 1 as |w| climbs from REF to
+// FORCE_OMEGA_CAP — a genuinely tap-scale reference (~2.5 rad/s, near the
+// hardest contact velocity a full-force tap actually reaches; see
+// tests/cylinder.test.js's own decay-sequence test) rather than a wind-scale
+// one. A tap's whole ring-down now lands mostly in this upper segment and
+// visibly, audibly tapers as it decays; wind's own dynamic range is
+// preserved in SHAPE (still quiet-to-loud in the same relative order) at a
+// deliberate, documented ~30% overall reduction from before — the honest
+// cost of sharing one continuous, monotonic law across two regimes this far
+// apart, rather than silently degrading one of them by picking a reference
+// that only serves the other. `BRONZE.level` (audio/synths.js) may want
+// revisiting now that typical wind strikes run quieter than the level it was
+// last judged against — flagged there, not fixed here, since it needs ears,
+// not arithmetic.
+//
 // Deliberately no floor, unlike furin's tapKick force: "a graze barely
 // sounds" is the point, not a defect to pad away.
 const FORCE_OMEGA_REF = 0.08;
+const FORCE_KNEE_LEVEL = 0.7;
+const FORCE_OMEGA_CAP = 2.5;
 
 // NOTE FROM SIZE. "Size and pitch must move together... derive one from the
 // other rather than letting a case set both and contradict itself." A
@@ -300,10 +304,26 @@ export function noteForSize(size) {
 }
 
 // Pure, exported so tests/cylinder.test.js can pin the scaling law itself
-// (monotonic, clamped, zero at zero) independently of the physics that
-// feeds it a relOmega.
+// (monotonic, clamped, zero at zero, and — the property that matters most
+// after the soft-knee fix — a genuinely decaying sequence of |w| produces a
+// genuinely decaying sequence of force, not a column of 1s) independently
+// of the physics that feeds it a relOmega.
+//
+// TWO SEGMENTS, ONE CONTINUOUS CURVE (see FORCE NORMALISATION, above, for
+// why one linear reference can't serve both wind and tap scales at once).
+// Below FORCE_OMEGA_REF: identical shape to the original wind-only law
+// (|w|/REF), scaled down by FORCE_KNEE_LEVEL so it never exceeds the knee.
+// At and above FORCE_OMEGA_REF: rises linearly from FORCE_KNEE_LEVEL to 1 as
+// |w| runs from REF to FORCE_OMEGA_CAP, then clamps — this is where a tap's
+// whole ring-down lives, so this is the segment that actually diminuendos.
+// The two segments agree exactly at |w|=REF (both evaluate to
+// FORCE_KNEE_LEVEL there), so the curve has no discontinuity, only a change
+// of slope — the "knee."
 export function forceForRelOmega(relOmega) {
-  return clamp(Math.abs(relOmega) / FORCE_OMEGA_REF, 0, 1);
+  const w = Math.abs(relOmega);
+  if (w <= FORCE_OMEGA_REF) return (w / FORCE_OMEGA_REF) * FORCE_KNEE_LEVEL;
+  const t = clamp((w - FORCE_OMEGA_REF) / (FORCE_OMEGA_CAP - FORCE_OMEGA_REF), 0, 1);
+  return FORCE_KNEE_LEVEL + (1 - FORCE_KNEE_LEVEL) * t;
 }
 
 // scratch for reporting the struck body's world position — shared across

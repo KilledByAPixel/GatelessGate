@@ -255,6 +255,20 @@ export const CHIME = { degree: 8, tubes: 5, decay: 5, level: 0.03, bright: 0.35,
 // knock-force ballpark. STARTING POINT, not final — dev/hanging-audition.html
 // now has its own live slider for this (see that file), same "the owner
 // settles it by ear" contract CYL_SWING's own tunables carry.
+//
+// JUDGE THIS AFTER cylinder.js's force law, not before (code review): this
+// 0.032->0.07 comparison is per-STRIKE ("effective peak" at force=1), but
+// what the owner actually hears from one tap is up to a dozen-plus strikes
+// in a ring-down, and the force each of those reports changed materially in
+// the same pass that raised this level — see cylinder.js's own FORCE
+// NORMALISATION comment. Typical (sub-knee) contacts, wind included, now
+// report ~30% quieter than before the knee (a documented trade-off, not a
+// bug); a tap's own re-strikes used to ALL read force~1 and now taper
+// across the ring-down instead. Net effect on perceived loudness of a tap
+// is genuinely different from a single-strike comparison and needs its own
+// ear-check — this number may need to come back down, or may already be
+// right; left at 0.07 rather than re-guessed a second time with no ear on
+// it either way.
 export const BRONZE = { degree: 6, decay: 9, level: 0.07, bright: 0.18, verbMix: 0.85 };
 
 // The shipped water — Frank's audition numbers (the "Basin" preset). Drips are

@@ -284,7 +284,7 @@ test('THE WALL: a hard tap never swings the clapper visibly past the cylinder wa
     `the clapper swung ${maxRel} rad relative to the body, past the ${gap} rad gap — it rendered through the bronze wall`);
 });
 
-test('a full-force tap swings the CYLINDER BODY a real, visible amount, and THE WALL still holds at CYL_SWING.tapKick', () => {
+test('a full-force tap swings the CYLINDER BODY a fūrin-comparable amount, and THE WALL still holds at CYL_SWING.tapKick', () => {
   // CHANGED (task-cylinder-fix-brief.md BUG 1). This test used to be titled
   // "CYL_SWING.tapKick is a real increase over the shipped-before value" and
   // pinned tapKick against the PRE-swing-tuning value (2.5 rad/s), because
@@ -293,19 +293,19 @@ test('a full-force tap swings the CYLINDER BODY a real, visible amount, and THE 
   // (cylPend) instead — the actual bug the owner found in a live audition:
   // "when I click on it, it also doesn't seem like it swings at all" — that
   // old comparison is meaningless: 6.0 rad/s against the clapper's
-  // ~6.65 rad/s natural frequency and 0.9 rad/s against the body's own,
+  // ~6.65 rad/s natural frequency and 2.2 rad/s against the body's own,
   // much slower ~4.11 rad/s are unrelated numbers answering unrelated
   // questions, and the raw-value pin failed the moment the target pendulum
   // changed. What still matters, and is pinned here instead: a full-force
   // tap measurably moves the BODY (not just the clapper — this is the
   // actual regression guard for BUG 1, nothing before this fix caught a
-  // reversion to kicking the clapper), the resulting swing lands in a real,
-  // plausible range — deliberately SMALLER than a fūrin's own tap, see
-  // CYL_SWING.tapKick's own "WHY 0.9, NOT SOMETHING BIGGER" comment for the
-  // measured reason (a bigger swing here re-strikes the wall many times
-  // over many seconds as it rings down, not once) — and THE WALL still
-  // holds the clapper inside GAP_ANGLE at whatever CYL_SWING.tapKick
-  // currently is, not just "whatever the module shipped with."
+  // reversion to kicking the clapper), the resulting swing lands in a
+  // fūrin-comparable range (a first draft of this fix shrank the swing
+  // instead of fixing the force law that actually needed it — see
+  // CYL_SWING.tapKick's own "A FIRST DRAFT..." comment for why that was the
+  // wrong diagnosis, caught in review), and THE WALL still holds the
+  // clapper inside GAP_ANGLE at whatever CYL_SWING.tapKick currently is, not
+  // just "whatever the module shipped with."
   const f = makeCylinderChime({ seed: 13, phase: 0 });
   f.setWindLevel(0);
   const swing = f.group.getObjectByName('swing');
@@ -327,17 +327,58 @@ test('a full-force tap swings the CYLINDER BODY a real, visible amount, and THE 
   assert.ok(maxRel <= gap + 1e-6,
     `at CYL_SWING.tapKick=${CYL_SWING.tapKick}, the clapper swung ${maxRel} rad relative to the body, past the ${gap} rad gap`);
   // A plausibility BAND, not a tight pin against today's exact number (today:
-  // ~0.208 rad) — it has to survive the owner retuning CYL_SWING.tapKick by
+  // ~0.51 rad) — it has to survive the owner retuning CYL_SWING.tapKick by
   // ear through the harness, per that field's own "starting point, not
   // final" comment. Low end catches "barely moves" (a BUG 1 regression,
   // kicking the clapper again produces ~0 here under zero wind); high end
-  // catches both an implausible windmill AND a slide back into the
-  // many-re-strikes-over-many-seconds problem CYL_SWING.tapKick's own
-  // comment measures at fūrin scale (0.55 rad).
-  assert.ok(maxSwing > 0.05,
+  // catches an implausible windmill (a mash-cap regression, or a raw kick
+  // with no cap at all).
+  assert.ok(maxSwing > 0.15,
     `a full-force tap swung the body only ${maxSwing} rad — reads as barely moving, the exact bug this fix addresses`);
-  assert.ok(maxSwing < 0.4,
-    `a full-force tap swung the body ${maxSwing} rad — past the range measured safe from the many-re-strikes problem (see CYL_SWING.tapKick's own comment)`);
+  assert.ok(maxSwing < 1.2,
+    `a full-force tap swung the body ${maxSwing} rad — an implausible near-horizontal fling for a waist-high bronze mass`);
+});
+
+test('a decaying tap ring-down reports DECREASING force, not a column of 1.00s', () => {
+  // THE ACTUAL BUG code review caught: BUG 1's first fix draft shrank the
+  // swing to hide a problem that was never the swing's size — every
+  // re-strike in a decaying ring-down reported force~1 because
+  // FORCE_OMEGA_REF (wind-scale) saturates almost immediately at any
+  // tap-scale contact velocity, so a listener would hear a machine hammering
+  // at full volume for several seconds, not a bell settling. This drives a
+  // real tap at full amplitude in still air and asserts the reported force
+  // sequence is not just "eventually quiet" (the old law already managed
+  // that on its very last strike) but VISIBLY DECREASING across most of the
+  // ring-down: strictly fewer than half the strikes may sit within 0.02 of
+  // 1.0 (a wrong-but-plausible "fixed the peak, still saturates everywhere
+  // else" implementation would fail this), and the sequence's own late
+  // values must run meaningfully quieter than its early ones.
+  const forces = [];
+  const f = makeCylinderChime({
+    seed: 20, phase: 0,
+    onStrike: (note, force) => forces.push(force),
+  });
+  f.setWindLevel(0);
+  f.ring(1);
+  run(f, 20);
+  assert.ok(forces.length >= 6, `too few re-strikes to judge a ring-down: ${forces.length}`);
+
+  const saturated = forces.filter((v) => v > 0.98).length;
+  assert.ok(saturated < forces.length / 2,
+    `${saturated}/${forces.length} strikes still saturate near 1.0 — the force law isn't tracking the decay: ${forces}`);
+
+  // The ring-down's own transient is not monotone strike-to-strike (the
+  // physics itself has a quiet near-miss early on and a stronger return
+  // swing right after — measured: 0.954, 0.69, 0.759, 0.87, then a real
+  // decline), so a strict "every strike quieter than the last" pin would be
+  // fighting the physics, not the force law. What IS robustly true of a
+  // genuine diminuendo, and false of "saturated then a cliff to near-zero"
+  // (the OLD law's actual shape): the LAST strike of the ring-down reads
+  // meaningfully quieter than the LOUDEST strike anywhere in it.
+  const max = Math.max(...forces);
+  const last = forces[forces.length - 1];
+  assert.ok(last < max * 0.75,
+    `the ring-down's last strike (${last}) isn't meaningfully quieter than its loudest (${max}) — no audible diminuendo: ${forces}`);
 });
 
 test('a tap rings through the SAME contact mechanism as the wind, not a bypass', () => {
@@ -357,8 +398,23 @@ test('a tap rings through the SAME contact mechanism as the wind, not a bypass',
   // would leave swingAmp() at 0 here while clapperAmp() jumped instead.
   assert.ok(f.swingAmp() > 0, 'the tap did not add any energy to the BODY');
 
-  run(f, 1);   // a second's worth of frames for the kicked body to swing the clapper into the wall
-  assert.equal(hits.length, 1, `one tap should ring once, got ${hits.length}`);
+  // CHANGED (code review, task-cylinder-fix-brief.md follow-up): this used
+  // to run a full second and assert EXACTLY one strike, worded "one tap
+  // should ring once." That is no longer true of the component and was
+  // never reliably true of this window either — the body's own re-strike
+  // rate (its half-period, ~0.78s regardless of tapKick, see
+  // CYL_SWING.tapKick's own comment) means a second, genuine strike
+  // typically lands right around the 1s mark (measured: as close as 0.10s
+  // vs 1.02s, a 2% margin), so the old assertion was one float-timing
+  // accident from flipping to a false "bypass" failure on any retune. A
+  // full-force tap DOES ring more than once as it settles (the dedicated
+  // ring-down/diminuendo test above covers that shape); what this test is
+  // actually guarding is narrower and doesn't need a wide window: contact
+  // is physics-driven, not instant. 0.3s is comfortably shorter than the
+  // ~0.78s re-strike interval yet long enough for the first, fast contact
+  // (measured: lands within ~0.1s of a full-force tap) to have happened.
+  run(f, 0.3);
+  assert.equal(hits.length, 1, `the first strike after a tap should arrive from the physics within 0.3s, got ${hits.length}`);
   assert.equal(hits[0].note, f.note());
   assert.ok(hits[0].force > 0 && hits[0].force <= 1);
   assert.ok(Number.isFinite(hits[0].pos.x) && Number.isFinite(hits[0].pos.y) && Number.isFinite(hits[0].pos.z));
