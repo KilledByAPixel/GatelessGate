@@ -227,3 +227,62 @@ test('strike size follows the container, and is capped', () => {
   assert.ok(pond > 0.02, 'a pond ripple is actually visible');
   assert.ok(lake <= 0.11, 'the crest is capped rather than growing without limit');
 });
+
+// ---- the drift swell (case 20's ocean) -------------------------------------
+// A slow long wave traveling shoreward. It is the FREE-OCEAN term: deliberately
+// unmasked, because an ocean has no rim to protect — its near edge is buried
+// under the sand and its far edges die in the fog. Containers leave it off,
+// and off is the default, so every basin and pond in the book is untouched.
+
+const DRIFT = { dx: 0, dz: 1, amp: 0.05, wavelength: 8, period: 6 };
+
+test('drift off by default: a swell-less sheet stays perfectly flat', () => {
+  const w = makeWater({ shape: 'square', size: 20, swell: 0 });
+  w.update(1 / 60, 5.2);
+  for (const v of verts(w)) assert.equal(v.y, 0);
+});
+
+test('the drift travels: the whole waveform moves toward (dx, dz) at wavelength/period', () => {
+  const w = makeWater({ shape: 'square', size: 40, swell: 0, seed: 20, drift: DRIFT });
+  const c = DRIFT.wavelength / DRIFT.period;     // phase speed, units/sec
+  const dt = 0.7;
+  for (const z of [-12, -4, 0, 3, 9]) {
+    const now = w.heightAt(1, z, 2.0);
+    const later = w.heightAt(1, z + c * dt, 2.0 + dt);
+    assert.ok(Math.abs(now - later) < 1e-9,
+      `the crest at z=${z} did not arrive ${c * dt} further on ${dt}s later`);
+  }
+});
+
+test('the drift actually lifts the surface, and by no more than its amplitude', () => {
+  const w = makeWater({ shape: 'square', size: 40, swell: 0, seed: 20, drift: DRIFT });
+  let peak = 0;
+  for (let t = 0; t < 6.5; t += 0.25) {
+    w.update(0.25, t);
+    for (const v of verts(w)) peak = Math.max(peak, Math.abs(v.y));
+  }
+  assert.ok(peak > DRIFT.amp * 0.9, `peak ${peak} — the ocean is flat`);
+  assert.ok(peak <= DRIFT.amp + 1e-9, `peak ${peak} exceeds the stated amplitude`);
+});
+
+test('the drift is seeded and deterministic', () => {
+  const surface = (seed) => {
+    const w = makeWater({ shape: 'square', size: 40, swell: 0, seed, drift: DRIFT });
+    w.update(0.5, 1.7);
+    return Array.from(posOf(w));
+  };
+  assert.deepEqual(surface(20), surface(20));
+  assert.notDeepEqual(surface(20), surface(21));  // the phase is the seed's
+});
+
+test('ripples still ride on top of the drift, and the rim pinning still holds for them', () => {
+  const w = makeWater({ shape: 'square', size: 40, swell: 0, seed: 20, drift: DRIFT });
+  w.ripple(0, 0, 0.3);
+  w.update(0.5, 0.5);
+  // somewhere inside, the surface is displaced by MORE than drift alone could
+  let moved = false;
+  for (let r = 0; r < 6; r += 0.25) {
+    if (Math.abs(w.heightAt(r, 0, 0.5)) > DRIFT.amp + 1e-6) moved = true;
+  }
+  assert.ok(moved, 'the strike vanished under the drift');
+});

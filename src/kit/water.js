@@ -162,6 +162,13 @@ export function makeWater({
                            // pond with koi wants this lower so the fish read
   specular = 0.55,         // the white glint; 0 drops back to the toon ramp
   shininess = 64,
+  // The free-ocean term (case 20): one long slow wave traveling toward
+  // (dx, dz) at wavelength/period units/sec. DELIBERATELY UNMASKED — it
+  // ignores the rim pinning, because an ocean has no rim to protect: the near
+  // edge is buried under the sand ribbon and the far edges die in the fog. A
+  // contained surface (basin, pond) must leave this off, and off is the
+  // default, so every existing caller is byte-identical.
+  drift = null,
 } = {}) {
   const round = shape === 'round';
   const blob = shape === 'blob';
@@ -237,6 +244,15 @@ export function makeWater({
   const k1 = 1.7 / Math.max(1, half);
   const k2 = 2.3 / Math.max(1, half);
 
+  // the drift's phase is the seed's, like everything else here
+  const dp = hash1(3, seed) * Math.PI * 2;
+  const driftAt = drift
+    ? (x, z, t) => {
+      const { dx = 0, dz = 1, amp = 0.05, wavelength = 8, period = 6 } = drift;
+      return amp * Math.sin(((x * dx + z * dz) / wavelength - t / period) * Math.PI * 2 + dp);
+    }
+    : () => 0;
+
   // A ripple can never outlive its crossing of the container, so one started at
   // the far rim still dies at the near one rather than sailing on over the bank.
   const LIFE = Math.min(TAU * 3, (size * 1.1) / SPEED + 0.6);
@@ -296,13 +312,14 @@ export function makeWater({
 
   function heightAt(x, z, t = clock) {
     const m = maskAt(x, z);
-    return m > 0 ? waveAt(x, z, t) * m : 0;
+    return (m > 0 ? waveAt(x, z, t) * m : 0) + driftAt(x, z, t);
   }
 
   function displace() {
     for (let i = 0; i < count; i++) {
       const m = mask[i];
-      position[i * 3 + 1] = m > 0 ? waveAt(px[i], pz[i], clock) * m : 0;
+      position[i * 3 + 1] = (m > 0 ? waveAt(px[i], pz[i], clock) * m : 0)
+        + driftAt(px[i], pz[i], clock);
     }
     geo.attributes.position.needsUpdate = true;
     geo.computeVertexNormals();
