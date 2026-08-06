@@ -46,9 +46,12 @@ export function windMix(params, flavor, gust) {
   };
 }
 
-// Leaf-slap grains: rate in grains/second, driven by how fast the gust is
-// CHANGING (gustSlope), not how strong it is — steady wind through a tree
-// settles; the swish is the gust arriving. PROVISIONAL.
+// The rustle drive: driven by how fast the gust is CHANGING (gustSlope), not
+// how strong it is — steady wind through a tree settles; the swish is the
+// gust arriving. Born as a grains-per-second trigger rate; the grains are
+// gone (they clicked, then sandpapered — see the rustle band's comment in
+// makeWind) and the same 0..max curve now shapes a continuous band's gain,
+// so the numbers and their test carried over unchanged. PROVISIONAL.
 export const RUSTLE = { base: 1.5, slopeGain: 22, max: 12, level: 0.05 };
 export function rustleRate(grain, level, slope) {
   if (grain <= 0 || level <= 0) return 0;
@@ -681,54 +684,20 @@ export function makeWind(ctx, dest) {
   csrc.connect(cbp); cbp.connect(canopyG); canopyG.connect(outG);
   csrc.start();
 
-  // ---- the grains: leaf slaps, a pool of baked ticks fired by rustleRate.
-  // Audio is exempt from the determinism rule, so scheduling uses Math.random;
-  // the tick CONTENT is seeded so the pool is the same pool every run.
-  const grainBufs = [];
-  for (let i = 0; i < 10; i++) {
-    const grand = mulberry32(4000 + i);
-    const dur = 0.015 + grand() * 0.030;               // 15-45ms — a swish, not a tick
-    const gn = Math.ceil(SR * dur);
-    const gb = ctx.createBuffer(1, gn, SR);
-    const gd = gb.getChannelData(0);
-    // Hann-windowed noise: silent at BOTH ends. The first pool used
-    // (1 - j/n)^2 — full amplitude at sample zero — so every grain opened
-    // on a hard edge and the whole layer read as "weird clicking" (Frank's
-    // ear, wind-audition). A leaf brushing a leaf does not switch on.
-    for (let j = 0; j < gn; j++) {
-      const w = Math.sin((Math.PI * j) / gn);
-      gd[j] = (grand() * 2 - 1) * w * w;
-    }
-    grainBufs.push(gb);
-  }
-  function fireGrain() {
-    const t = ctx.currentTime;
-    const gsrc = ctx.createBufferSource();
-    gsrc.buffer = grainBufs[(Math.random() * grainBufs.length) | 0];
-    gsrc.playbackRate.value = 0.8 + Math.random() * 0.5;
-    const gbp = ctx.createBiquadFilter();
-    gbp.type = 'bandpass'; gbp.frequency.value = 1400 + Math.random() * 2400; gbp.Q.value = 0.9;
-    const gg = ctx.createGain();
-    gg.gain.value = RUSTLE.level * levelRaw * (0.5 + Math.random());
-    gsrc.connect(gbp); gbp.connect(gg); gg.connect(outG);
-    gsrc.start(t);
-  }
-  let grainTimer = null;
-  const GRAIN_TICK = 0.08;
-  function scheduleGrains() {
-    grainTimer = setTimeout(() => {
-      if (ctx.state === 'running') {
-        // Poisson-ish thinning over one tick window
-        let expected = rustleRate(flavor.grain, levelRaw, slope) * GRAIN_TICK;
-        while (expected > 0) {
-          if (Math.random() < Math.min(1, expected)) fireGrain();
-          expected -= 1;
-        }
-      }
-      scheduleGrains();
-    }, GRAIN_TICK * 1000);
-  }
-  scheduleGrains();
+  // ---- the rustle: leaves in the gust changes. Third build. v1 fired
+  // discrete grain one-shots and clicked (envelopes opened at full
+  // amplitude); v2 windowed them and read as sandpaper — a handful of
+  // audible noise-strokes a second IS a scratch, however soft its edges.
+  // The rain taught the same lesson the same night: a real crowd of tiny
+  // events (thousands of leaves) is statistically CONTINUOUS, so the layer
+  // is a second, brighter band off the canopy's own noise loop, and
+  // rustleRate — unchanged, still slope-driven, still capped — now shapes
+  // its GAIN instead of a trigger rate. The swish is the gust arriving;
+  // steady wind through a tree settles to nothing, exactly as before.
+  const rbp = ctx.createBiquadFilter();
+  rbp.type = 'bandpass'; rbp.frequency.value = 4800; rbp.Q.value = 0.5;
+  const rustleG = ctx.createGain(); rustleG.gain.value = 0;
+  csrc.connect(rbp); rbp.connect(rustleG); rustleG.connect(outG);
 
   // The gust is driven from windGust(simTime)/gustSlope(simTime) in JS rather
   // than from oscillators in this graph — the sim clock stays the one source
@@ -745,6 +714,11 @@ export function makeWind(ctx, dest) {
     bedG.gain.setTargetAtTime(m.bed, t, 0.4);
     canopyG.gain.setTargetAtTime(m.canopy, t, 0.4);
     lp.frequency.setTargetAtTime(m.cutoff, t, 0.4);
+    // rustleRate's 0..max maps straight onto the band's gain. Faster tau
+    // than the others: the swish must ANSWER the gust's arrival — at the
+    // bed's 0.4s it would smear into the canopy and vanish.
+    const r = RUSTLE.level * (rustleRate(flavor.grain, levelRaw, slope) / RUSTLE.max);
+    rustleG.gain.setTargetAtTime(r, t, 0.15);
   }
 
   return {
@@ -769,7 +743,6 @@ export function makeWind(ctx, dest) {
     flavor() { return flavorName; },
     gain() { return bedG.gain.value; },   // headless probe read; never drives anything
     stop() {
-      if (grainTimer) { clearTimeout(grainTimer); grainTimer = null; }
       for (const node of [src, csrc]) { try { node.stop(); } catch { /* already stopped */ } }
       outG.disconnect();
     },

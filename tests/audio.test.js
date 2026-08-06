@@ -80,7 +80,7 @@ test('makeWind: flavors retune the live graph without restarting it', () => {
     const m = windMix(windParams(0), windFlavorParams('pine'), 0.8);
     assert.equal(m.bed, 0); assert.equal(m.canopy, 0);
   } finally {
-    wind.stop();   // clears the grain timer — without this the test process hangs
+    wind.stop();   // stops the loop sources; the graph must not outlive the test
   }
 });
 
