@@ -157,7 +157,7 @@ export default {
     // gentler obliques at ±~20° with their own wavelengths and periods — is
     // what breaks the crests into a sea.
     const water = makeWater({
-      shape: 'square', size: 90, color: ACCENT, seed: ID,
+      shape: 'square', size: 150, color: ACCENT, seed: ID,
       opacity: 0.85, segments: 64,
       drift: [
         { dx: 0, dz: 1, amp: 0.045, wavelength: 8, period: 6 },
