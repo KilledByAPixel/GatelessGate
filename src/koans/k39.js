@@ -98,8 +98,13 @@ export default {
     // of a pond looks like. The carve is below, after composeWorld has built the
     // ground it cuts.
     const WY = -0.05;
-    const DEPTH = 1.3;      // how far the bed falls below the meadow
-    const BANK = 1.5;       // and how fast — "rapidly slopes down"
+    // The bed is a GRADIENT now, not a bowl (Frank: "the water more shallow
+    // where the stones are... it could get deeper farther away where the fish
+    // are"): ~SHALLOW under the stepping-stone line so the stones stand on
+    // the bottom, sliding down to DEEP on the back half where the koi swim.
+    const SHALLOW = 0.35;
+    const DEEP = 1.3;
+    const BANK = 1.5;       // how fast the bank falls — "rapidly slopes down"
     const SS = (a, b, v) => {
       const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
       return t * t * (3 - 2 * t);
@@ -141,18 +146,20 @@ export default {
       const pivot = new THREE.Group();
       pivot.name = 'stone';
       pivot.position.set(x, WY + 0.05, z);
-      // Still a plain cap, and deliberately: digging the bed out from under them
-      // raised the obvious question of whether a 20cm disc now floats over a
-      // metre of water, so each one grew a shaft down to the bottom — and it was
-      // a clear loss. The shafts are pale stone under a dark sheet that lets a
-      // quarter of them through, so seven of them read as stilts and the
-      // crossing turned into a row of mushrooms. The water hides what is under
-      // it well enough that the question never comes up; the stones sit ON the
-      // surface, which is all this case ever asks of them.
+      // The stone goes to the BOTTOM now (Frank: "the stones can be a bit
+      // taller, so they're fully touching the bottom of the pond") — the bed
+      // under the crossing is only SHALLOW (~0.35) deep since the gradient
+      // carve, so a 0.55 body reaches it with margin. This is NOT the old
+      // shafts-through-deep-water failure (pale stilts under a metre of dark
+      // sheet, "a row of mushrooms"): these are squat stones in genuinely
+      // shallow water, and their blob shadows stop reading as a float gap.
+      // The top face stays exactly where the old 0.20 cap put it.
+      const H = 0.55;
       const top = new THREE.Mesh(
-        new THREE.CylinderGeometry(r, r * 1.12, 0.20, 7),
+        new THREE.CylinderGeometry(r, r * 1.18, H, 7),
         toonMaterial({ color: WASH.stone, flat: true }));
       top.name = 'stone-top';
+      top.position.y = 0.10 - H / 2;
       top.rotation.y = hash1(i * 3 + 2, ID) * Math.PI;
       pivot.add(top);
       scene.add(pivot);
@@ -217,12 +224,19 @@ export default {
     // shoreDistance for exactly this, and it is the only way the bed and the
     // surface can be guaranteed to agree about where the shore is. A circle
     // would have the bed crossing the blob's wobble twice per lobe.
+    // The stone line runs (water-local) from A=(3.2, 3.5) to B=(-3.4, -1.7);
+    // n̂=(NX, NZ) is its unit perpendicular pointing at the koi (back) side.
+    // Depth is SHALLOW at and before the line, easing to DEEP past it.
+    const NX = 0.62, NZ = -0.79, AX = 3.2, AZ = 3.5;
     const groundMesh = scene.getObjectByName('ground');
     const gpos = groundMesh.geometry.attributes.position;
     for (let i = 0; i < gpos.count; i++) {
-      const d = water.shoreDistance(gpos.getX(i) - 0.4, gpos.getZ(i) + 1.6);
+      const lx = gpos.getX(i) - 0.4, lz = gpos.getZ(i) + 1.6;
+      const d = water.shoreDistance(lx, lz);
       if (d <= 0) continue;                       // dry land, untouched
-      gpos.setY(i, gpos.getY(i) - DEPTH * SS(0, BANK, d));
+      const s = (lx - AX) * NX + (lz - AZ) * NZ;  // signed distance past the line
+      const depth = SHALLOW + (DEEP - SHALLOW) * SS(0.6, 3.2, s);
+      gpos.setY(i, gpos.getY(i) - depth * SS(0, BANK, d));
     }
     gpos.needsUpdate = true;
     groundMesh.geometry.computeVertexNormals();
@@ -234,7 +248,11 @@ export default {
     // beneath them, so nothing can surface unasked.
     const koi = makeKoi({
       count: 4, seed: ID, length: 0.8, color: wash(0.16), unlit: true,
-      radius: 3.4, depth: 0.34, surfaceAt: water.heightAt,
+      radius: 2.0, depth: 0.34, surfaceAt: water.heightAt,
+      // the deep side of the gradient, clear of the crossing (Frank: "the
+      // fish are kind of further back in the pool where it can be a bit
+      // deeper... positioned so they're not overlapping with the stones")
+      center: [1.4, -2.0],
     });
     koi.group.position.set(0.4, WY, -1.6);
     // NO HULLS ON A SUBMERGED FISH. addOutlines gives everything an inverted

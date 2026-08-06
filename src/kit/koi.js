@@ -122,6 +122,11 @@ export function makeKoi({
   color = WASH.mid,
   radius = 2.0,
   depth = 0.13,
+  // Where the school swims, in the group's local frame. The group itself
+  // stays at the water's origin (surfaceAt samples in water coordinates, and
+  // moving the group would shear the two apart) — the ORBITS move instead.
+  // k39 uses this to keep the fish on the deep side of its gradient pond.
+  center = [0, 0],
   // Optional: the water's own heightAt(x, z). Given one, the fish ride the
   // surface — a ripple crossing the pond lifts whatever is under it, which is
   // what ties the school to the water instead of leaving it swimming in a
@@ -198,8 +203,8 @@ export function makeKoi({
       rate: 0.16 + hash1(i * 4 + 4, seed) * 0.14,
       dir: hash1(i * 4 + 5, seed) < 0.4 ? -1 : 1,
       beat: 4.5 + hash1(i * 4 + 6, seed) * 3,
-      cx: (hash1(i * 4 + 7, seed) - 0.5) * radius * 0.4,
-      cz: (hash1(i * 4 + 8, seed) - 0.5) * radius * 0.4,
+      cx: center[0] + (hash1(i * 4 + 7, seed) - 0.5) * radius * 0.4,
+      cz: center[1] + (hash1(i * 4 + 8, seed) - 0.5) * radius * 0.4,
     });
   }
 

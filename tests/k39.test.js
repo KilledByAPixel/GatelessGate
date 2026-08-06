@@ -259,10 +259,27 @@ test('case 39: the bed is dug out under the water and untouched outside it', () 
     }
   }
   assert.ok(insideChecked > 8 && outsideChecked > 8, 'the sample found real ground');
-  assert.ok(worstInside < wy - 0.5,
-    `the bed under the water must be well below it (highest ${worstInside.toFixed(2)} vs water ${wy})`);
+  // The bed became a GRADIENT (shallow crossing, deep koi side), so the old
+  // uniform "well below" pin (wy - 0.5 everywhere) now applies only past the
+  // stone line; the shallow side merely has to stay submerged.
+  assert.ok(worstInside < wy - 0.15,
+    `the bed under the water must stay submerged (highest ${worstInside.toFixed(2)} vs water ${wy})`);
   assert.ok(worstOutside > wy,
     `and the bank outside must stay above it (lowest ${worstOutside.toFixed(2)} vs water ${wy})`);
+
+  // the deep zone keeps the original guarantee
+  let deepChecked = 0, worstDeep = -Infinity;
+  for (let i = 0; i < pos.count; i++) {
+    const lx = pos.getX(i) - cx, lz = pos.getZ(i) - cz;
+    if (Math.hypot(lx, lz) > 4.0) continue;
+    const s = (lx - 3.2) * 0.62 + (lz - 3.5) * -0.79;   // same axis as the carve
+    if (s < 2.4) continue;   // most of the ramp done — carve depth ≥ ~1.1 here
+    deepChecked++;
+    worstDeep = Math.max(worstDeep, pos.getY(i));
+  }
+  assert.ok(deepChecked > 3, 'the sample found deep-zone ground');
+  assert.ok(worstDeep < wy - 0.5,
+    `the koi side must stay a real pool (highest ${worstDeep.toFixed(2)} vs water ${wy})`);
 });
 
 test('case 39: the fish are unlit, or they vanish under the sheet', () => {
@@ -278,5 +295,69 @@ test('case 39: the fish are unlit, or they vanish under the sheet', () => {
     assert.ok(b.material.isMeshBasicMaterial, 'unlit — the water eats toon shading');
     assert.equal(b.userData.keepMaterial, true, 'and the workbench must not relight it');
     assert.equal(b.userData.noOutline, true, 'no ink hull on a thing seen through water');
+  }
+});
+
+// ---- the gradient pond (Frank's second pond ruling) -------------------------
+// "The water more shallow where the stones are... deeper farther away where
+// the fish are. The stones can be a bit taller, so they're fully touching the
+// bottom of the pond. The fish are further back where it can be a bit deeper,
+// positioned so they're not overlapping with the stones."
+
+function bedYAt(ground, x, z) {
+  const p = ground.geometry.attributes.position;
+  let best = Infinity, y = 0;
+  for (let i = 0; i < p.count; i++) {
+    const d = Math.hypot(p.getX(i) - x, p.getZ(i) - z);
+    if (d < best) { best = d; y = p.getY(i); }
+  }
+  return y;
+}
+
+test('case 39: the bed is shallow under the crossing and deep under the koi', () => {
+  const { root, ground } = pondParts();
+  // mid-line stone (world) vs the koi school's center (world 1.8, -3.6)
+  const tops = [];
+  root.scene.traverse((o) => { if (o.name === 'stone-top') tops.push(o.parent); });
+  const mid = tops[3].position;
+  const stoneBed = bedYAt(ground, mid.x, mid.z);
+  const koiBed = bedYAt(ground, 1.8, -3.6);
+  assert.ok(koiBed < stoneBed - 0.5,
+    `deep side must be at least 0.5 deeper: stones ${stoneBed.toFixed(2)}, koi ${koiBed.toFixed(2)}`);
+});
+
+test('case 39: every stone stands on the bottom, none floats', () => {
+  const { root, ground } = pondParts();
+  root.scene.traverse((o) => {
+    if (o.name !== 'stone-top') return;
+    const pivot = o.parent;
+    const bottom = pivot.position.y + o.position.y - 0.55 / 2;
+    const bed = bedYAt(ground, pivot.position.x, pivot.position.z);
+    assert.ok(bottom <= bed + 0.02,
+      `stone at (${pivot.position.x.toFixed(1)},${pivot.position.z.toFixed(1)}) floats: bottom ${bottom.toFixed(2)} over bed ${bed.toFixed(2)}`);
+    assert.ok(bottom >= bed - 0.6, `stone sunk absurdly deep: ${bottom.toFixed(2)} vs bed ${bed.toFixed(2)}`);
+  });
+});
+
+test('case 39: the koi never swim into the crossing', () => {
+  const { root } = staged();
+  const stones = [];
+  const fish = [];
+  root.scene.traverse((o) => {
+    if (o.name === 'stone-top') stones.push(o.parent);
+    if (o.name === 'fish') fish.push(o);
+  });
+  assert.equal(fish.length, 4);
+  // sample a full minute of swimming: no fish center comes within a stone's
+  // radius + half a fish of any stone
+  for (let t = 0; t < 60; t += 0.25) {
+    root.update(0.25, t);
+    for (const f of fish) {
+      const fx = f.position.x + 0.4, fz = f.position.z - 1.6;   // koi group sits at (0.4,·,-1.6)
+      for (const s of stones) {
+        const d = Math.hypot(fx - s.position.x, fz - s.position.z);
+        assert.ok(d > 0.75, `fish at (${fx.toFixed(1)},${fz.toFixed(1)}) crosses stone at (${s.position.x.toFixed(1)},${s.position.z.toFixed(1)}) t=${t}`);
+      }
+    }
   }
 });

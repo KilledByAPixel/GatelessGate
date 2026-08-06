@@ -125,3 +125,21 @@ test('two seeds give two different schools', () => {
   };
   assert.notDeepEqual(swim(30), swim(7));
 });
+
+test('center offsets the school without moving the group', () => {
+  // Two schools, same seed, one offset. After the same update the offset
+  // school's mean position differs by exactly the center delta — schools are
+  // deterministic, so the delta is exact, not approximate.
+  const mean = (k) => {
+    const p = new THREE.Vector3();
+    for (const f of k.group.children) p.add(f.position);
+    return p.multiplyScalar(1 / k.group.children.length);
+  };
+  const a = makeKoi({ count: 3, seed: 39, radius: 2.0 });
+  const b = makeKoi({ count: 3, seed: 39, radius: 2.0, center: [1.4, -2.0] });
+  a.update(0.016, 5.0); b.update(0.016, 5.0);
+  const ma = mean(a), mb = mean(b);
+  assert.ok(Math.abs((mb.x - ma.x) - 1.4) < 1e-9, `dx ${mb.x - ma.x}`);
+  assert.ok(Math.abs((mb.z - ma.z) - (-2.0)) < 1e-9, `dz ${mb.z - ma.z}`);
+  assert.equal(a.group.position.x, b.group.position.x, 'the group itself must not move');
+});
