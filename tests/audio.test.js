@@ -1322,7 +1322,12 @@ test('jitterHz stays within ±STRIKE_JITTER_CENTS and is centred', () => {
 
 // ---- Task 8: the rain layer — patter, not wash -----------------------------
 
-test('the rain bed is patter, not wash: high crest factor, bounded, loopable', () => {
+test('the rain bed is a steady shower: continuous, level, bounded, loopable', () => {
+  // Revision note: this test's first life pinned the OPPOSITE (crest > 6,
+  // "patter, not wash") — the theory that discrete drops distinguish rain
+  // from surf. Frank's ear overruled it: sparse ticks read as dripping taps.
+  // What distinguishes rain from surf is steadiness (see RAIN's comment in
+  // synths.js), so that is what gets pinned now, from both sides.
   const SR = 44100;
   const s = rainBedSamples(SR, 4, 9911);
   assert.equal(s.length, SR * 4);
@@ -1331,10 +1336,21 @@ test('the rain bed is patter, not wash: high crest factor, bounded, loopable', (
   const rms = Math.sqrt(sum2 / s.length);
   assert.ok(peak <= 1.0001, `unnormalised peak ${peak}`);
   assert.ok(peak > 0.5, 'normalisation missing');
-  // discrete events over near-silence — the anti-"beach static" property.
-  // Filtered noise (the retired water bed) sits near crest 4; drops must be
-  // far sparser than that.
-  assert.ok(peak / rms > 6, `crest factor ${peak / rms}: this is a wash, not rain`);
+  // continuous with grain: pure hiss sits near crest 3.4, the retired plinky
+  // beds sat 14-20. Between, closer to the hiss.
+  const crest = peak / rms;
+  assert.ok(crest < 9, `crest ${crest}: individual drops read as taps, not rain`);
+  assert.ok(crest > 2.5, `crest ${crest}: this is a tone, not a shower`);
+  // steady: rain holds one level — baked surf-swells would breathe here
+  const W = Math.floor(SR * 0.25);
+  let lo = Infinity, hi = 0;
+  for (let w = 0; w + W <= s.length; w += W) {
+    let e = 0;
+    for (let i = w; i < w + W; i++) e += s[i] * s[i];
+    const r = Math.sqrt(e / W);
+    lo = Math.min(lo, r); hi = Math.max(hi, r);
+  }
+  assert.ok(hi / lo < 1.6, `windowed RMS swings ${hi / lo}: surf breathes, rain holds steady`);
   // deterministic: same seed, same rain
   assert.deepEqual(Array.from(rainBedSamples(SR, 4, 9911).subarray(0, 100)), Array.from(s.subarray(0, 100)));
 });

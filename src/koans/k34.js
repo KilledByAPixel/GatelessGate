@@ -105,7 +105,7 @@ export default {
     // THE RAIN: the verse's own weather — "When the earth is parched rain
     // will fall" — already falling over the study, indifferent to the
     // sentence that walked out of it.
-    const rain = makeRain({ count: 340, seed: ID, width: 26, depth: 26, height: 13 });
+    const rain = makeRain({ count: 460, seed: ID, width: 26, depth: 26, height: 13 });
     scene.add(rain.points);
 
     const world = composeWorld(scene, {

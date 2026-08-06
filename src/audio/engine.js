@@ -245,10 +245,12 @@ export function createAudio(save) {
   // The audible rain: sparse pitched plinks over the baked patter — rain
   // finding surfaces. Same high register as the basin drips, quieter.
   function rainDropNow() {
-    const deg = RAIN.degree + [0, 2, 4, 5][Math.floor(Math.random() * 4)];
-    const f0 = hz(deg, mood);
+    // Unpitched on purpose (Frank: the melodic plinks "don't sound like a
+    // rain drop"): log-uniform frequency off the scale entirely, and a
+    // near-flat sweep — the pool "bloip" glide is WATER's voice, not rain's.
+    const f0 = 650 * Math.pow(2.3, Math.random());
     strikeDrip(ctx, voicesDry, voicesWet, {
-      f0, gain: RAIN.dropLevel * (0.6 + Math.random() * 0.8), verbMix: WATER.verbMix,
+      f0, gain: RAIN.dropLevel * (0.6 + Math.random() * 0.8), sweep: 1.12, verbMix: WATER.verbMix,
     });
   }
   function scheduleRainDrop() {

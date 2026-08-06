@@ -482,35 +482,48 @@ export function makeWaterBed(ctx, dest) {
   };
 }
 
-// Rain. The water bed (makeWaterBed, above) is the ocean's surf now (case
-// 20), and its whole history is the lesson here: a CONTINUOUS filtered-noise
-// wash reads as surf — in this book it literally IS the surf — so rain is
-// built the other way up: the bed is a pre-baked loop of DISCRETE
-// Poisson-timed drop ticks (patter), and the salient content is live sparse
-// plinks through strikeDrip at the engine. All numbers PROVISIONAL pending
-// Frank's ear on case 34 (see CERAMIC's own comment for the convention).
-// Frank's first audition (case 34): "too high pitched, too much individual
-// dropping sounds — want continuous rain." Bed densified 22->65 drops/s and
-// dropped an octave-ish (see rainBedSamples), tone darkened, and the live
-// plinks pushed back and down so the shower carries and the plink punctuates.
-export const RAIN = { bedLevel: 0.030, bedTone: 3800, dropGap: 4.5, dropLevel: 0.016, degree: 14 };
+// Rain. Built twice, and the second build reversed the first's theory. v1
+// reasoned from the water bed's history (makeWaterBed, above — a filtered
+// noise wash that read as surf and finally BECAME case 20's surf) that rain
+// must be the opposite: sparse DISCRETE Poisson drop ticks, "patter, not
+// wash". Frank's ear overruled it twice — sparse ticks, even densified, read
+// as dripping taps, "doesn't sound like rain". What actually separates rain
+// from surf is not discreteness, it's STEADINESS: surf breathes on slow
+// wave-period swells, rain holds one level. So the bed is a steady hiss with
+// a dense droplet grain riding it (see rainBedSamples), makeRainBed keeps
+// its slow wobble near zero, and the surf lesson lives there instead. All
+// numbers PROVISIONAL pending Frank's ear on case 34 (see CERAMIC's own
+// comment for the convention). No `degree`: the plinks stopped being
+// melodic in the same revision — a raindrop lands off the scale.
+export const RAIN = { bedLevel: 0.016, bedTone: 3800, dropGap: 4.5, dropLevel: 0.016 };
 
-// Pure: the loop's samples. Poisson drop times (exponential gaps), each drop
-// a few ms of decaying sine-plus-noise at its own frequency — no filtered
-// noise anywhere, so there is no wash to read as surf. Peak-normalised.
+// Pure: the loop's samples. A steady shower — one-pole-lowpassed hiss (the
+// body of rain heard through air) plus a dense soft droplet grain (hundreds
+// of ticks/s) that keeps it granular up close instead of glassy. Constants
+// were picked by measurement (crest ~5.4 between pure hiss at 3.4 and the
+// retired plinky bed at 14-20; 0.25s-window RMS swell 1.12 — steady, where
+// baked surf-swells would breathe). Peak-normalised, seeded, loopable.
 export function rainBedSamples(sampleRate, seconds, seed = 9911) {
   const nTotal = Math.floor(sampleRate * seconds);
   const out = new Float32Array(nTotal);
   const rand = mulberry32(seed);
-  const LAMBDA = 65;                                   // drops per second
+  // the hiss: steady by construction
+  let y = 0;
+  const k = Math.exp((-2 * Math.PI * 2600) / sampleRate);
+  for (let i = 0; i < nTotal; i++) {
+    y = k * y + (1 - k) * (rand() * 2 - 1);
+    out[i] = y;
+  }
+  // the grain: soft ticks riding the hiss — texture, not events
+  const LAMBDA = 380;                                  // ticks per second
   let t = 0;
   while (t < seconds) {
     t += -Math.log(1 - rand()) / LAMBDA;
     const i0 = Math.floor(t * sampleRate);
     if (i0 >= nTotal) break;
-    const f = 800 * Math.pow(3.5, rand());             // 0.8k–2.8k, log-uniform
-    const dur = 0.005 + rand() * 0.015;
-    const amp = 0.25 + rand() * rand() * 0.75;         // few loud, many soft
+    const f = 900 * Math.pow(3, rand());               // 0.9k–2.7k, log-uniform
+    const dur = 0.002 + rand() * 0.006;
+    const amp = 0.9 * (0.3 + rand() * rand());
     const nd = Math.min(nTotal - i0, Math.ceil(dur * sampleRate));
     for (let j = 0; j < nd; j++) {
       const env = Math.pow(1 - j / nd, 2) * amp;
@@ -524,9 +537,11 @@ export function rainBedSamples(sampleRate, seconds, seed = 9911) {
   return out;
 }
 
-// Browser-only. Loop + gentle lowpass + slow incommensurate swells (the gust
-// idiom, nothing fast — the wah lessons), with surge() for the case-34 tap:
-// the shower leans in for a few seconds and relaxes on its own.
+// Browser-only. Loop + gentle lowpass, with surge() for the case-34 tap:
+// the shower leans in for a few seconds and relaxes on its own. The slow
+// incommensurate swells (the gust idiom) are kept but nearly flat — surf
+// breathes on its swells and that breathing is exactly what makes a noise
+// bed read as ocean, so rain holds its level and only barely lives.
 export function makeRainBed(ctx, dest) {
   const SR = ctx.sampleRate, LOOP = 12, XF = 1.0;
   const n = Math.floor(SR * LOOP), x = Math.floor(SR * XF);
@@ -552,7 +567,7 @@ export function makeRainBed(ctx, dest) {
   return {
     setLevel(l) {
       g.gain.setTargetAtTime(l, ctx.currentTime, 0.3);
-      gWob.gain.setTargetAtTime(l * 0.15, ctx.currentTime, 0.3);
+      gWob.gain.setTargetAtTime(l * 0.04, ctx.currentTime, 0.3);   // barely alive — see above
     },
     gain() { return g.gain.value; },   // headless probe read; never drives anything
     // mult/hold PROVISIONAL like every other number on this voice — how hard
