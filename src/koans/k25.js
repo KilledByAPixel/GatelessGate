@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import {
   composeWorld, makeVeranda, makeAssembly, makeMonk, faceMonk,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeScreen, makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 import { mergeSimple } from '../kit/scatter.js';
 
@@ -81,6 +81,14 @@ export default {
     // boards, which swallowed every seated robe's base and made the figures
     // read as squat blobs (Frank's "really squat and fat weirdly").
     const DECK_TOP = HOVER + 0.34;
+
+    // A bamboo screen (k26's, in plain ink — there it is the red thing
+    // itself) hanging at the back of the dream hall. Maitreya's hall is
+    // FURNISHED — that is what makes the dream feel like a place someone
+    // keeps, rather than a stage set. Silent: nothing here is for rolling.
+    const screen = makeScreen({ width: 3.0, height: 2.3, slats: 11, seed: 25 });
+    screen.group.position.set(0.2, DECK_TOP, -5.35);
+    hall.add(screen.group);
 
     // the seats: three low platforms, and Kyozan standing at the third
     const seats = [];
