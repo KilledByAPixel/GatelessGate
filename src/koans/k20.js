@@ -167,7 +167,7 @@ export default {
       opacity: 1, segments: 64,
       alphaRamp: (x, z) => {
         const s = 43 - z;
-        const t = Math.max(0, Math.min(1, s / 20));
+        const t = Math.max(0, Math.min(1, s / 12));   // full red by ~12 out — Frank wants it arriving sooner
         return 0.15 + 0.8 * t * t * (3 - 2 * t);
       },
       drift: [
