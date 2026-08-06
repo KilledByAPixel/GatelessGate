@@ -54,7 +54,7 @@ export function windMix(params, flavor, gust) {
 // Frank tuned these on wind-audition (2026-08-06): far less slope emphasis
 // than the design guessed (2.7 vs 22) — he wants the leaves mostly PRESENT,
 // swelling gently, not stabbing in with each gust front.
-export const RUSTLE = { base: 1.92, slopeGain: 2.7, max: 14.17, level: 0.03 };
+export const RUSTLE = { base: .9, slopeGain: 2.7, max: 14.17, level: 0.03 };
 export function rustleRate(grain, level, slope) {
   if (grain <= 0 || level <= 0) return 0;
   const drive = Math.min(1, Math.abs(slope) * 3);
