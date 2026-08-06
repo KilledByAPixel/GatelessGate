@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, aimMonk, faceMonk, makeAssembly,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeRack, makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
 const ID = 43;
@@ -89,6 +89,15 @@ export default {
     faceMonk(second, shuzan.position);
     scene.add(second);
 
+    // The staff rack (k44's, doing its ordinary job): everyone who came to
+    // hear Shuzan hold up ONE staff leaned theirs here. The case's whole
+    // trap is what you may and may not call the thing — a row of the same
+    // thing at rest, off to the side, is the quietest possible joke.
+    const rack = makeRack({ height: 1.25, holding: true });
+    rack.group.position.set(-3.1, 0, -2.6);
+    faceMonk(rack.group, second.position);
+    scene.add(rack.group);
+
     aimMonk(shuzan, near.position);
 
     // and the rest of the hall behind them, sitting well back
@@ -106,6 +115,7 @@ export default {
         { at: shuzan, r: 1.4 },
         { at: near, r: 1.2 },
         { at: second, r: 1.2 },
+        { at: rack.group, r: 0.9 },
         { x: 2.6, z: 3.6, r: 3.4 },
       ],
       grassKeepout: path.keepout(24, 0.95),
@@ -115,6 +125,7 @@ export default {
       [shuzan.position, 0.7, 0.55, 0.42],
       [near.position, 0.62, 0.5, 0.40],
       [second.position, 0.62, 0.5, 0.40],
+      [rack.group.position, 0.55, 0.3, 0.32],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = p.x; s.position.z = p.z;
