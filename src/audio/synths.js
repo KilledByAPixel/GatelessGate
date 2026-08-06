@@ -487,8 +487,8 @@ export function makeWaterBed(ctx, dest) {
 // wash reads as surf — in this book it literally IS the surf — so rain is
 // built the other way up: the bed is a pre-baked loop of DISCRETE
 // Poisson-timed drop ticks (patter), and the salient content is live sparse
-// plinks through strikeDrip at the engine. Levels PROVISIONAL pending
-// Frank's ear on case 34.
+// plinks through strikeDrip at the engine. All numbers PROVISIONAL pending
+// Frank's ear on case 34 (see CERAMIC's own comment for the convention).
 export const RAIN = { bedLevel: 0.030, bedTone: 5200, dropGap: 2.6, dropLevel: 0.022, degree: 17 };
 
 // Pure: the loop's samples. Poisson drop times (exponential gaps), each drop
@@ -551,6 +551,8 @@ export function makeRainBed(ctx, dest) {
       gWob.gain.setTargetAtTime(l * 0.15, ctx.currentTime, 0.3);
     },
     gain() { return g.gain.value; },   // headless probe read; never drives anything
+    // mult/hold PROVISIONAL like every other number on this voice — how hard
+    // the shower leans in for case 34's tap, pending Frank's ear.
     surge(mult = 2.2, hold = 2.5) {
       surgeG.gain.setTargetAtTime(mult, ctx.currentTime, 0.4);
       if (surgeTimer) clearTimeout(surgeTimer);
