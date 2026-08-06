@@ -687,11 +687,18 @@ export function makeWind(ctx, dest) {
   const grainBufs = [];
   for (let i = 0; i < 10; i++) {
     const grand = mulberry32(4000 + i);
-    const dur = 0.006 + grand() * 0.018;
+    const dur = 0.015 + grand() * 0.030;               // 15-45ms — a swish, not a tick
     const gn = Math.ceil(SR * dur);
     const gb = ctx.createBuffer(1, gn, SR);
     const gd = gb.getChannelData(0);
-    for (let j = 0; j < gn; j++) gd[j] = (grand() * 2 - 1) * Math.pow(1 - j / gn, 2);
+    // Hann-windowed noise: silent at BOTH ends. The first pool used
+    // (1 - j/n)^2 — full amplitude at sample zero — so every grain opened
+    // on a hard edge and the whole layer read as "weird clicking" (Frank's
+    // ear, wind-audition). A leaf brushing a leaf does not switch on.
+    for (let j = 0; j < gn; j++) {
+      const w = Math.sin((Math.PI * j) / gn);
+      gd[j] = (grand() * 2 - 1) * w * w;
+    }
     grainBufs.push(gb);
   }
   function fireGrain() {
