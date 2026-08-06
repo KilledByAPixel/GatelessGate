@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeWheel, makeMonk, faceMonk,
+  composeWorld, makePath, makeWheel, makeMonk, faceMonk, makeStall,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -61,6 +61,15 @@ export default {
     top.position.y = 0.76;
     trestle.add(top);
     trestle.position.set(-1.9, 0, -1.5);
+
+    // The workshop's stall (k45's roadside stand, restocked with a
+    // cartwright's wares): Keichu made a hundred carts — somewhere he sold
+    // the work. Behind the trestle, facing the road, it turns the yard
+    // from "a wheel on a stand" into a man's whole living.
+    const stall = makeStall({ seed: 8 });
+    stall.position.set(-3.6, 0, 0.9);      // in frame left of the wheel, not hidden behind the trestle
+    faceMonk(stall, { x: 1.3, z: 0.4 });   // open side toward the work
+    scene.add(stall);
     trestle.rotation.y = -0.4;
     scene.add(trestle);
 
@@ -93,6 +102,7 @@ export default {
         { at: trestle, r: 1.6 },
         { at: master, r: 1.1 },
         { at: student, r: 1.1 },
+        { at: stall, r: 1.6 },
       ],
       // the working yard is trodden bare around the stand and the bench
       grassKeepout: [
@@ -105,6 +115,7 @@ export default {
     for (const [p, rx, rz, op] of [
       [wheel.group.position, 0.8, 0.6, 0.38],
       [trestle.position, 0.8, 0.45, 0.32],
+      [stall.position, 1.1, 0.8, 0.30],
       [master.position, 0.68, 0.52, 0.42],
       [student.position, 0.62, 0.5, 0.40],
     ]) {
