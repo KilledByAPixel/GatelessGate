@@ -290,8 +290,12 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
         }
 
         if (o.isMesh && !o.userData.isOutline) {
-          o.castShadow = state.shadows && o.name !== 'ground';
-          o.receiveShadow = state.shadows;
+          // `noShadow` opts a mesh out of the shadow map entirely — water and
+          // foam set it: an ocean-sized sheet outruns the sun's shadow camera
+          // and the far-plane cut painted a phantom triangle of shadow on the
+          // open sea (case 20).
+          o.castShadow = state.shadows && o.name !== 'ground' && !o.userData.noShadow;
+          o.receiveShadow = state.shadows && !o.userData.noShadow;
           // Some materials must survive this swap untouched — `keepMaterial`.
           //
           // The toon toggle rebuilds every material as a plain Lambert, which

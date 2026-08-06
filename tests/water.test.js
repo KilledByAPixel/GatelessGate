@@ -348,3 +348,10 @@ test('alphaRamp on: RGBA vertex alpha follows the callback, clamped to 0..1', ()
     assert.equal(color.getX(i), 1, 'RGB stays white so the diffuse is untouched');
   }
 });
+
+test('water never joins the shadow map: the surface is flagged noShadow', () => {
+  // the ocean-sized sheet outruns the sun's shadow camera; the far-plane cut
+  // painted a phantom triangle of shadow on the open sea (case 20, Frank)
+  const w = makeWater({ shape: 'square', size: 90 });
+  assert.equal(surfaceOf(w).userData.noShadow, true);
+});

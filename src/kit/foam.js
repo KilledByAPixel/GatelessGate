@@ -101,6 +101,7 @@ export function makeFoam({
   mesh.name = 'foam';
   mesh.userData.noOutline = true;
   mesh.userData.keepMaterial = true;   // the workbench must not relight snow
+  mesh.userData.noShadow = true;       // a transparency, like the water it rides — see water.js
   mesh.frustumCulled = false;          // the strips move; a stale box would cull them
 
   const sea = (shore && shore.sea) ?? -0.35;

@@ -242,6 +242,12 @@ export function makeWater({
   const surface = new THREE.Mesh(geo, mat);
   surface.name = 'surface';
   surface.userData.noOutline = true;
+  // Water never joins the shadow map, either side of it. An ocean-sized sheet
+  // outruns the sun's little shadow camera (far = 42), and where the far
+  // plane slices the sheet the lookup paints a phantom wedge — Frank found a
+  // triangle of shadow mid-sea, cast by nothing. A glinting transparency has
+  // no business catching monk shadows anyway.
+  surface.userData.noShadow = true;
   // The debug workbench rebuilds every material as a plain Lambert on the
   // shipped default, which would drop the specular on the floor. This is
   // exactly what keepMaterial is for — the moon learned it the hard way.

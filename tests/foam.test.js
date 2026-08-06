@@ -159,3 +159,9 @@ test('makeFoam: a case can blush the foam and hand it the true water surface', a
   }
   assert.ok(ridden > 30, `only ${ridden} vertices ride the handed-over surface`);
 });
+
+test('makeFoam: flagged out of the shadow map, like the water it rides', async () => {
+  const { makeFoam } = await import('../src/kit/foam.js');
+  const foam = makeFoam({ shore: SHORE, seed: 20 });
+  assert.equal(foam.mesh.userData.noShadow, true);
+});
