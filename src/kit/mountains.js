@@ -3,6 +3,26 @@ import { hash1 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
 import { WASH } from '../palette.js';
 
+// The peak layout as a pure fact: where each mountain stands and how far its
+// base reaches. composeWorld asks this to keep scatter trees out of the rock,
+// and the road audit asks it to see what a road is aimed at. makeMountains
+// consumes THIS function — the math lives once, so mesh and footprint can
+// never drift. The hash streams (i*5+1..4) are the shipped ones; changing
+// them moves every mountain in the book.
+export function mountainFootprints({
+  count = 7, distance = 46, arcCenter = 0, arcSpan = 2.8, seed = 31, hScale = 1,
+} = {}) {
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    const a = arcCenter + (hash1(i * 5 + 1, seed) - 0.5) * arcSpan;
+    const d = distance * (0.85 + 0.35 * hash1(i * 5 + 2, seed));
+    const h = (9 + 13 * hash1(i * 5 + 3, seed)) * hScale;
+    const r = h * (0.9 + 0.7 * hash1(i * 5 + 4, seed));
+    out.push({ x: Math.sin(a) * d, z: -Math.cos(a) * d, r, h });
+  }
+  return out;
+}
+
 // Distant mountains: an arc of big faceted cones behind the scene, washed by
 // the fog into layered ink silhouettes. Call twice (far light band, nearer
 // darker band) for depth. Faces the -z direction the compositions look toward.
@@ -13,11 +33,9 @@ export function makeMountains({
   const g = new THREE.Group();
   g.name = 'mountains';
   const mat = toonMaterial({ color, flat: true });
+  const feet = mountainFootprints({ count, distance, arcCenter, arcSpan, seed, hScale });
   for (let i = 0; i < count; i++) {
-    const a = arcCenter + (hash1(i * 5 + 1, seed) - 0.5) * arcSpan;
-    const d = distance * (0.85 + 0.35 * hash1(i * 5 + 2, seed));
-    const h = (9 + 13 * hash1(i * 5 + 3, seed)) * hScale;
-    const r = h * (0.9 + 0.7 * hash1(i * 5 + 4, seed));
+    const { x: px, z: pz, r, h } = feet[i];
     const sides = 5 + Math.floor(hash1(i * 5 + 5, seed) * 3);
     const geo = new THREE.ConeGeometry(r, h, sides, 3);
 
@@ -42,7 +60,7 @@ export function makeMountains({
     geo.computeVertexNormals();
 
     const m = new THREE.Mesh(geo, mat);
-    m.position.set(Math.sin(a) * d, h / 2 - 1.5, -Math.cos(a) * d); // base sunk below the ground roll
+    m.position.set(px, h / 2 - 1.5, pz); // base sunk below the ground roll
     m.rotation.y = hash1(i * 7 + 6, seed) * Math.PI;
     m.rotation.z = (hash1(i * 7 + 8, seed) - 0.5) * 0.10;          // no peak stands perfectly plumb
     m.name = 'mountain';
