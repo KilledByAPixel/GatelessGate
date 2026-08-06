@@ -137,3 +137,25 @@ test('makeFoam: the trailing edge is more transparent than the front', async () 
   }
   assert.ok(max > min + 0.2, 'the fade gradient exists');
 });
+
+test('makeFoam: a case can blush the foam and hand it the true water surface', async () => {
+  const { makeFoam } = await import('../src/kit/foam.js');
+  const LIFT = 0.4;                              // an absurd surface, easy to spot
+  const foam = makeFoam({
+    shore: SHORE, seed: 20,
+    color: '#ffdddd',
+    surfaceAt: () => SHORE.sea + LIFT,
+  });
+  assert.equal(foam.mesh.material.color.getHexString(), 'ffdddd');
+  foam.update(1 / 60, 2.7);
+  const pos = foam.mesh.geometry.attributes.position;
+  // every vertex now sits at least at the lifted surface OR on higher sand
+  let ridden = 0;
+  for (let i = 0; i < pos.count; i++) {
+    assert.ok(pos.getY(i) >= SHORE.sea + LIFT + 0.02 - 1e-9
+      || pos.getY(i) >= SHORE.sea + 0.03,      // sand above the lifted sea
+    `a vertex ducked under the surface at y=${pos.getY(i)}`);
+    if (Math.abs(pos.getY(i) - (SHORE.sea + LIFT + 0.025)) < 1e-6) ridden++;
+  }
+  assert.ok(ridden > 30, `only ${ridden} vertices ride the handed-over surface`);
+});

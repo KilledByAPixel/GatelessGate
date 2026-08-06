@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, INK, INK_LIT, WASH, mixHex, wash } from '../palette.js';
+import { PAPER, ACCENT, INK, INK_LIT, SNOW, WASH, mixHex, wash } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeWater, makeSand, makeFoam,
   makeLights, makeBlobShadow, addOutlines, toonMaterial, groundHeight,
@@ -176,8 +176,18 @@ export default {
 
     // THE WAVE-ENDS — the foam that was the point of the ocean from Frank's
     // first sketch. Same period as the water's main swell, staggered per
-    // strip, so the arrivals overlap and no two land together.
-    const foam = makeFoam({ shore: SHORE, seed: ID, groundSeed: 21 });
+    // strip, so the arrivals overlap and no two land together. Blushed
+    // slightly toward the seal (Frank: "make it just slightly pink") — stark
+    // SNOW against the red read as paper scraps — and riding the sheet's OWN
+    // surface via surfaceAt (the koi idiom), because the sheet writes depth
+    // at this opacity and its crests would swallow tails pinned to flat sea
+    // level. renderOrder puts the foam after the sheet among transparents.
+    const foam = makeFoam({
+      shore: SHORE, seed: ID, groundSeed: 21,
+      color: mixHex(SNOW, ACCENT, 0.18),
+      surfaceAt: (x, z, t) => SHORE.sea + water.heightAt(x, z + (SHORE.dist + 43), t),
+    });
+    foam.mesh.renderOrder = 1;
     moving.add(foam.mesh);
 
     const world = composeWorld(moving, {

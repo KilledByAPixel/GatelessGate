@@ -47,6 +47,11 @@ export function makeFoam({
   length = 56,     // along-shore span the strips are scattered over
   across = 6,      // vertices across a strip's depth (front to tail)
   along = 10,      // vertices along a strip's width
+  color = SNOW,    // a case can blush it — k20's red sea takes a pink foam
+  // (x, z, t) => WORLD y of the water surface, the makeKoi idiom: with it the
+  // tails ride the actual swell instead of a flat sea level, which is what
+  // keeps them ON TOP of a depth-writing sheet whose crests rise past them
+  surfaceAt = null,
 } = {}) {
   const { dx = 0, dz = -1, dist = 8 } = shore || {};
   const px = -dz, pz = dx;                     // unit along-shore vector
@@ -87,7 +92,7 @@ export function makeFoam({
   geo.setIndex(indices);
 
   const mat = new THREE.MeshBasicMaterial({
-    color: SNOW,
+    color,
     transparent: true,
     vertexColors: true,
     depthWrite: false,
@@ -125,9 +130,11 @@ export function makeFoam({
           const x = px * u + dx * (dist + s);
           const z = pz * u + dz * (dist + s);
           // on the sand the foam hugs the sand; past the waterline the tail
-          // rides the SEA, not the seabed dropping away beneath it
+          // rides the SEA, not the seabed dropping away beneath it — the TRUE
+          // surface when the case hands one over, flat sea level otherwise
           const g = groundHeight(x, z, { seed: groundSeed, shore }) + 0.035;
-          const y = Math.max(g, sea + 0.02);
+          const w = surfaceAt ? surfaceAt(x, z, t) + 0.025 : sea + 0.02;
+          const y = Math.max(g, w);
           positions.set([x, y, z], v * 3);
           // bright at the front edge, drinking into the sand behind it; the
           // whole strip breathes with its cycle's own opacity
