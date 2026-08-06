@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeMonk, aimMonk, faceMonk, makeLantern,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial, makeFurin,
+  makeScale, makeLights, makeBlobShadow, addOutlines, toonMaterial, makeFurin,
 } from '../kit/index.js';
 
 const ID = 31;
@@ -56,6 +56,14 @@ export default {
     stall.position.set(-2.6, 0, -2.6);
     stall.rotation.y = 0.7;
     scene.add(stall);
+
+    // The merchant's scale (k18's, weighing tea instead of flax), standing
+    // by the stall's serving side. The old woman RUNS this place — a
+    // working shop weighs its goods, and the case is about being weighed.
+    const scale = makeScale({ height: 1.2, reading: 2 });
+    scale.group.position.set(-2.15, 0, -0.75);
+    faceMonk(scale.group, { x: 2.4, z: 1.5 });   // toward the customer's approach
+    scene.add(scale.group);
 
     const awning = new THREE.Mesh(
       new THREE.BoxGeometry(2.4, 0.07, 1.3),
@@ -136,6 +144,7 @@ export default {
         { x: WOMAN.x, z: WOMAN.z, r: 1.2 },
         { at: traveller, r: 1.2 },
         { at: lantern, r: 0.9 },
+        { at: scale.group, r: 0.7 },
       ],
       grassKeepout: [
         ...road.keepout(26, 1.0),
@@ -149,6 +158,7 @@ export default {
       [traveller.position, 0.66, 0.5, 0.42],
       [stall.position, 1.8, 1.4, 0.30],
       [lantern.position, 0.36, 0.3, 0.34],
+      [scale.group.position, 0.4, 0.3, 0.32],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = p.x; s.position.z = p.z;
