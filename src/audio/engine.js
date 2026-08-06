@@ -223,6 +223,15 @@ export function createAudio(save) {
     return bus;
   }
 
+  // UNCALLED since the ocean took the water bed (Frank, case 20: "those drip
+  // effects don't really go with the ocean — they're more of a still water
+  // pool"). The ambient drip loop was written for still-water beds, and every
+  // still-water case has since dropped the water token, so the only ears this
+  // ever reached were the surf's. Kept, like makeWaterBed was through its own
+  // quiet years, for the day a pool or a cave recipe names 'water' again —
+  // rewire it per-recipe then, not globally. Tap drips (audio.drip →
+  // strikeDrip) are a separate path and still ring everywhere they did.
+  // eslint-disable-next-line no-unused-vars
   function scheduleDrip() {
     dripTimer = setTimeout(() => {
       if (!water) return;
@@ -252,7 +261,8 @@ export function createAudio(save) {
       waterEpoch++;
       waterRecipeLevel = level;
       water.setLevel(WATER.bedLevel * level);
-      scheduleDrip();
+      // no scheduleDrip(): the bed's one caller is an OCEAN — see the note
+      // on scheduleDrip itself
     }
   }
 
