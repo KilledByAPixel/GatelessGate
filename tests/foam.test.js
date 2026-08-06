@@ -67,7 +67,7 @@ test('makeFoam: one mesh, unlit snow, kept material, no outline', async () => {
   assert.equal(foam.mesh.userData.keepMaterial, true);
 });
 
-test('makeFoam: strips live on the beach and hug the shored sand', async () => {
+test('makeFoam: strips live on the beach, hug the sand, and ride the sea past the waterline', async () => {
   const { makeFoam } = await import('../src/kit/foam.js');
   const { groundHeight } = await import('../src/kit/ground.js');
   const foam = makeFoam({ shore: SHORE, seed: 20 });
@@ -77,13 +77,39 @@ test('makeFoam: strips live on the beach and hug the shored sand', async () => {
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
     const s = x * SHORE.dx + z * SHORE.dz - SHORE.dist;   // seaward of waterline
-    assert.ok(s > -3.5 && s < 3.0, `a foam vertex sits at s=${s}, off the beach`);
+    assert.ok(s > -3.5 && s < 2.5, `a foam vertex sits at s=${s}, off the beach`);
     const g = groundHeight(x, z, { seed: 21, shore: SHORE });
-    const lift = y - g;
-    assert.ok(lift > 0.005 && lift < 0.09, `foam floats ${lift} above the sand at (${x}, ${z})`);
+    assert.ok(y > g + 0.005, `foam sunk into the ground at (${x.toFixed(1)}, ${z.toFixed(1)})`);
+    assert.ok(y < Math.max(g + 0.09, SHORE.sea + 0.05),
+      `foam floats ${y - g} above the surface at (${x.toFixed(1)}, ${z.toFixed(1)})`);
     checked++;
   }
   assert.ok(checked > 50, 'there is actually foam to check');
+});
+
+// THE SIGN BUG, PINNED: s is positive seaward, so run-up means the front
+// edge goes NEGATIVE. The first cut had it flipped — every wave-end swept
+// out to sea, sank under the water sheet, and no foam was ever visible
+// (Frank: "I don't see any foam at all"). The blind symmetric bound above
+// let it through; this does not.
+test('makeFoam: the wave-ends actually run UP the sand — landward of the waterline at full sweep', async () => {
+  const { makeFoam } = await import('../src/kit/foam.js');
+  const foam = makeFoam({ shore: SHORE, seed: 20 });
+  // scan a whole cycle: at SOME moment, plenty of foam stands well landward
+  // (s < -0.8), and at EVERY moment the landward reach beats the seaward one
+  let bestLandward = 0;
+  for (let t = 0; t < 6; t += 0.25) {
+    foam.update(0.25, t);
+    const pos = foam.mesh.geometry.attributes.position;
+    let landward = 0;
+    for (let i = 0; i < pos.count; i++) {
+      const s = pos.getX(i) * SHORE.dx + pos.getZ(i) * SHORE.dz - SHORE.dist;
+      if (s < -0.8) landward++;
+    }
+    bestLandward = Math.max(bestLandward, landward);
+  }
+  assert.ok(bestLandward > 30,
+    `only ${bestLandward} vertices ever reach up the sand — the sweep points the wrong way`);
 });
 
 test('makeFoam: deterministic, and alive — the strips move between moments', async () => {

@@ -98,6 +98,8 @@ export function makeFoam({
   mesh.userData.keepMaterial = true;   // the workbench must not relight snow
   mesh.frustumCulled = false;          // the strips move; a stale box would cull them
 
+  const sea = (shore && shore.sea) ?? -0.35;
+
   function update(dt, simTime) {
     const t = Number.isFinite(simTime) ? simTime : 0;
     let v = 0;
@@ -111,13 +113,21 @@ export function makeFoam({
         const wob = (noise1(u * 0.35 + t * 0.06, seed + 40) - 0.5) * 0.5;
         // ends of the strip trail behind its middle — a wave-end is a tongue
         const tongue = 1 - 0.5 * Math.abs(fu - 0.5) * 2;
-        const front = advance * tongue + wob;
+        // THE SIGN IS THE WHOLE GAME: s is positive SEAWARD, and run-up goes
+        // the other way. The front runs to NEGATIVE s (up the sand) as the
+        // cycle advances; the tail trails seaward behind it. This was flipped
+        // once and the foam swept out to sea, sank under the sheet, and Frank
+        // saw no foam at all.
+        const front = wob - advance * tongue;
         for (let j = 0; j <= across; j++) {
           const fj = j / across;                        // 0 front .. 1 tail
-          const s = front - fj * strip.depth;           // seaward coordinate
+          const s = front + fj * strip.depth;           // tail is seaward of the front
           const x = px * u + dx * (dist + s);
           const z = pz * u + dz * (dist + s);
-          const y = groundHeight(x, z, { seed: groundSeed, shore }) + 0.035;
+          // on the sand the foam hugs the sand; past the waterline the tail
+          // rides the SEA, not the seabed dropping away beneath it
+          const g = groundHeight(x, z, { seed: groundSeed, shore }) + 0.035;
+          const y = Math.max(g, sea + 0.02);
           positions.set([x, y, z], v * 3);
           // bright at the front edge, drinking into the sand behind it; the
           // whole strip breathes with its cycle's own opacity
