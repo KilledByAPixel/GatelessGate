@@ -482,6 +482,90 @@ export function makeWaterBed(ctx, dest) {
   };
 }
 
+// Rain. The water bed (makeWaterBed, above) is the ocean's surf now (case
+// 20), and its whole history is the lesson here: a CONTINUOUS filtered-noise
+// wash reads as surf — in this book it literally IS the surf — so rain is
+// built the other way up: the bed is a pre-baked loop of DISCRETE
+// Poisson-timed drop ticks (patter), and the salient content is live sparse
+// plinks through strikeDrip at the engine. Levels PROVISIONAL pending
+// Frank's ear on case 34.
+export const RAIN = { bedLevel: 0.030, bedTone: 5200, dropGap: 2.6, dropLevel: 0.022, degree: 17 };
+
+// Pure: the loop's samples. Poisson drop times (exponential gaps), each drop
+// a few ms of decaying sine-plus-noise at its own frequency — no filtered
+// noise anywhere, so there is no wash to read as surf. Peak-normalised.
+export function rainBedSamples(sampleRate, seconds, seed = 9911) {
+  const nTotal = Math.floor(sampleRate * seconds);
+  const out = new Float32Array(nTotal);
+  const rand = mulberry32(seed);
+  const LAMBDA = 22;                                   // drops per second
+  let t = 0;
+  while (t < seconds) {
+    t += -Math.log(1 - rand()) / LAMBDA;
+    const i0 = Math.floor(t * sampleRate);
+    if (i0 >= nTotal) break;
+    const f = 1400 * Math.pow(4, rand());              // 1.4k–5.6k, log-uniform
+    const dur = 0.003 + rand() * 0.009;
+    const amp = 0.25 + rand() * rand() * 0.75;         // few loud, many soft
+    const nd = Math.min(nTotal - i0, Math.ceil(dur * sampleRate));
+    for (let j = 0; j < nd; j++) {
+      const env = Math.pow(1 - j / nd, 2) * amp;
+      const ph = (2 * Math.PI * f * j) / sampleRate;
+      out[i0 + j] += env * (0.7 * Math.sin(ph) + 0.3 * (rand() * 2 - 1));
+    }
+  }
+  let peak = 0;
+  for (let i = 0; i < nTotal; i++) peak = Math.max(peak, Math.abs(out[i]));
+  if (peak > 0) for (let i = 0; i < nTotal; i++) out[i] /= peak;
+  return out;
+}
+
+// Browser-only. Loop + gentle lowpass + slow incommensurate swells (the gust
+// idiom, nothing fast — the wah lessons), with surge() for the case-34 tap:
+// the shower leans in for a few seconds and relaxes on its own.
+export function makeRainBed(ctx, dest) {
+  const SR = ctx.sampleRate, LOOP = 12, XF = 1.0;
+  const n = Math.floor(SR * LOOP), x = Math.floor(SR * XF);
+  const raw = rainBedSamples(SR, LOOP + XF, 9911);
+  for (let i = 0; i < x; i++) { const k = i / x; raw[i] = raw[i] * k + raw[n + i] * (1 - k); }
+  const buf = ctx.createBuffer(1, n, SR);
+  buf.getChannelData(0).set(raw.subarray(0, n));
+  const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = RAIN.bedTone; lp.Q.value = 0.4;
+  const g = ctx.createGain(); g.gain.value = 0;
+  const surgeG = ctx.createGain(); surgeG.gain.value = 1;
+  src.connect(lp); lp.connect(g); g.connect(surgeG); surgeG.connect(dest);
+
+  const lfoA = ctx.createOscillator(); lfoA.frequency.value = 0.047;
+  const lfoB = ctx.createOscillator(); lfoB.frequency.value = 0.079;
+  const gWob = ctx.createGain(); gWob.gain.value = 0;
+  lfoA.connect(gWob); lfoB.connect(gWob); gWob.connect(g.gain);
+  src.start(); lfoA.start(); lfoB.start();
+
+  let surgeTimer = null;
+  return {
+    setLevel(l) {
+      g.gain.setTargetAtTime(l, ctx.currentTime, 0.3);
+      gWob.gain.setTargetAtTime(l * 0.15, ctx.currentTime, 0.3);
+    },
+    gain() { return g.gain.value; },   // headless probe read; never drives anything
+    surge(mult = 2.2, hold = 2.5) {
+      surgeG.gain.setTargetAtTime(mult, ctx.currentTime, 0.4);
+      if (surgeTimer) clearTimeout(surgeTimer);
+      surgeTimer = setTimeout(() => {
+        surgeG.gain.setTargetAtTime(1, ctx.currentTime, 1.2);
+      }, hold * 1000);
+    },
+    stop() {
+      if (surgeTimer) { clearTimeout(surgeTimer); surgeTimer = null; }
+      for (const node of [src, lfoA, lfoB]) { try { node.stop(); } catch { /* already stopped */ } }
+      surgeG.disconnect();
+    },
+  };
+}
+
 // The gust envelope. Two very slow incommensurate sine sums: the breeze rises
 // and falls without ever settling into a period you could predict. This is pure
 // JS, evaluated at the sim clock — makeWind's setGust(v) and the fūrin's own

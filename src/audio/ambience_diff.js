@@ -47,7 +47,10 @@ export function emitterCount(recipe = []) {
 }
 
 // The voices the engine itself sustains, in the order the diff reports them.
-export const AUDIBLE = ['wind', 'water', 'music'];
+// 'rain' is deliberately NOT in BEDS below: like the water token, it counts
+// as an emitter, buying the drift layer more silence — a rain scene needs
+// less music.
+export const AUDIBLE = ['wind', 'water', 'music', 'rain'];
 
 // A recipe reduced to its sustained layers: { wind: 0.12, water: 0.35,
 // music: 1 }. Presence is meaningful even at level 0 — 'water:0' is a real

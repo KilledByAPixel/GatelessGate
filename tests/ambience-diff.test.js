@@ -200,7 +200,7 @@ test('debugState reads clean before any context exists', () => {
   assert.equal(typeof audio.transition, 'function');
   const s = audio.debugState();
   assert.deepEqual(s.recipe, []);
-  assert.deepEqual(s.layers, { wind: null, water: null, music: null });
+  assert.deepEqual(s.layers, { wind: null, water: null, music: null, rain: null });
   assert.deepEqual(s.log, []);
   assert.equal(s.mood, 'in');
 });
@@ -217,7 +217,7 @@ test('startAmbience, transition and playMusic are no-ops with no AudioContext in
   assert.doesNotThrow(() => audio.playMusic(2));
   const s = audio.debugState();
   assert.deepEqual(s.recipe, []);
-  assert.deepEqual(s.layers, { wind: null, water: null, music: null });
+  assert.deepEqual(s.layers, { wind: null, water: null, music: null, rain: null });
 });
 
 // ---- the Contents' own ambience (main.js's menuMusic) ----
@@ -278,4 +278,14 @@ test('entering a case from the Contents keeps the wind (no restart) and swaps ch
     if (audio) audio.stopAmbience();
     if (hadWindow) global.window = priorWindow; else delete global.window;
   }
+});
+
+// ---- Task 8: the rain layer — a fourth AUDIBLE sustained layer ------------
+
+test('rain is a sustained layer: diffed, kept, stopped like the others', () => {
+  assert.ok(AUDIBLE.includes('rain'));
+  const d = diffAmbience(['wind:0.2', 'rain:0.5', 'music'], ['wind:0.2', 'rain:0.8', 'music']);
+  assert.deepEqual(d.keep.find((k) => k.layer === 'rain'), { layer: 'rain', from: 0.5, to: 0.8 });
+  const gone = diffAmbience(['rain:0.5'], []);
+  assert.deepEqual(gone.stop, ['rain']);
 });

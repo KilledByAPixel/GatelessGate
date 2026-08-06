@@ -3,7 +3,7 @@ import {
   strike, bambooPartials, ODOSHI, pourBurst, strikeSitBell, SIT_BELL, STRIKE_SCALE, BELL,
   bellVoice, bellPartials, bellTail, applyBellPreset, BELL_PRESETS,
   CERAMIC, WOOD, CLOTH, BREATH, ceramicPartials, woodPartials, noiseSwell,
-  DRUM, drumPartials,
+  DRUM, drumPartials, RAIN, makeRainBed,
 } from './synths.js';
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
@@ -110,6 +110,7 @@ export function shouldPauseForHide(hidden, sitPhase) {
 export function createAudio(save) {
   let ctx = null, master = null, music = null, musicGain = null;
   let wind = null, verb = null, water = null, dripTimer = null;
+  let rain = null, rainDropTimer = null;
   let voicesDry = null, voicesWet = null;   // the pair hushVoices() gates — see its own comment
   let hushGen = 0;
   let hideGen = 0;   // mirrors hushGen: invalidates a stale deferred suspend, see pauseForHide()
@@ -118,7 +119,7 @@ export function createAudio(save) {
   // Creation counters for the headless probe: a layer that survived a page
   // turn keeps its epoch, one that restarted took a new one. Clock-free, so
   // it works even when a suspended headless context freezes every gain ramp.
-  let windEpoch = 0, waterEpoch = 0, musicEpoch = 0;
+  let windEpoch = 0, waterEpoch = 0, musicEpoch = 0, rainEpoch = 0;
   const tlog = [];        // last few transitions, for the same probe
   let soundOn = save.state().soundOn;
   let windScale = 1;      // debug-panel multiplier over whatever a koan asks for
@@ -241,6 +242,23 @@ export function createAudio(save) {
     }, WATER.gap * (0.6 + Math.random() * 0.8) * 1000);
   }
 
+  // The audible rain: sparse pitched plinks over the baked patter — rain
+  // finding surfaces. Same high register as the basin drips, quieter.
+  function rainDropNow() {
+    const deg = RAIN.degree + [0, 2, 4, 5][Math.floor(Math.random() * 4)];
+    const f0 = hz(deg, mood);
+    strikeDrip(ctx, voicesDry, voicesWet, {
+      f0, gain: RAIN.dropLevel * (0.6 + Math.random() * 0.8), verbMix: WATER.verbMix,
+    });
+  }
+  function scheduleRainDrop() {
+    rainDropTimer = setTimeout(() => {
+      if (!rain) return;
+      if (ctx.state === 'running') rainDropNow();   // suspended: skip, keep ticking
+      scheduleRainDrop();
+    }, RAIN.dropGap * (0.5 + Math.random()) * 1000);
+  }
+
   // One sustained layer coming to life. Every bed is born at gain 0 and
   // setLevel rides setTargetAtTime, so a started layer always FADES in from
   // silence — there is no click to guard against here.
@@ -266,6 +284,12 @@ export function createAudio(save) {
       // no scheduleDrip(): the bed's one caller is an OCEAN — see the note
       // on scheduleDrip itself
     }
+    if (type === 'rain' && !rain) {
+      rain = makeRainBed(ctx, master);
+      rainEpoch++;
+      rain.setLevel(RAIN.bedLevel * level);
+      scheduleRainDrop();
+    }
   }
 
   // A sustained layer leaving: fade to true silence on the bed's own
@@ -284,6 +308,12 @@ export function createAudio(save) {
       if (dripTimer) { clearTimeout(dripTimer); dripTimer = null; }
       w.setLevel(0);
       setTimeout(() => w.stop(), STOP_FADE_S * 1000);
+    }
+    if (layer === 'rain' && rain) {
+      const r = rain; rain = null;
+      if (rainDropTimer) { clearTimeout(rainDropTimer); rainDropTimer = null; }
+      r.setLevel(0);
+      setTimeout(() => r.stop(), STOP_FADE_S * 1000);
     }
     // Music needs no fade: stop() only cancels the scheduler, and every note
     // already sounding decays on its own strike envelope.
@@ -397,6 +427,9 @@ export function createAudio(save) {
           if (water) { waterRecipeLevel = k.to; water.setLevel(WATER.bedLevel * k.to); } else startLayer('water', k.to, emitters);
         }
         if (k.layer === 'music') ensureCaseMusic(emitters);   // keeps the plain drift; swaps out the menu's chimes
+        if (k.layer === 'rain') {
+          if (rain) rain.setLevel(RAIN.bedLevel * k.to); else startLayer('rain', k.to, emitters);
+        }
       }
       for (const s of start) startLayer(s.layer, s.level, emitters, windFlavorOf(next));
       playing = next.slice();
@@ -425,6 +458,8 @@ export function createAudio(save) {
       if (wind) { wind.stop(); wind = null; }
       if (water) { water.stop(); water = null; }
       if (dripTimer) { clearTimeout(dripTimer); dripTimer = null; }
+      if (rain) { rain.stop(); rain = null; }
+      if (rainDropTimer) { clearTimeout(rainDropTimer); rainDropTimer = null; }
       stopMusic();
       playing = [];
       if (verb) verb.setRoom('open');   // leaving for the menu resets the air
@@ -444,6 +479,7 @@ export function createAudio(save) {
           wind: wind ? { epoch: windEpoch, level: windLevel, gain: wind.gain(), flavor: wind.flavor() } : null,
           water: water ? { epoch: waterEpoch, gain: water.gain() } : null,
           music: music ? { epoch: musicEpoch, emitters: music.emitters(), chimes: musicChimed } : null,
+          rain: rain ? { epoch: rainEpoch, gain: rain.gain() } : null,
         },
       };
     },
@@ -541,6 +577,14 @@ export function createAudio(save) {
     drip({ loud = false, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
       dripNow(loud, at);
+    },
+    // Case 34's tap: the shower leans in for a moment — bed swell plus a
+    // couple of immediate plinks. A no-op when no rain layer is live.
+    rainSurge() {
+      if (!rain || !ctx || ctx.state !== 'running') return;
+      rain.surge();
+      rainDropNow();
+      setTimeout(() => { if (rain && ctx.state === 'running') rainDropNow(); }, 350);
     },
     // the shishi-odoshi: the kit object fires onKnock/onPour, the case wires
     // them here — the same indirection as the furin

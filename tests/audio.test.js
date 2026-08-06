@@ -4,7 +4,7 @@ import {
   windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B,
   gustPhase, windGust, gustSlope, WIND_FLAVORS, windFlavorParams, windMix, RUSTLE, rustleRate, STRIKE_SCALE, BELL_PRESETS, bellMacroPartials, applyBellPreset, NAMED_MODE_COUNT, strike,
   ceramicPartials, woodPartials, CERAMIC, WOOD, CLOTH, BREATH, WATER, CHIME, BRONZE, makeWind, jitterHz, STRIKE_JITTER_CENTS,
-  DRUM, drumPartials,
+  DRUM, drumPartials, RAIN, rainBedSamples,
 } from '../src/audio/synths.js';
 import { noteForSize } from '../src/kit/cylinder.js';
 import {
@@ -1318,4 +1318,44 @@ test('jitterHz stays within ±STRIKE_JITTER_CENTS and is centred', () => {
   assert.ok(Math.abs(cents(lo) + STRIKE_JITTER_CENTS) < 0.01);
   assert.ok(cents(hi) < STRIKE_JITTER_CENTS && cents(hi) > STRIKE_JITTER_CENTS - 0.01);
   assert.ok(STRIKE_JITTER_CENTS <= 10, 'this is seasoning, not detune');
+});
+
+// ---- Task 8: the rain layer — patter, not wash -----------------------------
+
+test('the rain bed is patter, not wash: high crest factor, bounded, loopable', () => {
+  const SR = 44100;
+  const s = rainBedSamples(SR, 4, 9911);
+  assert.equal(s.length, SR * 4);
+  let peak = 0, sum2 = 0;
+  for (let i = 0; i < s.length; i++) { peak = Math.max(peak, Math.abs(s[i])); sum2 += s[i] * s[i]; }
+  const rms = Math.sqrt(sum2 / s.length);
+  assert.ok(peak <= 1.0001, `unnormalised peak ${peak}`);
+  assert.ok(peak > 0.5, 'normalisation missing');
+  // discrete events over near-silence — the anti-"beach static" property.
+  // Filtered noise (the retired water bed) sits near crest 4; drops must be
+  // far sparser than that.
+  assert.ok(peak / rms > 6, `crest factor ${peak / rms}: this is a wash, not rain`);
+  // deterministic: same seed, same rain
+  assert.deepEqual(Array.from(rainBedSamples(SR, 4, 9911).subarray(0, 100)), Array.from(s.subarray(0, 100)));
+});
+
+test('engine: rain starts, keeps, surges and stops like a real layer', () => {
+  const ctx = graphAudioContext();
+  global.window = { AudioContext: function AudioContext() { return ctx; } };
+  try {
+    const audio = createAudio({ state: () => ({ soundOn: true }), setSound() {} });
+    audio.startAmbience(['wind:0.16', 'rain:0.6', 'music']);
+    const st = audio.debugState();
+    assert.ok(st.layers.rain, 'rain layer missing');
+    const epoch = st.layers.rain.epoch;
+    audio.transition(['wind:0.2', 'rain:0.9', 'music']);
+    assert.equal(audio.debugState().layers.rain.epoch, epoch, 'kept rain must not restart');
+    audio.rainSurge();   // must not throw with the layer live
+    audio.transition(['wind:0.2', 'music']);
+    assert.equal(audio.debugState().layers.rain, null);
+    audio.rainSurge();   // and must be a no-op without it
+    audio.stopAmbience();
+  } finally {
+    delete global.window;
+  }
 });
