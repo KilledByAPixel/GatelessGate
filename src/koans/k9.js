@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT_DEEP, wash } from '../palette.js';
 import {
-  composeWorld, makeBuddha, makeMonk, faceMonk, makeTree,
+  composeWorld, makeBuddha, makeMonk, faceMonk, makeTree, makeFox,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -127,6 +127,15 @@ export default {
     faceMonk(seijo, monk.position);
     scene.add(seijo);
 
+    // A fox (k2's, between lives), sitting at the monument's foot with its
+    // eyes on the figure that has sat since before recorded history. Small
+    // against all that time — the scale contrast is the reason it's here.
+    // Kitsune keep shrines in the old stories; nobody minds it.
+    const fox = makeFox({ height: 0.45, seed: 9 });
+    fox.group.position.set(-0.9, 0, 2.75);
+    faceMonk(fox.group, buddha.position);
+    scene.add(fox.group);
+
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
@@ -136,11 +145,16 @@ export default {
         { x: CX, z: CZ, r: 9.4 },          // the whole monument (tree included)
         { at: monk, r: 1.2 },
         { at: seijo, r: 1.2 },
+        { at: fox.group, r: 0.6 },
         // the near flank's footprint: a scatter tree that spawns inside the
         // mountain pokes its crown through the slope and reads as a hole
         { x: -22.7, z: -15.3, r: 19 },
       ],
-      grassKeepout: [{ x: CX, z: CZ, r: 8.8 }],
+      grassKeepout: [
+        { x: CX, z: CZ, r: 8.8 },
+        // a clearing for the fox — 0.45 of animal disappears in full meadow
+        { x: -0.9, z: 2.75, r: 0.9 },
+      ],
       // the left forest cluster moves behind the near flank's center plane —
       // forests ignore keepouts, and a forest crown that spawns mid-slope
       // pokes through the mountain face and reads as a hole in the rock
@@ -163,6 +177,7 @@ export default {
     for (const [p, rx, rz, op] of [
       [monk.position, 0.62, 0.5, 0.40],
       [seijo.position, 0.68, 0.52, 0.42],
+      [fox.group.position, 0.38, 0.26, 0.34],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = p.x; s.position.z = p.z;
@@ -203,6 +218,7 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
+        fox.update(dt, simTime);
       },
       fragment() {
         return { tolls, since: +Math.min(999, clock - lastToll).toFixed(1) };
