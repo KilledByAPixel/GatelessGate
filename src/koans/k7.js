@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeBasin, makeBowl, makeWater, makeMonk, faceMonk,
-  makeOdoshi, makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeOdoshi, makeCat, makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
 const ID = 7;
@@ -86,6 +86,20 @@ export default {
     odoshi.group.rotation.y = -2.70;
     scene.add(odoshi.group);
 
+    // The monastery cat (k14's, on an ordinary morning — nothing hangs over
+    // it here), sitting by the threshold with its eyes on the breakfast
+    // bowl. Domestic, like everything in this case: someone ate, someone
+    // washes up, the cat waits its turn.
+    // ON the light path, deliberately — placement three. In the meadow the
+    // grass swallowed it whole; on the hut's threshold it was ink against
+    // ink. A dark cat needs the one pale surface in the yard, and sitting
+    // in the middle of the walked road waiting for scraps is the most
+    // cat thing about it.
+    const cat = makeCat({ height: 0.32, seed: 7, pose: 'sit' });
+    cat.group.position.set(1.35, 0.03, -0.5);
+    faceMonk(cat.group, bowl.position);
+    scene.add(cat.group);
+
     const world = composeWorld(scene, {
       seed: 7,
       groundSeed: 21,
@@ -96,6 +110,7 @@ export default {
         { at: basin, r: 1.5 },          // basin + bowl
         { at: monk, r: 1.1 },
         { at: odoshi.group, r: 1.2 },   // the deer-scarer and its flume
+        { at: cat.group, r: 0.5 },
       ],
       // the trail, the hut's footprint and the basin's stone cover ground;
       // the monk stands in the grass like anyone would
@@ -111,6 +126,7 @@ export default {
       [basin.position, 0.8, 0.6, 0.36],
       [hut.position, 2.0, 1.5, 0.3],
       [odoshi.group.position, 0.7, 0.35, 0.32],
+      [cat.group.position, 0.3, 0.22, 0.34],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = p.x; s.position.z = p.z;
@@ -130,6 +146,10 @@ export default {
       if (!camera) return;
       // the deer-scarer first: a tap tips it without waiting out the fill
       if (input.raycastFirst(camera, odoshi.pickTargets())) { odoshi.tip(); return; }
+      // the cat's stir travels with the cat (the kit rule): touched, it
+      // shifts and resettles, no sound of its own — it is not this case's
+      // instrument, just its company
+      if (input.raycastFirst(camera, cat.meshes())) { cat.stir(); return; }
       // touching the water rings it where you touched; touching the bowl rings
       // the middle, as if it had been set down
       const onWater = surface ? input.raycastFirst(camera, [surface]) : null;
@@ -154,6 +174,7 @@ export default {
         world.update(dt, simTime);
         water.update(dt, simTime);
         odoshi.update(dt, simTime);
+        cat.update(dt, simTime);
       },
       fragment() {
         return { ripples: water.rippleCount(), rippled, knocks: odoshi.knocks() };
