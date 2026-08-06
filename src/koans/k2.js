@@ -5,6 +5,7 @@ import { composeWorld } from '../kit/scenery.js';
 import { makeMonk, faceMonk } from '../kit/monk.js';
 import { makeFox } from '../kit/fox.js';
 import { makeCave } from '../kit/cave.js';
+import { makeRain } from '../kit/rainfall.js';
 import { makeLights } from '../render/toon.js';
 import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
@@ -43,7 +44,13 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.18', 'music'],
+  // 'rain' (Frank's pick, scene-pass spec §5): five hundred lives turned on
+  // whether cause and effect can be evaded, and rain is the book's plainest
+  // image of it — falling on the freed fox, the cave, and the men alike,
+  // refusing nobody and exempting nobody. Passive on purpose: unlike case
+  // 34's mat there is no tap-surge here; you don't get to ask this weather
+  // for anything.
+  ambience: ['wind:0.18', 'rain', 'music'],
 
   // Framed low and a little left: aimed at the gap between the fox and the
   // monks rather than at anybody's head, and pitched so all four figures still
@@ -103,6 +110,11 @@ export default {
       return k;
     });
 
+    // THE RAIN — see the ambience note: it falls on everything alike. The
+    // streaks span the whole staging so nobody stands outside it.
+    const rain = makeRain({ count: 420, seed: ID, width: 24, depth: 24, height: 13 });
+    scene.add(rain.points);
+
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
@@ -159,6 +171,7 @@ export default {
       update(dt, simTime) {
         world.update(dt, simTime);
         fox.update(dt, simTime);
+        rain.update(dt, simTime);
       },
       fragment() {
         return {
@@ -166,9 +179,10 @@ export default {
           tailYaw: +fox.tailYaw().toFixed(4),
           stir: +fox.stir().toFixed(4),
           noticed: fox.noticed(),
+          drops: rain.count(),
         };
       },
-      dispose() {},
+      dispose() { rain.dispose(); },
     };
   },
 };
