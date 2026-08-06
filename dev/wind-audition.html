@@ -1,0 +1,87 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>wind audition</title>
+<style>
+  body { font: 14px/1.5 system-ui; margin: 2rem auto; max-width: 640px; color: #222; }
+  fieldset { border: 1px solid #ccc; margin: 1rem 0; }
+  label { display: flex; gap: .6rem; align-items: center; margin: .25rem 0; }
+  label span.val { width: 4.5em; text-align: right; font-variant-numeric: tabular-nums; }
+  input[type=range] { flex: 1; }
+  button.on { background: #333; color: #fff; }
+  pre { background: #f4f4f4; padding: .8rem; overflow-x: auto; }
+</style>
+<h1>wind audition</h1>
+<p><button id="start">start</button> gust <span id="gust">–</span> slope <span id="slope">–</span></p>
+<p>flavor:
+  <button class="flavor on" data-f="open">open</button>
+  <button class="flavor" data-f="pine">pine</button>
+  <button class="flavor" data-f="broadleaf">broadleaf</button>
+</p>
+<label>wind level <input id="level" type="range" min="0" max="1" step="0.01" value="0.2"><span class="val" id="levelV">0.20</span></label>
+<fieldset id="flavorBox"><legend>flavor params (live-edits the selected flavor)</legend></fieldset>
+<fieldset id="rustleBox"><legend>rustle</legend></fieldset>
+<p><button id="print">print flavors</button></p>
+<pre id="out"></pre>
+<script type="module">
+  import {
+    makeWind, windGust, gustSlope, WIND_FLAVORS, RUSTLE,
+  } from '../src/audio/synths.js';
+
+  let ctx = null, wind = null, current = 'open';
+  const t0 = performance.now();
+  const now = () => (performance.now() - t0) / 1000;
+
+  function slider(box, label, get, set, min, max, step) {
+    const l = document.createElement('label');
+    l.innerHTML = `${label} <input type="range" min="${min}" max="${max}" step="${step}"><span class="val"></span>`;
+    const input = l.querySelector('input'), val = l.querySelector('.val');
+    const show = () => { input.value = get(); val.textContent = (+get()).toFixed(3); };
+    input.oninput = () => { set(parseFloat(input.value)); val.textContent = (+input.value).toFixed(3); refresh(); };
+    box.appendChild(l);
+    return show;
+  }
+
+  const flavorBox = document.getElementById('flavorBox');
+  const shows = ['bed', 'canopy', 'grain', 'cutoff'].map((k) =>
+    slider(flavorBox, k, () => WIND_FLAVORS[current][k], (v) => { WIND_FLAVORS[current][k] = v; }, 0, 1.5, 0.01));
+  const rustleBox = document.getElementById('rustleBox');
+  const rshows = ['base', 'slopeGain', 'max', 'level'].map((k) =>
+    slider(rustleBox, k, () => RUSTLE[k], (v) => { RUSTLE[k] = v; }, 0, k === 'slopeGain' ? 60 : k === 'max' ? 30 : 1, 0.01));
+  function showAll() { shows.forEach((s) => s()); rshows.forEach((s) => s()); }
+  showAll();
+
+  function refresh() {
+    if (!wind) return;
+    wind.setFlavor(current);                       // re-reads the (mutated) table
+    wind.setLevel(parseFloat(level.value));
+  }
+
+  document.querySelectorAll('.flavor').forEach((b) => b.onclick = () => {
+    document.querySelectorAll('.flavor').forEach((x) => x.classList.toggle('on', x === b));
+    current = b.dataset.f;
+    showAll(); refresh();
+  });
+  const level = document.getElementById('level');
+  level.oninput = () => { document.getElementById('levelV').textContent = (+level.value).toFixed(2); refresh(); };
+
+  document.getElementById('start').onclick = () => {
+    if (ctx) return;
+    ctx = new AudioContext();
+    wind = makeWind(ctx, ctx.destination);
+    refresh();
+    setInterval(() => {
+      const t = now();
+      wind.setGust(windGust(t), gustSlope(t));
+      document.getElementById('gust').textContent = windGust(t).toFixed(2);
+      document.getElementById('slope').textContent = gustSlope(t).toFixed(2);
+    }, 50);
+  };
+
+  document.getElementById('print').onclick = () => {
+    const fmt = (o) => '{ ' + Object.entries(o).map(([k, v]) => `${k}: ${+(+v).toFixed(3)}`).join(', ') + ' }';
+    document.getElementById('out').textContent =
+      'export const WIND_FLAVORS = {\n' +
+      Object.entries(WIND_FLAVORS).map(([k, v]) => `  ${k}: ${fmt(v)},`).join('\n') +
+      '\n};\nexport const RUSTLE = ' + fmt(RUSTLE) + ';';
+  };
+</script>
