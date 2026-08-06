@@ -168,7 +168,10 @@ export default {
     water.group.position.set(0, SHORE.sea, -(SHORE.dist + 43));
     moving.add(water.group);
 
-    const sand = makeSand({ shore: SHORE, seed: ID, groundSeed: 21 });
+    // Wet sand, a step darker than the earth: the default pale ribbon was
+    // nearly the foam's own white, and the wave-ends vanished against it —
+    // the foam only reads if the sand it lands on is darker than it is.
+    const sand = makeSand({ shore: SHORE, seed: ID, groundSeed: 21, color: wash(0.30) });
     moving.add(sand);
 
     // THE WAVE-ENDS — the foam that was the point of the ocean from Frank's
