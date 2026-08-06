@@ -50,9 +50,11 @@ export function windMix(params, flavor, gust) {
 // how strong it is — steady wind through a tree settles; the swish is the
 // gust arriving. Born as a grains-per-second trigger rate; the grains are
 // gone (they clicked, then sandpapered — see the rustle band's comment in
-// makeWind) and the same 0..max curve now shapes a continuous band's gain,
-// so the numbers and their test carried over unchanged. PROVISIONAL.
-export const RUSTLE = { base: 1.5, slopeGain: 22, max: 12, level: 0.05 };
+// makeWind) and the same 0..max curve now shapes a continuous band's gain.
+// Frank tuned these on wind-audition (2026-08-06): far less slope emphasis
+// than the design guessed (2.7 vs 22) — he wants the leaves mostly PRESENT,
+// swelling gently, not stabbing in with each gust front.
+export const RUSTLE = { base: 1.92, slopeGain: 2.7, max: 14.17, level: 0.03 };
 export function rustleRate(grain, level, slope) {
   if (grain <= 0 || level <= 0) return 0;
   const drive = Math.min(1, Math.abs(slope) * 3);
