@@ -240,3 +240,40 @@ test('composeWorld fills a scene deterministically and honors keepouts', () => {
     }
   });
 });
+
+test('path via bends the centerline; default stays the straight lerp', () => {
+  const straight = makePath({ from: [0, 8], to: [0, -30], seed: 91, groundSeed: 21, wander: 0 });
+  const bent = makePath({ from: [0, 8], to: [0, -30], via: [7, -11], seed: 91, groundSeed: 21, wander: 0 });
+  // the bent road's mid-samples swing well toward the control point; ends pinned
+  assert.ok(Math.abs(straight.sample(0.5).x) < 0.01, 'straight stays straight');
+  assert.ok(bent.sample(0.5).x > 3, `mid-sample should swing toward via, got ${bent.sample(0.5).x}`);
+  assert.ok(Math.abs(bent.sample(0).x - 0) < 0.01 && Math.abs(bent.sample(1).x - 0) < 0.15,
+    'both ends stay where the case put them');
+});
+
+test('path tapers to a brush-lift at its far end, never to a degenerate tip', () => {
+  const p = makePath({ from: [0, 8], to: [0, -30], seed: 91, groundSeed: 21, wander: 0 });
+  const pos = p.geometry.attributes.position;
+  const widthAt = (i) => {
+    const l = new THREE.Vector3(pos.getX(i * 2), 0, pos.getZ(i * 2));
+    const r = new THREE.Vector3(pos.getX(i * 2 + 1), 0, pos.getZ(i * 2 + 1));
+    return l.distanceTo(r);
+  };
+  const nSamp = pos.count / 2 - 1;
+  assert.ok(widthAt(nSamp) < widthAt(Math.floor(nSamp / 2)) * 0.15,
+    `the far tip must be a near-point: tip ${widthAt(nSamp).toFixed(3)} vs mid ${widthAt(Math.floor(nSamp / 2)).toFixed(3)}`);
+  assert.ok(widthAt(nSamp) > 0.01, 'but never fully degenerate (NaN normals)');
+  assert.ok(widthAt(0) > widthAt(nSamp) * 5, 'the near end keeps its full width');
+  // and the normals stay finite through the taper
+  const nor = p.geometry.attributes.normal;
+  for (let i = 0; i < nor.count; i++) {
+    assert.ok(Number.isFinite(nor.getX(i)) && Number.isFinite(nor.getY(i)) && Number.isFinite(nor.getZ(i)),
+      `non-finite normal at ${i}`);
+  }
+  // taper: 0 opts out — the old square end
+  const blunt = makePath({ from: [0, 8], to: [0, -30], seed: 91, groundSeed: 21, wander: 0, taper: 0 });
+  const bpos = blunt.geometry.attributes.position;
+  const bl = new THREE.Vector3(bpos.getX((nSamp) * 2), 0, bpos.getZ((nSamp) * 2));
+  const br = new THREE.Vector3(bpos.getX((nSamp) * 2 + 1), 0, bpos.getZ((nSamp) * 2 + 1));
+  assert.ok(bl.distanceTo(br) > 0.8, 'taper: 0 keeps the square end');
+});
