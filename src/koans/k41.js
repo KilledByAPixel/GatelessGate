@@ -33,7 +33,7 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.34', 'snow', 'music'],
+  ambience: ['wind:0.34:pine', 'snow', 'music'],
   camera: { distance: 10.5, target: [0.4, 1.4, -1.8], azimuth: 0.55, polar: 1.24 },
 
   build(ctx) {

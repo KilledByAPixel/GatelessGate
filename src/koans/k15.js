@@ -58,7 +58,7 @@ export default {
   // 'furin' repeated TWICE, k29's own reasoning: emitterCount() sees it and
   // thins the drift layer accordingly (src/audio/music.js), which is exactly
   // what a page that just gained two voices wants.
-  ambience: ['wind:0.20', 'gate', 'furin', 'furin', 'music'],
+  ambience: ['wind:0.20:pine', 'gate', 'furin', 'furin', 'music'],
   camera: { distance: 11.0, target: [0.6, 1.6, -0.8], azimuth: 0.50, polar: 1.25 },
 
   build(ctx) {

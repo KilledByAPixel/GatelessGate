@@ -166,7 +166,7 @@ test('module shape matches the koan contract', () => {
   for (const f of ['case', 'comment', 'verse']) {
     assert.ok(k5.text[f] && k5.text[f].trim().length > 0, `text.${f} empty`);
   }
-  assert.deepEqual(k5.ambience, ['wind:0.24']);
+  assert.deepEqual(k5.ambience, ['wind:0.24:broadleaf']);   // the case IS a tree — the wind moves its leaves
   assert.ok(!k5.ambience.includes('music'), 'silence is right here');
   assert.ok(k5.camera && Number.isFinite(k5.camera.distance), 'a camera of its own');
   assert.ok(k5.camera.target[1] >= 2.0, 'the subject is UP — the frame pivots near branch height');

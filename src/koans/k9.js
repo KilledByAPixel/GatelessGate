@@ -25,7 +25,7 @@ export default {
   accent: ACCENT_DEEP,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.16', 'bell', 'music'],
+  ambience: ['wind:0.16:pine', 'bell', 'music'],
   // sat back and tilted up: the subject is six units tall and the point is
   // that you are small in front of it. The colossus is NOT centered — he sits
   // off at the left third, backed by a mountain flank, discovered rather than

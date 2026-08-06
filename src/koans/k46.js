@@ -64,7 +64,7 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.26'],                   // it is windy up a pole
+  ambience: ['wind:0.26:pine'],                   // it is windy up a pole
 
   // THE CAMERA IS HALF THIS CASE, and it is the first one that has to leave
   // the rig's default polar window. The stock framing looks at y=1.35 and

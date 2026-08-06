@@ -141,7 +141,7 @@ test('module shape matches the koan contract', () => {
   for (const f of ['case', 'comment', 'verse']) {
     assert.ok(k23.text[f] && k23.text[f].trim().length > 0, `text.${f} empty`);
   }
-  assert.deepEqual(k23.ambience, ['wind:0.22', 'music'], 'high open country gets the full drift');
+  assert.deepEqual(k23.ambience, ['wind:0.22:pine', 'music'], 'high open country gets the full drift, through ridge pines');
   assert.equal(typeof k23.build, 'function');
 });
 

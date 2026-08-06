@@ -572,7 +572,7 @@ export function makeRainBed(ctx, dest) {
     gain() { return g.gain.value; },   // headless probe read; never drives anything
     // mult/hold PROVISIONAL like every other number on this voice — how hard
     // the shower leans in for case 34's tap, pending Frank's ear.
-    surge(mult = 2.2, hold = 2.5) {
+    surge(mult = 3.0, hold = 2.5) {
       surgeG.gain.setTargetAtTime(mult, ctx.currentTime, 0.4);
       if (surgeTimer) clearTimeout(surgeTimer);
       surgeTimer = setTimeout(() => {

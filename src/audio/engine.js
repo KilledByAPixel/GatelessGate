@@ -3,7 +3,7 @@ import {
   strike, bambooPartials, ODOSHI, pourBurst, strikeSitBell, SIT_BELL, STRIKE_SCALE, BELL,
   bellVoice, bellPartials, bellTail, applyBellPreset, BELL_PRESETS,
   CERAMIC, WOOD, CLOTH, BREATH, ceramicPartials, woodPartials, noiseSwell,
-  DRUM, drumPartials, RAIN, makeRainBed,
+  DRUM, drumPartials, RAIN, makeRainBed, jitterHz,
 } from './synths.js';
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
@@ -620,7 +620,10 @@ export function createAudio(save) {
       const { dryLevel, sendLevel } = calibrateMix(DRUM.verbMix, MIX_TOUCH.kd, MIX_TOUCH.ks);
       const bus = placed(at, sendLevel, DRUM.tail, dryLevel);
       strike(ctx, bus ? bus.in : voicesDry, {
-        partials: drumPartials(),
+        // ±6 cents like every struck bar (jitterHz in strikeBar) — the bars
+        // get theirs at the strikeBar choke point; the drum routes through
+        // strike() directly, so its jitter rides in here at the same spot.
+        partials: drumPartials(jitterHz(DRUM.f0)),
         gain: DRUM.level * force,
         // a drum is a THUMP like the knock, not a bell — same scale reasoning.
         // PROVISIONAL pending Frank's ear on dev/drum-audition.html, same as

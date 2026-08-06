@@ -37,7 +37,7 @@ export default {
   // cases hung the same object in the same beam-underside spot, sizes
   // 0.7-0.9 the only thing distinguishing them) — a lighter, higher voice,
   // the other half of the kit's own vocabulary, still one quiet tube.
-  ambience: ['wind:0.16', 'rain', 'furin', 'music'],
+  ambience: ['wind:0.16:broadleaf', 'rain', 'furin', 'music'],
   camera: { distance: 10.5, target: [0.7, 1.5, -0.8], azimuth: 0.55, polar: 1.22 },
 
   build(ctx) {

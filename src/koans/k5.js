@@ -55,7 +55,7 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.24'],   // exposed height — more wind than a garden gets
+  ambience: ['wind:0.24:broadleaf'],   // exposed height — more wind than a garden gets
 
   // Nearly due south, deliberately: the branch reaches WEST over the gorge, so
   // a south-east azimuth looks THROUGH the canopy and the man becomes a red

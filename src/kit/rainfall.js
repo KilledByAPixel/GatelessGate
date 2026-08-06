@@ -10,8 +10,11 @@ import { wash } from '../palette.js';
 // the way a light wash does, and it dissolves into fog like everything else.
 //
 // surge(amount) is the one piece of state (birds.scatter's precedent): the
-// tap's answer. It lengthens the streaks and lifts opacity, then decays —
-// speed itself never changes, which is what keeps the closed form closed.
+// tap's answer. It lengthens the streaks and lifts opacity, HOLDS for the
+// same 2.5s the audio surge holds (makeRainBed.surge in audio/synths.js —
+// the two must move together or the tap reads as nothing, which is exactly
+// what Frank reported before they were synced), then decays on the same
+// tau. Speed itself never changes, which keeps the closed form closed.
 
 export function makeRain({
   count = 340,
@@ -56,9 +59,10 @@ export function makeRain({
 
   let clock = 0;
   let surge = 0;
+  let surgeHold = 0;                     // seconds left before the surge relaxes
 
   function pose() {
-    const L = len * (1 + surge * 0.8);
+    const L = len * (1 + surge * 1.2);   // PROVISIONAL — how visibly the tap answers
     for (let i = 0; i < drops.length; i++) {
       const d = drops[i];
       let y = height - ((clock * d.fall + d.phase * height) % height);
@@ -81,12 +85,13 @@ export function makeRain({
     count() { return drops.length; },
     extent() { return { width, depth, height }; },
     surgeLevel() { return surge; },
-    surge(amount = 1) { surge = Math.min(1.5, surge + amount); },
+    surge(amount = 1) { surge = Math.min(1.5, surge + amount); surgeHold = 2.5; },
 
     update(dt, simTime) {
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
-      surge *= Math.exp(-(dt || 0) / 1.2);
-      mat.opacity = opacity * (1 + surge * 0.5);
+      surgeHold = Math.max(0, surgeHold - (dt || 0));
+      if (surgeHold <= 0) surge *= Math.exp(-(dt || 0) / 1.2);
+      mat.opacity = opacity * (1 + surge * 0.6);
       pose();
     },
     dispose() { geo.dispose(); mat.dispose(); },

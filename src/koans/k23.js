@@ -63,7 +63,7 @@ export default {
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.22', 'music'],   // high open country — more wind than the meadows
+  ambience: ['wind:0.22:pine', 'music'],   // high open country — more wind than the meadows
 
   // Close framing for a small subject (k3's precedent): the treasure is a
   // 0.4-unit stack on a half-unit stone. Numbers baked from the staged

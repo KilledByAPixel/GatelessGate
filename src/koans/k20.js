@@ -60,7 +60,7 @@ export default {
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   // the surf bed, at last: makeWaterBed was kept for "a scene with genuinely
   // MOVING water — an ocean". This is that scene.
-  ambience: ['wind:0.22', 'water:0.55', 'music'],
+  ambience: ['wind:0.22:pine', 'water:0.55', 'music'],
   // A low lens: the camera sits near the grass and looks out past the two of
   // them to open water, so the upper frame is ocean dissolving into paper.
   camera: { distance: 12.0, target: [0.9, 1.15, 0.2], azimuth: 0.35, polar: 1.38 },
