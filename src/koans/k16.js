@@ -6,6 +6,7 @@ import { makePath } from '../kit/path.js';
 import { makeHut } from '../kit/hut.js';
 import { makeLantern } from '../kit/lantern.js';
 import { makeBell } from '../kit/bell.js';
+import { makeDrum } from '../kit/drum.js';
 import { makeCylinderChime } from '../kit/cylinder.js';
 import { makeMonk, aimMonk, faceMonk } from '../kit/monk.js';
 import { makeLights } from '../render/toon.js';
@@ -105,6 +106,15 @@ export default {
 
     // and the monk just out of the hall door, robes on, facing the sound
     const front = { x: Math.sin(hall.rotation.y), z: Math.cos(hall.rotation.y) };
+
+    // The temple pair: where a bell hangs, a drum stands (k13's, off duty).
+    // By the hall's front corner, facing the bell across the yard — and
+    // SILENT here on purpose: this case is about answering THE BELL, and a
+    // second voice in the yard would blur the one sound the koan turns on.
+    const drum = makeDrum({ radius: 0.5, seed: 16 });
+    drum.group.position.set(-3.65, 0, -3.0);
+    faceMonk(drum.group, bell.group.position);
+    scene.add(drum.group);
     const hallMonk = makeMonk({ height: 1.62, stout: 1.04 });
     hallMonk.position.set(hall.position.x + front.x * 1.9, 0, hall.position.z + front.z * 1.9);
     faceMonk(hallMonk, bell.group.position);
@@ -135,6 +145,7 @@ export default {
         { x: elder.position.x, z: elder.position.z, r: 1.2 },
         { x: hallMonk.position.x, z: hallMonk.position.z, r: 1.2 },
         { x: lantern.position.x, z: lantern.position.z, r: 0.9 },
+        { x: drum.group.position.x, z: drum.group.position.z, r: 0.9 },
       ],
       // only what covers ground: the trodden walk, the hall's footprint, the
       // bell's stone pad. The monks stand in the grass like anyone answering
@@ -153,6 +164,7 @@ export default {
       [bell.group.position, 1.05, 0.78, 0.34],
       [hall.position, 2.2, 1.7, 0.30],
       [lantern.position, 0.40, 0.32, 0.35],
+      [drum.group.position, 0.55, 0.42, 0.32],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = p.x; s.position.z = p.z;
