@@ -19,7 +19,13 @@ export function makePath({
   from = [0, 8], to = [0, -30], width = 1.4, seed = 91, groundSeed = 21,
   wander = 1.6, samples = 26, color = WASH.stone,
   via = null, taper = 0.3,
+  // The surface the ribbon drapes over. Default is the plain rolling ground
+  // (bit-identical to always); a case whose terrain is reshaped — k48's
+  // shored beach — passes its own, or the road's last stretch stands on the
+  // unshored height and pokes up over the dip like a tent.
+  groundFn = null,
 } = {}) {
+  const groundAt = groundFn || ((x, z) => groundHeight(x, z, { seed: groundSeed }));
   const pts = [];
   for (let i = 0; i <= samples; i++) {
     const t = i / samples;
@@ -55,8 +61,8 @@ export function makePath({
     }
     const lx = x - dz * w, lz = z + dx * w;
     const rx = x + dz * w, rz = z - dx * w;
-    const yl = groundHeight(lx, lz, { seed: groundSeed }) + 0.03;
-    const yr = groundHeight(rx, rz, { seed: groundSeed }) + 0.03;
+    const yl = groundAt(lx, lz) + 0.03;
+    const yr = groundAt(rx, rz) + 0.03;
     positions.set([lx, yl, lz, rx, yr, rz], i * 6);
     if (i < samples) {
       const a = i * 2, b = i * 2 + 1, c = i * 2 + 2, d = i * 2 + 3;
@@ -90,7 +96,7 @@ export function makePath({
     dx /= len; dz /= len;
     return {
       x, z,
-      y: groundHeight(x, z, { seed: groundSeed }),
+      y: groundAt(x, z),
       heading: Math.atan2(dx, dz),      // gate.rotation.y so you pass through it
       perp: { x: -dz, z: dx },          // unit across-path (left) for flanking
     };

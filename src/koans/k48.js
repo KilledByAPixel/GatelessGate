@@ -1,12 +1,32 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, WASH } from '../palette.js';
+import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeFan,
+  makeWater, makeSand, makeFoam,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
+import { groundHeight } from '../kit/ground.js';
 
 const ID = 48;
+
+// THE EASTERN SEA (Frank's pick, scene-pass spec §5: "there is already a
+// good spot for it and it mentions sea in the text"). Ummon's half of the
+// case strikes the carp of the eastern sea one blow — so the sea is IN the
+// koan, and it lies where the scene always had its open side: past the far
+// end of the one road. The road tapers out across the sand and ends at the
+// water, which is the whole geography of the case in one line — the one
+// road of Nirvana runs into the eastern sea. Kit and constants are case
+// 20's coast, but the sheet is INK, not red: one accent per koan, and
+// k48's belongs to the fan and the stroke.
+const SHORE = { dx: 0, dz: -1, dist: 16, width: 4, sea: -0.35, depth: 1.4 };
+// keep scatter, grass and trees off the beach and out of the water — case
+// 20's three-row idiom, moved out to this coast's waterline
+const SEA_KEEP = [
+  ...[-24, -16, -8, 0, 8, 16, 24].map((x) => ({ x, z: -18, r: 6 })),
+  ...[-24, -12, 0, 12, 24].map((x) => ({ x, z: -28, r: 14 })),
+  ...[-18, -6, 6, 18].map((x) => ({ x, z: -42, r: 16 })),
+];
 
 // The last case. A pupil asks where the one road of Nirvana begins, and Kembo
 // raises his walking stick, draws the figure ONE in the air, and says: "Here
@@ -41,9 +61,14 @@ export default {
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.26', 'stroke', 'music'],
+  // 'water:0.55' is the surf bed (case 20's), breathing with the swell via
+  // setWaterSwell below; the wind goes pine like every coast in the book.
+  ambience: ['wind:0.26:pine', 'water:0.55', 'stroke', 'music'],
   mood: 'yo',      // it ends in the open, in daylight, with a line being drawn
-  camera: { distance: 10.6, target: [0.8, 1.7, -0.4], azimuth: 0.55, polar: 1.23 },
+  // Lowered a touch when the sea arrived (polar 1.23 -> 1.31, target down):
+  // the case is a field scene no longer — the upper frame belongs to the
+  // eastern sea dissolving into paper, k20's own low-lens lesson.
+  camera: { distance: 11.2, target: [0.8, 1.45, -0.4], azimuth: 0.55, polar: 1.31 },
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -52,8 +77,14 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.028);
     scene.add(makeLights());
 
-    // the one road, going both ways out of the picture
-    const road = makePath({ from: [7.0, 6.0], to: [-6.0, -16], width: 1.7, seed: ID, groundSeed: 21, wander: 0.45 });
+    // The one road — and now it has somewhere to go: down the field, across
+    // the sand, ending AT the eastern sea. It drapes over the SHORED ground
+    // (its own groundFn), or its last stretch would stand on the unshored
+    // height and pitch up over the beach dip like a tent.
+    const road = makePath({
+      from: [7.0, 6.0], to: [-6.0, -16], width: 1.7, seed: ID, groundSeed: 21, wander: 0.45,
+      groundFn: (x, z) => groundHeight(x, z, { seed: 21, shore: SHORE }),
+    });
     scene.add(road);
 
     // KEMBO, raising a great folding fan in the air — "Here it is." He held a
@@ -115,17 +146,74 @@ export default {
     rock.rotation.y = 0.6;
     scene.add(rock);
 
+    // ---- the eastern sea -------------------------------------------------
+    // Case 20's coast, in this case's own dress: an ink sea, transparent in
+    // the shallows so the sand shows through, deepening seaward, the far
+    // fade owned by the fog. Three crossing swells break the crests up.
+    const water = makeWater({
+      // wash(0.68) — genuinely DARK ink (higher wash = darker; k39's pond
+      // sits at 0.72). Two lighter tries read as mudflat: at this grazing
+      // angle the fog eats a pale sheet whole (case 20 recorded the same
+      // failure). Dark ink under white glints says water.
+      shape: 'square', size: 150, color: wash(0.68), seed: ID,
+      opacity: 1, segments: 64,
+      // A tighter ramp than case 20's: red survives 20% visibility through
+      // the fog, grey doesn't — so the ink must arrive within the narrow
+      // strip the grazing camera actually sees. Full depth by ~5 out.
+      alphaRamp: (x, z) => {
+        const s = 43 - z;                             // seaward distance past the waterline
+        const t = Math.max(0, Math.min(1, s / 5));
+        return 0.3 + 0.62 * t * t * (3 - 2 * t);
+      },
+      drift: [
+        { dx: 0, dz: 1, amp: 0.045, wavelength: 8, period: 6 },
+        { dx: 0.2764, dz: 0.9611, amp: 0.022, wavelength: 5.2, period: 4.6 },
+        { dx: -0.3429, dz: 0.9394, amp: 0.017, wavelength: 3.4, period: 3.5 },
+      ],
+    });
+    water.group.position.set(0, SHORE.sea, -(SHORE.dist + 43));
+    scene.add(water.group);
+
+    // wet sand a step darker than the earth, so the foam has contrast
+    const sand = makeSand({ shore: SHORE, seed: ID, groundSeed: 21, color: wash(0.30) });
+    scene.add(sand);
+
+    // the wave-ends, riding the sheet's own surface (the koi idiom)
+    const foam = makeFoam({
+      shore: SHORE, seed: ID, groundSeed: 21,
+      surfaceAt: (x, z, t) => SHORE.sea + water.heightAt(x, z + (SHORE.dist + 43), t),
+    });
+    foam.mesh.renderOrder = 1;
+    scene.add(foam.mesh);
+
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
+      shore: SHORE,
+      // grass must plant on the TRUE shored surface, or tufts near the
+      // feathered keepout edge stand on the unshored height (case 20's find)
+      groundFn: (x, z) => groundHeight(x, z, { seed: 21, shore: SHORE }),
       trees: 4,
+      // the land at the reader's back and sides — nothing stands in the sea
+      mountains: [
+        { count: 7, distance: 52, arcCenter: Math.PI, arcSpan: 3.6, color: wash(0.16) },
+        { count: 4, distance: 34, arcCenter: -2.1, arcSpan: 1.3, color: wash(0.28), hScale: 0.65 },
+      ],
+      forests: [
+        { center: [-20, 0, 2], spread: 10, count: 40 },
+        { center: [17, 0, 6], spread: 9, count: 30, color: wash(0.55) },
+      ],
       keepout: [
         ...road.keepout(26, 1.4),
         { at: kembo, r: 1.3 },
         { at: pupil, r: 1.2 },
         { at: rock, r: 1.0 },
+        ...SEA_KEEP,
       ],
-      grassKeepout: road.keepout(28, 1.0),
+      grassKeepout: [
+        ...road.keepout(28, 1.0),
+        ...SEA_KEEP,
+      ],
     });
 
     for (const [p, rx, rz, op] of [
@@ -169,6 +257,14 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
+        water.update(dt, simTime);
+        foam.update(dt, simTime);
+        // the surf breathes with the sea it belongs to (case 20's idiom):
+        // read the true surface at the waterline and hand the bed 0..1
+        if (audio && audio.setWaterSwell) {
+          const h = water.heightAt(0, 43, simTime);
+          audio.setWaterSwell(Math.max(0, Math.min(1, 0.5 + h / 0.17)));
+        }
 
         const t = clock - drawnAt;
         // the brush crosses, the mark stands a while, and the air takes it back
