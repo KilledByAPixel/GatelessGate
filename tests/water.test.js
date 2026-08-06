@@ -320,3 +320,31 @@ test('crossing drift components: bounded by the sum of amplitudes, and genuinely
   }
   assert.ok(varies, 'the crests are still parallel bars');
 });
+
+// ---- the shallow-to-deep ramp (case 20's ocean) ----------------------------
+// Per-vertex opacity from a build-time callback: an ocean is nearly clear
+// over the sand and deepens seaward. Off by default, so every pond and basin
+// keeps its single uniform opacity.
+
+test('alphaRamp off: no color attribute, no vertexColors — everything as it was', () => {
+  const w = makeWater({ shape: 'square', size: 20 });
+  assert.equal(surfaceOf(w).geometry.attributes.color, undefined);
+  assert.ok(!surfaceOf(w).material.vertexColors);
+});
+
+test('alphaRamp on: RGBA vertex alpha follows the callback, clamped to 0..1', () => {
+  const w = makeWater({
+    shape: 'square', size: 20, swell: 0,
+    alphaRamp: (x, z) => z / 10,               // -1..1 across the sheet: clamps both ways
+  });
+  const surface = surfaceOf(w);
+  const color = surface.geometry.attributes.color;
+  const pos = surface.geometry.attributes.position;
+  assert.ok(surface.material.vertexColors);
+  assert.equal(color.itemSize, 4);
+  for (let i = 0; i < color.count; i++) {
+    const want = Math.max(0, Math.min(1, pos.getZ(i) / 10));
+    assert.ok(Math.abs(color.getW(i) - want) < 1e-6, `alpha at z=${pos.getZ(i)}`);
+    assert.equal(color.getX(i), 1, 'RGB stays white so the diffuse is untouched');
+  }
+});

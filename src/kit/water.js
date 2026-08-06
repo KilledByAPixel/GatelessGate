@@ -175,6 +175,14 @@ export function makeWater({
   // Each (dx, dz) must be a unit vector — anything else silently scales
   // that component's speed away from the wavelength/period you dialled in.
   drift = null,
+  // Per-vertex opacity, (x, z) => 0..1 in the surface's LOCAL plan coords —
+  // how an ocean is transparent over the sand and deepens seaward (Frank:
+  // "more transparent at the shoreline... more red in the distance"; the fog
+  // still owns the far fade to paper, this shapes the band before it).
+  // Evaluated ONCE at build; the ramp is geography, not animation. When set,
+  // the material's own `opacity` still multiplies on top. Off by default —
+  // every existing surface is byte-identical.
+  alphaRamp = null,
 } = {}) {
   const round = shape === 'round';
   const blob = shape === 'blob';
@@ -219,6 +227,18 @@ export function makeWater({
   // when the water is see-through, stop it writing depth — otherwise the fish
   // behind it get z-culled and the transparency shows nothing anyway
   if (opacity < 0.85) mat.depthWrite = false;
+  // the shallow-to-deep ramp: RGBA vertex colors, alpha from the callback,
+  // RGB left white so the diffuse stays exactly the stated color
+  if (alphaRamp) {
+    const vcount = position.length / 3;
+    const rgba = new Float32Array(vcount * 4);
+    for (let i = 0; i < vcount; i++) {
+      const a = alphaRamp(position[i * 3], position[i * 3 + 2]);
+      rgba.set([1, 1, 1, clamp01(a)], i * 4);
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(rgba, 4));
+    mat.vertexColors = true;
+  }
   const surface = new THREE.Mesh(geo, mat);
   surface.name = 'surface';
   surface.userData.noOutline = true;

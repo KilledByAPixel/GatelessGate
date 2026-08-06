@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, INK, INK_LIT, SNOW, WASH, mixHex, wash } from '../palette.js';
+import { PAPER, ACCENT, INK, INK_LIT, WASH, mixHex, wash } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeWater, makeSand, makeFoam,
   makeLights, makeBlobShadow, addOutlines, toonMaterial, groundHeight,
@@ -156,9 +156,20 @@ export default {
     // A finer grid plus three crossing swells — one main set rolling in, two
     // gentler obliques at ±~20° with their own wavelengths and periods — is
     // what breaks the crests into a sea.
+    // The red deepens seaward (Frank: "more transparent when it's at the
+    // shoreline... more red as it gets deeper"): nearly clear over the sand
+    // so the shallows show it, full red by ~20 out, and the fog still owns
+    // the far fade to paper beyond that. In the sheet's local coords the
+    // seaward distance past the waterline is s = 43 - z (the group sits at
+    // world z = -51, the waterline at world z = -8).
     const water = makeWater({
       shape: 'square', size: 150, color: ACCENT, seed: ID,
-      opacity: 0.85, segments: 64,
+      opacity: 1, segments: 64,
+      alphaRamp: (x, z) => {
+        const s = 43 - z;
+        const t = Math.max(0, Math.min(1, s / 20));
+        return 0.15 + 0.8 * t * t * (3 - 2 * t);
+      },
       drift: [
         { dx: 0, dz: 1, amp: 0.045, wavelength: 8, period: 6 },
         { dx: 0.2764, dz: 0.9611, amp: 0.022, wavelength: 5.2, period: 4.6 },
@@ -176,15 +187,15 @@ export default {
 
     // THE WAVE-ENDS — the foam that was the point of the ocean from Frank's
     // first sketch. Same period as the water's main swell, staggered per
-    // strip, so the arrivals overlap and no two land together. Blushed
-    // slightly toward the seal (Frank: "make it just slightly pink") — stark
-    // SNOW against the red read as paper scraps — and riding the sheet's OWN
-    // surface via surfaceAt (the koi idiom), because the sheet writes depth
-    // at this opacity and its crests would swallow tails pinned to flat sea
+    // strip, so the arrivals overlap and no two land together. It rides the
+    // sheet's OWN surface via surfaceAt (the koi idiom), because the sheet
+    // writes depth and its crests would swallow tails pinned to flat sea
     // level. renderOrder puts the foam after the sheet among transparents.
+    // (It wore a pink blush for an hour; Frank: "pink is not working.")
     const foam = makeFoam({
       shore: SHORE, seed: ID, groundSeed: 21,
-      color: mixHex(SNOW, ACCENT, 0.18),
+      // white again — the pink blush "is not working" (Frank); against the
+      // now-transparent shallows, plain snow foam is the contrast
       surfaceAt: (x, z, t) => SHORE.sea + water.heightAt(x, z + (SHORE.dist + 43), t),
     });
     foam.mesh.renderOrder = 1;
