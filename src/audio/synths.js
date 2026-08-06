@@ -15,6 +15,48 @@ export function windParams(level) {
   };
 }
 
+// Wind by vegetation. `open` is the shipped bed, bit-identical; the others
+// add character on top rather than replacing it, so every existing recipe
+// (no flavor named) keeps sounding exactly as it did. All numbers
+// PROVISIONAL pending Frank's ear on dev/wind-audition.html.
+//   bed    — multiplier on the brown bed's gain
+//   canopy — the high smooth-hiss band (pine needles); only speaks in gusts
+//   grain  — leaf-slap grain layer enable/amount (broadleaf)
+//   cutoff — multiplier on the bed's lowpass (pine sits a touch darker below
+//            its hiss; the hiss carries the top instead)
+export const WIND_FLAVORS = {
+  open:      { bed: 1,    canopy: 0,    grain: 0, cutoff: 1 },
+  pine:      { bed: 0.85, canopy: 0.45, grain: 0, cutoff: 0.85 },
+  broadleaf: { bed: 0.9,  canopy: 0.15, grain: 1, cutoff: 1 },
+};
+export function windFlavorParams(name) {
+  return WIND_FLAVORS[name] || WIND_FLAVORS.open;
+}
+
+// The three gain/filter targets one apply() pass writes, as data. `bed` and
+// `cutoff` are the OLD formulas exactly (windMix with the open flavor is the
+// shipped wind, provably — see the test). Canopy follows the research doc's
+// observation that the high band only speaks in strong gusts (~gust²).
+export function windMix(params, flavor, gust) {
+  const g = Math.max(0, gust);
+  return {
+    bed: params.gain * flavor.bed * (1 + gust * params.gust * 0.84),
+    canopy: params.gain * flavor.canopy * (0.2 + 1.8 * g * g),
+    cutoff: params.cutoff * flavor.cutoff * (1 + gust * params.gust),
+  };
+}
+
+// Leaf-slap grains: rate in grains/second, driven by how fast the gust is
+// CHANGING (gustSlope), not how strong it is — steady wind through a tree
+// settles; the swish is the gust arriving. PROVISIONAL.
+export const RUSTLE = { base: 1.5, slopeGain: 22, max: 12, level: 0.05 };
+export function rustleRate(grain, level, slope) {
+  if (grain <= 0 || level <= 0) return 0;
+  const drive = Math.min(1, Math.abs(slope) * 3);
+  const loud = Math.min(1, level / 0.10);
+  return Math.min(RUSTLE.max, grain * loud * (RUSTLE.base + RUSTLE.slopeGain * drive));
+}
+
 // A size-1 bell's fundamental. Bells are addressed by SIZE, not pitch — see
 // bellVoice — and this is the one number that anchors the scale.
 export const BELL_REF_HZ = 110;

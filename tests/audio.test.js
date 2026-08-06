@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B,
-  gustPhase, windGust, gustSlope, STRIKE_SCALE, BELL_PRESETS, bellMacroPartials, applyBellPreset, NAMED_MODE_COUNT, strike,
+  gustPhase, windGust, gustSlope, WIND_FLAVORS, windFlavorParams, windMix, RUSTLE, rustleRate, STRIKE_SCALE, BELL_PRESETS, bellMacroPartials, applyBellPreset, NAMED_MODE_COUNT, strike,
   ceramicPartials, woodPartials, CERAMIC, WOOD, CLOTH, BREATH, WATER, CHIME, BRONZE,
 } from '../src/audio/synths.js';
 import { noteForSize } from '../src/kit/cylinder.js';
@@ -20,6 +20,45 @@ test('windParams monotonic and bounded', () => {
   const mid = windParams(0.5);
   assert.ok(mid.gain > lo.gain && mid.gain < hi.gain);
   assert.deepEqual(windParams(2), windParams(1)); // clamps
+});
+
+test('wind flavors: open is identity, unknown falls back, all values sane', () => {
+  const open = windFlavorParams('open');
+  assert.deepEqual(open, { bed: 1, canopy: 0, grain: 0, cutoff: 1 });
+  assert.deepEqual(windFlavorParams('nonsense'), open);
+  assert.deepEqual(windFlavorParams(null), open);
+  for (const f of Object.values(WIND_FLAVORS)) {
+    for (const v of Object.values(f)) assert.ok(Number.isFinite(v) && v >= 0 && v <= 1.5);
+  }
+  assert.ok(windFlavorParams('pine').canopy > 0, 'pine has no canopy hiss');
+  assert.ok(windFlavorParams('broadleaf').grain > 0, 'broadleaf has no grains');
+});
+
+test('windMix: open reproduces the old formula; canopy only speaks in gusts', () => {
+  const p = windParams(0.5), open = windFlavorParams('open');
+  for (const gust of [-0.8, 0, 0.6]) {
+    const m = windMix(p, open, gust);
+    assert.ok(Math.abs(m.bed - p.gain * (1 + gust * p.gust * 0.84)) < 1e-12);
+    assert.ok(Math.abs(m.cutoff - p.cutoff * (1 + gust * p.gust)) < 1e-12);
+    assert.equal(m.canopy, 0);
+  }
+  const pine = windFlavorParams('pine');
+  const calm = windMix(p, pine, 0).canopy;
+  const gusty = windMix(p, pine, 0.9).canopy;
+  assert.ok(gusty > calm * 2.5, 'canopy must rise superlinearly with gust');
+  // level 0 is true silence in every branch
+  const z = windMix(windParams(0), pine, 0.9);
+  assert.equal(z.bed, 0); assert.equal(z.canopy, 0);
+});
+
+test('rustleRate: zero without grains or level, driven by |slope|, capped', () => {
+  assert.equal(rustleRate(0, 0.2, 1), 0);
+  assert.equal(rustleRate(1, 0, 1), 0);
+  const still = rustleRate(1, 0.2, 0);
+  const moving = rustleRate(1, 0.2, 0.4);
+  assert.ok(moving > still * 2, 'rustle must track the CHANGE in the wind');
+  assert.ok(rustleRate(1, 1, 99) <= RUSTLE.max);
+  assert.ok(rustleRate(1, 0.2, -0.4) === moving, 'sign of slope must not matter');
 });
 
 test('bellPartials are a bonshō: hum tone, strike note, fast-dying upper modes', () => {
@@ -152,8 +191,8 @@ test('the noise voices are quiet and pitchless, and breath is the quietest thing
 });
 
 test('parseRecipe', () => {
-  assert.deepEqual(parseRecipe('wind:0.25'), { type: 'wind', level: 0.25 });
-  assert.deepEqual(parseRecipe('wind'), { type: 'wind', level: 1 });
+  assert.deepEqual(parseRecipe('wind:0.25'), { type: 'wind', level: 0.25, flavor: null });
+  assert.deepEqual(parseRecipe('wind'), { type: 'wind', level: 1, flavor: null });
 });
 
 test('hz maps scale degrees across octaves', () => {

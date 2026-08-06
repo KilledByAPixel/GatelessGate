@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  parseRecipe, emitterCount, AUDIBLE, recipeLayers, diffAmbience,
+  parseRecipe, emitterCount, AUDIBLE, recipeLayers, diffAmbience, windFlavorOf,
 } from '../src/audio/ambience_diff.js';
 import { createAudio } from '../src/audio/engine.js';
 import { graphAudioContext } from './helpers/audio-graph-context.js';
@@ -9,9 +9,22 @@ import { graphAudioContext } from './helpers/audio-graph-context.js';
 // ---- the vocabulary (moved here from engine.js; the engine re-exports) ----
 
 test('parseRecipe still speaks the recipe grammar', () => {
-  assert.deepEqual(parseRecipe('wind:0.25'), { type: 'wind', level: 0.25 });
-  assert.deepEqual(parseRecipe('wind'), { type: 'wind', level: 1 });
-  assert.deepEqual(parseRecipe('water:0'), { type: 'water', level: 0 });
+  assert.deepEqual(parseRecipe('wind:0.25'), { type: 'wind', level: 0.25, flavor: null });
+  assert.deepEqual(parseRecipe('wind'), { type: 'wind', level: 1, flavor: null });
+  assert.deepEqual(parseRecipe('water:0'), { type: 'water', level: 0, flavor: null });
+});
+
+test('parseRecipe carries an optional wind flavor and old tokens are unchanged', () => {
+  assert.deepEqual(parseRecipe('wind:0.18:pine'), { type: 'wind', level: 0.18, flavor: 'pine' });
+  assert.deepEqual(parseRecipe('wind:0.18'), { type: 'wind', level: 0.18, flavor: null });
+  assert.deepEqual(parseRecipe('music'), { type: 'music', level: 1, flavor: null });
+});
+
+test('windFlavorOf reads the first wind token and defaults to open', () => {
+  assert.equal(windFlavorOf(['wind:0.2:broadleaf', 'music']), 'broadleaf');
+  assert.equal(windFlavorOf(['wind:0.2', 'music']), 'open');
+  assert.equal(windFlavorOf(['music']), 'open');
+  assert.equal(windFlavorOf([]), 'open');
 });
 
 test('the engine re-exports the vocabulary, so old imports keep working', async () => {

@@ -17,8 +17,18 @@
 // a page turn for free and the diff has nothing to say about it.
 
 export function parseRecipe(str) {
-  const [type, arg] = str.split(':');
-  return { type, level: arg !== undefined ? parseFloat(arg) : 1 };
+  const [type, arg, flavor] = str.split(':');
+  return { type, level: arg !== undefined ? parseFloat(arg) : 1, flavor: flavor || null };
+}
+
+// The wind token's optional third field: 'wind:0.18:pine'. One flavor per
+// scene — the first wind token wins, matching startAmbience's creation guard.
+export function windFlavorOf(recipe = []) {
+  for (const item of recipe) {
+    const { type, flavor } = parseRecipe(item);
+    if (type === 'wind') return flavor || 'open';
+  }
+  return 'open';
 }
 
 // Beds are not emitters: wind is atmosphere rather than an event source, and
