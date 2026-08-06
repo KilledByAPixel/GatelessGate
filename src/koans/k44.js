@@ -36,7 +36,7 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
     scene.add(makeLights());
 
-    const path = makePath({ from: [3.4, 8.6], to: [-1.0, -18], width: 1.4, seed: ID, groundSeed: 21, wander: 1.0 });
+    const path = makePath({ from: [3.4, 8.6], to: [-7.3, -16.1], width: 1.4, seed: ID, groundSeed: 21, wander: 1.0 });
     scene.add(path);
 
     // the hall the rack stands outside of — a staff rack belongs by a door

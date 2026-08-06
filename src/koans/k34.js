@@ -49,7 +49,7 @@ export default {
 
     // The road, back to ordinary dirt — it carried the case's red for a
     // while, but a ground-spanning ribbon never sat right as a seal.
-    const path = makePath({ from: [4.6, 8.2], to: [1.4, -18], width: 1.3, seed: ID, groundSeed: 21, wander: 0.8 });
+    const path = makePath({ from: [4.6, 8.2], to: [5.1, -18.2], width: 1.3, seed: ID, groundSeed: 21, wander: 0.8 });
     scene.add(path);
 
     // THE STUDY is the seal now (Frank: "make the little house red, because

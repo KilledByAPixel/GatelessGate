@@ -42,7 +42,10 @@ for (const file of files) {
     const fx = Number(from[1]), fz = Number(from[2]);
     const tx = Number(to[1]), tz = Number(to[2]);
     const flags = new Set();
-    for (const f of feet) if (Math.hypot(tx - f.x, tz - f.z) < f.r) flags.add('INTO MOUNTAIN');
+    // 0.85·r matches the enforced rule everywhere (trees, forests): inside
+    // that, a road visibly slides under rock; the outer skirt is fine — the
+    // taper has dissolved the road to a hair before the rock face.
+    for (const f of feet) if (Math.hypot(tx - f.x, tz - f.z) < f.r * 0.85) flags.add('INTO MOUNTAIN');
     const dx = tx - fx, dz = tz - fz, len2 = dx * dx + dz * dz;
     for (const f of feet) {
       const t = ((f.x - fx) * dx + (f.z - fz) * dz) / len2;

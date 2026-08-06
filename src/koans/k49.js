@@ -50,7 +50,7 @@ export default {
 
     // the path that has run under the whole book, one last time, straight down
     // into the fog
-    const road = makePath({ from: [0.4, 9], to: [-0.6, -30], width: 1.6, seed: ID, groundSeed: 21, wander: 0.7 });
+    const road = makePath({ from: [0.4, 9], to: [-7.4, -29.2], width: 1.6, seed: ID, groundSeed: 21, wander: 0.7 });
     scene.add(road);
 
     // ---- the pond, off to the left ----------------------------------------

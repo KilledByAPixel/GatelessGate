@@ -51,7 +51,7 @@ export default {
     scene.fog = new THREE.FogExp2(SKY, 0.028);
     scene.add(makeLights());
 
-    const path = makePath({ from: [4.6, 8.2], to: [-2.6, -18], width: 1.4, seed: ID, groundSeed: 21, wander: 0.9 });
+    const path = makePath({ from: [4.6, 8.2], to: [2.1, -18.9], width: 1.4, seed: ID, groundSeed: 21, wander: 0.9 });
     scene.add(path);
 
     // ---- the three things -------------------------------------------------
