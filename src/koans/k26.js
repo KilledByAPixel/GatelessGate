@@ -4,6 +4,7 @@ import { PAPER, ACCENT, ACCENT_DEEP, wash } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
 import { makeVeranda } from '../kit/veranda.js';
 import { makeScreen } from '../kit/screen.js';
+import { makeFan } from '../kit/fan.js';
 import { makeMonk, aimMonk } from '../kit/monk.js';
 import { makeAssembly } from '../kit/assembly.js';
 import { makeLights } from '../render/toon.js';
@@ -88,6 +89,19 @@ export default {
       scene.add(m);
       monks.push(m);
     }
+
+    // A fan (k48's, in its plain dress — there it is the koan's own
+    // gesture) set down open on the deck boards, off to the side where
+    // somebody left it when the blinds needed rolling. Laid flat: an open
+    // fan on the floor is a pause in the middle of a chore. Ink-washed —
+    // the kit's paper-tone leaf vanished against the pale boards.
+    // z must stay in FRONT of the screen plane (FRONT = -1.4): the first
+    // spot, -2.35, put it INSIDE the shut bay, invisible behind the blinds.
+    const fan = makeFan({ radius: 0.5, color: wash(0.42), seed: 26 });
+    fan.rotation.x = -Math.PI / 2;
+    fan.rotation.z = 0.7;
+    fan.position.set(1.85, DECK + 0.015, -0.35);
+    scene.add(fan);
 
     // Hogen, seated a little back on the centre line, facing the bay. A seated
     // monk's front is local +z (the sleeves fold that way), so he is turned by
