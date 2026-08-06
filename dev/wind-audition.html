@@ -46,7 +46,7 @@
     slider(flavorBox, k, () => WIND_FLAVORS[current][k], (v) => { WIND_FLAVORS[current][k] = v; }, 0, 1.5, 0.01));
   const rustleBox = document.getElementById('rustleBox');
   const rshows = ['base', 'slopeGain', 'max', 'level'].map((k) =>
-    slider(rustleBox, k, () => RUSTLE[k], (v) => { RUSTLE[k] = v; }, 0, k === 'slopeGain' ? 60 : k === 'max' ? 30 : 1, 0.01));
+    slider(rustleBox, k, () => RUSTLE[k], (v) => { RUSTLE[k] = v; }, 0, k === 'slopeGain' ? 60 : k === 'max' ? 30 : k === 'base' ? 3 : 1, 0.01));
   function showAll() { shows.forEach((s) => s()); rshows.forEach((s) => s()); }
   showAll();
 
@@ -85,3 +85,4 @@
       '\n};\nexport const RUSTLE = ' + fmt(RUSTLE) + ';';
   };
 </script>
+
