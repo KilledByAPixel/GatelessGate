@@ -1084,7 +1084,17 @@ export function strikeSitBell(ctx, dry, verbIn, { f0 = 1174, gain = SIT_BELL.lev
   });
 }
 
+// Identical repeats are the giveaway that a strike is synthesized: a real
+// clapper never lands twice the same. ±6 cents is far under "out of tune"
+// (the ear's melodic threshold sits near 10–20) but enough that two strikes
+// of the same tube are two events. Audio is exempt from the determinism rule.
+export const STRIKE_JITTER_CENTS = 6;
+export function jitterHz(f0, rand = Math.random) {
+  return f0 * Math.pow(2, ((rand() * 2 - 1) * STRIKE_JITTER_CENTS) / 1200);
+}
+
 export function strikeBar(ctx, dry, verbIn, { f0, gain = 1, decay = CHIME.decay, bright = CHIME.bright, verbMix = CHIME.verbMix } = {}) {
+  f0 = jitterHz(f0);
   const t = ctx.currentTime;
   const out = ctx.createGain();
   out.gain.value = gain;

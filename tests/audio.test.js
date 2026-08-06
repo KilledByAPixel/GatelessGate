@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B,
   gustPhase, windGust, gustSlope, WIND_FLAVORS, windFlavorParams, windMix, RUSTLE, rustleRate, STRIKE_SCALE, BELL_PRESETS, bellMacroPartials, applyBellPreset, NAMED_MODE_COUNT, strike,
-  ceramicPartials, woodPartials, CERAMIC, WOOD, CLOTH, BREATH, WATER, CHIME, BRONZE, makeWind,
+  ceramicPartials, woodPartials, CERAMIC, WOOD, CLOTH, BREATH, WATER, CHIME, BRONZE, makeWind, jitterHz, STRIKE_JITTER_CENTS,
 } from '../src/audio/synths.js';
 import { noteForSize } from '../src/kit/cylinder.js';
 import {
@@ -1268,4 +1268,14 @@ test('gustSlope is the derivative of windGust and is bounded', () => {
     assert.ok(Math.abs(gustSlope(t) - expect) < 1e-12);
     assert.ok(Math.abs(gustSlope(t)) < 4, `implausible slope at ${t}`);
   }
+});
+
+test('jitterHz stays within ±STRIKE_JITTER_CENTS and is centred', () => {
+  assert.equal(jitterHz(440, () => 0.5), 440);          // centre of the range is identity
+  const lo = jitterHz(440, () => 0);
+  const hi = jitterHz(440, () => 0.999999);
+  const cents = (f) => 1200 * Math.log2(f / 440);
+  assert.ok(Math.abs(cents(lo) + STRIKE_JITTER_CENTS) < 0.01);
+  assert.ok(cents(hi) < STRIKE_JITTER_CENTS && cents(hi) > STRIKE_JITTER_CENTS - 0.01);
+  assert.ok(STRIKE_JITTER_CENTS <= 10, 'this is seasoning, not detune');
 });
