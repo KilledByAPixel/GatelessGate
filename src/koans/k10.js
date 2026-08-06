@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeHut, makeMonk, faceMonk,
+  composeWorld, makePath, makeHut, makeMonk, faceMonk, makeVase,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -47,6 +47,13 @@ export default {
     hut.position.set(-1.4, 0, -4.0);
     hut.rotation.y = 0.5;
     scene.add(hut);
+
+    // One empty vase by the door (k40's, with nothing in it and nothing
+    // coming). Poverty in this book is furnished exactly this much: a
+    // vessel kept anyway. Seizei says he is destitute; the vase agrees.
+    const vase = makeVase({ height: 0.55, seed: 10 });
+    vase.group.position.set(-0.35, 0, -2.85);
+    scene.add(vase.group);
 
     // the mat they are sitting on — the whole of Seizei's estate
     const matGeo = new THREE.BoxGeometry(2.5, 0.035, 1.7);
@@ -154,6 +161,7 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
+        vase.update(dt, simTime);
 
         // once all three are down they lie a while, then stand back up
         if (allDownAt > -99 && clock - allDownAt > RIGHT_AFTER) {
