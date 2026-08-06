@@ -4,6 +4,7 @@ import {
   windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B,
   gustPhase, windGust, gustSlope, WIND_FLAVORS, windFlavorParams, windMix, RUSTLE, rustleRate, STRIKE_SCALE, BELL_PRESETS, bellMacroPartials, applyBellPreset, NAMED_MODE_COUNT, strike,
   ceramicPartials, woodPartials, CERAMIC, WOOD, CLOTH, BREATH, WATER, CHIME, BRONZE, makeWind, jitterHz, STRIKE_JITTER_CENTS,
+  DRUM, drumPartials,
 } from '../src/audio/synths.js';
 import { noteForSize } from '../src/kit/cylinder.js';
 import {
@@ -319,6 +320,23 @@ test('barPartials is a struck bar, not a bell', () => {
     assert.ok(c[i].decay < c[i - 1].decay);
     assert.ok(c[i].amp < c[i - 1].amp);
   }
+});
+
+test('drumPartials is a membrane, not a bar or a bell', () => {
+  const p = drumPartials();
+  assert.ok(p.length >= 5);
+  for (const x of p) assert.ok(x.freq > 0 && x.amp > 0 && x.decay > 0);
+  // amplitude leads on the SECOND mode: the 95 Hz fundamental is below what
+  // small speakers reproduce (the bonshō's own lesson, learned at audition)
+  assert.equal(Math.max(...p.map((x) => x.amp)), p[1].amp);
+  // membrane ratios are inharmonic and DENSE low — nothing near the bar's
+  // 2.756 second mode or the bell's 2.0 strike note
+  const r1 = p[1].freq / p[0].freq;
+  assert.ok(r1 > 1.4 && r1 < 1.8, `second mode at ${r1}x is not a membrane`);
+  // a drum does not ring: everything gone within about a second
+  assert.ok(Math.max(...p.map((x) => x.decay)) <= 1.0);
+  // upper modes die faster
+  assert.ok(p[p.length - 1].decay < p[0].decay);
 });
 
 test('emitterCount counts sound sources, not beds', () => {

@@ -114,8 +114,8 @@ export default {
     let rings = 0, beats = 0;
     // CODE REVIEW CAUGHT (Task 5C): the bell had no tap cooldown, so a held
     // pointer could stack audio.bell() calls without limit — k49's idiom
-    // (`clock - lastRing > 0.5`). The drum is a knock, not a bell, and is
-    // out of scope for this fix.
+    // (`clock - lastRing > 0.5`). The drum is the membrane voice
+    // (audio.drum), still uncooldowned on purpose.
     let lastRing = -99;
 
     input.onTap(() => {
@@ -123,7 +123,7 @@ export default {
       if (input.raycastFirst(camera, drum.pickTargets())) {
         drum.strike();
         beats++;
-        audio && audio.knock({ force: 1, at: drum.group.position });     // the dinner drum, beaten at last
+        audio && audio.drum({ force: 1, at: drum.group.position });     // the dinner drum, beaten at last
         return;
       }
       if (input.raycastFirst(camera, bell.pickTargets())) {

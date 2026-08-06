@@ -3,6 +3,7 @@ import {
   strike, bambooPartials, ODOSHI, pourBurst, strikeSitBell, SIT_BELL, STRIKE_SCALE, BELL,
   bellVoice, bellPartials, bellTail, applyBellPreset, BELL_PRESETS,
   CERAMIC, WOOD, CLOTH, BREATH, ceramicPartials, woodPartials, noiseSwell,
+  DRUM, drumPartials,
 } from './synths.js';
 import { makeMusic } from './music.js';
 import { makeVerb } from './verb.js';
@@ -563,6 +564,24 @@ export function createAudio(save) {
         gain: ODOSHI.level * force,
         scale: STRIKE_SCALE * 9,
         transient: { dur: 0.018, freq: 1100, q: 1.4, amp: 0.5 },
+      });
+    },
+    // The dinner drum (case 13). Born on this branch like the touch voices,
+    // so it takes MIX_TOUCH's judgment-call coefficients — see that
+    // constant's own comment.
+    drum({ force = 1, at = null } = {}) {
+      if (!ensureCtx() || ctx.state !== 'running') return;
+      const { dryLevel, sendLevel } = calibrateMix(DRUM.verbMix, MIX_TOUCH.kd, MIX_TOUCH.ks);
+      const bus = placed(at, sendLevel, DRUM.tail, dryLevel);
+      strike(ctx, bus ? bus.in : voicesDry, {
+        partials: drumPartials(),
+        gain: DRUM.level * force,
+        // a drum is a THUMP like the knock, not a bell — same scale reasoning
+        scale: STRIKE_SCALE * 7,
+        transient: [
+          { dur: 0.035, freq: 120, q: 0.7, amp: 0.6 },   // the body's thump
+          { dur: 0.010, freq: 950, q: 0.8, amp: 0.3 },   // the skin's slap
+        ],
       });
     },
     pour({ at = null } = {}) {

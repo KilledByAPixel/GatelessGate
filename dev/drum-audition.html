@@ -1,0 +1,65 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>drum audition</title>
+<style>
+  body { font: 14px/1.5 system-ui; margin: 2rem auto; max-width: 560px; color: #222; }
+  label { display: flex; gap: .6rem; align-items: center; margin: .3rem 0; }
+  label span.val { width: 4.5em; text-align: right; font-variant-numeric: tabular-nums; }
+  input[type=range] { flex: 1; }
+  pre { background: #f4f4f4; padding: .8rem; }
+</style>
+<h1>drum audition</h1>
+<p><button id="hit">strike</button> (space bar works too)</p>
+<div id="sliders"></div>
+<p><button id="print">print DRUM</button></p>
+<pre id="out"></pre>
+<script type="module">
+  import { DRUM, drumPartials, strike, STRIKE_SCALE } from '../src/audio/synths.js';
+  import { makeVerb } from '../src/audio/verb.js';
+
+  const T = { thumpAmp: 0.6, thumpFreq: 120, slapAmp: 0.3, slapFreq: 950, scaleMult: 7 };
+  let ctx = null, verb = null, dry = null;
+
+  const defs = [
+    ['f0', DRUM, 40, 260, 1], ['decay', DRUM, 0.1, 1.5, 0.01], ['level', DRUM, 0, 0.5, 0.005],
+    ['verbMix', DRUM, 0, 1, 0.01], ['thumpAmp', T, 0, 1.5, 0.01], ['thumpFreq', T, 50, 400, 1],
+    ['slapAmp', T, 0, 1.5, 0.01], ['slapFreq', T, 300, 3000, 10], ['scaleMult', T, 1, 16, 0.5],
+  ];
+  const box = document.getElementById('sliders');
+  for (const [k, obj, min, max, step] of defs) {
+    const l = document.createElement('label');
+    l.innerHTML = `${k} <input type="range" min="${min}" max="${max}" step="${step}" value="${obj[k]}"><span class="val">${obj[k]}</span>`;
+    l.querySelector('input').oninput = (e) => { obj[k] = parseFloat(e.target.value); l.querySelector('.val').textContent = obj[k]; };
+    box.appendChild(l);
+  }
+
+  function hit() {
+    if (!ctx) {
+      ctx = new AudioContext();
+      verb = makeVerb(ctx, ctx.destination);
+      dry = ctx.createGain(); dry.connect(ctx.destination);
+    }
+    const out = ctx.createGain();
+    const dryG = ctx.createGain(); dryG.gain.value = 1 - DRUM.verbMix * 0.7;
+    out.connect(dryG); dryG.connect(dry);
+    const sendG = ctx.createGain(); sendG.gain.value = DRUM.verbMix * 1.2;
+    out.connect(sendG); sendG.connect(verb.in);
+    strike(ctx, out, {
+      partials: drumPartials(DRUM.f0, DRUM.decay),
+      gain: DRUM.level,
+      scale: STRIKE_SCALE * T.scaleMult,
+      transient: [
+        { dur: 0.035, freq: T.thumpFreq, q: 0.7, amp: T.thumpAmp },
+        { dur: 0.010, freq: T.slapFreq, q: 0.8, amp: T.slapAmp },
+      ],
+    });
+  }
+  document.getElementById('hit').onclick = hit;
+  addEventListener('keydown', (e) => { if (e.code === 'Space') { e.preventDefault(); hit(); } });
+
+  document.getElementById('print').onclick = () => {
+    document.getElementById('out').textContent =
+      `export const DRUM = { f0: ${DRUM.f0}, level: ${DRUM.level}, decay: ${DRUM.decay}, verbMix: ${DRUM.verbMix}, tail: ${DRUM.tail} };\n` +
+      `// transient: thump { freq: ${T.thumpFreq}, amp: ${T.thumpAmp} }, slap { freq: ${T.slapFreq}, amp: ${T.slapAmp} }, scale: STRIKE_SCALE * ${T.scaleMult}`;
+  };
+</script>

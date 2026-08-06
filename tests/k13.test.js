@@ -6,8 +6,8 @@ import { ACCENT } from '../src/palette.js';
 
 // Case 13 had no dedicated test file before Task 5C. Adding one narrowly, to
 // pin the bell's tap cooldown found in review — the bell had none at all, so
-// a held pointer could stack audio.bell() calls without limit. The drum's
-// knock is left untouched: it is not a bell voice and was out of scope.
+// a held pointer could stack audio.bell() calls without limit. The drum has
+// its own membrane voice (audio.drum) now, still uncooldowned on purpose.
 
 function fakeCtx() {
   const taps = [], hovers = [];
@@ -36,7 +36,7 @@ test('a held pointer on the bell cannot ring it without limit; the drum is untou
   // object list per tap and misses the first reaches the bell branch alone.
   const rings = [];
   const beats = [];
-  const audio = { bell: (o) => rings.push(o.f0), knock: (o) => beats.push(o) };
+  const audio = { bell: (o) => rings.push(o.f0), drum: (o) => beats.push(o) };
   const ctx = fakeCtx();
   ctx.audio = audio;
   const root = k13.build(ctx);
@@ -63,9 +63,9 @@ test('a held pointer on the bell cannot ring it without limit; the drum is untou
   assert.equal(rings.length, 2);
 });
 
-test('the drum has no cooldown and answers every tap — unchanged, out of scope', () => {
+test('the drum has no cooldown and answers every tap — its own voice now', () => {
   const beats = [];
-  const audio = { bell() {}, knock: (o) => beats.push(o) };
+  const audio = { bell() {}, drum: (o) => beats.push(o) };
   const ctx = fakeCtx();
   ctx.audio = audio;
   const root = k13.build(ctx);

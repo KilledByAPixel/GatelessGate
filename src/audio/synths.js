@@ -373,6 +373,22 @@ export function bambooPartials(f0 = ODOSHI.f0, decay = ODOSHI.decay) {
   ].map(([r, a]) => ({ freq: f0 * r, amp: a, decay: decay * Math.pow(0.5, Math.log2(r)) }));
 }
 
+// The dinner drum (case 13) — a struck membrane, the timbral opposite of the
+// bell it faces across the yard: all transient and thump, no ring. Until now
+// the case borrowed the shishi-odoshi's bamboo knock. Ratios are the ideal
+// circular membrane's first six modes; a real barrel drum is rougher, which
+// the ±2% perturbations stand in for. Amplitude leads on the SECOND mode for
+// the same reason BELL_MODES leads on its 2x strike note: f0 itself is below
+// what laptop speakers reproduce. All numbers PROVISIONAL pending Frank's
+// ear on dev/drum-audition.html.
+export const DRUM = { f0: 95, level: 0.14, decay: 0.6, verbMix: 0.55, tail: 2 };
+
+export function drumPartials(f0 = DRUM.f0, decay = DRUM.decay) {
+  return [
+    [1.00, 0.55], [1.61, 1.00], [2.10, 0.70], [2.33, 0.45], [2.60, 0.30], [2.95, 0.18],
+  ].map(([r, a]) => ({ freq: f0 * r, amp: a, decay: decay * Math.pow(0.55, Math.log2(r)) }));
+}
+
 // the tube emptying: a short burst of the water-static, swelling and dying
 export function pourBurst(ctx, dest, { level = ODOSHI.pourLevel, dur = 1.3 } = {}) {
   const t0 = ctx.currentTime;
