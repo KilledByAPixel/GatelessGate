@@ -4,6 +4,7 @@ import { PAPER, ACCENT, ACCENT_LIGHT, wash } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
 import { makePath } from '../kit/path.js';
 import { makeMonk, faceMonk } from '../kit/monk.js';
+import { makeDog } from '../kit/dog.js';
 import { makeMoon } from '../kit/moon.js';
 import { makeWildflowers } from '../kit/wildflowers.js';
 import { makeLights } from '../render/toon.js';
@@ -87,6 +88,16 @@ export default {
     faceMonk(joshu, nansen.position);
     scene.add(nansen, joshu);
 
+    // An ordinary dog, trotting a few steps behind the two of them — k1's
+    // koan animal on its day off. In its home case it carries the accent
+    // and the whole question; here it is INK, unremarkable, walking the
+    // same road everyone walks. That is the case: ordinary mind is the way.
+    const dog = makeDog({ height: 0.5, seed: 19 });
+    const dp = path.sample(0.155);
+    dog.position.set(dp.x + dp.perp.x * 0.18, 0, dp.z + dp.perp.z * 0.18);
+    faceMonk(dog, joshu.position);
+    scene.add(dog);
+
     // The harvest moon: beyond the mountains and low, just clear of the ridge.
     // Its bearing sits a few degrees right of where the road runs out, so the
     // eye travels up the road and arrives at it.
@@ -126,6 +137,7 @@ export default {
         ...path.keepout(40, 0.80),
         { x: nansen.position.x, z: nansen.position.z, r: 0.42 },
         { x: joshu.position.x, z: joshu.position.z, r: 0.42 },
+        { x: dog.position.x, z: dog.position.z, r: 0.38 },
       ],
     });
     scene.add(flowers.mesh);
@@ -165,6 +177,7 @@ export default {
     for (const [p, rx, rz, op] of [
       [nansen.position, 0.72, 0.56, 0.42],
       [joshu.position, 0.66, 0.52, 0.42],
+      [dog.position, 0.42, 0.28, 0.36],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = p.x; s.position.z = p.z;
