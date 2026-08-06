@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeWildflowers, makeBirds, makeMonk, faceMonk,
-  makeLights, makeBlobShadow, addOutlines,
+  makeBuffalo, makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
 const ID = 24;
@@ -50,6 +50,15 @@ export default {
     faceMonk(monk, fuketsu.position);
     scene.add(monk);
 
+    // A buffalo (k37's, off its tether) grazing far up the meadow — spring
+    // in southern China is a WORKED landscape, and one grazing animal in
+    // the middle distance is what says so without saying anything. Angled
+    // away from camera, head down: grazing, not posing.
+    const buffalo = makeBuffalo({ height: 1.4, seed: 24 });
+    buffalo.group.position.set(-7.5, 0, -8.0);
+    buffalo.group.rotation.y = 0.8;
+    scene.add(buffalo.group);
+
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
@@ -58,6 +67,7 @@ export default {
         ...path.keepout(24, 1.0),
         { at: fuketsu, r: 1.3 },
         { at: monk, r: 1.2 },
+        { at: buffalo.group, r: 2.0 },
       ],
       grassKeepout: path.keepout(24, 0.9),
     });
@@ -99,6 +109,7 @@ export default {
     for (const [p, rx, rz, op] of [
       [fuketsu.position, 0.62, 0.5, 0.40],
       [monk.position, 0.62, 0.5, 0.40],
+      [buffalo.group.position, 1.0, 0.6, 0.32],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = p.x; s.position.z = p.z;
@@ -145,6 +156,7 @@ export default {
         world.update(dt, simTime);
         birds.update(dt, simTime);
         flowers.update(dt, simTime);
+        buffalo.update(dt, simTime);
 
         while (song.length && clock >= song[0]) {
           song.shift();
