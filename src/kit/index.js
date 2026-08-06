@@ -62,6 +62,7 @@ export { makeButterflies } from './butterflies.js';
 export { makeStall } from './stall.js';
 export { makeHorse } from './horse.js';
 export { makeSnow } from './snowfall.js';
+export { makeRain } from './rainfall.js';
 export { makeKoi } from './koi.js';
 export { makeFan } from './fan.js';
 export { makeWalk, walkPose, walkHeading, pathLength } from './walk.js';
