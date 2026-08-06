@@ -1,5 +1,5 @@
 import { makeGround } from './ground.js';
-import { makeMountains } from './mountains.js';
+import { makeMountains, mountainFootprints } from './mountains.js';
 import { makeForest } from './forest.js';
 import { makeRocks, makeBushes } from './scatter.js';
 import { makeGrassField } from './grassfield.js';
@@ -97,8 +97,15 @@ export function composeWorld(scene, {
     ...(groundColor ? { color: groundColor } : {}),
     ...(shore ? { shore } : {}),
   }));
+  // The mountains' base circles, computed ONCE from the same seeds the
+  // meshes use: forests and scatter trees refuse to stand inside them
+  // (Frank: "trees that are inside the mountain"). 0.85·r is where a
+  // trunk starts piercing visible rock; the very skirt stays plantable
+  // and reads as brush at fog distance.
+  const footprints = mountains.flatMap((m, i) =>
+    mountainFootprints({ seed: seed * 31 + i * 7, ...m }));
   mountains.forEach((m, i) => scene.add(makeMountains({ seed: seed * 31 + i * 7, ...m })));
-  forests.forEach((f, i) => scene.add(makeForest({ seed: seed * 41 + i * 11, ...f })));
+  forests.forEach((f, i) => scene.add(makeForest({ seed: seed * 41 + i * 11, avoid: footprints, ...f })));
 
   // midground trees: real kit trees on a ring, avoiding keepouts
   const sceneTrees = [];
@@ -110,6 +117,7 @@ export function composeWorld(scene, {
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
     if (z > 6) continue; // keep the near-camera foreground open
     if (keepout.some((k) => Math.hypot(x - k.x, z - k.z) < k.r)) continue;
+    if (footprints.some((f) => Math.hypot(x - f.x, z - f.z) < f.r * 0.85)) continue;
     const t = makeTree({ seed: seed * 100 + placed, height: 2.6 + hash1(tries * 5 + 4, seed) * 1.6 });
     t.position.set(x, 0, z);
     t.rotation.y = hash1(tries * 5 + 5, seed) * Math.PI * 2;
@@ -147,6 +155,7 @@ export function composeWorld(scene, {
 
   return {
     trees: sceneTrees,
+    mountainFootprints: footprints,
     grass: field,
     update(dt, simTime) { field.update(dt, simTime); },
   };

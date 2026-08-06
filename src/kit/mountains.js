@@ -65,6 +65,7 @@ export function makeMountains({
     m.rotation.z = (hash1(i * 7 + 8, seed) - 0.5) * 0.10;          // no peak stands perfectly plumb
     m.name = 'mountain';
     m.userData.noOutline = true; // silhouettes are washes, not contours
+    m.userData.footprint = { x: px, z: pz, r };   // self-describing, for the scene nets
     g.add(m);
   }
   return g;

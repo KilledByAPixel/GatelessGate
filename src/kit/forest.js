@@ -76,6 +76,12 @@ function pickTemplate(templates, u) {
 export function makeForest({
   count = 50, center = [0, 0, -28], spread = 16, seed = 41,
   color = WASH.mid, treeH = 2.8,
+  // Circles ({x, z, r}) no tree may stand in — composeWorld passes the
+  // mountains' footprints. Instances that land inside are SKIPPED, not
+  // re-rolled: every surviving tree keeps the exact position it always
+  // had, and the stand just thins where the rock eats its disc. (Frank:
+  // "clearly, obviously, trees that are inside the mountain.")
+  avoid = [],
 } = {}) {
   const pineTpl = buildTemplates('pine', PINE_TEMPLATES, seed, treeH);
   const treeTpl = buildTemplates('tree', TREE_TEMPLATES, seed, treeH);
@@ -87,11 +93,15 @@ export function makeForest({
   const e = new THREE.Euler();
   const p = new THREE.Vector3();
   const s = new THREE.Vector3();
+  const kept = [];
   for (let i = 0; i < count; i++) {
     const a = hash1(i * 3 + 1, seed) * Math.PI * 2;
     const r = Math.sqrt(hash1(i * 3 + 2, seed)) * spread;
     const sc = 0.7 + 0.9 * hash1(i * 3 + 3, seed);
-    p.set(center[0] + Math.cos(a) * r, -0.45, center[2] + Math.sin(a) * r); // bases sunk into the rolling ground
+    const ix = center[0] + Math.cos(a) * r, iz = center[2] + Math.sin(a) * r;
+    if (avoid.some((c) => Math.hypot(ix - c.x, iz - c.z) < c.r * 0.85)) continue;
+    kept.push({ x: ix, z: iz });
+    p.set(ix, -0.45, iz); // bases sunk into the rolling ground
     e.set(0, hash1(i * 5 + 4, seed) * Math.PI, 0);
     q.setFromEuler(e);
     s.set(sc, sc, sc);
@@ -112,5 +122,6 @@ export function makeForest({
   const mesh = new THREE.Mesh(merged, mat);
   mesh.name = 'forest';
   mesh.userData.noOutline = true; // a background mass in fog, not a hero silhouette — see rocks/bushes/grass
+  mesh.userData.instances = kept;  // self-describing, for the scene nets (positions are LOCAL to this mesh)
   return mesh;
 }
