@@ -88,3 +88,28 @@ test('case 20: the ocean is actually swelling, not a still sheet', () => {
   const at = (t) => { root.update(1 / 60, t); return Array.from(surface.geometry.attributes.position.array); };
   assert.notDeepEqual(at(1.0), at(4.0), 'no drift: the ocean is a floor');
 });
+
+test('case 20: the foam rides the beach, inside the moving world', () => {
+  const { root } = staged();
+  const moving = root.scene.getObjectByName('moving-world');
+  const foam = moving.getObjectByName('foam');
+  assert.ok(foam, 'the wave-ends are in the moving world — the shove sways them too');
+  root.update(1 / 60, 2.0);
+  const a = Array.from(foam.geometry.attributes.position.array);
+  root.update(1 / 60, 5.0);
+  const b = Array.from(foam.geometry.attributes.position.array);
+  assert.notDeepEqual(a, b, 'the foam is alive');
+});
+
+test('case 20: the surf breathes — update feeds the swell to the audio', () => {
+  const calls = [];
+  const ctx = fakeCtx();
+  ctx.audio = { knock() {}, setWaterSwell: (v) => calls.push(v) };
+  const root = k20.build(ctx);
+  root.setCamera(new THREE.PerspectiveCamera());
+  for (let t = 0; t < 8; t += 0.5) root.update(1 / 60, t);
+  assert.ok(calls.length >= 16, 'the swell is driven every update');
+  assert.ok(calls.every((v) => v >= 0 && v <= 1), 'the drive stays in 0..1');
+  const spread = Math.max(...calls) - Math.min(...calls);
+  assert.ok(spread > 0.3, `the surf actually breathes (spread ${spread})`);
+});

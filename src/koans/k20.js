@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK, INK_LIT, WASH, mixHex, wash } from '../palette.js';
 import {
-  composeWorld, makePath, makeMonk, faceMonk, makeWater, makeSand,
+  composeWorld, makePath, makeMonk, faceMonk, makeWater, makeSand, makeFoam,
   makeLights, makeBlobShadow, addOutlines, toonMaterial, groundHeight,
 } from '../kit/index.js';
 import { mergeSimple } from '../kit/scatter.js';
@@ -171,6 +171,12 @@ export default {
     const sand = makeSand({ shore: SHORE, seed: ID, groundSeed: 21 });
     moving.add(sand);
 
+    // THE WAVE-ENDS — the foam that was the point of the ocean from Frank's
+    // first sketch. Same period as the water's main swell, staggered per
+    // strip, so the arrivals overlap and no two land together.
+    const foam = makeFoam({ shore: SHORE, seed: ID, groundSeed: 21 });
+    moving.add(foam.mesh);
+
     const world = composeWorld(moving, {
       seed: ID,
       groundSeed: 21,
@@ -253,6 +259,15 @@ export default {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
         water.update(dt, simTime);
+        foam.update(dt, simTime);
+        // The surf breathes with the sea it belongs to: read the TRUE surface
+        // at the waterline (local z: world -8 minus the sheet's own -51) and
+        // hand it to the bed as 0..1. Synced by construction — there is no
+        // second clock to drift against the picture.
+        if (audio && audio.setWaterSwell) {
+          const h = water.heightAt(0, 43, simTime);
+          audio.setWaterSwell(Math.max(0, Math.min(1, 0.5 + h / 0.17)));
+        }
         while (pushes.length && clock - pushes[0].t > 8 * TAU) pushes.shift();
 
         let ox = 0, oz = 0;
@@ -274,7 +289,7 @@ export default {
           manX: +colossus.position.x.toFixed(4),
         };
       },
-      dispose() { water.dispose(); },
+      dispose() { water.dispose(); foam.dispose(); },
     };
   },
 };

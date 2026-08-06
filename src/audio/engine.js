@@ -121,6 +121,7 @@ export function createAudio(save) {
   const tlog = [];        // last few transitions, for the same probe
   let soundOn = save.state().soundOn;
   let windScale = 1;      // debug-panel multiplier over whatever a koan asks for
+  let waterRecipeLevel = 0;  // the recipe's own water level — what setWaterSwell breathes around
   let windLevel = 0;      // last level a koan requested, so a scale change applies now
   let ducked = false;     // ambience pulls back while narration is reading
   let mood = 'in';        // the case's editorial pick; every pitched voice reads it
@@ -249,6 +250,7 @@ export function createAudio(save) {
     if (type === 'water' && !water) {
       water = makeWaterBed(ctx, master);
       waterEpoch++;
+      waterRecipeLevel = level;
       water.setLevel(WATER.bedLevel * level);
       scheduleDrip();
     }
@@ -377,7 +379,7 @@ export function createAudio(save) {
           if (wind) { windLevel = k.to; wind.setLevel(k.to * windScale); } else startLayer('wind', k.to, emitters);
         }
         if (k.layer === 'water') {
-          if (water) water.setLevel(WATER.bedLevel * k.to); else startLayer('water', k.to, emitters);
+          if (water) { waterRecipeLevel = k.to; water.setLevel(WATER.bedLevel * k.to); } else startLayer('water', k.to, emitters);
         }
         if (k.layer === 'music') ensureCaseMusic(emitters);   // keeps the plain drift; swaps out the menu's chimes
       }
@@ -392,6 +394,15 @@ export function createAudio(save) {
     },
     setWindLevel(v) { windLevel = v; if (wind) wind.setLevel(v * windScale); },
     setGust(v) { if (wind) wind.setGust(v); },
+    // The surf's breath (case 20): the case reads its own sea's height at the
+    // waterline and hands it here as 0..1 — the setGust idiom, one line wide.
+    // Modulates the running bed around its recipe level (×0.7 quiet trough to
+    // ×1.3 arriving crest); no water bed running means silence stays silence.
+    // setLevel's own setTargetAtTime smoothing turns per-frame calls into a
+    // glide rather than a zipper.
+    setWaterSwell(v) {
+      if (water) water.setLevel(WATER.bedLevel * waterRecipeLevel * (0.7 + 0.6 * v));
+    },
     setWindScale(s) { windScale = s; if (wind) wind.setLevel(windLevel * windScale); },
     windScale() { return windScale; },
     stopAmbience() {
