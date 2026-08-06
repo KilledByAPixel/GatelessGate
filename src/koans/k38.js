@@ -6,6 +6,7 @@ import { makePath } from '../kit/path.js';
 import { makeMonk, aimMonk, faceMonk } from '../kit/monk.js';
 import { makeTree } from '../kit/tree.js';
 import { makeOak } from '../kit/oak.js';
+import { makeButterflies } from '../kit/butterflies.js';
 import { makeLights, toonMaterial } from '../render/toon.js';
 import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
@@ -73,6 +74,18 @@ export default {
     // own trunk, so the blob shadow underneath it is an honest one
     const oak = makeOak({ height: OAK.height, seed: 20, canopyColor: ACCENT_DEEP });
     oak.position.set(OAK.x, 0, OAK.z);
+
+    // Butterflies about the crown (k12's, in their everyday grey — the red
+    // ones are Zuigan's). A garden in season has visitors; they put the oak
+    // IN a garden instead of on a stage. Ink-wash, small, few: the accent
+    // here belongs to the canopy alone.
+    const butterflies = makeButterflies({
+      count: 7, seed: 38, color: WASH.dark, size: 0.5,
+      // the band rides the CROWN, not the trunk: against grass a grey
+      // butterfly vanishes; against the paper sky above the canopy it reads
+      center: [OAK.x + 1.0, OAK.z + 0.8], radius: 3.2, height: [2.4, 5.6],
+    });
+    scene.add(butterflies.group);
     oak.rotation.y = 0.4;
     scene.add(oak);
     oak.updateMatrixWorld(true);
@@ -263,6 +276,7 @@ export default {
       setCamera(c) { camera = c; },
       update(dt, simTime) {
         world.update(dt, simTime);
+        butterflies.update(dt, simTime);
 
         sinceAuto += dt;
         if (sinceAuto >= AUTO_EVERY) { sinceAuto = 0; release(null); }
