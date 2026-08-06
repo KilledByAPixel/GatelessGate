@@ -576,11 +576,13 @@ export function createAudio(save) {
       strike(ctx, bus ? bus.in : voicesDry, {
         partials: drumPartials(),
         gain: DRUM.level * force,
-        // a drum is a THUMP like the knock, not a bell — same scale reasoning
+        // a drum is a THUMP like the knock, not a bell — same scale reasoning.
+        // PROVISIONAL pending Frank's ear on dev/drum-audition.html, same as
+        // every number below it (see CERAMIC's own comment for the precedent).
         scale: STRIKE_SCALE * 7,
         transient: [
-          { dur: 0.035, freq: 120, q: 0.7, amp: 0.6 },   // the body's thump
-          { dur: 0.010, freq: 950, q: 0.8, amp: 0.3 },   // the skin's slap
+          { dur: 0.035, freq: 120, q: 0.7, amp: 0.6 },   // the body's thump — PROVISIONAL
+          { dur: 0.010, freq: 950, q: 0.8, amp: 0.3 },   // the skin's slap — PROVISIONAL
         ],
       });
     },
