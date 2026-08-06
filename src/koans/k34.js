@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeHut, makeBirds, makeMonk, faceMonk,
+  composeWorld, makePath, makeHut, makeRain, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial, makeFurin,
 } from '../kit/index.js';
 
@@ -14,11 +14,14 @@ const ID = 34;
 // The scene is the study the second sentence walks out of — the RED house
 // the old man has turned his back on — a reading mat before its door with a
 // monk still seated on it, and Nansen standing apart from all of it.
-// Overhead, birds.
+// Overhead, rain — the verse's own weather: "When the earth is parched rain
+// will fall." The birds that used to cross this sky moved on (Frank is
+// thinking about where); what's left overhead now is indifferent to the
+// sentence that just walked out the door.
 //
-// Touch the mat and the birds scatter. That is the whole of what the words
-// do when they leave the paper — they go up, they wheel around, and they
-// settle again somewhere you were not watching.
+// Touch the mat and the shower leans in for a moment. That is the whole of
+// what the words do when they leave the paper — they ask, and the sky
+// answers, briefly, then settles back to its own patter.
 export default {
   id: ID,
   slug: 'learning-is-not-the-path',
@@ -34,7 +37,7 @@ export default {
   // cases hung the same object in the same beam-underside spot, sizes
   // 0.7-0.9 the only thing distinguishing them) — a lighter, higher voice,
   // the other half of the kit's own vocabulary, still one quiet tube.
-  ambience: ['wind:0.16', 'birds', 'furin', 'music'],
+  ambience: ['wind:0.16', 'rain', 'furin', 'music'],
   camera: { distance: 10.5, target: [0.7, 1.5, -0.8], azimuth: 0.55, polar: 1.22 },
 
   build(ctx) {
@@ -99,9 +102,11 @@ export default {
     eaveChime.group.position.set(1.1, 2.3, 1.25);
     hut.add(eaveChime.group);
 
-    // THE BIRDS: the words that have already left, crossing the sky
-    const birds = makeBirds({ count: 8, seed: ID, center: [0.6, -1.2], height: 6.4, spread: 5.2 });
-    scene.add(birds.group);
+    // THE RAIN: the verse's own weather — "When the earth is parched rain
+    // will fall" — already falling over the study, indifferent to the
+    // sentence that walked out of it.
+    const rain = makeRain({ count: 340, seed: ID, width: 26, depth: 26, height: 13 });
+    scene.add(rain.points);
 
     const world = composeWorld(scene, {
       seed: ID,
@@ -148,15 +153,16 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
-      // the eave chime first, so a tap aimed at it never also scatters the birds
+      // the eave chime first, so a tap aimed at it never also calls the rain
       const chimeHit = eaveChime.pick(camera, input);
       if (chimeHit) { eaveChime.ring(0.75, chimeHit.tube); return; }
       if (!input.raycastFirst(camera, [hit])) return;
       if (clock - lastAt < 0.5) return;
       lastAt = clock;
-      birds.scatter();
+      // ask, and the sky answers: the shower leans in for a moment
+      rain.surge(1);
       disturbed++;
-      audio && audio.chimeStrike({ tube: 4, force: 0.45, at: hit.position });
+      audio && audio.rainSurge();
     });
 
     return {
@@ -165,19 +171,19 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
-        birds.update(dt, simTime);
+        rain.update(dt, simTime);
         eaveChime.setWindLevel(1);   // the kit's own default; see k47's furin
         eaveChime.update(dt, simTime);
       },
       fragment() {
         return {
           disturbed,
-          birds: birds.count(),
-          aloft: +birds.energy().toFixed(4),
+          drops: rain.count(),
+          surge: +rain.surgeLevel().toFixed(4),
           chimeStrikes: eaveChime.strikes(),
         };
       },
-      dispose() {},
+      dispose() { rain.dispose(); },
     };
   },
 };
