@@ -2,6 +2,7 @@
 // (Audio is exempt from the determinism rule — Math.random for noise is fine here.)
 
 import { mulberry32 } from './verb.js';
+import { noise1 } from '../util/noise.js';
 
 export function windParams(level) {
   const l = Math.max(0, Math.min(1, level));
@@ -434,6 +435,30 @@ export const GUST_B = 0.071;
 export const gustPhase = (t) =>
   (Math.sin(2 * Math.PI * GUST_A * t) + Math.sin(2 * Math.PI * GUST_B * t)) / 2;
 
+// The AUDIBLE gust: gustPhase's slow weather (70% weight, so the crests that
+// ring the fūrin are still the crests the ear rides) plus two seeded
+// value-noise octaves — gust-scale irregularity and leaf-flutter. This is the
+// doc-review fix for "two sines is a synth tell", done WITHOUT touching
+// gustPhase: the kit's pendulum physics (cylinder.js, furin.js) and their
+// measured strike statistics read gustPhase and must keep reading exactly it.
+// Pure function of sim time, same clock as everything else.
+export const WIND_GUST_SEED = 77;
+export function windGust(t) {
+  const slow = gustPhase(t);
+  const mid = 2 * noise1(t * 0.5, WIND_GUST_SEED) - 1;         // ~2s gust features
+  const flutter = 2 * noise1(t * 3.7, WIND_GUST_SEED + 1) - 1; // leaf-flutter band
+  const v = slow * 0.7 + mid * 0.22 + flutter * 0.08;
+  return Math.max(-1, Math.min(1, v));
+}
+
+// Rustle drive for the leaf-grain layer: leaves rustle when the wind CHANGES,
+// not when it is steadily strong, so the grain scheduler reads this, not
+// windGust itself. Central difference; h is wide enough to see the mid band
+// and mostly ignore flutter jitter.
+export function gustSlope(t, h = 0.25) {
+  return (windGust(t + h) - windGust(t - h)) / (2 * h);
+}
+
 export function makeWind(ctx, dest) {
   const SR = ctx.sampleRate;
   const LOOP = 10;        // a 2s loop is short enough that the ear hears it repeat
@@ -486,7 +511,7 @@ export function makeWind(ctx, dest) {
       params = windParams(v);
       apply();
     },
-    setGust(v) {
+    setGust(v, slope = 0) {
       gust = v;
       apply();
     },

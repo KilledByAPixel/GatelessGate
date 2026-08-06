@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B,
-  gustPhase, STRIKE_SCALE, BELL_PRESETS, bellMacroPartials, applyBellPreset, NAMED_MODE_COUNT, strike,
+  gustPhase, windGust, gustSlope, STRIKE_SCALE, BELL_PRESETS, bellMacroPartials, applyBellPreset, NAMED_MODE_COUNT, strike,
   ceramicPartials, woodPartials, CERAMIC, WOOD, CLOTH, BREATH, WATER, CHIME, BRONZE,
 } from '../src/audio/synths.js';
 import { noteForSize } from '../src/kit/cylinder.js';
@@ -1152,5 +1152,39 @@ test('a hide/show/hide burst inside one fade window does not let the FIRST hide\
     assert.equal(ctx.state, 'suspended');
   } finally {
     if (hadWindow) global.window = priorWindow; else delete global.window;
+  }
+});
+
+test('windGust keeps gustPhase\'s slow weather and adds faster texture', () => {
+  // bounded
+  for (let t = 0; t < 900; t += 0.31) {
+    const v = windGust(t);
+    assert.ok(v >= -1 && v <= 1, `out of range at ${t}: ${v}`);
+  }
+  // shares the slow core: correlated with gustPhase over half an hour
+  let sxy = 0, sxx = 0, syy = 0;
+  for (let t = 0; t < 1800; t += 0.5) {
+    const x = gustPhase(t), y = windGust(t);
+    sxy += x * y; sxx += x * x; syy += y * y;
+  }
+  const corr = sxy / Math.sqrt(sxx * syy);
+  assert.ok(corr > 0.55, `lost the shared weather: corr ${corr}`);
+  // and has short-lag movement gustPhase lacks — the added texture
+  let dNew = 0, dOld = 0, n = 0;
+  for (let t = 0; t < 1800; t += 0.5) {
+    dNew += Math.abs(windGust(t + 0.25) - windGust(t));
+    dOld += Math.abs(gustPhase(t + 0.25) - gustPhase(t));
+    n++;
+  }
+  assert.ok(dNew / n > (dOld / n) * 1.3,
+    `no added texture: ${dNew / n} vs ${dOld / n}`);
+});
+
+test('gustSlope is the derivative of windGust and is bounded', () => {
+  for (let t = 3; t < 600; t += 7.7) {
+    const h = 0.25;
+    const expect = (windGust(t + h) - windGust(t - h)) / (2 * h);
+    assert.ok(Math.abs(gustSlope(t) - expect) < 1e-12);
+    assert.ok(Math.abs(gustSlope(t)) < 4, `implausible slope at ${t}`);
   }
 });

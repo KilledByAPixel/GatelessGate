@@ -11,7 +11,7 @@ import { makeInput } from './input.js';
 import { setBreezePointer, clearBreeze } from './kit/breeze.js';
 import { createSave } from './save.js';
 import { createAudio, shouldPauseForHide } from './audio/engine.js';
-import { gustPhase } from './audio/synths.js';
+import { windGust, gustSlope } from './audio/synths.js';
 import { createNarration } from './audio/narration.js';
 import { CASES } from './koans/index.js';
 import { makeNavQueue } from './nav_queue.js';
@@ -1130,7 +1130,7 @@ function feedBreeze() {
 
 function tick() {
   simTime += STEP;
-  audio.setGust(gustPhase(simTime));
+  audio.setGust(windGust(simTime), gustSlope(simTime));
   audio.setListener(listenerFrom(camera));
   feedBreeze();
   if (mode === 'intro' && intro) intro.update(STEP);

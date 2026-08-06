@@ -403,7 +403,7 @@ export function createAudio(save) {
       if (tlog.length > 8) tlog.shift();
     },
     setWindLevel(v) { windLevel = v; if (wind) wind.setLevel(v * windScale); },
-    setGust(v) { if (wind) wind.setGust(v); },
+    setGust(v, slope = 0) { if (wind) wind.setGust(v, slope); },
     // The surf's breath (case 20): the case reads its own sea's height at the
     // waterline and hands it here as 0..1 — the setGust idiom, one line wide.
     // Modulates the running bed around its recipe level (×0.7 quiet trough to
