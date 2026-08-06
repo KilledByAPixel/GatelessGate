@@ -4,8 +4,8 @@
 // touches a node.
 //
 // A recipe is the koan module's ambience field: ['wind:0.12', 'water:0.35',
-// 'music', 'furin']. Only three tokens name voices the ENGINE itself keeps
-// running — wind, water, music (the AUDIBLE set). Every other token (furin,
+// 'music', 'furin']. Only four tokens name voices the ENGINE itself keeps
+// running — wind, water, music, rain (the AUDIBLE set). Every other token (furin,
 // bell, gavel…) is a kit object that makes its own noise when struck; in a
 // recipe it exists only to feed emitterCount's density rule, so it has no
 // layer of its own to keep or stop.
@@ -47,7 +47,7 @@ export function emitterCount(recipe = []) {
 }
 
 // The voices the engine itself sustains, in the order the diff reports them.
-// 'rain' is deliberately NOT in BEDS below: like the water token, it counts
+// 'rain' is deliberately NOT in BEDS above: like the water token, it counts
 // as an emitter, buying the drift layer more silence — a rain scene needs
 // less music.
 export const AUDIBLE = ['wind', 'water', 'music', 'rain'];

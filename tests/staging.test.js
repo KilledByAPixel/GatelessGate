@@ -26,7 +26,7 @@ const STUB_AUDIO = () => {
   return {
     calls,
     bell: rec('bell'), chimeStrike: rec('chime'), cylinderStrike: rec('cylinder'), knock: rec('knock'),
-    drum: rec('drum'), drip: rec('drip'), pour: rec('pour'),
+    drum: rec('drum'), drip: rec('drip'), pour: rec('pour'), rainSurge: rec('rainSurge'),
     // the touch voices: ceramic, wood, cloth, air
     ceramic: rec('ceramic'), wood: rec('wood'), cloth: rec('cloth'), breath: rec('breath'),
     startAmbience: rec('start'), stopAmbience: rec('stop'), setWindLevel: rec('wind'),
