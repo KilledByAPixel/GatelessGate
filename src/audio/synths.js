@@ -26,7 +26,7 @@ export function windParams(level) {
 //            its hiss; the hiss carries the top instead)
 export const WIND_FLAVORS = {
   open:      { bed: 1,    canopy: 0,    grain: 0, cutoff: 1 },
-  pine:      { bed: 0.85, canopy: 0.45, grain: 0, cutoff: 0.85 },
+  pine:      { bed: 0.85, canopy: 0.2, grain: 0, cutoff: 0.85 },
   broadleaf: { bed: 0.9,  canopy: 0.15, grain: 1, cutoff: 1 },
 };
 export function windFlavorParams(name) {
