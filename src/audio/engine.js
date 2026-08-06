@@ -68,7 +68,7 @@ const MIX_NONE = { kd: 0, ks: 0 };
 // comment) — same bound (1.67x), same reasoning, not a separate concern.
 const MIX_TOUCH = { kd: 0, ks: 1.2 };
 
-import { parseRecipe, emitterCount, diffAmbience, windFlavorOf } from './ambience_diff.js';
+import { parseRecipe, emitterCount, diffAmbience, windFlavorOf, roomFor } from './ambience_diff.js';
 
 // The recipe grammar and the page-turn diff live in ambience_diff.js (pure,
 // Node-tested); re-exported here so the engine stays the module everyone
@@ -367,6 +367,7 @@ export function createAudio(save) {
         startLayer(type, level, emitters, flavor);
       }
       playing = recipe.slice();
+      verb.setRoom(roomFor(recipe));
     },
     // The page turn: the outgoing case's bed flows into the incoming one's
     // instead of stopping and starting. KEPT layers never restart — the wind
@@ -398,6 +399,7 @@ export function createAudio(save) {
       }
       for (const s of start) startLayer(s.layer, s.level, emitters, windFlavorOf(next));
       playing = next.slice();
+      verb.setRoom(roomFor(next));
       tlog.push({
         keep: keep.map((k) => `${k.layer}:${k.from}>${k.to}`),
         start: start.map((s) => `${s.layer}:${s.level}`),
@@ -424,6 +426,7 @@ export function createAudio(save) {
       if (dripTimer) { clearTimeout(dripTimer); dripTimer = null; }
       stopMusic();
       playing = [];
+      if (verb) verb.setRoom('open');   // leaving for the menu resets the air
     },
     // Headless probe read — never drives anything. Epochs are the reliable
     // witness that a layer was KEPT across a transition (same number) rather
@@ -433,6 +436,7 @@ export function createAudio(save) {
       return {
         recipe: playing.slice(),
         mood,
+        room: verb ? verb.room() : null,
         ctxState: ctx ? ctx.state : null,   // suspended = every gain reads pre-ramp
         log: tlog.slice(),
         layers: {

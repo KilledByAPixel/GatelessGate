@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { reverbIR, mulberry32 } from '../src/audio/verb.js';
+import { reverbIR, mulberry32, ROOMS } from '../src/audio/verb.js';
 
 test('the noise source never collapses into a cycle', () => {
   // Regression: the previous LCG's multiply overflowed 2^53, and the degraded
@@ -80,4 +80,27 @@ test('the room is outdoor air, not a stone cistern', () => {
   const crossings = zc(ir.subarray(0, 480));
   assert.ok(crossings > 5 && crossings < 150,
     `the room's head is not outdoor air: ${crossings} crossings in 10ms`);
+});
+
+// ---- ROOMS: case 41's snow room, shorter and darker than the outdoor air ----
+
+test('the snow IR is shorter and darker than the open room', () => {
+  const SR = 44100;
+  const open = reverbIR(SR, ROOMS.open.seconds, 1013, ROOMS.open.fcScale);
+  const snow = reverbIR(SR, ROOMS.snow.seconds, 1013, ROOMS.snow.fcScale);
+  assert.ok(snow.length < open.length * 0.6, 'snow tail must be materially shorter');
+  // darker: fewer zero crossings per sample is less high-frequency content
+  const zc = (a) => {
+    let c = 0;
+    for (let i = 1; i < a.length; i++) if ((a[i] >= 0) !== (a[i - 1] >= 0)) c++;
+    return c / a.length;
+  };
+  assert.ok(zc(snow) < zc(open) * 0.8, `snow not darker: ${zc(snow)} vs ${zc(open)}`);
+});
+
+test('fcScale defaults to 1 — the open room is unchanged from before', () => {
+  const SR = 44100;
+  const a = reverbIR(SR, 1.8, 1013);
+  const b = reverbIR(SR, 1.8, 1013, 1);
+  assert.deepEqual(Array.from(a.subarray(0, 500)), Array.from(b.subarray(0, 500)));
 });

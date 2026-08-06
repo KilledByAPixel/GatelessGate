@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  parseRecipe, emitterCount, AUDIBLE, recipeLayers, diffAmbience, windFlavorOf,
+  parseRecipe, emitterCount, AUDIBLE, recipeLayers, diffAmbience, windFlavorOf, roomFor,
 } from '../src/audio/ambience_diff.js';
 import { createAudio } from '../src/audio/engine.js';
 import { graphAudioContext } from './helpers/audio-graph-context.js';
@@ -165,6 +165,14 @@ test('the diff never mentions a non-layer token, whatever the pages hold', () =>
   for (const list of [d.keep.map((k) => k.layer), d.start.map((s) => s.layer), d.stop]) {
     for (const layer of list) assert.ok(AUDIBLE.includes(layer), `${layer} is not a sustained layer`);
   }
+});
+
+// ---- roomFor: the recipe token that darkens the shared reverb ----
+
+test('roomFor: a snow token asks for the snow room', () => {
+  assert.equal(roomFor(['wind:0.34', 'snow', 'music']), 'snow');
+  assert.equal(roomFor(['wind:0.2', 'music']), 'open');
+  assert.equal(roomFor([]), 'open');
 });
 
 test('deterministic: the same pair diffs the same way every time', () => {

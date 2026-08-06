@@ -31,6 +31,13 @@ export function windFlavorOf(recipe = []) {
   return 'open';
 }
 
+// The room a recipe asks for. Today's only alternate is case 41's snow —
+// a 'snow' token anywhere in the recipe darkens and shortens the shared
+// reverb (see ROOMS in verb.js).
+export function roomFor(recipe = []) {
+  return recipe.some((s) => parseRecipe(s).type === 'snow') ? 'snow' : 'open';
+}
+
 // Beds are not emitters: wind is atmosphere rather than an event source, and
 // music is the thing being thinned. Everything else in a recipe is an object
 // that makes noise, and each one buys the drift layer more silence.

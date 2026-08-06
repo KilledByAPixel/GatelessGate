@@ -733,13 +733,15 @@ test('structurally: the sit bell bypasses the hush pair; an ordinary bell does n
     const ctx = audio.ctx;
     assert.ok(ctx, 'ensureCtx() did not build a context off the faked window');
 
-    // ensureCtx() creates exactly four gain nodes, in this order, before any
-    // voice is struck: master, musicGain, voicesDry, voicesWet. Pinning them
-    // by creation order is the same trade fakeAudioCtx() above already makes
-    // (reaching into strike()'s own graph because a param-table test cannot
-    // see a wiring mistake); if ensureCtx() ever creates a gain node in a
-    // different order this test's own assertion below on gains[0] catches it.
-    const [master, , voicesDry, voicesWet] = ctx._gains;
+    // ensureCtx() creates exactly seven gain nodes, in this order, before any
+    // voice is struck: master, musicGain, then makeVerb's own three (the
+    // shared input, and one return gain per room in ROOMS — open, snow, in
+    // that order), then voicesDry, voicesWet. Pinning them by creation order
+    // is the same trade fakeAudioCtx() above already makes (reaching into
+    // strike()'s own graph because a param-table test cannot see a wiring
+    // mistake); if ensureCtx() ever creates a gain node in a different order
+    // this test's own assertion below on gains[0] catches it.
+    const [master, , , , , voicesDry, voicesWet] = ctx._gains;
     assert.equal(master, audio.master, 'gains[0] is not the exposed master — creation order assumption is wrong');
     assert.ok(voicesDry && voicesWet, 'ensureCtx() did not build the hush pair');
 
@@ -777,10 +779,10 @@ test('structurally: the four touch voices route through the hush pair, not strai
     audio.unlock();
     const ctx = audio.ctx;
     // Same creation-order assumption as the sit-bell test above (master,
-    // musicGain, voicesDry, voicesWet) — pinned here too, so a future change
-    // to ensureCtx()'s node order fails this test loudly instead of quietly
-    // shifting which index "voicesDry" actually reads.
-    const [master, , voicesDry] = ctx._gains;
+    // musicGain, verb's own three, voicesDry, voicesWet) — pinned here too,
+    // so a future change to ensureCtx()'s node order fails this test loudly
+    // instead of quietly shifting which index "voicesDry" actually reads.
+    const [master, , , , , voicesDry] = ctx._gains;
     assert.equal(master, audio.master, 'gains[0] is not the exposed master — creation order assumption is wrong');
 
     for (const [name, call] of [
@@ -830,16 +832,17 @@ test('structurally: a placed one-shot builds a real bus — both legs land, and 
     audio.setListener(listener);
     audio.unlock();
     const ctx = audio.ctx;
-    const [master, , voicesDry, voicesWet] = ctx._gains;
+    const [master, , , , , voicesDry, voicesWet] = ctx._gains;
     assert.equal(master, audio.master, 'gains[0] is not the exposed master — creation order assumption is wrong');
 
     audio.bell({ f0: 300, at: source });
 
-    // ensureCtx()'s four gains exist before this call; makeSpatialBus() then
+    // ensureCtx()'s seven gains (master, musicGain, verb's own three,
+    // voicesDry, voicesWet) exist before this call; makeSpatialBus() then
     // creates exactly three more (input, dryG, sendG, in that order) before
     // strikeBell() adds its own oscillator/gain nodes on top — so this slice
     // is stable regardless of how many partials the voice has.
-    const [input, dryG, sendG] = ctx._gains.slice(4, 7);
+    const [input, dryG, sendG] = ctx._gains.slice(7, 10);
     assert.ok(input && dryG && sendG, 'the bus did not build its three gain nodes in the expected order');
 
     // the panner and lowpass are not gain nodes and so are not in _gains, but
@@ -888,7 +891,7 @@ test('structurally: a punctuation chime bypasses the hush pair; an ordinary chim
     const ctx = audio.ctx;
     assert.ok(ctx, 'ensureCtx() did not build a context off the faked window');
 
-    const [master, , voicesDry, voicesWet] = ctx._gains;
+    const [master, , , , , voicesDry, voicesWet] = ctx._gains;
     assert.equal(master, audio.master, 'gains[0] is not the exposed master — creation order assumption is wrong');
 
     // CODE REVIEW CAUGHT: ensureCtx() already wires voicesDry/musicGain into
@@ -932,7 +935,7 @@ test('structurally: cylinderStrike (the large hanging cylinder) routes through t
     audio.setListener(null);   // no listener -> placed() is null -> the unplaced fallback
     audio.unlock();
     const ctx = audio.ctx;
-    const [master, , voicesDry, voicesWet] = ctx._gains;
+    const [master, , , , , voicesDry, voicesWet] = ctx._gains;
     assert.equal(master, audio.master, 'gains[0] is not the exposed master — creation order assumption is wrong');
 
     const before = ctx._edges.length;
@@ -1233,6 +1236,25 @@ test('a hide/show/hide burst inside one fade window does not let the FIRST hide\
     assert.equal(ctx.state, 'suspended');
   } finally {
     if (hadWindow) global.window = priorWindow; else delete global.window;
+  }
+});
+
+test('engine: case 41\'s recipe swaps the room to snow, and leaving swaps back', () => {
+  const ctx = graphAudioContext();
+  global.window = { AudioContext: function AudioContext() { return ctx; } };
+  let audio;
+  try {
+    audio = createAudio({ state: () => ({ soundOn: true }), setSound() {} });
+    audio.startAmbience(['wind:0.34', 'snow', 'music']);
+    assert.equal(audio.debugState().room, 'snow');
+    audio.transition(['wind:0.2', 'music']);
+    assert.equal(audio.debugState().room, 'open');
+  } finally {
+    // the recipe's 'music' token starts makeMusic's real setTimeout scheduler
+    // (see the Contents-to-case test above) — left running it outlives this
+    // test and hangs `node --test` on the whole file.
+    if (audio) audio.stopAmbience();
+    delete global.window;
   }
 });
 
