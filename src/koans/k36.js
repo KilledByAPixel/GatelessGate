@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, makePine,
-  makeWalk, walkHeading, pathLength,
+  makeWalk, walkHeading, pathLength, makeHorse, makeBundle,
   makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
@@ -76,6 +76,21 @@ export default {
     pine.position.set(PP.x + PP.perp.x * 2.6, 0, PP.z + PP.perp.z * 2.6);
     scene.add(pine);
 
+    // A third traveler stopped here — horse (k45's) standing loose across
+    // the road from the pine, bundle (k23's) set down at the verge. Two
+    // walkers pass each other mid-frame; the rest gear says the road is
+    // LONG, that people break their journey on it, that the meeting the
+    // koan asks about happens on an ordinary working road.
+    const horse = makeHorse({ height: 1.5, seed: 36 });
+    horse.group.position.set(PP.x - PP.perp.x * 2.5, 0, PP.z - PP.perp.z * 2.5);
+    horse.group.rotation.y = PP.heading + 2.6;   // hip to the road, head away
+    scene.add(horse.group);
+
+    const bundle = makeBundle({ seed: 36 });
+    bundle.group.position.set(PP.x - PP.perp.x * 1.15, 0, PP.z - PP.perp.z * 1.15);
+    bundle.group.rotation.y = 0.9;
+    scene.add(bundle.group);
+
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
@@ -84,6 +99,8 @@ export default {
         ...road.keepout(26, 1.5),
         { x: HERE.x, z: HERE.z, r: 1.3 },
         { x: pine.position.x, z: pine.position.z, r: 1.5 },
+        { at: horse.group, r: 1.7 },
+        { at: bundle.group, r: 0.55 },
       ],
       grassKeepout: road.keepout(28, 1.0),
     });
@@ -94,6 +111,9 @@ export default {
     scene.add(masterShadow);
     const pineShadow = makeBlobShadow({ radiusX: 0.8, radiusZ: 0.62, opacity: 0.30 });
     pineShadow.position.set(pine.position.x, 0, pine.position.z);
+    const horseShadow = makeBlobShadow({ radiusX: 0.95, radiusZ: 0.5, opacity: 0.34 });
+    horseShadow.position.set(horse.group.position.x, 0, horse.group.position.z);
+    scene.add(horseShadow);
     scene.add(pineShadow);
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
@@ -174,6 +194,8 @@ export default {
         if (runStart === null) runStart = clock - START_U * PASS;
         if (travStart === null) travStart = clock - TRAV_U0 * TRAV_PASS;
         world.update(dt, simTime);
+        horse.update(dt, simTime);   // the tail swishes; the rest of it waits
+        bundle.update(dt, simTime);
         const mProg = (clock - runStart) / PASS;         // passes walked, unwrapped
         placeMaster(((mProg % 1) + 1) % 1, mProg * SPAN * roadLen);
         const tProg = (clock - travStart) / TRAV_PASS;
