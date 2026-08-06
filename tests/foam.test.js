@@ -49,3 +49,65 @@ test('foamCycle: rises before it fades — the sweep leads, the soak trails', ()
   }
   assert.ok(tO <= tA + 0.05, `opacity peaks at ${tO}, after the sweep's own peak ${tA}`);
 });
+
+// ---- the strips ------------------------------------------------------------
+
+const SHORE = { dx: 0, dz: -1, dist: 8, width: 4, sea: -0.35, depth: 1.4 };
+
+test('makeFoam: one mesh, unlit snow, kept material, no outline', async () => {
+  const { makeFoam } = await import('../src/kit/foam.js');
+  const foam = makeFoam({ shore: SHORE, seed: 20 });
+  assert.ok(foam.mesh.isMesh);
+  assert.equal(foam.mesh.name, 'foam');
+  assert.equal(foam.mesh.children.length, 0);
+  assert.ok(foam.mesh.material.isMeshBasicMaterial, 'foam is unlit');
+  assert.equal(foam.mesh.material.transparent, true);
+  assert.equal(foam.mesh.material.depthWrite, false);
+  assert.equal(foam.mesh.userData.noOutline, true);
+  assert.equal(foam.mesh.userData.keepMaterial, true);
+});
+
+test('makeFoam: strips live on the beach and hug the shored sand', async () => {
+  const { makeFoam } = await import('../src/kit/foam.js');
+  const { groundHeight } = await import('../src/kit/ground.js');
+  const foam = makeFoam({ shore: SHORE, seed: 20 });
+  foam.update(1 / 60, 2.7);
+  const pos = foam.mesh.geometry.attributes.position;
+  let checked = 0;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    const s = x * SHORE.dx + z * SHORE.dz - SHORE.dist;   // seaward of waterline
+    assert.ok(s > -3.5 && s < 3.0, `a foam vertex sits at s=${s}, off the beach`);
+    const g = groundHeight(x, z, { seed: 21, shore: SHORE });
+    const lift = y - g;
+    assert.ok(lift > 0.005 && lift < 0.09, `foam floats ${lift} above the sand at (${x}, ${z})`);
+    checked++;
+  }
+  assert.ok(checked > 50, 'there is actually foam to check');
+});
+
+test('makeFoam: deterministic, and alive — the strips move between moments', async () => {
+  const { makeFoam } = await import('../src/kit/foam.js');
+  const snap = (t) => {
+    const f = makeFoam({ shore: SHORE, seed: 20 });
+    f.update(1 / 60, t);
+    return Array.from(f.mesh.geometry.attributes.position.array);
+  };
+  assert.deepEqual(snap(2.0), snap(2.0));
+  assert.notDeepEqual(snap(2.0), snap(4.5));
+});
+
+test('makeFoam: the trailing edge is more transparent than the front', async () => {
+  const { makeFoam } = await import('../src/kit/foam.js');
+  const foam = makeFoam({ shore: SHORE, seed: 20 });
+  foam.update(1 / 60, 3.0);
+  const color = foam.mesh.geometry.attributes.color;
+  assert.equal(color.itemSize, 4, 'RGBA vertex colors carry the fade');
+  let min = 2, max = -1;
+  for (let i = 0; i < color.count; i++) {
+    const a = color.getW(i);
+    assert.ok(a >= 0 && a <= 1 + 1e-9);
+    min = Math.min(min, a); max = Math.max(max, a);
+  }
+  assert.ok(max > min + 0.2, 'the fade gradient exists');
+});
