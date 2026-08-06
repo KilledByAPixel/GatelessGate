@@ -489,7 +489,11 @@ export function makeWaterBed(ctx, dest) {
 // Poisson-timed drop ticks (patter), and the salient content is live sparse
 // plinks through strikeDrip at the engine. All numbers PROVISIONAL pending
 // Frank's ear on case 34 (see CERAMIC's own comment for the convention).
-export const RAIN = { bedLevel: 0.030, bedTone: 5200, dropGap: 2.6, dropLevel: 0.022, degree: 17 };
+// Frank's first audition (case 34): "too high pitched, too much individual
+// dropping sounds — want continuous rain." Bed densified 22->65 drops/s and
+// dropped an octave-ish (see rainBedSamples), tone darkened, and the live
+// plinks pushed back and down so the shower carries and the plink punctuates.
+export const RAIN = { bedLevel: 0.030, bedTone: 3800, dropGap: 4.5, dropLevel: 0.016, degree: 14 };
 
 // Pure: the loop's samples. Poisson drop times (exponential gaps), each drop
 // a few ms of decaying sine-plus-noise at its own frequency — no filtered
@@ -498,14 +502,14 @@ export function rainBedSamples(sampleRate, seconds, seed = 9911) {
   const nTotal = Math.floor(sampleRate * seconds);
   const out = new Float32Array(nTotal);
   const rand = mulberry32(seed);
-  const LAMBDA = 22;                                   // drops per second
+  const LAMBDA = 65;                                   // drops per second
   let t = 0;
   while (t < seconds) {
     t += -Math.log(1 - rand()) / LAMBDA;
     const i0 = Math.floor(t * sampleRate);
     if (i0 >= nTotal) break;
-    const f = 1400 * Math.pow(4, rand());              // 1.4k–5.6k, log-uniform
-    const dur = 0.003 + rand() * 0.009;
+    const f = 800 * Math.pow(3.5, rand());             // 0.8k–2.8k, log-uniform
+    const dur = 0.005 + rand() * 0.015;
     const amp = 0.25 + rand() * rand() * 0.75;         // few loud, many soft
     const nd = Math.min(nTotal - i0, Math.ceil(dur * sampleRate));
     for (let j = 0; j < nd; j++) {
