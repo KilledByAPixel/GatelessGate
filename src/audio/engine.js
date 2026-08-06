@@ -68,7 +68,7 @@ const MIX_NONE = { kd: 0, ks: 0 };
 // comment) — same bound (1.67x), same reasoning, not a separate concern.
 const MIX_TOUCH = { kd: 0, ks: 1.2 };
 
-import { parseRecipe, emitterCount, diffAmbience } from './ambience_diff.js';
+import { parseRecipe, emitterCount, diffAmbience, windFlavorOf } from './ambience_diff.js';
 
 // The recipe grammar and the page-turn diff live in ambience_diff.js (pure,
 // Node-tested); re-exported here so the engine stays the module everyone
@@ -243,11 +243,12 @@ export function createAudio(save) {
   // One sustained layer coming to life. Every bed is born at gain 0 and
   // setLevel rides setTargetAtTime, so a started layer always FADES in from
   // silence — there is no click to guard against here.
-  function startLayer(type, level, emitters) {
+  function startLayer(type, level, emitters, flavor = 'open') {
     if (type === 'wind' && !wind) {
       wind = makeWind(ctx, master);
       windEpoch++;
       windLevel = level;
+      wind.setFlavor(flavor);
       wind.setLevel(level * windScale);
     }
     if (type === 'music') ensureCaseMusic(emitters);
@@ -360,9 +361,10 @@ export function createAudio(save) {
     startAmbience(recipe = []) {
       if (!ensureCtx()) return;
       const emitters = emitterCount(recipe);
+      const flavor = windFlavorOf(recipe);
       for (const item of recipe) {
         const { type, level } = parseRecipe(item);
-        startLayer(type, level, emitters);
+        startLayer(type, level, emitters, flavor);
       }
       playing = recipe.slice();
     },
@@ -386,14 +388,15 @@ export function createAudio(save) {
         // this file reached in, but a keep on a missing node must build, not
         // crash — startLayer is the same fade-in the start list gets.
         if (k.layer === 'wind') {
-          if (wind) { windLevel = k.to; wind.setLevel(k.to * windScale); } else startLayer('wind', k.to, emitters);
+          if (wind) { windLevel = k.to; wind.setFlavor(windFlavorOf(next)); wind.setLevel(k.to * windScale); }
+          else startLayer('wind', k.to, emitters, windFlavorOf(next));
         }
         if (k.layer === 'water') {
           if (water) { waterRecipeLevel = k.to; water.setLevel(WATER.bedLevel * k.to); } else startLayer('water', k.to, emitters);
         }
         if (k.layer === 'music') ensureCaseMusic(emitters);   // keeps the plain drift; swaps out the menu's chimes
       }
-      for (const s of start) startLayer(s.layer, s.level, emitters);
+      for (const s of start) startLayer(s.layer, s.level, emitters, windFlavorOf(next));
       playing = next.slice();
       tlog.push({
         keep: keep.map((k) => `${k.layer}:${k.from}>${k.to}`),
@@ -433,7 +436,7 @@ export function createAudio(save) {
         ctxState: ctx ? ctx.state : null,   // suspended = every gain reads pre-ramp
         log: tlog.slice(),
         layers: {
-          wind: wind ? { epoch: windEpoch, level: windLevel, gain: wind.gain() } : null,
+          wind: wind ? { epoch: windEpoch, level: windLevel, gain: wind.gain(), flavor: wind.flavor() } : null,
           water: water ? { epoch: waterEpoch, gain: water.gain() } : null,
           music: music ? { epoch: musicEpoch, emitters: music.emitters(), chimes: musicChimed } : null,
         },

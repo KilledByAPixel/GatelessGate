@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   windParams, bellPartials, bellVoice, bellTail, BELL_REF_HZ, barPartials, GUST_A, GUST_B,
   gustPhase, windGust, gustSlope, WIND_FLAVORS, windFlavorParams, windMix, RUSTLE, rustleRate, STRIKE_SCALE, BELL_PRESETS, bellMacroPartials, applyBellPreset, NAMED_MODE_COUNT, strike,
-  ceramicPartials, woodPartials, CERAMIC, WOOD, CLOTH, BREATH, WATER, CHIME, BRONZE,
+  ceramicPartials, woodPartials, CERAMIC, WOOD, CLOTH, BREATH, WATER, CHIME, BRONZE, makeWind,
 } from '../src/audio/synths.js';
 import { noteForSize } from '../src/kit/cylinder.js';
 import {
@@ -59,6 +59,48 @@ test('rustleRate: zero without grains or level, driven by |slope|, capped', () =
   assert.ok(moving > still * 2, 'rustle must track the CHANGE in the wind');
   assert.ok(rustleRate(1, 1, 99) <= RUSTLE.max);
   assert.ok(rustleRate(1, 0.2, -0.4) === moving, 'sign of slope must not matter');
+});
+
+test('makeWind: flavors retune the live graph without restarting it', () => {
+  const ctx = graphAudioContext();
+  const dest = ctx.createGain();
+  const wind = makeWind(ctx, dest);
+  try {
+    wind.setLevel(0.5);
+    assert.equal(wind.flavor(), 'open');
+    // open: the canopy branch exists but is silent
+    const canopyTargets = () => ctx._gains.flatMap((g) => g.gain.targets);
+    wind.setFlavor('pine');
+    wind.setGust(0.8, 0);
+    assert.equal(wind.flavor(), 'pine');
+    assert.ok(canopyTargets().some((v) => v > 0), 'pine gusting must open some gain');
+    // level 0 silences every branch
+    wind.setLevel(0);
+    const m = windMix(windParams(0), windFlavorParams('pine'), 0.8);
+    assert.equal(m.bed, 0); assert.equal(m.canopy, 0);
+  } finally {
+    wind.stop();   // clears the grain timer — without this the test process hangs
+  }
+});
+
+test('engine: recipe flavor reaches the wind and survives a keep', () => {
+  const priorWindow = global.window;
+  const hadWindow = Object.prototype.hasOwnProperty.call(global, 'window');
+  const ctx = graphAudioContext();
+  global.window = { AudioContext: function FakeAudioContext() { return ctx; } };
+  let audio;
+  try {
+    audio = createAudio({ state: () => ({ soundOn: true }), setSound() {} });
+    audio.startAmbience(['wind:0.2:pine', 'music']);
+    assert.equal(audio.debugState().layers.wind.flavor, 'pine');
+    const epoch = audio.debugState().layers.wind.epoch;
+    audio.transition(['wind:0.3:broadleaf', 'music']);
+    assert.equal(audio.debugState().layers.wind.flavor, 'broadleaf');
+    assert.equal(audio.debugState().layers.wind.epoch, epoch, 'flavor change must not restart the bed');
+  } finally {
+    if (audio) audio.stopAmbience();
+    if (hadWindow) global.window = priorWindow; else delete global.window;
+  }
 });
 
 test('bellPartials are a bonshō: hum tone, strike note, fast-dying upper modes', () => {

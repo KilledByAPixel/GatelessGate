@@ -11,11 +11,14 @@
 export function graphAudioContext() {
   const edges = [];
   const gains = [];
-  const gainParam = () => ({
-    value: 1,
-    setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {},
-    setTargetAtTime() {}, cancelScheduledValues() {},
-  });
+  const gainParam = () => {
+    const p = {
+      value: 1, targets: [],
+      setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {},
+      setTargetAtTime(v) { p.targets.push(v); }, cancelScheduledValues() {},
+    };
+    return p;
+  };
   const ctx = {
     currentTime: 0,
     sampleRate: 44100,
@@ -32,7 +35,10 @@ export function graphAudioContext() {
       return n;
     },
     createBufferSource() {
-      const n = { buffer: null, loop: false, connect(dst) { edges.push([n, dst]); }, start() {}, stop() {} };
+      const n = {
+        buffer: null, loop: false, playbackRate: gainParam(),
+        connect(dst) { edges.push([n, dst]); }, start() {}, stop() {},
+      };
       return n;
     },
     createBuffer(channels, length) {

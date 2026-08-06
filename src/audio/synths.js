@@ -508,6 +508,7 @@ export function makeWind(ctx, dest) {
   const n = Math.floor(SR * LOOP);
   const x = Math.floor(SR * XF);
 
+  // ---- the bed: brown noise, exactly as always ----
   const raw = new Float32Array(n + x);
   let last = 0;
   for (let i = 0; i < raw.length; i++) {
@@ -521,46 +522,128 @@ export function makeWind(ctx, dest) {
   }
   const buf = ctx.createBuffer(1, n, SR);
   buf.getChannelData(0).set(raw.subarray(0, n));
-
   const src = ctx.createBufferSource();
   src.buffer = buf;
   src.loop = true;
+
+  const outG = ctx.createGain();      // the whole wind; branches sum here
+  outG.gain.value = 1;
+  outG.connect(dest);
 
   const hp = ctx.createBiquadFilter();          // drop subsonic drift from the integrator
   hp.type = 'highpass'; hp.frequency.value = 45;
   const lp = ctx.createBiquadFilter();
   lp.type = 'lowpass'; lp.frequency.value = 600; lp.Q.value = 0.4;
-  const g = ctx.createGain();
-  g.gain.value = 0;
-
-  src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(dest);
+  const bedG = ctx.createGain();
+  bedG.gain.value = 0;
+  src.connect(hp); hp.connect(lp); lp.connect(bedG); bedG.connect(outG);
   src.start();
 
-  // The gust is driven from gustPhase(simTime) in JS rather than from oscillators
-  // in this graph. The sim clock is then the one source of truth for both the
-  // audible wind and the fūrin's visible ring, so the two cannot drift apart —
-  // which was the whole point of pairing a chime with this synth.
+  // ---- the canopy: pine-needle hiss. A much whiter noise (the water bed's
+  // integrator) through one wide, LOW-Q band — no resonance to sweep, no
+  // tremolo: the wah lessons apply doubly to anything living up here.
+  const craw = new Float32Array(n + x);
+  const crand = mulberry32(51413);
+  let clast = 0;
+  for (let i = 0; i < craw.length; i++) {
+    const w = crand() * 2 - 1;
+    clast = (clast + 0.35 * w) / 1.35;
+    craw[i] = clast * 1.15;
+  }
+  for (let i = 0; i < x; i++) { const k = i / x; craw[i] = craw[i] * k + craw[n + i] * (1 - k); }
+  const cbuf = ctx.createBuffer(1, n, SR);
+  cbuf.getChannelData(0).set(craw.subarray(0, n));
+  const csrc = ctx.createBufferSource(); csrc.buffer = cbuf; csrc.loop = true;
+  const cbp = ctx.createBiquadFilter();
+  cbp.type = 'bandpass'; cbp.frequency.value = 3200; cbp.Q.value = 0.6;
+  const canopyG = ctx.createGain(); canopyG.gain.value = 0;
+  csrc.connect(cbp); cbp.connect(canopyG); canopyG.connect(outG);
+  csrc.start();
+
+  // ---- the grains: leaf slaps, a pool of baked ticks fired by rustleRate.
+  // Audio is exempt from the determinism rule, so scheduling uses Math.random;
+  // the tick CONTENT is seeded so the pool is the same pool every run.
+  const grainBufs = [];
+  for (let i = 0; i < 10; i++) {
+    const grand = mulberry32(4000 + i);
+    const dur = 0.006 + grand() * 0.018;
+    const gn = Math.ceil(SR * dur);
+    const gb = ctx.createBuffer(1, gn, SR);
+    const gd = gb.getChannelData(0);
+    for (let j = 0; j < gn; j++) gd[j] = (grand() * 2 - 1) * Math.pow(1 - j / gn, 2);
+    grainBufs.push(gb);
+  }
+  function fireGrain() {
+    const t = ctx.currentTime;
+    const gsrc = ctx.createBufferSource();
+    gsrc.buffer = grainBufs[(Math.random() * grainBufs.length) | 0];
+    gsrc.playbackRate.value = 0.8 + Math.random() * 0.5;
+    const gbp = ctx.createBiquadFilter();
+    gbp.type = 'bandpass'; gbp.frequency.value = 1400 + Math.random() * 2400; gbp.Q.value = 0.9;
+    const gg = ctx.createGain();
+    gg.gain.value = RUSTLE.level * levelRaw * (0.5 + Math.random());
+    gsrc.connect(gbp); gbp.connect(gg); gg.connect(outG);
+    gsrc.start(t);
+  }
+  let grainTimer = null;
+  const GRAIN_TICK = 0.08;
+  function scheduleGrains() {
+    grainTimer = setTimeout(() => {
+      if (ctx.state === 'running') {
+        // Poisson-ish thinning over one tick window
+        let expected = rustleRate(flavor.grain, levelRaw, slope) * GRAIN_TICK;
+        while (expected > 0) {
+          if (Math.random() < Math.min(1, expected)) fireGrain();
+          expected -= 1;
+        }
+      }
+      scheduleGrains();
+    }, GRAIN_TICK * 1000);
+  }
+  scheduleGrains();
+
+  // The gust is driven from windGust(simTime)/gustSlope(simTime) in JS rather
+  // than from oscillators in this graph — the sim clock stays the one source
+  // of truth for the audible wind AND the fūrin's visible ring.
   let params = windParams(0);
+  let levelRaw = 0;
   let gust = 0;
+  let slope = 0;
+  let flavorName = 'open';
+  let flavor = windFlavorParams(flavorName);
   function apply() {
     const t = ctx.currentTime;
-    g.gain.setTargetAtTime(params.gain * (1 + gust * params.gust * 0.84), t, 0.4);
-    lp.frequency.setTargetAtTime(params.cutoff * (1 + gust * params.gust), t, 0.4);
+    const m = windMix(params, flavor, gust);
+    bedG.gain.setTargetAtTime(m.bed, t, 0.4);
+    canopyG.gain.setTargetAtTime(m.canopy, t, 0.4);
+    lp.frequency.setTargetAtTime(m.cutoff, t, 0.4);
   }
 
   return {
     setLevel(v) {
+      levelRaw = v;
       params = windParams(v);
       apply();
     },
-    setGust(v, slope = 0) {
+    setGust(v, s = 0) {
       gust = v;
+      slope = s;
       apply();
     },
-    gain() { return g.gain.value; },   // headless probe read; never drives anything
+    // A flavor change rides apply()'s own setTargetAtTime smoothing, so a
+    // page turn that KEEPS the wind crossfades its character instead of
+    // cutting — same contract as a level change.
+    setFlavor(name) {
+      flavorName = WIND_FLAVORS[name] ? name : 'open';
+      flavor = windFlavorParams(flavorName);
+      apply();
+    },
+    flavor() { return flavorName; },
+    gain() { return bedG.gain.value; },   // headless probe read; never drives anything
     stop() {
-      try { src.stop(); } catch { /* already stopped */ }
-      g.disconnect();
+      if (grainTimer) { clearTimeout(grainTimer); grainTimer = null; }
+      for (const node of [src, csrc]) { try { node.stop(); } catch { /* already stopped */ } }
+      outG.disconnect();
     },
   };
 }
