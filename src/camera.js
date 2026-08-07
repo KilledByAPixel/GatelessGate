@@ -301,6 +301,14 @@ export function makeFreeCam(camera, el) {
   return {
     enabled: () => on,
     set(enabled) {
+      // TRANSITIONS ONLY — a re-assertion of the current state must be a
+      // no-op. The workbench's apply() re-fires onFreeCam on every scene
+      // swap, and set(true) on an already-flying cam re-seeded yaw/pitch
+      // from the camera's CURRENT direction — which, right after a page
+      // build, is the new rig's lookAt, not the flier's heading. Position
+      // survived, orientation was silently replaced (Frank: "the position
+      // is the same, but the orientation is not").
+      if (!!enabled === on) return;
       on = !!enabled;
       keys.clear();
       if (on) {

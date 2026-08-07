@@ -226,3 +226,22 @@ test('the free cam reports and accepts a pose', () => {
   assert.deepEqual([cam.position.x, cam.position.y, cam.position.z], [3, 4, 5]);
   assert.ok(Math.abs(cam.rotation.y - 0.7) < 1e-9, `yaw applied: ${cam.rotation.y}`);
 });
+
+test('re-asserting an already-on free cam never reseeds the heading', () => {
+  // The reload-restore bug's last layer (Frank: "the position is the same,
+  // but the orientation is not"): the workbench's apply() re-fires
+  // onFreeCam(true) on every scene swap, and set(true) on an already-flying
+  // cam re-read yaw/pitch from the camera's CURRENT direction — which right
+  // after a page build is the new rig's lookAt, not the flier's heading.
+  // set() is transitions-only now; a re-assertion must change nothing.
+  globalThis.addEventListener = globalThis.addEventListener || (() => {});
+  const cam = new THREE.PerspectiveCamera();
+  const free = makeFreeCam(cam, fakeEl());
+  free.set(true);
+  free.setPose({ pos: [3, 4, 5], yaw: 0.7, pitch: -0.3 });
+  cam.lookAt(-20, 0, -20);       // a fresh rig aims the camera at its case...
+  free.set(true);                // ...and the workbench re-asserts "on"
+  const p = free.pose();
+  assert.equal(p.yaw, 0.7, 'yaw survives the re-assertion');
+  assert.equal(p.pitch, -0.3, 'pitch survives the re-assertion');
+});

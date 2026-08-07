@@ -584,19 +584,19 @@ const freeCam = makeFreeCam(camera, renderer.domElement);
 // comes back standing where they were. Written about once a second while
 // flying — cheap, and no timer to tear down — plus once on the way out.
 // Turning the cam off forgets it: the next reload then boots normally.
-let poseAcc = 0;
 function savePose() {
   try { localStorage.setItem(FREECAM_KEY, JSON.stringify(packFreeCam(freeCam.pose()))); } catch { /* private mode */ }
 }
 function forgetPose() {
   try { localStorage.removeItem(FREECAM_KEY); } catch { /* ignore */ }
 }
-function keepPose(dt) {
-  if (!freeCam.enabled()) return;
-  poseAcc += dt;
-  if (poseAcc < 1) return;
-  poseAcc = 0;
-  savePose();
+// Every frame while flying (Frank: "just like every frame, just save the
+// camera orientation... only if it's in free cam mode"). It was once a
+// second, which left the stored pose up to a second stale on a reload whose
+// hide events didn't fire; a ~90-byte localStorage write per frame is
+// nothing, and this is a dev-only mode.
+function keepPose() {
+  if (freeCam.enabled()) savePose();
 }
 addEventListener('pagehide', () => { if (freeCam.enabled()) savePose(); });
 // and on hide as well: an embedded preview's reload doesn't reliably fire
@@ -1237,7 +1237,7 @@ function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
   if (dt > 0) fps = fps * 0.95 + (1 / dt) * 0.05;
-  keepPose(dt);
+  keepPose();
   debug.tick(fps);
   acc += dt;
   while (acc >= STEP) { acc -= STEP; tick(); }
