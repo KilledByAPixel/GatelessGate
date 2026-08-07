@@ -9,6 +9,11 @@
 
 export const SITE = 'https://frankforce.com';
 export const SOURCE_URL = 'https://sacred-texts.com/bud/glg/index.htm';
+// Where the book is built. Named for the repository the published site is
+// served from (killedbyapixel.github.io/GatelessGate/), which is the canonical
+// spelling — the underscored form some remotes carry is an old name GitHub
+// still redirects.
+export const REPO_URL = 'https://github.com/KilledByAPixel/GatelessGate';
 // The licence the book ships under. The repository carries the full legal text
 // in LICENSE and scopes it in NOTICE.md — what is Frank's to license and what
 // is not (the 1934 translation is public domain; Three.js is MIT). This page
@@ -88,7 +93,9 @@ export const SECTIONS = [
       + 'nothing here is a puzzle to solve, and nothing is locked. Made by Frank '
       + 'Force, ',
       ['frankforce.com', SITE],
-      '. The whole text also exists as ',
+      '. The code is ',
+      ['on GitHub', REPO_URL],
+      ', and the whole text also exists as ',
       ['a single plain page', BOOK_MD],
       ', generated from the same source this edition reads, for anyone who would '
       + 'rather read it straight through or keep a copy.',

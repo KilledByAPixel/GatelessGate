@@ -118,9 +118,9 @@ export default {
       seed: ID,
       treeKind: 'pine',
       groundSeed: 21,
-      trees: 7,        // a wooded mountainside, not a lawn (Frank: "more trees")
+      trees: 13,        // a wooded mountainside, not a lawn (Frank: "more trees")
       keepout: [
-        { x: 1, z: 20, r: 20 }, // behind camera
+        { x: 1, z: 30, r: 35 }, // behind camera
         ...cave.footprint(0.8),                       // the whole rock mass
         { x: FOX.x, z: FOX.z, r: 1.4 },
         { x: HYAKUJO.x, z: HYAKUJO.z, r: 1.2 },

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import {
-  SECTIONS, SITE, SOURCE_URL, BOOK_MD, THREE_VERSION, TTS_MODEL,
+  SECTIONS, SITE, SOURCE_URL, REPO_URL, BOOK_MD, THREE_VERSION, TTS_MODEL,
 } from '../src/ui/about_state.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -64,7 +64,7 @@ test('every link is safe, and the expected links are present', () => {
   // relative path: no scheme, and no leading slash, so it resolves beside
   // index.html whether the book is served from a domain root or a subpath.
   const links = SECTIONS.flatMap((s) => s.parts.filter(Array.isArray));
-  assert.ok(links.length >= 3, 'the site, the source and the plain text are linked');
+  assert.ok(links.length >= 4, 'the site, the repo, the source and the plain text are linked');
   for (const [text, href] of links) {
     assert.ok(text && text.trim(), 'a link has visible text');
     const outbound = /^https:\/\//.test(href);
@@ -73,6 +73,7 @@ test('every link is safe, and the expected links are present', () => {
   }
   const hrefs = links.map((l) => l[1]);
   assert.ok(hrefs.includes(SITE), 'Frank’s site is linked');
+  assert.ok(hrefs.includes(REPO_URL), 'the repository is linked');
   assert.ok(hrefs.includes(SOURCE_URL), 'the transcription source is linked');
   assert.ok(hrefs.includes(BOOK_MD), 'the whole-text page is linked');
 });

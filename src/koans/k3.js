@@ -43,7 +43,7 @@ const SPAN = 2.95;                                             // a few steps aw
 const BOY = { x: GUTEI.x + RIGHT.x * SPAN, z: GUTEI.z + RIGHT.z * SPAN };
 const VISITOR = { x: 2.70, z: -1.40 };                         // he asked the boy
 const RESIDENT = { x: -2.80, z: 0.60 };                        // he asked the master
-const LANTERN = { x: 3.60, z: -3.40 };
+const LANTERN = { x: 4.0, z: -3.40 };
 // WEST of the road. The hall stood at (3.4, -6.2) for a long time, and the
 // path's seeded curve runs through x ≈ 3.16 at that depth — 0.24 from the
 // hall's own centre, so the approach to the temple ran straight through the
@@ -149,7 +149,7 @@ export default {
   // drag range.
   // Lifted off the deck: at pitch 15.5 the lens sat down among the grass tips and
   // both figures were shot through a screen of blades.
-  camera: { distance: 9.6, target: [0.33, 1.25, -0.05], heading: 41.3, pitch: 22.4 },
+  camera: { distance: 9.6, target: [0.33, 1.25, -0.05], heading: 42.0, pitch: 19.0 },
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -160,7 +160,7 @@ export default {
 
     // the approach to the temple, coming up the right-hand side of the yard and
     // running past the hall
-    const path = makePath({ from: [3.9, 8.5], to: [2.0, -15], width: 1.6, seed: 33, groundSeed: 21, wander: 0.9 });
+    const path = makePath({ from: [3.9, 8.5], to: [2.0, -25], width: 1.6, seed: 33, groundSeed: 21, wander: 2.9 });
     scene.add(path);
 
     const hall = makeHut({ width: 3.2, height: 2.4, depth: 2.6 });

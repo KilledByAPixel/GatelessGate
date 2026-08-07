@@ -69,7 +69,7 @@ export default {
   ambience: ['wind:0.30', 'bell', 'music'],
   mood: 'in',
   // aimed at the fork — the choice is the subject
-  camera: { distance: 14, target: [FORK.x, 1.2, FORK.z], heading: 28.6, pitch: 15.5 },
+  camera: { distance: 13, target: [FORK.x, 1.2, FORK.z], heading: -18.6, pitch: 15.5 },
 
   build(ctx = {}) {
     const { audio = null, input = null } = ctx;
@@ -82,7 +82,7 @@ export default {
     // the road the reader arrives on, swinging through a real curve on its
     // way to the split (Frank: "a little bit more of a curve")
     const approach = makePath({
-      from: [2.0, 9.5], via: [-2.0, 3.0], to: [FORK.x, FORK.z],
+      from: [2.0, 9.5], via: [-2.0, 3.0], to: [FORK.x-.4, FORK.z+.5],
       width: 1.8, wander: 1.0, taper: 0,
       seed: SEEDS.pathSeed, groundSeed: SEEDS.groundSeed,
     });
