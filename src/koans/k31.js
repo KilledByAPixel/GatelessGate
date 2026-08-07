@@ -48,7 +48,7 @@ export default {
     // the road, and the branch of it that goes on to Taizan
     const road = makePath({ from: [5.4, 7.6], to: [-4.4, -16], width: 1.6, seed: ID, groundSeed: 21, wander: 0.6 });
     scene.add(road);
-    const branch = makePath({ from: [0.6, -2.2], to: [9.0, -14], width: 1.1, seed: ID * 3, groundSeed: 21, wander: 0.9 });
+    const branch = makePath({ from: [1.6, -2.2], to: [9.0, -14], width: 1.1, seed: ID * 3, groundSeed: 21, wander: 0.9 });
     scene.add(branch);
 
     // the tea stall at the fork: a hut with an awning over a bench
@@ -119,7 +119,7 @@ export default {
     scene.add(traveller);
 
     const lantern = makeLantern({ height: 1.0 });
-    lantern.position.set(1.0, 0, -3.2);
+    lantern.position.set(2, 0, -4.2);
     scene.add(lantern);
 
     // A single small tube on a cord, under the stall's own front eave — the

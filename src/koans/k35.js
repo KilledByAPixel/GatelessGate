@@ -34,7 +34,7 @@ export default {
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.16', 'music'],
-  camera: { distance: 12.5, target: [0.4, 1.8, -1.0], azimuth: 0.55, polar: 1.20 },
+  camera: { distance: 5.5, target: [0.4, 1.8, -1.0], azimuth: -0.55, polar: 1.50 },
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -44,7 +44,7 @@ export default {
     scene.add(makeLights());
 
     // the road between the two lives
-    const path = makePath({ from: [6.5, 6.0], to: [-6.0, -12], width: 1.4, seed: ID, groundSeed: 21, wander: 0.6 });
+    const path = makePath({ from: [6.5, 6.0], to: [-6.0, -22], width: 1.4, seed: ID, groundSeed: 21, wander: 0.6 });
     scene.add(path);
 
     // home, near; the town, far off down the road
@@ -149,7 +149,7 @@ export default {
           const lane = i === 0 ? 1 : -1;                             // her fixed side of the road
           const d = lane * sep * 3.4;
           const t = 0.5 + d * 0.055;                                 // along the road
-          const p = path.sample(Math.max(0.02, Math.min(0.98, t)));
+          const p = path.sample(Math.max(0.02, Math.min(0.7, t)));
           // a little walk in them: a gait bob and a slight roll/yaw sway, so
           // they read as two people walking rather than two markers sliding
           // along a rail (Frank's note). Out of phase between the two.
