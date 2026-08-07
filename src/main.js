@@ -620,7 +620,21 @@ const debug = makeDebug({
   post,
   onSound: () => setSoundLabel(),
   onLens: (fov) => applyLens(fov),
-  onFreeCam: (on) => { freeCam.set(on); if (!on) forgetPose(); },
+  // TRANSITIONS ONLY. This handler fires from the workbench's apply(), which
+  // re-asserts the whole state at mount and on every scene swap — so a bare
+  // `if (!on) forgetPose()` deleted the saved pose AT BOOT, before the
+  // restore block ever read it: free cam booted false, apply() said "off",
+  // and the key was gone. That is why reload never came back flying (Frank:
+  // "when I hit reload, it is no longer in free cam"). Entering saves at
+  // once (mode + spot, his model: "save when you enter free cam"); leaving
+  // ON PURPOSE — a real on→off transition — forgets; a re-assertion of
+  // "still off" touches nothing.
+  onFreeCam: (on) => {
+    const was = freeCam.enabled();
+    freeCam.set(on);
+    if (on && !was) savePose();
+    if (!on && was) forgetPose();
+  },
   onShot: () => requestShot(),
   onDevMode: (on) => {
     devMode = !!on;
@@ -1363,6 +1377,7 @@ if (booted && booted.view === 'case' && devOpen(booted.slug)) {
     skipIntro();
     if (!debug.state.freeCam) debug.toggle('freeCam');
     freeCam.setPose(pose);
+    savePose();   // the enter-transition just saved the pre-restore spot; overwrite with the real one
   }
 }
 requestAnimationFrame(frame);
