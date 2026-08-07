@@ -11,9 +11,21 @@ import { AUDIO_BASE, narrationSrc, playableQueue } from './narration_state.js';
 // Ducking the ambience is deliberately NOT done here: a read-aloud pauses between
 // sections, and ducking per file would pump the wind up and down on every seam. The
 // caller owns the reading session, so the caller owns the duck.
+// The reading sits a little under the bake. Every unit was normalised at bake
+// time to a level that is right on its own, but the voice plays against a
+// ducked ambience bed rather than against silence, and next to that bed it
+// came out louder than the room (Frank: "it's pretty loud"). This is the one
+// runtime volume the narration has — playback is an <audio> element outside
+// the Web Audio graph, so audio.duck() cannot reach it — which is why the trim
+// lives here rather than on a gain node with the rest of the mix.
+export const NARRATION_VOLUME = 0.95;
+
 export function createNarration({ base = AUDIO_BASE } = {}) {
   const el = new Audio();
   el.preload = 'none';
+  // set once: an <audio> element keeps its volume across src changes, so this
+  // holds for every section of every reading without being re-applied
+  el.volume = NARRATION_VOLUME;
 
   let manifest = null;
   let gen = 0;

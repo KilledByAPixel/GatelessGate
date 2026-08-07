@@ -152,3 +152,21 @@ test('a fresh speak() that overrides a pending hide does not leave heldForHide s
       'a stale heldForHide from the overridden hide made an unrelated hide/show replay the last section');
   });
 });
+
+// The reading plays through an <audio> element outside the Web Audio graph, so
+// audio.duck() cannot reach it and there is no gain node to trim. Its element
+// volume is therefore the ONLY place the reading's level can be set, and it is
+// set once at construction because an <audio> element keeps its volume across
+// src changes. A regression here is silent in every other test: every one of
+// them would still pass with the reading playing at full tilt.
+test('the reading sits a little under the bake, and stays there across sections', async () => {
+  const { NARRATION_VOLUME } = await import('../src/audio/narration.js');
+  assert.ok(NARRATION_VOLUME > 0.5 && NARRATION_VOLUME <= 1,
+    `a sane trim, not a mute or a boost: ${NARRATION_VOLUME}`);
+  await withFakes(async (narration, el) => {
+    assert.equal(el.volume, NARRATION_VOLUME, 'set on the element at construction');
+    await narration.speak(1, 'case');
+    await narration.speak(1, 'comment');
+    assert.equal(el.volume, NARRATION_VOLUME, 'and not reset by loading the next section');
+  });
+});
