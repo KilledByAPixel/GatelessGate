@@ -44,7 +44,13 @@ const BOY = { x: GUTEI.x + RIGHT.x * SPAN, z: GUTEI.z + RIGHT.z * SPAN };
 const VISITOR = { x: 2.70, z: -1.40 };                         // he asked the boy
 const RESIDENT = { x: -2.80, z: 0.60 };                        // he asked the master
 const LANTERN = { x: 3.60, z: -3.40 };
-const HALL = { x: 3.40, z: -6.20 };
+// WEST of the road. The hall stood at (3.4, -6.2) for a long time, and the
+// path's seeded curve runs through x ≈ 3.16 at that depth — 0.24 from the
+// hall's own centre, so the approach to the temple ran straight through the
+// temple (Frank: "temple is in middle of path"). The road's east verge is out
+// of frame at the home lens, so the hall crosses to the west side, where the
+// path (x ≈ 3.0–3.2 down its whole run) clears its footprint by a full verge.
+const HALL = { x: -0.30, z: -6.60 };
 
 // ---------------------------------------------------------------------------
 // the gesture
@@ -159,7 +165,7 @@ export default {
 
     const hall = makeHut({ width: 3.2, height: 2.4, depth: 2.6 });
     hall.position.set(HALL.x, 0, HALL.z);
-    hall.rotation.y = -0.50;                       // its threshold opens onto the yard
+    hall.rotation.y = 0.10;                        // its threshold opens onto the yard
     scene.add(hall);
 
     const lantern = makeLantern({ height: 1.1 });
