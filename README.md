@@ -28,8 +28,15 @@ You can have it **read aloud**, and ambient sound gives the scene its weather.
 
 The whole book also sits here as a single readable page — [THE GATELESS GATE](THE-GATELESS-GATE.md) — generated from the same text the interactive edition reads, so the two cannot disagree.
 
-The reading is the Nyogen Senzaki and Paul Reps English rendering, privately printed in Los Angeles in 1934 and in the US public domain, lightly modernized where the old verse forms had gone archaic.
-The preface and the afterword are not part of the 1934 translation and were translated especially for this edition, which stages them as scenes of their own.
+The reading is the Nyogen Senzaki and Paul Reps English rendering of the Mumonkan, privately printed by John Murray in Los Angeles in 1934.
+That printing is in the United States public domain — its copyright was never renewed — and Reps later expanded the material into *Zen Flesh, Zen Bones* (1957), the version most readers know.
+Archaic verb forms and pronouns, which survive here and there in the capping verses, have been lightly modernized; Mumon's commentaries were already in plain modern English.
+
+The 1934 printing carries the cases and nothing else.
+Mumon's preface, his afterword, the Zen Warnings and Amban's letter were translated for this edition from the Chinese of the Taishō canon (CBETA T48n2005), in three independent passes made blind to one another and to any existing English version, then compared line by line with every divergence of meaning settled against the Chinese.
+It is a new rendering and worth reading as one: it has had no scholarly review.
+The book's own About page carries the full note, including the one editorial decision worth knowing about — the single word Senzaki and Reps left untranslated.
+
 The goal is something beautiful enough to draw in someone who has never heard of a koan, and faithful enough to reward someone who has.
 
 ## Still to come
