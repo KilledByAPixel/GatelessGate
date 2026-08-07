@@ -81,6 +81,13 @@ export function buildHub({
     scene.add(gate);
   }
 
+  const closingChime = makeCylinderChime({
+    size: 0.4, seed: 49,
+    onStrike: (note, force, pos) => audio && audio.cylinderStrike({ note, force, at: pos }),
+  });
+  closingChime.group.position.set(-0.75, 3.0, 0);
+  gate.add(closingChime.group);
+
   let lanternA = null, lanternB = null;
   if (withLanterns) {
     const lw = 2.0;

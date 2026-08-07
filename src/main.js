@@ -741,6 +741,15 @@ function startIntro() {
 // ensureCaseMusic -> the chime swap, same as it already did.
 //
 // Mood resets to the book's default; a case's pick belongs to the case.
+// THE CONTENTS' OWN FRAMING, in one place: openMenu() and exit() both stand the
+// camera here, and tuning it used to mean finding and matching two literals.
+// The target is NOT written down — it is read off the hub scene, so the shot
+// follows the road wherever this hub's seed bends it. Aim it live with the
+// workbench's Compose panel (dev mode, open the Contents, drag or slide), then
+// copy the heading, pitch and distance into HERE — not the whole copied block,
+// whose target: [...] would freeze what gateTarget derives.
+const MENU_CAM = { distance: 14, heading: 28.6, pitch: 15.5 };
+
 function menuMusic() {
   audio.setMood('in');
   audio.startAmbience(['wind:0.30']);
@@ -751,7 +760,7 @@ async function openMenu() {
   await transition(() => {
     if (intro) { intro.dispose(); intro = null; }
     mode = 'menu';
-    makeRig({ distance: 14, target: hub.gateTarget, heading: 28.6, pitch: 15.5 });
+    makeRig({ ...MENU_CAM, target: hub.gateTarget });
     menu.refresh(save.state());
     menu.open();
     showView(menu.el);
@@ -971,7 +980,7 @@ async function exit() {
     koanCard = null; koanNarrationId = null;
     if (scroll) { scroll.dispose(); scroll = null; }
     mode = 'menu';
-    makeRig({ distance: 14, target: hub.gateTarget, heading: 28.6, pitch: 15.5 });
+    makeRig({ ...MENU_CAM, target: hub.gateTarget });
     menu.refresh(save.state());
     menu.open();
     showView(menu.el);
