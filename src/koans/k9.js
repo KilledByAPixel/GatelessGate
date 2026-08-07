@@ -127,12 +127,18 @@ export default {
     faceMonk(seijo, monk.position);
     scene.add(seijo);
 
-    // A fox (k2's, between lives), sitting at the monument's foot with its
-    // eyes on the figure that has sat since before recorded history. Small
-    // against all that time — the scale contrast is the reason it's here.
-    // Kitsune keep shrines in the old stories; nobody minds it.
+    // A fox (k2's, between lives), sitting with its eyes on the figure that
+    // has sat since before recorded history. Small against all that time —
+    // the scale contrast is the reason it's here. Kitsune keep shrines in
+    // the old stories; nobody minds it.
+    //
+    // OFF TO THE SIDE (Frank). It used to sit at (-0.9, 2.75), which from the
+    // home lens is the same screen column the colossus occupies — a red-brown
+    // smudge parked in front of the one thing the case is about. Now it sits
+    // at the frame's right edge, past the two monks, watching from the side
+    // the way an animal actually attends a place.
     const fox = makeFox({ height: 0.45, seed: 9 });
-    fox.group.position.set(-0.9, 0, 2.75);
+    fox.group.position.set(5.9, 0, 3.1);
     faceMonk(fox.group, buddha.position);
     scene.add(fox.group);
 
@@ -153,7 +159,7 @@ export default {
       grassKeepout: [
         { x: CX, z: CZ, r: 8.8 },
         // a clearing for the fox — 0.45 of animal disappears in full meadow
-        { x: -0.9, z: 2.75, r: 0.9 },
+        { x: 5.9, z: 3.1, r: 0.9 },
       ],
       // the left forest cluster moves behind the near flank's center plane —
       // forests ignore keepouts, and a forest crown that spawns mid-slope
