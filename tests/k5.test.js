@@ -340,3 +340,27 @@ test('the fog in the gorge is not a lid: it banks up the sides and the back', ()
   assert.ok(Math.max(...ys) < -0.5, `the mist has risen over the lip: ${Math.max(...ys).toFixed(2)}`);
   assert.ok(middle < -2.0, `and the middle must stay down, or the drop stops reading as deep: ${middle.toFixed(2)}`);
 });
+
+test('case 5 shows its gorge: no paper lid over the drop it carved', () => {
+  // The kit fills a gorge with unlit near-paper by default, so everything past
+  // the fog line is paper rather than landscape. This case carves a real gorge
+  // with banked sides and a far wall and wants it SEEN (Frank: "it looks better
+  // without it, where it just looks like a normal terrain deformation"). If a
+  // future edit switches the fill back on, the carve stops being visible and
+  // nothing else in this file would notice.
+  const root = k5.build(fakeCtx());
+  assert.equal(root.scene.getObjectByName('fogfill'), undefined,
+    'the drop is terrain here, not a paper void');
+
+  // the mist banks are still doing the softening
+  let banks = 0;
+  root.scene.traverse((o) => { if (o.name === 'mist') banks++; });
+  assert.ok(banks > 0, 'the mist stays — it is what keeps the floor from reading as a lawn');
+
+  // and the thing the fill was hiding is genuinely down there to look at
+  const ground = root.scene.getObjectByName('ground');
+  const gp = ground.geometry.attributes.position;
+  let deepest = Infinity;
+  for (let i = 0; i < gp.count; i++) deepest = Math.min(deepest, gp.getY(i));
+  assert.ok(deepest < -5, `there is a real gorge to see: floor at ${deepest.toFixed(1)}`);
+});
