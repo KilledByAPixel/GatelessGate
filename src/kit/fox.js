@@ -71,10 +71,10 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     ears: { r: 0.05, h: 0.3, x: 0.051, y: 0.09, z: 0.0, tilt: 0.44 },
     tail: {
       kind: 'stiff', r0: 0.06,
-      // the root end (buried in the barrel — see THE BRUSH above) reads as
-      // "two thirds as thick as the body": r1 solved directly against
-      // BODY_R rather than left at a hand-tuned value that drifts the moment
-      // the barrel's own radius changes.
+      // the root end (buried in the barrel — see THE BRUSH above): r1 was
+      // solved directly against BODY_R once, but the tweaks round replaced
+      // the derivation with this hand-tuned value — so it WILL drift if the
+      // barrel's own radius ever changes; re-eyeball it then.
       r1: 0.1,
       length: TAIL_LEN, up: TAIL_UP, back: TAIL_BACK, tilt: TAIL_TILT,
     },

@@ -158,7 +158,8 @@ export default {
     // what breaks the crests into a sea.
     // The red deepens seaward (Frank: "more transparent when it's at the
     // shoreline... more red as it gets deeper"): nearly clear over the sand
-    // so the shallows show it, full red by ~20 out, and the fog still owns
+    // so the shallows show it, full red by ~12 out (it was ~20 at first;
+    // Frank wanted the red arriving sooner), and the fog still owns
     // the far fade to paper beyond that. In the sheet's local coords the
     // seaward distance past the waterline is s = 43 - z (the group sits at
     // world z = -51, the waterline at world z = -8).

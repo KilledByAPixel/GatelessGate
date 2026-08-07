@@ -51,7 +51,7 @@ export const SPATIAL = {
 
   // How much room a sound picks up. The near end is what stops a drip at
   // arm's length sounding like a cistern; the far end is what puts a bell
-  // across the yard across the yard.
+  // across the yard.
   nearWet: 0.12,
   farWet: 0.55,
   wetHalf: 6,

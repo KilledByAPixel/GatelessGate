@@ -39,12 +39,14 @@ const PATH_OPTS = { from: [1.1, 6.8], to: [-1.6, -42], width: 1.7, seed: 47, gro
 // silhouette. Ground intervals grow with depth (9.8 then 13.7) to fight
 // perspective foreshortening; on screen the three read evenly stepped.
 //
-// The middle gate is the seal. It is the barrier the walker is approaching
-// NOW, and it takes ACCENT_DEEP exactly as the intro's gate does — a torii is
-// a big timber frame, and full ACCENT across that much area would glare. Its
+// The seal plan changed once: at first only the middle gate — the barrier the
+// walker is approaching NOW — took ACCENT_DEEP, with the near barrier near-ink
+// and the far one a lighter wash. Frank's call on review superseded that (see
+// the note inside GATES): all three carry the deep red, and fog does the
+// hierarchy the grey was doing. The deep mix is the intro gate's — a torii is
+// a big timber frame, and full ACCENT across that much area would glare. The
 // glow is in the material (SEAL_GLOW in render/toon.js keys off the accent
-// colours); nothing here sets emissive by hand. The near barrier is near-ink,
-// the far one takes a lighter wash so tone and fog stack the same direction.
+// colours); nothing here sets emissive by hand.
 const GATES = [
   // ALL THREE gates carry the seal — Frank's call on reviewing the plan, and he
   // is right that it beats the middle-only design: three red barriers on one

@@ -59,7 +59,7 @@ export default {
     // the same pond, so the same koi: seed 30 gives case 33 the identical fish
     // moving in the identical water — only the far bank differs. THE SEAL IS
     // THEIRS (Frank, overnight pass 2: the koi carry the red here): in case 30
-    // the red sits on the mat under the one who answered; here the answer is
+    // the red is the water itself, answering; here the answer is
     // taken out, and the only warm thing left alive in the picture is under
     // the water. Full ACCENT, not the deep mix — four small fish seen through
     // a half-opaque surface are a held thing, not a mass, and the water

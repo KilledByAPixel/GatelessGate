@@ -125,9 +125,9 @@ export default {
 
     // THE BUTTERFLIES ARE THE SEAL now, and they play over the open ground the
     // lens is actually pointed at rather than tucked in beside him. The camera
-    // stands at (7.8, 6.6, 8.0) and looks down the diagonal past his shoulder,
-    // so the middle of the frame is the plain around (-3, -5); a ray down the
-    // centre column lands there at every height. Seven of them over a wide disc
+    // looks down the diagonal past his shoulder, so the middle of the frame
+    // is the plain out past (-2, -4); a ray down the centre column lands
+    // there at every height. Seven of them over a wide disc
     // is a scattering across the whole open half of the picture rather than a
     // knot in one corner of it.
     const butterflies = makeButterflies({

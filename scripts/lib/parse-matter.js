@@ -51,7 +51,7 @@ const blocksFrom = (lines) => {
     if (!line.trim()) {
       // A blank line means different things either side of the divide. In prose
       // it ends a paragraph. Inside verse it is a STANZA break and has to
-      // survive: the Zen Warnings are fourteen stanzas, and dropping these
+      // survive: the Zen Warnings are thirteen stanzas, and dropping these
       // would run them together into one wall of lines.
       if (verse.length) verse.push('');
       else endPara();

@@ -4,7 +4,7 @@ import { PREFACE_SLUG, AFTERWORD_SLUG } from '../spine.js';
 import { SHOWCASE_SLUG } from './dev/index.js';
 
 // Cases with a diorama of their own. Lazy loaders keyed by numeric id (stable):
-// the first chapter — Mu, the flower, the bowl, the buffalo, and the flag.
+// all forty-nine now, Mu through Amban's addition.
 const LOADERS = {
   1: () => import('./k1.js'),
   2: () => import('./k2.js'),

@@ -59,14 +59,16 @@ export function makeHangingMonk({ height = 1.6, color = INK_LIT, seed = 5 } = {}
   // the branch the front of his face presses INTO the wood. Frank's note, and
   // he's right about the physics: a man hanging by his teeth tips back, chin
   // up, crown away — he dangles from his jaw, he doesn't stand under it.
-  // (The head is a featureless sphere, so the tilt is drawn by OFFSETS — head
-  // behind the pivot, body further behind still — rather than by rotating
-  // geometry nobody can see rotate.)
+  // (The head is a featureless sphere, so the tilt is drawn mostly by
+  // OFFSETS — head behind the pivot, body further behind still. A later pass
+  // added the rotateX below on top of them, pitching the head back on its
+  // own centre as well.)
   const headR = 0.095 * h;
   // sphereHead's default r is 0.095 — the same radius headR names — so this
   // is figure.js's own head, not a lookalike copy.
   const head = sphereHead({ height: h, mat });
-  // mouth = origin = head centre + (up 0.55 + forward 0.75) · headR
+  // mouth = origin = head centre + (up 0.7 + forward 0.9) · headR
+  // (retuned from 0.55/0.75 in the tweaks round)
   head.position.set(0, -0.7 * headR, -0.9 * headR);
   head.rotateX(-1.0)
   g.add(head);

@@ -54,9 +54,12 @@ export const AUDIBLE = ['wind', 'water', 'music', 'rain'];
 
 // A recipe reduced to its sustained layers: { wind: 0.12, water: 0.35,
 // music: 1 }. Presence is meaningful even at level 0 — 'water:0' is a real
-// layer (case 7 runs the basin bed silent and keeps its drips), so it must
-// read as PRESENT here, never as absent. First occurrence wins, matching
-// startAmbience's `!wind` / `!water` creation guards.
+// layer, and it must read as PRESENT here, never as absent. Case 7 is the
+// case that ONCE relied on that (it ran the basin bed silent and kept its
+// drips); no case declares a zero-level bed today, but the semantics are
+// kept — and pinned by tests/ambience-diff.test.js — for the next silent
+// bed. First occurrence wins, matching startAmbience's `!wind` / `!water`
+// creation guards.
 //
 // Music carries the recipe's emitterCount as its level rather than its own
 // token's (always-1) level: density is the one audible parameter the music

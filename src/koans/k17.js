@@ -40,7 +40,7 @@ export default {
   // teaching porch is exactly where a set of these would hang, at two sizes
   // so they read as a set rather than one repeating note. ONE token for both
   // instances, not two: the honest reason is RATE, not a token-per-object
-  // rule (there isn't one — case 29 declares two 'furin' tokens for FOUR
+  // rule (there isn't one — case 29 declares two 'furin' tokens for THREE
   // physical chimes). kit/cylinder.js is tuned for "tens of strikes an hour"
   // per instance from wind alone (its own WIND_LEAN comment); two of them
   // together are nowhere near as busy a voice as 'birds' wheeling overhead

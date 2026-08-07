@@ -101,7 +101,9 @@ export function makeTuftField({
   count = 12000, radius = 20, inner = 0, seed = 5, groundSeed = 21,
   // width came down 0.52 -> 0.46 with the density doubling: Frank read the wide
   // cards as "a bit thick", and narrower cards at twice the count give more
-  // plants AND more ground showing between them
+  // plants AND more ground showing between them. Then back up to 0.8 in
+  // Frank's later tweak-tufts round — the retune widened the cards again
+  // without revisiting this note.
   color = GRASS_TONE, width = 0.8, height = 0.44, wind = 1,
   windDir = [1, 0.35], gustScale = 0.055, gustSpeed = 2.4,
   keepout = [],

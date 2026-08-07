@@ -40,26 +40,24 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // pass so the muzzle drops below the withers — the grazing line.
     head: { shape: 'sphere', r: 0.3, fwd: 0.6, up: -0.05  },
     snout: { r0: 0.1, r1: 0.15, len: 0.2, fwd: 0.8, up: -.2, tilt:.5},
-    // THE BASE SITS ON THE SKULL, NOT THE HUMP. horns.up/fwd are NOT free
-    // parameters — they are the poll (the top-back corner of the tilted head
-    // box, where a real buffalo's horns actually emerge), solved the same way
-    // fox.js solves NECK_TOP: rotate the box's local top-back corner
-    // (0, +hh/2, -d/2) by head.tilt about x, then add head.up/head.fwd.
-    //   up  = head.up + (hh/2)*cos(tilt) + (d/2)*sin(tilt)
-    //       = -0.34    + 0.16*cos(0.55)   + 0.26*sin(0.55)   ≈ -0.07
-    //   fwd = head.fwd + (hh/2)*sin(tilt) - (d/2)*cos(tilt)
-    //       =  0.68    + 0.16*sin(0.55)   - 0.26*cos(0.55)   ≈  0.54
-    // A first pass set `up` from taste (0.02, then 0.30 chasing the k37
-    // crescent) without re-deriving it against head.up, which fell to -0.34 in
-    // the same round — the base drifted half a height clear of the skull and
-    // read as sprouting from the hump instead.
+    // THE BASE SITS ON THE SKULL, NOT THE HUMP. horns.up/fwd once were NOT
+    // free parameters — they were the poll of the old tilted head BOX, solved
+    // by rotating its top-back corner through head.tilt (that box, and the
+    // cos/sin arithmetic that went with it, left when the head became the
+    // sphere above). Against the sphere they are re-eyeballed in the tweaks
+    // round: up -0.02 / fwd 0.7 keeps the base on the sphere's upper-back
+    // shoulder relative to head { fwd: 0.6, up: -0.05 }, so the pair still
+    // leaves the skull, not the hump. The lesson from the box era stands: a
+    // first pass set `up` from taste without re-checking it against head.up
+    // and the base drifted half a height clear of the skull, reading as
+    // sprouting from the hump — if the head moves, move the horns with it.
     //
     // THE HORN IS SMALL, THICK AND CURVED — "round, curved, like a devil's
     // horn almost, small curved pointy horn" (Frank; the long straight cones
     // read as "spikes coming up from its ears"). `curve` (quadruped.js) lofts
     // the cone along an arc bending toward local -z, so with a wide `sweep`
     // the pair leaves the SIDES of the skull, stands up-and-out, and hooks
-    // back over the neck like local/refs/buffaloHead.png. Short (0.52, was
+    // back over the neck like local/refs/buffaloHead.png. Short (0.5, was
     // 1.10) and fat at the base (0.10, was 0.055): a devil's horn, not a
     // fencepost.
     horns: { r: 0.1, len: 0.5, x: 0.1, up: -0.02, fwd: 0.7, sweep: 0.75, back: 0.25, curve: -0.50 },

@@ -139,7 +139,7 @@ export function makeQuadruped({
   // thigh leaves the body, a pinch at the knee line, a slim cannon bone, and
   // a small flare back out at the foot. Four rings say all of that in one
   // mesh — same count as the old cylinder, so no species pays a draw for it.
-  // `legTaper` keeps its job as the TOP's knob (the horse runs it at 1.3 for
+  // `legTaper` keeps its job as the TOP's knob (the horse runs it at 1.2 for
   // a broad forearm over a wire cannon); the foot stays anchored on legR so
   // front and hind feet always match.
   const limb = (rTop, rFoot, len, seg) => loft([

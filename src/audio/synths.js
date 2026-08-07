@@ -212,8 +212,10 @@ function modesAt(f0, s) {
   return named.concat(shimmer);
 }
 
-// The pitch-addressed form. Eight case modules still call bell({ f0 }), and
-// this keeps their pitches while giving them the new voice. Same table.
+// The pitch-addressed form. The case modules that once called bell({ f0 })
+// have all migrated to presets; this survives for the dev harnesses and as
+// an API override, keeping any exact pitch while giving it the new voice.
+// Same table.
 export function bellPartials(f0 = BELL_REF_HZ) {
   return modesAt(f0, BELL_REF_HZ / f0);
 }
@@ -221,7 +223,8 @@ export function bellPartials(f0 = BELL_REF_HZ) {
 // How long a spatial bus must stay open before it is safe to release — see
 // `BELL`'s own comment for why this used to be a flat constant and why that
 // was wrong: decay is now coupled to size, so the hum's actual length varies
-// per call (k9's f0:49 implies a hum decay near 18s) and a fixed number sized
+// per call (a great bell down at ~49Hz — k9 in its f0 days, 'great' preset
+// now — implies a hum decay near 18s) and a fixed number sized
 // to whatever pitch someone had in mind when they wrote it will silently cut
 // a bigger bell's tail short — release() in spatial.js disconnects the bus
 // unconditionally at the time it is given, so there is no second chance.
@@ -438,7 +441,8 @@ export function pourBurst(ctx, dest, { level = ODOSHI.pourLevel, dur = 1.3 } = {
 // wrong sound for the picture. Those five koan recipes had their water
 // tokens removed rather than this function deleted, on the bet that what
 // would justify switching it back on was a scene with genuinely MOVING
-// water — an ocean or a stream. Case 20 is that scene. Tap-triggered drips
+// water — an ocean or a stream. Cases 20 and 48, the two oceans, are those
+// scenes. Tap-triggered drips
 // (audio.drip(), case tap handlers) are a separate code path through
 // strikeDrip below and were never coupled to this bed; they still ring on
 // touch everywhere they did before.
@@ -987,11 +991,12 @@ export function strike(ctx, dest, { partials, gain = 1, transient = {}, scale = 
 // this note is here so nobody trusts "5.4137" as this table's current sum.
 //
 // There used to be a `tail: 16` here for the spatial bus's release timer. A
-// code review caught it: k9's f0:49 implies a hum decay near 18s, so a flat
-// 16s release would cut that hum audibly short the moment a bell call site
-// gets a position (today none do, so it was latent — but the spatial
-// migration is a later task in this plan and would have hit it live). See
-// `bellTail()`, which derives the release from the voice actually struck.
+// code review caught it: k9's great bell (f0:49 in those days) implies a hum
+// decay near 18s, so a flat 16s release would cut that hum audibly short the
+// moment a bell call site got a position — at the time none did, so it was
+// latent, but the spatial migration landed and all seven case sites pass
+// `at:` now, so it would be live today. See `bellTail()`, which derives the
+// release from the voice actually struck.
 export const BELL = { degree: 0, level: 0.4563, size: 1, verbMix: 0.7 };
 
 // The mallet's OWN calibration, decoupled from BELL.level and frozen at what
@@ -1135,7 +1140,8 @@ export function renormalizeSum(src, dressed) {
 // multipliers push a dressed voice's sum well past it — measured at size
 // 1's table: hand 2.24x, temple 1.85x, great 1.39x, reaching a summed peak
 // of ~0.60 against the ~0.271 reference BELL.level was calibrated to hold,
-// a real clip risk on a path no case calls yet.
+// a real clip risk on a path that was uncalled when it was caught — seven
+// cases call it through their presets now.
 // Renormalizing here means BELL.level's calibration is valid for every
 // preset AND the bare `size`/`f0` forms, always, without a second constant
 // to keep in sync — and it changes nothing about the SHAPE Frank tuned: a
@@ -1164,8 +1170,8 @@ export function strikeBell(ctx, dry, verbIn, { partials, gain = 1, verbMix = BEL
   // low thump instead of layering them, and that trade IS the thud Frank
   // heard: a real strike is wood landing AND bronze answering, at once.
   // `beam`/`ping`/`pingFreq` default to the pre-preset hardcoded numbers, so
-  // the eight `bell({ f0 })` call sites (none of which pass these) sound
-  // exactly as before.
+  // any caller that leaves them off — the old `bell({ f0 })` sites did, back
+  // before they all migrated to presets — sounds exactly as before.
   strike(ctx, out, {
     partials,
     gain: gain * BELL.level,

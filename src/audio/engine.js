@@ -273,8 +273,9 @@ export function createAudio(save) {
       wind.setLevel(level * windScale);
     }
     if (type === 'music') ensureCaseMusic(emitters);
-    // Case 20's ocean is the live caller now — see makeWaterBed's own
-    // comment in synths.js for the scene that finally justified it. The
+    // The two oceans, cases 20 and 48, are the live callers now — see
+    // makeWaterBed's own comment in synths.js for the scene that finally
+    // justified it. The
     // other five koans that once carried 'water' (7, 30, 33, 39, 49) are
     // still water, a basin or a pond, and dropped the token because a
     // continuous staticky wash read as surf under a picture with none.
@@ -283,8 +284,8 @@ export function createAudio(save) {
       waterEpoch++;
       waterRecipeLevel = level;
       water.setLevel(WATER.bedLevel * level);
-      // no scheduleDrip(): the bed's one caller is an OCEAN — see the note
-      // on scheduleDrip itself
+      // no scheduleDrip(): the bed's callers are both OCEANS (cases 20 and
+      // 48) — see the note on scheduleDrip itself
     }
     if (type === 'rain' && !rain) {
       rain = makeRainBed(ctx, master);
@@ -445,8 +446,9 @@ export function createAudio(save) {
     },
     setWindLevel(v) { windLevel = v; if (wind) wind.setLevel(v * windScale); },
     setGust(v, slope = 0) { if (wind) wind.setGust(v, slope); },
-    // The surf's breath (case 20): the case reads its own sea's height at the
-    // waterline and hands it here as 0..1 — the setGust idiom, one line wide.
+    // The surf's breath (the two oceans, cases 20 and 48): the case reads its
+    // own sea's height at the waterline and hands it here as 0..1 — the
+    // setGust idiom, one line wide.
     // Modulates the running bed around its recipe level (×0.7 quiet trough to
     // ×1.3 arriving crest); no water bed running means silence stays silence.
     // setLevel's own setTargetAtTime smoothing turns per-frame calls into a
@@ -490,11 +492,12 @@ export function createAudio(save) {
     // one-shot onto the same instant, and unlocking sound later fires them all
     // as one cluster. A missed strike in a scene that was silent anyway costs
     // nothing.
-    // `size` is the new way to ask for a bell; `f0` survives as an override so
-    // the eight existing case call sites keep the exact pitches they shipped
-    // with — Frank decides at audition whether they migrate to size instead.
-    // `preset` is the third form: one of BELL_PRESETS's tuned bells (hand /
-    // temple / great), voice AND macro dressing AND mallet balance together.
+    // `size` is one way to ask for a bell; `f0` survives as an override for
+    // the dev harnesses and API compatibility — the case call sites that once
+    // pinned exact pitches with it have all migrated. `preset` is the third
+    // form, and the one every case site uses now: one of BELL_PRESETS's tuned
+    // bells (hand / temple / great), voice AND macro dressing AND mallet
+    // balance together.
     // The spatial bus's release is `bellTail(v)`, not a constant — a flat
     // number cannot cover every size at once, since decay itself scales with
     // size (see bellTail's comment in synths.js).
@@ -709,7 +712,6 @@ export function createAudio(save) {
     },
     playMusic,
     stopMusic,
-    musicVolume(v) { if (musicGain) musicGain.gain.value = v; },
     // Cuts every one-shot bell/chime/drip/knock/pour short at a page turn —
     // see the hush pair's own comment in ensureCtx() for why gating only the
     // dry leg is not enough. `hushGen` marks each call so a fast page-turner

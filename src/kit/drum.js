@@ -144,7 +144,7 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
   // own rim work. The first pass had the pale skin meeting the ink body with
   // no seam at all, which read as a painted circle rather than a stretched
   // hide bound down. Two toruses, merged into one mesh (one extra outline for
-  // both, the same trick hoop.js's own kit neighbours use).
+  // both, the same merge trick the kit's other paired pieces use).
   const hoopGeo = [];
   for (const sx of [-1, 1]) {
     const t = new THREE.TorusGeometry(0.805 * R, 0.052 * R, 6, 14);

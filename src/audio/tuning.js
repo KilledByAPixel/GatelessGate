@@ -1,4 +1,4 @@
-// The entire tuning. One root and one scale FAMILY for all 48 cases, the way
+// The entire tuning. One root and one scale FAMILY for all 49 cases, the way
 // there is one ink and one accent — so a case can never contain two pitched
 // things that disagree, and two cases can differ in mood without ever
 // sounding like different apps.

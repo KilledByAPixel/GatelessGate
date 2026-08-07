@@ -73,7 +73,7 @@ export default {
     scene.add(water.group);
 
     // koi under the surface — what turns the pale disc into water. They are
-    // wash-toned, not accent (the seal is the mat), and they read as the same
+    // wash-toned, not accent (the seal is the red water), and they read as the same
     // pond's life in case 33, which shares this pond.
     const koi = makeKoi({
       count: 4, seed: 30, radius: POND.size * 0.32, color: WASH.mid,

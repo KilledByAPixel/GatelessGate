@@ -17,10 +17,11 @@ const ID = 49;
 //
 // So this is the book at rest. It gathers a few of its own living things — a
 // pond with koi, birds crossing, trees in the fog, the path that has run under
-// every unstaged case — and holds them quiet. And it ends on Amban's little
-// circle: a red ENSO standing at the head of the path, the gateless gate drawn
-// as one brushstroke, the last and only warm mark in the book. Everything is
-// here.
+// every unstaged case — and holds them quiet. And it ends on a red torii gate
+// standing at the head of the path — the same gate the title screen opens on,
+// so the reader leaves by the door they entered — the last and only warm mark
+// in the book. (It was Amban's ENSO for a while, a circle drawn as one
+// brushstroke; the torii is the shipped seal.) Everything is here.
 //
 // It used to be the bare default landscape (a place the koan had not been set
 // in). That was a fair ending, but this is the intended one.

@@ -101,9 +101,10 @@
     }
 
     addOutlines(scene, { width: 0.035, wobble: 0.7 });
-    // the app's shipped default is hull OFF (ink scale 0), but this harness's
-    // treatments toggle outline visibility by hand and were authored around a
-    // real stroke — pin the scale up so those toggles still show one
+    // the app now mounts with a hairline hull ON (inkWidth 0.1 — debug.js
+    // v6), but this harness's treatments toggle outline visibility by hand
+    // and were authored around a real stroke — pin the scale up so those
+    // toggles still show one
     setInkScale(1);
 
     // ---- treatment machinery -------------------------------------------------

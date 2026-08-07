@@ -13,10 +13,10 @@ import { plainMaterial } from '../render/toon.js';
 // after every scene swap, so settings survive moving between cases.
 
 // Defaults are the INK & SEAL preset: no toon banding, depth-driven ink, real
-// contact shadows, paper pass at full grain, no quantisation, and the
-// inverted-hull ink outlines OFF by default — the depth-ink pass carries the
-// edges; the "Ink width" slider is the experiment knob that brings the hull
-// back live (Frank). One red seal per koan.
+// contact shadows, paper pass at full grain, no quantisation, and — since v6 —
+// a hairline of inverted-hull ink back ON by default (outlines: true, inkWidth
+// 0.1) over the depth-ink pass that carries the edges; the "Ink width" slider
+// stays the live knob for dialing the hull (Frank). One red seal per koan.
 // bumped when a default LOOK changes, since a stored state would otherwise
 // mask it: v3 turned the ink outlines on, v4 dropped ink strength to 0.5,
 // v5 turned the hull off by default (ink width 0), v6 is Frank's live tune

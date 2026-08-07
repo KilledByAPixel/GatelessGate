@@ -67,7 +67,8 @@ export default {
     // A small three-tube cluster hung under the hall's own front eave, clear
     // of the doorway (|x| < ~0.74 at this width) and the corner post
     // (x ~ 1.6) — a modest cluster, not the full five-tube ring case 29
-    // hangs at a gate, since this case's own back-and-forth is small too.
+    // once hung at its gate (it hangs three single tubes now), since this
+    // case's own back-and-forth is small too.
     const furin = makeFurin({
       tubes: 3, seed: 44,
       onStrike: (tube, force, pos) => audio && audio.chimeStrike({ tube, force, at: pos }),

@@ -190,10 +190,11 @@ export const CYL_SWING = {
 // dead). Pushing it back toward 1 closes the relative angle by as much as the
 // bigger leans opened it.
 //
-// So the pair below is a solve, not a taste: leans 2.5x for the swing, rate
-// 0.7 -> 0.88 to hold the hourly strike count where it was. Both measured
-// over a simulated hour on each of the four real rigs — see the sweep in the
-// commit message.
+// A first solve answered with a pair — leans 2.5x for the swing, clapRate
+// 0.7 -> 0.88 to hold the hourly strike count, measured over a simulated hour
+// on each of the four real rigs. That is NOT what ships (the clapRate move is
+// the second wrong turn recorded at the bottom of this note); the shipped
+// answer is the single `swell` knob described below.
 //
 // Live and mutable, the same pattern CYL_SWING and CYL_FORCE already use, so
 // dev/hanging-audition.html can dial them; read at construction, since the

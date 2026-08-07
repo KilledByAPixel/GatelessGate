@@ -181,10 +181,11 @@
     // ?ink=<number> — 0 skips the inverted-hull outline pass entirely, for
     // judging shots that want raw silhouette/form with no ink dressing on
     // top; any other number keeps the pass and sets the global ink-width
-    // scale (setInkScale) to it. Param absent matches the app's shipped
-    // default — hull off (scale 0) — but the outlines ARE still built, so
-    // setInkScale from the console (or a later ?ink=N reload) brings them
-    // back without re-adding anything.
+    // scale (setInkScale) to it. Param absent leaves the module's own
+    // scale-0 default, so the hull sits hidden (NOT the app's look any
+    // more — the app mounts with a 0.1 hairline since debug.js v6) — but
+    // the outlines ARE still built, so setInkScale from the console (or a
+    // later ?ink=N reload) brings them back without re-adding anything.
     const inkParam = new URLSearchParams(location.search).get('ink');
     if (inkParam !== '0') {
       addOutlines(scene, { width: 0.035, wobble: 0.7 });

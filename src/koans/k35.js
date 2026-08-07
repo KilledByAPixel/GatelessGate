@@ -18,8 +18,9 @@ const ID = 35;
 // brighter one. Neither is ever in front.
 //
 // Above it all, the moon from Mumon's verse — "The moon above the clouds is
-// the same moon, the mountains and rivers below are all different" — which is
-// the seal of the case and the only warm thing in the picture.
+// the same moon, the mountains and rivers below are all different". It was
+// the seal at first; now it hangs plain (Frank's call, recorded at the moon
+// below) and the two souls themselves carry the red.
 
 const CYCLE = 26;         // seconds for one full apart-and-together
 const LANE = 0.4;         // each soul keeps to her own side of the width-1.4 road

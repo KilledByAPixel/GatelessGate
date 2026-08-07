@@ -14,7 +14,8 @@ import { mergeSimple } from './scatter.js';
 //      is not tuned by eye: head.up/fwd are DERIVED below from the anchor the
 //      plan uses (cy = bodyY + 0.04, cz = 0.4 * bodyLen) plus a stated rise
 //      and NECK_LEAN. The plan's fixed 0.85x taper is nowhere near a wedge,
-//      so the neck's GEOMETRY is re-cut locally (0.043/0.10 top/base radius);
+//      so the neck's GEOMETRY is re-cut locally (0.06/0.15 top/base radius —
+//      thickened from 0.043/0.10 in the later models-tweaks round);
 //      transform, name and material stay the plan's.
 //   2. A SMALL HEAD, carried forward off the top of that line, poll around
 //      1.17x withers (was 1.4x — llama). ONE PIECE now: the box skull +
@@ -34,8 +35,9 @@ import { mergeSimple } from './scatter.js';
 //      (mergeSimple, transforms baked — nothing here animates them), so the
 //      count holds at 12 meshes / 24 hull draws, k45's frozen 148 untouched.
 //   5. TAIL OFF THE CROUP — the strand root moves up onto the rump's top-rear
-//      (up 0.185, back 0.44, solved against the pitched barrel surface so the
-//      join is buried, not floating), instead of a stub at rear-centre height.
+//      (up 0.135, back 0.41 — solved at 0.185/0.44 first, then re-eyeballed
+//      in the models-tweaks round; the join stays buried, not floating),
+//      instead of a stub at rear-centre height.
 //
 // Mesh ledger (11, was 12 — the snout merged into the head loft):
 //   body, front-leg pair (merged), 2 thighs, 2 shins, neck, head,

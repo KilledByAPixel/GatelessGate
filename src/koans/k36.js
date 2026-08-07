@@ -104,8 +104,6 @@ export default {
     faceMonk(traveller, master.position);
     faceMonk(master, traveller.position);
 
-    // a pine at the roadside, so the passing has something to be measured
-    // against
     // a pine at the roadside, so the meeting has something to be measured
     // against. Moved well past the master and further out: at its old spot it
     // stood exactly between the two of them from the new bearing, and a tree

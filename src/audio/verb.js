@@ -66,8 +66,9 @@ export const ROOMS = {
 // the RETURN is the other half of staying out of the mud: lows dry, mids and
 // highs carry the space.
 //
-// Both rooms are always built and always connected (an idle 0.9s mono-ish
-// convolver is cheap next to the open room's stereo 1.8s); setRoom crossfades
+// Both rooms are always built and always connected (an idle 0.9s stereo
+// convolver — two seeds, like the open room — is cheap next to the open
+// room's 1.8s); setRoom crossfades
 // their returns, so a page turn into case 41 darkens the air on the same
 // curve every other transition rides.
 export function makeVerb(ctx, dest) {
