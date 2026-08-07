@@ -111,19 +111,27 @@ test('strike() sets a subtle swing that decays back near zero', () => {
   assert.equal(swing.rotation.x, 0);
 
   b.strike();
-  assert.ok(b.swinging() > 0.03, `energy lands with the strike: ${b.swinging()}`);
+  // measured against the strike's OWN energy rather than absolutes derived
+  // from A0. The bell's throw was doubled once already (Frank: "it's just not
+  // enough — about twice as much") and every hardcoded number here moved with
+  // it; stated as fractions, these say what they mean and survive the next
+  // retune. What is actually being claimed: a strike lands real energy, the
+  // bell visibly swings, it never exceeds its own clamp, and it dies away.
+  const struck = b.swinging();
+  assert.ok(struck > 0.03, `energy lands with the strike: ${struck}`);
 
   let peak = 0;
   for (let i = 1; i <= 60; i++) {
     b.update(1 / 60, i / 60);
     peak = Math.max(peak, Math.abs(swing.rotation.x));
   }
-  assert.ok(peak > 0.015, `it visibly swings: ${peak}`);
-  assert.ok(peak <= 0.111, `but a bonshō is massive — stays subtle: ${peak}`);
+  assert.ok(peak > struck * 0.25, `it visibly swings: ${peak} against a strike of ${struck}`);
+  assert.ok(peak <= struck, `a bonshō is massive — the pose never exceeds the strike's own envelope: ${peak}`);
 
   // ~4s later it is nearly still; by 9s the strike has aged out entirely
   for (let i = 61; i <= 240; i++) b.update(1 / 60, i / 60);
-  assert.ok(b.swinging() < 0.004, `dies back near zero: ${b.swinging()}`);
+  assert.ok(b.swinging() < struck * 0.07,
+    `dies back near zero: ${b.swinging()}, ${(b.swinging() / struck * 100).toFixed(1)}% of the strike`);
   for (let i = 241; i <= 540; i++) b.update(1 / 60, i / 60);
   assert.equal(b.swinging(), 0, 'old strikes are pruned, not kept forever');
   assert.equal(swing.rotation.x, 0);

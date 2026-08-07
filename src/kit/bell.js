@@ -130,8 +130,21 @@ export function makeBell({ height = 1.1, color = ACCENT, frameColor = WASH.dark,
   const PERIOD = 1.9;                     // seconds per swing — massive, unhurried
   const OMEGA = (2 * Math.PI) / PERIOD;
   const TAU = 1.35;                       // envelope e-folding: ~5% left at 4s
-  const A0 = 0.055;                       // radians per strike — subtle
-  const MAX = 0.11;                       // spamming taps still stays a bonshō
+  // DOUBLED, on Frank's eye against the real thing in case 16: "the large
+  // bell... should also rotate, tilt more when it is struck. It's just not
+  // enough. About twice as much." 0.055 rad is 3.2 degrees — a bell that
+  // heavy moving that little reads as a still object with a sound attached,
+  // and it was the only hanging thing in the kit that never got opened up.
+  // MAX doubles with it, or the clamp would eat most of the new throw and a
+  // second strike would land against a ceiling instead of stacking.
+  //
+  // Note this is not the pendulum the fūrin and the bronze cylinder run on
+  // (src/kit/pendulum.js) — the bonshō still uses the older superposed-
+  // impulse model, which is why its numbers are amplitudes rather than a
+  // kick and a damping. Moving it across is its own task; doubling what is
+  // here answers what was actually asked without pretending to be that.
+  const A0 = 0.11;                        // radians per strike — ~6.3 degrees
+  const MAX = 0.22;                       // spamming taps still stays a bonshō
   // a faint off-axis component so the swing is not machine-planar; per-seed
   // rate and depth, and it starts from zero at each strike like the main term
   const wobFreq = OMEGA * (0.78 + 0.10 * hash1(7, seed));
