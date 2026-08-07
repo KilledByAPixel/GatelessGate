@@ -24,7 +24,8 @@ export function makeGate({
   width = 2.4, height = 2.6, color = INK_LIT,
   // Chimes under the lintel. A gate has no door to take a side from, so they
   // hang under the kasagi's flat centre span, which is the only stretch of it
-  // with a level underside. 0 hangs nothing. See src/kit/chimes.js.
+  // with a level underside. 0 hangs nothing; any other number hangs one or two,
+  // and they sound without being wired. See src/kit/chimes.js.
   chimes = 0, audio = null,
 } = {}) {
   const g = new THREE.Group();

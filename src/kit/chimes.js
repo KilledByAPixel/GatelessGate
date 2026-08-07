@@ -31,16 +31,32 @@ const SIZE = [0.10, 0.185];
 const KINDS = [1, 3, 5];
 const MIN_CORD = 0.05;      // below this the cap is tied to the beam, not hung from it
 
+// THE ENGINE, ONCE, so a hung chime makes sound without being asked (Frank:
+// "chimes should make sound by default"). Every other kit piece takes its
+// wiring from the case — makeFurin has onStrike, so does the cylinder chime —
+// and that is right for anything the case is composing deliberately. This
+// builder is the opposite: its whole point is that `chimes: 7` is the entire
+// instruction, and a second word you have to remember or get silence is not
+// that. There is exactly one audio engine in the app; main.js hands it over at
+// startup, the same way outlines.js takes its ink scale and scenery.js its
+// grass style.
+//
+// Resolved AT STRIKE TIME, not at build: a scene built before startup finished
+// would otherwise capture a null and stay mute for its whole life. An explicit
+// `audio` still wins, which is how tests capture strikes on their own stub.
+let sharedAudio = null;
+export function setChimeAudio(engine) { sharedAudio = engine || null; }
+
 /**
  * Hang one or two chimes under something.
  *
  * @param parent   the object they hang from — they are added to it, so they
  *                 move with it and the case never repeats its coordinates.
  * @param seed     non-zero picks the arrangement; 0 or absent hangs nothing.
- * @param audio    ctx.audio, wired straight to onStrike. Omitted, they swing
- *                 in silence rather than throwing — build() must survive a
- *                 scene with no audio engine at all (the staging net builds
- *                 every case that way).
+ * @param audio    an engine to use INSTEAD of the shared one (above). Cases do
+ *                 not need it; tests pass a stub here to capture strikes. With
+ *                 neither, they swing in silence rather than throwing, because
+ *                 build() must survive a scene with no audio engine at all.
  * @param y        the soffit: the height, in parent-local space, they hang from.
  * @param z        which side. The door's side, for the callers here.
  * @param span     half the x they may hang within, measured from x = 0.
@@ -93,9 +109,13 @@ export function hangChimes(parent, {
       // perfect lockstep, which is the one thing that says "these came out of
       // the same function" (case 29 hit it first).
       phase: 1.3 + 2.4 * i + rnd(k + 6) * 1.7,
-      onStrike: (tube, force, pos) => audio && audio.chimeStrike({ tube, force, at: pos }),
+      onStrike: (tube, force, pos) => {
+        const engine = audio || sharedAudio;
+        engine && engine.chimeStrike({ tube, force, at: pos });
+      },
     });
     f.group.position.set(x, y, z);
+    f.group.userData.hungBy = 'hangChimes';   // so the tests can find what this hung
     parent.add(f.group);
     out.push(f);
   }

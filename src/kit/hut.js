@@ -98,7 +98,9 @@ export function makeHut({
   // Chimes under the front eave — the side the door is on, which is the side
   // anybody is looking at. A seed, not a count: 0 hangs nothing (so every hut
   // already in the book is untouched), any other number hangs one or two of a
-  // seeded kind and size. See src/kit/chimes.js.
+  // seeded kind and size, and they SOUND — the kit holds the app's engine, so
+  // `chimes: 7` is the whole instruction. `audio` overrides it, which is how
+  // tests capture strikes. See src/kit/chimes.js.
   chimes = 0, audio = null,
 } = {}) {
   const g = new THREE.Group();

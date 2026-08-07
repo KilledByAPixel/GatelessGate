@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeHut } from '../src/kit/hut.js';
 import { makeGate } from '../src/kit/gate.js';
-import { hangChimes } from '../src/kit/chimes.js';
+import { hangChimes, setChimeAudio } from '../src/kit/chimes.js';
 import { makeFurin, FURIN_REACH } from '../src/kit/furin.js';
 
 const chimesOf = (g) => { const out = []; g.traverse((o) => { if (o.name === 'furin') out.push(o); }); return out; };
@@ -122,22 +122,55 @@ test('two chimes never swing in lockstep, and go one either side', () => {
   assert.ok(pairs > 0, 'no seed in thirty hung a pair — the count is stuck at one');
 });
 
-test('the strike reaches the audio engine, and silence is survivable', () => {
-  // build() must survive with no audio at all — the staging net builds every
-  // case that way — and must actually ring when there is one.
+const swing = (g, secs = 20) => { for (let i = 0; i < 60 * secs; i++) g.updateChimes(1 / 60, i / 60); };
+
+test('a hung chime makes sound without being asked to', () => {
+  // `chimes: 7` is the whole instruction (Frank: "chimes should make sound by
+  // default"). main.js hands the kit the app's one engine at startup and the
+  // chime finds it at strike time — no second word at the call site, and no
+  // silent chime because somebody forgot one.
   const struck = [];
-  const audio = { chimeStrike: (o) => struck.push(o) };
-  const hut = makeHut({ chimes: 11, audio });
-  const silent = makeHut({ chimes: 11 });
-  for (let i = 0; i < 60 * 20; i++) {
-    hut.updateChimes(1 / 60, i / 60);
-    silent.updateChimes(1 / 60, i / 60);      // no throw is the assertion
-  }
-  assert.ok(struck.length > 0, 'twenty seconds in the wind and nothing rang');
-  for (const s of struck) {
-    assert.ok(Number.isFinite(s.force) && s.force > 0, `bad force ${s.force}`);
-    assert.ok(Number.isInteger(s.tube), `bad tube ${s.tube}`);
-  }
+  setChimeAudio({ chimeStrike: (o) => struck.push(o) });
+  try {
+    swing(makeHut({ chimes: 11 }));
+    assert.ok(struck.length > 0, 'twenty seconds in the wind and nothing rang');
+    for (const s of struck) {
+      assert.ok(Number.isFinite(s.force) && s.force > 0, `bad force ${s.force}`);
+      assert.ok(Number.isInteger(s.tube), `bad tube ${s.tube}`);
+    }
+  } finally { setChimeAudio(null); }
+});
+
+test('an engine passed in wins over the shared one', () => {
+  // How a test captures its own strikes, and the escape hatch for a case that
+  // wants a chime routed somewhere of its own.
+  const shared = [], mine = [];
+  setChimeAudio({ chimeStrike: (o) => shared.push(o) });
+  try {
+    swing(makeHut({ chimes: 11, audio: { chimeStrike: (o) => mine.push(o) } }));
+    assert.ok(mine.length > 0, 'the engine it was handed never heard anything');
+    assert.equal(shared.length, 0, 'and the shared one was not rung behind its back');
+  } finally { setChimeAudio(null); }
+});
+
+test('with no engine anywhere it swings in silence rather than throwing', () => {
+  // build() must survive a scene with no audio at all — the staging net builds
+  // every case that way, and a page can be entered before the engine exists.
+  setChimeAudio(null);
+  swing(makeHut({ chimes: 11 }));            // no throw is the assertion
+});
+
+test('the engine is found at STRIKE time, not at build', () => {
+  // A scene built before startup finished would otherwise capture a null and
+  // stay mute for the rest of its life.
+  setChimeAudio(null);
+  const hut = makeHut({ chimes: 11 });       // built into a silent world...
+  const struck = [];
+  setChimeAudio({ chimeStrike: (o) => struck.push(o) });   // ...engine arrives after
+  try {
+    swing(hut);
+    assert.ok(struck.length > 0, 'the chime kept the null it was built with');
+  } finally { setChimeAudio(null); }
 });
 
 test('FURIN_REACH bounds BOTH forms, not just the single it was derived from', () => {

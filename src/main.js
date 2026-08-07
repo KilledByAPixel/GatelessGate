@@ -9,6 +9,7 @@ import { makeSceneManager, disposeRoot } from './scene/manager.js';
 import { makeDebug, devModeOn } from './ui/debug.js';
 import { makeCompose } from './ui/compose.js';
 import { makeLayoutOverlay } from './dev/overlay.js';
+import { setChimeAudio } from './kit/chimes.js';
 import { makeInput } from './input.js';
 import { setBreezePointer, clearBreeze } from './kit/breeze.js';
 import { createSave } from './save.js';
@@ -59,6 +60,9 @@ const scenes = makeSceneManager(renderer, dissolve, post, freeze);
 const input = makeInput(renderer.domElement);
 const save = createSave(window.localStorage);
 const audio = createAudio(save);
+// One engine, handed to the kit's chime hanger so `makeHut({ chimes: 7 })` is
+// the whole instruction and the thing it hangs can be heard (src/kit/chimes.js).
+setChimeAudio(audio);
 const narration = createNarration();
 
 // The hub is built now but NOT made active here: a deep link needs the scene
