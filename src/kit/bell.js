@@ -23,6 +23,38 @@ import { ACCENT, WASH } from '../palette.js';
 
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
+// THE SWING, live and tunable — the same mutable-export pattern SWING and
+// CLAP_FORCE (kit/furin.js) and CYL_SWING and CYL_FORCE (kit/cylinder.js)
+// already use: the binding stays const, its fields don't, so
+// dev/hanging-audition.html writes straight into it and the very next strike
+// moves differently with no reload. Read inside pose() and swinging() rather
+// than captured at construction, so a slider reaches a bell that is already
+// standing in the scene, not just the next one built.
+//
+// This bell was the last hanging thing in the kit still holding its numbers
+// as private consts, which is exactly why there was nowhere to tune it from
+// (Frank, with the harness open: "where could I... we're gonna tweak it a
+// little more"). The harness had a section for the fūrin and one for the
+// bronze cylinder and none for the bonshō.
+//
+//   throw  — radians of tilt a single strike lands. Started at 0.055 (3.2
+//            degrees), which read as a still object with a sound attached on
+//            a mass of bronze that size.
+//   max    — the ceiling stacked strikes saturate at. It must stay WELL
+//            clear of `throw` or it stops being a safety net and becomes the
+//            thing you are actually tuning against: at throw 0.21 a single
+//            strike already peaks at 0.148, so a 0.22 ceiling would clip the
+//            second strike of any pair and the bell would stop responding to
+//            being rung twice.
+//   period — seconds per swing. A bonshō is massive and unhurried.
+//   settle — envelope e-folding time; about 5% is left after 3 of these.
+export const BELL_SWING = {
+  throw: 0.30,
+  max: 0.55,
+  period: 1.9,
+  settle: 1.35,
+};
+
 export function makeBell({ height = 1.1, color = ACCENT, frameColor = WASH.dark, seed = 16 } = {}) {
   const g = new THREE.Group();
   g.name = 'bell';
@@ -127,33 +159,26 @@ export function makeBell({ height = 1.1, color = ACCENT, frameColor = WASH.dark,
   swing.add(hit);
 
   // ---- the swing --------------------------------------------------------
-  const PERIOD = 1.9;                     // seconds per swing — massive, unhurried
-  const OMEGA = (2 * Math.PI) / PERIOD;
-  const TAU = 1.35;                       // envelope e-folding: ~5% left at 4s
-  // DOUBLED, on Frank's eye against the real thing in case 16: "the large
-  // bell... should also rotate, tilt more when it is struck. It's just not
-  // enough. About twice as much." 0.055 rad is 3.2 degrees — a bell that
-  // heavy moving that little reads as a still object with a sound attached,
-  // and it was the only hanging thing in the kit that never got opened up.
-  // MAX doubles with it, or the clamp would eat most of the new throw and a
-  // second strike would land against a ceiling instead of stacking.
+  // All four numbers live in BELL_SWING at the top of this file now, and are
+  // read on every frame rather than captured here — see its comment. This is
+  // still the older superposed-impulse model rather than the real pendulum
+  // the fūrin and the bronze cylinder run on (src/kit/pendulum.js), which is
+  // why its knobs are amplitudes and not a kick and a damping. Moving it
+  // across is its own task.
   //
-  // Note this is not the pendulum the fūrin and the bronze cylinder run on
-  // (src/kit/pendulum.js) — the bonshō still uses the older superposed-
-  // impulse model, which is why its numbers are amplitudes rather than a
-  // kick and a damping. Moving it across is its own task; doubling what is
-  // here answers what was actually asked without pretending to be that.
-  const A0 = 0.3;                        // radians per strike — ~6.3 degrees
-  const MAX = 0.22;                       // spamming taps still stays a bonshō
-  // a faint off-axis component so the swing is not machine-planar; per-seed
-  // rate and depth, and it starts from zero at each strike like the main term
-  const wobFreq = OMEGA * (0.78 + 0.10 * hash1(7, seed));
+  // The off-axis wobble keeps the swing from reading machine-planar: its rate
+  // and depth are per-seed, and it starts from zero at each strike like the
+  // main term. It rides the live period, so retuning that keeps the two in
+  // proportion.
+  const wobFreq = ((2 * Math.PI) / BELL_SWING.period) * (0.78 + 0.10 * hash1(7, seed));
   const wobAmp = 0.20 + 0.15 * hash1(8, seed);
 
   let clock = 0;
   const struck = [];                      // simTimes of strikes still sounding
 
   function pose() {
+    const { throw: A0, max: MAX, period, settle: TAU } = BELL_SWING;
+    const OMEGA = (2 * Math.PI) / period;
     let x = 0, z = 0;
     for (const t0 of struck) {
       const t = clock - t0;
@@ -180,6 +205,7 @@ export function makeBell({ height = 1.1, color = ACCENT, frameColor = WASH.dark,
     // total envelope still in the bell: 0 at rest, ~A0 just after one strike
     swinging() {
       let e = 0;
+      const { throw: A0, settle: TAU } = BELL_SWING;
       for (const t0 of struck) if (clock >= t0) e += A0 * Math.exp(-(clock - t0) / TAU);
       return e;
     },
@@ -187,7 +213,7 @@ export function makeBell({ height = 1.1, color = ACCENT, frameColor = WASH.dark,
 
     update(dt, simTime) {
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
-      while (struck.length && clock - struck[0] > 6 * TAU) struck.shift();
+      while (struck.length && clock - struck[0] > 6 * BELL_SWING.settle) struck.shift();
       pose();
     },
   };
