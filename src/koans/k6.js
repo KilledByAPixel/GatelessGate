@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 
 import {
-  composeWorld, makeBuddha, makeMonk, faceMonk, makeFlower, makeAssembly,
+  composeWorld, makeBuddha, makeMonk, faceMonk, makeFlower, makeAssembly, makeCat,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 import { hash1 } from '../util/noise.js';
@@ -109,6 +109,16 @@ export default {
     });
     scene.add(assembly);
 
+    // The monastery cat (k14's, on its gentlest day), sitting at the
+    // assembly's flank with its eyes on the Buddha like everyone else —
+    // present for the sermon, unbothered by whether it understands. Frank:
+    // "add cat sitting with monks watching buddha."
+    const cat = makeCat({ height: 0.32, seed: 6, pose: 'sit' });
+    const CAT = { x: -1.5, z: -1.0 };
+    cat.group.position.set(CAT.x, 0, CAT.z);
+    faceMonk(cat.group, buddha.position);
+    scene.add(cat.group);
+
     const world = composeWorld(scene, {
       seed: 6,
       groundSeed: 21,
@@ -117,6 +127,7 @@ export default {
         { x: 1.2, z: SEAT_Z, r: 2.0 },   // the seat
         { x: 1.2, z: -2.2, r: 4.0 },     // the assembly
         { at: kasyapa, r: 1.2 },    // Kasyapa
+        { at: cat.group, r: 0.5 },
       ],
       // the stone platform covers ground, and the meadow steps back from the
       // grounded lotus so the bloom is not buried in blades; the assembly
@@ -124,12 +135,16 @@ export default {
       grassKeepout: [
         { x: 1.2, z: SEAT_Z, r: 1.2 },
         { x: 1.2, z: FLOWER_Z, r: 0.9 },
+        // a clearing for the cat — 0.32 of animal disappears in full meadow
+        // (k7 learned this the hard way)
+        { x: CAT.x, z: CAT.z, r: 0.7 },
       ],
     });
 
     for (const [p, rx, rz, op] of [
       [seat.position, 1.1, 0.85, 0.34],
       [kasyapa.position, 0.7, 0.55, 0.4],
+      [cat.group.position, 0.3, 0.22, 0.34],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = p.x; s.position.z = p.z;
@@ -162,7 +177,11 @@ export default {
     flower.traverse((o) => { if (o.isMesh && !o.userData.isOutline) flowerMeshes.push(o); });
     input.onTap(() => {
       if (!camera) return;
+      // the flower first — it is the case's moment; the cat is company.
+      // (Probing the cat first also silenced the staging net's hit-everything
+      // tap: a silent stir must never be the FIRST thing a tap can reach.)
       const hit = input.raycastFirst(camera, flowerMeshes);
+      if (!hit && input.raycastFirst(camera, cat.meshes())) { cat.stir(); return; }
       if (hit && releasePetal()) {
         // A petal genuinely makes no sound. The most that is honest is a
         // suggestion of one, and this is the quietest call in the book — and
@@ -181,6 +200,7 @@ export default {
       setCamera(c) { camera = c; },
       update(dt, simTime) {
         world.update(dt, simTime);
+        cat.update(dt, simTime);
 
         // he twirls it. The case is named for the gesture, and it is the only
         // motion in the scene besides the grass.
