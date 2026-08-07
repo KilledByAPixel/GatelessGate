@@ -3,6 +3,7 @@ import { hash1 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
 import { WASH } from '../palette.js';
 import { pineGeometry } from './pine.js';
+import { groundHeight } from './ground.js';
 import { makeTree } from './tree.js';
 import { makeOak } from './oak.js';
 import { mergeSimple } from './scatter.js';
@@ -82,6 +83,19 @@ export function makeForest({
   // had, and the stand just thins where the rock eats its disc. (Frank:
   // "clearly, obviously, trees that are inside the mountain.")
   avoid = [],
+  // The stand's species: 'mixed' is the classic conifer-heavy blend below;
+  // 'pine' and 'tree' (broadleaf — sapling and oak silhouettes) follow a
+  // case's treeKind so the fog line agrees with the midground (Frank found
+  // a broadleaf standing in his all-pine scene — it was a forest member,
+  // which used to ignore the scatter's species entirely).
+  kind = 'mixed',
+  // The terrain the bases stand on. They used to sit at a flat y = -0.45 and
+  // trust the roll to meet them — near the flat middle it does, but a stand
+  // out at 25+ units can sit where the ground rises a full unit or falls
+  // away, and Frank watched background trees bury to the canopy. Each base
+  // now samples the same terrain the ground mesh is built from, sunk a
+  // little so no trunk ever hovers on a downslope edge.
+  groundSeed = 21,
 } = {}) {
   const pineTpl = buildTemplates('pine', PINE_TEMPLATES, seed, treeH);
   const treeTpl = buildTemplates('tree', TREE_TEMPLATES, seed, treeH);
@@ -101,7 +115,7 @@ export function makeForest({
     const ix = center[0] + Math.cos(a) * r, iz = center[2] + Math.sin(a) * r;
     if (avoid.some((c) => Math.hypot(ix - c.x, iz - c.z) < c.r * 0.85)) continue;
     kept.push({ x: ix, z: iz });
-    p.set(ix, -0.45, iz); // bases sunk into the rolling ground
+    p.set(ix, groundHeight(ix, iz, { seed: groundSeed }) - 0.18, iz);
     e.set(0, hash1(i * 5 + 4, seed) * Math.PI, 0);
     q.setFromEuler(e);
     s.set(sc, sc, sc);
@@ -110,7 +124,12 @@ export function makeForest({
     const pick = hash1(i * 7 + 5, seed);
     const variant = hash1(i * 7 + 6, seed);
     let tpl;
-    if (pick < PINE_SHARE) tpl = pickTemplate(pineTpl, variant);
+    if (kind === 'pine') tpl = pickTemplate(pineTpl, variant);
+    else if (kind === 'tree') {
+      // broadleaf country: the sapling/oak blend at their old relative shares
+      tpl = pick < TREE_SHARE / (1 - PINE_SHARE)
+        ? pickTemplate(treeTpl, variant) : pickTemplate(oakTpl, variant);
+    } else if (pick < PINE_SHARE) tpl = pickTemplate(pineTpl, variant);
     else if (pick < PINE_SHARE + TREE_SHARE) tpl = pickTemplate(treeTpl, variant);
     else tpl = pickTemplate(oakTpl, variant);
 

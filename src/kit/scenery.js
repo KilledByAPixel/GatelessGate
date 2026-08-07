@@ -1,4 +1,4 @@
-import { makeGround } from './ground.js';
+import { makeGround, groundHeight } from './ground.js';
 import { makeMountains, mountainFootprints } from './mountains.js';
 import { makeForest } from './forest.js';
 import { makeRocks, makeBushes } from './scatter.js';
@@ -112,7 +112,15 @@ export function composeWorld(scene, {
   const footprints = mountains.flatMap((m, i) =>
     mountainFootprints({ seed: seed * 31 + i * 7, ...m }));
   mountains.forEach((m, i) => scene.add(makeMountains({ seed: seed * 31 + i * 7, ...m })));
-  forests.forEach((f, i) => scene.add(makeForest({ seed: seed * 41 + i * 11, avoid: footprints, ...f })));
+  // The fog-line stands follow the case's treeKind ('tree' keeps their
+  // classic mixed blend — an all-sapling fog line was nobody's ask), and
+  // they plant on this world's own terrain. A forest entry's own fields
+  // (via ...f) still override both.
+  forests.forEach((f, i) => scene.add(makeForest({
+    seed: seed * 41 + i * 11, avoid: footprints, groundSeed,
+    ...(treeKind !== 'tree' ? { kind: treeKind } : {}),
+    ...f,
+  })));
 
   // midground trees: real kit trees on a ring, avoiding keepouts
   const sceneTrees = [];
@@ -132,7 +140,14 @@ export function composeWorld(scene, {
     const t = pine
       ? makePine({ seed: seed * 100 + placed, height: 3.2 + hash1(tries * 5 + 4, seed) * 1.8 })
       : makeTree({ seed: seed * 100 + placed, height: 2.6 + hash1(tries * 5 + 4, seed) * 1.6 });
-    t.position.set(x, 0, z);
+    // ON the terrain, not at sea level: the ring reaches r = 20 and the
+    // ground out there rolls a good unit either way — trees planted at y 0
+    // floated on the dips and buried on the rises (Frank: "they're sunk
+    // below the ground back there"). Slight sink so no trunk hovers on a
+    // slope edge. groundFn first, same as the grass: a case with reshaped
+    // terrain owns the surface.
+    const ty = (groundFn ? groundFn(x, z) : groundHeight(x, z, { seed: groundSeed })) - 0.06;
+    t.position.set(x, ty, z);
     t.rotation.y = hash1(tries * 5 + 5, seed) * Math.PI * 2;
     scene.add(t);
     sceneTrees.push(t);

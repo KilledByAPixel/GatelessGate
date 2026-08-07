@@ -172,6 +172,16 @@ export default {
         { count: 5, distance: 47, arcCenter: -1.55, arcSpan: 1.5, color: wash(0.17), hScale: 0.80 },
         { count: 4, distance: 45, arcCenter: 0.95, arcSpan: 1.5, color: wash(0.20), hScale: 0.75 },
       ],
+      // AND SO IS THE FOG LINE. The stands used to sit at a flat y and duck
+      // under the sightline by accident; once forests started standing on
+      // the real terrain (the sunk-trees fix), the left stand's trees rode
+      // an upslope into the moon at the left end of the drag — this case's
+      // own occlusion net caught it. The left stand steps back and away
+      // from the corridor; the right one was never near it.
+      forests: [
+        { center: [-26, 0, -24], spread: 10, count: 55 },
+        { center: [16, 0, -31], spread: 14, count: 40, color: wash(0.55) },
+      ],
     });
 
     for (const [p, rx, rz, op] of [
