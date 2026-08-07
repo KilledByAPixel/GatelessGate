@@ -4,7 +4,7 @@ import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makePine,
   makeHorse, makeBundle,
-  makeLights, makeBlobShadow, addOutlines,
+  makeLights, addOutlines,
 } from '../kit/index.js';
 
 const ID = 36;
@@ -154,20 +154,6 @@ export default {
       ],
       grassKeepout: road.keepout(28, 1.0),
     });
-
-    // both stand still, so both shadows are placed once and never touched again
-    const shadow = makeBlobShadow({ radiusX: 0.68, radiusZ: 0.52, opacity: 0.42 });
-    shadow.position.set(traveller.position.x, 0, traveller.position.z);
-    scene.add(shadow);
-    const masterShadow = makeBlobShadow({ radiusX: 0.68, radiusZ: 0.52, opacity: 0.42 });
-    masterShadow.position.set(master.position.x, 0, master.position.z);
-    scene.add(masterShadow);
-    const pineShadow = makeBlobShadow({ radiusX: 0.8, radiusZ: 0.62, opacity: 0.30 });
-    pineShadow.position.set(pine.position.x, 0, pine.position.z);
-    const horseShadow = makeBlobShadow({ radiusX: 0.95, radiusZ: 0.5, opacity: 0.34 });
-    horseShadow.position.set(horse.group.position.x, 0, horse.group.position.z);
-    scene.add(horseShadow);
-    scene.add(pineShadow);
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

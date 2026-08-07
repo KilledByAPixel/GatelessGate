@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeBasin, makeWater, makeKoi, makeBirds, makeMonk, faceMonk,
-  makeGate, makeLights, makeBlobShadow, addOutlines, makeCylinderChime,
+  makeGate, makeLights, addOutlines, makeCylinderChime,
 } from '../kit/index.js';
 
 const ID = 49;
@@ -126,15 +126,6 @@ export default {
       ],
       grassKeepout: [...road.keepout(26, 1.0), { x: POND.x, z: POND.z, r: POND.outer + 0.4 }],
     });
-
-    for (const [p, rx, rz, op] of [
-      [you.position, 0.6, 0.48, 0.4],
-      [{ x: ep.x, z: ep.z }, 1.6, 0.4, 0.24],   // the gate straddles the road
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.set(p.x, 0.01, p.z);
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

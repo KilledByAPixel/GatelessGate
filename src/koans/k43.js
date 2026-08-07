@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, aimMonk, faceMonk, makeAssembly,
-  makeRack, makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeRack, makeLights, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
 const ID = 43;
@@ -120,17 +120,6 @@ export default {
       ],
       grassKeepout: path.keepout(24, 0.95),
     });
-
-    for (const [p, rx, rz, op] of [
-      [shuzan.position, 0.7, 0.55, 0.42],
-      [near.position, 0.62, 0.5, 0.40],
-      [second.position, 0.62, 0.5, 0.40],
-      [rack.group.position, 0.55, 0.3, 0.32],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

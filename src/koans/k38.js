@@ -8,7 +8,6 @@ import { makeTree } from '../kit/tree.js';
 import { makeOak } from '../kit/oak.js';
 import { tapMeshes } from '../kit/pick.js';
 import { makeLights, toonMaterial } from '../render/toon.js';
-import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
 import { hash1 } from '../util/noise.js';
 
@@ -70,8 +69,8 @@ export default {
     // daylight above the tallest of them, because "the oak is the biggest thing
     // growing" is the property that makes Joshu's answer land at all.
     const OAK = { x: -1.0, z: -3.0, height: 5.4, radius: 3.5 };
-    // seed 20 of the first sixty: the most compact crown still balanced over its
-    // own trunk, so the blob shadow underneath it is an honest one
+    // seed 20 of the first sixty: the most compact crown still balanced over
+    // its own trunk
     const oak = makeOak({ height: OAK.height, seed: 20, canopyColor: ACCENT_DEEP });
     oak.position.set(OAK.x, 0, OAK.z);
 
@@ -137,25 +136,6 @@ export default {
         { x: OAK.x, z: OAK.z, r: APRON_R * 0.98 },
       ],
     });
-
-    // The oak gets two shadows: a wide soft one for the canopy and a tight dark
-    // one where the bole meets the earth, lifted to sit on the swept apron.
-    // The key light comes from +x/+z, so the crown's shadow is thrown the other way.
-    const canopyShadow = makeBlobShadow({ radiusX: 3.6, radiusZ: 3.3, opacity: 0.26 });
-    canopyShadow.position.set(OAK.x - 0.55, 0.012, OAK.z - 0.45);
-    scene.add(canopyShadow);
-    const boleShadow = makeBlobShadow({ radiusX: 1.0, radiusZ: 0.85, opacity: 0.34 });
-    boleShadow.position.set(OAK.x, 0.1, OAK.z);
-    scene.add(boleShadow);
-
-    for (const [p, rx, rz, op] of [
-      [joshu.position, 0.7, 0.55, 0.42],
-      [monk.position, 0.65, 0.5, 0.42],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     // ---- the leaves ------------------------------------------------------
     // A fixed pool, borrowed and returned. Built before addOutlines and marked

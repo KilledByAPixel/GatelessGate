@@ -71,7 +71,6 @@ const CONTROLS = [
   { key: 'outlines', label: 'Ink outlines (hull)', type: 'bool', def: true },
   { key: 'inkWidth', label: 'Ink width', type: 'range', def: 0.1, min: 0, max: 3, step: 0.05 },
   { key: 'grain', label: 'Paper texture', type: 'bool', def: true },   // master: off = no paper at all
-  { key: 'blobs', label: 'Blob shadows', type: 'bool', def: false },
   { key: 'shadows', label: 'Real shadows', type: 'bool', def: true },
   { key: 'fogMul', label: 'Fog ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
   { key: 'sunMul', label: 'Sun ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
@@ -299,7 +298,6 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
           case 'mountains': o.visible = state.mountains; break;
           case 'rocks': case 'bushes': o.visible = state.scatter; break;
           case 'path': o.visible = state.path; break;
-          case 'blobshadow': o.visible = state.blobs; break;
           default: break;
         }
         if (o.userData.isOutline) o.visible = state.outlines && state.inkWidth > 0;

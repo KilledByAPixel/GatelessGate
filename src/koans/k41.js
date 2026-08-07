@@ -5,7 +5,7 @@ import { hash1 } from '../util/noise.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeCave, makeSnow, makePine, makeMonk, faceMonk,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
 const ID = 41;
@@ -164,15 +164,6 @@ export default {
       // snow covers everything: no grass anywhere near the clearing
       grassKeepout: [{ x: 0.4, z: -3.0, r: 13 }],
     });
-
-    for (const [p, rx, rz, op] of [
-      [eka.position, 0.66, 0.5, 0.30],
-      [pine.position, 0.7, 0.55, 0.22],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.030, wobble: 0.7 });
 

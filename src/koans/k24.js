@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeWildflowers, makeBirds, makeMonk, faceMonk,
-  makeBuffalo, makeLights, makeBlobShadow, addOutlines,
+  makeBuffalo, makeLights, addOutlines,
 } from '../kit/index.js';
 
 const ID = 24;
@@ -105,16 +105,6 @@ export default {
       height: 4.4, heightVary: 4.4, spread: 5.6,
     });
     scene.add(birds.group);
-
-    for (const [p, rx, rz, op] of [
-      [fuketsu.position, 0.62, 0.5, 0.40],
-      [monk.position, 0.62, 0.5, 0.40],
-      [buffalo.group.position, 1.0, 0.6, 0.32],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

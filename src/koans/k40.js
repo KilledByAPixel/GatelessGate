@@ -8,7 +8,6 @@ import { makeHut } from '../kit/hut.js';
 import { makeVase } from '../kit/vase.js';
 import { tapMeshes } from '../kit/pick.js';
 import { makeLights } from '../render/toon.js';
-import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
 
 const ID = 40;
@@ -138,17 +137,6 @@ export default {
         { x: CROWD.x, z: CROWD.z, r: 2.6 },
       ],
     });
-
-    for (const [x, z, rx, rz, op] of [
-      [HYAKUJO.x, HYAKUJO.z, 0.72, 0.56, 0.42],
-      [ISAN.x, ISAN.z, 0.62, 0.50, 0.42],
-      [VASE.x, VASE.z, 0.34, 0.28, 0.40],
-      [HALL.x, HALL.z, 2.10, 1.70, 0.30],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = x; s.position.z = z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

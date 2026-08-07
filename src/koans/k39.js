@@ -6,7 +6,7 @@ import { hash1 } from '../util/noise.js';
 import { clamp01, smoothstep as SS } from '../util/math.js';
 import {
   composeWorld, makeWater, makeKoi, makeMonk, aimMonk, faceMonk,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial, setSeal,
+  makeLights, addOutlines, toonMaterial, setSeal,
 } from '../kit/index.js';
 
 const ID = 39;
@@ -151,7 +151,7 @@ export default {
       // carve, so a 0.55 body reaches it with margin. This is NOT the old
       // shafts-through-deep-water failure (pale stilts under a metre of dark
       // sheet, "a row of mushrooms"): these are squat stones in genuinely
-      // shallow water, and their blob shadows stop reading as a float gap.
+      // shallow water.
       // The top face stays exactly where the old 0.20 cap put it.
       const H = 0.55;
       const top = new THREE.Mesh(
@@ -262,15 +262,6 @@ export default {
     // paleness moving under the surface.
     koi.group.traverse((o) => { o.userData.noOutline = true; });
     scene.add(koi.group);
-
-    for (const [p, rx, rz, op] of [
-      [student.position, 0.62, 0.5, 0.40],
-      [ummon.position, 0.68, 0.52, 0.42],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.030, wobble: 0.7 });
 

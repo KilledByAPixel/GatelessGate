@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk, makeFlower, makeAssembly, makeCat,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial, tapMeshes,
+  makeLights, addOutlines, toonMaterial, tapMeshes,
 } from '../kit/index.js';
 import { hash1 } from '../util/noise.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
@@ -140,16 +140,6 @@ export default {
         { x: CAT.x, z: CAT.z, r: 0.7 },
       ],
     });
-
-    for (const [p, rx, rz, op] of [
-      [seat.position, 1.1, 0.85, 0.34],
-      [kasyapa.position, 0.7, 0.55, 0.4],
-      [cat.group.position, 0.3, 0.22, 0.34],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

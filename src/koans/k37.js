@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP } from '../palette.js';
 import {
   composeWorld, makeBuffalo, makePen, makeMonk, faceMonk,
-  makeLights, makeBlobShadow, addOutlines, tapMeshes,
+  makeLights, addOutlines, tapMeshes,
 } from '../kit/index.js';
 
 const ID = 37;
@@ -71,15 +71,6 @@ export default {
       // hooves in life, so let it
       grassKeepout: [],
     });
-
-    for (const [p, rx, rz, op] of [
-      [buffalo.group.position, 1.4, 0.9, 0.4],
-      [monk.position, 0.65, 0.5, 0.42],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.035, wobble: 0.7 });
 

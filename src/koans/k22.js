@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeGate, makeFlag, makeMonk, faceMonk, makeLantern,
-  makeLights, makeBlobShadow, addOutlines, makeFurin,
+  makeLights, addOutlines, makeFurin,
 } from '../kit/index.js';
 import { clothEnergy } from '../sim/verlet.js';
 
@@ -110,18 +110,6 @@ export default {
         { x: gate.position.x, z: gate.position.z, r: 1.2 },
       ],
     });
-
-    for (const [p, rx, rz, op] of [
-      [kashapa.position, 0.7, 0.54, 0.42],
-      [ananda.position, 0.64, 0.5, 0.40],
-      [flag.group.position, 0.55, 0.45, 0.36],
-      [gate.position, 1.5, 0.5, 0.30],
-      [lantern.position, 0.38, 0.3, 0.34],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

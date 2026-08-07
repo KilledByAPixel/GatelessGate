@@ -4,7 +4,7 @@ import { PAPER, ACCENT, wash } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk, makeAssembly,
-  makeWildflowers, makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeWildflowers, makeLights, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
 const ID = 32;
@@ -106,16 +106,6 @@ export default {
       ],
     });
     scene.add(flowers.mesh);
-
-    for (const [p, rx, rz, op] of [
-      [seat.position, 1.0, 0.75, 0.34],
-      [philosopher.position, 0.68, 0.52, 0.42],
-      [ananda.position, 0.62, 0.5, 0.40],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

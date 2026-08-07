@@ -3,7 +3,7 @@ import MATTER from '../text/matter.js';
 import { PAPER, WASH, wash, ACCENT_DEEP } from '../../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeBell, makeFlag,
-  makeLights, makeBlobShadow, addOutlines,
+  makeLights, addOutlines,
 } from '../../kit/index.js';
 import { groundHeight } from '../../kit/ground.js';
 
@@ -155,16 +155,6 @@ export default {
         { at: flag.group, r: 0.4 },
       ],
     });
-
-    for (const [p, rx, rz, op] of [
-      [bell.group.position, 1.05, 0.78, 0.34],
-      [flag.group.position, 0.55, 0.45, 0.36],
-      [monk.position, 0.65, 0.5, 0.42],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

@@ -230,11 +230,6 @@ test('the diorama is a hall, a hanging bell, and three monks turned toward it', 
   assert.equal('#' + body.material.color.getHexString(), ACCENT.toLowerCase());
   assert.ok(body.material.emissiveIntensity > 0, 'the seal glows on its own');
 
-  // painted shadows under everything that stands in the yard
-  let blobs = 0;
-  root.scene.traverse((o) => { if (o.name === 'blobshadow') blobs++; });
-  assert.ok(blobs >= 6, `figures, bell, hall and lantern all cast: ${blobs}`);
-
   root.onEnter && root.onEnter();
   for (let i = 0; i < 120; i++) root.update(1 / 60, i / 60);
   const frag = root.fragment();

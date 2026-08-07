@@ -1,26 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { blobPixels } from '../src/render/blobshadow.js';
 import { grainPixels } from '../src/render/grain.js';
-import { INK, hexToRgb } from '../src/palette.js';
-
-test('blobPixels: opaque center, transparent corners, smooth falloff', () => {
-  const size = 64;
-  const px = blobPixels(size);
-  assert.equal(px.length, size * size * 4);
-  const alphaAt = (x, y) => px[(y * size + x) * 4 + 3];
-  const center = alphaAt(32, 32);
-  const mid = alphaAt(48, 32);
-  const corner = alphaAt(0, 0);
-  assert.ok(center > 200, `center alpha ${center}`);
-  assert.ok(mid > 0 && mid < center, `mid alpha ${mid}`);
-  assert.equal(corner, 0);
-  const [r, g, b] = hexToRgb(INK);
-  const center4 = (32 * size + 32) * 4;
-  assert.equal(px[center4], r);
-  assert.equal(px[center4 + 1], g);
-  assert.equal(px[center4 + 2], b);
-});
 
 test('grainPixels: near-white, varied, deterministic', () => {
   const a = grainPixels(64, 42);

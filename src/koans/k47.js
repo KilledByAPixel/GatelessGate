@@ -8,7 +8,6 @@ import { makeFurin } from '../kit/furin.js';
 import { makeMonk } from '../kit/monk.js';
 import { groundHeight } from '../kit/ground.js';
 import { makeLights } from '../render/toon.js';
-import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
 
 const ID = 47;
@@ -95,8 +94,7 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
     // The shadow frustum is pushed up the road so the second barrier still
     // casts onto the ground it stands on; the third is past any frustum worth
-    // paying texels for, and at 60% wash a cast shadow would not read anyway —
-    // its blob does the anchoring.
+    // paying texels for, and at 60% wash a cast shadow would not read anyway.
     scene.add(makeLights({ focus: [0.6, 0, -3.5], radius: 12 }));
 
     const path = makePath(PATH_OPTS);
@@ -121,7 +119,7 @@ export default {
       gate.position.set(gp.x, y, gp.z);
       gate.rotation.y = gp.heading;
       scene.add(gate);
-      return { gate, gp, y, spec, top: Math.max(...under) };
+      return { gate, gp, y, spec };
     });
 
     // Invisible tap zones, shaped like the FRAME, not the doorway. A single
@@ -193,21 +191,6 @@ export default {
       ],
       grassKeepout: path.keepout(34, 1.05),
     });
-
-    // Blob shadows anchor each barrier and the walker. Out past the flat
-    // radius a blob at y=0 would sink into the rising road, so each gate's
-    // blob rides the HIGHEST ground under its span; the far one is faint —
-    // most of its darkness belongs to the fog by then.
-    for (const [i, { gp, spec, top }] of gates.entries()) {
-      const s = makeBlobShadow({
-        radiusX: 0.55 + spec.width / 2, radiusZ: 0.7, opacity: 0.30 - i * 0.05,
-      });
-      s.position.set(gp.x, top + 0.02, gp.z);
-      scene.add(s);
-    }
-    const ms = makeBlobShadow({ radiusX: 0.7, radiusZ: 0.55, opacity: 0.42 });
-    ms.position.set(monk.position.x, 0.01, monk.position.z);
-    scene.add(ms);
 
     // a furin under the first barrier's lintel — the near gate is the one you
     // stand before, so it is the one that carries a voice in the wind

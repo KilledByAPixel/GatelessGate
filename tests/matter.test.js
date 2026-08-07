@@ -267,9 +267,8 @@ test('the afterword seats its meditator UNDER a tree, whatever the seed does', a
 // guards in buildHub were deleted and every piece went back to being built
 // unconditionally. These assert on the actual CONTENTS of the constructed
 // scene instead, keyed off the `name` every kit piece already sets on its own
-// root object (`gate.js`, `lantern.js`, `monk.js`, `path.js`) and the shared
-// `blobshadow` name every blob shadow carries (`render/blobshadow.js`) — no
-// change to buildHub's own code was needed to make its children identifiable.
+// root object (`gate.js`, `lantern.js`, `monk.js`, `path.js`) — no change to
+// buildHub's own code was needed to make its children identifiable.
 function countNamed(scene, name) {
   return scene.children.filter((c) => c.name === name).length;
 }
@@ -280,17 +279,11 @@ test('the fully-dressed hub has one each of gate, monk, path and two lanterns', 
   assert.equal(countNamed(full.scene, 'lantern'), 2);
   assert.equal(countNamed(full.scene, 'monk'), 1);
   assert.equal(countNamed(full.scene, 'path'), 1);
-  assert.equal(countNamed(full.scene, 'blobshadow'), 4, 'gate + monk + two lanterns');
 });
 
-test('gate: false removes only the gate and its own shadow', () => {
-  const full = buildHub();
+test('gate: false removes only the gate', () => {
   const noGate = buildHub({ gate: false });
   assert.equal(countNamed(noGate.scene, 'gate'), 0);
-  assert.equal(
-    countNamed(full.scene, 'blobshadow') - countNamed(noGate.scene, 'blobshadow'), 1,
-    'only the gate\'s own shadow should disappear with it',
-  );
   // the lanterns keep the shared keepout circle alive, but the objects
   // themselves are unaffected by the gate flag
   assert.equal(countNamed(noGate.scene, 'lantern'), 2);
@@ -298,24 +291,16 @@ test('gate: false removes only the gate and its own shadow', () => {
   assert.equal(countNamed(noGate.scene, 'path'), 1);
 });
 
-test('lanterns: false removes both lanterns and both their shadows', () => {
-  const full = buildHub();
+test('lanterns: false removes both lanterns and nothing else', () => {
   const noLanterns = buildHub({ lanterns: false });
   assert.equal(countNamed(noLanterns.scene, 'lantern'), 0);
-  assert.equal(
-    countNamed(full.scene, 'blobshadow') - countNamed(noLanterns.scene, 'blobshadow'), 2,
-  );
   assert.equal(countNamed(noLanterns.scene, 'gate'), 1);
   assert.equal(countNamed(noLanterns.scene, 'monk'), 1);
 });
 
-test('monk: false removes the monk and its shadow', () => {
-  const full = buildHub();
+test('monk: false removes the monk and nothing else', () => {
   const noMonk = buildHub({ monk: false });
   assert.equal(countNamed(noMonk.scene, 'monk'), 0);
-  assert.equal(
-    countNamed(full.scene, 'blobshadow') - countNamed(noMonk.scene, 'blobshadow'), 1,
-  );
   assert.equal(countNamed(noMonk.scene, 'gate'), 1);
   assert.equal(countNamed(noMonk.scene, 'lantern'), 2);
 });
@@ -333,7 +318,7 @@ test('path: false removes the path itself, but not what it positions', () => {
 test('turning every piece off actually removes all of them from the scene', () => {
   const full = buildHub();
   const bare = buildHub({ gate: false, path: false, monk: false, lanterns: false });
-  for (const name of ['gate', 'path', 'monk', 'lantern', 'blobshadow']) {
+  for (const name of ['gate', 'path', 'monk', 'lantern']) {
     assert.equal(countNamed(bare.scene, name), 0, `${name} should be gone from the bare scene`);
   }
   assert.ok(bare.scene.children.length < full.scene.children.length,

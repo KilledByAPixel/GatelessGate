@@ -17,7 +17,7 @@
     import { PAPER, INK } from '../src/palette.js';
     import {
       composeWorld, makePath, makeLantern, makeMonk, aimMonk, makeGate, makeFlag,
-      makeBlobShadow, addOutlines, setInkScale, makeGrassField,
+      addOutlines, setInkScale, makeGrassField,
     } from '../src/kit/index.js';
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -88,16 +88,6 @@
       scene.traverse((o) => { if (o.name === 'grass') o.visible = !on; }); // old clump tufts
       updateHud(); render();
       return on ? `field: ${grass.blades} blades` : 'clump tufts';
-    }
-
-    for (const [p, rx, rz, op] of [
-      [monkA.position, 0.7, 0.55, 0.42], [monkB.position, 0.7, 0.55, 0.42],
-      [gate.position, 1.8, 0.75, 0.32], [flag.group.position, 0.55, 0.45, 0.36],
-      [lanternA.position, 0.35, 0.3, 0.3], [lanternB.position, 0.35, 0.3, 0.3],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
     }
 
     addOutlines(scene, { width: 0.035, wobble: 0.7 });
@@ -195,7 +185,7 @@
       return current;
     }
 
-    // real shadow maps, on either treatment. Painted blob decals step aside when on.
+    // real shadow maps, on either treatment
     function shadows(on) {
       shadowsOn = !!on;
       renderer.shadowMap.enabled = shadowsOn;
@@ -203,7 +193,6 @@
       inkSun.castShadow = shadowsOn;
       keyLight.castShadow = shadowsOn;
       scene.traverse((o) => {
-        if (o.name === 'blobshadow') o.visible = !shadowsOn;
         if (o.isMesh && originals.has(o)) {
           const isGround = o.name === 'ground';
           o.castShadow = shadowsOn && !isGround;

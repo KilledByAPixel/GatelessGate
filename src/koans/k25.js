@@ -4,7 +4,7 @@ import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeVeranda, makeAssembly, makeMonk, faceMonk,
-  makeScreen, makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeScreen, makeLights, addOutlines, toonMaterial,
 } from '../kit/index.js';
 import { mergeSimple } from '../kit/scatter.js';
 
@@ -183,10 +183,6 @@ export default {
       keepout: [{ x: 0.2, z: -2.0, r: 8.0 }],
       grassKeepout: [{ x: 0.2, z: -2.0, r: 7.4 }],
     });
-
-    const blob = makeBlobShadow({ radiusX: 2.6, radiusZ: 2.2, opacity: 0.18 });
-    blob.position.set(0.2, 0, -2.0);
-    hall.add(blob);
 
     addOutlines(scene, { width: 0.030, wobble: 0.8 });
 

@@ -388,7 +388,4 @@ export default {
 // builders, never placed on their own: makeFigure is the lathe-and-limbs rig
 // makeMonk (and so every monk in the people row) is built from, not a model in
 // its own right; makeTail is the same for every quadruped's tail (buffalo,
-// horse, dog, fox, cat all carry one, already visible on each of them); and
-// makeBlobShadow is the render-side ground blob every case drops under its
-// own hover-lit figure — a per-case behaviour, not a model this room could
-// show standing on its own.
+// horse, dog, fox, cat all carry one, already visible on each of them).

@@ -7,7 +7,6 @@ import { makeAssembly } from '../kit/assembly.js';
 import { makeHut } from '../kit/hut.js';
 import { makeCat } from '../kit/cat.js';
 import { makeLights, toonMaterial } from '../render/toon.js';
-import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
 
 const ID = 14;
@@ -158,19 +157,6 @@ export default {
       // stand in the meadow, which is where monks stand.
       grassKeepout: [{ x: C.x, z: C.z, r: 1.95 }],
     });
-
-    for (const [x, z, rx, rz, op, y] of [
-      [C.x, C.z, 0.78, 0.62, 0.42, 0.07],            // Nansen, on the swept ground
-      [STONE.x, STONE.z, 0.58, 0.48, 0.38, 0.07],    // the stone
-      [EAST_ONE.x, EAST_ONE.z, 0.66, 0.52, 0.42, 0.01],
-      [WEST_ONE.x, WEST_ONE.z, 0.66, 0.52, 0.42, 0.01],
-      [EAST_HALL.x, EAST_HALL.z, 1.55, 1.35, 0.30, 0.01],
-      [WEST_HALL.x, WEST_HALL.z, 1.40, 1.25, 0.30, 0.01],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.set(x, y, z);
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

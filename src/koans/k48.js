@@ -5,7 +5,7 @@ import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeFan,
   makeWater, makeSand, makeFoam,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, addOutlines, toonMaterial,
 } from '../kit/index.js';
 import { groundHeight } from '../kit/ground.js';
 
@@ -215,16 +215,6 @@ export default {
         ...SEA_KEEP,
       ],
     });
-
-    for (const [p, rx, rz, op] of [
-      [kembo.position, 0.7, 0.54, 0.42],
-      [pupil.position, 0.62, 0.5, 0.40],
-      [rock.position, 0.55, 0.44, 0.32],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

@@ -9,7 +9,6 @@ import { makePath } from '../kit/path.js';
 import { makeHut } from '../kit/hut.js';
 import { makeLantern } from '../kit/lantern.js';
 import { makeLights } from '../render/toon.js';
-import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
 
 const ID = 3;
@@ -245,19 +244,6 @@ export default {
         { x: (GUTEI.x + BOY.x) / 2, z: (GUTEI.z + BOY.z) / 2, r: 2.9 },
       ],
     });
-
-    for (const [p, rx, rz, op] of [
-      [gutei.position, 0.72, 0.56, 0.42],
-      [boy.position, 0.48, 0.38, 0.40],
-      [visitor.position, 0.65, 0.5, 0.40],
-      [resident.position, 0.62, 0.5, 0.40],
-      [lantern.position, 0.32, 0.27, 0.30],
-      [hall.position, 2.1, 1.6, 0.30],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

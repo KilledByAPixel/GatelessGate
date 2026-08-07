@@ -4,7 +4,7 @@ import { PAPER, ACCENT, ACCENT_DEEP, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeStall, makeHorse,
-  makeLights, makeBlobShadow, addOutlines,
+  makeLights, addOutlines,
 } from '../kit/index.js';
 
 const ID = 45;
@@ -56,7 +56,6 @@ export default {
     // someone behind the counter. All ink and wash — the one warm mark in the
     // whole picture is the red horse, so the crowd stays monochrome.
     const stallKeepout = [];
-    const shadows = [];       // {x, z, rx, rz, op} gathered, added after composeWorld
     const stalls = [
       { t: 0.30, sidesign: 1, off: 2.7, w: 1.9 },
       { t: 0.46, sidesign: -1, off: 2.7, w: 1.7 },
@@ -81,7 +80,6 @@ export default {
       stall.rotation.y = heading;
       scene.add(stall);
       stallKeepout.push({ x: sx, z: sz, r: Math.max(s.w, 1.4) });
-      shadows.push({ x: sx, z: sz, rx: s.w * 0.6, rz: 0.9, op: 0.26 });
 
       // a keeper a step behind the counter, facing the lane — but the last
       // stall is left unattended, which reads as a real market (and keeps the
@@ -96,7 +94,6 @@ export default {
         scene.add(keeper);
         keepers.push(keeper);
         stallKeepout.push({ x: kx, z: kz, r: 0.7 });
-        shadows.push({ x: kx, z: kz, rx: 0.5, rz: 0.42, op: 0.34 });
       }
     }
 
@@ -112,7 +109,6 @@ export default {
     cust.rotation.y = Math.atan2(stallX - cx, stallZ - cz);
     scene.add(cust);
     stallKeepout.push({ x: cx, z: cz, r: 0.7 });
-    shadows.push({ x: cx, z: cz, rx: 0.5, rz: 0.42, op: 0.34 });
 
     // two people strolling the lane, driven along the road in update(). Their
     // motion is a closed form over simTime, so the street is alive but replays.
@@ -120,12 +116,7 @@ export default {
       { monk: makeMonk({ height: 1.6 }), t0: 0.18, t1: 0.74, rate: 0.045, phase: 0.0, dir: 1, lane: 0.55 },
       { monk: makeMonk({ height: 1.54, elder: true }), t0: 0.20, t1: 0.70, rate: 0.037, phase: 0.5, dir: -1, lane: -0.5 },
     ];
-    for (const w of walkers) {
-      const sh = makeBlobShadow({ radiusX: 0.5, radiusZ: 0.42, opacity: 0.34 });
-      sh.position.y = 0.01;
-      w.monk.add(sh);                 // travels with the walker
-      scene.add(w.monk);
-    }
+    for (const w of walkers) scene.add(w.monk);
 
     // A few more people standing about the street between the stalls (Frank: it
     // is a busy street). They come from the same builder as every other figure,
@@ -165,7 +156,6 @@ export default {
     // the side it stands), a little angled so it reads three-quarter, not flat
     horse.group.rotation.y = Math.atan2(-hp.perp.x * side, -hp.perp.z * side) - 0.35;
     scene.add(horse.group);
-    shadows.push({ x: horseX, z: horseZ, rx: 1.0, rz: 0.5, op: 0.3 });
 
     // HIM. Placed in the first frame at a plausible spot, then handed over to
     // the camera for the rest of his existence.
@@ -185,19 +175,6 @@ export default {
       ],
       grassKeepout: [...road.keepout(28, 1.0), ...stallKeepout],
     });
-
-    // the stall and standing-figure shadows gathered above, laid now
-    for (const s of shadows) {
-      const sh = makeBlobShadow({ radiusX: s.rx, radiusZ: s.rz, opacity: s.op });
-      sh.position.set(s.x, 0.01, s.z);
-      scene.add(sh);
-    }
-
-    // his shadow travels with him, so it is parented to him rather than laid
-    // on the ground where he happened to start
-    const shadow = makeBlobShadow({ radiusX: 0.66, radiusZ: 0.5, opacity: 0.36 });
-    shadow.position.y = 0.01;
-    him.add(shadow);
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

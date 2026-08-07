@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { disposeRoot } from '../src/scene/manager.js';
 import { makeIsland } from '../src/kit/island.js';
-import { makeBlobShadow } from '../src/render/blobshadow.js';
 import { toonRamp } from '../src/render/toon.js';
 
 test('shared ramp is flagged', () => {
@@ -13,7 +12,12 @@ test('shared ramp is flagged', () => {
 test('disposeRoot frees geometry + own textures but not the shared ramp', () => {
   const scene = new THREE.Scene();
   scene.add(makeIsland({ radius: 4, seed: 1 }));      // toon material -> shared gradientMap
-  scene.add(makeBlobShadow({ radiusX: 1, radiusZ: 1 })); // own DataTexture (map)
+  // a mesh with its own DataTexture map (the role the retired blob shadows
+  // used to play here): disposeRoot must free it, unlike the shared ramp
+  const tex = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1, THREE.RGBAFormat);
+  scene.add(new THREE.Mesh(
+    new THREE.PlaneGeometry(2, 2),
+    new THREE.MeshBasicMaterial({ map: tex })));
   const disposed = new Set();
   const counts = disposeRoot({ scene }, disposed);
   assert.ok(counts.geometries >= 2, `geometries ${counts.geometries}`);

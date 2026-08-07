@@ -8,7 +8,6 @@ import { makeDog } from '../kit/dog.js';
 import { makeMoon } from '../kit/moon.js';
 import { makeWildflowers } from '../kit/wildflowers.js';
 import { makeLights } from '../render/toon.js';
-import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
 
 const ID = 19;
@@ -183,16 +182,6 @@ export default {
         { center: [16, 0, -31], spread: 14, count: 40, color: wash(0.55) },
       ],
     });
-
-    for (const [p, rx, rz, op] of [
-      [nansen.position, 0.72, 0.56, 0.42],
-      [joshu.position, 0.66, 0.52, 0.42],
-      [dog.position, 0.42, 0.28, 0.36],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

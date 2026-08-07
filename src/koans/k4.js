@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, INK_LIT } from '../palette.js';
 import {
   composeWorld, makeVeranda, makeMonk, aimMonk, makeLantern,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial, makeFurin,
+  makeLights, addOutlines, toonMaterial, makeFurin,
 } from '../kit/index.js';
 
 const ID = 4;
@@ -157,16 +157,6 @@ export default {
       ],
       grassKeepout: [{ x: 0.2, z: -2.6, r: 3.2 }],
     });
-
-    for (const [p, rx, rz, op] of [
-      [wakuan.position, 0.68, 0.52, 0.42],
-      [veranda.position, 2.6, 2.0, 0.28],
-      [lantern.position, 0.38, 0.3, 0.34],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.030, wobble: 0.7 });
 

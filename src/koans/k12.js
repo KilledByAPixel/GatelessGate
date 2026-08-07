@@ -4,7 +4,7 @@ import { PAPER, ACCENT } from '../palette.js';
 import { smoothstep as SS } from '../util/math.js';
 import {
   composeWorld, makeCliff, makeMonk,
-  makeLights, makeBlobShadow, addOutlines,
+  makeLights, addOutlines,
 } from '../kit/index.js';
 import { makeButterflies } from '../kit/butterflies.js';
 import { groundHeight } from '../kit/ground.js';
@@ -183,14 +183,6 @@ export default {
     }
     gpos.needsUpdate = true;
     groundMesh.geometry.computeVertexNormals();
-
-    for (const [p, rx, rz, op] of [
-      [zuigan.position, 0.68, 0.52, 0.42],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

@@ -5,7 +5,7 @@ import { hash1 } from '../util/noise.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeVeranda, makeLantern, makeMonk, aimMonk, faceMonk,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial, makeCylinderChime,
+  makeLights, addOutlines, toonMaterial, makeCylinderChime,
 } from '../kit/index.js';
 
 const ID = 28;
@@ -199,16 +199,6 @@ export default {
         { x: -0.8, z: -3.2, r: 2.6 },
       ],
     });
-
-    for (const [p, rx, rz, op] of [
-      [tokusan.position, 0.66, 0.5, 0.42],
-      [veranda.position, 2.4, 1.9, 0.28],
-      [lantern.position, 0.4, 0.32, 0.34],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

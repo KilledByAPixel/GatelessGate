@@ -8,7 +8,6 @@ import { makeFan } from '../kit/fan.js';
 import { makeMonk, aimMonk } from '../kit/monk.js';
 import { makeAssembly } from '../kit/assembly.js';
 import { makeLights } from '../render/toon.js';
-import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
 
 const ID = 26;
@@ -144,20 +143,6 @@ export default {
         { count: 4, distance: 27, arcCenter: -0.06, arcSpan: 0.9, color: wash(0.32), hScale: 0.62 },
       ],
     });
-
-    // the hall's own shadow spills past the boards; the figures cast onto them
-    const verandaShadow = makeBlobShadow({ radiusX: 2.9, radiusZ: 2.7, opacity: 0.30 });
-    verandaShadow.position.set(0, 0.012, 0.8);
-    scene.add(verandaShadow);
-    for (const [p, rx, rz, op] of [
-      [monks[0].position, 0.62, 0.48, 0.40],
-      [monks[1].position, 0.62, 0.48, 0.40],
-      [hogen.position, 0.72, 0.58, 0.38],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.set(p.x, DECK + 0.012, p.z);
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

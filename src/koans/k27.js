@@ -4,7 +4,7 @@ import { PAPER, ACCENT, ACCENT_LIGHT, mixHex } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeHut, makeOak, makeMoon, makeMonk, faceMonk,
-  makeLights, makeBlobShadow, addOutlines,
+  makeLights, addOutlines,
 } from '../kit/index.js';
 
 const ID = 27;
@@ -118,24 +118,6 @@ export default {
         { at: hall, r: 2.1 },
       ],
     });
-
-    for (const [p, rx, rz, op] of [
-      [monk.position, 0.62, 0.5, 0.40],
-      [nansen.position, 0.68, 0.52, 0.42],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
-
-    // the two blob shadows that belong to the things themselves have to leave
-    // with them, so they are parented into those groups instead of the scene
-    const hallShadow = makeBlobShadow({ radiusX: 2.2, radiusZ: 1.7, opacity: 0.30 });
-    hallShadow.position.set(-2.2, 0, -4.4);
-    hallGroup.add(hallShadow);
-    const treeShadow = makeBlobShadow({ radiusX: 1.9, radiusZ: 1.5, opacity: 0.32 });
-    treeShadow.position.set(TREE.x, 0, TREE.z);
-    treeGroup.add(treeShadow);
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

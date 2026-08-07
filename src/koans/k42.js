@@ -4,7 +4,7 @@ import { PAPER, ACCENT_DEEP, wash } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
 const ID = 42;
@@ -96,16 +96,6 @@ export default {
       // Momyo comes through it
       grassKeepout: [{ x: 0.8, z: -1.8, r: 3.1 }],
     });
-
-    for (const [p, rx, rz, op] of [
-      [seat.position, 0.95, 0.75, 0.34],
-      [GIRL, 0.6, 0.48, 0.40],
-      [manjusri.position, 0.68, 0.52, 0.42],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

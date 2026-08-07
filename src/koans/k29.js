@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeLantern, makeMonk, aimMonk, faceMonk, makeGate, makeFlag,
-  makeLights, makeBlobShadow, addOutlines, makeFurin,
+  makeLights, addOutlines, makeFurin,
 } from '../kit/index.js';
 import { clothEnergy } from '../sim/verlet.js';
 
@@ -105,19 +105,6 @@ export default {
       // trodden road actually clears it
       grassKeepout: path.keepout(26, 1.05),
     });
-
-    for (const [p, rx, rz, op] of [
-      [monkA.position, 0.7, 0.55, 0.42],
-      [monkB.position, 0.7, 0.55, 0.42],
-      [gate.position, 1.8, 0.75, 0.32],
-      [flag.group.position, 0.55, 0.45, 0.36],
-      [lanternA.position, 0.35, 0.3, 0.3],
-      [lanternB.position, 0.35, 0.3, 0.3],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     // THREE single-tube fūrin under the gate's lintel, one size each —
     // Frank asked for "single wind chimes that can hang that could get

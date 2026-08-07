@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK, WASH, mixHex, wash } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeWater, makeSand, makeFoam,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial, groundHeight,
+  makeLights, addOutlines, toonMaterial, groundHeight,
 } from '../kit/index.js';
 import { mergeSimple } from '../kit/scatter.js';
 
@@ -236,16 +236,6 @@ export default {
         ...SEA_KEEP,
       ],
     });
-
-    for (const [p, rx, rz, op, parent] of [
-      [colossus.position, 0.72, 0.56, 0.42, scene],
-      [monk.position, 0.62, 0.5, 0.40, moving],
-      [marker.position, 0.34, 0.26, 0.32, moving],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      parent.add(s);
-    }
 
     addOutlines(scene, { width: 0.036, wobble: 0.7 });
 

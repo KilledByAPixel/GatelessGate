@@ -7,7 +7,6 @@ import { makeMonk, aimMonk } from '../kit/monk.js';
 import { makeBundle } from '../kit/bundle.js';
 import { tapMeshes } from '../kit/pick.js';
 import { toonMaterial, makeLights } from '../render/toon.js';
-import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
 import { hash1 } from '../util/noise.js';
 
@@ -186,15 +185,6 @@ export default {
         { count: 3, distance: 29, arcCenter: 0.85, arcSpan: 1.5, color: wash(0.31), hScale: 0.55 },
       ],
     });
-
-    for (const [p, rx, rz, op] of [
-      [emyo.position, 0.66, 0.52, 0.42],
-      [stone.position, 0.75, 0.62, 0.36],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

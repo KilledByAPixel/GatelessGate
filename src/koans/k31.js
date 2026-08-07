@@ -4,7 +4,7 @@ import { PAPER, ACCENT, WASH } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeHut, makeMonk, aimMonk, faceMonk, makeLantern,
-  makeScale, makeLights, makeBlobShadow, addOutlines, toonMaterial, makeFurin,
+  makeScale, makeLights, addOutlines, toonMaterial, makeFurin,
 } from '../kit/index.js';
 
 const ID = 31;
@@ -152,18 +152,6 @@ export default {
         { x: stall.position.x, z: stall.position.z, r: 1.8 },
       ],
     });
-
-    for (const [p, rx, rz, op] of [
-      [WOMAN, 0.62, 0.5, 0.42],
-      [traveller.position, 0.66, 0.5, 0.42],
-      [stall.position, 1.8, 1.4, 0.30],
-      [lantern.position, 0.36, 0.3, 0.34],
-      [scale.group.position, 0.4, 0.3, 0.32],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

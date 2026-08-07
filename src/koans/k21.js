@@ -4,7 +4,7 @@ import { PAPER, ACCENT, INK_LIT } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makeMonk, faceMonk, makeButterflies,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
 const ID = 21;
@@ -131,16 +131,6 @@ export default {
       // has instead of scenery
       grassKeepout: [{ at: stick, r: 5.2 }],
     });
-
-    for (const [p, rx, rz, op] of [
-      [ummon.position, 0.68, 0.52, 0.42],
-      [monk.position, 0.62, 0.5, 0.40],
-      [stick.position, 0.20, 0.16, 0.30],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

@@ -10,7 +10,6 @@ import { makeHangingMonk } from '../kit/hangingmonk.js';
 import { makeMonk, faceMonk } from '../kit/monk.js';
 import { tapMeshes } from '../kit/pick.js';
 import { makeLights, toonMaterial } from '../render/toon.js';
-import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
 import { smoothstep as SS } from '../util/math.js';
 
@@ -263,23 +262,6 @@ export default {
     }
     gpos.needsUpdate = true;
     groundMesh.geometry.computeVertexNormals();
-
-    // shadows: the tree's and the hat's little one. None under the hanging
-    // man — there is no ground under the hanging man.
-    const canopyShadow = makeBlobShadow({ radiusX: 1.9, radiusZ: 1.6, opacity: 0.24 });
-    canopyShadow.position.set(OAK.x - 0.35, 0.012, OAK.z - 0.45);
-    scene.add(canopyShadow);
-    const boleShadow = makeBlobShadow({ radiusX: 0.8, radiusZ: 0.7, opacity: 0.32 });
-    boleShadow.position.set(OAK.x, 0.014, OAK.z);
-    scene.add(boleShadow);
-    for (const [x, z, rx, rz, op] of [
-      [HAT.x - 0.06, HAT.z - 0.05, 0.35, 0.3, 0.30],
-      [ASKER.x - 0.05, ASKER.z - 0.06, 0.42, 0.36, 0.30],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = x; s.position.z = z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

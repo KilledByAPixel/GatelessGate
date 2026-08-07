@@ -8,7 +8,6 @@ import { makeFox } from '../kit/fox.js';
 import { makeCave } from '../kit/cave.js';
 import { makeRain } from '../kit/rainfall.js';
 import { makeLights } from '../render/toon.js';
-import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
 
 const ID = 2;
@@ -130,23 +129,6 @@ export default {
       // sitting in the grass like any animal, and so are the monks.
       grassKeepout: cave.floor(0.15),
     });
-
-    for (const [p, rx, rz, op] of [
-      [{ x: CAVE.x, z: CAVE.z }, 2.6, 2.2, 0.22],
-      [{ x: HYAKUJO.x, z: HYAKUJO.z }, 0.72, 0.56, 0.42],
-      ...monks.map((k) => [k.position, 0.66, 0.5, 0.42]),
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
-
-    // the fox's own shadow lies along the fox, not along the world axes — it is
-    // three times longer than it is wide and the difference shows
-    const foxShadow = makeBlobShadow({ radiusX: 0.80, radiusZ: 0.28, opacity: 0.36 });
-    foxShadow.position.set(FOX.x, 0.01, FOX.z);
-    foxShadow.rotation.z = FOX.yaw - Math.PI / 2;
-    scene.add(foxShadow);
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

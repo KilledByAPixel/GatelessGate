@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeBasin, makeBowl, makeWater, makeMonk, faceMonk,
-  makeOdoshi, makeCat, makeLights, makeBlobShadow, addOutlines, tapMeshes,
+  makeOdoshi, makeCat, makeLights, addOutlines, tapMeshes,
 } from '../kit/index.js';
 
 const ID = 7;
@@ -121,18 +121,6 @@ export default {
         { at: basin, r: 0.62 },
       ],
     });
-
-    for (const [p, rx, rz, op] of [
-      [monk.position, 0.65, 0.5, 0.42],
-      [basin.position, 0.8, 0.6, 0.36],
-      [hut.position, 2.0, 1.5, 0.3],
-      [odoshi.group.position, 0.7, 0.35, 0.32],
-      [cat.group.position, 0.3, 0.22, 0.34],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

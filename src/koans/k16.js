@@ -10,7 +10,6 @@ import { makeDrum } from '../kit/drum.js';
 import { makeCylinderChime } from '../kit/cylinder.js';
 import { makeMonk, aimMonk, faceMonk, wrapPi, bearing } from '../kit/monk.js';
 import { makeLights } from '../render/toon.js';
-import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
 
 const ID = 16;
@@ -153,20 +152,6 @@ export default {
         { x: bell.group.position.x, z: bell.group.position.z, r: 0.9 },
       ],
     });
-
-    for (const [p, rx, rz, op] of [
-      [near.position, 0.65, 0.50, 0.42],
-      [elder.position, 0.70, 0.55, 0.42],
-      [hallMonk.position, 0.65, 0.50, 0.40],
-      [bell.group.position, 1.05, 0.78, 0.34],
-      [hall.position, 2.2, 1.7, 0.30],
-      [lantern.position, 0.40, 0.32, 0.35],
-      [drum.group.position, 0.55, 0.42, 0.32],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

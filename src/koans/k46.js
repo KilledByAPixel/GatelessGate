@@ -6,7 +6,6 @@ import { makePole } from '../kit/pole.js';
 import { tapMeshes } from '../kit/pick.js';
 import { composeWorld } from '../kit/scenery.js';
 import { makeLights } from '../render/toon.js';
-import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
 import { noise1 } from '../util/noise.js';
 
@@ -173,16 +172,6 @@ export default {
         { center: [15, 0, -32], spread: 13, count: 40, color: wash(0.55) },
       ],
     });
-
-    for (const [x, z, rx, rz, op] of [
-      [POLE.x, POLE.z, 0.55, 0.45, 0.4],
-      [W1.x, W1.z, 0.62, 0.5, 0.4],
-      [W2.x, W2.z, 0.62, 0.5, 0.4],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = x; s.position.z = z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

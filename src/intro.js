@@ -2,7 +2,7 @@ import * as THREE from '../lib/three.module.js';
 import { PAPER, ACCENT_DEEP, wash } from './palette.js';
 import {
   composeWorld, makePath, makeLantern, makeGate, makeMonk,
-  makeLights, addOutlines, makeBlobShadow,
+  makeLights, addOutlines,
 } from './kit/index.js';
 import { introPath } from './intro_rails.js';
 
@@ -128,18 +128,6 @@ export function buildHub({
     grassKeepout: withPath ? path.keepout(26, 1.15) : [],   // only the lane clears grass
     mountains,
   });
-
-  // Kept in the original order — gate, monk, lanterns — so the default scene's
-  // child list is unchanged from before this was parameterised.
-  const shadows = [];
-  if (gate) shadows.push([gate.position, 2.2, 0.9, 0.3]);
-  if (monk) shadows.push([monk.position, 0.7, 0.55, 0.4]);
-  if (lanternA) shadows.push([lanternA.position, 0.35, 0.3, 0.3], [lanternB.position, 0.35, 0.3, 0.3]);
-  for (const [p, rx, rz, op] of shadows) {
-    const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-    s.position.x = p.x; s.position.z = p.z;
-    scene.add(s);
-  }
 
   addOutlines(scene, { width: 0.035, wobble: 0.7 });
   // the meadow breathes, so the idling scene is never static

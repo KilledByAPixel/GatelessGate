@@ -4,7 +4,7 @@ import { PAPER, ACCENT, ACCENT_DEEP } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeVeranda, makeMonk, makeLantern, wrapPi, bearing,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial, makeCylinderChime,
+  makeLights, addOutlines, toonMaterial, makeCylinderChime,
 } from '../kit/index.js';
 
 const ID = 17;
@@ -147,16 +147,6 @@ export default {
         { at: veranda, r: 3.0 },
       ],
     });
-
-    for (const [p, rx, rz, op] of [
-      [OSHIN_POS, 0.64, 0.5, 0.42],
-      [veranda.position, 2.4, 1.9, 0.28],
-      [lantern.position, 0.38, 0.3, 0.34],
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

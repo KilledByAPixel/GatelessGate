@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeMonk, faceMonk, wrapPi, bearing,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial, groundHeight,
+  makeLights, addOutlines, toonMaterial, groundHeight,
 } from '../kit/index.js';
 
 const ID = 11;
@@ -147,17 +147,6 @@ export default {
       // meadow rides the slope up to the hall instead of knifing through it
       groundFn: (x, z) => Math.max(groundHeight(x, z, { seed: 21 }), riseHeight(x, z)),
     });
-
-    for (const [p, rx, rz, op, y] of [
-      [monk.position, 0.6, 0.48, 0.40, RISE_TOP_Y],   // he sits on the plateau,
-      [hut.position, 1.7, 1.3, 0.28, RISE_TOP_Y],     // and so does his hut —
-      [JOSHU, 0.68, 0.52, 0.42, 0],                   // Joshu is down on the road
-    ]) {
-      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
-      s.position.x = p.x; s.position.z = p.z;
-      s.position.y += y;   // atop the rise, not buried inside it at ground level
-      scene.add(s);
-    }
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 

@@ -22,7 +22,7 @@ test('standing monk keeps both sleeves low; point pose raises one', () => {
 });
 
 test('kit facade re-exports the builders', () => {
-  for (const fn of ['makeIsland', 'makeGround', 'makeMountains', 'makeForest', 'makeMonk', 'makeTree', 'makeGate', 'makeFlag', 'makeBlobShadow', 'makeLights', 'toonMaterial', 'addOutlines']) {
+  for (const fn of ['makeIsland', 'makeGround', 'makeMountains', 'makeForest', 'makeMonk', 'makeTree', 'makeGate', 'makeFlag', 'makeLights', 'toonMaterial', 'addOutlines']) {
     assert.equal(typeof kit[fn], 'function', `kit.${fn} missing`);
   }
 });
