@@ -89,15 +89,17 @@ export default {
     // nobody could place — Frank — so it is gone; the red dung is the seal.)
 
     // THE FLIES (Frank: "like butterflies but smaller and black instead of
-    // red") — the butterfly kit at a third of the size, ink-dark, kept in a
-    // tight low orbit over the pile. Same closed-form flight; the quick
-    // wander rate is what makes the same math read as flies rather than
-    // butterflies. They perch nearly on the dirt — the yard is swept bare,
-    // so there are no grass tips to sit on.
+    // red") — the butterfly kit, tiny, ink-dark, in a tight low orbit over
+    // the pile. Same closed-form flight; the quick wander rate is what makes
+    // the same math read as flies rather than butterflies. They never land
+    // and they are HALF the first attempt's size (Frank: "don't have them
+    // land... they need to be, like, half the size") — a settled fly with
+    // slowly breathing wings read as a butterfly resting, which is exactly
+    // the wrong creature over dung.
     const flies = makeButterflies({
-      count: 6, seed: ID, color: INK_LIT, size: 0.13,
+      count: 6, seed: ID, color: INK_LIT, size: 0.065, land: false,
       center: [0.8, 0.2], radius: 0.85, height: [0.25, 0.95],
-      rate: 0.6, perch: 0.07,
+      rate: 0.6,
     });
     scene.add(flies.group);
 

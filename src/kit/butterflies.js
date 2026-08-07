@@ -77,6 +77,12 @@ export function makeButterflies({
   // grass all over"). At the tip height it perches ON the meadow wherever it
   // comes down, which is the same effect without picking a blade to sit on.
   perch = 0.32,
+  // Whether they ever settle. The fly-land-fly round is most of what makes
+  // these read as BUTTERFLIES; k21's flies pass false — flies over dung
+  // circle without resting, and a landed one read badly there (Frank:
+  // "don't have them land... just have them fly"). With land off, perch and
+  // the round's timings are simply never consulted.
+  land = true,
   groundFn = null,                 // (x, z) => terrain height; flat ground without one
 } = {}) {
   const g = new THREE.Group();
@@ -129,7 +135,9 @@ export function makeButterflies({
       // thing stays a pure function of simTime.
       cyc: 11 + h(8) * 9,                  // seconds for one fly-land-fly round
       cycPh: h(9),                         // where in that round it starts
-      down: 0.24 + h(10) * 0.16,           // the share of the round spent perched
+      // the share of the round spent perched — zero when landing is off,
+      // which liftAt reads as "always airborne"
+      down: land ? 0.24 + h(10) * 0.16 : 0,
     });
   }
 
@@ -150,6 +158,7 @@ export function makeButterflies({
   // into it. Pure in t, like everything else here.
   const EASE = 0.13;                 // share of the round spent going down / up
   function liftAt(b, t) {
+    if (!b.down) return 1;           // land:false — always airborne, no ease dip
     const u = (t / b.cyc + b.cycPh) % 1;
     const downStart = 0.5;           // it flies the first half of its round
     const downEnd = downStart + b.down;

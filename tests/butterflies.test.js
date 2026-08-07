@@ -175,3 +175,15 @@ test('deterministic — same seed same flight, different seed different flight, 
   assert.deepEqual(run(19), run(19));
   assert.notDeepEqual(run(19), run(20));
 });
+
+test('land: false keeps every one airborne for good — the k21 flies', () => {
+  // Frank: "don't have them land... just have them fly" — a settled fly with
+  // slowly breathing wings read as a resting butterfly, the wrong creature
+  // over dung. With landing off, lift is 1 at every instant: no perch, and
+  // no ease-dip where the round's descent used to begin.
+  const flock = makeButterflies({ count: 4, seed: 21, land: false });
+  for (let t = 0; t <= 120; t += 0.25) {
+    flock.update(0.25, t);
+    for (const l of flock.lift()) assert.equal(l, 1, `airborne at t=${t}`);
+  }
+});
