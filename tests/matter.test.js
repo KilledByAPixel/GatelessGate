@@ -10,11 +10,10 @@ import { buildHub } from '../src/intro.js';
 // tests/staging.test.js holds every one of the forty-nine cases to the module
 // contract at once; the preface and the afterword sit entirely outside that
 // net because they are not in CASES. Their data contract — text, labels, and
-// sections agreeing with each other — is plain-Node testable, since
-// src/koans/matter/preface.js imports nothing but its own text module. This
-// is the only place that would catch a typo'd slug, a section present in
-// `text` but missing from `labels` (a blank section on the page), or the
-// closing line drifting.
+// sections agreeing with each other — is plain-Node testable. This is the
+// only place that would catch a typo'd slug, a section present in `text` but
+// missing from `labels` (a blank section on the page), or the closing line
+// drifting — and, below, the two scenes' own staging invariants.
 
 const PAGES = [
   { slug: PREFACE_SLUG },
@@ -156,46 +155,78 @@ test('a scene can be built without its gate, path, monk or lanterns', () => {
   assert.equal(typeof bare.dispose, 'function');
 });
 
-test('the preface still centres on the spot where its gate would have stood', async () => {
-  // The gate is absent and the camera centres where it stood — the subject is
-  // its absence. That USED to be checkable by comparing gateTarget with the
-  // hub's, back when every hub scene shared one road. The preface bends its own
-  // road now, so the invariant has to be stated about the scene itself: the two
-  // lanterns flank gateTarget, which is what makes the empty middle read as a
-  // missing gate rather than as nothing in particular.
+// THE PREFACE'S OWN SCENE (Frank: "let's create a separate preface scene").
+// It used to be the hub with the gate removed; it is a bespoke diorama now —
+// the road the reader arrives on FORKS ("thousands of roads enter it"), a
+// bonshō and a flag stand either side of the split, and no gate exists
+// anywhere in it. These are the invariants that staging hangs on.
+test('the preface is the fork: three road ribbons, and no gate anywhere', async () => {
   const mod = await loadKoan(PREFACE_SLUG);
   const built = mod.build();
-  const [gx, , gz] = built.gateTarget;
-  assert.ok(built.gateTarget.every(Number.isFinite));
-  const lanterns = built.scene.children.filter((c) => c.name === 'lantern');
-  assert.equal(lanterns.length, 2);
-  const d = lanterns.map((l) => Math.hypot(l.position.x - gx, l.position.z - gz));
-  assert.ok(Math.abs(d[0] - d[1]) < 1e-6, `the lanterns straddle the spot evenly, got ${d}`);
-  assert.ok(Math.abs(d[0] - 2.0) < 1e-6, `and at the width the gate had, got ${d[0].toFixed(3)}`);
+  assert.ok(built.scene);
+  const paths = [];
+  built.scene.traverse((o) => { if (o.name === 'path') paths.push(o); });
+  assert.equal(paths.length, 3, `an approach and two arms, got ${paths.length} ribbons`);
+  // "no gate as the gate of the teaching" — provable at last: nothing in the
+  // scene is a gate, and there is no gateTarget for the camera to mourn
+  let gate = null;
+  built.scene.traverse((o) => { if (/gate|torii/i.test(o.name || '')) gate = o.name; });
+  assert.equal(gate, null, `the preface staged a ${gate}`);
+  assert.equal(built.gateTarget, undefined, 'the camera aims at the fork via the module camera, not a gate spot');
+  assert.ok(Array.isArray(mod.camera.target) && mod.camera.target.every(Number.isFinite),
+    'the module frames its own subject');
+});
+
+test('the preface carries the bell and the flag, and both answer a touch', async () => {
+  const taps = [], hovers = [];
+  const calls = [];
+  const ctx = {
+    audio: { bell: (o) => calls.push(['bell', o]), cloth: (o) => calls.push(['cloth', o]) },
+    input: {
+      onTap: (cb) => taps.push(cb),
+      onHover: (cb) => hovers.push(cb),
+      raycastFirst: () => null,
+      pointer: () => ({ x: 0, y: 0 }),
+    },
+  };
+  const mod = await loadKoan(PREFACE_SLUG);
+  const built = mod.build(ctx);
+  assert.ok(built.scene.getObjectByName('bell'), 'the bonshō stands at the fork');
+  assert.ok(built.scene.getObjectByName('flag'), 'the flag stands across from it');
+  assert.ok(taps.length > 0 && hovers.length > 0, 'the first page is touchable');
+
+  // a hit-everything tap rings the bonshō — the first sound a reader can make
+  built.setCamera({});
+  built.update(1 / 60, 0);
+  ctx.input.raycastFirst = (cam, objs) => (objs && objs.length
+    ? { object: objs[0], point: { clone: () => ({ x: 0, y: 0, z: 0 }) }, distance: 1 } : null);
+  taps.forEach((cb) => cb());
+  assert.equal(calls.length, 1, 'one answer per tap');
+  assert.equal(calls[0][0], 'bell');
+  assert.equal(built.fragment().strikes, 1);
+
+  // and the scene runs clean with no audio and no camera, the house rule
+  const bare = mod.build();
+  for (let i = 0; i < 120; i++) bare.update(1 / 60, i / 60);
+  for (const [k, v] of Object.entries(bare.fragment())) {
+    assert.ok(Number.isFinite(v) || typeof v === 'boolean', `fragment.${k} = ${v}`);
+  }
 });
 
 // Frank: "how do we have this set up differently at all? because right now it
-// looks exactly the same." Removing the gate was the ONLY difference between
-// the Contents and the preface — same hills, same trees, same bend in the road
-// — so the preface read as the Contents with a prop missing. Each scene rolls
-// its own land now. This is what stops the three quietly converging again if
-// someone tidies the seeds into one shared constant.
-test('the three hub scenes are three different pictures, not one with pieces removed', async () => {
+// looks exactly the same." The preface answered that by leaving the hub
+// machinery entirely — it is a different KIND of scene now, which this file
+// pins above. The Contents and the afterword still both render buildHub, so
+// the old convergence risk — one shared seed constant quietly making them the
+// same picture — remains real between THOSE two.
+test('the two hub scenes are two different pictures, not one with pieces removed', async () => {
   const xz = (built) => built.trees.map((t) => `${t.position.x.toFixed(3)},${t.position.z.toFixed(3)}`);
   const contents = buildHub();
-  const preface = (await loadKoan(PREFACE_SLUG)).build();
   const afterword = (await loadKoan(AFTERWORD_SLUG)).build();
-
-  for (const [a, b, names] of [
-    [contents, preface, 'contents vs preface'],
-    [contents, afterword, 'contents vs afterword'],
-    [preface, afterword, 'preface vs afterword'],
-  ]) {
-    const shared = xz(a).filter((p) => xz(b).includes(p));
-    assert.equal(shared.length, 0, `${names}: ${shared.length} trees stand in the same place`);
-    // and the road itself bends differently, which moves the gate spot with it
-    assert.notDeepEqual(a.gateTarget, b.gateTarget, `${names}: the same road`);
-  }
+  const shared = xz(contents).filter((p) => xz(afterword).includes(p));
+  assert.equal(shared.length, 0, `contents vs afterword: ${shared.length} trees stand in the same place`);
+  // and the road itself bends differently, which moves the gate spot with it
+  assert.notDeepEqual(contents.gateTarget, afterword.gateTarget, 'the same road');
 });
 
 test('the afterword seats its meditator UNDER a tree, whatever the seed does', async () => {
@@ -310,19 +341,19 @@ test('turning every piece off actually removes all of them from the scene', () =
 });
 
 // Everything above builds buildHub() directly with hand-written options — it never
-// proves that preface.js and afterword.js actually PASS those options through. Both
-// modules call buildHub() themselves inside their own build(), so a typo'd option name
-// (`gates:` instead of `gate:`, say) would silently fall back to buildHub's defaults —
-// the gate would reappear on the preface, the whole stage would reappear on the
-// afterword — and nothing above this line would ever notice, because it never goes
-// through loadKoan or calls the module's own build(). These do.
-test('the preface\'s own build() removes the gate but keeps path, monk and lanterns', async () => {
+// proves that afterword.js actually PASSES those options through. It calls buildHub()
+// itself inside its own build(), so a typo'd option name (`gates:` instead of `gate:`,
+// say) would silently fall back to buildHub's defaults — the whole stage would
+// reappear — and nothing above this line would ever notice, because it never goes
+// through loadKoan or calls the module's own build(). This does. (The preface used
+// to have a twin of this test; it stopped rendering the hub at all — see the fork
+// tests above, which are its staging net now.)
+test('the preface\'s own build() stages the fork: one monk, three ribbons, no gate', async () => {
   const mod = await loadKoan(PREFACE_SLUG);
   const built = mod.build();
   assert.equal(countNamed(built.scene, 'gate'), 0, 'no gate — "no gate as the gate of the teaching"');
-  assert.equal(countNamed(built.scene, 'path'), 1);
-  assert.equal(countNamed(built.scene, 'monk'), 1);
-  assert.equal(countNamed(built.scene, 'lantern'), 2);
+  assert.equal(countNamed(built.scene, 'path'), 3, 'the approach and the two arms of the fork');
+  assert.equal(countNamed(built.scene, 'monk'), 1, 'the one who has arrived at the choosing');
 });
 
 test('the afterword\'s own build() clears the whole stage', async () => {

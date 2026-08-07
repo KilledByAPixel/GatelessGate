@@ -1,42 +1,58 @@
+import * as THREE from '../../../lib/three.module.js';
 import MATTER from '../text/matter.js';
-import { buildHub } from '../../intro.js';
-import { wash } from '../../palette.js';
+import { PAPER, WASH, wash } from '../../palette.js';
+import {
+  composeWorld, makePath, makeMonk, faceMonk, makeBell, makeFlag,
+  makeLights, makeBlobShadow, addOutlines,
+} from '../../kit/index.js';
+import { groundHeight } from '../../kit/ground.js';
 
 // Mumon's own preface, which is where the four lines the book is named after
 // actually come from. Shaped like a koan module so it travels the same rails —
 // the nav queue, the ink transitions, the scroll — and differs only in having
 // no number, which is what turns off the seal.
 //
-// The scene is the hub with its gate removed. That is not a scene waiting for
-// art: it is the picture this text describes. "No gate as the gate of the
-// teaching" — the path still runs through, the monk still walks it, the camera
-// still centres where the gate stood, and there is nothing there. It is also
-// the one scene in the book with no accent object in it, because the gate was
-// the red thing — the text panel beside it still carries the usual accent red,
-// since makeScroll defaults to it (src/ui/scroll.js).
+// ITS OWN SCENE NOW, not the hub with the gate removed (Frank: "let's create
+// a separate preface scene"). The picture is the verse itself:
 //
-// Its own three seeds, because taking the gate out was not enough to tell this
-// page apart from the Contents it opens from — same hills, same trees, same
-// bend in the road, so it read as the Contents with a prop missing rather than
-// as a page (Frank: "right now it looks exactly the same"). Different land,
-// different scatter, a road that bends the other way. Still the same valley,
-// the way two drawings of one place are.
+//   THE FORK. "The great path has no gate, thousands of roads enter it" — so
+//   the road the reader arrives on SPLITS, a Y opening in the middle distance,
+//   both arms running out into haze. No gate stands anywhere in the scene,
+//   which is the other half of the same verse and was the one good idea of the
+//   old staging, kept.
+//
+//   THE BELL AND THE FLAG, either side of the split — the first page of the
+//   book, so it carries something to touch right away (Frank: "people have
+//   something right away"): the bonshō rings like case 16's, the flag ruffles
+//   under the pointer like case 29's. Both behaviors live in their kit pieces;
+//   this page only hangs them.
+//
+// STILL NO ACCENT OBJECT. The gate was the red thing and the gate is gone;
+// the bell and flag here wear ink washes, not the bell's default red (which
+// belongs to case 16's seal) or the flag's (case 29's). The text panel beside
+// the scene still carries the usual accent red via makeScroll's default.
+// Frank stages by eye from here — the numbers below are a first placement,
+// and the tints are one `color:` each if a warm mark ever earns its way in.
 const page = MATTER.preface;
 const SEEDS = { seed: 23, groundSeed: 41, pathSeed: 61 };
 
-// AND A THINNER HORIZON. With the gate gone the eye has nothing to stop on and
-// runs straight down the road — which ended in a mountain (Frank: "there's a
-// mountain directly in front of the road"). No seed fixes that: sweeping eighty
-// values of `seed` and a hundred and twenty of `pathSeed` found nothing that
-// clears the road's vanishing bearing by more than a few degrees, because the
-// title screen's fourteen peaks over that arc are a WALL — every bearing ends in
-// one. So the band itself thins and moves back here: fewer peaks, further off,
-// paler, and the near band cut to three low ones. The road runs out into haze
-// instead of into rock, which is the right picture for "no gate as the gate".
+// A THINNER HORIZON, kept from the gateless staging: the title screen's peak
+// band is a WALL — every road bearing ends in rock (measured; no seed clears
+// it). Fewer peaks, further off, paler, so both arms of the fork run out into
+// haze instead of into a mountain, which is the right picture for "thousands
+// of roads enter it."
 const MOUNTAINS = [
-  { count: 7, distance: 70, arcCenter:.2, arcSpan: 4.4, color: wash(0.12) },
-  { count: 3, distance: 48, arcCenter:-.2, arcSpan: 3.6, color: wash(0.21), hScale: 0.55 },
+  { count: 7, distance: 70, arcCenter: .2, arcSpan: 4.4, color: wash(0.12) },
+  { count: 3, distance: 48, arcCenter: -.2, arcSpan: 3.6, color: wash(0.21), hScale: 0.55 },
 ];
+
+// Where the road splits. The approach ends here square (taper 0) and the two
+// arms START a stride and a half before it, their square starts buried under
+// the approach's full-width ribbon — that overlap is what makes three ribbons
+// read as one road forking rather than three roads meeting. Each arm rides a
+// few millimetres higher via its own groundFn, or the overlapped triangles
+// z-fight (all three would otherwise sit at exactly ground + 0.03).
+const FORK = { x: 0.5, z: -3.2 };
 
 export default {
   id: null,
@@ -46,10 +62,160 @@ export default {
   labels: page.labels,
   text: page.text,
   accent: undefined,
-  ambience: ['wind:0.30', 'music'],
+  // 'bell' so emitterCount sees the bonshō and thins the drift, k16's rule
+  ambience: ['wind:0.30', 'bell', 'music'],
   mood: 'in',
-  camera: { distance: 14, azimuth: 0.5, polar: 1.3 },
-  build() {
-    return buildHub({ gate: false, ...SEEDS, mountains: MOUNTAINS });
+  // aimed at the fork — the choice is the subject
+  camera: { distance: 14, target: [FORK.x, 1.2, FORK.z], azimuth: 0.5, polar: 1.3 },
+
+  build(ctx = {}) {
+    const { audio = null, input = null } = ctx;
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(PAPER);
+    scene.fog = new THREE.FogExp2(PAPER, 0.030);
+    scene.add(makeLights());
+
+    // ---- the thousand roads, drawn as three ribbons ----------------------
+    // the road the reader arrives on, swinging through a real curve on its
+    // way to the split (Frank: "a little bit more of a curve")
+    const approach = makePath({
+      from: [2.0, 9.5], via: [-2.0, 3.0], to: [FORK.x, FORK.z],
+      width: 1.8, wander: 1.0, taper: 0,
+      seed: SEEDS.pathSeed, groundSeed: SEEDS.groundSeed,
+    });
+    scene.add(approach);
+
+    // the two arms. Slightly unequal widths — a fork where both choices are
+    // identical is a diagram, not a place — and each carries its own curve
+    // away from the other. groundFn lifts: see FORK's comment.
+    const lift = (dy) => (x, z) => groundHeight(x, z, { seed: SEEDS.groundSeed }) + dy;
+    // (both arms' start points are MEASURED against the approach's sampled
+    // centreline near z -1.7/-2.0 — the wander bows the ribbon, so a start
+    // placed by eye landed a hand's width outside it and the arm's tip
+    // showed as a separate sliver of road)
+    const left = makePath({
+      from: [-0.1, -1.7], via: [-3.6, -8.0], to: [-12.5, -23.0],
+      width: 1.4, wander: 1.1,
+      seed: SEEDS.pathSeed + 1, groundSeed: SEEDS.groundSeed, groundFn: lift(0.004),
+    });
+    scene.add(left);
+    const right = makePath({
+      from: [0.1, -2.0], via: [4.8, -9.0], to: [10.0, -22.0],
+      width: 1.25, wander: 1.1,
+      seed: SEEDS.pathSeed + 2, groundSeed: SEEDS.groundSeed, groundFn: lift(0.008),
+    });
+    scene.add(right);
+
+    // ---- the two things worth touching -----------------------------------
+    // The bonshō, off the right arm's shoulder, facing the split. Ink-dark
+    // bronze, not case 16's red — see the header on accent.
+    const bell = makeBell({ height: 1.1, color: WASH.deep, seed: SEEDS.seed });
+    bell.group.position.set(4.0, 0, -4.0);
+    bell.group.rotation.y = -1.1;
+    scene.add(bell.group);
+
+    // the flag across from it, off the left arm — the wind made visible
+    const flag = makeFlag({ seed: SEEDS.seed, color: WASH.dark });
+    flag.group.position.set(-3.5, 0, -5.2);
+    flag.group.rotation.y = 0.5;
+    scene.add(flag.group);
+
+    // and the one who has arrived at the choosing, still on the single road
+    const mp = approach.sample(0.72);
+    const monk = makeMonk({ height: 1.6 });
+    monk.position.set(mp.x + mp.perp.x * 0.55, 0, mp.z + mp.perp.z * 0.55);
+    faceMonk(monk, { x: FORK.x, z: FORK.z });
+    scene.add(monk);
+
+    const world = composeWorld(scene, {
+      seed: SEEDS.seed,
+      groundSeed: SEEDS.groundSeed,
+      trees: 5,
+      mountains: MOUNTAINS,
+      keepout: [
+        ...approach.keepout(16, 1.2),
+        ...left.keepout(16, 1.1),
+        ...right.keepout(16, 1.1),
+        { at: bell.group, r: 1.7 },
+        { at: flag.group, r: 1.0 },
+        { at: monk, r: 1.1 },
+        // the lens corridor: the home eye sits out near (7.0, 8.6) looking at
+        // the fork, and nothing may grow into that line
+        { x: 4.6, z: 3.6, r: 4.2 },
+      ],
+      grassKeepout: [
+        ...approach.keepout(18, 0.95),
+        ...left.keepout(16, 0.8),
+        ...right.keepout(16, 0.75),
+        { at: bell.group, r: 1.0 },
+        { at: flag.group, r: 0.4 },
+      ],
+    });
+
+    for (const [p, rx, rz, op] of [
+      [bell.group.position, 1.05, 0.78, 0.34],
+      [flag.group.position, 0.55, 0.45, 0.36],
+      [monk.position, 0.65, 0.5, 0.42],
+    ]) {
+      const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
+      s.position.x = p.x; s.position.z = p.z;
+      scene.add(s);
+    }
+
+    addOutlines(scene, { width: 0.033, wobble: 0.7 });
+
+    // ---- the first touches in the book -----------------------------------
+    // k16's bell idiom (strike + temple preset + the 0.5s held-pointer floor)
+    // and k29's flag idiom (hover ruffles; a tap is a firmer brush of the
+    // same cloth). Nothing is scored; these are the book saying "you can
+    // touch things" on its first page.
+    let camera = null;
+    let clock = 0;
+    let strikes = 0;
+    let ruffles = 0;
+    let lastRing = -99;
+
+    input && input.onHover(() => {
+      if (!camera) return;
+      const hit = input.raycastFirst(camera, [flag.mesh]);
+      if (hit) {
+        const local = flag.mesh.worldToLocal(hit.point.clone());
+        flag.hoverAt(local.x, local.y);
+      }
+    });
+    input && input.onTap(() => {
+      if (!camera) return;
+      if (input.raycastFirst(camera, bell.pickTargets())) {
+        if (clock - lastRing < 0.5) return;
+        lastRing = clock;
+        bell.strike();
+        strikes++;
+        audio && audio.bell({ preset: 'temple', at: bell.group.position });
+        return;
+      }
+      const hit = input.raycastFirst(camera, [flag.mesh]);
+      if (hit) {
+        const local = flag.mesh.worldToLocal(hit.point.clone());
+        flag.hoverAt(local.x, local.y);
+        ruffles++;
+        audio && audio.cloth({ force: 0.8, at: hit.point });
+      }
+      // the monk keeps his own counsel; the roads are for walking, not tapping
+    });
+
+    return {
+      scene,
+      setCamera(c) { camera = c; },
+      update(dt, simTime) {
+        clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
+        world.update(dt, simTime);
+        bell.update(dt, simTime);
+        flag.update(dt, simTime);
+      },
+      fragment() {
+        return { strikes, ruffles };
+      },
+      dispose() {},
+    };
   },
 };

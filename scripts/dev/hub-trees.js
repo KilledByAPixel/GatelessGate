@@ -2,9 +2,12 @@
 // its Buddha under one of them and derives which at build time; this is how you
 // check that derivation by hand after touching a seed.
 //
+// (The preface used to be the third scene here. It stopped rendering the hub —
+// it stages its own forked-road diorama now — so only the two true hub scenes
+// remain.)
+//
 //   node scripts/dev/hub-trees.js
 import { buildHub } from '../../src/intro.js';
-import PREFACE from '../../src/koans/matter/preface.js';
 import AFTERWORD from '../../src/koans/matter/afterword.js';
 
 const show = (name, built) => {
@@ -15,7 +18,6 @@ const show = (name, built) => {
 };
 
 show('title screen / contents', buildHub());
-show('preface', PREFACE.build());
 
 const after = AFTERWORD.build();
 show('afterword', after);
