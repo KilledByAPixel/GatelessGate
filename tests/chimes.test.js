@@ -4,6 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import { makeHut } from '../src/kit/hut.js';
 import { makeGate } from '../src/kit/gate.js';
 import { hangChimes, setChimeAudio, collectChimes, ringChimeAt } from '../src/kit/chimes.js';
+import { rigCamera } from './helpers/rig-camera.js';
 import { makeFurin, FURIN_REACH } from '../src/kit/furin.js';
 
 // Every chime group in a subtree, whichever family it came from — a fūrin is
@@ -329,4 +330,45 @@ test('the object form dials the strike rate and pins the count', () => {
   const loud = rate(1), quiet = rate(0.2);
   assert.ok(loud > quiet, `less wind must ring less: ${loud}/min at 1 vs ${quiet}/min at 0.2`);
   assert.ok(quiet > 0, 'a quiet chime is still a chime');
+});
+
+test('a REAL raycast at a hung chime picks it', () => {
+  // The earlier click test handed pick() a stub input that returned a hit for
+  // whatever it was offered, which proved the plumbing and nothing about the
+  // geometry. This aims the actual THREE.Raycaster the app uses, from the
+  // actual case framing, at the chime's own screen position — and uses
+  // input.js's NON-recursive intersectObjects, because that is what the app
+  // does and a pick target hidden one level down would silently never hit.
+  const scene = new THREE.Scene();
+  const hut = makeHut({ chimes: 11 });
+  hut.position.set(1.2, 0, -1.4);
+  scene.add(hut);
+  scene.updateMatrixWorld(true);
+
+  const cam = rigCamera({}, { aspect: 1.78 });
+  const ray = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  const input = {
+    raycastFirst(camera, objects) {
+      ray.setFromCamera(ndc, camera);
+      const hits = ray.intersectObjects(objects, false);
+      return hits.length ? hits[0] : null;
+    },
+  };
+
+  const chimes = collectChimes(scene);
+  assert.ok(chimes.length > 0);
+  for (const c of chimes) {
+    const p = new THREE.Vector3();
+    c.group.getWorldPosition(p);
+    p.y -= 0.2;                                   // the body, a little below the knot
+    const v = p.clone().project(cam);
+    ndc.set(v.x, v.y);
+    assert.ok(Math.abs(v.x) < 1 && Math.abs(v.y) < 1, `the chime is off screen at ${v.x},${v.y}`);
+    assert.ok(c.pick(cam, input), 'a ray straight at the chime does not pick it');
+  }
+
+  // and a ray at the far corner of the frame picks nothing
+  ndc.set(0.98, -0.98);
+  assert.equal(ringChimeAt(chimes, cam, input), false, 'it rings on a miss');
 });

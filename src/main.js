@@ -637,9 +637,25 @@ function hungChimes() {
   return scene.userData.hungChimes;
 }
 
-// Registered once, at startup, so it runs before any case's own tap handler —
-// and only spends the touch when a chime was actually under it.
-input.onTap(() => { if (camera) ringChimeAt(hungChimes(), camera, input); });
+const chimeTap = () => { if (camera) ringChimeAt(hungChimes(), camera, input); };
+
+// CLEARING THE TAPS IS THE OUTGOING CASE'S BUSINESS, NOT MAIN'S. input.clear()
+// empties the whole callback list, which is right for the page being left and
+// wrong for main.js's own handlers — and main's were registered once at
+// startup, so the first page turn silently dropped them for the rest of the
+// session. That is why hung chimes swung correctly and could not be clicked
+// (Frank: "i still cant click on the chimes connected to the huts"): the pick
+// was right, the raycast was right, and nothing was calling either. The unit
+// test that "proved" the tap worked had handed it a stub input that hit
+// whatever it was offered, so it never touched this at all.
+//
+// One way to clear the taps, and it puts main's back. Never input.clear()
+// directly — tests/main-input.test.js holds this file to that.
+function clearInput() {
+  input.clear();
+  input.onTap(chimeTap);
+}
+clearInput();
 
 // THE LAYOUT GUIDES, rebuilt per page. The workbench re-fires this on every
 // scene swap as well as when the switch moves, so the guides always describe
@@ -828,7 +844,7 @@ function buildKoan(mod, slug) {
   // tear down any outgoing koan (e.g. re-entering without an exit())
   if (koan && koan.onExit) koan.onExit();
   stopReading();
-  input.clear();
+  clearInput();
   // A ringing one-shot (a `great` bell is 57s) must not follow the reader
   // onto the next page. buildKoan runs for both a page turn AND a cold
   // arrival from the menu; hushing here covers both with one call, since a
@@ -1007,7 +1023,7 @@ async function exit() {
   router.set({ view: 'contents' });   // both paths below land on Contents
   if (mode !== 'koan') { menu.open(); showView(menu.el); return; }
   stopReading();
-  input.clear();
+  clearInput();
   koan && koan.onExit && koan.onExit();
   // ambience is main's job (see enter()): the case's whole bed dies here, and
   // menuMusic() below starts the Contents' own wind and music fresh — playMusic
