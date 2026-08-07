@@ -70,11 +70,16 @@ export function makeLattice({ width = 2.2, height = 2.0, bars = 5, color = WASH.
 //
 // `open` names the missing wall: '+z' is nearest the camera, '+x' is to its right.
 //
-// `doors` (radians) hangs two lattice leaves on the open side's corner posts,
-// each half the side wide, swung OUTWARD by that angle — the side reads as
-// double doors somebody pushed open and left, rather than a wall that was
-// never built (Frank, case 37: "on the open side it has the 2 panels rotating
-// open like double doors pushed open"). 0 keeps the plain missing side.
+// `doors` hangs two lattice leaves on the open side's corner posts, each half
+// the side wide, swung OUTWARD — the side reads as double doors somebody
+// pushed open and left, rather than a wall that was never built (Frank, case
+// 37: "on the open side it has the 2 panels rotating open like double doors
+// pushed open"). A number swings both leaves by that angle (radians); a
+// two-element array gives each leaf its own — [first corner, second corner]
+// in the build's own [-1, +1] order along the side — and 0 for a leaf means
+// it stands CLOSED in the wall plane, a real shut door, not a missing one
+// (Frank's second pass: "only one half... partially open — it's too open
+// right now"). `doors: 0` or omitted keeps the plain missing side.
 export function makePen({
   size = 5.4, height = 1.9, open = '+x', panelsPerSide = 2, bars = 4, color = WASH.dark,
   doors = 0,
@@ -116,7 +121,8 @@ export function makePen({
   // lattice geometry is shifted so the frame's edge sits on the pivot — and
   // turned outward by `doors`.
   const doorLeaves = [];
-  if (doors > 0) {
+  const doorAngles = Array.isArray(doors) ? doors : [doors, doors];
+  if (doorAngles.some((a) => a > 0)) {
     const [, cx, cz] = sides.find((s) => s[0] === open);
     // the side runs along x for the z-walls and along z for the x-walls;
     // its outward normal is just the side's own centre direction
@@ -124,7 +130,8 @@ export function makePen({
     const nlen = Math.hypot(cx, cz);
     const nx = cx / nlen, nz = cz / nlen;
     const leafW = half;
-    for (const s of [-1, 1]) {
+    [-1, 1].forEach((s, idx) => {
+      const angle = doorAngles[idx] || 0;
       const hx = cx + tx * half * s, hz = cz + tz * half * s;   // the hinge post
       // closed, the leaf reaches from its post back toward the side's middle;
       // rotation.y = a maps local +x to world (cos a, 0, -sin a)
@@ -132,7 +139,8 @@ export function makePen({
       // OPEN IS PICKED, NOT DERIVED: of the two turns, the one whose free
       // edge lands further outward is the pushed-open one. Yaw sign
       // conventions are exactly where a hand-derivation goes quietly wrong.
-      const swung = [closed + doors, closed - doors]
+      // (angle 0 collapses both candidates to `closed` — a shut leaf.)
+      const swung = [closed + angle, closed - angle]
         .map((a) => ({ a, out: (hx + Math.cos(a) * leafW) * nx + (hz - Math.sin(a) * leafW) * nz }))
         .sort((p, q) => q.out - p.out)[0].a;
       const geo = latticeGeometry({ width: leafW, height, bars });
@@ -143,7 +151,7 @@ export function makePen({
       leaf.rotation.y = swung;
       g.add(leaf);
       doorLeaves.push({ hx, hz, a: swung, w: leafW });
-    }
+    });
   }
 
   // Circles along the standing walls, for the prop keepout. Grass is left to

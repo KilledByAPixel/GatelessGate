@@ -28,14 +28,16 @@ export default {
     scene.add(makeLights());
 
     // The enclosure. Three walls of lattice — and the fourth side is not
-    // missing but OPENED: two door leaves swung outward on their corner
-    // posts, the way double doors stand after somebody pushed through and
-    // did not look back (Frank: "on the open side it has the 2 panels
-    // rotating open like double doors pushed open"). A wall that was never
-    // built says nothing; doors somebody left open say the pen has never
-    // once held him.
+    // missing but a DOUBLE DOOR: one leaf standing shut, the other pushed
+    // ajar, the way a gate stands after somebody slipped through and did not
+    // look back (Frank, in two passes: first "the 2 panels rotating open
+    // like double doors pushed open", then "only one half... partially open
+    // — it's too open right now"). A wall that was never built says nothing;
+    // a door left ajar says the pen has never once held him. The shut leaf
+    // is the far corner, the ajar one the near — it opens across the
+    // buffalo's own facing line, toward the lens.
     const PEN = { x: 1.0, z: -2.3, size: 5.4 };   // room to stand, not a crate
-    const pen = makePen({ size: PEN.size, height: 1.9, open: '+x', panelsPerSide: 2, doors: 1.15 });
+    const pen = makePen({ size: PEN.size, height: 1.9, open: '+x', panelsPerSide: 2, doors: [0, 0.62] });
     pen.position.set(PEN.x, 0, PEN.z);
     scene.add(pen);
 
