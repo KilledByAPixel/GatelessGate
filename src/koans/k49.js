@@ -54,7 +54,7 @@ export default {
     scene.add(road);
 
     // ---- the pond, off to the left ----------------------------------------
-    const POND = { x: -3.7, z: -1.6, size: 4.2, inner: 2.15, outer: 2.55, rim: 0.42, floor: 0.02, surface: 0.3 };
+    const POND = { x: 2.1, z: -1.6, size: 4.2, inner: 2.15, outer: 2.55, rim: 0.42, floor: 0.02, surface: 0.3 };
     const lip = makeBasin({
       inner: POND.inner, outer: POND.outer, rim: POND.rim, floor: POND.floor,
       color: WASH.stone, segments: 18,
@@ -107,7 +107,7 @@ export default {
     // flush underside (k29's own derivation); -0.75 sits close to that edge
     // at this width (2.6, span |x| < 0.946) rather than near the middle.
     const closingChime = makeCylinderChime({
-      size: 0.9, seed: 49,
+      size: 0.4, seed: 49,
       onStrike: (note, force, pos) => audio && audio.cylinderStrike({ note, force, at: pos }),
     });
     closingChime.group.position.set(-0.75, 3.0, 0);

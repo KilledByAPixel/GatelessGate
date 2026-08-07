@@ -46,7 +46,7 @@ export default {
     const dog = makeDog({ height: 0.6, color: ACCENT });   // the seal of this koan
     const dp = path.sample(0.145);          // near the pair, inside the shared camera's frame
     dog.position.set(dp.x + dp.perp.x * 1.7, 0, dp.z + dp.perp.z * 1.7);
-    dog.rotation.y = dp.heading + 2.3;      // looking back up the road at them
+    dog.rotation.y = dp.heading + 1.4;      // looking back up the road at them
     dog.traverse((o) => {
       if (!o.isMesh) return;
       o.material = o.material.clone();

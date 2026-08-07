@@ -130,7 +130,7 @@ export default {
       size: 0.7, seed: 16,
       onStrike: (note, force, pos) => audio && audio.cylinderStrike({ note, force, at: pos }),
     });
-    eaveChime.group.position.set(1.3, 2.4, 1.35);
+    eaveChime.group.position.set(1.3, 2.4, 1.65);
     hall.add(eaveChime.group);
 
     const world = composeWorld(scene, {

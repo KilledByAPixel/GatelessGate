@@ -71,12 +71,6 @@ export default {
     faceMonk(ananda, buddha.position);
     scene.add(ananda);
 
-    // one flower set down before the seat — the seal, and the only thing in
-    // the scene that was brought here by anybody
-    const flower = makeFlower({ height: 0.34, bloom: 0.4, petals: 6 });
-    flower.position.set(1.15, 0, -2.45);
-    scene.add(flower);
-
     const assembly = makeAssembly({
       count: 6, radius: 2.2, center: [-0.6, 2.6], facing: [0.6, -3.6], spread: 1.2, seed: ID,
     });
