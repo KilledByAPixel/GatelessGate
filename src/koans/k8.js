@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeWheel, makeMonk, faceMonk, makeStall,
+  composeWorld, makePath, makeWheel, makeMonk, faceMonk, makeStall, makeHut,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -73,6 +73,16 @@ export default {
     trestle.rotation.y = -0.4;
     scene.add(trestle);
 
+    // Keichu's own house, behind the working yard (Frank: "add a hut") —
+    // a wheelwright lives where he works. Left-rear so the road (x≈0.4 at
+    // this depth, measured off the seeded curve) keeps a clear verge, its
+    // threshold opening onto the yard it feeds.
+    const HUT = { x: -4.2, z: -4.2 };
+    const hut = makeHut({ width: 3.0, height: 2.3, depth: 2.4 });
+    hut.position.set(HUT.x, 0, HUT.z);
+    faceMonk(hut, { x: 1.3, z: 0.4 });
+    scene.add(hut);
+
     const blank = new THREE.Mesh(
       new THREE.TorusGeometry(0.78, 0.05, 5, 22),
       toonMaterial({ color: WASH.mid, flat: true }));
@@ -103,12 +113,14 @@ export default {
         { at: master, r: 1.1 },
         { at: student, r: 1.1 },
         { at: stall, r: 1.6 },
+        { at: hut, r: 3.0 },
       ],
       // the working yard is trodden bare around the stand and the bench
       grassKeepout: [
         ...path.keepout(24, 0.95),
         { x: 1.3, z: 0.4, r: 1.5 },
         { at: trestle, r: 1.1 },
+        { at: hut, r: 1.9 },
       ],
     });
 
@@ -116,6 +128,7 @@ export default {
       [wheel.group.position, 0.8, 0.6, 0.38],
       [trestle.position, 0.8, 0.45, 0.32],
       [stall.position, 1.1, 0.8, 0.30],
+      [hut.position, 2.0, 1.5, 0.30],
       [master.position, 0.68, 0.52, 0.42],
       [student.position, 0.62, 0.5, 0.40],
     ]) {
