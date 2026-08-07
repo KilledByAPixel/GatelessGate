@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, wash } from '../palette.js';
 import {
-  composeWorld, makeBuddha, makeMonk, faceMonk, makeFlower, makeAssembly,
+  composeWorld, makeBuddha, makeMonk, faceMonk, makeAssembly,
   makeWildflowers, makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 

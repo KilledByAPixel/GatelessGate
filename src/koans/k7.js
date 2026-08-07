@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeBasin, makeBowl, makeWater, makeMonk, faceMonk,
-  makeOdoshi, makeCat, makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeOdoshi, makeCat, makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
 const ID = 7;

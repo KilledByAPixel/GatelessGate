@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, INK, INK_LIT, WASH, wash } from '../palette.js';
+import { PAPER, ACCENT, INK_LIT, WASH, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makeCave, makeSnow, makePine, makeMonk, faceMonk,
