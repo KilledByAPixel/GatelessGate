@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeDog, makeHut, makeLantern,
-  makeLights, addOutlines, tapMeshes,
+  makeLights, addOutlines, tapMeshes, plantTree,
 } from '../kit/index.js';
 
 const ID = 1;
@@ -59,6 +59,8 @@ export default {
     monk.position.set(mp.x + mp.perp.x * 1.0, 0, mp.z + mp.perp.z * 0.85);
     faceMonk(monk, joshu.position);
     scene.add(joshu, monk);
+
+    plantTree(scene, { x: 3.2, z: -.4, height: 4.4 });
 
     // The dog: nearer the camera than anything else, and — alone in the scene —
     // unfogged, so when the world is swallowed it is what remains.
