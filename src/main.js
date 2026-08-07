@@ -1,6 +1,6 @@
 import * as THREE from '../lib/three.module.js';
 import { listenerFrom } from './camera_listener.js';
-import { makeCameraRig, makeFreeCam, DEFAULT_HOME_DISTANCE, FREECAM_KEY, packFreeCam, unpackFreeCam } from './camera.js';
+import { makeCameraRig, makeFreeCam, DEFAULT_HOME, FREECAM_KEY, packFreeCam, unpackFreeCam } from './camera.js';
 import { makeDissolve } from './render/dissolve.js';
 import { installGrain } from './render/grain.js';
 import { makePost } from './render/post.js';
@@ -852,7 +852,7 @@ function buildKoan(mod, slug) {
   // around empty road. A case's own `camera` still overrides, so this changes
   // nothing for the forty-nine.
   makeRig({
-    distance: DEFAULT_HOME_DISTANCE, target: [1.2, 1.35, 0.3], heading: 31.5, pitch: 17.2,
+    ...DEFAULT_HOME,
     ...(built.gateTarget ? { target: built.gateTarget } : {}),
     ...(mod.camera || {}),
   });

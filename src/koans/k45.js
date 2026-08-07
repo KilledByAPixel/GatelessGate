@@ -31,7 +31,10 @@ const LAG = 1.15;          // e-folding rate of his keeping-up, per second
 const BEHIND = 4.2;        // how far back he stands
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
-export default {
+// The framing, named so composeWorld can have it too: `view` lets the
+// scatter refuse spots no reachable heading can see (kit/scenery.js).
+const CAM = { distance: 11.0, target: [0.4, 1.5, -0.6], heading: 31.5, pitch: 19 };
+  export default {
   id: ID,
   slug: 'who-is-he',
   title: TEXT[ID].title,
@@ -39,96 +42,96 @@ export default {
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.22', 'music'],
-  camera: { distance: 11.0, target: [0.4, 1.5, -0.6], heading: 31.5, pitch: 19 },
-
+  camera: CAM,
+  
   build(ctx) {
-    const { audio, input } = ctx;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(PAPER);
-    scene.fog = new THREE.FogExp2(PAPER, 0.034);      // dusk: he is easy to lose
-    scene.add(makeLights());
-
-    const road = makePath({ from: [5.6, 7.4], to: [-4.8, -17], width: 1.6, seed: ID, groundSeed: 21, wander: 0.6 });
-    scene.add(road);
-
-    // ---- THE MARKET -------------------------------------------------------
-    // A short row of stalls down the lane, each turned to face the road, with
-    // someone behind the counter. All ink and wash — the one warm mark in the
-    // whole picture is the red horse, so the crowd stays monochrome.
-    const stallKeepout = [];
-    const stalls = [
-      { t: 0.30, sidesign: 1, off: 2.7, w: 1.9 },
-      { t: 0.46, sidesign: -1, off: 2.7, w: 1.7 },
-      { t: 0.62, sidesign: 1, off: 2.9, w: 1.8 },
-    ];
-    const keepers = [];
-    for (let i = 0; i < stalls.length; i++) {
-      const s = stalls[i];
-      const p = road.sample(s.t);
-      const sx = p.x + p.perp.x * s.off * s.sidesign;
-      const sz = p.z + p.perp.z * s.off * s.sidesign;
-      // face the stall's front (+z) back toward the road centre
-      const faceX = p.x - sx;
-      const faceZ = p.z - sz;
-      const heading = Math.atan2(faceX, faceZ);
-
-      const stall = makeStall({
-        width: s.w, depth: 1.2, height: 2.0, seed: ID + i * 7,
-        wood: wash(0.30 + (i % 2) * 0.06), cloth: wash(0.40),
-      });
-      stall.position.set(sx, 0, sz);
-      stall.rotation.y = heading;
-      scene.add(stall);
-      stallKeepout.push({ x: sx, z: sz, r: Math.max(s.w, 1.4) });
-
-      // a keeper a step behind the counter, facing the lane — but the last
-      // stall is left unattended, which reads as a real market (and keeps the
-      // draw budget honest with a crowd still to place)
-      if (i < 2) {
-        const back = 0.5;
-        const kx = sx - faceX / Math.hypot(faceX, faceZ) * back;
-        const kz = sz - faceZ / Math.hypot(faceX, faceZ) * back;
-        const keeper = makeMonk({ height: 1.5 + hash1(i, ID) * 0.1, hat: hash1(i + 3, ID) > 0.5, stout: 1.05 });
-        keeper.position.set(kx, 0, kz);
-        faceMonk(keeper, { x: p.x, z: p.z });
-        scene.add(keeper);
-        keepers.push(keeper);
-        stallKeepout.push({ x: kx, z: kz, r: 0.7 });
-      }
-    }
-
-    // a customer waiting at the middle stall's counter, on the lane side and
-    // turned to face the stall
-    const mid = road.sample(stalls[1].t);
-    const cust = makeMonk({ height: 1.58, elder: true });
-    const cx = mid.x + mid.perp.x * (stalls[1].off - 1.5) * stalls[1].sidesign;
-    const cz = mid.z + mid.perp.z * (stalls[1].off - 1.5) * stalls[1].sidesign;
-    cust.position.set(cx, 0, cz);
-    const stallX = mid.x + mid.perp.x * stalls[1].off * stalls[1].sidesign;
-    const stallZ = mid.z + mid.perp.z * stalls[1].off * stalls[1].sidesign;
-    cust.rotation.y = Math.atan2(stallX - cx, stallZ - cz);
-    scene.add(cust);
-    stallKeepout.push({ x: cx, z: cz, r: 0.7 });
-
-    // two people strolling the lane, driven along the road in update(). Their
-    // motion is a closed form over simTime, so the street is alive but replays.
-    const walkers = [
-      { monk: makeMonk({ height: 1.6 }), t0: 0.18, t1: 0.74, rate: 0.045, phase: 0.0, dir: 1, lane: 0.55 },
-      { monk: makeMonk({ height: 1.54, elder: true }), t0: 0.20, t1: 0.70, rate: 0.037, phase: 0.5, dir: -1, lane: -0.5 },
-    ];
-    for (const w of walkers) scene.add(w.monk);
-
-    // A few more people standing about the street between the stalls (Frank: it
-    // is a busy street). They come from the same builder as every other figure,
-    // just with the cheap options — no hat, no sleeves — so they are dark robed
-    // shapes like the monks rather than a separate kind of thing, and a crowd of
-    // them still fits the draw budget.
-    const bystander = (x, z, facing, h = 1.56) => {
-      const f = makeMonk({ height: h, hat: false, arms: false });
-      f.position.set(x, 0, z);
-      f.rotation.y = facing;
-      return f;
-    };
+  const { audio, input } = ctx;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(PAPER);
+  scene.fog = new THREE.FogExp2(PAPER, 0.034);      // dusk: he is easy to lose
+  scene.add(makeLights());
+  
+  const road = makePath({ from: [5.6, 7.4], to: [-4.8, -17], width: 1.6, seed: ID, groundSeed: 21, wander: 0.6 });
+  scene.add(road);
+  
+  // ---- THE MARKET -------------------------------------------------------
+  // A short row of stalls down the lane, each turned to face the road, with
+  // someone behind the counter. All ink and wash — the one warm mark in the
+  // whole picture is the red horse, so the crowd stays monochrome.
+  const stallKeepout = [];
+  const stalls = [
+  { t: 0.30, sidesign: 1, off: 2.7, w: 1.9 },
+  { t: 0.46, sidesign: -1, off: 2.7, w: 1.7 },
+  { t: 0.62, sidesign: 1, off: 2.9, w: 1.8 },
+  ];
+  const keepers = [];
+  for (let i = 0; i < stalls.length; i++) {
+  const s = stalls[i];
+  const p = road.sample(s.t);
+  const sx = p.x + p.perp.x * s.off * s.sidesign;
+  const sz = p.z + p.perp.z * s.off * s.sidesign;
+  // face the stall's front (+z) back toward the road centre
+  const faceX = p.x - sx;
+  const faceZ = p.z - sz;
+  const heading = Math.atan2(faceX, faceZ);
+  
+  const stall = makeStall({
+  width: s.w, depth: 1.2, height: 2.0, seed: ID + i * 7,
+  wood: wash(0.30 + (i % 2) * 0.06), cloth: wash(0.40),
+  });
+  stall.position.set(sx, 0, sz);
+  stall.rotation.y = heading;
+  scene.add(stall);
+  stallKeepout.push({ x: sx, z: sz, r: Math.max(s.w, 1.4) });
+  
+  // a keeper a step behind the counter, facing the lane — but the last
+  // stall is left unattended, which reads as a real market (and keeps the
+  // draw budget honest with a crowd still to place)
+  if (i < 2) {
+  const back = 0.5;
+  const kx = sx - faceX / Math.hypot(faceX, faceZ) * back;
+  const kz = sz - faceZ / Math.hypot(faceX, faceZ) * back;
+  const keeper = makeMonk({ height: 1.5 + hash1(i, ID) * 0.1, hat: hash1(i + 3, ID) > 0.5, stout: 1.05 });
+  keeper.position.set(kx, 0, kz);
+  faceMonk(keeper, { x: p.x, z: p.z });
+  scene.add(keeper);
+  keepers.push(keeper);
+  stallKeepout.push({ x: kx, z: kz, r: 0.7 });
+  }
+  }
+  
+  // a customer waiting at the middle stall's counter, on the lane side and
+  // turned to face the stall
+  const mid = road.sample(stalls[1].t);
+  const cust = makeMonk({ height: 1.58, elder: true });
+  const cx = mid.x + mid.perp.x * (stalls[1].off - 1.5) * stalls[1].sidesign;
+  const cz = mid.z + mid.perp.z * (stalls[1].off - 1.5) * stalls[1].sidesign;
+  cust.position.set(cx, 0, cz);
+  const stallX = mid.x + mid.perp.x * stalls[1].off * stalls[1].sidesign;
+  const stallZ = mid.z + mid.perp.z * stalls[1].off * stalls[1].sidesign;
+  cust.rotation.y = Math.atan2(stallX - cx, stallZ - cz);
+  scene.add(cust);
+  stallKeepout.push({ x: cx, z: cz, r: 0.7 });
+  
+  // two people strolling the lane, driven along the road in update(). Their
+  // motion is a closed form over simTime, so the street is alive but replays.
+  const walkers = [
+  { monk: makeMonk({ height: 1.6 }), t0: 0.18, t1: 0.74, rate: 0.045, phase: 0.0, dir: 1, lane: 0.55 },
+  { monk: makeMonk({ height: 1.54, elder: true }), t0: 0.20, t1: 0.70, rate: 0.037, phase: 0.5, dir: -1, lane: -0.5 },
+  ];
+  for (const w of walkers) scene.add(w.monk);
+  
+  // A few more people standing about the street between the stalls (Frank: it
+  // is a busy street). They come from the same builder as every other figure,
+  // just with the cheap options — no hat, no sleeves — so they are dark robed
+  // shapes like the monks rather than a separate kind of thing, and a crowd of
+  // them still fits the draw budget.
+  const bystander = (x, z, facing, h = 1.56) => {
+  const f = makeMonk({ height: h, hat: false, arms: false });
+  f.position.set(x, 0, z);
+  f.rotation.y = facing;
+  return f;
+};
     // dotted along both sides of the lane, in the gaps between the stalls
     const crowd = [
       bystander(road.sample(0.38).x - 1.4, road.sample(0.38).z + 0.3, 1.2, 1.6),
@@ -165,6 +168,7 @@ export default {
     scene.add(him);
 
     const world = composeWorld(scene, {
+      view: CAM,
       seed: ID,
       groundSeed: 21,
       trees: 1,           // the stalls are the scene now — one tree, no more

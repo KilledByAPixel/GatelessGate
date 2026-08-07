@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
+import { DEFAULT_HOME } from '../camera.js';
 import {
   composeWorld, makePath, makeHut, makeBasin, makeBowl, makeWater, makeMonk, faceMonk,
   makeOdoshi, makeCat, makeLights, addOutlines, tapMeshes,
@@ -102,6 +103,9 @@ export default {
     scene.add(cat.group);
 
     const world = composeWorld(scene, {
+      // no `camera:` here — this case takes the book's default framing, so the
+      // scatter is told the same thing (kit/scenery.js seenFrom)
+      view: DEFAULT_HOME,
       seed: 7,
       groundSeed: 21,
       trees: 4,

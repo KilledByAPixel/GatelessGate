@@ -51,7 +51,10 @@ const EAST_HALL = { x: 4.4, z: -6.2 }, WEST_HALL = { x: -3.4, z: -2.8 };
 const ARC_R = 1.35;
 const ARC_PULL = ARC_R * 0.81;
 
-export default {
+// The framing, named so composeWorld can have it too: `view` lets the
+// scatter refuse spots no reachable heading can see (kit/scenery.js).
+const CAM = { distance: 11.5, target: [1.15, 1.2, -1.0], heading: 31.5, pitch: 17.8 };
+  export default {
   id: ID,
   slug: 'nansen-cuts-the-cat-in-two',
   title: TEXT[ID].title,
@@ -61,131 +64,132 @@ export default {
   ambience: ['wind:0.12'],
   // Closer and lower than the standard diorama shot: the thing this case turns
   // on is 0.42 units tall, and the default framing loses it in the courtyard.
-  camera: { distance: 11.5, target: [1.15, 1.2, -1.0], heading: 31.5, pitch: 17.8 },
-
+  camera: CAM,
+  
   build(ctx) {
-    const { audio, input } = ctx;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(PAPER);
-    scene.fog = new THREE.FogExp2(PAPER, 0.030);
-    scene.add(makeLights());
-
-    // ---- the courtyard ----------------------------------------------------
-    // Swept ground, and the only footprint in the case that genuinely covers
-    // earth. Everyone else stands in grass, because they would.
-    const pad = new THREE.Mesh(
-      new THREE.CylinderGeometry(PAD_R, PAD_R * 1.02, 0.09, 11),
-      toonMaterial({ color: WASH.stone, flat: true }));
-    pad.name = 'courtyard';
-    pad.position.set(C.x, 0.005, C.z);   // sunk a little so it cannot z-fight the ground
-    pad.rotation.y = 0.2;
-    scene.add(pad);
-
-    // ---- the two halls ----------------------------------------------------
-    // Set well back, one either side, so they read as the buildings the two
-    // arguing parties came out of rather than as scenery in the way.
-    for (const [p, w, h, d] of [[EAST_HALL, 2.6, 2.3, 2.2], [WEST_HALL, 2.3, 2.1, 2.0]]) {
-      const hall = makeHut({ width: w, height: h, depth: d, color: WASH.dark });
-      hall.position.set(p.x, 0, p.z);
-      hall.rotation.y = Math.atan2(C.x - p.x, C.z - p.z);   // open front toward the courtyard
-      scene.add(hall);
-    }
-
-    // ---- the cat ----------------------------------------------------------
-    // Alive, whole, and completely uninterested. It sits on a stone rather than
-    // in Nansen's hands: held, it would read as a thing being brandished, and
-    // this cat is not in any trouble it knows about.
-    const stone = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.40, 0.46, 0.34, 7),
-      toonMaterial({ color: WASH.stone, flat: true }));
-    stone.name = 'stone';
-    stone.position.set(STONE.x, STONE_TOP - 0.17, STONE.z);
-    stone.rotation.y = 0.6;
-    scene.add(stone);
-
-    const cat = makeCat({ height: 0.32, color: ACCENT, seed: ID, pose: 'sit' });
-    cat.group.position.set(STONE.x, STONE_TOP, STONE.z);
-    cat.group.rotation.y = 0.35;        // looking out past the whole argument
-    scene.add(cat.group);
-
-    // ---- Nansen -----------------------------------------------------------
-    // In the middle of the swept ground, one sleeve raised toward the cat: the
-    // challenge, mid-air. Nothing in his hand.
-    const nansen = makeMonk({ pose: 'point', height: 1.75, stout: 1.06 });
-    nansen.position.set(C.x, 0.05, C.z);
-    aimMonk(nansen, { x: STONE.x, z: STONE.z });
-    scene.add(nansen);
-
-    // ---- the two halls' monks --------------------------------------------
-    // Each group is an instanced seated crowd with one standing figure stepped
-    // out in front of it — the two who had been doing the arguing. Every one of
-    // them is turned toward the cat. Nobody is turned toward Nansen, because
-    // nobody has anything to say to him.
-    for (const [g, seed] of [[EAST, ID * 3], [WEST, ID * 5]]) {
-      scene.add(makeAssembly({
-        count: 7, radius: ARC_R, spread: 0.9, seed,
-        center: [g.x, g.z - ARC_PULL],
-        facing: [STONE.x, STONE.z],
-      }));
-    }
-
-    for (const [p, stout] of [[EAST_ONE, 1.0], [WEST_ONE, 1.1]]) {
-      const m = makeMonk({ height: 1.6, stout });
-      m.position.set(p.x, 0, p.z);
-      faceMonk(m, { x: STONE.x, z: STONE.z });
-      scene.add(m);
-    }
-
-    // ---- the world --------------------------------------------------------
-    const world = composeWorld(scene, {
-      seed: ID,
-      groundSeed: 21,
-      trees: 4,
-      // generous: nothing scattered may land in the courtyard, in either group,
-      // or inside a hall
-      keepout: [
-        { x: C.x, z: C.z, r: 3.3 },
-        { x: STONE.x, z: STONE.z, r: 1.4 },
-        { x: EAST.x, z: EAST.z, r: 3.1 },
-        { x: WEST.x, z: WEST.z, r: 3.1 },
-        { x: EAST_ONE.x, z: EAST_ONE.z, r: 1.2 },
-        { x: WEST_ONE.x, z: WEST_ONE.z, r: 1.2 },
-        { x: EAST_HALL.x, z: EAST_HALL.z, r: 2.6 },
-        { x: WEST_HALL.x, z: WEST_HALL.z, r: 2.4 },
-      ],
-      // stingy: only the swept courtyard actually covers ground. The monks
-      // stand in the meadow, which is where monks stand.
-      grassKeepout: [{ x: C.x, z: C.z, r: 1.95 }],
-    });
-
-    addOutlines(scene, { width: 0.033, wobble: 0.7 });
-
-    // ---- the moment: the cat is fine --------------------------------------
-    // Touch it and it stretches, swivels an ear and curls its tail, then settles
-    // back to ignoring everyone. That is the whole interaction, and it is meant
-    // to be an anticlimax: the reader goes looking for the thing that resolves
-    // the case and finds a cat having a nice time.
-    let camera = null;
-    const targets = [...cat.meshes(), stone];
-
-    input.onTap(() => {
-      if (!camera) return;
-      if (input.raycastFirst(camera, targets)) cat.stir();
-    });
-
-    return {
-      scene,
-      setCamera(c) { camera = c; },
-      update(dt, simTime) {
-        world.update(dt, simTime);      // the meadow's wind
-        cat.update(dt, simTime);
-      },
-      fragment() {
-        return {
-          stirs: cat.stirCount(),
-          stir: +cat.stirLevel().toFixed(4),
-          stirring: cat.stirring(),
-        };
+  const { audio, input } = ctx;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(PAPER);
+  scene.fog = new THREE.FogExp2(PAPER, 0.030);
+  scene.add(makeLights());
+  
+  // ---- the courtyard ----------------------------------------------------
+  // Swept ground, and the only footprint in the case that genuinely covers
+  // earth. Everyone else stands in grass, because they would.
+  const pad = new THREE.Mesh(
+  new THREE.CylinderGeometry(PAD_R, PAD_R * 1.02, 0.09, 11),
+  toonMaterial({ color: WASH.stone, flat: true }));
+  pad.name = 'courtyard';
+  pad.position.set(C.x, 0.005, C.z);   // sunk a little so it cannot z-fight the ground
+  pad.rotation.y = 0.2;
+  scene.add(pad);
+  
+  // ---- the two halls ----------------------------------------------------
+  // Set well back, one either side, so they read as the buildings the two
+  // arguing parties came out of rather than as scenery in the way.
+  for (const [p, w, h, d] of [[EAST_HALL, 2.6, 2.3, 2.2], [WEST_HALL, 2.3, 2.1, 2.0]]) {
+  const hall = makeHut({ width: w, height: h, depth: d, color: WASH.dark });
+  hall.position.set(p.x, 0, p.z);
+  hall.rotation.y = Math.atan2(C.x - p.x, C.z - p.z);   // open front toward the courtyard
+  scene.add(hall);
+  }
+  
+  // ---- the cat ----------------------------------------------------------
+  // Alive, whole, and completely uninterested. It sits on a stone rather than
+  // in Nansen's hands: held, it would read as a thing being brandished, and
+  // this cat is not in any trouble it knows about.
+  const stone = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.40, 0.46, 0.34, 7),
+  toonMaterial({ color: WASH.stone, flat: true }));
+  stone.name = 'stone';
+  stone.position.set(STONE.x, STONE_TOP - 0.17, STONE.z);
+  stone.rotation.y = 0.6;
+  scene.add(stone);
+  
+  const cat = makeCat({ height: 0.32, color: ACCENT, seed: ID, pose: 'sit' });
+  cat.group.position.set(STONE.x, STONE_TOP, STONE.z);
+  cat.group.rotation.y = 0.35;        // looking out past the whole argument
+  scene.add(cat.group);
+  
+  // ---- Nansen -----------------------------------------------------------
+  // In the middle of the swept ground, one sleeve raised toward the cat: the
+  // challenge, mid-air. Nothing in his hand.
+  const nansen = makeMonk({ pose: 'point', height: 1.75, stout: 1.06 });
+  nansen.position.set(C.x, 0.05, C.z);
+  aimMonk(nansen, { x: STONE.x, z: STONE.z });
+  scene.add(nansen);
+  
+  // ---- the two halls' monks --------------------------------------------
+  // Each group is an instanced seated crowd with one standing figure stepped
+  // out in front of it — the two who had been doing the arguing. Every one of
+  // them is turned toward the cat. Nobody is turned toward Nansen, because
+  // nobody has anything to say to him.
+  for (const [g, seed] of [[EAST, ID * 3], [WEST, ID * 5]]) {
+  scene.add(makeAssembly({
+  count: 7, radius: ARC_R, spread: 0.9, seed,
+  center: [g.x, g.z - ARC_PULL],
+  facing: [STONE.x, STONE.z],
+  }));
+  }
+  
+  for (const [p, stout] of [[EAST_ONE, 1.0], [WEST_ONE, 1.1]]) {
+  const m = makeMonk({ height: 1.6, stout });
+  m.position.set(p.x, 0, p.z);
+  faceMonk(m, { x: STONE.x, z: STONE.z });
+  scene.add(m);
+  }
+  
+  // ---- the world --------------------------------------------------------
+  const world = composeWorld(scene, {
+  view: CAM,
+  seed: ID,
+  groundSeed: 21,
+  trees: 4,
+  // generous: nothing scattered may land in the courtyard, in either group,
+  // or inside a hall
+  keepout: [
+  { x: C.x, z: C.z, r: 3.3 },
+  { x: STONE.x, z: STONE.z, r: 1.4 },
+  { x: EAST.x, z: EAST.z, r: 3.1 },
+  { x: WEST.x, z: WEST.z, r: 3.1 },
+  { x: EAST_ONE.x, z: EAST_ONE.z, r: 1.2 },
+  { x: WEST_ONE.x, z: WEST_ONE.z, r: 1.2 },
+  { x: EAST_HALL.x, z: EAST_HALL.z, r: 2.6 },
+  { x: WEST_HALL.x, z: WEST_HALL.z, r: 2.4 },
+  ],
+  // stingy: only the swept courtyard actually covers ground. The monks
+  // stand in the meadow, which is where monks stand.
+  grassKeepout: [{ x: C.x, z: C.z, r: 1.95 }],
+  });
+  
+  addOutlines(scene, { width: 0.033, wobble: 0.7 });
+  
+  // ---- the moment: the cat is fine --------------------------------------
+  // Touch it and it stretches, swivels an ear and curls its tail, then settles
+  // back to ignoring everyone. That is the whole interaction, and it is meant
+  // to be an anticlimax: the reader goes looking for the thing that resolves
+  // the case and finds a cat having a nice time.
+  let camera = null;
+  const targets = [...cat.meshes(), stone];
+  
+  input.onTap(() => {
+  if (!camera) return;
+  if (input.raycastFirst(camera, targets)) cat.stir();
+  });
+  
+  return {
+  scene,
+  setCamera(c) { camera = c; },
+  update(dt, simTime) {
+  world.update(dt, simTime);      // the meadow's wind
+  cat.update(dt, simTime);
+  },
+  fragment() {
+  return {
+  stirs: cat.stirCount(),
+  stir: +cat.stirLevel().toFixed(4),
+  stirring: cat.stirring(),
+};
       },
       dispose() {},
     };

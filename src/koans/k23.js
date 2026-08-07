@@ -56,7 +56,10 @@ const SLEEVE_DOWN = (span, targetY) => {
 // so the held sleeve carries the tremor without the pose ever changing.
 const STIR = (t) => 0.007 * (0.62 * Math.sin(t * 11.3) + 0.38 * Math.sin(t * 6.7 + 2.1));
 
-export default {
+// The framing, named so composeWorld can have it too: `view` lets the
+// scatter refuse spots no reachable heading can see (kit/scenery.js).
+const CAM = { distance: 9.6, target: [-0.3, 0.92, -0.6], heading: 31.5, pitch: 20.1 };
+  export default {
   id: ID,
   slug: 'do-not-think-good-do-not-think-not-good',
   title: TEXT[ID].title,
@@ -64,36 +67,36 @@ export default {
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.22:pine', 'music'],   // high open country — more wind than the meadows
-
+  
   // Close framing for a small subject (k3's precedent): the treasure is a
   // 0.4-unit stack on a half-unit stone. Numbers baked from the staged
   // positions — stone (0.09, -0.81), E-myo (-1.08, -0.09) — with the target
   // biased toward the bundle and lifted to the line between his chest and it.
-  camera: { distance: 9.6, target: [-0.3, 0.92, -0.6], heading: 31.5, pitch: 20.1 },
-
+  camera: CAM,
+  
   build(ctx) {
-    const { audio, input } = ctx;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(PAPER);
-    scene.fog = new THREE.FogExp2(PAPER, 0.030);
-    scene.add(makeLights());
-
-    // the trail over the mountain, wandering harder than a temple approach —
-    // by the time it reaches this stone it has been climbing all day
-    const path = makePath({
-      from: TRAIL.from, to: TRAIL.to, width: TRAIL.width,
-      seed: ID, groundSeed: 21, wander: TRAIL.wander,
-    });
-    scene.add(path);
-
-    // the stone, placed FROM the trail so it stays on the verge however the
-    // wander is retuned
-    const sp = path.sample(STONE_T);
-    const STONE = { x: sp.x + sp.perp.x * STONE_OFF, z: sp.z + sp.perp.z * STONE_OFF };
-    const EMYO = {
-      x: STONE.x - Math.sin(APPROACH) * PACE,
-      z: STONE.z - Math.cos(APPROACH) * PACE,
-    };
+  const { audio, input } = ctx;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(PAPER);
+  scene.fog = new THREE.FogExp2(PAPER, 0.030);
+  scene.add(makeLights());
+  
+  // the trail over the mountain, wandering harder than a temple approach —
+  // by the time it reaches this stone it has been climbing all day
+  const path = makePath({
+  from: TRAIL.from, to: TRAIL.to, width: TRAIL.width,
+  seed: ID, groundSeed: 21, wander: TRAIL.wander,
+  });
+  scene.add(path);
+  
+  // the stone, placed FROM the trail so it stays on the verge however the
+  // wander is retuned
+  const sp = path.sample(STONE_T);
+  const STONE = { x: sp.x + sp.perp.x * STONE_OFF, z: sp.z + sp.perp.z * STONE_OFF };
+  const EMYO = {
+  x: STONE.x - Math.sin(APPROACH) * PACE,
+  z: STONE.z - Math.cos(APPROACH) * PACE,
+};
 
     // A squat faceted block with a dead-flat top: an altar the road happened
     // to provide. Column-jittered like the ranges so the silhouette breaks,
@@ -147,6 +150,7 @@ export default {
     reach.rotation.set(0, 0, REACH_Z);
 
     const world = composeWorld(scene, {
+      view: CAM,
       seed: ID,
       groundSeed: 21,
       // High and sparse: two trees where the meadow cases keep five, twice the

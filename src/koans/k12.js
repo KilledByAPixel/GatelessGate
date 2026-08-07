@@ -59,6 +59,12 @@ function voidStrip(lipZ) {
   return out;
 }
 
+// The framing, named so composeWorld can have it too: `view` lets the
+// scatter refuse spots no reachable heading can see (kit/scenery.js).
+const CAM = {
+  distance: 16.1, target: [0.9, 1.3, 0.35], heading: 22.3, pitch: 23.5,
+  minDist: 11, maxDist: 21,
+};
 export default {
   id: ID,
   slug: 'zuigan-calls-his-own-master',
@@ -81,10 +87,7 @@ export default {
   // and the frame's lower edge reaches 42.8, so the chasm is inside the picture
   // with a little to spare. maxDist goes out with it, or the rig would clamp
   // the shot it was given.
-  camera: {
-    distance: 16.1, target: [0.9, 1.3, 0.35], heading: 22.3, pitch: 23.5,
-    minDist: 11, maxDist: 21,
-  },
+  camera: CAM,
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -139,6 +142,7 @@ export default {
     // outcrop dresses that end of the ledge on its own now, and the world's
     // own trees keep the middle distance from going bare.
     const world = composeWorld(scene, {
+      view: CAM,
       seed: ID,
       groundSeed: 21,
       trees: 3,

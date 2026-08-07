@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
+import { DEFAULT_HOME } from '../camera.js';
 import { composeWorld } from '../kit/scenery.js';
 import { makePath } from '../kit/path.js';
 import { makeHut } from '../kit/hut.js';
@@ -130,6 +131,9 @@ export default {
     //hall.add(eaveChime.group);
 
     const world = composeWorld(scene, {
+      // no `camera:` here — this case takes the book's default framing, so the
+      // scatter is told the same thing (kit/scenery.js seenFrom)
+      view: DEFAULT_HOME,
       seed: ID,
       groundSeed: 21,
       trees: 4,

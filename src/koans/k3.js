@@ -134,7 +134,10 @@ function envelope(u) {
   return e * e * (3 - 2 * e);
 }
 
-export default {
+// The framing, named so composeWorld can have it too: `view` lets the
+// scatter refuse spots no reachable heading can see (kit/scenery.js).
+const CAM = { distance: 9.6, target: [0.33, 1.25, -0.05], heading: 42.0, pitch: 19.0 };
+  export default {
   id: ID,
   slug: 'gutei-s-finger',
   title: TEXT[ID].title,
@@ -149,134 +152,135 @@ export default {
   // drag range.
   // Lifted off the deck: at pitch 15.5 the lens sat down among the grass tips and
   // both figures were shot through a screen of blades.
-  camera: { distance: 9.6, target: [0.33, 1.25, -0.05], heading: 42.0, pitch: 19.0 },
-
+  camera: CAM,
+  
   build(ctx) {
-    const { audio, input } = ctx;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(PAPER);
-    scene.fog = new THREE.FogExp2(PAPER, 0.030);
-    scene.add(makeLights());
-
-    // the approach to the temple, coming up the right-hand side of the yard and
-    // running past the hall
-    const path = makePath({ from: [3.9, 8.5], to: [2.0, -25], width: 1.6, seed: 33, groundSeed: 21, wander: 2.9 });
-    scene.add(path);
-
-    const hall = makeHut({ width: 3.2, height: 2.4, depth: 2.6 });
-    hall.position.set(HALL.x, 0, HALL.z);
-    hall.rotation.y = 0.10;                        // its threshold opens onto the yard
-    scene.add(hall);
-
-    const lantern = makeLantern({ height: 1.1 });
-    lantern.position.set(LANTERN.x, 0, LANTERN.z);
-    scene.add(lantern);
-
-    // Gutei: bigger, stouter, hatted, with an elder's staff. Everything about
-    // him should say master before you have looked at what he is doing.
-    // No staff. The elder's staff stands on the same side as the raised arm, so
-    // it drew a grey vertical right beside the red seal and the two competed —
-    // in a case whose entire subject is one small red gesture, nothing else gets
-    // to be a vertical line next to it. He still reads as the master by size,
-    // stoutness, hat and staging.
-    const gutei = makeMonk({ height: 1.66, stout: 1.1, pose: 'raise' });
-    const GUTEI_pos = { x: GUTEI.x + 1, z: GUTEI.z -.5};  // nudged by hand  
-    gutei.position.set(GUTEI_pos.x, 0, GUTEI_pos.z);
-    gutei.rotation.y = FACING;
-    scene.add(gutei);
-
-    // The boy attendant, bare-headed — a novice has no travelling hat, and
-    // without one his own finger clears the top of his head instead of
-    // disappearing behind a brim.
-    const boy = makeMonk({ height: 1.10, pose: 'raise', hat: false });
-    boy.position.set(BOY.x, 0, BOY.z);
-    boy.rotation.y = FACING-.5; // slight turn to face Gutei's finger
-    scene.add(boy);
-
-    // the one seal — Gutei's finger — and the boy's empty raised hand beside it.
-    // Both figures lift the same arm through the same gesture; only the master
-    // has anything on the end of it.
-    const master = raiseFinger(gutei, { length: 0.17, radius: 0.027 });
-    const pupil = raiseFinger(boy, { withFinger: false });
-
-    // whoever has just asked. Kept off to the sides: the gap between the master
-    // and the boy is where both gestures live and nothing else belongs in it.
-    const visitor = makeMonk({ height: 1.58, stout: 0.96 });
-    visitor.position.set(VISITOR.x, 0, VISITOR.z);
-    faceMonk(visitor, boy.position);
-    scene.add(visitor);
-
-    // seated, deliberately: a low silhouette cannot crowd a raised finger
-    const resident = makeMonk({ height: 1.55, pose: 'sit' });
-    resident.position.set(RESIDENT.x, 0, RESIDENT.z);
-    faceMonk(resident, gutei.position);
-    scene.add(resident);
-
-    const world = composeWorld(scene, {
-      seed: ID,
-      groundSeed: 21,
-      trees: 4,
-      keepout: [
-        ...path.keepout(24, 1.05),
-        { x: GUTEI.x, z: GUTEI.z, r: 1.5 },
-        { x: BOY.x, z: BOY.z, r: 1.2 },
-        // the yard between them — nothing grows up between the two gestures
-        { x: (GUTEI.x + BOY.x) / 2, z: (GUTEI.z + BOY.z) / 2, r: 1.7 },
-        { x: VISITOR.x, z: VISITOR.z, r: 1.1 },
-        { x: RESIDENT.x, z: RESIDENT.z, r: 1.1 },
-        { x: LANTERN.x, z: LANTERN.z, r: 1.0 },
-        { x: HALL.x, z: HALL.z, r: 3.2 },
-        // the lens sits out here; a tree between it and the gesture would cost
-        // the whole case
-        { x: 4.6, z: 5.0, r: 5.2 },
-      ],
-      // Stingy on purpose. Only the trodden path, the hall's footprint and the
-      // lantern's base actually cover ground — everyone here is standing in the
-      // grass, which is how people stand in grass.
-      grassKeepout: [
-        ...path.keepout(24, 0.95),
-        { x: HALL.x, z: HALL.z, r: 1.9 },
-        { x: LANTERN.x, z: LANTERN.z, r: 0.4 },
-        // The swept yard. Standing in grass is right for a monk on a hillside and
-        // wrong here — waist-high meadow buried both gestures, and the gestures
-        // are the entire case. A temple yard is trodden bare, so this earns its
-        // keepout the way the trail does.
-        { x: (GUTEI.x + BOY.x) / 2, z: (GUTEI.z + BOY.z) / 2, r: 2.9 },
-      ],
-    });
-
-    addOutlines(scene, { width: 0.033, wobble: 0.7 });
-
-    // ---- the moment: touch one of them, and the other one answers ----------
-    // The imitation IS the koan, so the imitation is the thing you can reach.
-    // No prompt says so and nothing is scored; it is a small ambient echo, and
-    // both fingers are up whether or not anyone ever touches them.
-    let camera = null;
-    let now = 0;
-    let taps = 0, answers = 0;
-    let echo = null, echoAt = 0;
-    // CODE REVIEW CAUGHT (Task 5C): no cooldown at all here, so a held pointer
-    // stacked audio.bell() calls without limit — k49's idiom
-    // (`clock - lastRing > 0.5`) gates the TAP that starts a gesture; the
-    // scripted echo it schedules (BEAT later) is a single, already-bounded
-    // follow-up and is left alone.
-    let lastTap = -99;
-
-    const guteiMeshes = tapMeshes(gutei);
-    const boyMeshes = tapMeshes(boy);
-
-    const strike = (f) => {
-      f.since = now;
-      // the same gesture, twice, in two voices: the master's answer carries
-      // the room the way his authority does (temple), the boy's imitation is
-      // smaller and brighter (hand) — task-12's bell-preset migration, which
-      // trades the raw f0 pair (62 / a fifth above) for two of Frank's own
-      // tuned bells rather than two arbitrary pitches.
-      audio && audio.bell({
-        preset: f === master ? 'temple' : 'hand', gain: f === master ? 0.14 : 0.11,
-        at: f.monk.position,
-      });
-    };
+  const { audio, input } = ctx;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(PAPER);
+  scene.fog = new THREE.FogExp2(PAPER, 0.030);
+  scene.add(makeLights());
+  
+  // the approach to the temple, coming up the right-hand side of the yard and
+  // running past the hall
+  const path = makePath({ from: [3.9, 8.5], to: [2.0, -25], width: 1.6, seed: 33, groundSeed: 21, wander: 2.9 });
+  scene.add(path);
+  
+  const hall = makeHut({ width: 3.2, height: 2.4, depth: 2.6 });
+  hall.position.set(HALL.x, 0, HALL.z);
+  hall.rotation.y = 0.10;                        // its threshold opens onto the yard
+  scene.add(hall);
+  
+  const lantern = makeLantern({ height: 1.1 });
+  lantern.position.set(LANTERN.x, 0, LANTERN.z);
+  scene.add(lantern);
+  
+  // Gutei: bigger, stouter, hatted, with an elder's staff. Everything about
+  // him should say master before you have looked at what he is doing.
+  // No staff. The elder's staff stands on the same side as the raised arm, so
+  // it drew a grey vertical right beside the red seal and the two competed —
+  // in a case whose entire subject is one small red gesture, nothing else gets
+  // to be a vertical line next to it. He still reads as the master by size,
+  // stoutness, hat and staging.
+  const gutei = makeMonk({ height: 1.66, stout: 1.1, pose: 'raise' });
+  const GUTEI_pos = { x: GUTEI.x + 1, z: GUTEI.z -.5};  // nudged by hand
+  gutei.position.set(GUTEI_pos.x, 0, GUTEI_pos.z);
+  gutei.rotation.y = FACING;
+  scene.add(gutei);
+  
+  // The boy attendant, bare-headed — a novice has no travelling hat, and
+  // without one his own finger clears the top of his head instead of
+  // disappearing behind a brim.
+  const boy = makeMonk({ height: 1.10, pose: 'raise', hat: false });
+  boy.position.set(BOY.x, 0, BOY.z);
+  boy.rotation.y = FACING-.5; // slight turn to face Gutei's finger
+  scene.add(boy);
+  
+  // the one seal — Gutei's finger — and the boy's empty raised hand beside it.
+  // Both figures lift the same arm through the same gesture; only the master
+  // has anything on the end of it.
+  const master = raiseFinger(gutei, { length: 0.17, radius: 0.027 });
+  const pupil = raiseFinger(boy, { withFinger: false });
+  
+  // whoever has just asked. Kept off to the sides: the gap between the master
+  // and the boy is where both gestures live and nothing else belongs in it.
+  const visitor = makeMonk({ height: 1.58, stout: 0.96 });
+  visitor.position.set(VISITOR.x, 0, VISITOR.z);
+  faceMonk(visitor, boy.position);
+  scene.add(visitor);
+  
+  // seated, deliberately: a low silhouette cannot crowd a raised finger
+  const resident = makeMonk({ height: 1.55, pose: 'sit' });
+  resident.position.set(RESIDENT.x, 0, RESIDENT.z);
+  faceMonk(resident, gutei.position);
+  scene.add(resident);
+  
+  const world = composeWorld(scene, {
+  view: CAM,
+  seed: ID,
+  groundSeed: 21,
+  trees: 4,
+  keepout: [
+  ...path.keepout(24, 1.05),
+  { x: GUTEI.x, z: GUTEI.z, r: 1.5 },
+  { x: BOY.x, z: BOY.z, r: 1.2 },
+  // the yard between them — nothing grows up between the two gestures
+  { x: (GUTEI.x + BOY.x) / 2, z: (GUTEI.z + BOY.z) / 2, r: 1.7 },
+  { x: VISITOR.x, z: VISITOR.z, r: 1.1 },
+  { x: RESIDENT.x, z: RESIDENT.z, r: 1.1 },
+  { x: LANTERN.x, z: LANTERN.z, r: 1.0 },
+  { x: HALL.x, z: HALL.z, r: 3.2 },
+  // the lens sits out here; a tree between it and the gesture would cost
+  // the whole case
+  { x: 4.6, z: 5.0, r: 5.2 },
+  ],
+  // Stingy on purpose. Only the trodden path, the hall's footprint and the
+  // lantern's base actually cover ground — everyone here is standing in the
+  // grass, which is how people stand in grass.
+  grassKeepout: [
+  ...path.keepout(24, 0.95),
+  { x: HALL.x, z: HALL.z, r: 1.9 },
+  { x: LANTERN.x, z: LANTERN.z, r: 0.4 },
+  // The swept yard. Standing in grass is right for a monk on a hillside and
+  // wrong here — waist-high meadow buried both gestures, and the gestures
+  // are the entire case. A temple yard is trodden bare, so this earns its
+  // keepout the way the trail does.
+  { x: (GUTEI.x + BOY.x) / 2, z: (GUTEI.z + BOY.z) / 2, r: 2.9 },
+  ],
+  });
+  
+  addOutlines(scene, { width: 0.033, wobble: 0.7 });
+  
+  // ---- the moment: touch one of them, and the other one answers ----------
+  // The imitation IS the koan, so the imitation is the thing you can reach.
+  // No prompt says so and nothing is scored; it is a small ambient echo, and
+  // both fingers are up whether or not anyone ever touches them.
+  let camera = null;
+  let now = 0;
+  let taps = 0, answers = 0;
+  let echo = null, echoAt = 0;
+  // CODE REVIEW CAUGHT (Task 5C): no cooldown at all here, so a held pointer
+  // stacked audio.bell() calls without limit — k49's idiom
+  // (`clock - lastRing > 0.5`) gates the TAP that starts a gesture; the
+  // scripted echo it schedules (BEAT later) is a single, already-bounded
+  // follow-up and is left alone.
+  let lastTap = -99;
+  
+  const guteiMeshes = tapMeshes(gutei);
+  const boyMeshes = tapMeshes(boy);
+  
+  const strike = (f) => {
+  f.since = now;
+  // the same gesture, twice, in two voices: the master's answer carries
+  // the room the way his authority does (temple), the boy's imitation is
+  // smaller and brighter (hand) — task-12's bell-preset migration, which
+  // trades the raw f0 pair (62 / a fifth above) for two of Frank's own
+  // tuned bells rather than two arbitrary pitches.
+  audio && audio.bell({
+  preset: f === master ? 'temple' : 'hand', gain: f === master ? 0.14 : 0.11,
+  at: f.monk.position,
+  });
+};
 
     input.onTap(() => {
       if (!camera) return;

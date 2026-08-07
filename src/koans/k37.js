@@ -7,7 +7,10 @@ import {
 } from '../kit/index.js';
 
 const ID = 37;
-export default {
+// The framing, named so composeWorld can have it too: `view` lets the
+// scatter refuse spots no reachable heading can see (kit/scenery.js).
+const CAM = { distance: 15.5, target: [1.0, 1.5, -2.3], heading: 31.5, pitch: 17.2 };
+  export default {
   id: ID,
   slug: 'a-buffalo-passes-through-the-enclosure',
   title: TEXT[ID].title,
@@ -18,92 +21,93 @@ export default {
   // Orbit around the BUFFALO. On the shared default target the pivot landed on
   // the middle of a fence panel, so the camera swung around a wall while the
   // subject drifted across frame — the scene appeared to rotate about nothing.
-  camera: { distance: 15.5, target: [1.0, 1.5, -2.3], heading: 31.5, pitch: 17.2 },
-
+  camera: CAM,
+  
   build(ctx) {
-    const { audio, input } = ctx;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(PAPER);
-    scene.fog = new THREE.FogExp2(PAPER, 0.030);
-    scene.add(makeLights());
-
-    // The enclosure. Three walls of lattice — and the fourth side is not
-    // missing but a DOUBLE DOOR: one leaf standing shut, the other pushed
-    // ajar, the way a gate stands after somebody slipped through and did not
-    // look back (Frank, in two passes: first "the 2 panels rotating open
-    // like double doors pushed open", then "only one half... partially open
-    // — it's too open right now"). A wall that was never built says nothing;
-    // a door left ajar says the pen has never once held him. The shut leaf
-    // is the far corner, the ajar one the near — it opens across the
-    // buffalo's own facing line, toward the lens.
-    const PEN = { x: 1.0, z: -2.3, size: 5.4 };   // room to stand, not a crate
-    const pen = makePen({ size: PEN.size, height: 1.9, open: '+x', panelsPerSide: 2, doors: [0, 0.62] });
-    pen.position.set(PEN.x, 0, PEN.z);
-    scene.add(pen);
-
-    // He stands in the middle of his own pen, facing the side that is standing
-    // open. Nothing is holding him. Red, because the buffalo IS this koan —
-    // deepened, since full accent across an animal this size reads as glare.
-    const buffalo = makeBuffalo({ height: 1.5, color: ACCENT_DEEP, tailColor: ACCENT });
-    buffalo.group.position.set(PEN.x, 0, PEN.z);
-    // +z is his forward, so +PI/2 turns him to face +x — the opening. Backed off
-    // a little from square so the camera gets his hump and horns in three-quarter
-    // instead of a flat profile, and the tail stays clear of the body.
-    buffalo.group.rotation.y = Math.PI / 2 - 0.42;
-    scene.add(buffalo.group);
-
-    // a monk watching the impossible thing, set back so he doesn't fill the lens
-    const monk = makeMonk({ height: 1.6 });
-    monk.position.set(4.9, 0, 1.4);
-    faceMonk(monk, buffalo.group.position);
-    scene.add(monk);
-
-    const world = composeWorld(scene, {
-      seed: 37,
-      groundSeed: 21,
-      trees: 4,
-      keepout: [
-        ...pen.footprint(1.0),                              // the three standing walls
-        { x: PEN.x, z: PEN.z, r: PEN.size * 0.5 },          // nothing clutters the pen floor
-        { x: monk.position.x, z: monk.position.z, r: 1.1 },
-      ],
-      // nothing here covers the ground — grass grows through a fence and around
-      // hooves in life, so let it
-      grassKeepout: [],
-    });
-
-    addOutlines(scene, { width: 0.035, wobble: 0.7 });
-
-    // ---- the moment: the tail --------------------------------------------
-    // Tug it and it swishes. It never passes. That is the whole koan, and
-    // nothing in the UI says so.
-    let camera = null;
-    let tugs = 0;
-    const tailMeshes = tapMeshes(buffalo.tail.group);
-
-    input.onTap(() => {
-      if (!camera) return;
-      const hit = input.raycastFirst(camera, tailMeshes);
-      if (hit) {
-        buffalo.tail.impulse(1.2);
-        tugs++;
-        // a heavier brush than a robe: this is a tail, and there is an animal
-        // on the other end of it
-        audio && audio.cloth({ force: 1.1, at: hit.point });
-      }
-    });
-
-    return {
-      scene,
-      setCamera(c) { camera = c; },
-      update(dt, simTime) {
-        world.update(dt, simTime);
-        buffalo.update(dt, simTime);
-      },
-      fragment() {
-        return { tailEnergy: +buffalo.tail.energy().toFixed(6), tugs };
-      },
-      dispose() {},
-    };
+  const { audio, input } = ctx;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(PAPER);
+  scene.fog = new THREE.FogExp2(PAPER, 0.030);
+  scene.add(makeLights());
+  
+  // The enclosure. Three walls of lattice — and the fourth side is not
+  // missing but a DOUBLE DOOR: one leaf standing shut, the other pushed
+  // ajar, the way a gate stands after somebody slipped through and did not
+  // look back (Frank, in two passes: first "the 2 panels rotating open
+  // like double doors pushed open", then "only one half... partially open
+  // — it's too open right now"). A wall that was never built says nothing;
+  // a door left ajar says the pen has never once held him. The shut leaf
+  // is the far corner, the ajar one the near — it opens across the
+  // buffalo's own facing line, toward the lens.
+  const PEN = { x: 1.0, z: -2.3, size: 5.4 };   // room to stand, not a crate
+  const pen = makePen({ size: PEN.size, height: 1.9, open: '+x', panelsPerSide: 2, doors: [0, 0.62] });
+  pen.position.set(PEN.x, 0, PEN.z);
+  scene.add(pen);
+  
+  // He stands in the middle of his own pen, facing the side that is standing
+  // open. Nothing is holding him. Red, because the buffalo IS this koan —
+  // deepened, since full accent across an animal this size reads as glare.
+  const buffalo = makeBuffalo({ height: 1.5, color: ACCENT_DEEP, tailColor: ACCENT });
+  buffalo.group.position.set(PEN.x, 0, PEN.z);
+  // +z is his forward, so +PI/2 turns him to face +x — the opening. Backed off
+  // a little from square so the camera gets his hump and horns in three-quarter
+  // instead of a flat profile, and the tail stays clear of the body.
+  buffalo.group.rotation.y = Math.PI / 2 - 0.42;
+  scene.add(buffalo.group);
+  
+  // a monk watching the impossible thing, set back so he doesn't fill the lens
+  const monk = makeMonk({ height: 1.6 });
+  monk.position.set(4.9, 0, 1.4);
+  faceMonk(monk, buffalo.group.position);
+  scene.add(monk);
+  
+  const world = composeWorld(scene, {
+  view: CAM,
+  seed: 37,
+  groundSeed: 21,
+  trees: 4,
+  keepout: [
+  ...pen.footprint(1.0),                              // the three standing walls
+  { x: PEN.x, z: PEN.z, r: PEN.size * 0.5 },          // nothing clutters the pen floor
+  { x: monk.position.x, z: monk.position.z, r: 1.1 },
+  ],
+  // nothing here covers the ground — grass grows through a fence and around
+  // hooves in life, so let it
+  grassKeepout: [],
+  });
+  
+  addOutlines(scene, { width: 0.035, wobble: 0.7 });
+  
+  // ---- the moment: the tail --------------------------------------------
+  // Tug it and it swishes. It never passes. That is the whole koan, and
+  // nothing in the UI says so.
+  let camera = null;
+  let tugs = 0;
+  const tailMeshes = tapMeshes(buffalo.tail.group);
+  
+  input.onTap(() => {
+  if (!camera) return;
+  const hit = input.raycastFirst(camera, tailMeshes);
+  if (hit) {
+  buffalo.tail.impulse(1.2);
+  tugs++;
+  // a heavier brush than a robe: this is a tail, and there is an animal
+  // on the other end of it
+  audio && audio.cloth({ force: 1.1, at: hit.point });
+  }
+  });
+  
+  return {
+  scene,
+  setCamera(c) { camera = c; },
+  update(dt, simTime) {
+  world.update(dt, simTime);
+  buffalo.update(dt, simTime);
+  },
+  fragment() {
+  return { tailEnergy: +buffalo.tail.energy().toFixed(6), tugs };
+  },
+  dispose() {},
+};
   },
 };

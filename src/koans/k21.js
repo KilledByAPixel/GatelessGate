@@ -19,7 +19,10 @@ const ID = 21;
 // The dung itself is the one warm mark on the page (Frank): a red pile in the
 // dirt, which is the whole joke — the painter has given his one seal of colour
 // to a piece of dung, exactly the joke Mumon makes in the commentary.
-export default {
+// The framing, named so composeWorld can have it too: `view` lets the
+// scatter refuse spots no reachable heading can see (kit/scenery.js).
+const CAM = { distance: 10.0, target: [0.8, 0.8, 0.2], heading: 31.5, pitch: 21.2 };
+  export default {
   id: ID,
   slug: 'dried-dung',
   title: TEXT[ID].title,
@@ -28,40 +31,40 @@ export default {
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   // nothing here makes a sound but the wind, so the drift plays in full
   ambience: ['wind:0.30', 'music'],
-  camera: { distance: 10.0, target: [0.8, 0.8, 0.2], heading: 31.5, pitch: 21.2 },
-
+  camera: CAM,
+  
   build(ctx) {
-    const { audio, input } = ctx;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(PAPER);
-    scene.fog = new THREE.FogExp2(PAPER, 0.032);
-    scene.add(makeLights());
-
-    // THE STICK. Dry, crooked, a hand taller than it needs to be, standing in
-    // swept ground. Three tapering segments with a slight kink at each joint,
-    // because a perfectly straight stick reads as a post.
-    // THE DUNG. Kanshiketsu — a little pile of it, which is the whole answer to
-    // "what is Buddha". A few tapered lumps heaped together, lying on the
-    // ground and modelled in the round: pointed at both ends, fat in the
-    // middle, tilted every which way. Bigger than a person would expect, since
-    // it is the centrepiece of the scene (Frank's note: not a flat cube).
-    const stick = new THREE.Group();      // kept the name so the interaction below reads unchanged
-    stick.name = 'dung';
-    // red — the dung IS the seal of this case now (Frank)
-    const dryMat = toonMaterial({ color: ACCENT, flat: true });
-
-    // one turd: a spindle lathe laid on its side, hinged so it rests ON the
-    // ground rather than through it
-    const turdGeo = (L, R) => {
-      const prof = [
-        [0.00, 0.00], [0.42, 0.10], [0.80, 0.30], [1.00, 0.52],
-        [0.86, 0.74], [0.44, 0.92], [0.00, 1.00],
-      ].map(([r, y]) => new THREE.Vector2(r * R, y * L));
-      const geo = new THREE.LatheGeometry(prof, 7);
-      geo.translate(0, -L / 2, 0);        // centre it on its long axis
-      geo.rotateZ(Math.PI / 2);           // lie along x
-      return geo;
-    };
+  const { audio, input } = ctx;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(PAPER);
+  scene.fog = new THREE.FogExp2(PAPER, 0.032);
+  scene.add(makeLights());
+  
+  // THE STICK. Dry, crooked, a hand taller than it needs to be, standing in
+  // swept ground. Three tapering segments with a slight kink at each joint,
+  // because a perfectly straight stick reads as a post.
+  // THE DUNG. Kanshiketsu — a little pile of it, which is the whole answer to
+  // "what is Buddha". A few tapered lumps heaped together, lying on the
+  // ground and modelled in the round: pointed at both ends, fat in the
+  // middle, tilted every which way. Bigger than a person would expect, since
+  // it is the centrepiece of the scene (Frank's note: not a flat cube).
+  const stick = new THREE.Group();      // kept the name so the interaction below reads unchanged
+  stick.name = 'dung';
+  // red — the dung IS the seal of this case now (Frank)
+  const dryMat = toonMaterial({ color: ACCENT, flat: true });
+  
+  // one turd: a spindle lathe laid on its side, hinged so it rests ON the
+  // ground rather than through it
+  const turdGeo = (L, R) => {
+  const prof = [
+  [0.00, 0.00], [0.42, 0.10], [0.80, 0.30], [1.00, 0.52],
+  [0.86, 0.74], [0.44, 0.92], [0.00, 1.00],
+  ].map(([r, y]) => new THREE.Vector2(r * R, y * L));
+  const geo = new THREE.LatheGeometry(prof, 7);
+  geo.translate(0, -L / 2, 0);        // centre it on its long axis
+  geo.rotateZ(Math.PI / 2);           // lie along x
+  return geo;
+};
 
     // a heap: a base ring of lumps and a couple riding on top
     const LUMPS = [
@@ -116,6 +119,7 @@ export default {
     scene.add(monk);
 
     const world = composeWorld(scene, {
+      view: CAM,
       seed: ID,
       groundSeed: 21,
       trees: 2,                       // and those kept out at the fog line

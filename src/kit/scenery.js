@@ -105,6 +105,61 @@ export function around(obj, r) {
 // — rocks, bushes, both grass fields — still sees nothing but {x, z, r}.
 const asCircle = (k) => (k && k.at ? around(k.at, k.r) : k);
 
+// CAN THE READER EVER SEE THIS SPOT?
+//
+// Half the midground trees in the book stand where the lens never points: 51%
+// are outside the frame at the home framing and 18% are outside it at EVERY
+// heading the orbit can reach. Those last ones are pure waste (Frank: "don't
+// let trees spawn behind the default camera, that ends up being a waste since
+// you can never see them") — and because the placement loop RETRIES on a
+// rejection, refusing them does not thin the wood, it moves those trees to
+// where they show. Same budget, more scene.
+//
+// The test is horizontal only, and deliberately: a tree is tall, the pitch
+// drifts, the reader drags, and the vertical edges of the frame are the ones a
+// mistake is invisible in until somebody looks up. Left and right are what a
+// 103-degree orbit actually moves.
+//
+// The margins are chosen against what the frame can actually be, because the
+// cost of being wrong is a bald wedge that appears when the reader drags:
+//
+//   HALF_VIEW 42 degrees. The shipped 38-degree lens spans 31.5 degrees either
+//   side at 16:9 and 38.7 at 21:9, so 42 covers every window shape anyone will
+//   open the book in, with the pointer parallax and the ambient drift on top.
+//   Swept against the book's own 198 scatter trees: 42 relocates 6% of them,
+//   36 would relocate 10% and 32 would relocate 14% — real trees, but bought
+//   by assuming a frame narrower than an ultrawide monitor actually gives.
+//
+//   ARC_SAMPLES 13 across the drag range, one every 8.6 degrees. Visibility
+//   over the arc is smooth, and anything wide enough to be worth drawing is
+//   visible across far more than one step.
+//
+//   PAD 1.5 units of canopy, added as a real angle at the distance in hand: a
+//   trunk just outside the frame still shows its leaves. (This was briefly
+//   subtracted in COSINE space, which near 42 degrees is worth about three
+//   times the angle intended and quietly took the cull down to 3%.)
+const HALF_VIEW = 42;
+const ARC_SAMPLES = 13;
+const PAD = 1.5;
+const DEG = Math.PI / 180;
+
+export function seenFrom(x, z, view) {
+  const { heading = 31.5, pitch = 17.2, distance = 11.5, target = [0, 1.1, 0], headingRange = 51.5 } = view;
+  const R = distance * Math.cos(pitch * DEG);                  // the eye's own radius, in plan
+  for (let i = 0; i < ARC_SAMPLES; i++) {
+    const h = (heading - headingRange + (2 * headingRange * i) / (ARC_SAMPLES - 1)) * DEG;
+    const ex = target[0] + R * Math.sin(h), ez = target[2] + R * Math.cos(h);
+    const vx = x - ex, vz = z - ez;
+    const d = Math.hypot(vx, vz);
+    if (d < 1e-6) return true;                                 // standing on the lens
+    // forward is the way the lens points: from the eye back toward the target
+    const cos = (vx * -Math.sin(h) + vz * -Math.cos(h)) / d;
+    const ang = Math.acos(Math.max(-1, Math.min(1, cos))) / DEG;
+    if (ang <= HALF_VIEW + Math.atan(PAD / d) / DEG) return true;
+  }
+  return false;
+}
+
 // The shared scene grammar: every case sits in the same kind of world —
 // rolling ground, mountains and forest in the fog, and a dressed midground
 // (scatter trees, rocks, bushes, grass). Foreground staging stays per-koan.
@@ -143,6 +198,11 @@ export function composeWorld(scene, {
   // FLAVOR in a case's ambience ('wind:0.2:pine') is a separate, audio-only
   // choice; matching the two is the case's own job.
   treeKind = 'tree',
+  // The case's own framing, so the scatter can refuse spots the reader can
+  // never look at (seenFrom, above). Pass the same object the module's
+  // `camera:` names. Absent, nothing is culled beyond the old z > 6 rule and
+  // the placement is bit-identical to before this existed.
+  view = null,
   rocks = 12,
   bushes = 9,
   // Blades in the instanced field, not clumps. This used to be 52000 back when
@@ -211,6 +271,10 @@ export function composeWorld(scene, {
     const r = treeRing[0] + hash1(tries * 5 + 3, seed * 17) * (treeRing[1] - treeRing[0]);
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
     if (z > 6) continue; // keep the near-camera foreground open
+    // ...and off the spots no reachable heading can see. A rejection costs a
+    // try, not a tree: the loop keeps going until it has placed its quota, so
+    // this moves the wood into frame rather than thinning it.
+    if (view && !seenFrom(x, z, view)) continue;
     if (keepout.some((k) => Math.hypot(x - k.x, z - k.z) < k.r)) continue;
     if (footprints.some((f) => Math.hypot(x - f.x, z - f.z) < f.r * 0.85)) continue;
     // hash1 is stateless, so the extra draw for 'mixed' shifts no existing

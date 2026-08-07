@@ -29,7 +29,10 @@ const ease = (k) => k * k * (3 - 2 * k);
 // vector, reused across all three
 const scratchPos = new THREE.Vector3();
 
-export default {
+// The framing, named so composeWorld can have it too: `view` lets the
+// scatter refuse spots no reachable heading can see (kit/scenery.js).
+const CAM = { distance: 13.0, target: [0.4, 2.2, -1.4], heading: 31.5, pitch: 22.4 };
+  export default {
   id: ID,
   slug: 'it-is-not-mind-it-is-not-buddha-it-is-not-things',
   title: TEXT[ID].title,
@@ -37,101 +40,102 @@ export default {
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.18', 'music'],
-  camera: { distance: 13.0, target: [0.4, 2.2, -1.4], heading: 31.5, pitch: 22.4 },
-
+  camera: CAM,
+  
   build(ctx) {
-    const { audio, input } = ctx;
-    const scene = new THREE.Scene();
-    // EXPERIMENT (Frank): a red sky for the erasing case. The one scene where
-    // you take the world apart until only the page is left gets a page that is
-    // already tinted — so the paper you are left with is a warm red rather than
-    // white. The paper post pass multiplies, so this composites fine.
-    const SKY = mixHex(PAPER, ACCENT, 0.42);
-    scene.background = new THREE.Color(SKY);
-    scene.fog = new THREE.FogExp2(SKY, 0.028);
-    scene.add(makeLights());
-
-    const path = makePath({ from: [4.6, 8.2], to: [2.1, -18.9], width: 1.4, seed: ID, groundSeed: 21, wander: 0.9 });
-    scene.add(path);
-
-    // ---- the three things -------------------------------------------------
-    // Each sits in its own group so it can be lifted out whole, and each has a
-    // way of going that suits what it is: the built things sink into the
-    // ground they were standing on, and the moon — which was never standing on
-    // anything — simply stops being there.
-
-    const hallGroup = new THREE.Group();
-    hallGroup.name = 'the-hall';
-    const hall = makeHut({ width: 3.4, height: 2.6, depth: 2.8 });
-    hall.position.set(-2.2, 0, -4.4);
-    hall.rotation.y = 0.44;
-    hallGroup.add(hall);
-    scene.add(hallGroup);
-
-    const treeGroup = new THREE.Group();
-    treeGroup.name = 'the-tree';
-    const oak = makeOak({ height: 5.2, seed: ID });
-    const oakRoot = oak.group || oak;
-    const TREE = { x: 4.0, z: -2.6 };      // moved clear of the path (Frank: it stood in the road)
-    oakRoot.position.set(TREE.x, 0, TREE.z);
-    // Turn the hero limb AWAY from the home lens (Frank: "what's going on with
-    // the weird tree branch?"). Seed 27 grows its long low bough at local
-    // bearing 2.50 rad, which the home camera (heading 31.5) saw end-on: a bare
-    // foreshortened limb with a knuckle, jutting at the hall like an arm. At
-    // this yaw the bough reaches directly behind the crown, so from the whole
-    // reachable arc the tree reads as one heavy mass over its trunk.
-    oakRoot.rotation.y = 4.62;
-    treeGroup.add(oakRoot);
-    scene.add(treeGroup);
-
-    const moonGroup = new THREE.Group();
-    moonGroup.name = 'the-moon';
-    const moon = makeMoon({ radius: 3.0, color: ACCENT_LIGHT, distance: 60 });
-    moonGroup.add(moon);
-    scene.add(moonGroup);
-
-    // the monk who asked, left standing in whatever is left
-    const monk = makeMonk({ height: 1.58 });
-    monk.position.set(1.0, 0, 2.6);
-    faceMonk(monk, { x: -2.2, z: -4.4 });
-    scene.add(monk);
-
-    // Nansen, who is about to do this to him
-    const nansen = makeMonk({ height: 1.66, elder: true });
-    nansen.position.set(-1.0, 0, 1.2);
-    faceMonk(nansen, monk.position);
-    scene.add(nansen);
-
-    const world = composeWorld(scene, {
-      seed: ID,
-      groundSeed: 21,
-      trees: 3,
-      keepout: [
-        ...path.keepout(24, 1.2),
-        { at: hall, r: 3.2 },
-        { x: TREE.x, z: TREE.z, r: 3.0 },
-        { at: monk, r: 1.2 },
-        { at: nansen, r: 1.2 },
-      ],
-      grassKeepout: [
-        ...path.keepout(24, 0.95),
-        { at: hall, r: 2.1 },
-      ],
-    });
-
-    addOutlines(scene, { width: 0.033, wobble: 0.7 });
-
-    // ---- targets ----------------------------------------------------------
-    const mkHit = (name, x, y, z, w, h, d, parent) => {
-      const m = new THREE.Mesh(
-        new THREE.BoxGeometry(w, h, d),
-        new THREE.MeshBasicMaterial({ visible: false }));
-      m.name = name;
-      m.userData.noOutline = true;
-      m.position.set(x, y, z);
-      parent.add(m);
-      return m;
-    };
+  const { audio, input } = ctx;
+  const scene = new THREE.Scene();
+  // EXPERIMENT (Frank): a red sky for the erasing case. The one scene where
+  // you take the world apart until only the page is left gets a page that is
+  // already tinted — so the paper you are left with is a warm red rather than
+  // white. The paper post pass multiplies, so this composites fine.
+  const SKY = mixHex(PAPER, ACCENT, 0.42);
+  scene.background = new THREE.Color(SKY);
+  scene.fog = new THREE.FogExp2(SKY, 0.028);
+  scene.add(makeLights());
+  
+  const path = makePath({ from: [4.6, 8.2], to: [2.1, -18.9], width: 1.4, seed: ID, groundSeed: 21, wander: 0.9 });
+  scene.add(path);
+  
+  // ---- the three things -------------------------------------------------
+  // Each sits in its own group so it can be lifted out whole, and each has a
+  // way of going that suits what it is: the built things sink into the
+  // ground they were standing on, and the moon — which was never standing on
+  // anything — simply stops being there.
+  
+  const hallGroup = new THREE.Group();
+  hallGroup.name = 'the-hall';
+  const hall = makeHut({ width: 3.4, height: 2.6, depth: 2.8 });
+  hall.position.set(-2.2, 0, -4.4);
+  hall.rotation.y = 0.44;
+  hallGroup.add(hall);
+  scene.add(hallGroup);
+  
+  const treeGroup = new THREE.Group();
+  treeGroup.name = 'the-tree';
+  const oak = makeOak({ height: 5.2, seed: ID });
+  const oakRoot = oak.group || oak;
+  const TREE = { x: 4.0, z: -2.6 };      // moved clear of the path (Frank: it stood in the road)
+  oakRoot.position.set(TREE.x, 0, TREE.z);
+  // Turn the hero limb AWAY from the home lens (Frank: "what's going on with
+  // the weird tree branch?"). Seed 27 grows its long low bough at local
+  // bearing 2.50 rad, which the home camera (heading 31.5) saw end-on: a bare
+  // foreshortened limb with a knuckle, jutting at the hall like an arm. At
+  // this yaw the bough reaches directly behind the crown, so from the whole
+  // reachable arc the tree reads as one heavy mass over its trunk.
+  oakRoot.rotation.y = 4.62;
+  treeGroup.add(oakRoot);
+  scene.add(treeGroup);
+  
+  const moonGroup = new THREE.Group();
+  moonGroup.name = 'the-moon';
+  const moon = makeMoon({ radius: 3.0, color: ACCENT_LIGHT, distance: 60 });
+  moonGroup.add(moon);
+  scene.add(moonGroup);
+  
+  // the monk who asked, left standing in whatever is left
+  const monk = makeMonk({ height: 1.58 });
+  monk.position.set(1.0, 0, 2.6);
+  faceMonk(monk, { x: -2.2, z: -4.4 });
+  scene.add(monk);
+  
+  // Nansen, who is about to do this to him
+  const nansen = makeMonk({ height: 1.66, elder: true });
+  nansen.position.set(-1.0, 0, 1.2);
+  faceMonk(nansen, monk.position);
+  scene.add(nansen);
+  
+  const world = composeWorld(scene, {
+  view: CAM,
+  seed: ID,
+  groundSeed: 21,
+  trees: 3,
+  keepout: [
+  ...path.keepout(24, 1.2),
+  { at: hall, r: 3.2 },
+  { x: TREE.x, z: TREE.z, r: 3.0 },
+  { at: monk, r: 1.2 },
+  { at: nansen, r: 1.2 },
+  ],
+  grassKeepout: [
+  ...path.keepout(24, 0.95),
+  { at: hall, r: 2.1 },
+  ],
+  });
+  
+  addOutlines(scene, { width: 0.033, wobble: 0.7 });
+  
+  // ---- targets ----------------------------------------------------------
+  const mkHit = (name, x, y, z, w, h, d, parent) => {
+  const m = new THREE.Mesh(
+  new THREE.BoxGeometry(w, h, d),
+  new THREE.MeshBasicMaterial({ visible: false }));
+  m.name = name;
+  m.userData.noOutline = true;
+  m.position.set(x, y, z);
+  parent.add(m);
+  return m;
+};
     const hallHit = mkHit('hall-hit', -2.2, 1.3, -4.4, 4.0, 2.8, 3.4, hallGroup);
     const treeHit = mkHit('tree-hit', TREE.x, 2.6, TREE.z, 3.6, 5.2, 3.6, treeGroup);
     // the moon is 60 units out; its target is a panel hung in front of it on

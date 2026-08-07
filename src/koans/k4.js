@@ -17,7 +17,10 @@ const VERANDA_H = 3.2;   // shared with the chime hang point below
 // portrait is genuinely beardless. Try to put one on it and the ink will not
 // take: the stroke gathers, hangs there a moment, and drains back off the
 // silk. You cannot add what the picture is refusing to be.
-export default {
+// The framing, named so composeWorld can have it too: `view` lets the
+// scatter refuse spots no reachable heading can see (kit/scenery.js).
+const CAM = { distance: 9.0, target: [0.4, 1.7, -1.4], heading: 24.1, pitch: 15.5 };
+  export default {
   id: ID,
   slug: 'a-beardless-foreigner',
   title: TEXT[ID].title,
@@ -29,186 +32,187 @@ export default {
   // not a hillside), and one quiet voice suits a case about a picture that
   // refuses to be added to — a chattering cluster would be too many opinions.
   ambience: ['wind:0.14', 'scroll', 'furin', 'music'],
-  camera: { distance: 9.0, target: [0.4, 1.7, -1.4], heading: 24.1, pitch: 15.5 },
-
+  camera: CAM,
+  
   build(ctx) {
-    const { audio, input } = ctx;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(PAPER);
-    scene.fog = new THREE.FogExp2(PAPER, 0.030);
-    scene.add(makeLights());
-
-    // the bay the scroll hangs in
-    const veranda = makeVeranda({ width: 4.6, depth: 3.6, height: VERANDA_H });
-    veranda.position.set(0.2, 0, -3.4);
-    scene.add(veranda);
-
-    // ---- THE SCROLL -------------------------------------------------------
-    // A kakemono: two rollers and a hanging field of silk, with the portrait
-    // painted on it. Everything is flattened in z, because it IS a picture.
-    const scroll = new THREE.Group();
-    scroll.name = 'scroll';
-
-    const SW = 1.15, SH = 2.0;
-    const silk = new THREE.Mesh(
-      new THREE.PlaneGeometry(SW, SH),
-      toonMaterial({ color: WASH.mist, flat: true }));
-    silk.name = 'silk';
-    silk.userData.noOutline = true;      // a hung sheet has no hull to outline
-    scroll.add(silk);
-
-    for (const sy of [-1, 1]) {
-      const rod = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.045, 0.045, SW * 1.12, 7),
-        toonMaterial({ color: WASH.dark, flat: true }));
-      rod.name = 'rod';
-      rod.rotation.z = Math.PI / 2;
-      rod.position.set(0, sy * SH / 2, -0.01);
-      scroll.add(rod);
-    }
-
-    // The painted Bodhidharma: a robe and a cowled head, standing a hair
-    // proud of the silk. Famously bearded everywhere else; not here. Painted
-    // in the case's red, not ink (Frank: "make the whole image — the painting
-    // of Bodhidharma on the thing — red instead of black"): the portrait IS
-    // this koan's seal, so the little collector's-seal square it used to
-    // carry is gone with the same stroke — one red thing, and it is him.
-    const paintMat = toonMaterial({ color: ACCENT, flat: true });
-    const painted = new THREE.Group();
-    painted.name = 'painted';
-    painted.position.set(0, -0.12, 0.03);
-
-    const robeProfile = [
-      [0.02, 0.00], [0.34, 0.00], [0.30, 0.24], [0.24, 0.52],
-      [0.20, 0.70], [0.22, 0.80], [0.10, 0.86],
-    ].map(([r, y]) => new THREE.Vector2(r, y));
-    const robe = new THREE.Mesh(new THREE.LatheGeometry(robeProfile, 9), paintMat);
-    robe.name = 'robe';
-    robe.position.y = -0.62;
-    robe.scale.z = 0.30;                 // pressed flat: it is paint, not a man
-    painted.add(robe);
-
-    // The head: ONE mass, not two. It used to be a face sphere with a
-    // separate open hood shell over it, and since every part of the portrait
-    // is the same red paint the only thing the second piece contributed was
-    // its artifacts — the shell's rim cutting a hard seam across the crown,
-    // and its open underside showing backfaces from below (Frank: "why is
-    // its head weird?"). A hooded head in flat red IS a single silhouette,
-    // so it is modelled as one: an egg standing slightly tall, pressed flat
-    // like the rest of the paint.
-    const face = new THREE.Mesh(new THREE.SphereGeometry(0.155, 12, 10), paintMat);
-    face.name = 'face';
-    face.position.y = 0.315;
-    face.scale.set(1, 1.14, 0.32);
-    painted.add(face);
-    scroll.add(painted);
-
-    // THE BEARD THAT WILL NOT TAKE. Present from the start and invisible; a
-    // tap gathers it and it drains away again. Never outlined — an outline
-    // would draw a hard edge round something that is meant to be wet ink.
-    const beardMat = toonMaterial({ color: INK_LIT, flat: true });
-    beardMat.transparent = true;
-    beardMat.opacity = 0;
-    const beard = new THREE.Mesh(new THREE.ConeGeometry(0.115, 0.34, 7), beardMat);
-    beard.name = 'beard';
-    beard.userData.noOutline = true;
-    beard.rotation.x = Math.PI;          // point down, off the chin
-    beard.position.set(0, 0.06, 0.04);
-    beard.scale.z = 0.4;
-    painted.add(beard);
-
-    scroll.position.set(0.2, 1.95, -3.34);
-    scene.add(scroll);
-
-    // Wakuan, in front of it, complaining
-    const wakuan = makeMonk({ height: 1.66, pose: 'point' });
-    wakuan.position.set(1.5, 0, 0.3);
-    aimMonk(wakuan, scroll.position);
-    scene.add(wakuan);
-
-    const lantern = makeLantern({ height: 1.1 });
-    lantern.position.set(-2.9, 0, -0.4);
-    scene.add(lantern);
-
-    // A single small tube on a cord, hung under the veranda's own beam — the
-    // one voice a bay like this would actually carry. Local to the veranda
-    // group (like a torii's chimes in case 29) so it stays square to the
-    // porch however the scene is placed. x=1.5 sits between the two posts
-    // nearest that side (px ~ 0.77 and 2.3 at this width), clear of both;
-    // y is the beam's own underside (height-0.20); z sits a hand's width
-    // proud of the post line, under the eave's own shadow rather than flush
-    // with the beam face.
-    const furin = makeFurin({
-      size: .3,
-      tubes: 1, seed: 4,
-      onStrike: (_, force, pos) => audio && audio.chimeStrike({ tube: 1, force, at: pos }),
-    });
-    furin.group.position.set(1.5, VERANDA_H - 0.20, -0.15);
-    veranda.add(furin.group);
-
-    const world = composeWorld(scene, {
-      seed: ID,
-      groundSeed: 21,
-      trees: 4,
-      keepout: [
-        { at: veranda, r: 4.2 },
-        { at: wakuan, r: 1.2 },
-        { at: lantern, r: 0.9 },
-      ],
-      grassKeepout: [{ x: 0.2, z: -2.6, r: 3.2 }],
-    });
-
-    addOutlines(scene, { width: 0.030, wobble: 0.7 });
-
-    const hit = new THREE.Mesh(
-      new THREE.BoxGeometry(SW * 1.2, SH * 1.1, 0.3),
-      new THREE.MeshBasicMaterial({ visible: false }));
-    hit.name = 'scroll-hit';
-    hit.userData.noOutline = true;
-    scroll.add(hit);
-
-    // ---- the moment: the ink will not take -------------------------------
-    const STROKE = 2.2;          // gather, hang, drain
-    let camera = null;
-    let clock = 0;
-    let attempts = 0;
-    let strokeAt = -99;
-
-    input.onTap(() => {
-      if (!camera) return;
-      // the chime first, so a tap aimed at it never falls through to the
-      // scroll's own refusal — same probe-then-return order as case 29
-      const chimeHit = furin.pick(camera, input);
-      if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
-      if (!input.raycastFirst(camera, [hit])) return;
-      if (clock - strokeAt < STROKE) return;      // one refusal at a time
-      strokeAt = clock;
-      attempts++;
-      audio && audio.chimeStrike({ tube: 2, force: 0.4, at: scroll.position });
-    });
-
-    return {
-      scene,
-      setCamera(c) { camera = c; },
-      update(dt, simTime) {
-        clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
-        world.update(dt, simTime);
-        // a steady porch breeze — see k47's furin for the same untouched
-        // default (this case has no flag or screen to derive a live level
-        // from, so the chime reads the wind at its own full range, same as
-        // every other static-wind case that carries one)
-        furin.setWindLevel(1);
-        furin.update(dt, simTime);
-        const u = (clock - strokeAt) / STROKE;
-        // up fast, held a moment, then drained away
-        const a = (u <= 0 || u >= 1) ? 0 : Math.min(1, u / 0.18, (1 - u) / 0.45);
-        beardMat.opacity = 0.85 * a * a * (3 - 2 * a);
-        beard.scale.y = 0.6 + 0.4 * a;
-      },
-      fragment() {
-        return { attempts, ink: +beardMat.opacity.toFixed(3), chimeStrikes: furin.strikes() };
-      },
-      dispose() {},
-    };
+  const { audio, input } = ctx;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(PAPER);
+  scene.fog = new THREE.FogExp2(PAPER, 0.030);
+  scene.add(makeLights());
+  
+  // the bay the scroll hangs in
+  const veranda = makeVeranda({ width: 4.6, depth: 3.6, height: VERANDA_H });
+  veranda.position.set(0.2, 0, -3.4);
+  scene.add(veranda);
+  
+  // ---- THE SCROLL -------------------------------------------------------
+  // A kakemono: two rollers and a hanging field of silk, with the portrait
+  // painted on it. Everything is flattened in z, because it IS a picture.
+  const scroll = new THREE.Group();
+  scroll.name = 'scroll';
+  
+  const SW = 1.15, SH = 2.0;
+  const silk = new THREE.Mesh(
+  new THREE.PlaneGeometry(SW, SH),
+  toonMaterial({ color: WASH.mist, flat: true }));
+  silk.name = 'silk';
+  silk.userData.noOutline = true;      // a hung sheet has no hull to outline
+  scroll.add(silk);
+  
+  for (const sy of [-1, 1]) {
+  const rod = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.045, 0.045, SW * 1.12, 7),
+  toonMaterial({ color: WASH.dark, flat: true }));
+  rod.name = 'rod';
+  rod.rotation.z = Math.PI / 2;
+  rod.position.set(0, sy * SH / 2, -0.01);
+  scroll.add(rod);
+  }
+  
+  // The painted Bodhidharma: a robe and a cowled head, standing a hair
+  // proud of the silk. Famously bearded everywhere else; not here. Painted
+  // in the case's red, not ink (Frank: "make the whole image — the painting
+  // of Bodhidharma on the thing — red instead of black"): the portrait IS
+  // this koan's seal, so the little collector's-seal square it used to
+  // carry is gone with the same stroke — one red thing, and it is him.
+  const paintMat = toonMaterial({ color: ACCENT, flat: true });
+  const painted = new THREE.Group();
+  painted.name = 'painted';
+  painted.position.set(0, -0.12, 0.03);
+  
+  const robeProfile = [
+  [0.02, 0.00], [0.34, 0.00], [0.30, 0.24], [0.24, 0.52],
+  [0.20, 0.70], [0.22, 0.80], [0.10, 0.86],
+  ].map(([r, y]) => new THREE.Vector2(r, y));
+  const robe = new THREE.Mesh(new THREE.LatheGeometry(robeProfile, 9), paintMat);
+  robe.name = 'robe';
+  robe.position.y = -0.62;
+  robe.scale.z = 0.30;                 // pressed flat: it is paint, not a man
+  painted.add(robe);
+  
+  // The head: ONE mass, not two. It used to be a face sphere with a
+  // separate open hood shell over it, and since every part of the portrait
+  // is the same red paint the only thing the second piece contributed was
+  // its artifacts — the shell's rim cutting a hard seam across the crown,
+  // and its open underside showing backfaces from below (Frank: "why is
+  // its head weird?"). A hooded head in flat red IS a single silhouette,
+  // so it is modelled as one: an egg standing slightly tall, pressed flat
+  // like the rest of the paint.
+  const face = new THREE.Mesh(new THREE.SphereGeometry(0.155, 12, 10), paintMat);
+  face.name = 'face';
+  face.position.y = 0.315;
+  face.scale.set(1, 1.14, 0.32);
+  painted.add(face);
+  scroll.add(painted);
+  
+  // THE BEARD THAT WILL NOT TAKE. Present from the start and invisible; a
+  // tap gathers it and it drains away again. Never outlined — an outline
+  // would draw a hard edge round something that is meant to be wet ink.
+  const beardMat = toonMaterial({ color: INK_LIT, flat: true });
+  beardMat.transparent = true;
+  beardMat.opacity = 0;
+  const beard = new THREE.Mesh(new THREE.ConeGeometry(0.115, 0.34, 7), beardMat);
+  beard.name = 'beard';
+  beard.userData.noOutline = true;
+  beard.rotation.x = Math.PI;          // point down, off the chin
+  beard.position.set(0, 0.06, 0.04);
+  beard.scale.z = 0.4;
+  painted.add(beard);
+  
+  scroll.position.set(0.2, 1.95, -3.34);
+  scene.add(scroll);
+  
+  // Wakuan, in front of it, complaining
+  const wakuan = makeMonk({ height: 1.66, pose: 'point' });
+  wakuan.position.set(1.5, 0, 0.3);
+  aimMonk(wakuan, scroll.position);
+  scene.add(wakuan);
+  
+  const lantern = makeLantern({ height: 1.1 });
+  lantern.position.set(-2.9, 0, -0.4);
+  scene.add(lantern);
+  
+  // A single small tube on a cord, hung under the veranda's own beam — the
+  // one voice a bay like this would actually carry. Local to the veranda
+  // group (like a torii's chimes in case 29) so it stays square to the
+  // porch however the scene is placed. x=1.5 sits between the two posts
+  // nearest that side (px ~ 0.77 and 2.3 at this width), clear of both;
+  // y is the beam's own underside (height-0.20); z sits a hand's width
+  // proud of the post line, under the eave's own shadow rather than flush
+  // with the beam face.
+  const furin = makeFurin({
+  size: .3,
+  tubes: 1, seed: 4,
+  onStrike: (_, force, pos) => audio && audio.chimeStrike({ tube: 1, force, at: pos }),
+  });
+  furin.group.position.set(1.5, VERANDA_H - 0.20, -0.15);
+  veranda.add(furin.group);
+  
+  const world = composeWorld(scene, {
+  view: CAM,
+  seed: ID,
+  groundSeed: 21,
+  trees: 4,
+  keepout: [
+  { at: veranda, r: 4.2 },
+  { at: wakuan, r: 1.2 },
+  { at: lantern, r: 0.9 },
+  ],
+  grassKeepout: [{ x: 0.2, z: -2.6, r: 3.2 }],
+  });
+  
+  addOutlines(scene, { width: 0.030, wobble: 0.7 });
+  
+  const hit = new THREE.Mesh(
+  new THREE.BoxGeometry(SW * 1.2, SH * 1.1, 0.3),
+  new THREE.MeshBasicMaterial({ visible: false }));
+  hit.name = 'scroll-hit';
+  hit.userData.noOutline = true;
+  scroll.add(hit);
+  
+  // ---- the moment: the ink will not take -------------------------------
+  const STROKE = 2.2;          // gather, hang, drain
+  let camera = null;
+  let clock = 0;
+  let attempts = 0;
+  let strokeAt = -99;
+  
+  input.onTap(() => {
+  if (!camera) return;
+  // the chime first, so a tap aimed at it never falls through to the
+  // scroll's own refusal — same probe-then-return order as case 29
+  const chimeHit = furin.pick(camera, input);
+  if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
+  if (!input.raycastFirst(camera, [hit])) return;
+  if (clock - strokeAt < STROKE) return;      // one refusal at a time
+  strokeAt = clock;
+  attempts++;
+  audio && audio.chimeStrike({ tube: 2, force: 0.4, at: scroll.position });
+  });
+  
+  return {
+  scene,
+  setCamera(c) { camera = c; },
+  update(dt, simTime) {
+  clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
+  world.update(dt, simTime);
+  // a steady porch breeze — see k47's furin for the same untouched
+  // default (this case has no flag or screen to derive a live level
+  // from, so the chime reads the wind at its own full range, same as
+  // every other static-wind case that carries one)
+  furin.setWindLevel(1);
+  furin.update(dt, simTime);
+  const u = (clock - strokeAt) / STROKE;
+  // up fast, held a moment, then drained away
+  const a = (u <= 0 || u >= 1) ? 0 : Math.min(1, u / 0.18, (1 - u) / 0.45);
+  beardMat.opacity = 0.85 * a * a * (3 - 2 * a);
+  beard.scale.y = 0.6 + 0.4 * a;
+  },
+  fragment() {
+  return { attempts, ink: +beardMat.opacity.toFixed(3), chimeStrikes: furin.strikes() };
+  },
+  dispose() {},
+};
   },
 };

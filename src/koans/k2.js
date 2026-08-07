@@ -36,7 +36,10 @@ const FOX = { x: -0.67, z: -1.39, yaw: 1.40 };
 const HYAKUJO = { x: 1.60, z: -2.75 };
 const MONKS = [{ x: 2.74, z: -3.48 }, { x: 2.45, z: -2.61 }];
 
-export default {
+// The framing, named so composeWorld can have it too: `view` lets the
+// scatter refuse spots no reachable heading can see (kit/scenery.js).
+const CAM = { distance: 14.5, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 15.5 };
+  export default {
   id: ID,
   slug: 'hyakujo-s-fox',
   title: TEXT[ID].title,
@@ -50,7 +53,7 @@ export default {
   // 34's mat there is no tap-surge here; you don't get to ask this weather
   // for anything.
   ambience: ['wind:0.18', 'rain', 'music'],
-
+  
   // Framed low and a little left: aimed at the gap between the fox and the
   // monks rather than at anybody's head, and pitched so all four figures still
   // hold the frame at both ends of the drag the rig allows.
@@ -58,112 +61,112 @@ export default {
   // sat almost on the fox: the rock mass filled the top of the frame, Hyakujo was
   // cropped at the edge, and the encounter — a fox and a master regarding each
   // other — had no room to read as an encounter at all.
-  camera: { distance: 14.5, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 15.5 },
-
+  camera: CAM,
+  
   build(ctx) {
-    const { audio, input } = ctx;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(PAPER);
-    scene.fog = new THREE.FogExp2(PAPER, 0.030);
-    scene.add(makeLights());
-
-    // The mountainside, turned so the mouth faces the camera's home bearing and
-    // the fox stands square in front of the opening rather than off beside it.
-    // How much dark actually gets behind the fox depends on the pitch: drag the
-    // camera down and it is backed by the black, at the home pitch the sightline
-    // clears its back and lands on the threshold stone and the grass. Red on
-    // paper is doing the real work of keeping it legible either way.
-    const cave = makeCave({ width: 2.4, height: 2.4, depth: 1.9, seed: ID });
-    cave.position.set(CAVE.x, 0, CAVE.z);
-    cave.rotation.y = CAVE.yaw;
-    scene.add(cave);
-
-    // The fox. The one red thing here, and small enough to take ACCENT whole
-    // rather than the deepened mix a whole animal usually needs.
-    //
-    // Built a size up from a real fox on purpose. Measured against the red dog
-    // of case 1 — the book's own yardstick for how much frame a seal animal is
-    // owed — a life-sized fox came out at barely half the presence, and this
-    // one has to hold the shot against three standing figures. A fox a little
-    // larger than a fox should be is also not the wrong note to strike here.
-    const fox = makeFox({ height: 0.6, color: ACCENT, seed: ID });
-    fox.group.position.set(FOX.x, 0, FOX.z);
-    // stood broadside so the brush reads across the frame — a fox pointed at the
-    // lens is a red smudge — with only the head come round to the monks
-    fox.group.rotation.y = FOX.yaw;
-    fox.setLook(bearing(FOX, HYAKUJO) - FOX.yaw);
-    scene.add(fox.group);
-
-    // Hyakujo, with the staff. He is not doing anything with it.
-    const hyakujo = makeMonk({ height: 1.72, elder: true });
-    hyakujo.position.set(HYAKUJO.x, 0, HYAKUJO.z);
-    faceMonk(hyakujo, fox.group.position);
-    scene.add(hyakujo);
-
-    // and the monks who followed him round the mountain
-    const monks = MONKS.map((m, i) => {
-      const k = makeMonk({ height: 1.58 + i * 0.05, stout: 1 + i * 0.08 });
-      k.position.set(m.x, 0, m.z);
-      faceMonk(k, fox.group.position);
-      scene.add(k);
-      return k;
-    });
-
-    // THE RAIN — see the ambience note: it falls on everything alike. The
-    // streaks span the whole staging so nobody stands outside it.
-    const rain = makeRain({ count: 420, seed: ID, width: 24, depth: 24, height: 13 });
-    scene.add(rain.points);
-
-    const world = composeWorld(scene, {
-      seed: ID,
-      treeKind: 'pine',
-      groundSeed: 21,
-      trees: 13,        // a wooded mountainside, not a lawn (Frank: "more trees")
-      keepout: [
-        { x: 1, z: 30, r: 35 }, // behind camera
-        ...cave.footprint(0.8),                       // the whole rock mass
-        { x: FOX.x, z: FOX.z, r: 1.4 },
-        { x: HYAKUJO.x, z: HYAKUJO.z, r: 1.2 },
-        ...MONKS.map((m) => ({ x: m.x, z: m.z, r: 1.1 })),
-      ],
-      // only the cave's own stone floor actually covers ground. The fox is
-      // sitting in the grass like any animal, and so are the monks.
-      grassKeepout: cave.floor(0.15),
-    });
-
-    addOutlines(scene, { width: 0.033, wobble: 0.7 });
-
-    // ---- the moment: the fox notices you ---------------------------------
-    // An ear, a turn of the head, one sweep of the brush, and then it is a fox
-    // sitting outside a cave again. Nothing is asked of you and nothing is won.
-    let camera = null;
-    const foxMeshes = tapMeshes(fox.group);
-
-    input.onTap(() => {
-      if (!camera) return;
-      const hit = input.raycastFirst(camera, foxMeshes);
-      if (hit) {
-        fox.notice();
-        audio && audio.breath({ force: 0.6, at: hit.point });
-      }
-    });
-
-    return {
-      scene,
-      setCamera(c) { camera = c; },
-      update(dt, simTime) {
-        world.update(dt, simTime);
-        fox.update(dt, simTime);
-        rain.update(dt, simTime);
-      },
-      fragment() {
-        return {
-          headYaw: +fox.headYaw().toFixed(4),
-          tailYaw: +fox.tailYaw().toFixed(4),
-          stir: +fox.stir().toFixed(4),
-          noticed: fox.noticed(),
-          drops: rain.count(),
-        };
+  const { audio, input } = ctx;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(PAPER);
+  scene.fog = new THREE.FogExp2(PAPER, 0.030);
+  scene.add(makeLights());
+  
+  // The mountainside, turned so the mouth faces the camera's home bearing and
+  // the fox stands square in front of the opening rather than off beside it.
+  // How much dark actually gets behind the fox depends on the pitch: drag the
+  // camera down and it is backed by the black, at the home pitch the sightline
+  // clears its back and lands on the threshold stone and the grass. Red on
+  // paper is doing the real work of keeping it legible either way.
+  const cave = makeCave({ width: 2.4, height: 2.4, depth: 1.9, seed: ID });
+  cave.position.set(CAVE.x, 0, CAVE.z);
+  cave.rotation.y = CAVE.yaw;
+  scene.add(cave);
+  
+  // The fox. The one red thing here, and small enough to take ACCENT whole
+  // rather than the deepened mix a whole animal usually needs.
+  //
+  // Built a size up from a real fox on purpose. Measured against the red dog
+  // of case 1 — the book's own yardstick for how much frame a seal animal is
+  // owed — a life-sized fox came out at barely half the presence, and this
+  // one has to hold the shot against three standing figures. A fox a little
+  // larger than a fox should be is also not the wrong note to strike here.
+  const fox = makeFox({ height: 0.6, color: ACCENT, seed: ID });
+  fox.group.position.set(FOX.x, 0, FOX.z);
+  // stood broadside so the brush reads across the frame — a fox pointed at the
+  // lens is a red smudge — with only the head come round to the monks
+  fox.group.rotation.y = FOX.yaw;
+  fox.setLook(bearing(FOX, HYAKUJO) - FOX.yaw);
+  scene.add(fox.group);
+  
+  // Hyakujo, with the staff. He is not doing anything with it.
+  const hyakujo = makeMonk({ height: 1.72, elder: true });
+  hyakujo.position.set(HYAKUJO.x, 0, HYAKUJO.z);
+  faceMonk(hyakujo, fox.group.position);
+  scene.add(hyakujo);
+  
+  // and the monks who followed him round the mountain
+  const monks = MONKS.map((m, i) => {
+  const k = makeMonk({ height: 1.58 + i * 0.05, stout: 1 + i * 0.08 });
+  k.position.set(m.x, 0, m.z);
+  faceMonk(k, fox.group.position);
+  scene.add(k);
+  return k;
+  });
+  
+  // THE RAIN — see the ambience note: it falls on everything alike. The
+  // streaks span the whole staging so nobody stands outside it.
+  const rain = makeRain({ count: 420, seed: ID, width: 24, depth: 24, height: 13 });
+  scene.add(rain.points);
+  
+  const world = composeWorld(scene, {
+  view: CAM,
+  seed: ID,
+  treeKind: 'pine',
+  groundSeed: 21,
+  trees: 13,        // a wooded mountainside, not a lawn (Frank: "more trees")
+  keepout: [
+  ...cave.footprint(0.8),                       // the whole rock mass
+  { x: FOX.x, z: FOX.z, r: 1.4 },
+  { x: HYAKUJO.x, z: HYAKUJO.z, r: 1.2 },
+  ...MONKS.map((m) => ({ x: m.x, z: m.z, r: 1.1 })),
+  ],
+  // only the cave's own stone floor actually covers ground. The fox is
+  // sitting in the grass like any animal, and so are the monks.
+  grassKeepout: cave.floor(0.15),
+  });
+  
+  addOutlines(scene, { width: 0.033, wobble: 0.7 });
+  
+  // ---- the moment: the fox notices you ---------------------------------
+  // An ear, a turn of the head, one sweep of the brush, and then it is a fox
+  // sitting outside a cave again. Nothing is asked of you and nothing is won.
+  let camera = null;
+  const foxMeshes = tapMeshes(fox.group);
+  
+  input.onTap(() => {
+  if (!camera) return;
+  const hit = input.raycastFirst(camera, foxMeshes);
+  if (hit) {
+  fox.notice();
+  audio && audio.breath({ force: 0.6, at: hit.point });
+  }
+  });
+  
+  return {
+  scene,
+  setCamera(c) { camera = c; },
+  update(dt, simTime) {
+  world.update(dt, simTime);
+  fox.update(dt, simTime);
+  rain.update(dt, simTime);
+  },
+  fragment() {
+  return {
+  headYaw: +fox.headYaw().toFixed(4),
+  tailYaw: +fox.tailYaw().toFixed(4),
+  stir: +fox.stir().toFixed(4),
+  noticed: fox.noticed(),
+  drops: rain.count(),
+};
       },
       dispose() { rain.dispose(); },
     };

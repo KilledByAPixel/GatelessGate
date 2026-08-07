@@ -26,7 +26,10 @@ const BOW = 0.20;
 // here was once aimMonk's atan2(-dz, dx) — for the pointing +x sleeve — which
 // left Joshu turned a quarter circle off the monk he is deciding about.
 
-export default {
+// The framing, named so composeWorld can have it too: `view` lets the
+// scatter refuse spots no reachable heading can see (kit/scenery.js).
+const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 18.4 };
+  export default {
   id: ID,
   slug: 'joshu-examines-a-monk-in-meditation',
   title: TEXT[ID].title,
@@ -34,54 +37,54 @@ export default {
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.22', 'fist', 'music'],
-  camera: { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 18.4 },
-
+  camera: CAM,
+  
   build(ctx) {
-    const { audio, input } = ctx;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(PAPER);
-    scene.fog = new THREE.FogExp2(PAPER, 0.030);
-    scene.add(makeLights());
-
-    // the path Joshu came up, twice
-    const path = makePath({ from: [5.2, 8.0], to: [-3.4, -17], width: 1.2, seed: ID, groundSeed: 21, wander: 1.3 });
-    scene.add(path);
-
-    // the hut he retired to, on its rise — set OFF to the side of the road
-    // (Frank: the hill was blocking the main path; it used to sit at x -0.4,
-    // where the path's closest approach was 2.2 units from its center, well
-    // inside the 3.6 base — the road ran straight into the slope and vanished.
-    // At -2.8 the centerline clears the base by ~0.9 at its nearest sample).
-    const RISE = { x: -2.8, z: -2.6, rTop: 3.0, rBase: 3.6, h: 0.45, sides: 10 };
-    const RISE_TOP_Y = 0.22 + RISE.h / 2;          // the plateau's world height
-    const rise = new THREE.Mesh(
-      new THREE.CylinderGeometry(RISE.rTop, RISE.rBase, RISE.h, RISE.sides),
-      toonMaterial({ color: WASH.ground, flat: true }));
-    rise.name = 'rise';
-    rise.position.set(RISE.x, 0.22, RISE.z);
-    scene.add(rise);
-
-    // Height of the rise's SURFACE at (x, z) — the grass plants on this (via
-    // composeWorld's groundFn below), so it must match the mesh, not an ideal
-    // cone: CylinderGeometry is a ten-sided frustum, and treating it as round
-    // floats blades mid-air off the flats and buries them at the corners. A
-    // regular polygon's radius toward angle a is apothem / cos(offset from the
-    // nearest face's midline); along any ray from the axis the slope face is a
-    // straight line from base edge to top edge, so the lerp between the two
-    // polygon radii IS the facet, exactly.
-    const SLICE = (Math.PI * 2) / RISE.sides;
-    const riseHeight = (x, z) => {
-      const dx = x - RISE.x, dz = z - RISE.z;
-      const d = Math.hypot(dx, dz);
-      if (d >= RISE.rBase) return 0;               // cheap out past any corner
-      const a = Math.atan2(dx, dz);                // CylinderGeometry runs sin/cos
-      const off = ((a % SLICE) + SLICE) % SLICE - SLICE / 2;
-      const poly = Math.cos(SLICE / 2) / Math.cos(off);   // polygon radius / circumradius
-      const top = RISE.rTop * poly, base = RISE.rBase * poly;
-      if (d >= base) return 0;
-      if (d <= top) return RISE_TOP_Y;
-      return RISE_TOP_Y * ((base - d) / (base - top));
-    };
+  const { audio, input } = ctx;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(PAPER);
+  scene.fog = new THREE.FogExp2(PAPER, 0.030);
+  scene.add(makeLights());
+  
+  // the path Joshu came up, twice
+  const path = makePath({ from: [5.2, 8.0], to: [-3.4, -17], width: 1.2, seed: ID, groundSeed: 21, wander: 1.3 });
+  scene.add(path);
+  
+  // the hut he retired to, on its rise — set OFF to the side of the road
+  // (Frank: the hill was blocking the main path; it used to sit at x -0.4,
+  // where the path's closest approach was 2.2 units from its center, well
+  // inside the 3.6 base — the road ran straight into the slope and vanished.
+  // At -2.8 the centerline clears the base by ~0.9 at its nearest sample).
+  const RISE = { x: -2.8, z: -2.6, rTop: 3.0, rBase: 3.6, h: 0.45, sides: 10 };
+  const RISE_TOP_Y = 0.22 + RISE.h / 2;          // the plateau's world height
+  const rise = new THREE.Mesh(
+  new THREE.CylinderGeometry(RISE.rTop, RISE.rBase, RISE.h, RISE.sides),
+  toonMaterial({ color: WASH.ground, flat: true }));
+  rise.name = 'rise';
+  rise.position.set(RISE.x, 0.22, RISE.z);
+  scene.add(rise);
+  
+  // Height of the rise's SURFACE at (x, z) — the grass plants on this (via
+  // composeWorld's groundFn below), so it must match the mesh, not an ideal
+  // cone: CylinderGeometry is a ten-sided frustum, and treating it as round
+  // floats blades mid-air off the flats and buries them at the corners. A
+  // regular polygon's radius toward angle a is apothem / cos(offset from the
+  // nearest face's midline); along any ray from the axis the slope face is a
+  // straight line from base edge to top edge, so the lerp between the two
+  // polygon radii IS the facet, exactly.
+  const SLICE = (Math.PI * 2) / RISE.sides;
+  const riseHeight = (x, z) => {
+  const dx = x - RISE.x, dz = z - RISE.z;
+  const d = Math.hypot(dx, dz);
+  if (d >= RISE.rBase) return 0;               // cheap out past any corner
+  const a = Math.atan2(dx, dz);                // CylinderGeometry runs sin/cos
+  const off = ((a % SLICE) + SLICE) % SLICE - SLICE / 2;
+  const poly = Math.cos(SLICE / 2) / Math.cos(off);   // polygon radius / circumradius
+  const top = RISE.rTop * poly, base = RISE.rBase * poly;
+  if (d >= base) return 0;
+  if (d <= top) return RISE_TOP_Y;
+  return RISE_TOP_Y * ((base - d) / (base - top));
+};
 
     const hut = makeHut({ width: 2.4, height: 2.0, depth: 2.0 });
     hut.position.set(RISE.x - 0.6, 0.44, RISE.z - 1.0);
@@ -130,6 +133,7 @@ export default {
     scene.add(joshu);
 
     const world = composeWorld(scene, {
+      view: CAM,
       seed: ID,
       groundSeed: 21,
       trees: 4,

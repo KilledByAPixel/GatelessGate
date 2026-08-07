@@ -57,7 +57,10 @@ const MOUNTAINS = [
 // z-fight (all three would otherwise sit at exactly ground + 0.03).
 const FORK = { x: 0.5, z: -3.2 };
 
-export default {
+// The framing, named so composeWorld can have it too: `view` lets the
+// scatter refuse spots no reachable heading can see (kit/scenery.js).
+const CAM = { distance: 13, target: [FORK.x, 1.2, FORK.z], heading: -18.6, pitch: 15.5 };
+  export default {
   id: null,
   slug: page.slug,
   title: page.title,
@@ -69,147 +72,148 @@ export default {
   ambience: ['wind:0.30', 'bell', 'music'],
   mood: 'in',
   // aimed at the fork — the choice is the subject
-  camera: { distance: 13, target: [FORK.x, 1.2, FORK.z], heading: -18.6, pitch: 15.5 },
-
+  camera: CAM,
+  
   build(ctx = {}) {
-    const { audio = null, input = null } = ctx;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(PAPER);
-    scene.fog = new THREE.FogExp2(PAPER, 0.030);
-    scene.add(makeLights());
-
-    // ---- the thousand roads, drawn as three ribbons ----------------------
-    // the road the reader arrives on, swinging through a real curve on its
-    // way to the split (Frank: "a little bit more of a curve")
-    const approach = makePath({
-      from: [2.0, 9.5], via: [-2.0, 3.0], to: [FORK.x-.4, FORK.z+.5],
-      width: 1.8, wander: 1.0, taper: 0,
-      seed: SEEDS.pathSeed, groundSeed: SEEDS.groundSeed,
-    });
-    scene.add(approach);
-
-    // the two arms. Slightly unequal widths — a fork where both choices are
-    // identical is a diagram, not a place — and each carries its own curve
-    // away from the other. groundFn lifts: see FORK's comment.
-    const lift = (dy) => (x, z) => groundHeight(x, z, { seed: SEEDS.groundSeed }) + dy;
-    // (both arms' start points are MEASURED against the approach's sampled
-    // centreline near z -1.7/-2.0 — the wander bows the ribbon, so a start
-    // placed by eye landed a hand's width outside it and the arm's tip
-    // showed as a separate sliver of road)
-    const left = makePath({
-      from: [-0.1, -1.7], via: [-3.6, -8.0], to: [-12.5, -23.0],
-      width: 1.4, wander: 1.1,
-      seed: SEEDS.pathSeed + 1, groundSeed: SEEDS.groundSeed, groundFn: lift(0.004),
-    });
-    scene.add(left);
-    const right = makePath({
-      from: [0.1, -2.0], via: [4.8, -9.0], to: [10.0, -22.0],
-      width: 1.25, wander: 1.1,
-      seed: SEEDS.pathSeed + 2, groundSeed: SEEDS.groundSeed, groundFn: lift(0.008),
-    });
-    scene.add(right);
-
-    // ---- the two things worth touching -----------------------------------
-    // The bonshō, off the right arm's shoulder, facing the split. Ink-dark
-    // bronze, not case 16's red — see the header on accent.
-    const bell = makeBell({ height: 1.1, color: WASH.deep, seed: SEEDS.seed });
-    bell.group.position.set(4.0, 0, -4.0);
-    bell.group.rotation.y = -1.1;
-    scene.add(bell.group);
-
-    // the flag across from it, off the left arm — the wind made visible
-    const flag = makeFlag({ seed: SEEDS.seed, color: WASH.dark });
-    flag.group.position.set(-3.5, 0, -5.2);
-    flag.group.rotation.y = 0.5;
-    scene.add(flag.group);
-
-    // and the one who has arrived at the choosing, still on the single road —
-    // the page's one red thing (see the header)
-    const mp = approach.sample(0.72);
-    const monk = makeMonk({ height: 1.6, color: ACCENT_DEEP });
-    monk.position.set(mp.x + mp.perp.x * 0.55, 0, mp.z + mp.perp.z * 0.55);
-    faceMonk(monk, { x: FORK.x, z: FORK.z });
-    scene.add(monk);
-
-    const world = composeWorld(scene, {
-      seed: SEEDS.seed,
-      groundSeed: SEEDS.groundSeed,
-      trees: 5,
-      mountains: MOUNTAINS,
-      keepout: [
-        ...approach.keepout(16, 1.2),
-        ...left.keepout(16, 1.1),
-        ...right.keepout(16, 1.1),
-        { at: bell.group, r: 1.7 },
-        { at: flag.group, r: 1.0 },
-        { at: monk, r: 1.1 },
-        // the lens corridor: the home eye sits out near (7.0, 8.6) looking at
-        // the fork, and nothing may grow into that line
-        { x: 4.6, z: 3.6, r: 4.2 },
-      ],
-      grassKeepout: [
-        ...approach.keepout(18, 0.95),
-        ...left.keepout(16, 0.8),
-        ...right.keepout(16, 0.75),
-        { at: bell.group, r: 1.0 },
-        { at: flag.group, r: 0.4 },
-      ],
-    });
-
-    addOutlines(scene, { width: 0.033, wobble: 0.7 });
-
-    // ---- the first touches in the book -----------------------------------
-    // k16's bell idiom (strike + temple preset + the 0.5s held-pointer floor)
-    // and k29's flag idiom (hover ruffles; a tap is a firmer brush of the
-    // same cloth). Nothing is scored; these are the book saying "you can
-    // touch things" on its first page.
-    let camera = null;
-    let clock = 0;
-    let strikes = 0;
-    let ruffles = 0;
-    let lastRing = -99;
-
-    input && input.onHover(() => {
-      if (!camera) return;
-      const hit = input.raycastFirst(camera, [flag.mesh]);
-      if (hit) {
-        const local = flag.mesh.worldToLocal(hit.point.clone());
-        flag.hoverAt(local.x, local.y);
-      }
-    });
-    input && input.onTap(() => {
-      if (!camera) return;
-      if (input.raycastFirst(camera, bell.pickTargets())) {
-        if (clock - lastRing < 0.5) return;
-        lastRing = clock;
-        bell.strike();
-        strikes++;
-        audio && audio.bell({ preset: 'temple', at: bell.group.position });
-        return;
-      }
-      const hit = input.raycastFirst(camera, [flag.mesh]);
-      if (hit) {
-        const local = flag.mesh.worldToLocal(hit.point.clone());
-        flag.hoverAt(local.x, local.y);
-        ruffles++;
-        audio && audio.cloth({ force: 0.8, at: hit.point });
-      }
-      // the monk keeps his own counsel; the roads are for walking, not tapping
-    });
-
-    return {
-      scene,
-      setCamera(c) { camera = c; },
-      update(dt, simTime) {
-        clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
-        world.update(dt, simTime);
-        bell.update(dt, simTime);
-        flag.update(dt, simTime);
-      },
-      fragment() {
-        return { strikes, ruffles };
-      },
-      dispose() {},
-    };
+  const { audio = null, input = null } = ctx;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(PAPER);
+  scene.fog = new THREE.FogExp2(PAPER, 0.030);
+  scene.add(makeLights());
+  
+  // ---- the thousand roads, drawn as three ribbons ----------------------
+  // the road the reader arrives on, swinging through a real curve on its
+  // way to the split (Frank: "a little bit more of a curve")
+  const approach = makePath({
+  from: [2.0, 9.5], via: [-2.0, 3.0], to: [FORK.x-.4, FORK.z+.5],
+  width: 1.8, wander: 1.0, taper: 0,
+  seed: SEEDS.pathSeed, groundSeed: SEEDS.groundSeed,
+  });
+  scene.add(approach);
+  
+  // the two arms. Slightly unequal widths — a fork where both choices are
+  // identical is a diagram, not a place — and each carries its own curve
+  // away from the other. groundFn lifts: see FORK's comment.
+  const lift = (dy) => (x, z) => groundHeight(x, z, { seed: SEEDS.groundSeed }) + dy;
+  // (both arms' start points are MEASURED against the approach's sampled
+  // centreline near z -1.7/-2.0 — the wander bows the ribbon, so a start
+  // placed by eye landed a hand's width outside it and the arm's tip
+  // showed as a separate sliver of road)
+  const left = makePath({
+  from: [-0.1, -1.7], via: [-3.6, -8.0], to: [-12.5, -23.0],
+  width: 1.4, wander: 1.1,
+  seed: SEEDS.pathSeed + 1, groundSeed: SEEDS.groundSeed, groundFn: lift(0.004),
+  });
+  scene.add(left);
+  const right = makePath({
+  from: [0.1, -2.0], via: [4.8, -9.0], to: [10.0, -22.0],
+  width: 1.25, wander: 1.1,
+  seed: SEEDS.pathSeed + 2, groundSeed: SEEDS.groundSeed, groundFn: lift(0.008),
+  });
+  scene.add(right);
+  
+  // ---- the two things worth touching -----------------------------------
+  // The bonshō, off the right arm's shoulder, facing the split. Ink-dark
+  // bronze, not case 16's red — see the header on accent.
+  const bell = makeBell({ height: 1.1, color: WASH.deep, seed: SEEDS.seed });
+  bell.group.position.set(4.0, 0, -4.0);
+  bell.group.rotation.y = -1.1;
+  scene.add(bell.group);
+  
+  // the flag across from it, off the left arm — the wind made visible
+  const flag = makeFlag({ seed: SEEDS.seed, color: WASH.dark });
+  flag.group.position.set(-3.5, 0, -5.2);
+  flag.group.rotation.y = 0.5;
+  scene.add(flag.group);
+  
+  // and the one who has arrived at the choosing, still on the single road —
+  // the page's one red thing (see the header)
+  const mp = approach.sample(0.72);
+  const monk = makeMonk({ height: 1.6, color: ACCENT_DEEP });
+  monk.position.set(mp.x + mp.perp.x * 0.55, 0, mp.z + mp.perp.z * 0.55);
+  faceMonk(monk, { x: FORK.x, z: FORK.z });
+  scene.add(monk);
+  
+  const world = composeWorld(scene, {
+  view: CAM,
+  seed: SEEDS.seed,
+  groundSeed: SEEDS.groundSeed,
+  trees: 5,
+  mountains: MOUNTAINS,
+  keepout: [
+  ...approach.keepout(16, 1.2),
+  ...left.keepout(16, 1.1),
+  ...right.keepout(16, 1.1),
+  { at: bell.group, r: 1.7 },
+  { at: flag.group, r: 1.0 },
+  { at: monk, r: 1.1 },
+  // the lens corridor: the home eye sits out near (7.0, 8.6) looking at
+  // the fork, and nothing may grow into that line
+  { x: 4.6, z: 3.6, r: 4.2 },
+  ],
+  grassKeepout: [
+  ...approach.keepout(18, 0.95),
+  ...left.keepout(16, 0.8),
+  ...right.keepout(16, 0.75),
+  { at: bell.group, r: 1.0 },
+  { at: flag.group, r: 0.4 },
+  ],
+  });
+  
+  addOutlines(scene, { width: 0.033, wobble: 0.7 });
+  
+  // ---- the first touches in the book -----------------------------------
+  // k16's bell idiom (strike + temple preset + the 0.5s held-pointer floor)
+  // and k29's flag idiom (hover ruffles; a tap is a firmer brush of the
+  // same cloth). Nothing is scored; these are the book saying "you can
+  // touch things" on its first page.
+  let camera = null;
+  let clock = 0;
+  let strikes = 0;
+  let ruffles = 0;
+  let lastRing = -99;
+  
+  input && input.onHover(() => {
+  if (!camera) return;
+  const hit = input.raycastFirst(camera, [flag.mesh]);
+  if (hit) {
+  const local = flag.mesh.worldToLocal(hit.point.clone());
+  flag.hoverAt(local.x, local.y);
+  }
+  });
+  input && input.onTap(() => {
+  if (!camera) return;
+  if (input.raycastFirst(camera, bell.pickTargets())) {
+  if (clock - lastRing < 0.5) return;
+  lastRing = clock;
+  bell.strike();
+  strikes++;
+  audio && audio.bell({ preset: 'temple', at: bell.group.position });
+  return;
+  }
+  const hit = input.raycastFirst(camera, [flag.mesh]);
+  if (hit) {
+  const local = flag.mesh.worldToLocal(hit.point.clone());
+  flag.hoverAt(local.x, local.y);
+  ruffles++;
+  audio && audio.cloth({ force: 0.8, at: hit.point });
+  }
+  // the monk keeps his own counsel; the roads are for walking, not tapping
+  });
+  
+  return {
+  scene,
+  setCamera(c) { camera = c; },
+  update(dt, simTime) {
+  clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
+  world.update(dt, simTime);
+  bell.update(dt, simTime);
+  flag.update(dt, simTime);
+  },
+  fragment() {
+  return { strikes, ruffles };
+  },
+  dispose() {},
+};
   },
 };

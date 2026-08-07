@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
+import { DEFAULT_HOME } from '../camera.js';
 import {
   composeWorld, makePath, makeLantern, makeMonk, aimMonk, faceMonk, makeGate, makeFlag,
   makeLights, addOutlines, makeFurin,
@@ -94,6 +95,9 @@ export default {
     // the rest of the world: mountains, forest, midground trees, scatter —
     // shared grammar, kept off the staging and the path by keepouts
     const world = composeWorld(scene, {
+      // no `camera:` here — this case takes the book's default framing, so the
+      // scatter is told the same thing (kit/scenery.js seenFrom)
+      view: DEFAULT_HOME,
       seed: 29,
       groundSeed: 21,
       keepout: [

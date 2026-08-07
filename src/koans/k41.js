@@ -26,7 +26,10 @@ const ID = 41;
 
 const WISP = 1.5;
 
-export default {
+// The framing, named so composeWorld can have it too: `view` lets the
+// scatter refuse spots no reachable heading can see (kit/scenery.js).
+const CAM = { distance: 10.5, target: [0.4, 1.4, -1.8], heading: 31.5, pitch: 19 };
+  export default {
   id: ID,
   slug: 'bodhidharma-pacifies-the-mind',
   title: TEXT[ID].title,
@@ -34,101 +37,101 @@ export default {
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.34:pine', 'snow', 'music'],
-  camera: { distance: 10.5, target: [0.4, 1.4, -1.8], heading: 31.5, pitch: 19 },
-
+  camera: CAM,
+  
   build(ctx) {
-    const { audio, input } = ctx;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(PAPER);
-    // snow light: the air is thick and the world ends close
-    scene.fog = new THREE.FogExp2(PAPER, 0.045);
-    scene.add(makeLights());
-
-    // the cave he sat in, facing its wall for nine years
-    const cave = makeCave({ width: 3.0, height: 2.8, depth: 3.2, seed: ID });
-    cave.position.set(-0.4, 0, -5.2);
-    cave.rotation.y = 0.18;
-    scene.add(cave);
-
-    // BODHIDHARMA, turned to the wall — his back to the whole case.
-    //
-    // He used to sit at z -5.6, which is BEHIND the cave's throat: makeCave
-    // fills the opening with an unlit pure-INK box (the honest way to paint an
-    // absence of light — see cave.js), so an ink monk placed inside it was
-    // ink-on-ink and simply gone. Frank: "we're supposed to be able to see
-    // Buddha inside the cave, but we can't see anything — it's just a
-    // completely solid thing." Two fixes, both needed: sit him ON the
-    // threshold apron, just forward of the throat's face, so the black is
-    // BEHIND him rather than around him; and lift his tone off ink so his
-    // back reads as a shape against it. He is still inside the mouth, still
-    // facing the wall, still the smallest thing in the frame.
-    //
-    // That lift used to be an EXPLICIT one — WASH.mid, a mid grey — and it made
-    // him the one visibly pale person in the book (Frank: "the Buddha is not the
-    // right colour, he's like a lighter grey"). It is unnecessary now: every
-    // figure sits a step off ink, and the cave's throat is still an unlit box at
-    // INK itself, so his lit bands stand at 46 and 73 against its flat 30. Only
-    // his shadow side merges into the black behind him, which is what an ink
-    // painting of a man in a cave mouth should do.
-    // makeCave's throat is a SOLID box (an absence of light has to be opaque),
-    // so he cannot be IN it — he sits in the room the mouth opens onto,
-    // between the brow overhead and the black behind. That room only exists
-    // because the cave is deeper now and its dark set further back: at 0.35
-    // he is well under the brow and genuinely inside, rather than perched on
-    // the lip (Frank: "he'd be further into the cave... it feels like there's
-    // just a wall there, there's not any kind of depth to the cave").
-    const CAVE = { x: -0.4, z: -5.2, yaw: 0.18 };
-    const IN = 0.5;                       // along the cave's own axis, from its origin
-    const bodhidharma = makeMonk({ height: 1.56, pose: 'sit', hat: false });
-    bodhidharma.position.set(
-      CAVE.x + Math.sin(CAVE.yaw) * IN,
-      0.30,                                // the apron's top face
-      CAVE.z + Math.cos(CAVE.yaw) * IN);
-    faceMonk(bodhidharma, { x: -0.8, z: -8.0 });
-    scene.add(bodhidharma);
-
-    // EKA, outside in the snow — and MISSING ONE ARM. The text is what it is;
-    // the diorama shows it the gentlest way it can (Frank's staging): one
-    // sleeve simply gone from his side, and the arm itself lying in the snow a
-    // little way off, with a small red mark where it left him. No wound on the
-    // body, no gore — an absence and one seal, which is all the case needs.
-    const eka = makeMonk({ height: 1.62 });
-    eka.position.set(.6, 0, -2.3);
-    faceMonk(eka, cave.position);
-    // remove the arm on the side toward the cave (the hand he offered)
-    const ekaArms = eka.children.filter((c) => c.name === 'arm');
-    const goneArm = ekaArms.sort((a, b) => a.position.x - b.position.x)[0];  // his left
-    if (goneArm) eka.remove(goneArm);
-    scene.add(eka);
-
-    // THE ARM, laid in the snow between Eka and the cave: a plain dark sleeve
-    // lying on the ground, the cut end toward the seal.
-    const arm = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.05, 0.07, 0.5, 8),
-      // his own sleeve, so his own ink — at INK it was a darker object than the
-      // man it came off
-      toonMaterial({ color: INK_LIT, flat: true }));
-    arm.name = 'severed-arm';
-    arm.rotation.z = Math.PI / 2;                 // lying flat
-    arm.rotation.y = 0.6;
-    arm.position.set(0.95, 0.07, -3.05);
-    scene.add(arm);
-
-    // THE BLOOD — the one bit of colour, right where the arm lies (Frank: it
-    // was off to the side; it should be at the arm). Not much of it: one larger
-    // pool at the cut end and a couple of small drops nearby, flat on the snow.
-    // Read it as blood if you know the story, or as the painter's seal in white
-    // if you don't.
-    const bloodMat = toonMaterial({ color: ACCENT, flat: true });
-    const blood = new THREE.Group();
-    blood.name = 'blood';
-    const drop = (x, z, r, name) => {
-      const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.012, 5), bloodMat);
-      m.name = name;
-      m.rotation.y = hash1(Math.round(x * 97 + z * 13), ID) * Math.PI;
-      m.position.set(x, 0.011, z);
-      blood.add(m);
-    };
+  const { audio, input } = ctx;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(PAPER);
+  // snow light: the air is thick and the world ends close
+  scene.fog = new THREE.FogExp2(PAPER, 0.045);
+  scene.add(makeLights());
+  
+  // the cave he sat in, facing its wall for nine years
+  const cave = makeCave({ width: 3.0, height: 2.8, depth: 3.2, seed: ID });
+  cave.position.set(-0.4, 0, -5.2);
+  cave.rotation.y = 0.18;
+  scene.add(cave);
+  
+  // BODHIDHARMA, turned to the wall — his back to the whole case.
+  //
+  // He used to sit at z -5.6, which is BEHIND the cave's throat: makeCave
+  // fills the opening with an unlit pure-INK box (the honest way to paint an
+  // absence of light — see cave.js), so an ink monk placed inside it was
+  // ink-on-ink and simply gone. Frank: "we're supposed to be able to see
+  // Buddha inside the cave, but we can't see anything — it's just a
+  // completely solid thing." Two fixes, both needed: sit him ON the
+  // threshold apron, just forward of the throat's face, so the black is
+  // BEHIND him rather than around him; and lift his tone off ink so his
+  // back reads as a shape against it. He is still inside the mouth, still
+  // facing the wall, still the smallest thing in the frame.
+  //
+  // That lift used to be an EXPLICIT one — WASH.mid, a mid grey — and it made
+  // him the one visibly pale person in the book (Frank: "the Buddha is not the
+  // right colour, he's like a lighter grey"). It is unnecessary now: every
+  // figure sits a step off ink, and the cave's throat is still an unlit box at
+  // INK itself, so his lit bands stand at 46 and 73 against its flat 30. Only
+  // his shadow side merges into the black behind him, which is what an ink
+  // painting of a man in a cave mouth should do.
+  // makeCave's throat is a SOLID box (an absence of light has to be opaque),
+  // so he cannot be IN it — he sits in the room the mouth opens onto,
+  // between the brow overhead and the black behind. That room only exists
+  // because the cave is deeper now and its dark set further back: at 0.35
+  // he is well under the brow and genuinely inside, rather than perched on
+  // the lip (Frank: "he'd be further into the cave... it feels like there's
+  // just a wall there, there's not any kind of depth to the cave").
+  const CAVE = { x: -0.4, z: -5.2, yaw: 0.18 };
+  const IN = 0.5;                       // along the cave's own axis, from its origin
+  const bodhidharma = makeMonk({ height: 1.56, pose: 'sit', hat: false });
+  bodhidharma.position.set(
+  CAVE.x + Math.sin(CAVE.yaw) * IN,
+  0.30,                                // the apron's top face
+  CAVE.z + Math.cos(CAVE.yaw) * IN);
+  faceMonk(bodhidharma, { x: -0.8, z: -8.0 });
+  scene.add(bodhidharma);
+  
+  // EKA, outside in the snow — and MISSING ONE ARM. The text is what it is;
+  // the diorama shows it the gentlest way it can (Frank's staging): one
+  // sleeve simply gone from his side, and the arm itself lying in the snow a
+  // little way off, with a small red mark where it left him. No wound on the
+  // body, no gore — an absence and one seal, which is all the case needs.
+  const eka = makeMonk({ height: 1.62 });
+  eka.position.set(.6, 0, -2.3);
+  faceMonk(eka, cave.position);
+  // remove the arm on the side toward the cave (the hand he offered)
+  const ekaArms = eka.children.filter((c) => c.name === 'arm');
+  const goneArm = ekaArms.sort((a, b) => a.position.x - b.position.x)[0];  // his left
+  if (goneArm) eka.remove(goneArm);
+  scene.add(eka);
+  
+  // THE ARM, laid in the snow between Eka and the cave: a plain dark sleeve
+  // lying on the ground, the cut end toward the seal.
+  const arm = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.05, 0.07, 0.5, 8),
+  // his own sleeve, so his own ink — at INK it was a darker object than the
+  // man it came off
+  toonMaterial({ color: INK_LIT, flat: true }));
+  arm.name = 'severed-arm';
+  arm.rotation.z = Math.PI / 2;                 // lying flat
+  arm.rotation.y = 0.6;
+  arm.position.set(0.95, 0.07, -3.05);
+  scene.add(arm);
+  
+  // THE BLOOD — the one bit of colour, right where the arm lies (Frank: it
+  // was off to the side; it should be at the arm). Not much of it: one larger
+  // pool at the cut end and a couple of small drops nearby, flat on the snow.
+  // Read it as blood if you know the story, or as the painter's seal in white
+  // if you don't.
+  const bloodMat = toonMaterial({ color: ACCENT, flat: true });
+  const blood = new THREE.Group();
+  blood.name = 'blood';
+  const drop = (x, z, r, name) => {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.012, 5), bloodMat);
+  m.name = name;
+  m.rotation.y = hash1(Math.round(x * 97 + z * 13), ID) * Math.PI;
+  m.position.set(x, 0.011, z);
+  blood.add(m);
+};
     drop(0.86, -3.02, 0.115, 'seal');     // the larger pool, at the arm's cut end
     drop(1.06, -2.86, 0.05, 'drop');
     drop(0.70, -3.18, 0.055, 'drop');
@@ -148,6 +151,7 @@ export default {
     scene.add(pine);
 
     const world = composeWorld(scene, {
+      view: CAM,
       seed: ID,
       groundSeed: 21,
       // the earth has gone pale — this is the one scene in the book under snow

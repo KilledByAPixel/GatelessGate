@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { eyePosition, DEFAULT_HOME_DISTANCE } from '../../src/camera.js';
+import { eyePosition, DEFAULT_HOME } from '../../src/camera.js';
 
 // A camera standing exactly where the app would put it for a given `camera:`
 // block — the probe the framing tests aim through ("is the moon occluded from
@@ -14,10 +14,9 @@ import { eyePosition, DEFAULT_HOME_DISTANCE } from '../../src/camera.js';
 // can lose its subject at 0.8 — several of these tests exist to check exactly
 // that, so the caller names the aspect it means.
 
-// What main.js frames a case with when the module names no `camera` of its own.
-export const DEFAULT_HOME = {
-  distance: DEFAULT_HOME_DISTANCE, target: [1.2, 1.35, 0.3], heading: 31.5, pitch: 17.2,
-};
+// What main.js frames a case with when the module names no `camera` of its own —
+// re-exported rather than re-typed, so the probe cannot drift from the app.
+export { DEFAULT_HOME };
 
 export function rigCamera(home = {}, { heading, pitch, distance, aspect = 1.78, far = 100 } = {}) {
   const h = { ...DEFAULT_HOME, ...home };

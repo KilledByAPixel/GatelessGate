@@ -60,6 +60,16 @@ export function eyePosition({ heading, pitch, distance }, target) {
 // fix everywhere else in this file's neighbourhood.
 export const DEFAULT_HOME_DISTANCE = 11.5;
 
+// AND THE WHOLE OF THAT FRAMING, for the three places that need all of it
+// rather than just the distance: main.js builds every case's rig from it, the
+// tests' probe camera stands at it, and the four cases with no `camera:` of
+// their own hand it to composeWorld as the view its scatter should stay inside.
+// It was written out three times before that, which is two chances for the
+// book's default shot and the tests' idea of it to drift apart.
+export const DEFAULT_HOME = {
+  distance: DEFAULT_HOME_DISTANCE, target: [1.2, 1.35, 0.3], heading: 31.5, pitch: 17.2,
+};
+
 // The ambient drift: seconds in, a rig goal out. Pure, so the whole of the
 // motion can be tested in plain Node, and seeded rather than random because the
 // determinism rule covers the camera like everything else.
