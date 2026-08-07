@@ -23,7 +23,7 @@ import { breezeState, makePokeSpring, pokeSpringStep, GRASS_POKE_RADIUS } from '
 // deterministic, seedable, and assertable. Four tuft variants side by side in
 // one atlas; the shader picks a quarter per instance and mirrors half of them,
 // so one texture reads as eight different clumps.
-export const TUFT_W = 512;      // atlas width — four 128px variants
+export const TUFT_W = 1024;      // atlas width — four 128px variants
 export const TUFT_H = 128;
 export const TUFT_VARIANTS = 4;
 
@@ -102,7 +102,7 @@ export function makeTuftField({
   // width came down 0.52 -> 0.46 with the density doubling: Frank read the wide
   // cards as "a bit thick", and narrower cards at twice the count give more
   // plants AND more ground showing between them
-  color = GRASS_TONE, width = 0.46, height = 0.44, wind = 1,
+  color = GRASS_TONE, width = 0.8, height = 0.44, wind = 1,
   windDir = [1, 0.35], gustScale = 0.055, gustSpeed = 2.4,
   keepout = [],
   groundFn = null,   // see grassPlacements — the surface the tufts stand on
