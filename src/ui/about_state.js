@@ -41,12 +41,9 @@ export const SECTIONS = [
       + '(1957), the version most readers know. Archaic verb forms and pronouns, '
       + 'which survive here and there in the capping verses, have been lightly '
       + 'modernised; Mumon’s commentaries were already in plain modern English. '
-      + 'One editorial bracket has been let go. Senzaki and Reps left a single '
-      + 'word untranslated — Mu, the Chinese 無, which is Joshu’s entire answer '
-      + 'in the first case — and glossed it there as the negative symbol meaning '
-      + '“No thing” or “Nay.” Mumon takes that reading apart a few lines later, '
-      + 'so answering the question before the case has finished asking it seemed '
-      + 'the wrong way to open the book. Transcribed from ',
+      + 'Other small editorial changes have been made and more may follow — '
+      + 'bracketed translator’s notes let go where they explained a koan before '
+      + 'it had finished asking, and the like. Transcribed from ',
       ['sacred-texts.com', SOURCE_URL],
       '.',
     ],

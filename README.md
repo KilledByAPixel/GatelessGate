@@ -37,7 +37,7 @@ Archaic verb forms and pronouns, which survive here and there in the capping ver
 The 1934 printing carries the cases and nothing else.
 Mumon's preface, his afterword, the Zen Warnings and Amban's letter were translated for this edition from the Chinese of the Taishō canon (CBETA T48n2005), in three independent passes made blind to one another and to any existing English version, then compared line by line with every divergence of meaning settled against the Chinese.
 It is a new rendering and worth reading as one: it has had no scholarly review.
-The book's own About page carries the full note, including the one editorial decision worth knowing about — the single word Senzaki and Reps left untranslated.
+Other small editorial changes have been made and more may follow; the book's own About page carries the note.
 
 The goal is something beautiful enough to draw in someone who has never heard of a koan, and faithful enough to reward someone who has.
 
