@@ -181,7 +181,8 @@ export default {
     // to be a vertical line next to it. He still reads as the master by size,
     // stoutness, hat and staging.
     const gutei = makeMonk({ height: 1.66, stout: 1.1, pose: 'raise' });
-    gutei.position.set(GUTEI.x, 0, GUTEI.z);
+    const GUTEI_pos = { x: GUTEI.x + 1, z: GUTEI.z -.5};  // nudged by hand  
+    gutei.position.set(GUTEI_pos.x, 0, GUTEI_pos.z);
     gutei.rotation.y = FACING;
     scene.add(gutei);
 
@@ -190,7 +191,7 @@ export default {
     // disappearing behind a brim.
     const boy = makeMonk({ height: 1.10, pose: 'raise', hat: false });
     boy.position.set(BOY.x, 0, BOY.z);
-    boy.rotation.y = FACING;
+    boy.rotation.y = FACING-.5; // slight turn to face Gutei's finger
     scene.add(boy);
 
     // the one seal — Gutei's finger — and the boy's empty raised hand beside it.

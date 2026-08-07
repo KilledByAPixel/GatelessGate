@@ -139,6 +139,7 @@ export default {
     // proud of the post line, under the eave's own shadow rather than flush
     // with the beam face.
     const furin = makeFurin({
+      size: .3,
       tubes: 1, seed: 4,
       onStrike: (_, force, pos) => audio && audio.chimeStrike({ tube: 1, force, at: pos }),
     });
