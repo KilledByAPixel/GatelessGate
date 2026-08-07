@@ -8,6 +8,7 @@ import { makeFreeze } from './render/freeze.js';
 import { makeSceneManager, disposeRoot } from './scene/manager.js';
 import { makeDebug, devModeOn } from './ui/debug.js';
 import { makeCompose } from './ui/compose.js';
+import { makeLayoutOverlay } from './dev/overlay.js';
 import { makeInput } from './input.js';
 import { setBreezePointer, clearBreeze } from './kit/breeze.js';
 import { createSave } from './save.js';
@@ -611,6 +612,28 @@ document.addEventListener('visibilitychange', () => {
 // builds a fresh one.
 const compose = makeCompose({ getRig: () => rig });
 
+// THE LAYOUT GUIDES, rebuilt per page. The workbench re-fires this on every
+// scene swap as well as when the switch moves, so the guides always describe
+// what is on screen; the old overlay is detached from the OLD scene by the
+// handle kept here, because by the time a swap arrives scenes.active() is
+// already the new one and the stale lines would have ridden along invisibly
+// until that scene was disposed.
+let layout = null;
+let layoutScene = null;
+function setLayout(on) {
+  const active = scenes.active();
+  const scene = active && active.scene;
+  if (layout && (!on || layoutScene !== scene)) {
+    layoutScene && layoutScene.remove(layout);
+    layout.dispose();
+    layout = null; layoutScene = null;
+  }
+  if (!on || !scene || layout) return;
+  layout = makeLayoutOverlay(scene, { target: rig ? rig.target() : null });
+  layoutScene = scene;
+  scene.add(layout);
+}
+
 const debug = makeDebug({
   compose,
   renderer,
@@ -620,6 +643,7 @@ const debug = makeDebug({
   post,
   onSound: () => setSoundLabel(),
   onLens: (fov) => applyLens(fov),
+  onLayout: (on) => setLayout(on),
   // TRANSITIONS ONLY. This handler fires from the workbench's apply(), which
   // re-asserts the whole state at mount and on every scene swap — so a bare
   // `if (!on) forgetPose()` deleted the saved pose AT BOOT, before the

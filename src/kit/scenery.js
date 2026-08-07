@@ -15,8 +15,71 @@ let grassStyle = 'tufts';
 export function setGrassStyle(v) { grassStyle = v === 'blades' ? 'blades' : 'tufts'; }
 import { makeTree } from './tree.js';
 import { makePine } from './pine.js';
+import { makeOak } from './oak.js';
 import { hash1 } from '../util/noise.js';
 import { wash } from '../palette.js';
+
+const TAU = Math.PI * 2;
+const SPECIES = { tree: makeTree, pine: makePine, oak: makeOak };
+
+// ONE TREE, WHERE YOU SAY. composeWorld scatters the midground on a ring and
+// keeps it off the staging; this is the other thing a case wants — "put a pine
+// THERE" — and it used to be four lines every time, one of which (the y) was
+// usually wrong.
+//
+// plantTree(scene, { x: 6.2, z: -3.4, kind: 'pine', height: 4.4 })
+//
+// Only x and z are required. `kind` is 'tree' (broadleaf), 'pine' or 'oak';
+// `height` falls through to the species default; `rotation` is seeded from the
+// position when you don't name one, so two trees never stand in the same pose
+// and the same file always builds the same wood. Anything else you pass goes
+// straight to the builder (canopyColor, trunkColor, reach — the pine takes
+// `color`, the other two take the pair).
+//
+// IT DELIBERATELY DOES NO KEEPOUT WORK. This is the override — you asked for a
+// tree at that spot, so it stands there, and if scatter should stay off it the
+// case adds `{ at: <the returned tree>, r }` to composeWorld's keepout list.
+//
+// The y is the whole reason this exists. groundHeight is flat within nine units
+// of the origin, so every tree hand-placed near the middle of a scene got away
+// with y = 0 for years; out past that the terrain rolls a unit either way and a
+// tree at 0 floats or sinks (Frank, of the fog-line stands: "they're sunk below
+// the ground back there"). This samples the same surface the scatter does, and
+// takes `groundFn` for a case whose ground is more than the terrain function.
+//
+// Call it BEFORE the case's addOutlines, or the tree ships without ink. If you
+// find one that did, addOutlines is idempotent — it skips anything already
+// carrying a hull — so calling it a second time inks the newcomer and nothing else.
+export function plantTree(scene, {
+  x = 0, z = 0,
+  kind = 'tree',
+  height = null,
+  rotation = null,
+  seed = null,
+  groundSeed = 21,
+  groundFn = null,
+  sink = 0.06,           // the scatter's own, so a trunk never hovers on a slope
+  ...opts
+} = {}) {
+  const build = SPECIES[kind];
+  // A hard error, not a fall-through to the broadleaf: a typo'd species that
+  // quietly plants the default is a scene that looks wrong with nothing to read.
+  if (!build) throw new Error(`plantTree: unknown kind "${kind}" — tree, pine or oak`);
+
+  // Seeded from WHERE IT STANDS when no seed is given. Determinism holds (no
+  // Math.random anywhere), two trees at different spots differ without being
+  // told to, and nudging one re-rolls its shape — which is the right default
+  // for a prop being placed by eye, and overridable with `seed` the moment a
+  // particular tree is worth keeping.
+  const key = seed === null ? (Math.round(x * 1000) * 31 + Math.round(z * 1000) * 131) | 0 : seed;
+
+  const t = build({ seed: key, ...(height === null ? {} : { height }), ...opts });
+  const y = (groundFn ? groundFn(x, z) : groundHeight(x, z, { seed: groundSeed })) - sink;
+  t.position.set(x, y, z);
+  t.rotation.y = rotation === null ? hash1(key, 7717) * TAU : rotation;
+  if (scene) scene.add(t);
+  return t;
+}
 
 // A keepout circle, written the way a case actually thinks about it: "keep the
 // scatter off THIS THING". Pass anything with a `.position` — a monk, a hut, a
@@ -111,6 +174,23 @@ export function composeWorld(scene, {
   // and reads as brush at fog distance.
   const footprints = mountains.flatMap((m, i) =>
     mountainFootprints({ seed: seed * 31 + i * 7, ...m }));
+
+  // WHAT THIS WORLD WAS TOLD, left on the scene for the layout guides to draw
+  // (src/dev/overlay.js, the workbench's "Layout guides"). Keepouts and
+  // footprints are invisible by nature — they are circles nothing is ever drawn
+  // at — so the only way to see whether one is guarding the thing it was
+  // written for has been to move a prop and look at what the scatter did. Data
+  // only: no meshes, no draws, nothing rendered unless the guides are switched
+  // on. Recorded AFTER asCircle, so the guides show the circles that were
+  // actually applied rather than the mixture of forms the case wrote.
+  scene.userData.layout = {
+    groundSeed,
+    groundFn,
+    keepout,
+    grassKeepout: grassKeepout || keepout,
+    treeRing: [treeRing[0], treeRing[1]],
+    footprints,
+  };
   mountains.forEach((m, i) => scene.add(makeMountains({ seed: seed * 31 + i * 7, ...m })));
   // The fog-line stands follow the case's treeKind ('tree' keeps their
   // classic mixed blend — an all-sapling fog line was nobody's ask), and

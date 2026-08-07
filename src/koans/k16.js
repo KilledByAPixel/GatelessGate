@@ -55,7 +55,7 @@ export default {
     // The walk crosses the yard front-left to back-right, BETWEEN the hall and
     // the bell, so the court reads as ground people actually cross — and so a
     // monk on it is naturally broadside to the bell when the sound reaches him.
-    const path = makePath({ from: [-3.4, 8.8], to: [12.4, -15.3], width: 1.4, seed: ID, groundSeed: 21, wander: 1.1 });
+    const path = makePath({ from: [-8.0, 8.8], to: [12.4, -15.3], width: 1.4, seed: ID, groundSeed: 21, wander: 1.1 });
     scene.add(path);
 
     // the hall, back-left, its threshold facing the yard
@@ -92,12 +92,12 @@ export default {
     // only reads on a figure with a staff to carry around.)
     const ep = path.sample(0.42);
     const elder = makeMonk({ height: 1.66, elder: true });
-    elder.position.set(ep.x + ep.perp.x * 0.45, 0, ep.z + ep.perp.z * 0.45);
-    const walkTo = path.sample(0.62);
+    elder.position.set(ep.x + ep.perp.x * -2.45, 0, ep.z + ep.perp.z * 3.45);
+    const walkTo = path.sample(0.72);
     const yWalk = bearing(elder.position, { x: walkTo.x, z: walkTo.z });
     const yBell = bearing(elder.position, bell.group.position);
     const fullTurn = wrapPi(yBell - yWalk);
-    elder.rotation.y = yWalk + fullTurn * 0.42;
+    elder.rotation.y = 5.4; // hacked to face away at first
     scene.add(elder);
 
     // and the monk just out of the hall door, robes on, facing the sound

@@ -60,6 +60,10 @@ const CONTROLS = [
   { key: 'mountains', label: 'Mountains', type: 'bool', def: true },
   { key: 'scatter', label: 'Rocks & bushes', type: 'bool', def: true },
   { key: 'path', label: 'Path', type: 'bool', def: true },
+  // The scene's invisible half: keepouts, footprints, the scatter ring, and a
+  // stem on everything placed. src/dev/overlay.js draws it; off by default,
+  // because it is a tool for editing a scene rather than for looking at one.
+  { key: 'layout', label: 'Layout guides', type: 'bool', def: false },
 
   { group: 'Camera' },
   { key: 'lens', label: 'Lens (fov°)', type: 'range', def: 38, min: 16, max: 50, step: 1 },
@@ -110,7 +114,7 @@ function load(persist) {
   } catch { return defaults(); }
 }
 
-export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens, onFreeCam, onDevMode, onShot, compose = null }) {
+export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens, onFreeCam, onDevMode, onShot, onLayout, compose = null }) {
   const composeEl = compose && compose.el;
   let persist = loadPersist();
   const state = load(persist);
@@ -351,6 +355,10 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     setGrassStyle(state.grassTufts ? 'tufts' : 'blades');
     onLens && onLens(state.lens);
     onFreeCam && onFreeCam(state.freeCam);
+    // After the traverse, not inside it: the guides are built FROM the finished
+    // scene, and main.js rebuilds them per page because a stale overlay would
+    // draw the last case's keepouts over this one.
+    onLayout && onLayout(state.layout);
     renderer.shadowMap.enabled = state.shadows;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
