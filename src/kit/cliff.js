@@ -63,6 +63,11 @@ export function makeCliff({
   origin = [0, 0],
   yaw = 0,
   groundSeed = 21,
+  // Where the fog fill's surface lies. The default hides everything below a
+  // shallow shelf — most of "the drop" is mist. A case that wants the fall
+  // to read DEEP passes this lower and more of the face shows before the
+  // paper takes over (k5, Frank: "can we make the cliff deeper?").
+  fogTop = -1.15,
 } = {}) {
   const g = new THREE.Group();
   g.name = 'cliff';
@@ -151,7 +156,7 @@ export function makeCliff({
   // broken lip, a band of bare rock face, and then nothing but paper. Unlit
   // and fog-free on purpose: it IS the fog, and it must not pick up the sun or
   // dim with distance. The sprites stay as a soft lapping edge on its surface.
-  const FOG_TOP = -1.15;
+  const FOG_TOP = fogTop;
   const fill = new THREE.Mesh(
     new THREE.BoxGeometry(width * 2.1, drop + 2, 13.5),
     new THREE.MeshBasicMaterial({ color: wash(0.04) }));

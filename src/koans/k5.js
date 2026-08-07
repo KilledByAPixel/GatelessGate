@@ -3,6 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, INK_LIT, ACCENT, ACCENT_DEEP, GRAY_DARK, WASH } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
 import { mergeSimple } from '../kit/scatter.js';
+import { noise1 } from '../util/noise.js';
 import { makeOak } from '../kit/oak.js';
 import { makeCliff } from '../kit/cliff.js';
 import { makeHangingMonk } from '../kit/hangingmonk.js';
@@ -73,8 +74,12 @@ export default {
     scene.add(makeLights());
 
     // ---- the precipice ---------------------------------------------------
+    // drop 7 and the fog pushed down to -2.8 (Frank: "can we make the cliff
+    // deeper?"): the kit's default hid everything below a shallow shelf in
+    // mist, so most of "the drop" was implied. Now two courses of crags and
+    // a tall band of bare carved earth show before the paper takes over.
     const cliff = makeCliff({
-      width: 11, drop: 5, depth: 2.2, seed: ID,
+      width: 11, drop: 7, depth: 2.2, seed: ID, fogTop: -2.8,
       origin: [CLIFF.x, CLIFF.z], yaw: CLIFF.yaw, groundSeed: 21,
     });
     cliff.position.set(CLIFF.x, 0, CLIFF.z);
@@ -182,9 +187,13 @@ export default {
     // units over the gorge floor. Three columns of circles blanket the sunk
     // bay; past them the recovery ramp has risen far enough that nothing reads
     // as floating under the fog.
+    // The blanket is wider than the old one: the carve's edges wobble by a
+    // couple of units now and the recovery ramp runs to d≈25, so the mask
+    // gains a fourth column and two rows or a half-sunk tree would hover on
+    // the tapering rim.
     const gorgeMask = [];
-    for (const mx of [-7.1, -13.3, -19.5]) {
-      for (const mz of [-12, -7.5, -3, 1.5, 5]) {
+    for (const mx of [-7.1, -13.3, -19.5, -25.7]) {
+      for (const mz of [-15, -11, -7, -3, 1, 5, 8.5]) {
         gorgeMask.push({ x: mx, z: mz, r: 3.4 });
       }
     }
@@ -215,13 +224,24 @@ export default {
     // drop — so the ground itself now falls away. The case owns its scene, so
     // it can carve its own ground mesh without touching the shared kit: every
     // vertex west of the lip sinks on a steep smoothstep (the cliff face), runs
-    // a gorge floor, and eases back up 13-22 units out — the far wall, already
+    // a gorge floor, and eases back up on the far side — the far wall, already
     // deep in fog, with the mist banks lying in the chasm between. A bay window
     // along z confines the cut to the dressed run of lip stones, so beyond them
     // the meadow wraps around instead of tearing on an unrocked edge.
+    //
+    // EVERY EDGE OF THE CUT WOBBLES NOW (Frank: "it looks weird where the
+    // cliff ends in straight lines on the sides and back, could it taper").
+    // The first carve ran on three ruler lines — the lip at constant x, the
+    // bay ends at constant z, the far recovery at constant depth — and the
+    // gorge read as a rectangular pit. Each boundary is offset by its own
+    // low-frequency seeded noise: the lip meanders WEST only (never east —
+    // the asker stands 0.1 east of the carve start, so an eastward wobble
+    // would sink the ground under his feet), the side walls swing ±1.5 as
+    // they run out, the far wall comes and goes by ±2. The transitions are
+    // also wider, so the side walls taper down instead of shearing.
     const groundMesh = scene.getObjectByName('ground');
     const LIP_X = CLIFF.x - 0.35;
-    const DROP = 5;
+    const DROP = 7;                             // matches the cliff's own drop
     const SS = (a, b, v) => {
       const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
       return t * t * (3 - 2 * t);
@@ -229,12 +249,18 @@ export default {
     const gpos = groundMesh.geometry.attributes.position;
     for (let i = 0; i < gpos.count; i++) {
       const wx = gpos.getX(i);
-      const d = LIP_X - wx;                     // how far into the void
-      if (d <= 0) continue;
       const wz = gpos.getZ(i);
-      const bay = SS(-14, -9, wz) * (1 - SS(2, 6, wz));
+      // 0..0.7 and WEST-ONLY — more meander than this walks the carve's top
+      // edge out past the kit's own lip-stone dressing, and the fall would
+      // start on bare unrocked meadow
+      const lipWob = noise1(wz * 0.22, 505) * 0.7;
+      const d = LIP_X - wx - lipWob;            // how far into the void
+      if (d <= 0) continue;
+      const sideWob = (noise1(wx * 0.16, 506) - 0.5) * 3.0;
+      const bay = SS(-16 + sideWob, -8.5 + sideWob, wz) * (1 - SS(1.5 + sideWob, 7 + sideWob, wz));
       if (bay <= 0) continue;
-      const sink = DROP * SS(0, 1.4, d) * (1 - SS(13, 22, d)) * bay;
+      const farWob = (noise1(wz * 0.13, 507) - 0.5) * 4.0;
+      const sink = DROP * SS(0, 1.8, d) * (1 - SS(13 + farWob, 23 + farWob, d)) * bay;
       if (sink > 0) gpos.setY(i, gpos.getY(i) - sink);
     }
     gpos.needsUpdate = true;
