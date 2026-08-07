@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { WASH } from '../palette.js';
 import { mergeSimple } from './scatter.js';
+import { clamp01 } from '../util/math.js';
 
 // Basho's staff rack (case 44): "When you have a staff, I will give it to you.
 // If you have no staff, I will take it away from you."
@@ -14,7 +15,6 @@ import { mergeSimple } from './scatter.js';
 //
 // Origin on the ground between the posts; the staff leans in the near bay.
 
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const easeOut = (k) => 1 - (1 - k) * (1 - k);
 
 const SWAP = 0.45;       // seconds for a staff to arrive or go

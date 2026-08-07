@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { WASH } from '../palette.js';
+import { clamp } from '../util/math.js';
 
 // The steelyard balance Tozan was weighing flax on (case 18).
 //
@@ -13,8 +14,6 @@ import { WASH } from '../palette.js';
 //
 // Origin on the ground under the post; the beam runs along local ±x, pan on
 // the -x end, counterweight on +x.
-
-const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
 const REST = -0.05;      // a hair pan-heavy at equilibrium; dead level reads as a prop
 const PERIOD = 1.15;

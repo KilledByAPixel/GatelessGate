@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
+import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeHut, makeMonk, faceMonk, makeVase,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
@@ -20,7 +21,6 @@ const ID = 10;
 
 const TIP = 0.55;         // seconds for a cup to go over
 const RIGHT_AFTER = 4.5;  // and how long all three lie there before standing up
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 export default {
   id: ID,

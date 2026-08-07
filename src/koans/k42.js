@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT_DEEP, wash } from '../palette.js';
+import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
@@ -20,7 +21,6 @@ const ID = 42;
 
 const RISE = 2.4;         // seconds for Momyo to come up out of the earth
 const WAKE = 2.0;
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 export default {
   id: ID,

@@ -2,8 +2,8 @@ import * as THREE from '../../lib/three.module.js';
 import { noise1, hash1 } from '../util/noise.js';
 import { groundHeight } from './ground.js';
 import { SNOW } from '../palette.js';
+import { clamp01 } from '../util/math.js';
 
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (t) => t * t * (3 - 2 * t);
 
 // The wave-end's whole life as a closed form over simTime — sweep in fast,

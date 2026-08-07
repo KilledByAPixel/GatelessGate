@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { ACCENT, WASH } from '../palette.js';
+import { clamp01 } from '../util/math.js';
 
 // Keichu's wheel (case 8) on a wheelwright's stand.
 //
@@ -17,7 +18,6 @@ import { ACCENT, WASH } from '../palette.js';
 // just clock × rate, and every dissolve is an eased ramp from a recorded
 // start time, so the same call sequence always gives the same pose.
 
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const easeInOut = (k) => k * k * (3 - 2 * k);
 
 const FADE = 0.42;        // seconds for one part to go

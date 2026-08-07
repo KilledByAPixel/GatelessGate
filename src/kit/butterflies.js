@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { hash1, noise1 } from '../util/noise.js';
 import { toonMaterial } from '../render/toon.js';
 import { ACCENT } from '../palette.js';
+import { clamp } from '../util/math.js';
 
 // A handful of butterflies playing over a meadow. Each one is two small quads
 // hinged at the body line — nothing else; at any case's camera distance a
@@ -21,7 +22,6 @@ import { ACCENT } from '../palette.js';
 
 const TAU_E = 2.2;                 // e-folding of a flit, seconds
 const HEAD_EPS = 0.12;             // seconds between the two path samples a heading needs
-const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
 // One wing, in the local xz plane, hinged at the body line x = 0 so
 // rotation.z alone is the flap.

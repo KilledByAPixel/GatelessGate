@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { noise2 } from '../util/noise.js';
 import { WASH, INK_LIT } from '../palette.js';
+import { clamp01 } from '../util/math.js';
 
 // A hanging bamboo screen — a sudare — on a roller (case 26).
 //
@@ -16,7 +17,6 @@ import { WASH, INK_LIT } from '../palette.js';
 //   bottom rod's own radius resting on the sill. That is where the pitch below
 //   comes from — solve it and the screen fills exactly [0, height].
 
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (t) => t * t * (3 - 2 * t);
 
 // THE CLATTER. A sudare is slats winding onto a rail, so the sound is one

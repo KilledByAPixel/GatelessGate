@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK, mixHex, hexToRgb } from '../palette.js';
 import { hash1 } from '../util/noise.js';
+import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeVeranda, makeLantern, makeMonk, aimMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial, makeCylinderChime,
@@ -28,7 +29,6 @@ const ID = 28;
 const NIGHT = mixHex(PAPER, INK, 0.38);     // the page at this hour
 const DARK = mixHex(PAPER, INK, 0.93);      // and with the candle out
 const FADE = 1.5;                            // seconds to fall dark, and to come back
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 export default {
   id: ID,

@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { hash1, noise1 } from '../util/noise.js';
 import { WASH } from '../palette.js';
 import { makeBird } from './bird.js';
+import { clamp } from '../util/math.js';
 
 // A flock crossing the sky. Each bird flies a wide, slowly drifting circuit at
 // altitude — so it actually travels across the scene rather than circling one
@@ -14,7 +15,6 @@ import { makeBird } from './bird.js';
 // alarm on top: touched, they climb, quicken and beat harder, then settle.
 
 const TAU_E = 2.6;                 // e-folding of a scatter alarm, seconds
-const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
 export function makeBirds({
   count = 7,

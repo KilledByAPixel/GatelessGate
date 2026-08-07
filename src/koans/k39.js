@@ -3,6 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 
+import { clamp01, smoothstep as SS } from '../util/math.js';
 import {
   composeWorld, makeWater, makeKoi, makeMonk, aimMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial, setSeal,
@@ -31,7 +32,6 @@ const ID = 39;
 
 const SINK = 1.1;         // seconds for a stone to go under
 const SURFACE_AFTER = 6;  // and how long the water stays empty
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const STONES = 7;
 const FIRST_RED = STONES - 1;   // the crossing starts with the FAR stone red
 
@@ -108,10 +108,6 @@ export default {
     const SHALLOW = 0.35;
     const DEEP = 1.3;
     const BANK = 1.5;       // how fast the bank falls — "rapidly slopes down"
-    const SS = (a, b, v) => {
-      const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
-      return t * t * (3 - 2 * t);
-    };
     // open water — a BLOB now, not a square (Frank: "make that pond less
     // square-shaped, more organically shaped, kinda roundish"): a seeded
     // wobbled outline from the kit, sized up so every stone still stands well

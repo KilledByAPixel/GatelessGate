@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, wash } from '../palette.js';
+import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeFan,
   makeWater, makeSand, makeFoam,
@@ -49,7 +50,6 @@ const SEA_KEEP = [
 
 const DRAW = 0.9;
 const HOLD = 3.4;
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 // the stroke's hit box is nested under the stroke group, which carries its
 // own hand's-tilt rotation — reused rather than allocated per tap
 const scratchPos = new THREE.Vector3();

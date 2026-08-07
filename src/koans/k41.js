@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK_LIT, WASH, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
+import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeCave, makeSnow, makePine, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
@@ -24,7 +25,6 @@ const ID = 41;
 // find, and the finding of nothing is the whole answer Bodhidharma gives.
 
 const WISP = 1.5;
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 export default {
   id: ID,

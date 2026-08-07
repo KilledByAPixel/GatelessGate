@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP } from '../palette.js';
+import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeVeranda, makeMonk, makeLantern,
   makeLights, makeBlobShadow, addOutlines, toonMaterial, makeCylinderChime,
@@ -27,7 +28,6 @@ const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 // target) — what faceMonk does, and what chu's hand-rolled turn below already
 // did. It was aimMonk's (atan2(-dz, dx)), so Oshin faced a quarter turn off.
 const bearing = (from, to) => Math.atan2(to.x - from.x, to.z - from.z);
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 export default {
   id: ID,

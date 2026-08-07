@@ -4,6 +4,7 @@ import { hash1 } from '../util/noise.js';
 import { gustPhase } from '../audio/synths.js';
 import { WASH } from '../palette.js';
 import { createPendulum, integratePendulum, kickPendulum, pendulumEnergy } from './pendulum.js';
+import { clamp } from '../util/math.js';
 
 // The large hanging cylinder (task-cylinder-brief.md): waist-high bronze,
 // one note, struck by its OWN clapper rather than a paper sail or a
@@ -59,7 +60,6 @@ import { createPendulum, integratePendulum, kickPendulum, pendulumEnergy } from 
 // positions it by where it hangs FROM — same contract as makeFurin.
 
 const GRAVITY = 9.8;   // "book gravity" — see furin.js's own comment; reused, not reinvented
-const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
 // THE PERIOD RATIO — COSMETIC, NOT THE MECHANISM. The brief asks for
 // "shorter [clapper] length... irrational-ish rather than a neat 2:1, or the

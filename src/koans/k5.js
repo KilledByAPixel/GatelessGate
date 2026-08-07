@@ -11,6 +11,7 @@ import { makeMonk, faceMonk } from '../kit/monk.js';
 import { makeLights, toonMaterial } from '../render/toon.js';
 import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
+import { smoothstep as SS } from '../util/math.js';
 
 const ID = 5;
 
@@ -242,10 +243,6 @@ export default {
     const groundMesh = scene.getObjectByName('ground');
     const LIP_X = CLIFF.x - 0.35;
     const DROP = 7;                             // matches the cliff's own drop
-    const SS = (a, b, v) => {
-      const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
-      return t * t * (3 - 2 * t);
-    };
     const gpos = groundMesh.geometry.attributes.position;
     for (let i = 0; i < gpos.count; i++) {
       const wx = gpos.getX(i);

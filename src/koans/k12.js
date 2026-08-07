@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
+import { smoothstep as SS } from '../util/math.js';
 import {
   composeWorld, makeCliff, makeMonk,
   makeLights, makeBlobShadow, addOutlines,
@@ -37,11 +38,6 @@ const LIP_Z = CLIFF.z + 0.35;
 const DROP = 6.5;
 // He stands on the lip, a stride back from the brink, looking out over it.
 const ZUIGAN = { x: 0.9, z: 0.35 };
-
-const SS = (a, b, v) => {
-  const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
-  return t * t * (3 - 2 * t);
-};
 
 // How far out the chasm runs before the ground climbs back. NARROW on purpose,
 // and it is the number the whole shot turns on: a gorge between the reader and

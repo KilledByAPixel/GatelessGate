@@ -3,6 +3,7 @@ import { toonMaterial } from '../render/toon.js';
 import { mergeSimple } from './scatter.js';
 import { hash1 } from '../util/noise.js';
 import { ACCENT, WASH } from '../palette.js';
+import { clamp } from '../util/math.js';
 
 // A temple bell (bonshō) hung from its own two-post frame, the way they stand
 // in temple yards: a stone pad, two posts carrying a beam, a small roof over
@@ -20,8 +21,6 @@ import { ACCENT, WASH } from '../palette.js';
 // instant it lands and pushes from there. Everything is a closed form over the
 // simTime fed to update(), so the motion is deterministic: same seed, same
 // history of calls, same pose.
-
-const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
 // THE SWING, live and tunable — the same mutable-export pattern SWING and
 // CLAP_FORCE (kit/furin.js) and CYL_SWING and CYL_FORCE (kit/cylinder.js)

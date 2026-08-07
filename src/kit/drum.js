@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { WASH, wash } from '../palette.js';
 import { mergeSimple } from './scatter.js';
+import { clamp } from '../util/math.js';
 
 // The dinner drum (case 13) — a barrel drum SITTING on a low saddle stand, the
 // companion piece to the bonshō. Tokusan's whole mistake is that this has not
@@ -22,8 +23,6 @@ import { mergeSimple } from './scatter.js';
 // strike() is a closed form like the bell's: a fast decaying pulse that bulges
 // the skin and rocks the barrel in its slings, superposed so repeated hits
 // stack without a snap.
-
-const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
 const PERIOD = 0.42;     // the barrel's rock — light, quick, over in a moment
 const OMEGA = (2 * Math.PI) / PERIOD;

@@ -4,6 +4,7 @@ import { hash1 } from '../util/noise.js';
 import { gustPhase, gustBuffet } from '../audio/synths.js';
 import { PAPER, WASH } from '../palette.js';
 import { createPendulum, integratePendulum, kickPendulum, pendulumEnergy } from './pendulum.js';
+import { clamp } from '../util/math.js';
 
 // A wind chime: tubes hung in a ring under a wooden cap, a clapper, a paper
 // tag. The VISUAL sway follows the real gust — it is the wind that visibly
@@ -153,8 +154,6 @@ const WIND_X_LEAN = 0.09;
 //
 // Live, like SWING, so the harness can dial it.
 export const BUFFET = { level: 0.38 };
-
-const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
 // THE CLAPPER, as a second pendulum — the fix for Frank's "when I click on
 // it, I only ever hear one sound. I never hear more than one sound on the

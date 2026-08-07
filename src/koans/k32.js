@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, wash } from '../palette.js';
+import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk, makeAssembly,
   makeWildflowers, makeLights, makeBlobShadow, addOutlines, toonMaterial,
@@ -21,8 +22,6 @@ const ID = 32;
 const QUIET = 20;         // seconds of not touching anything
 const BOW_IN = 3.2;       // and then, slowly
 const BOW = 0.62;         // radians at the waist — a real bow, not a nod
-
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 export default {
   id: ID,

@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_LIGHT, mixHex } from '../palette.js';
+import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeHut, makeOak, makeMoon, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines,
@@ -22,7 +23,6 @@ const ID = 27;
 // somebody said once, not a state you are meant to reach and hold.
 
 const GONE = 1.6;         // seconds to leave
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const ease = (k) => k * k * (3 - 2 * k);
 // each thing's hit box is nested under its own group (hallGroup/treeGroup/
 // moonGroup), so its local position is not its world position — one scratch

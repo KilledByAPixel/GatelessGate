@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, wash } from '../palette.js';
+import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeVeranda, makeAssembly, makeMonk, faceMonk,
   makeScreen, makeLights, makeBlobShadow, addOutlines, toonMaterial,
@@ -23,7 +24,6 @@ const ID = 25;
 // The gavel works. Striking it deepens the wobble, which is what happens when
 // you assert something inside a dream.
 
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 // the gavel hangs off the dream's own rocking group (`hall`), so its local
 // position is not its world position — reused rather than allocated per tap
 const scratchPos = new THREE.Vector3();

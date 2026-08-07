@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { WASH } from '../palette.js';
 import { hash1 } from '../util/noise.js';
+import { clamp01 } from '../util/math.js';
 
 // A stylized water surface that knows the shape of the thing holding it.
 //
@@ -30,7 +31,6 @@ const TAU = 1.5;           // seconds for a ripple to fade to nothing
 const POOL = 8;            // concurrent ripples before the oldest is reused
 const EDGE_BAND = 0.12;    // fraction of the radius over which motion is pinned
 
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 const smooth = (t) => t * t * (3 - 2 * t);
 
 // ---- tessellation --------------------------------------------------------
