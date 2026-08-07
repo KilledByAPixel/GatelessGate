@@ -69,9 +69,6 @@ export function makeCliff({
   // to read DEEP passes this lower and more of the face shows before the
   // paper takes over (k5, Frank: "can we make the cliff deeper?").
   fogTop = -1.15,
-  // Paper below the fog line, or the gorge floor the carve actually made. See
-  // THE FOG FILL below — this is a composition decision, not a tuning knob.
-  fogFill = true,
 } = {}) {
   const g = new THREE.Group();
   g.name = 'cliff';
@@ -151,102 +148,29 @@ export function makeCliff({
   // Unlit soft sprites laid over the far ground, sunk under the lip stones and
   // rising slightly with distance. The nearest bank tucks its feathered edge in
   // UNDER the lip so no strip of meadow ever shows beyond the rock line.
-  // THE FOG FILL — off in case 5, and worth understanding before switching it
-  // on anywhere new.
+  // NO PAPER OVER THE DROP. There was a fog fill here: an unlit near-paper
+  // solid that filled the gorge from just under the crags downward, so
+  // everything past the fog line was paper rather than landscape. It existed
+  // because the mist sprites below are horizontal, go edge-on as the camera
+  // drops toward the horizon, and let a low shot see straight onto the gorge
+  // floor — and a solid cannot go edge-on.
   //
-  // The horizontal mist sprites go edge-on the moment the camera drops toward
-  // the horizon; from a low camera they become foreshortened slivers and the
-  // gorge floor (and the tree's real shadow lying on it) shows straight
-  // through. What cannot go edge-on is a SOLID, so this fills the gorge from
-  // just below the upper crags downward and the drop reads the way an ink
-  // painter draws it: meadow, broken lip, a band of bare rock face, then
-  // nothing but paper. Unlit and fog-free on purpose — it IS the fog, and must
-  // not pick up the sun or dim with distance.
+  // It answered "the floor is visible" with "then let nothing be visible",
+  // which was the right trade while these drops were shallow shelves and the
+  // floor showing through was an artifact. Both cases that use this builder
+  // now carve real gorges — meandering lips, tapered side walls, a far wall
+  // climbing back out — and what the fill was hiding had become scenery. It
+  // read as a lid laid across the chasm, which is how Frank found it at all:
+  // "it looks like there might be another piece of geo on top of the cliff
+  // bottom." Off in case 5 first, then case 12 ("it also looks bad in k12...
+  // it's just a cliff, you know?"), and with no third caller it is gone
+  // rather than left as a flag nothing sets.
   //
-  // WHY CASE 5 TURNED IT OFF. It answers "the floor is visible" with "then let
-  // nothing be visible", and that is a strong move: past the fog line there is
-  // no landscape at all, only paper. Once that case's carve got deep enough to
-  // be a real gorge with banked sides, the thing it was hiding stopped being an
-  // artifact and started being scenery (Frank: "it looks better without it,
-  // where it just looks like a normal terrain deformation").
-  //
-  // So it is a choice, not a default answer, and the choice is about what is
-  // below the lip: paper, or ground. Turn it on for a drop that should read as
-  // bottomless. Leave it off for one the reader is meant to see into — and
-  // then check what the sun does down there, because a real floor takes real
-  // shadows and that is the artifact this block was built for.
-  //
-  // ITS TOP IS NOT FLAT, and that is the difference between fog and a lid. A
-  // box has a ruler-straight top face, and from a camera low enough to see
-  // into the chasm that face reads as a floor laid across it — a second piece
-  // of geometry sitting on the drop (Frank, of case 5: "the bottom area below
-  // the cliff looks very straight... it looks like there might be another
-  // piece of geo on top of the cliff bottom"). So the surface is a grid that
-  // BANKS UP against the side walls and toward the back, the way mist piles
-  // where a gorge narrows, with a little seeded roll over the whole of it so
-  // no run of it is a straight line. The middle stays low, which is what keeps
-  // the drop reading as deep.
-  //
-  // Still one mesh and one draw: the banked top and the skirt that closes it
-  // are built into a single geometry.
+  // If a future cliff wants a bottomless drop again, the shape to build is
+  // not a box: a box has a ruler-straight top face and that face IS the lid.
+  // A surface banked up against the side walls and toward the back is what
+  // reads as mist piled in a narrowing gorge.
   const FOG_TOP = fogTop;
-  if (fogFill) {
-    const FILL_W = width * 2.1, FILL_D = 13.5, FILL_H = drop + 2;
-    const BANK = Math.min(1.6, drop * 0.24);      // how high it climbs at the walls
-    const FILL_COLS = 14, FILL_ROWS = 10;
-    const bankAt = (u, v) => {
-      // u: -1..1 across the gorge, v: 0 at the cliff foot, 1 at the far end
-      const sides = SS(0.45, 1.0, Math.abs(u));
-      const back = SS(0.35, 1.0, v);
-      const roll = (noise1(u * 2.3 + 11, seed + 71) - 0.5) * 0.38
-        + (noise1(v * 3.1 + 5, seed + 73) - 0.5) * 0.30;
-      return BANK * Math.max(sides, back) + roll;
-    };
-    const fillPos = [], fillIdx = [];
-    const vAt = (i, j) => i * (FILL_ROWS + 1) + j;
-    for (let i = 0; i <= FILL_COLS; i++) {
-      for (let j = 0; j <= FILL_ROWS; j++) {
-        const u = (i / FILL_COLS) * 2 - 1, v = j / FILL_ROWS;
-        fillPos.push(u * FILL_W / 2, FOG_TOP + bankAt(u, v), -(depth * 0.5 + v * FILL_D));
-      }
-    }
-    for (let i = 0; i < FILL_COLS; i++) {
-      for (let j = 0; j < FILL_ROWS; j++) {
-        fillIdx.push(vAt(i, j), vAt(i, j + 1), vAt(i + 1, j));
-        fillIdx.push(vAt(i + 1, j), vAt(i, j + 1), vAt(i + 1, j + 1));
-      }
-    }
-    // the skirt: every boundary vertex dropped straight to the bottom, so the
-    // thing is a solid from any angle a reader can reach rather than a sheet
-    // with an open underside
-    const rim = [];
-    for (let i = 0; i <= FILL_COLS; i++) rim.push(vAt(i, 0));
-    for (let j = 1; j <= FILL_ROWS; j++) rim.push(vAt(FILL_COLS, j));
-    for (let i = FILL_COLS - 1; i >= 0; i--) rim.push(vAt(i, FILL_ROWS));
-    for (let j = FILL_ROWS - 1; j >= 1; j--) rim.push(vAt(0, j));
-    const floorY = FOG_TOP - FILL_H;
-    const base = fillPos.length / 3;
-    for (const r of rim) fillPos.push(fillPos[r * 3], floorY, fillPos[r * 3 + 2]);
-    for (let k = 0; k < rim.length; k++) {
-      const k2 = (k + 1) % rim.length;
-      fillIdx.push(rim[k], base + k, rim[k2]);
-      fillIdx.push(rim[k2], base + k, base + k2);
-    }
-    const fillGeo = new THREE.BufferGeometry();
-    fillGeo.setAttribute('position', new THREE.Float32BufferAttribute(fillPos, 3));
-    fillGeo.setIndex(fillIdx);
-    const fill = new THREE.Mesh(fillGeo, new THREE.MeshBasicMaterial({ color: wash(0.04), side: THREE.DoubleSide }));
-    fill.material.fog = false;
-    fill.name = 'fogfill';
-    fill.userData.noOutline = true;
-    // Deliberately UNLIT — it is the fog, not a surface. The debug panel's
-    // toon-off clone must not rebuild it as a Lambert: lit near-paper under the
-    // hard key comes out bright, RECEIVES the tree's shadow, and the void grows
-    // a floor again — which is exactly the artifact this block exists to kill.
-    fill.userData.keepMaterial = true;
-    fill.position.set(0, 0, 0.4);   // the grid carries its own y and z; this is the old nudge toward the lip
-    g.add(fill);
-  }
 
   const tex = mistTexture();
   const BANKS = [

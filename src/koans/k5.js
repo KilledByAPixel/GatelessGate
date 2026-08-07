@@ -82,16 +82,12 @@ const CAM = { distance: 13.5, target: [-4.0, 2.3, -1.6], heading: 5.7, pitch: 15
   // deeper?"): the kit's default hid everything below a shallow shelf in
   // mist, so most of "the drop" was implied. Now two courses of crags and
   // a tall band of bare carved earth show before the paper takes over.
-  //
-  // NO FOG FILL. The kit's default fills the gorge with an unlit near-paper
-  // solid, so everything below the fog line is paper rather than landscape —
-  // it exists because a low camera sees over the flat mist sprites onto the
-  // floor. This case carves a real gorge with banked sides and a far wall, and
-  // once it was deep enough that floor stopped being an artifact: Frank, on
-  // seeing it without, "it looks better without it, where it just looks like a
-  // normal terrain deformation." The mist banks stay and do the softening.
+  // fogTop -2.8 is where the MIST sits, not a lid over the drop: this case is
+  // meant to be looked into (Frank: "it looks better without it, where it just
+  // looks like a normal terrain deformation"). See cliff.js's own note on the
+  // paper fill that used to hang here.
   const cliff = makeCliff({
-  width: 11, drop: 7, depth: 2.2, seed: ID, fogTop: -2.8, fogFill: false,
+  width: 11, drop: 7, depth: 2.2, seed: ID, fogTop: -2.8,
   origin: [CLIFF.x, CLIFF.z], yaw: CLIFF.yaw, groundSeed: 21,
   });
   cliff.position.set(CLIFF.x, 0, CLIFF.z);

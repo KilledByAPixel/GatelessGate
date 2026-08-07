@@ -104,6 +104,12 @@ export default {
     // and the meadow running away behind him. `origin` and `yaw` mirror the
     // group's own placement, which is how makeCliff samples the rolling ground
     // under its lumps.
+    // The gorge is SEEN here, the way case 5's is. A paper fill used to hang
+    // under the crags hiding everything past the fog line, and on a ledge this
+    // shallow it read as a slab laid over the drop rather than as depth
+    // (Frank: "it also looks bad in k12... it's just a cliff, you know?").
+    // Shallower than case 5's is fine — this one is a ledge, not a chasm —
+    // the carve below runs the face down and climbs it back out as a rim.
     const cliff = makeCliff({
       width: 13, drop: 6.5, depth: 2.6, seed: ID,
       origin: [CLIFF.x, CLIFF.z], yaw: CLIFF.yaw,

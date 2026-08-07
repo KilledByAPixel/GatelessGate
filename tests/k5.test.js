@@ -298,47 +298,25 @@ test('tapping the hanging man sways him; he steadies; he never answers, never fa
   assert.equal(dangler.position.y, before, 'he has not fallen — that is the whole koan');
 });
 
-test('the fog in the gorge is not a lid: it banks up the sides and the back', () => {
-  // The fill is what stops the drop growing a visible floor, and for a long
-  // time it was a BOX — so its top face was a ruler-straight plane laid across
-  // the chasm, which from a camera low enough to see in reads as exactly the
-  // floor it exists to hide (Frank: "the bottom area below the cliff looks
-  // very straight... it looks like there might be another piece of geo on top
-  // of the cliff bottom"). It is a banked surface now: low down the middle,
-  // climbing where the gorge narrows.
+test('no cliff lays paper over its own drop', () => {
+  // A fog fill used to hang under the crags: an unlit near-paper solid that
+  // made everything past the fog line paper instead of landscape. It read as a
+  // slab laid across the chasm, which is how it got noticed at all (Frank: "it
+  // looks like there might be another piece of geo on top of the cliff
+  // bottom"), and both cases that carve a real gorge look better with the drop
+  // visible. Nothing builds it now — this is what would notice it coming back.
   const cliff = makeCliff({ width: 11, drop: 7, depth: 2.2, seed: 5, fogTop: -2.8, groundSeed: 21 });
-  const fill = cliff.getObjectByName('fogfill');
-  assert.ok(fill, 'the gorge is filled');
-  assert.equal(fill.userData.keepMaterial, true,
-    'unlit and never re-cloned: lit near-paper under the key IS the floor artifact');
-  assert.equal(fill.material.fog, false, 'it is the fog — it must not fade with distance');
+  assert.equal(cliff.getObjectByName('fogfill'), undefined,
+    'the drop is terrain, not a paper void');
 
-  const pos = fill.geometry.attributes.position;
-  const top = [];
-  for (let i = 0; i < pos.count; i++) {
-    const y = pos.getY(i);
-    if (y > -8) top.push({ x: pos.getX(i), z: pos.getZ(i), y });   // skirt runs far below
-  }
-  assert.ok(top.length > 100, 'the surface is a grid, not a quad');
-
-  const ys = top.map((p) => p.y);
-  assert.ok(Math.max(...ys) - Math.min(...ys) > 1.0,
-    `the top is still flat: it varies by ${(Math.max(...ys) - Math.min(...ys)).toFixed(2)}`);
-
-  // low in the middle, high at the walls — which way round matters, or the
-  // mist is a dome over the gorge instead of drifts banked in it
-  const far = Math.max(...top.map((p) => -p.z));
-  const mean = (a) => a.reduce((s, v) => s + v, 0) / a.length;
-  const middle = mean(top.filter((p) => Math.abs(p.x) < 4 && -p.z < far * 0.4).map((p) => p.y));
-  const sides = mean(top.filter((p) => Math.abs(p.x) > 8).map((p) => p.y));
-  const back = mean(top.filter((p) => -p.z > far * 0.8).map((p) => p.y));
-  assert.ok(sides > middle + 0.5, `the sides must bank above the middle: ${sides.toFixed(2)} vs ${middle.toFixed(2)}`);
-  assert.ok(back > middle + 0.5, `and so must the back: ${back.toFixed(2)} vs ${middle.toFixed(2)}`);
-
-  // ...but it must never climb out of the chasm and cover the face itself,
-  // which is the whole thing case 5 made deeper on purpose
-  assert.ok(Math.max(...ys) < -0.5, `the mist has risen over the lip: ${Math.max(...ys).toFixed(2)}`);
-  assert.ok(middle < -2.0, `and the middle must stay down, or the drop stops reading as deep: ${middle.toFixed(2)}`);
+  // the mist banks are what soften it, and they stay
+  let banks = 0;
+  cliff.traverse((o) => { if (o.name === 'mist') banks++; });
+  assert.ok(banks >= 3, `the mist does the softening now, got ${banks} banks`);
+  cliff.traverse((o) => {
+    if (o.name !== 'mist') return;
+    assert.equal(o.userData.keepMaterial, true, 'unlit and textured — the toon clone breaks both');
+  });
 });
 
 test('case 5 shows its gorge: no paper lid over the drop it carved', () => {

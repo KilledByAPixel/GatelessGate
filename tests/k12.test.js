@@ -259,3 +259,25 @@ test('calling startles them, and the fragment stays finite', () => {
     assert.ok(Number.isFinite(v) || typeof v === 'boolean', `fragment.${k} = ${v}`);
   }
 });
+
+test('the ledge is seen, not papered over', () => {
+  // Same call as case 5's, made for the same reason and reported separately:
+  // the kit used to fill the drop with unlit near-paper so nothing past the
+  // fog line was landscape, and on a ledge this shallow it read as a slab laid
+  // over the gorge rather than as depth (Frank: "it also looks bad in k12...
+  // it's just a cliff, you know?"). The carve below IS the picture here.
+  const root = staged();
+  assert.equal(root.scene.getObjectByName('fogfill'), undefined,
+    'nothing lays paper over the drop this case carved');
+
+  // and the drop it carved is still there to be looked at
+  const gp = root.scene.getObjectByName('ground').geometry.attributes.position;
+  let deepest = Infinity;
+  for (let i = 0; i < gp.count; i++) deepest = Math.min(deepest, gp.getY(i));
+  assert.ok(deepest < -4, `a real ledge to see over: floor at ${deepest.toFixed(1)}`);
+
+  // the mist still lies in it — without the fill it is the only softening left
+  let banks = 0;
+  root.scene.traverse((o) => { if (o.name === 'mist') banks++; });
+  assert.ok(banks >= 3, `the mist banks stay, got ${banks}`);
+});
