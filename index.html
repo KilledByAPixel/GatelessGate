@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Gateless Gate 3D</title>
+<!-- The red torii the intro opens on and case 49 closes with, at 32px. Declared
+     rather than left to the browser's implicit /favicon.ico probe, which 404s
+     on a subpath deploy (the site is served from /GatelessGate/, not a domain
+     root) and would leave the tab blank. -->
+<link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #F3EDDF; }
   canvas { display: block; }

@@ -363,6 +363,20 @@ const DIAM_WEAK_EXP = 0.35;
 // (tests/k29.test.js does exactly that to prove each single's NOTE follows
 // the SIZE the case chose rather than a table the case kept).
 export const SINGLE_BODY_LEN = 0.85;
+// HOW FAR A CHIME REACHES BELOW ITS KNOT, in units of size, cord excluded:
+// total drop is cordLength + FURIN_REACH x size. Case 29 derived 1.98 by hand
+// ("total reach including the tanzaku is CORD + 1.98*size") to hang three
+// chimes clear of a gate's tie beam, and left it in a comment where the next
+// caller could not find it.
+//
+// 1.98 IS THE SINGLE'S FIGURE, NOT THE FAMILY'S, which is a distinction case 29
+// never had to draw because it hung nothing but singles. Measured off the built
+// geometry at eight sizes from 0.03 to 0.25, the two forms are exactly flat and
+// exactly different: a single reaches 1.980x its size, a ring of three or five
+// reaches 2.100x. Promoting the single's number to a general bound put a ring
+// 6% deeper than whatever was relying on it — caught by the first clearance
+// test written against a beam. The bound has to be the worse of the two.
+export const FURIN_REACH = 2.10;
 const SINGLE_BODY_R = 0.20;      // x S (weakly, see DIAM_WEAK_EXP), was 0.075
 const SINGLE_CLAP_FRAC = 0.70;   // clapper radius as a fraction of the body's, hidden inside it
 const SINGLE_THREAD = 0.10;      // x S, the bit of cord between mouth and paper

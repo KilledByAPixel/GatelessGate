@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { mergeSimple } from './scatter.js';
 import { INK, WASH, mixHex } from '../palette.js';
+import { hangChimes, attachChimes } from './chimes.js';
 
 // THE HALL.
 //
@@ -92,7 +93,14 @@ function rafterTips(geos, { along, run, edge, sign, y }) {
   }
 }
 
-export function makeHut({ width = 2.4, height = 2.2, depth = 2.0, color = WASH.dark } = {}) {
+export function makeHut({
+  width = 2.4, height = 2.2, depth = 2.0, color = WASH.dark,
+  // Chimes under the front eave — the side the door is on, which is the side
+  // anybody is looking at. A seed, not a count: 0 hangs nothing (so every hut
+  // already in the book is untouched), any other number hangs one or two of a
+  // seeded kind and size. See src/kit/chimes.js.
+  chimes = 0, audio = null,
+} = {}) {
   const g = new THREE.Group();
   g.name = 'hut';
   g.userData.hut = { width, height, depth };
@@ -200,6 +208,21 @@ export function makeHut({ width = 2.4, height = 2.2, depth = 2.0, color = WASH.d
   roof.name = 'roof';
   roof.position.y = height;                          // the soffit rests on the posts
   g.add(roof);
+
+  // ---- chimes under the eave ----------------------------------------------
+  // The hang point is the SOFFIT LINE, which is exactly y = height: the roof
+  // group sits at that height and its first ring is at local 0, so the
+  // underside of the eave and the top of the walls are the same plane. Pulled
+  // a hand's width inside the eave tip so the cord is under the boards rather
+  // than off the edge of them, and kept inside two thirds of the half-span so
+  // nothing hangs out past where the hip slopes come down.
+  attachChimes(g, hangChimes(g, {
+    seed: chimes, audio, y: height, z: hz0 - 0.12, span: hx0 * 0.62,
+    // Nothing structural hangs under this eave, so the limit is compositional:
+    // much past half a metre and the chime reads as hanging IN the doorway
+    // rather than off the building.
+    maxDrop: 0.52,
+  }));
 
   // ---- plinth and threshold ----------------------------------------------
   // A low stone base under the whole footprint, a sill to step over and a stone

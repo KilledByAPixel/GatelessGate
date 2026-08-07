@@ -227,7 +227,14 @@ test('the diorama is a hall, a hanging bell, and three monks turned toward it', 
     assert.ok(Number.isFinite(v) || typeof v === 'boolean', `fragment.${k} is ${v}`);
   }
   assert.equal(frag.strikes, 0, 'nothing has been struck yet');
-  assert.ok(Math.abs(frag.turn - 0.42) < 0.03, `the elder is staged mid-turn: ${frag.turn}`);
+  // He is staged with his BACK to it. This pinned 0.42 — caught half round —
+  // until Frank turned him the whole way away (k16.js: "hacked to face away at
+  // first"), which makes the summons a bigger movement and the strike worth
+  // watching. His staging is the authority; the number followed it. What the
+  // assertion is actually for is unchanged and is the pair with the strike test
+  // below: he must NOT already be facing the bell at build, or the one piece of
+  // motion this case has is over before the reader touches anything.
+  assert.ok(frag.turn < 0.1, `the elder starts unturned, back to the bell: ${frag.turn}`);
   root.onExit && root.onExit();
   root.dispose();
 });

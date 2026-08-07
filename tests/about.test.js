@@ -85,6 +85,22 @@ test('an in-book link points at a file that is actually there', () => {
   read(BOOK_MD);
 });
 
+test('the favicon is declared and the file is there', () => {
+  // Same rot as an in-book link, and quieter: a renamed or missing icon shows
+  // as a blank tab, which nobody files a bug about. The href must also stay
+  // RELATIVE — the site is served from /GatelessGate/, so a leading slash would
+  // point at the domain root and 404 in production while working locally.
+  const html = read('index.html');
+  const m = html.match(/<link[^>]+rel="icon"[^>]*>/);
+  assert.ok(m, 'index.html declares an icon');
+  const href = (m[0].match(/href="([^"]+)"/) || [])[1];
+  assert.ok(href, 'the icon link has an href');
+  assert.ok(!href.startsWith('/') && !/^[a-z]+:/i.test(href), `relative, so a subpath deploy finds it: ${href}`);
+  const bytes = readFileSync(join(ROOT, href));
+  assert.ok(bytes.length > 0, `${href} is empty`);
+  assert.equal(bytes.slice(1, 4).toString(), 'PNG', `${href} is not the PNG it is declared as`);
+});
+
 test('the rights line names the holder, the year and the licence', () => {
   const rights = SECTIONS.find((s) => s.label === 'Rights');
   const txt = rights.parts.join('');

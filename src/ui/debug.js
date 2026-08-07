@@ -360,7 +360,11 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     // draw the last case's keepouts over this one.
     onLayout && onLayout(state.layout);
     renderer.shadowMap.enabled = state.shadows;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // PCFShadowMap, not PCFSoft: three r185 deprecated the soft variant and
+    // silently falls back to this one anyway, warning on the console at every
+    // boot. Naming it directly changes nothing about what renders — the fallback
+    // was already what shipped — and the startup log goes quiet.
+    renderer.shadowMap.type = THREE.PCFShadowMap;
 
     if (post) {
       post.set('quantize', state.pQuant);

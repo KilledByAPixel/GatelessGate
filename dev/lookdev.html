@@ -189,7 +189,7 @@
     function shadows(on) {
       shadowsOn = !!on;
       renderer.shadowMap.enabled = shadowsOn;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.shadowMap.type = THREE.PCFShadowMap;   // PCFSoft is deprecated in r185 and falls back to this
       inkSun.castShadow = shadowsOn;
       keyLight.castShadow = shadowsOn;
       scene.traverse((o) => {

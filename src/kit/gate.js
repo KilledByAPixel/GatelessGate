@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { INK_LIT } from '../palette.js';
 import { mergeSimple } from './scatter.js';
+import { hangChimes, attachChimes } from './chimes.js';
 
 // A freestanding gate with no door: a torii. Two tapered posts (hashira)
 // rooted in base collars (nemaki), a tie beam (nuki) that reads proud of the
@@ -19,7 +20,13 @@ import { mergeSimple } from './scatter.js';
 // (nuki) anchor heights for its own invisible tap slabs — those two mesh
 // positions are load-bearing for a file this task cannot touch and must not
 // move.
-export function makeGate({ width = 2.4, height = 2.6, color = INK_LIT } = {}) {
+export function makeGate({
+  width = 2.4, height = 2.6, color = INK_LIT,
+  // Chimes under the lintel. A gate has no door to take a side from, so they
+  // hang under the kasagi's flat centre span, which is the only stretch of it
+  // with a level underside. 0 hangs nothing. See src/kit/chimes.js.
+  chimes = 0, audio = null,
+} = {}) {
   const g = new THREE.Group();
   g.name = 'gate';
   const mat = toonMaterial({ color });
@@ -79,5 +86,23 @@ export function makeGate({ width = 2.4, height = 2.6, color = INK_LIT } = {}) {
   second.name = 'tie';
   second.position.y = height * 0.78;
   g.add(top, second);
+
+  // ---- chimes under the lintel --------------------------------------------
+  // The kasagi's box is centred at height + 0.09 and is KASAGI_H (0.18) deep,
+  // so its underside is exactly `height`. Only the flat centre span has a level
+  // one — the wings tilt away from it — and |x| < width * 0.364 is how far that
+  // span reaches (cases 22 and 29 both derived that fraction before this existed).
+  //
+  // THE DROP IS BOUNDED BY THE NUKI, which crosses at height * 0.78 and is 0.14
+  // deep. Anything longer than the gap swings THROUGH the tie beam, which is
+  // exactly the trap case 29 had to work out by hand for its row of three; here
+  // the clearance is computed from the beam that causes it, so a gate of any
+  // height gets it right.
+  const nukiTop = height * 0.78 + 0.07;
+  attachChimes(g, hangChimes(g, {
+    seed: chimes, audio, y: height, z: 0, span: width * 0.30,
+    maxDrop: Math.max(0.12, height - nukiTop - 0.03),
+  }));
+
   return g;
 }
