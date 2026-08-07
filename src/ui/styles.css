@@ -89,17 +89,20 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 .gg-find::placeholder { color: rgba(var(--ink-rgb),0.34); font-style: italic; }
 .gg-find:focus { border-bottom-color: var(--accent); }
 .gg-find::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
-/* the ✕: a mark in the margin of the ruled line, not a button on a widget */
+/* the ✕: a square in the margin of the ruled line, not a button on a widget.
+   Flex-centred rather than trusting the glyph's own metrics — × sits high in
+   its em box in a serif face, so line-height alone leaves it off-centre. */
 .gg-find-wrap { position: relative; }
-.gg-find-wrap .gg-find { padding-right: 22px; }
+.gg-find-wrap .gg-find { padding-right: 26px; }
 .gg-find-clear {
   position: absolute; right: 0; top: 50%; transform: translateY(-50%);
-  width: 20px; height: 20px; padding: 0;
-  border: 0; background: transparent; cursor: pointer;
-  font: 18px/1 var(--serif, Georgia, 'Times New Roman', serif);
+  box-sizing: border-box; width: 20px; height: 20px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 2px; background: transparent; cursor: pointer;
+  font: 17px/1 var(--serif, Georgia, 'Times New Roman', serif);
   color: rgba(var(--ink-rgb),0.40);
 }
-.gg-find-clear:hover { color: var(--accent); }
+.gg-find-clear:hover { color: var(--accent); background: rgba(var(--ink-rgb),0.07); }
 .gg-found { font-size: 12px; color: var(--gray); margin: 6px 0 0; min-height: 14px; letter-spacing: 0.04em; }
 /* the matched line, under its title — the reason the result list is readable */
 .gg-menu li .ttl .hit {
@@ -270,6 +273,10 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 /* an action button in a control row — a thing you press, not a thing you set */
 .gg-debug-act { font: inherit; padding: 1px 8px; cursor: pointer; color: var(--ink); background: rgba(30,30,36,0.06); border: 1px solid rgba(30,30,36,0.25); border-radius: 2px; }
 .gg-debug-act:hover { background: rgba(30,30,36,0.14); }
+/* the Compose block: the copied camera line wraps and is selectable by hand,
+   because a clipboard write can be refused and the line is the whole point */
+.gg-compose { margin-top: 10px; }
+.gg-compose-note { grid-column: 1 / -1; font-style: normal; opacity: 0.75; word-break: break-all; user-select: text; font-size: 11px; line-height: 1.35; }
 
 .gg-sit-wrap { position: relative; display: inline-block; }
 .gg-sit-pop { position: absolute; top: 112%; right: 0; display: none; gap: 4px; z-index: 6; background: var(--paper); padding: 4px; border: 1px solid rgba(var(--ink-rgb),0.2); border-radius: 3px; box-shadow: 0 4px 14px rgba(30,30,36,0.14); }
