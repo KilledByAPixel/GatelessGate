@@ -118,12 +118,16 @@ export default {
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
-      trees: 4,
+      trees: 7,        // a wooded mountainside, not a lawn (Frank: "more trees")
       keepout: [
         ...cave.footprint(0.8),                       // the whole rock mass
         { x: FOX.x, z: FOX.z, r: 1.4 },
         { x: HYAKUJO.x, z: HYAKUJO.z, r: 1.2 },
         ...MONKS.map((m) => ({ x: m.x, z: m.z, r: 1.1 })),
+        // the home lens sits out near (7.4, 9.7) looking at the fox; with a
+        // bigger stand of trees, none may grow into that sightline (k32's
+        // scatter-tree-in-the-lens lesson)
+        { x: 4.4, z: 4.6, r: 4.4 },
       ],
       // only the cave's own stone floor actually covers ground. The fox is
       // sitting in the grass like any animal, and so are the monks.
