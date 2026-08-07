@@ -104,7 +104,7 @@ export function buildHub({
   if (withMonk) {
     const mp = path.sample(0.32);
     monk = makeMonk({});
-    monk.position.set(mp.x + mp.perp.x * 1.1, 0, mp.z + mp.perp.z * 1.1);
+    monk.position.set(mp.x + mp.perp.x * .5, 0, mp.z + mp.perp.z * 1.1);
     monk.rotation.y = mp.heading;                  // facing through, like the dolly
     scene.add(monk);
     keepout.push({ x: monk.position.x, z: monk.position.z, r: 1.6 });
