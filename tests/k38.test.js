@@ -10,7 +10,7 @@ import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 const box = (o) => new THREE.Box3().setFromObject(o);
 const width = (o) => { const b = box(o); return Math.max(b.max.x - b.min.x, b.max.z - b.min.z); };
 
-const fakeCtx = () => sharedCtx({ accent: k38.accent, quality: 'high' });
+const fakeCtx = () => sharedCtx({ accent: k38.accent });
 
 // ---- the kit piece -------------------------------------------------------
 

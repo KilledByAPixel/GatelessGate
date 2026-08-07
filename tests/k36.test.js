@@ -18,7 +18,7 @@ import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 // each other (the old bug's whole subject, in its new form), and that the bow
 // is a live angle at the waist rather than a pose baked into the geometry.
 
-const fakeCtx = () => sharedCtx({ accent: k36.accent, quality: 'high' });
+const fakeCtx = () => sharedCtx({ accent: k36.accent });
 
 const wrap = (a) => ((a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
 

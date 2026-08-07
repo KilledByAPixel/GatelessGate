@@ -9,7 +9,7 @@ import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 
 const ACCENT_HEX = new THREE.Color(ACCENT).getHexString();
 
-const fakeCtx = () => sharedCtx({ accent: k46.accent, quality: 'high' });
+const fakeCtx = () => sharedCtx({ accent: k46.accent });
 
 // Box of an object EXCLUDING outline shells — the inverted hull hangs ~0.06
 // below every mesh, which would smear the load-bearing seat assertion.

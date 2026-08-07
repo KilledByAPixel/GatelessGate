@@ -11,7 +11,7 @@ import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 // each other — while holding the deliberate ghosting (the case's whole point)
 // exactly where it was.
 
-const fakeCtx = () => sharedCtx({ accent: k35.accent, quality: 'high' });
+const fakeCtx = () => sharedCtx({ accent: k35.accent });
 
 const CYCLE = 26;                       // k35's apart-and-together period
 

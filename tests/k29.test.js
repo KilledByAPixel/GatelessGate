@@ -9,7 +9,6 @@ import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 
 const fakeCtx = () => sharedCtx({
   accent: k29.accent,
-  quality: 'high',
   audio: { setWindLevel() {}, startAmbience() {}, stopAmbience() {}, chimeStrike() {} },
 });
 

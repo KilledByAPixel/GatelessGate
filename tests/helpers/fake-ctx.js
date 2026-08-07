@@ -1,7 +1,7 @@
 // The stage-side half of a koan's ctx, for tests: tap/hover registries and a
 // raycast that misses by default. ~25 test files each declared their own
 // before this one. `audio` defaults to null (build() must survive silence);
-// pass a stub to capture calls. Extra fields (accent, quality) ride through.
+// pass a stub to capture calls. Extra fields (accent, ...) ride through.
 export function fakeCtx({ audio = null, ...extra } = {}) {
   const taps = [], hovers = [];
   return {

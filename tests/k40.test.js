@@ -34,7 +34,7 @@ function minYOf(group) {
   return min;
 }
 
-const fakeCtx = () => sharedCtx({ accent: k40.accent, quality: 'high' });
+const fakeCtx = () => sharedCtx({ accent: k40.accent });
 
 // ---- the kit piece -------------------------------------------------------
 

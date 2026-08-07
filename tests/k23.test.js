@@ -9,7 +9,7 @@ import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 const box = (o) => new THREE.Box3().setFromObject(o);
 const accentHex = new THREE.Color(ACCENT).getHexString();
 
-const fakeCtx = () => sharedCtx({ accent: k23.accent, quality: 'high' });
+const fakeCtx = () => sharedCtx({ accent: k23.accent });
 
 // drive a bundle for n frames starting at sim time t0; returns the peak lean
 // (group rotation magnitude) seen along the way

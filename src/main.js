@@ -787,7 +787,10 @@ function buildKoan(mod, slug) {
   audio.setMood(mod.mood);
   if (scroll) { scroll.dispose(); scroll = null; }
   const built = mod.build({
-    scene: null, kit: null, audio, input, accent: mod.accent, quality: 'high', hub,
+    // (a `quality: 'high'` rode along here for the whole project — the design
+    // doc's shed-extras-on-weak-devices hook — and nothing ever consumed it;
+    // removed on Frank's call rather than left looking load-bearing)
+    scene: null, kit: null, audio, input, accent: mod.accent, hub,
   });
   built.setCamera && built.setCamera(camera);
   const prev = scenes.active();
