@@ -1,9 +1,10 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { INK, PAPER, WASH, wash, mixHex, hexToRgb } from '../palette.js';
-import { hash1 } from '../util/noise.js';
+import { hash1, noise1 } from '../util/noise.js';
 import { groundHeight } from './ground.js';
 import { mergeSimple } from './scatter.js';
+import { smoothstep as SS } from '../util/math.js';
 
 // A precipice for case 5: the local ground breaking off into empty fogged
 // space. Faceted lumps in the cave.js manner — a raised, broken LIP the meadow
@@ -156,10 +157,66 @@ export function makeCliff({
   // broken lip, a band of bare rock face, and then nothing but paper. Unlit
   // and fog-free on purpose: it IS the fog, and it must not pick up the sun or
   // dim with distance. The sprites stay as a soft lapping edge on its surface.
+  //
+  // ITS TOP IS NOT FLAT, and that is the difference between fog and a lid. A
+  // box has a ruler-straight top face, and from a camera low enough to see
+  // into the chasm that face reads as a floor laid across it — a second piece
+  // of geometry sitting on the drop (Frank, of case 5: "the bottom area below
+  // the cliff looks very straight... it looks like there might be another
+  // piece of geo on top of the cliff bottom"). So the surface is a grid that
+  // BANKS UP against the side walls and toward the back, the way mist piles
+  // where a gorge narrows, with a little seeded roll over the whole of it so
+  // no run of it is a straight line. The middle stays low, which is what keeps
+  // the drop reading as deep.
+  //
+  // Still one mesh and one draw: the banked top and the skirt that closes it
+  // are built into a single geometry.
   const FOG_TOP = fogTop;
-  const fill = new THREE.Mesh(
-    new THREE.BoxGeometry(width * 2.1, drop + 2, 13.5),
-    new THREE.MeshBasicMaterial({ color: wash(0.04) }));
+  const FILL_W = width * 2.1, FILL_D = 13.5, FILL_H = drop + 2;
+  const BANK = Math.min(1.6, drop * 0.24);      // how high it climbs at the walls
+  const FILL_COLS = 14, FILL_ROWS = 10;
+  const bankAt = (u, v) => {
+    // u: -1..1 across the gorge, v: 0 at the cliff foot, 1 at the far end
+    const sides = SS(0.45, 1.0, Math.abs(u));
+    const back = SS(0.35, 1.0, v);
+    const roll = (noise1(u * 2.3 + 11, seed + 71) - 0.5) * 0.38
+      + (noise1(v * 3.1 + 5, seed + 73) - 0.5) * 0.30;
+    return BANK * Math.max(sides, back) + roll;
+  };
+  const fillPos = [], fillIdx = [];
+  const vAt = (i, j) => i * (FILL_ROWS + 1) + j;
+  for (let i = 0; i <= FILL_COLS; i++) {
+    for (let j = 0; j <= FILL_ROWS; j++) {
+      const u = (i / FILL_COLS) * 2 - 1, v = j / FILL_ROWS;
+      fillPos.push(u * FILL_W / 2, FOG_TOP + bankAt(u, v), -(depth * 0.5 + v * FILL_D));
+    }
+  }
+  for (let i = 0; i < FILL_COLS; i++) {
+    for (let j = 0; j < FILL_ROWS; j++) {
+      fillIdx.push(vAt(i, j), vAt(i, j + 1), vAt(i + 1, j));
+      fillIdx.push(vAt(i + 1, j), vAt(i, j + 1), vAt(i + 1, j + 1));
+    }
+  }
+  // the skirt: every boundary vertex dropped straight to the bottom, so the
+  // thing is a solid from any angle a reader can reach rather than a sheet
+  // with an open underside
+  const rim = [];
+  for (let i = 0; i <= FILL_COLS; i++) rim.push(vAt(i, 0));
+  for (let j = 1; j <= FILL_ROWS; j++) rim.push(vAt(FILL_COLS, j));
+  for (let i = FILL_COLS - 1; i >= 0; i--) rim.push(vAt(i, FILL_ROWS));
+  for (let j = FILL_ROWS - 1; j >= 1; j--) rim.push(vAt(0, j));
+  const floorY = FOG_TOP - FILL_H;
+  const base = fillPos.length / 3;
+  for (const r of rim) fillPos.push(fillPos[r * 3], floorY, fillPos[r * 3 + 2]);
+  for (let k = 0; k < rim.length; k++) {
+    const k2 = (k + 1) % rim.length;
+    fillIdx.push(rim[k], base + k, rim[k2]);
+    fillIdx.push(rim[k2], base + k, base + k2);
+  }
+  const fillGeo = new THREE.BufferGeometry();
+  fillGeo.setAttribute('position', new THREE.Float32BufferAttribute(fillPos, 3));
+  fillGeo.setIndex(fillIdx);
+  const fill = new THREE.Mesh(fillGeo, new THREE.MeshBasicMaterial({ color: wash(0.04), side: THREE.DoubleSide }));
   fill.material.fog = false;
   fill.name = 'fogfill';
   fill.userData.noOutline = true;
@@ -168,7 +225,7 @@ export function makeCliff({
   // hard key comes out bright, RECEIVES the tree's shadow, and the void grows
   // a floor again — which is exactly the artifact this block exists to kill.
   fill.userData.keepMaterial = true;
-  fill.position.set(0, FOG_TOP - (drop + 2) / 2, -(depth * 0.5 + 13.5 / 2 - 0.4));
+  fill.position.set(0, 0, 0.4);   // the grid carries its own y and z; this is the old nudge toward the lip
   g.add(fill);
 
   const tex = mistTexture();
