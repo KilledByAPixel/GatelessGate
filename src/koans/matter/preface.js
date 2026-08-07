@@ -1,6 +1,6 @@
 import * as THREE from '../../../lib/three.module.js';
 import MATTER from '../text/matter.js';
-import { PAPER, WASH, wash } from '../../palette.js';
+import { PAPER, WASH, wash, ACCENT_DEEP } from '../../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeBell, makeFlag,
   makeLights, makeBlobShadow, addOutlines,
@@ -27,12 +27,15 @@ import { groundHeight } from '../../kit/ground.js';
 //   under the pointer like case 29's. Both behaviors live in their kit pieces;
 //   this page only hangs them.
 //
-// STILL NO ACCENT OBJECT. The gate was the red thing and the gate is gone;
-// the bell and flag here wear ink washes, not the bell's default red (which
-// belongs to case 16's seal) or the flag's (case 29's). The text panel beside
-// the scene still carries the usual accent red via makeScroll's default.
-// Frank stages by eye from here — the numbers below are a first placement,
-// and the tints are one `color:` each if a warm mark ever earns its way in.
+// THE MONK IS THE RED THING (Frank: "let's make the monk red on the
+// preface"). The gate used to carry this page's warm mark and the gate is
+// gone; now it is the figure standing at the choosing — which is the right
+// reading for a preface: the one red thing on the book's first page is the
+// person about to walk it. ACCENT_DEEP, not full ACCENT — the house rule
+// for a person-sized mass (k42's girl is the precedent). The bell and flag
+// stay ink: case 16 owns the red bonshō and case 29 the red flag, and one
+// warm mark per page is the book's law.
+// Frank stages by eye from here — the numbers below are a first placement.
 const page = MATTER.preface;
 const SEEDS = { seed: 23, groundSeed: 41, pathSeed: 61 };
 
@@ -120,9 +123,10 @@ export default {
     flag.group.rotation.y = 0.5;
     scene.add(flag.group);
 
-    // and the one who has arrived at the choosing, still on the single road
+    // and the one who has arrived at the choosing, still on the single road —
+    // the page's one red thing (see the header)
     const mp = approach.sample(0.72);
-    const monk = makeMonk({ height: 1.6 });
+    const monk = makeMonk({ height: 1.6, color: ACCENT_DEEP });
     monk.position.set(mp.x + mp.perp.x * 0.55, 0, mp.z + mp.perp.z * 0.55);
     faceMonk(monk, { x: FORK.x, z: FORK.z });
     scene.add(monk);
