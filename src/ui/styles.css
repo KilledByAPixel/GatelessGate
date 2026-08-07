@@ -89,6 +89,17 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 .gg-find::placeholder { color: rgba(var(--ink-rgb),0.34); font-style: italic; }
 .gg-find:focus { border-bottom-color: var(--accent); }
 .gg-find::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+/* the ✕: a mark in the margin of the ruled line, not a button on a widget */
+.gg-find-wrap { position: relative; }
+.gg-find-wrap .gg-find { padding-right: 22px; }
+.gg-find-clear {
+  position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+  width: 20px; height: 20px; padding: 0;
+  border: 0; background: transparent; cursor: pointer;
+  font: 18px/1 var(--serif, Georgia, 'Times New Roman', serif);
+  color: rgba(var(--ink-rgb),0.40);
+}
+.gg-find-clear:hover { color: var(--accent); }
 .gg-found { font-size: 12px; color: var(--gray); margin: 6px 0 0; min-height: 14px; letter-spacing: 0.04em; }
 /* the matched line, under its title — the reason the result list is readable */
 .gg-menu li .ttl .hit {

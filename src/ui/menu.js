@@ -28,6 +28,17 @@ export function makeMenu({
   find.className = 'gg-find';
   find.placeholder = 'Search the book';
   find.setAttribute('aria-label', 'Search all forty-nine cases');
+  // Our own clear mark rather than the browser's: every engine draws
+  // ::-webkit-search-cancel-button differently and this panel is a book page,
+  // so the one it gets should be the page's ✕, in the page's ink.
+  const findWrap = document.createElement('div');
+  findWrap.className = 'gg-find-wrap';
+  const findClear = document.createElement('button');
+  findClear.type = 'button';
+  findClear.className = 'gg-find-clear';
+  findClear.textContent = '×';
+  findClear.setAttribute('aria-label', 'Clear search');
+  findWrap.append(find, findClear);
   const found = document.createElement('div');
   found.className = 'gg-found';
 
@@ -79,14 +90,15 @@ export function makeMenu({
   }
   backMatter.appendChild(dev);
 
-  el.append(h1, lede, cont, find, found, list, backMatter);
+  el.append(h1, lede, cont, findWrap, found, list, backMatter);
 
   let query = '';
+  // One way out of a search, wired to three things: the ✕, Escape, and any
+  // future caller. Escape used to be the only exit and it is invisible.
+  const clearQuery = () => { query = ''; find.value = ''; render(lastProg); };
   find.oninput = () => { query = find.value; render(lastProg); };
-  find.onkeydown = (e) => {
-    if (e.key !== 'Escape') return;
-    query = ''; find.value = ''; render(lastProg);
-  };
+  find.onkeydown = (e) => { if (e.key === 'Escape') clearQuery(); };
+  findClear.onclick = () => { clearQuery(); find.focus(); };
 
   let lastProg = progress;
   // The contents are the reading spine: the preface, the forty-nine, the
@@ -135,6 +147,7 @@ export function makeMenu({
   function render(prog) {
     lastProg = prog;
     cont.style.display = query ? 'none' : '';
+    findClear.style.display = query ? '' : 'none';
     backMatter.style.display = query ? 'none' : '';
     renderDev();
     if (renderResults(prog)) return;
