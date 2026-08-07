@@ -1,7 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { hash1 } from '../util/noise.js';
-import { gustPhase } from '../audio/synths.js';
+import { gustPhase, gustBuffet } from '../audio/synths.js';
 import { PAPER, WASH } from '../palette.js';
 import { createPendulum, integratePendulum, kickPendulum, pendulumEnergy } from './pendulum.js';
 
@@ -124,6 +124,35 @@ export const SWING = {
 // frozen here to open.
 const WIND_Z_LEAN = 0.16;
 const WIND_X_LEAN = 0.09;
+
+// HOW HARD THE TURBULENCE SHOVES IT, as a multiple of the steady lean above.
+// gustPhase alone drives this pendulum twenty times below its own natural
+// frequency, so it could only ever lean — measured, one direction change every
+// 5.2s in wind against 0.46s after a tap, which is Frank's "they swing really
+// slowly in a weird way... once I click on it, then it starts swinging
+// normal." gustBuffet (src/audio/synths.js) supplies the missing band.
+//
+// Mean zero, so the chime's resting lean is unchanged; this only decides how
+// much it moves ABOUT that lean. It multiplies the same torque coefficient the
+// lean does and is applied identically to the body and to the clapper, which
+// is what keeps the clapper's wind invariant intact — see THE CLAPPER above,
+// and the measured contact counts in the swing note below.
+//
+// BOUNDED BY THE CLAPPER, not by taste. The body and the clapper have
+// different natural frequencies, so a fast drive separates them in a way the
+// slow breeze never could — push this hard enough and the wind starts ringing
+// the chime, which is exactly the approved ambient pacing this file spends its
+// header protecting. Swept over eighteen rigs (six seeds x three tube counts)
+// for thirty simulated minutes each: 0.55 produced ten wind contacts, 0.45 and
+// everything below produced none. 0.38 is under that edge with room.
+//
+// Costing nothing to be careful here: the reversal rate — which is what
+// actually reads as "swinging" — is 0.48s at every level from 0.20 to 0.55,
+// because it is set by WHERE the drive's energy sits in frequency, not by how
+// much of it there is. Backing off only shortens the throw.
+//
+// Live, like SWING, so the harness can dial it.
+export const BUFFET = { level: 0.38 };
 
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
@@ -395,11 +424,40 @@ const CLAP_REACH = 0.15;
 // wind, the twist stays bounded at 0.499 rad.
 //
 // Live, like SWING — the harness writes into it.
+// LOOSENED, and given something to catch. Frank: "the paper part should spin
+// around a bit more with low resistance, like as it catches the wind." Two
+// separate reasons it barely moved, and both had to go:
+//
+//   `damping` 2/3.0 -> 2/6.5. A paper strip on a thread has very little to
+//   damp it; tau 3s bled off a twist before it could come back. At 6.5s the
+//   thread gives the twist back several times before it settles, which is
+//   what "low resistance" looks like.
+//
+//   `wind` 3.0 -> 3.8, and it now reads the buffet as well as the breeze.
+//   The breeze alone turns at 0.043 Hz — the strip crept a quarter of the way
+//   round over twenty seconds and crept back, reversing once every 15.8s,
+//   which is not catching anything. Reading the fast band too, it reverses
+//   every 1.4s and sweeps +/-94 degrees: three times the old throw, at ten
+//   times the liveliness.
+//
+// TUNED AGAINST A CLIFF, not by taste alone. Wind torque past the thread's
+// own stiffness sends the strip over the top, and once over it whirls: at
+// wind 3.9 / buffet 0.90 the twist stays bounded at 120 degrees, and at
+// 4.0 / 0.95 it runs to SEVEN AND A HALF TURNS. A first pass shipped 4.2 /
+// 1.35 and measured 41 turns of sweep — a pinwheel, not a poem-strip, and
+// it also broke the bound this file has always promised. 3.8 / 0.80 sits
+// below that edge with real margin: swept over 180 combinations (fifteen
+// seeds x three wind levels x four sizes, ten minutes each) the worst
+// instance in the book reaches 94 degrees and none goes over.
+//
+// A TAP still can, and should — `kick` is untouched, so a solid knock sends
+// it round exactly as before. The wind alone does not.
 export const SPIN = {
   stiffness: 6.3,
-  damping: 2 / 3.0,
-  wind: 3.0,
+  damping: 2 / 6.5,
+  wind: 3.8,
   kick: 10.0,
+  buffet: 0.80,     // x wind, on the fast band — what the paper actually catches
 };
 
 // scratch for reporting a struck tube's world position — shared across all
@@ -910,9 +968,24 @@ export function makeFurin({
         // because a windLevel past 1/lean has no real asin — the pendulum
         // simply starts at its horizontal extreme there, which is the
         // correct limit of "leaning as far as it can."
-        const eq = (lean, phase) => Math.asin(clamp(lean * gustPhase(phase) * windLevel, -1, 1));
+        // The buffet is part of the drive, so it is part of the equilibrium
+        // this seeds to — otherwise the chime starts at the breeze's lean and
+        // is immediately shoved off it, reintroducing the startup snap in
+        // miniature.
+        const drive = (phase) => gustPhase(phase) + BUFFET.level * gustBuffet(phase);
+        const eq = (lean, phase) => Math.asin(clamp(lean * drive(phase) * windLevel, -1, 1));
         zPend.theta = clapZ.theta = eq(WIND_Z_LEAN, seed + off);
         xPend.theta = clapX.theta = eq(WIND_X_LEAN, seed * 0.7 + off + 11);
+        // ...and the paper starts at its own twist, for the same reason. Its
+        // restoring term is stiffness*sin(theta), so equilibrium solves
+        // sin(theta) = torque/stiffness. Loosened as it now is, a full gust
+        // holds it most of a radian round: unseeded, every single-tube chime
+        // in the book would visibly wind up from flat over its first second.
+        if (spin) {
+          const sp = seed * 0.43 + off + 5;
+          const tq = SPIN.wind * windLevel * (gustPhase(sp) + SPIN.buffet * gustBuffet(sp));
+          spin.theta = Math.asin(clamp(tq / SPIN.stiffness, -1, 1));
+        }
       }
       const prevClock = clock;
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
@@ -947,22 +1020,29 @@ export function makeFurin({
       // src/kit/pendulum.js's integratePendulum comment) rather than an
       // independent time-since-creation, which is what keeps this in phase
       // with `tt` below.
-      integratePendulum(zPend, elapsed, (t) => windZTorque * gustPhase(t + off) * windLevel);
-      integratePendulum(xPend, elapsed, (t) => windXTorque * gustPhase(t * 0.7 + off + 11) * windLevel);
+      // `drive` is the breeze plus the buffeting on it (BUFFET, above). Both
+      // planes and BOTH pendulums read the identical expression at the
+      // identical offsets, which is the whole basis of the clapper invariant.
+      const driveZ = (t) => gustPhase(t + off) + BUFFET.level * gustBuffet(t + off);
+      const driveX = (t) => gustPhase(t * 0.7 + off + 11) + BUFFET.level * gustBuffet(t * 0.7 + off + 11);
+      integratePendulum(zPend, elapsed, (t) => windZTorque * driveZ(t) * windLevel);
+      integratePendulum(xPend, elapsed, (t) => windXTorque * driveX(t) * windLevel);
       // The clapper reads the SAME gust at the SAME offsets — that identity
       // is what holds the steady-wind relative angle at zero and keeps the
       // approved ambient pacing out of this mechanism entirely (THE CLAPPER,
       // top of file). Only the torque COEFFICIENT differs, and only because
       // its own g/L does.
-      integratePendulum(clapZ, elapsed, (t) => windClapZTorque * gustPhase(t + off) * windLevel);
-      integratePendulum(clapX, elapsed, (t) => windClapXTorque * gustPhase(t * 0.7 + off + 11) * windLevel);
+      integratePendulum(clapZ, elapsed, (t) => windClapZTorque * driveZ(t) * windLevel);
+      integratePendulum(clapX, elapsed, (t) => windClapXTorque * driveX(t) * windLevel);
       // The paper turns on its thread. Its own reading of the gust (a third
       // rate, a third offset) so it never twists in step with either swing
       // plane — a strip that turned exactly when the chime swung would read
       // as one rigid object, which is the opposite of what hanging paper
       // does.
       if (spin) {
-        integratePendulum(spin, elapsed, (t) => SPIN.wind * gustPhase(t * 0.43 + off + 5) * windLevel);
+        integratePendulum(spin, elapsed, (t) => SPIN.wind * windLevel * (
+          gustPhase(t * 0.43 + off + 5)
+          + SPIN.buffet * gustBuffet(t * 0.43 + off + 5)));
       }
 
       // CONTACT. How far the clapper has swung toward metal, and from which

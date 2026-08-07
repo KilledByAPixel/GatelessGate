@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { makeFurin, chimeActivity, noteForSize, SWING } from '../src/kit/furin.js';
+import { makeFurin, chimeActivity, noteForSize, SWING, BUFFET } from '../src/kit/furin.js';
 import { createPendulum, integratePendulum } from '../src/kit/pendulum.js';
-import { gustPhase } from '../src/audio/synths.js';
+import { gustPhase, gustBuffet } from '../src/audio/synths.js';
 
 // drive the component across sim time; returns the end time so runs can chain
 function run(f, secs, t0 = 0, step = 1 / 60) {
@@ -326,7 +326,13 @@ test("the paper turns on its thread, harder for a harder knock, and never winds 
     f.update(1 / 60, t);
     f.ring(force);
     let peak = 0;
-    for (let k = 0; k < 60 * 25; k++) { t += 1 / 60; f.update(1 / 60, t); peak = Math.max(peak, Math.abs(pivot.rotation.y)); }
+    // 60s, not the 25s this used to run. The strip was deliberately loosened
+    // (SPIN.damping tau 3.0s -> 6.5s, Frank: "the paper part should spin
+    // around a bit more with low resistance") and settling time scales with
+    // tau — at 25s it is still 0.07 rad short of its rest angle, which is the
+    // strip still moving, not the strip parked. Same claim, measured after
+    // the same number of time constants.
+    for (let k = 0; k < 60 * 60; k++) { t += 1 / 60; f.update(1 / 60, t); peak = Math.max(peak, Math.abs(pivot.rotation.y)); }
     return { peak, rest: pivot.rotation.y };
   };
 
@@ -635,7 +641,14 @@ test("the swing's wind phase stays locked to the absolute clock, even for a chim
   for (let i = 0; i < N; i++) {
     f.update(1 / 60, T0 + i / 60);
     // absolute time, not time-since-reference-creation: T0 + t
-    integratePendulum(reference, 1 / 60, (t) => torqueCoeff * gustPhase(t + T0 + PHASE));
+    // The drive is the breeze PLUS the turbulence on it (BUFFET/gustBuffet in
+    // furin.js — the fast band that lets the thing actually swing rather than
+    // only lean). Reproduced here for the same reason SWING.damping is read
+    // live rather than hardcoded: this test's subject is the CLOCK the drive
+    // is sampled at, so it has to sample the same drive the module does, or
+    // it fails for a reason that has nothing to do with what it is testing.
+    integratePendulum(reference, 1 / 60, (t) => torqueCoeff * (
+      gustPhase(t + T0 + PHASE) + BUFFET.level * gustBuffet(t + T0 + PHASE)));
   }
 
   const swing = f.group.getObjectByName('swing');

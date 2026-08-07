@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { makeCylinderChime, noteForSize, forceForRelOmega, CYL_SWING } from '../src/kit/cylinder.js';
+import { makeCylinderChime, noteForSize, forceForRelOmega, CYL_SWING, CYL_WIND } from '../src/kit/cylinder.js';
 import { createPendulum, integratePendulum } from '../src/kit/pendulum.js';
 import { gustPhase } from '../src/audio/synths.js';
 
@@ -47,9 +47,15 @@ function reference({ size = 0.8, T0 = 0 } = {}) {
   const CONTACT_Y = (CORD + CAP_H) + 0.65 * BODY_LEN;
   const L_cyl = CORD + 0.5 * BODY_LEN;
   const L_clap = L_cyl * (1 / PHI) * (1 / PHI);
-  const GAP_ANGLE = ((BODY_R - CLAP_R) * 0.9) / CONTACT_Y;
-  const windCylTorque = (GRAVITY / L_cyl) * 0.07;
-  const windClapTorque = (GRAVITY / L_clap) * 0.11;
+  // CYL_WIND is read LIVE, the same reasoning the CYL_SWING damping below
+  // already follows: the leans, the contact gap and the force scale are all
+  // exported tunables now, and a hardcoded copy here would silently stop
+  // matching the module the moment one of them moves. `swell` scales the
+  // whole system together (see CYL_WIND in cylinder.js), so it has to land
+  // on all three of them here exactly as it does there.
+  const GAP_ANGLE = (((BODY_R - CLAP_R) * 0.9) / CONTACT_Y) * CYL_WIND.swell;
+  const windCylTorque = (GRAVITY / L_cyl) * CYL_WIND.leanCyl * CYL_WIND.swell;
+  const windClapTorque = (GRAVITY / L_clap) * CYL_WIND.leanClap * CYL_WIND.swell;
   // damping reads the real, LIVE CYL_SWING object rather than a hardcoded
   // copy — CYL_SWING.cylDamping/clapDamping are exported, mutable tunables
   // now (task-swing-tune-brief.md, the harness writes into them directly),
@@ -83,7 +89,7 @@ function reference({ size = 0.8, T0 = 0 } = {}) {
       const elapsed = Math.max(0, t - prevT);
       prevT = t;
       integratePendulum(cyl, elapsed, (tt) => windCylTorque * gustPhase(tt) * windLevel);
-      integratePendulum(clap, elapsed, (tt) => windClapTorque * gustPhase(tt * 0.7 + 11) * windLevel);
+      integratePendulum(clap, elapsed, (tt) => windClapTorque * gustPhase(tt * CYL_WIND.clapRate + 11) * windLevel);
 
       // same level+refractory gating cylinder.js uses now (no separate edge
       // flag needed — see its own comment for why THE WALL below makes that
@@ -91,7 +97,7 @@ function reference({ size = 0.8, T0 = 0 } = {}) {
       const relTheta = cyl.theta - clap.theta;
       if (Math.abs(relTheta) > GAP_ANGLE && t - lastStrikeAt > REFRACTORY) {
         lastStrikeAt = t;
-        strikes.push({ t, force: forceForRelOmega(cyl.omega - clap.omega) });
+        strikes.push({ t, force: forceForRelOmega((cyl.omega - clap.omega) / CYL_WIND.swell) });
       }
 
       // THE WALL: must be reproduced here too, or this reference silently

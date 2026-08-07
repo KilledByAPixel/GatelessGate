@@ -173,8 +173,61 @@ export const CYL_SWING = {
 // cylinder's: it is the lighter of the two, so the same wind torque
 // coefficient formula ((g/L)*lean) needs a bigger lean to move a comparably
 // light mass enough to matter.
-const WIND_LEAN_CYL = 0.07;
-const WIND_LEAN_CLAP = 0.11;
+// OPENED UP, and rebalanced against the strike rate. Frank, watching them:
+// "make large bells swing farther, the sound is good but visually they should
+// swing farther." Measured before this change, the book's four cylinders
+// (k16, k17 x2, k28) all swung between -4.0 and +6.3 degrees over an hour —
+// a lean you have to look for, on the heaviest objects in the book.
+//
+// The two numbers cannot move alone, and that is the whole difficulty. What
+// RINGS this bell is the relative angle between cylinder and clapper passing
+// GAP_ANGLE, and both angles scale with these leans — so simply making the
+// swing bigger also makes it ring harder and more often, and the sound is the
+// half Frank says is already right. `clapRate` is the compensator: the
+// clapper reads the gust at a DIFFERENT rate from the cylinder, and that
+// decorrelation is precisely what opens the relative angle (see THE ACTUAL
+// MECHANISM above — feed both the identical gustPhase and the strikes stop
+// dead). Pushing it back toward 1 closes the relative angle by as much as the
+// bigger leans opened it.
+//
+// So the pair below is a solve, not a taste: leans 2.5x for the swing, rate
+// 0.7 -> 0.88 to hold the hourly strike count where it was. Both measured
+// over a simulated hour on each of the four real rigs — see the sweep in the
+// commit message.
+//
+// Live and mutable, the same pattern CYL_SWING and CYL_FORCE already use, so
+// dev/hanging-audition.html can dial them; read at construction, since the
+// torque coefficients they feed are per-instance geometry.
+// SO: `swell`, and it scales the WHOLE system rather than any one part of it.
+// Both leans, the contact gap, and the tap kick, all by the same factor. The
+// ringing is decided by the relative angle measured AGAINST that gap, and
+// every one of those quantities is linear in the swell — so the bell swings
+// two and a half times farther and rings at exactly the same moments, with
+// exactly the same force, as it did before. Not "retuned to sound similar":
+// the same system, drawn larger.
+//
+// The gap can move because NOBODY CAN SEE THE CLAPPER. It has no mesh at all
+// (see the NO CLAPPER MESH note in makeCylinderChime) — it is pure physics
+// inside an opaque bronze body, so its clearance is a free parameter in a way
+// the fūrin's visible ring clapper is not. That is the one fact this whole
+// change rests on.
+//
+// Two wrong turns are worth recording, because both look right on paper. The
+// first scaled the leans alone and left the gap: the relative angle grew past
+// the clearance, the clapper simply rested on the wall, and the bell rang at
+// the refractory limit — 4500 strikes an hour against 1424, a rattle. The
+// second tried to hold the ring rate by pushing `clapRate` back toward 1 to
+// re-correlate the two gust readings; measured across 0.88 to 0.99 it moved
+// the count by less than 5%, because once the relative angle is saturated the
+// decorrelation is no longer what gates anything. Holding the DIFFERENCE of
+// the two leans constant failed for the same reason: the dynamic part of the
+// relative angle scales with the drive, not just the gap between equilibria.
+export const CYL_WIND = {
+  leanCyl: 0.07,
+  leanClap: 0.11,
+  clapRate: 0.7,
+  swell: 2.0,
+};
 
 // THE MECHANISM (see the header comment for how this was found: not what
 // the brief predicted). The clapper's torque reads gustPhase at a DIFFERENT
@@ -487,14 +540,17 @@ export function makeCylinderChime({
   // OVERSTATES the true bronze-lined gap, never understates it, so it never
   // reports a touch that could not physically happen.
   const GAP_LINEAR = (BODY_R - CLAP_R) * 0.9;
-  const GAP_ANGLE = GAP_LINEAR / CONTACT_Y;
+  const GAP_ANGLE = (GAP_LINEAR / CONTACT_Y) * CYL_WIND.swell;
 
   // damping starts at CYL_SWING's current value but is re-read live every
   // update() (below), same reasoning as furin.js's own zPend/xPend.damping
   const cylPend = createPendulum({ length: L_cyl, g: GRAVITY, damping: CYL_SWING.cylDamping });
   const clapPend = createPendulum({ length: L_clap, g: GRAVITY, damping: CYL_SWING.clapDamping });
-  const windCylTorque = (GRAVITY / L_cyl) * WIND_LEAN_CYL;
-  const windClapTorque = (GRAVITY / L_clap) * WIND_LEAN_CLAP;
+  // both leans, the gap below, and the tap kick all take CYL_WIND.swell —
+  // see its own comment for why scaling the whole system together is what
+  // makes a bigger swing sound identical rather than merely similar
+  const windCylTorque = (GRAVITY / L_cyl) * CYL_WIND.leanCyl * CYL_WIND.swell;
+  const windClapTorque = (GRAVITY / L_clap) * CYL_WIND.leanClap * CYL_WIND.swell;
 
   const note = noteForSize(S);
 
@@ -525,8 +581,12 @@ export function makeCylinderChime({
   // landing while the body is already swung out wide is capped harder than
   // one landing near the bottom (there is less "room" left to add).
   function tapKick(force) {
-    const maxOmega = MAX_CYL_OMEGA_MULT * CYL_SWING.tapKick;
-    kickPendulum(cylPend, force * CYL_SWING.tapKick);
+    // swell scales the kick with everything else, so a TAPPED bell swings
+    // farther by the same factor the wind does and still rings identically —
+    // the gap it rings against grew by the same amount (CYL_WIND.swell)
+    const kick = CYL_SWING.tapKick * CYL_WIND.swell;
+    const maxOmega = MAX_CYL_OMEGA_MULT * kick;
+    kickPendulum(cylPend, force * kick);
     cylPend.omega = clamp(cylPend.omega, -maxOmega, maxOmega);
     const maxEnergy = 0.5 * maxOmega * maxOmega;
     if (pendulumEnergy(cylPend) > maxEnergy) {
@@ -595,7 +655,7 @@ export function makeCylinderChime({
       // different-reading-of-the-same-gust decorrelation explained above.
       integratePendulum(cylPend, elapsed, (t) => windCylTorque * gustPhase(t + off) * windLevel);
       integratePendulum(clapPend, elapsed,
-        (t) => windClapTorque * gustPhase(t * CLAP_GUST_RATE + off + CLAP_GUST_OFFSET) * windLevel);
+        (t) => windClapTorque * gustPhase(t * CYL_WIND.clapRate + off + CLAP_GUST_OFFSET) * windLevel);
 
       // CONTACT. Read the raw integrated relative angle BEFORE any
       // correction — this is what actually happened this frame, and it is
@@ -612,7 +672,15 @@ export function makeCylinderChime({
       // simpler to just not carry state that the wall already makes true.)
       const relTheta = cylPend.theta - clapPend.theta;
       if (Math.abs(relTheta) > GAP_ANGLE && clock - lastStrikeAt > REFRACTORY) {
-        fire(forceForRelOmega(cylPend.omega - clapPend.omega));
+        // Measured in UN-SWELLED units. CYL_WIND.swell scales every angle and
+        // therefore every angular velocity in this system; the force law's own
+        // thresholds (FORCE_OMEGA_REF, CYL_FORCE.cap) are absolute rad/s and
+        // were calibrated by ear against the unscaled bell. Dividing here
+        // rather than scaling those two keeps forceForRelOmega a pure function
+        // with the meaning it was tuned to have — and without it a swelled
+        // bell pins every contact at 1.0 and the ring-down stops diminuendo,
+        // which is precisely the half Frank said was already right.
+        fire(forceForRelOmega((cylPend.omega - clapPend.omega) / CYL_WIND.swell));
       }
 
       // THE WALL — see its own comment above (RESTITUTION). Unconditional:

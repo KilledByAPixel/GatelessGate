@@ -603,6 +603,38 @@ export const GUST_B = 0.071;
 export const gustPhase = (t) =>
   (Math.sin(2 * Math.PI * GUST_A * t) + Math.sin(2 * Math.PI * GUST_B * t)) / 2;
 
+// TURBULENCE — the fast half of the wind, and the half the hanging things in
+// the kit never had.
+//
+// gustPhase above is WEATHER: 0.043 and 0.071 Hz, a breeze rising and falling
+// over twenty seconds. That is the right signal for how loud the wind is and
+// for pacing strikes, and it is the only signal the fūrin's and the bell's
+// pendulums were ever given. But a pendulum driven fifteen to twenty-five
+// times below its own natural frequency cannot swing — it can only lean,
+// tracking the drive quasi-statically. Measured on the default fūrin (natural
+// period 0.91s): in wind alone it reversed direction once every 5.2 seconds,
+// against 0.46 seconds after a tap. Frank saw exactly that — "they swing
+// really slowly in a weird way... once I click on it, then it starts swinging
+// normal." The tap was the only thing in the whole system putting energy
+// anywhere near resonance.
+//
+// So: a second, faster wind signal, in the band those pendulums actually live
+// in. Two seeded value-noise octaves with features around 1.1s and 0.4s,
+// bracketing the natural periods of both the fūrin (0.91s) and the bronze
+// cylinder. Mean zero, so it adds no lean of its own — it is the buffeting
+// ON the breeze, not a stronger breeze.
+//
+// A SEPARATE FUNCTION, deliberately. gustPhase is load-bearing for the strike
+// weather (chimeActivity and every tube's excitation curve read it, and their
+// rates were measured and approved against exactly it), so it must keep
+// returning exactly what it always has. Callers opt in.
+export const BUFFET_SEED = 91;
+export function gustBuffet(t) {
+  const swirl = 2 * noise1(t * 0.9, BUFFET_SEED) - 1;      // ~1.1s features
+  const snap = 2 * noise1(t * 2.3, BUFFET_SEED + 1) - 1;   // ~0.4s features
+  return swirl * 0.68 + snap * 0.32;
+}
+
 // The AUDIBLE gust: gustPhase's slow weather (70% weight, so the crests that
 // ring the fūrin are still the crests the ear rides) plus two seeded
 // value-noise octaves — gust-scale irregularity and leaf-flutter. This is the
