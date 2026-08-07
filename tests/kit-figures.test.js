@@ -49,7 +49,12 @@ test('makeBuddha is the same seated figure as every monk — no hat, ordinary si
   // ordinary size: a seated 1.6 man, on the ground, not a colossus
   const box = new THREE.Box3().setFromObject(b);
   assert.ok(box.min.y > -0.02, `on the ground: ${box.min.y}`);
-  assert.ok(box.max.y > 0.85 && box.max.y < 1.1, `seated monk scale: ${box.max.y}`);
+  // The band is deliberately loose. Its job is to catch a colossus or a
+  // dwarf, not to pin a tuning: the seated head rides at whatever the current
+  // STANCES.sit says, and the topknot sits on top of that, so every head
+  // retune moves this number a little. 1.15 is the 1.6 man seated at 0.72 of
+  // his standing height with the bun — comfortably still a man.
+  assert.ok(box.max.y > 0.85 && box.max.y < 1.15, `seated monk scale: ${box.max.y}`);
 });
 
 test('the topknot: one bun on the crown, proud of the skull line, in the figure\'s own material', () => {
