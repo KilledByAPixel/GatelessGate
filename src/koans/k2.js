@@ -116,6 +116,7 @@ export default {
 
     const world = composeWorld(scene, {
       seed: ID,
+      treeKind: 'pine',
       groundSeed: 21,
       trees: 7,        // a wooded mountainside, not a lawn (Frank: "more trees")
       keepout: [
