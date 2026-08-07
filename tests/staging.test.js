@@ -5,6 +5,7 @@ import { CASES, slugify } from '../src/koans/index.js';
 import { loadKoan, isStaged } from '../src/koans/registry.js';
 import { DEFAULT_HOME_DISTANCE } from '../src/camera.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT, PAPER } from '../src/palette.js';
+import { DRAW_BUDGET } from '../src/budget.js';
 import { emitterCount } from '../src/audio/engine.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
 
@@ -314,8 +315,9 @@ test('the seal of each case is actually in the picture', async () => {
 });
 
 test('no staged scene blows the draw budget', async () => {
-  // < 150 draw calls per scene, and outlines double every mesh that takes one.
-  // Instanced fields (the meadow) are one call however many blades they carry.
+  // DRAW_BUDGET (src/budget.js — the number the workbench readout shows live)
+  // per scene, and outlines double every mesh that takes one. Instanced
+  // fields (the meadow) are one call however many blades they carry.
   const over = [];
   for (const entry of staged) {
     const mod = await loadKoan(entry.slug);
@@ -325,7 +327,7 @@ test('no staged scene blows the draw budget', async () => {
       if (o.isInstancedMesh || o.isPoints) calls += 1;
       else if (o.isMesh && o.material && o.material.visible !== false) calls += 1;
     });
-    const budget = OVER_BUDGET_BY_HISTORY[entry.id] || 150;
+    const budget = OVER_BUDGET_BY_HISTORY[entry.id] || DRAW_BUDGET;
     if (calls > budget) over.push([entry.id, calls]);
   }
   assert.deepEqual(over, [], `over budget: ${JSON.stringify(over)}`);

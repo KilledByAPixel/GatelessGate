@@ -264,6 +264,10 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 }
 .gg-debug.open { transform: translateX(0); }
 .gg-debug-readout { opacity: 0.7; margin-bottom: 10px; }
+/* the draw budget's tell: amber inside striking distance of the 150 line,
+   red over it (src/budget.js — the same number the staging net enforces) */
+.gg-debug-readout.gg-warn { opacity: 1; color: #9a6a00; font-weight: 700; }
+.gg-debug-readout.gg-over { opacity: 1; color: #a02c20; font-weight: 700; }
 .gg-debug-group { margin: 12px 0 4px; font-weight: 700; opacity: 0.55; text-transform: uppercase; letter-spacing: 0.06em; }
 .gg-debug-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px; padding: 2px 0; cursor: pointer; }
 .gg-debug-row em { font-style: normal; opacity: 0.6; }

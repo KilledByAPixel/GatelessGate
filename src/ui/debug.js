@@ -3,6 +3,7 @@ import { setGrassPatchiness } from '../kit/grassfield.js';
 import { setGrassStyle } from '../kit/scenery.js';
 import { setInkScale } from '../render/outlines.js';
 import { plainMaterial } from '../render/toon.js';
+import { DRAW_BUDGET, DRAW_WARN } from '../budget.js';
 
 // A workbench: a toolbar button top-right of the stage, and a plain panel that
 // slides out under it. Deliberately unstyled beyond the minimum — this is for
@@ -390,8 +391,15 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     if (compose && composeEl.style.display !== 'none') compose.refresh();
     // with post on, renderer.info reports the last fullscreen quad, not the scene
     const r = (post && post.active) ? post.stats : renderer.info.render;
+    // Draws against the book's budget (src/budget.js — the same 150 the
+    // staging net enforces). The live count is what the renderer actually
+    // issued this frame, so culling and post passes make it wobble a little
+    // around the net's static count; the colour is the tell — amber within
+    // reach of the line, red over it.
     readout.textContent =
-      `${Math.round(fps)} fps · ${r.calls} draws · ${(r.triangles / 1000).toFixed(0)}k tris`;
+      `${Math.round(fps)} fps · ${r.calls}/${DRAW_BUDGET} draws · ${(r.triangles / 1000).toFixed(0)}k tris`;
+    readout.classList.toggle('gg-over', r.calls > DRAW_BUDGET);
+    readout.classList.toggle('gg-warn', r.calls > DRAW_WARN && r.calls <= DRAW_BUDGET);
   }
 
   return {
