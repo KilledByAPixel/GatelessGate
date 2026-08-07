@@ -262,7 +262,7 @@ export default {
         // the surf breathes with the sea it belongs to (case 20's idiom):
         // read the true surface at the waterline and hand the bed 0..1
         if (audio && audio.setWaterSwell) {
-          const h = water.heightAt(0, 43, simTime);
+          const h = water.heightAt(0, 43, clock);   // the guarded clock, never raw simTime
           audio.setWaterSwell(Math.max(0, Math.min(1, 0.5 + h / 0.17)));
         }
 

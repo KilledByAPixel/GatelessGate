@@ -241,6 +241,8 @@ export function makePost(renderer, width, height) {
     dispose() {
       for (const rt of [scene, a, b]) rt.dispose();
       for (const p of passes) p.mat.dispose();
+      copyMat.dispose();            // not in `passes` — it is the plain blit
+      quad.geometry.dispose();      // freeze.js disposes its own; match it
       paperMat.uniforms.tPaper.value.dispose();
     },
   };

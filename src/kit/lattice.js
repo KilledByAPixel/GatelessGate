@@ -146,29 +146,33 @@ export function makePen({
     }
   }
 
-  // circles along the standing walls, for the prop keepout. Grass is left to
-  // grow through a fence, as it does.
+  // Circles along the standing walls, for the prop keepout. Grass is left to
+  // grow through a fence, as it does. World space, cave.js style: local
+  // circles first, then position AND yaw applied at call time — a rotated
+  // pen must not mask the wrong ground (this used to add position only;
+  // latent because case 37 does not rotate its pen).
   g.footprint = (r = 0.9, per = 5) => {
-    const out = [];
+    const local = [];
     for (const [name, cx, cz, rot] of sides) {
       if (name === open) continue;
       for (let i = 0; i <= per; i++) {
         const off = -half + size * (i / per);
-        out.push({ x: g.position.x + cx + (rot ? 0 : off), z: g.position.z + cz + (rot ? off : 0), r });
+        local.push({ x: cx + (rot ? 0 : off), z: cz + (rot ? off : 0) });
       }
     }
     // an open leaf sticks out past the pen's own square — cover its length,
     // hinge to free edge, or scatter grows a bush through a door
     for (const d of doorLeaves) {
       for (const t of [0.25, 0.6, 0.95]) {
-        out.push({
-          x: g.position.x + d.hx + Math.cos(d.a) * d.w * t,
-          z: g.position.z + d.hz - Math.sin(d.a) * d.w * t,
-          r,
-        });
+        local.push({ x: d.hx + Math.cos(d.a) * d.w * t, z: d.hz - Math.sin(d.a) * d.w * t });
       }
     }
-    return out;
+    const cos = Math.cos(g.rotation.y), sin = Math.sin(g.rotation.y);
+    return local.map((c) => ({
+      x: g.position.x + c.x * cos + c.z * sin,
+      z: g.position.z - c.x * sin + c.z * cos,
+      r,
+    }));
   };
   g.userData.walls = walls;
   return g;

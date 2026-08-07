@@ -313,9 +313,10 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // camera looks over his shoulder at the same target — so a staff planted ON
 // the +x axis sits exactly on the camera→figure→target line and reads as
 // growing out of the wearer's hat (k11/k19/k21/k22/k27/k31/k34/k36/k39).
-// Swinging the standing plant ~50° off the facing axis keeps it the same
-// distance out — past the hem, beside the resting sleeve — but breaks the
-// alignment for over-the-shoulder cameras. Seated figures face local +z
+// Swinging the standing plant off the facing axis (0.2 rad ≈ 11° shipped —
+// it began near 50° and was eased back in a later tweaks round) keeps it
+// the same distance out — past the hem, beside the resting sleeve — but
+// breaks the alignment for over-the-shoulder cameras. Seated figures face local +z
 // (the folded sleeves), so their +x plant already IS the side plant and
 // stays at 0. Cases with a bearing-sensitive staging can override with the
 // `staffAng` option (additive; 0 = the old on-axis plant).
@@ -326,29 +327,24 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // standing hands meet at the waist (the forearm swings nearly horizontal).
 // The inward swing (the cuffs crossing to the centre) is the same for all.
 const KNEEL = 0.5;
-const STANCES = {
-  stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.765, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.2, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.92 },
-  // Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did:
-  // the chest run in SIT_PROFILE was lengthened and steepened so a meditator
-  // sits STRAIGHT ("they should all kinda look like Buddha") — the crown now
-  // tops out at 0.610·h, still comfortably a seated man, and the fold angle
-  // eases to -0.44 so the cuffs keep landing in the lap the knees now frame.
-  sit: { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, head: 0.545, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31, foldCross: 1.1 },
-  kneel: {
-    profile: mixProfile(STAND_PROFILE, SIT_PROFILE, KNEEL),
-    shoulder: mix(0.60, 0.40, KNEEL),
-    sleeve: mix(0.34, 0.24, KNEEL),
-    head: mix(0.765, 0.50, KNEEL),
-    hat: mix(0.80, 0.545, KNEEL),
-    armZ: mix(0, 0.03, KNEEL),
-    staff: mix(1.2, 0.7, KNEEL),
-    staffX: mix(0.26, 0.3625, KNEEL),
-    staffAng: mix(0.9, 0, KNEEL),
-    foldUpper: mix(-0.12, -0.22, KNEEL),
-    foldFore: mix(-1.45, -0.31, KNEEL),
-    foldCross: mix(0.92, 1.1, KNEEL),
-  },
-};
+const STAND_STANCE = { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.765, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.2, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.92 };
+// Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did:
+// the chest run in SIT_PROFILE was lengthened and steepened so a meditator
+// sits STRAIGHT ("they should all kinda look like Buddha") — the crown now
+// tops out at 0.610·h, still comfortably a seated man, and the fold angle
+// eases to -0.44 so the cuffs keep landing in the lap the knees now frame.
+const SIT_STANCE = { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, head: 0.545, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31, foldCross: 1.1 };
+// Kneel is DERIVED, field by field, from whatever stand and sit currently
+// are. It used to repeat their values as literals, and every retune of the
+// endpoints (the sit +0.015 lift, staffAng 0.9 → 0.2) silently un-halved it
+// — four fields had drifted. Latent (no koan kneels; tests do), but the
+// whole claim of this stance is "exactly halfway", so it is now that by
+// construction.
+const KNEEL_STANCE = { profile: mixProfile(STAND_PROFILE, SIT_PROFILE, KNEEL) };
+for (const k of Object.keys(STAND_STANCE)) {
+  if (k !== 'profile') KNEEL_STANCE[k] = mix(STAND_STANCE[k], SIT_STANCE[k], KNEEL);
+}
+const STANCES = { stand: STAND_STANCE, sit: SIT_STANCE, kneel: KNEEL_STANCE };
 
 // ---------------------------------------------------------------------------
 // the assembly

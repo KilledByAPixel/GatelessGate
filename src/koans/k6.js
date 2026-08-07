@@ -155,6 +155,7 @@ export default {
 
     // ---- the moment: the flower, and the smile --------------------------
     let camera = null;
+    let clock = 0;           // the house simTime guard — see update()
     let dropped = 0;
     let smileT = 0;
     const falling = [];          // { mesh, age, x0, y0, z0, spin, drift }
@@ -199,12 +200,15 @@ export default {
       scene,
       setCamera(c) { camera = c; },
       update(dt, simTime) {
+        clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
         cat.update(dt, simTime);
 
         // he twirls it. The case is named for the gesture, and it is the only
-        // motion in the scene besides the grass.
-        flower.rotation.y = simTime * 0.32;
+        // motion in the scene besides the grass. Driven from the guarded
+        // clock, not raw simTime — a host calling update(dt) alone must not
+        // feed NaN into a transform.
+        flower.rotation.y = clock * 0.32;
 
         sinceAuto += dt;
         if (sinceAuto > AUTO_EVERY) { sinceAuto = 0; releasePetal(); }

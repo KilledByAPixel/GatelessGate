@@ -206,6 +206,7 @@ export default {
     let camera = null;
     let taps = 0;
     let stirNow = 0;
+    let clock = 0;           // the house simTime guard — see update()
     const grabMeshes = [stone];
     bundle.group.traverse((o) => {
       if (o.isMesh && !o.userData.isOutline) grabMeshes.push(o);
@@ -224,9 +225,10 @@ export default {
       scene,
       setCamera(c) { camera = c; },
       update(dt, simTime) {
+        clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
         bundle.update(dt, simTime);
-        stirNow = STIR(simTime);
+        stirNow = STIR(clock);      // the guarded clock: raw NaN simTime would land in a transform
         reach.rotation.z = REACH_Z + stirNow;
       },
       fragment() {

@@ -75,6 +75,8 @@ if (!flagged.length) {
   for (const f of flagged) {
     console.log(`  ${f.key.padEnd(12)} ${f.kind.padEnd(5)} ${f.ratio.toFixed(2)}x expected  `
       + `(${f.chars} chars, ${f.metric.toFixed(1)}${unit} vs ${f.predicted.toFixed(1)} predicted)`);
-    console.log(`     re-roll: node scripts/build-narration.js --provider ${manifest.provider || 'openai'} --case ${f.key.split(':')[0]} --section ${f.section} --force`);
+    // --preset included, matching check-narration-wps.js: pasting this
+    // command must never bake an outlier with a preset the manifest didn't use
+    console.log(`     re-roll: node scripts/build-narration.js --provider ${manifest.provider || 'openai'}${manifest.preset ? ` --preset ${manifest.preset}` : ''} --case ${f.key.split(':')[0]} --section ${f.section} --force`);
   }
 }

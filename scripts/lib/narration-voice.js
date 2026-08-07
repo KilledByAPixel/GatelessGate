@@ -1,5 +1,6 @@
 // Voice and delivery settings for generated narration. Shared by the audition
 // bake-off and the real bake, so the winning settings live in exactly one place.
+import { TRANSCRIPT_DIVIDER } from './gemini-tts.js';
 
 // WHAT THE BOOK ACTUALLY SHIPS. Everything below the Gemini divider is the live
 // path; the OpenAI constants just above it are the older one, kept because the
@@ -189,6 +190,9 @@ export function geminiPrompt(section, preset, text) {
     scene,
     `${notes}\n${SECTION_NOTE[section]}`,
     CONTEXT,
-    `#### TRANSCRIPT\n${text}`,
+    // the divider is imported, not retyped: gemini-tts.js's contract says it
+    // "must appear exactly as written", and two hand-kept copies could drift
+    // with nothing failing
+    `${TRANSCRIPT_DIVIDER}\n${text}`,
   ].join('\n\n');
 }

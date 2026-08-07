@@ -1165,7 +1165,8 @@ export function makeFurin({
     // pendulum: the old model summed up to 8 superposed impulses, so
     // spamming hoverAt() topped out around 0.05 rad; this model has one
     // omega, and repeated hovers now saturate at SWING.maxOmegaFrac*omega0
-    // rad (a live value, currently 0.85 — see SWING's own comment — the same
+    // rad (a live value, currently 0.65 — see SWING's own comment, which
+    // records 0.85 as the draft code review rejected — the same
     // ceiling a full-force tap can reach). Latent today — no case calls
     // hoverAt() — flagged here so it is not discovered by surprise if one
     // starts to.
@@ -1203,7 +1204,9 @@ export function makeFurin({
     },
     // every tube's built length, in build order (index 0 first) — the
     // harness reads this to show the size/length relationship live; a ring
-    // has `tubes` entries, a single tube has one
-    tubeLengths() { return state.map((_, i) => S * (1.7 - 0.14 * i)); },
+    // has `tubes` entries, a single tube has one. Same branch as the build
+    // itself: a single's body is singleLen (0.85·S), and reporting the ring
+    // formula for it overstated the length by exactly 2× in the harness.
+    tubeLengths() { return state.map((_, i) => (single ? singleLen : S * (1.7 - 0.14 * i))); },
   };
 }

@@ -171,13 +171,19 @@ export function makeVeranda({
 
   // The floor's footprint as circles — a GRASS mask, since nothing grows up
   // through boards. The props keepout wants something more generous than this.
+  // World space, cave.js style: reads position AND yaw at call time, so a
+  // case that rotates the veranda cannot silently mask the wrong ground
+  // (this used to skip the rotation — latent only because no case rotated one).
   g.footprint = (r = 0.95, cols = 5, rows = 4) => {
+    const cos = Math.cos(g.rotation.y), sin = Math.sin(g.rotation.y);
     const out = [];
     for (let i = 0; i < cols; i++) {
       for (let j = 0; j < rows; j++) {
+        const lx = -width / 2 + (width * (i + 0.5)) / cols;
+        const lz = (depth * (j + 0.5)) / rows;
         out.push({
-          x: g.position.x - width / 2 + (width * (i + 0.5)) / cols,
-          z: g.position.z + (depth * (j + 0.5)) / rows,
+          x: g.position.x + lx * cos + lz * sin,
+          z: g.position.z - lx * sin + lz * cos,
           r,
         });
       }

@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, INK, INK_LIT, WASH, mixHex, wash } from '../palette.js';
+import { PAPER, ACCENT, INK, WASH, mixHex, wash } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeWater, makeSand, makeFoam,
   makeLights, makeBlobShadow, addOutlines, toonMaterial, groundHeight,
@@ -289,7 +289,7 @@ export default {
         // hand it to the bed as 0..1. Synced by construction — there is no
         // second clock to drift against the picture.
         if (audio && audio.setWaterSwell) {
-          const h = water.heightAt(0, 43, simTime);
+          const h = water.heightAt(0, 43, clock);   // the guarded clock, never raw simTime
           audio.setWaterSwell(Math.max(0, Math.min(1, 0.5 + h / 0.17)));
         }
         while (pushes.length && clock - pushes[0].t > 8 * TAU) pushes.shift();

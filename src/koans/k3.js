@@ -312,7 +312,7 @@ export default {
       scene,
       setCamera(c) { camera = c; },
       update(dt, simTime) {
-        now = simTime;
+        now = Number.isFinite(simTime) ? simTime : now + (dt || 0);
         world.update(dt, simTime);          // the meadow's wind
         if (echo && simTime >= echoAt) {
           strike(echo);

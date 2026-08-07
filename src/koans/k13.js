@@ -81,8 +81,12 @@ export default {
       keepout: [
         ...path.keepout(24, 1.3),
         { x: hall.position.x, z: hall.position.z, r: 3.5 },
-        { x: -3.5, z: 0.4, r: 1.9 },
-        { x: 3.9, z: -0.4, r: 1.7 },
+        // { at } rather than copied coordinates: these two circles used to be
+        // the bell's and drum's OLD positions, left behind when the pair
+        // swapped sides — the keepouts guarded empty grass while the bell
+        // stood unprotected. The live reference cannot go stale.
+        { at: bell.group, r: 1.9 },
+        { at: drum.group, r: 1.7 },
         { at: tokusan, r: 1.2 },
         { x: seppo.position.x, z: seppo.position.z, r: 1.1 },
       ],

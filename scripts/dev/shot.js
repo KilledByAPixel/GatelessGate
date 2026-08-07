@@ -52,7 +52,10 @@ if (flag('jobs')) {
     model: flag('model'), mode: flag('mode'), lights: flag('lights'),
     kit: flag('kit'), case: flag('case'),
     expr: flag('expr'), view: flag('view'), out: flag('out'),
-    url: flag('url'), pageshot: argv.includes('--pageshot') || undefined,
+    // --page was advertised in the usage text and read by pageUrlFor, but
+    // never parsed here — `--page kit` on the CLI was silently the app page
+    url: flag('url'), page: flag('page'),
+    pageshot: argv.includes('--pageshot') || undefined,
   }];
 }
 if (!jobs.length || jobs.some((j) => !j.out || !(j.model || j.kit || j.case || j.expr))) {

@@ -483,6 +483,11 @@ function autoPump() {
   autoTimer = setTimeout(async () => {
     autoTimer = null;
     if (!autoMode || mode !== 'koan') return;
+    // RE-CHECK AT FIRE TIME, not only when the timer was armed: if the
+    // reader started their own read-aloud inside this window, calling
+    // toggleReadAll here would STOP it — and then, `started` being false,
+    // turn the page under them four seconds later.
+    if (readingAll) return;
     const started = await toggleReadAll();
     // THE PAGE MAY HAVE TURNED across that await — the reader has arrows and
     // this is a mode that runs for as long as they leave it running. If it

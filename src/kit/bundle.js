@@ -29,15 +29,21 @@ export function makeBundle({
 
   // ---- the folded robe --------------------------------------------------
   // Three flattened slabs, widest at the bottom. Radii and heights are
-  // fractions of `width` so the whole stack rescales as one cloth.
+  // fractions of `width` so the whole stack rescales as one cloth. The
+  // heights were authored against the default width (0.46) and are scaled
+  // through it — they used to be applied raw, so a non-default width
+  // widened the stack without raising it (latent: both callers use the
+  // default, but the comment above promised otherwise).
   const FOLDS = [
     { r: 0.500, h: 0.070 },
     { r: 0.435, h: 0.063 },
     { r: 0.370, h: 0.057 },
   ];
+  const hScale = width / 0.46;
   const SEG = 11;
   let stackH = 0;
-  FOLDS.forEach((f, i) => {
+  FOLDS.forEach((fRaw, i) => {
+    const f = { r: fRaw.r, h: fRaw.h * hScale };
     const R = width * f.r;
     const geo = new THREE.CylinderGeometry(R * 0.93, R, f.h, SEG);
     // Push each facet column in or out a touch (the ranges' trick at cloth
@@ -83,7 +89,7 @@ export function makeBundle({
     { seam: 1, r: 0.400, tube: 0.016 },   // between fold 1 and fold 2
   ];
   let seamY = 0;
-  const seamHeights = FOLDS.map((f) => (seamY += f.h));
+  const seamHeights = FOLDS.map((f) => (seamY += f.h * hScale));   // the same scale the folds got
   TIES.forEach((t, i) => {
     const rope = new THREE.Mesh(
       new THREE.TorusGeometry(width * t.r, width * t.tube, 6, 16), ropeMat);

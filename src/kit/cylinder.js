@@ -238,7 +238,8 @@ export const CYL_WIND = {
 // strikes drop to ZERO over a full simulated hour, regardless of period
 // ratio. Reused verbatim from furin.js rather than inventing new constants,
 // since it is already a proven decorrelation in this exact codebase.
-const CLAP_GUST_RATE = 0.7;
+// (The rate half of that pair lives in CYL_WIND.clapRate now — it became a
+// harness-tunable field; only the offset is still a plain constant here.)
 const CLAP_GUST_OFFSET = 11;
 
 // REFRACTORY: a contact cannot re-trigger every frame while the pendulums
@@ -651,7 +652,7 @@ export function makeCylinderChime({
       // the same reason: torqueAt must read gustPhase at a clock that stays
       // locked to the one strikes/rendering read, not an independent
       // time-since-creation). `off` is the per-instance offset; the
-      // clapper's extra `*CLAP_GUST_RATE, +CLAP_GUST_OFFSET` is the
+      // clapper's extra `*CYL_WIND.clapRate, +CLAP_GUST_OFFSET` is the
       // different-reading-of-the-same-gust decorrelation explained above.
       integratePendulum(cylPend, elapsed, (t) => windCylTorque * gustPhase(t + off) * windLevel);
       integratePendulum(clapPend, elapsed,

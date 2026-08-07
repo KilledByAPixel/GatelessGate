@@ -276,8 +276,12 @@ export default {
         const k = 1 - Math.exp(-LAG * step);
         him.position.x += (want.x - him.position.x) * k;
         him.position.z += (want.z - him.position.z) * k;
-        // facing the way you are facing: what there is to see is his back
-        him.rotation.y = Math.atan2(-fwd.z, fwd.x) + Math.PI;
+        // Facing the way you are facing: what there is to see is his back.
+        // The kit convention (faceMonk) is front = (sin ry, cos ry), so
+        // facing along fwd is atan2(fwd.x, fwd.z) exactly — the previous
+        // atan2(-fwd.z, fwd.x) + PI was that plus a quarter turn, and the
+        // reader saw his profile, not his back.
+        him.rotation.y = Math.atan2(fwd.x, fwd.z);
 
         // did that put him in the picture?
         ndc.copy(him.position);

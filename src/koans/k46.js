@@ -228,7 +228,7 @@ export default {
       scene,
       setCamera(c) { camera = c; },
       update(dt, simTime) {
-        now = simTime;
+        now = Number.isFinite(simTime) ? simTime : now + (dt || 0);
         world.update(dt, simTime);
 
         // the lean: deterministic envelope on sim time, nothing accumulates
@@ -238,8 +238,8 @@ export default {
         // — the mast is never perfectly still, which is most of why it reads
         // as tall
         const imp = swayAt < 0 ? 0 : SWAY_AMP * swayShape(now - swayAt);
-        mast.rotation.x = 0.008 * (noise1(simTime * 0.33, 461) - 0.5) + imp * 0.55;
-        mast.rotation.z = 0.008 * (noise1(simTime * 0.29 + 13.7, 462) - 0.5) + imp * 0.8;
+        mast.rotation.x = 0.008 * (noise1(now * 0.33, 461) - 0.5) + imp * 0.55;
+        mast.rotation.z = 0.008 * (noise1(now * 0.29 + 13.7, 462) - 0.5) + imp * 0.8;
       },
       fragment() {
         return {
