@@ -143,7 +143,7 @@ export function makeBell({ height = 1.1, color = ACCENT, frameColor = WASH.dark,
   // impulse model, which is why its numbers are amplitudes rather than a
   // kick and a damping. Moving it across is its own task; doubling what is
   // here answers what was actually asked without pretending to be that.
-  const A0 = 0.11;                        // radians per strike — ~6.3 degrees
+  const A0 = 0.3;                        // radians per strike — ~6.3 degrees
   const MAX = 0.22;                       // spamming taps still stays a bonshō
   // a faint off-axis component so the swing is not machine-planar; per-seed
   // rate and depth, and it starts from zero at each strike like the main term
