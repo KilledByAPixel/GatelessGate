@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT_DEEP, wash } from '../palette.js';
 import {
-  composeWorld, makeBuddha, makeMonk, faceMonk, makeOdoshi,
+  composeWorld, makeBuddha, makeMonk, faceMonk,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -68,14 +68,11 @@ export default {
     faceMonk(manjusri, GIRL);
     scene.add(manjusri);
 
-    // A shishi-odoshi at the garden's edge (k7's, keeping a different
-    // yard's time). She has sat through kalpas; the garden keeps its own
-    // slow clock beside her. VISUAL ONLY — no pour, no knock: this scene's
-    // silence belongs to her samadhi, and the sound pass is closed.
-    const odoshi = makeOdoshi({ size: 1, seed: 42, period: 32 });
-    odoshi.group.position.set(3.4, 0, -2.8);
-    odoshi.group.rotation.y = -2.2;
-    scene.add(odoshi.group);
+    // (A shishi-odoshi stood at the garden's edge for a while — k7's, silent,
+    // keeping a different yard's time. It's gone: its tip landed inside the
+    // floor's own big hit box, so touching the one moving prop in the scene
+    // made a monk rise out of the earth — an answer to a question nobody was
+    // asking. Frank: "get rid of the water tilting thing here.")
 
     // MOMYO, still under the floor. He is placed and posed from the start and
     // simply has not come up yet — the earth hides him.
@@ -94,7 +91,6 @@ export default {
         { x: GIRL.x, z: GIRL.z, r: 1.4 },
         { at: manjusri, r: 1.2 },
         { x: MOMYO.x, z: MOMYO.z, r: 1.2 },
-        { at: odoshi.group, r: 1.0 },
       ],
       // the floor of the assembly hall is swept — and it has to be bare where
       // Momyo comes through it
@@ -162,7 +158,6 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
-        odoshi.update(dt, simTime);
 
         // Manjusri keeps snapping, forever, to no effect
         if (manjusriArm) manjusriArm.rotation.x = 0.22 + Math.sin(clock * 1.6) * 0.06;
