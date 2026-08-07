@@ -14,6 +14,7 @@ import { makeTuftField } from './tuftfield.js';
 let grassStyle = 'tufts';
 export function setGrassStyle(v) { grassStyle = v === 'blades' ? 'blades' : 'tufts'; }
 import { makeTree } from './tree.js';
+import { makePine } from './pine.js';
 import { hash1 } from '../util/noise.js';
 import { wash } from '../palette.js';
 
@@ -73,6 +74,12 @@ export function composeWorld(scene, {
   groundFn = null,
   trees = 5,
   treeRing = [7, 20],
+  // The scatter's species (Frank: "I control what type of trees are in a
+  // scene"): 'tree' (the broadleaf default, bit-identical to before this
+  // option existed), 'pine', or 'mixed' — a seeded half-and-half. The wind
+  // FLAVOR in a case's ambience ('wind:0.2:pine') is a separate, audio-only
+  // choice; matching the two is the case's own job.
+  treeKind = 'tree',
   rocks = 12,
   bushes = 9,
   // Blades in the instanced field, not clumps. This used to be 52000 back when
@@ -118,7 +125,13 @@ export function composeWorld(scene, {
     if (z > 6) continue; // keep the near-camera foreground open
     if (keepout.some((k) => Math.hypot(x - k.x, z - k.z) < k.r)) continue;
     if (footprints.some((f) => Math.hypot(x - f.x, z - f.z) < f.r * 0.85)) continue;
-    const t = makeTree({ seed: seed * 100 + placed, height: 2.6 + hash1(tries * 5 + 4, seed) * 1.6 });
+    // hash1 is stateless, so the extra draw for 'mixed' shifts no existing
+    // stream — 'tree' scenes stay bit-identical to before treeKind existed
+    const pine = treeKind === 'pine'
+      || (treeKind === 'mixed' && hash1(tries * 5 + 6, seed * 17) < 0.5);
+    const t = pine
+      ? makePine({ seed: seed * 100 + placed, height: 3.2 + hash1(tries * 5 + 4, seed) * 1.8 })
+      : makeTree({ seed: seed * 100 + placed, height: 2.6 + hash1(tries * 5 + 4, seed) * 1.6 });
     t.position.set(x, 0, z);
     t.rotation.y = hash1(tries * 5 + 5, seed) * Math.PI * 2;
     scene.add(t);
