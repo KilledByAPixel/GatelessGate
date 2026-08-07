@@ -122,14 +122,19 @@ export function plainMaterial(src) {
 
 // Key + fill. Two things matter here:
 //
-// 1. The shadow camera is fitted TIGHT to the staging footprint. A 2k map spread
-//    over a 56-unit frustum is ~36 texels/unit and looks like stair-stepped
-//    garbage; over 20 units it is ~100 texels/unit and reads as contact shadow.
+// 1. The shadow camera is fitted TIGHT to the staging footprint, and the map
+//    is sized to hold ~100 texels/unit — the density that reads as contact
+//    shadow (a 2k map over a 56-unit frustum is ~36 texels/unit and looks
+//    like stair-stepped garbage; that derivation set the original ±10/2048
+//    pair). The frustum went ±10 → ±15 on Frank's ask ("a lot of trees and
+//    stuff are outside the range of the shadows — fifty percent bigger"),
+//    and the map went 2048 → 3072 with it, so the coverage grew without the
+//    texel density moving: 3072 over 30 units ≈ 102/unit, same as before.
 // 2. The fill is a hemisphere, not a flat ambient. A uniform ambient lifts every
 //    surface equally, which erases form — the single biggest reason the scene
 //    read flat. A hemisphere is brighter from the sky and darker underneath, so
 //    a robe or a stone still has a shaded side.
-export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 10 } = {}) {
+export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 15 } = {}) {
   const g = new THREE.Group();
   g.name = 'lights';
 
@@ -156,10 +161,10 @@ export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 10 }
 
   if (shadow) {
     sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.mapSize.set(3072, 3072);
     const c = sun.shadow.camera;
     c.left = -radius; c.right = radius; c.top = radius; c.bottom = -radius;
-    c.near = 0.5; c.far = 42;
+    c.near = 0.5; c.far = 48;   // the wider frustum's far corners need the extra depth
     c.updateProjectionMatrix();
     sun.shadow.bias = -0.0004;
     sun.shadow.normalBias = 0.025;
