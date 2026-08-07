@@ -27,9 +27,15 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
     scene.add(makeLights());
 
-    // The enclosure. Three walls of lattice and one side standing wide open.
+    // The enclosure. Three walls of lattice — and the fourth side is not
+    // missing but OPENED: two door leaves swung outward on their corner
+    // posts, the way double doors stand after somebody pushed through and
+    // did not look back (Frank: "on the open side it has the 2 panels
+    // rotating open like double doors pushed open"). A wall that was never
+    // built says nothing; doors somebody left open say the pen has never
+    // once held him.
     const PEN = { x: 1.0, z: -2.3, size: 5.4 };   // room to stand, not a crate
-    const pen = makePen({ size: PEN.size, height: 1.9, open: '+x', panelsPerSide: 2 });
+    const pen = makePen({ size: PEN.size, height: 1.9, open: '+x', panelsPerSide: 2, doors: 1.15 });
     pen.position.set(PEN.x, 0, PEN.z);
     scene.add(pen);
 

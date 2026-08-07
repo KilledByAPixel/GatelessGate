@@ -69,8 +69,15 @@ export function makeLattice({ width = 2.2, height = 2.0, bars = 5, color = WASH.
 // walls, three meshes, six draws — where the panel-per-mesh build cost dozens.
 //
 // `open` names the missing wall: '+z' is nearest the camera, '+x' is to its right.
+//
+// `doors` (radians) hangs two lattice leaves on the open side's corner posts,
+// each half the side wide, swung OUTWARD by that angle — the side reads as
+// double doors somebody pushed open and left, rather than a wall that was
+// never built (Frank, case 37: "on the open side it has the 2 panels rotating
+// open like double doors pushed open"). 0 keeps the plain missing side.
 export function makePen({
   size = 5.4, height = 1.9, open = '+x', panelsPerSide = 2, bars = 4, color = WASH.dark,
+  doors = 0,
 } = {}) {
   const g = new THREE.Group();
   g.name = 'pen';
@@ -102,6 +109,43 @@ export function makePen({
   }
   g.userData.open = open;
 
+  // ---- the doors, pushed open ------------------------------------------
+  // One leaf per corner post of the open side, half the side wide (the same
+  // width as a wall panel at the default panelsPerSide, so the leaves read
+  // as the wall's own panels unhung). Each is hinged at its post — the
+  // lattice geometry is shifted so the frame's edge sits on the pivot — and
+  // turned outward by `doors`.
+  const doorLeaves = [];
+  if (doors > 0) {
+    const [, cx, cz] = sides.find((s) => s[0] === open);
+    // the side runs along x for the z-walls and along z for the x-walls;
+    // its outward normal is just the side's own centre direction
+    const tx = cx === 0 ? 1 : 0, tz = cx === 0 ? 0 : 1;
+    const nlen = Math.hypot(cx, cz);
+    const nx = cx / nlen, nz = cz / nlen;
+    const leafW = half;
+    for (const s of [-1, 1]) {
+      const hx = cx + tx * half * s, hz = cz + tz * half * s;   // the hinge post
+      // closed, the leaf reaches from its post back toward the side's middle;
+      // rotation.y = a maps local +x to world (cos a, 0, -sin a)
+      const closed = Math.atan2(tz * s, -tx * s);
+      // OPEN IS PICKED, NOT DERIVED: of the two turns, the one whose free
+      // edge lands further outward is the pushed-open one. Yaw sign
+      // conventions are exactly where a hand-derivation goes quietly wrong.
+      const swung = [closed + doors, closed - doors]
+        .map((a) => ({ a, out: (hx + Math.cos(a) * leafW) * nx + (hz - Math.sin(a) * leafW) * nz }))
+        .sort((p, q) => q.out - p.out)[0].a;
+      const geo = latticeGeometry({ width: leafW, height, bars });
+      geo.translate(leafW / 2, 0, 0);           // hinge edge at the local origin
+      const leaf = new THREE.Mesh(geo, mat);
+      leaf.name = 'door';
+      leaf.position.set(hx, 0, hz);
+      leaf.rotation.y = swung;
+      g.add(leaf);
+      doorLeaves.push({ hx, hz, a: swung, w: leafW });
+    }
+  }
+
   // circles along the standing walls, for the prop keepout. Grass is left to
   // grow through a fence, as it does.
   g.footprint = (r = 0.9, per = 5) => {
@@ -111,6 +155,17 @@ export function makePen({
       for (let i = 0; i <= per; i++) {
         const off = -half + size * (i / per);
         out.push({ x: g.position.x + cx + (rot ? 0 : off), z: g.position.z + cz + (rot ? off : 0), r });
+      }
+    }
+    // an open leaf sticks out past the pen's own square — cover its length,
+    // hinge to free edge, or scatter grows a bush through a door
+    for (const d of doorLeaves) {
+      for (const t of [0.25, 0.6, 0.95]) {
+        out.push({
+          x: g.position.x + d.hx + Math.cos(d.a) * d.w * t,
+          z: g.position.z + d.hz - Math.sin(d.a) * d.w * t,
+          r,
+        });
       }
     }
     return out;
