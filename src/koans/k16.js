@@ -8,20 +8,17 @@ import { makeLantern } from '../kit/lantern.js';
 import { makeBell } from '../kit/bell.js';
 import { makeDrum } from '../kit/drum.js';
 import { makeCylinderChime } from '../kit/cylinder.js';
-import { makeMonk, aimMonk, faceMonk } from '../kit/monk.js';
+import { makeMonk, aimMonk, faceMonk, wrapPi, bearing } from '../kit/monk.js';
 import { makeLights } from '../render/toon.js';
 import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
 
 const ID = 16;
 
-// the elder's turn is a bearing eased toward another bearing, so two helpers
-// in faceMonk's convention (rotation.y = atan2(dx, dz) turns the BODY's own
-// front, local +z, onto the target). It used to be aimMonk's (atan2(-dz, dx),
-// which aims the pointing +x sleeve) — so the elder turning toward the bell
-// ended up presenting his shoulder to it.
-const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a));
-const bearing = (from, to) => Math.atan2(to.x - from.x, to.z - from.z);
+// the elder's turn is a bearing eased toward another bearing — wrapPi/bearing
+// from the kit, faceMonk's convention. The local pair here used to be
+// aimMonk's (atan2(-dz, dx), which aims the pointing +x sleeve) — so the
+// elder turning toward the bell ended up presenting his shoulder to it.
 
 // Ummon's question is the daily monastery moment itself: the bell sounds, and
 // monks everywhere stop what they are doing and turn toward the hall. So the

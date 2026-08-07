@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
-import { makeMonk, faceMonk } from '../kit/monk.js';
+import { makeMonk, faceMonk, bearing } from '../kit/monk.js';
 import { makeFox } from '../kit/fox.js';
 import { makeCave } from '../kit/cave.js';
 import { makeRain } from '../kit/rainfall.js';
@@ -34,8 +34,6 @@ const CAVE = { x: -1.37, z: -2.88, yaw: 0.44 };
 const FOX = { x: -0.67, z: -1.39, yaw: 1.40 };
 const HYAKUJO = { x: 1.60, z: -2.75 };
 const MONKS = [{ x: 2.74, z: -3.48 }, { x: 2.45, z: -2.61 }];
-
-const bearing = (from, to) => Math.atan2(to.x - from.x, to.z - from.z);
 
 export default {
   id: ID,

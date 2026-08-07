@@ -75,3 +75,13 @@ export function faceMonk(monk, target) {
   monk.rotation.y = Math.atan2(dx, dz);
   return monk;
 }
+
+// The facing convention, exported. Bodies front local +z, so a heading psi
+// points along (sin psi, cos psi) and the bearing from A toward B is
+// atan2(dx, dz) — faceMonk's own maths, usable piecewise wherever a case
+// eases one heading toward another. Four cases re-derived this pair locally
+// and one (k45) hand-rolled it wrong — atan2 arguments swapped is a quarter
+// turn, and the reader saw a profile where a back should be. wrapPi folds a
+// heading difference onto (-pi, pi] so the ease always turns the short way.
+export const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+export function bearing(from, to) { return Math.atan2(to.x - from.x, to.z - from.z); }

@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeHut, makeMonk, faceMonk,
+  composeWorld, makePath, makeHut, makeMonk, faceMonk, wrapPi, bearing,
   makeLights, makeBlobShadow, addOutlines, toonMaterial, groundHeight,
 } from '../kit/index.js';
 
@@ -22,12 +22,9 @@ const ID = 11;
 
 const TURN_RATE = 2.4;
 const BOW = 0.20;
-const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a));
-// FACE convention — atan2(dx, dz) turns local +z (the body's front) onto the
-// target, the same maths faceMonk uses. It was atan2(-dz, dx) (aimMonk's, for
-// the pointing +x sleeve), which left Joshu turned a quarter circle off the
-// monk he is deciding about.
-const bearing = (from, to) => Math.atan2(to.x - from.x, to.z - from.z);
+// bearing/wrapPi are the kit's now (faceMonk's convention). The local copy
+// here was once aimMonk's atan2(-dz, dx) — for the pointing +x sleeve — which
+// left Joshu turned a quarter circle off the monk he is deciding about.
 
 export default {
   id: ID,
