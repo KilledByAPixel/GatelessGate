@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { makeBuddha } from '../src/kit/buddha.js';
+import { makeBuddha, markFor } from '../src/kit/buddha.js';
 import { makeFigure, seatedBodyGeometry, HEAD_OBLONG } from '../src/kit/figure.js';
 import { makeAssembly } from '../src/kit/assembly.js';
-import { ACCENT } from '../src/palette.js';
+import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT, ACCENT_PALE, INK, INK_LIT, PAPER } from '../src/palette.js';
 
 // The widest radius the mesh's own geometry reaches inside a y band —
 // how the tests read a silhouette back off a lathe.
@@ -122,6 +122,30 @@ test('the urna: one small accent dot, sunk into the forehead, no outline', () =>
   // y) — Frank raised URNA_ELEV 0.5 -> 0.8, so this reads high on the brow now
   assert.ok(urna.position.y > 0 && urna.position.y < rHead * HEAD_OBLONG[1] * 0.85,
     `mid-forehead, not the scalp: ${urna.position.y}`);
+});
+
+test('the mark contrasts with the head it sits on', () => {
+  // A red dot on a red skull is a bump, not a mark. This was solved with
+  // GEOMETRY for a while — the urna buried deeper so its silhouette could
+  // carry what its colour no longer did — which is why k9's colossus had a
+  // forehead lump and no visible dot (Frank: "we still need to add the black
+  // dot to the head of the red figures").
+  const inkStatue = makeBuddha({ height: 1.6 });
+  const redStatue = makeBuddha({ height: 10.2, color: ACCENT_DEEP });
+  const urnaOf = (b) => b.children.find((c) => c.name === 'head').children.find((c) => c.name === 'urna');
+  assert.equal('#' + urnaOf(inkStatue).material.color.getHexString(), ACCENT.toLowerCase(),
+    'an ink head keeps the vermillion dot');
+  assert.equal('#' + urnaOf(redStatue).material.color.getHexString(), INK.toLowerCase(),
+    'a red head takes an ink one');
+
+  // every accent in the palette counts as red, not just the one k9 happens to use
+  for (const red of [ACCENT, ACCENT_DEEP, ACCENT_LIGHT, ACCENT_PALE]) {
+    assert.equal(markFor(red), INK, `${red} is an accent — its mark must be ink`);
+  }
+  assert.equal(markFor(INK_LIT), ACCENT, 'and anything else keeps the vermillion');
+
+  // and a case carving a statue from something else entirely can still say
+  assert.equal('#' + urnaOf(makeBuddha({ markColor: PAPER })).material.color.getHexString(), PAPER.toLowerCase());
 });
 
 test('makeBuddha keeps its signature: height scales it, color robes it, urna stays red', () => {

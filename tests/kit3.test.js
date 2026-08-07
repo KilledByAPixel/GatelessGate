@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import { fakeCtx } from './helpers/fake-ctx.js';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeWheel } from '../src/kit/wheel.js';
@@ -258,4 +259,17 @@ test('the same simTime is the same weather', () => {
     return Array.from(s.points.geometry.attributes.position.array);
   };
   assert.deepEqual(snap(), snap());
+});
+
+test('case 8 turns eight spokes, for the eightfold path', async () => {
+  // Frank's, and it is a reading as much as a look: the case's own text says
+  // fifty, which nothing at this radius could carry — twelve read as a grey
+  // blur right where the nave the koan turns on is supposed to be.
+  const k8 = (await import('../src/koans/k8.js')).default;
+  const root = k8.build(fakeCtx({ accent: k8.accent }));
+  const wheel = root.scene.getObjectByName('wheel');
+  assert.ok(wheel, 'the wheel is in the scene');
+  let spokes = 0;
+  wheel.traverse((o) => { if (o.name === 'spoke') spokes++; });
+  assert.equal(spokes, 8, `the eightfold path wants eight, got ${spokes}`);
 });

@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, WASH, INK_LIT } from '../palette.js';
+import { PAPER, ACCENT, WASH, INK, INK_LIT } from '../palette.js';
 import {
   composeWorld, makeVeranda, makeMonk, aimMonk, makeLantern,
   makeLights, addOutlines, toonMaterial, makeFurin,
@@ -104,6 +104,25 @@ const CAM = { distance: 9.0, target: [0.4, 1.7, -1.4], heading: 24.1, pitch: 15.
   face.position.y = 0.315;
   face.scale.set(1, 1.14, 0.32);
   painted.add(face);
+
+  // THE ONE DARK MARK ON HIM. Everything about this portrait is the same flat
+  // red, which is the point — but a head that is one unbroken red egg has no
+  // face and no front, and reads as a shape rather than a man looking at you
+  // (Frank: "we still need to add the black dot to the head of the red
+  // figures"). One ink dot is the whole fix, and it is the same move the kit
+  // makes on a red buddha: markFor() in kit/buddha.js gives an accent-coloured
+  // head an ink urna for exactly this reason.
+  //
+  // Sat ON the paint rather than sunk into it, because the paint is pressed
+  // flat to 0.32 of its depth and a buried dot would come out the back of the
+  // silk. No outline — a hull round a mark this small is a blot.
+  const mark = new THREE.Mesh(new THREE.SphereGeometry(0.030, 8, 6),
+    toonMaterial({ color: INK, flat: true }));
+  mark.name = 'mark';
+  mark.userData.noOutline = true;
+  mark.scale.set(1, 1, 0.5);
+  mark.position.set(0, 0.355, 0.050);
+  painted.add(mark);
   scroll.add(painted);
   
   // THE BEARD THAT WILL NOT TAKE. Present from the start and invisible; a

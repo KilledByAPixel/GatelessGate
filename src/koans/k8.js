@@ -43,7 +43,13 @@ const CAM = { distance: 9.0, target: [1.3, 1.25, 0.4], heading: 31.5, pitch: 19 
   
   // THE WHEEL, on its stand, turning. Its face is squared to the home camera
   // so the spokes read as spokes rather than as an edge-on line.
-  const wheel = makeWheel({ radius: 1.05, spokes: 12, wheelColor: ACCENT });
+  //
+  // EIGHT SPOKES, for the eightfold path (Frank). The case's own text says
+  // fifty, which no wheel in a low-poly diorama was ever going to carry — at
+  // this radius twelve already read as a grey blur where the hub should be,
+  // and eight both counts as something and lets the nave the koan turns on
+  // actually be seen between them.
+  const wheel = makeWheel({ radius: 1.05, spokes: 8, wheelColor: ACCENT });
   wheel.group.position.set(1.3, 0, 0.4);
   wheel.group.rotation.y = 0.55;
   scene.add(wheel.group);

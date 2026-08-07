@@ -77,6 +77,16 @@ export function makeScreen({
   speed = 2.2,           // e-folding rate of the roll, per second
   cords = true,
   hit = true,            // an invisible pane so a tap anywhere on the screen lands
+  // A FIXED SCREEN INSTEAD OF A HANGING ONE. A sudare is a blind: a roller with
+  // material winding onto it and two pull cords. That needs a lintel to hang
+  // from, and case 25's dream hall has no wall behind the deck — so it read as
+  // slats and cords floating in the air with nothing holding them up (Frank:
+  // "the screen behind them is not attached right; let's just make it composed
+  // of horizontal slats"). Fixed swaps the roller for a plain head rail and
+  // adds two stiles down the ends, so the same slats are visibly HELD by
+  // something. It does not roll: roll/unroll/toggle become no-ops and there is
+  // no clatter, because nothing moves.
+  fixed = false,
   onClack = null,        // the roll's own clatter — see THE CLATTER, above
 } = {}) {
   const group = new THREE.Group();
@@ -122,12 +132,37 @@ export function makeScreen({
     rods.push(rod);
   }
 
+  // THE STILES, on a fixed screen: one down each end, running the full height
+  // and standing a little proud of the slats so they read as the frame the
+  // slats are set into rather than two more rods. This is the whole difference
+  // between a screen that is part of the room and a screen that is hovering
+  // in it.
+  const stiles = [];
+  if (fixed) {
+    const stileGeo = new THREE.CylinderGeometry(rodR * 1.25, rodR * 1.25, height, 7);
+    for (const sx of [-1, 1]) {
+      const stile = new THREE.Mesh(stileGeo, mat);
+      stile.name = 'stile';
+      stile.position.set(sx * width * 0.5, height / 2, rodR * 0.5);
+      group.add(stile);
+      stiles.push(stile);
+    }
+    // and a sill, so the bottom is landed rather than left in the air
+    const sillGeo = new THREE.CylinderGeometry(rodR * 1.15, rodR * 1.15, width * 1.06, 8);
+    sillGeo.rotateZ(Math.PI / 2);
+    const sill = new THREE.Mesh(sillGeo, mat);
+    sill.name = 'sill';
+    sill.position.y = rodR * 1.15;
+    group.add(sill);
+    stiles.push(sill);
+  }
+
   // The pull cords, hanging clear in front of the material where a hand can
   // close on them — clear enough that a slat's ink outline does not swallow
   // them. They do not move with the roll: you pull them, they stay put.
   const cordMeshes = [];
   const cordFront = cordZ > 0 ? cordZ : rodR * 2.4;
-  if (cords) {
+  if (cords && !fixed) {
     const len = cordDrop > 0 ? cordDrop : height * 0.5;
     const cordGeo = new THREE.CylinderGeometry(0.024, 0.024, len, 6);
     cordGeo.translate(0, -len / 2, 0);
@@ -145,7 +180,7 @@ export function makeScreen({
   // A tap wants the screen, not a particular rod. This pane covers the whole
   // opening in both states, so the gesture stays forgiving on a phone; it is
   // invisible to the renderer but solid to a raycast.
-  const picks = [rail, ...rods];
+  const picks = [rail, ...rods, ...stiles];
   if (hit) {
     const pane = new THREE.Mesh(
       new THREE.PlaneGeometry(width + 0.5, height),
@@ -199,10 +234,14 @@ export function makeScreen({
     pickTargets() { return picks; },
 
     // pose it outright: staging, and the only way to jump states without easing
-    setRoll(t) { goal = clamp01(t); cur = goal; place(); return cur; },
-    roll() { goal = 1; return goal; },
+    // A fixed screen stays where it is. These keep their signatures so a caller
+    // never has to ask which kind it was handed, and answer honestly: it is
+    // down, and it is staying down.
+    setRoll(t) { if (fixed) return 0; goal = clamp01(t); cur = goal; place(); return cur; },
+    roll() { if (fixed) return 0; goal = 1; return goal; },
     unroll() { goal = 0; return goal; },
-    toggle() { goal = goal > 0.5 ? 0 : 1; return goal > 0.5; },
+    toggle() { if (fixed) return false; goal = goal > 0.5 ? 0 : 1; return goal > 0.5; },
+    fixed,
 
     isUp() { return goal > 0.5; },              // what it has been asked to be
     rolled() { return cur; },                   // where it actually is

@@ -490,3 +490,38 @@ test('tapping the screen rolls it up and opens the bay', () => {
   assert.equal(frag.pulls, 2);
   assert.ok(frag.cover > 2.0, 'the screen comes back down');
 });
+
+test('a fixed screen is held by something, and stays put', () => {
+  // Case 25's dream hall is an open deck with no wall behind it, so a sudare's
+  // roller and pull cords hung in daylight holding nothing up (Frank: "the
+  // screen behind them is not attached right; let's just make it composed of
+  // horizontal slats"). Fixed keeps the slats and gives them a frame.
+  const w = makeScreen({ width: 3.0, height: 2.3, slats: 11, seed: 25, fixed: true });
+  const named = (n) => { const out = []; w.group.traverse((o) => { if (o.name === n) out.push(o); }); return out; };
+
+  assert.equal(named('cord').length, 0, 'no pull cords — there is nothing to pull');
+  assert.equal(w.cords.length, 0);
+  assert.equal(named('stile').length, 2, 'a stile down each end');
+  assert.equal(named('sill').length, 1, 'and a sill under it, so the bottom is landed');
+  assert.ok(named('slat').length + named('hem').length >= 11, 'the slats are still the screen');
+
+  // the frame spans the whole opening, or it is decoration rather than structure
+  for (const st of named('stile')) {
+    const b = new THREE.Box3().setFromObject(st);
+    assert.ok(b.min.y < 0.1 && b.max.y > 2.2, `a stile runs the height: ${b.min.y}..${b.max.y}`);
+  }
+
+  // and it does not roll, whatever it is asked
+  assert.equal(w.fixed, true);
+  assert.equal(w.roll(), 0);
+  assert.equal(w.toggle(), false);
+  assert.equal(w.setRoll(1), 0);
+  w.update(1 / 60, 1);
+  assert.equal(w.rolled(), 0, 'a fixed screen is down and staying down');
+
+  // the hanging kind is untouched
+  const hanging = makeScreen({ width: 3.0, height: 2.3, slats: 11, seed: 25 });
+  assert.equal(hanging.cords.length, 2);
+  assert.equal(hanging.fixed, false);
+  assert.equal(hanging.roll(), 1);
+});
