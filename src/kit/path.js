@@ -18,7 +18,7 @@ import { WASH } from '../palette.js';
 export function makePath({
   from = [0, 8], to = [0, -30], width = 1.4, seed = 91, groundSeed = 21,
   wander = 1.6, samples = 26, color = WASH.stone,
-  via = null, taper = 0.3,
+  via = null, taper = 0.45,
   // The surface the ribbon drapes over. Default is the plain rolling ground
   // (bit-identical to always); a case whose terrain is reshaped — k48's
   // shored beach — passes its own, or the road's last stretch stands on the
@@ -54,9 +54,20 @@ export function makePath({
       const t = i / samples;
       if (t > 1 - taper) {
         const s = (1 - t) / taper;               // 1 at taper start -> 0 at the tip
+        // A LONG THIN TAIL, not a sudden point (Frank: "the road tapers too
+        // quickly at its ends"). Smoothstep alone was the wrong curve for a
+        // brush lift: near the tip it behaves like 3s², so four fifths of the
+        // taper stayed at almost full width and the whole narrowing crammed
+        // into the last fifth — which reads as the road being cut off, the
+        // very thing the taper was added to avoid. Mixing it mostly-linear
+        // triples the width through the tail, so the stroke thins steadily
+        // over its whole run and ends in a fine line. The smoothstep share is
+        // what keeps a little softness at the taper's START, where a purely
+        // linear ramp would leave a faint crease across the road.
+        const ss = s * s * (3 - 2 * s);
         // floor at a hair's width: a true point makes degenerate faces whose
         // normals go NaN in computeVertexNormals
-        w *= Math.max(0.03, s * s * (3 - 2 * s));
+        w *= Math.max(0.03, 0.3 * ss + 0.7 * s);
       }
     }
     const lx = x - dz * w, lz = z + dx * w;

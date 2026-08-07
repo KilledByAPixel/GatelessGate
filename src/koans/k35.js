@@ -141,6 +141,43 @@ export default {
     let phase = 0;              // drives the walk; advanced by dt, nudged by taps
     let pulls = 0;
 
+    // WHERE THE TWO OF HER STAND, as a function of the clock and nothing else.
+    // Pulled out of update() so it can also run ONCE at build time: the souls
+    // are born at the group origin and were only ever placed by the first
+    // update, but the frame loop only ticks when it has a whole 1/60s banked,
+    // so a short first frame rendered them both stacked at world zero before
+    // snapping apart (Frank: "a flicker on first frame of monks position").
+    // Same shape of bug, and the same fix, as makeCameraRig's own update(0).
+    function placeSouls() {
+      // one separation parameter, applied symmetrically: they are always the
+      // same distance from the meeting point, in opposite directions
+      const sep = (1 - Math.cos(phase * Math.PI * 2)) * 0.5;      // 0 together, 1 apart
+      for (const [i, s] of souls.entries()) {
+        const lane = i === 0 ? 1 : -1;                             // her fixed side of the road
+        const d = lane * sep * 3.4;
+        const t = 0.5 + d * 0.055;                                 // along the road
+        const p = path.sample(Math.max(0.02, Math.min(0.7, t)));
+        // a little walk in them: a gait bob and a slight roll/yaw sway, so
+        // they read as two people walking rather than two markers sliding
+        // along a rail (Frank's note). Out of phase between the two.
+        const gait = clock * 2.3 + i * Math.PI;
+        // each keeps to her own side (Frank: once one's on one side, once
+        // the other) — the meeting is two of her side by side, not a merge
+        s.position.set(p.x + p.perp.x * LANE * lane, Math.abs(Math.sin(gait)) * 0.035, p.z + p.perp.z * LANE * lane);
+        // face along the road, the way she goes when they separate — the
+        // kit's walkHeading of her outbound travel (perp is (-dz, dx), so
+        // the tangent is (perp.z, -perp.x)); this is the same atan2 the
+        // case always had, named
+        s.rotation.y = walkHeading(lane * p.perp.z, lane * -p.perp.x)
+          + Math.sin(clock * 1.1 + i) * 0.06;
+        s.rotation.z = Math.sin(gait) * 0.04;
+        // where they meet, the pair reads as one whole person
+        const solid = 0.5 + (1 - sep) * 0.42;
+        s.traverse((o) => { if (o.isMesh && o.material) o.material.opacity = solid; });
+      }
+    }
+    placeSouls();   // stand them up before the first frame, not after it
+
     input.onTap(() => {
       if (!camera) return;
       if (!input.raycastFirst(camera, [hit])) return;
@@ -158,33 +195,7 @@ export default {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
         phase += Math.max(0, dt || 0) / CYCLE;
-
-        // one separation parameter, applied symmetrically: they are always the
-        // same distance from the meeting point, in opposite directions
-        const sep = (1 - Math.cos(phase * Math.PI * 2)) * 0.5;      // 0 together, 1 apart
-        for (const [i, s] of souls.entries()) {
-          const lane = i === 0 ? 1 : -1;                             // her fixed side of the road
-          const d = lane * sep * 3.4;
-          const t = 0.5 + d * 0.055;                                 // along the road
-          const p = path.sample(Math.max(0.02, Math.min(0.7, t)));
-          // a little walk in them: a gait bob and a slight roll/yaw sway, so
-          // they read as two people walking rather than two markers sliding
-          // along a rail (Frank's note). Out of phase between the two.
-          const gait = clock * 2.3 + i * Math.PI;
-          // each keeps to her own side (Frank: once one's on one side, once
-          // the other) — the meeting is two of her side by side, not a merge
-          s.position.set(p.x + p.perp.x * LANE * lane, Math.abs(Math.sin(gait)) * 0.035, p.z + p.perp.z * LANE * lane);
-          // face along the road, the way she goes when they separate — the
-          // kit's walkHeading of her outbound travel (perp is (-dz, dx), so
-          // the tangent is (perp.z, -perp.x)); this is the same atan2 the
-          // case always had, named
-          s.rotation.y = walkHeading(lane * p.perp.z, lane * -p.perp.x)
-            + Math.sin(clock * 1.1 + i) * 0.06;
-          s.rotation.z = Math.sin(gait) * 0.04;
-          // where they meet, the pair reads as one whole person
-          const solid = 0.5 + (1 - sep) * 0.42;
-          s.traverse((o) => { if (o.isMesh && o.material) o.material.opacity = solid; });
-        }
+        placeSouls();
       },
       fragment() {
         return {
