@@ -114,38 +114,11 @@ export function makeBushes({ count = 9, seed = 61, groundSeed = 21, keepout = []
   return mesh;
 }
 
-export function makeGrass({ count = 150, seed = 81, groundSeed = 21, keepout = [], rMin = 1.5, rMax = 20, color = WASH.dry } = {}) {
-  const pts = scatterPoints({ count, rMin, rMax, seed, keepout });
-  // one tuft = blades splaying OUTWARD from a shared base (a patch, not a teepee).
-  // each blade pivots at its base (y=0) and leans away from center. Each
-  // blade also gets its OWN height (seeded, not a fixed 0.34 for all six) —
-  // a real tuft is ragged, not a set of matched-length spikes; the per-tuft
-  // scale (below, in `instanced()`) still varies the whole clump, this varies
-  // the blades within one clump.
-  const blades = [];
-  const N = 6;
-  for (let i = 0; i < N; i++) {
-    const h = 0.34 * (0.6 + 0.75 * hash1(i * 11 + 3, seed));
-    const b = new THREE.ConeGeometry(0.03, h, 3, 1, true); // open-ended: no base cap
-    b.translate(0, h / 2, 0);                 // base at origin so rotation pivots there
-    b.rotateZ(0.55 + 0.2 * ((i * 5) % 3));    // tilt away from vertical (~31–43°)
-    b.rotateY((i / N) * Math.PI * 2 + 0.4);   // spread the lean around the compass
-    blades.push(b);
-  }
-  const stubH = 0.3 * (0.65 + 0.7 * hash1(N * 11 + 3, seed));
-  const stub = new THREE.ConeGeometry(0.03, stubH, 3, 1, true);
-  stub.translate(0, stubH / 2, 0); stub.rotateZ(0.1); // one near-upright blade at the middle
-  blades.push(stub);
-  const merged = mergeSimple(blades);
-  const mesh = instanced(merged, color, pts, {
-    yOf: (pt) => groundHeight(pt.x, pt.z, { seed: groundSeed }),
-    scaleOf: (u) => 0.6 + 0.9 * u,
-    sink: 0.02,
-    tintSpread: 0.04,
-  });
-  mesh.name = 'grass';
-  return mesh;
-}
+// (makeGrass — the old clump-scatter tufts — lived here until the cleanup
+// pass found nothing using it: the meadow is makeTuftField's job now, with
+// makeGrassField as the blade fallback, and only this file's own test kept
+// it green. Deleted on Frank's word rather than kept-on-purpose like
+// makeTemple; the tuft construction it pioneered survives in tuftfield.js.)
 
 // Minimal non-indexed geometry merge (position + normal only) — enough for
 // toon-shaded props without pulling in the BufferGeometryUtils addon.

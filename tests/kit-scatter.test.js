@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { makeRocks, makeBushes, makeGrass, scatterPoints } from '../src/kit/scatter.js';
+import { makeRocks, makeBushes, scatterPoints } from '../src/kit/scatter.js';
 import { makeLantern } from '../src/kit/lantern.js';
 import { makePath } from '../src/kit/path.js';
 import { composeWorld } from '../src/kit/scenery.js';
@@ -25,8 +25,8 @@ test('scatterPoints respects keepouts and stays in the annulus', () => {
   assert.deepEqual(pts, pts2);
 });
 
-test('rocks/bushes/grass are single instanced meshes sitting on the ground', () => {
-  for (const [make, name] of [[makeRocks, 'rocks'], [makeBushes, 'bushes'], [makeGrass, 'grass']]) {
+test('rocks/bushes are single instanced meshes sitting on the ground', () => {
+  for (const [make, name] of [[makeRocks, 'rocks'], [makeBushes, 'bushes']]) {
     const m = make({ seed: 7, groundSeed: 21 });
     assert.ok(m.isInstancedMesh, `${name} instanced`);
     assert.equal(m.name, name);
