@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeGate, makeLantern, makeMonk, faceMonk,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial, makeFurin,
+  makeLights, makeBlobShadow, addOutlines, toonMaterial, makeFurin, makeTemple,
 } from '../kit/index.js';
 
 const ID = 15;
@@ -144,12 +144,28 @@ export default {
       return f;
     });
 
+    // THE TEMPLE OF HOJI, SOUTH OF THE LAKE — the answer Tozan gives, standing
+    // where an answer like that comes from. Out at the edge of the valley
+    // against the near mountains rather than anywhere near the two men (Frank:
+    // "further out to the edge near where the mountains are, not in the centre
+    // of the scene"): the whole point of the case is that naming the place is
+    // beside the point, so the place should be somewhere the eye finds second.
+    // Turned a little off the road's axis so it reads as a compound the valley
+    // was built around, not a prop squared up to the camera.
+    const temple = makeTemple({ scale: 0.7, seed: ID });
+    temple.position.set(-13.0, 0, -12.0);
+    temple.rotation.y = 1.0;
+    scene.add(temple);
+
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
       trees: 5,
       keepout: [
         ...path.keepout(24, 1.3),
+        // the compound's own circles, in world space, asked for rather than
+        // guessed — `scale` and the yaw both decide them
+        ...temple.footprint(),
         { at: gate, r: 2.4 },
         { at: tozan, r: 1.1 },
         { at: ummon, r: 1.1 },

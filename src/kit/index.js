@@ -29,6 +29,7 @@ export { makeBasin } from './basin.js';
 export { makeBowl } from './bowl.js';
 export { makeWater } from './water.js';
 export { makeHut } from './hut.js';
+export { makeTemple } from './temple.js';
 export { makeLattice, makePen } from './lattice.js';
 export { makeQuadruped } from './quadruped.js';
 export { makeBell } from './bell.js';

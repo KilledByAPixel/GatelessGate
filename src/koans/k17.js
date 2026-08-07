@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
   composeWorld, makeVeranda, makeMonk, makeLantern,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial, makeCylinderChime,
+  makeLights, makeBlobShadow, addOutlines, toonMaterial, makeCylinderChime, makeTemple,
 } from '../kit/index.js';
 
 const ID = 17;
@@ -128,11 +128,29 @@ export default {
     veranda.add(chimeB.group);
     const chimes = [chimeA, chimeB];
 
+    // THE EMPEROR'S TEACHER teaches somewhere, and the case never says where —
+    // only that Chu is Kokushi, the teacher of the emperor, which is a rank
+    // that comes with an establishment behind it. So one stands out at the
+    // valley's edge: not the hall these two are sitting on, just the compound
+    // it belongs to, small in the fog and off toward the mountains.
+    //
+    // Smaller and nearer than case 15's, and that is forced rather than
+    // chosen: this case's near mountain band is dominated by two peaks of
+    // radius 17 and 16, and a search over the whole valley floor found NO
+    // placement past thirty units that clears them and still falls inside the
+    // lens. It sits in front of the larger one instead, which is where a
+    // temple would actually be built.
+    const temple = makeTemple({ scale: 0.5, seed: ID });
+    temple.position.set(-9.5, 0, -8.5);
+    temple.rotation.y = 0.9;
+    scene.add(temple);
+
     const world = composeWorld(scene, {
       seed: ID,
       groundSeed: 21,
       trees: 4,
       keepout: [
+        ...temple.footprint(),
         { at: veranda, r: 3.8 },
         { x: OSHIN_POS.x, z: OSHIN_POS.z, r: 1.2 },
         { at: lantern, r: 0.9 },
