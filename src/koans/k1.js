@@ -19,6 +19,7 @@ export default {
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.18', 'music'],
+  camera: { distance: 10.8, target: [1.35, 1.35, 0.3], heading: 18.5, pitch: 11 },
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -27,7 +28,7 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, FOG_BASE);
     scene.add(makeLights());
 
-    const path = makePath({ from: [1.2, 9], to: [1.2, -34], width: 1.7, seed: 13, groundSeed: 21, wander: 1.1 });
+    const path = makePath({ from: [1.2, 9], to: [1.2, -34], width: 1.7, seed: 13, groundSeed: 21, wander: 3.1 });
     scene.add(path);
 
     // Joshu's hermitage, back off the road behind him — the place the monk
@@ -43,7 +44,7 @@ export default {
 
     // and a stone lantern at the road's edge opposite — the pair of verticals
     // that make the spot a PLACE on the road rather than a stretch of it
-    const LANTERN = { x: 2.5, z: -2.0 };
+    const LANTERN = { x: 1.5, z: -2.0 };
     const lantern = makeLantern({ height: 1.15 });
     lantern.position.set(LANTERN.x, 0, LANTERN.z);
     scene.add(lantern);
@@ -51,11 +52,11 @@ export default {
     // Old Joshu sits off the road; the monk stands before him with the question.
     const mp = path.sample(0.19);
     const joshu = makeMonk({ pose: 'sit', elder: true, height: 1.72 });
-    joshu.position.set(mp.x - mp.perp.x * 1.45, 0, mp.z - mp.perp.z * 1.45);
+    joshu.position.set(mp.x - mp.perp.x * 1.25, 0, mp.z - mp.perp.z * 1.45);
     faceMonk(joshu, { x: mp.x + mp.perp.x * 1.3, z: mp.z + mp.perp.z * 1.3 });
 
     const monk = makeMonk({ height: 1.6 });
-    monk.position.set(mp.x + mp.perp.x * 0.85, 0, mp.z + mp.perp.z * 0.85);
+    monk.position.set(mp.x + mp.perp.x * 1.0, 0, mp.z + mp.perp.z * 0.85);
     faceMonk(monk, joshu.position);
     scene.add(joshu, monk);
 
@@ -63,8 +64,8 @@ export default {
     // unfogged, so when the world is swallowed it is what remains.
     const dog = makeDog({ height: 0.6, color: ACCENT });   // the seal of this koan
     const dp = path.sample(0.145);          // near the pair, inside the shared camera's frame
-    dog.position.set(dp.x + dp.perp.x * 1.7, 0, dp.z + dp.perp.z * 1.7);
-    dog.rotation.y = dp.heading + 1.4;      // looking back up the road at them
+    dog.position.set(dp.x - .7, 0, dp.z - 2.7);
+    dog.rotation.y = dp.heading + 2.4;      // looking back up the road at them
     dog.traverse((o) => {
       if (!o.isMesh) return;
       o.material = o.material.clone();
@@ -76,6 +77,7 @@ export default {
       seed: 1,
       groundSeed: 21,
       keepout: [
+        { x: 55, z: 30, r: 55 }, // behind camera
         ...path.keepout(26, 1.1),
         { x: mp.x, z: mp.z, r: 2.6 },
         { x: dog.position.x, z: dog.position.z, r: 1.0 },

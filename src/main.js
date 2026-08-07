@@ -748,7 +748,7 @@ function startIntro() {
 // workbench's Compose panel (dev mode, open the Contents, drag or slide), then
 // copy the heading, pitch and distance into HERE — not the whole copied block,
 // whose target: [...] would freeze what gateTarget derives.
-const MENU_CAM = { distance: 14, heading: 28.6, pitch: 15.5 };
+const MENU_CAM = { distance: 13, heading: 28.6, pitch: 15.5 };
 
 function menuMusic() {
   audio.setMood('in');

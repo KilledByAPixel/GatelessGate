@@ -2,7 +2,7 @@ import * as THREE from '../lib/three.module.js';
 import { PAPER, ACCENT_DEEP, wash } from './palette.js';
 import {
   composeWorld, makePath, makeLantern, makeGate, makeMonk,
-  makeLights, addOutlines,
+  makeLights, addOutlines, makeCylinderChime,
 } from './kit/index.js';
 import { introPath } from './intro_rails.js';
 
@@ -80,13 +80,6 @@ export function buildHub({
     gate.rotation.y = gp.heading;
     scene.add(gate);
   }
-
-  const closingChime = makeCylinderChime({
-    size: 0.4, seed: 49,
-    onStrike: (note, force, pos) => audio && audio.cylinderStrike({ note, force, at: pos }),
-  });
-  closingChime.group.position.set(-0.75, 3.0, 0);
-  gate.add(closingChime.group);
 
   let lanternA = null, lanternB = null;
   if (withLanterns) {
