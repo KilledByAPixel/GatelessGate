@@ -3,24 +3,12 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import k13 from '../src/koans/k13.js';
 import { ACCENT } from '../src/palette.js';
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Case 13 had no dedicated test file before Task 5C. Adding one narrowly, to
 // pin the bell's tap cooldown found in review — the bell had none at all, so
 // a held pointer could stack audio.bell() calls without limit. The drum has
 // its own membrane voice (audio.drum) now, still uncooldowned on purpose.
-
-function fakeCtx() {
-  const taps = [], hovers = [];
-  return {
-    audio: null,
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null,
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
 
 test('module shape matches the koan contract', () => {
   assert.equal(k13.id, 13);

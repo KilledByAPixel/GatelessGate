@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import k11 from '../src/koans/k11.js';
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Case 11 — Joshu examines a monk in meditation. Two staging complaints from
 // Frank's pass live here so they cannot come back:
@@ -9,13 +10,6 @@ import k11 from '../src/koans/k11.js';
 //      vanished under it;
 //   2. the meadow was planted at terrain height, so blades knifed up through
 //      the raised plateau instead of riding the hill.
-
-function fakeCtx() {
-  return {
-    audio: null,
-    input: { onTap: () => {}, onHover: () => {}, raycastFirst: () => null },
-  };
-}
 
 function built() {
   return k11.build(fakeCtx());

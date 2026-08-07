@@ -7,6 +7,7 @@ import { readingOrder, readingEntries, neighborSlug } from '../src/spine.js';
 import MATTER from '../src/koans/text/matter.js';
 import { SHOWCASE_SLUG, DEV_PAGES, isDevPage } from '../src/koans/dev/index.js';
 import { PAPER } from '../src/palette.js';
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 // THE SHOWCASE — every model in the kit, in one room.
 //
@@ -16,15 +17,6 @@ import { PAPER } from '../src/palette.js';
 // walks the book — the spine, the contents, and above all the staging net,
 // whose draw-call budget it would blow by design. The scene itself gets the
 // same smoke treatment a case gets, minus the budget.
-
-const fakeCtx = () => {
-  const taps = [], hovers = [];
-  return {
-    audio: null,
-    input: { onTap: (cb) => taps.push(cb), onHover: (cb) => hovers.push(cb), raycastFirst: () => null },
-    _taps: taps, _hovers: hovers,
-  };
-};
 
 test('the showcase loads through its own table', async () => {
   assert.ok(isRegistered(SHOWCASE_SLUG), 'enter() checks this before it will navigate anywhere');

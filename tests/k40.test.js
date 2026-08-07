@@ -4,6 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import { makeVase } from '../src/kit/vase.js';
 import k40 from '../src/koans/k40.js';
 import { ACCENT } from '../src/palette.js';
+import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 
 const box = (o) => new THREE.Box3().setFromObject(o);
 const UP = new THREE.Vector3(0, 1, 0);
@@ -33,21 +34,7 @@ function minYOf(group) {
   return min;
 }
 
-function fakeCtx() {
-  const taps = [], hovers = [];
-  return {
-    accent: k40.accent,
-    quality: 'high',
-    audio: null,                       // build() must survive with no audio at all
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null,        // nothing under the cursor by default
-      pointer: () => ({ x: 0, y: 0 }),
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
+const fakeCtx = () => sharedCtx({ accent: k40.accent, quality: 'high' });
 
 // ---- the kit piece -------------------------------------------------------
 

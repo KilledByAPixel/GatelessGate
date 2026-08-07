@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { loadKoan } from '../src/koans/registry.js';
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 // The ten cases this pass hung a fūrin or a bronze cylinder in (chime-
 // staging task): each one's own case file explains WHY that particular
@@ -43,19 +44,6 @@ function stubAudio() {
   };
 }
 
-function fakeCtx(audio) {
-  const taps = [], hovers = [];
-  return {
-    audio,
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null,
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
-
 // every mesh belonging to EACH chime object found in the scene, grouped by
 // instance and collected by object identity rather than by name —
 // cylinder.js's own 'body' mesh name collides with bell.js's, so matching by
@@ -71,7 +59,7 @@ function chimeInstances(scene) {
 for (const { slug, kind, pair, windTied } of CASES) {
   test(`${slug}: the hung chime is wired into update() — a wind-driven strike reaches audio`, async () => {
     const audio = stubAudio();
-    const ctx = fakeCtx(audio);
+    const ctx = fakeCtx({ audio });
     const mod = await loadKoan(slug);
     const root = mod.build(ctx);
     // no camera, no taps: this exercises ONLY the ambient wind path, so a
@@ -114,7 +102,7 @@ for (const { slug, kind, pair, windTied } of CASES) {
     // so a narrow stub leaves that one case's probe order entirely unpinned.
     // An always-hit stub closes both gaps at once, for all ten.
     const audio = stubAudio();
-    const ctx = fakeCtx(audio);
+    const ctx = fakeCtx({ audio });
     const mod = await loadKoan(slug);
     const root = mod.build(ctx);
     root.setCamera(new THREE.PerspectiveCamera());
@@ -149,7 +137,7 @@ for (const { slug, kind, pair, windTied } of CASES) {
       // built two chimes but only ever wired the loop to the first) would
       // be invisible there. Isolate each instance's own meshes in turn.
       const audio = stubAudio();
-      const ctx = fakeCtx(audio);
+      const ctx = fakeCtx({ audio });
       const mod = await loadKoan(slug);
       const root = mod.build(ctx);
       root.setCamera(new THREE.PerspectiveCamera());
@@ -179,7 +167,7 @@ for (const { slug, kind, pair, windTied } of CASES) {
       // (every OTHER case in this pass) would keep ringing here even after
       // the flag's wind is switched off, which is exactly the bug this pins.
       const audio = stubAudio();
-      const ctx = fakeCtx(audio);
+      const ctx = fakeCtx({ audio });
       const mod = await loadKoan(slug);
       const root = mod.build(ctx);
       root.setCamera(new THREE.PerspectiveCamera());

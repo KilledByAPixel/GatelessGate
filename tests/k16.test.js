@@ -4,6 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import k16 from '../src/koans/k16.js';
 import { makeBell } from '../src/kit/bell.js';
 import { ACCENT } from '../src/palette.js';
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Case 16 is the daily summons: the bell sounds and the monastery turns toward
 // it. The things worth pinning here are the bonshō itself (a NEW kit prop with
@@ -171,19 +172,6 @@ test('two bells with the same seed and history land in the same pose', () => {
 });
 
 // ---- the case ---------------------------------------------------------------
-
-function fakeCtx() {
-  const taps = [], hovers = [];
-  return {
-    audio: null,                        // build() must work with no audio at all
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null,
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
 
 // k16 ships without a `camera` block, so the app frames it with the default
 // diorama rig (src/main.js): distance 11.5, target [1.2, 1.35, 0.3],

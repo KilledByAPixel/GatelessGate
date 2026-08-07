@@ -4,6 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import k12 from '../src/koans/k12.js';
 import { ACCENT } from '../src/palette.js';
 import { groundHeight } from '../src/kit/ground.js';
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Zuigan on his ledge, calling himself. Two things this file guards, both of
 // them Frank's round-12 notes:
@@ -16,20 +17,6 @@ import { groundHeight } from '../src/kit/ground.js';
 //   * THE BUTTERFLIES, moved here out of case 19. They are this case's seal
 //     now, so they have to be red, they have to be where the camera is looking,
 //     and — the part that was wrong — a landed one must actually STOP.
-
-function fakeCtx() {
-  const taps = [];
-  return {
-    audio: null,
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: () => {},
-      raycastFirst: () => null,
-      pointer: () => ({ x: 0, y: 0 }),
-    },
-    _taps: taps,
-  };
-}
 
 // a camera exactly where the case's own `camera` block puts it
 function rigCamera(aspect = 0.87) {

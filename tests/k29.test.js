@@ -5,22 +5,13 @@ import * as THREE from '../lib/three.module.js';
 import k29 from '../src/koans/k29.js';
 import { clothEnergy } from '../src/sim/verlet.js';
 import { noteForSize, makeFurin, SWING, SINGLE_BODY_LEN } from '../src/kit/furin.js';
+import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 
-function fakeCtx() {
-  const taps = [], hovers = [];
-  return {
-    accent: k29.accent,
-    quality: 'high',
-    audio: { setWindLevel() {}, startAmbience() {}, stopAmbience() {}, chimeStrike() {} },
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null, // no hit by default
-      pointer: () => ({ x: 0, y: 0 }),
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
+const fakeCtx = () => sharedCtx({
+  accent: k29.accent,
+  quality: 'high',
+  audio: { setWindLevel() {}, startAmbience() {}, stopAmbience() {}, chimeStrike() {} },
+});
 
 test('module shape matches the koan contract', () => {
   assert.equal(k29.id, 29);

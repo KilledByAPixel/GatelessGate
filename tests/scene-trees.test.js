@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CASES } from '../src/koans/index.js';
 import { loadKoan, isStaged } from '../src/koans/registry.js';
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 // No tree stands inside a mountain — scatter trees AND forest instances.
 // The real offenders were the forests: a stand's disc (spread up to 16)
@@ -17,13 +18,6 @@ import { loadKoan, isStaged } from '../src/koans/registry.js';
 // tree reads as brush at fog distance ("it can kind of look like
 // bushes"), which is fine. Code rejects at 0.85r; the net asserts 0.8r,
 // the slack keeping one refactor from tripping the other.
-
-function fakeCtx() {
-  return {
-    audio: null,
-    input: { onTap: () => {}, onHover: () => {}, raycastFirst: () => null },
-  };
-}
 
 function treesVsMountains(scene) {
   const spots = [], feet = [];

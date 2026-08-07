@@ -6,6 +6,7 @@ import { loadKoan, isStaged } from '../src/koans/registry.js';
 import { DEFAULT_HOME_DISTANCE } from '../src/camera.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT, PAPER } from '../src/palette.js';
 import { emitterCount } from '../src/audio/engine.js';
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 // THE STAGING NET.
 //
@@ -33,19 +34,6 @@ const STUB_AUDIO = () => {
     duck: rec('duck'),
   };
 };
-
-function fakeCtx(audio = null) {
-  const taps = [], hovers = [];
-  return {
-    audio,
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null,
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
 
 function rigCamera(mod, azimuth = null) {
   const home = { distance: DEFAULT_HOME_DISTANCE, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27, ...(mod.camera || {}) };
@@ -114,7 +102,7 @@ for (const entry of staged) {
     }
 
     // ---- it builds, with no audio and no camera -------------------------
-    const ctx = fakeCtx(null);
+    const ctx = fakeCtx();
     const root = mod.build(ctx);
     for (const fn of ['update', 'dispose', 'fragment', 'setCamera']) {
       assert.equal(typeof root[fn], 'function', `root.${fn} missing`);
@@ -188,7 +176,7 @@ test('every staged interaction reaches the audio engine', async () => {
   for (const entry of staged) {
     const mod = await loadKoan(entry.slug);
     const audio = STUB_AUDIO();
-    const ctx = fakeCtx(audio);
+    const ctx = fakeCtx({ audio });
     const root = mod.build(ctx);
     root.setCamera(rigCamera(mod));
     root.update(1 / 60, 0);
@@ -216,7 +204,7 @@ test('the two cases silent by editorial choice make no sound at all', async () =
     assert.ok(entry, `case ${id} is not staged`);
     const mod = await loadKoan(entry.slug);
     const audio = STUB_AUDIO();
-    const ctx = fakeCtx(audio);
+    const ctx = fakeCtx({ audio });
     const root = mod.build(ctx);
     root.setCamera(rigCamera(mod));
     root.update(1 / 60, 0);
@@ -244,7 +232,7 @@ test('every placed sound carries a position an AudioParam can take', async () =>
   for (const entry of staged) {
     const mod = await loadKoan(entry.slug);
     const audio = STUB_AUDIO();
-    const ctx = fakeCtx(audio);
+    const ctx = fakeCtx({ audio });
     const root = mod.build(ctx);
     root.setCamera(rigCamera(mod));
     root.update(1 / 60, 0);

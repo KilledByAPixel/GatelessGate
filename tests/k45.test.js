@@ -3,8 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import k45 from '../src/koans/k45.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../src/palette.js';
-
-const fakeCtx = () => ({ audio: null, input: { onTap() {}, onHover() {}, raycastFirst: () => null } });
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 function staged() {
   const root = k45.build(fakeCtx());

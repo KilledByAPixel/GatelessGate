@@ -4,25 +4,12 @@ import * as THREE from '../lib/three.module.js';
 import { makeBundle } from '../src/kit/bundle.js';
 import k23 from '../src/koans/k23.js';
 import { ACCENT } from '../src/palette.js';
+import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 
 const box = (o) => new THREE.Box3().setFromObject(o);
 const accentHex = new THREE.Color(ACCENT).getHexString();
 
-function fakeCtx() {
-  const taps = [], hovers = [];
-  return {
-    accent: k23.accent,
-    quality: 'high',
-    audio: null,                       // build() must survive with no audio at all
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null,        // nothing under the cursor by default
-      pointer: () => ({ x: 0, y: 0 }),
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
+const fakeCtx = () => sharedCtx({ accent: k23.accent, quality: 'high' });
 
 // drive a bundle for n frames starting at sim time t0; returns the peak lean
 // (group rotation magnitude) seen along the way

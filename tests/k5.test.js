@@ -5,23 +5,11 @@ import { makeCliff } from '../src/kit/cliff.js';
 import { makeHangingMonk } from '../src/kit/hangingmonk.js';
 import k5 from '../src/koans/k5.js';
 import { ACCENT, ACCENT_DEEP, INK, WASH } from '../src/palette.js';
+import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 
 const box = (o) => new THREE.Box3().setFromObject(o);
 
-function fakeCtx() {
-  const taps = [], hovers = [];
-  return {
-    accent: k5.accent,
-    audio: null,                       // build() must survive with no audio at all
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null,        // nothing under the cursor by default
-      pointer: () => ({ x: 0, y: 0 }),
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
+const fakeCtx = () => sharedCtx({ accent: k5.accent });
 
 // ---- the cliff -----------------------------------------------------------
 

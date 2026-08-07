@@ -5,24 +5,11 @@ import { makePole } from '../src/kit/pole.js';
 import { addOutlines } from '../src/render/outlines.js';
 import k46 from '../src/koans/k46.js';
 import { ACCENT } from '../src/palette.js';
+import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 
 const ACCENT_HEX = new THREE.Color(ACCENT).getHexString();
 
-function fakeCtx() {
-  const taps = [], hovers = [];
-  return {
-    accent: k46.accent,
-    quality: 'high',
-    audio: null,                        // build() must survive with no audio
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null,
-      pointer: () => ({ x: 0, y: 0 }),
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
+const fakeCtx = () => sharedCtx({ accent: k46.accent, quality: 'high' });
 
 // Box of an object EXCLUDING outline shells — the inverted hull hangs ~0.06
 // below every mesh, which would smear the load-bearing seat assertion.

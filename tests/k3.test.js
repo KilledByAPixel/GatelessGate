@@ -6,22 +6,9 @@ import { makeRaisedFinger } from '../src/kit/finger.js';
 import { ACCENT } from '../src/palette.js';
 import { slugify } from '../src/koans/index.js';
 import TEXT from '../src/koans/text/mumonkan.js';
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 const ACCENT_HEX = new THREE.Color(ACCENT).getHexString();
-
-function fakeCtx() {
-  const taps = [], hovers = [];
-  return {
-    audio: null,
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null,
-      pointer: () => ({ x: 0, y: 0 }),
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
 
 // every mesh actually painted in the accent — outline shells carry a
 // ShaderMaterial with no .color, so they never count

@@ -6,6 +6,7 @@ import k7 from '../src/koans/k7.js';
 import k30, { POND } from '../src/koans/k30.js';
 import k33 from '../src/koans/k33.js';
 import { ACCENT, ACCENT_PALE } from '../src/palette.js';
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Cases 7, 30 and 33 each held their water in a solid cylinder and set the
 // surface a couple of centimetres below its top face — so the cap covered the
@@ -15,11 +16,6 @@ import { ACCENT, ACCENT_PALE } from '../src/palette.js';
 //
 // These tests assert the thing that was actually broken: that if you look down
 // into the vessel, you see water.
-
-const fakeCtx = () => ({
-  audio: null,
-  input: { onTap: () => {}, onHover: () => {}, raycastFirst: () => null },
-});
 
 function staged(mod) {
   const root = mod.build(fakeCtx());

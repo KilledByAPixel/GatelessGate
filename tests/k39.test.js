@@ -4,6 +4,7 @@ import * as THREE from '../lib/three.module.js';
 
 import k39, { nextRed } from '../src/koans/k39.js';
 import { ACCENT } from '../src/palette.js';
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Case 39's three rulings from Frank, pinned:
 //
@@ -88,19 +89,6 @@ test('nextRed: exactly one red among survivors, for every sinking order', () => 
 // ---- the staged scene ------------------------------------------------------
 
 const RED = new THREE.Color(ACCENT).getHexString();
-
-function fakeCtx() {
-  const taps = [];
-  return {
-    audio: null,
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: () => {},
-      raycastFirst: () => null,
-    },
-    _taps: taps,
-  };
-}
 
 function staged() {
   const ctx = fakeCtx();

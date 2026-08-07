@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import k20 from '../src/koans/k20.js';
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Case 20 on the coast. The case's two facts, pinned:
 //
@@ -11,15 +12,6 @@ import k20 from '../src/koans/k20.js';
 //      would overflow" — so when you push him, the ocean itself sways.
 //   2. The coast layout: sea to the front (-z), ground diving below sea level
 //      seaward, sand between, and no mountain standing in the water.
-
-function fakeCtx() {
-  const taps = [];
-  return {
-    audio: null,
-    input: { onTap: (cb) => taps.push(cb), onHover: () => {}, raycastFirst: () => null },
-    _taps: taps,
-  };
-}
 
 function staged() {
   const ctx = fakeCtx();

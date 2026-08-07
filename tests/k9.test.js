@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import k9 from '../src/koans/k9.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../src/palette.js';
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Case 9 is staged as a DISCOVERY, not a product shot (Frank's note): the
 // colossus sits off at the left third against the mountain flank, and an
@@ -10,19 +11,6 @@ import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../src/palette.js';
 // measure him with. These tests pin that composition — if the statue drifts
 // back to the camera axis, or the scale tree wanders away from him or grows
 // out of ordinary world scale, the case has lost its point.
-
-function fakeCtx() {
-  const taps = [];
-  return {
-    audio: null,
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: () => {},
-      raycastFirst: () => null,
-    },
-    _taps: taps,
-  };
-}
 
 // the shipped camera, at a square-ish book aspect (the reading pane's canvas
 // is narrower than the 1.78 test rig, which halves apparent x offsets)

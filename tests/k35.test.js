@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import k35 from '../src/koans/k35.js';
+import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 
 // Case 35, the two souls. Frank's note this round: "make them not walk
 // through each other: once one's on one side of the road, once the other."
@@ -10,21 +11,7 @@ import k35 from '../src/koans/k35.js';
 // each other — while holding the deliberate ghosting (the case's whole point)
 // exactly where it was.
 
-function fakeCtx() {
-  const taps = [], hovers = [];
-  return {
-    accent: k35.accent,
-    quality: 'high',
-    audio: null,
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null,
-      pointer: () => ({ x: 0, y: 0 }),
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
+const fakeCtx = () => sharedCtx({ accent: k35.accent, quality: 'high' });
 
 const CYCLE = 26;                       // k35's apart-and-together period
 

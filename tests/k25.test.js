@@ -2,19 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import k25 from '../src/koans/k25.js';
+import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 
-function fakeCtx() {
-  const taps = [], hovers = [];
-  return {
-    audio: { knock() {}, startAmbience() {}, stopAmbience() {}, duck() {} },
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null,
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
+const fakeCtx = () => sharedCtx({ audio: { knock() {}, startAmbience() {}, stopAmbience() {}, duck() {} } });
 
 test('module shape matches the koan contract', () => {
   assert.equal(k25.id, 25);

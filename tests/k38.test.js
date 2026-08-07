@@ -5,25 +5,12 @@ import { makeOak } from '../src/kit/oak.js';
 import { makeTree } from '../src/kit/tree.js';
 import k38 from '../src/koans/k38.js';
 import { ACCENT, ACCENT_DEEP } from '../src/palette.js';
+import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 
 const box = (o) => new THREE.Box3().setFromObject(o);
 const width = (o) => { const b = box(o); return Math.max(b.max.x - b.min.x, b.max.z - b.min.z); };
 
-function fakeCtx() {
-  const taps = [], hovers = [];
-  return {
-    accent: k38.accent,
-    quality: 'high',
-    audio: null,                       // build() must survive with no audio at all
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null,        // nothing under the cursor by default
-      pointer: () => ({ x: 0, y: 0 }),
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
+const fakeCtx = () => sharedCtx({ accent: k38.accent, quality: 'high' });
 
 // ---- the kit piece -------------------------------------------------------
 

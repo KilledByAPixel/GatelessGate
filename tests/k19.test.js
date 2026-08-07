@@ -6,6 +6,7 @@ import { makeMoon } from '../src/kit/moon.js';
 import { makeWildflowers } from '../src/kit/wildflowers.js';
 import { groundHeight } from '../src/kit/ground.js';
 import { ACCENT, ACCENT_DEEP, wash, WASH } from '../src/palette.js';
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Case 19 has no object at its centre, so its two red seals are weather: the
 // harvest moon and the wildflowers along the verge — spring and autumn, the
@@ -14,20 +15,6 @@ import { ACCENT, ACCENT_DEEP, wash, WASH } from '../src/palette.js';
 // case 12.) Both are easy to get subtly wrong in ways nothing else in the suite
 // would catch — a moon that the fog quietly erases, or that a pale invisible
 // slope stands in front of; blooms that grow in the middle of the road.
-
-function fakeCtx() {
-  const taps = [], hovers = [];
-  return {
-    audio: null,                       // build() must work with no audio at all
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null,        // nothing under the cursor by default
-      pointer: () => ({ x: 0, y: 0 }),
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
 
 // place a camera exactly where the case's own `camera` block puts it
 function rigCamera(azimuth = k19.camera.azimuth, aspect = 1.78) {

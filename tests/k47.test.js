@@ -4,6 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import k47 from '../src/koans/k47.js';
 import { bySlug } from '../src/koans/index.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT, PAPER } from '../src/palette.js';
+import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Case 47 is almost pure composition — one road, three barriers across it, a
 // walker between the first and the second — so what can go quietly wrong is
@@ -14,20 +15,6 @@ import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT, PAPER } from '../src/palette.js';
 
 const SEAL = new Set([ACCENT, ACCENT_DEEP, ACCENT_LIGHT]
   .map((c) => new THREE.Color(c).getHexString()));
-
-function fakeCtx(audio = null) {
-  const taps = [], hovers = [];
-  return {
-    audio,
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null,        // nothing under the cursor by default
-      pointer: () => ({ x: 0, y: 0 }),
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
 
 // place a camera exactly where the case's own `camera` block puts it
 function rigCamera(azimuth = k47.camera.azimuth, aspect = 1.78) {
@@ -256,7 +243,7 @@ test('each barrier answers with its own bell, the nearest the biggest', () => {
     bell: (o) => bells.push(o.preset),
     startAmbience: () => {}, stopAmbience: () => {}, setWindLevel: () => {},
   };
-  const ctx = fakeCtx(audio);
+  const ctx = fakeCtx({ audio });
   const root = k47.build(ctx);
   assert.ok(ctx._taps.length > 0, 'the case has to offer something to find');
   root.setCamera(rigCamera());
@@ -290,7 +277,7 @@ test('each barrier answers with its own bell, the nearest the biggest', () => {
   // and with no audio at all, the counter still counts and nothing throws.
   // Target-aware, like the loop above: the handler probes the furin first,
   // and a mock that answers every raycast would feed the tap to the chime.
-  const quiet = fakeCtx(null);
+  const quiet = fakeCtx();
   const qroot = k47.build(quiet);
   qroot.setCamera(rigCamera());
   const qgates = gatesByDepth(qroot.scene);
@@ -307,7 +294,7 @@ test('a bell cannot be re-struck inside its cooldown — holding the pointer dow
   // (`clock - lastRing > 0.5`) fixes it here per barrier.
   const bells = [];
   const audio = { bell: (o) => bells.push(o.f0), startAmbience() {}, stopAmbience() {}, setWindLevel() {} };
-  const ctx = fakeCtx(audio);
+  const ctx = fakeCtx({ audio });
   const root = k47.build(ctx);
   root.setCamera(rigCamera());
   const gates = gatesByDepth(root.scene);
@@ -340,7 +327,7 @@ test('a bell cannot be re-struck inside its cooldown — holding the pointer dow
 test('a furin hangs under the first barrier and its strikes reach the engine', () => {
   const struck = [];
   const audio = { bell() {}, chimeStrike: (o) => struck.push(o) };
-  const root = k47.build(fakeCtx(audio));
+  const root = k47.build(fakeCtx({ audio }));
 
   // it hangs from the FIRST gate — the one you stand before — not floating
   // in the scene: a child of the gate group, so it inherits sink and heading

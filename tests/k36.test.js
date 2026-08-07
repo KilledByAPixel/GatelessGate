@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import k36 from '../src/koans/k36.js';
+import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 
 // Case 36, meeting a Zen master on the road.
 //
@@ -17,21 +18,7 @@ import k36 from '../src/koans/k36.js';
 // each other (the old bug's whole subject, in its new form), and that the bow
 // is a live angle at the waist rather than a pose baked into the geometry.
 
-function fakeCtx() {
-  const taps = [], hovers = [];
-  return {
-    accent: k36.accent,
-    quality: 'high',
-    audio: null,
-    input: {
-      onTap: (cb) => taps.push(cb),
-      onHover: (cb) => hovers.push(cb),
-      raycastFirst: () => null,
-      pointer: () => ({ x: 0, y: 0 }),
-    },
-    _taps: taps, _hovers: hovers,
-  };
-}
+const fakeCtx = () => sharedCtx({ accent: k36.accent, quality: 'high' });
 
 const wrap = (a) => ((a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
 
