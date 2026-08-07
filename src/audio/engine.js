@@ -459,12 +459,14 @@ export function createAudio(save) {
     setWindScale(s) { windScale = s; if (wind) wind.setLevel(windLevel * windScale); },
     windScale() { return windScale; },
     stopAmbience() {
-      if (wind) { wind.stop(); wind = null; }
-      if (water) { water.stop(); water = null; }
-      if (dripTimer) { clearTimeout(dripTimer); dripTimer = null; }
-      if (rain) { rain.stop(); rain = null; }
-      if (rainDropTimer) { clearTimeout(rainDropTimer); rainDropTimer = null; }
-      stopMusic();
+      // Through stopLayer, not a hard stop: this used to call each bed's
+      // stop() directly, which disconnects mid-waveform — a bed at level
+      // 0.2-0.3 cut at an arbitrary sample can click under the page turn.
+      // stopLayer fades to true zero on the bed's own curve first (3s), and
+      // it already drops the engine's reference at once, so a quick re-entry
+      // starts a fresh bed while the old one dies underneath (Frank: "let's
+      // definitely use the three second fade instead of the hard cut").
+      for (const layer of ['wind', 'water', 'rain', 'music']) stopLayer(layer);
       playing = [];
       if (verb) verb.setRoom('open');   // leaving for the menu resets the air
     },
