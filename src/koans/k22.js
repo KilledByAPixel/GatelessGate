@@ -39,7 +39,7 @@ export default {
   // chimes and flag already agree to.
   ambience: ['wind:0.30', 'flag', 'furin', 'music'],
   mood: 'yo',      // "This spring does not belong to the ordinary season."
-  camera: { distance: 11.5, target: [0.9, 1.9, -0.2], azimuth: 0.55, polar: 1.24 },
+  camera: { distance: 11.5, target: [0.9, 1.9, -0.2], heading: 31.5, pitch: 19 },
 
   build(ctx) {
     const { audio, input } = ctx;

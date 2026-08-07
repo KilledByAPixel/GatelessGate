@@ -751,7 +751,7 @@ async function openMenu() {
   await transition(() => {
     if (intro) { intro.dispose(); intro = null; }
     mode = 'menu';
-    makeRig({ distance: 14, target: hub.gateTarget, azimuth: 0.5, polar: 1.3 });
+    makeRig({ distance: 14, target: hub.gateTarget, heading: 28.6, pitch: 15.5 });
     menu.refresh(save.state());
     menu.open();
     showView(menu.el);
@@ -819,7 +819,7 @@ function buildKoan(mod, slug) {
   // around empty road. A case's own `camera` still overrides, so this changes
   // nothing for the forty-nine.
   makeRig({
-    distance: DEFAULT_HOME_DISTANCE, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27,
+    distance: DEFAULT_HOME_DISTANCE, target: [1.2, 1.35, 0.3], heading: 31.5, pitch: 17.2,
     ...(built.gateTarget ? { target: built.gateTarget } : {}),
     ...(mod.camera || {}),
   });
@@ -971,7 +971,7 @@ async function exit() {
     koanCard = null; koanNarrationId = null;
     if (scroll) { scroll.dispose(); scroll = null; }
     mode = 'menu';
-    makeRig({ distance: 14, target: hub.gateTarget, azimuth: 0.5, polar: 1.3 });
+    makeRig({ distance: 14, target: hub.gateTarget, heading: 28.6, pitch: 15.5 });
     menu.refresh(save.state());
     menu.open();
     showView(menu.el);

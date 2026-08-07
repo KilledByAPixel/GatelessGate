@@ -67,14 +67,14 @@ export default {
   ambience: ['wind:0.26:pine'],                   // it is windy up a pole
 
   // THE CAMERA IS HALF THIS CASE, and it is the first one that has to leave
-  // the rig's default polar window. The stock framing looks at y=1.35 and
+  // the rig's default pitch window. The stock framing looks at y=1.35 and
   // would show an empty meadow with a stick. Instead the orbit pivots around
   // a point high on the mast: at the home angle the seated figure rides the
   // upper third against clear paper, the pole runs the full height of the
   // frame, and the base just clears the bottom edge — ground and summit in one
-  // shot. Dragging down (maxPolar 1.35) sinks the lens almost level with him,
+  // shot. Dragging down (minPitch 12.7) sinks the lens almost level with him,
   // the ground falls out of the frame and he sits against nothing but sky;
-  // dragging up (minPolar 0.55, far past the stock 0.9 floor) climbs above the
+  // dragging up (maxPitch 58.5, far past the stock 38.5 ceiling) climbs above the
   // cap and reveals the drop, the watchers turning into specks by the base.
   // maxDist 20 keeps the whole mast reachable on a phone; the sitter stays
   // inside ~18.5 units of the lens even fully wheeled out, so FogExp2 0.030
@@ -82,10 +82,10 @@ export default {
   camera: {
     distance: 14.5,
     target: [POLE.x, 5.5, POLE.z],
-    azimuth: 0.55,
-    polar: 1.05,
-    minPolar: 0.55,
-    maxPolar: 1.35,
+    heading: 31.5,
+    pitch: 29.8,
+    minPitch: 12.7,
+    maxPitch: 58.5,
     maxDist: 20,
   },
 
@@ -151,11 +151,11 @@ export default {
       grassKeepout: [{ x: POLE.x, z: POLE.z, r: 0.3 }],
 
       // THE RIDGELINE STANDS ASIDE. The home view looks along bearing ~-0.55
-      // (radians, from the world origin), and at maxPolar the sitter reads
+      // (radians, from the world origin), and at minPitch the sitter reads
       // against whatever stands at that bearing near his height. The stock
       // bands put washed peaks straight through that line, so the red sat on a
       // ghost. These arcs clear roughly (-1.05..0.15) — paper sky directly
-      // behind the man at the home azimuth, tall country pushed to both frame
+      // behind the man at the home heading, tall country pushed to both frame
       // edges where it frames the drop instead of muddying it. (k19 precedent:
       // shape the ridge around the seal.)
       mountains: [

@@ -40,7 +40,7 @@ export default {
   // settled, single note rather than the lively cluster case 29 and case 47
   // give their own gates: the book is at rest, not arguing about the wind.
   ambience: ['wind:0.16', 'birds', 'cylinder', 'music'],
-  camera: { distance: 12.5, target: [0.2, 1.5, -2.4], azimuth: 0.42, polar: 1.2 },
+  camera: { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 24.1, pitch: 21.2 },
 
   build(ctx) {
     const { audio, input } = ctx;

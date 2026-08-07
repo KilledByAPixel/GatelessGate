@@ -122,7 +122,7 @@ test('the showcase frames itself, wide, and the clamps let you get right out', a
   assert.ok(c, 'a room this size cannot use the standard diorama shot');
   assert.equal(c.target.length, 3);
   assert.ok(c.target.every(Number.isFinite));
-  assert.ok(c.polar > 0.2 && c.polar < Math.PI - 0.2);
+  assert.ok(c.pitch > -78 && c.pitch < 78);
   assert.ok(c.maxDist > 30, 'the whole room must fit in the frame at full zoom-out');
   assert.ok(c.minDist <= 4, 'and a single model must be reachable up close');
   assert.ok(c.distance >= c.minDist && c.distance <= c.maxDist);

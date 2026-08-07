@@ -76,7 +76,7 @@ export default {
   // here, so it's off (see makeWaterBed's comment in synths.js). A tap on a
   // stone or the water itself still rings a drip.
   ambience: ['wind:0.14', 'music'],
-  camera: { distance: 11.0, target: [0.4, 0.9, -1.0], azimuth: 0.62, polar: 1.18 },
+  camera: { distance: 11.0, target: [0.4, 0.9, -1.0], heading: 35.5, pitch: 22.4 },
 
   build(ctx) {
     const { audio, input } = ctx;

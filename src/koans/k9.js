@@ -30,7 +30,7 @@ export default {
   // that you are small in front of it. The colossus is NOT centered — he sits
   // off at the left third, backed by a mountain flank, discovered rather than
   // presented; the right of the frame holds the scale tree and the two monks.
-  camera: { distance: 17, target: [0.2, 2.6, -1.6], azimuth: 0.55, polar: 1.32 },
+  camera: { distance: 17, target: [0.2, 2.6, -1.6], heading: 31.5, pitch: 14.4 },
 
   build(ctx) {
     const { audio, input } = ctx;

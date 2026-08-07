@@ -69,7 +69,7 @@ export default {
   ambience: ['wind:0.30', 'bell', 'music'],
   mood: 'in',
   // aimed at the fork — the choice is the subject
-  camera: { distance: 14, target: [FORK.x, 1.2, FORK.z], azimuth: 0.5, polar: 1.3 },
+  camera: { distance: 14, target: [FORK.x, 1.2, FORK.z], heading: 28.6, pitch: 15.5 },
 
   build(ctx = {}) {
     const { audio = null, input = null } = ctx;

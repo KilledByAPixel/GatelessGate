@@ -26,7 +26,7 @@ export default {
   ambience: ['wind:0.20', 'wheel', 'music'],
   mood: 'yo',        // a workshop in daylight, not a night of doubt
   // closer than the default diorama rig: the subject is a wheel, not a hillside
-  camera: { distance: 9.0, target: [1.3, 1.25, 0.4], azimuth: 0.55, polar: 1.24 },
+  camera: { distance: 9.0, target: [1.3, 1.25, 0.4], heading: 31.5, pitch: 19 },
 
   build(ctx) {
     const { audio, input } = ctx;

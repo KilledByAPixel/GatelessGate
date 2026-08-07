@@ -36,14 +36,14 @@ export default {
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.16', 'music'],
   // Close in, and low. Both of those sit OUTSIDE the rig's stock envelope
-  // (minDist 7, maxPolar 1.45), so this frame has to widen the envelope as
+  // (minDist 7, minPitch 7), so this frame has to widen the envelope as
   // well as name itself — the way k12 does for its gorge. Without that the
   // authored view holds on arrival and then dies at the reader's first
   // scroll notch or drag, which clamps into the stock range and can never
   // get back out: the composition would be reachable exactly once.
   camera: {
-    distance: 5.5, target: [0.4, 1.8, -1.0], azimuth: -0.55, polar: 1.50,
-    minDist: 4.5, maxDist: 11, maxPolar: 1.56,
+    distance: 5.5, target: [0.4, 1.8, -1.0], heading: -31.5, pitch: 4.1,
+    minDist: 4.5, maxDist: 11, minPitch: 0.6,
   },
 
   build(ctx) {

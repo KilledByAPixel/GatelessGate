@@ -25,7 +25,7 @@ export default {
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.16', 'scale', 'music'],
   mood: 'yo',        // a plain answer on a working morning
-  camera: { distance: 9.4, target: [1.1, 1.2, 0.5], azimuth: 0.55, polar: 1.25 },
+  camera: { distance: 9.4, target: [1.1, 1.2, 0.5], heading: 31.5, pitch: 18.4 },
 
   build(ctx) {
     const { audio, input } = ctx;

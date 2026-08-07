@@ -56,7 +56,7 @@ const ROWS = {
 
 // The captions stand in the aisle IN FRONT of their row, on the TRUE centre
 // line (x = 0) — the one column that stays clear at every depth, zoom and
-// azimuth this camera reaches, because every row's own tall outlier (the
+// heading this camera reaches, because every row's own tall outlier (the
 // vegetation oak, the gallows oak in the people row, the architecture pole)
 // is placed off to one side precisely so the middle of the room is empty.
 //
@@ -181,8 +181,8 @@ export default {
   // further because the app's camera far plane is 100 and the moon stands out
   // past the back row — a deeper pull-out would clip it out of existence.
   camera: {
-    distance: 56, target: [0, 1.0, -22], azimuth: 0, polar: 1.02,
-    minDist: 3, maxDist: 70, minPolar: 0.40, maxPolar: 1.48, azimuthRange: 1.5,
+    distance: 56, target: [0, 1.0, -22], heading: 0, pitch: 31.6,
+    minDist: 3, maxDist: 70, minPitch: 5.2, maxPitch: 67.1, headingRange: 85.9,
   },
 
   build() {

@@ -3,6 +3,7 @@ import MATTER from '../text/matter.js';
 import { buildHub } from '../../intro.js';
 import { WASH } from '../../palette.js';
 import { makeBuddha, groundHeight, toonMaterial, addOutlines } from '../../kit/index.js';
+import { eyePosition } from '../../camera.js';
 
 // Mumon's afterword, the Zen Warnings, and the letter that produced case 49 —
 // in that order, so the book ends on "Say it quick. Say it quick."
@@ -38,7 +39,7 @@ const MAT_R = 0.55, MAT_H = 0.05;
 const OFF = 1.1;
 // Named, because build() has to solve the rig's own equation to know where the
 // reader is standing before it can put anything to one side of them.
-const CAM = { distance: 16, azimuth: 0.5, polar: 1.3 };
+const CAM = { distance: 16, heading: 28.6, pitch: 15.5 };
 
 export default {
   id: null,
@@ -57,13 +58,12 @@ export default {
 
     // WHERE THE GATE STOOD, and where the reader is standing to look at it —
     // both read off the scene rather than written down, so they follow the road
-    // wherever this page's pathSeed bends it. The eye is the rig's own maths
-    // (src/camera.js): target + distance along the azimuth/polar direction.
+    // wherever this page's pathSeed bends it. The eye comes from the rig's own
+    // eyePosition rather than a second copy of its trig — a copy would have been
+    // one more thing to find when the camera changed vocabulary.
     const [gx, , gz] = built.gateTarget;
-    const eye = {
-      x: gx + CAM.distance * Math.sin(CAM.polar) * Math.sin(CAM.azimuth),
-      z: gz + CAM.distance * Math.sin(CAM.polar) * Math.cos(CAM.azimuth),
-    };
+    const [ex, , ez] = eyePosition(CAM, built.gateTarget);
+    const eye = { x: ex, z: ez };
 
     // HIS TREE: of the scatter trees standing well beyond the gate spot, the one
     // whose offset from the view axis is nearest SIDE. Not the one NEAREST the

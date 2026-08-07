@@ -45,7 +45,7 @@ export default {
   // or a flag rippling continuously in the breeze, the kind of emitter a
   // second token is actually meant to flag as "busier now."
   ambience: ['wind:0.15', 'call', 'cylinder', 'music'],
-  camera: { distance: 11.0, target: [0.6, 1.3, -0.4], azimuth: 0.60, polar: 1.26 },
+  camera: { distance: 11.0, target: [0.6, 1.3, -0.4], heading: 34.4, pitch: 17.8 },
 
   build(ctx) {
     const { audio, input } = ctx;

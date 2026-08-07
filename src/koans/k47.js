@@ -33,7 +33,7 @@ const PATH_OPTS = { from: [1.1, 6.8], to: [-1.6, -42], width: 1.7, seed: 47, gro
 // t along the road, and a slight step DOWN in size with depth. The steps do
 // two jobs: they exaggerate the recession, and they make collapse impossible —
 // the nearest gate is always the largest on screen by construction, so at the
-// one azimuth where the three centres line up (the camera crossing the road's
+// one heading where the three centres line up (the camera crossing the road's
 // axis) the gates nest as three distinct frames instead of merging into one
 // silhouette. Ground intervals grow with depth (9.8 then 13.7) to fight
 // perspective foreshortening; on screen the three read evenly stepped.
@@ -81,11 +81,11 @@ export default {
   // target sits between the first and second barriers (the corridor's visual
   // centre of mass): pivoting on the seal gate itself would put the lens
   // inside the first gate at home distance. Checked numerically at home
-  // azimuth +-0.5 across aspects 1.78/0.8: all three lintels stay in frame at
+  // heading +-28.6 across aspects 1.78/0.8: all three lintels stay in frame at
   // home, and at every angle the gates either separate (NDC centre gap up to
   // 0.88) or nest (projected width ratios ~2.2 and ~1.9 where the centres
-  // cross near azimuth 0.07). The walker's head sits just under centre frame.
-  camera: { distance: 14.5, target: [0.1, 1.9, -9.5], azimuth: 0.32, polar: 1.395 },
+  // cross near heading 4). The walker's head sits just under centre frame.
+  camera: { distance: 14.5, target: [0.1, 1.9, -9.5], heading: 18.3, pitch: 10.1 },
 
   build(ctx) {
     const { audio, input } = ctx;

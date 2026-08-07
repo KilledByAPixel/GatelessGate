@@ -27,7 +27,7 @@ export default {
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.18', 'staff', 'music'],
-  camera: { distance: 9.6, target: [0.6, 1.35, 0.0], azimuth: 0.55, polar: 1.26 },
+  camera: { distance: 9.6, target: [0.6, 1.35, 0.0], heading: 31.5, pitch: 17.8 },
 
   build(ctx) {
     const { audio, input } = ctx;

@@ -57,7 +57,7 @@ export default {
   // and they simply overlapped, one hat behind another. Swung round and
   // lowered until the line between them runs across the frame and the bow
   // reads as a bend at the waist rather than a hat seen from above.
-  camera: { distance: 8.6, target: [1.38, 1.72, -2.18], azimuth: -0.38, polar: 1.30 },
+  camera: { distance: 8.6, target: [1.38, 1.72, -2.18], heading: -21.8, pitch: 15.5 },
 
   build(ctx) {
     const { audio, input } = ctx;

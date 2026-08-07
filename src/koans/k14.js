@@ -61,7 +61,7 @@ export default {
   ambience: ['wind:0.12'],
   // Closer and lower than the standard diorama shot: the thing this case turns
   // on is 0.42 units tall, and the default framing loses it in the courtyard.
-  camera: { distance: 11.5, target: [1.15, 1.2, -1.0], azimuth: 0.55, polar: 1.26 },
+  camera: { distance: 11.5, target: [1.15, 1.2, -1.0], heading: 31.5, pitch: 17.8 },
 
   build(ctx) {
     const { audio, input } = ctx;

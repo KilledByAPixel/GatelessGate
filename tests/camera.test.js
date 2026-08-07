@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import {
   makeCameraRig, wanderGoal, makeFreeCam, packFreeCam, unpackFreeCam,
-  toHeadingPitch, fromHeadingPitch, cameraBlock,
+  eyePosition, cameraBlock,
 } from '../src/camera.js';
 
 // The rig's own defaults — the envelope a reader can reach by dragging.
-const HOME = { azimuth: 0.55, polar: 1.27, distance: 11.5 };
-const BOUNDS = { azimuthRange: 0.9, minPolar: 0.9, maxPolar: 1.45, minDist: 7, maxDist: 16 };
+const HOME = { heading: 31.5, pitch: 17.2, distance: 11.5 };
+const BOUNDS = { headingRange: 51.5, minPitch: 7, maxPitch: 38.5, minDist: 7, maxDist: 16 };
 
 function fakeEl() {
   const handlers = {};
@@ -20,14 +20,14 @@ function fakeEl() {
   };
 }
 
-test('drag clamps polar and azimuth to configured range', () => {
+test('drag clamps pitch and heading to configured range', () => {
   const el = fakeEl();
   const rig = makeCameraRig(new THREE.PerspectiveCamera(), el, {});
   el.handlers.pointerdown({ clientX: 400, clientY: 300 });
   el.handlers.pointermove({ clientX: 400 - 100000, clientY: 300 + 100000 });
   el.handlers.pointerup({});
-  assert.ok(rig.goal.polar >= 0.9 && rig.goal.polar <= 1.45, `polar ${rig.goal.polar}`);
-  assert.ok(rig.goal.azimuth >= 0.5 - 0.9 - 1e-9 && rig.goal.azimuth <= 0.5 + 0.9 + 1e-9, `azimuth ${rig.goal.azimuth}`);
+  assert.ok(rig.goal.pitch >= 7 && rig.goal.pitch <= 38.5, `pitch ${rig.goal.pitch}`);
+  assert.ok(rig.goal.heading >= 28.6 - 51.5 - 1e-9 && rig.goal.heading <= 28.6 + 51.5 + 1e-9, `heading ${rig.goal.heading}`);
 });
 
 test('wheel clamps distance', () => {
@@ -61,7 +61,7 @@ test('update converges toward goal and positions the camera', () => {
   el.handlers.pointerup({});
   for (let i = 0; i < 600; i++) rig.update(1 / 60);
   const s = rig.state();
-  assert.ok(Math.abs(s.azimuth - rig.goal.azimuth) < 0.05, `azimuth ${s.azimuth} vs goal ${rig.goal.azimuth}`);
+  assert.ok(Math.abs(s.heading - rig.goal.heading) < 2.9, `heading ${s.heading} vs goal ${rig.goal.heading}`);
   const dist = cam.position.distanceTo(new THREE.Vector3(0, 1.1, 0));
   assert.ok(Math.abs(dist - s.distance) < 0.01, `camera not on sphere: ${dist} vs ${s.distance}`);
 });
@@ -75,12 +75,12 @@ test('update converges toward goal and positions the camera', () => {
 test('the ambient drift never leaves the rig bounds', () => {
   for (let t = 0; t < 6000; t += 0.31) {
     const g = wanderGoal(t, HOME, BOUNDS);
-    assert.ok(Number.isFinite(g.azimuth) && Number.isFinite(g.polar) && Number.isFinite(g.distance),
+    assert.ok(Number.isFinite(g.heading) && Number.isFinite(g.pitch) && Number.isFinite(g.distance),
       `non-finite goal at t=${t}: ${JSON.stringify(g)}`);
-    assert.ok(g.azimuth >= HOME.azimuth - BOUNDS.azimuthRange - 1e-9
-      && g.azimuth <= HOME.azimuth + BOUNDS.azimuthRange + 1e-9, `azimuth ${g.azimuth} at t=${t}`);
-    assert.ok(g.polar >= BOUNDS.minPolar - 1e-9 && g.polar <= BOUNDS.maxPolar + 1e-9,
-      `polar ${g.polar} at t=${t}`);
+    assert.ok(g.heading >= HOME.heading - BOUNDS.headingRange - 1e-9
+      && g.heading <= HOME.heading + BOUNDS.headingRange + 1e-9, `heading ${g.heading} at t=${t}`);
+    assert.ok(g.pitch >= BOUNDS.minPitch - 1e-9 && g.pitch <= BOUNDS.maxPitch + 1e-9,
+      `pitch ${g.pitch} at t=${t}`);
     assert.ok(g.distance >= BOUNDS.minDist - 1e-9 && g.distance <= BOUNDS.maxDist + 1e-9,
       `distance ${g.distance} at t=${t}`);
   }
@@ -95,14 +95,14 @@ test('the ambient drift is seeded, not random', () => {
 test('the ambient drift actually drifts, on all three axes', () => {
   // Guards against a "wander" that clamps or averages its way into sitting
   // still — which would pass the bounds test above perfectly.
-  const seen = { azimuth: [], polar: [], distance: [] };
+  const seen = { heading: [], pitch: [], distance: [] };
   for (let t = 0; t < 600; t += 0.5) {
     const g = wanderGoal(t, HOME, BOUNDS);
     for (const k of Object.keys(seen)) seen[k].push(g[k]);
   }
   const spread = (xs) => Math.max(...xs) - Math.min(...xs);
-  assert.ok(spread(seen.azimuth) > 0.2, `azimuth barely moves: ${spread(seen.azimuth)}`);
-  assert.ok(spread(seen.polar) > 0.05, `polar barely moves: ${spread(seen.polar)}`);
+  assert.ok(spread(seen.heading) > 11, `heading barely moves: ${spread(seen.heading)}`);
+  assert.ok(spread(seen.pitch) > 2.9, `pitch barely moves: ${spread(seen.pitch)}`);
   assert.ok(spread(seen.distance) > 1, `distance barely moves: ${spread(seen.distance)}`);
 });
 
@@ -112,10 +112,10 @@ test('the drift stays near the case home framing, not out at the limits', () => 
   let n = 0, az = 0, po = 0, di = 0;
   for (let t = 0; t < 3000; t += 0.5) {
     const g = wanderGoal(t, HOME, BOUNDS);
-    az += g.azimuth; po += g.polar; di += g.distance; n++;
+    az += g.heading; po += g.pitch; di += g.distance; n++;
   }
-  assert.ok(Math.abs(az / n - HOME.azimuth) < 0.2, `azimuth mean drifts off home: ${az / n}`);
-  assert.ok(Math.abs(po / n - HOME.polar) < 0.06, `polar mean drifts off home: ${po / n}`);
+  assert.ok(Math.abs(az / n - HOME.heading) < 11.5, `heading mean drifts off home: ${az / n}`);
+  assert.ok(Math.abs(po / n - HOME.pitch) < 3.5, `pitch mean drifts off home: ${po / n}`);
   assert.ok(Math.abs(di / n - HOME.distance) < 1.2, `distance mean drifts off home: ${di / n}`);
 });
 
@@ -132,44 +132,55 @@ test('a rig with wander on moves the camera over time; with it off it holds stil
     `camera barely drifted with wander on: ${cam.position.distanceTo(start)}`);
 });
 
-test('pitch zero is level, and positive pitch looks down', () => {
-  // The whole reason the panel does not speak polar: level is 1.5708 there,
-  // and smaller means higher up, which reads backwards to everyone.
-  assert.equal(toHeadingPitch({ azimuth: 0, polar: Math.PI / 2 }).pitch, 0);
-  assert.ok(toHeadingPitch({ azimuth: 0, polar: 1.27 }).pitch > 0, 'above the target looks down');
-  assert.ok(toHeadingPitch({ azimuth: 0, polar: 1.7 }).pitch < 0, 'below the target looks up');
-  // and the pair round-trips
-  const hp = toHeadingPitch({ azimuth: -0.55, polar: 1.5 });
-  const back = fromHeadingPitch(hp);
-  assert.ok(Math.abs(back.azimuth - -0.55) < 1e-9, `azimuth: ${back.azimuth}`);
-  assert.ok(Math.abs(back.polar - 1.5) < 1e-9, `polar: ${back.polar}`);
+test('pitch zero is level, positive pitch looks down, heading zero stands on +z', () => {
+  // The whole reason the vocabulary changed: polar measured level as 1.5708 and
+  // counted DOWNWARD, so a smaller number meant a higher lens — backwards to
+  // everyone who ever composed a shot. These four assertions ARE the convention.
+  const T = [1, 2, 3];
+  const at = (heading, pitch) => eyePosition({ heading, pitch, distance: 10 }, T);
+
+  assert.ok(Math.abs(at(0, 0)[1] - T[1]) < 1e-9, 'pitch 0 puts the lens level with the target');
+  assert.ok(at(0, 30)[1] > T[1], 'positive pitch looks DOWN on it from above');
+  assert.ok(at(0, -30)[1] < T[1], 'negative pitch looks up from below');
+
+  // heading 0 stands square in front, on +z; positive swings left, toward +x
+  const front = at(0, 0);
+  assert.ok(Math.abs(front[0] - T[0]) < 1e-9 && front[2] > T[2], `heading 0 sits on +z: ${front}`);
+  assert.ok(at(45, 0)[0] > T[0], 'positive heading swings toward +x');
+
+  // and it is a sphere: every framing is `distance` from the target
+  for (const [h, p] of [[0, 0], [31.5, 17.2], [-120, -40], [200, 80]]) {
+    const [x, y, z] = eyePosition({ heading: h, pitch: p, distance: 10 }, T);
+    const d = Math.hypot(x - T[0], y - T[1], z - T[2]);
+    assert.ok(Math.abs(d - 10) < 1e-9, `heading ${h} pitch ${p} is off the sphere: ${d}`);
+  }
 });
 
 test('the copied camera block is the line a koan module wants', () => {
-  const line = cameraBlock({ distance: 11.5, azimuth: 0.55, polar: 1.27 }, [0.4, 1.8, -1]);
-  assert.equal(line, 'camera: { distance: 11.5, target: [0.4, 1.8, -1], azimuth: 0.55, polar: 1.27 },');
+  const line = cameraBlock({ distance: 11.5, heading: 31.5, pitch: 17.2 }, [0.4, 1.8, -1]);
+  assert.equal(line, 'camera: { distance: 11.5, target: [0.4, 1.8, -1], heading: 31.5, pitch: 17.2 },');
 });
 
 test('a framing outside the rig envelope copies the widened bounds with it', () => {
-  // k35's trap: distance 5.5 and polar 1.5 both sit outside the stock
+  // k35's trap: distance 5.5 and pitch 4.1 both sit outside the stock
   // envelope, so the framing holds on arrival and dies at the first scroll.
   // The block that needs bounds carries them rather than relying on memory.
-  const line = cameraBlock({ distance: 5.5, azimuth: -0.55, polar: 1.5 }, [0.4, 1.8, -1]);
+  const line = cameraBlock({ distance: 5.5, heading: -31.5, pitch: 4.1 }, [0.4, 1.8, -1]);
   assert.ok(line.includes('minDist: 4.5'), `widened near limit: ${line}`);
-  assert.ok(line.includes('maxPolar: 1.56'), `widened low limit: ${line}`);
+  assert.ok(line.includes('minPitch: 0.7'), `widened low limit: ${line}`);
   // a framing inside the envelope says nothing about bounds
-  const plain = cameraBlock({ distance: 11.5, azimuth: 0.55, polar: 1.27 }, [0, 1.1, 0]);
-  assert.ok(!/minDist|maxDist|minPolar|maxPolar/.test(plain), `no noise: ${plain}`);
+  const plain = cameraBlock({ distance: 11.5, heading: 31.5, pitch: 17.2 }, [0, 1.1, 0]);
+  assert.ok(!/minDist|maxDist|minPitch|maxPitch/.test(plain), `no noise: ${plain}`);
 });
 
 test('composing moves the framing and opens the envelope to hold it', () => {
   globalThis.addEventListener = globalThis.addEventListener || (() => {});
   const cam = new THREE.PerspectiveCamera();
   const rig = makeCameraRig(cam, fakeEl(), { target: [0, 1.1, 0], distance: 11.5 });
-  rig.setHome({ distance: 5.5, polar: 1.5 });
+  rig.setHome({ distance: 5.5, pitch: 4.1 });
   assert.equal(rig.home.distance, 5.5);
   assert.ok(rig.bounds.minDist <= 5.5, `envelope opened: ${rig.bounds.minDist}`);
-  assert.ok(rig.bounds.maxPolar >= 1.5, `envelope opened: ${rig.bounds.maxPolar}`);
+  assert.ok(rig.bounds.minPitch <= 4.1, `envelope opened: ${rig.bounds.minPitch}`);
 });
 
 test('a rig never writes through to the caller\'s target array', () => {

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { CASES, slugify } from '../src/koans/index.js';
 import { loadKoan, isStaged } from '../src/koans/registry.js';
-import { DEFAULT_HOME_DISTANCE } from '../src/camera.js';
+import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT, PAPER } from '../src/palette.js';
 import { DRAW_BUDGET } from '../src/budget.js';
 import { emitterCount } from '../src/audio/engine.js';
@@ -36,16 +36,9 @@ const STUB_AUDIO = () => {
   };
 };
 
-function rigCamera(mod, azimuth = null) {
-  const home = { distance: DEFAULT_HOME_DISTANCE, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27, ...(mod.camera || {}) };
-  const cam = new THREE.PerspectiveCamera(38, 1.78, 0.1, 200);
-  const [tx, ty, tz] = home.target;
-  const az = azimuth === null ? home.azimuth : azimuth;
-  const sp = Math.sin(home.polar), cp = Math.cos(home.polar);
-  cam.position.set(tx + home.distance * sp * Math.sin(az), ty + home.distance * cp, tz + home.distance * sp * Math.cos(az));
-  cam.lookAt(tx, ty, tz);
-  cam.updateMatrixWorld(true);
-  return cam;
+function rigCamera(mod, heading = null) {
+  return sharedRig(mod.camera || {},
+    { far: 200, ...(heading === null ? {} : { heading }) });
 }
 
 // THE THREE SILENT CASES. Not an oversight — an editorial choice, pinned in
@@ -99,7 +92,16 @@ for (const entry of staged) {
       const c = mod.camera;
       assert.ok(c.distance > 3 && c.distance < 40, `camera distance ${c.distance}`);
       assert.equal(c.target.length, 3);
-      assert.ok(c.polar > 0.2 && c.polar < Math.PI - 0.2, `camera polar ${c.polar}`);
+      assert.ok(c.pitch > -78 && c.pitch < 78, `camera pitch ${c.pitch}`);
+      // A block still written in the OLD vocabulary would not error — the rig
+      // would ignore the unknown keys and quietly frame the case at the stock
+      // heading and pitch, which is a composition silently thrown away. The
+      // degrees are also an order of magnitude larger than the radians they
+      // replaced, so a value left unconverted reads as a wild angle, not a
+      // wrong one: pitch 1.27 is very nearly level.
+      for (const dead of ['azimuth', 'polar', 'minPolar', 'maxPolar', 'azimuthRange']) {
+        assert.equal(c[dead], undefined, `${mod.slug} still names ${dead} — heading/pitch degrees now`);
+      }
     }
 
     // ---- it builds, with no audio and no camera -------------------------

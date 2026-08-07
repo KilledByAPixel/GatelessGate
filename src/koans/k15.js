@@ -59,7 +59,7 @@ export default {
   // thins the drift layer accordingly (src/audio/music.js), which is exactly
   // what a page that just gained two voices wants.
   ambience: ['wind:0.20:pine', 'gate', 'furin', 'furin', 'music'],
-  camera: { distance: 11.0, target: [0.6, 1.6, -0.8], azimuth: 0.50, polar: 1.25 },
+  camera: { distance: 11.0, target: [0.6, 1.6, -0.8], heading: 28.6, pitch: 18.4 },
 
   build(ctx) {
     const { audio, input } = ctx;

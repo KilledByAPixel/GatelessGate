@@ -31,7 +31,7 @@ export default {
   // read as surf on still water, so it's off (see makeWaterBed's comment in
   // synths.js). A tap on the pond still rings a drip.
   ambience: ['wind:0.12', 'music'],
-  camera: { distance: 11.5, target: [0.6, 1.2, -2.2], azimuth: 0.55, polar: 1.19 },
+  camera: { distance: 11.5, target: [0.6, 1.2, -2.2], heading: 31.5, pitch: 21.8 },
 
   build(ctx) {
     const { audio, input } = ctx;

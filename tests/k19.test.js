@@ -7,6 +7,7 @@ import { makeWildflowers } from '../src/kit/wildflowers.js';
 import { groundHeight } from '../src/kit/ground.js';
 import { ACCENT, ACCENT_DEEP, wash, WASH } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
+import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 
 // Case 19 has no object at its centre, so its two red seals are weather: the
 // harvest moon and the wildflowers along the verge — spring and autumn, the
@@ -17,20 +18,8 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 // slope stands in front of; blooms that grow in the middle of the road.
 
 // place a camera exactly where the case's own `camera` block puts it
-function rigCamera(azimuth = k19.camera.azimuth, aspect = 1.78) {
-  const c = k19.camera;
-  const cam = new THREE.PerspectiveCamera(38, aspect, 0.1, 100);
-  const [tx, ty, tz] = c.target;
-  const sp = Math.sin(c.polar), cp = Math.cos(c.polar);
-  cam.position.set(
-    tx + c.distance * sp * Math.sin(azimuth),
-    ty + c.distance * cp,
-    tz + c.distance * sp * Math.cos(azimuth),
-  );
-  cam.lookAt(tx, ty, tz);
-  cam.updateMatrixWorld(true);
-  return cam;
-}
+const rigCamera = (heading = k19.camera.heading, aspect = 1.78) =>
+  sharedRig(k19.camera, { heading, aspect });
 
 // ---- the case ---------------------------------------------------------------
 
@@ -88,8 +77,8 @@ test('NOTHING STANDS IN FRONT OF THE MOON, at any camera angle', () => {
   const ray = new THREE.Raycaster();
   ray.far = 300;
 
-  const RANGE = 0.9;                          // camera.js azimuthRange
-  for (const az of [-RANGE, -0.45, 0, 0.45, RANGE].map((d) => k19.camera.azimuth + d)) {
+  const RANGE = 51.5;                         // camera.js headingRange, degrees
+  for (const az of [-RANGE, -25.8, 0, 25.8, RANGE].map((d) => k19.camera.heading + d)) {
     const cam = rigCamera(az);
     for (let k = 0; k < 9; k++) {
       const p = moon.position.clone();
@@ -103,7 +92,7 @@ test('NOTHING STANDS IN FRONT OF THE MOON, at any camera angle', () => {
       ray.set(cam.position, dir.normalize());
       const blocker = ray.intersectObjects(root.scene.children, true)
         .find((h) => h.distance < len - 0.5 && h.object.name !== 'moon' && !h.object.userData.isOutline);
-      assert.ok(!blocker, `at azimuth ${az.toFixed(2)} the moon is occluded by ${blocker && blocker.object.name}`);
+      assert.ok(!blocker, `at heading ${az.toFixed(1)} the moon is occluded by ${blocker && blocker.object.name}`);
     }
   }
 });
@@ -114,7 +103,7 @@ test('the moon sits in frame, above the horizon, at the home angle', () => {
   const moon = root.scene.getObjectByName('moon');
   // narrow portrait is the worst case for a moon placed off to one side
   for (const aspect of [1.78, 1.30, 0.80]) {
-    const cam = rigCamera(k19.camera.azimuth, aspect);
+    const cam = rigCamera(k19.camera.heading, aspect);
     const v = moon.position.clone().project(cam);
     assert.ok(Math.abs(v.x) < 0.85, `moon x in frame at aspect ${aspect}, got ${v.x.toFixed(2)}`);
     assert.ok(v.y > 0 && v.y < 0.85, `moon sits high but not on the rim, got ${v.y.toFixed(2)}`);

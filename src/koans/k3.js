@@ -34,7 +34,7 @@ const ID = 3;
 // each other was the obvious first staging and it was wrong: the case is not a
 // confrontation, it is a copy. Facing the same way, the two silhouettes make the
 // same shape at two sizes, which is the picture. It also puts both gestures in
-// the screen plane at the home azimuth, so neither arm is foreshortened.
+// the screen plane at the home heading, so neither arm is foreshortened.
 const FACING = 0.55;
 const RIGHT = { x: Math.cos(FACING), z: -Math.sin(FACING) };   // where the sleeves point
 
@@ -144,12 +144,12 @@ export default {
   ambience: ['wind:0.12', 'music'],
   // Closer and lower than the standard diorama framing. The subject of this one
   // is two marks a few centimetres long; at the default distance they are specks
-  // in a meadow. The azimuth is nudged a little off the sleeves' bearing so that
+  // in a meadow. The heading is nudged a little off the sleeves' bearing so that
   // Gutei's staff never lines up with his own raised finger anywhere in the
   // drag range.
-  // Lifted off the deck: at polar 1.30 the lens sat down among the grass tips and
+  // Lifted off the deck: at pitch 15.5 the lens sat down among the grass tips and
   // both figures were shot through a screen of blades.
-  camera: { distance: 9.6, target: [0.33, 1.25, -0.05], azimuth: 0.72, polar: 1.18 },
+  camera: { distance: 9.6, target: [0.33, 1.25, -0.05], heading: 41.3, pitch: 22.4 },
 
   build(ctx) {
     const { audio, input } = ctx;

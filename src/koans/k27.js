@@ -37,7 +37,7 @@ export default {
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.18', 'music'],
-  camera: { distance: 13.0, target: [0.4, 2.2, -1.4], azimuth: 0.55, polar: 1.18 },
+  camera: { distance: 13.0, target: [0.4, 2.2, -1.4], heading: 31.5, pitch: 22.4 },
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -76,7 +76,7 @@ export default {
     oakRoot.position.set(TREE.x, 0, TREE.z);
     // Turn the hero limb AWAY from the home lens (Frank: "what's going on with
     // the weird tree branch?"). Seed 27 grows its long low bough at local
-    // azimuth 2.50, which the home camera (azimuth 0.55) saw end-on: a bare
+    // bearing 2.50 rad, which the home camera (heading 31.5) saw end-on: a bare
     // foreshortened limb with a knuckle, jutting at the hall like an arm. At
     // this yaw the bough reaches directly behind the crown, so from the whole
     // reachable arc the tree reads as one heavy mass over its trunk.

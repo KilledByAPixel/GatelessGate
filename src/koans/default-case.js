@@ -37,7 +37,7 @@ export function makeDefaultCase(id) {
     // Sat back and lifted, unlike a staged case. There is no subject here to
     // close in on, and the standard diorama framing put the lens at knee height
     // in the grass with whatever tree happened to be nearest filling the frame.
-    camera: { distance: 17, target: [0.6, 2.4, -2.0], azimuth: 0.62, polar: 1.16 },
+    camera: { distance: 17, target: [0.6, 2.4, -2.0], heading: 35.5, pitch: 23.5 },
 
     build(ctx) {
       const { audio } = ctx;

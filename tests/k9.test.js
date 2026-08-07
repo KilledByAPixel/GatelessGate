@@ -4,6 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import k9 from '../src/koans/k9.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
+import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 
 // Case 9 is staged as a DISCOVERY, not a product shot (Frank's note): the
 // colossus sits off at the left third against the mountain flank, and an
@@ -14,19 +15,7 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 
 // the shipped camera, at a square-ish book aspect (the reading pane's canvas
 // is narrower than the 1.78 test rig, which halves apparent x offsets)
-function shippedCamera(aspect = 1.0) {
-  const home = k9.camera;
-  const cam = new THREE.PerspectiveCamera(38, aspect, 0.1, 200);
-  const [tx, ty, tz] = home.target;
-  const sp = Math.sin(home.polar), cp = Math.cos(home.polar);
-  cam.position.set(
-    tx + home.distance * sp * Math.sin(home.azimuth),
-    ty + home.distance * cp,
-    tz + home.distance * sp * Math.cos(home.azimuth));
-  cam.lookAt(tx, ty, tz);
-  cam.updateMatrixWorld(true);
-  return cam;
-}
+const shippedCamera = (aspect = 1.0) => sharedRig(k9.camera, { aspect, far: 200 });
 
 function buildScene() {
   const ctx = fakeCtx();

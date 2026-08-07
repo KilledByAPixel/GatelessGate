@@ -5,6 +5,7 @@ import k12 from '../src/koans/k12.js';
 import { ACCENT } from '../src/palette.js';
 import { groundHeight } from '../src/kit/ground.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
+import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 
 // Zuigan on his ledge, calling himself. Two things this file guards, both of
 // them Frank's round-12 notes:
@@ -19,20 +20,7 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 //     and — the part that was wrong — a landed one must actually STOP.
 
 // a camera exactly where the case's own `camera` block puts it
-function rigCamera(aspect = 0.87) {
-  const c = k12.camera;
-  const cam = new THREE.PerspectiveCamera(38, aspect, 0.1, 100);
-  const [tx, ty, tz] = c.target;
-  const sp = Math.sin(c.polar), cp = Math.cos(c.polar);
-  cam.position.set(
-    tx + c.distance * sp * Math.sin(c.azimuth),
-    ty + c.distance * cp,
-    tz + c.distance * sp * Math.cos(c.azimuth),
-  );
-  cam.lookAt(tx, ty, tz);
-  cam.updateMatrixWorld(true);
-  return cam;
-}
+const rigCamera = (aspect = 0.87) => sharedRig(k12.camera, { aspect });
 
 const staged = () => {
   const root = k12.build(fakeCtx());

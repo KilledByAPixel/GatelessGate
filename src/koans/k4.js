@@ -29,7 +29,7 @@ export default {
   // not a hillside), and one quiet voice suits a case about a picture that
   // refuses to be added to — a chattering cluster would be too many opinions.
   ambience: ['wind:0.14', 'scroll', 'furin', 'music'],
-  camera: { distance: 9.0, target: [0.4, 1.7, -1.4], azimuth: 0.42, polar: 1.30 },
+  camera: { distance: 9.0, target: [0.4, 1.7, -1.4], heading: 24.1, pitch: 15.5 },
 
   build(ctx) {
     const { audio, input } = ctx;

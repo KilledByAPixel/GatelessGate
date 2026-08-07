@@ -28,7 +28,7 @@ export default {
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   // nothing here makes a sound but the wind, so the drift plays in full
   ambience: ['wind:0.30', 'music'],
-  camera: { distance: 10.0, target: [0.8, 0.8, 0.2], azimuth: 0.55, polar: 1.20 },
+  camera: { distance: 10.0, target: [0.8, 0.8, 0.2], heading: 31.5, pitch: 21.2 },
 
   build(ctx) {
     const { audio, input } = ctx;

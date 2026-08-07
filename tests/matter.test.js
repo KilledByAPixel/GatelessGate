@@ -4,6 +4,7 @@ import { loadKoan, isRegistered, isStaged } from '../src/koans/registry.js';
 import { CASES } from '../src/koans/index.js';
 import { PREFACE_SLUG, AFTERWORD_SLUG } from '../src/spine.js';
 import { buildHub } from '../src/intro.js';
+import { eyePosition } from '../src/camera.js';
 
 // THE MATTER NET.
 //
@@ -251,8 +252,7 @@ test('the afterword seats its meditator UNDER a tree, whatever the seed does', a
   // not shown". Measured against the rig's own eye for this page's camera.
   const [gx, , gz] = built.gateTarget;
   const cam = (await loadKoan(AFTERWORD_SLUG)).camera;
-  const ex = gx + cam.distance * Math.sin(cam.polar) * Math.sin(cam.azimuth);
-  const ez = gz + cam.distance * Math.sin(cam.polar) * Math.cos(cam.azimuth);
+  const [ex, , ez] = eyePosition(cam, built.gateTarget);
   const ax = gx - ex, az = gz - ez, len = Math.hypot(ax, az);
   const dx = mat.position.x - ex, dz = mat.position.z - ez;
   const lateral = Math.abs(dx * az - dz * ax) / len;

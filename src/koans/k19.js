@@ -47,13 +47,13 @@ export default {
   // Wider, and lower, than the standard diorama shot. This is a landscape, not
   // a tableau: the road has to have room to run away into the hills, and the
   // camera has to sit near enough to horizontal that there is sky above the
-  // ridge for the moon to stand in. polar 1.42 puts the horizon at roughly
+  // ridge for the moon to stand in. pitch 8.6 puts the horizon at roughly
   // three-fifths of the frame height, leaving a band of paper along the top.
   // The target sits off to the right of the two figures on purpose. Everything
   // near shifts left in frame with it while the moon, seventy units out, barely
   // moves at all — so the walkers end up low and left and the moon high and
   // right, instead of the two of them stacked up the centre line.
-  camera: { distance: 14.6, target: [1.5, 1.75, -1.3], azimuth: 0.42, polar: 1.42 },
+  camera: { distance: 14.6, target: [1.5, 1.75, -1.3], heading: 24.1, pitch: 8.6 },
 
   build(ctx) {
     const { audio, input } = ctx;

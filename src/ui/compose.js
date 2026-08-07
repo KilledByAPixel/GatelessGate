@@ -1,13 +1,14 @@
-import { toHeadingPitch, fromHeadingPitch, cameraBlock } from '../camera.js';
+import { cameraBlock } from '../camera.js';
 
 // COMPOSING A SHOT. A dev-mode block in the workbench that aims the current
 // page's camera live and then hands you the `camera:` line to paste into the
 // koan module.
 //
-// It speaks heading and pitch in DEGREES, not azimuth and polar in radians
-// (Frank: "it's in azimuth and polar instead of heading and pitch, and I would
-// expect that pitch zero would be horizontal"). The conversion is a pure pair
-// in camera.js; this file is the panel around it.
+// It speaks heading and pitch in degrees — and so, now, does the rig and every
+// koan's `camera:` block (Frank: "it's in azimuth and polar instead of heading
+// and pitch, and I would expect that pitch zero would be horizontal", then
+// later: rename them "so that lines up with our heading and pitch exactly").
+// This panel used to convert at its own edge; there is nothing left to convert.
 //
 // Two things make it a composing tool rather than six number boxes:
 //
@@ -98,12 +99,8 @@ export function makeCompose({ getRig }) {
   function push(key, v) {
     const rig = getRig();
     if (!rig) return;
-    if (key === 'heading' || key === 'pitch') {
-      const hp = toHeadingPitch(rig.home);
-      hp[key] = v;
-      rig.setHome(fromHeadingPitch(hp));
-    } else if (key === 'distance') {
-      rig.setHome({ distance: v });
+    if (key === 'heading' || key === 'pitch' || key === 'distance') {
+      rig.setHome({ [key]: v });
     } else {
       const t = rig.target();
       t[{ tx: 0, ty: 1, tz: 2 }[key]] = v;
@@ -118,10 +115,9 @@ export function makeCompose({ getRig }) {
     const rig = getRig();
     el.style.opacity = rig ? '' : '0.4';
     if (!rig) return;
-    const hp = toHeadingPitch(rig.home);
     const t = rig.target();
     const now = {
-      heading: hp.heading, pitch: hp.pitch, distance: rig.home.distance,
+      heading: rig.home.heading, pitch: rig.home.pitch, distance: rig.home.distance,
       tx: t[0], ty: t[1], tz: t[2],
     };
     for (const f of FIELDS) {

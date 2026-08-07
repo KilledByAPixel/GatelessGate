@@ -29,7 +29,7 @@ const ID = 23;
 // the story (he pulls, it does not come) is what the tap is for.
 //
 // The pair stand along bearing 2.12 from each other — square to the middle of
-// the drag range for home azimuth 0.55, k2's rule — so E-myo never eclipses
+// the drag range for home heading 31.5, k2's rule — so E-myo never eclipses
 // the stone anywhere in the orbit (min separation ~5 degrees, at the far right
 // of the drag).
 const TRAIL = { from: [1.6, 9], to: [-3.2, -20], width: 1.35, wander: 1.85 };
@@ -69,7 +69,7 @@ export default {
   // 0.4-unit stack on a half-unit stone. Numbers baked from the staged
   // positions — stone (0.09, -0.81), E-myo (-1.08, -0.09) — with the target
   // biased toward the bundle and lifted to the line between his chest and it.
-  camera: { distance: 9.6, target: [-0.3, 0.92, -0.6], azimuth: 0.55, polar: 1.22 },
+  camera: { distance: 9.6, target: [-0.3, 0.92, -0.6], heading: 31.5, pitch: 20.1 },
 
   build(ctx) {
     const { audio, input } = ctx;

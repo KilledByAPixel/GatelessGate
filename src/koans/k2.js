@@ -25,7 +25,8 @@ const ID = 2;
 //
 // AND THEY ARE STRUNG ALONG ONE LINE, at bearing ~2.12. That is deliberate and
 // it is the whole reason this staging holds: the rig lets the viewer drag from
-// azimuth -0.35 to 1.45, so ANY two figures whose mutual bearing falls inside
+// heading -20 to 83 degrees (bearing -0.35 to 1.45 rad), so ANY two figures
+// whose mutual bearing falls inside
 // that span will eclipse each other somewhere in the drag. 2.12 is square to
 // the middle of it, which puts every pair permanently off that span. Arranged
 // by eye instead, the monks sat level with the fox in z and one of them wiped
@@ -57,7 +58,7 @@ export default {
   // sat almost on the fox: the rock mass filled the top of the frame, Hyakujo was
   // cropped at the edge, and the encounter — a fox and a master regarding each
   // other — had no room to read as an encounter at all.
-  camera: { distance: 14.5, target: [0.1, 1.35, -2.2], azimuth: 0.55, polar: 1.30 },
+  camera: { distance: 14.5, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 15.5 },
 
   build(ctx) {
     const { audio, input } = ctx;

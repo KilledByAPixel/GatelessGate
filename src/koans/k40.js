@@ -53,7 +53,7 @@ export default {
   // Closer than the standard shot: the thing this case turns on is 0.55 units
   // tall, and the courtyard framing loses it. Target height splits the
   // difference between the vase and the standing figures.
-  camera: { distance: 10.8, target: [1.1, 1.0, -0.5], azimuth: 0.5, polar: 1.28 },
+  camera: { distance: 10.8, target: [1.1, 1.0, -0.5], heading: 28.6, pitch: 16.7 },
 
   build(ctx) {
     const { audio, input } = ctx;

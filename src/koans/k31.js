@@ -36,7 +36,7 @@ export default {
   // "reply."
   ambience: ['wind:0.20', 'stall', 'furin', 'music'],
   mood: 'yo',
-  camera: { distance: 10.4, target: [0.7, 1.3, -0.2], azimuth: 0.55, polar: 1.25 },
+  camera: { distance: 10.4, target: [0.7, 1.3, -0.2], heading: 31.5, pitch: 18.4 },
 
   build(ctx) {
     const { audio, input } = ctx;

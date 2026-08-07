@@ -8,6 +8,7 @@ import { composeWorld } from '../src/kit/scenery.js';
 import { makeGrassField } from '../src/kit/grassfield.js';
 import { groundHeight } from '../src/kit/ground.js';
 import k28 from '../src/koans/k28.js';
+import { eyePosition } from '../src/camera.js';
 
 test('scatterPoints respects keepouts and stays in the annulus', () => {
   const keepout = [{ x: 0, z: 0, r: 6 }, { x: 10, z: 0, r: 3 }];
@@ -91,24 +92,19 @@ test('lantern firebox is a truly open chamber — no interior box, candle inside
 
 test('case 28\'s flame is visible from the case\'s own home camera', () => {
   // Fix round 1 measured band overlap; round 2 asserts the thing Frank
-  // actually asked for — an unobstructed SIGHT-LINE. The home camera pose is
-  // reproduced from the rig formula (camera.js makeCameraRig: target +
-  // distance * (sinφ·sinθ, cosφ, sinφ·cosθ) — same disclosed
-  // reproduce-the-formula tradeoff the roof-rim test below uses), and a ray
-  // from there to the flame must reach it before any lantern stone, roof or
-  // veranda timber. Derived from k28's own build() and camera block, so
+  // actually asked for — an unobstructed SIGHT-LINE. The home camera pose comes
+  // from the rig's own eyePosition rather than a reproduced copy of its trig
+  // (the disclosed reproduce-the-formula tradeoff the roof-rim test below still
+  // carries), and a ray from there to the flame must reach it before any
+  // lantern stone, roof or veranda timber. Derived from k28's own build() and
+  // camera block, so
   // either file drifting out from under the other is caught here, not by eye.
   const built = k28.build({ audio: null, input: { onTap: () => {} } });
   const flame = built.scene.getObjectByName('flame');
   assert.ok(flame, 'k28 builds a flame mesh');
   built.scene.updateMatrixWorld(true);
 
-  const { distance, target, azimuth, polar } = k28.camera;
-  const sp = Math.sin(polar), cp = Math.cos(polar);
-  const cam = new THREE.Vector3(
-    target[0] + distance * sp * Math.sin(azimuth),
-    target[1] + distance * cp,
-    target[2] + distance * sp * Math.cos(azimuth));
+  const cam = new THREE.Vector3(...eyePosition(k28.camera, k28.camera.target));
 
   const fpos = flame.getWorldPosition(new THREE.Vector3());
   const ray = new THREE.Raycaster(cam, fpos.clone().sub(cam).normalize());

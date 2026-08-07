@@ -40,7 +40,7 @@ export default {
   // Sat back and levelled off: the closer, higher shot looked DOWN on the monks,
   // which turns a robed figure into a cone. Target sits between the oak and the
   // pair so both carry the frame.
-  camera: { distance: 16, target: [0.7, 1.9, -1.6], azimuth: 0.5, polar: 1.36 },
+  camera: { distance: 16, target: [0.7, 1.9, -1.6], heading: 28.6, pitch: 12.1 },
 
   build(ctx) {
     const { audio, input } = ctx;

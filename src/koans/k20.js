@@ -63,7 +63,7 @@ export default {
   ambience: ['wind:0.22:pine', 'water:0.55', 'music'],
   // A low lens: the camera sits near the grass and looks out past the two of
   // them to open water, so the upper frame is ocean dissolving into paper.
-  camera: { distance: 12.0, target: [0.9, 1.15, 0.2], azimuth: 0.35, polar: 1.38 },
+  camera: { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10.9 },
 
   build(ctx) {
     const { audio, input } = ctx;

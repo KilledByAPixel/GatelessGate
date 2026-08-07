@@ -29,7 +29,7 @@ export default {
   // degrees off the middle of the frame with the subject shoved into a corner
   // (Frank: "the camera is not centred very well, it's way off to the side; it
   // should be centred more like where the flower is"). So the pivot IS the
-  // flower. The azimuth comes in from 0.55 for the same reason — a squarer look
+  // flower. The heading comes in from the stock 31.5 for the same reason — a squarer look
   // down the scene's own axis — and the distance goes out to hold the assembly
   // back off the lens, since pulling the target four units deeper pulls the
   // camera with it.
@@ -40,7 +40,7 @@ export default {
   // moving the target alone would have dragged the camera four units deeper
   // into the assembly and stood the front row in the lens, which is the trap
   // the arc's own comment warns about below.
-  camera: { distance: 15.26, target: [1.2, 1.1, -4.0], azimuth: 0.398, polar: 1.33 },
+  camera: { distance: 15.26, target: [1.2, 1.1, -4.0], heading: 22.8, pitch: 13.8 },
 
   build(ctx) {
     const { audio, input } = ctx;

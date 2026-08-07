@@ -34,7 +34,7 @@ export default {
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.22', 'fist', 'music'],
-  camera: { distance: 10.8, target: [-0.2, 1.3, -0.6], azimuth: 0.55, polar: 1.25 },
+  camera: { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 18.4 },
 
   build(ctx) {
     const { audio, input } = ctx;

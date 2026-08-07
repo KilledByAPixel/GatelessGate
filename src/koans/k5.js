@@ -60,12 +60,12 @@ export default {
   ambience: ['wind:0.24:broadleaf'],   // exposed height — more wind than a garden gets
 
   // Nearly due south, deliberately: the branch reaches WEST over the gorge, so
-  // a south-east azimuth looks THROUGH the canopy and the man becomes a red
+  // a south-east heading looks THROUGH the canopy and the man becomes a red
   // sliver at its rim. From here the frame reads left to right — the gorge,
   // the man in profile over it, the limb carrying him back into the crown —
-  // and the polar sits a touch lower than house so the cliff face below the
+  // and the pitch sits a touch lower than house so the cliff face below the
   // lip is actually in shot, which is what makes the drop a drop.
-  camera: { distance: 13.5, target: [-4.0, 2.3, -1.6], azimuth: 0.10, polar: 1.30 },
+  camera: { distance: 13.5, target: [-4.0, 2.3, -1.6], heading: 5.7, pitch: 15.5 },
 
   build(ctx) {
     const { audio, input } = ctx;

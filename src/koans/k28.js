@@ -42,7 +42,7 @@ export default {
   // small everyday sound; a lone deep voice, occasional and quiet, suits the
   // night's hush far better than a chattering cluster would.
   ambience: ['wind:0.12', 'flame', 'cylinder', 'music'],
-  camera: { distance: 9.6, target: [0.6, 1.5, -1.2], azimuth: 0.52, polar: 1.26 },
+  camera: { distance: 9.6, target: [0.6, 1.5, -1.2], heading: 29.8, pitch: 17.8 },
 
   build(ctx) {
     const { audio, input } = ctx;

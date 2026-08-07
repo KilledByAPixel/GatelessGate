@@ -5,6 +5,7 @@ import k47 from '../src/koans/k47.js';
 import { bySlug } from '../src/koans/index.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT, PAPER } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
+import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 
 // Case 47 is almost pure composition — one road, three barriers across it, a
 // walker between the first and the second — so what can go quietly wrong is
@@ -17,20 +18,8 @@ const SEAL = new Set([ACCENT, ACCENT_DEEP, ACCENT_LIGHT]
   .map((c) => new THREE.Color(c).getHexString()));
 
 // place a camera exactly where the case's own `camera` block puts it
-function rigCamera(azimuth = k47.camera.azimuth, aspect = 1.78) {
-  const c = k47.camera;
-  const cam = new THREE.PerspectiveCamera(38, aspect, 0.1, 100);
-  const [tx, ty, tz] = c.target;
-  const sp = Math.sin(c.polar), cp = Math.cos(c.polar);
-  cam.position.set(
-    tx + c.distance * sp * Math.sin(azimuth),
-    ty + c.distance * cp,
-    tz + c.distance * sp * Math.cos(azimuth),
-  );
-  cam.lookAt(tx, ty, tz);
-  cam.updateMatrixWorld(true);
-  return cam;
-}
+const rigCamera = (heading = k47.camera.heading, aspect = 1.78) =>
+  sharedRig(k47.camera, { heading, aspect });
 
 // gates sorted by distance along the road: nearest (largest z) first
 function gatesByDepth(scene) {
@@ -175,7 +164,7 @@ test('the three lintels stack in frame at home, at every aspect', () => {
   root.scene.updateMatrixWorld(true);
   const gates = gatesByDepth(root.scene);
   for (const aspect of [1.78, 1.30, 0.80]) {
-    const cam = rigCamera(k47.camera.azimuth, aspect);
+    const cam = rigCamera(k47.camera.heading, aspect);
     let lastY = -Infinity;
     for (const [i, g] of gates.entries()) {
       const v = lintelTop(g).project(cam);
@@ -188,15 +177,15 @@ test('the three lintels stack in frame at home, at every aspect', () => {
 });
 
 test('the stack never collapses into one silhouette across the orbit', () => {
-  // At the azimuth where the camera crosses the road's axis the three centres
+  // At the heading where the camera crosses the road's axis the three centres
   // nearly coincide — there the near-largest size stepping must keep them
   // nested as three distinct frames (projected width ratio); everywhere else
-  // the centres themselves must separate. Checked at home +-0.5 as staged.
+  // the centres themselves must separate. Checked at home +-29 degrees as staged.
   const root = k47.build(fakeCtx());
   root.scene.updateMatrixWorld(true);
   const gates = gatesByDepth(root.scene);
-  for (const daz of [-0.5, -0.25, 0, 0.25, 0.5]) {
-    const cam = rigCamera(k47.camera.azimuth + daz);
+  for (const daz of [-28.6, -14.3, 0, 14.3, 28.6]) {
+    const cam = rigCamera(k47.camera.heading + daz);
     const proj = gates.map((g) => {
       const c = lintelTop(g).project(cam);
       // post-to-post width on screen
@@ -211,7 +200,7 @@ test('the stack never collapses into one silhouette across the orbit', () => {
       const sep = Math.hypot(proj[a].c.x - proj[b].c.x, proj[a].c.y - proj[b].c.y);
       const ratio = proj[a].hw / proj[b].hw;
       assert.ok(sep > 0.25 || ratio > 1.3,
-        `az ${(k47.camera.azimuth + daz).toFixed(2)}: gates ${a + 1}/${b + 1} sep=${sep.toFixed(2)} ratio=${ratio.toFixed(2)} — one silhouette`);
+        `heading ${(k47.camera.heading + daz).toFixed(1)}: gates ${a + 1}/${b + 1} sep=${sep.toFixed(2)} ratio=${ratio.toFixed(2)} — one silhouette`);
     }
   }
 });

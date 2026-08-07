@@ -6,6 +6,7 @@ import { addOutlines } from '../src/render/outlines.js';
 import k46 from '../src/koans/k46.js';
 import { ACCENT } from '../src/palette.js';
 import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
+import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 
 const ACCENT_HEX = new THREE.Color(ACCENT).getHexString();
 
@@ -28,18 +29,7 @@ function inkBox(root) {
 
 // A camera standing exactly where the case's rig block puts it (camera.js math,
 // main.js lens: fov 38).
-function rigCamera({ azimuth = k46.camera.azimuth, polar = k46.camera.polar, aspect = 1.4, distance = k46.camera.distance } = {}) {
-  const cam = new THREE.PerspectiveCamera(38, aspect, 0.1, 100);
-  const [tx, ty, tz] = k46.camera.target;
-  const sp = Math.sin(polar), cp = Math.cos(polar);
-  cam.position.set(
-    tx + distance * sp * Math.sin(azimuth),
-    ty + distance * cp,
-    tz + distance * sp * Math.cos(azimuth));
-  cam.lookAt(tx, ty, tz);
-  cam.updateMatrixWorld(true);
-  return cam;
-}
+const rigCamera = ({ aspect = 1.4, ...shot } = {}) => sharedRig(k46.camera, { aspect, ...shot });
 
 const monksOf = (scene) => {
   const out = [];
@@ -112,12 +102,12 @@ test('module shape matches the koan contract', () => {
   assert.ok(Array.isArray(k46.ambience) && k46.ambience.length > 0);
   assert.equal(typeof k46.build, 'function');
 
-  // the one vertical composition: a high orbit pivot, and a polar window the
-  // stock rig (minPolar 0.9) could never reach
+  // the one vertical composition: a high orbit pivot, and a pitch window the
+  // stock rig (maxPitch 38.5) could never reach
   const c = k46.camera;
   assert.ok(c.target[1] > 4 && c.target[1] < 6.5, `orbit pivot high on the mast, got ${c.target[1]}`);
-  assert.ok(c.minPolar < 0.9, 'must open the stock polar floor to look down the drop');
-  assert.ok(c.maxPolar <= 1.45 && c.maxPolar > c.polar, 'and still clamp above the horizon');
+  assert.ok(c.maxPitch > 38.5, 'must open the stock pitch ceiling to look down the drop');
+  assert.ok(c.minPitch >= 7 && c.minPitch < c.pitch, 'and still clamp above the horizon');
   assert.ok(c.maxDist >= 16, 'the whole mast has to fit in frame when wheeled out');
   assert.ok(c.distance <= c.maxDist && c.distance >= 7);
 });
@@ -229,12 +219,12 @@ test('the framing holds: sitter and watchers land in NDC at the home angles', ()
     });
   }
 
-  // the whole drag range keeps the subject: at the polar floor the lens climbs
+  // the whole drag range keeps the subject: at the pitch ceiling the lens climbs
   // above the cap, at the ceiling it sinks almost level with him
-  for (const polar of [k46.camera.minPolar, k46.camera.polar, k46.camera.maxPolar]) {
-    const v = head.clone().project(rigCamera({ polar, aspect: 0.7 }));
+  for (const pitch of [k46.camera.minPitch, k46.camera.pitch, k46.camera.maxPitch]) {
+    const v = head.clone().project(rigCamera({ pitch, aspect: 0.7 }));
     assert.ok(Math.abs(v.y) < 0.95 && Math.abs(v.x) < 0.5,
-      `sitter stays framed at polar ${polar}: ${v.x.toFixed(2)},${v.y.toFixed(2)}`);
+      `sitter stays framed at pitch ${pitch}: ${v.x.toFixed(2)},${v.y.toFixed(2)}`);
   }
 
   // and the vertical actually reads: at home, seat above centre, pole base near
@@ -246,7 +236,7 @@ test('the framing holds: sitter and watchers land in NDC at the home angles', ()
   assert.ok(baseV.y < -0.55 && baseV.y > -1.05, `the base hangs near the bottom edge: ${baseV.y.toFixed(2)}`);
 });
 
-test('clear paper behind the sitter at the home azimuth — no ridge, no tree', () => {
+test('clear paper behind the sitter at the home heading — no ridge, no tree', () => {
   const built = k46.build(fakeCtx());
   const scene = built.scene;
   scene.updateMatrixWorld(true);
@@ -263,8 +253,8 @@ test('clear paper behind the sitter at the home azimuth — no ridge, no tree', 
   const ray = new THREE.Raycaster();
   ray.far = 300;
 
-  for (const polar of [k46.camera.polar, k46.camera.maxPolar]) {
-    const cam = rigCamera({ polar });
+  for (const pitch of [k46.camera.pitch, k46.camera.minPitch]) {
+    const cam = rigCamera({ pitch });
     for (const p of samples) {
       const dir = p.clone().sub(cam.position);
       const dist = dir.length();
@@ -273,7 +263,7 @@ test('clear paper behind the sitter at the home azimuth — no ridge, no tree', 
         .filter((h) => h.distance > dist + 0.6 && !h.object.userData.isOutline);
       for (const h of beyond) {
         assert.ok(!['mountain', 'tree', 'forest'].includes(h.object.name),
-          `at polar ${polar} the red sits on "${h.object.name}" instead of paper`);
+          `at pitch ${pitch} the red sits on "${h.object.name}" instead of paper`);
       }
     }
   }

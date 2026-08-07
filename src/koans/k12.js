@@ -82,7 +82,7 @@ export default {
   // with a little to spare. maxDist goes out with it, or the rig would clamp
   // the shot it was given.
   camera: {
-    distance: 16.1, target: [0.9, 1.3, 0.35], azimuth: 0.39, polar: 1.16,
+    distance: 16.1, target: [0.9, 1.3, 0.35], heading: 22.3, pitch: 23.5,
     minDist: 11, maxDist: 21,
   },
 

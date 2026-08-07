@@ -65,10 +65,10 @@ export default {
   // setWaterSwell below; the wind goes pine like every coast in the book.
   ambience: ['wind:0.26:pine', 'water:0.55', 'stroke', 'music'],
   mood: 'yo',      // it ends in the open, in daylight, with a line being drawn
-  // Lowered a touch when the sea arrived (polar 1.23 -> 1.31, target down):
+  // Lowered a touch when the sea arrived (pitch 19.5 -> 14.9, target down):
   // the case is a field scene no longer — the upper frame belongs to the
   // eastern sea dissolving into paper, k20's own low-lens lesson.
-  camera: { distance: 11.2, target: [0.8, 1.45, -0.4], azimuth: 0.55, polar: 1.31 },
+  camera: { distance: 11.2, target: [0.8, 1.45, -0.4], heading: 31.5, pitch: 14.9 },
 
   build(ctx) {
     const { audio, input } = ctx;

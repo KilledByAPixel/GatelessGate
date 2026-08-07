@@ -26,7 +26,7 @@ export default {
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.20:broadleaf', 'birds', 'music'],
   mood: 'yo',      // the brightest case in the book: it is literally springtime
-  camera: { distance: 11.0, target: [0.8, 1.6, -0.4], azimuth: 0.55, polar: 1.21 },
+  camera: { distance: 11.0, target: [0.8, 1.6, -0.4], heading: 31.5, pitch: 20.7 },
 
   build(ctx) {
     const { audio, input } = ctx;

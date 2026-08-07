@@ -6,6 +6,48 @@ import { noise1 } from './util/noise.js';
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
+// ---------------------------------------------------------------------------
+// HEADING AND PITCH, IN DEGREES — the one vocabulary
+// ---------------------------------------------------------------------------
+// A camera on a sphere around a target is spherical-coordinate maths, and this
+// file used to say so out loud: every koan's `camera:` block named an `azimuth`
+// and a `polar` in radians, where polar is measured DOWN FROM STRAIGHT ABOVE so
+// level is 1.5708 and a SMALLER number means the lens is HIGHER. Nobody composes
+// a shot that way (Frank: "I would expect that pitch zero would be horizontal"),
+// so the Compose panel spoke heading and pitch in degrees and converted at the
+// edge — which left the panel and the file naming the same shot with different
+// numbers, and a composer reading 17.2 off the panel to type 1.27 into the file.
+//
+// Now there is one vocabulary and the panel's numbers ARE the file's numbers:
+//   heading — where you stand around the subject; 0 is square in front of it
+//             (on +z, looking toward -z), positive swings left
+//   pitch   — 0 is LEVEL with the target, positive looks DOWN on it from
+//             above, negative looks up from below
+// Both in degrees, everywhere the rig is authored, driven, or read back. The
+// radians live inside eyePosition and nowhere else.
+//
+// (The free cam at the bottom of this file keeps its own yaw/pitch in RADIANS,
+// in Three's rotation convention where positive pitch looks UP. It is a flier,
+// not an orbit, and it writes camera.rotation directly — different job, and the
+// opposite sign. Don't cross the two.)
+const DEG = 180 / Math.PI;
+
+// Where the lens ends up: the one place the spherical maths lives. The rig
+// places the camera with it, and the case tests that ask "can you see the moon
+// from the home framing" build their probe camera with it too, rather than each
+// re-deriving the same three lines of trig — nine copies of which had to be
+// found and converted by hand when the vocabulary changed.
+export function eyePosition({ heading, pitch, distance }, target) {
+  const a = heading / DEG;
+  const p = (90 - pitch) / DEG;                  // back to polar-from-vertical
+  const sp = Math.sin(p), cp = Math.cos(p);
+  return [
+    target[0] + distance * sp * Math.sin(a),
+    target[1] + distance * cp,
+    target[2] + distance * sp * Math.cos(a),
+  ];
+}
+
 // The distance a case gets when it names no `camera` of its own — main.js's
 // buildKoan passes this as the `distance` in its makeRig({...}) call, which
 // is NOT the same thing as makeCameraRig's own `distance = 11` default just
@@ -32,15 +74,15 @@ export const DEFAULT_HOME_DISTANCE = 11.5;
 // dragging, art-directed per case long before this existed. Staying inside them
 // means the drift cannot push the camera through a tree or under the ground in
 // any of the forty-nine scenes, with nothing to check by hand. The amounts are
-// deliberately modest — half the drag range in azimuth, a tenth of a radian in
-// polar, a couple of units of breath in distance. A bit more movement than
-// sitting still, not a fairground ride.
+// deliberately modest — half the drag range in heading, six degrees of pitch, a
+// couple of units of breath in distance. A bit more movement than sitting still,
+// not a fairground ride.
 export function wanderGoal(t, home, bounds) {
   const swing = (period, seed) => noise1(t / period, seed) * 2 - 1;   // -1..1
   return {
-    azimuth: clamp(home.azimuth + swing(37, 11) * bounds.azimuthRange * 0.5,
-      home.azimuth - bounds.azimuthRange, home.azimuth + bounds.azimuthRange),
-    polar: clamp(home.polar + swing(53, 23) * 0.1, bounds.minPolar, bounds.maxPolar),
+    heading: clamp(home.heading + swing(37, 11) * bounds.headingRange * 0.5,
+      home.heading - bounds.headingRange, home.heading + bounds.headingRange),
+    pitch: clamp(home.pitch + swing(53, 23) * 5.7, bounds.minPitch, bounds.maxPitch),
     distance: clamp(home.distance + swing(41, 37) * 2, bounds.minDist, bounds.maxDist),
   };
 }
@@ -48,19 +90,22 @@ export function wanderGoal(t, home, bounds) {
 // The stock envelope a case gets if it names no limits of its own. One copy:
 // makeCameraRig defaults to it, and cameraBlock measures a composed framing
 // against it to decide whether that framing has to carry limits of its own.
-export const RIG_BOUNDS = { minDist: 7, maxDist: 16, minPolar: 0.9, maxPolar: 1.45 };
+// The pitch pair reads backwards from the polar pair it replaced — a HIGH lens
+// is a HIGH pitch — so the old floor (polar 0.9) is now the ceiling and vice
+// versa; the degrees are the old radians rounded to something a person can hold.
+export const RIG_BOUNDS = { minDist: 7, maxDist: 16, minPitch: 7, maxPitch: 38.5 };
 
 export function makeCameraRig(camera, el, {
   target = [0, 1.1, 0],
   distance = 11,
-  azimuth = 0.5,
-  polar = 1.25,
-  minPolar = RIG_BOUNDS.minPolar,
-  maxPolar = RIG_BOUNDS.maxPolar,
-  azimuthRange = 0.9,
+  heading = 28.6,
+  pitch = 18.4,
+  minPitch = RIG_BOUNDS.minPitch,
+  maxPitch = RIG_BOUNDS.maxPitch,
+  headingRange = 51.5,
   minDist = RIG_BOUNDS.minDist,
   maxDist = RIG_BOUNDS.maxDist,
-  parallax = 0.045,
+  parallax = 2.6,
   damping = 4,
 } = {}) {
   // A COPY of the caller's target, never the caller's own array. A koan
@@ -69,13 +114,13 @@ export function makeCameraRig(camera, el, {
   // the case for the rest of the session — and the next visit would open on a
   // framing that exists in no file.
   target = [target[0], target[1], target[2]];
-  const home = { azimuth, polar, distance };
-  const goal = { azimuth, polar, distance };
-  const cur = { azimuth, polar, distance };
+  const home = { heading, pitch, distance };
+  const goal = { heading, pitch, distance };
+  const cur = { heading, pitch, distance };
   // The one copy of the envelope. The drag, the wheel and the drift all read
   // it here rather than closing over the arguments separately, so opening it
   // (Compose does) moves every clamp at once instead of three quarters of them.
-  const bounds = { azimuthRange, minPolar, maxPolar, minDist, maxDist };
+  const bounds = { headingRange, minPitch, maxPitch, minDist, maxDist };
   const mouse = { x: 0, y: 0 };
   let dragging = false, px = 0, py = 0;
   let wander = false, wanderTime = 0;
@@ -89,8 +134,11 @@ export function makeCameraRig(camera, el, {
     mouse.x = clamp((e.clientX / w) * 2 - 1, -1, 1);
     mouse.y = clamp((e.clientY / h) * 2 - 1, -1, 1);
     if (dragging) {
-      goal.azimuth = clamp(goal.azimuth - (e.clientX - px) * 0.005, home.azimuth - bounds.azimuthRange, home.azimuth + bounds.azimuthRange);
-      goal.polar = clamp(goal.polar - (e.clientY - py) * 0.005, bounds.minPolar, bounds.maxPolar);
+      // 0.29 deg/px — the 0.005 rad/px this dragged at before the vocabulary
+      // changed. Pitch takes the drag with the opposite sign to the polar it
+      // replaced: pulling the pointer DOWN lifts the lens, which is MORE pitch.
+      goal.heading = clamp(goal.heading - (e.clientX - px) * 0.29, home.heading - bounds.headingRange, home.heading + bounds.headingRange);
+      goal.pitch = clamp(goal.pitch + (e.clientY - py) * 0.29, bounds.minPitch, bounds.maxPitch);
       px = e.clientX; py = e.clientY;
     }
   };
@@ -116,16 +164,12 @@ export function makeCameraRig(camera, el, {
       Object.assign(goal, wanderGoal(wanderTime, home, bounds));
     }
     const k = 1 - Math.exp(-damping * dt);
-    cur.azimuth += (goal.azimuth + mouse.x * parallax - cur.azimuth) * k;
-    cur.polar += (goal.polar - mouse.y * parallax - cur.polar) * k;
+    cur.heading += (goal.heading + mouse.x * parallax - cur.heading) * k;
+    cur.pitch += (goal.pitch + mouse.y * parallax - cur.pitch) * k;
     cur.distance += (goal.distance - cur.distance) * k;
     const [tx, ty, tz] = target;
-    const sp = Math.sin(cur.polar), cp = Math.cos(cur.polar);
-    camera.position.set(
-      tx + cur.distance * sp * Math.sin(cur.azimuth),
-      ty + cur.distance * cp,
-      tz + cur.distance * sp * Math.cos(cur.azimuth)
-    );
+    const [ex, ey, ez] = eyePosition(cur, target);
+    camera.position.set(ex, ey, ez);
     camera.lookAt(tx, ty, tz);
   }
 
@@ -139,7 +183,7 @@ export function makeCameraRig(camera, el, {
   // first tick would have produced — just a frame earlier.
   update(0);
 
-  const state = () => ({ azimuth: cur.azimuth, polar: cur.polar, distance: cur.distance });
+  const state = () => ({ heading: cur.heading, pitch: cur.pitch, distance: cur.distance });
 
   function dispose() {
     el.removeEventListener?.('pointerdown', onPointerDown);
@@ -164,15 +208,15 @@ export function makeCameraRig(camera, el, {
   // silently is how a framing gets tuned to a number the rig will not hold.
   // What the bounds ended up as is readable, so the copied block can say so.
   function setHome(next) {
-    for (const k of ['azimuth', 'polar', 'distance']) {
+    for (const k of ['heading', 'pitch', 'distance']) {
       if (next[k] === undefined) continue;
       home[k] = next[k];
       goal[k] = next[k];
     }
     bounds.minDist = Math.min(bounds.minDist, home.distance);
     bounds.maxDist = Math.max(bounds.maxDist, home.distance);
-    bounds.minPolar = Math.min(bounds.minPolar, home.polar);
-    bounds.maxPolar = Math.max(bounds.maxPolar, home.polar);
+    bounds.minPitch = Math.min(bounds.minPitch, home.pitch);
+    bounds.maxPitch = Math.max(bounds.maxPitch, home.pitch);
   }
   const setTarget = (x, y, z) => { target[0] = x; target[1] = y; target[2] = z; };
 
@@ -181,32 +225,6 @@ export function makeCameraRig(camera, el, {
     setHome, setTarget, bounds,
     target: () => [target[0], target[1], target[2]],
   };
-}
-
-// ---------------------------------------------------------------------------
-// COMPOSING A SHOT: heading and pitch, in degrees
-// ---------------------------------------------------------------------------
-// The rig thinks in spherical coordinates because that is what places a camera
-// on a sphere around a target. Nobody composes a shot that way. `polar` is
-// measured DOWN FROM STRAIGHT ABOVE, so level is 1.5708 and a smaller number
-// means higher up — backwards from how anyone reads it (Frank: "I would expect
-// that pitch zero would be horizontal").
-//
-// So the workbench speaks heading and pitch, in degrees:
-//   heading — where you stand around the subject; 0 is square in front of it
-//             (on +z, looking toward -z), positive swings left
-//   pitch   — 0 is LEVEL with the target, positive looks DOWN on it from
-//             above, negative looks up from below
-// The file on disk keeps radians, because that is what makeCameraRig takes;
-// the conversion happens here, once, in a pair anyone can test.
-const DEG = 180 / Math.PI;
-
-export function toHeadingPitch({ azimuth, polar }) {
-  return { heading: azimuth * DEG, pitch: 90 - polar * DEG };
-}
-
-export function fromHeadingPitch({ heading, pitch }) {
-  return { azimuth: heading / DEG, polar: (90 - pitch) / DEG };
 }
 
 // The `camera:` block a koan module wants, as source text — the last step of
@@ -222,21 +240,26 @@ export function fromHeadingPitch({ heading, pitch }) {
 // already opened the live bounds to admit whatever is being composed, so
 // asking it whether the framing fits would always answer yes and the block
 // would omit the very limits it exists to carry.
+// The angles go out at ONE decimal, which is what the panel displays: a shot
+// read off the sliders and a shot pasted into a file are then the same number
+// on the page, which is the whole reason the vocabulary changed. A tenth of a
+// degree is 0.0017 rad — finer than the eye, and finer than a slider step.
 const r3 = (n) => +n.toFixed(3);
-export function cameraBlock({ distance, azimuth, polar }, target) {
+const r1 = (n) => +n.toFixed(1);
+export function cameraBlock({ distance, heading, pitch }, target) {
   const b = RIG_BOUNDS;
   const parts = [
     `distance: ${r3(distance)}`,
     `target: [${target.map(r3).join(', ')}]`,
-    `azimuth: ${r3(azimuth)}`,
-    `polar: ${r3(polar)}`,
+    `heading: ${r1(heading)}`,
+    `pitch: ${r1(pitch)}`,
   ];
   const extra = [];
   // a hair of margin, so the authored value is not sitting exactly on the rail
   if (distance < b.minDist) extra.push(`minDist: ${r3(Math.max(1, distance - 1))}`);
   if (distance > b.maxDist) extra.push(`maxDist: ${r3(distance + 1)}`);
-  if (polar < b.minPolar) extra.push(`minPolar: ${r3(Math.max(0.05, polar - 0.06))}`);
-  if (polar > b.maxPolar) extra.push(`maxPolar: ${r3(Math.min(Math.PI - 0.05, polar + 0.06))}`);
+  if (pitch < b.minPitch) extra.push(`minPitch: ${r1(Math.max(-87, pitch - 3.4))}`);
+  if (pitch > b.maxPitch) extra.push(`maxPitch: ${r1(Math.min(87, pitch + 3.4))}`);
   return `camera: { ${parts.concat(extra).join(', ')} },`;
 }
 

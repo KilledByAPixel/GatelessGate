@@ -27,7 +27,7 @@ export default {
   // voices for a case that is itself a small back-and-forth, given, taken,
   // given again.
   ambience: ['wind:0.18', 'rack', 'furin', 'music'],
-  camera: { distance: 9.2, target: [0.9, 1.15, 0.6], azimuth: 0.55, polar: 1.25 },
+  camera: { distance: 9.2, target: [0.9, 1.15, 0.6], heading: 31.5, pitch: 18.4 },
 
   build(ctx) {
     const { audio, input } = ctx;

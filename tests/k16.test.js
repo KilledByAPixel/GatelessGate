@@ -5,6 +5,7 @@ import k16 from '../src/koans/k16.js';
 import { makeBell } from '../src/kit/bell.js';
 import { ACCENT } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
+import { rigCamera as sharedRig, DEFAULT_HOME } from './helpers/rig-camera.js';
 
 // Case 16 is the daily summons: the bell sounds and the monastery turns toward
 // it. The things worth pinning here are the bonshō itself (a NEW kit prop with
@@ -174,22 +175,10 @@ test('two bells with the same seed and history land in the same pose', () => {
 // ---- the case ---------------------------------------------------------------
 
 // k16 ships without a `camera` block, so the app frames it with the default
-// diorama rig (src/main.js): distance 11.5, target [1.2, 1.35, 0.3],
-// azimuth 0.55, polar 1.27, and the user can drag ±0.9 of azimuth around home.
-const HOME = { distance: 11.5, target: [1.2, 1.35, 0.3], azimuth: 0.55, polar: 1.27 };
-function rigCamera(azimuth = HOME.azimuth, aspect = 1.78) {
-  const cam = new THREE.PerspectiveCamera(38, aspect, 0.1, 100);
-  const [tx, ty, tz] = HOME.target;
-  const sp = Math.sin(HOME.polar), cp = Math.cos(HOME.polar);
-  cam.position.set(
-    tx + HOME.distance * sp * Math.sin(azimuth),
-    ty + HOME.distance * cp,
-    tz + HOME.distance * sp * Math.cos(azimuth),
-  );
-  cam.lookAt(tx, ty, tz);
-  cam.updateMatrixWorld(true);
-  return cam;
-}
+// diorama rig — DEFAULT_HOME is that framing, kept beside the rig itself rather
+// than copied here — and the reader can drag ±51.5° of heading around home.
+const HOME = DEFAULT_HOME;
+const rigCamera = (heading = HOME.heading, aspect = 1.78) => sharedRig({}, { heading, aspect });
 
 test('module shape matches the koan contract', () => {
   assert.equal(k16.id, 16);
@@ -277,7 +266,7 @@ test('a held pointer cannot ring the bell without limit, though a genuine re-str
 
 test('the hall never stands between the camera and the bell across the orbit arc', () => {
   // The brief's staging trap: a tall prop behind the seal can eat it for half
-  // the orbit. The reachable arc is home ±0.9 (camera.js azimuthRange); across
+  // the orbit. The reachable arc is home ±51.5° (camera.js headingRange); across
   // all of it the hall must not occlude the bronze.
   const root = k16.build(fakeCtx());
   root.scene.updateMatrixWorld(true);
@@ -287,15 +276,15 @@ test('the hall never stands between the camera and the bell across the orbit arc
   const ray = new THREE.Raycaster();
   ray.far = 100;
 
-  for (const d of [-0.9, -0.45, 0, 0.45, 0.9]) {
-    const cam = rigCamera(HOME.azimuth + d);
+  for (const d of [-51.5, -25.8, 0, 25.8, 51.5]) {
+    const cam = rigCamera(HOME.heading + d);
     const dir = target.clone().sub(cam.position);
     const len = dir.length();
     ray.set(cam.position, dir.normalize());
     const blocker = ray.intersectObject(hall, true)
       .find((h) => h.distance < len - 0.3 && !h.object.userData.isOutline);
     assert.ok(!blocker,
-      `at azimuth ${(HOME.azimuth + d).toFixed(2)} the hall hides the bell (${blocker && blocker.object.name})`);
+      `at heading ${(HOME.heading + d).toFixed(1)} the hall hides the bell (${blocker && blocker.object.name})`);
   }
 });
 
@@ -306,7 +295,7 @@ test('the bell sits in frame at the home angle', () => {
   const p = body.getWorldPosition(new THREE.Vector3());
   // narrow portrait is the worst case for a seal placed right of centre
   for (const aspect of [1.78, 1.30, 0.80]) {
-    const v = p.clone().project(rigCamera(HOME.azimuth, aspect));
+    const v = p.clone().project(rigCamera(HOME.heading, aspect));
     assert.ok(Math.abs(v.x) < 0.7, `bell x in frame at aspect ${aspect}: ${v.x.toFixed(2)}`);
     assert.ok(Math.abs(v.y) < 0.7, `bell y in frame at aspect ${aspect}: ${v.y.toFixed(2)}`);
   }
