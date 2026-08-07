@@ -158,10 +158,17 @@ const PERIOD_RATIO = 1 / PHI;
 // real bell's re-strikes diminuendo, so the RIGHT fix teaches the force law
 // to track a decaying swing, not shrink the swing until the flaw is out of
 // earshot.
+//
+// tapKick 2.2 -> 1.0 — Frank's own retune, by eye, AFTER the force
+// normalisation above landed. Not the rejected 0.9 draft coming back: that
+// draft shrank the swing to hide a broken force law, and the objection was
+// to the diagnosis, not the amplitude. With the law fixed, a smaller kick
+// is just a smaller, properly-diminishing swing — a taste call, and his to
+// make ("the tap kick, reduce that to one rad/s").
 export const CYL_SWING = {
   cylDamping: 2 / 4.5,
   clapDamping: 2 / 4.5,
-  tapKick: 2.2,
+  tapKick: 1.0,
 };
 
 // WIND LEAN (rad): the equilibrium angle a full, steady gust settles each

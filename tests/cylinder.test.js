@@ -359,14 +359,28 @@ test('a decaying tap ring-down reports DECREASING force, not a column of 1.00s',
   // 1.0 (a wrong-but-plausible "fixed the peak, still saturates everywhere
   // else" implementation would fail this), and the sequence's own late
   // values must run meaningfully quieter than its early ones.
+  // AT A REFERENCE KICK, not the shipped one. This test guards the FORCE
+  // LAW, and the law's decay only shows across a long ring-down — several
+  // natural periods of re-strikes. Frank's ear-tuned tapKick (1.0 rad/s as
+  // of his harness pass) swings barely past GAP_ANGLE, giving half a dozen
+  // mid-scale, phase-noisy contacts: too short a sequence to judge a
+  // diminuendo, and not what this test is about. CYL_SWING is live-mutable
+  // by design (the harness writes it), so the test borrows that: pin the
+  // kick at the 2.2 the law was calibrated against, restore after.
+  const kick0 = CYL_SWING.tapKick;
+  CYL_SWING.tapKick = 2.2;
   const forces = [];
-  const f = makeCylinderChime({
-    seed: 20, phase: 0,
-    onStrike: (note, force) => forces.push(force),
-  });
-  f.setWindLevel(0);
-  f.ring(1);
-  run(f, 20);
+  try {
+    const f = makeCylinderChime({
+      seed: 20, phase: 0,
+      onStrike: (note, force) => forces.push(force),
+    });
+    f.setWindLevel(0);
+    f.ring(1);
+    run(f, 20);
+  } finally {
+    CYL_SWING.tapKick = kick0;
+  }
   assert.ok(forces.length >= 6, `too few re-strikes to judge a ring-down: ${forces.length}`);
 
   const saturated = forces.filter((v) => v > 0.98).length;
