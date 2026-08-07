@@ -5,7 +5,7 @@ import * as THREE from '../lib/three.module.js';
 import k39, { nextRed } from '../src/koans/k39.js';
 import { ACCENT } from '../src/palette.js';
 
-// Case 39's two rulings from Frank, pinned:
+// Case 39's three rulings from Frank, pinned:
 //
 //   1. "Make that pond less square-shaped — more organically shaped, kinda
 //      roundish." The water is a seeded blob now; what this file owns is that
@@ -14,6 +14,10 @@ import { ACCENT } from '../src/palette.js';
 //      disappears — so there's always exactly one red." The selection is the
 //      pure function `nextRed`; the scene tests hold the invariant through
 //      real taps, the full sinking, and the resurfacing reset.
+//   3. "Make it so you can only push the red stone." A grey stone holds — a
+//      knock, no sink — so the crossing dismantles point by point from the
+//      far end in. (nextRed keeps its general nearest-survivor form; taps
+//      simply can no longer reach the cases where it matters.)
 
 // ---- the pure red walk -----------------------------------------------------
 
@@ -148,16 +152,38 @@ test('case 39: exactly one red stone, starting at the far end of the line', () =
   assert.equal(root.fragment().red, 6);
 });
 
-test('case 39: sinking a plain stone leaves the red where it was', () => {
+test('case 39: a grey stone holds — it knocks, and nothing sinks', () => {
+  // Frank: "make it so you can only push the red stone." Someone else's
+  // phrase is perfectly load-bearing.
   const { root, tops, tap } = staged();
   root.update(1 / 60, 1);
   tap(2);
+  root.update(1 / 60, 2.8);              // long past SINK
+  assert.equal(root.fragment().sunk, 0, 'the grey stone did not go under');
   assert.equal(root.fragment().red, 6);
+  assert.equal(tops[2].parent.visible, true, 'it is still standing');
   assert.equal(tops[6].material.color.getHexString(), RED);
   assert.equal(redTops(tops), 1);
 });
 
-test('case 39: sinking the red hands it to the NEAREST survivor — one red all the way down', () => {
+test('case 39: the grey knock actually reaches the audio engine', () => {
+  const calls = [];
+  const ctx = fakeCtx();
+  ctx.audio = { knock: (o) => calls.push(['knock', o]), drip: (o) => calls.push(['drip', o]) };
+  const root = k39.build(ctx);
+  root.setCamera({});
+  root.update(1 / 60, 0);
+  const hits = [];
+  root.scene.traverse((o) => { if (o.name === 'stone-hit') hits.push(o); });
+  ctx.input.raycastFirst = (cam, objs) => (objs && objs[0] === hits[2]
+    ? { object: hits[2], point: new THREE.Vector3(), distance: 1 } : null);
+  ctx._taps.forEach((cb) => cb());
+  assert.equal(calls.length, 1, 'one answer per tap');
+  assert.equal(calls[0][0], 'knock', 'a stone that holds sounds like stone, not water');
+  assert.equal(root.fragment().sunk, 0);
+});
+
+test('case 39: only the red sinks, so the crossing dismantles from the far end in', () => {
   const { root, tops, tap } = staged();
   let t = 1;
   // THE HANDOVER WAITS FOR THE SINK. The red stays on the stone you touched
@@ -166,9 +192,6 @@ test('case 39: sinking the red hands it to the NEAREST survivor — one red all 
   // every tap here is followed by a step past SINK (1.1s) before reading.
   const sink = (i) => { tap(i); t += 1.6; root.update(1 / 60, t); };
 
-  sink(2);                               // plain stone: red stays on 6
-  assert.equal(root.fragment().red, 6);
-
   tap(6);                                // the red one, touched...
   assert.equal(root.fragment().red, 6, 'still red while it is on its way down');
   t += 1.6; root.update(1 / 60, t);       // ...and now under
@@ -176,19 +199,18 @@ test('case 39: sinking the red hands it to the NEAREST survivor — one red all 
   assert.equal(tops[5].material.color.getHexString(), RED);
   assert.equal(redTops(tops), 1, 'the red MOVED — it did not duplicate');
 
-  sink(5);                               // red again: 4 is next along the line
-  assert.equal(root.fragment().red, 4);
-  sink(4);                               // red again: 3 takes it (2 is already down)
-  assert.equal(root.fragment().red, 3);
-  assert.equal(redTops(tops), 1);
+  sink(3);                               // grey mid-line stone: it holds
+  assert.equal(root.fragment().sunk, 1, 'a grey stone cannot be pushed under');
+  assert.equal(root.fragment().red, 5);
 
-  sink(0);                               // plain: red stays on 3
-  assert.equal(root.fragment().red, 3);
-  sink(3);                               // red: 2 and 0 are sunk, so 1 takes it
-  assert.equal(root.fragment().red, 1);
-  assert.equal(redTops(tops), 1);
+  // the only way down the line is the red itself, stone by stone
+  for (const [i, expect] of [[5, 4], [4, 3], [3, 2], [2, 1], [1, 0]]) {
+    sink(i);
+    assert.equal(root.fragment().red, expect, `red marches ${i} -> ${expect}`);
+    assert.equal(redTops(tops), 1);
+  }
 
-  sink(1);                               // the last survivor goes down
+  sink(0);                               // the last survivor goes down
   assert.equal(root.fragment().red, -1, 'no survivors, no red');
   assert.equal(root.fragment().sunk, 7);
 });
@@ -196,7 +218,8 @@ test('case 39: sinking the red hands it to the NEAREST survivor — one red all 
 test('case 39: when the stones surface again the red is back on the far one', () => {
   const { root, tops, tap } = staged();
   let t = 1;
-  for (const i of [0, 1, 2, 3, 4, 5, 6]) { tap(i); t += 1.6; root.update(1 / 60, t); }
+  // red order — the only order taps can achieve now
+  for (const i of [6, 5, 4, 3, 2, 1, 0]) { tap(i); t += 1.6; root.update(1 / 60, t); }
   assert.equal(root.fragment().red, -1);
   root.update(1 / 60, t + 30);           // long past SURFACE_AFTER
   assert.equal(root.fragment().sunk, 0, 'the crossing came back');

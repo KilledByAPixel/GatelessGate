@@ -15,16 +15,19 @@ const ID = 39;
 // asks whose poem it is, and tells him he is sidetracked.
 //
 // So the crossing is made of borrowed words: stepping stones laid across dark
-// water, each one a phrase, and they hold right up until you are standing on
-// them. Touch a stone and it goes under. Sink the lot and the water lies flat
-// and black with nothing to walk on — and then, after a while, they surface
-// again for the next person who wants to quote something.
+// water, each one a phrase. Only ONE of them ever gives way — the vermillion
+// one, the phrase currently carrying the point (Frank: "make it so you can
+// only push the red stone"). Touch a grey stone and it holds, with a solid
+// little knock: everyone else's words are perfectly load-bearing. Touch the
+// red one and it goes under, and the red moves to the next surviving stone —
+// so the crossing can only ever be dismantled point by point, from the far
+// end in, until the water lies flat and black with nothing to walk on. Then,
+// after a while, the stones surface again for the next person who wants to
+// quote something.
 //
-// One stone is always vermillion — it starts as the far one, the end of the
-// line nobody in this case ever reaches. Sink the red one and the red moves to
-// the next surviving stone (Frank: "when you push one under, the next one
-// turns red, since that one disappears — so there's always exactly one red").
-// The point you were making is never the stone you are standing on.
+// (Any stone used to sink. The red starts as the far one — the end of the
+// line nobody in this case ever reaches — and there is always exactly one:
+// the point you were making is never the stone you are standing on.)
 
 const SINK = 1.1;         // seconds for a stone to go under
 const SURFACE_AFTER = 6;  // and how long the water stays empty
@@ -289,6 +292,13 @@ export default {
         const s = stones[i];
         if (s.sunkAt > -99) continue;
         if (!input.raycastFirst(camera, [s.hit])) continue;
+        // ONLY THE RED GIVES WAY (Frank: "make it so you can only push the
+        // red stone"). A grey stone is someone else's phrase and it holds —
+        // a solid knock, no ripple, nothing moves.
+        if (i !== red) {
+          audio && audio.knock({ force: 0.35, at: s.pivot.position });
+          return;
+        }
         s.sunkAt = clock;
         sunk++;
         // it goes under where you were about to put your weight
