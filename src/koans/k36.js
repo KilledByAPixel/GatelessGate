@@ -2,8 +2,8 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
-  composeWorld, makePath, makeMonk, makePine,
-  makeWalk, walkHeading, pathLength, makeHorse, makeBundle,
+  composeWorld, makePath, makeMonk, faceMonk, makePine,
+  makeHorse, makeBundle,
   makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
@@ -12,24 +12,36 @@ const ID = 36;
 // "When you meet a Zen master on the road you cannot talk to him, you cannot
 // face him with silence. What are you going to do?"
 //
-// Both of the answers you have are taken away before you start, so the scene
-// gives you the moment JUST AFTER: two travellers on the one road, each on his
-// own side, already past one another — the meeting neither could open. Both
-// keep walking — the master down into the near fog and up the road again, the
-// traveller away into the far fog and back; touching the master only starts
-// his approach over. You never get to face him and you never get to not face
-// him.
+// THE MEETING ITSELF, held still. The two of them stand on the road facing
+// each other, and the traveller is bowing.
+//
+// An earlier pass had them walking past one another — the meeting missed,
+// both of them carrying on into the fog. Frank pulled it because case 35, one
+// page back, is already two figures walking a road: two walking scenes in a
+// row read as the same scene twice, whatever they mean. Standing is also the
+// better answer to the question. The bow is the one response the koan does
+// not take away from you: it is not talk and it is not silence, and it
+// settles nothing — which is why he can hold it and the master can stand
+// there unmoved and the case is still open.
 //
 // Both are solid ink. An earlier pass ghosted the master to half-opacity and
-// Frank pulled it: he is not a spirit (case 35 is the one about souls), he is
-// a man you failed to meet. The passing does the work the fade used to do.
+// Frank pulled that too: he is not a spirit (case 35 is the one about souls),
+// he is a man standing in the road in front of you.
 
-const PASS = 17;          // seconds for the master to come on, past, and out — a slow, dreamlike walk (Frank: much slower)
-const TRAV_PASS = 19;     // the traveller covers the same road a shade slower — an elder's pace
-const SPAN = 0.68;        // the stretch of road parameter each of them walks per pass
-const LANE = 0.45;        // how far each keeps to his own side of the road
-const START_U = 0.66;     // first frame: just past the meeting — the moment the case is about
-const TRAV_U0 = (0.30 - 0.04) / SPAN;   // and the traveller a stride up the road at t=0.30, as staged last round
+const MASTER_T = 0.42;    // where each of them stands along the road
+const TRAV_T = 0.345;     // the traveller nearer the lens, the master up the road
+                          // — about two metres apart, a bowing distance
+const LANE = 0.30;        // a little to his own side, so the pair is not a mirror
+const GEAR_T = 0.50;      // the roadside gear, just past the meeting and beyond it
+
+// The bow. A held one, with breath in it, rather than a gesture that plays
+// and finishes: this is a diorama, and a man who bows and straightens on a
+// loop reads as a machine. `BOW_DEEP` is what a tap adds on top, easing away
+// over a few seconds.
+const BOW_REST = 0.62;    // radians at the waist — a formal standing bow, not a nod
+const BOW_BREATH = 0.035;
+const BOW_DEEP = 0.36;
+const DEEP_TAU = 1.9;     // seconds for a deepened bow to ease back to the held one
 
 export default {
   id: ID,
@@ -39,7 +51,13 @@ export default {
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.24', 'music'],
-  camera: { distance: 11.5, target: [0.5, 1.5, -0.6], azimuth: 0.55, polar: 1.23 },
+  // ACROSS the meeting, not along it. Two people meeting on a road stand
+  // along the road facing each other, so the book's usual bearing — looking
+  // down the road — put the camera within a few degrees of their shared axis
+  // and they simply overlapped, one hat behind another. Swung round and
+  // lowered until the line between them runs across the frame and the bow
+  // reads as a bend at the waist rather than a hat seen from above.
+  camera: { distance: 8.6, target: [1.38, 1.72, -2.18], azimuth: -0.38, polar: 1.30 },
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -52,42 +70,71 @@ export default {
     const road = makePath({ from: [6.0, 7.0], to: [-5.5, -17], width: 1.6, seed: ID, groundSeed: 21, wander: 0.5 });
     scene.add(road);
 
-    // YOU — or the traveller standing in for you — on the near stretch, staff
-    // in hand, keeping to his own side of the road and WALKING ON up it: the
-    // meeting is already behind him, and he does not stop either. He stood
-    // still in the last round; Frank's walk note put both of them in motion.
-    const traveller = makeMonk({ height: 1.62, elder: true });
-    const HERE = road.sample(0.30);       // where the book opens on him (keepout below)
+    // YOU — or the traveller standing in for you — stopped in the road with
+    // his staff planted, bowing. `pose: 'bow'` builds him upright and hinged
+    // at the sash: makeFigure puts a group named 'waist' in the figure and
+    // turning its rotation.x IS the bow, so the case plays the angle rather
+    // than staging a man already bent double. The staff is parented to the
+    // figure, not to the waist, so it stays planted while he bows over it.
+    // Bare-headed, and the master keeps his hat. Two hatted monks at this
+    // bearing were one silhouette twice, and a wide sedge brim seen from
+    // slightly above hides the very thing this scene is: you could not tell
+    // he was bowing. A man who takes his hat off to bow is also just what
+    // happens on a road.
+    const traveller = makeMonk({ height: 1.62, elder: true, hat: false, pose: 'bow' });
+    const HERE = road.sample(TRAV_T);
+    traveller.position.set(HERE.x + HERE.perp.x * LANE, 0, HERE.z + HERE.perp.z * LANE);
     scene.add(traveller);
-    // the traveller's staff stays plain ink now (Frank: the master is the seal,
+    const waist = traveller.getObjectByName('waist');
+    // the traveller's staff stays plain ink (Frank: the master is the seal,
     // not the staff)
 
-    // THE MASTER, going the other way on the other side, solid and RED — he is
+    // THE MASTER, standing in the road in front of him, solid and RED — he is
     // the seal: the one you cannot face or not-face, the thing the whole case
-    // is about.
+    // is about. Nothing of him moves. Every other figure in this book that
+    // stands still is still because the scene is quiet; he is still because
+    // the bow does not reach him.
     const master = makeMonk({ height: 1.68, color: ACCENT });
     master.name = 'master';
+    const THERE = road.sample(MASTER_T);
+    master.position.set(THERE.x - THERE.perp.x * LANE, 0, THERE.z - THERE.perp.z * LANE);
     scene.add(master);
+
+    // and they face each other — the whole staging, in two lines
+    faceMonk(traveller, master.position);
+    faceMonk(master, traveller.position);
 
     // a pine at the roadside, so the passing has something to be measured
     // against
+    // a pine at the roadside, so the meeting has something to be measured
+    // against. Moved well past the master and further out: at its old spot it
+    // stood exactly between the two of them from the new bearing, and a tree
+    // growing up the middle of a meeting is not a measure of anything.
     const pine = makePine({ height: 4.0, seed: ID });
-    const PP = road.sample(0.46);
-    pine.position.set(PP.x + PP.perp.x * 2.6, 0, PP.z + PP.perp.z * 2.6);
+    const PT = road.sample(0.66);
+    pine.position.set(PT.x + PT.perp.x * 3.6, 0, PT.z + PT.perp.z * 3.6);
     scene.add(pine);
 
     // A third traveler stopped here — horse (k45's) standing loose across
-    // the road from the pine, bundle (k23's) set down at the verge. Two
-    // walkers pass each other mid-frame; the rest gear says the road is
-    // LONG, that people break their journey on it, that the meeting the
-    // koan asks about happens on an ordinary working road.
+    // the road from the pine, bundle (k23's) set down at the verge. The rest
+    // gear says the road is LONG, that people break their journey on it, that
+    // the meeting the koan asks about happens on an ordinary working road.
+    //
+    // Moved twice for the new bearing. It used to sit at the pine's own t,
+    // which is now where the master stands — the bundle would have been a
+    // metre from his feet. Pushed far down the road it went out of frame
+    // entirely, which is worse than crowding: the props were paying draw calls
+    // to be invisible. Here it stands just beyond the meeting on the far side,
+    // filling the middle distance between the two men rather than standing
+    // between them.
+    const PP = road.sample(GEAR_T);
     const horse = makeHorse({ height: 1.5, seed: 36 });
-    horse.group.position.set(PP.x - PP.perp.x * 2.5, 0, PP.z - PP.perp.z * 2.5);
+    horse.group.position.set(PP.x + PP.perp.x * 2.4, 0, PP.z + PP.perp.z * 2.4);
     horse.group.rotation.y = PP.heading + 2.6;   // hip to the road, head away
     scene.add(horse.group);
 
     const bundle = makeBundle({ seed: 36 });
-    bundle.group.position.set(PP.x - PP.perp.x * 1.15, 0, PP.z - PP.perp.z * 1.15);
+    bundle.group.position.set(PP.x + PP.perp.x * 1.35, 0, PP.z + PP.perp.z * 1.35);
     bundle.group.rotation.y = 0.9;
     scene.add(bundle.group);
 
@@ -97,7 +144,12 @@ export default {
       trees: 4,
       keepout: [
         ...road.keepout(26, 1.5),
-        { x: HERE.x, z: HERE.z, r: 1.3 },
+        // both of them, by where they actually STAND. This used to guard the
+        // traveller's road sample alone, which was right when the two were
+        // walking the whole road and neither had a spot of their own; now
+        // they do, and the master had no keepout at all.
+        { x: traveller.position.x, z: traveller.position.z, r: 1.3 },
+        { x: master.position.x, z: master.position.z, r: 1.3 },
         { x: pine.position.x, z: pine.position.z, r: 1.5 },
         { at: horse.group, r: 1.7 },
         { at: bundle.group, r: 0.55 },
@@ -105,9 +157,12 @@ export default {
       grassKeepout: road.keepout(28, 1.0),
     });
 
+    // both stand still, so both shadows are placed once and never touched again
     const shadow = makeBlobShadow({ radiusX: 0.68, radiusZ: 0.52, opacity: 0.42 });
-    scene.add(shadow);                     // follows the traveller, placed below
+    shadow.position.set(traveller.position.x, 0, traveller.position.z);
+    scene.add(shadow);
     const masterShadow = makeBlobShadow({ radiusX: 0.68, radiusZ: 0.52, opacity: 0.42 });
+    masterShadow.position.set(master.position.x, 0, master.position.z);
     scene.add(masterShadow);
     const pineShadow = makeBlobShadow({ radiusX: 0.8, radiusZ: 0.62, opacity: 0.30 });
     pineShadow.position.set(pine.position.x, 0, pine.position.z);
@@ -123,66 +178,37 @@ export default {
       new THREE.MeshBasicMaterial({ visible: false }));
     hit.name = 'master-hit';
     hit.userData.noOutline = true;
+    hit.position.set(master.position.x, 1.0, master.position.z);
     scene.add(hit);
 
-    // ---- the moment: they go past ------------------------------------------
-    // The master's walk parameter runs 0.72 → 0.04 along the road, carrying him
-    // from the far fog, past the traveller on the other side, and out below
-    // the camera; the traveller's runs the other way, 0.04 → 0.72, up into the
-    // same fog. Both wrap and start over on their own, and touching the master
-    // only makes him start over sooner. The book opens on START_U — the two of
-    // them a stride past each other, the meeting already missed.
-    //
-    // Both walk with the kit gait (the souls' walk from case 35, extracted to
-    // src/kit/walk.js): a footfall bob, a weight-shift roll, a slow heading
-    // sway — driven by DISTANCE covered, so the step rhythm is the pace you
-    // see. Each faces his own direction of travel, upright: walkHeading takes
-    // the travel vector and turns the figure's true front (local +z) onto it.
-    // Twice now a pass has had these two a quarter turn off the road (Frank:
-    // "rotated weird", then "facing the wrong way") — both times the bug was
-    // heading math assuming the wrong forward axis, and the second fix moved
-    // the convention into the kit so it cannot drift per-case again.
+    // ---- the moment: the bow ------------------------------------------------
+    // Nothing here travels. The only thing that moves in this scene is the
+    // angle at one man's waist, and the whole case is in it: he bows, and the
+    // bow is neither of the two things the koan forbids, and it changes
+    // nothing. Touch the master and the traveller bows DEEPER — the one thing
+    // you can do with an unanswerable meeting is offer more of the same — and
+    // it eases back to the held bow within a few seconds, having settled
+    // nothing. The master never responds; that is not an omission.
     let camera = null;
     let clock = 0;
     let reaches = 0;
-    let runStart = null;               // set from the first real clock reading
-    let travStart = null;
+    let deep = 0;            // 0..1, how much of BOW_DEEP is currently added
 
-    const roadLen = pathLength(road.sample);
-    const walkM = makeWalk({ seed: ID, height: 1.68 });
-    const walkT = makeWalk({ seed: ID + 1, height: 1.62 });
-
-    // u = fraction of a pass; s = road distance covered since HIS clock began,
-    // fed to the gait unwrapped so footfalls stay continuous across the wrap
-    const placeMaster = (u, s) => {
-      const t = 0.72 - u * SPAN;
-      const p = road.sample(Math.max(0.02, Math.min(0.98, t)));
-      // his own side of the road — the traveller keeps to +perp, he to -perp
-      const x = p.x - p.perp.x * LANE, z = p.z - p.perp.z * LANE;
-      master.position.x = x; master.position.z = z;
-      // down the road: t falling means travel along MINUS the tangent, and
-      // perp = (-dz, dx) gives the tangent back as (perp.z, -perp.x)
-      walkM.apply(master, s, walkHeading(-p.perp.z, p.perp.x));
-      hit.position.set(x, 1.0, z);
-      masterShadow.position.set(x, 0, z);
-    };
-    const placeTraveller = (u, s) => {
-      const t = 0.04 + u * SPAN;
-      const p = road.sample(Math.max(0.02, Math.min(0.98, t)));
-      const x = p.x + p.perp.x * LANE, z = p.z + p.perp.z * LANE;
-      traveller.position.x = x; traveller.position.z = z;
-      // up the road, the way he is going — past the man he did not meet
-      walkT.apply(traveller, s, walkHeading(p.perp.z, -p.perp.x));
-      shadow.position.set(x, 0, z);
-    };
-    placeMaster(START_U, START_U * SPAN * roadLen);
-    placeTraveller(TRAV_U0, TRAV_U0 * SPAN * roadLen);
+    // The angle, as a function of the clock and `deep` and nothing else — so
+    // it can also be applied ONCE at build. A figure whose pose is only set by
+    // the first update() renders its build pose on any first frame too short
+    // to bank a full timestep, which on case 35 showed as a visible flicker.
+    function applyBow() {
+      if (!waist) return;
+      waist.rotation.x = BOW_REST + Math.sin(clock * 0.55) * BOW_BREATH + deep * BOW_DEEP;
+    }
+    applyBow();
 
     input.onTap(() => {
       if (!camera) return;
       if (!input.raycastFirst(camera, [hit])) return;
       reaches++;
-      runStart = clock;                 // he starts the approach again
+      deep = 1;
       audio && audio.chimeStrike({ tube: 3, force: 0.35, at: hit.position });
     });
 
@@ -191,20 +217,14 @@ export default {
       setCamera(c) { camera = c; },
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
-        if (runStart === null) runStart = clock - START_U * PASS;
-        if (travStart === null) travStart = clock - TRAV_U0 * TRAV_PASS;
         world.update(dt, simTime);
         horse.update(dt, simTime);   // the tail swishes; the rest of it waits
         bundle.update(dt, simTime);
-        const mProg = (clock - runStart) / PASS;         // passes walked, unwrapped
-        placeMaster(((mProg % 1) + 1) % 1, mProg * SPAN * roadLen);
-        const tProg = (clock - travStart) / TRAV_PASS;
-        placeTraveller(((tProg % 1) + 1) % 1, tProg * SPAN * roadLen);
+        if (deep > 0) deep = Math.max(0, deep - Math.max(0, dt || 0) / DEEP_TAU);
+        applyBow();
       },
       fragment() {
-        const u = runStart === null ? START_U : ((((clock - runStart) / PASS) % 1) + 1) % 1;
-        const v = travStart === null ? TRAV_U0 : ((((clock - travStart) / TRAV_PASS) % 1) + 1) % 1;
-        return { reaches, walk: +u.toFixed(3), walkT: +v.toFixed(3) };
+        return { reaches, bow: +(waist ? waist.rotation.x : 0).toFixed(4), deep: +deep.toFixed(3) };
       },
       dispose() {},
     };
