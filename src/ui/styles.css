@@ -267,6 +267,9 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 .gg-debug-row input[type=range] { grid-column: 1 / -1; width: 100%; height: 14px; }
 .gg-debug-reset { margin-top: 14px; width: 100%; cursor: pointer; font: inherit; padding: 4px; background: none; border: 1px solid rgba(30,30,36,0.25); border-radius: 3px; color: var(--ink); }
 .gg-debug-keep { margin-top: 8px; opacity: 0.75; }
+/* an action button in a control row — a thing you press, not a thing you set */
+.gg-debug-act { font: inherit; padding: 1px 8px; cursor: pointer; color: var(--ink); background: rgba(30,30,36,0.06); border: 1px solid rgba(30,30,36,0.25); border-radius: 2px; }
+.gg-debug-act:hover { background: rgba(30,30,36,0.14); }
 
 .gg-sit-wrap { position: relative; display: inline-block; }
 .gg-sit-pop { position: absolute; top: 112%; right: 0; display: none; gap: 4px; z-index: 6; background: var(--paper); padding: 4px; border: 1px solid rgba(var(--ink-rgb),0.2); border-radius: 3px; box-shadow: 0 4px 14px rgba(30,30,36,0.14); }

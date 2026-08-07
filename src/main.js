@@ -552,6 +552,25 @@ function applyStageOnly() {
   syncLookRead();            // sitting takes the button with the toolbar
 }
 
+// ---- screenshot (developer mode) ----
+// The renderer is built without preserveDrawingBuffer, so the canvas can only
+// be read in the SAME task as a render — read it any later and the buffer has
+// already been cleared. Hence a flag, drained at the bottom of frame() right
+// after the scene is drawn. Canvas only: the WebGL frame, no DOM panels, which
+// is the same picture scripts/dev/shot-server.js receives.
+let shotPending = false;
+function requestShot() { shotPending = true; }
+function saveShot() {
+  shotPending = false;
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  const stamp = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  const a = document.createElement('a');
+  a.href = renderer.domElement.toDataURL('image/png');
+  a.download = `${(mode === 'koan' && koanSlug) ? koanSlug : mode}-${stamp}.png`;
+  a.click();
+}
+
 // ---- debug workbench (top-right of the stage) ----
 const freeCam = makeFreeCam(camera, renderer.domElement);
 const debug = makeDebug({
@@ -563,6 +582,7 @@ const debug = makeDebug({
   onSound: () => setSoundLabel(),
   onLens: (fov) => applyLens(fov),
   onFreeCam: (on) => freeCam.set(on),
+  onShot: () => requestShot(),
   onDevMode: (on) => {
     devMode = !!on;
     menu.setDevMode(devMode);
@@ -1065,6 +1085,11 @@ addEventListener('keydown', (e) => {
     debug.toggle('freeCam');
     return;
   }
+  // P saves a screenshot — the same request the workbench's Save button makes
+  if (devMode && !typing && (e.key === 'p' || e.key === 'P')) {
+    requestShot();
+    return;
+  }
   // page the book with the arrow keys while reading a case
   if (mode === 'koan' && koanSlug && !typing) {
     // same walk as both sets of arrows, back-to-Contents rule included
@@ -1153,6 +1178,7 @@ function frame(now) {
   acc += dt;
   while (acc >= STEP) { acc -= STEP; tick(); }
   scenes.render(camera);
+  if (shotPending) saveShot();
 }
 
 // Named rather than inline because the window is not the only thing that

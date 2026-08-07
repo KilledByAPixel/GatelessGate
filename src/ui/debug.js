@@ -63,6 +63,7 @@ const CONTROLS = [
   { group: 'Camera' },
   { key: 'lens', label: 'Lens (fov°)', type: 'range', def: 38, min: 16, max: 50, step: 1 },
   { key: 'freeCam', label: 'Free cam (WASD·QE·drag)', type: 'bool', def: false },
+  { action: 'shot', label: 'Screenshot (P)', text: 'Save' },
 
   { group: 'Render' },
   { key: 'toon', label: 'Toon shader', type: 'bool', def: false },
@@ -109,7 +110,7 @@ function load(persist) {
   } catch { return defaults(); }
 }
 
-export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens, onFreeCam, onDevMode }) {
+export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens, onFreeCam, onDevMode, onShot }) {
   let persist = loadPersist();
   const state = load(persist);
   const inputs = {};
@@ -143,6 +144,20 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     const name = document.createElement('span');
     name.textContent = c.label;
     row.appendChild(name);
+
+    // An action, not a setting: it has no key, holds no state, and is never
+    // persisted or reset. defaults() walks CONTROLS by `key`, so a keyed
+    // button would leave a junk entry in the saved settings blob.
+    if (c.action) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'gg-debug-act';
+      b.textContent = c.text;
+      b.onclick = () => { if (c.action === 'shot') onShot && onShot(); };
+      row.appendChild(b);
+      panel.appendChild(row);
+      continue;
+    }
 
     if (c.type === 'bool') {
       const input = document.createElement('input');
