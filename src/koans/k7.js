@@ -18,9 +18,10 @@ export default {
   // silent) — but that also scheduled random ambient drips, which Frank
   // decided he didn't want (see makeWaterBed's comment in synths.js: the
   // bed and its drip schedule are switched off everywhere, not just here).
-  // A tap on the water or the bowl still answers with one (audio.drip(),
-  // below) — that response was never on this token, only the ambient
-  // schedule was. The shishi-odoshi is the yard's one declared emitter now.
+  // A tap on the water still answers with one (audio.drip(), below) — that
+  // response was never on this token, only the ambient schedule was; the
+  // bowl answers as ceramic now, not as somebody else's water. The
+  // shishi-odoshi is the yard's one declared emitter.
   ambience: ['wind:0.14', 'odoshi', 'music'],
   // the first bright case: washing a bowl is domestic, morning work — yo, not
   // hirajoshi
@@ -135,9 +136,14 @@ export default {
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
-    // ---- the moment: touch the bowl, and the water answers ---------------
+    // ---- the moment: the water answers as water, the bowl as a bowl ------
     let camera = null;
+    let clock = 0;
     let rippled = 0;
+    let rocked = 0;
+    // the bowl's rock: same idiom as k21's dung wobble — recent tap times,
+    // summed as decaying oscillations, driven from update()
+    const rocks = [];
     const surface = water.group.children.find((c) => c.name === 'surface');
     const bowlMeshes = [];
     bowl.traverse((o) => { if (o.isMesh && !o.userData.isOutline) bowlMeshes.push(o); });
@@ -150,19 +156,24 @@ export default {
       // shifts and resettles, no sound of its own — it is not this case's
       // instrument, just its company
       if (input.raycastFirst(camera, cat.meshes())) { cat.stir(); return; }
-      // touching the water rings it where you touched; touching the bowl rings
-      // the middle, as if it had been set down
+      // The bowl is ITS OWN thing now (Frank: "shake the bowl and make sound
+      // for that instead of water") — it used to answer with a ripple in the
+      // basin two steps away, a cause with somebody else's effect. Touched,
+      // it rocks on its foot and clinks like the empty thing it is — the
+      // ceramic touch voice, k40's vase being the precedent for fired clay.
+      if (input.raycastFirst(camera, bowlMeshes)) {
+        rocks.push(clock);
+        if (rocks.length > 4) rocks.shift();
+        rocked++;
+        audio && audio.ceramic({ force: 0.6, at: bowl.position });
+        return;
+      }
+      // touching the water rings it where you touched
       const onWater = surface ? input.raycastFirst(camera, [surface]) : null;
       if (onWater) {
         const local = water.group.worldToLocal(onWater.point.clone());
         water.ripple(local.x, local.z);
         audio && audio.drip({ loud: true, at: onWater.point });   // the touch you see is the drop you hear
-        rippled++;
-        return;
-      }
-      if (input.raycastFirst(camera, bowlMeshes)) {
-        water.ripple(0, 0);
-        audio && audio.drip({ loud: true, at: bowl.position });
         rippled++;
       }
     });
@@ -171,13 +182,27 @@ export default {
       scene,
       setCamera(c) { camera = c; },
       update(dt, simTime) {
+        clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
         water.update(dt, simTime);
         odoshi.update(dt, simTime);
         cat.update(dt, simTime);
+        // the bowl settles quicker than the dung pile — it is round-bottomed
+        // and light, a quick chatter that dies
+        let a = 0;
+        for (const t0 of rocks) {
+          const t = clock - t0;
+          if (t < 0) continue;
+          a += 0.16 * Math.exp(-t / 0.38) * Math.sin(2 * Math.PI * t / 0.22);
+        }
+        bowl.rotation.z = a;
+        bowl.rotation.x = a * 0.55;
       },
       fragment() {
-        return { ripples: water.rippleCount(), rippled, knocks: odoshi.knocks() };
+        return {
+          ripples: water.rippleCount(), rippled, rocked,
+          wobble: +bowl.rotation.z.toFixed(4), knocks: odoshi.knocks(),
+        };
       },
       dispose() {},
     };
