@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, wash } from '../palette.js';
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk, makeFlower, makeAssembly,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeWildflowers, makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
 const ID = 32;
@@ -93,6 +93,21 @@ export default {
       grassKeepout: [{ x: 0.6, z: -3.6, r: 1.5 }],
     });
 
+    // White wildflowers through the meadow (Frank: "add flowers to the scene,
+    // just white ones") — the kit's default whitish bloom, deliberately NOT
+    // the accent: nothing in this case gets to speak, flowers included. They
+    // nod; that is all the motion the stillness allows.
+    const flowers = makeWildflowers({
+      count: 120, radius: 16, rMin: 3.0, seed: ID, groundSeed: 21,
+      keepout: [
+        { x: 0.6, z: -3.6, r: 2.2 },     // the seat and the silence before it
+        { at: philosopher, r: 0.9 },
+        { at: ananda, r: 0.8 },
+        { x: -0.6, z: 2.6, r: 2.8 },     // the assembly
+      ],
+    });
+    scene.add(flowers.mesh);
+
     for (const [p, rx, rz, op] of [
       [seat.position, 1.0, 0.75, 0.34],
       [philosopher.position, 0.68, 0.52, 0.42],
@@ -125,6 +140,7 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
+        flowers.update(dt, simTime);
 
         const still = clock - lastTouch;
         const u = clamp01((still - QUIET) / BOW_IN);
