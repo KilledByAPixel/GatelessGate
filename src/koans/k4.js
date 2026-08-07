@@ -67,7 +67,7 @@ export default {
       scroll.add(rod);
     }
 
-    // The painted Bodhidharma: a hooded mass and a bare face, standing a hair
+    // The painted Bodhidharma: a robe and a cowled head, standing a hair
     // proud of the silk. Famously bearded everywhere else; not here. Painted
     // in the case's red, not ink (Frank: "make the whole image — the painting
     // of Bodhidharma on the thing — red instead of black"): the portrait IS
@@ -88,17 +88,19 @@ export default {
     robe.scale.z = 0.30;                 // pressed flat: it is paint, not a man
     painted.add(robe);
 
-    const face = new THREE.Mesh(new THREE.SphereGeometry(0.135, 12, 9), paintMat);
+    // The head: ONE mass, not two. It used to be a face sphere with a
+    // separate open hood shell over it, and since every part of the portrait
+    // is the same red paint the only thing the second piece contributed was
+    // its artifacts — the shell's rim cutting a hard seam across the crown,
+    // and its open underside showing backfaces from below (Frank: "why is
+    // its head weird?"). A hooded head in flat red IS a single silhouette,
+    // so it is modelled as one: an egg standing slightly tall, pressed flat
+    // like the rest of the paint.
+    const face = new THREE.Mesh(new THREE.SphereGeometry(0.155, 12, 10), paintMat);
     face.name = 'face';
-    face.position.y = 0.30;
-    face.scale.z = 0.32;
+    face.position.y = 0.315;
+    face.scale.set(1, 1.14, 0.32);
     painted.add(face);
-
-    const hood = new THREE.Mesh(new THREE.SphereGeometry(0.175, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.62), paintMat);
-    hood.name = 'hood';
-    hood.position.y = 0.315;
-    hood.scale.z = 0.34;
-    painted.add(hood);
     scroll.add(painted);
 
     // THE BEARD THAT WILL NOT TAKE. Present from the start and invisible; a
