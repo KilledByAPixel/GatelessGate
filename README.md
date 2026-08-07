@@ -14,6 +14,8 @@ Each koan is staged as its own low-poly diorama — black ink on paper, with a s
 You read the case, its old master's commentary, and its closing verse.
 You can have it **read aloud**, and ambient sound gives the scene its weather.
 
+![Gateless Gate Screenshot](screenshot.png)
+
 ## What's inside
 
 - **All forty-nine cases** — Mumon's forty-eight and Amban's traditional addition. Each case has its own scene, the full text, and a spoken reading.
