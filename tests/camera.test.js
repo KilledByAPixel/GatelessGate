@@ -1,7 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { makeCameraRig, wanderGoal, makeFreeCam, packFreeCam, unpackFreeCam } from '../src/camera.js';
+import {
+  makeCameraRig, wanderGoal, makeFreeCam, packFreeCam, unpackFreeCam,
+  toHeadingPitch, fromHeadingPitch, cameraBlock,
+} from '../src/camera.js';
 
 // The rig's own defaults — the envelope a reader can reach by dragging.
 const HOME = { azimuth: 0.55, polar: 1.27, distance: 11.5 };
@@ -127,6 +130,58 @@ test('a rig with wander on moves the camera over time; with it off it holds stil
   for (let i = 0; i < 600; i++) rig.update(1 / 60);
   assert.ok(cam.position.distanceTo(start) > 0.25,
     `camera barely drifted with wander on: ${cam.position.distanceTo(start)}`);
+});
+
+test('pitch zero is level, and positive pitch looks down', () => {
+  // The whole reason the panel does not speak polar: level is 1.5708 there,
+  // and smaller means higher up, which reads backwards to everyone.
+  assert.equal(toHeadingPitch({ azimuth: 0, polar: Math.PI / 2 }).pitch, 0);
+  assert.ok(toHeadingPitch({ azimuth: 0, polar: 1.27 }).pitch > 0, 'above the target looks down');
+  assert.ok(toHeadingPitch({ azimuth: 0, polar: 1.7 }).pitch < 0, 'below the target looks up');
+  // and the pair round-trips
+  const hp = toHeadingPitch({ azimuth: -0.55, polar: 1.5 });
+  const back = fromHeadingPitch(hp);
+  assert.ok(Math.abs(back.azimuth - -0.55) < 1e-9, `azimuth: ${back.azimuth}`);
+  assert.ok(Math.abs(back.polar - 1.5) < 1e-9, `polar: ${back.polar}`);
+});
+
+test('the copied camera block is the line a koan module wants', () => {
+  const line = cameraBlock({ distance: 11.5, azimuth: 0.55, polar: 1.27 }, [0.4, 1.8, -1]);
+  assert.equal(line, 'camera: { distance: 11.5, target: [0.4, 1.8, -1], azimuth: 0.55, polar: 1.27 },');
+});
+
+test('a framing outside the rig envelope copies the widened bounds with it', () => {
+  // k35's trap: distance 5.5 and polar 1.5 both sit outside the stock
+  // envelope, so the framing holds on arrival and dies at the first scroll.
+  // The block that needs bounds carries them rather than relying on memory.
+  const line = cameraBlock({ distance: 5.5, azimuth: -0.55, polar: 1.5 }, [0.4, 1.8, -1]);
+  assert.ok(line.includes('minDist: 4.5'), `widened near limit: ${line}`);
+  assert.ok(line.includes('maxPolar: 1.56'), `widened low limit: ${line}`);
+  // a framing inside the envelope says nothing about bounds
+  const plain = cameraBlock({ distance: 11.5, azimuth: 0.55, polar: 1.27 }, [0, 1.1, 0]);
+  assert.ok(!/minDist|maxDist|minPolar|maxPolar/.test(plain), `no noise: ${plain}`);
+});
+
+test('composing moves the framing and opens the envelope to hold it', () => {
+  globalThis.addEventListener = globalThis.addEventListener || (() => {});
+  const cam = new THREE.PerspectiveCamera();
+  const rig = makeCameraRig(cam, fakeEl(), { target: [0, 1.1, 0], distance: 11.5 });
+  rig.setHome({ distance: 5.5, polar: 1.5 });
+  assert.equal(rig.home.distance, 5.5);
+  assert.ok(rig.bounds.minDist <= 5.5, `envelope opened: ${rig.bounds.minDist}`);
+  assert.ok(rig.bounds.maxPolar >= 1.5, `envelope opened: ${rig.bounds.maxPolar}`);
+});
+
+test('a rig never writes through to the caller\'s target array', () => {
+  // A koan module's `camera.target` literal is evaluated once and cached with
+  // the module. If the rig held that array, composing would re-author the case
+  // for the session and the next visit would open on a framing in no file.
+  const authored = [1, 2, 3];
+  const cam = new THREE.PerspectiveCamera();
+  const rig = makeCameraRig(cam, fakeEl(), { target: authored });
+  rig.setTarget(9, 9, 9);
+  assert.deepEqual(authored, [1, 2, 3], 'the module\'s own array is untouched');
+  assert.deepEqual(rig.target(), [9, 9, 9]);
 });
 
 test('a free-cam pose survives the round trip', () => {

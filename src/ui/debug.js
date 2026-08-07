@@ -110,7 +110,8 @@ function load(persist) {
   } catch { return defaults(); }
 }
 
-export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens, onFreeCam, onDevMode, onShot }) {
+export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens, onFreeCam, onDevMode, onShot, compose = null }) {
+  const composeEl = compose && compose.el;
   let persist = loadPersist();
   const state = load(persist);
   const inputs = {};
@@ -195,6 +196,13 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     panel.appendChild(row);
   }
 
+  // Composing lives above "reset all" because it is a per-page tool, not a
+  // whole-panel one, and it is hidden outright unless developer mode is on —
+  // the same rule the Developer section of the Contents follows.
+  if (composeEl) panel.appendChild(composeEl);
+  const syncCompose = () => { if (composeEl) composeEl.style.display = devModeOn() ? '' : 'none'; };
+  syncCompose();
+
   const reset = document.createElement('button');
   reset.className = 'gg-debug-reset';
   reset.textContent = 'reset all';
@@ -246,6 +254,7 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
   devInput.checked = devModeOn();
   devInput.onchange = () => {
     try { localStorage.setItem(DEV_KEY, devInput.checked ? '1' : '0'); } catch { /* private mode */ }
+    syncCompose();
     onDevMode && onDevMode(devInput.checked);
   };
   devRow.appendChild(devName);
@@ -377,6 +386,8 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
 
   function tick(fps) {
     if (!panel.classList.contains('open')) return;
+    // only while the panel is actually on screen — the read-back is DOM writes
+    if (compose && composeEl.style.display !== 'none') compose.refresh();
     // with post on, renderer.info reports the last fullscreen quad, not the scene
     const r = (post && post.active) ? post.stats : renderer.info.render;
     readout.textContent =

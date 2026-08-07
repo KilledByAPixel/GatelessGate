@@ -7,6 +7,7 @@ import { makePost } from './render/post.js';
 import { makeFreeze } from './render/freeze.js';
 import { makeSceneManager, disposeRoot } from './scene/manager.js';
 import { makeDebug, devModeOn } from './ui/debug.js';
+import { makeCompose } from './ui/compose.js';
 import { makeInput } from './input.js';
 import { setBreezePointer, clearBreeze } from './kit/breeze.js';
 import { createSave } from './save.js';
@@ -594,7 +595,13 @@ function keepPose(dt) {
 }
 addEventListener('pagehide', () => { if (freeCam.enabled()) savePose(); });
 
+// Composing lives beside the workbench and aims whatever rig is current — it
+// asks for the rig each time rather than holding one, because every page swap
+// builds a fresh one.
+const compose = makeCompose({ getRig: () => rig });
+
 const debug = makeDebug({
+  compose,
   renderer,
   getScene: () => { const a = scenes.active(); return a && a.scene; },
   audio,
