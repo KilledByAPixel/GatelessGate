@@ -121,7 +121,7 @@ const CAM = { distance: 9.0, target: [0.4, 1.7, -1.4], heading: 24.1, pitch: 15.
   mark.name = 'mark';
   mark.userData.noOutline = true;
   mark.scale.set(1, 1, 0.5);
-  mark.position.set(0, 0.355, 0.050);
+  mark.position.set(0, 0.41, 0.040);
   painted.add(mark);
   scroll.add(painted);
   

@@ -103,3 +103,42 @@ test('the meadow does not move when the dream rocks', () => {
   assert.ok(maxDreamDrift > 1e-5,
     'the dream hall must still rock');
 });
+
+test("the back screen fills the hall's own bay, in the plane of its posts", () => {
+  // Three numbers were guessed at and all three were wrong: the screen stood
+  // 1.3 units BEHIND the post line — out past the back of the deck, over open
+  // ground — at 3.0 wide in a 5.4 bay and 2.3 tall in a 2.86 one (Frank: "still
+  // does not match up with the back wall there and is also too far behind the
+  // wall"). It reads veranda.opening now, so it cannot drift from the frame it
+  // is set into whatever size that frame becomes.
+  const root = k25.build(fakeCtx({ accent: k25.accent }));
+  root.scene.updateMatrixWorld(true);
+  const solid = (o) => {
+    const b = new THREE.Box3(), t = new THREE.Box3();
+    o.traverse((m) => {
+      if (!m.isMesh || m.userData.isOutline || m.name === 'screen-hit') return;
+      if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
+      t.copy(m.geometry.boundingBox).applyMatrix4(m.matrixWorld); b.union(t);
+    });
+    return b;
+  };
+  const screen = solid(root.scene.getObjectByName('screen'));
+  const post = solid(root.scene.getObjectByName('post'));
+  const beam = solid(root.scene.getObjectByName('beam'));
+  const floor = solid(root.scene.getObjectByName('floor'));
+
+  // IN the post plane, not behind it — and never past the back of the deck
+  assert.ok(screen.min.z > post.min.z - 0.05 && screen.max.z < post.max.z + 0.05,
+    `the screen sits in the post line: ${screen.min.z.toFixed(2)}..${screen.max.z.toFixed(2)} vs ${post.min.z.toFixed(2)}..${post.max.z.toFixed(2)}`);
+  assert.ok(screen.min.z > floor.min.z - 0.2, 'and not out behind the deck it stands on');
+
+  // filling the opening: deck boards to the underside of the beam
+  assert.ok(Math.abs(screen.min.y - floor.max.y) < 0.05,
+    `it lands on the boards: ${screen.min.y.toFixed(2)} vs deck ${floor.max.y.toFixed(2)}`);
+  assert.ok(Math.abs(screen.max.y - beam.min.y) < 0.05,
+    `it reaches the beam: ${screen.max.y.toFixed(2)} vs beam underside ${beam.min.y.toFixed(2)}`);
+
+  // and corner post to corner post, with no daylight down either side
+  assert.ok(screen.min.x < post.min.x + 0.2 && screen.max.x > post.max.x - 0.2,
+    `it spans the bay: ${screen.min.x.toFixed(2)}..${screen.max.x.toFixed(2)} vs posts ${post.min.x.toFixed(2)}..${post.max.x.toFixed(2)}`);
+});

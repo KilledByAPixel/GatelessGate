@@ -502,6 +502,12 @@ test('a fixed screen is held by something, and stays put', () => {
   assert.equal(named('cord').length, 0, 'no pull cords — there is nothing to pull');
   assert.equal(w.cords.length, 0);
   assert.equal(named('stile').length, 2, 'a stile down each end');
+  // ...unless the bay already has posts of its own doing that job
+  const framed = makeScreen({ width: 3.0, height: 2.3, slats: 11, fixed: true, stiles: false });
+  const stilesOf = (w) => { let n = 0; w.group.traverse((o) => { if (o.name === 'stile') n++; }); return n; };
+  const sillsOf = (w) => { let n = 0; w.group.traverse((o) => { if (o.name === 'sill') n++; }); return n; };
+  assert.equal(stilesOf(framed), 0, "no stiles inside somebody else's posts");
+  assert.equal(sillsOf(framed), 1, 'the sill stays either way — it lands the bottom slat');
   assert.equal(named('sill').length, 1, 'and a sill under it, so the bottom is landed');
   assert.ok(named('slat').length + named('hem').length >= 11, 'the slats are still the screen');
 

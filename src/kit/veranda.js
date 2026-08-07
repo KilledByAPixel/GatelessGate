@@ -169,6 +169,22 @@ export function makeVeranda({
 
   g.userData.deck = deck;
 
+  // THE OPENING, reported rather than left to be re-derived. The posts note
+  // above already says z = 0 is "what a case builds against (a hung screen, a
+  // scroll)" — but a case still had to work out the other three numbers by
+  // reading this file, and case 25 got all of them wrong: its screen stood 1.3
+  // units BEHIND the post line, out past the back of the deck over open
+  // ground, at 3.0 wide in a 5.4 bay and 2.3 tall in a 2.86 one (Frank: "the
+  // screen on 25 still does not match up with the back wall there and is also
+  // too far behind the wall").
+  //
+  //   width   post to post, corner to corner
+  //   height  deck boards up to the underside of the beam
+  //   y, z    where that rectangle's bottom-centre sits in veranda-local space
+  //
+  // Fill it and the thing you built is set into the frame, at any veranda size.
+  g.opening = { width, height: height - 0.20 - deck, y: deck, z: 0 };
+
   // The floor's footprint as circles — a GRASS mask, since nothing grows up
   // through boards. The props keepout wants something more generous than this.
   // World space, cave.js style: reads position AND yaw at call time, so a

@@ -141,7 +141,7 @@ const CAM = { distance: 17, target: [0.2, 2.6, -1.6], heading: 31.5, pitch: 14.4
   // at the frame's right edge, past the two monks, watching from the side
   // the way an animal actually attends a place.
   const fox = makeFox({ height: 0.45, seed: 9 });
-  fox.group.position.set(5.9, 0, 3.1);
+  fox.group.position.set(-2.9, 0, 3.6);
   faceMonk(fox.group, buddha.position);
   scene.add(fox.group);
   

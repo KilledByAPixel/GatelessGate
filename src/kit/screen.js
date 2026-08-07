@@ -87,6 +87,11 @@ export function makeScreen({
   // something. It does not roll: roll/unroll/toggle become no-ops and there is
   // no clatter, because nothing moves.
   fixed = false,
+  // Fixed screens get end stiles by default, because slats alone read as rods
+  // floating in a row. A screen filling a post-and-beam bay does NOT want them:
+  // the posts are already the frame, and a stile inside each one is a doubled
+  // line. Case 25 sets this false for exactly that reason.
+  stiles: wantStiles = true,
   onClack = null,        // the roll's own clatter — see THE CLATTER, above
 } = {}) {
   const group = new THREE.Group();
@@ -138,7 +143,7 @@ export function makeScreen({
   // between a screen that is part of the room and a screen that is hovering
   // in it.
   const stiles = [];
-  if (fixed) {
+  if (fixed && wantStiles) {
     const stileGeo = new THREE.CylinderGeometry(rodR * 1.25, rodR * 1.25, height, 7);
     for (const sx of [-1, 1]) {
       const stile = new THREE.Mesh(stileGeo, mat);
@@ -147,7 +152,10 @@ export function makeScreen({
       group.add(stile);
       stiles.push(stile);
     }
-    // and a sill, so the bottom is landed rather than left in the air
+  }
+  // The sill lands the bottom whether or not the ends are framed: without it a
+  // fixed screen's lowest slat floats a pitch above whatever it stands on.
+  if (fixed) {
     const sillGeo = new THREE.CylinderGeometry(rodR * 1.15, rodR * 1.15, width * 1.06, 8);
     sillGeo.rotateZ(Math.PI / 2);
     const sill = new THREE.Mesh(sillGeo, mat);

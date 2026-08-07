@@ -86,17 +86,30 @@ const CAM = { distance: 11.0, target: [0.4, 2.0, -1.6], heading: 31.5, pitch: 19
   const DECK_TOP = HOVER + 0.34;
   
   // A bamboo screen (k26's, in plain ink — there it is the red thing
-  // itself) standing at the back of the dream hall. Maitreya's hall is
-  // FURNISHED — that is what makes the dream feel like a place someone
-  // keeps, rather than a stage set.
+  // itself) closing the back of the dream hall. Maitreya's hall is FURNISHED —
+  // that is what makes the dream feel like a place someone keeps, rather than
+  // a stage set.
   //
   // FIXED, not hanging. k26's screen is a sudare on a roller with pull cords,
-  // which needs a lintel over it; this hall is an open deck with no wall
-  // behind, so the roller and its cords hung in daylight holding nothing
-  // (Frank: "the screen behind them is not attached right"). Stiles down the
-  // ends and a sill under it make the same slats read as a standing screen.
-  const screen = makeScreen({ width: 3.0, height: 2.3, slats: 11, seed: 25, fixed: true });
-  screen.group.position.set(0.2, DECK_TOP, -5.35);
+  // which needs a lintel over it; this is an open deck, so the roller and its
+  // cords hung in daylight holding nothing up (Frank: "not attached right").
+  //
+  // AND IT FILLS THE BAY EXACTLY, read off the veranda rather than typed. The
+  // first pass put it 1.3 units behind the post line, past the back edge of
+  // the deck over open ground, 3.0 wide in a 5.4 bay and 2.3 tall in a 2.86
+  // one — three separate numbers guessed at, all wrong, which is what
+  // veranda.opening now exists to stop. No stiles: the veranda's own corner
+  // posts stand exactly on this line and are the frame already.
+  const bay = veranda.opening;
+  const screen = makeScreen({
+    width: bay.width, height: bay.height, slats: 11, seed: 25,
+    fixed: true, stiles: false,
+  });
+  screen.group.position.set(
+    veranda.position.x + 0,
+    veranda.position.y + bay.y,
+    veranda.position.z + bay.z,
+  );
   hall.add(screen.group);
   
   // the seats: three low platforms, and Kyozan standing at the third
