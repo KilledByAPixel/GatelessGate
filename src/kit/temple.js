@@ -9,6 +9,17 @@ import { WASH } from '../palette.js';
 // road in this scene goes somewhere, and that the men standing on it belong to
 // an institution rather than to nowhere.
 //
+// NOTHING USES THIS YET, on purpose. It was built for cases 15 (which names a
+// temple) and 17 (whose Chu is the emperor's teacher, a rank with an
+// establishment behind it), placed in both, and then pulled: seen in the
+// scenes it did not earn its place — "let's get rid of the temples, it was a
+// nice try" — but the piece itself is kept for a case that wants one later
+// (Frank: "we might wanna use them again"). It is complete and was working;
+// what was wrong was the picture, not the component.
+//
+// If you place one, read the SCALE note at the bottom of this file first. The
+// mistake is easy to repeat and hard to see coming.
+//
 // Frank: "we could reuse the hut and maybe put in the distance larger with a
 // couple other smaller huts next to it... and that could be kind of a bit in
 // the distance, so we don't need so much detail there."
@@ -139,3 +150,26 @@ export function makeTemple({
 
   return g;
 }
+
+// SCALE, AND THE MISTAKE THAT IS EASY TO REPEAT. Read this before placing one.
+//
+// A compound at scale 1.0 is five units across the hall alone and about eleven
+// across the whole group. Dropped at the twenty-odd units where "the distance"
+// intuitively feels like it starts, that fills a quarter of the frame and
+// reads as buildings LOOMING — the exact opposite of the thing being asked
+// for. Measured against a real shot: 1.0 at range 24 was far too big, and the
+// correction that followed pushed it clean out of frame instead. What read
+// correctly was 0.7 at around range 24, sitting at the frame's edge.
+//
+// Two other things worth knowing, both learned the hard way:
+//
+//   Place it by MEASUREMENT. A grid over the valley floor, scoring candidate
+//   positions against mountainFootprints() (kit/mountains.js), the lens half
+//   angle, and the range, finds spots an eye does not — and finds the cases
+//   where none exists. Case 17's near band is dominated by peaks of radius 17
+//   and 16, and no placement past thirty units clears them and still lands in
+//   frame; that is worth knowing before spending an evening nudging numbers.
+//
+//   Call footprint() AFTER positioning and rotating the group. It reads both,
+//   and returns world circles, so `...temple.footprint()` drops straight into
+//   composeWorld's keepout list.
