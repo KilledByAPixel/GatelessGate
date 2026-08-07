@@ -142,6 +142,35 @@ export function makeCameraRig(camera, el, {
   return { update, state, goal, home, setWander, dispose };
 }
 
+// THE FREE CAM'S POSE, KEPT ACROSS RELOADS. Reloading is how iterating on a
+// scene works — edit a file, reload, look at the same thing from the same
+// place — and losing the camera every time made the free cam nearly useless
+// for the job it exists to do. The URL already restores WHICH page; this
+// restores where you were standing on it.
+//
+// Pure, so the round trip is testable without a browser: main.js owns
+// localStorage, this owns the shape.
+export const FREECAM_KEY = 'gg-freecam-v1';
+
+export function packFreeCam(pose) {
+  return { on: true, pos: [pose.pos[0], pose.pos[1], pose.pos[2]], yaw: pose.yaw, pitch: pose.pitch };
+}
+
+// null unless developer mode is on AND the blob is a complete, finite,
+// still-enabled pose. The devMode gate is the whole safety story: a reader
+// can never be dropped into a flying camera, whatever localStorage holds.
+export function unpackFreeCam(raw, devMode) {
+  if (!devMode || !raw) return null;
+  let o = raw;
+  if (typeof raw === 'string') {
+    try { o = JSON.parse(raw); } catch { return null; }
+  }
+  if (!o || o.on !== true || !Array.isArray(o.pos) || o.pos.length !== 3) return null;
+  const nums = [o.pos[0], o.pos[1], o.pos[2], o.yaw, o.pitch];
+  if (!nums.every((n) => typeof n === 'number' && Number.isFinite(n))) return null;
+  return { pos: [o.pos[0], o.pos[1], o.pos[2]], yaw: o.yaw, pitch: o.pitch };
+}
+
 // A dev free camera: WASD walks, Q/E sinks/rises, Shift hurries, drag looks.
 // Debug-panel only — it is not part of the book. It never touches sim state;
 // while it is on, the orbit rig simply stops being applied, and turning it
@@ -184,6 +213,18 @@ export function makeFreeCam(camera, el) {
         yaw = Math.atan2(-d.x, -d.z);
         pitch = Math.asin(clamp(d.y, -1, 1));
       }
+    },
+    // What to store, and how to come back to it. `setPose` is only meaningful
+    // while the cam is on — set() seeds yaw/pitch from the rig camera, so a
+    // restore must call set(true) FIRST and setPose second, or the saved
+    // heading is overwritten by wherever the rig happened to be looking.
+    pose() {
+      return { pos: [camera.position.x, camera.position.y, camera.position.z], yaw, pitch };
+    },
+    setPose(p) {
+      camera.position.set(p.pos[0], p.pos[1], p.pos[2]);
+      yaw = p.yaw;
+      pitch = p.pitch;
     },
     update(dt) {
       if (!on) return;

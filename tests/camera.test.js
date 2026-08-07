@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { makeCameraRig, wanderGoal } from '../src/camera.js';
+import { makeCameraRig, wanderGoal, makeFreeCam, packFreeCam, unpackFreeCam } from '../src/camera.js';
 
 // The rig's own defaults — the envelope a reader can reach by dragging.
 const HOME = { azimuth: 0.55, polar: 1.27, distance: 11.5 };
@@ -127,4 +127,47 @@ test('a rig with wander on moves the camera over time; with it off it holds stil
   for (let i = 0; i < 600; i++) rig.update(1 / 60);
   assert.ok(cam.position.distanceTo(start) > 0.25,
     `camera barely drifted with wander on: ${cam.position.distanceTo(start)}`);
+});
+
+test('a free-cam pose survives the round trip', () => {
+  const pose = { pos: [1.5, 2.25, -3], yaw: 0.4, pitch: -0.2 };
+  const back = unpackFreeCam(JSON.stringify(packFreeCam(pose)), true);
+  assert.deepEqual(back, pose);
+});
+
+test('a reader never lands in the free cam', () => {
+  // The one rule this feature has to keep: dev mode off means whatever is in
+  // localStorage is refused, so "off = the app as it was" stays literally true.
+  const saved = JSON.stringify(packFreeCam({ pos: [0, 1, 0], yaw: 0, pitch: 0 }));
+  assert.equal(unpackFreeCam(saved, false), null);
+});
+
+test('an unusable saved pose is refused rather than flown', () => {
+  assert.equal(unpackFreeCam(null, true), null, 'nothing saved');
+  assert.equal(unpackFreeCam('{not json', true), null, 'garbage');
+  assert.equal(unpackFreeCam('{"on":false,"pos":[0,0,0],"yaw":0,"pitch":0}', true), null, 'cam was off');
+  assert.equal(unpackFreeCam('{"on":true,"pos":[0,0],"yaw":0,"pitch":0}', true), null, 'short position');
+  assert.equal(unpackFreeCam('{"on":true,"pos":[0,null,0],"yaw":0,"pitch":0}', true), null, 'null coordinate');
+  assert.equal(unpackFreeCam('{"on":true,"pos":[0,0,0],"yaw":0}', true), null, 'no pitch');
+  const nan = { on: true, pos: [0, 0, 0], yaw: Number.NaN, pitch: 0 };
+  assert.equal(unpackFreeCam(nan, true), null, 'NaN yaw');
+});
+
+test('the free cam reports and accepts a pose', () => {
+  // makeFreeCam binds the WASD keys at window level, which plain Node has no
+  // global for. The keys are not what this test is about; a no-op stub lets
+  // the pose half be tested without a browser.
+  globalThis.addEventListener = globalThis.addEventListener || (() => {});
+  const cam = new THREE.PerspectiveCamera();
+  const free = makeFreeCam(cam, fakeEl());
+  free.set(true);
+  free.setPose({ pos: [3, 4, 5], yaw: 0.7, pitch: -0.3 });
+  const p = free.pose();
+  assert.deepEqual(p.pos, [3, 4, 5]);
+  assert.equal(p.yaw, 0.7);
+  assert.equal(p.pitch, -0.3);
+  // and the pose is what actually drives the camera on the next update
+  free.update(1 / 60);
+  assert.deepEqual([cam.position.x, cam.position.y, cam.position.z], [3, 4, 5]);
+  assert.ok(Math.abs(cam.rotation.y - 0.7) < 1e-9, `yaw applied: ${cam.rotation.y}`);
 });

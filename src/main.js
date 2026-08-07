@@ -1,6 +1,6 @@
 import * as THREE from '../lib/three.module.js';
 import { listenerFrom } from './camera_listener.js';
-import { makeCameraRig, makeFreeCam, DEFAULT_HOME_DISTANCE } from './camera.js';
+import { makeCameraRig, makeFreeCam, DEFAULT_HOME_DISTANCE, FREECAM_KEY, packFreeCam, unpackFreeCam } from './camera.js';
 import { makeDissolve } from './render/dissolve.js';
 import { installGrain } from './render/grain.js';
 import { makePost } from './render/post.js';
@@ -573,6 +573,27 @@ function saveShot() {
 
 // ---- debug workbench (top-right of the stage) ----
 const freeCam = makeFreeCam(camera, renderer.domElement);
+
+// The free cam's pose, kept across reloads so a developer editing a scene
+// comes back standing where they were. Written about once a second while
+// flying — cheap, and no timer to tear down — plus once on the way out.
+// Turning the cam off forgets it: the next reload then boots normally.
+let poseAcc = 0;
+function savePose() {
+  try { localStorage.setItem(FREECAM_KEY, JSON.stringify(packFreeCam(freeCam.pose()))); } catch { /* private mode */ }
+}
+function forgetPose() {
+  try { localStorage.removeItem(FREECAM_KEY); } catch { /* ignore */ }
+}
+function keepPose(dt) {
+  if (!freeCam.enabled()) return;
+  poseAcc += dt;
+  if (poseAcc < 1) return;
+  poseAcc = 0;
+  savePose();
+}
+addEventListener('pagehide', () => { if (freeCam.enabled()) savePose(); });
+
 const debug = makeDebug({
   renderer,
   getScene: () => { const a = scenes.active(); return a && a.scene; },
@@ -581,7 +602,7 @@ const debug = makeDebug({
   post,
   onSound: () => setSoundLabel(),
   onLens: (fov) => applyLens(fov),
-  onFreeCam: (on) => freeCam.set(on),
+  onFreeCam: (on) => { freeCam.set(on); if (!on) forgetPose(); },
   onShot: () => requestShot(),
   onDevMode: (on) => {
     devMode = !!on;
@@ -1174,6 +1195,7 @@ function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
   if (dt > 0) fps = fps * 0.95 + (1 / dt) * 0.05;
+  keepPose(dt);
   debug.tick(fps);
   acc += dt;
   while (acc >= STEP) { acc -= STEP; tick(); }
@@ -1296,5 +1318,23 @@ if (booted && booted.view === 'case' && devOpen(booted.slug)) {
   debugApply();
   dissolve.set(1);
   startIntro();
+}
+
+// Back into the free cam, if a developer's last reload left it flying. After
+// the boot branch so the scene, the rig and the workbench all exist — and it
+// skips the intro, because a title dolly would simply drive over the pose we
+// just restored. `debug.toggle` is the same route the F key takes, so the
+// checkbox, the saved settings and the effect stay in step; it is skipped when
+// the persisted settings already have the cam on, since toggling then would
+// turn it off.
+{
+  let raw = null;
+  try { raw = localStorage.getItem(FREECAM_KEY); } catch { /* private mode */ }
+  const pose = unpackFreeCam(raw, devMode);
+  if (pose) {
+    skipIntro();
+    if (!debug.state.freeCam) debug.toggle('freeCam');
+    freeCam.setPose(pose);
+  }
 }
 requestAnimationFrame(frame);
