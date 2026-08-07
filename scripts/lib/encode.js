@@ -1,6 +1,7 @@
 // WAV -> mp3 via system ffmpeg. Gemini returns raw PCM, so encoding is a required
 // stage rather than a nicety; keeping it separate from the bake means format
-// experiments (bitrate, opus) re-encode from cached raw audio and never re-pay the API.
+// experiments (bitrate; the opus trial mp3 won over) re-encode from cached raw
+// audio and never re-pay the API.
 import { execFileSync, spawnSync } from 'node:child_process';
 
 // A freshly installed ffmpeg isn't on PATH in already-open shells, which would
@@ -38,15 +39,6 @@ export function loudnormWav(src, dest, { I = -16, TP = -1.5, LRA = 11 } = {}) {
     '-i', src,
     '-af', `loudnorm=I=${I}:TP=${TP}:LRA=${LRA}`,
     '-ar', '24000', '-ac', '1', '-c:a', 'pcm_s16le',
-    dest,
-  ]);
-}
-
-export function toOpus(src, dest, bitrate = '24k') {
-  execFileSync(FFMPEG, [
-    '-hide_banner', '-loglevel', 'error', '-y',
-    '-i', src,
-    '-codec:a', 'libopus', '-b:a', bitrate, '-ac', '1',
     dest,
   ]);
 }

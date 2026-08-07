@@ -87,7 +87,8 @@ function queueSaveCam() {
   camSaveT = setTimeout(() => {
     if (!currentKey) return;
     cams[currentKey] = { az, el, dist };
-    localStorage.setItem(CAM_LS, JSON.stringify(cams));
+    // guarded like the read above: private/locked-down modes throw on write
+    try { localStorage.setItem(CAM_LS, JSON.stringify(cams)); } catch { /* view-only */ }
   }, 250);
 }
 
@@ -367,7 +368,7 @@ addEventListener('keydown', (e) => {
     az = 0.7; el = 0.32; dist = modelRadius * 3.4; modelGroup.rotation.y = 0;
     clearTimeout(camSaveT);                     // a queued drag-save must not resurrect it
     delete cams[currentKey];                    // reset also FORGETS the stored spot
-    localStorage.setItem(CAM_LS, JSON.stringify(cams));
+    try { localStorage.setItem(CAM_LS, JSON.stringify(cams)); } catch { /* view-only */ }
   } else if (e.key === 's' || e.key === 'S') {
     setSilhouette(!silhouette);
   } else if (e.key === 'l' || e.key === 'L') {

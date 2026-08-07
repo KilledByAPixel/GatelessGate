@@ -18,7 +18,7 @@ const _c = new THREE.Color();
 // Deterministically place `count` items in an annulus, avoiding keepouts.
 export function scatterPoints({ count, rMin = 4, rMax = 24, seed = 1, keepout = [] } = {}) {
   const pts = [];
-  let i = 0, tries = 0;
+  let tries = 0;
   while (pts.length < count && tries < count * 12) {
     tries++;
     const a = hash1(tries * 3 + 1, seed) * Math.PI * 2;
@@ -26,7 +26,6 @@ export function scatterPoints({ count, rMin = 4, rMax = 24, seed = 1, keepout = 
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
     if (keepout.some((k) => Math.hypot(x - k.x, z - k.z) < k.r)) continue;
     pts.push({ x, z, u: hash1(tries * 3 + 3, seed) });
-    i++;
   }
   return pts;
 }

@@ -91,12 +91,12 @@ export default {
     }
 
     // two cups on the bench — the tea nobody in this case ever drinks
-    for (const [i, off] of [[0, -0.35], [1, 0.3]].entries()) {
+    for (const off of [-0.35, 0.3]) {
       const cup = new THREE.Mesh(
         new THREE.CylinderGeometry(0.055, 0.045, 0.075, 8),
         toonMaterial({ color: ACCENT, flat: true }));
       cup.name = 'cup';
-      cup.position.set(-1.4 + off[1] * Math.cos(0.7), 0.50, -1.5 - off[1] * Math.sin(0.7));
+      cup.position.set(-1.4 + off * Math.cos(0.7), 0.50, -1.5 - off * Math.sin(0.7));
       scene.add(cup);
     }
 

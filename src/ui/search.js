@@ -31,10 +31,6 @@ function index() {
   return INDEX;
 }
 
-export function terms(query) {
-  return fold(query || '').split(/[^a-z0-9']+/).filter((t) => t.length > 1);
-}
-
 // A term in quotes is a WHOLE-WORD term. Unquoted searching is forgiving on
 // purpose (see the header) — but forgiveness is exactly wrong for the one
 // word this book turns on: `mu` also matches much, must, Mumon and murmur,

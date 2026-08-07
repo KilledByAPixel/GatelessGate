@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { searchCases, terms, snippet, parseQuery } from '../src/ui/search.js';
+import { searchCases, snippet, parseQuery } from '../src/ui/search.js';
 
 const ids = (q) => searchCases(q).map((r) => r.id);
 
@@ -21,11 +21,14 @@ test('finds the case you half-remember', () => {
   assert.ok(ids('flower').includes(6));
 });
 
-test('a title hit outranks a passing mention in a commentary', () => {
+test('a title hit reports where=title; passing mentions report their own field', () => {
   const r = searchCases('flag');
   assert.equal(r[0].id, 29);
   assert.equal(r[0].where, 'title');
-  // other cases may mention a flag in passing; they must not come first
+  // Results are book-ordered, not ranked (see the book-order test below);
+  // case 29 comes first here because it is the lowest-numbered hit, and it
+  // happens to be the title hit. The `where` field is what this pins: the
+  // other cases mention a flag in passing and must not claim a title match.
   assert.ok(r.length >= 1);
   for (const hit of r.slice(1)) assert.notEqual(hit.where, 'title');
 });
@@ -58,8 +61,13 @@ test('snippet keeps whole words and marks where it was cut', () => {
   assert.ok(!/\bqui\b|\bick\b/.test(s), 'no half-words');
 });
 
-test('terms drops punctuation and one-letter noise', () => {
-  assert.deepEqual(terms("Joshu's dog, or a cat?"), ["joshu's", 'dog', 'or', 'cat']);
+test('parseQuery drops punctuation and one-letter noise', () => {
+  assert.deepEqual(parseQuery("Joshu's dog, or a cat?"), [
+    { term: "joshu's", exact: false },
+    { term: 'dog', exact: false },
+    { term: 'or', exact: false },
+    { term: 'cat', exact: false },
+  ]);
 });
 
 test('a quoted term matches whole words only', () => {

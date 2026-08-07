@@ -13,7 +13,7 @@ export const LABELS = { case: 'The Case', comment: "Mumon's Comment", verse: 'Th
 // narration.js and narration_state.js's playableQueue/hasNarration): a section
 // with nothing baked is a silent no-op there, never an error and never reached
 // by drawing the wrong shape here.
-export function pageShape({ id, sections, labels, text } = {}) {
+export function pageShape({ id, sections, labels } = {}) {
   return {
     sections: sections || SECTIONS,
     labels: labels || LABELS,

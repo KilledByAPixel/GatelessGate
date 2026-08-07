@@ -121,7 +121,6 @@ export default {
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
     // ---- the moment: nothing, for long enough ----------------------------
-    let camera = null;
     let clock = 0;
     let lastTouch = 0;
     let bowed = false;
@@ -136,7 +135,9 @@ export default {
 
     return {
       scene,
-      setCamera(c) { camera = c; },
+      // the module contract wants the hook, but nothing here aims a ray:
+      // the tap handler's whole job is "any touch resets the wait"
+      setCamera() {},
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
