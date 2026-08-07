@@ -34,8 +34,8 @@ const SEEDS = { seed: 23, groundSeed: 41, pathSeed: 61 };
 // paler, and the near band cut to three low ones. The road runs out into haze
 // instead of into rock, which is the right picture for "no gate as the gate".
 const MOUNTAINS = [
-  { count: 7, distance: 70, arcSpan: 4.4, color: wash(0.12) },
-  { count: 3, distance: 48, arcSpan: 3.6, color: wash(0.21), hScale: 0.55 },
+  { count: 7, distance: 70, arcCenter:.2, arcSpan: 4.4, color: wash(0.12) },
+  { count: 3, distance: 48, arcCenter:-.2, arcSpan: 3.6, color: wash(0.21), hScale: 0.55 },
 ];
 
 export default {

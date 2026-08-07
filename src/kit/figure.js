@@ -100,8 +100,8 @@ export function sleeve({ height = 1.6, len = 0.34 * 1.6, r0 = 0.035, r1 = 0.065,
 // Frank). Baked into the GEOMETRY, not mesh.scale: buddha.js parents its
 // topknot and urna to this mesh, and a scaled mesh would distort them.
 // Exported so those marks can place themselves against the true skull shell.
-export const HEAD_OBLONG = [0.96, 1.10, 1.0];
-export function sphereHead({ height = 1.6, r = 0.095, mat }) {
+export const HEAD_OBLONG = [0.8, 1.10, 1.0];
+export function sphereHead({ height = 1.6, r = 0.09, mat }) {
   const geo = new THREE.SphereGeometry(r * height, 14, 10);
   geo.scale(HEAD_OBLONG[0], HEAD_OBLONG[1], HEAD_OBLONG[2]);
   const head = new THREE.Mesh(geo, mat);
@@ -327,18 +327,18 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // The inward swing (the cuffs crossing to the centre) is the same for all.
 const KNEEL = 0.5;
 const STANCES = {
-  stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.735, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.2, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.92 },
+  stand: { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.765, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.2, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.92 },
   // Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did:
   // the chest run in SIT_PROFILE was lengthened and steepened so a meditator
   // sits STRAIGHT ("they should all kinda look like Buddha") — the crown now
   // tops out at 0.610·h, still comfortably a seated man, and the fold angle
   // eases to -0.44 so the cuffs keep landing in the lap the knees now frame.
-  sit: { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, head: 0.515, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31, foldCross: 1.1 },
+  sit: { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, head: 0.545, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31, foldCross: 1.1 },
   kneel: {
     profile: mixProfile(STAND_PROFILE, SIT_PROFILE, KNEEL),
     shoulder: mix(0.60, 0.40, KNEEL),
     sleeve: mix(0.34, 0.24, KNEEL),
-    head: mix(0.735, 0.50, KNEEL),
+    head: mix(0.765, 0.50, KNEEL),
     hat: mix(0.80, 0.545, KNEEL),
     armZ: mix(0, 0.03, KNEEL),
     staff: mix(1.2, 0.7, KNEEL),

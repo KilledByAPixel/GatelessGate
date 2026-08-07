@@ -65,9 +65,9 @@ export function makeHangingMonk({ height = 1.6, color = INK_LIT, seed = 5 } = {}
   const headR = 0.095 * h;
   // sphereHead's default r is 0.095 — the same radius headR names — so this
   // is figure.js's own head, not a lookalike copy.
-  const head = sphereHead({ height: h*.8, mat });
+  const head = sphereHead({ height: h, mat });
   // mouth = origin = head centre + (up 0.55 + forward 0.75) · headR
-  head.position.set(0, -0.7 * headR, -0.8 * headR);
+  head.position.set(0, -0.7 * headR, -0.9 * headR);
   head.rotateX(-1.0)
   g.add(head);
 
