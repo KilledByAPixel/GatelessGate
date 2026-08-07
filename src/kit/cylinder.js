@@ -424,6 +424,19 @@ export function forceForRelOmega(relOmega) {
 // pattern as furin.js's WORLD)
 const WORLD = new THREE.Vector3();
 
+// HOW FAR IT REACHES BELOW ITS KNOT, in units of size, cord excluded — the
+// cylinder's half of the pair furin.js's FURIN_REACH is the other of. Measured
+// off built geometry at four sizes and exactly flat: 0.984, rounded up.
+//
+// The two families scale COMPLETELY differently — a fūrin is 2.1x its size
+// tall, this is 0.98x — so the same `size` number means two different objects.
+// Hanging both from one table with one size band is how the cylinders came out
+// at half the apparent scale of everything beside them (Frank: "the cylinder
+// ones are too small... maybe we're usually using small ones for some reason").
+// The reason was this number, and the fix is to size both families from a world
+// height and divide by their own reach.
+export const CYL_REACH = 0.99;
+
 export function makeCylinderChime({
   size = 0.8, seed = 11, phase = null, onStrike = null,
   cord = 0.30,              // the hanging string, in units of size; 0 for none

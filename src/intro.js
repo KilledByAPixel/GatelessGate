@@ -75,7 +75,7 @@ export function buildHub({
   // deep mix; full accent across those posts would glare.
   let gate = null;
   if (withGate) {
-    gate = makeGate({ width: 3.0, height: 3.4, color: ACCENT_DEEP, chimes:19 });
+    gate = makeGate({ width: 3.0, height: 3.4, color: ACCENT_DEEP });
     gate.position.set(gp.x, 0, gp.z);
     gate.rotation.y = gp.heading;
     scene.add(gate);

@@ -220,10 +220,12 @@ export function makeHut({
   // nothing hangs out past where the hip slopes come down.
   attachChimes(g, hangChimes(g, {
     seed: chimes, audio, y: height, z: hz0 - 0.12, span: hx0 * 0.62,
-    // Nothing structural hangs under this eave, so the limit is compositional:
-    // much past half a metre and the chime reads as hanging IN the doorway
-    // rather than off the building.
-    maxDrop: 0.52,
+    // Nothing structural hangs under this eave, so the limit is the DOOR HEAD:
+    // a chime may reach down to the top of the opening beside it and no
+    // further, which is where a real one hangs and also stops it reading as
+    // hanging IN the doorway. Derived from the door this hut actually built,
+    // so a low hut gets a short chime without anyone remembering to say so.
+    maxDrop: Math.max(0.3, Math.min(0.72, height - doorH - 0.02)),
   }));
 
   // ---- plinth and threshold ----------------------------------------------

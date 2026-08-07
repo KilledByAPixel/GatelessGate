@@ -6,7 +6,11 @@ import { makeGate } from '../src/kit/gate.js';
 import { hangChimes, setChimeAudio, collectChimes, ringChimeAt } from '../src/kit/chimes.js';
 import { makeFurin, FURIN_REACH } from '../src/kit/furin.js';
 
-const chimesOf = (g) => { const out = []; g.traverse((o) => { if (o.name === 'furin') out.push(o); }); return out; };
+// Every chime group in a subtree, whichever family it came from — a fūrin is
+// named 'furin' and a bronze cylinder 'cylinder-chime', and counting only the
+// first silently reported zero for a hut that had hung two cylinders.
+const HUNG = new Set(['furin', 'cylinder-chime']);
+const chimesOf = (g) => { const out = []; g.traverse((o) => { if (HUNG.has(o.name)) out.push(o); }); return out; };
 
 // The lowest ink anything on the chime reaches, measured off the built
 // geometry rather than trusted from the formula — the clearance rules are only
@@ -45,21 +49,61 @@ test('a seed hangs one or two, and the same seed hangs the same ones', () => {
   assert.notDeepEqual(pos(a), pos(makeHut({ chimes: 10 })), 'a different seed is a different arrangement');
 });
 
-test('over enough seeds both kinds and a spread of sizes come up', () => {
-  // "random types and sizes" — a generator that always returns the same ring
-  // at the same size would pass every other test in this file.
+// Which of the four it is: a fūrin by its tube count, or the bronze cylinder.
+function kindOf(group) {
+  if (group.name === 'cylinder-chime') return 'cylinder';
+  let tubes = 0;
+  group.traverse((o) => { if (o.name === 'tube') tubes++; });
+  return `furin-${tubes}t`;
+}
+const heightOf = (g) => { g.updateMatrixWorld(true); return new THREE.Box3().setFromObject(g).max.y - new THREE.Box3().setFromObject(g).min.y; };
+
+test('all four chimes come up, at a spread of sizes', () => {
+  // "just randomly pick between chimes" — a generator that always returns the
+  // same ring at the same size would pass every other test in this file.
   const kinds = new Set(), sizes = new Set();
-  for (let s = 1; s <= 40; s++) {
+  for (let s = 1; s <= 60; s++) {
     for (const c of chimesOf(makeHut({ chimes: s }))) {
-      let tubes = 0;
-      c.traverse((o) => { if (o.name === 'tube') tubes++; });
-      kinds.add(tubes);
+      kinds.add(kindOf(c));
       sizes.add(Math.round(lowest(c) * 100));
     }
   }
-  assert.ok(kinds.has(1), 'the single body comes up');
-  assert.ok(kinds.size >= 3, `only ${[...kinds].join(',')} — the ring sizes never vary`);
-  assert.ok(sizes.size > 10, `only ${sizes.size} distinct hangs across forty seeds`);
+  for (const want of ['furin-1t', 'furin-3t', 'furin-5t', 'cylinder']) {
+    assert.ok(kinds.has(want), `${want} never came up: got ${[...kinds].join(', ')}`);
+  }
+  assert.ok(sizes.size > 10, `only ${sizes.size} distinct hangs across sixty seeds`);
+});
+
+test('the four hang at the SAME apparent size, whatever family they come from', () => {
+  // THE BUG THIS FILE EXISTS TO STOP COMING BACK. A fūrin is 2.1x its `size`
+  // tall and a bronze cylinder 0.98x, so one shared band of `size` numbers
+  // hung the cylinders at half the scale of everything beside them (Frank: "the
+  // cylinder ones are too small... maybe we're usually using small ones for
+  // some reason"). Both are sized from a world height now, so a reader cannot
+  // tell which builder made which by how big it is.
+  const byKind = {};
+  for (let s = 1; s <= 60; s++) {
+    for (const c of chimesOf(makeHut({ chimes: s }))) (byKind[kindOf(c)] ||= []).push(heightOf(c));
+  }
+  const means = Object.entries(byKind).map(([k, hs]) => [k, hs.reduce((a, b) => a + b, 0) / hs.length]);
+  const lo = Math.min(...means.map(([, m]) => m)), hi = Math.max(...means.map(([, m]) => m));
+  assert.ok(hi / lo < 1.25,
+    `families disagree on scale: ${means.map(([k, m]) => `${k} ${m.toFixed(2)}`).join(', ')}`);
+
+  // and they are big enough to read from a case camera eleven units out —
+  // the old band topped out at 0.39 and mostly sat near 0.20
+  for (const [k, hs] of Object.entries(byKind)) {
+    const mean = hs.reduce((a, b) => a + b, 0) / hs.length;
+    assert.ok(mean > 0.33, `${k} averages ${mean.toFixed(2)} tall — too small to see`);
+  }
+});
+
+test('one or two, on an even coin', () => {
+  // Frank: "fifty percent of the time it should just be one chime."
+  let ones = 0, n = 400;
+  for (let s = 1; s <= n; s++) if (chimesOf(makeHut({ chimes: s })).length === 1) ones++;
+  const pct = (100 * ones) / n;
+  assert.ok(pct > 43 && pct < 57, `${pct.toFixed(0)}% single over ${n} seeds — not an even coin`);
 });
 
 test('they hang under the eave on the door side, inside the roof', () => {

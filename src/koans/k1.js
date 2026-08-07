@@ -40,7 +40,7 @@ const CAM = { distance: 10.8, target: [1.35, 1.35, 0.3], heading: 18.5, pitch: 1
   // path samples at z≈-4.5 put the road at x≈0.5, so the hut at -3.8 keeps
   // a clear verge between its threshold and the traffic.
   const HUT = { x: -3.8, z: -4.5 };
-  const hut = makeHut({ width: 3.0, height: 2.3, depth: 2.4 });
+  const hut = makeHut({ width: 3.0, height: 2.3, depth: 2.4, chimes:4});
   hut.position.set(HUT.x, 0, HUT.z);
   faceMonk(hut, { x: 0.9, z: 0.4 });     // its threshold opens onto the road
   scene.add(hut);

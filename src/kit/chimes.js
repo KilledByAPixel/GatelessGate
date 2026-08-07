@@ -1,4 +1,5 @@
-import { makeFurin, FURIN_REACH } from './furin.js';
+import { makeFurin } from './furin.js';
+import { makeCylinderChime, CYL_REACH } from './cylinder.js';
 import { hash1 } from '../util/noise.js';
 
 // HANGING CHIMES UNDER SOMETHING, in one line.
@@ -19,17 +20,39 @@ import { hash1 } from '../util/noise.js';
 // The seed is the whole interface: change the number until you like what you
 // get, and it will be that every time the page is built.
 
-// The book's chime sizes, the range case 29 arrived at by ear: 0.09 rings
-// bright and small, 0.18 is the deepest that still reads as a fūrin rather
-// than a bell. Anything a beam's clearance forces below this gets clamped up
-// and takes a shorter cord instead — a tiny chime on a long string reads as
-// debris, where a normal one hung tight reads as hung tight.
-const SIZE = [0.10, 0.185];
-// Ring or single. A ring of three or five tubes is the classic; the single
-// body is the plainer temple version. Both are shipped variants of makeFurin
-// (its own comment: "five or three tubes around a visible" ring, or one body).
-const KINDS = [1, 3, 5];
+// THE FOUR CHIMES IT PICKS BETWEEN, at even odds. Three are makeFurin's own
+// variants — a single hanging body, and rings of three or five tubes — and the
+// fourth is the bronze cylinder from cylinder.js, the same piece case 16 hangs
+// under its hall.
+//
+// `reach` is how far each one drops below its knot per unit of the builder's
+// own `size`, measured off built geometry and pinned in tests/chimes.test.js.
+// It is here because THE TWO FAMILIES SCALE COMPLETELY DIFFERENTLY: a fūrin is
+// 2.1x its size tall, a cylinder 0.98x. Sizing them from one shared band of
+// `size` numbers is how the cylinders ended up at half the apparent scale of
+// everything hanging beside them (Frank: "the cylinder ones are too small...
+// maybe we're usually using small ones for some reason"). So the band below is
+// in WORLD HEIGHT and each kind divides by its own reach to get there.
+//
+// `strike` is each family's own way into the audio engine — a fūrin reports a
+// tube index and rings chimeStrike, the cylinder reports a note and rings
+// cylinderStrike (case 16's wiring). Same reason they cannot share a call.
+const KINDS = [
+  { make: makeFurin, opts: { tubes: 1 }, reach: 1.98, strike: 'chimeStrike', key: 'tube' },
+  { make: makeFurin, opts: { tubes: 3 }, reach: 2.10, strike: 'chimeStrike', key: 'tube' },
+  { make: makeFurin, opts: { tubes: 5 }, reach: 2.10, strike: 'chimeStrike', key: 'tube' },
+  { make: makeCylinderChime, opts: {}, reach: CYL_REACH, strike: 'cylinderStrike', key: 'note' },
+];
+
+// HOW BIG ONE HANGS, in world units of total drop — cord and body together.
+// Not a `size`, because that word means two different objects here. A hut's
+// eave is about 2.2 up and its door head about 1.5, so a third of a metre is
+// the smallest that reads as a hung object from a case camera eleven units out
+// and half a metre is where it starts to be furniture. Clamped by whatever
+// clearance the caller has under it, so a gate's tie beam still wins.
+const DROP = [0.34, 0.52];
 const MIN_CORD = 0.05;      // below this the cap is tied to the beam, not hung from it
+const CORD_VARY = 0.06;     // ...and a little either way, so a pair is not a matched set
 
 // THE ENGINE, ONCE, so a hung chime makes sound without being asked (Frank:
 // "chimes should make sound by default"). Every other kit piece takes its
@@ -83,27 +106,29 @@ export function hangChimes(parent, {
   if (!seed) return [];
   const rnd = (i) => hash1(i, seed * 7919 + 13);
 
-  // One or two. Three under one eave starts to read as a shop rather than a
-  // house, and case 29's row of three is a composition, not a decoration.
-  const howMany = count === null ? (rnd(0) < 0.45 ? 1 : 2) : count;
+  // Half the time one, half the time two — an even coin, as asked. Three under
+  // one eave starts to read as a shop rather than a house, and case 29's row of
+  // three is a composition, not a decoration.
+  const howMany = count === null ? (rnd(0) < 0.5 ? 1 : 2) : count;
   const out = [];
 
   for (let i = 0; i < howMany; i++) {
     const k = i * 6;                       // its own slice of the stream
-    const tubes = KINDS[Math.floor(rnd(k + 1) * KINDS.length)];
+    const spec = KINDS[Math.floor(rnd(k + 1) * KINDS.length)];
 
-    // SIZE AND CORD ARE SOLVED TOGETHER against the clearance, because they
-    // share it: total reach is cord + FURIN_REACH x size, and a size chosen
-    // first can leave no room for a cord at all. Take the wanted size, shrink
-    // it if it alone would foul, and give the cord whatever is left.
-    const want = SIZE[0] + rnd(k + 2) * (SIZE[1] - SIZE[0]);
-    const size = Math.min(want, (maxDrop - MIN_CORD) / FURIN_REACH);
+    // SIZED FROM A WORLD HEIGHT, not from a `size`. Pick how far the whole
+    // thing should hang, take the cord out of it, and let the kind's own reach
+    // say what `size` gets the rest — so a cylinder and a five-tube ring hung
+    // side by side are the same height on screen instead of one being half the
+    // other. Clamped by the caller's clearance, so a gate's tie beam still wins.
+    const want = DROP[0] + rnd(k + 2) * (DROP[1] - DROP[0]);
+    const drop = Math.min(want, maxDrop);
     // Absolute, never size-relative — case 29's lesson, from Frank watching
     // three sizes hang in a row: "the small ones are not hanging low enough."
     // A cord measured in units of size gives the smallest chime the shortest
     // string, so the one that most needs to reach down is pinned tightest.
-    const room = Math.max(MIN_CORD, maxDrop - FURIN_REACH * size);
-    const cordLength = MIN_CORD + rnd(k + 3) * (room - MIN_CORD);
+    const cordLength = Math.min(MIN_CORD + rnd(k + 3) * CORD_VARY, drop * 0.35);
+    const size = Math.max(0.03, (drop - cordLength) / spec.reach);
 
     // Two chimes go one either side of centre; a lone one sits off-centre,
     // because dead centre under an eave reads as a fixture rather than
@@ -112,8 +137,8 @@ export function hangChimes(parent, {
     const x = howMany === 1 ? span * off * (rnd(k + 5) < 0.5 ? -1 : 1)
       : span * off * (i === 0 ? -1 : 1);
 
-    const f = makeFurin({
-      tubes,
+    const f = spec.make({
+      ...spec.opts,
       size,
       cordLength,
       seed: seed * 31 + i,
@@ -121,18 +146,18 @@ export function hangChimes(parent, {
       // perfect lockstep, which is the one thing that says "these came out of
       // the same function" (case 29 hit it first).
       phase: 1.3 + 2.4 * i + rnd(k + 6) * 1.7,
-      onStrike: (tube, force, pos) => {
+      onStrike: (which, force, pos) => {
         const engine = audio || sharedAudio;
-        engine && engine.chimeStrike({ tube, force, at: pos });
+        engine && engine[spec.strike] && engine[spec.strike]({ [spec.key]: which, force, at: pos });
       },
     });
     f.setWindLevel(wind);
-    f.group.position.set(x, y, z);
     // The chime object itself rides on its group, because a scene is the only
-    // thing main.js has a handle on and everything that makes a fūrin a fūrin —
+    // thing main.js has a handle on and everything that makes a chime a chime —
     // update(), pick(), ring() — lives on the object, not the Object3D.
     f.group.userData.hungBy = 'hangChimes';
     f.group.userData.furin = f;
+    f.group.position.set(x, y, z);
     parent.add(f.group);
     out.push(f);
   }
@@ -168,7 +193,9 @@ export function collectChimes(root) {
 export function ringChimeAt(chimes, camera, input) {
   for (const c of chimes) {
     const hit = c.pick(camera, input);
-    if (hit) { c.ring(0.75, hit.tube); return true; }
+    // furin's pick returns { tube }, the cylinder's returns true — it has one
+    // voice and nothing to disambiguate, and ring() ignores a second argument.
+    if (hit) { c.ring(0.75, hit && hit.tube); return true; }
   }
   return false;
 }

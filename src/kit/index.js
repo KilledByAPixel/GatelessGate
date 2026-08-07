@@ -51,7 +51,7 @@ export { makeRaisedFinger } from './finger.js';
 export { makeAssembly } from './assembly.js';
 export { makeFurin, FURIN_REACH } from './furin.js';
 export { hangChimes } from './chimes.js';
-export { makeCylinderChime, noteForSize } from './cylinder.js';
+export { makeCylinderChime, noteForSize, CYL_REACH } from './cylinder.js';
 export { makeOdoshi } from './odoshi.js';
 // the third chapter: the objects the remaining cases turn on
 export { makeWheel } from './wheel.js';
