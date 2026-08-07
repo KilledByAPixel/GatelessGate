@@ -599,6 +599,12 @@ function keepPose(dt) {
   savePose();
 }
 addEventListener('pagehide', () => { if (freeCam.enabled()) savePose(); });
+// and on hide as well: an embedded preview's reload doesn't reliably fire
+// pagehide, and the 1/s cadence alone can be up to a second stale — "reload
+// and have it be in the exact same spot" needs the exact spot
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && freeCam.enabled()) savePose();
+});
 
 // Composing lives beside the workbench and aims whatever rig is current — it
 // asks for the rig each time rather than holding one, because every page swap
@@ -669,7 +675,17 @@ function applyLens(fov = (debug && debug.state.lens) || LENS_BASE) {
 function makeRig(opts) {
   if (rig && rig.dispose) rig.dispose();
   rigBaseDistance = opts.distance;
+  // A FLYING CAM SURVIVES THE RIG SWAP. makeCameraRig snaps the camera to
+  // the case's home at construction (its update(0) — deliberate, see its own
+  // comment), and the free cam only ever applies key DELTAS to position, so
+  // that snap silently stomped a flying camera on every page build. That is
+  // why the reload restore "worked" for the heading but not the spot: boot
+  // restored the pose, then the async page build snapped it away (Frank: "I
+  // want the camera to stay in the same spot... if the free cam is
+  // activated"). Capture the pose before the rig writes, put it back after.
+  const flying = freeCam.enabled() ? freeCam.pose() : null;
   const r = makeCameraRig(camera, renderer.domElement, opts);
+  if (flying) freeCam.setPose(flying);
   rig = r;
   applyLens();
   // every scene builds a fresh rig, so a stage-only view already running has to
