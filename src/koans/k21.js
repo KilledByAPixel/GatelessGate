@@ -1,9 +1,9 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT } from '../palette.js';
+import { PAPER, ACCENT, INK_LIT } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
-  composeWorld, makeMonk, faceMonk,
+  composeWorld, makeMonk, faceMonk, makeButterflies,
   makeLights, makeBlobShadow, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -88,6 +88,19 @@ export default {
     // here. With four sides it read as a stray red square on the ground that
     // nobody could place — Frank — so it is gone; the red dung is the seal.)
 
+    // THE FLIES (Frank: "like butterflies but smaller and black instead of
+    // red") — the butterfly kit at a third of the size, ink-dark, kept in a
+    // tight low orbit over the pile. Same closed-form flight; the quick
+    // wander rate is what makes the same math read as flies rather than
+    // butterflies. They perch nearly on the dirt — the yard is swept bare,
+    // so there are no grass tips to sit on.
+    const flies = makeButterflies({
+      count: 6, seed: ID, color: INK_LIT, size: 0.13,
+      center: [0.8, 0.2], radius: 0.85, height: [0.25, 0.95],
+      rate: 0.6, perch: 0.07,
+    });
+    scene.add(flies.group);
+
     // Ummon, who said it, and the monk who asked. Set well apart: the space
     // between them is doing as much work as they are.
     const ummon = makeMonk({ height: 1.66, elder: true });
@@ -150,6 +163,7 @@ export default {
       knocks.push(clock);
       if (knocks.length > 4) knocks.shift();
       taps++;
+      flies.flit();       // the wobble puts the flies up; they settle back
       audio && audio.knock({ force: 0.45, at: hit.position });
     });
 
@@ -159,6 +173,7 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
+        flies.update(dt, simTime);
         let a = 0;
         for (const t0 of knocks) {
           const t = clock - t0;
