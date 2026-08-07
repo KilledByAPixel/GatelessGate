@@ -53,6 +53,8 @@ export function setChimeAudio(engine) { sharedAudio = engine || null; }
  * @param parent   the object they hang from — they are added to it, so they
  *                 move with it and the case never repeats its coordinates.
  * @param seed     non-zero picks the arrangement; 0 or absent hangs nothing.
+ *                 May also be `{ seed, wind, count }` to dial the strike rate
+ *                 or pin how many hang.
  * @param audio    an engine to use INSTEAD of the shared one (above). Cases do
  *                 not need it; tests pass a stub here to capture strikes. With
  *                 neither, they swing in silence rather than throwing, because
@@ -67,16 +69,26 @@ export function setChimeAudio(engine) { sharedAudio = engine || null; }
  */
 export function hangChimes(parent, {
   seed = 0, audio = null, y = 0, z = 0, span = 0.8, maxDrop = 0.5,
+  wind = 1, count = null,
 } = {}) {
+  // `chimes: 29` is the common case and stays a bare number. The object form —
+  // `chimes: { seed: 29, wind: 0.45 }` — is for when the strike rate is wrong
+  // for the scene: at wind 1 a pair rings about every two seconds, at 0.45
+  // about every three, at 0.2 about every five and a half. The book's rule is
+  // that audio is minimal and chill, and how chatty a corner should be is a
+  // decision about that corner, not a constant.
+  if (seed && typeof seed === 'object') {
+    ({ seed = 0, wind = 1, count = null } = seed);
+  }
   if (!seed) return [];
   const rnd = (i) => hash1(i, seed * 7919 + 13);
 
   // One or two. Three under one eave starts to read as a shop rather than a
   // house, and case 29's row of three is a composition, not a decoration.
-  const count = rnd(0) < 0.45 ? 1 : 2;
+  const howMany = count === null ? (rnd(0) < 0.45 ? 1 : 2) : count;
   const out = [];
 
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < howMany; i++) {
     const k = i * 6;                       // its own slice of the stream
     const tubes = KINDS[Math.floor(rnd(k + 1) * KINDS.length)];
 
@@ -97,7 +109,7 @@ export function hangChimes(parent, {
     // because dead centre under an eave reads as a fixture rather than
     // something somebody hung there.
     const off = 0.3 + rnd(k + 4) * 0.7;
-    const x = count === 1 ? span * off * (rnd(k + 5) < 0.5 ? -1 : 1)
+    const x = howMany === 1 ? span * off * (rnd(k + 5) < 0.5 ? -1 : 1)
       : span * off * (i === 0 ? -1 : 1);
 
     const f = makeFurin({
@@ -114,12 +126,51 @@ export function hangChimes(parent, {
         engine && engine.chimeStrike({ tube, force, at: pos });
       },
     });
+    f.setWindLevel(wind);
     f.group.position.set(x, y, z);
-    f.group.userData.hungBy = 'hangChimes';   // so the tests can find what this hung
+    // The chime object itself rides on its group, because a scene is the only
+    // thing main.js has a handle on and everything that makes a fūrin a fūrin —
+    // update(), pick(), ring() — lives on the object, not the Object3D.
+    f.group.userData.hungBy = 'hangChimes';
+    f.group.userData.furin = f;
     parent.add(f.group);
     out.push(f);
   }
   return out;
+}
+
+// EVERY CHIME HUNG IN A SCENE, found by sweeping it once.
+//
+// A hung chime has to be DRIVEN or it is a bronze ornament: makeFurin only
+// swings inside its own update(), and without one the thing hangs dead still,
+// never reaches its clapper and never makes a sound. The first cut of this
+// feature left that to the case — and every case promptly did not do it, which
+// is the same friction the seed exists to remove (Frank: "they're not moving or
+// anything, they're not making sound... these are kind of like solid").
+//
+// So main.js drives them, the way it already owns ambience for every case. It
+// sweeps a scene once when the scene becomes active and keeps the list; the
+// list dies with the scene, so there is no registry to leak and nothing to
+// unregister on a page turn.
+export function collectChimes(root) {
+  const out = [];
+  if (!root) return out;
+  root.traverse((o) => {
+    if (o.userData.hungBy === 'hangChimes' && o.userData.furin) out.push(o.userData.furin);
+  });
+  return out;
+}
+
+// The tap. Returns true when one was struck, so the caller knows the touch was
+// spent. Two-stage picking is the fūrin's own (kit reuse rule): its pick()
+// probes the tubes first, where a hit is unambiguous, then the forgiving
+// whole-chime targets.
+export function ringChimeAt(chimes, camera, input) {
+  for (const c of chimes) {
+    const hit = c.pick(camera, input);
+    if (hit) { c.ring(0.75, hit.tube); return true; }
+  }
+  return false;
 }
 
 // What a builder hands back so the case can drive them: the list, and one
@@ -128,8 +179,12 @@ export function hangChimes(parent, {
 // Object3D and forty cases add them straight to a scene.
 export function attachChimes(group, chimes) {
   group.chimes = chimes;
-  // Safe to call unconditionally, so a case's update() never has to ask
-  // whether this particular hut happens to have chimes on it today.
+  // Safe to call unconditionally, so a case's update() never has to ask whether
+  // this particular hut happens to have chimes on it today — and safe to call
+  // ALONGSIDE main.js's own driving, because makeFurin integrates the elapsed
+  // simTime since its last call: a second call at the same simTime advances it
+  // by zero. A case that wants to drive its own chimes can; it just no longer
+  // has to.
   group.updateChimes = (dt, simTime) => { for (const c of chimes) c.update(dt, simTime); };
   return group;
 }

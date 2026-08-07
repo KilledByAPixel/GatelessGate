@@ -9,7 +9,7 @@ import { makeSceneManager, disposeRoot } from './scene/manager.js';
 import { makeDebug, devModeOn } from './ui/debug.js';
 import { makeCompose } from './ui/compose.js';
 import { makeLayoutOverlay } from './dev/overlay.js';
-import { setChimeAudio } from './kit/chimes.js';
+import { setChimeAudio, collectChimes, ringChimeAt } from './kit/chimes.js';
 import { makeInput } from './input.js';
 import { setBreezePointer, clearBreeze } from './kit/breeze.js';
 import { createSave } from './save.js';
@@ -615,6 +615,31 @@ document.addEventListener('visibilitychange', () => {
 // asks for the rig each time rather than holding one, because every page swap
 // builds a fresh one.
 const compose = makeCompose({ getRig: () => rig });
+
+// CHIMES HUNG BY THE KIT, driven and tappable for every page at once.
+//
+// makeHut({ chimes: 7 }) hangs a fūrin; something still has to move it, or it
+// is a dead ornament nobody can ring (Frank: "they're not moving or anything,
+// they're not making sound... these are kind of like solid"). Leaving that to
+// each case is the friction the seed exists to remove, so it lives here beside
+// the ambience main.js already owns on every case's behalf.
+//
+// Swept ONCE per scene and cached on the scene itself: the list dies with the
+// scene, so there is no registry to leak and nothing to unregister at a page
+// turn. A case that would rather drive its own can still call
+// hut.updateChimes(); the fūrin integrates elapsed simTime, so being driven
+// twice in one frame advances it by zero the second time.
+function hungChimes() {
+  const active = scenes.active();
+  const scene = active && active.scene;
+  if (!scene) return [];
+  if (!scene.userData.hungChimes) scene.userData.hungChimes = collectChimes(scene);
+  return scene.userData.hungChimes;
+}
+
+// Registered once, at startup, so it runs before any case's own tap handler —
+// and only spends the touch when a chime was actually under it.
+input.onTap(() => { if (camera) ringChimeAt(hungChimes(), camera, input); });
 
 // THE LAYOUT GUIDES, rebuilt per page. The workbench re-fires this on every
 // scene swap as well as when the switch moves, so the guides always describe
@@ -1266,6 +1291,7 @@ function tick() {
   else if (rig) rig.update(STEP);
   const active = scenes.active();
   if (active && active.update) active.update(STEP, simTime);
+  for (const c of hungChimes()) c.update(STEP, simTime);
   if (mode === 'sit') sit.update(STEP);
   dissolve.update(STEP);
   freeze.update(STEP);

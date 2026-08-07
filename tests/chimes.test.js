@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeHut } from '../src/kit/hut.js';
 import { makeGate } from '../src/kit/gate.js';
-import { hangChimes, setChimeAudio } from '../src/kit/chimes.js';
+import { hangChimes, setChimeAudio, collectChimes, ringChimeAt } from '../src/kit/chimes.js';
 import { makeFurin, FURIN_REACH } from '../src/kit/furin.js';
 
 const chimesOf = (g) => { const out = []; g.traverse((o) => { if (o.name === 'furin') out.push(o); }); return out; };
@@ -193,4 +193,96 @@ test('FURIN_REACH bounds BOTH forms, not just the single it was derived from', (
   }
   const single = -lowest(makeFurin({ tubes: 1, size: 0.1, cordLength: 0, seed: 5 }).group) / 0.1;
   assert.ok(Math.abs(single - 1.98) < 1e-6, `the single's own figure, case 29's: ${single}`);
+});
+
+// ---- the two things that make it a chime rather than an ornament -----------
+// Both of these were missing from the first cut: the thing hung correctly, in
+// the right place, at the right size, and then sat there (Frank: "they're not
+// moving or anything, they're not making sound... you can't click on them").
+
+test('a hung chime is found by a sweep of the scene it ends up in', () => {
+  // How main.js reaches them at all. It has a scene and nothing else — the
+  // update/pick/ring surface lives on the fūrin object, not on its Object3D,
+  // so the object has to ride along on the group for any of this to be possible.
+  const scene = new THREE.Scene();
+  const hut = makeHut({ chimes: 11 });
+  hut.position.set(3, 0, -2);
+  scene.add(hut);
+  const found = collectChimes(scene);
+  assert.equal(found.length, chimesOf(hut).length, 'the sweep found every chime hung in the scene');
+  assert.ok(found.length > 0);
+  for (const f of found) {
+    for (const fn of ['update', 'pick', 'ring']) {
+      assert.equal(typeof f[fn], 'function', `a swept chime can be ${fn}ed`);
+    }
+  }
+  assert.equal(collectChimes(new THREE.Scene()).length, 0, 'a scene with none sweeps up nothing');
+});
+
+test('it actually sways: driven, the chime moves and eventually rings', () => {
+  const struck = [];
+  setChimeAudio({ chimeStrike: (o) => struck.push(o) });
+  try {
+    const scene = new THREE.Scene();
+    scene.add(makeHut({ chimes: 11 }));
+    const chimes = collectChimes(scene);
+    const swingOf = () => chimes.map((c) => c.group.getObjectByName('swing').rotation.z);
+    const start = swingOf();
+    const seen = new Set();
+    for (let i = 0; i < 60 * 30; i++) {
+      for (const c of chimes) c.update(1 / 60, i / 60);
+      if (i % 60 === 0) swingOf().forEach((v) => seen.add(v.toFixed(4)));
+    }
+    const end = swingOf();
+    assert.ok(end.some((v, i) => Math.abs(v - start[i]) > 1e-4), 'it hangs dead still — nothing is driving it');
+    assert.ok(seen.size > 10, `it barely moves: ${seen.size} distinct poses in thirty seconds`);
+    assert.ok(struck.length > 0, 'thirty seconds of swaying and the clapper never reached a tube');
+  } finally { setChimeAudio(null); }
+});
+
+test('you can click it: a ray that touches a chime rings it', () => {
+  const struck = [];
+  setChimeAudio({ chimeStrike: (o) => struck.push(o) });
+  try {
+    const scene = new THREE.Scene();
+    scene.add(makeHut({ chimes: 11 }));
+    scene.updateMatrixWorld(true);
+    const chimes = collectChimes(scene);
+
+    // main.js's own handler, with an input that hits whatever it is offered —
+    // the tubes are what a real pointer would find first
+    const input = { raycastFirst: (cam, objs) => (objs && objs.length
+      ? { object: objs[0], point: new THREE.Vector3(), distance: 1 } : null) };
+    assert.equal(ringChimeAt(chimes, {}, input), true, 'a touch on a chime is spent on it');
+    for (let i = 0; i < 60 * 3; i++) for (const c of chimes) c.update(1 / 60, i / 60);
+    assert.ok(struck.length > 0, 'rung by hand and still silent');
+
+    // and a touch that finds nothing leaves them alone
+    assert.equal(ringChimeAt(chimes, {}, { raycastFirst: () => null }), false);
+  } finally { setChimeAudio(null); }
+});
+
+test('the object form dials the strike rate and pins the count', () => {
+  // `chimes: 29` stays a bare seed; `{ seed, wind, count }` is for a corner
+  // that should be quieter or busier than the default. The book's rule is that
+  // audio is minimal and chill, and how chatty a corner is belongs to the
+  // corner rather than to a constant in the kit.
+  assert.equal(chimesOf(makeHut({ chimes: { seed: 5, count: 1 } })).length, 1);
+  assert.equal(chimesOf(makeHut({ chimes: { seed: 5, count: 2 } })).length, 2);
+  assert.equal(chimesOf(makeHut({ chimes: { seed: 0 } })).length, 0, 'seed 0 still hangs nothing');
+
+  const rate = (wind) => {
+    let n = 0;
+    setChimeAudio({ chimeStrike: () => n++ });
+    try {
+      const scene = new THREE.Scene();
+      scene.add(makeHut({ chimes: { seed: 29, wind, count: 2 } }));
+      const cs = collectChimes(scene);
+      for (let i = 0; i < 60 * 60; i++) for (const c of cs) c.update(1 / 60, i / 60);
+      return n;
+    } finally { setChimeAudio(null); }
+  };
+  const loud = rate(1), quiet = rate(0.2);
+  assert.ok(loud > quiet, `less wind must ring less: ${loud}/min at 1 vs ${quiet}/min at 0.2`);
+  assert.ok(quiet > 0, 'a quiet chime is still a chime');
 });
