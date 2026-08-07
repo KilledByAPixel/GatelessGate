@@ -5,6 +5,7 @@ import { composeWorld } from '../kit/scenery.js';
 import { makePath } from '../kit/path.js';
 import { makeMonk, aimMonk } from '../kit/monk.js';
 import { makeBundle } from '../kit/bundle.js';
+import { tapMeshes } from '../kit/pick.js';
 import { toonMaterial, makeLights } from '../render/toon.js';
 import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
@@ -207,10 +208,7 @@ export default {
     let taps = 0;
     let stirNow = 0;
     let clock = 0;           // the house simTime guard — see update()
-    const grabMeshes = [stone];
-    bundle.group.traverse((o) => {
-      if (o.isMesh && !o.userData.isOutline) grabMeshes.push(o);
-    });
+    const grabMeshes = [stone, ...tapMeshes(bundle.group)];
 
     input.onTap(() => {
       if (!camera) return;

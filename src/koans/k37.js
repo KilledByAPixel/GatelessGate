@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP } from '../palette.js';
 import {
   composeWorld, makeBuffalo, makePen, makeMonk, faceMonk,
-  makeLights, makeBlobShadow, addOutlines,
+  makeLights, makeBlobShadow, addOutlines, tapMeshes,
 } from '../kit/index.js';
 
 const ID = 37;
@@ -86,10 +86,7 @@ export default {
     // nothing in the UI says so.
     let camera = null;
     let tugs = 0;
-    const tailMeshes = [];
-    buffalo.tail.group.traverse((o) => {
-      if (o.isMesh && !o.userData.isOutline) tailMeshes.push(o);
-    });
+    const tailMeshes = tapMeshes(buffalo.tail.group);
 
     input.onTap(() => {
       if (!camera) return;

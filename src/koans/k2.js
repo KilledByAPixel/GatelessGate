@@ -3,6 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import { composeWorld } from '../kit/scenery.js';
 import { makeMonk, faceMonk, bearing } from '../kit/monk.js';
+import { tapMeshes } from '../kit/pick.js';
 import { makeFox } from '../kit/fox.js';
 import { makeCave } from '../kit/cave.js';
 import { makeRain } from '../kit/rainfall.js';
@@ -155,8 +156,7 @@ export default {
     // An ear, a turn of the head, one sweep of the brush, and then it is a fox
     // sitting outside a cave again. Nothing is asked of you and nothing is won.
     let camera = null;
-    const foxMeshes = [];
-    fox.group.traverse((o) => { if (o.isMesh && !o.userData.isOutline) foxMeshes.push(o); });
+    const foxMeshes = tapMeshes(fox.group);
 
     input.onTap(() => {
       if (!camera) return;

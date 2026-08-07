@@ -8,6 +8,7 @@ import { makeOak } from '../kit/oak.js';
 import { makeCliff } from '../kit/cliff.js';
 import { makeHangingMonk } from '../kit/hangingmonk.js';
 import { makeMonk, faceMonk } from '../kit/monk.js';
+import { tapMeshes } from '../kit/pick.js';
 import { makeLights, toonMaterial } from '../render/toon.js';
 import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
@@ -288,10 +289,7 @@ export default {
     // never says so.
     let camera = null;
     let sways = 0;
-    const danglerMeshes = [];
-    dangler.group.traverse((o) => {
-      if (o.isMesh && !o.userData.isOutline) danglerMeshes.push(o);
-    });
+    const danglerMeshes = tapMeshes(dangler.group);
 
     input.onTap(() => {
       if (!camera) return;

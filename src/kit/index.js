@@ -12,6 +12,7 @@ export { makeSand } from './sand.js';
 export { makeFoam, foamCycle } from './foam.js';
 export { composeWorld, around } from './scenery.js';
 export { makeMonk, aimMonk, faceMonk, wrapPi, bearing } from './monk.js';
+export { tapMeshes } from './pick.js';
 export { makeFigure, robeLathe, sleeve, sphereHead, neckBetween } from './figure.js';
 export { makeTree } from './tree.js';
 export { makePine, pineGeometry } from './pine.js';

@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk, makeFlower, makeAssembly, makeCat,
-  makeLights, makeBlobShadow, addOutlines, toonMaterial,
+  makeLights, makeBlobShadow, addOutlines, toonMaterial, tapMeshes,
 } from '../kit/index.js';
 import { hash1 } from '../util/noise.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
@@ -174,8 +174,7 @@ export default {
       return true;
     }
 
-    const flowerMeshes = [];
-    flower.traverse((o) => { if (o.isMesh && !o.userData.isOutline) flowerMeshes.push(o); });
+    const flowerMeshes = tapMeshes(flower);
     input.onTap(() => {
       if (!camera) return;
       // the flower first — it is the case's moment; the cat is company.

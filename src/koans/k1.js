@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeDog, makeHut, makeLantern,
-  makeLights, makeBlobShadow, addOutlines,
+  makeLights, makeBlobShadow, addOutlines, tapMeshes,
 } from '../kit/index.js';
 
 const ID = 1;
@@ -113,12 +113,7 @@ export default {
     let muPhase = -1;      // -1 idle, otherwise seconds elapsed
     let mu = 0;            // 0..1 how far the world has gone
 
-    function dogMeshes() {
-      const out = [];
-      dog.traverse((o) => { if (o.isMesh && !o.userData.isOutline) out.push(o); });
-      return out;
-    }
-    const hitTargets = dogMeshes();
+    const hitTargets = tapMeshes(dog);
 
     input.onTap(() => {
       if (!camera || muPhase >= 0) return;

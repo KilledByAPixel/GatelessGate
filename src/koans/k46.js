@@ -3,6 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, wash } from '../palette.js';
 import { makeMonk, faceMonk } from '../kit/monk.js';
 import { makePole } from '../kit/pole.js';
+import { tapMeshes } from '../kit/pick.js';
 import { composeWorld } from '../kit/scenery.js';
 import { makeLights } from '../render/toon.js';
 import { makeBlobShadow } from '../render/blobshadow.js';
@@ -198,13 +199,8 @@ export default {
     // the ceiling.
     let lastRing = -99;
 
-    const pick = (o) => {
-      const out = [];
-      o.traverse((m) => { if (m.isMesh && !m.userData.isOutline) out.push(m); });
-      return out;
-    };
-    const sitterMeshes = pick(sitter);
-    const poleMeshes = pick(pole);
+    const sitterMeshes = tapMeshes(sitter);
+    const poleMeshes = tapMeshes(pole);
 
     input.onTap(() => {
       if (!camera) return;

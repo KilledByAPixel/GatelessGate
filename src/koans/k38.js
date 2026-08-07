@@ -6,6 +6,7 @@ import { makePath } from '../kit/path.js';
 import { makeMonk, aimMonk, faceMonk } from '../kit/monk.js';
 import { makeTree } from '../kit/tree.js';
 import { makeOak } from '../kit/oak.js';
+import { tapMeshes } from '../kit/pick.js';
 import { makeLights, toonMaterial } from '../render/toon.js';
 import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
@@ -244,8 +245,7 @@ export default {
       return true;
     }
 
-    const oakMeshes = [];
-    oak.traverse((o) => { if (o.isMesh && !o.userData.isOutline) oakMeshes.push(o); });
+    const oakMeshes = tapMeshes(oak);
 
     // Touch the tree and a few leaves come off it. There is nothing to solve and
     // nothing that says so; it is the same as touching a tree.

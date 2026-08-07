@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeBasin, makeBowl, makeWater, makeMonk, faceMonk,
-  makeOdoshi, makeCat, makeLights, makeBlobShadow, addOutlines,
+  makeOdoshi, makeCat, makeLights, makeBlobShadow, addOutlines, tapMeshes,
 } from '../kit/index.js';
 
 const ID = 7;
@@ -145,8 +145,7 @@ export default {
     // summed as decaying oscillations, driven from update()
     const rocks = [];
     const surface = water.group.children.find((c) => c.name === 'surface');
-    const bowlMeshes = [];
-    bowl.traverse((o) => { if (o.isMesh && !o.userData.isOutline) bowlMeshes.push(o); });
+    const bowlMeshes = tapMeshes(bowl);
 
     input.onTap(() => {
       if (!camera) return;

@@ -6,6 +6,7 @@ import { makeMonk, aimMonk, faceMonk } from '../kit/monk.js';
 import { makeAssembly } from '../kit/assembly.js';
 import { makeHut } from '../kit/hut.js';
 import { makeVase } from '../kit/vase.js';
+import { tapMeshes } from '../kit/pick.js';
 import { makeLights } from '../render/toon.js';
 import { makeBlobShadow } from '../render/blobshadow.js';
 import { addOutlines } from '../render/outlines.js';
@@ -157,8 +158,7 @@ export default {
     // foot NOT quite happening. It cannot be knocked over — makeVase caps the
     // tilt far short of the tipping point however often it is tapped.
     let camera = null;
-    const vaseMeshes = [];
-    vase.group.traverse((o) => { if (o.isMesh && !o.userData.isOutline) vaseMeshes.push(o); });
+    const vaseMeshes = tapMeshes(vase.group);
 
     input.onTap(() => {
       if (!camera) return;
