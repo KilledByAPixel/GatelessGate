@@ -156,6 +156,19 @@ export function searchCases(query) {
       score,
     });
   }
-  out.sort((a, b) => b.score - a.score || a.id - b.id);
+  // IN BOOK ORDER, always. Results used to come back ranked by `score` —
+  // title hits first, then case text, then commentary — which is the right
+  // answer for a search engine and the wrong one for a book. Frank, reading a
+  // result list: "they should always show a number order." He is right about
+  // why: this list is rendered exactly like the Contents, numeral in the left
+  // column and all, so a reader scans it as the Contents with rows removed.
+  // Numbers that jump around in a list shaped like a table of contents read as
+  // a fault in the list rather than as a ranking.
+  //
+  // The score is still computed and still returned. It decides nothing about
+  // order now, but it is what `where` and the snippet choice are derived from,
+  // and it is the one thing that would have to come back if this is ever
+  // wanted as "best match first" again.
+  out.sort((a, b) => a.id - b.id);
   return out;
 }
