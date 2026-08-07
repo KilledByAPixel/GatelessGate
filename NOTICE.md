@@ -43,9 +43,15 @@ work is long out of copyright everywhere.
 
 ## A note on the NoDerivatives term
 
-`ND` means no adaptations may be shared. Reading the code, running it locally,
-and forking the repository to do either are ordinary uses of a public
-repository; publishing a modified version of the book is what the term is
-there to prevent. If you want to do something the licence does not allow — a
-translation, a port, a classroom or gallery use, anything commercial — ask.
-The answer is not automatically no: <https://frankforce.com>
+`ND` means no adaptations may be shared, and read strictly that includes a
+fork with your own commits on it. That is not the intent. **Forking in order
+to propose changes back to this repository is expressly permitted** — see
+[CONTRIBUTING.md](CONTRIBUTING.md), which also says what happens to a
+contribution once it is merged.
+
+What the term is for is the other case: taking the book, changing it, and
+putting out your own version of it as a thing of your own.
+
+If you want to do something the licence does not allow — a translation, a
+port, a classroom or gallery use, anything commercial — ask. The answer is not
+automatically no: <https://frankforce.com>

@@ -49,6 +49,9 @@ It does not cover the 1934 translation of the forty-nine cases, which is in the 
 
 If you want to do something the license doesn't allow, ask — the answer is not automatically no.
 
+**Pull requests are welcome**, and forking in order to open one is expressly permitted despite the NoDerivatives term — see [CONTRIBUTING.md](CONTRIBUTING.md).
+The license is aimed at someone publishing their own version of the book, not at someone helping with this one.
+
 ## Still to come
 
 This is a living project. Here is some of what's planned...
