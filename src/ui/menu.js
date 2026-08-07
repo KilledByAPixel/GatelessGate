@@ -15,7 +15,7 @@ export function makeMenu({
   h1.textContent = 'The Gateless Gate';
   const lede = document.createElement('p');
   lede.className = 'lede';
-  lede.textContent = 'The Mumonkan — read any case, in any order.';
+  lede.textContent = 'An interactive edition of the Mumonkan';
 
   const cont = document.createElement('div');
   cont.className = 'gg-continue';

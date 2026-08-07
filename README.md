@@ -1,6 +1,6 @@
 # Gateless Gate 3D
 
-*An interactive sumi-e reading of the Mumonkan, in your browser.*
+*An interactive edition of the Mumonkan, in your browser.*
 
 ## [Enter the Gate](https://killedbyapixel.github.io/GatelessGate/)
 

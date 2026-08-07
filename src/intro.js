@@ -180,7 +180,7 @@ export function makeIntro(camera, { onDone, onSound } = {}) {
   const el = document.createElement('div');
   el.className = 'gg-view gg-title-view';
   el.innerHTML = '<h1>The Gateless Gate</h1>'
-    + '<p class="sub">An interactive reading of the Mumonkan</p>';
+    + '<p class="sub">An interactive edition of the Mumonkan</p>';
 
   function apply() {
     const { pos, look } = introPath(u);
