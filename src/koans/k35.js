@@ -34,7 +34,16 @@ export default {
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.16', 'music'],
-  camera: { distance: 5.5, target: [0.4, 1.8, -1.0], azimuth: -0.55, polar: 1.50 },
+  // Close in, and low. Both of those sit OUTSIDE the rig's stock envelope
+  // (minDist 7, maxPolar 1.45), so this frame has to widen the envelope as
+  // well as name itself — the way k12 does for its gorge. Without that the
+  // authored view holds on arrival and then dies at the reader's first
+  // scroll notch or drag, which clamps into the stock range and can never
+  // get back out: the composition would be reachable exactly once.
+  camera: {
+    distance: 5.5, target: [0.4, 1.8, -1.0], azimuth: -0.55, polar: 1.50,
+    minDist: 4.5, maxDist: 11, maxPolar: 1.56,
+  },
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -43,8 +52,16 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
     scene.add(makeLights());
 
-    // the road between the two lives
-    const path = makePath({ from: [6.5, 6.0], to: [-6.0, -22], width: 1.4, seed: ID, groundSeed: 21, wander: 0.6 });
+    // The road between the two lives. It runs the full depth it was extended
+    // to — but bent, because straight ahead at that reach is a twelve-unit
+    // mountain at (-5.5, -29.6) and the road was ending nearly three units
+    // inside its rock. The bend lives in the far quarter: at the town's depth
+    // the lane is within a third of a unit of where the straight road put it,
+    // so nothing near the camera moved.
+    const path = makePath({
+      from: [6.5, 6.0], to: [3.5, -21], via: [-5.0, -9],
+      width: 1.4, seed: ID, groundSeed: 21, wander: 0.6,
+    });
     scene.add(path);
 
     // home, near; the town, far off down the road
