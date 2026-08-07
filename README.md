@@ -39,6 +39,16 @@ The book's own About page carries the full note, including the one editorial dec
 
 The goal is something beautiful enough to draw in someone who has never heard of a koan, and faithful enough to reward someone who has.
 
+## License
+
+Shared under **[Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International](https://creativecommons.org/licenses/by-nc-nd/4.0/)** — credit it, don't sell it, don't publish a changed version of it.
+That covers what is mine: the code, the dioramas, the audio, the narration, and the new translations of the front and back matter, © 2026 Frank Force.
+
+It does not cover the 1934 translation of the forty-nine cases, which is in the public domain and nobody's to license, nor Three.js in `lib/`, which is MIT and travels under its own terms.
+[NOTICE.md](NOTICE.md) sets out which is which; [LICENSE](LICENSE) is the legal text.
+
+If you want to do something the license doesn't allow, ask — the answer is not automatically no.
+
 ## Still to come
 
 This is a living project. Here is some of what's planned...

@@ -1082,7 +1082,7 @@ An interactive sumi-e reading: every case staged as a small ink-painting diorama
 
 **Rights**
 
-The 1934 translation is in the public domain. Everything else — the code, the dioramas, the audio, and the narration — is © 2026 Frank Force. All rights reserved.
+The 1934 translation is in the public domain. Everything else — the code, the dioramas, the audio, the narration, and the new translations of the front and back matter — is © 2026 Frank Force, shared under [Creative Commons BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/): credit it, don’t sell it, don’t publish a changed version of it. For anything the licence doesn’t cover, ask. Three.js, vendored here, is MIT-licensed and travels under its own terms.
 
 **Built with**
 

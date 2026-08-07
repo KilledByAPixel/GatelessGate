@@ -2,6 +2,7 @@
   "name": "gateless-gate",
   "private": true,
   "type": "module",
+  "license": "CC-BY-NC-ND-4.0",
   "scripts": {
     "test": "node --test",
     "start": "npx -y http-server -p 8105 -c-1 .",

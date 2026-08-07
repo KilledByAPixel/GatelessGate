@@ -84,9 +84,44 @@ test('an in-book link points at a file that is actually there', () => {
   read(BOOK_MD);
 });
 
-test('the rights line names the holder and the year', () => {
+test('the rights line names the holder, the year and the licence', () => {
   const rights = SECTIONS.find((s) => s.label === 'Rights');
   const txt = rights.parts.join('');
   assert.match(txt, /©\s*2026\s*Frank Force/);
-  assert.match(txt, /All rights reserved/i);
+  assert.match(txt, /BY-NC-ND 4\.0/);
+  // and it still says what is NOT his to license — the reason this page has a
+  // rights line at all is that the book is two things with different owners
+  assert.match(txt, /1934 translation is in the public domain/);
+});
+
+// The page and the repository must not say different things about the terms.
+// A reader sees the About page; anyone who lands on GitHub sees LICENSE. They
+// were already out of step once: the page said "all rights reserved" while the
+// repository carried a Creative Commons licence.
+test('the About page and the repository agree on the licence', () => {
+  const rights = SECTIONS.find((s) => s.label === 'Rights');
+  const url = rights.parts.filter(Array.isArray).map(([, href]) => href)
+    .find((h) => /creativecommons\.org/.test(h));
+  assert.ok(url, 'the rights line links the licence deed');
+  assert.match(url, /by-nc-nd\/4\.0/, `the deed for the licence we actually ship: ${url}`);
+
+  const license = read('LICENSE');
+  assert.match(license, /^Attribution-NonCommercial-NoDerivatives 4\.0 International/,
+    'LICENSE carries the CC BY-NC-ND 4.0 legal text');
+  // the real text, not a stub that links away: all eight sections
+  for (let n = 1; n <= 8; n++) {
+    assert.ok(license.includes(`Section ${n} --`), `LICENSE is complete: no Section ${n}`);
+  }
+
+  const pkg = JSON.parse(read('package.json'));
+  assert.equal(pkg.license, 'CC-BY-NC-ND-4.0', 'the SPDX id matches the licence text');
+
+  // and NOTICE.md keeps the two things the licence itself must not be edited
+  // to say: what is public domain, and what is MIT
+  const notice = read('NOTICE.md');
+  // \s+, not a space: NOTICE.md is hard-wrapped prose and the phrase straddles
+  // a line break. A test that forces prose to reflow for its own regex is the
+  // test being wrong.
+  assert.match(notice, /public\s+domain/i, 'NOTICE names the 1934 translation as public domain');
+  assert.match(notice, /MIT/, 'NOTICE names the vendored Three.js as MIT');
 });
