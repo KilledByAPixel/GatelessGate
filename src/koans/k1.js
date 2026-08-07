@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
-  composeWorld, makePath, makeMonk, faceMonk, makeDog,
+  composeWorld, makePath, makeMonk, faceMonk, makeDog, makeHut, makeLantern,
   makeLights, makeBlobShadow, addOutlines,
 } from '../kit/index.js';
 
@@ -29,6 +29,24 @@ export default {
 
     const path = makePath({ from: [1.2, 9], to: [1.2, -34], width: 1.7, seed: 13, groundSeed: 21, wander: 1.1 });
     scene.add(path);
+
+    // Joshu's hermitage, back off the road behind him — the place the monk
+    // walked here to reach (the opening page was two figures and a dog in an
+    // empty meadow; Frank: "scene is boring, add more, maybe a hut"). The
+    // path samples at z≈-4.5 put the road at x≈0.5, so the hut at -3.8 keeps
+    // a clear verge between its threshold and the traffic.
+    const HUT = { x: -3.8, z: -4.5 };
+    const hut = makeHut({ width: 3.0, height: 2.3, depth: 2.4 });
+    hut.position.set(HUT.x, 0, HUT.z);
+    faceMonk(hut, { x: 0.9, z: 0.4 });     // its threshold opens onto the road
+    scene.add(hut);
+
+    // and a stone lantern at the road's edge opposite — the pair of verticals
+    // that make the spot a PLACE on the road rather than a stretch of it
+    const LANTERN = { x: 2.5, z: -2.0 };
+    const lantern = makeLantern({ height: 1.15 });
+    lantern.position.set(LANTERN.x, 0, LANTERN.z);
+    scene.add(lantern);
 
     // Old Joshu sits off the road; the monk stands before him with the question.
     const mp = path.sample(0.19);
@@ -61,14 +79,24 @@ export default {
         ...path.keepout(26, 1.1),
         { x: mp.x, z: mp.z, r: 2.6 },
         { x: dog.position.x, z: dog.position.z, r: 1.0 },
+        { x: HUT.x, z: HUT.z, r: 3.0 },
+        { x: LANTERN.x, z: LANTERN.z, r: 0.9 },
       ],
-      grassKeepout: path.keepout(26, 1.0),   // Joshu and the dog sit in the grass
+      // Joshu and the dog sit in the grass; the hut's own floor and the
+      // lantern's base cover theirs
+      grassKeepout: [
+        ...path.keepout(26, 1.0),
+        { x: HUT.x, z: HUT.z, r: 1.9 },
+        { x: LANTERN.x, z: LANTERN.z, r: 0.4 },
+      ],
     });
 
     for (const [p, rx, rz, op] of [
       [joshu.position, 0.75, 0.6, 0.42],
       [monk.position, 0.65, 0.5, 0.42],
       [dog.position, 0.5, 0.32, 0.34],
+      [hut.position, 2.0, 1.5, 0.30],
+      [lantern.position, 0.38, 0.3, 0.34],
     ]) {
       const s = makeBlobShadow({ radiusX: rx, radiusZ: rz, opacity: op });
       s.position.x = p.x; s.position.z = p.z;
