@@ -41,9 +41,9 @@ export const SECTIONS = [
       + '(1957), the version most readers know. Archaic verb forms and pronouns, '
       + 'which survive here and there in the capping verses, have been lightly '
       + 'modernised; Mumon’s commentaries were already in plain modern English. '
-      + 'Other small editorial changes have been made and more may follow — '
-      + 'bracketed translator’s notes let go where they explained a koan before '
-      + 'it had finished asking, and the like. Transcribed from ',
+      + 'Other small editorial changes have been made — bracketed translator’s '
+      + 'notes let go where they explained a koan before it had finished asking, '
+      + 'and the like. Transcribed from ',
       ['sacred-texts.com', SOURCE_URL],
       '.',
     ],

@@ -1066,7 +1066,7 @@ This file is generated from the same text the interactive edition reads, so the 
 
 **The translation**
 
-The English text is Nyogen Senzaki and Paul Reps’s rendering of the Mumonkan, privately printed by John Murray in Los Angeles in 1934. That printing is in the United States public domain — its copyright was never renewed. Reps later expanded this material into Zen Flesh, Zen Bones (1957), the version most readers know. Archaic verb forms and pronouns, which survive here and there in the capping verses, have been lightly modernised; Mumon’s commentaries were already in plain modern English. Other small editorial changes have been made and more may follow — bracketed translator’s notes let go where they explained a koan before it had finished asking, and the like. Transcribed from [sacred-texts.com](https://sacred-texts.com/bud/glg/index.htm).
+The English text is Nyogen Senzaki and Paul Reps’s rendering of the Mumonkan, privately printed by John Murray in Los Angeles in 1934. That printing is in the United States public domain — its copyright was never renewed. Reps later expanded this material into Zen Flesh, Zen Bones (1957), the version most readers know. Archaic verb forms and pronouns, which survive here and there in the capping verses, have been lightly modernised; Mumon’s commentaries were already in plain modern English. Other small editorial changes have been made — bracketed translator’s notes let go where they explained a koan before it had finished asking, and the like. Transcribed from [sacred-texts.com](https://sacred-texts.com/bud/glg/index.htm).
 
 **The front and back matter**
 
