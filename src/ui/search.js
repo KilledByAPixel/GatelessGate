@@ -35,47 +35,113 @@ export function terms(query) {
   return fold(query || '').split(/[^a-z0-9']+/).filter((t) => t.length > 1);
 }
 
+// A term in quotes is a WHOLE-WORD term. Unquoted searching is forgiving on
+// purpose (see the header) — but forgiveness is exactly wrong for the one
+// word this book turns on: `mu` also matches much, must, Mumon and murmur,
+// so Joshu's answer was the hardest thing in the book to find. Quotes mean
+// here what they mean in every other search box: this word, whole. Several
+// words in one pair of quotes are a phrase — adjacent, in order.
+//
+// An unclosed quote is treated as closed at the end of the query, so the
+// search keeps working while the user is still typing it.
+const KEEP = (t) => t.length > 1 || /^[0-9]$/.test(t);
+
+function pushLoose(out, s) {
+  for (const t of s.split(/[^a-z0-9']+/)) {
+    if (t && KEEP(t)) out.push({ term: t, exact: false });
+  }
+}
+
+export function parseQuery(query) {
+  const q = fold(query || '');
+  const out = [];
+  const runs = /"([^"]*)"?/g;
+  let last = 0, m;
+  while ((m = runs.exec(q))) {
+    pushLoose(out, q.slice(last, m.index));
+    const phrase = m[1].split(/[^a-z0-9']+/).filter(Boolean).join(' ');
+    if (phrase) out.push({ term: phrase, exact: true });
+    last = runs.lastIndex;
+  }
+  pushLoose(out, q.slice(last));
+  return out;
+}
+
+// The boundary class is the complement of the token class parseQuery splits
+// on, so "whole word" means exactly "what the tokenizer would call one word".
+const BOUND = "[^a-z0-9']";
+const ESC = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function exactRe(term) {
+  const words = term.split(' ').map(ESC).join(`${BOUND}+`);
+  return new RegExp(`(?:^|${BOUND})(${words})(?:$|${BOUND})`);
+}
+
+// Where a probe matched in a FOLDED field, and how long the match is — the
+// two facts snippet() needs. Folding is length-preserving for the text this
+// book contains, which is why an index into the folded string is also an
+// index into the original (snippet already relied on that).
+function locate(probe, text) {
+  if (!probe.re) {
+    const at = text.indexOf(probe.term);
+    return at < 0 ? null : { at, len: probe.term.length };
+  }
+  const m = probe.re.exec(text);
+  if (!m) return null;
+  return { at: m.index + m[0].indexOf(m[1]), len: m[1].length };
+}
+
 // Where a hit landed, and enough words either side to recognise it. Snippets are
 // what make search usable here: a list of 49 titles you half-remember is exactly
 // as unhelpful as the contents page you already have.
-export function snippet(text, term, width = 90) {
-  const at = fold(text).indexOf(term);
+export function snippet(text, term, width = 90, found = null) {
+  const at = found ? found.at : fold(text).indexOf(term);
+  const len = found ? found.len : term.length;
   if (at < 0) return null;
   let from = Math.max(0, at - Math.floor(width / 2));
-  let to = Math.min(text.length, at + term.length + Math.floor(width / 2));
+  let to = Math.min(text.length, at + len + Math.floor(width / 2));
   while (from > 0 && !/\s/.test(text[from - 1])) from--;          // don't cut a word in half
   while (to < text.length && !/\s/.test(text[to])) to++;
   return (from > 0 ? '…' : '') + text.slice(from, to).replace(/\s+/g, ' ').trim() + (to < text.length ? '…' : '');
 }
 
 export function searchCases(query) {
-  const t = terms(query);
-  if (!t.length) return null;                 // null means "not searching", vs [] for "no hits"
+  const tokens = parseQuery(query);
+  if (!tokens.length) return null;            // null means "not searching", vs [] for "no hits"
+  const probes = tokens.map((t) => ({ ...t, re: t.exact ? exactRe(t.term) : null }));
 
   const out = [];
   for (const entry of index()) {
     // every term must appear somewhere in this case, in any field
-    const hits = t.map((term) => FIELDS.find((f) => entry.fields[f].includes(term)));
-    if (hits.some((f) => f === undefined)) continue;
+    const found = probes.map((p) => {
+      for (const f of FIELDS) {
+        const at = locate(p, entry.fields[f]);
+        if (at) return { field: f, at };
+      }
+      return null;
+    });
+    if (found.some((f) => f === null)) continue;
+    const hits = found.map((f) => f.field);
 
     // A title hit is worth far more than a hit buried in a commentary: someone
     // typing "flag" wants case 29, not the four commentaries that mention flags.
     let score = 0;
-    for (let i = 0; i < t.length; i++) {
+    for (let i = 0; i < probes.length; i++) {
       score += hits[i] === 'title' ? 100 : hits[i] === 'case' ? 10 : 1;
-      if (entry.fields.title.startsWith(t[i])) score += 50;
+      if (entry.fields.title.startsWith(probes[i].term)) score += 50;
     }
 
     // show the snippet for the most interesting field that matched
     const best = ['case', 'comment', 'verse'].find((f) => hits.includes(f))
       || (hits.includes('title') ? 'case' : null);
-    const term = t.find((x) => entry.fields[best] && entry.fields[best].includes(x)) || t[0];
+    const i = best ? hits.indexOf(best) : -1;
+    const at = i >= 0 ? found[i].at : null;
 
     out.push({
       id: entry.id,
       title: entry.title,
       where: hits.includes('title') ? 'title' : best,
-      snippet: best ? snippet(entry.raw[best] || '', term) : null,
+      snippet: best ? snippet(entry.raw[best] || '', probes[Math.max(0, i)].term, 90, at) : null,
       score,
     });
   }

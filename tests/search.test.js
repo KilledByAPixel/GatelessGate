@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { searchCases, terms, snippet } from '../src/ui/search.js';
+import { searchCases, terms, snippet, parseQuery } from '../src/ui/search.js';
 
 const ids = (q) => searchCases(q).map((r) => r.id);
 
@@ -60,4 +60,45 @@ test('snippet keeps whole words and marks where it was cut', () => {
 
 test('terms drops punctuation and one-letter noise', () => {
   assert.deepEqual(terms("Joshu's dog, or a cat?"), ["joshu's", 'dog', 'or', 'cat']);
+});
+
+test('a quoted term matches whole words only', () => {
+  // The motivating case: `mu` unquoted also matches much, must, Mumon,
+  // murmur — Joshu's answer, the most important word in the book, is
+  // unfindable. Quoted, only the cases where it stands alone.
+  const loose = ids('mu');
+  const exact = ids('"mu"');
+  assert.ok(loose.length > 10, `unquoted mu is noisy: ${loose.length}`);
+  assert.deepEqual(exact, [1, 49]);
+});
+
+test('a quoted phrase must appear adjacent and in order', () => {
+  assert.deepEqual(ids('"wash your bowl"'), [7]);
+  assert.deepEqual(ids('"bowl your wash"'), []);
+});
+
+test('an unclosed quote searches the text typed so far', () => {
+  // mid-typing, the user has opened a quote and not closed it yet
+  assert.deepEqual(ids('"mu'), ids('"mu"'));
+});
+
+test('unquoted searching is unchanged', () => {
+  assert.equal(searchCases('man').length, 22);
+  assert.deepEqual(ids('man').slice(0, 4), [20, 2, 5, 9]);
+  assert.equal(searchCases('sit').length, 7);
+  assert.deepEqual(ids('sit').slice(0, 4), [11, 25, 41, 46]);
+});
+
+test('parseQuery separates quoted runs from loose words', () => {
+  assert.deepEqual(parseQuery('joshu "wash your bowl" dog'), [
+    { term: 'joshu', exact: false },
+    { term: 'wash your bowl', exact: true },
+    { term: 'dog', exact: false },
+  ]);
+});
+
+test('a quoted hit still carries a snippet', () => {
+  const hit = searchCases('"porridge"')[0];
+  assert.equal(hit.id, 7);
+  assert.ok(/porridge/i.test(hit.snippet), `snippet holds the term: ${hit.snippet}`);
 });
