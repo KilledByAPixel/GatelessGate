@@ -108,12 +108,23 @@ export function snippet(text, term, width = 90, found = null) {
 export function searchCases(query) {
   const tokens = parseQuery(query);
   if (!tokens.length) return null;            // null means "not searching", vs [] for "no hits"
-  const probes = tokens.map((t) => ({ ...t, re: t.exact ? exactRe(t.term) : null }));
+  // A NUMBER IS ALWAYS A WHOLE-WORD TERM, quoted or not. Loose matching is
+  // substring matching, and for digits that is only ever noise: unquoted `3`
+  // would otherwise find case 25 because its commentary happens to say 13.
+  // Nobody types a digit hoping to match the inside of a longer number.
+  const probes = tokens.map((t) => ({
+    ...t,
+    re: (t.exact || /^[0-9]+$/.test(t.term)) ? exactRe(t.term) : null,
+  }));
 
   const out = [];
   for (const entry of index()) {
-    // every term must appear somewhere in this case, in any field
+    // every term must appear somewhere in this case, in any field — or, for a
+    // bare number, BE this case's number. Typing 31 should reach case 31; it
+    // used to reach nothing at all, because the numeral appears nowhere in the
+    // text of the case it names.
     const found = probes.map((p) => {
+      if (/^[0-9]+$/.test(p.term) && entry.id === +p.term) return { field: 'id', at: null };
       for (const f of FIELDS) {
         const at = locate(p, entry.fields[f]);
         if (at) return { field: f, at };
@@ -127,7 +138,7 @@ export function searchCases(query) {
     // typing "flag" wants case 29, not the four commentaries that mention flags.
     let score = 0;
     for (let i = 0; i < probes.length; i++) {
-      score += hits[i] === 'title' ? 100 : hits[i] === 'case' ? 10 : 1;
+      score += (hits[i] === 'title' || hits[i] === 'id') ? 100 : hits[i] === 'case' ? 10 : 1;
       if (entry.fields.title.startsWith(probes[i].term)) score += 50;
     }
 
@@ -140,7 +151,7 @@ export function searchCases(query) {
     out.push({
       id: entry.id,
       title: entry.title,
-      where: hits.includes('title') ? 'title' : best,
+      where: (hits.includes('title') || hits.includes('id')) ? 'title' : best,
       snippet: best ? snippet(entry.raw[best] || '', probes[Math.max(0, i)].term, 90, at) : null,
       score,
     });

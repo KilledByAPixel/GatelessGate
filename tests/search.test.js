@@ -97,6 +97,21 @@ test('parseQuery separates quoted runs from loose words', () => {
   ]);
 });
 
+test('a number finds the case with that number', () => {
+  // Before this, `31` matched nothing at all and `3` was dropped as noise.
+  assert.equal(ids('31')[0], 31);
+  assert.equal(ids('3')[0], 3, 'single digits count');
+  assert.ok(!ids('3').includes(31), '3 is not a prefix of 31');
+  assert.deepEqual(ids('0'), [], 'no case zero');
+  assert.equal(searchCases('"31"')[0].id, 31, 'quoting a number changes nothing');
+});
+
+test('a case matched by its number needs no snippet', () => {
+  const hit = searchCases('31')[0];
+  assert.equal(hit.where, 'title', 'the row already shows the number');
+  assert.equal(hit.snippet, null);
+});
+
 test('a quoted hit still carries a snippet', () => {
   const hit = searchCases('"porridge"')[0];
   assert.equal(hit.id, 7);
