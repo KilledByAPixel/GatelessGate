@@ -1,7 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonRamp } from '../render/toon.js';
 import { hash1 } from '../util/noise.js';
-import { grassPlacements, GRASS_TONE } from './grassfield.js';
+import { grassPlacements, GRASS_TONE, RIM_SHRINK, GRASS_BASE_TAPER } from './grassfield.js';
 import { breezeState, makePokeSpring, pokeSpringStep, GRASS_POKE_RADIUS } from './breeze.js';
 
 // Frank's tuft grass: instead of one chunky geometric spear per grass plant,
@@ -98,7 +98,7 @@ function tuftTexture() {
 
 // ---- the field ------------------------------------------------------------
 export function makeTuftField({
-  count = 12000, radius = 20, inner = 0, seed = 5, groundSeed = 21,
+  count = 12000, radius = 20, taper = GRASS_BASE_TAPER, inner = 0, seed = 5, groundSeed = 21,
   // width came down 0.52 -> 0.46 with the density doubling: Frank read the wide
   // cards as "a bit thick", and narrower cards at twice the count give more
   // plants AND more ground showing between them. Then back up to 0.8 in
@@ -280,7 +280,7 @@ export function makeTuftField({
   };
   mat.customProgramCacheKey = () => 'tuftfield-billboard-poke-v2';
 
-  const spots = grassPlacements({ count, radius, inner, seed, groundSeed, keepout, groundFn });
+  const spots = grassPlacements({ count, radius, taper, inner, seed, groundSeed, keepout, groundFn });
   const mesh = new THREE.InstancedMesh(geo, mat, Math.max(1, spots.length));
   mesh.name = 'grassfield';          // the debug panel's toggles, wind sliders and
   mesh.userData.noOutline = true;    // material-swap exemption all key off this name
@@ -296,8 +296,12 @@ export function makeTuftField({
   let n = 0;
   for (const p of spots) {
     v.set(p.x, p.y, p.z);
-    // no rotation — the shader billboards; wide/tall carry the aspect variation
-    sc3.set(width * p.wide, height * p.tall, 1);
+    // no rotation — the shader billboards; wide/tall carry the aspect variation.
+    // The rim shrink goes on BOTH axes here, unlike the blade field: a card
+    // carries a whole clump, so a small one is a small clump, and squashing only
+    // its height would stretch the baked blades sideways instead.
+    const s = 1 - RIM_SHRINK * p.rim;
+    sc3.set(width * p.wide * s, height * p.tall * s, 1);
     m.compose(v, IDENTITY_Q, sc3);
     mesh.setMatrixAt(n, m);
     col.copy(base).offsetHSL(p.tint[0], p.tint[1], p.tint[2]);

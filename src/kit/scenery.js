@@ -2,7 +2,7 @@ import { makeGround, groundHeight } from './ground.js';
 import { makeMountains, mountainFootprints } from './mountains.js';
 import { makeForest } from './forest.js';
 import { makeRocks, makeBushes } from './scatter.js';
-import { makeGrassField } from './grassfield.js';
+import { makeGrassField, grassReach, grassArea, GRASS_BASE_AREA } from './grassfield.js';
 import { makeTuftField } from './tuftfield.js';
 
 // Which grass renderer composeWorld builds. Both share grassPlacements and the
@@ -208,7 +208,16 @@ export function composeWorld(scene, {
   // Blades in the instanced field, not clumps. This used to be 52000 back when
   // patchiness threw half of them away; once the field stopped cutting holes in
   // itself every one of them got placed and the meadow turned into a mat.
+  //
+  // The number is quoted for the base reach and taper. Move either and the
+  // budget scales with grassArea, below — otherwise pushing the meadow out just
+  // spreads the same grass thinner, which is not what "further" means.
   grass = 34000,
+  // How far the meadow reaches and where it starts dissolving. Default to the
+  // module-level pair the workbench's two sliders drive (grassfield.js), so a
+  // case can still pin its own and be immune to the sliders.
+  grassRadius = null,
+  grassTaper = null,
   forests = [
     { center: [-19, 0, -27], spread: 13, count: 55 },
     { center: [16, 0, -31], spread: 14, count: 40, color: wash(0.55) },
@@ -314,13 +323,23 @@ export function composeWorld(scene, {
   // `grass` is a blade budget; a tuft card shows several blades. The divisor
   // was 3 at first; Frank asked for about twice the coverage, and at two
   // triangles each even this is a fraction of the blade field's geometry.
+  //
+  // THE REACH, and why the budget moves with it. Both fields place at even area
+  // density, so a fixed count spread over a bigger disc is a thinner meadow —
+  // the "further" slider would have read as "sparser", which is the opposite of
+  // the ask. Scaling by the area ratio holds the core density where it was
+  // tuned and spends the extra purely on the ground the field newly covers.
+  const { radius: reach, taper } = grassReach();
+  const radius = grassRadius === null ? reach : grassRadius;
+  const rimTaper = grassTaper === null ? taper : grassTaper;
+  const budget = grass * grassArea(radius, rimTaper) / GRASS_BASE_AREA;
   const field = grassStyle === 'tufts'
     ? makeTuftField({
-      count: Math.round(grass / 1.5), seed: seed * 81, groundSeed,
+      count: Math.round(budget / 1.5), radius, taper: rimTaper, seed: seed * 81, groundSeed,
       keepout: grassKeepout || keepout, groundFn,
     })
     : makeGrassField({
-      count: grass, seed: seed * 81, groundSeed,
+      count: Math.round(budget), radius, taper: rimTaper, seed: seed * 81, groundSeed,
       keepout: grassKeepout || keepout, groundFn,
     });
   scene.add(field.mesh);

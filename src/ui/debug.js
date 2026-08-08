@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { setGrassPatchiness } from '../kit/grassfield.js';
+import { setGrassPatchiness, setGrassReach, setGrassTaper } from '../kit/grassfield.js';
 import { setGrassStyle } from '../kit/scenery.js';
 import { setInkScale } from '../render/outlines.js';
 import { plainMaterial } from '../render/toon.js';
@@ -53,6 +53,13 @@ const CONTROLS = [
   { key: 'grassTufts', label: 'Grass tufts (re-enter)', type: 'bool', def: true },
   { key: 'grassWind', label: 'Grass wind', type: 'range', def: 1.5, min: 0, max: 3, step: 0.05 },
   { key: 'grassPatch', label: 'Grass patch (re-enter)', type: 'range', def: 0.7, min: 0, max: 0.8, step: 0.02 },
+  // How far the meadow reaches, and how much of that reach it spends dissolving
+  // — a low taper starts thinning early and fades over a long way, a high one
+  // holds the field solid and lets it go near the edge. The plant budget scales
+  // with the reach (composeWorld), so pulling this out adds grass rather than
+  // stretching the same grass thinner.
+  { key: 'grassReach', label: 'Grass reach (re-enter)', type: 'range', def: 24, min: 12, max: 34, step: 1 },
+  { key: 'grassTaper', label: 'Grass taper (re-enter)', type: 'range', def: 0.45, min: 0.2, max: 0.9, step: 0.05 },
   { key: 'gustScale', label: 'Gust patch', type: 'range', def: 0.2, min: 0.01, max: 0.25, step: 0.005 },
   { key: 'gustSpeed', label: 'Gust drift', type: 'range', def: 0.7, min: 0, max: 12, step: 0.1 },
   { key: 'trees', label: 'Trees', type: 'bool', def: true },
@@ -352,6 +359,8 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     }
 
     setGrassPatchiness(state.grassPatch);
+    setGrassReach(state.grassReach);
+    setGrassTaper(state.grassTaper);
     setGrassStyle(state.grassTufts ? 'tufts' : 'blades');
     onLens && onLens(state.lens);
     onFreeCam && onFreeCam(state.freeCam);

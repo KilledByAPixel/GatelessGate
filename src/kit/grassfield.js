@@ -22,6 +22,50 @@ const UP = new THREE.Vector3(0, 1, 0);
 let defaultPatchiness = 0.42;
 export function setGrassPatchiness(v) { defaultPatchiness = v; }
 
+// HOW FAR THE MEADOW REACHES, and how much of that reach it spends dissolving.
+// Same deal as patchiness — baked at build time, so the workbench's two sliders
+// set these and the change lands on the next page.
+//
+// Frank: "can we do something with the grass to make it taper off a little bit
+// more instead of stopping so abruptly... and it could go a little bit further."
+// Both halves of that are here. Only composeWorld reads them; a builder called
+// directly (the showcase, kit-preview) still gets its own radius and the stock
+// taper, because those are small display fields and not a horizon.
+let defaultReach = 24;      // world units from the origin to the last straggler
+let defaultTaper = 0.45;    // fraction of the reach that is solid before thinning starts
+export function setGrassReach(v) { if (Number.isFinite(v) && v > 0) defaultReach = v; }
+export function setGrassTaper(v) { if (Number.isFinite(v) && v > 0 && v < 1) defaultTaper = v; }
+export function grassReach() { return { radius: defaultReach, taper: defaultTaper }; }
+
+// The reach and taper these fields were tuned at. composeWorld quotes its grass
+// budget for THIS pair; pushing the reach out has to buy more grass or the
+// slider just thins the meadow it was supposed to extend.
+export const GRASS_BASE_RADIUS = 20;
+export const GRASS_BASE_TAPER = 0.62;
+
+// HOW MUCH GRASS A REACH IS WORTH: the keep probability integrated over the
+// disc, i.e. how much full-density ground this reach and taper add up to.
+//
+// The budget scales on THIS and not on pi*r^2, because the two knobs pull
+// against each other — moving the taper inward removes about as much grass as
+// widening the disc adds, and scaling on raw area over-bought by a quarter the
+// first time both moved at once (core density came out 26% above the tuned
+// value). Closed form of the smoothstep falloff below: the solid core, plus a
+// band whose weights are the two integrals of (1 - smoothstep) against r.
+export function grassArea(radius, taper) {
+  const a = radius * taper;          // solid out to here
+  const w = radius - a;              // and dissolving over this
+  return Math.PI * a * a + 2 * Math.PI * w * (0.5 * a + 0.15 * w);
+}
+export const GRASS_BASE_AREA = grassArea(GRASS_BASE_RADIUS, GRASS_BASE_TAPER);
+
+// How much of its height a plant has lost by the time it reaches the very edge.
+// Half: enough to read as the meadow petering out into shorter, sparser stuff,
+// not so much that the outermost survivors look mown.
+export const RIM_SHRINK = 0.5;
+
+const smooth01 = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+
 // How much grass belongs at (x, z): 0 bare ground, 1 a full stand.
 //
 // Two things here are deliberate, and both exist because the naive version cut a
@@ -81,6 +125,13 @@ const GROUND_FN_SINK = 0.02;
 
 export function grassPlacements({
   count, radius = 20, inner = 0, seed = 5, groundSeed = 21,
+  // Where the dissolve begins, as a fraction of the radius. Was hard-coded at
+  // 0.62 with a LINEAR falloff, and that combination is what read as stopping
+  // abruptly: a straight ramp has a kink at each end, so the field went from
+  // full to visibly thinning in one step and then hit the rim while its last
+  // plants were still full-sized. Eased at both ends now (see `rim` below),
+  // and the band is wider by default.
+  taper = GRASS_BASE_TAPER,
   patchiness = defaultPatchiness, keepout = [],
   // (x, z) => y of the surface the grass stands on, for cases whose ground is
   // more than the terrain function (a rise, a platform). Optional and additive:
@@ -103,10 +154,16 @@ export function grassPlacements({
     const x = Math.cos(a) * rr;
     const z = Math.sin(a) * rr;
 
-    // thin toward the outer rim so the field dissolves into fog instead of
-    // ending on a visible circle
-    const rimT = (rr - radius * 0.62) / (radius * 0.38);
-    if (rimT > 0 && hash1(i * 4 + 13, seed) < rimT) continue;
+    // Thin toward the outer rim so the field dissolves into fog instead of
+    // ending on a visible circle. `rim` is 0 through the solid core and eases
+    // to 1 at the very edge — smoothstepped, so the thinning starts gently
+    // instead of switching on, and the last stretch is nearly empty rather than
+    // arriving at zero on a straight line. The renderers read it too: density
+    // alone leaves FULL-SIZED plants scattered along the boundary, which is
+    // what draws the edge. Shrinking them as they thin is what actually
+    // dissolves the meadow.
+    const rim = smooth01((rr - radius * taper) / (radius * (1 - taper)));
+    if (rim > 0 && hash1(i * 4 + 13, seed) < rim) continue;
 
     // Large-scale patchiness: bare ground and dense stands rather than uniform
     // coverage. Wall-to-wall grass leaves the eye nowhere to rest.
@@ -132,6 +189,7 @@ export function grassPlacements({
       yaw: hash1(i * 4 + 7, seed) * Math.PI * 2,
       wide: 0.8 + 0.5 * hash1(i * 4 + 9, seed),
       tall: 0.65 + 0.8 * hash1(i * 4 + 5, seed),
+      rim,          // 0 in the core, 1 at the very edge — the renderers shrink on it
       // tonal drift, blade to blade — mostly tone, barely hue/saturation;
       // colour noise reads as fake
       tint: [
@@ -156,7 +214,7 @@ export function grassPlacements({
 export const GRASS_TONE = wash(0.40);
 
 export function makeGrassField({
-  count = 52000, radius = 20, inner = 0, seed = 5, groundSeed = 21,
+  count = 52000, radius = 20, taper = GRASS_BASE_TAPER, inner = 0, seed = 5, groundSeed = 21,
   color = GRASS_TONE, height = 0.34, width = 0.05, wind = 1,
   windDir = [1, 0.35], gustScale = 0.055, gustSpeed = 2.4,
   patchiness = defaultPatchiness,   // 0 = wall-to-wall turf; higher opens bare ground
@@ -350,12 +408,14 @@ export function makeGrassField({
   const sc3 = new THREE.Vector3();
   const base = new THREE.Color(color);
   const col = new THREE.Color();
-  const spots = grassPlacements({ count, radius, inner, seed, groundSeed, patchiness, keepout, groundFn });
+  const spots = grassPlacements({ count, radius, taper, inner, seed, groundSeed, patchiness, keepout, groundFn });
   let n = 0;
   for (const p of spots) {
     v.set(p.x, p.y, p.z);
     q.setFromAxisAngle(UP, p.yaw);
-    sc3.set(p.wide, p.tall, 1);
+    // shorter as it thins — a blade, so only the height goes; its thickness is
+    // already sub-pixel out there
+    sc3.set(p.wide, p.tall * (1 - RIM_SHRINK * p.rim), 1);
     m.compose(v, q, sc3);
     mesh.setMatrixAt(n, m);
     col.copy(base).offsetHSL(p.tint[0], p.tint[1], p.tint[2]);

@@ -1,7 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { patchDensity, makeGrassField, grassPlacements } from '../src/kit/grassfield.js';
+import {
+  patchDensity, makeGrassField, grassPlacements, grassArea, setGrassReach, RIM_SHRINK,
+} from '../src/kit/grassfield.js';
+import { composeWorld } from '../src/kit/scenery.js';
 import { groundHeight } from '../src/kit/ground.js';
 import { setBreezePointer, clearBreeze } from '../src/kit/breeze.js';
 
@@ -189,4 +192,114 @@ test('the field actually places the blades it is asked for', () => {
   // budget and quietly delivered half a meadow.
   const f = makeGrassField({ count: 6000, radius: 20, seed: 2349 });
   assert.ok(f.blades > 6000 * 0.98, `placed ${f.blades} of 6000`);
+});
+
+// THE RIM (Frank: "can we do something with the grass to make it taper off a
+// little bit more instead of stopping so abruptly... and it could go a little
+// bit further"). The field always thinned toward its edge; what it never did
+// was SHRINK, so the last plants standing on the boundary were full-height and
+// drew the circle the thinning was meant to hide.
+test('the meadow thins AND shrinks toward its edge, and is empty at the rim', () => {
+  const radius = 24, taper = 0.45;
+  const spots = grassPlacements({ count: 20000, radius, taper, seed: 2349 });
+  const ring = (r0, r1) => spots.filter((p) => {
+    const rr = Math.hypot(p.x, p.z);
+    return rr >= r0 && rr < r1;
+  });
+  const density = (r0, r1) => ring(r0, r1).length / (Math.PI * (r1 * r1 - r0 * r0));
+  const meanRim = (r0, r1) => {
+    const g = ring(r0, r1);
+    return g.reduce((s, p) => s + p.rim, 0) / Math.max(1, g.length);
+  };
+
+  // the core is solid and untouched: rim 0 means the renderers scale by 1
+  assert.equal(meanRim(0, radius * taper * 0.9), 0, 'nothing shrinks inside the core');
+
+  // density falls off, and keeps falling, all the way out
+  const bands = [[10, 14], [14, 18], [18, 22], [22, 24]].map(([a, b]) => density(a, b));
+  for (let i = 1; i < bands.length; i++) {
+    assert.ok(bands[i] < bands[i - 1] * 0.75,
+      `band ${i} keeps thinning: ${bands.map((d) => d.toFixed(1))}`);
+  }
+
+  // and so does plant size — this is the half that is new
+  const sizes = [[10, 14], [14, 18], [18, 22], [22, 24]].map(([a, b]) => meanRim(a, b));
+  for (let i = 1; i < sizes.length; i++) {
+    assert.ok(sizes[i] > sizes[i - 1], `plants keep shrinking: ${sizes.map((s) => s.toFixed(2))}`);
+  }
+  assert.ok(sizes.at(-1) > 0.85, `the outermost survivors are ${(RIM_SHRINK * sizes.at(-1) * 100).toFixed(0)}% shorter`);
+
+  // nothing stands outside the reach, and the tail really does reach it
+  const rr = spots.map((p) => Math.hypot(p.x, p.z));
+  assert.ok(Math.max(...rr) <= radius, 'nothing past the stated reach');
+  assert.ok(Math.max(...rr) > radius * 0.95, 'and the field does get out there');
+});
+
+test('the taper is a real knob: pull it in and the dissolve starts earlier', () => {
+  const opts = { count: 8000, radius: 24, seed: 2349 };
+  const startOf = (taper) => {
+    const spots = grassPlacements({ ...opts, taper });
+    // the innermost plant that has begun to shrink at all
+    return Math.min(...spots.filter((p) => p.rim > 0).map((p) => Math.hypot(p.x, p.z)));
+  };
+  const early = startOf(0.35), late = startOf(0.75);
+  assert.ok(early < late - 5, `0.35 starts at ${early.toFixed(1)}, 0.75 at ${late.toFixed(1)}`);
+  // and both still respect the same outer edge
+  assert.ok(late < 24, 'the dissolve always fits inside the reach');
+});
+
+test('grassArea matches the placement rule it budgets for', () => {
+  // composeWorld buys grass by this integral rather than by pi*r^2, so if the
+  // falloff in grassPlacements is ever retuned without retuning the closed form
+  // here, every scene's density silently moves. Checked against a numeric
+  // integral of the SAME smoothstep the placement loop uses.
+  const ss = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+  for (const [radius, taper] of [[20, 0.62], [24, 0.45], [30, 0.3], [16, 0.8]]) {
+    let numeric = 0;
+    const N = 20000;
+    for (let i = 0; i < N; i++) {
+      const r = (i + 0.5) * radius / N;
+      numeric += (1 - ss((r - radius * taper) / (radius * (1 - taper)))) * 2 * Math.PI * r * (radius / N);
+    }
+    const closed = grassArea(radius, taper);
+    assert.ok(Math.abs(closed - numeric) / numeric < 1e-3,
+      `r=${radius} t=${taper}: closed ${closed.toFixed(1)} vs numeric ${numeric.toFixed(1)}`);
+  }
+});
+
+test('reaching further buys more grass instead of spreading the same grass thinner', () => {
+  // The failure this guards is the one that makes the reach slider useless: a
+  // fixed plant count over a bigger disc is a SPARSER meadow, so "further"
+  // would have read as "thinner" and the near field — the part the reader is
+  // actually looking at — would have got worse every notch.
+  const near = (scene) => {
+    const field = scene.getObjectByName('grassfield');
+    const m = new THREE.Matrix4(), p = new THREE.Vector3();
+    let n = 0;
+    for (let i = 0; i < field.count; i++) {
+      field.getMatrixAt(i, m);
+      p.setFromMatrixPosition(m);
+      if (Math.hypot(p.x, p.z) < 8) n++;
+    }
+    return n;
+  };
+
+  const at = (radius) => {
+    setGrassReach(radius);
+    const scene = new THREE.Scene();
+    composeWorld(scene, { seed: 7, groundSeed: 21 });
+    return { total: scene.getObjectByName('grassfield').count, near: near(scene) };
+  };
+
+  try {
+    const short = at(18);
+    const long = at(30);
+    assert.ok(long.total > short.total * 1.3,
+      `a longer reach buys more plants: ${short.total} -> ${long.total}`);
+    // the near field is what must NOT change: same core density either way
+    assert.ok(Math.abs(long.near - short.near) / short.near < 0.08,
+      `the near field holds its density: ${short.near} vs ${long.near} inside r=8`);
+  } finally {
+    setGrassReach(24);   // module state — leave it as the rest of the suite expects
+  }
 });
