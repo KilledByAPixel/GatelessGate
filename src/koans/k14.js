@@ -1,11 +1,9 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
-import { composeWorld } from '../kit/scenery.js';
-import { makeMonk, aimMonk, faceMonk } from '../kit/monk.js';
-import { makeAssembly } from '../kit/assembly.js';
-import { makeHut } from '../kit/hut.js';
-import { makeCat } from '../kit/cat.js';
+import {
+  aimMonk, composeWorld, faceMonk, makeAssembly, makeCat, makeHut, makeMonk,
+} from '../kit/index.js';
 import { makeLights, toonMaterial } from '../render/toon.js';
 import { addOutlines } from '../render/outlines.js';
 

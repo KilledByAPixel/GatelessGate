@@ -2,10 +2,9 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK, WASH, mixHex, wash } from '../palette.js';
 import {
-  composeWorld, makePath, makeMonk, faceMonk, makeWater, makeSand, makeFoam,
-  makeLights, addOutlines, toonMaterial, groundHeight,
+  addOutlines, composeWorld, faceMonk, groundHeight, makeFoam, makeLights,
+  makeMonk, makePath, makeSand, makeWater, mergeSimple, toonMaterial,
 } from '../kit/index.js';
-import { mergeSimple } from '../kit/scatter.js';
 
 const ID = 20;
 

@@ -2,10 +2,9 @@ import * as THREE from '../../../lib/three.module.js';
 import MATTER from '../text/matter.js';
 import { PAPER, WASH, wash, ACCENT_DEEP } from '../../palette.js';
 import {
-  composeWorld, makePath, makeMonk, faceMonk, makeBell, makeFlag,
-  makeLights, addOutlines, plantTree, makeLantern,
+  addOutlines, composeWorld, faceMonk, groundHeight, makeBell, makeFlag,
+  makeLantern, makeLights, makeMonk, makePath, plantTree,
 } from '../../kit/index.js';
-import { groundHeight } from '../../kit/ground.js';
 
 // Mumon's own preface, which is where the four lines the book is named after
 // actually come from. Shaped like a koan module so it travels the same rails —

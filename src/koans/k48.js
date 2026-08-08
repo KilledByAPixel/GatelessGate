@@ -3,11 +3,9 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
-  composeWorld, makePath, makeMonk, faceMonk, makeFan,
-  makeWater, makeSand, makeFoam,
-  makeLights, addOutlines, toonMaterial,
+  addOutlines, composeWorld, faceMonk, groundHeight, makeFan, makeFoam,
+  makeLights, makeMonk, makePath, makeSand, makeWater, toonMaterial,
 } from '../kit/index.js';
-import { groundHeight } from '../kit/ground.js';
 
 const ID = 48;
 

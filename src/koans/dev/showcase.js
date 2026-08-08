@@ -2,18 +2,15 @@ import * as THREE from '../../../lib/three.module.js';
 import { PAPER, INK, ACCENT, ACCENT_DEEP } from '../../palette.js';
 import { makeLights } from '../../render/toon.js';
 import { addOutlines } from '../../render/outlines.js';
-import { makeGround } from '../../kit/ground.js';
-import { makeTuftField } from '../../kit/tuftfield.js';
-import { makeScale } from '../../kit/scale.js';
-import { makeOdoshi } from '../../kit/odoshi.js';
 import {
-  makeQuadruped, makeBuffalo, makeHorse, makeDog, makeFox, makeCat,
-  makeKoi, makeWater, makeBasin, makeBird, makeBirds,
-  makeMonk, makeBuddha, makeAssembly, makeRaisedFinger, makeFlag, makeHangingMonk,
-  makeTree, makePine, makeOak, makeForest, makeGrassField, makeWildflowers, makeFlower,
-  makeGate, makeHut, makeVeranda, makeStall, makeScreen, makeLattice, makePen, makePole,
-  makeLantern, makeBell, makeDrum, makeRack, makeVase, makeBowl, makeWheel,
-  makeFurin, makeBundle, makeMoon,
+  makeAssembly, makeBasin, makeBell, makeBird, makeBirds, makeBowl,
+  makeBuddha, makeBuffalo, makeBundle, makeCat, makeDog, makeDrum, makeFlag,
+  makeFlower, makeForest, makeFox, makeFurin, makeGate, makeGrassField,
+  makeGround, makeHangingMonk, makeHorse, makeHut, makeKoi, makeLantern,
+  makeLattice, makeMonk, makeMoon, makeOak, makeOdoshi, makePen, makePine,
+  makePole, makeQuadruped, makeRack, makeRaisedFinger, makeScale,
+  makeScreen, makeStall, makeTree, makeTuftField, makeVase, makeVeranda,
+  makeWater, makeWheel, makeWildflowers,
 } from '../../kit/index.js';
 
 // THE SHOWCASE — every model in the kit, in one room.

@@ -3,7 +3,7 @@ export { makeIsland } from './island.js';
 export { makeGround, groundHeight } from './ground.js';
 export { makeMountains } from './mountains.js';
 export { makeForest } from './forest.js';
-export { makeRocks, makeBushes, scatterPoints } from './scatter.js';
+export { makeRocks, makeBushes, scatterPoints, mergeSimple } from './scatter.js';
 export { makeGrassField } from './grassfield.js';
 export { makeTuftField } from './tuftfield.js';
 export { makeLantern } from './lantern.js';

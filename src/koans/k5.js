@@ -1,14 +1,11 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, INK_LIT, ACCENT, ACCENT_DEEP, GRAY_DARK, WASH } from '../palette.js';
-import { composeWorld } from '../kit/scenery.js';
-import { mergeSimple } from '../kit/scatter.js';
+import {
+  composeWorld, faceMonk, makeCliff, makeHangingMonk, makeMonk, makeOak,
+  mergeSimple, tapMeshes,
+} from '../kit/index.js';
 import { noise1 } from '../util/noise.js';
-import { makeOak } from '../kit/oak.js';
-import { makeCliff } from '../kit/cliff.js';
-import { makeHangingMonk } from '../kit/hangingmonk.js';
-import { makeMonk, faceMonk } from '../kit/monk.js';
-import { tapMeshes } from '../kit/pick.js';
 import { makeLights, toonMaterial } from '../render/toon.js';
 import { addOutlines } from '../render/outlines.js';
 import { smoothstep as SS } from '../util/math.js';

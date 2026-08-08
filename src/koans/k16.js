@@ -2,14 +2,10 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import { DEFAULT_HOME } from '../camera.js';
-import { composeWorld } from '../kit/scenery.js';
-import { makePath } from '../kit/path.js';
-import { makeHut } from '../kit/hut.js';
-import { makeLantern } from '../kit/lantern.js';
-import { makeBell } from '../kit/bell.js';
-import { makeDrum } from '../kit/drum.js';
-import { makeCylinderChime } from '../kit/cylinder.js';
-import { makeMonk, aimMonk, faceMonk, wrapPi, bearing } from '../kit/monk.js';
+import {
+  aimMonk, bearing, composeWorld, faceMonk, makeBell, makeCylinderChime,
+  makeDrum, makeHut, makeLantern, makeMonk, makePath, wrapPi,
+} from '../kit/index.js';
 import { makeLights } from '../render/toon.js';
 import { addOutlines } from '../render/outlines.js';
 

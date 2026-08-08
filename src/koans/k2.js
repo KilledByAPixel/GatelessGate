@@ -1,17 +1,12 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
-import { composeWorld } from '../kit/scenery.js';
-import { makeMonk, faceMonk, bearing } from '../kit/monk.js';
-import { tapMeshes } from '../kit/pick.js';
-import { makeFox } from '../kit/fox.js';
-import { makeCave } from '../kit/cave.js';
-import { makeRain } from '../kit/rainfall.js';
+import {
+  bearing, composeWorld, faceMonk, makeCave, makeFox, makeMonk, makeRain,
+  plantTree, tapMeshes,
+} from '../kit/index.js';
 import { makeLights } from '../render/toon.js';
 import { addOutlines } from '../render/outlines.js';
-import {
-  plantTree,
-} from '../kit/index.js';
 
 const ID = 2;
 

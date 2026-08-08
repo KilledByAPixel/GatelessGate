@@ -3,11 +3,9 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import { smoothstep as SS } from '../util/math.js';
 import {
-  composeWorld, makeCliff, makeMonk,
-  makeLights, addOutlines,
+  addOutlines, composeWorld, groundHeight, makeButterflies, makeCliff,
+  makeLights, makeMonk,
 } from '../kit/index.js';
-import { makeButterflies } from '../kit/butterflies.js';
-import { groundHeight } from '../kit/ground.js';
 
 const ID = 12;
 

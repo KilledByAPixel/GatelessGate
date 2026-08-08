@@ -1,12 +1,9 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH, wash } from '../palette.js';
-import { composeWorld } from '../kit/scenery.js';
-import { makePath } from '../kit/path.js';
-import { makeGate } from '../kit/gate.js';
-import { makeFurin } from '../kit/furin.js';
-import { makeMonk } from '../kit/monk.js';
-import { groundHeight } from '../kit/ground.js';
+import {
+  composeWorld, groundHeight, makeFurin, makeGate, makeMonk, makePath,
+} from '../kit/index.js';
 import { makeLights } from '../render/toon.js';
 import { addOutlines } from '../render/outlines.js';
 

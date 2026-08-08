@@ -3,10 +3,9 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
-  composeWorld, makeVeranda, makeAssembly, makeMonk, faceMonk,
-  makeScreen, makeLights, addOutlines, toonMaterial,
+  addOutlines, composeWorld, faceMonk, makeAssembly, makeLights, makeMonk,
+  makeScreen, makeVeranda, mergeSimple, toonMaterial,
 } from '../kit/index.js';
-import { mergeSimple } from '../kit/scatter.js';
 
 const ID = 25;
 
