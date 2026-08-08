@@ -11,7 +11,17 @@ import { PAPER, ACCENT, WASH } from '../palette.js';
 const ID = 6;
 
 const PETAL_FALL = 5.0;     // seconds for a petal to reach the ground
-const SMILE_IN = 1.4;
+
+// NO SMILE. Kasyapa used to grow one while a petal was in the air — a bare
+// paper arc on his head, the one face rendered anywhere in this book, faded in
+// over 1.4s and left there. Frank cut it (this round). It was the design doc's
+// original hook for this case and it does not survive contact with the shipped
+// figures: a lone arc on a featureless ink head reads as a mark ON him rather
+// than an expression, at a staging distance where his whole skull is a few
+// pixels across. The case still lands — the flower turns, a petal goes, and
+// nobody in the scene reacts, which is closer to what the text describes than
+// a face was. If a smile is ever wanted back it needs to be a POSE (a tilt of
+// the head, a shift in the shoulders), not geometry on a face that has none.
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
@@ -24,7 +34,7 @@ const CAM = { distance: 13, target: [1.2, 1.1, -4], heading: 17, pitch: 12 };
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.12', 'music'],
-  mood: 'yo',      // the flower and the smile — the gentlest case in the book
+  mood: 'yo',      // the flower, the petal, the cat — the gentlest case in the book
   
   // Its own lens. The generic diorama shot pivots on [1.2, 1.35, 0.3], which in
   // THIS scene is bare grass in front of the crowd: everything that matters —
@@ -91,19 +101,6 @@ const CAM = { distance: 13, target: [1.2, 1.1, -4], heading: 17, pitch: 12 };
   faceMonk(kasyapa, buddha.position);
   scene.add(kasyapa);
   
-  // "A smile is an event": the ONLY face rendered anywhere in this book. It is
-  // a bare arc, hidden until the petal falls.
-  const smileMat = toonMaterial({ color: PAPER, flat: true });
-  smileMat.fog = false;
-  smileMat.transparent = true;
-  smileMat.opacity = 0;
-  const smile = new THREE.Mesh(new THREE.TorusGeometry(0.042, 0.009, 6, 12, Math.PI), smileMat);
-  smile.name = 'smile';
-  smile.rotation.z = Math.PI;            // an upturned arc
-  smile.position.set(0, 0.795 * 1.55, 0.088 * 1.55);
-  smile.userData.noOutline = true;
-  kasyapa.add(smile);
-  
   // The rest of the assembly, one instanced crowd facing the seat. The arc
   // opens toward +z (the camera), so its centre must sit WELL BACK or the
   // front row looms in the lens as a wall of black cones.
@@ -147,11 +144,10 @@ const CAM = { distance: 13, target: [1.2, 1.1, -4], heading: 17, pitch: 12 };
   
   addOutlines(scene, { width: 0.033, wobble: 0.7 });
   
-  // ---- the moment: the flower, and the smile --------------------------
+  // ---- the moment: the flower, and the petal --------------------------
   let camera = null;
   let clock = 0;           // the house simTime guard — see update()
   let dropped = 0;
-  let smileT = 0;
   const falling = [];          // { mesh, age, x0, y0, z0, spin, drift }
   
   function releasePetal() {
@@ -220,19 +216,12 @@ const CAM = { distance: 13, target: [1.2, 1.1, -4], heading: 17, pitch: 12 };
   f.mesh.rotation.x = Math.sin(f.age * 2.1) * 0.5;
   if (t >= 1) falling.splice(i, 1);
   }
-  
-  // the smile arrives while a petal is in the air, and stays
-  const airborne = falling.length > 0;
-  if (airborne || smileT > 0) {
-  smileT = Math.min(1, smileT + dt / SMILE_IN);
-  smileMat.opacity = 0.9 * smileT;
-  }
   },
   fragment() {
   return {
   petals: flower.children.filter((c) => c.name === 'petal').length,
   falling: falling.length,
-  smile: +smileT.toFixed(3),
+  dropped,
 };
       },
       dispose() {},
