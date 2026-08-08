@@ -97,7 +97,7 @@ const CAM = { distance: 17, target: [3.95, 0.45, -1.3], heading: -24.5, pitch: 1
   { at: monk, r: 0.8 },
   ],
   });
-  //scene.add(flowers.mesh);
+  scene.add(flowers.mesh);
   
   // AND THE BIRDS — the seal of this case. "The birds sing among innumerable
   // kinds of fragrant flowers": the birds are what the whole answer is, so

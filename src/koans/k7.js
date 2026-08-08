@@ -4,7 +4,7 @@ import { PAPER, ACCENT, WASH } from '../palette.js';
 import { DEFAULT_HOME } from '../camera.js';
 import {
   composeWorld, makePath, makeHut, makeBasin, makeBowl, makeWater, makeMonk, faceMonk,
-  makeOdoshi, makeCat, makeLights, addOutlines, tapMeshes,
+  makeOdoshi, makeLights, addOutlines, tapMeshes,
 } from '../kit/index.js';
 
 const ID = 7;
@@ -67,11 +67,38 @@ export default {
     bowl.position.set(2.42, 0, 2.1);
     scene.add(bowl);
 
-    // the monk who has eaten, and been told to go wash
-    const monk = makeMonk({ height: 1.58 });
-    monk.position.set(1.55, 0, 1.75);
-    faceMonk(monk, basin.position);
+    // THE TWO OF THEM. The case is four lines of talk, so the picture is a
+    // conversation: Joshu by his own basin, and the monk who has just walked
+    // in. Before this there was one figure and no Joshu at all, which left the
+    // scene a man standing next to a bowl.
+    //
+    // Joshu is the elder, and he keeps the old figure's spot — he belongs to
+    // the yard, and standing him within reach of the basin and the bowl is what
+    // makes "then wash your bowl" a thing said about what is already at his
+    // feet rather than an instruction shouted across a field.
+    const joshu = makeMonk({ height: 1.62, elder: true });
+    joshu.position.set(1.55, 0, 1.75);
+    scene.add(joshu);
+
+    // The monk who has just entered the monastery, off the road in the grass
+    // where you stop when someone answers you. Placed to the shot's LEFT of
+    // Joshu rather than up the path behind him: the path runs almost straight
+    // away from the camera here, so a figure on it stands directly behind the
+    // one he is talking to and the pair reads as one person. Off the road they
+    // separate across the frame and read as two.
+    // The 2.6 between them is a SCREEN measurement, not a social one. At this
+    // camera's distance a body is about 0.06 of half-frame wide, so a pair a
+    // conversational 1.5 apart came out 0.17 apart on screen and read as one
+    // figure with a shadow. 2.6 along the camera's own left axis puts 0.30
+    // between them — two people talking, from where the reader stands.
+    const monk = makeMonk({ height: 1.56 });
+    monk.position.set(-0.67, 0, 3.11);
     scene.add(monk);
+
+    // Facing last, once both are placed, so neither aims at where the other
+    // was going to be.
+    faceMonk(joshu, monk.position);
+    faceMonk(monk, joshu.position);
 
     // The shishi-odoshi, set back from the basin with its mouth turned toward
     // it. The distance is load-bearing: the tube reaches 0.7 when it tips,
@@ -88,19 +115,11 @@ export default {
     odoshi.group.rotation.y = -2.70;
     scene.add(odoshi.group);
 
-    // The monastery cat (k14's, on an ordinary morning — nothing hangs over
-    // it here), sitting by the threshold with its eyes on the breakfast
-    // bowl. Domestic, like everything in this case: someone ate, someone
-    // washes up, the cat waits its turn.
-    // ON the light path, deliberately — placement three. In the meadow the
-    // grass swallowed it whole; on the hut's threshold it was ink against
-    // ink. A dark cat needs the one pale surface in the yard, and sitting
-    // in the middle of the walked road waiting for scraps is the most
-    // cat thing about it.
-    const cat = makeCat({ height: 0.32, seed: 7, pose: 'sit' });
-    cat.group.position.set(1.35, 0.03, -0.5);
-    faceMonk(cat.group, bowl.position);
-    scene.add(cat.group);
+    // (The monastery cat used to sit on the path here, eyeing the breakfast
+    // bowl. It went when the second figure arrived — Frank. Two monks and a
+    // cat in a yard this size is a crowd, and the cat sat exactly where the
+    // conversation now stands. It is still k14's cat and still turns up in
+    // the afterword; it just does not live in this case any more.)
 
     const world = composeWorld(scene, {
       // no `camera:` here — this case takes the book's default framing, so the
@@ -113,9 +132,9 @@ export default {
         ...path.keepout(24, 1.0),
         { at: hut, r: 3.0 },
         { at: basin, r: 1.5 },          // basin + bowl
+        { at: joshu, r: 1.1 },
         { at: monk, r: 1.1 },
         { at: odoshi.group, r: 1.2 },   // the deer-scarer and its flume
-        { at: cat.group, r: 0.5 },
       ],
       // the trail, the hut's footprint and the basin's stone cover ground;
       // the monk stands in the grass like anyone would
@@ -143,10 +162,6 @@ export default {
       if (!camera) return;
       // the deer-scarer first: a tap tips it without waiting out the fill
       if (input.raycastFirst(camera, odoshi.pickTargets())) { odoshi.tip(); return; }
-      // the cat's stir travels with the cat (the kit rule): touched, it
-      // shifts and resettles, no sound of its own — it is not this case's
-      // instrument, just its company
-      if (input.raycastFirst(camera, cat.meshes())) { cat.stir(); return; }
       // The bowl is ITS OWN thing now (Frank: "shake the bowl and make sound
       // for that instead of water") — it used to answer with a ripple in the
       // basin two steps away, a cause with somebody else's effect. Touched,
@@ -177,7 +192,6 @@ export default {
         world.update(dt, simTime);
         water.update(dt, simTime);
         odoshi.update(dt, simTime);
-        cat.update(dt, simTime);
         // the bowl settles quicker than the dung pile — it is round-bottomed
         // and light, a quick chatter that dies
         let a = 0;
