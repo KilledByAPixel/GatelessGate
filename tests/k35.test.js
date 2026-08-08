@@ -111,11 +111,13 @@ test('one life stands on the road with a child at either hand', () => {
   assert.notEqual(height(kids[0]).toFixed(2), height(kids[1]).toFixed(2), 'and not twins');
 });
 
-test('the other life sits off the road, under a tree that is really there', () => {
-  // Her tree is hand-planted rather than scattered, which is exactly the
-  // pairing the afterword once broke by writing a coordinate down: stated
-  // against the trees the scene built, so a re-seeded scatter cannot leave
-  // her meditating in open grass.
+test('the other life sits off the road, in the clear', () => {
+  // This used to require her within 1.6 of a trunk — she was staged under a
+  // hand-planted canopy. The restaging moved her back down the road to the
+  // house end, seven units off that tree and 3.2 from the nearest scattered
+  // one, and the composition is better for it (k35.js says why). So the
+  // canopy requirement is gone; what is still worth pinning is that she is
+  // off the road, clear of every trunk, and seated.
   const built = staged();
   const road = built.scene.getObjectByName('path');
   const souls = collect(built.scene, 'soul');
@@ -125,13 +127,23 @@ test('the other life sits off the road, under a tree that is really there', () =
 
   const near = Math.min(...collect(built.scene, 'tree').map((t) =>
     Math.hypot(t.position.x - sitter.position.x, t.position.z - sitter.position.z)));
-  assert.ok(near < 1.6, `under the canopy, not in open grass — nearest trunk ${near.toFixed(2)}`);
-  assert.ok(near > 0.6, `beside the trunk, not inside it — nearest trunk ${near.toFixed(2)}`);
+  assert.ok(near > 0.6, `beside a trunk, never inside one — nearest trunk ${near.toFixed(2)}`);
 
   // seated, so noticeably lower than the one on her feet
   const height = (o) => new THREE.Box3().setFromObject(o).max.y;
   const walker = souls.find((s) => s !== sitter);
   assert.ok(height(sitter) < height(walker) * 0.8, 'she is sitting');
+});
+
+test('the hand-planted tree is still hand-planted', () => {
+  // The scatter is seeded and will move its own trees when a seed changes;
+  // this one anchors the composition, so it must not quietly become one of
+  // them. Pinned by position rather than by count, which a re-seed can match
+  // by accident.
+  const built = staged();
+  const trees = collect(built.scene, 'tree');
+  assert.ok(trees.some((t) => Math.hypot(t.position.x - 4.2, t.position.z - -3.5) < 0.01),
+    'the planted tree stands at TREE — if it moved, move this with it on purpose');
 });
 
 test('touch either of her and BOTH answer, by the same amount', () => {

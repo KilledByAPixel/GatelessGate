@@ -2,61 +2,58 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import k4 from '../src/koans/k4.js';
-import { ACCENT, INK } from '../src/palette.js';
+import { ACCENT, INK_LIT } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Case 4's seal is a PAINTING of Bodhidharma on a hanging scroll — flat red on
-// silk, and the beard that will not take. The portrait is one colour by design,
-// but a head that is a single unbroken red egg has no face and no front, and
-// reads as a shape rather than a man (Frank: "we still need to add the black
-// dot to the head of the red figures in #4 and #9"). Case 9's is the kit's own
-// urna, made to contrast in kit/buddha.js; this one is hand-painted, so it is
-// pinned here.
+// silk, and the beard that will not take.
+//
+// This file used to pin an ink dot on the portrait's head, added because a head
+// that is one unbroken red egg was thought to read as a shape rather than a man.
+// Judged by eye against the finished scene, the dot lost: the portrait reads
+// better as flat unbroken paint, because it is a picture of a man rather than a
+// man. So what is pinned now is the OPPOSITE — that the painted figure is one
+// colour all the way through, with no second colour anywhere on it.
+//
+// The mark is still built in k4.js and one commented line from being added back.
+// If it returns, the three assertions that were here are worth restoring: that
+// it is INK and not the paint it sits on, that it stands proud of the face's
+// front but never pierces the back of the silk, and that it is under a quarter
+// of the head's height — a dot, not a lamp.
 
 const staged = () => {
   const root = k4.build(fakeCtx({ accent: k4.accent }));
   root.scene.updateMatrixWorld(true);
   return root;
 };
-const boxOf = (o) => new THREE.Box3().setFromObject(o);
 
-test('the painted head carries one mark, and it is ink', () => {
+test('the painted portrait carries no face mark', () => {
   const scene = staged().scene;
-  const mark = scene.getObjectByName('mark');
-  assert.ok(mark, 'the portrait has a face mark');
-  assert.equal('#' + mark.material.color.getHexString(), INK.toLowerCase(),
-    'ink, not the paint it sits on — a red dot on a red head is a bump');
-  assert.equal(mark.userData.noOutline, true, 'a hull round a mark this small is a blot');
+  assert.equal(scene.getObjectByName('mark'), undefined,
+    'the dot is out by decision — if it is back, restore the assertions in this file');
 });
 
-test('the mark sits ON the paint: proud of the front, never out the back', () => {
-  // The portrait is pressed to a third of its depth because it is paint, not a
-  // man. A dot sunk into it the way the kit sinks an urna would come straight
-  // out the back of the silk.
-  const scene = staged().scene;
-  const face = boxOf(scene.getObjectByName('face'));
-  const mark = boxOf(scene.getObjectByName('mark'));
-  assert.ok(mark.max.z > face.max.z, 'it must stand proud of the paint to read at all');
-  assert.ok(mark.min.z > face.min.z, 'and never pierce the back of the scroll');
-  assert.ok(mark.min.y > face.min.y && mark.max.y < face.max.y, 'on the head, not floating off it');
-
-  // small: a mark, not a third eye
-  const size = mark.getSize(new THREE.Vector3());
-  const head = face.getSize(new THREE.Vector3());
-  assert.ok(size.y / head.y < 0.25,
-    `the mark is ${(100 * size.y / head.y).toFixed(0)}% of the head — a lamp, not a dot`);
-});
-
-test('the portrait is still the case\'s one red', () => {
-  // The mark must not turn into a second colour story: everything else on him
-  // stays the accent, which is what makes the portrait the seal.
+test('the portrait is the case\'s one red, and nothing else', () => {
+  // The whole painted figure is a single flat colour. The beard is excluded
+  // because it is ink that fades up from fully transparent as the case is
+  // touched — it is the interaction, not part of the painting at rest.
   const scene = staged().scene;
   const painted = scene.getObjectByName('painted');
   const colors = new Set();
   painted.traverse((o) => {
     if (o.isMesh && !o.userData.isOutline && o.name !== 'beard') colors.add('#' + o.material.color.getHexString());
   });
-  assert.ok(colors.has(ACCENT.toLowerCase()), 'the paint is the accent');
-  assert.deepEqual([...colors].sort(), [ACCENT.toLowerCase(), INK.toLowerCase()].sort(),
-    `the portrait is red plus one ink mark, got ${[...colors].join(', ')}`);
+  assert.deepEqual([...colors], [ACCENT.toLowerCase()],
+    `the portrait is flat accent throughout, got ${[...colors].join(', ')}`);
+});
+
+test('the beard is ink, and starts invisible', () => {
+  // Wakuan's complaint is that the fellow has no beard. The scene agrees with
+  // him at rest: the beard exists, in ink, at zero opacity.
+  const scene = staged().scene;
+  const beard = scene.getObjectByName('beard');
+  assert.ok(beard, 'the beard is built even though it cannot be seen');
+  assert.equal('#' + beard.material.color.getHexString(), INK_LIT.toLowerCase(),
+    'ink, so it never competes with the paint for the seal');
+  assert.equal(beard.material.opacity, 0, 'and the portrait is beardless until touched');
 });

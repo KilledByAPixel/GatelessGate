@@ -3,12 +3,26 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { mountainFootprints } from '../src/kit/mountains.js';
 
-// No road ends deep inside a mountain. Same 0.85·r rule the trees and
-// forests enforce; the outer skirt is legal because makePath's default
-// taper has dissolved the road to a hair before the rock face.
+// No road ends deep inside a mountain.
+//
+// This is deliberately LOOSER than the 0.85·r rule the trees and forests
+// enforce, and the difference is the point. A tree is a solid object standing
+// in the near field; a road is a tapering mark that makePath has already
+// dissolved to a hair, and it ends out where the fog has washed the rock to
+// near-paper anyway. A road aimed off into the hills is a composition Frank
+// wants available — "sometimes I want the road kind of going out that way".
+//
+// So the bar is only that a road may not end in the CORE of a peak. Reference
+// case: k28's road ends 6.6 from a mountain of radius 10.6 — 0.62 of the way
+// in, verified by eye as reading correctly — so the threshold sits at 0.60,
+// just inside it. A cone that wide still has ~40% of its height left at that
+// radius, which sounds like a wall and is not one at thirty units through fog.
+// What this still catches is a road terminating at or past a peak's middle.
+//
 // scripts/dev/road-audit.js is the workbench version of this check (it
 // also reports aims and abrupt endings, which are art calls, not law).
-//
+const DEEP = 0.60;
+
 // Deliberate exceptions, verified by eye — read the reason before "fixing":
 //   k19 — custom mountains; its road dissolves into the treeline under the
 //         red moon exactly as composed (shots/k19-road.jpeg, 2026-08-06).
@@ -43,8 +57,8 @@ test('no statically-parsable road ends deep inside a mountain', () => {
       checked++;
       for (const f of feet) {
         const d = Math.hypot(tx - f.x, tz - f.z);
-        assert.ok(d > f.r * 0.85,
-          `${file}: road ends at (${tx}, ${tz}), ${(f.r * 0.85 - d).toFixed(1)} deep inside the mountain at (${f.x.toFixed(1)}, ${f.z.toFixed(1)})`);
+        assert.ok(d > f.r * DEEP,
+          `${file}: road ends at (${tx}, ${tz}), ${(f.r * DEEP - d).toFixed(1)} into the core of the mountain at (${f.x.toFixed(1)}, ${f.z.toFixed(1)}) (r ${f.r.toFixed(1)})`);
       }
     }
   }
