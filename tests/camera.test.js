@@ -213,9 +213,19 @@ test('pitch zero is level, positive pitch looks down, heading zero stands on +z'
   }
 });
 
-test('the copied camera block is the line a koan module wants', () => {
-  const line = cameraBlock({ distance: 11.5, heading: 31.5, pitch: 17.2 }, [0.4, 1.8, -1]);
-  assert.equal(line, 'camera: { distance: 11.5, target: [0.4, 1.8, -1], heading: 31.5, pitch: 17.2 },');
+test('the copied camera block drops straight inside a case\'s CAM braces', () => {
+  // Fields only — no braces, no `camera:` prefix, no trailing comma. Every case
+  // hoists `const CAM = { ... };`, so what a composer pastes is the inside of
+  // that literal. Pinned by round-trip rather than by string match alone: the
+  // text has to be a real object body, and it has to parse back to the numbers
+  // that went in.
+  const body = cameraBlock({ distance: 11.5, heading: 31.5, pitch: 17.2 }, [0.4, 1.8, -1]);
+  assert.equal(body, 'distance: 11.5, target: [0.4, 1.8, -1], heading: 31.5, pitch: 17.2');
+  assert.ok(!body.includes('{') && !body.includes('}'), `no braces: ${body}`);
+  assert.ok(!body.endsWith(','), `no trailing comma: ${body}`);
+
+  const round = new Function(`return { ${body} };`)();
+  assert.deepEqual(round, { distance: 11.5, target: [0.4, 1.8, -1], heading: 31.5, pitch: 17.2 });
 });
 
 test('a framing outside the rig envelope copies the widened bounds with it', () => {

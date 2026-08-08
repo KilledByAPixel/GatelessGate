@@ -1,8 +1,9 @@
 import { cameraBlock } from '../camera.js';
 
 // COMPOSING A SHOT. A dev-mode block in the workbench that aims the current
-// page's camera live and then hands you the `camera:` line to paste into the
-// koan module.
+// page's camera live and then hands you the fields to paste into the koan
+// module's `const CAM = { ... };` — the body only, no braces, so it drops
+// straight between the ones already in the file.
 //
 // It speaks heading and pitch in degrees — and so, now, does the rig and every
 // koan's `camera:` block (Frank: "it's in azimuth and polar instead of heading

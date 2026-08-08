@@ -269,9 +269,10 @@ export function makeCameraRig(camera, el, {
   };
 }
 
-// The `camera:` block a koan module wants, as source text — the last step of
-// composing a shot is getting it out of the browser and into the file, and
-// reading six numbers off a panel and retyping them is where shots get lost.
+// The BODY of a koan module's `const CAM = { ... };` — the fields only, with no
+// braces and no trailing comma. The last step of composing a shot is getting it
+// out of the browser and into the file, and reading six numbers off a panel and
+// retyping them is where shots get lost.
 //
 // It emits bounds ONLY when the framing needs them. A case whose distance or
 // pitch falls outside the rig's stock envelope has to widen it or the reader's
@@ -302,7 +303,14 @@ export function cameraBlock({ distance, heading, pitch }, target) {
   if (distance > b.maxDist) extra.push(`maxDist: ${r3(distance + 1)}`);
   if (pitch < b.minPitch) extra.push(`minPitch: ${r1(Math.max(-87, pitch - 3.4))}`);
   if (pitch > b.maxPitch) extra.push(`maxPitch: ${r1(Math.min(87, pitch + 3.4))}`);
-  return `camera: { ${parts.concat(extra).join(', ')} },`;
+  // THE BRACES ARE NOT INCLUDED, and that is the point (Frank: "can we have it
+  // just be the stuff in the curly brackets so I could paste it in easier").
+  // Every case now hoists `const CAM = { ... };` above its module object, so
+  // what a composer wants is the INSIDE of that literal — select between the
+  // braces, paste, done. The old output was `camera: { ... },`, which matched
+  // the inline shape no case is written in any more and had to be unwrapped by
+  // hand every single time.
+  return parts.concat(extra).join(', ');
 }
 
 // THE FREE CAM'S POSE, KEPT ACROSS RELOADS. Reloading is how iterating on a

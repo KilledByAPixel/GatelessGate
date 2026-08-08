@@ -24,7 +24,7 @@ const RIGHT_AFTER = 4.5;  // and how long all three lie there before standing up
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 8.6, target: [0.7, 1.0, 0.4], heading: 31.5, pitch: 17.2 };
+const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 17.2 };
   export default {
   id: ID,
   slug: 'seizei-alone-and-poor',
@@ -42,7 +42,7 @@ const CAM = { distance: 8.6, target: [0.7, 1.0, 0.4], heading: 31.5, pitch: 17.2
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
   scene.add(makeLights());
   
-  const path = makePath({ from: [4.0, 8.4], to: [-2.0, -18], width: 1.2, seed: ID, groundSeed: 21, wander: 1.2 });
+  const path = makePath({ from: [4.0, 8.4], to: [-2.0, -22], width: 1.2, seed: ID, groundSeed: 21, wander: 1.2 });
   scene.add(path);
   
   // Sozan's hut, which is not much of a hut either
@@ -52,12 +52,13 @@ const CAM = { distance: 8.6, target: [0.7, 1.0, 0.4], heading: 31.5, pitch: 17.2
   scene.add(hut);
   
   plantTree(scene, { x: -4.2, z: -1.7, height: 4.7 });
+  plantTree(scene, { x: 1.2, z: -15.7, height: 3.7, kind: 'pine' });
   
   // One empty vase by the door (k40's, with nothing in it and nothing
   // coming). Poverty in this book is furnished exactly this much: a
   // vessel kept anyway. Seizei says he is destitute; the vase agrees.
   const vase = makeVase({ height: 0.55, seed: 10 });
-  vase.group.position.set(-0.75, 0, -1.85);
+  vase.group.position.set(-0.15, 0, 1.0);
   scene.add(vase.group);
   
   // the mat they are sitting on — the whole of Seizei's estate
