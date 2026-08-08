@@ -4,7 +4,7 @@ import { PAPER, ACCENT, WASH } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeHut, makeMonk, faceMonk, makeVase,
-  makeLights, addOutlines, toonMaterial,
+  makeLights, addOutlines, toonMaterial, plantTree,
 } from '../kit/index.js';
 
 const ID = 10;
@@ -50,6 +50,8 @@ const CAM = { distance: 8.6, target: [0.7, 1.0, 0.4], heading: 31.5, pitch: 17.2
   hut.position.set(-1.4, 0, -4.0);
   hut.rotation.y = 0.5;
   scene.add(hut);
+  
+  plantTree(scene, { x: -4.2, z: -1.7, height: 4.7 });
   
   // One empty vase by the door (k40's, with nothing in it and nothing
   // coming). Poverty in this book is furnished exactly this much: a
@@ -100,7 +102,10 @@ const CAM = { distance: 8.6, target: [0.7, 1.0, 0.4], heading: 31.5, pitch: 17.2
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  // not ID: the scatter was re-rolled to sit around the planted tree above,
+  // and 4 is the roll that landed (Frank's eye). groundSeed stays 21 — the
+  // terrain is shared, only the things standing on it moved.
+  seed: 4,
   groundSeed: 21,
   trees: 4,
   keepout: [

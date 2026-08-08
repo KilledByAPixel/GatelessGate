@@ -104,15 +104,21 @@ export default {
     const moon = makeMoon({ radius: 2.9, color: wash(0.30), distance: 62 });
     scene.add(moon);
 
-    // HER TREE, planted rather than scattered: the seated one has to be under
-    // a particular canopy, so this is the one tree in the scene whose position
-    // is the composition's business and not the scatter's (kit/scenery.js,
-    // plantTree — the hand-placement override, no keepout work of its own).
+    // THE TREE, planted rather than scattered: it stands where the composition
+    // needs a mass, so it is the one tree in the scene whose position is the
+    // picture's business and not the scatter's (kit/scenery.js, plantTree —
+    // the hand-placement override, no keepout work of its own).
+    //
+    // It is NOT a canopy over the seated one any more. The restaging moved her
+    // back down the road, some seven units off this trunk, and the picture is
+    // better for it — she sits in open ground with the tree standing between
+    // her and the house. The old arrangement had her tucked under it, which
+    // read as shelter; the case is not about shelter.
     const tree = plantTree(scene, { x: TREE.x, z: TREE.z, height: 4.0, groundSeed: 21 });
 
     // THE TWO OF HER — the seal, and the only red in the picture. Solid, both
     // of them: see the header. One stands in the lane with her children; the
-    // other sits under the tree a few strides off it.
+    // other sits alone, well back down the road at the house end of it.
     const road = path.sample(ROAD_T);
     const souls = [];
 
