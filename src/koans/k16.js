@@ -1,7 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
-import { DEFAULT_HOME } from '../camera.js';
 import {
   aimMonk, bearing, composeWorld, faceMonk, makeBell, makeCylinderChime,
   makeDrum, makeHut, makeLantern, makeMonk, makePath, wrapPi,
@@ -26,6 +25,13 @@ const ID = 16;
 // The interaction is the summons itself — the first case in the book you can
 // HEAR. Touch the bell and it swings and rings (audio.bell), and the elder on
 // the walk finishes the turn he was caught in.
+// The framing. This case used to take the book's default shot implicitly, by
+// naming no `camera:` at all. These are DEFAULT_HOME's own numbers, written
+// out so the shot is tuned here like every other case's rather than by moving
+// the book (Frank). composeWorld gets the same object as its `view`, so the
+// scatter still refuses spots no reachable heading can see (kit/scenery.js).
+const CAM = { distance: 11.5, target: [1.2, 1.35, 0.3], heading: 31.5, pitch: 17.2 };
+
 export default {
   id: ID,
   slug: 'bells-and-robes',
@@ -41,6 +47,8 @@ export default {
   // the bonsho (a single note, only occasionally wind-struck) that it never
   // competes with the summons that is this case's whole subject.
   ambience: ['wind:0.14', 'bell', 'cylinder', 'music'],
+
+  camera: CAM,
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -127,9 +135,7 @@ export default {
     //hall.add(eaveChime.group);
 
     const world = composeWorld(scene, {
-      // no `camera:` here — this case takes the book's default framing, so the
-      // scatter is told the same thing (kit/scenery.js seenFrom)
-      view: DEFAULT_HOME,
+      view: CAM,
       seed: ID,
       groundSeed: 21,
       trees: 4,

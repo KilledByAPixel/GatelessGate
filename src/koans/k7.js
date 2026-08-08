@@ -1,13 +1,19 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
-import { DEFAULT_HOME } from '../camera.js';
 import {
   composeWorld, makePath, makeHut, makeBasin, makeBowl, makeWater, makeMonk, faceMonk,
   makeOdoshi, makeLights, addOutlines, tapMeshes,
 } from '../kit/index.js';
 
 const ID = 7;
+// The framing. This case used to take the book's default shot implicitly, by
+// naming no `camera:` at all. These are DEFAULT_HOME's own numbers, written
+// out so the shot is tuned here like every other case's rather than by moving
+// the book (Frank). composeWorld gets the same object as its `view`, so the
+// scatter still refuses spots no reachable heading can see (kit/scenery.js).
+const CAM = { distance: 11.5, target: [1.2, 1.35, 0.3], heading: 31.5, pitch: 17.2 };
+
 export default {
   id: ID,
   slug: 'joshu-washes-the-bowl',
@@ -27,6 +33,8 @@ export default {
   // the first bright case: washing a bowl is domestic, morning work — yo, not
   // hirajoshi
   mood: 'yo',
+
+  camera: CAM,
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -80,17 +88,17 @@ export default {
     joshu.position.set(1.55, 0, 1.75);
     scene.add(joshu);
 
-    // The monk who has just entered the monastery, off the road in the grass
-    // where you stop when someone answers you. Placed to the shot's LEFT of
-    // Joshu rather than up the path behind him: the path runs almost straight
-    // away from the camera here, so a figure on it stands directly behind the
-    // one he is talking to and the pair reads as one person. Off the road they
-    // separate across the frame and read as two.
-    // The 2.6 between them is a SCREEN measurement, not a social one. At this
-    // camera's distance a body is about 0.06 of half-frame wide, so a pair a
-    // conversational 1.5 apart came out 0.17 apart on screen and read as one
-    // figure with a shadow. 2.6 along the camera's own left axis puts 0.30
-    // between them — two people talking, from where the reader stands.
+    // The monk who has just entered the monastery, up the path from Joshu and
+    // a little past him (Frank's placement). 1.87 units apart, which is only
+    // 0.13 of half-frame between them on screen — they read as two because
+    // they stand at different DEPTHS, one nearer and larger, not because they
+    // are spread across the frame.
+    //
+    // Worth knowing before moving either of them: at this camera's distance a
+    // body is about 0.06 of half-frame wide, so world distance and screen
+    // separation are very different currencies. An earlier pass put them a
+    // conversational 1.5 apart at the SAME depth and they collapsed into one
+    // figure with a shadow.
     const monk = makeMonk({ height: 1.56 });
     monk.position.set(1.8, 0, -.1);
     scene.add(monk);
@@ -122,9 +130,7 @@ export default {
     // the afterword; it just does not live in this case any more.)
 
     const world = composeWorld(scene, {
-      // no `camera:` here — this case takes the book's default framing, so the
-      // scatter is told the same thing (kit/scenery.js seenFrom)
-      view: DEFAULT_HOME,
+      view: CAM,
       seed: 7,
       groundSeed: 21,
       trees: 4,

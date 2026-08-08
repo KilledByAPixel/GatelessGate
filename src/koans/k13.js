@@ -1,7 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
-import { DEFAULT_HOME } from '../camera.js';
 import {
   composeWorld, makePath, makeHut, makeBell, makeDrum, makeBowl,
   makeMonk, faceMonk, makeLights, addOutlines,
@@ -16,6 +15,13 @@ const ID = 13;
 //
 // Both instruments answer a touch. Neither of them is the right one to sound —
 // that is the case. Nothing tells you so.
+// The framing. This case used to take the book's default shot implicitly, by
+// naming no `camera:` at all. These are DEFAULT_HOME's own numbers, written
+// out so the shot is tuned here like every other case's rather than by moving
+// the book (Frank). composeWorld gets the same object as its `view`, so the
+// scatter still refuses spots no reachable heading can see (kit/scenery.js).
+const CAM = { distance: 11.5, target: [1.2, 1.35, 0.3], heading: 31.5, pitch: 17.2 };
+
 export default {
   id: ID,
   slug: 'tokusan-holds-his-bowl',
@@ -24,6 +30,8 @@ export default {
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   ambience: ['wind:0.14', 'bell', 'drum', 'music'],
+
+  camera: CAM,
 
   build(ctx) {
     const { audio, input } = ctx;
@@ -76,9 +84,7 @@ export default {
     faceMonk(tokusan, seppo.position);
 
     const world = composeWorld(scene, {
-      // no `camera:` here — this case takes the book's default framing, so the
-      // scatter is told the same thing (kit/scenery.js seenFrom)
-      view: DEFAULT_HOME,
+      view: CAM,
       seed: ID,
       groundSeed: 21,
       trees: 4,

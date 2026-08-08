@@ -334,3 +334,28 @@ test('no staged scene blows the draw budget', async () => {
   }
   assert.deepEqual(over, [], `over budget: ${JSON.stringify(over)}`);
 });
+
+// EVERY CASE NAMES ITS OWN FRAMING. Four cases used to name no `camera:` at
+// all and fall through to DEFAULT_HOME, which meant their shot could only be
+// tuned by moving the whole book, and the Compose panel had nowhere to paste
+// its block back to. They carry explicit numbers now — DEFAULT_HOME's own, so
+// nothing moved — and this keeps it that way.
+//
+// The matter pages are not in `staged` and are deliberately not covered:
+// the afterword renders the hub and must INHERIT its derived gateTarget, so a
+// written-down target there is the bug, not the fix (see afterword.js).
+test('every staged case names a complete camera of its own', async () => {
+  const bad = [];
+  for (const entry of staged) {
+    const mod = await loadKoan(entry.slug);
+    const cam = mod.camera;
+    if (!cam) { bad.push([entry.id, 'no camera: block — it would inherit DEFAULT_HOME']); continue; }
+    for (const k of ['distance', 'heading', 'pitch']) {
+      if (!Number.isFinite(cam[k])) bad.push([entry.id, `camera.${k} is ${cam[k]}`]);
+    }
+    if (!Array.isArray(cam.target) || cam.target.length !== 3 || !cam.target.every(Number.isFinite)) {
+      bad.push([entry.id, `camera.target is ${JSON.stringify(cam.target)}`]);
+    }
+  }
+  assert.deepEqual(bad, [], `incomplete camera blocks: ${JSON.stringify(bad)}`);
+});
