@@ -1,8 +1,8 @@
-# Gateless Gate 3D
+# The Gateless Gate 3D
 
-*An interactive edition of the Mumonkan, in your browser.*
+*An interactive edition of the Mumonkan in your browser.*
 
-## [Enter the Gate](https://killedbyapixel.github.io/GatelessGate/)
+## [Open the Gate](https://killedbyapixel.github.io/GatelessGate/)
 
 Works on desktop and phone. No install, no sign-in, nothing to download.
 
