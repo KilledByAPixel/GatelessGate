@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK_LIT } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
-  composeWorld, makeMonk, faceMonk, makeButterflies,
+  composeWorld, makeMonk, faceMonk, makeButterflies, makeWildflowers,
   makeLights, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -15,6 +15,16 @@ const ID = 21;
 // A yard swept to bare earth, the little pile of dung in the middle of it, two
 // figures, and nothing else: no lantern, no path, no hut, the trees kept out at
 // the fog line. The emptiness is the staging.
+//
+// Wildflowers through the meadow (Frank), on the same terms as the grass: they
+// come up to within a couple of units of the pile and run out to the treeline,
+// leaving the dung itself on clean dirt. The swept yard is bare of PROPS — no
+// lantern, no rocks, no bushes — and that is what carries the emptiness; a
+// meadow with no flowers in it was never what the sweeping meant.
+//
+// They keep the kit's default whitish bloom: red heads would put a second seal
+// on the page and take the joke off the dung, which is the one thing here
+// allowed to be vermillion.
 //
 // The dung itself is the one warm mark on the page (Frank): a red pile in the
 // dirt, which is the whole joke — the painter has given his one seal of colour
@@ -118,6 +128,25 @@ const CAM = { distance: 10.0, target: [0.8, 0.8, 0.2], heading: 31.5, pitch: 21.
     faceMonk(monk, ummon.position);
     scene.add(monk);
 
+    // rMin matches the GRASS keepout (1.2), not the scatter's 6.0: the swept
+    // yard is bare of props, but grass has always grown right up to the pile,
+    // and blooms are meadow, not scenery. Held out to 2.0 so the dung itself
+    // still sits on clean dirt.
+    //
+    // Measured, not guessed: at rMin 6.5 the nearest bloom was 13.9 units from
+    // the camera and 90 of them put 39 in frame at ~3.6px a head — a dusting in
+    // the fog that read as nothing at all. These numbers put the field's front
+    // edge inside the near half of the shot at k32's density and head size.
+    const flowers = makeWildflowers({
+      count: 220, rMin: 2.0, radius: 18, scale: 1.5, seed: ID, groundSeed: 21,
+      keepout: [
+        { at: stick, r: 1.5 },
+        { at: ummon, r: 1.2 },
+        { at: monk, r: 1.2 },
+      ],
+    });
+    scene.add(flowers.mesh);
+
     const world = composeWorld(scene, {
       view: CAM,
       seed: ID,
@@ -170,6 +199,7 @@ const CAM = { distance: 10.0, target: [0.8, 0.8, 0.2], heading: 31.5, pitch: 21.
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
         flies.update(dt, simTime);
+        flowers.update(dt, simTime);
         let a = 0;
         for (const t0 of knocks) {
           const t = clock - t0;

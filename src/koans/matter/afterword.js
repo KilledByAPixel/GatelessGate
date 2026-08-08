@@ -2,7 +2,9 @@ import * as THREE from '../../../lib/three.module.js';
 import MATTER from '../text/matter.js';
 import { buildHub } from '../../intro.js';
 import { WASH } from '../../palette.js';
-import { makeBuddha, makeCat, groundHeight, toonMaterial, addOutlines } from '../../kit/index.js';
+import {
+  makeBuddha, makeCat, makeWildflowers, groundHeight, toonMaterial, addOutlines,
+} from '../../kit/index.js';
 import { eyePosition } from '../../camera.js';
 
 // Mumon's afterword, the Zen Warnings, and the letter that produced case 49 —
@@ -12,9 +14,11 @@ import { eyePosition } from '../../camera.js';
 // the case it introduces. That inversion is accepted: it reads as the machinery
 // shown afterwards, and the alternative is editing a case.
 //
-// The scene is the world with everything taken out of it — no gate, no path, no
-// lanterns, no one walking. Ground, mountains, forest, and the fog. Except: two
-// stayed behind. A Buddha on a small mat under the tree the opening camera
+// The scene is the world with the PEOPLE and the built things taken out of it —
+// no gate, no path, no lanterns, no one walking. Ground, mountains, forest, a
+// meadow gone to wildflowers, and the fog. What was cleared is the traffic, not
+// the life: an empty road through dead ground is a bleaker last picture than
+// this book earns. Except: two stayed behind. A Buddha on a small mat under the tree the opening camera
 // looks past (Frank, overnight pass 2), off to the side of the frame, facing
 // the spot where the gate stood in the intro — meditating on the door everyone
 // else left by. The camera is not on him; he is found, not shown.
@@ -168,6 +172,27 @@ export default {
       o.instanceMatrix.needsUpdate = true;
     });
 
+    // WILDFLOWERS through the valley (Frank). The stage is cleared of people and
+    // built things, not of life — an empty road with the meadow gone over is a
+    // different, bleaker ending than the one this page wants. They keep the
+    // kit's default whitish bloom: this page has `accent: undefined` and no
+    // seal, and a red head would invent one on the last picture in the book.
+    //
+    // Placed with their own keepouts rather than through the CLEAR sweep above
+    // — that sweep retires instances the hub had already scattered blind, and
+    // these are ours to put down correctly the first time.
+    // Count and scale are measured against k32's field, which reads correctly:
+    // 120 at scale 1 over this radius put only 70 in frame at ~3.8px a head and
+    // vanished into the fog.
+    const flowers = makeWildflowers({
+      count: 260, rMin: 2.5, radius: 20, scale: 1.5, seed: 58, groundSeed: built.groundSeed,
+      keepout: [
+        { x: MAT.x, z: MAT.z, r: 0.85 },
+        { x: CAT.x, z: CAT.z, r: 0.5 },
+      ],
+    });
+    scene.add(flowers.mesh);
+
     // buildHub's own return, with the cat driven off the end of it: its barrel
     // breathes and its tail drifts, which is the only thing moving on this page
     // besides the meadow. The simTime guard is the house idiom — a cat handed a
@@ -179,6 +204,7 @@ export default {
         built.update(dt, simTime);
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         cat.update(Math.max(0, dt || 0), clock);
+        flowers.update(Math.max(0, dt || 0), clock);
       },
     };
   },
