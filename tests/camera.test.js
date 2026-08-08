@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import {
   makeCameraRig, wanderGoal, makeFreeCam, packFreeCam, unpackFreeCam,
-  eyePosition, cameraBlock, HANDS_OFF,
+  eyePosition, cameraBlock,
 } from '../src/camera.js';
 
 // The rig's own defaults — the envelope a reader can reach by dragging.
@@ -65,26 +65,87 @@ test('locking mid-grab releases the grab', () => {
   assert.equal(rig.goal.heading, heading, 'the grab must not survive the lock');
 });
 
-test('the drift yields to a hand on the camera, and comes back after it lets go', () => {
+// The bug Frank saw twice over: "it's almost like the initial camera is wrong",
+// and "I exit out of look at the scene and the camera is in a slightly different
+// location than it was." One cause — noise1(0, seed) is not 0.5, so the drift's
+// first frame was 16.5 degrees off the case's heading. Entering threw the goal
+// sideways; leaving froze it wherever the drift had walked to.
+test('entering the look does not move the camera off the case\'s framing', () => {
+  const rig = makeCameraRig(new THREE.PerspectiveCamera(), fakeEl(), {});
+  const home = { ...rig.home };
+  rig.setWander(true);
+  for (let i = 0; i < 3; i++) rig.update(1 / 60);
+  assert.ok(Math.abs(rig.goal.heading - home.heading) < 0.05,
+    `the look opened ${Math.abs(rig.goal.heading - home.heading).toFixed(2)} deg off the composed shot`);
+  assert.ok(Math.abs(rig.goal.pitch - home.pitch) < 0.05, `pitch jumped: ${rig.goal.pitch}`);
+  assert.ok(Math.abs(rig.goal.distance - home.distance) < 0.02, `distance jumped: ${rig.goal.distance}`);
+});
+
+test('leaving the look hands the page its composed framing back', () => {
+  const rig = makeCameraRig(new THREE.PerspectiveCamera(), fakeEl(), {});
+  const home = { ...rig.home };
+  rig.setWander(true);
+  for (let i = 0; i < 60 * 30; i++) rig.update(1 / 60);       // half a minute of drift
+  assert.notEqual(rig.goal.heading, home.heading, 'it did drift, so the test means something');
+
+  rig.setWander(false);
+  assert.equal(rig.goal.heading, home.heading, 'the page must not keep the drift\'s heading');
+  assert.equal(rig.goal.pitch, home.pitch);
+  assert.equal(rig.goal.distance, home.distance);
+});
+
+test('a second visit to the look opens on the composed shot too', () => {
+  // Without rewinding the drift clock, re-entering resumes mid-curve and jumps
+  // exactly the way the first visit used to.
+  const rig = makeCameraRig(new THREE.PerspectiveCamera(), fakeEl(), {});
+  const home = { ...rig.home };
+  rig.setWander(true);
+  for (let i = 0; i < 60 * 30; i++) rig.update(1 / 60);
+  rig.setWander(false);
+  rig.setWander(true);
+  for (let i = 0; i < 3; i++) rig.update(1 / 60);
+  assert.ok(Math.abs(rig.goal.heading - home.heading) < 0.05,
+    `the second look opened ${Math.abs(rig.goal.heading - home.heading).toFixed(2)} deg off`);
+});
+
+test('the drift runs until the reader takes hold, and then never again', () => {
   const el = fakeEl();
   const rig = makeCameraRig(new THREE.PerspectiveCamera(), el, {});
   rig.setWander(true);
   rig.setDrag(true);
+
+  // hands off: the scene breathes
+  for (let i = 0; i < 120; i++) rig.update(1 / 60);
+  assert.notEqual(rig.goal.heading, rig.home.heading, 'the drift moves the goal on its own');
+
   el.handlers.pointerdown({ clientX: 400, clientY: 300 });
   el.handlers.pointermove({ clientX: 300, clientY: 300 });
-  const held = rig.goal.heading;
-  assert.notEqual(held, rig.home.heading, 'the drag moved it');
-
-  for (let i = 0; i < 60; i++) rig.update(1 / 60);        // a second, still held
-  assert.equal(rig.goal.heading, held,
-    'the drift used to overwrite the goal every frame, which is why the look felt uncontrollable');
-
   el.handlers.pointerup({});
-  for (let i = 0; i < Math.ceil(HANDS_OFF * 60) - 10; i++) rig.update(1 / 60);
-  assert.equal(rig.goal.heading, held, 'still theirs, just before HANDS_OFF is up');
+  const held = rig.goal.heading;
 
-  for (let i = 0; i < 40; i++) rig.update(1 / 60);
-  assert.notEqual(rig.goal.heading, held, 'and the scene takes it back');
+  // A timed hand-back was tried and was wrong: you frame a shot, pause to look
+  // at it, and the scene pulls it to the case's default while you watch. Two
+  // full minutes here — far past any plausible timeout — and it must not move.
+  for (let i = 0; i < 120 * 60; i++) rig.update(1 / 60);
+  assert.equal(rig.goal.heading, held, 'the drift must never take the shot back');
+});
+
+test('a fresh rig breathes again — the latch is per page, not forever', () => {
+  // Every page turn builds a new rig, which is what clears it. If the latch
+  // ever moved to module scope, the first drag of a session would kill the
+  // drift for the whole book.
+  const el = fakeEl();
+  const first = makeCameraRig(new THREE.PerspectiveCamera(), el, {});
+  first.setWander(true); first.setDrag(true);
+  el.handlers.pointerdown({ clientX: 400, clientY: 300 });
+  el.handlers.pointermove({ clientX: 300, clientY: 300 });
+  el.handlers.pointerup({});
+
+  const el2 = fakeEl();
+  const next = makeCameraRig(new THREE.PerspectiveCamera(), el2, {});
+  next.setWander(true);
+  for (let i = 0; i < 120; i++) next.update(1 / 60);
+  assert.notEqual(next.goal.heading, next.home.heading, 'the new page drifts');
 });
 
 test('wheel clamps distance', () => {

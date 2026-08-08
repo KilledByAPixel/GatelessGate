@@ -561,12 +561,18 @@ function stageOnly() { return ambient || mode === 'sit'; }
 // the cursor and nothing more: no dragging it off the shot, no wheel. Step into
 // the look, where the diorama has the whole window and there is nothing to read,
 // and the controls are yours. The drift still runs there and yields for a few
-// seconds whenever you take hold (camera.js, HANDS_OFF).
+// gives way for good the first time you take hold (camera.js, `taken`).
 //
-// Dev mode keeps them everywhere, because Compose is aimed by hand from the
-// Contents screen — "drag the scene with the mouse and the numbers follow" —
-// and the Contents is not a stage-only view.
-function canDragCamera() { return stageOnly() || devMode; }
+// DEV MODE IS NOT AN EXEMPTION ON A CASE. It was, briefly, so that Compose
+// could be aimed by dragging — and the result was that the one person who
+// needed to see the new behaviour never did: Frank reads the book in dev mode,
+// so every page still dragged, and entering the look then swung the camera as
+// the drift overrode whatever he had just done. A shot is composed from the
+// look now, which has the controls anyway and a whole window to judge in.
+//
+// The Contents keeps them, because MENU_CAM is aimed from there and that
+// screen is not a stage-only view.
+function canDragCamera() { return stageOnly() || (devMode && mode !== 'koan'); }
 function applyStageOnly() {
   app.classList.toggle('ambient', stageOnly());
   app.classList.toggle('sitting', mode === 'sit');   // the toolbar steps aside too
@@ -960,6 +966,10 @@ function buildKoan(mod, slug) {
   panel.appendChild(scroll.el);
   showView(scroll.el);
   mode = 'koan';
+  // AFTER the mode flips, not with the rig. makeRig ran forty lines up, while
+  // `mode` still said 'menu' — so arriving at a case from the Contents in dev
+  // mode handed it the Contents' answer and left the page draggable.
+  if (rig) rig.setDrag(canDragCamera());
   // A PAGE TURNED UNDER THE LOOK, so say which page it is now (Frank: "we would
   // display the title when you click next or previous, because it's going to a
   // new one"). This cannot fire on merely opening the look — buildKoan only runs

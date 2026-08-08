@@ -685,6 +685,30 @@ export function makeFurin({
   cap.position.y = -CAP_H / 2;                // top face stays AT the hang point
   body.add(cap);
 
+  // THE NECK, single only. Every tube's top is at -0.18*S (see the loop above),
+  // but a single's knot only reaches -0.08*S — so there was a tenth of a unit of
+  // clear air between the knot and the bell it is supposedly holding up, and the
+  // bell read as floating (Frank: "there's just a gap between the chime part and
+  // the top part... extend the thing it's hanging from down further"). A ring
+  // does not want this: its tubes hang on threads from a roof and the daylight
+  // under the cap is the point.
+  //
+  // Slimmer than the tube so it reads as something the bell hangs FROM rather
+  // than as part of the bell, and it closes the gap by construction — both ends
+  // come off TUBE_TOP and CAP_H, so moving either one keeps them joined.
+  if (single) {
+    const TUBE_TOP = 0.18 * S;
+    const neckLen = TUBE_TOP - CAP_H;
+    if (neckLen > 0) {
+      const neckR = Math.min(capR * 0.55, singleTubeR * 0.42);
+      const neck = new THREE.Mesh(
+        new THREE.CylinderGeometry(neckR, neckR, neckLen, 6), wood);
+      neck.name = 'neck';
+      neck.position.y = -(CAP_H + neckLen / 2);
+      body.add(neck);
+    }
+  }
+
   // THE CLAPPER. A ring's is a visible disc hanging at the centre with every
   // tube 0.33S clear of it — that reads correctly and stays. A single's is
   // INSIDE the body and has no mesh at all: nobody can see into an opaque

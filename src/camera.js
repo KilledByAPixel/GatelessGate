@@ -87,8 +87,24 @@ export const DEFAULT_HOME = {
 // deliberately modest — half the drag range in heading, six degrees of pitch, a
 // couple of units of breath in distance. A bit more movement than sitting still,
 // not a fairground ride.
+// IT STARTS AT HOME. noise1(0, seed) is not 0.5 — it is wherever that seed's
+// curve happens to begin — so without the envelope below the drift's very first
+// frame was already 16.5 DEGREES off the case's heading. Entering the look
+// therefore threw the goal sideways and the damping swung the camera after it,
+// which is the twist Frank kept seeing: "it's almost like the initial camera is
+// wrong... when I first go into look at the scene the camera goes into a
+// slightly different rotation."
+//
+// The fix is an amplitude ramp rather than a re-centred curve: at t = 0 every
+// offset is multiplied by zero, so the goal IS home and the shot the case was
+// composed for holds. Over WANDER_RAMP seconds the breathing opens up to full.
+// Slow relative to the 37/53/41-second channels, so it reads as the scene
+// waking rather than as a separate move.
+export const WANDER_RAMP = 6;
 export function wanderGoal(t, home, bounds) {
-  const swing = (period, seed) => noise1(t / period, seed) * 2 - 1;   // -1..1
+  const u = clamp(t / WANDER_RAMP, 0, 1);
+  const ease = u * u * (3 - 2 * u);
+  const swing = (period, seed) => (noise1(t / period, seed) * 2 - 1) * ease;   // -1..1, faded in
   return {
     heading: clamp(home.heading + swing(37, 11) * bounds.headingRange * 0.5,
       home.heading - bounds.headingRange, home.heading + bounds.headingRange),
@@ -105,11 +121,13 @@ export function wanderGoal(t, home, bounds) {
 // versa; the degrees are the old radians rounded to something a person can hold.
 export const RIG_BOUNDS = { minDist: 7, maxDist: 16, minPitch: 7, maxPitch: 38.5 };
 
-// Seconds of stillness before the ambient drift takes the camera back off a
-// reader who moved it. Long enough that letting go mid-look does not feel like
-// the scene snatching the lens, short enough that a hands-off page returns to
-// breathing on its own without being asked.
-export const HANDS_OFF = 4;
+// (There was a HANDS_OFF constant here: seconds of stillness before the drift
+// took the camera back off a reader who had moved it. It is gone. Handing the
+// lens back after a pause meant the shot you had just framed slid away to the
+// case's default while you were looking at it — Frank: "the camera automatically
+// snaps to the default view if you don't touch it for a bit. I don't want it to
+// do that." The drift now stops for good the first time you take hold; see
+// `taken` in makeCameraRig.)
 
 export function makeCameraRig(camera, el, {
   target = [0, 1.1, 0],
@@ -146,10 +164,17 @@ export function makeCameraRig(camera, el, {
   // the workbench: a reader with the text beside them gets the composition the
   // case was framed for, and cannot wander off it while reading.
   let drag = true;
-  // Seconds since the reader last had hold of it. Starts at Infinity so a fresh
-  // rig in the look drifts from the first frame rather than waiting out a grab
-  // that never happened.
-  let handsOff = Infinity;
+  // ONCE THEY TAKE IT, THEY KEEP IT. A latch, not a timer: the first drag or
+  // wheel on this rig stops the ambient drift and it does not come back. A
+  // timer was tried and was wrong in the only way that matters — you frame a
+  // shot, pause to look at it, and the scene pulls it away to the case's
+  // default while you watch.
+  //
+  // Scoped to the rig, so it clears where it should: every page turn builds a
+  // fresh one and the new scene breathes again. Leaving the look and returning
+  // to the SAME page deliberately does not un-latch it — the alternative is
+  // exactly the snap this replaced.
+  let taken = false;
 
   const onPointerDown = (e) => {
     if (!drag) return;
@@ -167,6 +192,7 @@ export function makeCameraRig(camera, el, {
       goal.heading = clamp(goal.heading - (e.clientX - px) * 0.29, home.heading - bounds.headingRange, home.heading + bounds.headingRange);
       goal.pitch = clamp(goal.pitch + (e.clientY - py) * 0.29, bounds.minPitch, bounds.maxPitch);
       px = e.clientX; py = e.clientY;
+      taken = true;         // the lens is theirs now; the drift is done
     }
   };
   const onPointerUp = () => { dragging = false; };
@@ -176,7 +202,7 @@ export function makeCameraRig(camera, el, {
     // stage is not ours to swallow.
     if (!drag) return;
     e.preventDefault?.();
-    handsOff = 0;
+    taken = true;
     goal.distance = clamp(goal.distance + e.deltaY * 0.01, bounds.minDist, bounds.maxDist);
   };
   el.addEventListener('pointerdown', onPointerDown);
@@ -189,15 +215,13 @@ export function makeCameraRig(camera, el, {
     // Ambient mode moves the GOAL and lets the existing damping do the smoothing
     // — there is no second easing here, and there shouldn't be.
     //
-    // THE DRIFT YIELDS. It used to overwrite the goal every frame, so a drag
-    // while it was running was undone before it could be seen — a known limit
-    // of the first pass, and the reason the look felt like it had no controls
-    // at all. Now the reader's hand stops the drift, and it comes back after
-    // HANDS_OFF seconds of stillness, easing toward the case's own framing
-    // because wanderGoal is written around `home` rather than around wherever
-    // they left the lens.
-    if (dragging) handsOff = 0; else handsOff += dt;
-    if (wander && handsOff >= HANDS_OFF) {
+    // THE DRIFT GIVES WAY FOR GOOD. It used to overwrite the goal every frame,
+    // so a drag was undone before it could be seen; then it gave way for a few
+    // seconds and took the shot back, which was worse — you would frame
+    // something, stop to look at it, and watch it slide off to the case's
+    // default. It is one-way now: hands on the camera, and this page has
+    // stopped breathing until the reader turns the page.
+    if (wander && !taken) {
       wanderTime += dt;
       Object.assign(goal, wanderGoal(wanderTime, home, bounds));
     }
@@ -233,7 +257,26 @@ export function makeCameraRig(camera, el, {
 
   // `home` is returned because the drift breathes around the case's own framing,
   // and the lens slider has to be able to move that framing with it.
-  const setWander = (on) => { wander = !!on; };
+  // Entering and leaving the look are both EDGES, not states, and each has to
+  // put the goal somewhere sane.
+  //
+  // Leaving restores `home`. The drift had walked the goal away from the case's
+  // framing, wander switching off simply froze it there, and the reader dropped
+  // back onto their page looking at a shot nobody composed — Frank: "I exit out
+  // of look at the scene, and the camera is in a slightly different location
+  // than it was." The damping eases it back rather than cutting.
+  //
+  // Entering rewinds the clock and un-latches, so every visit to the look opens
+  // on the composed shot and breathes out from there (wanderGoal ramps from
+  // zero at t = 0). Without the rewind, a second look would resume mid-curve
+  // and jump exactly the way the first one used to.
+  const setWander = (on) => {
+    const next = !!on;
+    if (next === wander) return;
+    wander = next;
+    if (wander) { wanderTime = 0; taken = false; }
+    else Object.assign(goal, home);
+  };
   // Turning the controls off mid-grab has to release the grab too, or the next
   // pointermove over the locked stage would still be steering.
   const setDrag = (on) => { drag = !!on; if (!drag) dragging = false; };
