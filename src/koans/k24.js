@@ -19,7 +19,7 @@ const ID = 24;
 // the whole answer. Southern China, spring, borrowed from someone else.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.0, target: [0.8, 1.6, -0.4], heading: 31.5, pitch: 20.7 };
+const CAM = { distance: 17, target: [3.95, 0.45, -1.3], heading: -24.5, pitch: 13.5, maxDist: 18 };
   export default {
   id: ID,
   slug: 'without-words-without-silence',
@@ -43,7 +43,7 @@ const CAM = { distance: 11.0, target: [0.8, 1.6, -0.4], heading: 31.5, pitch: 20
   
   // FUKETSU, sitting in the middle of the answer
   const fuketsu = makeMonk({ height: 1.58, pose: 'sit' });
-  fuketsu.position.set(0.8, 0, 0.6);
+  fuketsu.position.set(1.1, 0, 1.1);
   faceMonk(fuketsu, { x: 4.0, z: 4.0 });
   scene.add(fuketsu);
   
@@ -60,7 +60,7 @@ const CAM = { distance: 11.0, target: [0.8, 1.6, -0.4], heading: 31.5, pitch: 20
   const buffalo = makeBuffalo({ height: 1.4, seed: 24 });
   buffalo.group.position.set(-7.5, 0, -8.0);
   buffalo.group.rotation.y = 0.8;
-  scene.add(buffalo.group);
+  //scene.add(buffalo.group);
   
   const world = composeWorld(scene, {
   view: CAM,
@@ -73,7 +73,11 @@ const CAM = { distance: 11.0, target: [0.8, 1.6, -0.4], heading: 31.5, pitch: 20
   { at: monk, r: 1.2 },
   { at: buffalo.group, r: 2.0 },
   ],
-  grassKeepout: path.keepout(24, 0.9),
+  grassKeepout: [
+  ...path.keepout(24, 0.9),
+  
+  { at: fuketsu, r: 1.2 },
+  ],
   });
   
   // INNUMERABLE KINDS OF FRAGRANT FLOWERS — a meadow genuinely in bloom, on
@@ -93,7 +97,7 @@ const CAM = { distance: 11.0, target: [0.8, 1.6, -0.4], heading: 31.5, pitch: 20
   { at: monk, r: 0.8 },
   ],
   });
-  scene.add(flowers.mesh);
+  //scene.add(flowers.mesh);
   
   // AND THE BIRDS — the seal of this case. "The birds sing among innumerable
   // kinds of fragrant flowers": the birds are what the whole answer is, so

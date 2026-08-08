@@ -133,7 +133,7 @@ const CAM = { distance: 10.0, target: [0.8, 0.8, 0.2], heading: 31.5, pitch: 21.
       ],
       // and the yard is swept to bare earth, which is the one thing this scene
       // has instead of scenery
-      grassKeepout: [{ at: stick, r: 5.2 }],
+      grassKeepout: [{ at: stick, r: 1.2 }],
     });
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });

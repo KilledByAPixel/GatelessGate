@@ -56,18 +56,18 @@ const CAM = { distance: 9.6, target: [0.6, 1.5, -1.2], heading: 29.8, pitch: 17.
   const lights = makeLights();
   scene.add(lights);
   
-  const path = makePath({ from: [4.2, 8.0], to: [-2.0, -17], width: 1.3, seed: ID, groundSeed: 21, wander: 0.9 });
+  const path = makePath({ from: [4.2, 8.0], to: [-2.0, -27], width: 1.3, seed: ID, groundSeed: 21, wander: 2.9 });
   scene.add(path);
   
   // Ryutan's veranda, with the screen standing open
   const veranda = makeVeranda({ width: 4.4, depth: 3.6, height: 3.0 });
-  veranda.position.set(-0.8, 0, -3.8);
+  veranda.position.set(-2.1, 0, -3.8);
   veranda.rotation.y = 0.22;
   scene.add(veranda);
   
   // RYUTAN, inside on the boards, who is about to do this
   const ryutan = makeMonk({ height: 1.6, pose: 'sit', elder: true });
-  ryutan.position.set(-1.4, 0.34, -3.0);
+  ryutan.position.set(-2.8, 0.34, -2.0);
   scene.add(ryutan);
   
   // TOKUSAN, on the step, hand out, having just been given the light
@@ -84,7 +84,7 @@ const CAM = { distance: 9.6, target: [0.6, 1.5, -1.2], heading: 29.8, pitch: 17.
   // from the lantern, so this rotation aims the opening straight down that
   // sight-line and the candle inside is plainly visible.
   const lantern = makeLantern({ height: 1.15 });
-  lantern.position.set(0.5, 0, -1.7);
+  lantern.position.set(-.8, .3, -1.7);
   lantern.rotation.y = 0.5;
   scene.add(lantern);
   const candle = lantern.getObjectByName('candle');
@@ -105,7 +105,7 @@ const CAM = { distance: 9.6, target: [0.6, 1.5, -1.2], heading: 29.8, pitch: 17.
   const flame = new THREE.Mesh(flameGeo, flameMat);
   flame.name = 'flame';
   flame.userData.noOutline = true;
-  flame.position.set(0.5, 0.78, -1.7);     // base at 0.68 — the kit candle's tip
+  flame.position.set(-.8, 1.0, -1.7);     // base at 0.68 — the kit candle's tip
   scene.add(flame);
   
   // THE GLOW — the bright red light Frank asked to see in the box. A radial
@@ -200,7 +200,7 @@ const CAM = { distance: 9.6, target: [0.6, 1.5, -1.2], heading: 29.8, pitch: 17.
   ],
   grassKeepout: [
   ...path.keepout(24, 0.95),
-  { x: -0.8, z: -3.2, r: 2.6 },
+  { x: -1.8, z: -2.8, r: 2.9 },
   ],
   });
   

@@ -34,7 +34,7 @@ const ID = 35;
 // the seal at first; now it hangs plain (Frank's call, recorded at the moon
 // below) and the two souls themselves carry the red.
 
-const ROAD_T = 0.36;      // how far along the road the family stands
+const ROAD_T = 0.29;      // how far along the road the family stands
 const KID_SIDE = 0.70;    // a child off either shoulder, across the width-1.4 road
 // The other of her, and her tree — on the HOME side of the road, which is the
 // +perp side here (the house stands at x 4.6). Not decoration: the one who
@@ -45,7 +45,7 @@ const KID_SIDE = 0.70;    // a child off either shoulder, across the width-1.4 r
 // the 1.78 the staging net checks with; here the seated figure reaches 0.75 of
 // frame width at aspect 1.0, and a step further out costs her an arm to the
 // right edge on a small window.
-const SIT = { x: 3.25, z: -2.8 };
+const SIT = { x: 2.25, z: -10.8 };
 const TREE = { x: 4.2, z: -3.5 };
 const ANSWER = 2.4;       // seconds for a touch to fade out of both of them
 
@@ -90,14 +90,14 @@ export default {
 
     // home, near; the town, far off down the road
     const home = makeHut({ width: 2.8, height: 2.2, depth: 2.3 });
-    home.position.set(4.6, 0, 2.6);
-    home.rotation.y = -0.7;
+    home.position.set(2.6, 0, -12.6);
+    home.rotation.y = -.2;
     scene.add(home);
 
     const town = makeHut({ width: 3.0, height: 2.4, depth: 2.4 });
     town.position.set(-6.4, 0, -8.0);
     town.rotation.y = 0.5;
-    scene.add(town);
+    //scene.add(town);
 
     // THE MOON, standing beyond everything — plain now, not the seal (Frank):
     // the two souls carry the red, so the moon is just a pale disc.
