@@ -16,7 +16,7 @@ const ID = 8;
 // What is left keeps turning. It was never the hub that turned it.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.0, target: [1.3, 1.25, 0.4], heading: 31.5, pitch: 19 };
+const CAM = { distance: 9, target: [0.7, 1.25, 0.4], heading: 31.5, pitch: 19 };
   export default {
   id: ID,
   slug: 'keichu-s-wheel',
@@ -102,12 +102,12 @@ const CAM = { distance: 9.0, target: [1.3, 1.25, 0.4], heading: 31.5, pitch: 19 
   
   // Getsuan, who asked, and the student he asked
   const master = makeMonk({ height: 1.66, elder: true });
-  master.position.set(-0.5, 0, 2.1);
+  master.position.set(-0.4, 0, 1.7);
   faceMonk(master, wheel.group.position);
   scene.add(master);
   
   const student = makeMonk({ height: 1.56, pose: 'sit' });
-  student.position.set(3.5, 0, 1.5);
+  student.position.set(2.8, 0, 1.5);
   faceMonk(student, wheel.group.position);
   scene.add(student);
   

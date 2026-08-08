@@ -19,7 +19,7 @@ const VERANDA_H = 3.2;   // shared with the chime hang point below
 // silk. You cannot add what the picture is refusing to be.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.0, target: [0.4, 1.7, -1.4], heading: 24.1, pitch: 15.5 };
+const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 };
   export default {
   id: ID,
   slug: 'a-beardless-foreigner',
@@ -79,7 +79,7 @@ const CAM = { distance: 9.0, target: [0.4, 1.7, -1.4], heading: 24.1, pitch: 15.
   const paintMat = toonMaterial({ color: ACCENT, flat: true });
   const painted = new THREE.Group();
   painted.name = 'painted';
-  painted.position.set(0, -0.12, 0.03);
+  painted.position.set(0, 0.1, 0.03);
   
   const robeProfile = [
   [0.02, 0.00], [0.34, 0.00], [0.30, 0.24], [0.24, 0.52],
@@ -122,7 +122,7 @@ const CAM = { distance: 9.0, target: [0.4, 1.7, -1.4], heading: 24.1, pitch: 15.
   mark.userData.noOutline = true;
   mark.scale.set(1, 1, 0.5);
   mark.position.set(0, 0.41, 0.040);
-  painted.add(mark);
+  //painted.add(mark); // disable mark for now
   scroll.add(painted);
   
   // THE BEARD THAT WILL NOT TAKE. Present from the start and invisible; a
@@ -144,7 +144,7 @@ const CAM = { distance: 9.0, target: [0.4, 1.7, -1.4], heading: 24.1, pitch: 15.
   
   // Wakuan, in front of it, complaining
   const wakuan = makeMonk({ height: 1.66, pose: 'point' });
-  wakuan.position.set(1.5, 0, 0.3);
+  wakuan.position.set(-.9, .35, -1);
   aimMonk(wakuan, scroll.position);
   scene.add(wakuan);
   
@@ -172,7 +172,7 @@ const CAM = { distance: 9.0, target: [0.4, 1.7, -1.4], heading: 24.1, pitch: 15.
   view: CAM,
   seed: ID,
   groundSeed: 21,
-  trees: 4,
+  trees: 9,
   keepout: [
   { at: veranda, r: 4.2 },
   { at: wakuan, r: 1.2 },

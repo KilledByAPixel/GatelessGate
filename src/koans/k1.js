@@ -42,7 +42,7 @@ const CAM = { distance: 10.8, target: [1.35, 1.35, 0.3], heading: 18.5, pitch: 1
   const HUT = { x: -3.8, z: -4.5 };
   const hut = makeHut({ width: 3.0, height: 2.3, depth: 2.4, chimes:4});
   hut.position.set(HUT.x, 0, HUT.z);
-  faceMonk(hut, { x: 0.9, z: 0.4 });     // its threshold opens onto the road
+  hut.rotation.y = 0.9;
   scene.add(hut);
   
   // and a stone lantern at the road's edge opposite — the pair of verticals
@@ -50,7 +50,7 @@ const CAM = { distance: 10.8, target: [1.35, 1.35, 0.3], heading: 18.5, pitch: 1
   const LANTERN = { x: 1.5, z: -2.0 };
   const lantern = makeLantern({ height: 1.15 });
   lantern.position.set(LANTERN.x, 0, LANTERN.z);
-  scene.add(lantern);
+  //scene.add(lantern);
   
   // Old Joshu sits off the road; the monk stands before him with the question.
   const mp = path.sample(0.19);
@@ -93,6 +93,7 @@ const CAM = { distance: 10.8, target: [1.35, 1.35, 0.3], heading: 18.5, pitch: 1
   // lantern's base cover theirs
   grassKeepout: [
   ...path.keepout(26, 1.0),
+  { x: joshu.position.x, z: joshu.position.z, r: 1.6 },
   { x: HUT.x, z: HUT.z, r: 1.9 },
   { x: LANTERN.x, z: LANTERN.z, r: 0.4 },
   ],

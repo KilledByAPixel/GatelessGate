@@ -9,6 +9,9 @@ import { makeCave } from '../kit/cave.js';
 import { makeRain } from '../kit/rainfall.js';
 import { makeLights } from '../render/toon.js';
 import { addOutlines } from '../render/outlines.js';
+import {
+  plantTree,
+} from '../kit/index.js';
 
 const ID = 2;
 
@@ -38,7 +41,7 @@ const MONKS = [{ x: 2.74, z: -3.48 }, { x: 2.45, z: -2.61 }];
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 14.5, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 15.5 };
+const CAM = { distance: 12.0, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 15.5 };
   export default {
   id: ID,
   slug: 'hyakujo-s-fox',
@@ -116,15 +119,19 @@ const CAM = { distance: 14.5, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 1
   // streaks span the whole staging so nobody stands outside it.
   const rain = makeRain({ count: 420, seed: ID, width: 24, depth: 24, height: 13 });
   scene.add(rain.points);
+
+  plantTree(scene, { x: 2.2, z: -5.7, height: 4.7 });
+  plantTree(scene, { x: -4.7, z: -.7, height: 4.4, kind: 'pine' });
   
   const world = composeWorld(scene, {
   view: CAM,
   seed: ID,
   treeKind: 'pine',
   groundSeed: 21,
-  trees: 13,        // a wooded mountainside, not a lawn (Frank: "more trees")
+  trees: 9,        // a wooded mountainside, not a lawn (Frank: "more trees")
   keepout: [
   ...cave.footprint(0.8),                       // the whole rock mass
+  { x: 0, z:30, r: 30 }, // behind camera
   { x: FOX.x, z: FOX.z, r: 1.4 },
   { x: HYAKUJO.x, z: HYAKUJO.z, r: 1.2 },
   ...MONKS.map((m) => ({ x: m.x, z: m.z, r: 1.1 })),

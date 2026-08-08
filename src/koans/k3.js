@@ -50,7 +50,7 @@ const LANTERN = { x: 4.0, z: -3.40 };
 // temple (Frank: "temple is in middle of path"). The road's east verge is out
 // of frame at the home lens, so the hall crosses to the west side, where the
 // path (x ≈ 3.0–3.2 down its whole run) clears its footprint by a full verge.
-const HALL = { x: -0.30, z: -6.60 };
+const HALL = { x: -0.30, z: -4.60 };
 
 // ---------------------------------------------------------------------------
 // the gesture
@@ -136,7 +136,7 @@ function envelope(u) {
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.6, target: [0.33, 1.25, -0.05], heading: 42.0, pitch: 19.0 };
+const CAM = { distance: 9.6, target: [0.7, 1.25, 0.55], heading: 16, pitch: 15.5 };
   export default {
   id: ID,
   slug: 'gutei-s-finger',
@@ -163,10 +163,10 @@ const CAM = { distance: 9.6, target: [0.33, 1.25, -0.05], heading: 42.0, pitch: 
   
   // the approach to the temple, coming up the right-hand side of the yard and
   // running past the hall
-  const path = makePath({ from: [3.9, 8.5], to: [2.0, -25], width: 1.6, seed: 33, groundSeed: 21, wander: 2.9 });
+  const path = makePath({ from: [3.9, 8.5], to: [2.0, -30], width: 1.6, seed: 33, groundSeed: 21, wander: 2.9 });
   scene.add(path);
   
-  const hall = makeHut({ width: 3.2, height: 2.4, depth: 2.6 });
+  const hall = makeHut({ width: 3.2, height: 2.4, depth: 2.6, chimes: 19 });
   hall.position.set(HALL.x, 0, HALL.z);
   hall.rotation.y = 0.10;                        // its threshold opens onto the yard
   scene.add(hall);

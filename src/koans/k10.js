@@ -55,14 +55,14 @@ const CAM = { distance: 8.6, target: [0.7, 1.0, 0.4], heading: 31.5, pitch: 17.2
   // coming). Poverty in this book is furnished exactly this much: a
   // vessel kept anyway. Seizei says he is destitute; the vase agrees.
   const vase = makeVase({ height: 0.55, seed: 10 });
-  vase.group.position.set(-0.35, 0, -2.85);
+  vase.group.position.set(-0.75, 0, -1.85);
   scene.add(vase.group);
   
   // the mat they are sitting on — the whole of Seizei's estate
-  const matGeo = new THREE.BoxGeometry(2.5, 0.035, 1.7);
+  const matGeo = new THREE.BoxGeometry(2.5, 0.035, 2.7);
   const mat = new THREE.Mesh(matGeo, toonMaterial({ color: WASH.dry, flat: true }));
   mat.name = 'mat';
-  mat.position.set(0.7, 0.018, 0.5);
+  mat.position.set(0.5, 0.018, 0.5);
   mat.rotation.y = 0.24;
   scene.add(mat);
   
@@ -81,7 +81,7 @@ const CAM = { distance: 8.6, target: [0.7, 1.0, 0.4], heading: 31.5, pitch: 17.2
   // THE THREE CUPS, between them. Small, held, already drunk.
   const cupMat = toonMaterial({ color: ACCENT, flat: true });
   const cups = [];
-  const CUP_AT = [[0.55, 0.72], [0.92, 0.34], [1.12, 0.86]];
+  const CUP_AT = [[0.35, 0.72], [0.72, 0.34], [.92, 0.86]];
   for (const [i, [cx, cz]] of CUP_AT.entries()) {
   const pivot = new THREE.Group();       // tips about its own foot
   pivot.name = 'cup';

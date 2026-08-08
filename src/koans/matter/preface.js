@@ -3,7 +3,7 @@ import MATTER from '../text/matter.js';
 import { PAPER, WASH, wash, ACCENT_DEEP } from '../../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeBell, makeFlag,
-  makeLights, addOutlines,
+  makeLights, addOutlines, plantTree, makeLantern,
 } from '../../kit/index.js';
 import { groundHeight } from '../../kit/ground.js';
 
@@ -100,13 +100,13 @@ const CAM = { distance: 13, target: [FORK.x, 1.2, FORK.z], heading: -18.6, pitch
   // placed by eye landed a hand's width outside it and the arm's tip
   // showed as a separate sliver of road)
   const left = makePath({
-  from: [-0.1, -1.7], via: [-3.6, -8.0], to: [-12.5, -23.0],
+  from: [-0.1, -1.7], via: [-3.6, -8.0], to: [-11.5, -23.0],
   width: 1.4, wander: 1.1,
   seed: SEEDS.pathSeed + 1, groundSeed: SEEDS.groundSeed, groundFn: lift(0.004),
   });
   scene.add(left);
   const right = makePath({
-  from: [0.1, -2.0], via: [4.8, -9.0], to: [10.0, -22.0],
+  from: [0.1, -2.0], via: [4.8, -9.0], to: [9.0, -22.0],
   width: 1.25, wander: 1.1,
   seed: SEEDS.pathSeed + 2, groundSeed: SEEDS.groundSeed, groundFn: lift(0.008),
   });
@@ -116,7 +116,7 @@ const CAM = { distance: 13, target: [FORK.x, 1.2, FORK.z], heading: -18.6, pitch
   // The bonshō, off the right arm's shoulder, facing the split. Ink-dark
   // bronze, not case 16's red — see the header on accent.
   const bell = makeBell({ height: 1.1, color: WASH.deep, seed: SEEDS.seed });
-  bell.group.position.set(4.0, 0, -4.0);
+  bell.group.position.set(3.0, 0, -3.0);
   bell.group.rotation.y = -1.1;
   scene.add(bell.group);
   
@@ -133,6 +133,15 @@ const CAM = { distance: 13, target: [FORK.x, 1.2, FORK.z], heading: -18.6, pitch
   monk.position.set(mp.x + mp.perp.x * 0.55, 0, mp.z + mp.perp.z * 0.55);
   faceMonk(monk, { x: FORK.x, z: FORK.z });
   scene.add(monk);
+
+  plantTree(scene, { x:.2, z: -11.4, height: 3.4 });
+  
+  // and a stone lantern at the road's edge opposite — the pair of verticals
+  // that make the spot a PLACE on the road rather than a stretch of it
+  const LANTERN = { x: -.1, z: -3.5 };
+  const lantern = makeLantern({ height: 1.15 });
+  lantern.position.set(LANTERN.x, 0, LANTERN.z);
+  scene.add(lantern);
   
   const world = composeWorld(scene, {
   view: CAM,

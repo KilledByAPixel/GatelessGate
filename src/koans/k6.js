@@ -15,7 +15,7 @@ const SMILE_IN = 1.4;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 15.26, target: [1.2, 1.1, -4.0], heading: 22.8, pitch: 13.8 };
+const CAM = { distance: 13, target: [1.2, 1.1, -4], heading: 17, pitch: 12 };
   export default {
   id: ID,
   slug: 'buddha-twirls-a-flower',
@@ -87,7 +87,7 @@ const CAM = { distance: 15.26, target: [1.2, 1.1, -4.0], heading: 22.8, pitch: 1
   
   // Mahakasyapa sits nearest, apart from the rest — the one who understands.
   const kasyapa = makeMonk({ pose: 'sit', height: 1.55 });
-  kasyapa.position.set(1.2, 0, -.6);
+  kasyapa.position.set(1.2, 0, -1.6);
   faceMonk(kasyapa, buddha.position);
   scene.add(kasyapa);
   
@@ -108,7 +108,7 @@ const CAM = { distance: 15.26, target: [1.2, 1.1, -4.0], heading: 22.8, pitch: 1
   // opens toward +z (the camera), so its centre must sit WELL BACK or the
   // front row looms in the lens as a wall of black cones.
   const assembly = makeAssembly({
-  count: 7, radius: 2.3, center: [1.2, -2.2], facing: [1.2, SEAT_Z], spread: 1.3, seed: 6,
+  count: 7, radius: 3.1, center: [1.2, -3.9], facing: [1.2, SEAT_Z], spread: 1.3, seed: 6,
   });
   scene.add(assembly);
   

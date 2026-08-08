@@ -52,7 +52,7 @@ const CAM = { distance: 10.5, target: [0.7, 1.5, -0.8], heading: 31.5, pitch: 20
   
   // The road, back to ordinary dirt — it carried the case's red for a
   // while, but a ground-spanning ribbon never sat right as a seal.
-  const path = makePath({ from: [4.6, 8.2], to: [5.1, -18.2], width: 1.3, seed: ID, groundSeed: 21, wander: 0.8 });
+  const path = makePath({ from: [4.6, 8.2], to: [5.1, -20], width: 1.3, seed: ID, groundSeed: 21, wander: 0.8 });
   scene.add(path);
   
   // THE STUDY is the seal now (Frank: "make the little house red, because
@@ -75,8 +75,8 @@ const CAM = { distance: 10.5, target: [0.7, 1.5, -0.8], heading: 31.5, pitch: 20
   matMat.polygonOffsetFactor = -2;
   const mat = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.03, 1.9), matMat);
   mat.name = 'mat';
-  mat.position.set(-0.1, 0.035, -0.7);
-  mat.rotation.y = 0.2;
+  mat.position.set(.5, 0.035, -0.7);
+  mat.rotation.y = 0.5;
   scene.add(mat);
   
   // ...and a student on it (Frank: "let's put a monk sitting down on that
@@ -84,13 +84,13 @@ const CAM = { distance: 10.5, target: [0.7, 1.5, -0.8], heading: 31.5, pitch: 20
   // stayed with the books while Nansen walked off. Seated on the mat's top
   // face; the sit pose brings its own zabuton.
   const student = makeMonk({ height: 1.6, pose: 'sit' });
-  student.position.set(-0.1, 0.05, -0.7);
+  student.position.set(0.3, 0.05, -0.7);
   faceMonk(student, hut.position);
   scene.add(student);
   
   // NANSEN, apart from it, facing away — he said the sentence and walked off
   const nansen = makeMonk({ height: 1.66, elder: true });
-  nansen.position.set(3.4, 0, 1.9);
+  nansen.position.set(3.4, 0, 0.9);
   faceMonk(nansen, { x: 8.0, z: 4.0 });
   scene.add(nansen);
   

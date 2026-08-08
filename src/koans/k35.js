@@ -45,16 +45,14 @@ const KID_SIDE = 0.70;    // a child off either shoulder, across the width-1.4 r
 // the 1.78 the staging net checks with; here the seated figure reaches 0.75 of
 // frame width at aspect 1.0, and a step further out costs her an arm to the
 // right edge on a small window.
-const SIT = { x: 3.05, z: -2.8 };
-const TREE = { x: 3.9, z: -3.5 };
+const SIT = { x: 3.25, z: -2.8 };
+const TREE = { x: 4.2, z: -3.5 };
 const ANSWER = 2.4;       // seconds for a touch to fade out of both of them
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = {
-  distance: 5.5, target: [0.4, 1.8, -1.0], heading: -31.5, pitch: 4.1,
-  minDist: 4.5, maxDist: 11, minPitch: 0.6,
-};
+const CAM = { distance: 5.5, target: [0.9, 1.5, -1], heading: -21.5, pitch: 4.1, minDist: 4.5, minPitch: 0.7 };
+
 export default {
   id: ID,
   slug: 'two-souls',

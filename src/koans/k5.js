@@ -39,7 +39,7 @@ const HAT = { x: -2.55, z: -3.3 };
 // SILHOUETTE as much as for staging: a step left of the bole and a step nearer
 // the lens, he stands against the pale lip stones instead of disappearing into
 // the trunk behind him.
-const ASKER = { x: -3.65, z: 0.55 };
+const ASKER = { x: -3.15, z: 0.55 };
 
 // the branch runs from its base toward -x, drooping a little at the tip
 const branchDir = [-Math.cos(BRANCH.tilt), -Math.sin(BRANCH.tilt), 0];
@@ -52,7 +52,7 @@ const GRIP_ALONG = BRANCH.len - 0.35;   // the teeth set a little in from the ti
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 13.5, target: [-4.0, 2.3, -1.6], heading: 5.7, pitch: 15.5 };
+const CAM = { distance: 11, target: [-3.8, 2.3, -1.6], heading: -32, pitch: -6.5, minPitch: -9.9 };
   export default {
   id: ID,
   slug: 'kyogen-mounts-the-tree',
@@ -209,7 +209,7 @@ const CAM = { distance: 13.5, target: [-4.0, 2.3, -1.6], heading: 5.7, pitch: 15
   view: CAM,
   seed: ID,
   groundSeed: 21,
-  trees: 4,
+  trees: 9,
   keepout: [
   ...cliff.footprint(0.9),
   ...cliff.voidFootprint(0.6),
