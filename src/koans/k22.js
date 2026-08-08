@@ -54,11 +54,11 @@ const CAM = { distance: 11.5, target: [0.9, 1.9, -0.2], heading: 31.5, pitch: 19
   // THE PATH is the seal here (Frank's experiment): case 29 already owns the
   // red flag, so this case keeps the flag but paints it plain, and lets the
   // road up to the gate be the one warm thing instead.
-  const path = makePath({ from: [-3.8, 8.4], to: [1.2, -18], width: 1.5, seed: ID, groundSeed: 21, wander: 0.7, color: ACCENT });
+  const path = makePath({ from: [-3.8, 8.4], to: [1.2, -22], width: 1.5, seed: ID, groundSeed: 21, wander: 2.7, color: ACCENT });
   scene.add(path);
   
   const gate = makeGate({ width: 2.9, height: 3.1 });
-  gate.position.set(-0.9, 0, -3.4);
+  gate.position.set(-1.3, 0, -3.4);
   gate.rotation.y = 0.24;
   scene.add(gate);
   
@@ -66,7 +66,7 @@ const CAM = { distance: 11.5, target: [0.9, 1.9, -0.2], heading: 31.5, pitch: 19
   // where a hall's sign would actually stand. It still ruffles and stills
   // (the flag kit carries those); it is simply no longer the red one.
   const flag = makeFlag({ seed: ID, poleH: 3.4, width: 1.4, color: WASH.dark });
-  flag.group.position.set(1.0, 0, -2.4);
+  flag.group.position.set(1.5, 0, -2.4);
   scene.add(flag.group);
   
   // KASHAPA, who is handing it over, and ANANDA, who has just said yes
@@ -81,7 +81,7 @@ const CAM = { distance: 11.5, target: [0.9, 1.9, -0.2], heading: 31.5, pitch: 19
   faceMonk(ananda, kashapa.position);
   
   const lantern = makeLantern({ height: 1.1 });
-  lantern.position.set(-2.8, 0, 0.6);
+  lantern.position.set(-3.3, 0, 0.6);
   scene.add(lantern);
   
   // One small tube on a cord, hung under the gate's own flat lintel span

@@ -105,7 +105,7 @@ const CAM = { distance: 11.0, target: [0.6, 1.3, -0.4], heading: 34.4, pitch: 17
   scene.add(oshin);
   
   const lantern = makeLantern({ height: 1.1 });
-  lantern.position.set(1.4, 0, -3.2);
+  lantern.position.set(0.6, 0, -3.2);
   scene.add(lantern);
   
   // A pair of hanging bronze cylinders under the teacher's own eave, sized
@@ -148,7 +148,7 @@ const CAM = { distance: 11.0, target: [0.6, 1.3, -0.4], heading: 34.4, pitch: 17
   // should be just where the platform is"). The veranda's own circle is
   // centred on the veranda now, not offset forward of it.
   grassKeepout: [
-  { at: veranda, r: 3.0 },
+  { x: veranda.position.x+1., z: veranda.position.z+1.5, r: 2.7 }, // nudge it a bit
   ],
   });
   
