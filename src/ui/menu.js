@@ -11,8 +11,18 @@ export function makeMenu({
   const el = document.createElement('div');
   el.className = 'gg-view gg-menu hidden';
 
+  // THE TITLE ROW, and the reading light beside it. The light used to sit in
+  // the colophon at the foot of the page, on the argument that a book's light
+  // switch belongs at the end rather than over its title — which was true of
+  // the page and wrong about the reader: the colophon is below the search box
+  // and all fifty-one rows, so reaching it meant scrolling the whole contents,
+  // and Frank asked for a light switch that is already there.
+  const head = document.createElement('div');
+  head.className = 'gg-menu-head';
   const h1 = document.createElement('h1');
   h1.textContent = 'The Gateless Gate';
+  head.appendChild(h1);
+  if (themeEl) head.appendChild(themeEl);
   const lede = document.createElement('p');
   lede.className = 'lede';
   lede.textContent = 'An interactive edition of the Mumonkan';
@@ -54,13 +64,12 @@ export function makeMenu({
   about.textContent = 'About';
   about.title = 'The translation, the lineage, and the credits';
   about.onclick = () => onAbout && onAbout();
-  // The colophon line carries the reading light too: it is the one control the
-  // contents needs, and a book's light switch belongs at the end of the page
-  // rather than over its title. Same button as the one beside Sit.
+  // The reading light was here; it is up in the title row now (see above), so
+  // this line carries About alone. NOT both — one page with two switches for
+  // the same thing is worse than one with the switch in the wrong place.
   const colophon = document.createElement('div');
   colophon.className = 'gg-colophon';
   colophon.appendChild(about);
-  if (themeEl) colophon.appendChild(themeEl);
   backMatter.appendChild(colophon);
 
   // The Developer section, after About — the tools, not the book. Rebuilt from
@@ -90,7 +99,7 @@ export function makeMenu({
   }
   backMatter.appendChild(dev);
 
-  el.append(h1, lede, cont, findWrap, found, list, backMatter);
+  el.append(head, lede, cont, findWrap, found, list, backMatter);
 
   let query = '';
   // One way out of a search, wired to three things: the ✕, Escape, and any

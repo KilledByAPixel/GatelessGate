@@ -57,6 +57,11 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 .gg-title-view .sub { color: var(--gray); font-style: italic; margin: 0 0 28px; }
 
 /* ---- table of contents (menu), in the left panel ---- */
+/* Title and the reading light on one line. baseline, not centre: the glyph
+   should sit on the title's own line rather than float beside a 30px cap. */
+.gg-menu-head { display: flex; align-items: baseline; gap: 12px; }
+.gg-menu-head h1 { flex: 1; }
+.gg-menu-head .gg-theme { flex: none; }
 .gg-menu h1 { font-weight: normal; letter-spacing: 0.04em; font-size: 30px; margin: 0 0 4px; }
 .gg-menu .lede { color: var(--gray); font-style: italic; margin: 0 0 18px; }
 .gg-menu ol { list-style: none; padding: 0; margin: 12px 0 0; }
