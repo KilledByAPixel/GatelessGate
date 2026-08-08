@@ -239,7 +239,7 @@ test('the afterword seats its meditator UNDER a tree, whatever the seed does', a
   const built = (await loadKoan(AFTERWORD_SLUG)).build();
   const mat = built.scene.children.find((c) => c.name === 'mat');
   const buddha = built.scene.children.find((c) => c.name === 'buddha');
-  assert.ok(mat && buddha, 'the afterword has exactly one figure in it');
+  assert.ok(mat && buddha, 'the afterword still has its meditator');
   assert.ok(Math.hypot(mat.position.x - buddha.position.x, mat.position.z - buddha.position.z) < 1e-9,
     'and he is on the mat');
 
@@ -260,6 +260,34 @@ test('the afterword seats its meditator UNDER a tree, whatever the seed does', a
   assert.ok(along > len, `past the gate spot, deeper in the shot (${along.toFixed(1)} vs ${len.toFixed(1)})`);
   assert.ok(lateral > 1.5, `off the centre line — the camera is not on him (${lateral.toFixed(2)})`);
   assert.ok(lateral < 8, `and still inside the frame (${lateral.toFixed(2)})`);
+});
+
+test('the cat stayed behind too, sitting beside him and looking the same way', async () => {
+  // Frank: "for the afterword lets add the cat to the scene sitting nearby."
+  // Derived off the meditator the same way he is derived off his tree, so it
+  // follows him if the seed moves him — the failure this page has already had
+  // once, when a written-down coordinate outlived the scatter that produced it.
+  const built = (await loadKoan(AFTERWORD_SLUG)).build();
+  const buddha = built.scene.getObjectByName('buddha');
+  const cat = built.scene.getObjectByName('cat');
+  assert.ok(cat, 'the cat is in the closing scene');
+
+  const gap = Math.hypot(cat.position.x - buddha.position.x, cat.position.z - buddha.position.z);
+  assert.ok(gap > 0.5 && gap < 1.4, `a stride off the mat, not on it and not across the field: ${gap.toFixed(2)}`);
+  assert.ok(Math.abs(cat.rotation.y - buddha.rotation.y) < 1e-9,
+    'the two of them are looking at the same empty road, not at each other');
+
+  // and it is alive: the barrel breathes, which is the only thing moving on
+  // this page besides the meadow
+  const body = cat.getObjectByName('body');
+  built.update(1 / 60, 0);
+  const at0 = body.scale.x;
+  for (let i = 1; i <= 90; i++) built.update(1 / 60, i / 60);
+  assert.notEqual(body.scale.x, at0, 'the cat breathes');
+
+  // the page still runs with a junk clock — the guard every update() carries
+  built.update(1 / 60, NaN);
+  assert.ok(Number.isFinite(body.scale.x), 'a NaN simTime must not stop its breathing');
 });
 
 // The four tests above hold for a return-value shape that a fully-dressed

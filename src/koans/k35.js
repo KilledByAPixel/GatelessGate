@@ -2,8 +2,8 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, wash } from '../palette.js';
 import {
-  composeWorld, makePath, makeHut, makeMoon, makeMonk,
-  walkHeading, makeLights, addOutlines,
+  composeWorld, makePath, makeHut, makeMoon, makeMonk, faceMonk,
+  plantTree, groundHeight, makeLights, addOutlines,
 } from '../kit/index.js';
 
 const ID = 35;
@@ -11,25 +11,47 @@ const ID = 35;
 // Seijo had two souls: one sick in bed at home, one away in the city, married,
 // with two children. Goso asks which was the true one.
 //
-// The scene refuses to answer. There are two of her on the road between the
-// house and the town, both faint, walking a slow figure that carries them
-// apart and brings them back together; when they meet they overlap into one
-// solid figure for a moment and then separate again. Neither is ever the
-// brighter one. Neither is ever in front.
+// BOTH LIVES ARE STANDING THERE AT ONCE, and both are ordinary. On the road,
+// one of her with a child at either hand — the years away, the marriage, the
+// family, all of it real. A little off the road, on the home side, the other
+// one sits under a tree — the years that never left the house, equally real.
+// Neither is a ghost. That is the whole staging (Frank: "1 red person
+// standing on the road with 2 children at either side, the other red person
+// meditating under a tree nearby, also they will not be transparent anymore").
+//
+// It replaced two translucent walkers who paced apart and back together along
+// the road. The ghosting was the old answer to "which is the true one" — make
+// them both half-there — and it answered by hedging: two faint figures read as
+// two apparitions, i.e. as neither of them being the woman. Two solid people
+// living two whole lives in one picture is the harder and truer image, and it
+// is the one the case actually describes.
+//
+// What survives from that version: neither of her is the brighter one, both
+// carry the same red, and touching either one is answered by BOTH.
 //
 // Above it all, the moon from Mumon's verse — "The moon above the clouds is
 // the same moon, the mountains and rivers below are all different". It was
 // the seal at first; now it hangs plain (Frank's call, recorded at the moon
 // below) and the two souls themselves carry the red.
 
-const CYCLE = 26;         // seconds for one full apart-and-together
-const LANE = 0.4;         // each soul keeps to her own side of the width-1.4 road
-                          // (k36's travellers do the same at 0.45 on a 1.6 road):
-                          // they pass BESIDE each other now, never through
+const ROAD_T = 0.36;      // how far along the road the family stands
+const KID_SIDE = 0.70;    // a child off either shoulder, across the width-1.4 road
+// The other of her, and her tree — on the HOME side of the road, which is the
+// +perp side here (the house stands at x 4.6). Not decoration: the one who
+// stayed sits at the house end of the road, and the family is further along it
+// toward the town, so the picture reads left to right the way the case does.
+// The exact numbers are framing. The reading pane is the window minus a panel
+// that takes up to 40% of it, so a square-ish stage is the real worst case, not
+// the 1.78 the staging net checks with; here the seated figure reaches 0.75 of
+// frame width at aspect 1.0, and a step further out costs her an arm to the
+// right edge on a small window.
+const SIT = { x: 3.05, z: -2.8 };
+const TREE = { x: 3.9, z: -3.5 };
+const ANSWER = 2.4;       // seconds for a touch to fade out of both of them
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = {
+const CAM = {
   distance: 5.5, target: [0.4, 1.8, -1.0], heading: -31.5, pitch: 4.1,
   minDist: 4.5, maxDist: 11, minPitch: 0.6,
 };
@@ -84,105 +106,141 @@ export default {
     const moon = makeMoon({ radius: 2.9, color: wash(0.30), distance: 62 });
     scene.add(moon);
 
-    // THE TWO OF HER — the seal. Both half-there and both red: which is the
-    // true one is the case, so neither can be the solid or the coloured one
-    // alone. The material is shared by construction.
+    // HER TREE, planted rather than scattered: the seated one has to be under
+    // a particular canopy, so this is the one tree in the scene whose position
+    // is the composition's business and not the scatter's (kit/scenery.js,
+    // plantTree — the hand-placement override, no keepout work of its own).
+    const tree = plantTree(scene, { x: TREE.x, z: TREE.z, height: 4.0, groundSeed: 21 });
+
+    // THE TWO OF HER — the seal, and the only red in the picture. Solid, both
+    // of them: see the header. One stands in the lane with her children; the
+    // other sits under the tree a few strides off it.
+    const road = path.sample(ROAD_T);
     const souls = [];
-    for (let i = 0; i < 2; i++) {
-      const s = makeMonk({ height: 1.5, hat: false, color: ACCENT });
-      s.name = 'soul';
-      s.traverse((o) => {
-        if (!o.isMesh) return;
-        o.material = o.material.clone();
-        o.material.transparent = true;
-        o.material.opacity = 0.5;
-        o.material.depthWrite = false;      // two ghosts must not punch holes in each other
-      });
-      scene.add(s);
-      souls.push(s);
+
+    const walker = makeMonk({ height: 1.5, hat: false, color: ACCENT });
+    walker.name = 'soul';
+    walker.position.set(road.x, groundHeight(road.x, road.z, { seed: 21 }), road.z);
+    // turned back up the road toward the house, which is the direction the
+    // case moves in: she is the one who comes home after the years away
+    faceMonk(walker, home.position);
+    scene.add(walker);
+    souls.push(walker);
+
+    const sitter = makeMonk({ height: 1.5, hat: false, color: ACCENT, pose: 'sit' });
+    sitter.name = 'soul';
+    sitter.position.set(SIT.x, groundHeight(SIT.x, SIT.z, { seed: 21 }), SIT.z);
+    // She faces the road — and so, from where she sits, the other of her.
+    // A meditator normally faces nothing in particular; this one is looking at
+    // the life she is also living, which is the picture the case wants.
+    faceMonk(sitter, walker.position);
+    scene.add(sitter);
+    souls.push(sitter);
+
+    // THE TWO CHILDREN, one at either hand. Ink, not red — the red belongs to
+    // the two of her, and a family painted in the accent would spread the seal
+    // over five figures and seal nothing. Bare-headed and unequal in height,
+    // the way k3's boy attendant is: children in this book are small adults in
+    // silhouette, so the only things saying "child" are scale and difference.
+    const kids = [];
+    for (const [i, h] of [1.02, 0.88].entries()) {
+      const side = i === 0 ? 1 : -1;
+      const kid = makeMonk({ height: h, hat: false });
+      kid.name = 'child';
+      const kx = road.x + road.perp.x * KID_SIDE * side;
+      const kz = road.z + road.perp.z * KID_SIDE * side;
+      kid.position.set(kx, groundHeight(kx, kz, { seed: 21 }), kz);
+      kid.rotation.y = walker.rotation.y - side * 0.28;   // each turned a little toward her
+      scene.add(kid);
+      kids.push(kid);
     }
 
     const world = composeWorld(scene, {
       view: CAM,
       seed: ID,
+      // one fewer than before: her tree is planted by hand above, and the
+      // scatter's budget should not grow just because the composition did
+      trees: 4,
       groundSeed: 21,
-      trees: 5,
       keepout: [
         ...path.keepout(26, 1.4),
         { x: home.position.x, z: home.position.z, r: 2.8 },
         { x: town.position.x, z: town.position.z, r: 3.0 },
+        // by live reference, so nudging the staging moves its clearing with it
+        { at: tree, r: 3.2 },
+        { at: sitter, r: 1.4 },
       ],
       grassKeepout: [
         ...path.keepout(28, 1.0),
         { x: home.position.x, z: home.position.z, r: 1.9 },
+        // a seated figure is half a standing one: full meadow would swallow
+        // her to the shoulders (k7 learned this on a cat)
+        { at: sitter, r: 0.85 },
       ],
     });
 
     addOutlines(scene, { width: 0.030, wobble: 0.7 });
 
-    const hit = new THREE.Mesh(
-      new THREE.BoxGeometry(9.0, 2.2, 4.0),
-      new THREE.MeshBasicMaterial({ visible: false }));
-    hit.name = 'souls-hit';
-    hit.userData.noOutline = true;
-    hit.position.set(0.0, 1.0, -1.0);
-    scene.add(hit);
+    // One hit box per life, sized to what stands inside it: the family's takes
+    // the mother and both children, so a reader who taps a child has tapped
+    // her — the children belong to that life, not to a third one.
+    const hitFor = (name, w, h, d, x, z) => {
+      const m = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, d),
+        new THREE.MeshBasicMaterial({ visible: false }));
+      m.name = name;
+      m.userData.noOutline = true;
+      m.position.set(x, groundHeight(x, z, { seed: 21 }) + h / 2, z);
+      scene.add(m);
+      return m;
+    };
+    const hits = [
+      hitFor('family-hit', 2.6, 1.9, 2.2, road.x, road.z),
+      hitFor('sitter-hit', 1.5, 1.3, 1.5, SIT.x, SIT.z),
+    ];
 
     // ---- the moment: which one is real -----------------------------------
-    // Touching either of them pulls them together — the cycle jumps toward the
-    // instant they overlap. It never resolves which one survives the meeting,
-    // because there is only ever one figure standing there and then two again.
+    // Touch either of her and BOTH of them answer — the same breath, the same
+    // small lean, at the same instant. The staging changed underneath this
+    // (two walkers used to be pulled together by a tap) but the refusal did
+    // not: there is no way to address one of her, so the question never gets
+    // the answer it is fishing for.
     let camera = null;
     let clock = 0;
-    let phase = 0;              // drives the walk; advanced by dt, nudged by taps
-    let pulls = 0;
+    let touches = 0;
+    let env = 0;                // 1 on a touch, decaying to 0 over ANSWER
+    const AT = new THREE.Vector3();
 
-    // WHERE THE TWO OF HER STAND, as a function of the clock and nothing else.
-    // Pulled out of update() so it can also run ONCE at build time: the souls
-    // are born at the group origin and were only ever placed by the first
-    // update, but the frame loop only ticks when it has a whole 1/60s banked,
-    // so a short first frame rendered them both stacked at world zero before
-    // snapping apart (Frank: "a flicker on first frame of monks position").
-    // Same shape of bug, and the same fix, as makeCameraRig's own update(0).
-    function placeSouls() {
-      // one separation parameter, applied symmetrically: they are always the
-      // same distance from the meeting point, in opposite directions
-      const sep = (1 - Math.cos(phase * Math.PI * 2)) * 0.5;      // 0 together, 1 apart
-      for (const [i, s] of souls.entries()) {
-        const lane = i === 0 ? 1 : -1;                             // her fixed side of the road
-        const d = lane * sep * 3.4;
-        const t = 0.5 + d * 0.055;                                 // along the road
-        const p = path.sample(Math.max(0.02, Math.min(0.7, t)));
-        // a little walk in them: a gait bob and a slight roll/yaw sway, so
-        // they read as two people walking rather than two markers sliding
-        // along a rail (Frank's note). Out of phase between the two.
-        const gait = clock * 2.3 + i * Math.PI;
-        // each keeps to her own side (Frank: once one's on one side, once
-        // the other) — the meeting is two of her side by side, not a merge
-        s.position.set(p.x + p.perp.x * LANE * lane, Math.abs(Math.sin(gait)) * 0.035, p.z + p.perp.z * LANE * lane);
-        // face along the road, the way she goes when they separate — the
-        // kit's walkHeading of her outbound travel (perp is (-dz, dx), so
-        // the tangent is (perp.z, -perp.x)); this is the same atan2 the
-        // case always had, named
-        s.rotation.y = walkHeading(lane * p.perp.z, lane * -p.perp.x)
-          + Math.sin(clock * 1.1 + i) * 0.06;
-        s.rotation.z = Math.sin(gait) * 0.04;
-        // where they meet, the pair reads as one whole person
-        const solid = 0.5 + (1 - sep) * 0.42;
-        s.traverse((o) => { if (o.isMesh && o.material) o.material.opacity = solid; });
-      }
-    }
-    placeSouls();   // stand them up before the first frame, not after it
+    // Their rest pose, so the breath below is an offset and not a drift: both
+    // of these were set once, above, by faceMonk and the terrain.
+    for (const s of souls) s.userData.baseY = s.position.y;
 
     input.onTap(() => {
       if (!camera) return;
-      if (!input.raycastFirst(camera, [hit])) return;
-      pulls++;
-      // ease the phase toward the nearest meeting (phase 0 or 1 of the cycle)
-      const target = Math.round(phase);
-      phase += (target - phase) * 0.55;
-      audio && audio.chimeStrike({ tube: 2, force: 0.4, at: hit.position });
+      const hit = input.raycastFirst(camera, hits);
+      if (!hit) return;
+      touches++;
+      env = 1;
+      audio && audio.chimeStrike({ tube: 2, force: 0.4, at: hit.object.getWorldPosition(AT) });
     });
+
+    // Breathing, and the answer. Pulled out of update() for the reason the old
+    // placeSouls() was: the frame loop only ticks on a whole banked 1/60s, so
+    // anything only update() ever applies is missing from the first rendered
+    // frame (Frank, on the previous staging: "a flicker on first frame of
+    // monks position").
+    function breathe() {
+      const e = env * env * (3 - 2 * env);        // smooth the tail of the decay
+      const b = Math.sin(clock * 0.7);
+      for (const s of souls) {
+        // identical on both, by construction: neither of her is livelier
+        s.rotation.z = b * 0.010 + e * 0.045;
+        s.position.y = s.userData.baseY + Math.abs(b) * 0.010 + e * 0.025;
+      }
+      // the children are not her, so they fidget on their own clocks
+      for (const [i, k] of kids.entries()) k.rotation.z = Math.sin(clock * 1.3 + i * 2.1) * 0.028;
+    }
+    breathe();
 
     return {
       scene,
@@ -190,14 +248,14 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
-        phase += Math.max(0, dt || 0) / CYCLE;
-        placeSouls();
+        env = Math.max(0, env - Math.max(0, dt || 0) / ANSWER);
+        breathe();
       },
       fragment() {
         return {
-          pulls,
-          apart: +((1 - Math.cos(phase * Math.PI * 2)) * 0.5).toFixed(4),
-          gap: +souls[0].position.distanceTo(souls[1].position).toFixed(3),
+          touches,
+          answer: +env.toFixed(4),
+          apart: +souls[0].position.distanceTo(souls[1].position).toFixed(3),
         };
       },
       dispose() {},

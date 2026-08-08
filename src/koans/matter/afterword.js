@@ -2,7 +2,7 @@ import * as THREE from '../../../lib/three.module.js';
 import MATTER from '../text/matter.js';
 import { buildHub } from '../../intro.js';
 import { WASH } from '../../palette.js';
-import { makeBuddha, groundHeight, toonMaterial, addOutlines } from '../../kit/index.js';
+import { makeBuddha, makeCat, groundHeight, toonMaterial, addOutlines } from '../../kit/index.js';
 import { eyePosition } from '../../camera.js';
 
 // Mumon's afterword, the Zen Warnings, and the letter that produced case 49 —
@@ -13,11 +13,17 @@ import { eyePosition } from '../../camera.js';
 // shown afterwards, and the alternative is editing a case.
 //
 // The scene is the world with everything taken out of it — no gate, no path, no
-// lanterns, no one walking. Ground, mountains, forest, and the fog. Except: one
-// figure stayed behind. A Buddha on a small mat under the tree the opening
-// camera looks past (Frank, overnight pass 2), off to the side of the frame,
-// facing the spot where the gate stood in the intro — meditating on the door
-// everyone else left by. The camera is not on him; he is found, not shown.
+// lanterns, no one walking. Ground, mountains, forest, and the fog. Except: two
+// stayed behind. A Buddha on a small mat under the tree the opening camera
+// looks past (Frank, overnight pass 2), off to the side of the frame, facing
+// the spot where the gate stood in the intro — meditating on the door everyone
+// else left by. The camera is not on him; he is found, not shown.
+//
+// And the cat (Frank: "for the afterword lets add the cat to the scene sitting
+// nearby"), a step off the mat, facing the same empty spot he is. It is the one
+// creature in the book that turns up wherever it likes — the sermon in case 6,
+// the washing-up in case 7, its own case 14 — so of course it is still here
+// after the last page, and of course nobody is left to argue over it.
 const page = MATTER.afterword;
 
 // Its own three seeds, for the same reason the preface has its own: the book
@@ -114,20 +120,39 @@ export default {
     buddha.position.set(MAT.x, y0 + MAT_H, MAT.z);
     buddha.rotation.y = Math.atan2(gx - MAT.x, gz - MAT.z);
     scene.add(buddha);
-    // buildHub outlined its scene before these two existed; the call is
+    // THE CAT, a stride off the mat on his left, sitting the way it sits in
+    // every other case it has walked into. Facing where he faces rather than
+    // facing HIM: k6's cat watches the Buddha because that case is about who
+    // understood the sermon, and this page is not about anything — the two of
+    // them are simply looking at the same empty road.
+    const CAT_OUT = 0.95;
+    const psi = buddha.rotation.y;
+    // his local +x in world, which is his left as the reader sees him
+    const CAT = { x: MAT.x + Math.cos(psi) * CAT_OUT, z: MAT.z - Math.sin(psi) * CAT_OUT };
+    const cat = makeCat({ height: 0.32, seed: 49, pose: 'sit' });
+    cat.group.position.set(CAT.x, groundHeight(CAT.x, CAT.z, { seed: built.groundSeed }), CAT.z);
+    cat.group.rotation.y = psi;
+    scene.add(cat.group);
+
+    // buildHub outlined its scene before these three existed; the call is
     // per-mesh idempotent, so scoping a second one to the additions is safe
     addOutlines(mat, { width: 0.035, wobble: 0.7 });
     addOutlines(buddha, { width: 0.035, wobble: 0.7 });
+    addOutlines(cat.group, { width: 0.035, wobble: 0.7 });
 
-    // A small clearing, only where he actually sits: the hub placed its
-    // scatter with no keepout here, so retire any instance that landed under
-    // the mat by sinking it well below the ground (the matrix stays finite
+    // A small clearing, only where the two of them actually sit: the hub placed
+    // its scatter with no keepout here, so retire any instance that landed
+    // under them by sinking it well below the ground (the matrix stays finite
     // and invertible, the instanced draw stays intact, and it is exactly as
     // deterministic as the placement was). Grass keeps growing right up to
     // the mat's edge — the house rule — so the tuft clearing radius hugs the
     // mat; rocks and bushes get a touch more: a boulder shouldering the
     // meditator reads as bad luck, not nature.
     const CLEAR = { rocks: 0.95, bushes: 0.95, grassfield: 0.7 };
+    // The cat's own clearing, as a fraction of his: it is a third of his height
+    // and 0.32 of animal disappears in full meadow (k7 learned that the hard
+    // way and k6 wrote it down), but a cat-sized bald patch is all it needs.
+    const SPOTS = [{ x: MAT.x, z: MAT.z, k: 1 }, { x: CAT.x, z: CAT.z, k: 0.62 }];
     const m = new THREE.Matrix4();
     const p = new THREE.Vector3();
     scene.traverse((o) => {
@@ -136,13 +161,25 @@ export default {
       for (let i = 0; i < o.count; i++) {
         o.getMatrixAt(i, m);
         p.setFromMatrixPosition(m);
-        if (Math.hypot(p.x - MAT.x, p.z - MAT.z) >= r) continue;
+        if (!SPOTS.some((s) => Math.hypot(p.x - s.x, p.z - s.z) < r * s.k)) continue;
         m.setPosition(p.x, p.y - 30, p.z);
         o.setMatrixAt(i, m);
       }
       o.instanceMatrix.needsUpdate = true;
     });
 
-    return built;
+    // buildHub's own return, with the cat driven off the end of it: its barrel
+    // breathes and its tail drifts, which is the only thing moving on this page
+    // besides the meadow. The simTime guard is the house idiom — a cat handed a
+    // NaN clock stops breathing and never starts again.
+    let clock = 0;
+    return {
+      ...built,
+      update(dt, simTime) {
+        built.update(dt, simTime);
+        clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
+        cat.update(Math.max(0, dt || 0), clock);
+      },
+    };
   },
 };
