@@ -92,7 +92,7 @@ export default {
     // figure with a shadow. 2.6 along the camera's own left axis puts 0.30
     // between them — two people talking, from where the reader stands.
     const monk = makeMonk({ height: 1.56 });
-    monk.position.set(-0.67, 0, 3.11);
+    monk.position.set(1.8, 0, -.1);
     scene.add(monk);
 
     // Facing last, once both are placed, so neither aims at where the other
