@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import {
   makeCameraRig, wanderGoal, makeFreeCam, packFreeCam, unpackFreeCam,
-  eyePosition, cameraBlock,
+  eyePosition, cameraBlock, HANDS_OFF,
 } from '../src/camera.js';
 
 // The rig's own defaults — the envelope a reader can reach by dragging.
@@ -28,6 +28,63 @@ test('drag clamps pitch and heading to configured range', () => {
   el.handlers.pointerup({});
   assert.ok(rig.goal.pitch >= 7 && rig.goal.pitch <= 38.5, `pitch ${rig.goal.pitch}`);
   assert.ok(rig.goal.heading >= 28.6 - 51.5 - 1e-9 && rig.goal.heading <= 28.6 + 51.5 + 1e-9, `heading ${rig.goal.heading}`);
+});
+
+// Reading a page, the camera is the case's own composition and the reader only
+// breathes it with the cursor. The controls belong to the look. main.js decides
+// which is which (canDragCamera); the rig only has to honour the switch.
+test('a locked camera ignores the drag and does not swallow the wheel', () => {
+  const el = fakeEl();
+  const rig = makeCameraRig(new THREE.PerspectiveCamera(), el, {});
+  rig.setDrag(false);
+  assert.equal(rig.canDrag(), false);
+  const heading = rig.goal.heading, distance = rig.goal.distance;
+
+  el.handlers.pointerdown({ clientX: 400, clientY: 300 });
+  el.handlers.pointermove({ clientX: 100, clientY: 600 });
+  el.handlers.pointerup({});
+  assert.equal(rig.goal.heading, heading, 'a drag must not aim a locked camera');
+
+  // The wheel has to fall THROUGH, not be eaten: with the camera locked, a
+  // scroll over the stage is not the rig's to take.
+  let prevented = false;
+  el.handlers.wheel({ deltaY: 500, preventDefault: () => { prevented = true; } });
+  assert.equal(rig.goal.distance, distance, 'and must not zoom it');
+  assert.equal(prevented, false, 'a locked rig must not preventDefault the wheel');
+});
+
+test('locking mid-grab releases the grab', () => {
+  // Otherwise the next pointermove over the now-locked stage keeps steering,
+  // because `dragging` was left true when the controls went away.
+  const el = fakeEl();
+  const rig = makeCameraRig(new THREE.PerspectiveCamera(), el, {});
+  el.handlers.pointerdown({ clientX: 400, clientY: 300 });
+  rig.setDrag(false);
+  const heading = rig.goal.heading;
+  el.handlers.pointermove({ clientX: 100, clientY: 300 });
+  assert.equal(rig.goal.heading, heading, 'the grab must not survive the lock');
+});
+
+test('the drift yields to a hand on the camera, and comes back after it lets go', () => {
+  const el = fakeEl();
+  const rig = makeCameraRig(new THREE.PerspectiveCamera(), el, {});
+  rig.setWander(true);
+  rig.setDrag(true);
+  el.handlers.pointerdown({ clientX: 400, clientY: 300 });
+  el.handlers.pointermove({ clientX: 300, clientY: 300 });
+  const held = rig.goal.heading;
+  assert.notEqual(held, rig.home.heading, 'the drag moved it');
+
+  for (let i = 0; i < 60; i++) rig.update(1 / 60);        // a second, still held
+  assert.equal(rig.goal.heading, held,
+    'the drift used to overwrite the goal every frame, which is why the look felt uncontrollable');
+
+  el.handlers.pointerup({});
+  for (let i = 0; i < Math.ceil(HANDS_OFF * 60) - 10; i++) rig.update(1 / 60);
+  assert.equal(rig.goal.heading, held, 'still theirs, just before HANDS_OFF is up');
+
+  for (let i = 0; i < 40; i++) rig.update(1 / 60);
+  assert.notEqual(rig.goal.heading, held, 'and the scene takes it back');
 });
 
 test('wheel clamps distance', () => {

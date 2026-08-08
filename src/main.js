@@ -555,11 +555,23 @@ syncLookRead();
 // derived from both, rather than a thing the look owns and the timer borrows:
 // leaving a sit while the look is on must not pull the panel back over it.
 function stageOnly() { return ambient || mode === 'sit'; }
+
+// WHO GETS TO AIM THE CAMERA — and it is the reverse of what it was (Frank).
+// Reading a page, you get the framing the case was composed for, breathing with
+// the cursor and nothing more: no dragging it off the shot, no wheel. Step into
+// the look, where the diorama has the whole window and there is nothing to read,
+// and the controls are yours. The drift still runs there and yields for a few
+// seconds whenever you take hold (camera.js, HANDS_OFF).
+//
+// Dev mode keeps them everywhere, because Compose is aimed by hand from the
+// Contents screen — "drag the scene with the mouse and the numbers follow" —
+// and the Contents is not a stage-only view.
+function canDragCamera() { return stageOnly() || devMode; }
 function applyStageOnly() {
   app.classList.toggle('ambient', stageOnly());
   app.classList.toggle('sitting', mode === 'sit');   // the toolbar steps aside too
   applyStageSize();          // the panel just left or returned; see the comment there
-  if (rig) rig.setWander(stageOnly());
+  if (rig) { rig.setWander(stageOnly()); rig.setDrag(canDragCamera()); }
   syncLookRead();            // sitting takes the button with the toolbar
 }
 
@@ -708,6 +720,9 @@ const debug = makeDebug({
   onDevMode: (on) => {
     devMode = !!on;
     menu.setDevMode(devMode);
+    // Compose is aimed by dragging the scene, so dev mode carries the camera
+    // controls into the reading view where a reader does not get them.
+    if (rig) rig.setDrag(canDragCamera());
     // Turning it OFF while standing in a dev page would leave the reader on a
     // page they can no longer reach — and the URL naming it. Show them out.
     if (!devMode && mode === 'koan' && isDevPage(koanSlug)) exit();
@@ -774,6 +789,7 @@ function makeRig(opts) {
   // every scene builds a fresh rig, so a stage-only view already running has to
   // be re-applied to it — otherwise paging while ambient silently stops the drift
   r.setWander(stageOnly());
+  r.setDrag(canDragCamera());
   return r;
 }
 

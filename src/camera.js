@@ -105,6 +105,12 @@ export function wanderGoal(t, home, bounds) {
 // versa; the degrees are the old radians rounded to something a person can hold.
 export const RIG_BOUNDS = { minDist: 7, maxDist: 16, minPitch: 7, maxPitch: 38.5 };
 
+// Seconds of stillness before the ambient drift takes the camera back off a
+// reader who moved it. Long enough that letting go mid-look does not feel like
+// the scene snatching the lens, short enough that a hands-off page returns to
+// breathing on its own without being asked.
+export const HANDS_OFF = 4;
+
 export function makeCameraRig(camera, el, {
   target = [0, 1.1, 0],
   distance = 11,
@@ -134,8 +140,19 @@ export function makeCameraRig(camera, el, {
   const mouse = { x: 0, y: 0 };
   let dragging = false, px = 0, py = 0;
   let wander = false, wanderTime = 0;
+  // WHO IS ALLOWED TO AIM THE CAMERA. Cursor parallax (below) is always on —
+  // it is the scene breathing with the reader, not a control. Dragging and the
+  // wheel are a control, and main.js hands them out only in the look and to
+  // the workbench: a reader with the text beside them gets the composition the
+  // case was framed for, and cannot wander off it while reading.
+  let drag = true;
+  // Seconds since the reader last had hold of it. Starts at Infinity so a fresh
+  // rig in the look drifts from the first frame rather than waiting out a grab
+  // that never happened.
+  let handsOff = Infinity;
 
   const onPointerDown = (e) => {
+    if (!drag) return;
     dragging = true;
     px = e.clientX; py = e.clientY;
   };
@@ -155,7 +172,11 @@ export function makeCameraRig(camera, el, {
   const onPointerUp = () => { dragging = false; };
   const onPointerLeave = () => { dragging = false; };
   const onWheel = (e) => {
+    // Bail BEFORE preventDefault: with the camera locked, a wheel over the
+    // stage is not ours to swallow.
+    if (!drag) return;
     e.preventDefault?.();
+    handsOff = 0;
     goal.distance = clamp(goal.distance + e.deltaY * 0.01, bounds.minDist, bounds.maxDist);
   };
   el.addEventListener('pointerdown', onPointerDown);
@@ -166,10 +187,17 @@ export function makeCameraRig(camera, el, {
 
   function update(dt) {
     // Ambient mode moves the GOAL and lets the existing damping do the smoothing
-    // — there is no second easing here, and there shouldn't be. A drag while the
-    // drift is running is overwritten on the next frame, so the camera eases back;
-    // that is a known limit of this first pass, not an accident.
-    if (wander) {
+    // — there is no second easing here, and there shouldn't be.
+    //
+    // THE DRIFT YIELDS. It used to overwrite the goal every frame, so a drag
+    // while it was running was undone before it could be seen — a known limit
+    // of the first pass, and the reason the look felt like it had no controls
+    // at all. Now the reader's hand stops the drift, and it comes back after
+    // HANDS_OFF seconds of stillness, easing toward the case's own framing
+    // because wanderGoal is written around `home` rather than around wherever
+    // they left the lens.
+    if (dragging) handsOff = 0; else handsOff += dt;
+    if (wander && handsOff >= HANDS_OFF) {
       wanderTime += dt;
       Object.assign(goal, wanderGoal(wanderTime, home, bounds));
     }
@@ -206,6 +234,10 @@ export function makeCameraRig(camera, el, {
   // `home` is returned because the drift breathes around the case's own framing,
   // and the lens slider has to be able to move that framing with it.
   const setWander = (on) => { wander = !!on; };
+  // Turning the controls off mid-grab has to release the grab too, or the next
+  // pointermove over the locked stage would still be steering.
+  const setDrag = (on) => { drag = !!on; if (!drag) dragging = false; };
+  const canDrag = () => drag;
 
   // ---- composing (the workbench's Compose panel) --------------------------
   // Moving the framing live means moving home AND goal: home is what the drift
@@ -231,7 +263,7 @@ export function makeCameraRig(camera, el, {
   const setTarget = (x, y, z) => { target[0] = x; target[1] = y; target[2] = z; };
 
   return {
-    update, state, goal, home, setWander, dispose,
+    update, state, goal, home, setWander, setDrag, canDrag, dispose,
     setHome, setTarget, bounds,
     target: () => [target[0], target[1], target[2]],
   };
