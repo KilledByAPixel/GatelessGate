@@ -18,7 +18,7 @@ import { AUDIO_BASE, narrationSrc, playableQueue } from './narration_state.js';
 // runtime volume the narration has — playback is an <audio> element outside
 // the Web Audio graph, so audio.duck() cannot reach it — which is why the trim
 // lives here rather than on a gain node with the rest of the mix.
-export const NARRATION_VOLUME = 0.75;
+export const NARRATION_VOLUME = 0.7;
 
 export function createNarration({ base = AUDIO_BASE } = {}) {
   const el = new Audio();
