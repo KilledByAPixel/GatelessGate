@@ -48,7 +48,7 @@ export default {
     scene.add(path);
 
     // the monastery threshold he has just entered
-    const hut = makeHut({ width: 3.0, height: 2.3, depth: 2.4 });
+    const hut = makeHut({ width: 3.0, height: 2.3, depth: 2.4, chimes: 15});
     hut.position.set(-1.4, 0, -4.2);
     hut.rotation.y = 0.15;
     scene.add(hut);

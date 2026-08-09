@@ -184,7 +184,7 @@ const CAM = { distance: 9.6, target: [0.6, 1.5, -1.2], heading: 29.8, pitch: 17.
   size: 0.85, seed: 28,
   onStrike: (note, force, pos) => audio && audio.cylinderStrike({ note, force, at: pos }),
   });
-  nightChime.group.position.set(-1.95, 2.8, -0.15);
+  nightChime.group.position.set(-1.65, 2.8, -0.15);
   veranda.add(nightChime.group);
   
   const world = composeWorld(scene, {

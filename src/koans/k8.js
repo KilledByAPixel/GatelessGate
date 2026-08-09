@@ -87,7 +87,7 @@ const CAM = { distance: 9, target: [0.7, 1.25, 0.4], heading: 31.5, pitch: 19 };
   // this depth, measured off the seeded curve) keeps a clear verge, its
   // threshold opening onto the yard it feeds.
   const HUT = { x: -4.2, z: -4.2 };
-  const hut = makeHut({ width: 3.0, height: 2.3, depth: 2.4 });
+  const hut = makeHut({ width: 3.0, height: 2.3, depth: 2.4, chimes: 16 });
   hut.position.set(HUT.x, 0, HUT.z);
   faceMonk(hut, { x: 1.3, z: 0.4 });
   scene.add(hut);
