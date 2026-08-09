@@ -121,7 +121,7 @@ function load(persist) {
   } catch { return defaults(); }
 }
 
-export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens, onFreeCam, onDevMode, onShot, onLayout, compose = null }) {
+export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens, onFreeCam, onDevMode, onShot, onLayout, onPanel, compose = null }) {
   const composeEl = compose && compose.el;
   let persist = loadPersist();
   const state = load(persist);
@@ -275,6 +275,11 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
   button.onclick = () => {
     panel.classList.toggle('open');
     button.classList.toggle('active');
+    // The panel is a column beside the stage, not a sheet over it, so opening
+    // it RESIZES the viewport. Nothing in the page fires a resize event for a
+    // layout change of its own, so the renderer has to be told (the same reason
+    // main.js's applyStageSize exists for the look).
+    onPanel && onPanel(panel.classList.contains('open'));
   };
 
   // ---- application --------------------------------------------------------

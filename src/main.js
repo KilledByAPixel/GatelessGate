@@ -707,6 +707,9 @@ const debug = makeDebug({
   onSound: () => setSoundLabel(),
   onLens: (fov) => applyLens(fov),
   onLayout: (on) => setLayout(on),
+  // Opening the workbench narrows the stage, and no resize event fires for a
+  // layout change inside the page.
+  onPanel: () => applyStageSize(),
   // TRANSITIONS ONLY. This handler fires from the workbench's apply(), which
   // re-asserts the whole state at mount and on every scene swap — so a bare
   // `if (!on) forgetPose()` deleted the saved pose AT BOOT, before the
@@ -734,7 +737,11 @@ const debug = makeDebug({
     if (!devMode && mode === 'koan' && isDevPage(koanSlug)) exit();
   },
 });
-debug.mount(stage, toolbar);   // panel over the stage, button into the toolbar
+// The panel goes in the APP row, beside the stage — a column the flex shell
+// makes room for, the mirror of the text panel on the other side — while the
+// button stays in the toolbar over the picture. Mounted on the stage it was an
+// overlay, and the diorama stayed centred behind it.
+debug.mount(app, toolbar);
 // every scene swap builds fresh objects, so the workbench must re-apply to them
 const debugApply = () => debug.apply();
 
@@ -1447,12 +1454,22 @@ if (booted && booted.view === 'case' && devOpen(booted.slug)) {
   // wired to rescue them, which is the worst possible first impression of a
   // shared link. Land exactly where the ordinary boot (the `else` branch)
   // would have put them.
-  enter(booted.slug).catch(() => {
-    router.set({ view: 'contents' }, { replace: true });
-    scenes.setActive(hub);
-    dissolve.set(1);
-    startIntro();
-  });
+  // IN DEV MODE THERE IS NO CATCH, deliberately. A broken case should fail the
+  // way any other JavaScript does — straight to the debugger, which is where
+  // Frank is already standing with "pause on uncaught exceptions" ticked. The
+  // rescue below is worse than useless there: it swallows the throw and then
+  // navigates away from the page being worked on, so the reload lands on the
+  // hub and the error is gone. Nothing is caught, logged or drawn; the URL is
+  // left naming the case, so a reload retries it.
+  if (devMode) enter(booted.slug);
+  else {
+    enter(booted.slug).catch(() => {
+      router.set({ view: 'contents' }, { replace: true });
+      scenes.setActive(hub);
+      dissolve.set(1);
+      startIntro();
+    });
+  }
 } else {
   // A bad hash (`#99`, junk) parses to null here too — router.initial() can't
   // tell "no hash" from "a hash naming nothing". Either way Contents is where

@@ -119,7 +119,9 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 /* Back matter, under the contents: the About link sits where a printed book
    puts its colophon. Hidden while searching, like Continue. */
 .gg-backmatter { margin: 18px 0 4px; padding-top: 14px; border-top: 1px solid rgba(var(--ink-rgb),0.12); }
-/* the colophon line: About at the margin, the reading light at the far edge */
+/* the colophon line: About at the margin. The reading light used to sit at the
+   far edge of it and is up in the title row now — nobody scrolls past fifty-one
+   rows to find a light switch. */
 .gg-colophon { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 /* the About link: quiet, italic, and set apart from the numbered rows */
 .gg-about-link {
@@ -260,14 +262,30 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 }
 .gg-look-auto.active:hover:not(:disabled) { border-color: rgba(199,62,58,0.8); }
 /* ---- debug workbench: panel sliding out under the toolbar ---- */
+/* THE WORKBENCH TAKES LAYOUT, IT DOES NOT OVERLAY.
+   It used to be an absolute sheet over the stage at 94% opacity, which put the
+   controls on top of the very picture they aim: the diorama went on being
+   centred in the full stage, behind the panel, so composing a shot meant
+   judging a centre you could not see (Frank: "it's hard for me to adjust the
+   camera... have it make the viewport smaller the same as when the text is on
+   the left"). It is a flex column beside the stage now — the mirror of the text
+   panel — so the viewport narrows, the picture recentres in what is left, and
+   what you frame is what the reader gets.
+
+   `display`, not an animated width: the WebGL buffer has to be resized on the
+   change, and a slide would mean resizing it every frame of the transition to
+   buy nothing. Opaque, and no backdrop blur, for the same reason — nothing of
+   the scene should show through the thing you are judging it against.
+
+   No padding-top for the toolbar any more: the toolbar rides the stage's right
+   edge, which is now this panel's left edge, so the two no longer overlap. */
 .gg-debug {
-  position: absolute; top: 0; right: 0; bottom: 0; width: 232px; z-index: 8;
-  transform: translateX(100%); transition: transform 160ms ease;
-  background: rgba(243,237,223,0.94); border-left: 1px solid rgba(30,30,36,0.22);
-  padding: 52px 12px 14px; overflow-y: auto; backdrop-filter: blur(3px);
+  display: none; flex: none; width: 232px;
+  background: var(--paper); border-left: 1px solid rgba(30,30,36,0.22);
+  padding: 14px 12px; overflow-y: auto;
   font: 11px/1.5 ui-monospace, Menlo, Consolas, monospace; color: var(--ink);
 }
-.gg-debug.open { transform: translateX(0); }
+.gg-debug.open { display: block; }
 .gg-debug-readout { opacity: 0.7; margin-bottom: 10px; }
 /* the draw budget's tell: amber inside striking distance of the 150 line,
    red over it (src/budget.js — the same number the staging net enforces) */
@@ -335,6 +353,14 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
   #gg-panel { width: 100%; height: 52%; flex: none; order: 2; border-right: none; border-top: 1px solid rgba(var(--ink-rgb),0.12); }
   #gg-stage { order: 1; flex: 1; }
   .gg-view { padding: 22px 24px 40px; }
+  /* The workbench is a side column on a desktop; in a stacked column layout a
+     232px-wide child would be a full-width band shoving the book off screen.
+     Back to an overlay here — narrow is not where a shot gets composed, and a
+     dev tool must never be what breaks a phone. */
+  .gg-debug.open {
+    position: absolute; top: 0; right: 0; bottom: 0; z-index: 8;
+    border-left: 1px solid rgba(30,30,36,0.22);
+  }
 }
 
 /* ---- narrower still: the look's toolbar in short form ----
