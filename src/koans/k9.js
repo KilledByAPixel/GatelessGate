@@ -20,7 +20,7 @@ const ID = 9;
 // happens; nothing else has happened for ten cycles.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 17, target: [0.2, 2.6, -1.6], heading: 31.5, pitch: 14.4 };
+const CAM = { distance: 17, target: [-0.3, 2.8, -1.6], heading: 31.5, pitch: 14.4 };
   export default {
   id: ID,
   slug: 'a-buddha-before-history',
@@ -101,7 +101,7 @@ const CAM = { distance: 17, target: [0.2, 2.6, -1.6], heading: 31.5, pitch: 14.4
   // 0.595·H, so 10.2 keeps the monument the size the whole case — camera,
   // strata, the smallness of the two monks — was staged around.
   const SEAT_Y = y - 0.9;      // deeper: the wider pooled hem is the buried part
-  const buddha = makeBuddha({ height: 10.2, color: ACCENT_DEEP });
+  const buddha = makeBuddha({ height: 10.5, color: ACCENT_DEEP });
   buddha.position.set(CX, SEAT_Y, CZ);
   buddha.rotation.y = 0.30;    // gaze out across the frame, over the monks
   scene.add(buddha);
@@ -126,7 +126,7 @@ const CAM = { distance: 17, target: [0.2, 2.6, -1.6], heading: 31.5, pitch: 14.4
   
   // and Seijo, who answered that the question answers itself
   const seijo = makeMonk({ height: 1.64, elder: true });
-  seijo.position.set(4.4, 0, 0.6);
+  seijo.position.set(4.1, 0, 0.7);
   faceMonk(seijo, monk.position);
   scene.add(seijo);
   
@@ -141,7 +141,7 @@ const CAM = { distance: 17, target: [0.2, 2.6, -1.6], heading: 31.5, pitch: 14.4
   // at the frame's right edge, past the two monks, watching from the side
   // the way an animal actually attends a place.
   const fox = makeFox({ height: 0.45, seed: 9 });
-  fox.group.position.set(-2.9, 0, 3.6);
+  fox.group.position.set(-1.9, 0, 3.6);
   faceMonk(fox.group, buddha.position);
   scene.add(fox.group);
   

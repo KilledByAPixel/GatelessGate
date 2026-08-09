@@ -20,7 +20,7 @@ const ID = 13;
 // out so the shot is tuned here like every other case's rather than by moving
 // the book (Frank). composeWorld gets the same object as its `view`, so the
 // scatter still refuses spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.5, target: [1.2, 1.35, 0.3], heading: 31.5, pitch: 17.2 };
+const CAM = { distance: 9.9, target: [0.8, 1.35, 0.3], heading: 31.5, pitch: 17.2 };
 
 export default {
   id: ID,

@@ -36,7 +36,7 @@ const MONKS = [{ x: 2.74, z: -3.48 }, { x: 2.45, z: -2.61 }];
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 12.0, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 15.5 };
+const CAM = { distance: 11.0, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 15.5 };
   export default {
   id: ID,
   slug: 'hyakujo-s-fox',
@@ -123,10 +123,10 @@ const CAM = { distance: 12.0, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 1
   seed: ID,
   treeKind: 'pine',
   groundSeed: 21,
-  trees: 9,        // a wooded mountainside, not a lawn (Frank: "more trees")
+  trees: 5,        // a wooded mountainside, not a lawn (Frank: "more trees")
   keepout: [
   ...cave.footprint(0.8),                       // the whole rock mass
-  { x: 0, z:30, r: 30 }, // behind camera
+  { x: 0, z:40, r: 50 }, // behind camera
   { x: FOX.x, z: FOX.z, r: 1.4 },
   { x: HYAKUJO.x, z: HYAKUJO.z, r: 1.2 },
   ...MONKS.map((m) => ({ x: m.x, z: m.z, r: 1.1 })),

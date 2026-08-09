@@ -193,11 +193,11 @@ export function composeWorld(scene, {
   trees = 5,
   treeRing = [7, 20],
   // The scatter's species (Frank: "I control what type of trees are in a
-  // scene"): 'tree' (the broadleaf default, bit-identical to before this
+  // scene"): 'tree' (the broadleaf, bit-identical to before this
   // option existed), 'pine', or 'mixed' — a seeded half-and-half. The wind
   // FLAVOR in a case's ambience ('wind:0.2:pine') is a separate, audio-only
   // choice; matching the two is the case's own job.
-  treeKind = 'tree',
+  treeKind = 'mixed',
   // The case's own framing, so the scatter can refuse spots the reader can
   // never look at (seenFrom, above). Pass the same object the module's
   // `camera:` names. Absent, nothing is culled beyond the old z > 6 rule and

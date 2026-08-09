@@ -59,9 +59,8 @@ function voidStrip(lipZ) {
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = {
-  distance: 16.1, target: [0.9, 1.3, 0.35], heading: 22.3, pitch: 23.5,
-  minDist: 11, maxDist: 21,
+const CAM = {
+distance: 15, target: [0.9, 1.3, 0.35], heading: 21, pitch: 23.5
 };
 export default {
   id: ID,
@@ -112,9 +111,17 @@ export default {
       width: 13, drop: 6.5, depth: 2.6, seed: ID,
       origin: [CLIFF.x, CLIFF.z], yaw: CLIFF.yaw,
     });
-    cliff.position.set(CLIFF.x, 0, CLIFF.z);
+    cliff.position.set(CLIFF.x+5, 0, CLIFF.z);
     cliff.rotation.y = CLIFF.yaw;
     scene.add(cliff);
+
+    const cliff2 = makeCliff({
+      width: 13, drop: 6.5, depth: 2.6, seed: ID,
+      origin: [CLIFF.x-5, CLIFF.z], yaw: CLIFF.yaw,
+    });
+    cliff2.position.set(CLIFF.x-5, 0, CLIFF.z);
+    cliff2.rotation.y = CLIFF.yaw;
+    scene.add(cliff2);
 
     // ZUIGAN, alone, near the edge. `elder` gives him the kit's own staff, held
     // the ordinary way and in his own ink — the free-standing vermillion shaft
@@ -148,10 +155,14 @@ export default {
     const world = composeWorld(scene, {
       view: CAM,
       seed: ID,
-      groundSeed: 21,
-      trees: 3,
-      treeRing: [11, 20],
+      groundSeed: 115,
+      trees: 7,
+      mountains: [
+        { count: 8, distance: 252, arcSpan: 3.6 },
+        { count: 5, distance: 35, arcSpan: 2.4},
+      ],
       keepout: [
+        { x: 0, z: 20, r: 1.4 },
         ...cliff.footprint(1.0),
         ...cliff.voidFootprint(0.5),
         { x: ZUIGAN.x, z: ZUIGAN.z, r: 1.4 },

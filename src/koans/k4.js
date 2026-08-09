@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, INK, INK_LIT } from '../palette.js';
 import {
   composeWorld, makeVeranda, makeMonk, aimMonk, makeLantern,
-  makeLights, addOutlines, toonMaterial, makeFurin,
+  makeLights, addOutlines, toonMaterial, makeFurin, makeVase, plantTree
 } from '../kit/index.js';
 
 const ID = 4;
@@ -45,6 +45,11 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   const veranda = makeVeranda({ width: 4.6, depth: 3.6, height: VERANDA_H });
   veranda.position.set(0.2, 0, -3.4);
   scene.add(veranda);
+
+  const vase = makeVase({ height: 0.55, seed: 10 });
+  vase.group.position.set(-1.1, .3, .2);
+  veranda.add(vase.group);
+    
   
   // ---- THE SCROLL -------------------------------------------------------
   // A kakemono: two rollers and a hanging field of silk, with the portrait
@@ -173,7 +178,9 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   });
   furin.group.position.set(1.5, VERANDA_H - 0.20, -0.15);
   veranda.add(furin.group);
-  
+
+  plantTree(scene, { x: -5.2, z: -4.7, height: 4.2 });
+
   const world = composeWorld(scene, {
   view: CAM,
   seed: ID,

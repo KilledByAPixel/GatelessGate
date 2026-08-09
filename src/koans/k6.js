@@ -125,6 +125,7 @@ const CAM = { distance: 11, target: [1.2, .3, -4], heading: 17, pitch: 18 };
   groundSeed: 21,
   trees: 4,
   keepout: [
+  { x: 1.2, z: 40, r:50.0 }, // back area
   { x: 1.2, z: SEAT_Z, r: 2.0 },   // the seat
   { x: 1.2, z: -2.2, r: 4.0 },     // the assembly
   { at: kasyapa, r: 1.2 },    // Kasyapa

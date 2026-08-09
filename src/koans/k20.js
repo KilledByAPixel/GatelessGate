@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK, WASH, mixHex, wash } from '../palette.js';
 import {
   addOutlines, composeWorld, faceMonk, groundHeight, makeFoam, makeLights,
-  makeMonk, makePath, makeSand, makeWater, mergeSimple, toonMaterial,
+  makeMonk, makePath, makeSand, makeWater, mergeSimple, toonMaterial, makeLantern
 } from '../kit/index.js';
 
 const ID = 20;
@@ -110,30 +110,12 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   monk.position.set(3.6, 0, 3.4);
   faceMonk(monk, colossus.position);
   moving.add(monk);
-  
-  // A stone waymarker beside the road, worn down by everyone who has tried:
-  // a square pillar that tapers as it rises, a pyramid cap, a half-buried
-  // plinth, a step darker than the road so it stands against the ribbon.
+
+  // a lantern is the marker
   const MARKER = { x: -0.95, z: 1.0 };
-  const markerParts = [];
-  const shaft = new THREE.CylinderGeometry(0.145, 0.185, 0.82, 4);
-  shaft.translate(0, 0.41, 0);
-  markerParts.push(shaft);
-  const cap = new THREE.ConeGeometry(0.205, 0.17, 4);
-  cap.translate(0, 0.82 + 0.075, 0);
-  markerParts.push(cap);
-  const plinth = new THREE.DodecahedronGeometry(0.26, 0);
-  plinth.scale(1.25, 0.42, 1.05);
-  plinth.translate(0.02, 0.05, 0.01);
-  markerParts.push(plinth);
-  const marker = new THREE.Mesh(
-  mergeSimple(markerParts),
-  toonMaterial({ color: mixHex(WASH.stone, INK, 0.22), flat: true }));
-  marker.name = 'marker';
-  marker.position.set(MARKER.x, 0, MARKER.z);
-  marker.rotation.y = 0.55;
-  marker.rotation.z = 0.05;   // an old stone leans a little
-  moving.add(marker);
+  const lantern = makeLantern({ height: 1.1 });
+  lantern.position.set(MARKER.x, 0, MARKER.z);
+  scene.add(lantern);
   
   // ---- the coast itself ------------------------------------------------
   // The great ocean: a big sheet whose near edge hides under the sand and
