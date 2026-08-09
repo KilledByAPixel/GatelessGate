@@ -75,7 +75,7 @@ const CAM = { distance: 13.0, target: [0.4, 2.2, -1.4], heading: 31.5, pitch: 22
   treeGroup.name = 'the-tree';
   const oak = makeOak({ height: 5.2, seed: ID });
   const oakRoot = oak.group || oak;
-  const TREE = { x: 4.0, z: -2.6 };      // moved clear of the path (Frank: it stood in the road)
+  const TREE = { x: 2.0, z: -4.6 };      // moved clear of the path (Frank: it stood in the road)
   oakRoot.position.set(TREE.x, 0, TREE.z);
   // Turn the hero limb AWAY from the home lens (Frank: "what's going on with
   // the weird tree branch?"). Seed 27 grows its long low bough at local

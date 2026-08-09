@@ -124,7 +124,7 @@ const CAM = { distance: 11.5, target: [1.15, 1.2, -1.0], heading: 31.5, pitch: 1
   // nobody has anything to say to him.
   for (const [g, seed] of [[EAST, ID * 3], [WEST, ID * 5]]) {
   scene.add(makeAssembly({
-  count: 7, radius: ARC_R, spread: 0.9, seed,
+  count: 5, radius: ARC_R, spread: 0.9, seed,
   center: [g.x, g.z - ARC_PULL],
   facing: [STONE.x, STONE.z],
   }));
@@ -142,7 +142,7 @@ const CAM = { distance: 11.5, target: [1.15, 1.2, -1.0], heading: 31.5, pitch: 1
   view: CAM,
   seed: ID,
   groundSeed: 21,
-  trees: 4,
+  trees: 3,
   // generous: nothing scattered may land in the courtyard, in either group,
   // or inside a hall
   keepout: [

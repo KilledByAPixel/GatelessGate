@@ -183,7 +183,7 @@ const CAM = { distance: 11.0, target: [0.4, 2.0, -1.6], heading: 31.5, pitch: 19
   // the ground there"). The dream's rocking still carries them, but its
   // amplitude is millimetres; it never lifts a hem visibly off the grass.
   const assembly = makeAssembly({
-  count: 8, radius: 2.6, center: [0.4, 1.9], facing: [0.2, -3.0], spread: 1.3, seed: ID,
+  count: 8, radius: 4.6, center: [-.7, -2.5], facing: [0.2, -3.0], spread: 1.3, seed: ID,
   });
   hall.add(assembly);
   
