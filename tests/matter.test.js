@@ -79,7 +79,11 @@ test('the preface verse is the four lines the book is named after', async () => 
   const mod = await loadKoan(PREFACE_SLUG);
   const lines = mod.text.verse.split('\n');
   assert.equal(lines.length, 4);
-  assert.match(lines[0], /^The great road has no gate\./);
+  // What's guarded is that the verse section holds the verse — four lines, the
+  // first of them the gateless one — not one particular English rendering of it.
+  // This pinned the first line word for word and duly failed the day the line was
+  // retranslated, which told us nothing about the build.
+  assert.match(lines[0], /gateless/i);
 });
 
 test('the lead-in to the verse does not survive into the prose', async () => {

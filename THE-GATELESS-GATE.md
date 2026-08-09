@@ -20,10 +20,10 @@ If a man will go straight in with one blade and not care whether he lives, then 
 
 **The Verse**
 
-The great road has no gate.  
-There are a thousand roads.  
-Get through this barrier  
-and you go alone through heaven and earth.
+The Great Way is gateless,  
+approached by a thousand roads.  
+Once past this barrier  
+you walk unhindered through heaven and earth.
 
 ## 1. Joshu's Dog
 
