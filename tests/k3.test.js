@@ -2,7 +2,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import k3 from '../src/koans/k3.js';
-import { makeRaisedFinger } from '../src/kit/finger.js';
 import { ACCENT } from '../src/palette.js';
 import { slugify } from '../src/koans/index.js';
 import TEXT from '../src/koans/text/mumonkan.js';
@@ -51,24 +50,30 @@ function raisedHemY(monk) {
   return top;
 }
 
-test('makeRaisedFinger is one mesh, the size it says it is, standing on its base', () => {
-  const f = makeRaisedFinger({ length: 0.16, radius: 0.026 });
+// The digit is a stretched sphere built inside this case now — the kit's lathed
+// finger model was cut, so the shape is asserted where it is actually raised
+// rather than against a builder that no longer exists. Read off the GEOMETRY,
+// not a world box, so nothing here depends on how monk.js scales a figure.
+test('the seal is one mesh, slim, and standing on its base', () => {
+  const f = accentMeshes(k3.build(fakeCtx()).scene)[0];
   assert.equal(f.name, 'finger');
   assert.ok(f.isMesh, 'a single mesh');
-  // ONE mesh matters: the two-seal count in the scene below is only meaningful
-  // while a finger cannot quietly become a shaft plus a capping sphere
-  assert.equal(f.children.length, 0, 'a finger is not assembled from parts');
+  // ONE mesh matters: the one-seal count in the scene below is only meaningful
+  // while a finger cannot quietly become a shaft plus a capping sphere. Its
+  // own thin outline hull is the one child it is allowed.
+  const parts = f.children.filter((c) => !c.userData.isOutline);
+  assert.equal(parts.length, 0, 'a finger is not assembled from parts');
 
-  const box = new THREE.Box3().setFromObject(f);
+  const geo = f.geometry;
+  if (!geo.boundingBox) geo.computeBoundingBox();
+  const box = geo.boundingBox;
   assert.ok(Math.abs(box.min.y) < 1e-6, `hinged at its base: ${box.min.y}`);
-  assert.ok(Math.abs(box.max.y - 0.16) < 1e-4, `full length: ${box.max.y}`);
   const width = Math.max(box.max.x - box.min.x, box.max.z - box.min.z);
-  assert.ok(width > 0.026 * 1.6 && width <= 0.026 * 2 + 1e-6, `about two radii across: ${width}`);
   // a finger, not a bead: much fatter than this and the seal stops reading
   assert.ok(box.max.y > width * 2.8, `slim: ${(box.max.y / width).toFixed(2)}:1`);
 
   for (const attr of ['position', 'normal']) {
-    const a = f.geometry.attributes[attr].array;
+    const a = geo.attributes[attr].array;
     for (let i = 0; i < a.length; i++) assert.ok(Number.isFinite(a[i]), `finite ${attr}`);
   }
 });

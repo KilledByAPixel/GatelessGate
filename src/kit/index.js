@@ -47,7 +47,6 @@ export { makeMoon } from './moon.js';
 export { makeWildflowers } from './wildflowers.js';
 export { makeScreen } from './screen.js';
 export { makeVeranda } from './veranda.js';
-export { makeRaisedFinger } from './finger.js';
 export { makeAssembly } from './assembly.js';
 export { makeFurin, FURIN_REACH } from './furin.js';
 export { hangChimes } from './chimes.js';

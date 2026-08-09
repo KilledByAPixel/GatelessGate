@@ -18,7 +18,7 @@
       makeWater, makeHut, makeLattice, makeAssembly, makeLights, addOutlines,
       setInkScale, toonMaterial,
       makeFox, makeCat, makeHorse, makeKoi, makeBird, makeBirds,
-      makeHangingMonk, makeRaisedFinger,
+      makeHangingMonk,
       makeTree, makePine, makeOak, makeForest, makeGrassField, makeTuftField, makeWildflowers,
       makeGate, makeVeranda, makeLantern, makeBell, makeDrum, makeStall,
       makeBasin, makeFurin, makeWheel, makeVase, makeRack, makePole, makeBundle,
@@ -110,8 +110,6 @@
     bird.group.position.y = 1.4;
 
     place(makeBirds({ count: 6, seed: 24, center: [0, 0], height: 6.2, spread: 4 }), 6, -8, 0, 'birds');
-
-    place(makeRaisedFinger({}), 10, -6, 0, 'finger');
 
     // row D — vegetation (z ≈ 14). Pushed back from the original z≈12 plan,
     // and the forest's footprint kept modest (spread 3.5, not 5) — the wider
@@ -254,10 +252,12 @@
       // shows each petal's true widened face instead. flower is placed at
       // (-11, 5, 0) with no rotation; offset (0.6, 0.60, 0.35) from the pod.
       flower:      { p: [-10.4, 1.15, 5.35], t: [-11, 0.55, 5.05] },
-      // profile view: the near view has no established "facing" to offset from
-      // (a flower has none, same reasoning `finger-side` used), so this rotates
-      // the near view's own camera offset 90 degrees around the target — same
-      // formula as `finger-side`: (dx, dy, dz) -> (-dz, dy, dx).
+      // profile view, and the one the other rotate-90 views below quote: a
+      // flower has no established "facing" the way a monk or a quadruped does,
+      // so rather than reuse the local-+x-offset formula those models anchor to
+      // a walking/aiming direction, this rotates the near view's own camera
+      // offset 90 degrees around the target — (dx, dy, dz) -> (-dz, dy, dx),
+      // same distance and height, a genuinely different azimuth.
       'flower-side': { p: [-11.35, 1.15, 5.6], t: [-11, 0.55, 5.05] },
       // bowl had no dedicated view at all (a ledgered gap — flower got one in
       // C5, lattice comes in D6, this is bowl's turn). place(thing, x, z, ry)
@@ -267,7 +267,7 @@
       // the bowl is small (R=0.22, H=0.3) — target at rim height, camera a
       // little above and back.
       bowl:        { p: [-7, 0.50, 6.6], t: [-8, 0.18, 5] },
-      // profile view: a bowl (like the flower/finger) has no established
+      // profile view: a bowl (like the flower) has no established
       // facing to offset from, so this rotates the near view's own camera
       // offset 90 degrees around the target — same formula as `flower-side`.
       'bowl-side': { p: [-9.6, 0.50, 6.0], t: [-8, 0.18, 5] },
@@ -330,17 +330,6 @@
       // d = |(-0.3,0.40,-4.2) - (1,1.40,-6)| = 2.4352.
       'bird-side': { p: [3.4352, 0.40, -6], t: [1, 1.40, -6] },
       birds:   { p: [3.0, 4.50, -1.0], t: [6, 6.00, -8] },
-      finger:  { p: [10.6, 0.22, -5.4], t: [10, 0.08, -6] },
-      // profile view, added for B4 (finger.js). The finger has no established
-      // "facing" the way a monk or quadruped does (it's a lathe standing
-      // straight up), so rather than reuse the local-+x-offset formula those
-      // models anchor to a walking/aiming direction, this rotates the near
-      // view's own camera offset by 90 degrees around the target (the finger
-      // is placed at (10, 0, -6) with ry=0; near view offset from target is
-      // (0.6, 0.14, 0.6) — rotated to (-0.6, 0.14, 0.6), same distance and
-      // height, a genuinely different azimuth so the nail plane and knuckle
-      // steps are checked from both sides).
-      'finger-side': { p: [9.4, 0.22, -5.4], t: [10, 0.08, -6] },
 
       // row D — vegetation
       tree:        { p: [-19.5, 2.2, 19.5], t: [-16, 1.5, 14] },
@@ -406,7 +395,7 @@
       // rotate-90 formula; offset (1.2, 0.2, 1.6) -> rotated (-1.6, 0.2, 1.2).
       'bundle-side': { p: [28.4, 0.4, 23.2], t: [30, 0.2, 22] },
       // profile views, added for D4 (lantern.js/bell.js): same formula as
-      // gate-side/finger-side — `(t.x + d, near.eye, t.z)` where d is the
+      // gate-side — `(t.x + d, near.eye, t.z)` where d is the
       // near view's own distance from its target and both placements have
       // ry=0, so the side offset is a pure +x step from the target at the
       // same eye height. lantern: d = |(-15.5,24.6)-(-17,22)| = 3.001666;
@@ -425,7 +414,6 @@
     soloGroups['koi-side'] = soloGroups.koi;
     soloGroups['bird-side'] = soloGroups.bird;
     soloGroups['buddha-side'] = soloGroups.buddha;
-    soloGroups['finger-side'] = soloGroups.finger;
     soloGroups['flower-side'] = soloGroups.flower;
     soloGroups['gate-side'] = soloGroups.gate;
     soloGroups['lantern-side'] = soloGroups.lantern;

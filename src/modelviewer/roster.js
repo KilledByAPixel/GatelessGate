@@ -8,6 +8,12 @@
 // don't rename them casually — checklist notes are stored under them.
 // Variants that matter to the polish work (poses, stances) get their own keys.
 //
+// Not everything in the kit earns a cell. A model belongs here when it has FORM
+// to judge on a turntable; the moon does not — it is one unlit disc whose entire
+// design is four render rules (fog off, no outline, no ink pass, keep the
+// material), and a gallery cell shows none of them. It is reviewed in case 19,
+// standing where it stands.
+//
 // This module must stay dependency-free and DOM-free: it is imported by plain
 // Node tests as well as both browser harnesses.
 
@@ -36,7 +42,6 @@ export const ROSTER = [
   { key: 'buddha', section: 'figures', build: (kit) => kit.makeBuddha({}) },
   { key: 'hangingmonk', section: 'figures', build: (kit) => kit.makeHangingMonk({}) },
   { key: 'assembly', section: 'figures', build: (kit) => kit.makeAssembly({ count: 6, radius: 1.6 }) },
-  { key: 'finger', section: 'figures', build: (kit) => kit.makeRaisedFinger({}) },
   // flora
   { key: 'tree', section: 'flora', build: (kit) => kit.makeTree({}) },
   { key: 'pine', section: 'flora', build: (kit) => kit.makePine({}) },
@@ -51,6 +56,7 @@ export const ROSTER = [
   { key: 'bell', section: 'structures', build: (kit) => kit.makeBell({}) },
   { key: 'flag', section: 'structures', build: (kit) => kit.makeFlag({}) },
   { key: 'screen', section: 'structures', build: (kit) => kit.makeScreen({}) },
+  { key: 'cave', section: 'structures', build: (kit) => kit.makeCave({}) },
   // props
   { key: 'bowl', section: 'props', build: (kit) => kit.makeBowl({}) },
   { key: 'vase', section: 'props', build: (kit) => kit.makeVase({}) },
@@ -64,9 +70,6 @@ export const ROSTER = [
   { key: 'pole', section: 'props', build: (kit) => kit.makePole({}) },
   { key: 'fan', section: 'props', build: (kit) => kit.makeFan({}) },
   { key: 'scale', section: 'props', build: (kit) => kit.makeScale({}) },
-  // world
-  { key: 'moon', section: 'world', build: (kit) => kit.makeMoon({}) },
-  { key: 'cave', section: 'world', build: (kit) => kit.makeCave({}) },
 ];
 
 // Kit builders return either a bare Object3D or a handle ({ group | mesh,

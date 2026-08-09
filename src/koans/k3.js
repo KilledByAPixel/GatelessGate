@@ -2,10 +2,9 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
-  composeWorld, faceMonk, makeHut, makeLantern, makeMonk, makePath,
-  makeRaisedFinger, tapMeshes,
+  composeWorld, faceMonk, makeHut, makeLantern, makeMonk, makePath, tapMeshes,
 } from '../kit/index.js';
-import { makeLights } from '../render/toon.js';
+import { makeLights, toonMaterial } from '../render/toon.js';
 import { addOutlines } from '../render/outlines.js';
 
 const ID = 3;
@@ -91,6 +90,28 @@ function seat(f) {
   f.finger.position.copy(hem.point).addScaledVector(hem.along, -f.radius * 1.15);
 }
 
+// The digit itself: a sphere stretched tall, hinged at its base so it can be
+// sunk into a cuff. It lived in the kit as a lathed profile for a while — a
+// shaft that swelled and tapered, and before that knuckles and a nail — and
+// none of it ever reached the reader. Its own header said so (THE DETAIL FLOOR)
+// while the swell went on being modelled anyway. Two centimetres of red seen
+// from six metres is a silhouette and nothing else, so Frank cut the model:
+// an ellipsoid is the whole finger, and the kit is one file lighter for it.
+//
+// Kept around three times as long as it is wide. Fatter than that and the seal
+// stops reading as a finger and starts reading as a bead held up. It is
+// authored a good deal larger than an anatomical finger for the same reason
+// case 6's lotus is oversized — the thing being gestured with has to carry the
+// shot, and at true scale the seal is a speck.
+function makeFinger(length, radius) {
+  const geo = new THREE.SphereGeometry(radius, 9, 6);
+  geo.scale(1, length / (2 * radius), 1);
+  geo.translate(0, length / 2, 0);         // stands on its base, like the lathe did
+  const mesh = new THREE.Mesh(geo, toonMaterial({ color: ACCENT, flat: true }));
+  mesh.name = 'finger';
+  return mesh;
+}
+
 // One finger, standing straight up out of the cuff.
 //
 // The finger is a child of the MONK, not of the sleeve. Parented to the sleeve
@@ -98,11 +119,11 @@ function seat(f) {
 // and what Gutei holds up is a finger held UP — the whole gesture is that it is
 // vertical. The price is that it has to be re-seated whenever the arm moves,
 // which is all seat() does.
-function raiseFinger(monk, { length, radius, withFinger = true } = {}) {
+function raiseFinger(monk, { length = 0.15, radius = 0.025, withFinger = true } = {}) {
   const arm = raisedSleeve(monk);
   let finger = null;
   if (withFinger) {
-    finger = makeRaisedFinger({ length, radius });
+    finger = makeFinger(length, radius);
     // Its own outline, thin, added BEFORE the scene-wide pass can claim it: the
     // house stroke is 0.033 wide and this digit is 0.05 across, so the standard
     // inverted hull would swallow the red completely.

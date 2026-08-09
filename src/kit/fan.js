@@ -6,8 +6,8 @@ import { INK_LIT, WASH } from '../palette.js';
 // The folding fan (ōgi) — Ummon's answer in case 48, and a prop any figure can
 // hold. An open paper sector on a short grip: the whole read is the wedge
 // silhouette, so that is where all the geometry goes and nothing else gets any
-// (THE DETAIL FLOOR, finger.js — ribs, guards and a rivet all live below what
-// the case camera resolves).
+// (THE DETAIL FLOOR, k3.js's makeFinger — ribs, guards and a rivet all live
+// below what the case camera resolves).
 //
 // Two meshes, deliberately:
 //   'fan-leaf'   — a CircleGeometry sector, one radial band per pleat. The rim

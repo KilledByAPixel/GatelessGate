@@ -8,7 +8,7 @@ import {
   makeFlower, makeForest, makeFox, makeFurin, makeGate, makeGrassField,
   makeGround, makeHangingMonk, makeHorse, makeHut, makeKoi, makeLantern,
   makeLattice, makeMonk, makeMoon, makeOak, makeOdoshi, makePen, makePine,
-  makePole, makeQuadruped, makeRack, makeRaisedFinger, makeScale,
+  makePole, makeQuadruped, makeRack, makeScale,
   makeScreen, makeStall, makeTree, makeTuftField, makeVase, makeVeranda,
   makeWater, makeWheel, makeWildflowers,
 } from '../../kit/index.js';
@@ -253,7 +253,6 @@ export default {
     // stands rather than moved afterwards. Set off the centre line so it does
     // not sit on top of the row's caption in the aisle ahead of it.
     scene.add(makeAssembly({ count: 8, radius: 2.2, center: [1.0, ROWS.people], facing: [1.0, ROWS.people + 4] }));
-    place(makeRaisedFinger({}), 4.8, 'people');
     place(makeFlag({}), 7.6, 'people', -0.4);
 
     // The hanging monk needs a branch, so he gets one: a real canopy anchor on
