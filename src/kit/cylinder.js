@@ -377,20 +377,33 @@ export const CYL_FORCE = {
 // scale (NOTE_SPAN=5) end to end. Integer, because the engine's chime
 // voices are addressed by scale degree, not raw Hz (see
 // audio/engine.js's cylinderStrike).
-const SIZE_MIN = 0.6, SIZE_MAX = 1.0, NOTE_SPAN = 5;
+// NOTE_REF is where note 0 sits and, with SIZE_MAX, sets the slope. SIZE_MIN is
+// only the clamp's floor, and the two are SEPARATE because they were the same
+// number and that was a bug: a hung cylinder is not a waist-high one.
+//
+// `hangChimes` picks a cylinder as one of its four kinds and sizes it from a
+// world drop — 0.23 to 0.48, a third of the floor-standing object. Every one of
+// those fell below the old floor of 0.6 and clamped to note 0, so two hung
+// cylinders of visibly different size always sounded the same pitch (Frank:
+// "they're coming out of different sizes, but the note is the same"). A bound
+// written for one caller was silently flattening another.
+//
+// 0.2 covers what the kit actually builds and yields a 3-degree spread across
+// the hung band — two chimes on one eave differ audibly without playing a tune.
+// The floor-standing chime is untouched: 0.6 is still note 0 and 1.0 still -5,
+// because those sit above the floor and read the same slope they always did.
+const NOTE_REF = 0.6, SIZE_MIN = 0.2, SIZE_MAX = 1.0, NOTE_SPAN = 5;
 export function noteForSize(size) {
-  // Clamped to the brief's own stated range: the formula is a straight
-  // line and would happily extrapolate a `size` of, say, 3 into a note
-  // many octaves off the family's register — code review flagged this as
-  // unclamped. `makeCylinderChime` never passes an out-of-range size today,
-  // but the function is exported and public, so it holds its own contract
-  // rather than trusting every future caller to.
+  // Still clamped, for the reason code review gave: the formula is a straight
+  // line and would happily extrapolate a `size` of, say, 3 into a note many
+  // octaves off the family's register. The floor is now wide enough to admit
+  // every size the kit builds, which is what a bound is supposed to be.
   const s = clamp(size, SIZE_MIN, SIZE_MAX);
   // -0 guard: at size===SIZE_MIN the raw round is 0, and negating a literal
   // 0 in JS produces -0 — harmless as a scale-degree offset (hz(-0) reads
   // identically to hz(0)) but a needless surprise for anything that
   // compares this against a plain 0 with strict equality.
-  const steps = Math.round(NOTE_SPAN * (s - SIZE_MIN) / (SIZE_MAX - SIZE_MIN));
+  const steps = Math.round(NOTE_SPAN * (s - NOTE_REF) / (SIZE_MAX - NOTE_REF));
   return steps === 0 ? 0 : -steps;
 }
 

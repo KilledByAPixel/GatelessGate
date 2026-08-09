@@ -166,6 +166,27 @@ test('bigger cylinder = lower note AND slower swing, both derived from size', ()
   assert.equal(noteForSize(1.0), -5);
 });
 
+test('a HUNG cylinder gets a note of its own, not the clamp floor', () => {
+  // The clamp's floor used to be 0.6 — the waist-high object's own smallest
+  // size — but kit/chimes.js hangs cylinders from an eave at roughly a third
+  // of that (0.23..0.48, sized from a world drop). Every one of them fell
+  // under the floor and came back note 0, so two hung cylinders of visibly
+  // different size sounded identical. A bound written for one caller must not
+  // flatten another.
+  const hung = [0.23, 0.30, 0.38, 0.48];
+  const notes = hung.map(noteForSize);
+  assert.ok(new Set(notes).size >= 3, `the hung band should span notes, got ${notes}`);
+  for (let i = 1; i < hung.length; i++) {
+    assert.ok(notes[i] <= notes[i - 1], `bigger must not sound higher: ${notes}`);
+  }
+  // Smaller than the floor-standing chime, so HIGHER than its note 0 — the
+  // sign is the part a future re-tune could invert without noticing.
+  assert.ok(Math.min(...notes) > 0, `a hung cylinder is small, so it rings high: ${notes}`);
+  // and the floor-standing chime is untouched by the wider bound
+  assert.equal(noteForSize(0.6), 0);
+  assert.equal(noteForSize(1.0), -5);
+});
+
 test('no wind and no taps: the cylinder never strikes, and the swing genuinely does not move', () => {
   const f = makeCylinderChime({ seed: 1, phase: 0 });
   f.setWindLevel(0);
