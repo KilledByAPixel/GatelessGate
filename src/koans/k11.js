@@ -1,30 +1,57 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, WASH } from '../palette.js';
+import { PAPER, ACCENT, INK_LIT, WASH, wash } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeMonk, faceMonk, wrapPi, bearing,
   makeLights, addOutlines, toonMaterial, groundHeight,
+  makeWater, makeSand, makeFoam, makeBoat,
 } from '../kit/index.js';
 
 const ID = 11;
 
 // Joshu comes to a monk who has retired to meditate and asks "What is, is
-// what?" The monk raises his fist. Joshu says the water is too shallow for
-// ships, and leaves. Days later he comes back, asks the same question, gets
-// the same fist, and says "Well given, well taken, well killed, well saved" —
-// and bows.
+// what?" The monk raises his fist. Joshu says "ships cannot remain where the
+// water is too shallow", and leaves. Days later he comes back, asks the same
+// question, gets the same fist, and says "Well given, well taken, well
+// killed, well saved" — and bows.
 //
 // The fist is identical both times. So the fist is the one accented thing in
 // the scene, and the interaction is Joshu's verdict: touch it and he turns
 // away; touch it again and he bows to it. Nothing about the fist changes. The
 // case is entirely in the man who is looking at it, which is Mumon's question:
 // where is the fault?
+//
+// THE COAST stages the verdict itself (Frank: "lets make 11 an ocean scene").
+// The hermit's rise now stands above a shallow bay: a long bar of nearly
+// transparent ink over pale sand, the sea only gathering weight far out where
+// the fog takes it — water too shallow for ships, made literal. And one ship
+// IS here (Frank: "a ship in the ocean a bit in the distance floating on the
+// waves"): a small junk standing off beyond the shallows, riding the swell,
+// because Joshu's line is what it cannot do — come in and remain. The sea
+// stays ink; the red sea belongs to case 20, where the ocean is the seal.
+// Here the seal is the fist.
 
 const TURN_RATE = 2.4;
 const BOW = 0.20;
 // bearing/wrapPi are the kit's now (faceMonk's convention). The local copy
 // here was once aimMonk's atan2(-dz, dx) — for the pointing +x sleeve — which
 // left Joshu turned a quarter circle off the monk he is deciding about.
+
+// The coast, k20's grammar: sea to the -z, waterline 10.5 out, a 4-metre
+// beach, the bed settling shallow — 1.2 under the surface, a bay not a deep.
+// ONE object shared by ground, sand and the water's resting height. The rise's
+// base foot reaches z = -6.2; the beach taper starts at -6.5, so the hill
+// stands wholly on land.
+// exported for tests/k11.test.js, which checks the meadow against the same
+// surface the case plants it on rather than a copied set of numbers
+export const SHORE = { dx: 0, dz: -1, dist: 10.5, width: 4, sea: -0.35, depth: 1.2 };
+// keep scatter, grass and trees out of the sea and off the beach (k20's three
+// staggered rows, pulled to this coast's waterline)
+const SEA_KEEP = [
+  ...[-24, -16, -8, 0, 8, 16, 24].map((x) => ({ x, z: -12.5, r: 6 })),
+  ...[-24, -12, 0, 12, 24].map((x) => ({ x, z: -22, r: 14 })),
+  ...[-18, -6, 6, 18].map((x) => ({ x, z: -36, r: 16 })),
+];
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
@@ -36,7 +63,9 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.22', 'fist', 'music'],
+  // the surf bed under the case whose verdict is about water — quieter than
+  // k20's open ocean (0.55): a shallow bay laps, it does not break
+  ambience: ['wind:0.22', 'water:0.35', 'fist', 'music'],
   camera: CAM,
   
   build(ctx) {
@@ -46,8 +75,11 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
   scene.add(makeLights());
   
-  // the path Joshu came up, twice
-  const path = makePath({ from: [5.2, 8.0], to: [-3.4, -17], width: 1.2, seed: ID, groundSeed: 21, wander: 1.3 });
+  // the path Joshu came up, twice — a coast road now, running with the
+  // shoreline behind the hermit's rise. It used to run to (-3.4, -17),
+  // which the bay would drown: a road aimed at the water is a dead end into
+  // the ocean (k20's own lesson, k20.js).
+  const path = makePath({ from: [8.0, 4.6], to: [-15, 2.0], width: 1.2, seed: ID, groundSeed: 21, wander: 1.6 });
   scene.add(path);
   
   // the hut he retired to, on its rise — set OFF to the side of the road
@@ -116,8 +148,9 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
     fist.position.y = -0.34 * 1.5;
     (raised || monk).add(fist);
 
-    // JOSHU, down on the path, who will make up his mind about it
-    const JOSHU = new THREE.Vector3(3.0, 0, 1.6);
+    // JOSHU, down on the path, who will make up his mind about it — beside
+    // the coast road (it passes z ≈ 4 at his x now), a step toward the rise
+    const JOSHU = new THREE.Vector3(3.0, 0, 2.9);
     faceMonk(monk, JOSHU);
     // `bow: true` hinges him at the sash without changing his arms: makeFigure
     // hands back a group named 'waist' carrying the torso, head and sleeves,
@@ -128,28 +161,97 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
     const joshuWaist = joshu.getObjectByName('waist');
     joshu.position.copy(JOSHU);
     const AT_MONK = bearing(JOSHU, monk.position);
-    const AWAY = bearing(JOSHU, { x: 7.0, z: 4.5 });      // back down the road
+    const AWAY = bearing(JOSHU, { x: 8.0, z: 4.8 });      // back down the road
     joshu.rotation.y = AT_MONK;
     scene.add(joshu);
+
+    // ---- the shallow bay --------------------------------------------------
+    // The sheet's local waterline sits at z = +43 (the group is at world
+    // -(dist + 43), k20's own placement), so seaward distance is s = 43 - z.
+    // THE SHALLOWS ARE THE VERDICT: the ink stays nearly clear for a long run
+    // — pale sand showing through a film of water — and only reaches its full
+    // weight ~20 out, twice the reach k20's red needs. A gentler swell than
+    // the open ocean's, too: a bay laps.
+    const water = makeWater({
+      shape: 'square', size: 150, color: INK_LIT, seed: ID,
+      opacity: 1, segments: 64,
+      alphaRamp: (x, z) => {
+        const s = 43 - z;
+        const t = Math.max(0, Math.min(1, s / 20));
+        return 0.10 + 0.72 * t * t * (3 - 2 * t);
+      },
+      drift: [
+        { dx: 0, dz: 1, amp: 0.032, wavelength: 7, period: 6 },
+        { dx: 0.2764, dz: 0.9611, amp: 0.016, wavelength: 4.6, period: 4.6 },
+        { dx: -0.3429, dz: 0.9394, amp: 0.012, wavelength: 3.2, period: 3.5 },
+      ],
+    });
+    water.group.position.set(0, SHORE.sea, -(SHORE.dist + 43));
+    scene.add(water.group);
+
+    // wet sand a step darker than the earth — k20's lesson: foam only reads
+    // against sand darker than itself
+    const sand = makeSand({ shore: SHORE, seed: ID, groundSeed: 21, color: wash(0.30) });
+    scene.add(sand);
+
+    // WORLD y of the sea surface at world (x, z) — the one closure the foam
+    // and the boat both ride, so nothing floats on a sea of its own invention
+    const seaSurface = (x, z, t) => SHORE.sea + water.heightAt(x, z + (SHORE.dist + 43), t);
+
+    const foam = makeFoam({
+      shore: SHORE, seed: ID, groundSeed: 21, count: 7,
+      surfaceAt: seaSurface,
+    });
+    foam.mesh.renderOrder = 1;
+    scene.add(foam.mesh);
+
+    // THE SHIP — standing off past the shallows, riding the swell, broadside
+    // to the shore. It is the case's own verdict at anchor: "ships cannot
+    // remain where the water is too shallow", so it keeps its distance where
+    // the ink is finally deep, half dissolved in the fog, and does not come in.
+    const boat = makeBoat({ seed: ID, surfaceAt: seaSurface });
+    boat.group.position.set(1.5, SHORE.sea, -21);
+    boat.group.rotation.y = Math.PI / 2 + 0.22;   // bow up the coast, quartering
+    scene.add(boat.group);
 
     const world = composeWorld(scene, {
       view: CAM,
       seed: ID,
       groundSeed: 21,
+      shore: SHORE,
       trees: 4,
+      // the coast at the staging's back: both mountain bands re-aimed behind
+      // and beside — nothing stands in the sea (k20's arrangement)
+      mountains: [
+        { count: 7, distance: 52, arcCenter: Math.PI, arcSpan: 3.6, color: wash(0.16) },
+        { count: 4, distance: 33, arcCenter: -2.2, arcSpan: 1.3, color: wash(0.28), hScale: 0.65 },
+      ],
+      forests: [
+        { center: [-22, 0, 9], spread: 12, count: 45 },
+        { center: [18, 0, 11], spread: 12, count: 35, color: wash(0.55) },
+      ],
       keepout: [
         ...path.keepout(24, 1.1),
         { x: RISE.x, z: RISE.z, r: 3.8 },
         { x: JOSHU.x, z: JOSHU.z, r: 1.2 },
+        ...SEA_KEEP,
       ],
       grassKeepout: [
         ...path.keepout(24, 0.95),
         { x: hut.position.x, z: hut.position.z, r: 1.7 },
+        ...SEA_KEEP,
       ],
-      // the grass stands on the rise where the rise is, and on the terrain
-      // everywhere else — same seed the terrain itself is built from, so the
-      // meadow rides the slope up to the hall instead of knifing through it
-      groundFn: (x, z) => Math.max(groundHeight(x, z, { seed: 21 }), riseHeight(x, z)),
+      // the grass stands on the rise where the rise is, and on the SHORED
+      // terrain everywhere else — the same surface the ground mesh itself is
+      // displaced by, so the meadow rides the hill AND follows the land down
+      // toward the sand instead of hovering on the unshored height (k20's
+      // groundFn note). Off the hill riseHeight is 0, and taking a max of 0
+      // against the shore's dip would flatten the seabed — hence the guard.
+      groundFn: (x, z) => {
+        const g = groundHeight(x, z, { seed: 21, shore: SHORE });
+        const r = riseHeight(x, z);
+        return r > 0 ? Math.max(g, r) : g;
+      },
     });
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
@@ -187,6 +289,15 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
+        water.update(dt, simTime);
+        foam.update(dt, simTime);
+        boat.update(dt, simTime);
+        // the lapping breathes with the sea it belongs to (k20's idiom):
+        // the TRUE surface at the waterline, handed to the bed as 0..1
+        if (audio && audio.setWaterSwell) {
+          const h = water.heightAt(0, 43, clock);
+          audio.setWaterSwell(Math.max(0, Math.min(1, 0.5 + h / 0.17)));
+        }
         const step = Math.max(0, dt || 0);
 
         // he turns away on the odd verdicts and back on the even ones
@@ -209,9 +320,11 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
           visits,
           approved: visits > 0 && visits % 2 === 0,
           bow: +Math.abs(joshuWaist.rotation.x).toFixed(4),
+          // the ship rides but never arrives — its distance offshore is fixed
+          shipY: +boat.group.position.y.toFixed(4),
         };
       },
-      dispose() {},
+      dispose() { water.dispose(); foam.dispose(); },
     };
   },
 };

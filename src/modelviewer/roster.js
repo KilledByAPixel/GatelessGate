@@ -66,6 +66,7 @@ export const ROSTER = [
   { key: 'rack', section: 'props', build: (kit) => kit.makeRack({}) },
   { key: 'stall', section: 'props', build: (kit) => kit.makeStall({}) },
   { key: 'wheel', section: 'props', build: (kit) => kit.makeWheel({}) },
+  { key: 'boat', section: 'props', build: (kit) => kit.makeBoat({}) },
   { key: 'furin', section: 'props', build: (kit) => kit.makeFurin({}) },
   { key: 'pole', section: 'props', build: (kit) => kit.makePole({}) },
   { key: 'fan', section: 'props', build: (kit) => kit.makeFan({}) },

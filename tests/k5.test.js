@@ -171,7 +171,14 @@ test('build stages the predicament: cliff, grey oak, one man alone over a real d
 
   const found = { cliff: [], oak: [], hangingmonk: [], monk: [], fallenhat: [], branch: [] };
   built.scene.traverse((o) => { if (found[o.name]) found[o.name].push(o); });
-  assert.equal(found.cliff.length, 1, 'one precipice');
+  // ONE precipice, built as two makeCliff segments since Frank's 2026-08-10
+  // tweak ran the lip on past both edges of the frame (the wall used to end
+  // in shot). Segments of the same wall share the origin line: same yaw,
+  // same x — a segment breaking rank would be a genuine second cliff.
+  assert.equal(found.cliff.length, 2, 'one precipice, two segments of wall');
+  const [c1, c2] = found.cliff;
+  assert.equal(c1.rotation.y, c2.rotation.y, 'the wall does not bend between segments');
+  assert.equal(c1.position.x, c2.position.x, 'the segments hold one line');
   assert.equal(found.oak.length, 1, 'one tree at its lip');
   assert.equal(found.branch.length, 1, 'one stout limb over the drop');
   assert.equal(found.hangingmonk.length, 1, 'one man hanging by his teeth');

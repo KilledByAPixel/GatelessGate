@@ -48,6 +48,7 @@ export { makeWildflowers } from './wildflowers.js';
 export { makeScreen } from './screen.js';
 export { makeVeranda } from './veranda.js';
 export { makeAssembly } from './assembly.js';
+export { makeBoat } from './boat.js';
 export { makeFurin, FURIN_REACH } from './furin.js';
 export { hangChimes } from './chimes.js';
 export { makeCylinderChime, noteForSize, CYL_REACH } from './cylinder.js';
