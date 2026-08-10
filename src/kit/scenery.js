@@ -218,6 +218,33 @@ export function composeWorld(scene, {
   // case can still pin its own and be immune to the sliders.
   grassRadius = null,
   grassTaper = null,
+  // HOW WINDY THIS CASE IS, for the grass alone. Each one is THE SAME NUMBER
+  // ITS WORKBENCH SLIDER SHOWS — find a value by dragging, type that value
+  // here. Not multipliers: a multiplier means the case reads differently
+  // depending on where the slider happened to be left, which is the opposite
+  // of pinning a scene's weather.
+  //
+  //   grassWind       "Grass wind"  — amplitude. How far a tuft leans, at an
+  //                   unchanged rate; a big value is a stronger wind, never a
+  //                   faster one.
+  //   grassGustScale  "Gust patch"  — a FREQUENCY, like the slider: LOWER is a
+  //                   broader gust (the patch is ~1/value world units across).
+  //   grassGustSpeed  "Gust drift"  — world units/sec the gust field slides
+  //                   downwind; the knob that makes wind visibly travel
+  //                   through the meadow instead of it breathing in place.
+  //
+  // null means "whatever the slider says", which is what every case did before
+  // these existed, so leaving them out changes nothing. A case that DOES pin a
+  // value hands it to its slider on arrival, so the panel shows what the page
+  // is actually doing and dragging still auditions from there.
+  //
+  // The grass only. A chime's liveliness is its own setWindLevel() and the
+  // audible wind is the ambience recipe's `wind:` token — three dials, on
+  // purpose, because a still-looking meadow under a ringing eave is a real
+  // picture and one number could not ask for it.
+  grassWind = null,
+  grassGustScale = null,
+  grassGustSpeed = null,
   forests = [
     { center: [-19, 0, -27], spread: 13, count: 55 },
     { center: [16, 0, -31], spread: 14, count: 40, color: wash(0.55) },
@@ -342,6 +369,17 @@ export function composeWorld(scene, {
       count: Math.round(budget), radius, taper: rimTaper, seed: seed * 81, groundSeed,
       keepout: grassKeepout || keepout, groundFn,
     });
+
+  // The case's weather, applied here and left on the field for the workbench to
+  // find. Applied as well as recorded: the field is right from its first frame,
+  // rather than only from whenever debug.apply() next runs.
+  const gu = field.mesh.userData;
+  gu.caseWind = grassWind;
+  gu.caseGustScale = grassGustScale;
+  gu.caseGustSpeed = grassGustSpeed;
+  if (grassWind !== null) gu.uniforms.uWind.value = grassWind;
+  if (grassGustScale !== null) gu.uniforms.uGustScale.value = grassGustScale;
+  if (grassGustSpeed !== null) gu.uniforms.uGustSpeed.value = grassGustSpeed;
   scene.add(field.mesh);
 
   return {

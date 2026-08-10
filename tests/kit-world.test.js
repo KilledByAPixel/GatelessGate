@@ -102,6 +102,50 @@ test('composeWorld hands the case ground function through to its grass', () => {
   }
 });
 
+// A case's own weather has to reach the shader AND survive the workbench. The
+// second half is the whole point: debug.apply() runs on every page build in
+// every mode, so while it assigned the uniforms outright a case could not have
+// weather at all — whatever it asked for was overwritten on the frame its
+// field was born. The panel adopts `caseWind`/`caseGustScale`/`caseGustSpeed`
+// into its sliders now, so this pins the wire-through and the records the
+// panel goes looking for.
+test('composeWorld gives each case its own grass weather, in the sliders\' own units', () => {
+  const fieldFor = (opts) => {
+    const scene = new THREE.Scene();
+    composeWorld(scene, { seed: 3, grass: 800, trees: 0, rocks: 0, bushes: 0, ...opts });
+    return scene.children.find((c) => c.name === 'grassfield');
+  };
+  try {
+    for (const style of ['tufts', 'blades']) {
+      setGrassStyle(style);
+      // no weather asked for: the field keeps the builder's own values and says
+      // so, which is the panel's cue to leave its sliders alone
+      const plain = fieldFor({});
+      assert.equal(plain.userData.caseWind, null, `${style}: unpinned wind follows the slider`);
+      assert.equal(plain.userData.caseGustScale, null, `${style}: unpinned gust patch follows the slider`);
+      assert.equal(plain.userData.caseGustSpeed, null, `${style}: unpinned gust drift follows the slider`);
+
+      // ABSOLUTE, not multipliers: 5 must mean 5 whatever the field was built
+      // with, or a case reads differently depending on where a slider was left
+      for (const w of [0, 0.35, 5]) {
+        const f = fieldFor({ grassWind: w });
+        assert.equal(f.userData.uniforms.uWind.value, w, `${style}: grassWind ${w} IS the uniform`);
+        assert.equal(f.userData.caseWind, w, `${style}: grassWind ${w} is recorded for the panel`);
+      }
+      const gusty = fieldFor({ grassGustScale: 0.08, grassGustSpeed: 3.5 });
+      assert.equal(gusty.userData.uniforms.uGustScale.value, 0.08, `${style}: gust patch pins the uniform`);
+      assert.equal(gusty.userData.uniforms.uGustSpeed.value, 3.5, `${style}: gust drift pins the uniform`);
+      assert.equal(gusty.userData.caseGustScale, 0.08, `${style}: gust patch recorded for the panel`);
+      assert.equal(gusty.userData.caseGustSpeed, 3.5, `${style}: gust drift recorded for the panel`);
+      // 0 is a real request (a dead-still scene), not "unset"
+      assert.notEqual(fieldFor({ grassWind: 0 }).userData.caseWind, null, `${style}: 0 pins, not falls through`);
+      assert.notEqual(fieldFor({ grassGustSpeed: 0 }).userData.caseGustSpeed, null, `${style}: drift 0 pins too`);
+    }
+  } finally {
+    setGrassStyle('tufts');   // the shipped default — leave the module as found
+  }
+});
+
 test('forest count scales the built geometry, and instances actually spread out', () => {
   // The old InstancedMesh-based test pinned `count` via `f.count` (an actual
   // instance count the object carried) and placement variety via comparing

@@ -129,6 +129,12 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 24.1, pitch: 21
   { x: ep.x, z: ep.z, r: 1.4 },
   ],
   grassKeepout: [...road.keepout(26, 1.0), { x: POND.x, z: POND.z, r: POND.outer + 0.4 }],
+  // the book at rest. Each is the same number its workbench slider reads —
+  // these three are the stock weather; drag a slider, then type what you found.
+  // grassGustScale is a frequency like its "Gust patch" slider: LOWER = broader.
+  grassWind: 4.5,        // "Grass wind"  — how far the grass leans
+  grassGustScale: 0.1,   // "Gust patch"  — gust breadth (~1/value units across)
+  grassGustSpeed: 4.1,   // "Gust drift"  — how fast gusts cross the meadow
   });
   
   addOutlines(scene, { width: 0.033, wobble: 0.7 });

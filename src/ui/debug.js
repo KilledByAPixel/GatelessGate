@@ -51,7 +51,7 @@ const CONTROLS = [
   { group: 'Scene' },
   { key: 'grass', label: 'Grass field', type: 'bool', def: true },
   { key: 'grassTufts', label: 'Grass tufts (re-enter)', type: 'bool', def: true },
-  { key: 'grassWind', label: 'Grass wind', type: 'range', def: 1.5, min: 0, max: 3, step: 0.05 },
+  { key: 'grassWind', label: 'Grass wind', type: 'range', def: 1.5, min: 0, max: 9, step: 0.05 },
   { key: 'grassPatch', label: 'Grass patch (re-enter)', type: 'range', def: 0.7, min: 0, max: 0.8, step: 0.02 },
   // How far the meadow reaches, and how much of that reach it spends dissolving
   // — a low taper starts thinning early and fades over a long way, a high one
@@ -60,8 +60,8 @@ const CONTROLS = [
   // stretching the same grass thinner.
   { key: 'grassReach', label: 'Grass reach (re-enter)', type: 'range', def: 24, min: 12, max: 34, step: 1 },
   { key: 'grassTaper', label: 'Grass taper (re-enter)', type: 'range', def: 0.45, min: 0.2, max: 0.9, step: 0.05 },
-  { key: 'gustScale', label: 'Gust patch', type: 'range', def: 0.2, min: 0.01, max: 0.25, step: 0.005 },
-  { key: 'gustSpeed', label: 'Gust drift', type: 'range', def: 0.7, min: 0, max: 12, step: 0.1 },
+  { key: 'gustScale', label: 'Gust patch', type: 'range', def: 0.01, min: 0.001, max: .25, step: 0.001 },
+  { key: 'gustSpeed', label: 'Gust drift', type: 'range', def: 12, min: 0, max: 99, step: 1.0 },
   { key: 'trees', label: 'Trees', type: 'bool', def: true },
   { key: 'forest', label: 'Forest', type: 'bool', def: true },
   { key: 'mountains', label: 'Mountains', type: 'bool', def: true },
@@ -217,17 +217,26 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
   const reset = document.createElement('button');
   reset.className = 'gg-debug-reset';
   reset.textContent = 'reset all';
+  // Push state back into a control's widget. Rows are found by their label,
+  // which is what "reset all" always did; this is the same walk, callable for
+  // one key, because a case pinning its own grass wind has to move that slider.
+  function syncRow(key) {
+    const c = CONTROLS.find((x) => x.key === key);
+    if (!c) return;
+    for (const el of panel.querySelectorAll('input')) {
+      const row = el.closest('.gg-debug-row');
+      const span = row && row.querySelector('span');
+      if (!span || span.textContent !== c.label) continue;
+      if (el.type === 'checkbox') el.checked = !!state[key];
+      else { el.value = state[key]; row.querySelector('em').textContent = (+state[key]).toFixed(2); }
+      return;
+    }
+  }
+
   reset.onclick = () => {
     Object.assign(state, defaults());
     save();
-    for (const el of panel.querySelectorAll('input')) {
-      const row = el.closest('.gg-debug-row');
-      const label = row.querySelector('span').textContent;
-      const c = CONTROLS.find((x) => x.label === label);
-      if (!c) continue;
-      if (el.type === 'checkbox') el.checked = !!state[c.key];
-      else { el.value = state[c.key]; row.querySelector('em').textContent = (+state[c.key]).toFixed(2); }
-    }
+    for (const c of CONTROLS) if (c.key) syncRow(c.key);
     apply();
   };
   panel.appendChild(reset);
@@ -295,6 +304,10 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     return mesh.userData._matPlain;
   }
 
+  // The grass field the wind slider was last synced against. A page turn builds
+  // a new one, which is the signal to adopt that case's pinned wind (below).
+  let windField = null;
+
   function apply() {
     // Before the traverse: setInkScale drives the shared width uniform and
     // shows/hides every outline mesh in every scene (hidden at 0, where the
@@ -357,6 +370,28 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
       const field = scene.getObjectByName('grassfield');
       if (field && field.userData.uniforms) {
         const u = field.userData.uniforms;
+        // A case that pinned its own weather (composeWorld's grassWind /
+        // grassGustScale / grassGustSpeed) MOVES THE SLIDERS on arrival, rather
+        // than the sliders overwriting it. apply() runs on every page build in
+        // every mode, so the naive assignments below erased a case's weather on
+        // the frame its field was born — which is why none of this could be
+        // per-case at all. Adopting keeps one rule ("the uniform is what the
+        // slider reads") and still lets a pinned case be auditioned by
+        // dragging, which is the whole point of the panel. Only on a NEW
+        // field, or every apply would drag the sliders back mid-tweak.
+        if (field !== windField) {
+          windField = field;
+          const adopt = (caseKey, stateKey) => {
+            const pinned = field.userData[caseKey];
+            if (pinned != null && pinned !== state[stateKey]) {
+              state[stateKey] = pinned;
+              syncRow(stateKey);
+            }
+          };
+          adopt('caseWind', 'grassWind');
+          adopt('caseGustScale', 'gustScale');
+          adopt('caseGustSpeed', 'gustSpeed');
+        }
         u.uWind.value = state.grassWind;
         u.uGustScale.value = state.gustScale;
         u.uGustSpeed.value = state.gustSpeed;
