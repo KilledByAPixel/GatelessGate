@@ -103,7 +103,7 @@ const CAM = { distance: 11.0, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 1
   
   // and the monks who followed him round the mountain
   const monks = MONKS.map((m, i) => {
-  const k = makeMonk({ height: 1.58 + i * 0.05, stout: 1 + i * 0.08 });
+  const k = makeMonk({ height: 1.58 + i * 0.05, stout: 1 + i * 0.08, hat:i<1 });
   k.position.set(m.x, 0, m.z);
   faceMonk(k, fox.group.position);
   scene.add(k);

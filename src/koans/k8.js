@@ -101,9 +101,9 @@ const CAM = { distance: 9, target: [0.7, 1.25, 0.4], heading: 31.5, pitch: 19 };
   scene.add(blank);
   
   // Getsuan, who asked, and the student he asked
-  const master = makeMonk({ height: 1.66, elder: true });
+  const master = makeMonk({ height: 1.66, elder: true, hat: false });
   master.position.set(-0.4, 0, 1.7);
-  faceMonk(master, wheel.group.position);
+  master.rotation.y = 1.8;
   scene.add(master);
   
   const student = makeMonk({ height: 1.56, pose: 'sit' });
