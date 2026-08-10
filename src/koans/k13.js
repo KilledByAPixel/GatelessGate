@@ -20,7 +20,7 @@ const ID = 13;
 // out so the shot is tuned here like every other case's rather than by moving
 // the book (Frank). composeWorld gets the same object as its `view`, so the
 // scatter still refuses spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.9, target: [0.8, 1.35, 0.3], heading: 31.5, pitch: 17.2 };
+const CAM = { distance: 11.9, target: [-1.4, 1.35, -1.2], heading: 31.5, pitch: 16.5 };
 
 export default {
   id: ID,
@@ -42,6 +42,9 @@ export default {
 
     const path = makePath({ from: [-4.2, 8.0], to: [3.0, -18], width: 1.5, seed: ID, groundSeed: 21, wander: 0.9 });
     scene.add(path);
+
+    const path2 = makePath({ from: [13, 2.0], to: [-15.0, -15], width: 1.5, seed: ID, groundSeed: 21, wander: 0.9 });
+    scene.add(path2);
 
     // the dining hall he is walking to, too early
     const hall = makeHut({ width: 3.6, height: 2.5, depth: 2.8 });
@@ -85,11 +88,12 @@ export default {
 
     const world = composeWorld(scene, {
       view: CAM,
-      seed: ID,
+      seed: ID+1,
       groundSeed: 21,
       trees: 4,
       keepout: [
         ...path.keepout(24, 1.3),
+        ...path2.keepout(24, 1.3),
         { x: hall.position.x, z: hall.position.z, r: 3.5 },
         // { at } rather than copied coordinates: these two circles used to be
         // the bell's and drum's OLD positions, left behind when the pair
@@ -102,6 +106,7 @@ export default {
       ],
       grassKeepout: [
         ...path.keepout(26, 0.9),
+        ...path2.keepout(26, 0.9),
         { x: hall.position.x, z: hall.position.z, r: 2.1 },
         { x: -4.5, z: 0.4, r: 1.1 },
         { x: 1.9, z: -0.4, r: 0.8 },

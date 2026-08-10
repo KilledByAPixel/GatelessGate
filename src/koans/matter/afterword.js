@@ -34,7 +34,7 @@ const page = MATTER.afterword;
 // should not close on the picture it opened from. The stage clears AND the land
 // is different — a valley the reader has not stood in, which is what the end of
 // a book looks like.
-const SEEDS = { seed: 34, groundSeed: 58, pathSeed: 17 };
+const SEEDS = { seed: 33, groundSeed: 58, pathSeed: 17 };
 
 // The mat: a step out from a tree's trunk on its camera side, under the canopy
 // edge. WHICH tree is chosen at build time, not written down. It used to be a
@@ -49,7 +49,7 @@ const MAT_R = 0.55, MAT_H = 0.05;
 const OFF = 1.1;
 // Named, because build() has to solve the rig's own equation to know where the
 // reader is standing before it can put anything to one side of them.
-const CAM = { distance: 16, heading: 28.6, pitch: 15.5 };
+const CAM = { distance: 16, heading: 38.6, pitch: 15.5 };
 
 export default {
   id: null,
