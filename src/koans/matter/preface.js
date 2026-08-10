@@ -58,7 +58,7 @@ const FORK = { x: 0.5, z: -3.2 };
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 13, target: [FORK.x, 1.2, FORK.z], heading: -18.6, pitch: 15.5 };
+const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.5 };
   export default {
   id: null,
   slug: page.slug,

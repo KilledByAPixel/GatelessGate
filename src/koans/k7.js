@@ -12,7 +12,7 @@ const ID = 7;
 // out so the shot is tuned here like every other case's rather than by moving
 // the book (Frank). composeWorld gets the same object as its `view`, so the
 // scatter still refuses spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.5, target: [1.2, 1.35, 0.3], heading: 31.5, pitch: 17.2 };
+const CAM = { distance: 10.7, target: [1.2, 1.35, 0.55], heading: 47, pitch: 14 };
 
 export default {
   id: ID,
@@ -72,7 +72,7 @@ export default {
 
     // the bowl, set down beside the basin where he left it
     const bowl = makeBowl({ radius: 0.19, color: ACCENT });   // the seal of this koan
-    bowl.position.set(2.42, 0, 2.1);
+    bowl.position.set(2.42, 0, 2.3);
     scene.add(bowl);
 
     // THE TWO OF THEM. The case is four lines of talk, so the picture is a
@@ -119,8 +119,8 @@ export default {
       onPour: () => audio && audio.pour({ at: odoshi.group.position }),
       onKnock: (force) => audio && audio.knock({ force, at: odoshi.group.position }),
     });
-    odoshi.group.position.set(3.75, 0, 0.15);
-    odoshi.group.rotation.y = -2.70;
+    odoshi.group.position.set(3.75, 0, .5);
+    odoshi.group.rotation.y = -3.10;
     scene.add(odoshi.group);
 
     // (The monastery cat used to sit on the path here, eyeing the breakfast

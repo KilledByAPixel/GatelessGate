@@ -135,7 +135,7 @@ const CAM = { distance: 11, target: [1.2, .3, -4], heading: 17, pitch: 18 };
   // grounded lotus so the bloom is not buried in blades; the assembly
   // sits in the grass
   grassKeepout: [
-  { x: 1.2, z: SEAT_Z, r: 1.2 },
+  { x: 1.2, z: SEAT_Z+2, r: 2.7 },
   { x: 1.2, z: FLOWER_Z, r: 0.9 },
   // a clearing for the cat — 0.32 of animal disappears in full meadow
   // (k7 learned this the hard way)

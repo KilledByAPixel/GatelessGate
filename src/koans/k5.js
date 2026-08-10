@@ -49,7 +49,7 @@ const GRIP_ALONG = BRANCH.len - 0.35;   // the teeth set a little in from the ti
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6.5, minPitch: -9.9 };
+const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6.5, minPitch: -9.9 };
   export default {
   id: ID,
   slug: 'kyogen-mounts-the-tree',
@@ -87,10 +87,19 @@ const CAM = { distance: 11, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6.5
   width: 11, drop: 7, depth: 2.2, seed: ID, fogTop: -2.8,
   origin: [CLIFF.x, CLIFF.z], yaw: CLIFF.yaw, groundSeed: 21,
   });
-  cliff.position.set(CLIFF.x, 0, CLIFF.z);
+  cliff.position.set(CLIFF.x, 0, CLIFF.z+5);
   cliff.rotation.y = CLIFF.yaw;
   scene.add(cliff);
   
+ const cliff2 = makeCliff({
+  width: 11, drop: 7, depth: 2.2, seed: ID, fogTop: -2.8,
+  origin: [CLIFF.x, CLIFF.z], yaw: CLIFF.yaw, groundSeed: 21,
+  });
+  cliff2.position.set(CLIFF.x, 0, CLIFF.z-5);
+  cliff2.rotation.y = CLIFF.yaw;
+  scene.add(cliff2);
+
+
   // ---- the tree at its lip ---------------------------------------------
   // Grey through and through: k38's oak owns the red canopy, and this case's
   // one warm note hangs from the branch, not on it.

@@ -19,7 +19,7 @@ const ID = 10;
 // it has already been drunk. Tip all three and after a while they stand
 // themselves back up, full of exactly as much as they were before.
 
-const TIP = 0.55;         // seconds for a cup to go over
+const TIP = 0.4;         // seconds for a cup to go over
 const RIGHT_AFTER = 4.5;  // and how long all three lie there before standing up
 
 // The framing, named so composeWorld can have it too: `view` lets the
@@ -46,7 +46,7 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 17.2 
   scene.add(path);
   
   // Sozan's hut, which is not much of a hut either
-  const hut = makeHut({ width: 2.6, height: 2.1, depth: 2.2 });
+  const hut = makeHut({ width: 2.6, height: 2.1, depth: 2.2, chimes:8 });
   hut.position.set(-1.4, 0, -4.0);
   hut.rotation.y = 0.5;
   scene.add(hut);
@@ -173,7 +173,8 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 17.2 
   for (const c of cups) {
   const u = c.tippedAt > -99 ? clamp01((clock - c.tippedAt) / TIP) : 0;
   const e = u * u * (3 - 2 * u);
-  c.pivot.rotation.z = -(Math.PI / 2) * e;
+  c.pivot.rotation.z = -.8*(Math.PI / 2) * e;
+  c.pivot.position.y = .04 + u*.03;
   }
   },
   fragment() {
