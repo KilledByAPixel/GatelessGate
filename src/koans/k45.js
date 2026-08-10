@@ -48,7 +48,7 @@ const ID = 45;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.0, target: [0.4, 1.5, -0.6], heading: 31.5, pitch: 19 };
+const CAM = { distance: 11, target: [1.55, 1.05, -0.6], heading: 42, pitch: 18.5 };
   export default {
   id: ID,
   slug: 'who-is-he',
@@ -118,7 +118,7 @@ const CAM = { distance: 11.0, target: [0.4, 1.5, -0.6], heading: 31.5, pitch: 19
   // a customer waiting at the middle stall's counter, on the lane side and
   // turned to face the stall
   const mid = road.sample(stalls[1].t);
-  const cust = makeMonk({ height: 1.58, elder: true });
+  const cust = makeMonk({ height: 1.58, elder: true, hat: false, stout: 1.2 });
   const cx = mid.x + mid.perp.x * (stalls[1].off - 1.5) * stalls[1].sidesign;
   const cz = mid.z + mid.perp.z * (stalls[1].off - 1.5) * stalls[1].sidesign;
   cust.position.set(cx, 0, cz);
@@ -148,7 +148,7 @@ const CAM = { distance: 11.0, target: [0.4, 1.5, -0.6], heading: 31.5, pitch: 19
   // talk actually stand: turned out of the flow, not blocking it.
   const MEET_T = 0.37;
   const MEET_ANG = (62 * Math.PI) / 180;
-  const GAP = 0.85;                     // a pace apart — close enough to be a meeting
+  const GAP = 0.45;                     // a pace apart — close enough to be a meeting
   const meetAt = road.sample(MEET_T);
   const along = { x: Math.sin(meetAt.heading), z: Math.cos(meetAt.heading) };
   const axis = {
@@ -156,7 +156,7 @@ const CAM = { distance: 11.0, target: [0.4, 1.5, -0.6], heading: 31.5, pitch: 19
     z: along.z * Math.cos(MEET_ANG) + meetAt.perp.z * Math.sin(MEET_ANG),
   };
   const elder = makeMonk({ height: 1.6, elder: true });
-  const younger = makeMonk({ height: 1.54 });
+  const younger = makeMonk({ height: 1.5, pose: 'fold', hat: false });
   elder.position.set(meetAt.x + axis.x * GAP, 0, meetAt.z + axis.z * GAP);
   younger.position.set(meetAt.x - axis.x * GAP, 0, meetAt.z - axis.z * GAP);
   faceMonk(elder, younger.position);

@@ -79,7 +79,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
   // shoreline behind the hermit's rise. It used to run to (-3.4, -17),
   // which the bay would drown: a road aimed at the water is a dead end into
   // the ocean (k20's own lesson, k20.js).
-  const path = makePath({ from: [8.0, 4.6], to: [-15, 2.0], width: 1.2, seed: ID, groundSeed: 21, wander: 1.6 });
+  const path = makePath({ from: [8.0, 1.6], to: [-15, 2.0], width: 1.2, seed: ID, groundSeed: 21, wander: 1.6 });
   scene.add(path);
   
   // the hut he retired to, on its rise — set OFF to the side of the road
@@ -150,7 +150,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
 
     // JOSHU, down on the path, who will make up his mind about it — beside
     // the coast road (it passes z ≈ 4 at his x now), a step toward the rise
-    const JOSHU = new THREE.Vector3(3.0, 0, 2.9);
+    const JOSHU = new THREE.Vector3(1.0, 0, 2.9);
     faceMonk(monk, JOSHU);
     // `bow: true` hinges him at the sash without changing his arms: makeFigure
     // hands back a group named 'waist' carrying the torso, head and sleeves,
@@ -210,7 +210,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
     // remain where the water is too shallow", so it keeps its distance where
     // the ink is finally deep, half dissolved in the fog, and does not come in.
     const boat = makeBoat({ seed: ID, surfaceAt: seaSurface });
-    boat.group.position.set(1.5, SHORE.sea, -21);
+    boat.group.position.set(-8.5, SHORE.sea, -31);
     boat.group.rotation.y = Math.PI / 2 + 0.22;   // bow up the coast, quartering
     scene.add(boat.group);
 
@@ -238,7 +238,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
       ],
       grassKeepout: [
         ...path.keepout(24, 0.95),
-        { x: hut.position.x, z: hut.position.z, r: 1.7 },
+        { x: hut.position.x+1, z: hut.position.z+1, r: 2. },
         ...SEA_KEEP,
       ],
       // the grass stands on the rise where the rise is, and on the SHORED
