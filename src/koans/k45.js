@@ -17,18 +17,43 @@ const ID = 45;
 // counters, a customer waiting to be served, and a couple of people strolling
 // through. The crowd is the point — it is what he is lost in.
 //
-// And he is in it, standing behind you. Not hidden somewhere clever — behind
-// the camera, continuously, wherever the camera goes. He is facing the same way
-// you are, so what there is to see is his back.
+// And he is in it — at the EDGE of the picture, always, with his back turned.
+// Never the figure you were looking at; always one you notice afterwards.
 //
-// He LAGS, and that is the whole mechanic. Orbit slowly and he keeps station
-// out of frame. Swing the camera round quickly and he cannot get out of the
-// way in time, and for a second or so he is there at the edge of the picture,
-// walking away, before he slides out again. You can do it as often as you
-// like. You never get in front of him.
+// HE USED TO STAND BEHIND THE CAMERA and lag, the idea being that a fast swing
+// would catch him at the frame's edge before he got out of the way. It could
+// not work, and measuring it said so: a point 4.2 units BEHIND the camera lags
+// SIDEWAYS, and sideways from behind you is still behind you — it never crosses
+// into the frustum. Orbiting the real module at every rate from 2°/s to 120°/s
+// put him on screen for exactly zero frames; past ~150°/s he stopped being
+// dodged at all and simply stood there in the street, permanently visible.
+// There was no rate in between. (And a reading page cannot drag the camera at
+// all, so even that degenerate case needed the look.) Frank, who reads pages:
+// "I don't notice a man keeping station."
+//
+// So he is staged in the frame instead of behind it. His mark is a point on the
+// ground UNPROJECTED from a fixed spot near the edge of the picture (the same
+// ground-plane cast main.js's feedBreeze uses), so it is exact for any pitch and
+// distance the rig can reach: he is always at the margin, at a walkable depth,
+// however the camera is aimed. He walks to it at a walking pace and no faster —
+// which is the lag, kept, and doing visible work now: swing the camera and his
+// mark leaps to the new margin while he is still crossing the old one, so he
+// drops out of the picture, and by the time you have arrived he has stepped in
+// at some other edge. Reach for him and he walks out of shot.
+//
+// You never get in front of him.
 
 const LAG = 1.15;          // e-folding rate of his keeping-up, per second
-const BEHIND = 4.2;        // how far back he stands
+const WALK = 1.5;          // ...and a hard ceiling on it. He walks; he never darts.
+// Where the margin is, in the picture. X near the edge but comfortably inside;
+// Y low, so the ground point it casts to lands out in the street rather than
+// under the camera's feet. OUT is off-frame — where he enters from and leaves to.
+const EDGE_X = 0.86, EDGE_Y = -0.35, EDGE_X_OUT = 1.12;
+const CENTRE_X = 0.45;     // inside this much of the frame's middle he is exposed, and leaves
+const REACH = 3.5;         // a mark further off than this is one he has lost; he stops chasing
+const NEAR = 4, FAR = 15;  // and his mark is no use closer or further than this
+const WORLD_R = 15;        // never out in the mountains
+const REPLACE_WAIT = 0.6;  // off-frame this long and he is free to be somewhere else
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
 // The framing, named so composeWorld can have it too: `view` lets the
@@ -190,22 +215,45 @@ const CAM = { distance: 11.0, target: [0.4, 1.5, -0.6], heading: 31.5, pitch: 19
     hit.position.y = 0.95;
     him.add(hit);
 
-    // ---- the moment: turn round ------------------------------------------
+    // ---- the moment: at the edge of the picture ---------------------------
     let camera = null;
     let clock = 0;
     let glimpses = 0;
     let seen = false;
     let caught = 0;
     let lastChime = -99;
+    let margin = 1;              // which margin he is holding: +1 or -1
+    let leaving = false;       // reached for — walking out of shot
+    let goneSince = 0;         // seconds off-frame, for the re-place
+    let places = 0;            // how many times he has stepped in somewhere new
 
     const fwd = new THREE.Vector3();
     const want = new THREE.Vector3();
+    const ray = new THREE.Vector3();
     const ndc = new THREE.Vector3();
+
+    // The ground point under a spot in the PICTURE. Same cast as main.js's
+    // feedBreeze: drop the NDC ray onto y = 0 and read where it lands. Doing it
+    // this way rather than with an angle off the camera's forward is what makes
+    // the margin exact at every pitch the rig allows — an angular offset that
+    // frames him nicely at pitch 19 puts him under the bottom edge at pitch 30.
+    function groundAt(nx, ny, out) {
+      ray.set(nx, ny, 0.5).unproject(camera).sub(camera.position).normalize();
+      const t = ray.y < -1e-4 ? camera.position.y / -ray.y : -1;
+      if (!(t > NEAR) || t > FAR) return false;      // above the horizon, or out in the fog
+      out.set(camera.position.x + ray.x * t, 0, camera.position.z + ray.z * t);
+      const r = Math.hypot(out.x, out.z);
+      if (r > WORLD_R) { out.x *= WORLD_R / r; out.z *= WORLD_R / r; }
+      return true;
+    }
 
     input.onTap(() => {
       if (!camera) return;
       if (!input.raycastFirst(camera, [hit])) return;
       caught++;
+      // and he goes. Not a teleport — he walks out of the picture on the margin
+      // he was already holding, which is the whole answer this case gives.
+      leaving = true;
       if (clock - lastChime > 0.6) {
         lastChime = clock;
         // you did not catch him. Something sounds a long way off — left
@@ -218,7 +266,20 @@ const CAM = { distance: 11.0, target: [0.4, 1.5, -0.6], heading: 31.5, pitch: 19
 
     return {
       scene,
-      setCamera(c) { camera = c; },
+      // He is stood on his mark the INSTANT there is a camera to measure it
+      // from, not on the first update(): a figure whose position only update()
+      // ever sets renders its build pose on any first frame too short to bank a
+      // whole timestep, which on case 35 showed as a visible flicker. Here it
+      // would be worse — he would be caught mid-street for a frame.
+      setCamera(c) {
+        camera = c;
+        if (camera && groundAt(margin * EDGE_X, EDGE_Y, want)) {
+          him.position.set(want.x, 0, want.z);
+          camera.getWorldDirection(fwd);
+          fwd.y = 0;
+          if (fwd.lengthSq() > 1e-8) him.rotation.y = Math.atan2(fwd.x, fwd.z);
+        }
+      },
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
@@ -242,21 +303,47 @@ const CAM = { distance: 11.0, target: [0.4, 1.5, -0.6], heading: 31.5, pitch: 19
         if (!camera) return;
         const step = Math.max(0, dt || 0);
 
-        // where "behind you" is, right now
         camera.getWorldDirection(fwd);
         fwd.y = 0;
         if (fwd.lengthSq() < 1e-8) fwd.set(0, 0, -1);
         fwd.normalize();
-        want.copy(camera.position).addScaledVector(fwd, -BEHIND);
-        want.y = 0;
-        // ...but never out in the mountains
-        const r = Math.hypot(want.x, want.z);
-        if (r > 16) { want.x *= 16 / r; want.z *= 16 / r; }
 
-        // he keeps up, but not quite
-        const k = 1 - Math.exp(-LAG * step);
-        him.position.x += (want.x - him.position.x) * k;
-        him.position.z += (want.z - him.position.z) * k;
+        // his mark: the margin of the picture on the side he is holding — or
+        // off the edge entirely if he has been reached for, or caught out in the
+        // middle of the shot. groundAt can refuse (a lens tipped at the horizon
+        // casts no ground point), and then he simply keeps the mark he had
+        // rather than snapping anywhere.
+        groundAt(margin * (leaving ? EDGE_X_OUT : EDGE_X), EDGE_Y, want);
+
+        // He walks there, and the walk is capped. The ease alone would have him
+        // sprinting across the street whenever the camera swung — which is the
+        // shape of the bug this staging replaced, and the cap is what turns the
+        // lag from an invisible property into the mechanic: outrun his mark and
+        // he is simply left out of frame until he can step in somewhere else.
+        //
+        // AND WHEN THE MARK IS PLAINLY OUT OF REACH HE STOPS WALKING. Whipping
+        // the camera round sweeps the mark through the street faster than any
+        // man crosses it, and chasing it anyway had him running along under the
+        // centre of the frame for as long as the swing lasted — the reader's
+        // eye reads that as a figure FOLLOWING the camera, which is the exact
+        // opposite of the case. Out of reach, he stands in the street like
+        // everybody else and lets the picture sweep off him.
+        // ...unless he is on his way out, which he always completes on foot. The
+        // ground stretches fast toward the edge of a frame, so the step from the
+        // margin to just past it can be several units — long enough for the
+        // reach test to refuse it, and then a man reached for simply stood there.
+        const reach = Math.hypot(want.x - him.position.x, want.z - him.position.z);
+        if (leaving || reach <= REACH) {
+          const k = 1 - Math.exp(-LAG * step);
+          let dx = (want.x - him.position.x) * k;
+          let dz = (want.z - him.position.z) * k;
+          const d = Math.hypot(dx, dz);
+          const cap = WALK * step;
+          if (d > cap && d > 1e-9) { dx *= cap / d; dz *= cap / d; }
+          him.position.x += dx;
+          him.position.z += dz;
+        }
+        him.position.y = Math.abs(Math.sin(clock * 3.2)) * 0.03;   // the strollers' walking bob
         // Facing the way you are facing: what there is to see is his back.
         // The kit convention (faceMonk) is front = (sin ry, cos ry), so
         // facing along fwd is atan2(fwd.x, fwd.z) exactly — the previous
@@ -264,19 +351,47 @@ const CAM = { distance: 11.0, target: [0.4, 1.5, -0.6], heading: 31.5, pitch: 19
         // reader saw his profile, not his back.
         him.rotation.y = Math.atan2(fwd.x, fwd.z);
 
-        // did that put him in the picture?
+        // is he in the picture?
         ndc.copy(him.position);
         ndc.y = 1.0;
         ndc.project(camera);
         const inFrame = ndc.z > 0 && ndc.z < 1 && Math.abs(ndc.x) < 1 && Math.abs(ndc.y) < 1;
         if (inFrame && !seen) glimpses++;
         seen = inFrame;
+
+        // Caught out in the middle of the shot, he heads for the nearer edge —
+        // the same thing he does when reached for, and for the same reason. He
+        // holds the side he is already nearer to, so this never walks him ACROSS
+        // the frame to reach the other margin.
+        if (inFrame && Math.abs(ndc.x) < CENTRE_X) {
+          margin = ndc.x >= 0 ? 1 : -1;
+          leaving = true;
+        }
+
+        // OFF-FRAME IS THE ONLY PLACE HE IS ALLOWED TO MOVE UNNATURALLY, and
+        // the wait is what guarantees it: he must be gone for REPLACE_WAIT
+        // before he is put anywhere, so nothing ever jumps in view. He comes
+        // back on the other margin — seeded off the placement count, never
+        // Math.random, because the determinism rule covers him too.
+        if (inFrame) { goneSince = 0; return; }
+        goneSince += step;
+        if (goneSince < REPLACE_WAIT) return;
+        const flip = hash1(places, ID) < 0.72;      // usually the other edge, not always
+        margin = flip ? -margin : margin;
+        leaving = false;
+        places++;
+        goneSince = 0;
+        // set down JUST off the frame, so what the reader sees is a man
+        // stepping in at the margin rather than one appearing at it
+        if (groundAt(margin * EDGE_X_OUT, EDGE_Y, want)) him.position.set(want.x, 0, want.z);
       },
       fragment() {
         return {
           glimpses,
           seen,
           caught,
+          places,
+          margin,
           lag: +clamp(him.position.distanceTo(want), 0, 99).toFixed(3),
         };
       },

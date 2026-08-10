@@ -183,9 +183,12 @@ const CAM = { distance: 11, target: [1.2, .3, -4], heading: 17, pitch: 18 };
   }
   });
   
-  let sinceAuto = 0;
-  const AUTO_EVERY = 26;       // it happens on its own too, rarely, unhurried
-  
+  // NOTHING FALLS ON ITS OWN HERE. A petal used to release every 26s unprompted;
+  // Frank cut it — the case is Kashyapa's smile, which is an ANSWER to something
+  // offered, and a flower shedding on a timer answers nobody. Case 38's oak keeps
+  // its unprompted leaf: a tree in the wind genuinely does that, and the falling
+  // is the whole subject there rather than the response.
+
   return {
   scene,
   setCamera(c) { camera = c; },
@@ -199,10 +202,7 @@ const CAM = { distance: 11, target: [1.2, .3, -4], heading: 17, pitch: 18 };
   // clock, not raw simTime — a host calling update(dt) alone must not
   // feed NaN into a transform.
   flower.rotation.y = clock * 0.32;
-  
-  sinceAuto += dt;
-  if (sinceAuto > AUTO_EVERY) { sinceAuto = 0; releasePetal(); }
-  
+
   for (let i = falling.length - 1; i >= 0; i--) {
   const f = falling[i];
   f.age += dt;

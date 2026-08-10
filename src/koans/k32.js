@@ -1,7 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, wash } from '../palette.js';
-import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk, makeAssembly,
   makeWildflowers, makeLights, addOutlines, toonMaterial,
@@ -12,16 +11,37 @@ const ID = 32;
 // "Without words, without the wordless, will you tell me truth?" — and the
 // Buddha kept silence, and the philosopher thanked him for it.
 //
-// This is the book's second temporal case, and the strictest one: touching
-// anything actively PREVENTS the event. Sit still and do nothing and, after a
-// while, the philosopher bows and the case completes itself. Reach for it and
-// the count starts over. A good horse runs even at the shadow of the whip.
+// This WAS the book's second temporal case: 20 seconds of touching nothing and
+// the philosopher bowed, and any tap reset the count. It was cut (Frank: "I'm
+// not sure that one is the best concept either"), and measuring it said the
+// same thing louder — the wait began the moment the page loaded, so reading the
+// case text outlasted it and he bowed unprompted on essentially every visit.
+// The one thing a tap could do was PREVENT the only event in the scene, which
+// meant the interaction was invisible by construction: what the reader saw was
+// a scripted bow, and touching the page made it not happen.
 //
-// Nothing hints at this. Nothing should.
+// Now you ask, and the Buddha does nothing, and the philosopher bows anyway.
+// The BEAT below is the whole case — the pause where an answer doesn't come is
+// the answer. Ask as often as you like; the tenth asking gets exactly what the
+// first did (case 23's rule for a scene that refuses).
 
-const QUIET = 20;         // seconds of not touching anything
-const BOW_IN = 3.2;       // and then, slowly
-const BOW = 0.62;         // radians at the waist — a real bow, not a nod
+const BEAT = 1.1;         // silence, held, where the answer would have gone
+const BOW_IN = 2.4;       // and then, slowly
+const BOW_HOLD = 2.2;     // down there a while — a real bow, not a nod
+const BOW_OUT = 3.0;      // and slower still coming up
+const BOW_SPAN = BEAT + BOW_IN + BOW_HOLD + BOW_OUT;
+const BOW = 0.62;         // radians at the waist
+
+// The bow as a pure function of seconds since the asking, so nothing
+// accumulates and a host that only ever calls update(dt) still gets the shape.
+const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+function bowShape(u) {
+  if (!(u >= BEAT) || u >= BOW_SPAN) return 0;
+  const t = u - BEAT;
+  if (t < BOW_IN) return smooth(t / BOW_IN);
+  if (t < BOW_IN + BOW_HOLD) return 1;
+  return 1 - smooth((t - BOW_IN - BOW_HOLD) / BOW_OUT);
+}
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
@@ -113,49 +133,52 @@ const CAM = { distance: 10.5, target: [0.9, 1.5, -1.6], heading: 31.5, pitch: 17
   
   addOutlines(scene, { width: 0.033, wobble: 0.7 });
   
-  // ---- the moment: nothing, for long enough ----------------------------
+  // ---- the moment: ask, and be answered with nothing --------------------
   let clock = 0;
-  let lastTouch = 0;
-  let bowed = false;
-  let reaches = 0;
-  
-  // ANY tap resets the wait — there is nothing here to hit, which is the point
+  let askedAt = -99;
+  let asked = 0;
+  let bows = 0;
+  let sounded = true;      // the pending chime is already spent before the first asking
+
+  // ANY tap asks — there is nothing here to hit, which is the point. Aiming
+  // this at the Buddha would make the gesture a target-hunt, and the case is
+  // not one: the question is put to the scene and the scene declines it.
   input.onTap(() => {
-  if (bowed) return;
-  lastTouch = clock;
-  reaches++;
+  if (clock - askedAt < BOW_SPAN) return;      // let the bow he already gave you finish
+  askedAt = clock;
+  asked++;
+  sounded = false;
   });
-  
+
   return {
   scene,
-  // the module contract wants the hook, but nothing here aims a ray:
-  // the tap handler's whole job is "any touch resets the wait"
+  // the module contract wants the hook, but nothing here aims a ray
   setCamera() {},
   update(dt, simTime) {
   clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
   world.update(dt, simTime);
   flowers.update(dt, simTime);
-  
-  const still = clock - lastTouch;
-  const u = clamp01((still - QUIET) / BOW_IN);
-  const lean = u * u * (3 - 2 * u);
+
+  const lean = bowShape(clock - askedAt);
   // FORWARD, at the waist. This was rotation.z on the whole figure, so
   // he listed sideways like a felled post (Frank: "he's bowing along the
   // wrong axis... he should be bowing forward, and ideally bent at the
   // waist"). Bodies front local +z and a positive turn about x carries
   // the chest that way, so this is a bow from the sash up.
   philWaist.rotation.x = BOW * lean;
-  if (!bowed && u >= 1) {
-  bowed = true;
-  // the one sound in the case, and it arrives only if you let it
+  // the one sound in the case, at the bottom of the bow and not at the
+  // tap: what is being marked is the thanking, not the asking
+  if (!sounded && lean >= 1) {
+  sounded = true;
+  bows++;
   audio && audio.chimeStrike({ tube: 0, force: 0.5, at: philosopher.position });
   }
   },
   fragment() {
   return {
-  reaches,
-  bowed,
-  still: +Math.min(999, clock - lastTouch).toFixed(1),
+  asked,
+  bows,
+  since: +Math.min(999, clock - askedAt).toFixed(1),
   lean: +Math.abs(philWaist.rotation.x).toFixed(4),
 };
       },
