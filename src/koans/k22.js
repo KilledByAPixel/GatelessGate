@@ -97,7 +97,7 @@ const CAM = { distance: 11.5, target: [0.9, 1.9, -0.2], heading: 31.5, pitch: 19
   // the pole rather than a second sign standing on its own. Quartered toward
   // the camera so the board's face and the post's edge both read.
   const sign = makeSign({ height: 1.9 });
-  sign.position.set(-4.3, 0, -1.2);
+  sign.position.set(4.3, 0, -1.2);
   sign.rotation.y = 0.62;
   scene.add(sign);
   
