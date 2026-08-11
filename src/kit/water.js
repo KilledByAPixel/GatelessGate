@@ -301,7 +301,7 @@ export function makeWater({
     mask[i] = smooth(clamp01(edge[i] / band));
   }
 
-  // Idle swell: two slow crossed waves with seeded phases — the wind's
+  // Idle swell: two crossed wavelets with seeded phases — the wind's
   // breathing. A flat 0.012 was invisible on the ponds (Frank: "it's not
   // perfectly still... a little motion of the water"), so like STRIKE it now
   // grows with the container and stops: readable on a pond, proportionate in
@@ -312,8 +312,12 @@ export function makeWater({
   const IA = Math.min(0.025, 0.0175 * half) * swell;
   const p1 = hash1(1, seed) * Math.PI * 2;
   const p2 = hash1(2, seed) * Math.PI * 2;
-  const k1 = 1.7 / Math.max(1, half);
-  const k2 = 2.3 / Math.max(1, half);
+  // k of 5/11 over a pond half-width: wavelengths ~1.3 and ~0.6 units, so a
+  // pond carries a few visible crests. The first pass used 1.7/2.3 — a wave
+  // LONGER than the pond, which could only tilt the whole sheet: invisible
+  // small, a seesaw big (Frank tuned these by eye).
+  const k1 = 5 / Math.max(1, half);
+  const k2 = 11 / Math.max(1, half);
 
   // Each drift component's phase is the seed's, like everything else here.
   // Hoisted once — the per-call destructure used to run per vertex per frame.
@@ -361,11 +365,13 @@ export function makeWater({
   function idleAt(x, z, t) {
     // no swell means no idle term at all, rather than one multiplied by zero —
     // dead-still water stays exactly flat, and skips two sines per vertex
-    // 0.55/0.42 rad/s — periods of ~11 and ~15 seconds, the "low frequency
-    // kind of thing" Frank asked for; the old 0.9/0.7 churned faster than
-    // wind reads on still water
+    // 3/5 rad/s — ~2s periods, a brisk shimmer. Frank tuned these by eye
+    // alongside k1/k2: the first pass went slow (0.55/0.42, ~11-15s periods)
+    // chasing "low frequency", and at pond-sized wavelengths that read as
+    // nothing at all until the amplitude made it a seesaw. Short wavelets
+    // moving briskly at small amplitude is what actually reads as wind.
     return IA === 0 ? 0
-      : IA * (Math.sin(x * k1 + t * 0.55 + p1) + Math.sin(z * k2 + t * 0.42 + p2));
+      : IA * (Math.sin(x * k1 + t * 3 + p1) + Math.sin(z * k2 + t * 5 + p2));
   }
 
   // The one place the wave is defined — the free surface, before the container
