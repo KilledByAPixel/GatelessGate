@@ -158,6 +158,9 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   // failure). Dark ink under white glints says water.
   shape: 'square', size: 150, color: wash(0.68), seed: ID,
   opacity: 1, segments: 64,
+  // half the default idle swell: holds the amplitude this shoreline was
+  // tuned around when the ponds' breathing was turned up (see IA in water.js)
+  swell: 0.5,
   // A tighter ramp than case 20's: red survives 20% visibility through
   // the fog, grey doesn't — so the ink must arrive within the narrow
   // strip the grazing camera actually sees. Full depth by ~5 out.

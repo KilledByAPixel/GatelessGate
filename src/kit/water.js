@@ -301,10 +301,15 @@ export function makeWater({
     mask[i] = smooth(clamp01(edge[i] / band));
   }
 
-  // Idle swell: two slow crossed waves with seeded phases. Water that is
-  // perfectly flat between taps reads as a floor, so there is always a little
-  // going on — but only a little.
-  const IA = 0.012 * swell;
+  // Idle swell: two slow crossed waves with seeded phases — the wind's
+  // breathing. A flat 0.012 was invisible on the ponds (Frank: "it's not
+  // perfectly still... a little motion of the water"), so like STRIKE it now
+  // grows with the container and stops: readable on a pond, proportionate in
+  // case 7's basin, capped on open water. Kept well under a tap's crest so a
+  // strike still owns the surface ("pretty subtle, so you can still see when
+  // you click"). The oceans pass swell: 0.5 to hold the amplitude their
+  // shorelines were tuned around.
+  const IA = Math.min(0.025, 0.0175 * half) * swell;
   const p1 = hash1(1, seed) * Math.PI * 2;
   const p2 = hash1(2, seed) * Math.PI * 2;
   const k1 = 1.7 / Math.max(1, half);
@@ -356,8 +361,11 @@ export function makeWater({
   function idleAt(x, z, t) {
     // no swell means no idle term at all, rather than one multiplied by zero —
     // dead-still water stays exactly flat, and skips two sines per vertex
+    // 0.55/0.42 rad/s — periods of ~11 and ~15 seconds, the "low frequency
+    // kind of thing" Frank asked for; the old 0.9/0.7 churned faster than
+    // wind reads on still water
     return IA === 0 ? 0
-      : IA * (Math.sin(x * k1 + t * 0.9 + p1) + Math.sin(z * k2 + t * 0.7 + p2));
+      : IA * (Math.sin(x * k1 + t * 0.55 + p1) + Math.sin(z * k2 + t * 0.42 + p2));
   }
 
   // The one place the wave is defined — the free surface, before the container

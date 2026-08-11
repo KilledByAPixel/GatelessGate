@@ -414,6 +414,24 @@ test('a ripple comes back: the pond is alive again after the ring has crossed it
   }
 });
 
+// ---- the idle swell --------------------------------------------------------
+// The wind's breathing (Frank: "a little bit of ambient motion... produced by
+// the wind, so it's not perfectly still... pretty subtle, so you can still
+// see when you click"). Alive enough to read on a still pond, low and slow,
+// and always well under a tap so a strike still owns the surface.
+
+test('the idle swell is alive but subtle on a pond', () => {
+  const w = makeWater({ shape: 'round', size: 2.0, seed: 30 });
+  let peak = 0;
+  for (let t = 0; t < 30; t += 0.3) {
+    for (const [x, z] of [[0, 0], [0.4, 0.2], [-0.5, -0.3], [0.2, -0.6]]) {
+      peak = Math.max(peak, Math.abs(w.heightAt(x, z, t)));
+    }
+  }
+  assert.ok(peak > 0.026, `swell peak ${peak} — the pond reads as perfectly still`);
+  assert.ok(peak < 0.055, `swell peak ${peak} — the breathing is drowning the taps`);
+});
+
 // ---- the stir (hover mini-ripples) -----------------------------------------
 // Moving the pointer across the water stirs it — mini-ripples along the
 // stroke, amplitude from pointer speed, always smaller than a tap (Frank:

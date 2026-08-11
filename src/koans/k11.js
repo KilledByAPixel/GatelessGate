@@ -184,6 +184,9 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
     const water = makeWater({
       shape: 'square', size: 150, color: INK_LIT, seed: ID,
       opacity: 1, segments: 64,
+      // half the default idle swell: holds the amplitude this shoreline was
+      // tuned around when the ponds' breathing was turned up (see IA in water.js)
+      swell: 0.5,
       alphaRamp: (x, z) => {
         const s = 43 - z;
         const t = Math.max(0, Math.min(1, s / 20));
