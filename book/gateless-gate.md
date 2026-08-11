@@ -78,11 +78,11 @@ To realize Zen you have to pass through the barrier of the patriarchs. Enlighten
 
 This is the barrier of Zen. If you pass through it you will see Joshu face to face. Then you can work hand in hand with the whole line of patriarchs. Is this not a pleasant thing to do?
 
-If you want to pass this barrier, you must work through every bone in your body, through every pore of your skin, filled with this question: What is Mu? and carry it day and night. Do not believe it is the common negative symbol meaning nothing. It is not nothingness, the opposite of existence. If you really want to pass this barrier, you should feel like drinking a hot iron ball that you can neither swallow nor spit out.
+If you want to pass this barrier, you must work through every bone in your body, through every pore of your skin, filled with this question: What is Mu? and carry it day and night. Do not believe it is the common negative symbol meaning nothing. It is not nothingness, the opposite of existence. If you really want to pass this barrier, you should feel as if you had swallowed a hot iron ball that you can neither get down nor spit out.
 
 Then your previous lesser knowledge disappears. As a fruit ripening in season, inside and outside naturally become one. It is like a man who cannot speak and has had a dream. He knows it but he cannot tell it.
 
-When you enter this condition your ego-shell is crushed and you can shake the heaven and move the earth. You are like a great warrior with a sharp sword. If a Buddha stands in your way, you will cut him down; if a patriarch offers you any obstacle, you will kill him; and you will be free in your way of birth and death. You can enter any world as if it were your own playground. I will tell you how to do this with this koan:
+When you enter this condition your ego-shell is crushed and you can shake the heaven and move the earth. You are like a great warrior with a sharp sword. If a Buddha stands in your way, you will cut him down; if a patriarch offers you any obstacle, you will kill him; and you will be free in the face of birth and death. You can enter any world as if it were your own playground. I will tell you how to do this with this koan:
 
 Just concentrate your whole energy into this Mu, and do not let it break. When you enter this Mu and there is no break, your attainment will be as a candle burning and illuminating the whole universe.
 
@@ -99,7 +99,7 @@ you lose your own Buddha nature.
 
 Once when Hyakujo delivered some Zen lectures an old man attended them, unseen by the monks. At the end of each talk when the monks left so did he. But one day he remained after they had gone, and Hyakujo asked him: "Who are you?"
 
-The old man replied: "I am not a human being, but I was a human being when the Kashapa Buddha preached in this world. I was a Zen master and lived on this mountain. At that time one of my students asked me whether or not the enlightened person is subject to the law of causation. I answered him: 'The enlightened person is not subject to the law of causation.' For this answer evidencing a clinging to absoluteness I became a fox for five hundred rebirths, and I am still a fox. Will you save me from this condition with your Zen words and let me get out of a fox's body? Now may I ask you: Is the enlightened person subject to the law of causation?"
+The old man replied: "I am not a human being, but I was a human being when the Kashapa Buddha preached in this world. I was a Zen master and lived on this mountain. At that time one of my students asked me whether or not the enlightened person is subject to the law of causation. I answered him: 'The enlightened person is not subject to the law of causation.' Because that answer clung to absoluteness I became a fox for five hundred rebirths, and I am still a fox. Will you save me from this condition with your Zen words and let me get out of a fox's body? Now may I ask you: Is the enlightened person subject to the law of causation?"
 
 Hyakujo said: "The enlightened person is one with the law of causation."
 
@@ -182,7 +182,7 @@ Kyogen said: "Zen is like a man hanging in a tree by his teeth over a cliff. His
 
 ### Mumon's Comment
 
-In such a predicament the cleverest talk is of no use. If you have memorized all the sutras, you cannot use them. When you can give the right answer, even though your past road was one of death, you open up a new road of life. But if you cannot answer, you should live ages hence and ask the future Buddha, Maitreya.
+In such a predicament the cleverest talk is of no use. If you have memorized all the sutras, you cannot use them. When you can give the right answer, even though your past road was one of death, you open up a new road of life. But if you cannot answer, you will have to wait ages and ask the future Buddha, Maitreya.
 
 ### The Verse
 
@@ -201,7 +201,7 @@ Buddha said: "I have the eye of the true teaching, the heart of Nirvana, the tru
 
 ### Mumon's Comment
 
-Golden-faced Gautama thought he could cheat anyone. He made the good listeners as bad, and sold dog meat under the sign of mutton. And he himself thought it was wonderful. What if all the audience had laughed together? How could he have transmitted the teaching? And again, if Mahakashapa had not smiled, how could he have transmitted the teaching? If he says that realization can be transmitted, he is like a city slicker cheating a farm boy, and if he says it cannot be transmitted, why does he approve of Mahakashapa?
+Golden-faced Gautama thought he could cheat anyone. He made the good listeners bad, and sold dog meat under the sign of mutton. And he himself thought it was wonderful. What if all the audience had laughed together? How could he have transmitted the teaching? And again, if Mahakashapa had not smiled, how could he have transmitted the teaching? If he says that realization can be transmitted, he is like a city slicker cheating a farm boy, and if he says it cannot be transmitted, why does he approve of Mahakashapa?
 
 ### The Verse
 
@@ -248,7 +248,7 @@ If you can answer this question instantly, your eyes will be like a comet and yo
 ### The Verse
 
 When the hubless wheel turns,
-master or no master can stop it.
+master or no master, none can stop it.
 It turns above heaven and below earth,
 south, north, east, and west.
 
@@ -285,7 +285,7 @@ Sozan asked: "Seizei?"
 
 Seizei responded: "Yes, sir."
 
-Sozan said: "You have Zen, the best wine in China, and already have finished three cups, and still you are saying that they did not even wet your lips."
+Sozan said: "You have Zen, the best wine in China, and already have finished three cups, and still you are saying that it did not even wet your lips."
 
 ### Mumon's Comment
 
@@ -451,7 +451,7 @@ Ummon asked: "The world is such a wide world, why do you answer a bell and don c
 
 ### Mumon's Comment
 
-When you study Zen you need not follow sound or color or form. Even though some have attained insight when hearing a voice or seeing a color or a form, this is a very common way. It is not true Zen. The real Zen student controls sound, color, form, and actualizes the truth in everyday life.
+When you study Zen you need not follow sound or color or form. Even though some have attained insight when hearing a voice or seeing a color or a form, this is a very common way. It is not true Zen. The real Zen student controls sound, color, and form, and actualizes the truth in everyday life.
 
 Sound comes to the ear, the ear goes to sound. When you blot out sound and sense, what do you understand? While listening with ears you can never understand. To understand it fully you should see sound.
 
@@ -556,7 +556,7 @@ Shogen spoke plainly enough, but how many will understand? If you comprehend, yo
 ### The Verse
 
 If the feet of enlightenment moved, the great ocean would overflow;
-if his head bowed, it would look down upon the heavens.
+if its head bowed, it would look down upon the heavens.
 Such a body has no place to rest.
 Let another continue this poem.
 
@@ -570,7 +570,7 @@ Ummon answered him: "Dried dung."
 
 ### Mumon's Comment
 
-It seems to me Ummon is so poor he cannot distinguish the taste of one food from another, or else he is too busy to write readable letters. Well, he tried to hold his school with dried dung. And his teaching was just as useless.
+It seems to me Ummon is so poor he cannot distinguish the taste of one food from another, or else he is too busy to write readable letters. Well, he tried to hold his school with dried dung, and his teaching was just as useless.
 
 ### The Verse
 
@@ -618,7 +618,7 @@ At these words Emyo was enlightened. Sweat broke out all over his body. He cried
 
 The sixth patriarch replied: "What I have told you is no secret at all. When you realize your own true self the secret belongs to you."
 
-Emyo said: "I was under the fifth patriarch many years but could not realize my true self until now. Through your teaching I find the source. A person drinks water and knows himself whether it is cold or warm. May I call you my teacher?"
+Emyo said: "I was under the fifth patriarch many years but could not realize my true self until now. Through your teaching I find the source. A person drinks water and knows for himself whether it is cold or warm. May I call you my teacher?"
 
 The sixth patriarch replied: "We studied together under the fifth patriarch. Call him your teacher, but just treasure what you have attained."
 
@@ -802,7 +802,7 @@ Joshu remarked: "I have investigated that old woman."
 
 ### Mumon's Comment
 
-The old woman understood how war is planned, but she did not know how spies sneak in behind her tent. Old Joshu played the spy's work and turned the tables on her, but he was not an able general. Both had their faults. Now I want to ask you: What was the point of Joshu's investigating the old woman?
+The old woman understood how war is planned, but she did not know how spies sneak in behind her tent. Old Joshu did the spy's work and turned the tables on her, but he was not an able general. Both had their faults. Now I want to ask you: What was the point of Joshu's investigating the old woman?
 
 ### The Verse
 
@@ -1004,7 +1004,7 @@ Bodhidharma said: "Then your mind is pacified already."
 
 ### Mumon's Comment
 
-That broken-toothed old foreigner, Bodhidharma, came thousands of miles over the sea from India to China as if he had something wonderful. He is like raising waves without wind. After he remained years in China he had only one disciple and that one lost his arm and was deformed. Alas, ever since he has had brainless disciples.
+That broken-toothed old foreigner, Bodhidharma, came thousands of miles over the sea from India to China as if he had something wonderful. It is like raising waves without wind. After he remained years in China he had only one disciple and that one lost his arm and was deformed. Alas, ever since he has had brainless disciples.
 
 ### The Verse
 
@@ -1108,7 +1108,7 @@ You can continue your steps or turn your body freely about on the top of the pol
 If you lack the third eye of insight
 you will cling to the measure of the hundred feet.
 You will jump from there and kill yourself,
-the blind leading the blind.
+like the blind leading the blind.
 
 ## 47. Three Gates of Tosotsu
 
@@ -1126,7 +1126,7 @@ The third gate is that once you are free from birth and death you should know wh
 
 If you can pass these three barriers you will be a master wherever you stand. Whatever happens around you, you will turn into Zen.
 
-Otherwise you will be living on poor food, and not even enough of that to satisfy you.
+Otherwise you will be living on poor food, and will not have even enough of that to satisfy you.
 
 ### The Verse
 
@@ -1166,7 +1166,7 @@ Amban, a layman Zen student, said: "Mumon has just published forty-eight koans a
 
 ### Amban's Comment
 
-Where did that so-called teaching come from? How is it that one could not even think it? Suppose someone spoke about it then what became of it? Buddha himself never stopped talking and in this sutra spoke contrarily. Because of this, persons like Mumon appear afterwards in China and fry up useless cakes, annoying people. What shall we do after all? I will show you.
+Where did that so-called teaching come from? How is it that one could not even think it? Suppose someone spoke about it; then what would become of it? Buddha himself never stopped talking and in this sutra spoke contrarily. Because of this, persons like Mumon appear afterwards in China and fry up useless cakes, annoying people. What shall we do after all? I will show you.
 
 Then Amban put his palms together, folded his hands, and said: "Stop, stop. Do not speak. The ultimate truth is not even to think. And now I will make a little circle on the sutra with my finger and add that five thousand other sutras and Vimalakirti's gateless gate all are here!"
 
@@ -1181,7 +1181,7 @@ they recognize each other without question.
 
 ### Mumon's Afterword
 
-The Buddhas and the patriarchs, handing these encounters down, took the confession and closed the case. Never a word to spare. They lifted the lid off your skull and let your eyes open into the daylight. What they want is for you to take hold of it here and now and not go looking for it from anywhere else.
+The Buddhas and the patriarchs, handing these encounters down, took the confession and closed the case. Never a word to spare. They lifted the lid off your skull and let your eyes open into the daylight. What they want is for you to take hold of it here and now and not go looking for it anywhere else.
 
 Anyone who has been all the way through hears one of these raised and knows at once where it lands. There is no doorway to pass through and no stairway to climb. They walk through the barrier swinging their arms and never ask the man at the gate.
 
@@ -1244,7 +1244,7 @@ Don't leave the damage to grind on you for ages without end.
 
 ### Amban's Letter
 
-Old master Mumon commented on forty-eight koans, passing verdict on the words of the old masters. It was very like a man selling fried cakes, who gets the customer to open his mouth and take one, and then the customer can neither swallow it nor spit it out.
+Old master Mumon commented on forty-eight koans, passing verdict on the words of the old masters. It was very like a man selling fried cakes, who gets the customer to open his mouth and take one, so that the customer can neither swallow it nor spit it out.
 
 Even so, I would like to use the man's own stove while it is still hot, fry up one more, and round the count out to forty-nine, the number used in the Great Expansion, then send it back to him as before. And I wonder where the old man will sink his teeth in. If he takes it in one bite, light will pour out and the ground will shake. If not, then even the forty-eight before it all turn to hot sand.
 
