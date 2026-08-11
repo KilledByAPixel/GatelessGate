@@ -18,7 +18,7 @@ breaks are the verse and are kept. scripts/lib/parse-book.js says which
 sections are which.
 
 RIGHTS: this is a new edition of the Mumonkan, (c) 2026 Frank Force,
-CC BY-NC-ND 4.0 — re-edited and modernised throughout, with a preface and
+CC BY-NC-ND 4.0 — re-edited and modernized throughout, with a preface and
 a back matter translated for it from the Chinese and published in no
 earlier English edition. What it inherits is nobody's to license: Wumen
 Huikai's 1228 Chinese, and the 1934 Senzaki/Reps English under the edits,
@@ -72,7 +72,7 @@ healthy flesh. Worse still to snag on words and phrases and go hunting for a mea
 Swinging a stick at the moon. Scratching an itch through your boot. What has any of it to
 do with anything?
 
-In the summer of the wuzi year of Shaoding I was head monk at Longxiang in Wenzhou. Monks
+In the summer of 1228 I was head monk at Ryusho, in Onshu. Monks
 kept coming to ask for instruction, so I took the old teachers' koans and used them as
 tile-shards for knocking at the gate, leading each student on according to what he needed.
 I copied them down as they came, and before I noticed there was a book. I never put them
@@ -80,7 +80,7 @@ in any order. Forty-eight of them altogether. The whole thing goes under the nam
 Gateless Gate.
 
 If a man will go straight in with one blade and not care whether he lives, then
-eight-armed Nezha cannot stop him, and even the twenty-eight patriarchs of India and the
+eight-armed Nata cannot stop him, and even the twenty-eight patriarchs of India and the
 six of this land can only catch sight of him coming and beg for their lives. But hang
 back, and it is like watching a rider go past outside the window. Blink, and he is long
 gone.
@@ -281,28 +281,28 @@ And lets tears stream from their dead eyes.
 ### The Case
 
 When Buddha was in Grdhrakuta mountain he turned a flower in his fingers and held it
-before his listeners. Every one was silent. Only Maha-Kashapa smiled at this revelation,
+before his listeners. Everyone was silent. Only Mahakashapa smiled at this revelation,
 although he tried to control the lines of his face.
 
 Buddha said: "I have the eye of the true teaching, the heart of Nirvana, the true aspect
 of non-form, and the ineffable stride of Dharma. It is not expressed by words, but
-especially transmitted beyond teaching. This teaching I have given to Maha-Kashapa."
+especially transmitted beyond teaching. This teaching I have given to Mahakashapa."
 
 ### Mumon's Comment
 
 Golden-faced Gautama thought he could cheat anyone. He made the good listeners as bad, and
 sold dog meat under the sign of mutton. And he himself thought it was wonderful. What if
 all the audience had laughed together? How could he have transmitted the teaching? And
-again, if Maha-Kashapa had not smiled, how could he have transmitted the teaching? If he
+again, if Mahakashapa had not smiled, how could he have transmitted the teaching? If he
 says that realization can be transmitted, he is like the city slicker that cheats the
-country dub, and if he says it cannot be transmitted, why does he approve of Maha-Kashapa?
+country dub, and if he says it cannot be transmitted, why does he approve of Mahakashapa?
 
 ### The Verse
 
 At the turning of a flower
 His disguise was exposed.
 No one in heaven or earth can surpass
-Maha-Kashapa's wrinkled face.
+Mahakashapa's wrinkled face.
 
 ## 7. Joshu Washes the Bowl
 
@@ -334,9 +334,9 @@ He could have cooked his rice much sooner.
 
 ### The Case
 
-Getsuan said to his students: "Keichu, the first wheel-maker of China, made two wheels of
-fifty spokes each. Now, suppose you removed the nave uniting the spokes. What would become
-of the wheel? And had Keichu done this, could he be called the master wheel-maker?"
+Getsuan said to his students: "Keichu, the first wheelwright of China, made two wheels of
+fifty spokes each. Now, suppose you removed the hub uniting the spokes. What would become
+of the wheel? And had Keichu done this, could he be called the master wheelwright?"
 
 ### Mumon's Comment
 
@@ -674,7 +674,7 @@ must see it through fire.
 
 If the feet of enlightenment moved, the great ocean would overflow;
 If that head bowed, it would look down upon the heavens.
-Such a body has no place to rest....
+Such a body has no place to rest.
 Let another continue this poem.
 
 ## 21. Dried Dung
@@ -728,26 +728,26 @@ This spring does not belong to the ordinary season.
 When he became emancipated the sixth patriarch received from the fifth patriarch the bowl
 and robe given from the Buddha to his successors, generation after generation.
 
-A monk named E-myo out of envy pursued the patriarch to take this great treasure away from
-him. The sixth patriarch placed the bowl and robe on a stone in the road and told E-myo:
+A monk named Emyo out of envy pursued the patriarch to take this great treasure away from
+him. The sixth patriarch placed the bowl and robe on a stone in the road and told Emyo:
 "These objects just symbolize the faith. There is no use fighting over them. If you desire
 to take them, take them now."
 
-When E-myo went to move the bowl and robe they were as heavy as mountains. He could not
+When Emyo went to move the bowl and robe they were as heavy as mountains. He could not
 budge them. Trembling for shame he said: "I came wanting the teaching, not the material
 treasures. Please teach me."
 
 The sixth patriarch said: "When you do not think good and when you do not think not-good,
 what is your true self?"
 
-At these words E-myo was illumined. Perspiration broke out all over his body. He cried and
+At these words Emyo was illumined. Perspiration broke out all over his body. He cried and
 bowed, saying: "You have given me the secret words and meanings. Is there yet a deeper
 part of the teaching?"
 
 The sixth patriarch replied: "What I have told you is no secret at all. When you realize
 your own true self the secret belongs to you."
 
-E-myo said: "I was under the fifth patriarch many years but could not realize my true self
+Emyo said: "I was under the fifth patriarch many years but could not realize my true self
 until now. Through your teaching I find the source. A person drinks water and knows
 himself whether it is cold or warm. May I call you my teacher?"
 
@@ -873,7 +873,7 @@ Ryutan blew it out. At that moment the mind of Tokusan was opened.
 "What have you attained?" asked Ryutan. "From now on," said Tokusan, "I will not doubt the
 teacher's words."
 
-The next day Ryutan told the monks at his lecture: "I see one monk among you. His tes are
+The next day Ryutan told the monks at his lecture: "I see one monk among you. His teeth are
 like the sword tree, his mouth is like the blood bowl. If you hit him hard with a big
 stick, he will not even so much as look back at you. Someday he will mount the highest
 peak and carry my teaching there."
@@ -951,7 +951,10 @@ he will close his ears and flee after hearing "This mind is Buddha."
 
 ### The Verse
 
-Under blue sky, in bright sunlight, One need not search around. Asking what Buddha is Is like hiding loot in one's pocket and declaring oneself innocent.
+Under blue sky, in bright sunlight,
+One need not search around.
+Asking what is Buddha
+Is like claiming innocence while hiding loot in one's pocket.
 
 ## 31. Joshu Investigates
 
@@ -1214,7 +1217,7 @@ meditation. So by his miracle power he transported her to a high heaven and trie
 to call her, but in vain.
 
 Buddha Shakyamuni said: "Even a hundred thousand Manjusris could not disturb her, but
-below this place, past twelve hundred million countries, is a Bodhisattva, Mo-myo, seed of
+below this place, past twelve hundred million countries, is a Bodhisattva, Momyo, seed of
 delusion. If he comes here, she will awaken."
 
 No sooner had the Buddha spoken than that Bodhisattva sprang up from the earth and bowed
@@ -1366,14 +1369,14 @@ Before the first step is taken the goal is reached. Before the tongue is moved t
 
 ### The Case
 
-Amban, a layman Zen student, said: "Mu-mon has just published forty-eight koans and called
+Amban, a layman Zen student, said: "Mumon has just published forty-eight koans and called
 the book Gateless Gate. He criticizes the old patriarchs' words and actions. I think he is
 very mischievous. He is like an old doughnut seller trying to catch a passerby to force
 his doughnuts down his mouth. The customer can neither swallow nor spit out the doughnuts,
-and this causes suffering. Mu-mon has annoyed everyone enough, so I think I shall add one
+and this causes suffering. Mumon has annoyed everyone enough, so I think I shall add one
 more as a bargain. I wonder if he himself can eat this bargain. If he can, and digest it
 well, it will be fine, but if not, we will have to put it back into the frying pan with
-his forty-eight also and cook them again. Mu-mon, you eat first, before someone else does:
+his forty-eight also and cook them again. Mumon, you eat first, before someone else does:
 
 "Buddha, according to a sutra, once said: 'Stop, stop. Do not speak. The ultimate truth is
 not even to think.'"
@@ -1382,7 +1385,7 @@ not even to think.'"
 
 Where did that so-called teaching come from? How is it that one could not even think it?
 Suppose someone spoke about it then what became of it? Buddha himself was a great
-chatterbox and in this sutra spoke contrarily. Because of this, persons like Mu-mon appear
+chatterbox and in this sutra spoke contrarily. Because of this, persons like Mumon appear
 afterwards in China and make useless doughnuts, annoying people. What shall we do after
 all? I will show you.
 
@@ -1411,8 +1414,8 @@ An all-round man of the first rank hears one of them raised and knows at once wh
 lands. There is no doorway to go in by and no stairs to climb. He walks through the
 checkpoint swinging his arms and never asks the man on the gate.
 
-Have you not heard what Xuansha said? No gate is the gate of release. No intent is the
-intent of the man of the Way. And Baiyun said: You know perfectly well it is just this. So
+Have you not heard what Gensha said? No gate is the gate of release. No intent is the
+intent of the man of the Way. And Hakuun said: You know perfectly well it is just this. So
 why can't you get through?
 
 Talk like that is smearing milk on red clay. Get through the Gateless Gate and you have
@@ -1427,8 +1430,8 @@ and house and country come to rest of themselves.
 
 ### Colophon
 
-Five days before the end of the summer retreat, the year the era changed to Shaoding.
-Respectfully set down by the monk Ekai, called Mumon, eighth in descent from Yangqi.
+Five days before the end of the summer retreat, the year the era changed to Jotei.
+Respectfully set down by the monk Ekai, called Mumon, eighth in descent from Yogi.
 
 ### Zen Warnings
 
