@@ -30,7 +30,7 @@ const ID = 16;
 // out so the shot is tuned here like every other case's rather than by moving
 // the book (Frank). composeWorld gets the same object as its `view`, so the
 // scatter still refuses spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10, target: [1.2, 1.35, 0.3], heading: 30, pitch: 18 };
+const CAM = { distance: 10, target: [-0.4, 1.35, 0.3], heading: -7.5, pitch: 18 };
 
 export default {
   id: ID,
@@ -113,8 +113,8 @@ export default {
     // SILENT here on purpose: this case is about answering THE BELL, and a
     // second voice in the yard would blur the one sound the koan turns on.
     const drum = makeDrum({ radius: 0.5, seed: 16 });
-    drum.group.position.set(-3., 0, -2.0);
-    drum.group.rotation.y = 2.9;
+    drum.group.position.set(-3.5, 0, -2.0);
+    drum.group.rotation.y = 2.1;
     scene.add(drum.group);
     const hallMonk = makeMonk({ height: 1.62, stout: 1.04 });
     hallMonk.position.set(hall.position.x + front.x * 1.9, 0, hall.position.z + front.z * 1.9);
