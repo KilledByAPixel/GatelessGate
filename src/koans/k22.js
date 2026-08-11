@@ -51,10 +51,13 @@ const CAM = { distance: 11.5, target: [0.9, 1.9, -0.2], heading: 31.5, pitch: 19
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
   scene.add(makeLights());
   
-  // THE PATH is the seal here (Frank's experiment): case 29 already owns the
-  // red flag, so this case keeps the flag but paints it plain, and lets the
-  // road up to the gate be the one warm thing instead.
-  const path = makePath({ from: [-3.8, 8.4], to: [1.2, -22], width: 1.5, seed: ID, groundSeed: 21, wander: 2.7, color: ACCENT });
+  // The road is plain stone. It carried the seal for a while (case 29 owns the
+  // red flag, so this case painted its banner plain and warmed the road up to
+  // the gate instead) — but once the case grew a sign of its own, the sign was
+  // the better place for it: the koan is ABOUT taking one sign down and putting
+  // another up, and a red board says that where a red road only said "here is a
+  // road". See THE BOARD below.
+  const path = makePath({ from: [-3.8, 8.4], to: [1.2, -22], width: 1.5, seed: ID, groundSeed: 21, wander: 2.7 });
   scene.add(path);
   
   const gate = makeGate({ width: 2.9, height: 3.1 });
@@ -84,19 +87,22 @@ const CAM = { distance: 11.5, target: [0.9, 1.9, -0.2], heading: 31.5, pitch: 19
   lantern.position.set(-3.3, 0, 0.6);
   scene.add(lantern);
 
-  // THE BOARD. A plain sign on a plain post, blank — the case turns on taking
-  // one sign down and putting another up, and an empty board is the only
-  // honest way to draw a sign whose whole point is WHOSE name is on it. It
-  // stands just off the near verge of the red road, in the gap between the
-  // gate and the banner: the figures and the lantern occupy the other flank,
-  // and a notice board belongs where somebody walking up would meet it.
+  // THE BOARD, AND THE SEAL. A sign on a post, blank — the case turns on taking
+  // one sign down and putting another up, and an empty board is the only honest
+  // way to draw a sign whose whole point is WHOSE name is on it. Red, because
+  // this is the thing the koan is about: the road wore the accent first and only
+  // ever said "here is a road" with it (see the path above). One hue per koan,
+  // so the road went back to stone in the same breath — the seal MOVED, it was
+  // not added.
   //
-  // IN THE GAP, NOT BESIDE THE POLE. Placed further out on the banner's side
-  // first, it landed within ~3° of the flagpole on a portrait stage and the
-  // two uprights stacked into one line — the board read as something bolted to
-  // the pole rather than a second sign standing on its own. Quartered toward
-  // the camera so the board's face and the post's edge both read.
-  const sign = makeSign({ height: 1.9 });
+  // It stands out past the banner on the yard's near flank, quartered toward
+  // the camera so the board's face and the post's edge both read. Worth knowing
+  // if it is ever moved back inboard: at 1.9 it is short enough to sit under
+  // the flag's cloth, and placed on that side at plain-stone tone it landed
+  // within ~3° of the flagpole on a portrait stage and the two uprights read as
+  // one bolted object. The accent is most of what separates them now, so the
+  // colour and the position are holding hands here.
+  const sign = makeSign({ height: 1.9, color: ACCENT });
   sign.position.set(4.3, 0, -1.2);
   sign.rotation.y = 0.62;
   scene.add(sign);

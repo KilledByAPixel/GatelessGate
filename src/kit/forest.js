@@ -136,6 +136,17 @@ export function makeForest({
     parts.push(tpl.clone().applyMatrix4(m4));
   }
 
+  // THE STAND DOES NOT MOVE IN THE WIND, deliberately. The templates carry the
+  // foliage-wind attributes (their builders bake them — kit/foliage.js), and
+  // this merge drops them, because `mergeSimple` without `extras` copies
+  // position and normal only. That is the intended outcome, not an oversight:
+  // a forest is a background mass in fog at the far end of the scene, already
+  // opted out of the outline pass one line below for the same reason, and
+  // rustling several hundred merged trees would spend the whole effect where
+  // nobody can see it while a hand-placed tree ten metres away is the thing
+  // being looked at. If this ever should move, the missing piece is passing the
+  // templates' own aSway/aPhase/aLeaf through the merge with a per-tree phase
+  // offset — the attributes exist upstream, they just stop here.
   const merged = mergeSimple(parts);
   const mat = toonMaterial({ color, flat: true });
   const mesh = new THREE.Mesh(merged, mat);

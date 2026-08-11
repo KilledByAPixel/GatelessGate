@@ -40,7 +40,7 @@ export function grassReach() { return { radius: defaultReach, taper: defaultTape
 // The reach and taper these fields were tuned at. composeWorld quotes its grass
 // budget for THIS pair; pushing the reach out has to buy more grass or the
 // slider just thins the meadow it was supposed to extend.
-export const GRASS_BASE_RADIUS = 20;
+const GRASS_BASE_RADIUS = 20;
 export const GRASS_BASE_TAPER = 0.62;
 
 // HOW MUCH GRASS A REACH IS WORTH: the keep probability integrated over the

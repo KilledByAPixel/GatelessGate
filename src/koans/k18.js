@@ -18,7 +18,7 @@ const ID = 18;
 // settles, and it says three pounds. It was always going to say three pounds.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.4, target: [-0.5, 0.2, 0.5], heading: 44.5, pitch: 21.5 };
+const CAM = { distance: 11, target: [-0.5, 1, 0.5], heading: 46, pitch: 21.5 };
   export default {
   id: ID,
   slug: 'tozan-s-three-pounds',
@@ -48,22 +48,22 @@ const CAM = { distance: 9.4, target: [-0.5, 0.2, 0.5], heading: 44.5, pitch: 21.
   // either figure is standing in front of. Quartered so a door wall and a side
   // wall both show; square-on it would read as a flat.
   //
-  // OFF-AXIS ANGLE AND DISTANCE ARE ONE DECISION, not two. The stage is a
-  // PORTRAIT window — the text panel takes the other half — so the horizontal
-  // half-angle is only about 17°, not the ~31° a landscape frame would give.
-  // A 3.2-wide hall subtends 12° at 15 units, so centring it 10° out still ran
-  // its far wall into the frame edge; two passes were lost sliding it sideways
-  // when the fix was to stand it FURTHER OFF. At ~21 units out and ~7° off the
-  // axis it subtends under 9°, clears the edge whole, and the fog has taken
-  // enough of it that it reads as the building the yard belongs to rather than
-  // a prop in the way. Move it nearer and it crops; move it much further and
-  // the fog erases it — those two are the bounds.
+  // OFF-AXIS ANGLE AND DISTANCE ARE ONE DECISION, not two — the rule, not this
+  // hut's numbers, because the numbers have moved twice. The stage is a
+  // PORTRAIT window (the text panel takes the other half), so the horizontal
+  // half-angle is only about 17°, not the ~31° a landscape frame would give,
+  // and a 3.2-wide hall still subtends 12° at 15 units. Centring it 10° out
+  // therefore ran its far wall off the left edge: the fix for a cropped
+  // building here is to stand it FURTHER BACK, not to slide it inboard, since
+  // distance shrinks the angle it occupies and drops it down the frame at the
+  // same time. The far bound is the fog — past roughly 25 units this hall
+  // dissolves into the paper altogether.
   //
   // No chimes (the `chimes:` seed other huts carry): this case's ambience is
   // wind, the steelyard and the music bed, and the whole joke is one plain
   // answer — a hanging voice under the eave would be a second thing speaking.
   const hut = makeHut({ width: 3.2, height: 2.4, depth: 2.6 });
-  hut.position.set(-10.8, 0, -6.3);
+  hut.position.set(-4.8, 0, -3.3);
   hut.rotation.y = 1.15;
   scene.add(hut);
 

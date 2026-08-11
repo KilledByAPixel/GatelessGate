@@ -117,6 +117,23 @@ export function plainMaterial(src) {
   // clone has been caught dropping.)
   if (src.map !== undefined) m.map = src.map;
   if (src.alphaTest) m.alphaTest = src.alphaTest;
+  // ...and any SHADER AUGMENTATION hung on the authored material. onBeforeCompile
+  // is how the kit adds vertex motion to a merged mesh without paying a draw call
+  // per moving part (kit/foliage.js does it for the trees and pines; the grass
+  // fields have always done it for blades and tufts). Dropping it here meant such
+  // a material animated in the workbench's toon mode and stood dead still in the
+  // shipped look — the exact shape of the moon's week of secret lighting, one row
+  // down this same list. customProgramCacheKey travels with it or three.js
+  // reuses one compiled program for materials whose injected source differs.
+  // (Fifth property this clone has been caught dropping.)
+  //
+  // Object.hasOwn, NOT truthiness: THREE.Material's PROTOTYPE defines both of
+  // these (a no-op and a "" key), so `if (src.onBeforeCompile)` is true for
+  // every material ever made and would stamp the prototype's own no-ops onto
+  // each clone as own properties. Harmless by luck, meaningless as a guard, and
+  // it hid the fact that the check was never actually testing anything.
+  if (Object.hasOwn(src, 'onBeforeCompile')) m.onBeforeCompile = src.onBeforeCompile;
+  if (Object.hasOwn(src, 'customProgramCacheKey')) m.customProgramCacheKey = src.customProgramCacheKey;
   return m;
 }
 

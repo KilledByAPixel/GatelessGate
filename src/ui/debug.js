@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { setGrassPatchiness, setGrassReach, setGrassTaper } from '../kit/grassfield.js';
 import { setGrassStyle } from '../kit/scenery.js';
+import { setFoliageWeather } from '../kit/foliage.js';
 import { setInkScale } from '../render/outlines.js';
 import { plainMaterial } from '../render/toon.js';
 import { DRAW_BUDGET, DRAW_WARN } from '../budget.js';
@@ -22,8 +23,12 @@ import { DRAW_BUDGET, DRAW_WARN } from '../budget.js';
 // mask it: v3 turned the ink outlines on, v4 dropped ink strength to 0.5,
 // v5 turned the hull off by default (ink width 0), v6 is Frank's live tune
 // of the weather: more wind in the grass, a broader and slower-drifting
-// gust, patchier placement, and a hairline of hull ink back on (all Frank)
-const KEY = 'gateless-gate-debug-v6';
+// gust, patchier placement, and a hairline of hull ink back on (all Frank).
+// v7 is the weather retuned again once the TREES started answering these same
+// three numbers (kit/foliage.js): grass wind 1.5 -> 3.0 and the gust patch
+// 0.01 -> 0.08, a much tighter patch so a gust crosses as weather rather than
+// lifting the whole meadow and every tree in it at once.
+const KEY = 'gateless-gate-debug-v7';
 // Persistence is opt-in. By default the workbench opens on the shipped defaults
 // every reload, so a quick test can never quietly leave the look changed the next
 // time round. The "Keep settings on reload" toggle (below "reset all") turns it
@@ -63,7 +68,7 @@ const CONTROLS = [
   { group: 'Scene' },
   { key: 'grass', label: 'Grass field', type: 'bool', def: true },
   { key: 'grassTufts', label: 'Grass tufts (re-enter)', type: 'bool', def: true },
-  { key: 'grassWind', label: 'Grass wind', type: 'range', def: 1.5, min: 0, max: 9, step: 0.05 },
+  { key: 'grassWind', label: 'Grass wind', type: 'range', def: 3.0, min: 0, max: 9, step: 0.05 },
   { key: 'grassPatch', label: 'Grass patch (re-enter)', type: 'range', def: 0.7, min: 0, max: 0.8, step: 0.02 },
   // How far the meadow reaches, and how much of that reach it spends dissolving
   // — a low taper starts thinning early and fades over a long way, a high one
@@ -72,7 +77,7 @@ const CONTROLS = [
   // stretching the same grass thinner.
   { key: 'grassReach', label: 'Grass reach (re-enter)', type: 'range', def: 24, min: 12, max: 34, step: 1 },
   { key: 'grassTaper', label: 'Grass taper (re-enter)', type: 'range', def: 0.45, min: 0.2, max: 0.9, step: 0.05 },
-  { key: 'gustScale', label: 'Gust patch', type: 'range', def: 0.01, min: 0.001, max: .25, step: 0.001 },
+  { key: 'gustScale', label: 'Gust patch', type: 'range', def: 0.08, min: 0.001, max: .25, step: 0.001 },
   { key: 'gustSpeed', label: 'Gust drift', type: 'range', def: 12, min: 0, max: 99, step: 1.0 },
   { key: 'trees', label: 'Trees', type: 'bool', def: true },
   { key: 'forest', label: 'Forest', type: 'bool', def: true },
@@ -434,6 +439,19 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
         w.gustSpeed = state.gustSpeed;
       }
     }
+
+    // ...and the trees and pines, off the same three numbers. Not inside the
+    // `grass` branch above and not looked up in the scene: the foliage wind is
+    // ONE shared uniform record for the whole book (kit/foliage.js), so this is
+    // a single write with no traverse, and turning the grass field off must not
+    // also still the wood. setFoliageWeather scales the grass's wind down on
+    // its way in — a tree that leaned as far as a blade of grass would be the
+    // bowing-tree look this replaced.
+    setFoliageWeather({
+      wind: state.grassWind,
+      gustScale: state.gustScale,
+      gustSpeed: state.gustSpeed,
+    });
 
     setGrassPatchiness(state.grassPatch);
     setGrassReach(state.grassReach);

@@ -1,5 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { INK } from '../palette.js';
+import { FOLIAGE, FOLIAGE_PARS } from '../kit/foliage.js';
 
 // Inverted-hull outlines: a back-face shell displaced along normals.
 // Static positional noise makes the stroke width irregular (hand-brushed)
@@ -58,6 +59,14 @@ float vnoise(vec3 x) {
 void main() {
   float w = uWidth * uScale * (1.0 + uWobble * (vnoise(position * 3.0) - 0.5) * 2.0);
   vec3 p = position + normal * w;
+#ifdef GG_FOLIAGE
+  // The shell shares the SAME BufferGeometry object as the mesh it wraps
+  // (addOutlines below), so the wind attributes are already bound here — this
+  // only has to apply the identical displacement. It is not optional: a hull
+  // that stays put while the foliage under it moves peels the ink off the
+  // leaves, and the hull ships on at inkWidth 0.1.
+  p += ggFoliageOffset(p, (modelMatrix * vec4(position, 1.0)).xz);
+#endif
   vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
   gl_Position = projectionMatrix * mvPosition;
   #include <fog_vertex>
@@ -72,7 +81,7 @@ void main() {
   #include <fog_fragment>
 }`;
 
-export function makeOutlineMaterial({ width = 0.02, wobble = 0.6, color = INK } = {}) {
+export function makeOutlineMaterial({ width = 0.02, wobble = 0.6, color = INK, foliage = false } = {}) {
   const uniforms = THREE.UniformsUtils.merge([
     THREE.UniformsLib.fog,
     {
@@ -82,10 +91,18 @@ export function makeOutlineMaterial({ width = 0.02, wobble = 0.6, color = INK } 
     },
   ]);
   // AFTER the merge, which deep-clones: every material must reference the one
-  // shared INK_SCALE object or the live global dial couldn't reach it.
+  // shared INK_SCALE object or the live global dial couldn't reach it. The
+  // foliage uniforms go on for the same reason and by the same rule — the
+  // shared objects, never copies, so one clock write reaches every hull.
   uniforms.uScale = INK_SCALE;
+  if (foliage) Object.assign(uniforms, FOLIAGE);
   return new THREE.ShaderMaterial({
-    vertexShader: VERT,
+    // Opt-in, keyed off the mesh's own userData rather than switched on for
+    // everything: the wind chunk declares three attributes, and a shell over
+    // ordinary geometry that lacks them would be reading whatever the driver
+    // leaves bound. Trees and pines ask for it; nothing else has to care.
+    defines: foliage ? { GG_FOLIAGE: '' } : {},
+    vertexShader: foliage ? FOLIAGE_PARS + VERT : VERT,
     fragmentShader: FRAG,
     uniforms,
     side: THREE.BackSide,
@@ -102,7 +119,8 @@ export function addOutlines(root, opts = {}) {
   });
   const created = [];
   for (const m of meshes) {
-    const outline = new THREE.Mesh(m.geometry, makeOutlineMaterial(opts));
+    const outline = new THREE.Mesh(m.geometry,
+      makeOutlineMaterial({ ...opts, foliage: !!m.userData.foliageWind }));
     outline.name = `${m.name || 'mesh'}-outline`;
     outline.userData.isOutline = true;
     outline.visible = INK_SCALE.value > 0;

@@ -12,6 +12,7 @@ import { makeLayoutOverlay } from './dev/overlay.js';
 import { setChimeAudio, collectChimes, ringChimeAt } from './kit/chimes.js';
 import { makeInput } from './input.js';
 import { setBreezePointer, clearBreeze } from './kit/breeze.js';
+import { stepFoliageWind } from './kit/foliage.js';
 import { createSave } from './save.js';
 import { createAudio, shouldPauseForHide } from './audio/engine.js';
 import { windGust, gustSlope } from './audio/synths.js';
@@ -1334,6 +1335,11 @@ function tick() {
   simTime += STEP;
   audio.setGust(windGust(simTime), gustSlope(simTime));
   audio.setListener(listenerFrom(camera));
+  // The trees' and pines' wind is one shared uniform for the whole book (see
+  // kit/foliage.js), so it is advanced HERE rather than per scene: every tree
+  // in every scene, the intro's hub included, moves off this one write, and a
+  // tree built mid-frame joins the wind already in progress.
+  stepFoliageWind(simTime);
   feedBreeze();
   if (mode === 'intro' && intro) intro.update(STEP);
   else if (freeCam.enabled()) freeCam.update(STEP);

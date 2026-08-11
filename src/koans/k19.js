@@ -34,7 +34,7 @@ const BREEZE_TAU = 1.7;   // how long a crossing breath stays in the sound
 // same picture is the point — flowers on the ground, the moon over the ridge.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 14.6, target: [1.5, 1.75, -1.3], heading: 24.1, pitch: 8.6 };
+const CAM = { distance: 12, target: [1.25, 1.75, -1.3], heading: 22.5, pitch: 8.6 };
   export default {
   id: ID,
   slug: 'everyday-life-is-the-path',
@@ -144,9 +144,9 @@ const CAM = { distance: 14.6, target: [1.5, 1.75, -1.3], heading: 24.1, pitch: 8
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: 19,
+  seed: 33,
   groundSeed: 21,
-  trees: 4,
+  trees: 7,
   keepout: [
   ...path.keepout(26, 1.5),                                       // the whole run of the road
   { x: nansen.position.x, z: nansen.position.z, r: 1.7 },

@@ -122,7 +122,15 @@ export function makeBushes({ count = 9, seed = 61, groundSeed = 21, keepout = []
 
 // Minimal non-indexed geometry merge (position + normal only) — enough for
 // toon-shaded props without pulling in the BufferGeometryUtils addon.
-export function mergeSimple(geos) {
+//
+// `extras` is an optional map of PER-PART scalars to spread across that part's
+// vertices: { aSway: [0.1, 0.4, ...] }, one number per geometry in `geos`, out
+// as a 1-component float attribute. It exists because a merged mesh has no
+// parts any more — the merge is the whole point, and it is also what destroys
+// the ability to move one branch — so the identity a vertex shader needs has to
+// be baked in at merge time, while the caller still knows which geometry was
+// which. Callers that pass nothing get exactly the buffer they always did.
+export function mergeSimple(geos, extras = null) {
   // already-merged geometries come in non-indexed; re-converting them only logs
   // a warning, so skip it (lattice panels merge, then walls merge those again)
   const nonIndexed = geos.map((g) => (g.index ? g.toNonIndexed() : g));
@@ -130,14 +138,26 @@ export function mergeSimple(geos) {
   for (const g of nonIndexed) total += g.attributes.position.count;
   const pos = new Float32Array(total * 3);
   const nor = new Float32Array(total * 3);
+  const names = extras ? Object.keys(extras) : [];
+  const spread = {};
+  for (const n of names) {
+    if (extras[n].length !== geos.length) {
+      throw new Error(`mergeSimple: extras.${n} has ${extras[n].length} values for ${geos.length} geometries`);
+    }
+    spread[n] = new Float32Array(total);
+  }
   let o = 0;
-  for (const g of nonIndexed) {
+  for (let i = 0; i < nonIndexed.length; i++) {
+    const g = nonIndexed[i];
+    const n = g.attributes.position.count;
     pos.set(g.attributes.position.array, o * 3);
     nor.set(g.attributes.normal.array, o * 3);
-    o += g.attributes.position.count;
+    for (const name of names) spread[name].fill(extras[name][i], o, o + n);
+    o += n;
   }
   const out = new THREE.BufferGeometry();
   out.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   out.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  for (const name of names) out.setAttribute(name, new THREE.BufferAttribute(spread[name], 1));
   return out;
 }

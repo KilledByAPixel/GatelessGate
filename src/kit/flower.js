@@ -83,8 +83,8 @@ export function makeFlower({
 
   // the seed pod at the heart of the bloom, riding the stem's real tip
   const pod = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.26 * B, 0.17 * B, 0.18 * B, 9),
-    toonMaterial({ color: WASH.mid, flat: true }));
+    new THREE.CylinderGeometry(0.1 * B, 0.02 * B, 0.18 * B, 9),
+    toonMaterial({ color: WASH.deep, flat: true }));
   pod.name = 'pod';
   pod.position.copy(TIP);
   g.add(pod);
