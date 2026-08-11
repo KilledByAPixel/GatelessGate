@@ -93,7 +93,7 @@ you walk unhindered through heaven and earth.
 
 ### The Case
 
-A monk asked Joshu, a Chinese Zen master: "Has a dog Buddha-nature or not?"
+A monk asked Joshu, a Chinese Zen master: "Has a dog Buddha nature or not?"
 
 Joshu answered: "Mu."
 
@@ -131,7 +131,10 @@ candle burning and illuminating the whole universe.
 
 ### The Verse
 
-Has a dog Buddha-nature? This is the most serious question of all. If you say yes or no, You lose your own Buddha-nature.
+Has a dog Buddha nature?
+This is the most serious question of all.
+If you say yes or no,
+You lose your own Buddha nature.
 
 ## 2. Hyakujo's Fox
 
@@ -190,7 +193,10 @@ To understand this clearly one has to have just one eye.
 
 ### The Verse
 
-Controlled or not controlled? The same dice shows two faces. Not controlled or controlled, Both are a grievous error.
+Controlled or not controlled?
+The same dice shows two faces.
+Not controlled or controlled,
+Both are a grievous error.
 
 ## 3. Gutei's Finger
 
@@ -216,7 +222,10 @@ the boy, and the clinger all together.
 
 ### The Verse
 
-Gutei cheapens the teaching of Tenryu, Emancipating the boy with a knife. Compared to the Chinese god who pushed aside a mountain with one hand Old Gutei is a poor imitator.
+Gutei cheapens the teaching of Tenryu,
+Emancipating the boy with a knife.
+Compared to the Chinese god who pushed aside a mountain with one hand
+Old Gutei is a poor imitator.
 
 ## 4. A Beardless Foreigner
 
@@ -234,7 +243,10 @@ him at all.
 
 ### The Verse
 
-One should not discuss a dream In front of a simpleton. Why has Bodhidharma no beard? What an absurd question!
+One should not discuss a dream
+In front of a simpleton.
+Why has Bodhidharma no beard?
+What an absurd question!
 
 ## 5. Kyogen Mounts the Tree
 
@@ -256,7 +268,10 @@ should live ages hence and ask the future Buddha, Maitreya.
 
 ### The Verse
 
-Kyogen is truly a fool Spreading that ego-killing poison That closes his pupils' mouths And lets their tears stream from their dead eyes.
+Kyogen is truly a fool
+Spreading ego killing poison
+That closes his pupils' mouths
+And lets tears stream from their dead eyes.
 
 ## 6. Buddha Twirls a Flower
 
@@ -281,7 +296,10 @@ country dub, and if he says it cannot be transmitted, why does he approve of Mah
 
 ### The Verse
 
-At the turning of a flower His disguise was exposed. No one in heaven or earth can surpass Maha-Kashapa's wrinkled face.
+At the turning of a flower
+His disguise was exposed.
+No one in heaven or earth can surpass
+Maha-Kashapa's wrinkled face.
 
 ## 7. Joshu Washes the Bowl
 
@@ -304,7 +322,10 @@ Joshu's heart. I hope he did not mistake the bell for a pitcher.
 
 ### The Verse
 
-It is too clear and so it is hard to see. A dunce once searched for a fire with a lighted lantern. Had he known what fire was, He could have cooked his rice much sooner.
+It is too clear and so it is hard to see.
+A dunce once searched for a fire with a lighted lantern.
+Had he known what fire was,
+He could have cooked his rice much sooner.
 
 ## 8. Keichu's Wheel
 
@@ -321,7 +342,10 @@ like a flash of lightning.
 
 ### The Verse
 
-When the hubless wheel turns, Master or no master can stop it. It turns above heaven and below earth, South, north, east, and west.
+When the hubless wheel turns,
+Master or no master can stop it.
+It turns above heaven and below earth,
+South, north, east, and west.
 
 ## 9. A Buddha before History
 
@@ -540,7 +564,10 @@ intimately one should see sound.
 
 ### The Verse
 
-When you understand, you belong to the family; When you do not understand, you are a stranger. Those who do not understand belong to the family, And when they understand they are strangers.
+When you understand, you belong to the family;
+When you do not understand, you are a stranger.
+Those who do not understand belong to the family,
+And when they understand they are strangers.
 
 ## 17. The Three Calls of the Emperor's Teacher
 
@@ -622,7 +649,10 @@ though if Joshu reached the point that Nansen did. He needed thirty more years o
 
 ### The Verse
 
-In spring, hundreds of flowers; in autumn, a harvest moon; In summer, a refreshing breeze; in winter, snow will accompany you. If useless things do not hang in your mind, Any season is a good season for you.
+In spring, hundreds of flowers; in autumn, a harvest moon;
+In summer, a refreshing breeze; in winter, snow will accompany you.
+If useless things do not hang in your mind,
+Any season is a good season for you.
 
 ## 20. The Enlightened Man
 
@@ -639,7 +669,10 @@ must see it through fire.
 
 ### The Verse
 
-If the feet of enlightenment moved, the great ocean would overflow; If that head bowed, it would look down upon the heavens. Such a body has no place to rest.... Let another continue this poem.
+If the feet of enlightenment moved, the great ocean would overflow;
+If that head bowed, it would look down upon the heavens.
+Such a body has no place to rest....
+Let another continue this poem.
 
 ## 21. Dried Dung
 
@@ -680,7 +713,10 @@ enlightenment.
 
 ### The Verse
 
-The point of the question is dull but the answer is intimate. How many persons hearing it will open their eyes? Elder brother calls and younger brother answers, This spring does not belong to the ordinary season.
+The point of the question is dull but the answer is intimate.
+How many persons hearing it will open their eyes?
+Elder brother calls and younger brother answers,
+This spring does not belong to the ordinary season.
 
 ## 23. Do Not Think Good, Do Not Think Not-Good
 
@@ -722,7 +758,10 @@ skin and seeds from the fruit and then, opening the pupil's mouth, let him eat.
 
 ### The Verse
 
-You cannot describe it, you cannot picture it, You cannot admire it, you cannot sense it. It is your true self, it has nowhere to hide. When the world is destroyed, it will not be destroyed.
+You cannot describe it, you cannot picture it,
+You cannot admire it, you cannot sense it.
+It is your true self, it has nowhere to hide.
+When the world is destroyed, it will not be destroyed.
 
 ## 24. Without Words, Without Silence
 
@@ -742,7 +781,10 @@ silence, and tell me about your own Zen.
 
 ### The Verse
 
-Without revealing his own penetration, He offered another's words, not his to give. Had he chattered on and on, Even his listeners would have been embarrassed.
+Without revealing his own penetration,
+He offered another's words, not his to give.
+Had he chattered on and on,
+Even his listeners would have been embarrassed.
 
 ## 25. Preaching from the Third Seat
 
@@ -764,7 +806,10 @@ open it, if he does not seal it, he is 108,000 miles from truth.
 
 ### The Verse
 
-In the light of day, Yet in a dream he talks of a dream. A monster among monsters, He intended to deceive the whole crowd.
+In the light of day,
+Yet in a dream he talks of a dream.
+A monster among monsters,
+He intended to deceive the whole crowd.
 
 ## 26. Two Monks Roll Up the Screen
 
@@ -805,7 +850,10 @@ Old Nansen gave away his treasure-words. He must have been greatly upset.
 
 ### The Verse
 
-Nansen was too kind and lost his treasure. Truly, words have no power. Even though the mountain becomes the sea, Words cannot open another's mind.
+Nansen was too kind and lost his treasure.
+Truly, words have no power.
+Even though the mountain becomes the sea,
+Words cannot open another's mind.
 
 ## 28. Blow Out the Candle
 
@@ -924,7 +972,10 @@ Joshu's investigating the old woman?
 
 ### The Verse
 
-When the question is common The answer is also common. When the question is sand in a bowl of boiled rice The answer is a stick in the soft mud.
+When the question is common
+The answer is also common.
+When the question is sand in a bowl of boiled rice
+The answer is a stick in the soft mud.
 
 ## 32. A Philosopher Asks Buddha
 
@@ -949,7 +1000,10 @@ outsiders?
 
 ### The Verse
 
-To tread the sharp edge of a sword, To run on smooth-frozen ice, One needs no footsteps to follow. Walk over the cliffs with hands free.
+To tread the sharp edge of a sword,
+To run on smooth-frozen ice,
+One needs no footsteps to follow.
+Walk over the cliffs with hands free.
 
 ## 33. This Mind Is Not Buddha
 
@@ -965,7 +1019,10 @@ If anyone understands this, he is a graduate of Zen.
 
 ### The Verse
 
-If you meet a fencing-master on the road, you may give him your sword, If you meet a poet, you may offer him your poem. When you meet others, say only a part of what you intend. Never give the whole thing at once.
+If you meet a fencing-master on the road, you may give him your sword,
+If you meet a poet, you may offer him your poem.
+When you meet others, say only a part of what you intend.
+Never give the whole thing at once.
 
 ## 34. Learning Is Not the Path
 
@@ -980,7 +1037,10 @@ the scandal of his own home. However, there are few who appreciate his kindness.
 
 ### The Verse
 
-When the sky is clear the sun appears, When the earth is parched rain will fall. He opened his heart fully and spoke out, But it was useless to talk to pigs and fish.
+When the sky is clear the sun appears,
+When the earth is parched rain will fall.
+He opened his heart fully and spoke out,
+But it was useless to talk to pigs and fish.
 
 ## 35. Two Souls
 
@@ -999,7 +1059,10 @@ he may say: "Mumon did not tell me where to go!" but it will be too late then.
 
 ### The Verse
 
-The moon above the clouds is the same moon, The mountains and rivers below are all different. Each is happy in its unity and variety. This is one, this is two.
+The moon above the clouds is the same moon,
+The mountains and rivers below are all different.
+Each is happy in its unity and variety.
+This is one, this is two.
 
 ## 36. Meeting a Zen Master on the Road
 
@@ -1049,7 +1112,10 @@ Buddha after him.
 
 ### The Verse
 
-Words cannot describe everything. The heart's message cannot be delivered in words. If one receives words literally, he will be lost, If he tries to explain with words, he will not attain enlightenment in this life.
+Words cannot describe everything.
+The heart's message cannot be delivered in words.
+If one receives words literally, he will be lost,
+If he tries to explain with words, he will not attain enlightenment in this life.
 
 ## 39. Ummon's Sidetrack
 
@@ -1074,7 +1140,10 @@ even perceive himself.
 
 ### The Verse
 
-When a fish meets the fishhook If he is too greedy, he will be caught. When his mouth opens His life already is lost.
+When a fish meets the fishhook
+he will be caught if he is too greedy.
+As soon as his mouth opens
+His life already is lost.
 
 ## 40. Tipping Over a Water Vase
 
@@ -1161,7 +1230,10 @@ are living in the world of delusion.
 
 ### The Verse
 
-One could not awaken her, the other could. Neither are good actors. One wears the mask of god, one a devil's mask. Had both failed, the drama still would be a comedy.
+One could not awaken her, the other could.
+Neither are good actors.
+One wears the mask of god, one a devil's mask.
+Had both failed, the drama still would be a comedy.
 
 ## 43. Shuzan's Short Staff
 
@@ -1211,7 +1283,10 @@ There is no need to ask anyone whether or not your recognition is true.
 
 ### The Verse
 
-Do not fight with another's bow and arrow. Do not ride another's horse. Do not discuss another's faults. Do not interfere with another's work.
+Do not fight with another's bow and arrow.
+Do not ride another's horse.
+Do not discuss another's faults.
+Do not interfere with another's work.
 
 ## 46. Proceed from the Top of the Pole
 
@@ -1315,7 +1390,10 @@ are here!"
 
 ### The Verse
 
-If anyone tells you fire is light, Pay no attention. When two thieves meet they need no introduction: They recognize each other without question.
+If anyone tells you fire is light,
+Pay no attention.
+When two thieves meet they need no introduction:
+They recognize each other without question.
 
 ## Afterword
 
@@ -1402,3 +1480,6 @@ one bite, light will pour out and the ground will shake. If not, then even the f
 already there all turn to hot sand.
 
 Say it quick. Say it quick.
+
+
+
