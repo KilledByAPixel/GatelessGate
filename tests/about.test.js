@@ -106,9 +106,12 @@ test('the rights line names the holder, the year and the licence', () => {
   const txt = rights.parts.join('');
   assert.match(txt, /©\s*2026\s*Frank Force/);
   assert.match(txt, /BY-NC-ND 4\.0/);
-  // and it still says what is NOT his to license — the reason this page has a
-  // rights line at all is that the book is two things with different owners
-  assert.match(txt, /1934 translation is in the public domain/);
+  // and it still says what is NOT his to license. That is the reason this page
+  // has a rights line at all: the book is a new edition standing on a public
+  // domain one, and a reader is owed both halves of that. Matched loosely on
+  // purpose — the sentence has been reworded once already, and pinning its exact
+  // shape tests the prose rather than the claim.
+  assert.match(txt, /1934 translation[^.]*public domain/);
 });
 
 // The page and the repository must not say different things about the terms.

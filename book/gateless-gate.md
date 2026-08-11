@@ -17,43 +17,46 @@ paragraph, prose line breaks are wrapping and mean nothing; verse line
 breaks are the verse and are kept. scripts/lib/parse-book.js says which
 sections are which.
 
-RIGHTS: this file is mixed. The forty-nine cases are the 1934
-Senzaki/Reps rendering and are in the United States public domain. The
-Preface and Afterword pages are a new translation made for this edition,
-(c) 2026 Frank Force, CC BY-NC-ND 4.0. See NOTICE.md.
+RIGHTS: this is a new edition of the Mumonkan, (c) 2026 Frank Force,
+CC BY-NC-ND 4.0 — re-edited and modernised throughout, with a preface and
+a back matter translated for it from the Chinese and published in no
+earlier English edition. What it inherits is nobody's to license: Wumen
+Huikai's 1228 Chinese, and the 1934 Senzaki/Reps English under the edits,
+which is in the United States public domain. NOTICE.md has the detail.
 -->
 
-THE GATELESS GATE
+*The Mumonkan — forty-eight koans collected by Wumen Huikai, called Mumon, in 1228, each
+with his commentary and his capping verse. The forty-ninth case is not his: Amban added it
+a few years later, and grumbled about the other forty-eight while he did.*
 
-Forty-eight Zen koans collected by Mu-mon Ekai in the early thirteenth century
+**This edition — 2026**
 
-Translated by Nyogen Senzaki and Paul Reps (1934)
-Source: John Murray, Los Angeles (privately printed) —
-https://sacred-texts.com/bud/glg/index.htm
+A new edition, not a reprint of an old one.
 
-Nyogen Senzaki and Paul Reps's English rendering, privately printed in Los Angeles in 1934
-and later expanded into the better-known Zen Flesh Zen Bones (1957). The 1934 printing is
-in the US public domain (copyright not renewed). Lightly modernised by Soul Spirit Self
-where archaic English verb forms persist (Mumon's commentaries are in plain modern
-English; verses occasionally slip into Edwardian register).
+Its preface and its back matter — Mumon's preface, his afterword, the Zen Warnings and
+Amban's letter — were translated for it from the Chinese of the Taishō canon (CBETA
+T48n2005), and appear in no earlier English edition of the Mumonkan.
 
----
+Its forty-nine cases have been edited throughout: archaic constructions eased, wording
+simplified where it clouded the sense, and the capping verses set back as lines after a
+flattening somewhere upstream had run them together into prose. What is wanted is a
+Gateless Gate that reads plainly in the English of now, without losing what the older
+renderings were reaching for.
 
-What follows is the complete text of The Gateless Gate (Mumonkan) — Mu-mon Ekai's 1228
-collection of forty-eight koans with his commentary and capping verses — in Nyogen Senzaki
-and Paul Reps's 1934 English rendering. The 1934 Los Angeles printing predates Reps's
-later expansion of this material into Zen Flesh, Zen Bones (1957). Archaic English verb
-forms and pronouns where they occur in the verses have been lightly modernised.
+The new translations and the editing are © 2026 Frank Force, shared under CC BY-NC-ND 4.0.
 
-[THE GATELESS GATE]
+**What it descends from**
 
-by Ekai, called Mu-mon
+The English of the cases began as Nyogen Senzaki and Paul Reps's rendering, privately
+printed by John Murray in Los Angeles in 1934 and expanded later into the better known Zen
+Flesh, Zen Bones (1957). That 1934 printing is in the United States public domain — its
+copyright was never renewed — and it reaches this edition by way of
+[sacred-texts.com](https://sacred-texts.com/bud/glg/index.htm) and a light modernisation by
+Soul Spirit Self.
 
-Transcribed by Nyogen Senzaki and Paul Reps
-
-John Murray, Los Angeles
-
-[1934]
+Beneath all of it is Wumen Huikai's Chinese of 1228. Neither the 1228 original nor the 1934
+English is anyone's to license, and this edition claims neither. NOTICE.md sorts out which
+is which.
 
 ## Preface
 

@@ -18,13 +18,19 @@ sitting alone at the root of a repository looks like it covers the whole of it.
 - The new English translations of the front and back matter — Mumon's preface,
   his afterword, the Zen Warnings and Amban's letter — made for this edition
   from the Chinese, and the editorial matter in `README.md` and the About page.
-  In `book/gateless-gate.md` these are the Preface and Afterword pages; the
-  forty-nine numbered pages of that same file are not covered — see below. The
+  In `book/gateless-gate.md` these are the Preface and Afterword pages. The
   apparatus behind them in `book/translation-notes.md` is covered too, and so
   are the seven further pieces translated there but not published in the book,
   excepting the Chinese any of it quotes.
+- The editing of the forty-nine cases for this edition — the modernising, the
+  simplified wording, the capping verses set back as lines. The 1934 English
+  underneath that editing is not covered; see below.
 
 In short: attribution required, no commercial use, no derivative works.
+
+This is a new edition of the Mumonkan, not a reprint of an old one. It carries a
+preface and back matter that have appeared in no earlier English edition, and its
+forty-nine cases have been edited throughout. What it inherits, it says so.
 
 ## Not covered
 
@@ -36,8 +42,13 @@ the text in `src/koans/text/mumonkan.js`, of `THE-GATELESS-GATE.md`, and of the
 forty-nine numbered pages of `book/gateless-gate.md`, and it reaches this
 edition through [sacred-texts.com](https://sacred-texts.com/bud/glg/index.htm).
 
-The light modernisation of archaic verb forms in the capping verses is the only
-editorial hand on those cases; it is not claimed as a separate work.
+**The editing of those cases for this edition** is a different matter, and is
+covered. Archaic constructions have been eased, wording simplified where it
+clouded the sense, and the capping verses set back as lines after a flattening
+upstream had run them together into prose. That editorial work is © 2026 Frank
+Force under the licence above. It does not reach back to the 1934 text beneath
+it, which stays public domain and free for anyone to take up as it was
+printed.
 
 **Three.js**, vendored in `lib/`, is © 2010-2026 Three.js Authors and is
 licensed MIT. Each file carries its own SPDX header. It travels under its own

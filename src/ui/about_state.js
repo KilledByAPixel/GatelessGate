@@ -104,9 +104,13 @@ export const SECTIONS = [
   {
     label: 'Rights',
     parts: [
-      'The 1934 translation is in the public domain. Everything else — the code, '
-      + 'the dioramas, the audio, the narration, and the new translations of the '
-      + 'front and back matter — is © 2026 Frank Force, shared under ',
+      'This is a new edition of the Mumonkan, © 2026 Frank Force: the cases '
+      + 'edited and modernised throughout, and a preface and back matter '
+      + 'translated for it from the Chinese that appear in no earlier English '
+      + 'edition. The 1934 translation underneath that editing is in the public '
+      + 'domain and stays that way. Everything else — the code, the dioramas, '
+      + 'the audio, the narration, the new translations and the editing — is '
+      + 'shared under ',
       ['Creative Commons BY-NC-ND 4.0', LICENSE_URL],
       ': credit it, don’t sell it, don’t publish a changed version of it. For '
       + 'anything the licence doesn’t cover, ask. Three.js, vendored here, is '
