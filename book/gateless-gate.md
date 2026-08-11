@@ -1126,54 +1126,53 @@ house and country come to rest on their own.
 
 ### Colophon
 
-Five days before the end of the summer retreat, the year the era changed to Jotei. Respectfully set down by the monk Ekai, called Mumon, eighth in descent from Yogi.
+Five days before the end of the summer retreat, in the first year of the Jotei era 1228.
+
+Respectfully set down by the monk Ekai, called Mumon, eighth in the line from Yogi.
 
 ### Zen Warnings
 
-Follow the rules and hold the line:
-you tie yourself up without a rope.
+Follow the rules and keep to the forms:
+you tie yourself up with no rope.
 
-Range where you like with nothing in the way:
-the outsiders' road, the devil's army.
+Roam where you like with nothing in your way:
+off the road altogether, in with the devil's army.
 
-Keep the mind clear and still:
+Keep the mind settled and still:
 the crooked Zen of silent illumination.
 
-Do as you please and drop every tie:
+Do as you please and let every tie go:
 down you go into the deep pit.
 
 Wide awake, never dull:
-a chain on your leg and a board round your neck.
+chains on your legs, a board around your neck.
 
 Think good, think evil:
 hell and heaven.
 
 Opinions about Buddha, opinions about the teaching:
-iron mountains on both sides of you.
+iron mountains closing on either side.
 
 Catch each thought the moment it stirs:
-a man fooling about with ghosts.
+you're fooling around with spirits.
 
 Sit like a stump working at your concentration:
 making a living in a house of ghosts.
 
-Push on and you lose the sense of it;
-pull back and you break with the root.
+Push on and you miss the point;
+pull back and you break with the source.
 
-Neither on nor back:
+Neither forward nor back:
 a corpse that is still breathing.
 
-Now say: how do you actually walk it?
+Now tell me: how do you actually walk it?
 
-Put your back into it. Settle it in this life.
-Don't leave the rest of it to grind on you through endless ages.
+Put your back into it and settle it in this life. Don't leave the damage to grind on you for ages without end.
 
 ### Amban's Letter
 
-Old Zen master Mumon made his remarks on forty-eight koans, passing verdict on the koans of the old worthies. It was very like a man selling fried cakes, who gets the customer to open his mouth and take one, and then the customer can neither swallow it nor spit it out.
+Old master Mumon commented on forty-eight koans, passing verdict on the words of the old masters. It was very like a man selling fried cakes, who gets the customer to open his mouth and take one, and then the customer can neither swallow it nor spit it out.
 
-Even so. Amban would like to use the man's own stove while it is still hot, fry up one more, and round the count out to the number of the Great Expansion, then send it back to him as before. And I wonder where the old master will get his teeth in. If he takes it in one bite, light will pour out and the ground will shake. If not, then even the forty-eight already there all turn to hot sand.
+Even so, I would like to use the man's own stove while it is still hot, fry up one more, and round the count out to forty-nine — the number of the Great Expansion — then send it back to him as before. And I wonder where the old man will sink his teeth in. If he takes it in one bite, light will pour out and the ground will shake. If not, then even the forty-eight before it all turn to hot sand.
 
-Say it quick. Say it quick.
-
-
+Say it quick. Say it quick!
