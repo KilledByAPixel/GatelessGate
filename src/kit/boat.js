@@ -52,8 +52,19 @@ export function makeBoat({
   const keelF = [0, -D, L * 0.22];
   const keelA = [0, -D, -L * 0.34];
   const tri = [];
-  const face = (a, b, c) => tri.push(...a, ...b, ...c);
-  // port side (outward-facing wind order), then starboard mirrored
+  // WOUND OUTWARD, and it was not: every one of these ten triangles used to be
+  // listed the other way round, so computeVertexNormals gave the whole shell
+  // inward normals. Front-face culling then threw away the near side and drew
+  // the far side's interior, lit from inside — which is why the hull's
+  // underside read as a solid patch in the wrong value (Frank: "the bottom of
+  // it seems like it might be flipped, inverted, rendered the inverse
+  // colouring"), and why the inverted-hull outline pass had nothing sensible to
+  // grow. The vertex lists below stay in the order they were composed in — bow
+  // to keel to gunwale, which is how the shape reads on paper — and the helper
+  // emits them reversed, so the geometry is right without the prose going
+  // backwards. tests/boat.test.js holds every face to it.
+  const face = (a, b, c) => tri.push(...a, ...c, ...b);
+  // port side, then starboard mirrored
   face(bowTip, keelF, midP);
   face(midP, keelF, keelA);
   face(midP, keelA, sternP);
