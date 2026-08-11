@@ -25,13 +25,13 @@ Huikai's 1228 Chinese, and the 1934 Senzaki/Reps English under the edits,
 which is in the United States public domain. NOTICE.md has the detail.
 -->
 
-*The Mumonkan — forty-eight koans collected by Wumen Huikai, called Mumon, in 1228, each with his commentary and his capping verse. The forty-ninth case is not his: Amban added it a few years later, and grumbled about the other forty-eight while he did.*
+*The Mumonkan: forty-eight koans collected by Wumen Huikai, called Mumon, in 1228, each with his commentary and his capping verse. The forty-ninth case is not his: Amban added it a few years later, and grumbled about the other forty-eight while he did.*
 
-**This edition — 2026**
+**This edition, 2026**
 
 A new edition, not a reprint of an old one.
 
-Its preface and its back matter — Mumon's preface, his afterword, the Zen Warnings and Amban's letter — were translated for it from the Chinese of the Taishō canon (CBETA T48n2005), and appear in no earlier English edition of the Mumonkan.
+Its preface and its back matter (Mumon's preface, his afterword, the Zen Warnings and Amban's letter) were translated for it from the Chinese of the Taishō canon (CBETA T48n2005), and appear in no earlier English edition of the Mumonkan.
 
 Its forty-nine cases have been edited throughout: archaic constructions eased, wording simplified where it clouded the sense, and the capping verses set back as lines after a flattening somewhere upstream had run them together into prose. What is wanted is a Gateless Gate that reads plainly in the English of now, without losing what the older renderings were reaching for.
 
@@ -39,7 +39,7 @@ The new translations and the editing are © 2026 Frank Force, shared under CC BY
 
 **What it descends from**
 
-The English of the cases began as Nyogen Senzaki and Paul Reps's rendering, privately printed by John Murray in Los Angeles in 1934 and expanded later into the better known Zen Flesh, Zen Bones (1957). That 1934 printing is in the United States public domain — its copyright was never renewed — and it reaches this edition by way of [sacred-texts.com](https://sacred-texts.com/bud/glg/index.htm) and a light modernisation by Soul Spirit Self.
+The English of the cases began as Nyogen Senzaki and Paul Reps's rendering, privately printed by John Murray in Los Angeles in 1934 and expanded later into the better-known Zen Flesh, Zen Bones (1957). That 1934 printing is in the United States public domain, its copyright never renewed, and it reaches this edition by way of [sacred-texts.com](https://sacred-texts.com/bud/glg/index.htm) and a light modernization by Soul Spirit Self.
 
 Beneath all of it is Wumen Huikai's Chinese of 1228. Neither the 1228 original nor the 1934 English is anyone's to license, and this edition claims neither. NOTICE.md sorts out which is which.
 
@@ -47,13 +47,13 @@ Beneath all of it is Wumen Huikai's Chinese of 1228. Neither the 1228 original n
 
 ### Mumon's Preface
 
-The Buddha's teaching makes mind as its source, and no gate as the gate of the teaching. If there is no gate, then how do you pass through?
+The Buddha's teaching takes mind as its source, and no gate as the gate of the teaching. If there is no gate, then how do you pass through?
 
-It is said that what comes through the gate is can never be your own treasures. What you gain from external conditions has a begining and end, it comes together and it falls apart. Talk like that is raising waves where there is no wind, cutting into healthy flesh. Worse still to snag on words and phrases and go hunting for meaning. Swinging a stick at the moon. Scratching an itch through your boot. What has any of it to do with anything?
+It is said that what comes in through the gate can never be your own treasure. What you gain from outside conditions has a beginning and an end; it comes together and it falls apart. Talk like that is raising waves where there is no wind, cutting into healthy flesh. Worse still to snag on words and phrases and go hunting for meaning. Swinging a stick at the moon. Scratching an itch through your boot. What has any of it to do with anything?
 
 In the summer of 1228 I was head monk at Ryusho, in Onshu. Monks kept coming to ask for instruction, so I took the old teachers' koans and used them as tile-shards for knocking at the gate, leading each student on according to what he needed. I copied them down as they came, and before I realized there was a book. I never put them in any order, forty-eight of them altogether. The whole thing goes under the name Mumonkan, "The Gateless Gate."
 
-If a man of determination bravely pushes forward regardless of all danger, then eight-armed Nata cannot stop him. At the sight of him the twenty-eight patriarchs of India and the six of this land would beg for their lives. However without determination, it is like when a horse gallops past an open window. Blink and he is gone.
+If a man of determination bravely pushes forward regardless of all danger, then eight-armed Nata cannot stop him. At the sight of him the twenty-eight patriarchs of India and the six of this land would beg for their lives. However, without determination, it is like a horse galloping past an open window. Blink, and it is gone.
 
 ### The Verse
 
@@ -268,7 +268,10 @@ I will allow his realization, but I will not admit his understanding. When one i
 
 ### The Verse
 
-It is better to realize mind than body. When mind is realized one need not worry about body. When mind and body become one The man is free. Then he desires no praising.
+It is better to realize mind than body.
+When mind is realized one need not worry about body.
+When mind and body become one,
+The man is free and desires no praise.
 
 ## 10. Seizei Alone and Poor
 
@@ -288,7 +291,10 @@ Seizei overplayed his hand. Why was it so? Because Sozan had eyes and knew with 
 
 ### The Verse
 
-The poorest man in China, The bravest man in China, He barely sustains himself, Yet wishes to rival the wealthiest.
+The poorest man in China,
+The bravest man in China,
+He barely sustains himself,
+Yet wishes to rival the wealthiest.
 
 ## 11. Joshu Examines a Monk in Meditation
 
@@ -316,7 +322,10 @@ If anyone thinks that the one's insight exceeds the other's, he has no eyes.
 
 ### The Verse
 
-The light of the eyes is as a comet, And Zen's activity is as lightning. The sword that kills the man Is the sword that saves the man.
+The light of the eyes is as a comet,
+And Zen's activity is as lightning.
+The sword that kills the man
+Is the sword that saves the man.
 
 ## 12. Zuigan Calls His Own Master
 
@@ -340,7 +349,10 @@ Old Zuigan sells out and buys himself. He is opening a puppet show. He uses one 
 
 ### The Verse
 
-Some Zen students do not realize the true man in a mask Because they recognize ego-soul. Ego-soul is the seed of birth and death, And foolish people call it the true man.
+Some Zen students do not realize the true man in a mask
+Because they recognize ego-soul.
+Ego-soul is the seed of birth and death,
+And foolish people call it the true man.
 
 ## 13. Tokusan Holds His Bowl
 
@@ -362,7 +374,10 @@ Speaking about ultimate truth, both Ganto and Tokusan did not even dream it. Aft
 
 ### The Verse
 
-Whoever understands the first truth Should understand the ultimate truth. The last and first, Are they not the same?
+Whoever understands the first truth
+Should understand the ultimate truth.
+The last and first,
+Are they not the same?
 
 ## 14. Nansen Cuts the Cat in Two
 
@@ -382,7 +397,10 @@ Why did Joshu put his sandals on his head? If anyone answers this question, he w
 
 ### The Verse
 
-Had Joshu been there, He would have enforced the edict oppositely. Joshu snatches the sword And Nansen begs for his life.
+Had Joshu been there,
+He would have enforced the edict oppositely.
+Joshu snatches the sword
+And Nansen begs for his life.
 
 ## 15. Tozan's Three Blows
 
@@ -418,7 +436,10 @@ Now, I want to ask: Did Tozan deserve the three blows? If you say yes, not only 
 
 ### The Verse
 
-The lioness teaches her cubs roughly; The cubs jump and she knocks them down. When Ummon saw Tozan his first arrow was light; His second arrow shot deep.
+The lioness teaches her cubs roughly;
+The cubs jump and she knocks them down.
+When Ummon saw Tozan his first arrow was light;
+His second arrow shot deep.
 
 ## 16. Bells and Robes
 
@@ -467,7 +488,10 @@ Now I want to ask you: Which one should apologize?
 
 ### The Verse
 
-When prison stocks are iron and have no place for the head, the prisoner is doubly in trouble. When there is no place for Zen in the head of our generation, it is in grievous trouble. If you try to hold up the gate and door of a falling house, You also will be in trouble.
+When prison stocks are iron and have no place for the head, the prisoner is doubly in trouble.
+When there is no place for Zen in the head of our generation, it is in grievous trouble.
+If you try to hold up the gate and door of a falling house,
+You also will be in trouble.
 
 ## 18. Tozan's Three Pounds
 
@@ -483,7 +507,10 @@ Old Tozan's Zen is like a clam. The minute the shell opens you see the whole ins
 
 ### The Verse
 
-Three pounds of flax in front of your nose, Close enough, and mind is still closer. Whoever talks about affirmation and negation Lives in the right and wrong region.
+Three pounds of flax in front of your nose,
+Close enough, and mind is still closer.
+Whoever talks about affirmation and negation
+Lives in the right and wrong region.
 
 ## 19. Everyday Life Is the Path
 
@@ -545,7 +572,10 @@ It seems to me Ummon is so poor he cannot distinguish the taste of one food from
 
 ### The Verse
 
-Lightning flashes, Sparks shower. In one blink of your eyes You have missed seeing.
+Lightning flashes,
+Sparks shower.
+In one blink of your eyes
+You have missed seeing.
 
 ## 22. Kashapa's Preaching Sign
 
@@ -655,7 +685,10 @@ I want to ask you: Which of those two monks gained and which lost? If any of you
 
 ### The Verse
 
-When the screen is rolled up the great sky opens, Yet the sky is not attuned to Zen. It is best to forget the great sky And to retire from every wind.
+When the screen is rolled up the great sky opens,
+Yet the sky is not attuned to Zen.
+It is best to forget the great sky
+And to retire from every wind.
 
 ## 27. It Is Not Mind, It Is Not Buddha, It Is Not Things
 
@@ -710,7 +743,10 @@ The old woman referred him to Ryutan, not more than five miles away. So he went 
 
 ### The Verse
 
-A hundred hearings cannot surpass one seeing, But after you see the teacher, that one glance cannot surpass a hundred hearings. His nose was very high But he was blind after all.
+A hundred hearings cannot surpass one seeing,
+But after you see the teacher, that one glance cannot surpass a hundred hearings.
+His nose was very high
+But he was blind after all.
 
 ## 29. Not the Wind, Not the Flag
 
@@ -728,7 +764,10 @@ The sixth patriarch said: "The wind is not moving, the flag is not moving. Mind 
 
 ### The Verse
 
-Wind, flag, mind moves, The same understanding. When the mouth opens All are wrong.
+Wind, flag, mind moves,
+The same understanding.
+When the mouth opens
+All are wrong.
 
 ## 30. This Mind Is Buddha
 
@@ -860,7 +899,10 @@ In such a case, if you can answer him intimately, your realization will be beaut
 
 ### The Verse
 
-Meeting a Zen master on the road, Face him neither with words nor silence. Give him an uppercut And you will be called one who understands Zen.
+Meeting a Zen master on the road,
+Face him neither with words nor silence.
+Give him an uppercut
+And you will be called one who understands Zen.
 
 ## 37. A Buffalo Passes Through the Enclosure
 
@@ -874,7 +916,10 @@ If anyone can open one eye at this point and say a word of Zen, he is qualified 
 
 ### The Verse
 
-If the buffalo runs, he will fall into the trench; If he returns, he will be butchered. That little tail Is a very strange thing.
+If the buffalo runs, he will fall into the trench;
+If he returns, he will be butchered.
+That little tail
+Is a very strange thing.
 
 ## 38. An Oak Tree in the Garden
 
@@ -938,7 +983,10 @@ Isan was brave enough, but he could not escape Hyakujo's trick. After all, he ga
 
 ### The Verse
 
-Giving up cooking utensils, Defeating the chatterbox, Though his teacher sets a barrier for him His feet will tip over everything, even the Buddha.
+Giving up cooking utensils,
+Defeating the chatterbox,
+Though his teacher sets a barrier for him
+His feet will tip over everything, even the Buddha.
 
 ## 41. Bodhidharma Pacifies the Mind
 
@@ -958,7 +1006,10 @@ That broken-toothed old Hindu, Bodhidharma, came thousands of miles over the sea
 
 ### The Verse
 
-Why did Bodhidharma come to China? For years monks have discussed this. All the troubles that have followed since Came from that teacher and disciple.
+Why did Bodhidharma come to China?
+For years monks have discussed this.
+All the troubles that have followed since
+Came from that teacher and disciple.
 
 ## 42. The Girl Comes Out from Meditation
 
@@ -999,7 +1050,10 @@ If you call this a short staff, you oppose its reality. If you do not call it a 
 
 ### The Verse
 
-Holding out the short staff, He gave an order of life or death. Positive and negative interwoven, Even Buddhas and patriarchs cannot escape this attack.
+Holding out the short staff,
+He gave an order of life or death.
+Positive and negative interwoven,
+Even Buddhas and patriarchs cannot escape this attack.
 
 ## 44. Basho's Staff
 
@@ -1013,7 +1067,10 @@ When there is no bridge over the creek the staff will help me. When I return hom
 
 ### The Verse
 
-With this staff in my hand I can measure the depths and shallows of the world. The staff supports the heavens and makes firm the earth. Everywhere it goes the true teaching will be spread.
+With this staff in my hand
+I can measure the depths and shallows of the world.
+The staff supports the heavens and makes firm the earth.
+Everywhere it goes the true teaching will be spread.
 
 ## 45. Who Is He?
 
@@ -1044,7 +1101,10 @@ One can continue his steps or turn his body freely about on the top of the pole.
 
 ### The Verse
 
-The man who lacks the third eye of insight Will cling to the measure of the hundred feet. Such a man will jump from there and kill himself, Like a blind man misleading other blind men.
+The man who lacks the third eye of insight
+Will cling to the measure of the hundred feet.
+Such a man will jump from there and kill himself,
+Like a blind man misleading other blind men.
 
 ## 47. Three Gates of Tosotsu
 
@@ -1064,7 +1124,10 @@ Otherwise he will be living on poor food and not even enough of that to satisfy 
 
 ### The Verse
 
-An instant realization sees endless time. Endless time is as one moment. When one comprehends the endless moment He realizes the person who is seeing it.
+An instant realization sees endless time.
+Endless time is as one moment.
+When one comprehends the endless moment
+He realizes the person who is seeing it.
 
 ## 48. One Road of Kembo
 
@@ -1082,19 +1145,22 @@ One teacher enters the deep sea and scratches the earth and raises dust. The oth
 
 ### The Verse
 
-Before the first step is taken the goal is reached. Before the tongue is moved the speech is finished. More than brilliant intuition is needed To find the origin of the right road.
+Before the first step is taken the goal is reached.
+Before the tongue is moved the speech is finished.
+More than brilliant intuition is needed
+To find the origin of the right road.
 
 ## 49. Amban's Addition
 
 ### The Case
 
-Amban, a layman Zen student, said: "Mumon has just published forty-eight koans and called the book Gateless Gate. He criticizes the old patriarchs' words and actions. I think he is very mischievous. He is like an old cake seller trying to catch a passerby to force cake down his mouth. The customer can neither swallow nor spit out the cakes, and this causes suffering. Mumon has annoyed everyone enough, so I think I shall add one more as a bargain. I wonder if he himself can eat this bargain. If he can, and digest it well, it will be fine, but if not, we will have to put it back into the frying pan with his forty-eight also and cook them again. Mumon, you eat first, before someone else does:
+Amban, a layman Zen student, said: "Mumon has just published forty-eight koans and called the book Gateless Gate. He criticizes the old patriarchs' words and actions. I think he is very mischievous. He is like an old man selling fried cakes, catching a passerby and forcing one into his mouth. The customer can neither swallow the cake nor spit it out, and this causes suffering. Mumon has annoyed everyone enough, so I think I shall add one more as a bargain. I wonder if he himself can eat this bargain. If he can, and digest it well, it will be fine, but if not, we will have to put it back into the frying pan with his forty-eight also and cook them again. Mumon, you eat first, before someone else does:
 
 "Buddha, according to a sutra, once said: 'Stop, stop. Do not speak. The ultimate truth is not even to think.'"
 
 ### Amban's Comment
 
-Where did that so-called teaching come from? How is it that one could not even think it? Suppose someone spoke about it then what became of it? Buddha himself was a great chatterbox and in this sutra spoke contrarily. Because of this, persons like Mumon appear afterwards in China and make useless cakes, annoying people. What shall we do after all? I will show you.
+Where did that so-called teaching come from? How is it that one could not even think it? Suppose someone spoke about it then what became of it? Buddha himself was a great chatterbox and in this sutra spoke contrarily. Because of this, persons like Mumon appear afterwards in China and fry up useless cakes, annoying people. What shall we do after all? I will show you.
 
 Then Amban put his palms together, folded his hands, and said: "Stop, stop. Do not speak. The ultimate truth is not even to think. And now I will make a little circle on the sutra with my finger and add that five thousand other sutras and Vimalakirti's gateless gate all are here!"
 
@@ -1115,18 +1181,18 @@ Anyone who has been all the way through hears one of these raised and knows at o
 
 Have you not heard what Gensha said? No gate is the gate of freedom. No intent is the intent of a person of the Way. And as Hakuun said: You know perfectly well it is just this. So why can't you get through?
 
-Talk like that is smearing milk on red clay. Get through the Gateless Gate and you have already made a fool of Mumon. Fail to get through and you have disapointed yourself.
+Talk like that is smearing milk on red clay. Get through the Gateless Gate and you have already made a fool of Mumon. Fail to get through and you have disappointed yourself.
 
 ### The Verse
 
 The mind of nirvana is easy to see.
-Seeing one thing from another is hard.
-Where that seeing is all clear,
+Telling one thing from another is hard.
+Where that telling is clear,
 house and country come to rest on their own.
 
 ### Colophon
 
-Five days before the end of the summer retreat, in the first year of the Jotei era 1228.
+Five days before the end of the summer retreat, in the first year of the Jotei era, 1228.
 
 Respectfully set down by the monk Ekai, called Mumon, eighth in the line from Yogi.
 
@@ -1167,12 +1233,13 @@ a corpse that is still breathing.
 
 Now tell me: how do you actually walk it?
 
-Put your back into it and settle it in this life. Don't leave the damage to grind on you for ages without end.
+Put your back into it and settle it in this life.
+Don't leave the damage to grind on you for ages without end.
 
 ### Amban's Letter
 
 Old master Mumon commented on forty-eight koans, passing verdict on the words of the old masters. It was very like a man selling fried cakes, who gets the customer to open his mouth and take one, and then the customer can neither swallow it nor spit it out.
 
-Even so, I would like to use the man's own stove while it is still hot, fry up one more, and round the count out to forty-nine — the number of the Great Expansion — then send it back to him as before. And I wonder where the old man will sink his teeth in. If he takes it in one bite, light will pour out and the ground will shake. If not, then even the forty-eight before it all turn to hot sand.
+Even so, I would like to use the man's own stove while it is still hot, fry up one more, and round the count out to forty-nine, the number of the Great Expansion, then send it back to him as before. And I wonder where the old man will sink his teeth in. If he takes it in one bite, light will pour out and the ground will shake. If not, then even the forty-eight before it all turn to hot sand.
 
-Say it quick. Say it quick!
+Say it quick. Say it quick.
