@@ -47,13 +47,13 @@ Beneath all of it is Wumen Huikai's Chinese of 1228. Neither the 1228 original n
 
 ### Mumon's Preface
 
-The Buddha's teaching takes mind as its source, and no gate as the gate of the teaching. If there is no gate, then how do you get through?
+The Buddha's teaching makes mind as its source, and no gate as the gate of the teaching. If there is no gate, then how do you pass through?
 
-Haven't you heard it said: what comes in by the gate is not the treasure of your own house; what you get from conditions has a start and a finish, it comes together and it falls apart. Talk like that is raising waves where there is no wind, cutting a sore into healthy flesh. Worse still to snag on words and phrases and go hunting for a meaning. Swinging a stick at the moon. Scratching an itch through your boot. What has any of it to do with anything?
+It is said that what comes through the gate is can never be your own treasures. What you gain from external conditions has a begining and end, it comes together and it falls apart. Talk like that is raising waves where there is no wind, cutting into healthy flesh. Worse still to snag on words and phrases and go hunting for meaning. Swinging a stick at the moon. Scratching an itch through your boot. What has any of it to do with anything?
 
-In the summer of 1228 I was head monk at Ryusho, in Onshu. Monks kept coming to ask for instruction, so I took the old teachers' koans and used them as tile-shards for knocking at the gate, leading each student on according to what he needed. I copied them down as they came, and before I noticed there was a book. I never put them in any order. Forty-eight of them altogether. The whole thing goes under the name The Gateless Gate.
+In the summer of 1228 I was head monk at Ryusho, in Onshu. Monks kept coming to ask for instruction, so I took the old teachers' koans and used them as tile-shards for knocking at the gate, leading each student on according to what he needed. I copied them down as they came, and before I realized there was a book. I never put them in any order, forty-eight of them altogether. The whole thing goes under the name Mumonkan, "The Gateless Gate."
 
-If a man will go straight in with one blade and not care whether he lives, then eight-armed Nata cannot stop him, and even the twenty-eight patriarchs of India and the six of this land can only catch sight of him coming and beg for their lives. But hang back, and it is like watching a rider go past outside the window. Blink, and he is long gone.
+If a man of determination bravely pushes forward regardless of all danger, then eight-armed Nata cannot stop him. At the sight of him the twenty-eight patriarchs of India and the six of this land would beg for their lives. However without determination, it is like when a horse gallops past an open window. Blink and he is gone.
 
 ### The Verse
 
@@ -1088,13 +1088,13 @@ Before the first step is taken the goal is reached. Before the tongue is moved t
 
 ### The Case
 
-Amban, a layman Zen student, said: "Mumon has just published forty-eight koans and called the book Gateless Gate. He criticizes the old patriarchs' words and actions. I think he is very mischievous. He is like an old doughnut seller trying to catch a passerby to force his doughnuts down his mouth. The customer can neither swallow nor spit out the doughnuts, and this causes suffering. Mumon has annoyed everyone enough, so I think I shall add one more as a bargain. I wonder if he himself can eat this bargain. If he can, and digest it well, it will be fine, but if not, we will have to put it back into the frying pan with his forty-eight also and cook them again. Mumon, you eat first, before someone else does:
+Amban, a layman Zen student, said: "Mumon has just published forty-eight koans and called the book Gateless Gate. He criticizes the old patriarchs' words and actions. I think he is very mischievous. He is like an old cake seller trying to catch a passerby to force cake down his mouth. The customer can neither swallow nor spit out the cakes, and this causes suffering. Mumon has annoyed everyone enough, so I think I shall add one more as a bargain. I wonder if he himself can eat this bargain. If he can, and digest it well, it will be fine, but if not, we will have to put it back into the frying pan with his forty-eight also and cook them again. Mumon, you eat first, before someone else does:
 
 "Buddha, according to a sutra, once said: 'Stop, stop. Do not speak. The ultimate truth is not even to think.'"
 
 ### Amban's Comment
 
-Where did that so-called teaching come from? How is it that one could not even think it? Suppose someone spoke about it then what became of it? Buddha himself was a great chatterbox and in this sutra spoke contrarily. Because of this, persons like Mumon appear afterwards in China and make useless doughnuts, annoying people. What shall we do after all? I will show you.
+Where did that so-called teaching come from? How is it that one could not even think it? Suppose someone spoke about it then what became of it? Buddha himself was a great chatterbox and in this sutra spoke contrarily. Because of this, persons like Mumon appear afterwards in China and make useless cakes, annoying people. What shall we do after all? I will show you.
 
 Then Amban put his palms together, folded his hands, and said: "Stop, stop. Do not speak. The ultimate truth is not even to think. And now I will make a little circle on the sutra with my finger and add that five thousand other sutras and Vimalakirti's gateless gate all are here!"
 
@@ -1109,20 +1109,20 @@ They recognize each other without question.
 
 ### Mumon's Afterword
 
-The buddhas and the patriarchs, handing these encounters down, took the confession and closed the case. Never a word to spare. They lift the lid off your skull and let your eyes out into the daylight. What they want is for you to take hold of it here and now and not go looking for it from anybody else.
+The buddhas and the patriarchs, handing these encounters down, took the confession and closed the case. Never a word to spare. They lifted the lid off your skull and let your eyes open into the daylight. What they want is for you to take hold of it here and now and not go looking for it from anywhere else.
 
-An all-round man of the first rank hears one of them raised and knows at once where it lands. There is no doorway to go in by and no stairs to climb. He walks through the checkpoint swinging his arms and never asks the man on the gate.
+Anyone who has been all the way through hears one of these raised and knows at once where it lands. There is no doorway to pass through and no stairway to climb. He walks through the checkpoint swinging his arms and never asks the man at the gate.
 
-Have you not heard what Gensha said? No gate is the gate of release. No intent is the intent of the man of the Way. And Hakuun said: You know perfectly well it is just this. So why can't you get through?
+Have you not heard what Gensha said? No gate is the gate of freedom. No intent is the intent of a person of the Way. And as Hakuun said: You know perfectly well it is just this. So why can't you get through?
 
-Talk like that is smearing milk on red clay. Get through the Gateless Gate and you have already made a fool of Mumon. Fail to get through it and you have let yourself down.
+Talk like that is smearing milk on red clay. Get through the Gateless Gate and you have already made a fool of Mumon. Fail to get through and you have disapointed yourself.
 
 ### The Verse
 
-The mind of nirvana is easy enough to make out.
-The wisdom that tells one thing from another is hard.
-Get that wisdom clear
-and house and country come to rest of themselves.
+The mind of nirvana is easy to see.
+Seeing one thing from another is hard.
+Where that seeing is all clear,
+house and country come to rest on their own.
 
 ### Colophon
 
