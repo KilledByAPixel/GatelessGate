@@ -17,7 +17,9 @@ import { clamp01 } from '../util/math.js';
 // one uniform grid, cut to a circle for a basin or pond and left square for
 // open water — and the ripples are a HEIGHT FIELD on its vertices rather than
 // separate ring meshes. The rim vertices are anchored, so
-// nothing can travel past the wall, and the silhouette is the container's own.
+// nothing can travel past the wall, the silhouette is the container's own,
+// and a ring that reaches the wall folds back off it and returns (see the
+// fold in waveAt) instead of sailing on over the bank.
 // It also costs ONE draw call instead of seven.
 //
 // Everything is a closed form over the simTime handed to update() — no
@@ -28,6 +30,11 @@ const SPEED = 2.35;        // how fast a ripple front travels, world units/sec
 const WAVELEN = 0.62;      // crest-to-crest, in the same units
 const PACKET = 0.42;       // width of the travelling wave packet
 const TAU = 3.5;           // seconds for a ripple to fade to nothing
+const BOUNCE = 0.6;        // amplitude kept per round trip of the fold — one
+                           // wall bounce and one refocus. Applied smoothly as
+                           // BOUNCE^(travelled / 2·wallDist), not per discrete
+                           // contact: a stepped multiplier popped the whole
+                           // packet's height the instant the count ticked.
 const POOL = 8;            // concurrent ripples before the oldest is reused
 const EDGE_BAND = 0.12;    // fraction of the radius over which motion is pinned
 
@@ -294,9 +301,13 @@ export function makeWater({
     }
     : () => 0;
 
-  // A ripple can never outlive its crossing of the container, so one started at
-  // the far rim still dies at the near one rather than sailing on over the bank.
-  const LIFE = Math.min(TAU * 3, (size * 1.1) / SPEED + 0.6);
+  // The old cap here — "a ripple can never outlive its crossing" — was the
+  // no-bounce assumption in constant form, and with Frank's SPEED it was
+  // killing a pond ripple at ~1.5s while TAU promised 3.5. Reflections repeal
+  // it: a ring re-crosses as often as its amplitude lasts, so the only stop
+  // is the decay itself. Past three TAU the crest is under 5% of its strike
+  // and the env cutoff has long since dropped it from the sum.
+  const LIFE = TAU * 3;
 
   // How big a strike reads at this scale. A fixed amplitude was wrong at both
   // ends — the same crest that is a gentle ring on a pond is a tidal wave in
@@ -326,15 +337,51 @@ export function makeWater({
     for (const r of ripples) {
       const age = t - r.t0;
       if (age < 0 || age > LIFE) continue;
-      const d = Math.hypot(x - r.x, z - r.z);
-      const front = d - SPEED * age;
+      const dx = x - r.x;
+      const dz = z - r.z;
+      const d = Math.hypot(dx, dz);
+      // THE FOLD: the wall reflects. D is the tap-to-wall distance along this
+      // point's own direction; the travelled distance T bounces back and forth
+      // inside [0, D] as a triangle wave, so the ring runs out, comes back,
+      // refocuses at the tap, and runs out again. A centred tap collapses to a
+      // ring converging on its own origin — which is why this is a fold and
+      // not mirror image-sources: no finite set of mirrors can converge.
+      const D = Math.max(wallAlong(r.x, r.z, dx, dz, d), 1e-6);
+      const T = SPEED * age;
+      const m2 = T % (2 * D);
+      const folded = m2 <= D ? m2 : 2 * D - m2;
+      const front = d - folded;
       const env = Math.exp(-(front / PACKET) * (front / PACKET));
       if (env < 0.004) continue;
       // a travelling packet: one crest with a trough to each side of it
-      h += r.amp * Math.exp(-age / TAU) * env
+      h += r.amp * Math.exp(-age / TAU) * Math.pow(BOUNCE, T / (2 * D)) * env
         * Math.cos((front / WAVELEN) * Math.PI * 2) / (1 + d * 0.55);
     }
     return h;
+  }
+
+  // Distance from a tap at (sx, sz) to the wall, measured along the ray toward
+  // (sx+dx, sz+dz) — the per-direction wall the fold reflects off. For the
+  // blob it borrows wallDistance's own approximation: the rim radius at the
+  // TARGET point's bearing from centre, exact enough at the blob's gentle
+  // wobbles. `d` is |(dx, dz)|, already computed by the caller; a degenerate
+  // ray (the point IS the tap) falls back to the tap's own wall distance —
+  // the value is cosmetic there, it just must be finite.
+  function wallAlong(sx, sz, dx, dz, d) {
+    if (d < 1e-9) return Math.max(wallDistance(sx, sz), 0);
+    const ux = dx / d;
+    const uz = dz / d;
+    if (round || blob) {
+      const R = blob ? radiusAt(Math.atan2(sz + dz, sx + dx)) : half;
+      const b = sx * ux + sz * uz;
+      // ray-circle: t^2 + 2bt + (|s|^2 - R^2) = 0, taking the forward root.
+      // The blob's varying R can nudge the discriminant a hair negative for a
+      // tap pulled onto the rim — clamp, the edge mask owns that region anyway.
+      return -b + Math.sqrt(Math.max(b * b + R * R - sx * sx - sz * sz, 0));
+    }
+    const tx = ux > 0 ? (half - sx) / ux : ux < 0 ? (-half - sx) / ux : Infinity;
+    const tz = uz > 0 ? (half - sz) / uz : uz < 0 ? (-half - sz) / uz : Infinity;
+    return Math.min(tx, tz);
   }
 
   // Signed distance to the wall: positive inside, 0 on it, negative out. This

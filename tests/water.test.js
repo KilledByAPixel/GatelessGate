@@ -393,3 +393,53 @@ test('swellAt carries the ocean drift', () => {
   for (let t = 0; t < 6.5; t += 0.25) if (Math.abs(w.swellAt(1, 3, t)) > 0.01) lifted = true;
   assert.ok(lifted, 'the drift vanished from swellAt');
 });
+
+// ---- the bounce ------------------------------------------------------------
+// Ripples reflect off the container wall: the travelled distance is folded
+// (triangle-wave) against the per-direction wall distance, so the ring runs
+// out, comes back in, refocuses, and runs out again, losing amplitude per
+// round trip (BOUNCE). Time thresholds below assume SPEED ~= 2.35 — they are
+// deliberately loose so a retune survives them.
+
+test('a ripple comes back: the pond is alive again after the ring has crossed it', () => {
+  const R = 2.0;
+  const w = makeWater({ shape: 'round', size: R * 2, swell: 0, seed: 7 });
+  w.ripple(0, 0, 0.3);
+  // At SPEED 2.35 the outgoing ring is fully off a 2-unit pond by t ~= 1.4s;
+  // under the old (no-bounce) math every later sample was flat to ~3e-5.
+  for (const t of [2.0, 3.5]) {
+    w.update(0.1, t);
+    let peak = 0;
+    for (let r = 0; r < R; r += 0.05) peak = Math.max(peak, Math.abs(w.heightAt(r, 0, t)));
+    assert.ok(peak > 1e-3, `at t=${t} the pond is dead flat (peak ${peak}) — nothing bounced`);
+  }
+});
+
+test('each pass is weaker than the last: TAU and BOUNCE both bite', () => {
+  const R = 2.0;
+  const w = makeWater({ shape: 'round', size: R * 2, swell: 0, seed: 7 });
+  w.ripple(0, 0, 0.3);
+  // A centre tap's crest visits r=1 once per pass, roughly once per second at
+  // SPEED 2.35 (fold period 2R/SPEED ~= 1.7s, crest at r=1 every half period).
+  const peakIn = (t0, t1) => {
+    let m = 0;
+    for (let t = t0; t < t1; t += 0.02) m = Math.max(m, Math.abs(w.heightAt(1.0, 0, t)));
+    return m;
+  };
+  const p1 = peakIn(0, 1);
+  const p2 = peakIn(1, 2);
+  const p3 = peakIn(2, 3);
+  assert.ok(p1 > p2 && p2 > p3,
+    `passes must decay: ${p1} -> ${p2} -> ${p3}`);
+  assert.ok(p2 > 1e-3, 'the second pass should still be visible, not annihilated');
+});
+
+test('the bounce respects the wall: rim pinning holds through many passes', () => {
+  const R = 2.0;
+  const w = makeWater({ shape: 'round', size: R * 2, swell: 0, seed: 7 });
+  w.ripple(0.9, 0.4, 0.3);                     // off-centre, so folds differ per direction
+  for (let t = 0; t < 9; t += 0.15) {
+    assert.equal(w.heightAt(R, 0, t), 0);
+    assert.equal(w.heightAt(0, -R, t), 0);
+  }
+});

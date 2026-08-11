@@ -66,7 +66,7 @@ test('makeWater is a flat surface that ripples on demand', () => {
   assert.equal(w.rippleCount(), 0);
   w.ripple(0, 0);
   assert.equal(w.rippleCount(), 1, 'a ring appears');
-  for (let i = 0; i < 240; i++) w.update(1 / 60, i / 60);
+  for (let i = 0; i < 720; i++) w.update(1 / 60, i / 60);
   assert.equal(w.rippleCount(), 0, 'the ring expires');
 });
 
