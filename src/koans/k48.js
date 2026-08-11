@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
-  addOutlines, composeWorld, faceMonk, groundHeight, makeFan, makeFoam,
+  addOutlines, composeWorld, faceMonk, groundHeight, makeBoat, makeFan, makeFoam,
   makeLights, makeMonk, makePath, makeSand, makeWater, toonMaterial,
 } from '../kit/index.js';
 
@@ -179,13 +179,37 @@ const CAM = { distance: 11.2, target: [0.8, 1.45, -0.4], heading: 31.5, pitch: 1
   const sand = makeSand({ shore: SHORE, seed: ID, groundSeed: 21, color: wash(0.30) });
   scene.add(sand);
   
+  // WORLD y of the sea surface at world (x, z) — case 11's one closure, so the
+  // foam and the ship ride the same water instead of each inventing a sea
+  const seaSurface = (x, z, t) => SHORE.sea + water.heightAt(x, z + (SHORE.dist + 43), t);
+
   // the wave-ends, riding the sheet's own surface (the koi idiom)
   const foam = makeFoam({
   shore: SHORE, seed: ID, groundSeed: 21,
-  surfaceAt: (x, z, t) => SHORE.sea + water.heightAt(x, z + (SHORE.dist + 43), t),
+  surfaceAt: seaSurface,
   });
   foam.mesh.renderOrder = 1;
   scene.add(foam.mesh);
+
+  // A SHIP STANDING OUT. The last case's sea had nothing on it, and an empty
+  // sheet of ink reads as distance rather than as sea; one silhouette on it
+  // gives the water a scale and the horizon something to be far from. It also
+  // finishes the geography the case is made of — the one road runs out across
+  // the sand into the eastern sea, and something is out there going.
+  //
+  // Placed by the picture, not by taste. At 44 units the fog leaves about a
+  // fifth of it, which is the same read case 11's ship has and is the number
+  // that staging was tuned to. The yaw is the SAIL's doing: the lug sail is a
+  // single flat quad in the hull's own x = 0 plane, so it vanishes edge-on and
+  // a boat pointed at or away from the reader loses the one shape the model
+  // exists to make. 1.98 is the broadest the sail projects from this camera,
+  // and it happens to be a heading already turned for the open sea. Aft of the
+  // fan and well above the figures, on the opposite side of the frame from the
+  // one red thing in the picture.
+  const boat = makeBoat({ seed: ID, surfaceAt: seaSurface });
+  boat.group.position.set(-14, SHORE.sea, -30);
+  boat.group.rotation.y = 1.98;
+  scene.add(boat.group);
   
   const world = composeWorld(scene, {
   view: CAM,
@@ -251,6 +275,7 @@ const CAM = { distance: 11.2, target: [0.8, 1.45, -0.4], heading: 31.5, pitch: 1
   world.update(dt, simTime);
   water.update(dt, simTime);
   foam.update(dt, simTime);
+  boat.update(dt, simTime);      // it seats itself on the swell; the case owns only x and z
   // the surf breathes with the sea it belongs to (case 20's idiom):
   // read the true surface at the waterline and hand the bed 0..1
   if (audio && audio.setWaterSwell) {
@@ -274,6 +299,8 @@ const CAM = { distance: 11.2, target: [0.8, 1.45, -0.4], heading: 31.5, pitch: 1
   draws,
   length: +bar.scale.x.toFixed(3),
   showing: bar.visible,
+  shipY: +boat.group.position.y.toFixed(4),
+  shipRock: +boat.group.rotation.z.toFixed(4),
 };
       },
       dispose() {},

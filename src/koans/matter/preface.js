@@ -146,7 +146,7 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   view: CAM,
   seed: SEEDS.seed,
   groundSeed: SEEDS.groundSeed,
-  trees: 5,
+  trees: 9,
   mountains: MOUNTAINS,
   keepout: [
   ...approach.keepout(16, 1.2),

@@ -122,7 +122,7 @@ export function buildHub({
     // them and they are all here: change the count, widen or narrow the ring, or
     // push one off a spot with a keepout circle. `seed` is the fourth and
     // bluntest — it reshuffles the rocks, bushes and grass with them.
-    trees: 5,
+    trees: 20,
     treeRing: [7, 20],
     keepout,
     grassKeepout: withPath ? path.keepout(26, 1.15) : [],   // only the lane clears grass

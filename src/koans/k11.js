@@ -150,7 +150,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
 
     // JOSHU, down on the path, who will make up his mind about it — beside
     // the coast road (it passes z ≈ 4 at his x now), a step toward the rise
-    const JOSHU = new THREE.Vector3(1.0, 0, 2.9);
+    const JOSHU = new THREE.Vector3(2.0, 0, 1.9);
     faceMonk(monk, JOSHU);
     // `bow: true` hinges him at the sash without changing his arms: makeFigure
     // hands back a group named 'waist' carrying the torso, head and sleeves,
@@ -216,10 +216,10 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
 
     const world = composeWorld(scene, {
       view: CAM,
-      seed: ID,
+      seed: ID+1,
       groundSeed: 21,
       shore: SHORE,
-      trees: 4,
+      trees: 7,
       // the coast at the staging's back: both mountain bands re-aimed behind
       // and beside — nothing stands in the sea (k20's arrangement)
       mountains: [
