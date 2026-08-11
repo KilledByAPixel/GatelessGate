@@ -231,7 +231,7 @@ export default {
     place(makeBasin({ inner: 1.05, outer: 1.25, rim: 0.4 }), POND_X, 'animals');
     const pond = place(makeWater({ shape: 'round', size: 2.0, opacity: 0.55, strike: 0.06 }),
       POND_X, 'animals', 0, POND_Y);
-    place(makeKoi({ count: 3, radius: 0.62, length: 0.66, depth: 0.10, surfaceAt: pond.heightAt }),
+    place(makeKoi({ count: 3, radius: 0.62, length: 0.66, depth: 0.10, surfaceAt: pond.swellAt }),
       POND_X, 'animals', 0, POND_Y);
 
     // A single bird is modelled flat — it is meant to be seen from below, in a

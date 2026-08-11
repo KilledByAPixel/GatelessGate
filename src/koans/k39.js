@@ -251,7 +251,7 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
     // beneath them, so nothing can surface unasked.
     const koi = makeKoi({
       count: 4, seed: ID, length: 0.8, color: wash(0.16), unlit: true,
-      radius: 2.0, depth: 0.34, surfaceAt: water.heightAt,
+      radius: 2.0, depth: 0.34, surfaceAt: water.swellAt,
       // the deep side of the gradient, clear of the crossing (Frank: "the
       // fish are kind of further back in the pool where it can be a bit
       // deeper... positioned so they're not overlapping with the stones")

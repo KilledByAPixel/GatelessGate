@@ -74,7 +74,7 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   
   const koi = makeKoi({
   count: 3, seed: ID, radius: POND.size * 0.3, color: WASH.mid,
-  length: 0.66, depth: 0.19, surfaceAt: water.heightAt,
+  length: 0.66, depth: 0.19, surfaceAt: water.swellAt,
   });
   koi.group.position.set(POND.x, POND.surface, POND.z);
   scene.add(koi.group);

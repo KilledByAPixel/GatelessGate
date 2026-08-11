@@ -83,7 +83,7 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   // sized to the water they are actually in: the tail fin stands taller
   // than the old 0.95 fish was deep, so its dorsal broke the surface
   length: 0.7, depth: 0.19,
-  surfaceAt: water.heightAt,
+  surfaceAt: water.swellAt,
   });
   koi.group.position.set(POND.x, POND.surface, POND.z);
   scene.add(koi.group);
