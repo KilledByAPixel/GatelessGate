@@ -12,6 +12,15 @@
 > The seven pieces that do NOT ship keep their English in full below. This is
 > the only place they exist.
 >
+> **One editorial drop, recorded here because nowhere else holds it.** Mumon
+> points at his own verse twice in running prose — "The verse:" closing the
+> preface, and "…you have let yourself down. As the lines have it:" closing the
+> afterword. Neither is carried into the book: a **The Verse** heading stands
+> where they stood and says the same thing, and leaving both would have the page
+> announce the verse twice. The phrases are translated, they are Mumon's, and
+> they are written out here so that deleting the working drafts did not delete
+> them.
+>
 > The collation against a non-CBETA witness is still owed, and wants a machine
 > that can reach Chinese Wikisource — see "Source" below.
 
