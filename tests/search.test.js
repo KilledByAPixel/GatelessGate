@@ -74,10 +74,15 @@ test('a quoted term matches whole words only', () => {
   // The motivating case: `mu` unquoted also matches much, must, Mumon,
   // murmur — Joshu's answer, the most important word in the book, is
   // unfindable. Quoted, only the cases where it stands alone.
+  //
+  // Case 1 alone. This expected [1, 49] until the 2026 editing pass spelled
+  // Mu-mon as Mumon: the hyphen had been tokenising his name into "mu" + "mon",
+  // so case 49 was matching on the author's name rather than on Joshu's answer.
+  // Losing it is the search getting more correct, not less.
   const loose = ids('mu');
   const exact = ids('"mu"');
   assert.ok(loose.length > 10, `unquoted mu is noisy: ${loose.length}`);
-  assert.deepEqual(exact, [1, 49]);
+  assert.deepEqual(exact, [1]);
 });
 
 test('a quoted phrase must appear adjacent and in order', () => {

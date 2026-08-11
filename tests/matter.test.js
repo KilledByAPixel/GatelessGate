@@ -120,9 +120,9 @@ test('the lead-in sentence does not survive into the afterword\'s prose', async 
 test('the colophon stands on its own, and it is not the verse', async () => {
   const mod = await loadKoan(AFTERWORD_SLUG);
   assert.equal(mod.labels.colophon, 'Colophon');
-  assert.ok(mod.text.colophon.trimEnd().endsWith('eighth in descent from Yangqi.'));
-  assert.ok(!mod.text.verse.includes('Yangqi'), 'the colophon must not ride along inside the verse');
-  assert.ok(!mod.text.prose.includes('Yangqi'), 'nor stay behind in the prose');
+  assert.ok(mod.text.colophon.trimEnd().endsWith('eighth in descent from Yogi.'));
+  assert.ok(!mod.text.verse.includes('Yogi'), 'the colophon must not ride along inside the verse');
+  assert.ok(!mod.text.prose.includes('Yogi'), 'nor stay behind in the prose');
 });
 
 test('no page carries a rendered indent', async () => {
