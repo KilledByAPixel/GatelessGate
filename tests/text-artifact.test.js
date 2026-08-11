@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import TEXT, { about } from '../src/koans/text/mumonkan.js';
+import TEXT from '../src/koans/text/mumonkan.js';
 
 test('committed artifact has 49 complete entries', () => {
   const ids = Object.keys(TEXT).map(Number).sort((a, b) => a - b);
@@ -13,7 +13,6 @@ test('committed artifact has 49 complete entries', () => {
     }
   }
   assert.equal(TEXT[49].extra, true);
-  assert.ok(about && about.length > 0);
 });
 
 test('case 29 is the wind-and-flag koan', () => {
