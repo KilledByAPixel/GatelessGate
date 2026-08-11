@@ -17,7 +17,7 @@ const ID = 44;
 // The behaviour lives in the kit piece, so the paradox travels with it.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.2, target: [0.9, 1.15, 0.6], heading: 31.5, pitch: 18.4 };
+const CAM = { distance: 9.2, target: [0.1, 1.15, 0.6], heading: 36.5, pitch: 18.4 };
   export default {
   id: ID,
   slug: 'basho-s-staff',
@@ -44,13 +44,13 @@ const CAM = { distance: 9.2, target: [0.9, 1.15, 0.6], heading: 31.5, pitch: 18.
   
   // the hall the rack stands outside of — a staff rack belongs by a door
   const hall = makeHut({ width: 3.2, height: 2.4, depth: 2.5 });
-  hall.position.set(-1.6, 0, -4.6);
+  hall.position.set(-5.6, 0, -4.6);
   hall.rotation.y = 0.42;
   scene.add(hall);
   
   // THE RACK, with the staff in it. Accent, because the staff is the case.
   const rack = makeRack({ height: 1.3, staffColor: ACCENT, holding: true });
-  rack.group.position.set(0.9, 0, 0.6);
+  rack.group.position.set(1.2, 0, 0.6);
   rack.group.rotation.y = 0.5;
   scene.add(rack.group);
   

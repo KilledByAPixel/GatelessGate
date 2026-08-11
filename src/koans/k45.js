@@ -48,7 +48,7 @@ const ID = 45;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11, target: [1.55, 1.05, -0.6], heading: 42, pitch: 18.5 };
+const CAM = { distance: 7.9, target: [1.55, 1.05, -0.6], heading: -24.5, pitch: 13.5 };
   export default {
   id: ID,
   slug: 'who-is-he',
@@ -146,7 +146,7 @@ const CAM = { distance: 11, target: [1.55, 1.05, -0.6], heading: 42, pitch: 18.5
   // shadow — 0.09 of half-frame from this camera. Swung 62° off the road they
   // read at 0.23, more than double, and 62° is also how two people who stop to
   // talk actually stand: turned out of the flow, not blocking it.
-  const MEET_T = 0.37;
+  const MEET_T = 0.36;
   const MEET_ANG = (62 * Math.PI) / 180;
   const GAP = 0.45;                     // a pace apart — close enough to be a meeting
   const meetAt = road.sample(MEET_T);
@@ -203,14 +203,14 @@ const CAM = { distance: 11, target: [1.55, 1.05, -0.6], heading: 42, pitch: 18.5
     // it does not block the counter, and standing a clear step off the road
     // rather than at its very edge (Frank: it was a little too close, so it
     // moved back — tethered on the grass, not loitering in the traffic)
-    const hp = road.sample(0.262);
+    const hp = road.sample(0.35);
     const side = stalls[0].sidesign;
     const horseX = hp.x + hp.perp.x * 1.95 * side;
     const horseZ = hp.z + hp.perp.z * 1.95 * side;
     horse.group.position.set(horseX, 0, horseZ);
     // the horse faces +z; turn its head toward the road (i.e. toward -perp on
     // the side it stands), a little angled so it reads three-quarter, not flat
-    horse.group.rotation.y = Math.atan2(-hp.perp.x * side, -hp.perp.z * side) - 0.35;
+    horse.group.rotation.y = Math.atan2(-hp.perp.x * side, -hp.perp.z * side) + 0.3;
     scene.add(horse.group);
 
     const world = composeWorld(scene, {

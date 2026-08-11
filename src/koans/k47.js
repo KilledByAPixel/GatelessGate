@@ -57,14 +57,14 @@ const GATES = [
   { t: 0.42, width: 3.0, height: 2.75, color: ACCENT_DEEP }, // how will you be free of life and death?
   { t: 0.70, width: 2.8, height: 2.6, color: ACCENT_DEEP }, // where do you go?
 ];
-const MONK_T = 0.31;   // mid-journey: past the first barrier, short of the second
+const MONK_T = 0.28;   // mid-journey: past the first barrier, short of the second
 // One bell size per gate, in the same near-to-far order as GATES — task-12's
 // migration off raw f0 (62 + 18*i) to Frank's tuned presets.
 const GATE_PRESETS = ['great', 'temple', 'hand'];
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 14.5, target: [0.1, 1.9, -9.5], heading: 18.3, pitch: 10.1 };
+const CAM = { distance: 14.5, target: [-0.6, 1.05, -10.3], heading: 9.5, pitch: 8.5 };
   export default {
   id: ID,
   slug: 'three-gates-of-tosotsu',

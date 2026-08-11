@@ -24,7 +24,7 @@ const WAKE = 2.0;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.8, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 17.8 };
+const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15.5 };
   export default {
   id: ID,
   slug: 'the-girl-comes-out-from-meditation',
@@ -87,9 +87,9 @@ const CAM = { distance: 9.8, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 17
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  seed: ID+2,
   groundSeed: 21,
-  trees: 4,
+  trees: 8,
   keepout: [
   { x: 0.5, z: -3.3, r: 2.0 },
   { x: GIRL.x, z: GIRL.z, r: 1.4 },
@@ -98,7 +98,7 @@ const CAM = { distance: 9.8, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 17
   ],
   // the floor of the assembly hall is swept — and it has to be bare where
   // Momyo comes through it
-  grassKeepout: [{ x: 0.8, z: -1.8, r: 3.1 }],
+  grassKeepout: [{ x: 0.8, z: -1.8, r: 2.4 }],
   });
   
   addOutlines(scene, { width: 0.033, wobble: 0.7 });

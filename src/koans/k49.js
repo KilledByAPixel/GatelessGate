@@ -27,7 +27,7 @@ const ID = 49;
 // in). That was a fair ending, but this is the intended one.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 24.1, pitch: 21.2 };
+const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21.2 };
   export default {
   id: ID,
   slug: 'amban-s-addition',
@@ -88,7 +88,7 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 24.1, pitch: 21
   // far side, back to us, walking on into the fog. He has passed through; the
   // book is behind him.
   const you = makeMonk({ height: 1.6, elder: true });
-  const yb = road.sample(0.47);
+  const yb = road.sample(0.6);
   const yp = { x: yb.x + yb.perp.x * 0.35, z: yb.z + yb.perp.z * 0.35 };
   you.position.set(yp.x, 0, yp.z);
   scene.add(you);
@@ -100,7 +100,7 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 24.1, pitch: 21
   // full accent: a big timber frame in bright vermillion would glare (the
   // same call the intro gate makes).
   const gate = makeGate({ width: 2.6, height: 3.0, color: ACCENT_DEEP });
-  const ep = road.sample(0.38);
+  const ep = road.sample(0.34);
   gate.position.set(ep.x, 0, ep.z);
   gate.rotation.y = ep.heading;    // its opening aligned down the path
   scene.add(gate);
@@ -141,7 +141,7 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 24.1, pitch: 21
   
   // face him on down the road, away from us — he has gone through (aimed after
   // outlines, since it is a pure transform)
-  const away = road.sample(0.62);
+  const away = road.sample(0.1);
   faceMonk(you, { x: away.x, z: away.z });
   
   // ---- the moment: pass through -----------------------------------------
