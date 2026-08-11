@@ -158,6 +158,21 @@ test('an empty section fails rather than shipping a blank page', () => {
   assert.throws(() => parseBook(bad), /The Case.*empty/s);
 });
 
+test('a mistyped page heading fails and names what it could have been', () => {
+  const bad = book({ afterword: AFTERWORD.replace('## Afterword', '## Afterwords') });
+  assert.throws(() => parseBook(bad), /Afterwords[\s\S]*Preface, Afterword/);
+});
+
+test('a missing matter page fails rather than shipping a book without one', () => {
+  const bad = [HEADER, ...ids.map((id) => caseBlock(id)), AFTERWORD].join('\n');
+  assert.throws(() => parseBook(bad), /must be preface, 1, 2/);
+});
+
+test('the same case twice fails rather than one quietly winning', () => {
+  const bad = [HEADER, PREFACE, ...ids.map((id) => caseBlock(id === 12 ? 11 : id)), AFTERWORD].join('\n');
+  assert.throws(() => parseBook(bad), /case 11 appears twice/);
+});
+
 test('prose stranded outside a section fails', () => {
   const bad = book({ cases: { 9: "## 9. Case 9\n\nStranded.\n\n### The Case\n\nc\n\n### Mumon's Comment\n\nc\n\n### The Verse\n\nv\n" } });
   assert.throws(() => parseBook(bad), /Stranded/);
