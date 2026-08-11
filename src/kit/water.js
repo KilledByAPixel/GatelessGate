@@ -55,7 +55,7 @@ const STIR_MAX_SPEED = 8;      // full-strength stroke speed
 const STIR_SPACING = 0.5;      // stroke distance between mini-ripples
 const STIR_TELEPORT = 1.5;     // a jump this big is a re-entry, not a stroke
 const STIR_GAP = 0.5;          // seconds of silence that also mean re-entry
-const STIR_AMP = 0.22;         // fraction of STRIKE at full stroke speed. Set
+const STIR_AMP = 0.2;         // fraction of STRIKE at full stroke speed. Set
                                // where a fast stroke's OVERLAPPING drops (one
                                // every STIR_SPACING, packets 0.42 wide) still
                                // sum to about half a tap — at 0.33 the combined
