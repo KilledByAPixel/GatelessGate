@@ -28,7 +28,7 @@ const WISP = 1.5;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.5, target: [0.4, 1.4, -1.8], heading: 31.5, pitch: 19 };
+const CAM = { distance: 10.6, target: [0, 1.75, -3.15], heading: 39.5, pitch: 22.5 };
   export default {
   id: ID,
   slug: 'bodhidharma-pacifies-the-mind',

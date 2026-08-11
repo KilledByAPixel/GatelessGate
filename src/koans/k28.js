@@ -32,7 +32,7 @@ const FADE = 1.5;                            // seconds to fall dark, and to com
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.6, target: [0.6, 1.5, -1.2], heading: 29.8, pitch: 17.8 };
+const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   export default {
   id: ID,
   slug: 'blow-out-the-candle',

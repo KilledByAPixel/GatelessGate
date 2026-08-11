@@ -51,7 +51,7 @@ const ANSWER = 2.4;       // seconds for a touch to fade out of both of them
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 5.5, target: [0.9, 1.5, -1], heading: -21.5, pitch: 4.1, minDist: 4.5, minPitch: 0.7 };
+const CAM = { distance: 5.5, target: [0.9, 1.5, -1], heading: -19.5, pitch: 4.1, minDist: 4.5, minPitch: 0.7 };
 
 export default {
   id: ID,

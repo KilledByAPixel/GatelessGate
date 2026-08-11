@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, wash } from '../palette.js';
+import { PAPER, ACCENT, ACCENT_DEEP, wash } from '../palette.js';
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk, makeAssembly,
   makeWildflowers, makeLights, addOutlines, toonMaterial,
@@ -45,7 +45,7 @@ function bowShape(u) {
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.5, target: [0.9, 1.5, -1.6], heading: 31.5, pitch: 17.2 };
+const CAM = { distance: 9, target: [1.45, 1, -0.95], heading: 31.5, pitch: 23 };
   export default {
   id: ID,
   slug: 'a-philosopher-asks-buddha',
@@ -81,28 +81,28 @@ const CAM = { distance: 10.5, target: [0.9, 1.5, -1.6], heading: 31.5, pitch: 17
   // pose 'bow' hinges him at the sash: makeFigure hands back a group named
   // 'waist' carrying the torso, head and arms, and turning it forward IS the
   // bow. He is built upright; the movement below is the whole case.
-  const philosopher = makeMonk({ height: 1.66, hat: false, stout: 1.05, pose: 'bow' });
+  const philosopher = makeMonk({ height: 1.66, hat: false, stout: 1.05, pose: 'bow', color: ACCENT_DEEP  });
   const philWaist = philosopher.getObjectByName('waist');
-  philosopher.position.set(2.0, 0, 0.5);
+  philosopher.position.set(-0.2, 0, -2.1);
   faceMonk(philosopher, buddha.position);
   scene.add(philosopher);
   
   // Ananda, off to the side, who will ask afterwards what just happened
   const ananda = makeMonk({ height: 1.58 });
-  ananda.position.set(-2.3, 0, -0.9);
+  ananda.position.set(2.6, 0, -3.9);
   faceMonk(ananda, buddha.position);
   scene.add(ananda);
   
   const assembly = makeAssembly({
-  count: 6, radius: 2.2, center: [-0.6, 2.6], facing: [0.6, -3.6], spread: 1.2, seed: ID,
+  count: 6, radius: 2.2, center: [0.9, -1.6], facing: [0.6, -3.6], spread: 1.2, seed: ID,
   });
   scene.add(assembly);
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  seed: ID+1,
   groundSeed: 21,
-  trees: 4,
+  trees: 6,
   keepout: [
   { x: 0.6, z: -3.6, r: 2.4 },
   { at: philosopher, r: 1.2 },
@@ -113,7 +113,7 @@ const CAM = { distance: 10.5, target: [0.9, 1.5, -1.6], heading: 31.5, pitch: 17
   // see anything). Keep the foreground between lens and seat open.
   { x: 3.6, z: 3.0, r: 4.6 },
   ],
-  grassKeepout: [{ x: 0.6, z: -3.6, r: 1.5 }],
+  grassKeepout: [{ x: .9, z: -1.8, r: 3 }],
   });
   
   // White wildflowers through the meadow (Frank: "add flowers to the scene,

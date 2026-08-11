@@ -9,7 +9,7 @@ import {
 const ID = 37;
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 15.5, target: [1.0, 1.5, -2.3], heading: 31.5, pitch: 17.2 };
+const CAM = { distance: 13.8, target: [1.45, 1, -1.5], heading: 29, pitch: 23.5 };
   export default {
   id: ID,
   slug: 'a-buffalo-passes-through-the-enclosure',
@@ -63,7 +63,7 @@ const CAM = { distance: 15.5, target: [1.0, 1.5, -2.3], heading: 31.5, pitch: 17
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: 37,
+  seed: 40,
   groundSeed: 21,
   trees: 4,
   keepout: [

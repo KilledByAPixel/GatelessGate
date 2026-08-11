@@ -23,7 +23,7 @@ const POINT = 1.5;        // seconds: raise, hold, and back down
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.4, target: [0.7, 1.3, -0.2], heading: 31.5, pitch: 18.4 };
+const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 18.4 };
   export default {
   id: ID,
   slug: 'joshu-investigates',

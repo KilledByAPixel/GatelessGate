@@ -38,7 +38,7 @@ const AMBIENCE = ['wind:' + BASE_WIND, 'furin', 'furin', 'music'];
 // out so the shot is tuned here like every other case's rather than by moving
 // the book (Frank). composeWorld gets the same object as its `view`, so the
 // scatter still refuses spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.5, target: [2.75, 1.35, 0.55], heading: 35.5, pitch: 17.2 };
+const CAM = { distance: 11.5, target: [2.75, 1.35, 0.55], heading: 36.5, pitch: 17.2 };
 
 export default {
   id: ID,

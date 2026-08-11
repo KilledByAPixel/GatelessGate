@@ -65,7 +65,7 @@ export function nextRed(red, tapped, sunk) {
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.0, target: [0.4, 0.9, -1.0], heading: 35.5, pitch: 22.4 };
+const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.5 };
   export default {
   id: ID,
   slug: 'ummon-s-sidetrack',
@@ -204,7 +204,7 @@ const CAM = { distance: 11.0, target: [0.4, 0.9, -1.0], heading: 35.5, pitch: 22
 
     const world = composeWorld(scene, {
       view: CAM,
-      seed: ID,
+      seed: ID+1,
       groundSeed: 21,
       trees: 4,
       keepout: [
@@ -214,7 +214,7 @@ const CAM = { distance: 11.0, target: [0.4, 0.9, -1.0], heading: 35.5, pitch: 22
         { at: student, r: 1.2 },
         { at: ummon, r: 1.2 },
       ],
-      grassKeepout: [{ x: 0.4, z: -1.6, r: 6.55 }],
+      grassKeepout: [{ x: 0.4, z: -1.6, r: 5.1 }],
     });
 
     // ---- THE BED: the pond is a HOLE, not a sheet ------------------------

@@ -24,7 +24,7 @@ const ID = 34;
 // answers, briefly, then settles back to its own patter.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.5, target: [0.7, 1.5, -0.8], heading: 31.5, pitch: 20.1 };
+const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 20.1 };
   export default {
   id: ID,
   slug: 'learning-is-not-the-path',

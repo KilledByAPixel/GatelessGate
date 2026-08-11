@@ -45,7 +45,7 @@ const DEEP_TAU = 1.9;     // seconds for a deepened bow to ease back to the held
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 8.6, target: [1.38, 1.72, -2.18], heading: -21.8, pitch: 15.5 };
+const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch: 20.5 };
   export default {
   id: ID,
   slug: 'meeting-a-zen-master-on-the-road',

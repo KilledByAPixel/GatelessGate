@@ -30,7 +30,7 @@ export const BANK = { x: 0.6, z: -5.6 };
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.5, target: [0.6, 1.2, -2.2], heading: 31.5, pitch: 21.8 };
+const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch: 33.5 };
   export default {
   id: ID,
   slug: 'this-mind-is-buddha',
@@ -123,18 +123,17 @@ const CAM = { distance: 11.5, target: [0.6, 1.2, -2.2], heading: 31.5, pitch: 21
   scene.add(daibai);
   
   const lantern = makeLantern({ height: 1.1 });
-  lantern.position.set(-3.2, 0, -0.6);
+  lantern.position.set(-4.2, 0, -2.6);
   scene.add(lantern);
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  seed: 33,
   groundSeed: 21,
   trees: 4,
   keepout: [
   { x: POND.x, z: POND.z, r: POND.size * 0.62 },
   { x: BANK.x, z: BANK.z, r: 1.8 },
-  { at: daibai, r: 1.2 },
   { at: lantern, r: 0.9 },
   ],
   grassKeepout: [

@@ -24,7 +24,7 @@ const AUTO_EVERY = 13;   // and now and then one lets go with nobody touching it
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 16, target: [0.7, 1.9, -1.6], heading: 28.6, pitch: 12.1 };
+const CAM = { distance: 14.3, target: [1.05, 1.55, -1.6], heading: 156.5, pitch: 5, minPitch: 1.6 };
   export default {
   id: ID,
   slug: 'an-oak-tree-in-the-garden',
@@ -105,13 +105,13 @@ const CAM = { distance: 16, target: [0.7, 1.9, -1.6], heading: 28.6, pitch: 12.1
   // ---- the two men -----------------------------------------------------
   // Joshu, asked the largest question there is, has turned and put a sleeve out
   // at the scenery. The monk is still facing Joshu, waiting for the answer.
-  const jp = path.sample(0.31);
+  const jp = path.sample(0.34);
   const joshu = makeMonk({ pose: 'point', height: 1.72, stout: 1.1 });
   joshu.position.set(jp.x, 0, jp.z);
   aimMonk(joshu, { x: OAK.x, z: OAK.z });      // the raised sleeve lands in the crown
   scene.add(joshu);
   
-  const mp = path.sample(0.255);
+  const mp = path.sample(0.31);
   const monk = makeMonk({ height: 1.58 });
   monk.position.set(mp.x + mp.perp.x * 0.85, 0, mp.z + mp.perp.z * 0.85);
   faceMonk(monk, joshu.position);

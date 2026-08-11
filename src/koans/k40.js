@@ -31,17 +31,17 @@ const ID = 40;
 const VASE = { x: 1.5, z: 0.5 };      // forward of everyone, nearest the lens
 const VASE_H = 0.55;
 const HALL = { x: -1.0, z: -6.2 };    // the new monastery's stand-in, far back
-const HYAKUJO = { x: -0.45, z: 1.55 };   // beside the vase, not behind it —
+const HYAKUJO = { x: 0.45, z: 1.55 };   // beside the vase, not behind it —
                                           // the red must sit against paper and
                                           // grass, never against a black robe
-const ISAN = { x: 2.45, z: -0.5 };    // of the crowd, one step out of it
+const ISAN = { x: 1.95, z: -0.0 };    // of the crowd, one step out of it
 const CROWD = { x: 4.15, z: -1.1 };   // where the arc's centroid should land
-const ARC_R = 1.4;
+const ARC_R = 1.9;
 const ARC_PULL = ARC_R * 0.81;        // mean(cos) over the 0.7π arc — see k14
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.8, target: [1.1, 1.0, -0.5], heading: 28.6, pitch: 16.7 };
+const CAM = { distance: 10.8, target: [2.05, 1, -0.5], heading: 57.5, pitch: 20 };
   export default {
   id: ID,
   slug: 'tipping-over-a-water-vase',
@@ -66,7 +66,7 @@ const CAM = { distance: 10.8, target: [1.1, 1.0, -0.5], heading: 28.6, pitch: 16
   // ---- the hall ---------------------------------------------------------
   // Set well back, open front toward the clearing: the gathering happens
   // OUTSIDE it, which is what makes the ground in front read as a courtyard.
-  const hall = makeHut({ width: 3.2, height: 2.5, depth: 2.6, color: WASH.dark });
+  const hall = makeHut({ width: 3.2, height: 2.5, depth: 2.6, color: WASH.dark, chimes: 39 });
   hall.position.set(HALL.x, 0, HALL.z);
   hall.rotation.y = Math.atan2(VASE.x - HALL.x, VASE.z - HALL.z);
   scene.add(hall);
@@ -94,7 +94,7 @@ const CAM = { distance: 10.8, target: [1.1, 1.0, -0.5], heading: 28.6, pitch: 16
   // side of its centre, so the centre is pushed back by ARC_PULL for the
   // crowd to land on the CROWD mark (k14's correction).
   const assembly = makeAssembly({
-  count: 9, radius: ARC_R, spread: 1.0, seed: ID,
+  count: 9, radius: ARC_R, spread: 3.0, seed: ID,
   center: [CROWD.x, CROWD.z - ARC_PULL],
   facing: [VASE.x, VASE.z],
   });
