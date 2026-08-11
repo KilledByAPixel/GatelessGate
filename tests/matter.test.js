@@ -238,8 +238,10 @@ test('the afterword seats its meditator UNDER a tree, whatever the seed does', a
   // The one invariant that broke silently: the mat's coordinate was copied out
   // of one particular seed's scatter, and when the seed changed the tree moved
   // and the meditator did not — he sat in open grass under nothing, and no test
-  // and no screenshot said a word. Stated against the trees the scene actually
-  // built, so it cannot come apart again.
+  // and no screenshot said a word. He now sits under a tree the page PLANTS
+  // (named 'bodhi'), so the pairing is one number rather than two that have to
+  // agree — but the claim being made is the same one, and it is still the claim
+  // worth making.
   const built = (await loadKoan(AFTERWORD_SLUG)).build();
   const mat = built.scene.children.find((c) => c.name === 'mat');
   const buddha = built.scene.children.find((c) => c.name === 'buddha');
@@ -247,10 +249,19 @@ test('the afterword seats its meditator UNDER a tree, whatever the seed does', a
   assert.ok(Math.hypot(mat.position.x - buddha.position.x, mat.position.z - buddha.position.z) < 1e-9,
     'and he is on the mat');
 
-  const near = Math.min(...built.trees.map((t) =>
-    Math.hypot(t.position.x - mat.position.x, t.position.z - mat.position.z)));
-  assert.ok(near < 1.6, `under the canopy, not in open grass — nearest trunk ${near.toFixed(2)}`);
-  assert.ok(near > 0.6, `beside the trunk, not inside it — nearest trunk ${near.toFixed(2)}`);
+  const bodhi = built.scene.getObjectByName('bodhi');
+  assert.ok(bodhi, 'the afterword plants him a tree of his own');
+  const near = Math.hypot(bodhi.position.x - mat.position.x, bodhi.position.z - mat.position.z);
+  assert.ok(near < 1.6, `under the canopy, not in open grass — his trunk is ${near.toFixed(2)} away`);
+  assert.ok(near > 0.6, `beside the trunk, not inside it — his trunk is ${near.toFixed(2)} away`);
+
+  // ...and nothing from the hub's own scatter is growing through it. buildHub
+  // scatters before this page has any say, so the page clears his spot; without
+  // that, a seed is free to have already put a trunk exactly where his goes.
+  const crowd = built.trees
+    .map((t) => Math.hypot(t.position.x - bodhi.position.x, t.position.z - bodhi.position.z))
+    .filter((d) => d < 2.5);
+  assert.equal(crowd.length, 0, `his spot is his: ${crowd.length} hub trees inside it`);
 
   // He is OFF TO THE SIDE of the shot, not in the middle of it: "he is found,
   // not shown". Measured against the rig's own eye for this page's camera.

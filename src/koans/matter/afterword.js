@@ -4,6 +4,7 @@ import { buildHub } from '../../intro.js';
 import { WASH } from '../../palette.js';
 import {
   makeBuddha, makeCat, makeWildflowers, groundHeight, toonMaterial, addOutlines,
+  plantTree,
 } from '../../kit/index.js';
 import { eyePosition } from '../../camera.js';
 
@@ -34,22 +35,47 @@ const page = MATTER.afterword;
 // should not close on the picture it opened from. The stage clears AND the land
 // is different — a valley the reader has not stood in, which is what the end of
 // a book looks like.
-const SEEDS = { seed: 33, groundSeed: 58, pathSeed: 17 };
+const SEEDS = { seed: 35, groundSeed: 58, pathSeed: 17 };
 
-// The mat: a step out from a tree's trunk on its camera side, under the canopy
-// edge. WHICH tree is chosen at build time, not written down. It used to be a
-// coordinate copied out of one particular seed's scatter — "(3.04, −11.7), the
-// only one near the camera's view axis" — and the day the hub's seed changed
-// that tree moved and the meditator did not: he sat in open grass, under
-// nothing, and no test or screenshot said a word. So the pairing is derived
-// now. It cannot come apart.
+// HIS TREE IS HIS OWN (Frank: "let's just have it so Buddha sits under his own
+// custom tree that we set up and place"). It used to be picked out of the hub's
+// scatter at build time, which was itself a fix for something worse — a
+// coordinate copied out of one particular seed's scatter, "(3.04, −11.7)", so
+// that the day the hub's seed changed the tree moved and the meditator did not:
+// he sat in open grass, under nothing, and no test or screenshot said a word.
+//
+// Planting our own removes that hazard rather than reopening it, PROVIDED the
+// tree is not written down as a raw coordinate either. It is placed in the
+// SHOT'S OWN FRAME — so far past the gate spot along the view axis, so far off
+// the centre line — and the mat is then derived from the trunk exactly as
+// before. Tree and meditator come from one number now instead of two that have
+// to agree, which is stronger than the derivation it replaces: there is no
+// second thing left to go stale.
+//
+// An OAK, not the scatter's broadleaf: it is bigger and broader than anything
+// the hub plants (tests/k38 pins that), so the one tree in this picture that
+// matters reads as his rather than as one more tree that happened to be there.
+const TREE = {
+  kind: 'oak',
+  height: 5.2,
+  depth: 3.2,     // units beyond the gate spot, along the view axis
+  side: 2.8,      // units off the centre line — beside the shot, still in it.
+                  // Positive is camera-RIGHT at this page's framing. 4.5 (the
+                  // old derivation's target) put the oak half off the right
+                  // edge with him hidden behind the trunk.
+  seed: 41,       // pinned, so his tree is the same tree every time the book ends
+};
+// Any hub tree closer than this to his gets cleared away. Two trunks growing
+// through each other is worse than one fewer tree in a field of them, and the
+// hub's scatter knows nothing about what we are about to plant.
+const TREE_CLEAR = 3.4;
 const MAT_R = 0.55, MAT_H = 0.05;
 // How far out from the trunk the mat sits, toward the camera. About a canopy
 // radius: under the edge of the leaves rather than against the bark.
 const OFF = 1.1;
 // Named, because build() has to solve the rig's own equation to know where the
 // reader is standing before it can put anything to one side of them.
-const CAM = { distance: 16, heading: 38.6, pitch: 15.5 };
+const CAM = { distance: 14.8, target: [-0.705, 1.9, -6], heading: 27.5, pitch: 15.5 };
 
 export default {
   id: null,
@@ -75,34 +101,35 @@ export default {
     const [ex, , ez] = eyePosition(CAM, built.gateTarget);
     const eye = { x: ex, z: ez };
 
-    // HIS TREE: of the scatter trees standing well beyond the gate spot, the one
-    // whose offset from the view axis is nearest SIDE. Not the one NEAREST the
-    // axis — that is the middle of the picture, and the whole point of him is
-    // that the camera is not on him. SIDE is where the old hand-picked tree sat
-    // (about four and a half units off the centre line), which is far enough to
-    // be beside the shot and near enough to still be in it.
-    const SIDE = 4.5, PAST = 1.5;
+    // HIS TREE, placed rather than found. The frame is the shot's own: a unit
+    // vector down the view axis (eye -> gate) and its perpendicular, so `depth`
+    // and `side` mean what they say however this page's pathSeed bends the road
+    // or the camera vocabulary changes.
     const ax = gx - eye.x, az = gz - eye.z;
     const axisLen = Math.hypot(ax, az) || 1;
-    const candidates = built.trees.map((t) => {
-      const dx = t.position.x - eye.x, dz = t.position.z - eye.z;
-      return {
-        t,
-        along: (dx * ax + dz * az) / axisLen,               // depth into the shot
-        lateral: Math.abs(dx * az - dz * ax) / axisLen,     // off the centre line
-      };
+    const ux = ax / axisLen, uz = az / axisLen;          // down the axis
+    const px = -uz, pz = ux;                             // and across it
+    const tx = eye.x + ux * (axisLen + TREE.depth) + px * TREE.side;
+    const tz = eye.z + uz * (axisLen + TREE.depth) + pz * TREE.side;
+
+    // Clear the hub's own scatter out of his spot first. buildHub scattered
+    // those before this page had any say in it, so without this a seed is free
+    // to have already put a trunk exactly where his goes.
+    for (const t of built.trees.slice()) {
+      if (Math.hypot(t.position.x - tx, t.position.z - tz) < TREE_CLEAR) {
+        t.parent && t.parent.remove(t);
+        built.trees.splice(built.trees.indexOf(t), 1);
+      }
+    }
+
+    const bodhi = plantTree(scene, {
+      x: tx, z: tz, kind: TREE.kind, height: TREE.height, seed: TREE.seed,
+      groundSeed: built.groundSeed,
     });
-    const bySide = (pool) =>
-      pool.slice().sort((a, b) => Math.abs(a.lateral - SIDE) - Math.abs(b.lateral - SIDE))[0];
-    const tree = bySide(candidates.filter((c) => c.along > axisLen + PAST))
-      // A seed can put every tree short of the gate spot. Then the deepest of
-      // them is still a tree to sit under, and no meditator at all is not an
-      // option — this page has exactly one figure in it.
-      || candidates.slice().sort((a, b) => b.along - a.along)[0];
+    bodhi.name = 'bodhi';   // his, and findable — tests/matter.test.js seats him under THIS tree
 
     // The mat sits a step out from that trunk, on the camera's side of it, so
     // he is under the canopy edge rather than behind the tree.
-    const tx = tree.t.position.x, tz = tree.t.position.z;
     const ox = eye.x - tx, oz = eye.z - tz;
     const olen = Math.hypot(ox, oz) || 1;
     const MAT = { x: tx + (ox / olen) * OFF, z: tz + (oz / olen) * OFF };
@@ -156,7 +183,7 @@ export default {
     // The cat's own clearing, as a fraction of his: it is a third of his height
     // and 0.32 of animal disappears in full meadow (k7 learned that the hard
     // way and k6 wrote it down), but a cat-sized bald patch is all it needs.
-    const SPOTS = [{ x: MAT.x, z: MAT.z, k: 1 }, { x: CAT.x, z: CAT.z, k: 0.62 }];
+    const SPOTS = [{ x: MAT.x, z: MAT.z, k: 1 }, { x: CAT.x, z: CAT.z, k: 0.7 }];
     const m = new THREE.Matrix4();
     const p = new THREE.Vector3();
     scene.traverse((o) => {
