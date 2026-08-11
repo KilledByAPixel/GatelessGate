@@ -164,6 +164,16 @@ export default {
     const surface = water.group.children.find((c) => c.name === 'surface');
     const bowlMeshes = tapMeshes(bowl);
 
+    // brushing the water stirs it — mini-ripples by pointer speed (the
+    // water's breeze; see stir in src/kit/water.js). Silent: the drip is the tap's.
+    input.onHover(() => {
+      if (!camera || !surface) return;
+      const hit = input.raycastFirst(camera, [surface]);
+      if (!hit) return;
+      const local = water.group.worldToLocal(hit.point.clone());
+      water.stir(local.x, local.z);
+    });
+
     input.onTap(() => {
       if (!camera) return;
       // the deer-scarer first: a tap tips it without waiting out the fill

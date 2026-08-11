@@ -38,6 +38,24 @@ const BOUNCE = 0.6;        // amplitude kept per round trip of the fold — one
 const POOL = 8;            // concurrent ripples before the oldest is reused
 const EDGE_BAND = 0.12;    // fraction of the radius over which motion is pinned
 
+// The stir (hover): moving the pointer across the surface drops mini-ripples
+// along the stroke, sized by pointer speed — the water's cousin of the grass
+// breeze (src/kit/breeze.js), and it makes the same promises: a dead zone so
+// a resting hand's jitter does nothing, the first fed point only anchors, and
+// everything derives from the fed points and the sim clock, so the same
+// stroke over the same steps stirs the same water.
+const STIR_MIN_SPEED = 0.35;   // breeze's dead zone, world units/sec
+const STIR_MAX_SPEED = 8;      // full-strength stroke speed
+const STIR_SPACING = 0.5;      // stroke distance between mini-ripples
+const STIR_TELEPORT = 1.5;     // a jump this big is a re-entry, not a stroke
+const STIR_GAP = 0.5;          // seconds of silence that also mean re-entry
+const STIR_AMP = 0.22;         // fraction of STRIKE at full stroke speed. Set
+                               // where a fast stroke's OVERLAPPING drops (one
+                               // every STIR_SPACING, packets 0.42 wide) still
+                               // sum to about half a tap — at 0.33 the combined
+                               // crest reached 3/4 of a tap, which is no longer
+                               // "a little motion, less than clicking" (Frank)
+
 const smooth = (t) => t * t * (3 - 2 * t);
 
 // ---- tessellation --------------------------------------------------------
@@ -437,6 +455,14 @@ export function makeWater({
   }
   displace();
 
+  // The stir's memory: where the pointer last was on this surface, when, and
+  // how much stroke has run since the last mini-ripple. Pointer state, not
+  // sim state — same standing as breeze.js's module state.
+  let stX = 0;
+  let stZ = 0;
+  let stT = -1e9;
+  let stAccum = 0;
+
   return {
     group,
     surface,
@@ -464,6 +490,37 @@ export function makeWater({
     heightAt,
     // the same surface with the ripple term removed — what the koi ride
     swellAt,
+    // Feed the pointer's on-surface point (local space) while it moves over
+    // the water — from a case's onHover raycast, the same wiring as a tap.
+    // Speed between fed points decides everything: below the dead zone
+    // nothing happens, above it a mini-ripple drops every STIR_SPACING of
+    // stroke, growing with speed but always well under a tap. Silent by
+    // design — the drip belongs to the tap.
+    stir(x, z) {
+      const dt = clock - stT;
+      if (dt <= 0) {
+        // same tick: extend the stroke; speed is judged when time moves
+        stAccum += Math.hypot(x - stX, z - stZ);
+        stX = x; stZ = z;
+        return;
+      }
+      const dist = Math.hypot(x - stX, z - stZ);
+      stT = clock;
+      if (dt > STIR_GAP || dist > STIR_TELEPORT) {
+        // first point, a long silence, or a jump: the pointer arrived, it
+        // did not travel — anchor only, exactly breeze.js's re-entry rule
+        stX = x; stZ = z; stAccum = 0;
+        return;
+      }
+      const speed = dist / dt;
+      const strength = clamp01((speed - STIR_MIN_SPEED) / (STIR_MAX_SPEED - STIR_MIN_SPEED));
+      stAccum += dist;
+      stX = x; stZ = z;
+      if (strength > 0 && stAccum >= STIR_SPACING) {
+        stAccum = 0;
+        this.ripple(x, z, STRIKE * STIR_AMP * strength);
+      }
+    },
     // signed distance to the shore in local space (positive = in the water):
     // how a case checks its stepping stones actually stand in a blob pond
     shoreDistance: wallDistance,

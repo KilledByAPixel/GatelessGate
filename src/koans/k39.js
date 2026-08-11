@@ -278,6 +278,17 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
 
     const surface = water.group.children.find((c) => c.name === 'surface');
 
+    // brushing the open water stirs it — mini-ripples by pointer speed (the
+    // water's breeze; see stir in src/kit/water.js). The stones stay
+    // tap-only: a stroke across the lake must never sink a phrase.
+    input.onHover(() => {
+      if (!camera || !surface) return;
+      const hit = input.raycastFirst(camera, [surface]);
+      if (!hit) return;
+      const local = water.group.worldToLocal(hit.point.clone());
+      water.stir(local.x, local.z);
+    });
+
     input.onTap(() => {
       if (!camera) return;
       for (let i = 0; i < stones.length; i++) {

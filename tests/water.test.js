@@ -414,6 +414,86 @@ test('a ripple comes back: the pond is alive again after the ring has crossed it
   }
 });
 
+// ---- the stir (hover mini-ripples) -----------------------------------------
+// Moving the pointer across the water stirs it — mini-ripples along the
+// stroke, amplitude from pointer speed, always smaller than a tap (Frank:
+// "a little motion, less than clicking... it will go by mouse velocity,
+// similar to how the grass works"). Same contract as the grass breeze:
+// a dead zone so a resting hand does nothing, the first fed point only
+// anchors, and everything derives from the fed points and the sim clock.
+
+test('stir: the first fed point only anchors — no ripple', () => {
+  const w = makeWater({ shape: 'round', size: 4, swell: 0, seed: 7 });
+  w.update(1 / 60, 1 / 60);
+  w.stir(0.5, 0);
+  assert.equal(w.rippleCount(), 0);
+});
+
+test('stir: a resting hand (sub-dead-zone drift) never stirs', () => {
+  const w = makeWater({ shape: 'round', size: 4, swell: 0, seed: 7 });
+  // 0.005 units per frame at 60fps is 0.3 u/s — under the 0.35 dead zone,
+  // however far it accumulates
+  for (let i = 0; i < 300; i++) {
+    w.update(1 / 60, i / 60);
+    w.stir(-0.75 + i * 0.005, 0);
+  }
+  assert.equal(w.rippleCount(), 0);
+});
+
+test('stir: a brisk stroke drops mini-ripples along it', () => {
+  const w = makeWater({ shape: 'round', size: 4, swell: 0, seed: 7 });
+  // 0.2 units per frame at 60fps is 12 u/s — a real swipe; the first call
+  // anchors, then every ~0.5 units of stroke drops one mini-ripple
+  for (let i = 0; i < 9; i++) {
+    w.update(1 / 60, i / 60);
+    w.stir(-0.8 + i * 0.2, 0);
+  }
+  assert.ok(w.rippleCount() >= 1, 'the stroke left no ripple');
+});
+
+test('stir: a stir is always gentler than a tap', () => {
+  const peakOf = (poke) => {
+    const w = makeWater({ shape: 'round', size: 4, swell: 0, seed: 7 });
+    poke(w);
+    let m = 0;
+    for (let t = 0.2; t < 1.4; t += 0.05) {
+      for (let r = 0; r < 2; r += 0.1) m = Math.max(m, Math.abs(w.heightAt(r, 0, t)));
+    }
+    return m;
+  };
+  const tapped = peakOf((w) => w.ripple(0.4, 0));
+  const stirred = peakOf((w) => {
+    for (let i = 0; i < 9; i++) {
+      w.update(1 / 60, i / 60);
+      w.stir(-0.8 + i * 0.2, 0);
+    }
+  });
+  assert.ok(stirred > 0, 'the stir did nothing at all');
+  assert.ok(stirred < tapped * 0.6,
+    `a stir (${stirred}) should stay well under a tap (${tapped})`);
+});
+
+test('stir: a teleport-sized jump re-anchors instead of stirring', () => {
+  const w = makeWater({ shape: 'round', size: 4, swell: 0, seed: 7 });
+  w.update(1 / 60, 1 / 60);
+  w.stir(-1.5, 0);                              // anchor
+  w.update(1 / 60, 2 / 60);
+  w.stir(1.5, 0);                               // pointer re-entered far away
+  assert.equal(w.rippleCount(), 0);
+});
+
+test('stir: deterministic — the same stroke gives the same surface', () => {
+  const run = () => {
+    const w = makeWater({ shape: 'round', size: 4, seed: 30 });
+    for (let i = 0; i < 12; i++) {
+      w.update(1 / 60, i / 60);
+      w.stir(-1 + i * 0.18, 0.3);
+    }
+    return Array.from(w.surface.geometry.attributes.position.array);
+  };
+  assert.deepEqual(run(), run());
+});
+
 test('each pass is weaker than the last: TAU and BOUNCE both bite', () => {
   const R = 2.0;
   const w = makeWater({ shape: 'round', size: R * 2, swell: 0, seed: 7 });

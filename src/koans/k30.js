@@ -149,6 +149,16 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   let rippled = 0;
   const surface = water.group.children.find((c) => c.name === 'surface');
   
+  // brushing the water stirs it — mini-ripples by pointer speed (the
+  // water's breeze; see stir in src/kit/water.js). Silent: the drip is the tap's.
+  input.onHover(() => {
+  if (!camera || !surface) return;
+  const hit = input.raycastFirst(camera, [surface]);
+  if (!hit) return;
+  const local = water.group.worldToLocal(hit.point.clone());
+  water.stir(local.x, local.z);
+  });
+
   input.onTap(() => {
   if (!camera || !surface) return;
   const hit = input.raycastFirst(camera, [surface]);

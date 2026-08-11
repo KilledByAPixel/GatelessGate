@@ -165,6 +165,16 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   let lastRing = -99;
   let rippled = 0;
   
+  // brushing the water stirs it — mini-ripples by pointer speed (the
+  // water's breeze; see stir in src/kit/water.js). Silent: the drip is the tap's.
+  input.onHover(() => {
+  if (!camera || !surface) return;
+  const hit = input.raycastFirst(camera, [surface]);
+  if (!hit) return;
+  const local = water.group.worldToLocal(hit.point.clone());
+  water.stir(local.x, local.z);
+  });
+
   input.onTap(() => {
   if (!camera) return;
   // the closing chime first: it hangs inside the gate's own big
