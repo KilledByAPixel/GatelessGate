@@ -355,3 +355,41 @@ test('water never joins the shadow map: the surface is flagged noShadow', () => 
   const w = makeWater({ shape: 'square', size: 90 });
   assert.equal(surfaceOf(w).userData.noShadow, true);
 });
+
+// ---- swellAt (the koi's sampler) -------------------------------------------
+// Frank: a tap above the school must not toss the fish. swellAt is the surface
+// MINUS the ripple term — idle swell and drift only, still edge-masked — so a
+// koi rides the living water but ignores the reader's finger.
+
+test('swellAt and heightAt agree on untapped water, and the wall stays pinned', () => {
+  const w = makeWater({ shape: 'round', size: 4, seed: 30 });
+  for (const [x, z] of [[0, 0], [0.5, -1], [1.7, 0.3], [-1.2, -0.9]]) {
+    assert.equal(w.swellAt(x, z, 2.2), w.heightAt(x, z, 2.2));
+  }
+  assert.equal(w.swellAt(2, 0, 1.3), 0, 'the swell is masked to zero at the wall');
+});
+
+test('swellAt: a tap moves heightAt but never the swell', () => {
+  const w = makeWater({ shape: 'round', size: 4, seed: 30 });
+  const probe = [];
+  for (let r = 0; r < 1.9; r += 0.1) probe.push(w.swellAt(r, 0, 1.0));
+  w.ripple(0, 0, 0.3);
+  w.update(1.0, 1.0);
+  const after = [];
+  for (let r = 0; r < 1.9; r += 0.1) after.push(w.swellAt(r, 0, 1.0));
+  assert.deepEqual(after, probe, 'the tap leaked into swellAt');
+  // while the full surface genuinely moved somewhere along the same ray
+  let moved = false;
+  for (let r = 0; r < 1.9; r += 0.1) {
+    if (Math.abs(w.heightAt(r, 0, 1.0) - w.swellAt(r, 0, 1.0)) > 1e-4) moved = true;
+  }
+  assert.ok(moved, 'the tap did not register on heightAt either');
+});
+
+test('swellAt carries the ocean drift', () => {
+  const w = makeWater({ shape: 'square', size: 40, swell: 0, seed: 20, drift: DRIFT });
+  assert.equal(w.swellAt(1, 3, 2.0), w.heightAt(1, 3, 2.0));
+  let lifted = false;
+  for (let t = 0; t < 6.5; t += 0.25) if (Math.abs(w.swellAt(1, 3, t)) > 0.01) lifted = true;
+  assert.ok(lifted, 'the drift vanished from swellAt');
+});

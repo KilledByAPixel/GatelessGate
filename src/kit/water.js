@@ -310,13 +310,19 @@ export function makeWater({
   let next = 0;
   let clock = 0;
 
+  // The idle-swell term alone — shared by waveAt (which adds the ripples on
+  // top) and swellAt (which deliberately does not).
+  function idleAt(x, z, t) {
+    // no swell means no idle term at all, rather than one multiplied by zero —
+    // dead-still water stays exactly flat, and skips two sines per vertex
+    return IA === 0 ? 0
+      : IA * (Math.sin(x * k1 + t * 0.9 + p1) + Math.sin(z * k2 + t * 0.7 + p2));
+  }
+
   // The one place the wave is defined — the free surface, before the container
   // has any say. Both the mesh and heightAt read through this.
   function waveAt(x, z, t) {
-    // no swell means no idle term at all, rather than one multiplied by zero —
-    // dead-still water stays exactly flat, and skips two sines per vertex
-    let h = IA === 0 ? 0
-      : IA * (Math.sin(x * k1 + t * 0.9 + p1) + Math.sin(z * k2 + t * 0.7 + p2));
+    let h = idleAt(x, z, t);
     for (const r of ripples) {
       const age = t - r.t0;
       if (age < 0 || age > LIFE) continue;
@@ -356,6 +362,15 @@ export function makeWater({
     return (m > 0 ? waveAt(x, z, t) * m : 0) + driftAt(x, z, t);
   }
 
+  // The surface WITHOUT the taps: idle swell + drift, edge-masked, no ripple
+  // term. This is what the koi ride (Frank: a tap above the school must not
+  // toss the fish) — anything that should feel the water breathe but ignore
+  // the reader's finger samples this instead of heightAt.
+  function swellAt(x, z, t = clock) {
+    const m = maskAt(x, z);
+    return (m > 0 ? idleAt(x, z, t) * m : 0) + driftAt(x, z, t);
+  }
+
   function displace() {
     for (let i = 0; i < count; i++) {
       const m = mask[i];
@@ -392,6 +407,8 @@ export function makeWater({
     // the water's height in local space — so koi, petals and anything else
     // floating can ride the surface instead of hovering over it
     heightAt,
+    // the same surface with the ripple term removed — what the koi ride
+    swellAt,
     // signed distance to the shore in local space (positive = in the water):
     // how a case checks its stepping stones actually stand in a blob pond
     shoreDistance: wallDistance,
