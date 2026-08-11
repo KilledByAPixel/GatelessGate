@@ -221,7 +221,8 @@ export function makeKoi({
       const z = k.cz + Math.sin(a) * k.rz;
       let y = -depth + Math.sin(clock * 0.6 + k.phase) * 0.02;
       // rise and fall with the water directly overhead
-      if (surfaceAt) y += surfaceAt(x, z) * ride;
+      // disabled ride for now, fish shouldnt move with water
+      //if (surfaceAt) y += surfaceAt(x, z) * ride;
       k.group.position.set(x, y, z);
       // face along the tangent of the ellipse it is swimming
       const vx = -k.rx * Math.sin(a) * k.dir;
