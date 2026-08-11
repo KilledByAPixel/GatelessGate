@@ -41,6 +41,18 @@ const PERSIST_KEY = 'gateless-gate-debug-persist';
 // identical to what it was before this existed.
 const DEV_KEY = 'gateless-gate-dev';
 
+// Whether the panel itself was left OPEN. Its own key for the same reason
+// DEV_KEY has one: this is a switch about what the app is showing you, not a
+// look setting, so it is remembered unconditionally and "reset all" (which only
+// walks CONTROLS) never touches it.
+//
+// DEVELOPER MODE GATES THE RESTORE, not the remembering (Frank). The flag is
+// written whenever the panel is toggled, but a reload only reopens the panel if
+// developer mode is also on — so a reader who once opened the workbench out of
+// curiosity gets the book back on the next visit, while the one machine that
+// has developer mode ticked keeps its workbench where it left it.
+const PANEL_KEY = 'gateless-gate-debug-panel';
+
 // Read outside makeDebug, so main.js can build the menu with the right shape on
 // the first frame rather than popping the section in once the workbench mounts.
 export function devModeOn() {
@@ -112,6 +124,10 @@ function defaults() {
 
 function loadPersist() {
   try { return localStorage.getItem(PERSIST_KEY) === '1'; } catch { return false; }
+}
+
+function loadPanelOpen() {
+  try { return localStorage.getItem(PANEL_KEY) === '1'; } catch { return false; }
 }
 
 function load(persist) {
@@ -281,15 +297,23 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
   devRow.appendChild(devInput);
   panel.appendChild(devRow);
 
-  button.onclick = () => {
-    panel.classList.toggle('open');
-    button.classList.toggle('active');
+  // The one way the panel opens or closes — the click below and the restore in
+  // mount() both come through here, so the class, the button's lit state, the
+  // remembered flag and the renderer's idea of the stage size can never drift
+  // apart. (Same reasoning as the `toggle(key)` method at the bottom of this
+  // file: a second path that sets the same state is a second path to be wrong.)
+  function setPanel(open) {
+    panel.classList.toggle('open', open);
+    button.classList.toggle('active', open);
+    try { localStorage.setItem(PANEL_KEY, open ? '1' : '0'); } catch { /* private mode */ }
     // The panel is a column beside the stage, not a sheet over it, so opening
     // it RESIZES the viewport. Nothing in the page fires a resize event for a
     // layout change of its own, so the renderer has to be told (the same reason
     // main.js's applyStageSize exists for the look).
-    onPanel && onPanel(panel.classList.contains('open'));
-  };
+    onPanel && onPanel(open);
+  }
+
+  button.onclick = () => setPanel(!panel.classList.contains('open'));
 
   // ---- application --------------------------------------------------------
   // Authored values are captured the first time a scene is seen, so the sliders
@@ -396,6 +420,19 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
         u.uGustScale.value = state.gustScale;
         u.uGustSpeed.value = state.gustSpeed;
       }
+
+      // The blooms ride the SAME weather as the blades (kit/wildflowers.js):
+      // these are the same three numbers, so the sliders — and therefore a
+      // case's pinned wind, which the adopt() above has already moved them to
+      // — reach the meadow's flowers as well as its grass. Written straight
+      // into the live record, the mirror of the grass's uniforms above.
+      const bloomField = scene.getObjectByName('wildflowers');
+      if (bloomField && bloomField.userData.wind) {
+        const w = bloomField.userData.wind;
+        w.wind = state.grassWind;
+        w.gustScale = state.gustScale;
+        w.gustSpeed = state.gustSpeed;
+      }
     }
 
     setGrassPatchiness(state.grassPatch);
@@ -479,6 +516,12 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     mount(host, buttonHost = host) {
       buttonHost.appendChild(button);
       host.appendChild(panel);
+      // Reopen where it was left — see PANEL_KEY: remembered always, restored
+      // only in developer mode. It has to happen HERE rather than at
+      // construction: the panel narrows the stage, and setPanel's onPanel is
+      // what tells the renderer, which can only be right once the panel is
+      // actually in the DOM.
+      if (devModeOn() && loadPanelOpen()) setPanel(true);
       apply();
     },
   };

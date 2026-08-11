@@ -55,6 +55,7 @@ export const ROSTER = [
   { key: 'lantern', section: 'structures', build: (kit) => kit.makeLantern({}) },
   { key: 'bell', section: 'structures', build: (kit) => kit.makeBell({}) },
   { key: 'flag', section: 'structures', build: (kit) => kit.makeFlag({}) },
+  { key: 'sign', section: 'structures', build: (kit) => kit.makeSign({}) },
   { key: 'screen', section: 'structures', build: (kit) => kit.makeScreen({}) },
   { key: 'cave', section: 'structures', build: (kit) => kit.makeCave({}) },
   // props

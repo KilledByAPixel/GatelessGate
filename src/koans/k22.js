@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeGate, makeFlag, makeMonk, faceMonk, makeLantern,
-  makeLights, addOutlines, makeFurin,
+  makeLights, addOutlines, makeFurin, makeSign,
 } from '../kit/index.js';
 import { clothEnergy } from '../sim/verlet.js';
 
@@ -83,6 +83,23 @@ const CAM = { distance: 11.5, target: [0.9, 1.9, -0.2], heading: 31.5, pitch: 19
   const lantern = makeLantern({ height: 1.1 });
   lantern.position.set(-3.3, 0, 0.6);
   scene.add(lantern);
+
+  // THE BOARD. A plain sign on a plain post, blank — the case turns on taking
+  // one sign down and putting another up, and an empty board is the only
+  // honest way to draw a sign whose whole point is WHOSE name is on it. It
+  // stands just off the near verge of the red road, in the gap between the
+  // gate and the banner: the figures and the lantern occupy the other flank,
+  // and a notice board belongs where somebody walking up would meet it.
+  //
+  // IN THE GAP, NOT BESIDE THE POLE. Placed further out on the banner's side
+  // first, it landed within ~3° of the flagpole on a portrait stage and the
+  // two uprights stacked into one line — the board read as something bolted to
+  // the pole rather than a second sign standing on its own. Quartered toward
+  // the camera so the board's face and the post's edge both read.
+  const sign = makeSign({ height: 1.9 });
+  sign.position.set(-4.3, 0, -1.2);
+  sign.rotation.y = 0.62;
+  scene.add(sign);
   
   // One small tube on a cord, hung under the gate's own flat lintel span
   // (|x| < width*0.364 stays flush underside — k29's own derivation of
@@ -108,10 +125,12 @@ const CAM = { distance: 11.5, target: [0.9, 1.9, -0.2], heading: 31.5, pitch: 19
   { at: kashapa, r: 1.2 },
   { at: ananda, r: 1.2 },
   { at: lantern, r: 0.9 },
+  { at: sign, r: 1.0 },
   ],
   grassKeepout: [
   ...path.keepout(26, 0.95),
   { x: gate.position.x, z: gate.position.z, r: 1.2 },
+  { at: sign, r: 0.5 },
   ],
   });
   

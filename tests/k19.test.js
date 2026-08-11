@@ -4,6 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import k19 from '../src/koans/k19.js';
 import { makeMoon } from '../src/kit/moon.js';
 import { makeWildflowers } from '../src/kit/wildflowers.js';
+import { setBreezePointer, clearBreeze } from '../src/kit/breeze.js';
 import { groundHeight } from '../src/kit/ground.js';
 import { ACCENT, ACCENT_DEEP, wash, WASH } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
@@ -455,4 +456,198 @@ test('a wildflower field is safe to build and drive with nothing placed', () => 
   assert.equal(f.mesh.count, 0);
   assert.doesNotThrow(() => { f.gustAt(0, 0); f.update(1 / 60, 1); });
   assert.ok(Number.isFinite(f.lean()));
+});
+
+// ---- the blooms answer the meadow's wind and the reader's hand --------------
+// Both are the grass's own models (kit/wildflowers.js's header): the drifting
+// gust field makeGrassField samples in GLSL, and the shared pointer spring in
+// kit/breeze.js. What these pin is that the flowers actually read them — a
+// bloom standing still in leaning grass was the complaint.
+
+const DT = 1 / 60;
+
+// drive a field forward, optionally stroking the pointer across it at the same
+// time. Returns the per-bloom tilt at the end. Both branches see the identical
+// simTime sequence, so anything that differs is the pointer and nothing else.
+function run(f, frames, stroke = null) {
+  for (let i = 0; i < frames; i++) {
+    if (stroke) stroke(i);
+    f.update(DT, i * DT);
+  }
+  return matrices(f).map(tiltOf);
+}
+
+// the XZ direction a bloom is leaning, read back off its instance matrix
+const bendOf = (m4) => {
+  const up = new THREE.Vector3(0, 1, 0).transformDirection(m4);
+  return new THREE.Vector2(up.x, up.z);
+};
+
+test('the wind leans the blooms, and wind: 0 is the field as it was before it had any', () => {
+  const opts = { count: 70, radius: 16, rMin: 2, seed: 12, groundSeed: 21 };
+  const still = makeWildflowers({ ...opts, wind: 0 });
+  const windy = makeWildflowers({ ...opts, wind: 1.5 });
+
+  const a = run(still, 90);
+  const b = run(windy, 90);
+  assert.equal(a.length, b.length, 'same field, same blooms');
+  assert.ok(a.every(Number.isFinite) && b.every(Number.isFinite), 'no NaN in either');
+
+  // every bloom feels it
+  for (let i = 0; i < a.length; i++) {
+    assert.ok(Math.abs(b[i] - a[i]) > 1e-4, `bloom ${i} did not answer the wind`);
+  }
+
+  // The wind only ever ADDS to the BEND (a stem does not lean into it), which
+  // is what lean() reports. Note it is NOT true of the tilt read off the
+  // instance matrix: a bloom is planted with a resting tilt of its own in a
+  // random direction, and a bend that opposes that tilt stands the stem back
+  // UP. Asserting monotonic tilt per bloom looked right and failed on the
+  // first bloom whose rest happened to point upwind.
+  assert.ok(windy.lean() > still.lean() * 1.15,
+    `a windy field bends visibly further: ${still.lean()} -> ${windy.lean()}`);
+
+  // and wind: 0 really is the old behaviour — the nod alone, still alive
+  assert.ok(still.lean() > 0, 'the bloom keeps its own nod with the wind off');
+});
+
+test('the wind is weather crossing the field, not a constant extra lean', () => {
+  // With the nod alone, ~70 blooms on scattered phases largely average out to
+  // a near-constant mean. The wind is one noise field sliding downwind over
+  // all of them, so the MEAN itself has to rise and fall — that is the
+  // difference between a gust passing and a bias added.
+  const opts = { count: 70, radius: 16, rMin: 2, seed: 12, groundSeed: 21 };
+  const still = makeWildflowers({ ...opts, wind: 0 });
+  const windy = makeWildflowers({ ...opts, wind: 1.5 });
+  // AT THE WEATHER THE BOOK ACTUALLY SHIPS, not the builder defaults: the
+  // workbench's own defaults (debug.js — a broad, fast-drifting gust) put the
+  // whole field inside about a third of one noise cell, so the meadow breathes
+  // as one. At the builder's tighter default patch the field spans nearly two
+  // cells and the mean averages much of its own gust away — still correct, but
+  // it is not what a reader sees, and it is the shipped look this pins.
+  for (const f of [still, windy]) f.setGust(0.01, 12);
+
+  const swing = (f) => {
+    let lo = Infinity, hi = -Infinity;
+    for (let i = 0; i < 900; i++) {         // 15s: several gusts at the shipped drift
+      f.update(DT, i * DT);
+      lo = Math.min(lo, f.lean());
+      hi = Math.max(hi, f.lean());
+    }
+    return hi - lo;
+  };
+  const stillSwing = swing(still);
+  const windySwing = swing(windy);
+  assert.ok(windySwing > stillSwing * 2,
+    `the windy field's mean lean breathes: ${stillSwing.toFixed(5)} vs ${windySwing.toFixed(5)}`);
+});
+
+test('a stroke bends the blooms it passes, and leaves the rest of the meadow alone', () => {
+  clearBreeze();
+  // two tight drifts: one under the stroke, one right across the field
+  const along = [{ x: 0, z: 0 }, { x: 14, z: 0 }];
+  const opts = {
+    count: 40, radius: 19, seed: 3, groundSeed: 21, along, spread: 0.5,
+    wind: 0,     // the pointer alone, so nothing else can explain a difference
+  };
+  // "under the stroke" means inside breeze.js's own reach of where the pointer
+  // ends up, not merely in the near drift — a bloom out at the rim of the
+  // falloff circle is legitimately barely touched, and asserting on it pins
+  // the edge of a smoothstep rather than the behaviour.
+  const near = (f) => f.points.map((p, i) => [p, i])
+    .filter(([p]) => Math.hypot(p.x, p.z - 1.2) < 1.0).map(([, i]) => i);
+  const far = (f) => f.points.map((p, i) => [p, i]).filter(([p]) => p.x > 12).map(([, i]) => i);
+
+  const quiet = makeWildflowers(opts);
+  const brushed = makeWildflowers(opts);
+  assert.ok(near(quiet).length > 3 && far(quiet).length > 3, 'both drifts got blooms');
+
+  const a = run(quiet, 36);
+  // the same 36 frames, with the pointer sweeping through the near drift at
+  // 4 units/s — well over breeze.js's dead zone, so it registers as a stroke
+  let z = -1.2;
+  const b = run(brushed, 36, () => { z += 4 * DT; setBreezePointer(0, z, DT); });
+
+  for (const i of near(quiet)) {
+    assert.ok(Math.abs(b[i] - a[i]) > 1e-3,
+      `bloom ${i} is under the stroke and must move (${a[i]} vs ${b[i]})`);
+  }
+  for (const i of far(quiet)) {
+    assert.ok(Math.abs(b[i] - a[i]) < 1e-9,
+      `bloom ${i} is ${quiet.points[i].x.toFixed(1)} away and must not feel it`);
+  }
+  clearBreeze();
+});
+
+test('the blooms bend ALONG the stroke, not merely harder downwind', () => {
+  clearBreeze();
+  // The wind blows along +x (the kit default leans that way); the stroke runs
+  // along +z. If the pointer only scaled the existing lean, the bend direction
+  // could not move off the wind axis — the old fixed-axis code could only say
+  // "more" or "less".
+  const opts = {
+    count: 30, radius: 8, seed: 5, groundSeed: 21,
+    along: [{ x: 0, z: 0 }], spread: 0.5, windDir: [1, 0], wind: 1,
+  };
+  const quiet = makeWildflowers(opts);
+  const brushed = makeWildflowers(opts);
+
+  for (let i = 0; i < 36; i++) quiet.update(DT, i * DT);
+  let z = -1.2;
+  for (let i = 0; i < 36; i++) {
+    z += 4 * DT;
+    setBreezePointer(0, z, DT);
+    brushed.update(DT, i * DT);
+  }
+
+  const mQuiet = matrices(quiet).map(bendOf);
+  const mBrushed = matrices(brushed).map(bendOf);
+  // averaged over the drift, so one bloom's own resting tilt cannot carry it
+  const meanZ = (v) => v.reduce((s, p) => s + p.y, 0) / v.length;
+  assert.ok(meanZ(mBrushed) > meanZ(mQuiet) + 0.01,
+    `the bend swings toward the stroke: ${meanZ(mQuiet).toFixed(4)} -> ${meanZ(mBrushed).toFixed(4)}`);
+  clearBreeze();
+});
+
+test('a resting pointer stirs nothing — hovering is not a breeze', () => {
+  clearBreeze();
+  const opts = {
+    count: 30, radius: 8, seed: 6, groundSeed: 21,
+    along: [{ x: 0, z: 0 }], spread: 0.5, wind: 0,
+  };
+  const quiet = makeWildflowers(opts);
+  const hovered = makeWildflowers(opts);
+
+  const a = run(quiet, 60);
+  // the same point, over and over: breeze.js's dead zone means this is not a
+  // stroke, and a bloom must not twitch just because a cursor is parked on it
+  const b = run(hovered, 60, () => setBreezePointer(0, 0, DT));
+  for (let i = 0; i < a.length; i++) {
+    assert.ok(Math.abs(a[i] - b[i]) < 1e-9, `bloom ${i} moved under a still pointer`);
+  }
+  clearBreeze();
+});
+
+test('the workbench can reach a standing field: the wind record is live on the mesh', () => {
+  // debug.js writes these three straight into userData.wind, the mirror of the
+  // grass field's userData.uniforms — so a case's pinned weather and the
+  // sliders both reach the blooms.
+  const f = makeWildflowers({ count: 30, radius: 10, seed: 8, groundSeed: 21, wind: 0 });
+  const rec = f.mesh.userData.wind;
+  assert.ok(rec && typeof rec.wind === 'number', 'the mesh carries its live wind record');
+  assert.equal(rec.gustScale, 0.055, 'and the grass builder\'s own defaults');
+  assert.equal(rec.gustSpeed, 2.4);
+
+  const before = run(f, 60);
+  f.setWind(2.5);
+  assert.equal(rec.wind, 2.5, 'the setter and the record are the same state');
+  const after = run(f, 60);
+  assert.ok(before.some((t, i) => Math.abs(t - after[i]) > 1e-3),
+    'turning the wind up on a standing field moves it');
+
+  f.setGust(0.2, 9);
+  assert.equal(rec.gustScale, 0.2);
+  assert.equal(rec.gustSpeed, 9);
+  f.setWindDir(0, 3);
+  assert.ok(Math.abs(rec.dirX) < 1e-9 && Math.abs(rec.dirZ - 1) < 1e-9, 'the direction is normalised');
 });

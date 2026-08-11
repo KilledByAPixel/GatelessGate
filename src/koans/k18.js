@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
-  composeWorld, makePath, makeScale, makeMonk, aimMonk, faceMonk,
+  composeWorld, makePath, makeScale, makeMonk, aimMonk, faceMonk, makeHut,
   makeLights, addOutlines, toonMaterial,
 } from '../kit/index.js';
 
@@ -39,7 +39,34 @@ const CAM = { distance: 9.4, target: [-0.5, 0.2, 0.5], heading: 44.5, pitch: 21.
   
   const path = makePath({ from: [-3.6, 8.4], to: [2.4, -18], width: 1.3, seed: ID, groundSeed: 21, wander: 1.1 });
   scene.add(path);
-  
+
+  // THE HALL the yard belongs to. Tozan is weighing flax outside a working
+  // building, not in open country, and the case only reads as an interruption
+  // if there is somewhere the work is being done. Set well back and off to the
+  // camera's left — the home framing looks in from (≈5.6, 3.6, 6.7), so this
+  // corner is open ground behind the group rather than anything the scale or
+  // either figure is standing in front of. Quartered so a door wall and a side
+  // wall both show; square-on it would read as a flat.
+  //
+  // OFF-AXIS ANGLE AND DISTANCE ARE ONE DECISION, not two. The stage is a
+  // PORTRAIT window — the text panel takes the other half — so the horizontal
+  // half-angle is only about 17°, not the ~31° a landscape frame would give.
+  // A 3.2-wide hall subtends 12° at 15 units, so centring it 10° out still ran
+  // its far wall into the frame edge; two passes were lost sliding it sideways
+  // when the fix was to stand it FURTHER OFF. At ~21 units out and ~7° off the
+  // axis it subtends under 9°, clears the edge whole, and the fog has taken
+  // enough of it that it reads as the building the yard belongs to rather than
+  // a prop in the way. Move it nearer and it crops; move it much further and
+  // the fog erases it — those two are the bounds.
+  //
+  // No chimes (the `chimes:` seed other huts carry): this case's ambience is
+  // wind, the steelyard and the music bed, and the whole joke is one plain
+  // answer — a hanging voice under the eave would be a second thing speaking.
+  const hut = makeHut({ width: 3.2, height: 2.4, depth: 2.6 });
+  hut.position.set(-10.8, 0, -6.3);
+  hut.rotation.y = 1.15;
+  scene.add(hut);
+
   // THE SCALE. Its pan hangs on the left of the beam; the flax rides in it.
   const scale = makeScale({ height: 1.4, reading: 3 });
   scale.group.position.set(1.2, 0, 0.6);
@@ -103,10 +130,12 @@ const CAM = { distance: 9.4, target: [-0.5, 0.2, 0.5], heading: 44.5, pitch: 21.
   { x: 3.3, z: 1.0, r: 1.4 },
   { at: tozan, r: 1.1 },
   { at: monk, r: 1.1 },
+  { at: hut, r: 2.8 },
   ],
   grassKeepout: [
   ...path.keepout(24, 0.95),
   { x: 1.2, z: 0.6, r: 0.9 },
+  { at: hut, r: 2.2 },
   ],
   });
   
