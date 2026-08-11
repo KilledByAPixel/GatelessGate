@@ -196,9 +196,11 @@ export function makeWater({
   const half = size / 2;
   // the wall as a function of angle — constant for 'round', wobbled for 'blob'
   const radiusAt = blob ? blobOutline(half, seed) : null;
-  // enough vertices that a ripple reads as a curve, capped so a big lake does
-  // not cost more per frame than it is worth
-  const n = segments || Math.max(12, Math.min(30, Math.round(size * 3.2)));
+  // enough vertices that a ripple — and the standing pattern a bounce builds
+  // near the wall — reads as a curve, capped so a big lake does not cost more
+  // per frame than it is worth. The cap keeps every default cell under half a
+  // WAVELEN; the oceans pass segments: 64 explicitly and skip all this.
+  const n = segments || Math.max(24, Math.min(48, Math.round(size * 6)));
   const { pos, idx, edge } = round || blob ? discGrid(half, n, radiusAt) : squareGrid(size, n);
 
   const group = new THREE.Group();

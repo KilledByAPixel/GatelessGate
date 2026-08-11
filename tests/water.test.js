@@ -443,3 +443,16 @@ test('the bounce respects the wall: rim pinning holds through many passes', () =
     assert.equal(w.heightAt(0, -R, t), 0);
   }
 });
+
+test('default density resolves the ripple wavelength', () => {
+  // Crest-to-crest is 0.62 (WAVELEN); a cell must be at most half that or the
+  // rings alias into polygons — the old cap of 30 put case 39's 12.5-unit
+  // lake at 1.5 vertices per wavelength. Bounces make it worse: standing
+  // patterns live near the wall, where a coarse grid chews them visibly.
+  for (const size of [0.86, 2.0, 6.4, 12.5]) {
+    const w = makeWater({ shape: 'square', size });
+    const pos = posOf(w);
+    const cell = Math.abs(pos[3] - pos[0]);    // first two vertices are one cell apart in x
+    assert.ok(cell <= 0.31 + 1e-9, `size ${size}: cell ${cell} undersamples a 0.62 crest`);
+  }
+});
