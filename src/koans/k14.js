@@ -51,7 +51,7 @@ const ARC_PULL = ARC_R * 0.81;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.5, target: [1.15, 1.2, -1.0], heading: 31.5, pitch: 17.8 };
+const CAM = { distance: 11.5, target: [1.15, 1.2, -1], heading: 34, pitch: 27 };
   export default {
   id: ID,
   slug: 'nansen-cuts-the-cat-in-two',
@@ -157,7 +157,7 @@ const CAM = { distance: 11.5, target: [1.15, 1.2, -1.0], heading: 31.5, pitch: 1
   ],
   // stingy: only the swept courtyard actually covers ground. The monks
   // stand in the meadow, which is where monks stand.
-  grassKeepout: [{ x: C.x, z: C.z, r: 1.95 }],
+  grassKeepout: [{ x: C.x, z: C.z, r: 2.15 }],
   });
   
   addOutlines(scene, { width: 0.033, wobble: 0.7 });

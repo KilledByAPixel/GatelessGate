@@ -18,7 +18,7 @@ const ID = 18;
 // settles, and it says three pounds. It was always going to say three pounds.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.4, target: [1.1, 1.2, 0.5], heading: 31.5, pitch: 18.4 };
+const CAM = { distance: 9.4, target: [-0.5, 0.2, 0.5], heading: 44.5, pitch: 21.5 };
   export default {
   id: ID,
   slug: 'tozan-s-three-pounds',
@@ -72,11 +72,11 @@ const CAM = { distance: 9.4, target: [1.1, 1.2, 0.5], heading: 31.5, pitch: 18.4
   tie.position.x = len * 0.16;
   bundle.add(tie);
   bundle.position.set(
-  2.9 + hash1(i * 3 + 2, ID) * 1.0,
+  1.2 + hash1(i * 3 + 2, ID) * .2,
   0.14 + (i % 2) * 0.26,
-  1.5 - hash1(i * 3 + 3, ID) * 1.1,
+  2.9 - hash1(i * 3 + 3, ID) * 1.1,
   );
-  bundle.rotation.y = hash1(i * 3 + 4, ID) * Math.PI;
+  bundle.rotation.y = hash1(i * 3 + 4, ID) * .1
   bundle.rotation.z = (hash1(i * 3 + 5, ID) - 0.5) * 0.22;
   scene.add(bundle);
   }

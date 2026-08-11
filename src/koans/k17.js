@@ -29,7 +29,7 @@ const BOW_IN = 1.1, BOW_HOLD = 1.9, BOW_OUT = 1.2;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.0, target: [0.6, 1.3, -0.4], heading: 34.4, pitch: 17.8 };
+const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.8 };
   export default {
   id: ID,
   slug: 'the-three-calls-of-the-emperor-s-teacher',

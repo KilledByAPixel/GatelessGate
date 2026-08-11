@@ -27,7 +27,7 @@ const BOW = 0.55;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11, target: [1.15, 1.6, -0.8], heading: 1.5, pitch: 13.5 };
+const CAM = { distance: 10.1, target: [1.15, 1.3, -0.8], heading: 4, pitch: 13.5 };
   export default {
   id: ID,
   slug: 'tozan-s-three-blows',

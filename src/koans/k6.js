@@ -25,7 +25,7 @@ const PETAL_FALL = 5.0;     // seconds for a petal to reach the ground
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11, target: [1.2, .3, -4], heading: 17, pitch: 18 };
+const CAM = { distance: 11, target: [1.05, 0.3, -3.35], heading: 17, pitch: 29.5 };
   export default {
   id: ID,
   slug: 'buddha-twirls-a-flower',

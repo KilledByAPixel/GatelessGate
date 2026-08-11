@@ -13,7 +13,7 @@ const MU_DUR = 4.4;      // seconds for the full breath
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.8, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5 };
+const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5 };
   export default {
   id: ID,
   slug: 'joshu-s-dog',

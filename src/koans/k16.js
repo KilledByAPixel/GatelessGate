@@ -30,7 +30,7 @@ const ID = 16;
 // out so the shot is tuned here like every other case's rather than by moving
 // the book (Frank). composeWorld gets the same object as its `view`, so the
 // scatter still refuses spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.5, target: [1.2, 1.35, 0.3], heading: 31.5, pitch: 17.2 };
+const CAM = { distance: 10, target: [1.2, 1.35, 0.3], heading: 30, pitch: 18 };
 
 export default {
   id: ID,
@@ -73,12 +73,12 @@ export default {
     // On its own frame near the front of the court, angled so neither the beam
     // nor the swing plane lines up with the hall behind it.
     const bell = makeBell({ height: 1.1, color: ACCENT, seed: ID });
-    bell.group.position.set(2.3, 0, 0.7);
-    bell.group.rotation.y = -0.5;
+    bell.group.position.set(2.3, 0, -.7);
+    bell.group.rotation.y = -0.1;
     scene.add(bell.group);
 
     // a stone lantern where the walk passes nearest the hall
-    const lp = path.sample(0.50);
+    const lp = path.sample(0.30);
     const lantern = makeLantern({ height: 1.15 });
     lantern.position.set(lp.x - lp.perp.x * 1.1, 0, lp.z - lp.perp.z * 1.1);
     scene.add(lantern);
@@ -138,7 +138,7 @@ export default {
       view: CAM,
       seed: ID,
       groundSeed: 21,
-      trees: 4,
+      trees: 3,
       keepout: [
         ...path.keepout(26, 1.4),
         { x: hall.position.x, z: hall.position.z, r: 3.4 },
