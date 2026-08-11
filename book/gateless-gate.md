@@ -63,10 +63,10 @@ is which.
 ### Mumon's Preface
 
 The Buddha's teaching takes mind as its source, and no gate as the gate of the teaching.
-If it is no gate, then how do you get through?
+If there is no gate, then how do you get through?
 
 Haven't you heard it said: what comes in by the gate is not the treasure of your own
-house; what you get from conditions has a start and a finish — it comes together and it
+house; what you get from conditions has a start and a finish, it comes together and it
 falls apart. Talk like that is raising waves where there is no wind, cutting a sore into
 healthy flesh. Worse still to snag on words and phrases and go hunting for a meaning.
 Swinging a stick at the moon. Scratching an itch through your boot. What has any of it to
