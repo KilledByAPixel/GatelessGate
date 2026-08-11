@@ -32,9 +32,36 @@ import { clamp } from '../util/math.js';
 // first cut used ~111 s / ~70 s waves and Frank heard a 41 s flurry at load
 // followed by an 89 s hole — it read as a bug. Rates chosen NOT to track the
 // gust envelope.
+//
+// AND THE PHASE OFFSETS, which are the other half of that same complaint.
+// Slowing the waves fixed the 41-second flurry but not the reason it landed AT
+// LOAD, and the bug came back in its second form: "the chimes are a lot louder
+// initially, and then they kinda quiet down... I'm not getting the right vibe
+// of what the actual scene is supposed to be like until it settles."
+//
+// The cause is that both sines are zero AND rising at t = 0, so with no offsets
+// they add coherently on the way up and drive `a` straight through the 0.35
+// gate. Measured: strikes enabled 1.5 s after load, full activity inside ten
+// seconds, 32% duty over the first half-minute against a 25.5% long-run
+// average. Every session opened mid-flurry. It shows up on a fresh load and
+// nowhere else because simTime is global and never resets per case — arriving
+// at a case any other way arrives at ordinary weather.
+//
+// ONE EPOCH, NOT TWO PHASES. Shifting the whole curve is a pure time
+// translation, so the flurry/break/duty statistics measured above are
+// mathematically unchanged; giving each sine its OWN offset would not be a
+// translation at all and would rewrite the beat structure. gustPhase's own
+// comment in src/audio/synths.js records that mistake being made and caught.
+//
+// 31.65s chosen by sweep: the first strike becomes possible at t = 10s instead
+// of t = 1.5s, and the opening thirty seconds carry 26% duty against the 25.5%
+// long-run average — a chime that is quiet for a moment when you arrive and
+// then behaves exactly like itself.
 const ACT_A = 0.031, ACT_B = 0.047;
+const ACT_EPOCH = 31.65;
 export function chimeActivity(t) {
-  const a = (Math.sin(2 * Math.PI * ACT_A * t) + Math.sin(2 * Math.PI * ACT_B * t)) / 2;
+  const s = t + ACT_EPOCH;
+  const a = (Math.sin(2 * Math.PI * ACT_A * s) + Math.sin(2 * Math.PI * ACT_B * s)) / 2;
   return Math.max(0, Math.min(1, (a - 0.35) / 0.4));
 }
 
@@ -465,10 +492,34 @@ const CLAP_REACH = 0.15;
 //
 // A TAP still can, and should — `kick` is untouched, so a solid knock sends
 // it round exactly as before. The wind alone does not.
+// THE STABILITY INVARIANT, which is not a matter of taste:
+//
+//     wind * (1 + buffet)  <  stiffness
+//
+// The restoring torsion is -stiffness*sin(theta), so it can only balance a
+// drive whose magnitude is under `stiffness`. Above that there is NO
+// equilibrium at any angle: the strip goes over the top and keeps
+// accelerating, winding up forever — which is precisely the failure the
+// "never winds up" test in tests/furin.test.js exists to catch.
+//
+// It was violated. At wind 3.8 the peak drive is 3.8 * 1.8 = 6.84 against a
+// stiffness of 6.3, so any moment when the slow gust and the fast buffet
+// crested together had no equilibrium to settle to. It survived only because
+// the phases in play never produced that coincidence inside the window the
+// test happened to sample; giving gustPhase an epoch (so the book stops
+// opening on a gale) reshuffled which coincidences occur and it wound to
+// 45 rad — seven turns — on the first run.
+//
+// 3.3 restores the margin: 3.3 * 1.8 = 5.94 < 6.3, so an equilibrium always
+// exists and the peak lean is asin(5.94/6.3) = 1.23 rad, comfortably short of
+// over-the-top. The paper's LOOSENESS is `damping` (tau 6.5s, Frank's "spin
+// around a bit more with low resistance"), not this gain, so the feel he
+// signed off on is unaffected. Anything raising `wind` or `buffet` has to
+// check the inequality above or the strip becomes a windmill.
 export const SPIN = {
   stiffness: 6.3,
   damping: 2 / 6.5,
-  wind: 3.8,
+  wind: 3.3,
   kick: 10.0,
   buffet: 0.80,     // x wind, on the fast band — what the paper actually catches
 };
@@ -1010,7 +1061,14 @@ export function makeFurin({
         // is immediately shoved off it, reintroducing the startup snap in
         // miniature.
         const drive = (phase) => gustPhase(phase) + BUFFET.level * gustBuffet(phase);
-        const eq = (lean, phase) => Math.asin(clamp(lean * drive(phase) * windLevel, -1, 1));
+        // `|| 0` collapses NEGATIVE ZERO. windLevel 0 is still air, so the
+        // equilibrium is zero — but `lean * drive * 0` is -0 whenever drive is
+        // negative, asin(-0) is -0, and that -0 rides all the way out to
+        // swing.rotation.z. Node's strict assert distinguishes -0 from 0, so a
+        // stilled chime tested for "at rest" failed on a sign that means
+        // nothing. It only surfaced once gustPhase stopped being exactly 0 at
+        // t = 0; the seeding was always capable of producing it.
+        const eq = (lean, phase) => Math.asin(clamp(lean * drive(phase) * windLevel, -1, 1)) || 0;
         zPend.theta = clapZ.theta = eq(WIND_Z_LEAN, seed + off);
         xPend.theta = clapX.theta = eq(WIND_X_LEAN, seed * 0.7 + off + 11);
         // ...and the paper starts at its own twist, for the same reason. Its

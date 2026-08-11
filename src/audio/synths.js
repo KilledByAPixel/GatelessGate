@@ -604,8 +604,40 @@ export function makeRainBed(ctx, dest) {
 // chime, and it only holds if there is exactly one clock driving both.
 export const GUST_A = 0.043;
 export const GUST_B = 0.071;
+
+// THE SESSION MUST NOT OPEN ON A GALE. Without these offsets both sines are
+// exactly zero AND both rising at t = 0, so they add coherently on the way up
+// and the wind goes from dead calm to 0.93 — the 98th percentile of every value
+// it ever takes — in the first four seconds of every session. Frank heard it as
+// the chimes being "a lot louder initially, and then they kinda quiet down",
+// and specifically when going STRAIGHT to a case: simTime is global and never
+// resets per case, so arriving anywhere else in the book means arriving at
+// ordinary weather, and only a fresh load lands on the rigged opening.
+//
+// It is worth being exact about what was wrong, because "the first gust is too
+// strong" is not quite it: measured over a whole 30-second window the opening
+// peak is unremarkable (56th percentile). What is wrong is the RAMP. The wind
+// has no business reaching nine tenths of its lifetime maximum four seconds
+// after a page load, whatever it does afterwards.
+//
+// ONE EPOCH, NOT TWO PHASES — and this distinction is the whole correctness
+// argument, not a stylistic preference. The first fix gave each sine its own
+// offset, which is NOT a time shift unless the offsets happen to satisfy
+// phiA/A == phiB/B: independent phases change the RELATIVE phase of the two
+// components and therefore the beat structure itself. It sailed through by eye
+// and audio.test.js caught it immediately — crest gaps opened to 43.5s against
+// a design limit of 31 ("never a dead minute"). Shifting the whole curve by a
+// single epoch is a pure translation, so every long-run property the tests pin
+// — crest spacing, bounds, irregularity — is mathematically identical to what
+// it was. Only where the book opens on the curve moves, which was the bug.
+//
+// 125s chosen by sweep: the opening reads 0.00 -> 0.17 -> 0.27 -> 0.10 over the
+// first eight seconds against the old 0.00 -> 0.65 -> 0.93. A breeze coming up,
+// not a door opening onto a gale.
+const GUST_EPOCH = 125;
 export const gustPhase = (t) =>
-  (Math.sin(2 * Math.PI * GUST_A * t) + Math.sin(2 * Math.PI * GUST_B * t)) / 2;
+  (Math.sin(2 * Math.PI * GUST_A * (t + GUST_EPOCH))
+    + Math.sin(2 * Math.PI * GUST_B * (t + GUST_EPOCH))) / 2;
 
 // TURBULENCE — the fast half of the wind, and the half the hanging things in
 // the kit never had.

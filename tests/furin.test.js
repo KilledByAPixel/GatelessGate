@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { makeFurin, chimeActivity, noteForSize, SWING, BUFFET } from '../src/kit/furin.js';
+import { makeFurin, chimeActivity, noteForSize, SWING, BUFFET, SPIN } from '../src/kit/furin.js';
 import { createPendulum, integratePendulum } from '../src/kit/pendulum.js';
 import { gustPhase, gustBuffet } from '../src/audio/synths.js';
 
@@ -854,4 +854,67 @@ test('it hangs by a STRING, and swings from the knot at the top of it', () => {
   const swung = new THREE.Box3().setFromObject(cap).getCenter(new THREE.Vector3());
   assert.ok(Math.abs(swung.x - rest.x) > 0.1 * S, 'the cap travels when the knot turns');
   assert.ok(swung.y > rest.y, 'and rises, the way anything on a string does');
+});
+
+// ---------------------------------------------------------------------------
+// THE OPENING. simTime is global and never resets per case, so a fresh load is
+// the one moment the book reads these curves at t = 0. Both were sums of two
+// sines with no offset — zero AND rising at the origin, adding coherently —
+// so every session opened on weather it almost never sees otherwise. Frank:
+// "the chimes are a lot louder initially, and then they kinda quiet down...
+// I'm not getting the right vibe of what the actual scene is supposed to be
+// like until it settles."
+// ---------------------------------------------------------------------------
+
+test('a chime does not open a session mid-flurry', () => {
+  // Measured before the epoch: strikes enabled 1.5s after load, full activity
+  // inside ten seconds, 32% duty over the first half-minute against a 25.5%
+  // long-run average. Every load landed inside a flurry.
+  assert.equal(chimeActivity(0), 0, 'silent at the instant the book opens');
+  for (let t = 0; t <= 6; t += 0.1) {
+    assert.equal(chimeActivity(t), 0, `still settling at t=${t.toFixed(1)}, got ${chimeActivity(t)}`);
+  }
+  // ...but it must not be a dead scene either — the chime has to speak while
+  // the reader is still on the page
+  let first = Infinity;
+  for (let t = 0; t < 120; t += 0.05) { if (chimeActivity(t) > 0) { first = t; break; } }
+  assert.ok(first > 6 && first < 20, `first voice at ${first.toFixed(2)}s — wanted a beat of quiet, then a chime`);
+});
+
+test('the epoch is a pure time shift: the chime weather itself is untouched', () => {
+  // THE CORRECTNESS ARGUMENT for how this was fixed. Giving each sine its own
+  // phase was tried first and is NOT a translation — it rewrites the relative
+  // phase of the two components and with it the whole beat structure. That
+  // version opened 43.5s crest gaps in gustPhase against a 31s design limit,
+  // and audio.test.js caught it. Shifting the WHOLE curve cannot do that, and
+  // this pins the statistics the file's own header documents: flurries 3-10s
+  // (mean 8), breaks 16-33s (mean 24), active ~26%.
+  let on = 0, n = 0;
+  const spells = [], breaks = [];
+  let cur = null;
+  for (let t = 0; t < 3600; t += 0.05) {
+    const a = chimeActivity(t) > 0;
+    if (a) on++;
+    n++;
+    if (cur === null) cur = { a, t };
+    else if (cur.a !== a) { (cur.a ? spells : breaks).push(t - cur.t); cur = { a, t }; }
+  }
+  const mean = (xs) => xs.reduce((s, x) => s + x, 0) / xs.length;
+  const duty = on / n;
+  assert.ok(duty > 0.22 && duty < 0.30, `active ${(duty * 100).toFixed(1)}% — the header says ~26%`);
+  assert.ok(mean(spells) > 6 && mean(spells) < 10, `flurries mean ${mean(spells).toFixed(1)}s — the header says 8`);
+  assert.ok(mean(breaks) > 20 && mean(breaks) < 28, `breaks mean ${mean(breaks).toFixed(1)}s — the header says 24`);
+});
+
+test('the paper strip can always find an equilibrium — it is a torsion, not a windmill', () => {
+  // wind * (1 + buffet) < stiffness, or the drive exceeds anything the
+  // restoring torsion can balance and the strip goes over the top and winds up
+  // forever. It was violated (3.8 * 1.8 = 6.84 vs 6.3) and survived only
+  // because the phases in play never crested together inside the window the
+  // "never winds up" test sampled. Asserted directly here so the next person
+  // to raise either number is told immediately, rather than by a wound-up
+  // paper strip thirty simulated minutes into an unrelated test.
+  const peakDrive = SPIN.wind * (1 + SPIN.buffet);
+  assert.ok(peakDrive < SPIN.stiffness,
+    `peak drive ${peakDrive.toFixed(2)} must stay under stiffness ${SPIN.stiffness} or the strip winds up`);
 });

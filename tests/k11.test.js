@@ -118,7 +118,7 @@ test('the ship stands off in deep water and rides the swell', () => {
     if (!o.isMesh || !o.material || !o.material.color) return;
     if (o.material.color.getHexString() === new THREE.Color(ACCENT).getHexString()) reds.push(o.name);
   });
-  assert.deepEqual(reds, ['hull', 'mast'],
+  assert.deepEqual(reds, ['hull', 'mast', 'sail'],
     `only the ship wears the accent, got [${reds}]`);
   assert.equal(root.fragment().visits, 0);
 });

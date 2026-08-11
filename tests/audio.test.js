@@ -1375,3 +1375,20 @@ test('engine: rain starts, keeps, surges and stops like a real layer', () => {
     delete global.window;
   }
 });
+
+test('the wind does not slam the moment the book opens', () => {
+  // gustPhase's two sines were both zero AND rising at t = 0, so they added
+  // coherently and the wind went from dead calm to 0.93 — the 98th percentile
+  // of every value it ever takes — within four seconds of a page load. Fixed
+  // with a single EPOCH (a pure time shift), never per-sine phases: those are
+  // not a translation and they rewrote the crest spacing this file pins above.
+  let peak = -2;
+  for (let t = 0; t <= 8; t += 0.05) peak = Math.max(peak, gustPhase(t));
+  assert.ok(peak < 0.45,
+    `the opening eight seconds crest at ${peak.toFixed(3)} — that is a gale, not a scene settling`);
+
+  // ...and it is not dead air either: the weather has to be moving
+  let span = 0;
+  for (let t = 0; t <= 30; t += 0.05) span = Math.max(span, Math.abs(gustPhase(t)));
+  assert.ok(span > 0.3, `the first half-minute never got above ${span.toFixed(3)} — the scene reads as still`);
+});
