@@ -223,7 +223,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
     // hull under a plain sail rather than as one vermillion blob — and the
     // pale sail is what keeps the silhouette legible at this distance, where
     // the fog has taken better than half of everything.
-    const boat = makeBoat({ seed: ID, surfaceAt: seaSurface, color: ACCENT });
+    const boat = makeBoat({ seed: ID, surfaceAt: seaSurface, color: ACCENT, sailColor: ACCENT });
     boat.group.position.set(-8.5, SHORE.sea, -31);
     boat.group.rotation.y = Math.PI / 2 + 0.22;   // bow up the coast, quartering
     scene.add(boat.group);
