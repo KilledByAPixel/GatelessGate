@@ -66,7 +66,7 @@ const CAM = { distance: 17, target: [3.95, 0.45, -1.3], heading: -24.5, pitch: 1
   view: CAM,
   seed: ID,
   groundSeed: 21,
-  trees: 5,
+  trees: 8,
   keepout: [
   ...path.keepout(24, 1.0),
   { at: fuketsu, r: 1.3 },

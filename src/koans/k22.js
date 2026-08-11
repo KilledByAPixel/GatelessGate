@@ -26,7 +26,7 @@ const scratchPos = new THREE.Vector3();
 // reuse rule doing exactly what it was written for.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.5, target: [0.9, 1.9, -0.2], heading: 31.5, pitch: 19 };
+const CAM = { distance: 10.6, target: [0.4, 1.9, -0.2], heading: 33, pitch: 23 };
   export default {
   id: ID,
   slug: 'kashapa-s-preaching-sign',
@@ -74,11 +74,11 @@ const CAM = { distance: 11.5, target: [0.9, 1.9, -0.2], heading: 31.5, pitch: 19
   
   // KASHAPA, who is handing it over, and ANANDA, who has just said yes
   const kashapa = makeMonk({ height: 1.68, elder: true });
-  kashapa.position.set(-0.2, 0, 1.5);
+  kashapa.position.set(-1.2, 0, -.5);
   scene.add(kashapa);
   
   const ananda = makeMonk({ height: 1.60 });
-  ananda.position.set(1.1, 0, 2.9);
+  ananda.position.set(1.1, 0, .9);
   scene.add(ananda);
   faceMonk(kashapa, ananda.position);
   faceMonk(ananda, kashapa.position);
@@ -102,8 +102,8 @@ const CAM = { distance: 11.5, target: [0.9, 1.9, -0.2], heading: 31.5, pitch: 19
   // within ~3° of the flagpole on a portrait stage and the two uprights read as
   // one bolted object. The accent is most of what separates them now, so the
   // colour and the position are holding hands here.
-  const sign = makeSign({ height: 1.9, color: ACCENT });
-  sign.position.set(4.3, 0, -1.2);
+  const sign = makeSign({ height: 1.9, width: 1.2, color: ACCENT });
+  sign.position.set(-2.9, 0, -1.1);
   sign.rotation.y = 0.62;
   scene.add(sign);
   
@@ -121,7 +121,7 @@ const CAM = { distance: 11.5, target: [0.9, 1.9, -0.2], heading: 31.5, pitch: 19
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  seed: ID+3,
   groundSeed: 21,
   trees: 4,
   keepout: [

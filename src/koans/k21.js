@@ -31,7 +31,7 @@ const ID = 21;
 // to a piece of dung, exactly the joke Mumon makes in the commentary.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.0, target: [0.8, 0.8, 0.2], heading: 31.5, pitch: 21.2 };
+const CAM = { distance: 10, target: [0.8, 0.8, 0.2], heading: 13, pitch: 23 };
   export default {
   id: ID,
   slug: 'dried-dung',
@@ -149,13 +149,13 @@ const CAM = { distance: 10.0, target: [0.8, 0.8, 0.2], heading: 31.5, pitch: 21.
 
     const world = composeWorld(scene, {
       view: CAM,
-      seed: ID,
-      groundSeed: 21,
-      trees: 2,                       // and those kept out at the fog line
-      treeRing: [16, 24],
+      seed: ID+3,
+      groundSeed: 22,
+      trees: 7,                       // and those kept out at the fog line
       rocks: 5,
       bushes: 3,
       keepout: [
+      { x: 0, z:40, r: 48 }, // behind camera
         { at: stick, r: 6.0 },   // the swept yard: nothing scatters into it
         { at: ummon, r: 1.2 },
         { at: monk, r: 1.2 },

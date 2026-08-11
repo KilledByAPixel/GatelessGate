@@ -31,7 +31,7 @@ const scratchPos = new THREE.Vector3();
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 13.0, target: [0.4, 2.2, -1.4], heading: 31.5, pitch: 22.4 };
+const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 31.5, pitch: 22.4, maxDist: 18.4 };
   export default {
   id: ID,
   slug: 'it-is-not-mind-it-is-not-buddha-it-is-not-things',
@@ -65,7 +65,7 @@ const CAM = { distance: 13.0, target: [0.4, 2.2, -1.4], heading: 31.5, pitch: 22
   
   const hallGroup = new THREE.Group();
   hallGroup.name = 'the-hall';
-  const hall = makeHut({ width: 3.4, height: 2.6, depth: 2.8 });
+  const hall = makeHut({ width: 3.4, height: 2.6, depth: 2.8, chimes: 11 });
   hall.position.set(-2.2, 0, -4.4);
   hall.rotation.y = 0.44;
   hallGroup.add(hall);
@@ -83,7 +83,7 @@ const CAM = { distance: 13.0, target: [0.4, 2.2, -1.4], heading: 31.5, pitch: 22
   // foreshortened limb with a knuckle, jutting at the hall like an arm. At
   // this yaw the bough reaches directly behind the crown, so from the whole
   // reachable arc the tree reads as one heavy mass over its trunk.
-  oakRoot.rotation.y = 4.62;
+  oakRoot.rotation.y = 3.62;
   treeGroup.add(oakRoot);
   scene.add(treeGroup);
   
@@ -107,9 +107,9 @@ const CAM = { distance: 13.0, target: [0.4, 2.2, -1.4], heading: 31.5, pitch: 22
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  seed: ID+3,
   groundSeed: 21,
-  trees: 3,
+  trees: 7,
   keepout: [
   ...path.keepout(24, 1.2),
   { at: hall, r: 3.2 },
