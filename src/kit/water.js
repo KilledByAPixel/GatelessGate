@@ -199,7 +199,8 @@ export function makeWater({
   // enough vertices that a ripple — and the standing pattern a bounce builds
   // near the wall — reads as a curve, capped so a big lake does not cost more
   // per frame than it is worth. The cap keeps every default cell under half a
-  // WAVELEN; the oceans pass segments: 64 explicitly and skip all this.
+  // WAVELEN up to a ~15-unit lake — anything bigger should pass `segments`
+  // explicitly, the way the oceans do: they pass segments: 64 and skip all this.
   const n = segments || Math.max(24, Math.min(48, Math.round(size * 6)));
   const { pos, idx, edge } = round || blob ? discGrid(half, n, radiusAt) : squareGrid(size, n);
 
@@ -339,6 +340,11 @@ export function makeWater({
     for (const r of ripples) {
       const age = t - r.t0;
       if (age < 0 || age > LIFE) continue;
+      // Once decay has ground the crest below visibility there is no point
+      // folding rays for it — without this, a folded packet never leaves the
+      // pond, so the env cutoff below almost never skips the loop any more
+      // and every live slot pays wallAlong for its whole 10.5s LIFE.
+      if (r.amp * Math.exp(-age / TAU) < 0.004) continue;
       const dx = x - r.x;
       const dz = z - r.z;
       const d = Math.hypot(dx, dz);

@@ -408,7 +408,6 @@ test('a ripple comes back: the pond is alive again after the ring has crossed it
   // At SPEED 2.35 the outgoing ring is fully off a 2-unit pond by t ~= 1.4s;
   // under the old (no-bounce) math every later sample was flat to ~3e-5.
   for (const t of [2.0, 3.5]) {
-    w.update(0.1, t);
     let peak = 0;
     for (let r = 0; r < R; r += 0.05) peak = Math.max(peak, Math.abs(w.heightAt(r, 0, t)));
     assert.ok(peak > 1e-3, `at t=${t} the pond is dead flat (peak ${peak}) — nothing bounced`);

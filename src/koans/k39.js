@@ -245,9 +245,10 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
     groundMesh.geometry.computeVertexNormals();
 
     // ---- AND FISH, now that there is water to put them in ----------------
-    // The whole point of digging it (Frank). They ride the surface's own height
-    // field, so a stone going under lifts the school that happens to be under
-    // the ring. Held well below the sheet — there is more than a metre of water
+    // The whole point of digging it (Frank). They ride water.swellAt — the
+    // idle breathing, NOT the reader's ripples — because Frank ruled a stone
+    // going under (or a tap) must not toss the fish; the rings pass over the
+    // school. Held well below the sheet — there is more than a metre of water
     // beneath them, so nothing can surface unasked.
     const koi = makeKoi({
       count: 4, seed: ID, length: 0.8, color: wash(0.16), unlit: true,
