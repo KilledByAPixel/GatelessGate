@@ -18,6 +18,11 @@ sitting alone at the root of a repository looks like it covers the whole of it.
 - The new English translations of the front and back matter — Mumon's preface,
   his afterword, the Zen Warnings and Amban's letter — made for this edition
   from the Chinese, and the editorial matter in `README.md` and the About page.
+  In `book/gateless-gate.md` these are the Preface and Afterword pages; the
+  forty-nine numbered pages of that same file are not covered — see below. The
+  apparatus behind them in `book/translation-notes.md` is covered too, and so
+  are the seven further pieces translated there but not published in the book,
+  excepting the Chinese any of it quotes.
 
 In short: attribution required, no commercial use, no derivative works.
 
@@ -27,9 +32,9 @@ In short: attribution required, no commercial use, no derivative works.
 domain — Nyogen Senzaki and Paul Reps's rendering of the Mumonkan, privately
 printed by John Murray in Los Angeles in 1934, its copyright never renewed. It
 is not Frank Force's to license and nothing here claims it. It is the bulk of
-the text in `src/koans/text/mumonkan.js` and of `THE-GATELESS-GATE.md`, and it
-reaches this edition through
-[sacred-texts.com](https://sacred-texts.com/bud/glg/index.htm).
+the text in `src/koans/text/mumonkan.js`, of `THE-GATELESS-GATE.md`, and of the
+forty-nine numbered pages of `book/gateless-gate.md`, and it reaches this
+edition through [sacred-texts.com](https://sacred-texts.com/bud/glg/index.htm).
 
 The light modernisation of archaic verb forms in the capping verses is the only
 editorial hand on those cases; it is not claimed as a separate work.
@@ -37,6 +42,10 @@ editorial hand on those cases; it is not claimed as a separate work.
 **Three.js**, vendored in `lib/`, is © 2010-2026 Three.js Authors and is
 licensed MIT. Each file carries its own SPDX header. It travels under its own
 licence, not this one.
+
+**The Chinese source text** quoted throughout `book/translation-notes.md` is
+the Taishō edition as published by CBETA (T48n2005 無門關). It travels under
+CBETA's own terms, not this licence.
 
 **The Mumonkan itself** was compiled in 1228 by Wumen Huikai. The underlying
 work is long out of copyright everywhere.

@@ -4,7 +4,7 @@
 // version and the narration model — against the files that actually set them.
 //
 // Sources: the translation and lineage facts come from the header of
-// local/gateless-gate.txt; THREE_VERSION from lib/THREE_VERSION.txt; TTS_MODEL
+// book/gateless-gate.md; THREE_VERSION from lib/THREE_VERSION.txt; TTS_MODEL
 // from scripts/lib/narration-voice.js.
 
 export const SITE = 'https://frankforce.com';

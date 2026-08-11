@@ -28,6 +28,8 @@ You can read the koans, meditate in the scenes, or have it read to you.
 
 The whole book is also here as one plain page: [THE GATELESS GATE](THE-GATELESS-GATE.md).
 It is generated from the same source the interactive edition reads, so the two cannot drift apart.
+That source is [book/gateless-gate.md](book/gateless-gate.md) — the preface, the forty-nine and the afterword in one file — and `node scripts/build-text.js` is what turns it into what the site reads.
+Beside it, [book/translation-notes.md](book/translation-notes.md) is the scholarly record behind the new translation: the Chinese, the exact Taishō page and line spans, the reasoning, and the readings still unresolved.
 
 The English is Nyogen Senzaki and Paul Reps's rendering of the Mumonkan, privately printed by John Murray in Los Angeles in 1934 which is in the United States public domain.
 Mumon's preface, his afterword, the Zen Warnings and Amban's letter were translated with AI assistance for this edition from the Chinese of the Taishō canon (CBETA T48n2005).

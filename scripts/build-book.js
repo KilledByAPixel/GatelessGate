@@ -2,8 +2,8 @@
 // Run: node scripts/build-book.js
 //
 // Downstream of scripts/build-text.js, never a substitute for it: this reads what
-// that script generated. After editing local/gateless-gate.txt or the front and
-// back matter, run build-text.js first, then this.
+// that script generated. After editing book/gateless-gate.md, run build-text.js
+// first, then this.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
