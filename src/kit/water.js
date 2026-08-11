@@ -24,10 +24,10 @@ import { clamp01 } from '../util/math.js';
 // integration, no stored per-vertex state, no Math.random — so the same taps at
 // the same steps give the same water every run.
 
-const SPEED = 1.35;        // how fast a ripple front travels, world units/sec
+const SPEED = 2.35;        // how fast a ripple front travels, world units/sec
 const WAVELEN = 0.62;      // crest-to-crest, in the same units
 const PACKET = 0.42;       // width of the travelling wave packet
-const TAU = 1.5;           // seconds for a ripple to fade to nothing
+const TAU = 3.5;           // seconds for a ripple to fade to nothing
 const POOL = 8;            // concurrent ripples before the oldest is reused
 const EDGE_BAND = 0.12;    // fraction of the radius over which motion is pinned
 
