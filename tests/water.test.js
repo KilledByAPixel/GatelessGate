@@ -482,6 +482,39 @@ test('stir: a teleport-sized jump re-anchors instead of stirring', () => {
   assert.equal(w.rippleCount(), 0);
 });
 
+test('stir: a slow crawl never banks stroke for a later blip', () => {
+  const w = makeWater({ shape: 'round', size: 4, swell: 0, seed: 7 });
+  // 300 frames of sub-dead-zone crawl cover 1.5 units — three spacings' worth.
+  // If that distance banked, the single brisk frame after it would fire a
+  // ripple sized by the blip; a resting hand's drift must count for nothing.
+  for (let i = 0; i < 300; i++) {
+    w.update(1 / 60, i / 60);
+    w.stir(-1 + i * 0.005, 0);
+  }
+  w.update(1 / 60, 301 / 60);
+  w.stir(0.5 + 0.2, 0);                         // one brisk frame, 12 u/s
+  assert.equal(w.rippleCount(), 0);
+});
+
+test('stir: a stroke never evicts a tap\'s ring', () => {
+  const w = makeWater({ shape: 'round', size: 4, swell: 0, seed: 7 });
+  const s = w.ripple(0, 0);                     // the tap's slot, amp = STRIKE
+  const tapAmp = s.amp;
+  // a long ping-pong stroke: ~9 mini-ripples, more than any shared pool of 8
+  // could hold beside the tap — the tap's slot must survive untouched
+  let x = -1.4;
+  let dir = 1;
+  for (let i = 0; i < 28; i++) {
+    w.update(1 / 60, (i + 1) / 60);
+    x += 0.2 * dir;
+    if (x > 1.3 || x < -1.3) dir = -dir;
+    w.stir(x, 0);
+  }
+  assert.ok(w.rippleCount() > 1, 'the stroke itself should be stirring');
+  assert.equal(s.t0, 0, 'the tap\'s slot was reused by a stir');
+  assert.equal(s.amp, tapAmp, 'the tap\'s amplitude was overwritten by a stir');
+});
+
 test('stir: deterministic — the same stroke gives the same surface', () => {
   const run = () => {
     const w = makeWater({ shape: 'round', size: 4, seed: 30 });

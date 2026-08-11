@@ -35,7 +35,7 @@ const BOUNCE = 0.6;        // amplitude kept per round trip of the fold — one
                            // BOUNCE^(travelled / 2·wallDist), not per discrete
                            // contact: a stepped multiplier popped the whole
                            // packet's height the instant the count ticked.
-const POOL = 8;            // concurrent ripples before the oldest is reused
+const POOL = 8;            // concurrent tap ripples before the oldest is reused
 const EDGE_BAND = 0.12;    // fraction of the radius over which motion is pinned
 
 // The stir (hover): moving the pointer across the surface drops mini-ripples
@@ -44,6 +44,12 @@ const EDGE_BAND = 0.12;    // fraction of the radius over which motion is pinned
 // a resting hand's jitter does nothing, the first fed point only anchors, and
 // everything derives from the fed points and the sim clock, so the same
 // stroke over the same steps stirs the same water.
+const STIR_POOL = 4;       // stir slots, SEPARATE from the taps' POOL: a
+                           // stroke drops mini-ripples far faster than anyone
+                           // taps, and sharing one rotation let a few seconds
+                           // of idle brushing evict a tap's ring mid-life — a
+                           // visible one-frame pop. Stirs only ever recycle
+                           // stirs.
 const STIR_MIN_SPEED = 0.35;   // breeze's dead zone, world units/sec
 const STIR_MAX_SPEED = 8;      // full-strength stroke speed
 const STIR_SPACING = 0.5;      // stroke distance between mini-ripples
@@ -337,9 +343,12 @@ export function makeWater({
   // harder just for being wider.
   const STRIKE = strike || Math.min(0.10, 0.045 * half);
 
+  // One flat array the wave loop reads straight through, two rotations into
+  // it: taps own [0, POOL), stirs own [POOL, POOL + STIR_POOL) — see drop().
   const ripples = [];
-  for (let i = 0; i < POOL; i++) ripples.push({ t0: -1e9, x: 0, z: 0, amp: 0 });
+  for (let i = 0; i < POOL + STIR_POOL; i++) ripples.push({ t0: -1e9, x: 0, z: 0, amp: 0 });
   let next = 0;
+  let stirNext = 0;
   let clock = 0;
 
   // The idle-swell term alone — shared by waveAt (which adds the ripples on
@@ -463,27 +472,39 @@ export function makeWater({
   let stT = -1e9;
   let stAccum = 0;
 
+  // The one place a ripple enters the pool. A point outside the water is
+  // pulled to the nearest point inside it rather than ignored, so a hit on
+  // the very rim still reads. Taps and stirs rotate their own slot ranges
+  // (see STIR_POOL) so a stroke can never retire a tap's ring early.
+  function drop(x, z, amp, stirred) {
+    let cx = x;
+    let cz = z;
+    if (round || blob) {
+      const R = blob ? radiusAt(Math.atan2(z, x)) : half;
+      const d = Math.hypot(x, z);
+      if (d > R) { const k = R / d; cx = x * k; cz = z * k; }
+    } else {
+      cx = Math.max(-half, Math.min(half, x));
+      cz = Math.max(-half, Math.min(half, z));
+    }
+    let slot;
+    if (stirred) {
+      slot = ripples[POOL + stirNext];
+      stirNext = (stirNext + 1) % STIR_POOL;
+    } else {
+      slot = ripples[next];
+      next = (next + 1) % POOL;
+    }
+    slot.t0 = clock; slot.x = cx; slot.z = cz; slot.amp = amp;
+    return slot;
+  }
+
   return {
     group,
     surface,
-    // Drop a ripple at a point in the surface's own local space. A tap outside
-    // the water is pulled to the nearest point inside it rather than ignored,
-    // so a hit on the very rim still reads.
+    // Drop a ripple at a point in the surface's own local space (a tap).
     ripple(x, z, amp = STRIKE) {
-      let cx = x;
-      let cz = z;
-      if (round || blob) {
-        const R = blob ? radiusAt(Math.atan2(z, x)) : half;
-        const d = Math.hypot(x, z);
-        if (d > R) { const k = R / d; cx = x * k; cz = z * k; }
-      } else {
-        cx = Math.max(-half, Math.min(half, x));
-        cz = Math.max(-half, Math.min(half, z));
-      }
-      const slot = ripples[next];
-      next = (next + 1) % POOL;
-      slot.t0 = clock; slot.x = cx; slot.z = cz; slot.amp = amp;
-      return slot;
+      return drop(x, z, amp, false);
     },
     // the water's height in local space — so koi, petals and anything else
     // floating can ride the surface instead of hovering over it
@@ -508,17 +529,22 @@ export function makeWater({
       stT = clock;
       if (dt > STIR_GAP || dist > STIR_TELEPORT) {
         // first point, a long silence, or a jump: the pointer arrived, it
-        // did not travel — anchor only, exactly breeze.js's re-entry rule
+        // did not travel — anchor only. Same intent as breeze.js's re-entry
+        // rule, different mechanism: breeze is cleared from outside
+        // (clearBreeze), the water infers re-entry from the gap itself.
         stX = x; stZ = z; stAccum = 0;
         return;
       }
       const speed = dist / dt;
       const strength = clamp01((speed - STIR_MIN_SPEED) / (STIR_MAX_SPEED - STIR_MIN_SPEED));
-      stAccum += dist;
+      // only real stroke banks toward the next drop — a sub-dead-zone crawl
+      // counts for nothing, however far it wanders, so a later blip can never
+      // cash in distance a resting hand accumulated
+      if (strength > 0) stAccum += dist;
       stX = x; stZ = z;
       if (strength > 0 && stAccum >= STIR_SPACING) {
         stAccum = 0;
-        this.ripple(x, z, STRIKE * STIR_AMP * strength);
+        drop(x, z, STRIKE * STIR_AMP * strength, true);
       }
     },
     // signed distance to the shore in local space (positive = in the water):
