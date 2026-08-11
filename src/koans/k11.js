@@ -15,11 +15,19 @@ const ID = 11;
 // question, gets the same fist, and says "Well given, well taken, well
 // killed, well saved" — and bows.
 //
-// The fist is identical both times. So the fist is the one accented thing in
-// the scene, and the interaction is Joshu's verdict: touch it and he turns
-// away; touch it again and he bows to it. Nothing about the fist changes. The
-// case is entirely in the man who is looking at it, which is Mumon's question:
-// where is the fault?
+// The fist is identical both times, and the interaction is Joshu's verdict:
+// touch it and he turns away; touch it again and he bows to it. Nothing about
+// the fist changes. The case is entirely in the man who is looking at it, which
+// is Mumon's question: where is the fault?
+//
+// THE SEAL IS THE SHIP, not the fist (Frank). The fist held the red first, on
+// the reasoning that the one identical thing should be the one warm thing — but
+// that put the accent on the object the case says is NOT where the fault lies.
+// The ship is Joshu's actual sentence: "ships cannot remain where the water is
+// too shallow." It stands off beyond the shallows doing the one thing it cannot
+// stop doing, which is not coming in. Painting it is the case's own line said
+// in colour, and it leaves the fist ink — identical to every other ink thing,
+// which is exactly what the fist is supposed to be.
 //
 // THE COAST stages the verdict itself (Frank: "lets make 11 an ocean scene").
 // The hermit's rise now stands above a shallow bay: a long bar of nearly
@@ -29,7 +37,7 @@ const ID = 11;
 // waves"): a small junk standing off beyond the shallows, riding the swell,
 // because Joshu's line is what it cannot do — come in and remain. The sea
 // stays ink; the red sea belongs to case 20, where the ocean is the seal.
-// Here the seal is the fist.
+// Here the seal is the ship ON that sea.
 
 const TURN_RATE = 2.4;
 const BOW = 0.20;
@@ -131,10 +139,11 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
     // he is looking at his visitor, both times — a fist raised at nobody in
     // particular would read as a man alone rather than as an answer given
 
-    // THE FIST — the seal. Only the fist is vermillion; the arm stays ink, the
-    // way the boy's raised sleeve does in case 3. A whole red arm read as a
-    // banner rather than a hand (Frank's note); the red belongs on the fist,
-    // which is the thing that is identical on both of Joshu's visits.
+    // THE FIST — ink now, not the seal; the ship carries the red (see the
+    // header). It is still its own mesh and still the tap target, because the
+    // whole interaction hangs off it: what changed is only that it no longer
+    // announces itself. A fist the same tone as the arm it ends is the point —
+    // Joshu is shown the identical ordinary thing twice.
     const raised = monk.children
       .filter((c) => c.name === 'arm')
       .find((c) => Math.abs(c.rotation.z) > 1);
@@ -143,7 +152,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
     // local y, so this lands on the hand wherever the pose puts it.
     const fist = new THREE.Mesh(
       new THREE.SphereGeometry(0.075, 9, 7),
-      toonMaterial({ color: ACCENT, flat: true }));
+      toonMaterial({ color: INK_LIT, flat: true }));
     fist.name = 'fist';
     fist.position.y = -0.34 * 1.5;
     (raised || monk).add(fist);
@@ -209,7 +218,12 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
     // to the shore. It is the case's own verdict at anchor: "ships cannot
     // remain where the water is too shallow", so it keeps its distance where
     // the ink is finally deep, half dissolved in the fog, and does not come in.
-    const boat = makeBoat({ seed: ID, surfaceAt: seaSurface });
+    // THE SHIP, and the case's one warm thing. `color` paints hull and mast;
+    // the sail deliberately stays cloth-pale, so the red reads as a painted
+    // hull under a plain sail rather than as one vermillion blob — and the
+    // pale sail is what keeps the silhouette legible at this distance, where
+    // the fog has taken better than half of everything.
+    const boat = makeBoat({ seed: ID, surfaceAt: seaSurface, color: ACCENT });
     boat.group.position.set(-8.5, SHORE.sea, -31);
     boat.group.rotation.y = Math.PI / 2 + 0.22;   // bow up the coast, quartering
     scene.add(boat.group);

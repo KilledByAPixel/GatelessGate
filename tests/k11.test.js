@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import k11, { SHORE } from '../src/koans/k11.js';
 import { groundHeight } from '../src/kit/ground.js';
+import { ACCENT } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Case 11 — Joshu examines a monk in meditation. Two staging complaints from
@@ -101,7 +102,23 @@ test('the ship stands off in deep water and rides the swell', () => {
   }
   assert.ok(ys.size > 8, `the swell actually lifts and lowers it: ${ys.size} distinct heights`);
 
-  // the fist is still the only accent in the scene — the sea did not bring
-  // k20's red with it, and the ship is ink like everything else
+  // THE SHIP carries the case's one accent now — the fist went back to ink,
+  // because the koan's own line is about what a ship cannot do, not about the
+  // hand. The SEA is still ink either way: k20 owns the red ocean, and a red
+  // hull on it must not drag that in behind it.
+  const hull = boat.getObjectByName('hull');
+  assert.ok(hull, 'the boat still names its hull');
+  assert.equal(hull.material.color.getHexString(), new THREE.Color(ACCENT).getHexString(),
+    'the ship is the seal');
+  // ...and nothing ELSE in the scene went red with it. Walked as meshes rather
+  // than by name — `water` is a Group, and asking a Group for its material is
+  // how the first version of this check quietly threw instead of asserting.
+  const reds = [];
+  root.scene.traverse((o) => {
+    if (!o.isMesh || !o.material || !o.material.color) return;
+    if (o.material.color.getHexString() === new THREE.Color(ACCENT).getHexString()) reds.push(o.name);
+  });
+  assert.deepEqual(reds, ['hull', 'mast'],
+    `only the ship wears the accent, got [${reds}]`);
   assert.equal(root.fragment().visits, 0);
 });
