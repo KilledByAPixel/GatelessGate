@@ -117,14 +117,16 @@ const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 1
   // ---- THE BAKE ---------------------------------------------------------
   // Fuketsu and his questioner stand; the buffalo grazes without going
   // anywhere. All of that is one mesh per material once it is merged, before
-  // the ink pass doubles it — 136 draw calls to about 84.
+  // the ink pass doubles it — 135 draw calls to 91.
   //
   // NOT THE BIRDS. They are the seal of this case and every one of them
   // flaps: three meshes apiece that have to stay three meshes.
   //
   // The buffalo keeps its TAIL. Sixteen of its eighteen pieces never move,
   // but the tail swings on makeTail's own clock (buffalo.update), and a
-  // merged tail is a tail that has stopped.
+  // merged tail is a tail that has stopped. Its seven segment meshes stay
+  // unbaked and each still takes its own ink shell, which is why this scene
+  // lands at 91 rather than the ~84 a fully-still prop would have reached.
   //
   // The trees and pines are not passed in at all — bakeStatic would refuse
   // them anyway (their canopies carry wind attributes and a shell that reads
