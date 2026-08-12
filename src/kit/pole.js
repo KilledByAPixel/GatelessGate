@@ -14,10 +14,9 @@ import { hash1 } from '../util/noise.js';
 // cap arithmetic, so retuning the drum here never leaves a monk hovering.
 //
 // The guy-lines are believability, not structure: three hairlines running to
-// seeded ground anchors. They are drawn as ink strokes — a 0.012-radius
-// cylinder under the house 0.033 outline would be swallowed whole (the case-3
-// finger problem), so lines and stakes are painted near-ink and opt out of the
-// outline pass entirely.
+// seeded ground anchors. A 0.012-radius cylinder is barely there at case
+// distance, so lines and stakes are painted near-ink to stay legible at
+// that thinness.
 export function makePole({
   height = 8,
   radius = 0.16,

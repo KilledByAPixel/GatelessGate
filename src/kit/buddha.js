@@ -34,9 +34,9 @@ import { makeFigure, HEAD_OBLONG } from './figure.js';
 // topknot"). A single bun sunk into the crown — the ushnisha's read at the
 // detail floor: one sphere, its centre buried so the crest sits proud of the
 // skull line. It is a silhouette event (the one thing allowed to break the
-// crown), so unlike the urna it keeps its outline, and it wears the figure's
-// own material — hair on an ink man, stone on k9's colossus. Monks keep
-// their hats and bare heads; buddha = bare head + topknot + urna.
+// crown), and it wears the figure's own material — hair on an ink man,
+// stone on k9's colossus. Monks keep their hats and bare heads; buddha =
+// bare head + topknot + urna.
 const KNOT_R = 0.44;        // fraction of the head's radius — a bun, not a second head
 const KNOT_SINK = 1.1;     // centre at 0.82·r: crest proud by ~0.26·r, enough
                             //   to break the crown line at case distance

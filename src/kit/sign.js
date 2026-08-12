@@ -25,8 +25,8 @@ import { WASH } from '../palette.js';
 //
 // ONE MESH, ONE DRAW. Post and board are merged (mergeSimple, the same move the
 // gate's nemaki and the tree's knots make) rather than parented as two meshes:
-// they share a tone, so a second mesh would buy a second draw call and a second
-// inverted hull for a join the silhouette already carries.
+// they share a tone, so a second mesh would buy nothing but a second draw call
+// for a join the silhouette already carries.
 //
 // The origin is the post's FOOT, on y = 0, so a case places it by where it
 // stands. The board faces local +z.

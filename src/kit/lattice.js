@@ -10,9 +10,9 @@ const T = 0.06;   // frame thickness
 // standing from y=0 to height, centred on x=0. Kept separate from makeLattice
 // so a wall can merge several panels into one mesh before anything is drawn.
 //
-// This is the whole reason the pen went from ~50 meshes to three: an inverted-
-// hull outline is added per mesh, so every bar used to cost two draws. One
-// merged geometry per panel (or per wall) is one silhouette, one outline.
+// This is the whole reason the pen went from ~50 meshes to three: every mesh
+// is a draw call, so fifty bars used to cost fifty draws. One merged geometry
+// per panel (or per wall) is one draw.
 //
 // BAR RHYTHM: three distinct weights, not one. The frame (T) reads as the
 // timber that carries load; the verticals (0.62T) are the primary infill,
@@ -65,8 +65,8 @@ export function makeLattice({ width = 2.2, height = 2.0, bars = 5, color = WASH.
 //
 // Each STANDING WALL is one merged mesh: its panelsPerSide panels are baked
 // into a single geometry (they are the same panel repeated, so this is just
-// doubling one piece), and the wall as a whole carries one outline. Three
-// walls, three meshes, six draws — where the panel-per-mesh build cost dozens.
+// doubling one piece), and the wall as a whole is one draw. Three walls,
+// three meshes, three draws — where the panel-per-mesh build cost dozens.
 //
 // `open` names the missing wall: '+z' is nearest the camera, '+x' is to its right.
 //

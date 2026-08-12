@@ -10,9 +10,9 @@
 //
 // Not everything in the kit earns a cell. A model belongs here when it has FORM
 // to judge on a turntable; the moon does not — it is one unlit disc whose entire
-// design is four render rules (fog off, no outline, no ink pass, keep the
-// material), and a gallery cell shows none of them. It is reviewed in case 19,
-// standing where it stands.
+// design is three render rules (fog off, no ink pass, keep the material), and a
+// gallery cell shows none of them. It is reviewed in case 19, standing where it
+// stands.
 //
 // This module must stay dependency-free and DOM-free: it is imported by plain
 // Node tests as well as both browser harnesses.

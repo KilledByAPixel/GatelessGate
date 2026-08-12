@@ -74,7 +74,7 @@ export function makeVeranda({
   // from under the boards down past it (with a generous buried margin, since
   // composeWorld terrain rolls), and a skirting rail ties them just above the
   // ground line so the frame reads as carpentry, not four loose sticks.
-  // One merged mesh: one draw, one outline, same economy as the posts.
+  // One merged mesh: one draw, same economy as the posts.
   if (legs > 0) {
     const SINK = 0.30;                       // buried margin for terrain relief
     const LEG_T = 0.24;

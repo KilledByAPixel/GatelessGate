@@ -34,11 +34,10 @@ import { hangChimes, attachChimes } from './chimes.js';
 // hut rotation any case happens to use.
 //
 // Mesh budget: five, DOWN from the old six. Everything that shares a material
-// is baked into one geometry, because an inverted-hull outline is added per
-// MESH and a hall made of a hundred children would cost a hundred outline draws
-// on its own. The four corner posts are one merged mesh for the same reason;
-// they are still the only round, smooth-shaded part, which is why they do not
-// simply join the walls.
+// is baked into one geometry — a hall made of a hundred children would cost a
+// hundred draws on its own. The four corner posts are one merged mesh for the
+// same reason; they are still the only round, smooth-shaded part, which is
+// why they do not simply join the walls.
 //
 // Nothing here is random. Every number falls out of width/height/depth, so two
 // huts of the same size are the same hut — same as it always was.
@@ -57,8 +56,8 @@ function pushQuad(v, a, b, c, d) {
 // A closed hipped shell from a stack of rectangular rings, lowest first. Each
 // ring is a pair of half-extents and a height; consecutive rings are skinned
 // with four quads and the stack is capped top (ridge) and bottom (soffit), so
-// the whole thing is a solid. An open shell would give the inverted-hull
-// outline pass nothing to invert, and the eave would read as a hole from below.
+// the whole thing is a solid — an open shell would read as a hole from below,
+// wherever the missing faces let the reader see straight through it.
 function hipShell(rings) {
   const v = [];
   for (let i = 0; i < rings.length - 1; i++) {

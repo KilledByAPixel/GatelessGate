@@ -49,7 +49,7 @@ export function makeRack({ height = 1.25, color = WASH.dark, staffColor = WASH.m
   // post, the way a real through-tenon reads: the timber doesn't just touch,
   // it is visibly notched together. The first pass had the rail and sill
   // simply overlapping the post cylinders with no seam at all. One merged
-  // mesh, four blocks, one extra outline.
+  // mesh, four blocks, one draw.
   const collar = 0.11 * H;
   const joineryParts = [];
   for (const sx of [-1, 1]) {

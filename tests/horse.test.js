@@ -29,14 +29,14 @@ function withersOf(group) {
 }
 
 test('the horse holds at 11 meshes: trade, never add', () => {
-  // Every mesh costs 2 draws when hull outlines are on. This used to be
-  // pinned because k45 was frozen at 148/150 draw calls; k45 no longer feels
-  // it — it bakes its whole horse to one mesh with `bakeStatic` — but the
-  // horse itself is shared (k36 stages it unbaked), so its mesh count is
-  // still exactly what any case drawing it unbaked pays. 12 is what the
-  // pre-rework horse spent; the knee'd hind pair was paid for by merging the
-  // front posts and the ear pair, and the single-loft head then RETIRED the
-  // snout mesh — trade, never add.
+  // Under the inverted-hull outline system (the hull, since deleted), every
+  // mesh cost 2 draws, and this was pinned because k45 was frozen at 148/150
+  // draw calls; k45 no longer feels it — it bakes its whole horse to one mesh
+  // with `bakeStatic` — but the horse itself is shared (k36 stages it
+  // unbaked), so its mesh count is still exactly what any case drawing it
+  // unbaked pays. 12 is what the pre-rework horse spent; the knee'd hind pair
+  // was paid for by merging the front posts and the ear pair, and the
+  // single-loft head then RETIRED the snout mesh — trade, never add.
   const { group } = build();
   let meshes = 0;
   group.traverse((o) => { if (o.isMesh) meshes++; });

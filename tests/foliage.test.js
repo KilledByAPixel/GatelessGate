@@ -209,9 +209,10 @@ test('the wind survives the material swap that ships', () => {
   assert.equal(Object.hasOwn(plain, 'onBeforeCompile'), false);
 });
 
-test('a pine hands its outline shell the flag it needs to move with it', () => {
-  // the hull shares the mesh's own BufferGeometry, so the attributes are
-  // already there; what it needs is the opt-in, or the ink peels off the tree
+test('a pine and a tree both carry the foliageWind flag bakeStatic reads', () => {
+  // bakeStatic's canMerge refuses to merge a foliage-wind mesh, because
+  // merging would drop its per-vertex wind attributes; this is the flag it
+  // checks
   assert.equal(makePine({}).userData.foliageWind, true);
   const tree = makeTree({});
   assert.equal(tree.getObjectByName('trunk').userData.foliageWind, true);

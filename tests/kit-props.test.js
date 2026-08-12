@@ -75,13 +75,13 @@ test('makeHut is a roofed hall on the ground, and cheap to draw', () => {
   assert.equal(hut.name, 'hut');
 
   // The four corner posts are ONE merged mesh, not four children — same reason
-  // makeLattice bakes its bars: an inverted-hull outline is added per mesh, and
-  // the hall appears in fourteen cases, two of them twice. They stay a mesh of
-  // their own rather than joining the walls because they are the one round,
+  // makeLattice bakes its bars: every mesh is a draw call, and the hall
+  // appears in fourteen cases, two of them twice. They stay a mesh of their
+  // own rather than joining the walls because they are the one round,
   // smooth-shaded part of the building.
   const posts = hut.children.filter((c) => c.name === 'post');
   assert.equal(posts.length, 1, 'the posts are merged');
-  assert.equal(posts[0].children.length, 0, 'no child meshes to outline separately');
+  assert.equal(posts[0].children.length, 0, 'no child meshes to draw separately');
   const pb = new THREE.Box3().setFromObject(posts[0]);
   assert.ok(pb.min.x < -1.0 && pb.max.x > 1.0, 'a post at each end of the width');
   assert.ok(pb.min.z < -0.8 && pb.max.z > 0.8, 'and at each end of the depth');
@@ -143,10 +143,10 @@ test('makeHut is a roofed hall on the ground, and cheap to draw', () => {
 test('makeLattice is a single merged mesh, framed and full height', () => {
   const l = makeLattice({ width: 2.2, height: 2.0, bars: 5 });
   assert.equal(l.name, 'lattice');
-  // one mesh, not a group of bars: an inverted-hull outline is added per mesh,
-  // so a lattice made of dozens of children costs dozens of outline draws
+  // one mesh, not a group of bars: every mesh is a draw call, so a lattice
+  // made of dozens of children would cost dozens of draws
   assert.ok(l.isMesh, 'merged into one mesh');
-  assert.equal(l.children.length, 0, 'no child meshes to outline separately');
+  assert.equal(l.children.length, 0, 'no child meshes to draw separately');
   assert.deepEqual(l.userData.lattice, { width: 2.2, height: 2.0, bars: 5 });
   const box = new THREE.Box3().setFromObject(l);
   assert.ok(box.min.y > -0.02, 'on the ground');

@@ -84,7 +84,7 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
   // THE SADDLE, and the footrail tying the legs together at the ankle — the
   // caps are what the belly actually rests in, and the rail is what stops the
   // pair reading as two sticks the drum happens to balance on. Merged, so the
-  // whole joinery costs one extra outline.
+  // whole joinery costs one draw, not several.
   const capW = 0.40 * R;
   const trimParts = [
     // spans the legs where they actually are at ankle height, splay included
@@ -142,8 +142,8 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
   // BODY HOOPS — the dark rings that bind each skin to the barrel, the taiko's
   // own rim work. The first pass had the pale skin meeting the ink body with
   // no seam at all, which read as a painted circle rather than a stretched
-  // hide bound down. Two toruses, merged into one mesh (one extra outline for
-  // both, the same merge trick the kit's other paired pieces use).
+  // hide bound down. Two toruses, merged into one mesh (one draw for both,
+  // the same merge trick the kit's other paired pieces use).
   const hoopGeo = [];
   for (const sx of [-1, 1]) {
     const t = new THREE.TorusGeometry(0.805 * R, 0.052 * R, 6, 14);

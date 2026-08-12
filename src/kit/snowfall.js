@@ -12,10 +12,9 @@ import { SNOW } from '../palette.js';
 // falling snow is not white, it's the same colour as the ground"). Falling snow
 // is the one thing in the book brighter than the page — see SNOW in palette.js.
 //
-// One THREE.Points, no meshes and no outlines. Each flake's fall is a closed
-// form over simTime — a wrapping descent with its own drift — so the same
-// simTime always gives the same weather, and nothing accumulates between
-// frames.
+// One THREE.Points, no meshes. Each flake's fall is a closed form over
+// simTime — a wrapping descent with its own drift — so the same simTime
+// always gives the same weather, and nothing accumulates between frames.
 
 // ROUND FLAKES. A PointsMaterial with no map draws every point as a hard
 // SQUARE, so the weather was three hundred little tiles tumbling past the cave

@@ -32,12 +32,9 @@ import { plainMaterial } from '../render/toon.js';
 //   puts them under the sun, and the moon spent a week secretly lit that way.
 //   grassfield — its wind bend lives in its own shader, and a clone freezes
 //   the grass mid-stride.
-//
-// Outline hulls are left alone as well: they are flat ink by design and
-// nothing about them is lit.
 export function applyBookShading(obj) {
   obj.traverse((o) => {
-    if (!o.isMesh || o.userData.isOutline) return;
+    if (!o.isMesh) return;
     if (o.name === 'grassfield' || o.userData.keepMaterial) return;
     if (Array.isArray(o.material)) o.material = o.material.map(plainMaterial);
     else if (o.material) o.material = plainMaterial(o.material);

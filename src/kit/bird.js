@@ -12,9 +12,8 @@ import { mergeSimple } from './scatter.js';
 // is barely more than that chevron: a small flattened body, a head with a
 // beak, a short tail, and two broad blunt wings. No legs.
 //
-// Three meshes — one merged body and two wings — no outline (an inverted hull
-// on a shape this thin reads as a blot). The body is baked into one mesh; only
-// the wings move.
+// Three meshes — one merged body and two wings. The body is baked into one
+// mesh; only the wings move.
 //
 // The wings FOLD. A flat paddle that only hinges up and down at the shoulder
 // reads fine at flock distance but static up close — the close-up single

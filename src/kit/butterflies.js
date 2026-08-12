@@ -17,8 +17,7 @@ import { clamp } from '../util/math.js';
 // beat quicker, then settle.
 //
 // Draw calls: two meshes per butterfly, sharing ONE material. Six butterflies
-// is twelve draws; they take no outline (an inverted hull on a paper-thin quad
-// is a blot).
+// is twelve draws.
 
 // E-folding of a flit, in seconds. Lengthened with the startle envelope: the
 // excitement drives both the wingbeat and the path speed, and at 2.2 it was

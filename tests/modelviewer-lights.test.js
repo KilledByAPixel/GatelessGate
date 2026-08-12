@@ -84,14 +84,13 @@ test('applyBookShading swaps lit toon materials for the shipped Lambert', () => 
 
 test('applyBookShading leaves alone everything the book marks unlit', () => {
   const g = new THREE.Group();
-  // the four guards, each with the thing that taught it
+  // the two guards, each with the thing that taught it
   const moon = mesh('moon', new THREE.MeshBasicMaterial({ color: 0x943433 }), { keepMaterial: true });
   const grass = mesh('grassfield', toonMaterial({ color: '#6f6d6b' }));
-  const outline = mesh('robe-ink', new THREE.MeshBasicMaterial({ color: 0x14110c }), { isOutline: true });
-  g.add(moon, grass, outline);
-  const before = [moon.material, grass.material, outline.material];
+  g.add(moon, grass);
+  const before = [moon.material, grass.material];
   applyBookShading(g);
-  assert.deepEqual([moon.material, grass.material, outline.material], before);
+  assert.deepEqual([moon.material, grass.material], before);
 });
 
 test('applyBookShading handles a multi-material mesh', () => {

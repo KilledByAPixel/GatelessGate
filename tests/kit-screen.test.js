@@ -384,7 +384,7 @@ test('makeVeranda legs carry a lifted deck to the ground, at all four corners', 
   const v = makeVeranda({ width, depth, height: 3.3, deck, legs: LEGS });
   const legMeshes = v.children.filter((c) => c.name === 'leg');
   assert.equal(legMeshes.length, 1, 'the whole frame merges into one mesh, hut-style');
-  assert.equal(legMeshes[0].children.length, 0, 'no child meshes to outline separately');
+  assert.equal(legMeshes[0].children.length, 0, 'no child meshes to draw separately');
 
   const box = new THREE.Box3().setFromObject(legMeshes[0]);
   assert.ok(box.min.y < -(LEGS + 0.25), `the frame sinks past the ground line: ${box.min.y}`);

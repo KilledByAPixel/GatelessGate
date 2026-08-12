@@ -2,9 +2,6 @@
 //
 // Case 14 idled at 17 fps in the browser where earlier cases sat near 48, so
 // this builds every registered case headlessly and counts what is in the scene.
-// Outline shells are counted separately because addOutlines duplicates geometry:
-// they are hidden by default in the debug preset, but they are still built, still
-// in the graph, and still traversed every frame.
 import { CASES } from '../src/koans/index.js';
 import { isStaged, loadKoan } from '../src/koans/registry.js';
 
@@ -19,7 +16,7 @@ for (const c of CASES) {
   const mod = await loadKoan(c.slug);
   const built = mod.build(ctx);
 
-  let meshes = 0, outlines = 0, tris = 0, outlineTris = 0, instances = 0;
+  let meshes = 0, tris = 0, instances = 0;
   built.scene.traverse((o) => {
     if (!o.isMesh) return;
     const g = o.geometry;
@@ -28,17 +25,16 @@ for (const c of CASES) {
     if (o.isInstancedMesh) instances += o.count;
     meshes++; tris += count * n;
   });
-  rows.push({ id: c.id, title: c.title.slice(0, 30), meshes, outlines, instances,
-    ktris: tris / 1000, koutline: outlineTris / 1000 });
+  rows.push({ id: c.id, title: c.title.slice(0, 30), meshes, instances, ktris: tris / 1000 });
   built.dispose();
 }
 
 rows.sort((a, b) => b.ktris - a.ktris);
-console.log('id  case                            meshes  outline   instances    ktris  +outline');
+console.log('id  case                            meshes   instances    ktris');
 for (const r of rows) {
   console.log(
     String(r.id).padStart(2) + '  ' + r.title.padEnd(30) +
-    String(r.meshes).padStart(6) + String(r.outlines).padStart(9) +
+    String(r.meshes).padStart(6) +
     String(r.instances).padStart(12) +
-    r.ktris.toFixed(0).padStart(9) + r.koutline.toFixed(0).padStart(10));
+    r.ktris.toFixed(0).padStart(9));
 }

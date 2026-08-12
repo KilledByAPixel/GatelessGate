@@ -24,14 +24,15 @@ import { WASH } from '../palette.js';
 // couple other smaller huts next to it... and that could be kind of a bit in
 // the distance, so we don't need so much detail there."
 //
-// It reuses the hut's LANGUAGE, not the hut. makeHut is five meshes plus five
-// inverted-hull outlines — ten draws each, thirty for three of them — and case
-// 15 had twenty-five draws of headroom against the book's 150 budget. Three
-// real huts would not have fitted, and every part of them that costs anything
-// (the framed door, the rafter ends poking through the fascia, the threshold
-// stone) is invisible past about fifteen units anyway. So: the same silhouette
-// — long low body, wide hipped roof carried well past the wall — built as two
-// merged geometries, four draws for the whole compound.
+// It reuses the hut's LANGUAGE, not the hut. Under the inverted-hull outline
+// (the hull, since deleted), makeHut's five meshes cost five hull outlines on
+// top — ten draws each, thirty for three of them — against case 15's
+// twenty-five draws of headroom, so three real huts would not have fitted.
+// That arithmetic is history now, but every part of a real hut that cost
+// anything back then (the framed door, the rafter ends poking through the
+// fascia, the threshold stone) is invisible past about fifteen units anyway.
+// So: the same silhouette — long low body, wide hipped roof carried well past
+// the wall — built as two merged geometries, two draws for the whole compound.
 //
 // What survives at fog distance is the ROOFLINE, so that is what the detail
 // goes into: each roof is a squat four-sided pyramid, deliberately oversailing

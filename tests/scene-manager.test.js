@@ -27,7 +27,8 @@ test('disposeRoot frees geometry + own textures but not the shared ramp', () => 
 });
 
 test('disposeRoot does not double-dispose shared geometry', () => {
-  // two meshes sharing one geometry (like an outline shell)
+  // two meshes sharing one geometry, the way a builder reuses a single
+  // BufferGeometry across instances
   const geo = new THREE.BoxGeometry(1, 1, 1);
   const mat = new THREE.MeshBasicMaterial();
   const a = new THREE.Mesh(geo, mat), b = new THREE.Mesh(geo, mat);

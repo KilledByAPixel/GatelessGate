@@ -16,10 +16,9 @@ import { INK_LIT, WASH } from '../palette.js';
 //                  in a touch, so the outer edge is scalloped — that scallop is
 //                  the one pleat cue that survives at six metres. A seeded
 //                  per-rib wobble keeps the edge hand-cut rather than die-cut.
-//                  DoubleSide and no outline: it is an open sheet, and the
-//                  inverted hull doesn't suit one (same call as the flag's
-//                  cloth and the bird's wing).
-//   'fan-handle' — the closed grip below the pivot, outlined like any solid.
+//                  DoubleSide: it is an open sheet, read from both faces
+//                  (same call as the flag's cloth and the bird's wing).
+//   'fan-handle' — the closed grip below the pivot.
 //
 // The group origin is the BOTTOM OF THE GRIP — where the hand is — with the
 // leaf opening along local +Y and its face toward local +Z, so posing it is:
