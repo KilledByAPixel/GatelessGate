@@ -38,8 +38,14 @@ import { mergeSimple } from './scatter.js';
 // nine monks as nine meshes and the whole point would be lost. The userData
 // flags are in the key because they change how the mesh is treated downstream
 // — noOutline decides whether the ink pass touches it, keepMaterial whether
-// the workbench's plain-Lambert rebuild does — and two meshes that disagree
-// about either cannot share one.
+// the workbench's plain-Lambert rebuild does, noShadow/noCastShadow whether
+// debug.js's shadow pass touches it (water.js, foam.js) — and two meshes that
+// disagree about any of them cannot share one. emissive/emissiveIntensity are
+// in the key for the same reason colour is: toon.js's seal glow
+// (`toonMaterial({ glow: false })`) exists precisely so two accent-coloured
+// materials CAN differ only by glow, and a merge that ignored it would spread
+// one mesh's glow across the other's surface — the case-30 pond bug toon.js's
+// own comment records, again.
 function drawKey(mesh) {
   const m = mesh.material;
   return [
@@ -49,22 +55,36 @@ function drawKey(mesh) {
     !!m.transparent,
     m.opacity,
     !!m.flatShading,
+    m.emissive ? m.emissive.getHexString() : '-',
+    m.emissiveIntensity ?? 1,
     !!mesh.userData.noOutline,
     !!mesh.userData.keepMaterial,
+    !!mesh.userData.noShadow,
+    !!mesh.userData.noCastShadow,
   ].join('|');
 }
 
 // A material only NEEDS uv if something on it actually samples the surface
 // by texel — `gradientMap` doesn't count, it's the toon ramp and is indexed
-// by N·L, not by uv. `map`/`alphaMap` are the two texture slots this kit
-// actually uses (scene/manager.js's disposeRoot enumerates the same pair
-// plus gradientMap when it tears materials down).
+// by N·L, not by uv. Every OTHER `*Map` slot (`map`, `alphaMap`, `normalMap`,
+// `bumpMap`, `emissiveMap`, `roughnessMap`, `aoMap`, `displacementMap`,
+// `specularMap`, …) samples by uv, so the refusal has to be the general rule
+// rather than a list of the two slots this kit happens to use today — a
+// normal-mapped material merged through a narrow list would sample (0,0)
+// everywhere and render flat with nothing failing, the exact failure shape
+// toon.js's plainMaterial comment records happening five separate times.
 function usesUV(m) {
-  return !!(m.map || m.alphaMap);
+  for (const key in m) {
+    if (key === 'gradientMap') continue;
+    if (key.endsWith('Map') && m[key]) return true;
+  }
+  return false;
 }
 
 // What this refuses to swallow. Each of these stays where it is, as an
-// ordinary child of the baked prop, so nothing ever disappears.
+// ordinary child of the baked prop, so nothing ever disappears — the other
+// half of that promise, for anything that is not a Mesh or Points at all
+// (a Light, a Sprite, a LineSegments), is `walk`'s own `else if` below.
 function canMerge(o) {
   if (!o.isMesh) return false;
   if (o.isInstancedMesh || o.isPoints) return false;      // already one draw
@@ -84,6 +104,12 @@ function canMerge(o) {
     if (name === 'uv' && !usesUV(o.material)) continue;
     if (name !== 'position' && name !== 'normal') return false;
   }
+  // mergeSimple reads `normal.array` unconditionally (scatter.js) — a
+  // hand-built geometry that never called computeVertexNormals() would pass
+  // the attribute-name gate above (it has no attribute mergeSimple doesn't
+  // want) and then die inside the merge with "Cannot read properties of
+  // undefined (reading 'array')", from a file the case author did not write.
+  if (!o.geometry.attributes.position || !o.geometry.attributes.normal) return false;
   return true;
 }
 
@@ -149,6 +175,8 @@ export function bakeStatic(target, opts = {}) {
         b = { material: o.material, geos: [], userData: {} };
         if (o.userData.noOutline) b.userData.noOutline = true;
         if (o.userData.keepMaterial) b.userData.keepMaterial = true;
+        if (o.userData.noShadow) b.userData.noShadow = true;
+        if (o.userData.noCastShadow) b.userData.noCastShadow = true;
         buckets.set(drawKey(o), b);
       }
       const g = o.geometry.clone();
@@ -160,6 +188,19 @@ export function bakeStatic(target, opts = {}) {
       // upper sleeve's own mesh (figure.js: `arm.add(fore)`), so a walk that
       // stopped at a merged mesh would drop both forearms of every seated
       // figure in the book and nothing but the triangle count would say so.
+    } else if (o.type !== 'Group' && o.type !== 'Object3D') {
+      // Anything that is neither mergeable (handled above) nor a PLAIN
+      // container survives whole, subtree and all — a Light, a Sprite, a
+      // LineSegments parented inside a still prop (pole.js's guy-lines,
+      // rainfall.js's rain) would otherwise fall through to here, be walked
+      // for children it doesn't have, and then be silently destroyed by the
+      // wholesale child removal below. `type` rather than an `isX` allowlist
+      // because every THREE class stamps its own (`'Mesh'`, `'Light'`,
+      // `'Sprite'`, `'LineSegments'`, `'PerspectiveCamera'`…) while Group and
+      // the bare Object3D — the only containers this kit actually builds —
+      // both stay `'Group'`/`'Object3D'`.
+      survivors.push(o);
+      return;
     }
     for (const c of [...o.children]) walk(c);
   };
@@ -201,8 +242,17 @@ export function bakeStatic(target, opts = {}) {
   host.userData.bakedFrom = targets.map((t) => t.name || 'unnamed');
 
   // Dispose only what this bake alone consumed. A geometry the bake saw twice
-  // may be shared with something outside it, and one dispose would empty both.
-  for (const [geo, n] of uses) if (n === 1) geo.dispose();
+  // may be shared with something outside it, and one dispose would empty both
+  // — and "outside it" includes a SURVIVOR of this same bake: a `keep`
+  // subtree, a foliage mesh, a hit proxy can hold the very geometry object a
+  // sibling mesh got merged (and cloned) from. `uses` only counts merge
+  // consumption, so without this a survivor-held geometry with exactly one
+  // merge-use would be disposed out from under the survivor still using it.
+  // THREE re-uploads on the next render, so nothing goes black — which is why
+  // this was Minor — but it defeats the one case `keep` exists for.
+  const survivorGeos = new Set();
+  for (const s of survivors) s.traverse((o) => { if (o.geometry) survivorGeos.add(o.geometry); });
+  for (const [geo, n] of uses) if (n === 1 && !survivorGeos.has(geo)) geo.dispose();
 
   return host;
 }
