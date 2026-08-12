@@ -197,11 +197,12 @@ const CAM = { distance: 7.9, target: [1.55, 1.05, -0.6], heading: -24.5, pitch: 
     ];
     for (const c of crowd) scene.add(c);
 
-    // THE HORSE — the case's one red thing, standing tethered by the first
-    // stall. The verse says "Do not ride another's horse," so here is the horse
-    // you are not to ride, and it is the only warm mark in the whole street.
-    // A larger red than a held seal, so it takes the deep mix rather than
-    // glaring full accent across a whole animal.
+    // THE HORSE — the case's one red thing, standing tethered by the t-0.30
+    // stall (the second of five). The verse says "Do not ride another's
+    // horse," so here is the horse you are not to ride, and it is the only
+    // warm mark in the whole street. A larger red than a held seal, so it
+    // takes the deep mix rather than glaring full accent across a whole
+    // animal.
     const horse = makeHorse({ height: 1.5, color: ACCENT_DEEP, seed: ID });
     // beside the t-0.30 stall, not in front of it — pulled back along the lane
     // so it does not block the counter, and standing a clear step off the road
