@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { bakeStatic } from '../src/kit/bake.js';
 import { makeMonk } from '../src/kit/monk.js';
+import { addOutlines } from '../src/render/outlines.js';
 
 // THE WHOLE CORRECTNESS CLAIM, in one helper: a bake is a pure regrouping of
 // triangles. Not fewer, not moved, not flipped — the same set of triangles in
@@ -134,4 +135,86 @@ test('meshes on different materials stay different meshes', () => {
 test('a mesh passed directly is a mistake, not a no-op', () => {
   const m = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial());
   assert.throws(() => bakeStatic(m), /group/i);
+});
+
+// Everything below is a thing the bake must LEAVE ALONE. The rule is the same
+// in each case — it survives as an ordinary child of the baked prop, so a bake
+// can never make part of a scene vanish.
+test('an invisible hit proxy survives the bake', () => {
+  const prop = new THREE.Group();
+  prop.name = 'prop';
+  const mat = new THREE.MeshBasicMaterial({ color: 0x333333 });
+  prop.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat));
+  prop.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat));
+  const hit = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2),
+    new THREE.MeshBasicMaterial({ visible: false }));
+  hit.name = 'prop-hit';
+  hit.visible = false;
+  prop.add(hit);
+  new THREE.Scene().add(prop);
+
+  bakeStatic(prop);
+  assert.equal(prop.children.length, 2, 'one merged mesh plus the proxy');
+  assert.ok(prop.children.includes(hit), 'the proxy is untouched');
+});
+
+test('a foliage-wind mesh survives the bake', () => {
+  const prop = new THREE.Group();
+  prop.name = 'prop';
+  const mat = new THREE.MeshBasicMaterial({ color: 0x333333 });
+  prop.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat));
+  const leafy = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat);
+  leafy.name = 'canopy';
+  leafy.userData.foliageWind = true;      // carries wind attributes and a matched shell
+  prop.add(leafy);
+  new THREE.Scene().add(prop);
+
+  bakeStatic(prop);
+  assert.ok(prop.children.includes(leafy), 'the canopy keeps its own geometry');
+});
+
+test('an instanced field survives the bake', () => {
+  const prop = new THREE.Group();
+  prop.name = 'prop';
+  const mat = new THREE.MeshBasicMaterial({ color: 0x333333 });
+  prop.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat));
+  const field = new THREE.InstancedMesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), mat, 20);
+  field.name = 'field';
+  prop.add(field);
+  new THREE.Scene().add(prop);
+
+  bakeStatic(prop);
+  assert.ok(prop.children.includes(field), 'already one draw; left alone');
+});
+
+test('a geometry carrying more than position and normal survives the bake', () => {
+  const prop = new THREE.Group();
+  prop.name = 'prop';
+  const mat = new THREE.MeshBasicMaterial({ color: 0x333333 });
+  prop.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat));
+  const rich = new THREE.BoxGeometry(1, 1, 1);
+  rich.setAttribute('aSway', new THREE.BufferAttribute(
+    new Float32Array(rich.attributes.position.count), 1));
+  const swaying = new THREE.Mesh(rich, mat);
+  swaying.name = 'swaying';
+  prop.add(swaying);
+  new THREE.Scene().add(prop);
+
+  bakeStatic(prop);
+  assert.ok(prop.children.includes(swaying), 'mergeSimple would have dropped aSway');
+});
+
+// ORDER IS THE CONTRACT. Baking after the ink pass would merge the shells into
+// the prop and hang fresh ones on top of that — silently doubling the exact
+// thing the bake exists to halve. Loud instead.
+test('baking after addOutlines throws', () => {
+  const prop = new THREE.Group();
+  prop.name = 'prop';
+  const mat = new THREE.MeshBasicMaterial({ color: 0x333333 });
+  prop.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat));
+  prop.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat));
+  new THREE.Scene().add(prop);
+  addOutlines(prop, { width: 0.03, wobble: 0.7 });
+
+  assert.throws(() => bakeStatic(prop), /before addOutlines/i);
 });
