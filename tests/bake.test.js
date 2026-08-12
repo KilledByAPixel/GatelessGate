@@ -290,3 +290,33 @@ test('keep leaves a named subtree out of the merge, still animatable', () => {
   assert.equal(kept.children.length, 2, 'with both its segments');
   assert.ok(Math.abs(kept.position.x - (-0.6)) < 1e-6, 'and still where it hung');
 });
+
+// A bake clones every geometry it consumes, so the originals are garbage the
+// moment they leave the scene — and a diorama that leaks a monk's worth of
+// buffers on every page turn is a real cost. But geometry is sometimes SHARED,
+// and one dispose would empty every mesh using it, so only geometries this
+// bake alone consumed are released.
+test('consumed geometries are disposed, shared ones are not', () => {
+  const scene = new THREE.Scene();
+  const prop = new THREE.Group();
+  prop.name = 'prop';
+  const mat = new THREE.MeshBasicMaterial({ color: 0x333333 });
+
+  const lone = new THREE.BoxGeometry(1, 1, 1);
+  const shared = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+  const a = new THREE.Mesh(lone, mat);
+  const b = new THREE.Mesh(shared, mat);
+  const c = new THREE.Mesh(shared, mat);
+  c.position.x = 1;
+  prop.add(a, b, c);
+  scene.add(prop);
+
+  let loneGone = false, sharedGone = false;
+  lone.addEventListener('dispose', () => { loneGone = true; });
+  shared.addEventListener('dispose', () => { sharedGone = true; });
+
+  bakeStatic(prop);
+
+  assert.equal(loneGone, true, 'used once, released');
+  assert.equal(sharedGone, false, 'used twice — something else may hold it');
+});
