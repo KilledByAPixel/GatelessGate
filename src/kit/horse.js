@@ -40,8 +40,8 @@ import { mergeSimple } from './scatter.js';
 //      this was written against (the hull, since deleted), 24 draws, the
 //      number k45's frozen 148 used to leave no room to spend on (k45 has
 //      since baked its horse down to one mesh, so the ledger below is what
-//      an unbaked horse still costs any other case that stages it — 12
-//      draws today).
+//      an unbaked horse still costs any other case that stages it — one
+//      draw per mesh, now that the hull is gone).
 //   5. TAIL OFF THE CROUP — the strand root moves up onto the rump's top-rear
 //      (up 0.135, back 0.41 — solved at 0.185/0.44 first, then re-eyeballed
 //      in the models-tweaks round; the join stays buried, not floating),

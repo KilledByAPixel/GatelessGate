@@ -11,8 +11,8 @@ const T = 0.06;   // frame thickness
 // so a wall can merge several panels into one mesh before anything is drawn.
 //
 // This is the whole reason the pen went from ~50 meshes to three: every mesh
-// is a draw call, so fifty bars used to cost fifty draws. One merged geometry
-// per panel (or per wall) is one draw.
+// is a draw call, so those ~50 bars used to cost ~50 draws. One merged
+// geometry per panel (or per wall) is one draw.
 //
 // BAR RHYTHM: three distinct weights, not one. The frame (T) reads as the
 // timber that carries load; the verticals (0.62T) are the primary infill,
