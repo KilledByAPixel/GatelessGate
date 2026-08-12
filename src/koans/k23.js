@@ -170,11 +170,17 @@ const CAM = { distance: 10.4, target: [0.2, 1.0, -0.9], heading: 31.5, pitch: 18
     // elevation math was derived assuming the body's own forward axis (once
     // local +x, via the old aimMonk staging) carries the reach — now the
     // body fronts local +z (faceMonk, for the pair-facing above), so the arm
-    // needs the missing quarter turn back, ON THE ARM, to land in the same
-    // place: rotation.z is untouched (still the elevation SLEEVE_DOWN
-    // returns), rotation.y is the constant -PI/2 that remaps it from the
-    // body's local +x onto local +z. Checked bit-for-bit against the old
-    // aimMonk staging's world-space reach direction before this changed.
+    // needs the missing quarter turn back, ON THE ARM: rotation.z stays the
+    // elevation SLEEVE_DOWN returns, rotation.y is the constant -PI/2 that
+    // remaps it from the old local +x onto the new local +z. That swap is
+    // exact only for a parent with no rotation off the y-axis; E-myo's own
+    // -0.06 lean (below) composes differently through Ry(-PI/2) than it did
+    // through the old Ry(0), so the reach direction is NOT bit-for-bit the
+    // old staging's — it lands about 3.6 degrees off it at these numbers
+    // (checked numerically), which the STONE_H-scale reach and the ~9-unit
+    // camera distance both swallow; nothing asserts the arm's absolute world
+    // tip. A future retune of the lean below should re-check that number
+    // rather than assume it stays small.
     const ARM_YAW = -Math.PI / 2;
     const reach = emyo.children
       .filter((c) => c.name === 'arm')
