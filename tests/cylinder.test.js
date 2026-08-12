@@ -3,17 +3,17 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeCylinderChime, noteForSize, forceForRelOmega, CYL_SWING, CYL_WIND } from '../src/kit/cylinder.js';
 import { createPendulum, integratePendulum } from '../src/kit/pendulum.js';
-import { gustPhase } from '../src/audio/synths.js';
+import { gustPhase, gustBuffet } from '../src/audio/synths.js';
 
-// The large hanging cylinder (task-cylinder-brief.md): a second pendulum
-// (the clapper) whose torque reads a DIFFERENT phase/rate of the same wind
-// than the cylinder's own — that decorrelation, not the period difference
-// between them, is what makes the two drift in and out of phase under a
-// steady wind (see cylinder.js's header comment: the period-ratio story in
-// an earlier draft measured out false — 1:1, 2:1 and 1/phi all produced
-// comparable strike statistics once the decorrelated gust reading was in
-// place). The resulting strikes are a physical consequence of that
-// decorrelation, not a scheduled event.
+// The large hanging cylinder (task-cylinder-brief.md): body and clapper now
+// read the IDENTICAL wind drive — gustPhase plus CYL_WIND.buffet of the fast
+// gustBuffet band — and what rings the bell is their different lengths
+// answering that fast band differently (see cylinder.js's THE MECHANISM,
+// TWICE: the old decorrelated-reads design was level-triggered, and a held
+// gust parked the clapper on the wall and metronomed at the refractory —
+// Frank's 2026-08-11 hut-chime complaint, measured at a 0.52s MEDIAN gap).
+// The resulting strikes are a physical consequence of frequency response,
+// not a scheduled event.
 //
 // Several tests below reconstruct the physics INDEPENDENTLY from documented
 // formulas (same technique as tests/furin.test.js's "swing's wind phase
@@ -88,8 +88,11 @@ function reference({ size = 0.8, T0 = 0 } = {}) {
     step(_dt, t, windLevel = 1) {
       const elapsed = Math.max(0, t - prevT);
       prevT = t;
-      integratePendulum(cyl, elapsed, (tt) => windCylTorque * gustPhase(tt) * windLevel);
-      integratePendulum(clap, elapsed, (tt) => windClapTorque * gustPhase(tt * CYL_WIND.clapRate + 11) * windLevel);
+      // the IDENTICAL drive for both, exactly as cylinder.js builds it (with
+      // this rig's phase: 0, its per-instance `off` is 0)
+      const drive = (tt) => gustPhase(tt) + CYL_WIND.buffet * gustBuffet(tt);
+      integratePendulum(cyl, elapsed, (tt) => windCylTorque * drive(tt) * windLevel);
+      integratePendulum(clap, elapsed, (tt) => windClapTorque * drive(tt) * windLevel);
 
       // same level+refractory gating cylinder.js uses now (no separate edge
       // flag needed — see its own comment for why THE WALL below makes that
@@ -207,10 +210,11 @@ test('no wind and no taps: the cylinder never strikes, and the swing genuinely d
 test('a steady wind produces strikes that are IRREGULARLY spaced, not a metronome', () => {
   // THE ASSERTION MOST LIKELY TO BE FAKE, per the brief: a test that only
   // checks strikes happen would pass a periodic implementation. This one
-  // measures the actual gap statistics — see the mutation-verify note in
-  // cylinder-report.md, where forcing the two pendulums onto a single
-  // shared periodic driver (rather than the decorrelated gustPhase reading)
-  // was shown to fail these exact bounds.
+  // measures the actual gap statistics. (The mutation-verify story here
+  // originally contrasted against "a single shared periodic driver" — the
+  // redesign DID move both pendulums onto one shared driver, but an
+  // APERIODIC one: gustPhase + buffet noise. The bounds still bite — a
+  // truly periodic drive still fails them.)
   const { realTimes } = driveBoth({ seed: 3, T0: 5237.4, secs: 7200 });
   assert.ok(realTimes.length > 20, `too few strikes to judge spacing: ${realTimes.length}`);
   const gaps = realTimes.slice(1).map((t, i) => t - realTimes[i]);
@@ -220,6 +224,50 @@ test('a steady wind produces strikes that are IRREGULARLY spaced, not a metronom
   assert.ok(cv > 0.3, `gaps read as regular, not weather: mean ${mean}, cv ${cv}`);
   const min = Math.min(...gaps), max = Math.max(...gaps);
   assert.ok(max > min * 3, `spread too narrow to read as irregular: min ${min}, max ${max}`);
+});
+
+// THE REGRESSION THIS REDESIGN EXISTS FOR (Frank, 2026-08-11, the hut
+// chimes): under the old decorrelated-reads mechanism a high gust held the
+// two equilibria apart past the contact gap, the clapper rested on the wall,
+// and REFRACTORY metered a soft metronome — measured at wind 1: 1200-1430
+// strikes/hour with a MEDIAN gap of 0.52s (the refractory window itself),
+// runs of 13 back-to-back dings, and a body reversing direction only every
+// ~7s ("it doesn't really swing with the wind... held in place until I
+// actually click"). Pins all three symptoms dead, at a hung size and the
+// floor size.
+test('a held gust cannot metronome the bell, and the body visibly swings in wind', () => {
+  for (const size of [0.33, 0.8]) {
+    const f = makeCylinderChime({ size, seed: 2, phase: 0 });
+    f.setWindLevel(1);
+    const times = [];
+    let seen = 0;
+    const swing = f.group.getObjectByName('swing');
+    let prev = 0, dir = 0, reversals = 0;
+    const secs = 3600, dt = 1 / 60;
+    for (let i = 0; i * dt < secs; i++) {
+      f.update(dt, i * dt);
+      if (f.strikes() > seen) { seen = f.strikes(); times.push(i * dt); }
+      const d = Math.sign(swing.rotation.z - prev);
+      if (d !== 0 && dir !== 0 && d !== dir) reversals++;
+      if (d !== 0) dir = d;
+      prev = swing.rotation.z;
+    }
+    // it still speaks in wind at all...
+    assert.ok(times.length > 5, `size ${size}: the wind never rings it (${times.length} strikes in an hour)`);
+    // ...but never as a metronome: the median gap sits far above the 0.5s
+    // refractory (the broken design's median WAS the refractory), and no
+    // refractory-cadence run longer than a genuine double-or-triple hit
+    const gaps = times.slice(1).map((t, i) => t - times[i]);
+    const med = [...gaps].sort((a, b) => a - b)[Math.floor(gaps.length / 2)];
+    assert.ok(med > 1.5, `size ${size}: median inter-strike gap ${med}s is a metronome`);
+    let streak = 0, worst = 0;
+    for (const g of gaps) { streak = g < 0.6 ? streak + 1 : 0; worst = Math.max(worst, streak); }
+    assert.ok(worst <= 3, `size ${size}: ${worst + 1} refractory-cadence strikes in a row — the wall-resting rattle is back`);
+    // and it SWINGS: direction changes at the pendulum's own tempo, not the
+    // slow gust's (~7s under the old lean-only drive)
+    const revEvery = secs / Math.max(1, reversals);
+    assert.ok(revEvery < 2, `size ${size}: the body reverses only every ${revEvery.toFixed(1)}s — leaning, not swinging`);
+  }
 });
 
 test('strike force is the clamped relative angular velocity at contact — pinned against an independent reproduction', () => {

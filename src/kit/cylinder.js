@@ -1,7 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { toonMaterial } from '../render/toon.js';
 import { hash1 } from '../util/noise.js';
-import { gustPhase } from '../audio/synths.js';
+import { gustPhase, gustBuffet } from '../audio/synths.js';
 import { WASH } from '../palette.js';
 import { createPendulum, integratePendulum, kickPendulum, pendulumEnergy } from './pendulum.js';
 import { clamp } from '../util/math.js';
@@ -28,18 +28,34 @@ import { clamp } from '../util/math.js';
 // nothing to phase-lock in the first place, so this was never a KAM-type
 // resonance question.
 //
-// THE ACTUAL MECHANISM: the clapper's torque reads gustPhase at a DIFFERENT
-// reading of the same gust (CLAP_GUST_RATE/CLAP_GUST_OFFSET, below) — the
-// same decorrelation trick furin.js's xPend already uses to keep two things
-// "driven by the same wind" from moving in lockstep. THAT is what makes the
-// two drift in and out of phase; the period ratio does not meaningfully
-// contribute to it under this design. It is kept anyway — see
-// PERIOD_RATIO's own comment for why — but read as the brief's literal
-// instruction honoured, not as the cause of the irregularity. When the
-// relative angle crosses the physical clearance between clapper and wall,
-// they touch and the cylinder rings. No random number, no scheduled
-// weather, no threshold hack — "occasionally, if they get knocked by the
-// wind" falls out of the decorrelated-gust-reading physics.
+// THE MECHANISM, TWICE. The first shipped mechanism was DECORRELATION: the
+// clapper's torque read gustPhase at a different rate and offset from the
+// body's (furin's old xPend trick), and the slow drift between the two
+// equilibria is what crossed the contact gap. That design was LEVEL-
+// triggered, and it is why Frank heard a soft metronome (2026-08-11, the
+// hut chimes): whenever the gust ran high enough, the two decorrelated
+// leans sat further apart than the gap for the whole plateau, the clapper
+// rested against the wall, and the only thing metering the sound was
+// REFRACTORY — measured before the fix: 1200-1430 strikes/hour at wind 1
+// with a MEDIAN inter-strike gap of 0.52s (the refractory window itself)
+// and runs of 13 back-to-back dings. "It keeps trying to ring it many
+// times rather than one ring and then reducing the energy" — exactly.
+//
+// NOW: both pendulums read the SAME drive — gustPhase plus CYL_WIND.buffet
+// of gustBuffet, at the same phase — the treatment furin.js got in the
+// "hanging things swing in the wind" fix and this file then missed. With
+// identical reads, a HELD gust level separates the equilibria by only
+// (leanClap-leanCyl)*swell*|gust|, which tops out at 0.08 rad against a
+// 0.176 rad gap: a steady wind, at ANY level, can no longer hold the
+// clapper on the wall. What rings it is the TRANSIENT: the buffet band
+// sits at the pendulums' own natural periods, the two lengths respond
+// with different phase and amplitude, and an honest contact happens with
+// real relative velocity — then RESTITUTION and damping spend that energy
+// and it goes quiet, even if the wind stays up. Strikes cluster where the
+// gust runs high (the lean difference biases the remaining margin), which
+// is when a listener expects a chime to speak. No random number, no
+// scheduled weather — "occasionally, if they get knocked by the wind"
+// falls out of the frequency-response physics.
 //
 // TWO PENDULUMS, NOT A DOUBLE PENDULUM. A real clapper's own mount rides
 // inside the swinging body, which would make this a true double pendulum —
@@ -190,18 +206,14 @@ export const CYL_SWING = {
 // RINGS this bell is the relative angle between cylinder and clapper passing
 // GAP_ANGLE, and both angles scale with these leans — so simply making the
 // swing bigger also makes it ring harder and more often, and the sound is the
-// half Frank says is already right. `clapRate` is the compensator: the
-// clapper reads the gust at a DIFFERENT rate from the cylinder, and that
-// decorrelation is precisely what opens the relative angle (see THE ACTUAL
-// MECHANISM above — feed both the identical gustPhase and the strikes stop
-// dead). Pushing it back toward 1 closes the relative angle by as much as the
-// bigger leans opened it.
-//
-// A first solve answered with a pair — leans 2.5x for the swing, clapRate
-// 0.7 -> 0.88 to hold the hourly strike count, measured over a simulated hour
-// on each of the four real rigs. That is NOT what ships (the clapRate move is
-// the second wrong turn recorded at the bottom of this note); the shipped
-// answer is the single `swell` knob described below.
+// half Frank says is already right. Under the OLD decorrelated-reads design
+// `clapRate` was the compensator for that; it is gone now (see THE
+// MECHANISM, TWICE in the header) — both pendulums read the same drive, and
+// the lean DIFFERENCE (0.04 rad here, times swell) is deliberately held
+// under GAP_ANGLE so a steady gust can never park the clapper on the wall.
+// The difference still matters: it is the bias that spends the contact
+// margin at high gust, which is why wind strikes cluster where the ear
+// expects them.
 //
 // Live and mutable, the same pattern CYL_SWING and CYL_FORCE already use, so
 // dev/hanging-audition.html can dial them; read at construction, since the
@@ -230,25 +242,28 @@ export const CYL_SWING = {
 // decorrelation is no longer what gates anything. Holding the DIFFERENCE of
 // the two leans constant failed for the same reason: the dynamic part of the
 // relative angle scales with the drive, not just the gap between equilibria.
+// `buffet`: how much of gustBuffet — the fast, mean-zero band furin.js
+// already reads, with features at the pendulums' own periods — rides on the
+// slow gust. This is what makes the bronze visibly SWING in wind instead of
+// quasi-statically leaning (measured before: one direction change every ~7s;
+// Frank, of the hut chimes: "it doesn't really swing with the wind, it's
+// held in place almost until I actually click"), and its transients are now
+// the only thing that can ring the bell from wind. Level swept in
+// scratch measurement across seeds, sizes and wind levels, then settled by
+// ear in dev/hanging-audition.html like every other number here.
+// buffet 0.5, from the sweep (an hour per config, wind 1): hung sizes land
+// at 51-81 strikes/hr in gust-clustered pairs (median gap 42s, closest pair
+// 0.8s — a ding and sometimes one more, then quiet), the floor bells at
+// ~316/hr median 6.9s, and NOBODY's median sits at the refractory any more
+// (the broken design's did: 0.52s). The fūrin's own 0.38 leaves the small
+// hung cylinders nearly mute (2/hr) — shorter pendulums track the band too
+// stiffly, so they need more of it.
 export const CYL_WIND = {
   leanCyl: 0.07,
   leanClap: 0.11,
-  clapRate: 0.7,
   swell: 2.0,
+  buffet: 0.5,
 };
-
-// THE MECHANISM (see the header comment for how this was found: not what
-// the brief predicted). The clapper's torque reads gustPhase at a DIFFERENT
-// reading of the same gust — same trick furin.js's xPend uses (*0.7, +11)
-// to keep two things driven by "the same wind" from moving in lockstep.
-// This, not the period ratio, is what makes the two drift in and out of
-// phase: remove it (feed both pendulums the identical gustPhase(t)) and
-// strikes drop to ZERO over a full simulated hour, regardless of period
-// ratio. Reused verbatim from furin.js rather than inventing new constants,
-// since it is already a proven decorrelation in this exact codebase.
-// (The rate half of that pair lives in CYL_WIND.clapRate now — it became a
-// harness-tunable field; only the offset is still a plain constant here.)
-const CLAP_GUST_OFFSET = 11;
 
 // REFRACTORY: a contact cannot re-trigger every frame while the pendulums
 // are still overlapping past GAP_ANGLE — same purpose as furin's per-tube
@@ -685,12 +700,16 @@ export function makeCylinderChime({
       // track this file's absolute `clock` (furin.js's same pattern, and
       // the same reason: torqueAt must read gustPhase at a clock that stays
       // locked to the one strikes/rendering read, not an independent
-      // time-since-creation). `off` is the per-instance offset; the
-      // clapper's extra `*CYL_WIND.clapRate, +CLAP_GUST_OFFSET` is the
-      // different-reading-of-the-same-gust decorrelation explained above.
-      integratePendulum(cylPend, elapsed, (t) => windCylTorque * gustPhase(t + off) * windLevel);
-      integratePendulum(clapPend, elapsed,
-        (t) => windClapTorque * gustPhase(t * CYL_WIND.clapRate + off + CLAP_GUST_OFFSET) * windLevel);
+      // time-since-creation). `off` is the per-instance offset. BOTH
+      // pendulums read the IDENTICAL drive — same phase, same buffet — so a
+      // held gust level cannot separate their equilibria past the gap; only
+      // their different lengths answering the fast band differently can
+      // touch them (see THE MECHANISM, TWICE in the header). CYL_WIND.buffet
+      // is read live inside the closure, so a harness slider reaches an
+      // already-hanging bell mid-swing.
+      const drive = (t) => gustPhase(t + off) + CYL_WIND.buffet * gustBuffet(t + off);
+      integratePendulum(cylPend, elapsed, (t) => windCylTorque * drive(t) * windLevel);
+      integratePendulum(clapPend, elapsed, (t) => windClapTorque * drive(t) * windLevel);
 
       // CONTACT. Read the raw integrated relative angle BEFORE any
       // correction — this is what actually happened this frame, and it is

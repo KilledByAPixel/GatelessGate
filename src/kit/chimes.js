@@ -96,10 +96,16 @@ export function hangChimes(parent, {
 } = {}) {
   // `chimes: 29` is the common case and stays a bare number. The object form —
   // `chimes: { seed: 29, wind: 0.45 }` — is for when the strike rate is wrong
-  // for the scene: at wind 1 a pair rings about every two seconds, at 0.45
-  // about every three, at 0.2 about every five and a half. The book's rule is
-  // that audio is minimal and chill, and how chatty a corner should be is a
-  // decision about that corner, not a constant.
+  // for the scene. (The rates this comment used to quote — "a pair rings
+  // about every two seconds at wind 1" — described the cylinder's old
+  // level-triggered wind mechanism, which turned out to be a refractory
+  // metronome and was redesigned 2026-08-11; see cylinder.js's THE
+  // MECHANISM, TWICE. A hung cylinder now rings in occasional gust-clustered
+  // pairs, roughly once a minute at wind 1, and below full wind its strikes
+  // thin toward silence — the fūrin kinds keep speaking at partial wind via
+  // their own flurry weather.) The book's rule is that audio is minimal and
+  // chill, and how chatty a corner should be is a decision about that
+  // corner, not a constant.
   if (seed && typeof seed === 'object') {
     ({ seed = 0, wind = 1, count = null } = seed);
   }
