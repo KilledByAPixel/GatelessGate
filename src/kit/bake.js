@@ -1,0 +1,200 @@
+import * as THREE from '../../lib/three.module.js';
+import { mergeSimple } from './scatter.js';
+
+// BAKING A STILL PROP DOWN TO ITS DRAW CALLS.
+//
+// Figures and animals are built part by part — a monk is a robe, two sleeves,
+// a head, sometimes a hat and a staff; a horse is eleven pieces — and every
+// one of those is a draw call, doubled by the inverted-hull shell addOutlines
+// hangs on it. A crowd therefore costs its scene most of the budget, and the
+// cases that have crowds have paid for them by cutting detail: k45's
+// bystanders lost their arms and three of its five stalls lost their keepers,
+// for no reason but this.
+//
+// Almost none of it needs to be separate. A figure is POSED at build time and
+// then never moves a part again — only six cases in the book reach inside one
+// afterwards (four take the bow hinge, one takes a staff, k3 lifts a sleeve).
+// Baking a transform into vertices preserves a pose exactly; what it destroys
+// is the ability to change one LATER.
+//
+// So this is opt-in, per instance, and the case decides. A prop the case knows
+// is still gets merged to one mesh per material; anything that moves simply is
+// not passed in.
+//
+// THE ORDER IS THE CONTRACT: call this after the case has finished posing,
+// recolouring and composing, and BEFORE addOutlines — so the ink pass sees one
+// mesh and hangs one shell. Finding a shell already in place is a hard error
+// rather than a silent doubling of the very thing this is for.
+//
+// The single-prop form mutates the prop IN PLACE and returns it, rather than
+// returning a replacement: cases hold references to what they built (k45
+// writes `horse.group.rotation.y` every frame) and tests find props by name,
+// and a swap would leave every one of those pointing at a detached group.
+
+// What makes two meshes the same DRAW. Material equivalence, not object
+// identity: every makeMonk mints its own toonMaterial, so identity would leave
+// nine monks as nine meshes and the whole point would be lost. The userData
+// flags are in the key because they change how the mesh is treated downstream
+// — noOutline decides whether the ink pass touches it, keepMaterial whether
+// the workbench's plain-Lambert rebuild does — and two meshes that disagree
+// about either cannot share one.
+function drawKey(mesh) {
+  const m = mesh.material;
+  return [
+    m.type,
+    m.color ? m.color.getHexString() : '-',
+    m.side,
+    !!m.transparent,
+    m.opacity,
+    !!m.flatShading,
+    !!mesh.userData.noOutline,
+    !!mesh.userData.keepMaterial,
+  ].join('|');
+}
+
+// A material only NEEDS uv if something on it actually samples the surface
+// by texel — `gradientMap` doesn't count, it's the toon ramp and is indexed
+// by N·L, not by uv. `map`/`alphaMap` are the two texture slots this kit
+// actually uses (scene/manager.js's disposeRoot enumerates the same pair
+// plus gradientMap when it tears materials down).
+function usesUV(m) {
+  return !!(m.map || m.alphaMap);
+}
+
+// What this refuses to swallow. Each of these stays where it is, as an
+// ordinary child of the baked prop, so nothing ever disappears.
+function canMerge(o) {
+  if (!o.isMesh) return false;
+  if (o.isInstancedMesh || o.isPoints) return false;      // already one draw
+  if (o.visible === false) return false;                  // hit proxies
+  if (o.userData.foliageWind) return false;               // wind attributes + a matched shell
+  if (!o.material || !o.geometry) return false;
+  if (o.material.isMaterial !== true) return false;        // material arrays: one mesh, several draws
+  for (const name of Object.keys(o.geometry.attributes)) {
+    // mergeSimple moves position and normal and nothing else; anything richer
+    // would be silently dropped, which is how a wind attribute becomes a
+    // canopy that stops moving with nothing failing. `uv` is the one
+    // exception: THREE mints it on every BufferGeometry whether or not
+    // anything reads it, and none of the toon-shaded props this bakes ever
+    // do — so it only disqualifies a mesh when its OWN material samples a
+    // texture by it (a tuft's alpha-tested map, say), the case dropping it
+    // would actually be seen.
+    if (name === 'uv' && !usesUV(o.material)) continue;
+    if (name !== 'position' && name !== 'normal') return false;
+  }
+  return true;
+}
+
+export function bakeStatic(target, opts = {}) {
+  const single = !Array.isArray(target);
+  const targets = single ? [target] : target;
+  if (!targets.length) throw new Error('bakeStatic: nothing to bake');
+  if (single && target.isMesh) {
+    throw new Error('bakeStatic: pass the prop group, not a mesh — a lone mesh is already one draw');
+  }
+
+  for (const t of targets) {
+    t.traverse((o) => {
+      if (o.userData.isOutline) {
+        throw new Error('bakeStatic: this prop already carries outline shells — bake BEFORE addOutlines');
+      }
+    });
+  }
+
+  // THE FRAME the geometry is baked into.
+  //   single — the prop's own frame, so the prop keeps its position and
+  //            rotation and the whole thing still moves.
+  //   array  — the shared parent's frame, so the merged group sits at identity
+  //            and each prop's placement is carried in the vertices.
+  let frame;
+  if (single) {
+    frame = target;
+  } else {
+    frame = opts.into || targets[0].parent;
+    for (const t of targets) {
+      if (!opts.into && t.parent !== frame) {
+        throw new Error('bakeStatic: these props do not share a parent — pass { into }');
+      }
+    }
+    if (!frame) throw new Error('bakeStatic: no parent to bake into — pass { into }');
+  }
+  frame.updateWorldMatrix(true, true);
+  // with `into`, the props may live anywhere; their own chains have to be
+  // current or the bake reads stale placements
+  for (const t of targets) t.updateWorldMatrix(true, true);
+  const inv = new THREE.Matrix4().copy(frame.matrixWorld).invert();
+
+  const buckets = new Map();
+  const survivors = [];
+  const uses = new Map();          // source geometry -> how many times this bake used it
+
+  const walk = (o) => {
+    if (o.isMesh || o.isPoints) {
+      if (!canMerge(o)) {
+        // a survivor keeps its WHOLE SUBTREE: anything parented to a thing
+        // that still moves has to move with it
+        survivors.push(o);
+        return;
+      }
+      let b = buckets.get(drawKey(o));
+      if (!b) {
+        b = { material: o.material, geos: [], userData: {} };
+        if (o.userData.noOutline) b.userData.noOutline = true;
+        if (o.userData.keepMaterial) b.userData.keepMaterial = true;
+        buckets.set(drawKey(o), b);
+      }
+      const g = o.geometry.clone();
+      g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld));
+      b.geos.push(g);
+      uses.set(o.geometry, (uses.get(o.geometry) || 0) + 1);
+      // and FALL THROUGH to the children: a part can be parented to another
+      // part rather than to the prop. A folded arm hangs its forearm off the
+      // upper sleeve's own mesh (figure.js: `arm.add(fore)`), so a walk that
+      // stopped at a merged mesh would drop both forearms of every seated
+      // figure in the book and nothing but the triangle count would say so.
+    }
+    for (const c of [...o.children]) walk(c);
+  };
+  for (const t of targets) {
+    if (single) for (const c of [...t.children]) walk(c);
+    else walk(t);
+  }
+
+  // capture survivor placements before anything is unparented
+  const placed = survivors.map((s) => ({
+    node: s,
+    m: new THREE.Matrix4().multiplyMatrices(inv, s.matrixWorld),
+  }));
+
+  const merged = [];
+  let i = 0;
+  for (const b of buckets.values()) {
+    const mesh = new THREE.Mesh(mergeSimple(b.geos), b.material);
+    mesh.name = `baked-${i++}`;
+    Object.assign(mesh.userData, b.userData);
+    merged.push(mesh);
+  }
+
+  const host = single ? target : new THREE.Group();
+  if (single) {
+    for (const c of [...target.children]) target.remove(c);
+  } else {
+    host.name = opts.name || 'baked';
+    for (const t of targets) t.removeFromParent();
+  }
+  for (const m of merged) host.add(m);
+  for (const { node, m } of placed) {
+    node.removeFromParent();
+    m.decompose(node.position, node.quaternion, node.scale);
+    host.add(node);
+  }
+  if (!single) frame.add(host);
+
+  host.userData.bakedFrom = targets.map((t) => t.name || 'unnamed');
+
+  // Dispose only what this bake alone consumed. A geometry the bake saw twice
+  // may be shared with something outside it, and one dispose would empty both.
+  for (const [geo, n] of uses) if (n === 1) geo.dispose();
+
+  return host;
+}

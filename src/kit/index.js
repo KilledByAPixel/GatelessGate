@@ -22,6 +22,7 @@ export { makeFlag } from './flag.js';
 export { makeSign } from './sign.js';
 export { makeLights, toonMaterial, setSeal } from '../render/toon.js';
 export { addOutlines, setInkScale, getInkScale } from '../render/outlines.js';
+export { bakeStatic } from './bake.js';
 export { makeDog } from './dog.js';
 export { makeTail } from './tail.js';
 export { makeBuffalo } from './buffalo.js';
