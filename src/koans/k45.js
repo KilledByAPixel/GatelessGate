@@ -48,7 +48,7 @@ const ID = 45;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 42, pitch: 16 };
+const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 };
   export default {
   id: ID,
   slug: 'who-is-he',
@@ -209,13 +209,13 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 42, pitch: 16 
     // rather than at its very edge (Frank: it was a little too close, so it
     // moved back — tethered on the grass, not loitering in the traffic)
     const hp = road.sample(0.35);
-    const side = stalls[1].sidesign;
+    const side = stalls[2].sidesign;
     const horseX = hp.x + hp.perp.x * 1.95 * side;
     const horseZ = hp.z + hp.perp.z * 1.95 * side;
     horse.group.position.set(horseX, 0, horseZ);
     // the horse faces +z; turn its head toward the road (i.e. toward -perp on
     // the side it stands), a little angled so it reads three-quarter, not flat
-    horse.group.rotation.y = Math.atan2(-hp.perp.x * side, -hp.perp.z * side) + 0.3;
+    horse.group.rotation.y =  1.9;
     scene.add(horse.group);
 
     const world = composeWorld(scene, {
