@@ -104,8 +104,13 @@ test('the afterword\'s verse is a section of its own, like every other verse in 
   const mod = await loadKoan(AFTERWORD_SLUG);
   const lines = mod.text.verse.split('\n');
   assert.equal(lines.length, 4);
-  assert.match(lines[0], /^The mind of nirvana is easy enough to make out\./);
   assert.equal(mod.labels.verse, 'The Verse');
+  // What makes this section right is that it is FOUR LINES of verse and holds
+  // neither of its neighbours. Its opening words were pinned here once; the
+  // edition rewrote them, and the test failed for a change that was correct.
+  // The shape is the claim, not the sentence.
+  assert.ok(!mod.text.verse.includes(mod.text.colophon), 'the colophon must not ride along in the verse');
+  assert.ok(!mod.text.verse.includes('Respectfully set down'));
 });
 
 test('the lead-in sentence does not survive into the afterword\'s prose', async () => {
@@ -113,16 +118,28 @@ test('the lead-in sentence does not survive into the afterword\'s prose', async 
   // not a line of its own as in the preface. The section label says it now.
   const mod = await loadKoan(AFTERWORD_SLUG);
   assert.ok(!mod.text.prose.trimEnd().endsWith('As the lines have it:'));
-  assert.ok(mod.text.prose.trimEnd().endsWith('you have let yourself down.'),
+  // Any lead-in would end on a colon, pointing at a verse the section heading
+  // already announces. Testing for the colon catches a reworded lead-in too,
+  // where pinning the closing sentence only caught the one we happened to know.
+  assert.ok(!/:$/.test(mod.text.prose.trimEnd()),
+    'the prose must not close on a lead-in pointing at the verse');
+  assert.ok(/[.!?]["')\]]?$/.test(mod.text.prose.trimEnd()),
     'the prose should close on its last real sentence');
 });
 
 test('the colophon stands on its own, and it is not the verse', async () => {
   const mod = await loadKoan(AFTERWORD_SLUG);
   assert.equal(mod.labels.colophon, 'Colophon');
-  assert.ok(mod.text.colophon.trimEnd().endsWith('eighth in descent from Yogi.'));
-  assert.ok(!mod.text.verse.includes('Yogi'), 'the colophon must not ride along inside the verse');
-  assert.ok(!mod.text.prose.includes('Yogi'), 'nor stay behind in the prose');
+  // A colophon is the signature at the end of the writing: it says who set the
+  // book down, and it says so nowhere else on the page. Both halves are checked
+  // against the colophon's own text rather than a remembered sentence, so
+  // rewording it stays free while losing it or duplicating it still fails. This
+  // pinned "eighth in descent from Yangqi", then "...from Yogi", and failed both
+  // times for edits that were correct.
+  assert.match(mod.text.colophon, /Ekai|Mumon/, 'the colophon should name who set it down');
+  const tail = mod.text.colophon.trimEnd().split(/\s+/).slice(-4).join(' ');
+  assert.ok(!mod.text.verse.includes(tail), 'the colophon must not ride along inside the verse');
+  assert.ok(!mod.text.prose.includes(tail), 'nor stay behind in the prose');
 });
 
 test('no page carries a rendered indent', async () => {

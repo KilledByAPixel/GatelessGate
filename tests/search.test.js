@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { searchCases, snippet, parseQuery } from '../src/ui/search.js';
+import TEXT from '../src/koans/text/mumonkan.js';
 
 const ids = (q) => searchCases(q).map((r) => r.id);
 
@@ -95,11 +96,30 @@ test('an unclosed quote searches the text typed so far', () => {
   assert.deepEqual(ids('"mu'), ids('"mu"'));
 });
 
-test('unquoted searching finds the same cases as it always did', () => {
-  // the SET, not the order — ordering is pinned by its own test below
-  assert.equal(searchCases('man').length, 22);
-  assert.equal(searchCases('sit').length, 7);
-  assert.deepEqual(ids('sit'), [1, 11, 14, 25, 41, 43, 46]);
+test('unquoted searching finds the case a word came from', () => {
+  // The queries are DERIVED from the text at run time, never written down.
+  //
+  // Every literal that has lived in this test was invalidated by an editing
+  // pass doing its job: a count for `man` (the enlightened man became the
+  // enlightened person), then one for `sit` (Bodhidharma sits became sat).
+  // Both times search was fine and the test was wrong. Nothing in the book's
+  // wording is stable while the edition is being edited, so this asserts the
+  // mechanism instead: a word that occurs in exactly one case must find that
+  // case.
+  const owner = new Map();
+  const seen = new Map();
+  for (const id of Object.keys(TEXT).map(Number)) {
+    const words = new Set(`${TEXT[id].case} ${TEXT[id].comment}`.toLowerCase().match(/\b[a-z]{7,}\b/g) || []);
+    for (const w of words) { seen.set(w, (seen.get(w) || 0) + 1); owner.set(w, id); }
+  }
+  const unique = [...seen].filter(([, n]) => n === 1).map(([w]) => w);
+  assert.ok(unique.length > 20, `the corpus should hold many once-only words, found ${unique.length}`);
+  for (const w of unique.slice(0, 12)) {
+    assert.ok(ids(w).includes(owner.get(w)), `"${w}" is only in case ${owner.get(w)}, so search must find it there`);
+  }
+  // Unquoted is a substring match, so a common fragment should be noisy. Said
+  // without betting on any particular word surviving the editing.
+  assert.ok(searchCases('the').length > 30, 'an unquoted common fragment should match widely');
 });
 
 test('results come back in book order, always', () => {

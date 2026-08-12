@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import k47 from '../src/koans/k47.js';
 import { bySlug } from '../src/koans/index.js';
+import TEXT from '../src/koans/text/mumonkan.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT, PAPER } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
 import { rigCamera as sharedRig } from './helpers/rig-camera.js';
@@ -63,8 +64,14 @@ test('module shape matches the koan contract', () => {
   for (const f of ['case', 'comment', 'verse']) {
     assert.ok(k47.text[f] && k47.text[f].trim().length > 0, `text.${f} empty`);
   }
-  // the case file must never author prose — it all comes from TEXT[47]
-  assert.match(k47.text.case, /three barriers/);
+  // the case file must never author prose — it all comes from TEXT[47]. Said
+  // against the text module itself rather than against a phrase out of it: this
+  // matched /three barriers/ until the 2026 pass wrote "three gates", agreeing
+  // with the case's own title, and the test failed for an edit that was right.
+  // Comparing the two is the actual claim and cannot go stale.
+  assert.equal(k47.text.case, TEXT[47].case);
+  assert.equal(k47.text.comment, TEXT[47].comment);
+  assert.equal(k47.text.verse, TEXT[47].verse);
   assert.deepEqual(k47.ambience, ['wind:0.16', 'furin', 'music']);
   assert.equal(typeof k47.build, 'function');
   assert.ok(k47.camera && k47.camera.target, 'this case frames itself');

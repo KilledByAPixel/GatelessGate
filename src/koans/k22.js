@@ -29,7 +29,7 @@ const scratchPos = new THREE.Vector3();
 const CAM = { distance: 10.6, target: [0.4, 1.9, -0.2], heading: 33, pitch: 23 };
   export default {
   id: ID,
-  slug: 'kashapa-s-preaching-sign',
+  slug: 'mahakashapa-s-preaching-sign',
   title: TEXT[ID].title,
   accent: ACCENT,
   tier: 2,

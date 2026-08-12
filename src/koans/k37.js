@@ -12,7 +12,7 @@ const ID = 37;
 const CAM = { distance: 13.8, target: [1.45, 1, -1.5], heading: 29, pitch: 23.5 };
   export default {
   id: ID,
-  slug: 'a-buffalo-passes-through-the-enclosure',
+  slug: 'a-buffalo-passes-through-the-gate',
   title: TEXT[ID].title,
   accent: ACCENT,
   tier: 2,

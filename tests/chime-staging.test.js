@@ -22,7 +22,7 @@ const CASES = [
   { slug: 'tozan-s-three-blows', kind: 'chime' },                // k15
   { slug: 'bells-and-robes', kind: 'cylinder' },                 // k16
   { slug: 'the-three-calls-of-the-emperor-s-teacher', kind: 'cylinder', pair: true }, // k17
-  { slug: 'kashapa-s-preaching-sign', kind: 'chime', windTied: true },   // k22
+  { slug: 'mahakashapa-s-preaching-sign', kind: 'chime', windTied: true },   // k22
   { slug: 'blow-out-the-candle', kind: 'cylinder' },             // k28
   { slug: 'joshu-investigates', kind: 'chime' },                 // k31
   { slug: 'learning-is-not-the-path', kind: 'chime' },           // k34 (revised from a cylinder)

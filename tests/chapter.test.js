@@ -20,7 +20,7 @@ const CHAPTER = [
   { id: 23, slug: 'do-not-think-good-do-not-think-not-good' },
   { id: 26, slug: 'two-monks-roll-up-the-screen' },
   { id: 29, slug: 'not-the-wind-not-the-flag' },
-  { id: 37, slug: 'a-buffalo-passes-through-the-enclosure' },
+  { id: 37, slug: 'a-buffalo-passes-through-the-gate' },
   { id: 38, slug: 'an-oak-tree-in-the-garden' },
   { id: 40, slug: 'tipping-over-a-water-vase' },
   { id: 46, slug: 'proceed-from-the-top-of-the-pole' },
