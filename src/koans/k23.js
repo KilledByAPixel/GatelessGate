@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import {
-  composeWorld, faceMonk, makeBundle, makeMonk, makePath, plantRock,
+  composeWorld, faceMonk, makeBundle, makeHut, makeMonk, makePath, plantRock,
   plantTree, tapMeshes,
 } from '../kit/index.js';
 import { toonMaterial, makeLights } from '../render/toon.js';
@@ -199,6 +199,14 @@ const CAM = { distance: 10.4, target: [0.2, 1.0, -0.9], heading: 31.5, pitch: 18
     const pine = plantTree(scene, { x: -6.0, z: -8.2, kind: 'pine', height: 3.8 });
     pine.rotation.z = -0.10;   // leaned downwind (+x, the gust direction)
 
+    // A trail shelter off the east verge (Frank's add, 2026-08-11) — the kind
+    // of hut a pass keeps for weather, threshold turned back toward the road.
+    // Numbers are placement starts, his to tune.
+    const hut = makeHut({ width: 2.4, height: 2.1, depth: 2.0, chimes: ID });
+    hut.position.set(5.8, 0, -6.8);
+    faceMonk(hut, { x: STONE.x, z: STONE.z });
+    scene.add(hut);
+
     const world = composeWorld(scene, {
       view: CAM,
       seed: ID,
@@ -222,6 +230,7 @@ const CAM = { distance: 10.4, target: [0.2, 1.0, -0.9], heading: 31.5, pitch: 18
         { at: patriarch, r: 1.2 },
         ...boulders.map((b) => ({ at: b, r: b.scale.x + 0.5 })),
         { at: pine, r: 1.5 },
+        { at: hut, r: 2.2 },
         // the right-hand end of the camera arc dips inside the tree ring
         // (z < 6, r ~ 8) — nothing gets to stand between the lens and the stone
         { x: 7.5, z: 0.7, r: 3.2 },
