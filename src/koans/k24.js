@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeWildflowers, makeBirds, makeMonk, faceMonk,
-  makeBuffalo, makeLights, addOutlines,
+  makeBuffalo, makeLights, addOutlines, bakeStatic,
 } from '../kit/index.js';
 
 const ID = 24;
@@ -114,6 +114,24 @@ const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 1
   });
   scene.add(birds.group);
   
+  // ---- THE BAKE ---------------------------------------------------------
+  // Fuketsu and his questioner stand; the buffalo grazes without going
+  // anywhere. All of that is one mesh per material once it is merged, before
+  // the ink pass doubles it — 136 draw calls to about 84.
+  //
+  // NOT THE BIRDS. They are the seal of this case and every one of them
+  // flaps: three meshes apiece that have to stay three meshes.
+  //
+  // The buffalo keeps its TAIL. Sixteen of its eighteen pieces never move,
+  // but the tail swings on makeTail's own clock (buffalo.update), and a
+  // merged tail is a tail that has stopped.
+  //
+  // The trees and pines are not passed in at all — bakeStatic would refuse
+  // them anyway (their canopies carry wind attributes and a shell that reads
+  // them), and asking is just a slower way of being told no.
+  bakeStatic([fuketsu, monk], { name: 'the-two' });
+  bakeStatic(buffalo.group, { keep: ['tail'] });
+
   addOutlines(scene, { width: 0.033, wobble: 0.7 });
   
   const hit = new THREE.Mesh(
