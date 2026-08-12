@@ -181,7 +181,10 @@ export function makeQuadruped({
       // joint's own radius, centred exactly on the hinge point, keeps the
       // joint covered at any bend — and it is MERGED into the thigh's
       // geometry rather than added as a child, so it costs no mesh and no
-      // draw call (k45's horse budget is frozen at the line).
+      // draw call — free, which is what mattered back when k45's horse
+      // budget was frozen at the line; k45 now bakes its horse to one mesh
+      // regardless, but the merge still costs nothing for any quadruped
+      // that uses this plan.
       const kneeBall = new THREE.SphereGeometry(rKnee * 1.05, 7, 5);
       kneeBall.translate(0, -thighLen, 0);
       const thigh = new THREE.Mesh(

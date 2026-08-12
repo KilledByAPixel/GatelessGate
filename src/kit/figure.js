@@ -427,8 +427,11 @@ export function makeFigure({
     g.add(arm);
     return arm;
   };
-  // a background figure can skip its sleeves — two fewer meshes apiece, which is
-  // what lets a crowd fit the draw budget
+  // a background figure can skip its sleeves — two fewer meshes apiece. That
+  // used to be what let a crowd fit the draw budget at all; now that a still
+  // crowd bakes down to one mesh with `bakeStatic`, arms cost nothing there,
+  // so this option is for a figure that stays unbaked and needs the meshes
+  // shaved some other way.
   if (arms) {
     for (const side of [-1, 1]) {
       // the gesture arm (point/raise, always the right) stays a single

@@ -28,15 +28,19 @@ function withersOf(group) {
   return v.y + body.geometry.parameters.radius;
 }
 
-test('the budget freeze holds: exactly 11 meshes', () => {
-  // k45 is frozen at 148/150 draw calls and every mesh costs 2 when hull
-  // outlines are on. 12 is what the pre-rework horse spent; the knee'd hind
-  // pair was paid for by merging the front posts and the ear pair, and the
-  // single-loft head then RETIRED the snout mesh — trade, never add.
+test('the horse holds at 11 meshes: trade, never add', () => {
+  // Every mesh costs 2 draws when hull outlines are on. This used to be
+  // pinned because k45 was frozen at 148/150 draw calls; k45 no longer feels
+  // it — it bakes its whole horse to one mesh with `bakeStatic` — but the
+  // horse itself is shared (k36 stages it unbaked), so its mesh count is
+  // still exactly what any case drawing it unbaked pays. 12 is what the
+  // pre-rework horse spent; the knee'd hind pair was paid for by merging the
+  // front posts and the ear pair, and the single-loft head then RETIRED the
+  // snout mesh — trade, never add.
   const { group } = build();
   let meshes = 0;
   group.traverse((o) => { if (o.isMesh) meshes++; });
-  assert.equal(meshes, 11, 'mesh count is the draw budget — trade, never add');
+  assert.equal(meshes, 11, 'mesh count is what an unbaked horse costs — trade, never add');
 });
 
 test('THE NECK WEDGE: leaning 40-50 degrees off vertical, broad base to narrow top', () => {
