@@ -93,6 +93,11 @@ export function bakeStatic(target, opts = {}) {
     throw new Error('bakeStatic: pass the prop group, not a mesh — a lone mesh is already one draw');
   }
 
+  // Names whose whole subtree stays out of the merge. A prop that is still
+  // EXCEPT for one part — case 24's grazing buffalo, sixteen static pieces and
+  // a tail that swings — would otherwise have to stay unbaked entirely.
+  const keep = new Set(opts.keep || []);
+
   for (const t of targets) {
     t.traverse((o) => {
       if (o.userData.isOutline) {
@@ -129,6 +134,7 @@ export function bakeStatic(target, opts = {}) {
   const uses = new Map();          // source geometry -> how many times this bake used it
 
   const walk = (o) => {
+    if (keep.has(o.name)) { survivors.push(o); return; }
     if (o.isMesh || o.isPoints) {
       if (!canMerge(o)) {
         // a survivor keeps its WHOLE SUBTREE: anything parented to a thing

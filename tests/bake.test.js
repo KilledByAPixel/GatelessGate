@@ -218,3 +218,75 @@ test('baking after addOutlines throws', () => {
 
   assert.throws(() => bakeStatic(prop), /before addOutlines/i);
 });
+
+test('several props on the same material become one mesh', () => {
+  const scene = new THREE.Scene();
+  const monks = [];
+  for (let i = 0; i < 4; i++) {
+    const m = makeMonk({ height: 1.5 + i * 0.02, hat: i % 2 === 0 });
+    m.position.set(i * 1.5, 0, -i);
+    m.rotation.y = i * 0.4;
+    scene.add(m);
+    monks.push(m);
+  }
+  const before = worldTriangles(scene);
+
+  const crowd = bakeStatic(monks, { name: 'crowd' });
+
+  assertSameTriangles(before, worldTriangles(scene));
+  assert.equal(crowd.name, 'crowd');
+  assert.equal(crowd.parent, scene, 'it took their place in the scene');
+  assert.equal(crowd.children.length, 1, 'four people, one colour, one draw');
+  assert.deepEqual(crowd.userData.bakedFrom, ['monk', 'monk', 'monk', 'monk']);
+  for (const m of monks) assert.equal(m.parent, null, 'the originals are gone from the scene');
+});
+
+test('props that do not share a parent are a mistake unless you say where', () => {
+  const scene = new THREE.Scene();
+  const nook = new THREE.Group();
+  scene.add(nook);
+  const a = makeMonk({ height: 1.5 });
+  const b = makeMonk({ height: 1.5 });
+  scene.add(a);
+  nook.add(b);
+
+  assert.throws(() => bakeStatic([a, b]), /into/);
+  const crowd = bakeStatic([a, b], { into: scene, name: 'crowd' });
+  assert.equal(crowd.parent, scene);
+});
+
+// The buffalo of case 24 is the motivating case: sixteen still pieces and a
+// tail that swings. Without this the whole animal has to stay unbaked for the
+// sake of two segments.
+test('keep leaves a named subtree out of the merge, still animatable', () => {
+  const scene = new THREE.Scene();
+  const beast = new THREE.Group();
+  beast.name = 'beast';
+  const mat = new THREE.MeshBasicMaterial({ color: 0x333333 });
+  for (let i = 0; i < 6; i++) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), mat);
+    m.position.x = i * 0.5;
+    beast.add(m);
+  }
+  const tail = new THREE.Group();
+  tail.name = 'tail';
+  tail.position.set(-0.6, 0.5, 0);
+  for (let i = 0; i < 2; i++) {
+    const seg = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.3, 0.1), mat);
+    seg.name = 'seg';
+    seg.position.y = -i * 0.3;
+    tail.add(seg);
+  }
+  beast.add(tail);
+  scene.add(beast);
+  const before = worldTriangles(scene);
+
+  bakeStatic(beast, { keep: ['tail'] });
+
+  assertSameTriangles(before, worldTriangles(scene));
+  assert.equal(beast.children.length, 2, 'one merged body plus the tail');
+  const kept = beast.children.find((c) => c.name === 'tail');
+  assert.ok(kept, 'the tail is still a group of its own');
+  assert.equal(kept.children.length, 2, 'with both its segments');
+  assert.ok(Math.abs(kept.position.x - (-0.6)) < 1e-6, 'and still where it hung');
+});
