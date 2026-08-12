@@ -24,9 +24,34 @@ const named = (scene, name) => {
   return out;
 };
 
+// AFTER THE BAKE, MOST OF THE STREET IS ONE MESH. The individual 'monk' and
+// 'stall' groups it consumed are gone, and the bake's own record of what it
+// ate — userData.bakedFrom — is the census. The two who are MEETING are not
+// baked (the case turns on the elder's staff), so they are still real groups
+// and everything about them is still findable the old way.
+const census = (scene, name) => {
+  let n = 0;
+  scene.traverse((o) => {
+    const from = o.userData.bakedFrom;
+    if (from) n += from.filter((s) => s === name).length;
+    else if (o.name === name) n++;
+  });
+  return n;
+};
+
+// everything in the street that could conceivably move: the two articulate
+// figures, the horse, and each baked group (which carries a whole crowd)
+const movables = (scene) => {
+  const out = [];
+  scene.traverse((o) => {
+    if (o.userData.bakedFrom || o.name === 'monk' || o.name === 'horse') out.push(o);
+  });
+  return out;
+};
+
 test('the market is there: a row of stalls', () => {
   const { root } = staged();
-  assert.equal(named(root.scene, 'stall').length, 5, 'five stalls line the lane');
+  assert.equal(census(root.scene, 'stall'), 5, 'five stalls line the lane');
 });
 
 test('the horse is the one red thing, and it stands still', () => {
@@ -64,11 +89,12 @@ function isDescendant(root, node) {
 // gone, and that nothing replaced them.
 test('the whole street stands still', () => {
   const { root } = staged();
-  const monks = named(root.scene, 'monk');
-  assert.ok(monks.length >= 10, 'keepers, customers, bystanders, and the two who are meeting');
-  const start = new Map(monks.map((m) => [m.uuid, m.position.clone()]));
+  assert.ok(census(root.scene, 'monk') >= 10,
+    'keepers, customers, bystanders, and the two who are meeting');
+  const people = movables(root.scene);
+  const start = new Map(people.map((m) => [m.uuid, m.position.clone()]));
   for (let i = 0; i < 60 * 12; i++) root.update(1 / 60, i / 60);
-  for (const m of monks) {
+  for (const m of people) {
     assert.ok(start.get(m.uuid).distanceTo(m.position) < 1e-9,
       `nobody in the market walks: one moved ${start.get(m.uuid).distanceTo(m.position).toFixed(3)}`);
   }
@@ -152,11 +178,8 @@ test('the horse shies from a hand, sounds, and settles back exactly', () => {
 // the assertion that nothing in the street is driven by the camera again.
 test('no figure is steered by the camera — swing it and the street is unchanged', () => {
   const { root, cam } = staged();
-  const figures = [];
-  root.scene.traverse((o) => {
-    if (o.name === 'monk' || o.name === 'horse') figures.push({ o, at: o.position.clone(), ry: o.rotation.y });
-  });
-  assert.ok(figures.length >= 11, 'a street full of people');
+  const figures = movables(root.scene).map((o) => ({ o, at: o.position.clone(), ry: o.rotation.y }));
+  assert.ok(census(root.scene, 'monk') + census(root.scene, 'horse') >= 11, 'a street full of people');
 
   for (let i = 0; i < 60 * 20; i++) {
     // orbit hard: the motion that used to sweep his mark across the street
@@ -172,4 +195,30 @@ test('no figure is steered by the camera — swing it and the street is unchange
     assert.equal(f.o.rotation.y, f.ry, `${f.o.name} does not turn with the lens`);
   }
   assert.equal(named(root.scene, 'him').length, 0, 'and there is no man at the margin any more');
+});
+
+// The street is staged and still (see the header), so it is baked: the crowd
+// and the stalls are merged down to a handful of meshes. That is what pays for
+// the second keeper and the bystanders' arms — both were cut for the draw
+// budget and neither costs anything now, because they merge into a mesh that
+// was going to be drawn anyway.
+test('the street is baked, and the budget it frees is spent on the street', () => {
+  const { root } = staged();
+
+  let draws = 0;
+  root.scene.traverse((o) => {
+    if (o.isInstancedMesh || o.isPoints) draws += 1;
+    else if (o.isMesh && o.material && o.material.visible !== false) draws += 1;
+  });
+  assert.ok(draws < 80, `a merged street is cheap: ${draws} draws`);
+
+  // the two who are meeting keep their parts — the elder's staff is read by
+  // name in the test above, and a baked figure has no parts to find
+  const monks = named(root.scene, 'monk');
+  assert.equal(monks.length, 2, 'only the meeting pair stay articulate');
+  assert.ok(monks.every((m) => m.userData.meeting), 'and they are the tagged pair');
+
+  // what the budget bought back
+  assert.equal(census(root.scene, 'stall'), 5);
+  assert.ok(census(root.scene, 'monk') >= 10, 'the crowd is bigger than it was');
 });

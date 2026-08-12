@@ -4,7 +4,7 @@ import { PAPER, ACCENT, ACCENT_DEEP, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeStall, makeHorse,
-  makeLights, addOutlines, plantTree,
+  makeLights, addOutlines, plantTree, bakeStatic,
 } from '../kit/index.js';
 
 const ID = 45;
@@ -84,6 +84,7 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
   { t: 0.78, sidesign: -1, off: 2.1, w: 1.6 },
   ];
   const keepers = [];
+  const stallGroups = [];
   for (let i = 0; i < stalls.length; i++) {
   const s = stalls[i];
   const p = road.sample(s.t);
@@ -101,12 +102,16 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
   stall.position.set(sx, 0, sz);
   stall.rotation.y = heading;
   scene.add(stall);
+  stallGroups.push(stall);
   stallKeepout.push({ x: sx, z: sz, r: Math.max(s.w*.7, 1.4) });
   
-  // a keeper a step behind the counter, facing the lane — but the last
-  // three stalls stand unattended, which reads as a real market (and the
-  // draw budget is why the far end minds itself)
-  if (i == 0) {
+  // a keeper a step behind the counter, facing the lane. The far three
+  // stalls stand unattended, which reads as a real market — a lane where
+  // every counter is manned reads as a stage set. This used to say the
+  // draw budget was the reason as well; it is not any more (the whole
+  // crowd is one mesh, see THE BAKE below), so what is left is the
+  // composition's own reason.
+  if (i < 2) {
   const back = 0.5;
   const kx = sx - faceX / Math.hypot(faceX, faceZ) * back;
   const kz = sz - faceZ / Math.hypot(faceX, faceZ) * back;
@@ -179,12 +184,14 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
   const meetKeepout = [{ at: elder, r: 0.7 }, { at: younger, r: 0.7 }];
   
   // A few more people standing about the street between the stalls (Frank: it
-  // is a busy street). They come from the same builder as every other figure,
-  // just with the cheap options — no hat, no sleeves — so they are dark robed
-  // shapes like the monks rather than a separate kind of thing, and a crowd of
-  // them still fits the draw budget.
-  const bystander = (x, z, facing, h = 1.56, hat=false) => {
-  const f = makeMonk({ height: h, hat: hat, arms: false });
+  // is a busy street). They come from the same builder as every other figure
+  // — mostly hatless, so they read as a crowd of dark robed shapes rather
+  // than a row of identical monks. They used to lose their SLEEVES as well:
+  // two fewer meshes apiece was what let a crowd fit the draw budget at all.
+  // The bake below made that saving irrelevant — arms or no arms, these five
+  // are one mesh — so they have their arms back.
+  const bystander = (x, z, facing, h = 1.56, hat = false) => {
+  const f = makeMonk({ height: h, hat: hat });
   f.position.set(x, 0, z);
   f.rotation.y = facing;
   return f;
@@ -234,6 +241,24 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
       ],
       grassKeepout: [...road.keepout(28, 1.0), ...stallKeepout, ...meetKeepout],
     });
+
+    // ---- THE BAKE ---------------------------------------------------------
+    // NOTHING IN THIS STREET MOVES (see the header), so nearly all of it can be
+    // merged down to one mesh per material — 141 draw calls to about 59. This
+    // is what the second keeper and the bystanders' arms above are paid for
+    // with: a figure added to a baked crowd costs nothing at all.
+    //
+    // BEFORE addOutlines, always: the ink pass then hangs one shell on the
+    // merged mesh instead of one on every piece of every person, which is where
+    // half of the saving is.
+    //
+    // The two who are MEETING are deliberately left alone. A baked figure has
+    // no parts to find, and the elder's staff is exactly the kind of thing this
+    // case is read by — they are the koan's whole image, and they cost eleven
+    // meshes between them, which the rest of the street has now paid for.
+    bakeStatic(stallGroups, { name: 'stalls' });
+    bakeStatic([...keepers, cust, ...crowd], { name: 'crowd' });
+    bakeStatic(horse.group);
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
