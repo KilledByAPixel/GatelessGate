@@ -26,7 +26,7 @@ const scratchPos = new THREE.Vector3();
 // reuse rule doing exactly what it was written for.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.6, target: [0.4, 1.9, -0.2], heading: 33, pitch: 23 };
+const CAM = { distance: 10.6, target: [0.4, 1.9, -0.2], heading: 33, pitch: 12.5 };
   export default {
   id: ID,
   slug: 'mahakashapa-s-preaching-sign',

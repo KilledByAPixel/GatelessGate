@@ -19,7 +19,7 @@ const ID = 24;
 // the whole answer. Southern China, spring, borrowed from someone else.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 17, target: [3.95, 0.45, -1.3], heading: -24.5, pitch: 13.5, maxDist: 18 };
+const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 17.5, maxDist: 18 };
   export default {
   id: ID,
   slug: 'without-words-without-silence',
@@ -58,9 +58,9 @@ const CAM = { distance: 17, target: [3.95, 0.45, -1.3], heading: -24.5, pitch: 1
   // the middle distance is what says so without saying anything. Angled
   // away from camera, head down: grazing, not posing.
   const buffalo = makeBuffalo({ height: 1.4, seed: 24 });
-  buffalo.group.position.set(-7.5, 0, -8.0);
-  buffalo.group.rotation.y = 0.8;
-  //scene.add(buffalo.group);
+  buffalo.group.position.set(12, 0, -9.0);
+  buffalo.group.rotation.y = .7;
+  scene.add(buffalo.group);
   
   const world = composeWorld(scene, {
   view: CAM,

@@ -34,7 +34,7 @@ const HALL = { x: -1.0, z: -6.2 };    // the new monastery's stand-in, far back
 const HYAKUJO = { x: 0.45, z: 1.55 };   // beside the vase, not behind it —
                                           // the red must sit against paper and
                                           // grass, never against a black robe
-const ISAN = { x: 1.95, z: -0.0 };    // of the crowd, one step out of it
+const ISAN = { x: 1.9, z: -0.2 };    // of the crowd, one step out of it
 const CROWD = { x: 4.15, z: -1.1 };   // where the arc's centroid should land
 const ARC_R = 1.9;
 const ARC_PULL = ARC_R * 0.81;        // mean(cos) over the 0.7π arc — see k14

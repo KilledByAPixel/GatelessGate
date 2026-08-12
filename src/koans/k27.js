@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_LIGHT, mixHex } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
-  composeWorld, makePath, makeHut, makeOak, makeMoon, makeMonk, faceMonk,
+  composeWorld, makePath, makeHut, makeOak, makeMoon, makeMonk, faceMonk, makeLantern,
   makeLights, addOutlines,
 } from '../kit/index.js';
 
@@ -63,6 +63,10 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 31.5, pitch: 2
   // ground they were standing on, and the moon — which was never standing on
   // anything — simply stops being there.
   
+  const lantern = makeLantern({ height: 1.0 });
+  lantern.position.set(5.5, 0, .2);
+  scene.add(lantern);
+  
   const hallGroup = new THREE.Group();
   hallGroup.name = 'the-hall';
   const hall = makeHut({ width: 3.4, height: 2.6, depth: 2.8, chimes: 11 });
@@ -75,7 +79,7 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 31.5, pitch: 2
   treeGroup.name = 'the-tree';
   const oak = makeOak({ height: 5.2, seed: ID });
   const oakRoot = oak.group || oak;
-  const TREE = { x: 2.0, z: -4.6 };      // moved clear of the path (Frank: it stood in the road)
+  const TREE = { x: 2.3, z: -4.6 };      // moved clear of the path (Frank: it stood in the road)
   oakRoot.position.set(TREE.x, 0, TREE.z);
   // Turn the hero limb AWAY from the home lens (Frank: "what's going on with
   // the weird tree branch?"). Seed 27 grows its long low bough at local

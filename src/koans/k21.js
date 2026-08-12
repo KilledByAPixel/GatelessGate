@@ -31,7 +31,7 @@ const ID = 21;
 // to a piece of dung, exactly the joke Mumon makes in the commentary.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10, target: [0.8, 0.8, 0.2], heading: 13, pitch: 23 };
+const CAM = { distance: 10, target: [0.8, 0.9, 0.2], heading: 4, pitch: 14 };
   export default {
   id: ID,
   slug: 'dried-dung',

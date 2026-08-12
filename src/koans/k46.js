@@ -136,9 +136,9 @@ export default {
 
     const world = composeWorld(scene, {
       view: CAM,
-      seed: ID,
+      seed: ID+1,
       groundSeed: 21,
-      trees: 3,
+      trees: 13,
       keepout: [
         { x: POLE.x, z: POLE.z, r: 1.4 },
         ...pole.anchors.map((a) => ({ x: POLE.x + a.x, z: POLE.z + a.z, r: 0.5 })),
