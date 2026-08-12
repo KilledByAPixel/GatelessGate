@@ -132,7 +132,7 @@ export function makeWildflowers({
   windDir = [1, 0.35],   // matches the meadow's default, so they lean together
   sway = 0.17,           // the bloom's OWN nod, radians of lean — never zero, so a
                          // windless field is still a meadow rather than a bed of nails
-  // The meadow's weather, in the SAME three numbers makeGrassField takes and
+  // The meadow's weather, in the SAME three numbers the grass field takes and
   // the workbench's "Grass wind" / "Gust patch" / "Gust drift" sliders read.
   // wind: 0 leaves only the nod above, which is exactly how this field
   // behaved before it answered the wind at all.
@@ -193,7 +193,7 @@ export function makeWildflowers({
   mesh.userData.wind = weather;   // so the debug panel can reach it live
 
   // The pointer's response spring — one per field, integrated once a tick,
-  // exactly as makeGrassField does it. Its state IS the push: length is how
+  // exactly as the grass field does it. Its state IS the push: length is how
   // hard, direction is which way, and it carries its own sign through zero so
   // a released stroke swings back rather than fading.
   const poke = makePokeSpring();
@@ -337,7 +337,7 @@ export function makeWildflowers({
     mesh,
     get blooms() { return mesh.count; },
     points: pts.map((p) => ({ x: p.x, z: p.z })),
-    // the same three setters makeGrassField exposes, taking the same numbers
+    // the same three setters the grass field exposes, taking the same numbers
     setWind(w) { weather.wind = w; },
     setWindDir(x, z) {
       const m = Math.hypot(x, z);

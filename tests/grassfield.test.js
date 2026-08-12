@@ -2,8 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import {
-  patchDensity, makeGrassField, grassPlacements, grassArea, setGrassReach, RIM_SHRINK,
+  patchDensity, grassPlacements, grassArea, setGrassReach, RIM_SHRINK,
 } from '../src/kit/grassfield.js';
+import { makeTuftField } from '../src/kit/tuftfield.js';
 import { composeWorld } from '../src/kit/scenery.js';
 import { groundHeight } from '../src/kit/ground.js';
 import { setBreezePointer, clearBreeze } from '../src/kit/breeze.js';
@@ -100,7 +101,7 @@ test('the breeze is invisible until a pointer moves', () => {
   // poked must render EXACTLY as it did before breeze.js existed. The wind
   // clock may tick all it likes — only real pointer motion may raise it.
   clearBreeze();
-  const f = makeGrassField({ count: 300, radius: 20, seed: 2349 });
+  const f = makeTuftField({ count: 300, radius: 20, seed: 2349 });
   const u = f.mesh.userData.uniforms;
   assert.equal(u.uPokeAmt.value, 0, 'born still');
   assert.ok(u.uPokePos, 'poke position uniform exists');
@@ -113,7 +114,7 @@ test('the breeze is invisible until a pointer moves', () => {
 
 test('a sweep brushes the field ALONG the stroke, and release springs it back', () => {
   clearBreeze();
-  const f = makeGrassField({ count: 300, radius: 20, seed: 2349 });
+  const f = makeTuftField({ count: 300, radius: 20, seed: 2349 });
   const u = f.mesh.userData.uniforms;
   // a full second of brisk +x sweeping, so the spring settles on the stroke
   let x = 0;
@@ -173,24 +174,26 @@ test('grass plants on the surface it is given — and nothing moves when none is
   }
 });
 
-test('the blade field stands its instances on the supplied ground', () => {
+// Ported from the blade field when it was cut: the SHIPPED field has to do
+// this too, and it is the same placement layer underneath either way.
+test('the field stands its instances on the supplied ground', () => {
   const fn = (x, z) => 2 + 0.05 * x - 0.03 * z;
-  const f = makeGrassField({ count: 300, radius: 12, seed: 7, groundFn: fn });
+  const f = makeTuftField({ count: 300, radius: 12, seed: 7, groundFn: fn });
   const m = new THREE.Matrix4(), p = new THREE.Vector3();
   const q = new THREE.Quaternion(), s = new THREE.Vector3();
-  assert.ok(f.blades > 100, `blades to check: ${f.blades}`);
+  assert.ok(f.blades > 100, `plants to check: ${f.blades}`);
   for (let i = 0; i < f.blades; i++) {
     f.mesh.getMatrixAt(i, m);
     m.decompose(p, q, s);
     assert.ok(Math.abs(p.y - (fn(p.x, p.z) - 0.02)) < 1e-5,
-      `blade ${i} rooted in its ground: y ${p.y} at (${p.x}, ${p.z})`);
+      `plant ${i} rooted in its ground: y ${p.y} at (${p.x}, ${p.z})`);
   }
 });
 
-test('the field actually places the blades it is asked for', () => {
+test('the field actually places the plants it is asked for', () => {
   // The old rejection rates were so high the placement loop ran out of candidate
   // budget and quietly delivered half a meadow.
-  const f = makeGrassField({ count: 6000, radius: 20, seed: 2349 });
+  const f = makeTuftField({ count: 6000, radius: 20, seed: 2349 });
   assert.ok(f.blades > 6000 * 0.98, `placed ${f.blades} of 6000`);
 });
 

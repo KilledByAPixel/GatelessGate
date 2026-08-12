@@ -1,20 +1,38 @@
-import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+// No THREE, no materials, no breeze: this file builds no mesh any more. It is
+// numbers and placements — which is also why it is the half of the old grass
+// module that is testable in plain Node.
 import { wash } from '../palette.js';
 import { groundHeight } from './ground.js';
 import { hash1, fbm2 } from '../util/noise.js';
-import { breezeState, makePokeSpring, pokeSpringStep, GRASS_POKE_RADIUS } from './breeze.js';
 
-// Dense wind-blown grass: thousands of tapered blades in ONE InstancedMesh,
-// bent entirely in the vertex shader from a single uTime uniform, so the wind
-// costs no per-frame CPU work and no extra draw calls.
+// WHERE THE MEADOW GOES, and how much of it there is. This file is the
+// placement and tuning layer for the grass; the grass ITSELF is tuftfield.js,
+// whose billboard cards are what the book ships.
 //
-// The blade bends along a CIRCULAR ARC rather than being displaced sideways: a
-// lateral offset shears the blade and lengthens it, which reads as rubber. Arc
-// bending is length-preserving, so the blade curves the way a real one does.
-// Gusts travel along the wind axis so the wind blows THROUGH the field instead
-// of every blade oscillating in place.
-const UP = new THREE.Vector3(0, 1, 0);
+// It used to be both. `makeGrassField` lived at the bottom — thousands of
+// tapered 3D blades in one InstancedMesh, arc-bent in the vertex shader — and
+// `composeWorld` chose between the two off a `grassStyle` flag that the
+// workbench's "Grass tufts" switch drove. The switch shipped defaulting to
+// tufts and stayed there, so the blades were dev-only for their whole life and
+// were cut (Frank, this round: "we don't actually use those anywhere... let's
+// remove those old 3D grass things"). Two field implementations, one of them
+// unreachable, is also two places every retune had to be made and one of them
+// silently didn't matter.
+//
+// What survived is everything the billboards still stand on:
+//
+//   grassPlacements   where every plant goes: patchy density, keepouts, the
+//                     rim taper, the ground it conforms to, its seeded yaw
+//   patchDensity      the noise that opens bare ground inside the field
+//   grassArea/Reach   the budget maths composeWorld scales plant counts by
+//   GRASS_TONE, RIM_SHRINK, GRASS_BASE_TAPER
+//   set*              the three workbench sliders (reach, taper, patchiness)
+//
+// tuftfield.js imports the first five; scenery.js the budget maths; debug.js
+// the sliders. The name stays `grassfield` because everything that reads
+// "the grass field" means this — but note that tuftfield's MESH is also named
+// 'grassfield', for the debug panel's sliders, so scene.getObjectByName
+// ('grassfield') returns the billboards.
 
 // Placement is baked when the field is built, so the debug panel cannot change
 // patchiness live — it sets the default here and the change lands the next time
@@ -211,248 +229,16 @@ export function grassPlacements({
 // exported so tuftfield.js's billboard cards (the OTHER thing a grass plant
 // can be, per that file's own header) share the exact same base tone rather
 // than drifting apart the moment the debug panel swaps one for the other.
-export const GRASS_TONE = wash(0.40);
-
-export function makeGrassField({
-  count = 52000, radius = 20, taper = GRASS_BASE_TAPER, inner = 0, seed = 5, groundSeed = 21,
-  color = GRASS_TONE, height = 0.34, width = 0.05, wind = 1,
-  windDir = [1, 0.35], gustScale = 0.055, gustSpeed = 2.4,
-  patchiness = defaultPatchiness,   // 0 = wall-to-wall turf; higher opens bare ground
-  keepout = [],
-  groundFn = null,                  // see grassPlacements — the surface the blades stand on
-} = {}) {
-  // one blade: a tapered strip, origin at the base, segmented so it can curve.
-  // BOW is a static curve baked into the rest pose itself — the geometry no
-  // longer describes an upright rectangle, it describes a bowed quad strip.
-  // It is the same shape for every instance (one shared geometry buffer, one
-  // draw call), but each blade's own random yaw (grassPlacements) rotates that
-  // bow into a different world-space direction per blade, so the field reads
-  // as many individually curved strokes rather than one shape repeated
-  // identically — "seeded" via the placement seed that already drives yaw.
-  const SEG = 5;
-  const BOW = height * 0.30;
-  const geo = new THREE.PlaneGeometry(width, height, 1, SEG);
-  geo.translate(0, height / 2, 0);              // base at the origin
-  const pos = geo.attributes.position;
-  for (let i = 0; i < pos.count; i++) {
-    const t = pos.getY(i) / height;             // 0 at base, 1 at tip
-    pos.setX(i, pos.getX(i) * (1 - t * 0.85) + BOW * t * t);  // taper AND bow
-  }
-  geo.computeVertexNormals();
-
-  const uniforms = {
-    uTime: { value: 0 },
-    uWind: { value: wind },
-    uWindDir: { value: new THREE.Vector2(windDir[0], windDir[1]).normalize() },
-    uGustScale: { value: gustScale },   // world units per noise cell — gust patch size
-    uGustSpeed: { value: gustSpeed },   // how fast the field drifts downwind
-    // the pointer's breeze (src/kit/breeze.js): blades near the stroke bend
-    // ALONG the drag direction. uPokeAmt/uPokeDir read a damped spring driven
-    // by the drag vector (see update below); uPokeAmt defaults to 0, so a
-    // scene whose pointer never moves renders exactly as it did before the
-    // breeze existed.
-    uPokePos: { value: new THREE.Vector2(0, 0) },
-    uPokeDir: { value: new THREE.Vector2(0, 0) },
-    uPokeAmt: { value: 0 },
-    uPokeR: { value: GRASS_POKE_RADIUS },
-  };
-  // The response spring: one per field, integrated once per tick in update().
-  // Its state is exactly what the poke uniforms publish.
-  const poke = makePokeSpring();
-
-  const mat = toonMaterial({ color, side: THREE.DoubleSide });
-  // A dense stand was reading as a near-solid dark mass: half the field's
-  // blades face away from the key light after their random yaw and land in
-  // the toon ramp's darkest step, and thousands of them overlapping on screen
-  // reads as one dark scribble rather than individual strokes. A small
-  // emissive floor (tied to the grass's own colour, not a flat white) puts a
-  // ceiling under how dark any blade can go while leaving the ramp's shading
-  // contrast intact above it — the same "hold a floor under the dark end"
-  // idea PATCH_FLOOR already uses for density, applied to tone.
-  mat.emissive = new THREE.Color(color);
-  mat.emissiveIntensity = 0.16;
-  mat.onBeforeCompile = (shader) => {
-    Object.assign(shader.uniforms, uniforms);
-    shader.vertexShader = `
-      uniform float uTime;
-      uniform float uWind;
-      uniform vec2 uWindDir;
-      uniform float uGustScale;
-      uniform float uGustSpeed;
-      uniform vec2 uPokePos;
-      uniform vec2 uPokeDir;
-      uniform float uPokeAmt;
-      uniform float uPokeR;
-
-      // Cheap 2D value noise. A sine of dot(pos, windDir) is a PLANE WAVE: every
-      // blade the same distance along the wind axis moves identically, which
-      // reads as a bar sweeping the field. Sampling a noise field that drifts
-      // downwind instead gives patchy gusts and lulls in both dimensions.
-      float ggHash(vec2 p) {
-        p = fract(p * vec2(123.34, 456.21));
-        p += dot(p, p + 45.32);
-        return fract(p.x * p.y);
-      }
-      float ggNoise(vec2 p) {
-        vec2 i = floor(p);
-        vec2 f = fract(p);
-        f = f * f * (3.0 - 2.0 * f);
-        return mix(mix(ggHash(i), ggHash(i + vec2(1.0, 0.0)), f.x),
-                   mix(ggHash(i + vec2(0.0, 1.0)), ggHash(i + vec2(1.0, 1.0)), f.x), f.y);
-      }
-      ` +
-      shader.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
-      #ifdef USE_INSTANCING
-        vec3 iPos = instanceMatrix[3].xyz;
-        float H = ${height.toFixed(4)};
-        float s = clamp(transformed.y, 0.0, H);        // arclength from the base
-
-        // the whole noise field slides downwind, so gusts arrive and pass
-        vec2 flow = iPos.xz * uGustScale - uWindDir * (uTime * uGustSpeed * uGustScale);
-        float gust = ggNoise(flow) * 0.70 + ggNoise(flow * 2.7 + 19.3) * 0.30;   // 0..1
-
-        // per-blade stiffness: neighbours must not move in lockstep
-        float stiff = 0.65 + 0.7 * fract(sin(dot(iPos.xz, vec2(12.9898, 78.233))) * 43758.5453);
-        // strength never goes negative — grass does not lean into the wind
-        float thetaWind = uWind * (0.12 + 0.40 * gust) * stiff;
-        float droop = 0.24 * stiff;   // a real blade is never straight, even at rest
-
-        // resolve the world wind direction into this blade's local frame, so every
-        // blade leans the same way in world space despite its random yaw
-        vec2 ix = normalize(vec2(instanceMatrix[0].x, instanceMatrix[0].z) + vec2(1e-6));
-        vec2 iz = normalize(vec2(instanceMatrix[2].x, instanceMatrix[2].z) + vec2(1e-6));
-
-        // the pointer's brush: blades near the stroke bend ALONG the drag
-        // direction (uPokeDir carries the spring's sign, so the swing-back
-        // after release reads as a reversal, not a fade), with a small radial
-        // share for volume — the read stays "brushed the way I moved". It
-        // joins the same arc bend the wind uses, so the tip factor is the arc
-        // itself and roots stay planted. Falloff mirrors breezeFalloff in
-        // breeze.js — smoothstep to zero at uPokeR.
-        vec2 pokeD = iPos.xz - uPokePos;
-        float pokeDist = length(pokeD);
-        float pokeT = clamp(1.0 - pokeDist / uPokeR, 0.0, 1.0);
-        float pokeFall = pokeT * pokeT * (3.0 - 2.0 * pokeT);
-        vec2 radialDir = pokeDist > 1e-4 ? pokeD / pokeDist : vec2(0.0);
-        vec2 pokeVec = (uPokeDir + radialDir * 0.18)
-                     * (uPokeAmt * pokeFall * (0.55 + 0.15 * gust) * stiff);
-
-        // wind (shared world direction) plus the blade's own resting lean (local
-        // +z, so calm grass leans every which way instead of all one way)
-        vec2 bendVec = vec2(dot(ix, uWindDir), dot(iz, uWindDir)) * thetaWind
-                     + vec2(dot(ix, pokeVec), dot(iz, pokeVec))
-                     + vec2(0.0, 1.0) * droop;
-        float theta = length(bendVec);
-        vec2 bendDir = theta > 1e-5 ? bendVec / theta : vec2(0.0, 1.0);
-
-        // circular arc: constant curvature k over arclength s. Length-preserving,
-        // so the blade curves instead of stretching.
-        float k = theta / H;
-        float arcY, arcOff;
-        if (abs(k) < 1e-4) { arcY = s; arcOff = 0.0; }
-        else { arcY = sin(k * s) / k; arcOff = (1.0 - cos(k * s)) / k; }
-
-        transformed.y = arcY;
-        transformed.x += bendDir.x * arcOff;
-        transformed.z += bendDir.y * arcOff;
-
-        // tip micro-flutter: a second, faster, smaller ripple with a seeded
-        // per-blade phase and detuned frequency, weighted t^3 so it lives in
-        // the last third of the blade — the field shimmers instead of swaying
-        // as one. It rides uWind and the gust, so a windless scene stays
-        // bit-identical to the pre-flutter render. Small on purpose: sumi-e,
-        // not a shampoo ad.
-        float flPhase = ggHash(iPos.xz * 3.71 + 7.13) * 6.2832;
-        float flFreq = 5.7 + 2.6 * ggHash(iPos.xz * 1.93 + 2.17);
-        float tipT = s / H;
-        float fl = sin(uTime * flFreq + flPhase)
-                 * uWind * 0.014 * (0.35 + 0.65 * gust) * tipT * tipT * tipT;
-        transformed.x += bendDir.x * fl;
-        transformed.z += bendDir.y * fl;
-      #endif
-      `)
-      // Blades are yawed around Y only (grassPlacements never tips a blade off
-      // vertical), so a blade's LOCAL up is always WORLD up regardless of its
-      // yaw — blending the shading normal partway toward it, tuftfield.js's
-      // own fix for the identical dark-mass symptom, lifts a blade's face out
-      // of the ramp's shadow band without flattening it into a billboard: the
-      // other 45% keeps the blade's own facing so a stand still has shape.
-      .replace('#include <beginnormal_vertex>', `
-      vec3 objectNormal = normalize(mix(normal, vec3(0.0, 1.0, 0.0), 0.55));
-      #ifdef USE_TANGENT
-        vec3 objectTangent = vec3(tangent.xyz);
-      #endif
-      `);
-
-    // Mark every grass fragment in the alpha channel so the ink pass can skip
-    // it. A blade is thinner than a pixel at distance, and a depth-edge filter
-    // crawls badly on sub-pixel geometry. This costs one instruction and no
-    // extra pass — the alternative is a whole ID buffer.
-    shader.fragmentShader = shader.fragmentShader.replace(
-      '#include <dithering_fragment>',
-      '#include <dithering_fragment>\n  gl_FragColor.a = 0.0;   // ink-mask marker',
-    );
-  };
-  mat.customProgramCacheKey = () => 'grassfield-arc-poke-v2';
-
-  const mesh = new THREE.InstancedMesh(geo, mat, count);
-  mesh.name = 'grassfield';
-  mesh.userData.noOutline = true;   // an inverted hull on a blade is noise
-  mesh.userData.uniforms = uniforms; // so the debug panel can reach the wind live
-  mesh.castShadow = false;
-  mesh.receiveShadow = true;
-
-  const m = new THREE.Matrix4();
-  const q = new THREE.Quaternion();
-  const v = new THREE.Vector3();
-  const sc3 = new THREE.Vector3();
-  const base = new THREE.Color(color);
-  const col = new THREE.Color();
-  const spots = grassPlacements({ count, radius, taper, inner, seed, groundSeed, patchiness, keepout, groundFn });
-  let n = 0;
-  for (const p of spots) {
-    v.set(p.x, p.y, p.z);
-    q.setFromAxisAngle(UP, p.yaw);
-    // shorter as it thins — a blade, so only the height goes; its thickness is
-    // already sub-pixel out there
-    sc3.set(p.wide, p.tall * (1 - RIM_SHRINK * p.rim), 1);
-    m.compose(v, q, sc3);
-    mesh.setMatrixAt(n, m);
-    col.copy(base).offsetHSL(p.tint[0], p.tint[1], p.tint[2]);
-    mesh.setColorAt(n, col);
-    n++;
-  }
-  mesh.count = n;
-  mesh.instanceMatrix.needsUpdate = true;
-  if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  mesh.computeBoundingSphere();
-
-  return {
-    mesh,
-    get blades() { return mesh.count; },
-    setWind(w) { uniforms.uWind.value = w; },
-    // The level this field is CURRENTLY blowing at. Case 20 reads it once at
-    // build so a gust can multiply the weather already in force — pinned by the
-    // case or dragged on the workbench slider — and hand exactly that back
-    // afterwards, instead of guessing a base and overwriting whichever it was.
-    wind() { return uniforms.uWind.value; },
-    setWindDir(x, z) { uniforms.uWindDir.value.set(x, z).normalize(); },
-    setGust(scale, speed) {
-      if (scale !== undefined) uniforms.uGustScale.value = scale;
-      if (speed !== undefined) uniforms.uGustSpeed.value = speed;
-    },
-    update(dt, simTime) {
-      uniforms.uTime.value = simTime;
-      // the pointer's breeze: one spring integration + uniform writes, no
-      // per-instance CPU work, no allocation. The smoothed drag vector drives
-      // the spring; the uniforms just read its state — bend with the stroke,
-      // swing back past rest on release, settle exactly.
-      const b = breezeState();
-      pokeSpringStep(poke, b.strength * b.dirX, b.strength * b.dirZ, dt);
-      const amt = Math.hypot(poke.px, poke.pz);
-      uniforms.uPokePos.value.set(b.x, b.z);
-      uniforms.uPokeAmt.value = amt;
-      if (amt > 1e-6) uniforms.uPokeDir.value.set(poke.px / amt, poke.pz / amt);
-    },
-  };
-}
+// AND THE NUMBER IS NOW THE NUMBER. For most of this file's life the tone was
+// applied twice — once as the field material's colour and again inside every
+// instance colour, which three.js multiplies — so wash(0.40) rendered at about
+// wash(0.69): darker than INK_LIT, the floor the style guide sets for a lit
+// surface, and a knob that moved the result roughly twice as far as it read.
+// tuftfield.js carries only the VARIATION per instance now, so this constant is
+// the tone the meadow actually renders at.
+//
+// 0.62 rather than the 0.69 it had been landing on: a step lighter, which is
+// what the ground occlusion bought. The grass no longer has to carry the sense
+// of mass on its own now that the earth under it is darker where it is thick
+// (grassshade.js), so the blades themselves can come up out of the wash.
+export const GRASS_TONE = wash(0.62);

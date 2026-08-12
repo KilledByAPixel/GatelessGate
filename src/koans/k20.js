@@ -47,9 +47,9 @@ const ID = 20;
 // The gust: straight up, then a long lay-over and a slow release. GUST_MULT is
 // a multiplier on whatever wind the case (or the workbench slider) is already
 // set to, so this rides the scene's own weather instead of replacing it.
-const GUST_MULT = 3.4;
+const GUST_MULT = 6;
 const GUST_IN = 0.35;    // it arrives all at once — that is what a squall is
-const GUST_HOLD = 1.6;
+const GUST_HOLD = 3;
 const GUST_OUT = 4.5;    // and takes its time leaving
 const GUST_SPAN = GUST_IN + GUST_HOLD + GUST_OUT;
 const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));

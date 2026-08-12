@@ -219,6 +219,25 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   // is what the draining was FOR, and it is gone by the time the red returns.
   // Nothing is achieved. He is still beardless.
   //
+  // WRITE THE MATERIAL THAT IS ON THE MESH, NOT THE ONE YOU AUTHORED. This is
+  // why the beard never appeared and why the first cut of the drain did not
+  // either (Frank, twice: "it doesn't seem like the ink is doing anything";
+  // "I'm not seeing anything of four when I click on the red portrait").
+  //
+  // The workbench's `toon` flag defaults to FALSE, which is the shipped look,
+  // and ui/debug.js's apply() rebuilds every lit mesh's material as a plain
+  // Lambert: it stashes the authored one on `userData._matToon` and hangs a
+  // CLONE on the mesh. So `beardMat.opacity = ...` and `paintMat.color = ...`
+  // were both writing to an object that had been swapped off the mesh before a
+  // single frame was drawn. Nothing failed; the effect simply rendered to
+  // nowhere, and it had been doing that since the case was staged.
+  //
+  // Resolved per frame rather than cached, because apply() re-runs on every
+  // page build and every flag change and hands out fresh clones each time.
+  // Anything in this book that animates a COLOUR or an OPACITY has to do it
+  // this way, or mark the mesh `keepMaterial` and accept raw toon shading.
+  const paintedMeshes = [];
+  painted.traverse((o) => { if (o.isMesh && !o.userData.isOutline && o.name !== 'beard') paintedMeshes.push(o); });
   // INK_LIT, not INK: this is a lit surface, and at raw INK the toon ramp's
   // bands land at levels 9/19/30 and the portrait would go invisible rather
   // than black (the style rule in CLAUDE.md).
@@ -268,19 +287,20 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   furin.update(dt, simTime);
   // the red running out of him, and coming back
   const drained = drainShape(clock - strokeAt);
-  paintMat.color.copy(RED).lerp(BLACK, drained);
+  for (const m of paintedMeshes) m.material.color.copy(RED).lerp(BLACK, drained);
   // and the beard, which only exists while the ink is out of the picture
   // — up fast, and gone before the colour returns
   const u = (clock - strokeAt) / STROKE;
   const a = (u <= 0 || u >= 1) ? 0 : Math.min(1, u / 0.18, (1 - u) / 0.45);
-  beardMat.opacity = 0.85 * a * a * (3 - 2 * a);
+  beard.material.transparent = true;
+  beard.material.opacity = 0.85 * a * a * (3 - 2 * a);
   beard.scale.y = 0.6 + 0.4 * a;
   },
   fragment() {
   return {
   attempts,
   drained: +drainShape(clock - strokeAt).toFixed(3),
-  ink: +beardMat.opacity.toFixed(3),
+  ink: +beard.material.opacity.toFixed(3),
   chimeStrikes: furin.strikes(),
 };
   },

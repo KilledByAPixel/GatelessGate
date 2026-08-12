@@ -6,7 +6,7 @@ import { makeMoon } from '../src/kit/moon.js';
 import { makeWildflowers } from '../src/kit/wildflowers.js';
 import { setBreezePointer, clearBreeze } from '../src/kit/breeze.js';
 import { groundHeight } from '../src/kit/ground.js';
-import { ACCENT, ACCENT_DEEP, wash, WASH } from '../src/palette.js';
+import { ACCENT, ACCENT_DEEP, PAPER, wash, WASH } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
 import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 
@@ -186,38 +186,90 @@ test('touching the meadow lifts the wind; touching the moon shifts the light', (
   assert.ok(root.fragment().lean > 0 && root.fragment().lean < 0.5,
     'the field goes back to its resting sway');
 
-  // TAP THE MOON AND IT GOES OUT. makeMoon's setGlow shifts the disc a few
-  // percent toward the paper and swells it 4.5% — deliberately tiny, so a moon
-  // never blinks — and on the one page whose subject IS the light that was a
-  // change nobody could name (Frank: "maybe it disappears the moon, or changes
-  // it, or does something"). It now fades out of the sky altogether, takes the
-  // scene's lights down with it, holds a moonless couple of seconds, and comes
-  // back slower than it left.
+  // TAP THE MOON AND IT COMES ON. The moon is what lights this page — the key
+  // is placed on its own bearing, so every shadow in the meadow points away
+  // from it — and a tap swells the disc until it is most of the sky, takes the
+  // SKY red with it and leaves the land alone, then settles back.
+  //
+  // Two earlier versions of this are pinned by their absence. setGlow shifted
+  // the disc a few percent toward the paper, which nobody could see; fading the
+  // disc out by opacity BROKE it, because makeMoon's shader writes
+  // gl_FragColor.a = 0 as an ink-mask marker and turning on `transparent` makes
+  // the blender read that as see-through (Frank: "the moon is not red anymore").
+  // Nothing here touches the moon's material at all now.
   ctx.input.raycastFirst = (cam, objs) => (objs.includes(moon) ? { object: moon, point: moon.position.clone() } : null);
-  const lights = [];
-  root.scene.traverse((o) => { if (o.isLight) lights.push([o, o.intensity]); });
-  assert.ok(lights.length > 0, 'the meadow is lit by something');
+  const sun = root.scene.getObjectByProperty('isDirectionalLight', true);
+  assert.ok(sun, 'the meadow has a key light');
+  const sunHome = sun.position.clone();
+  const moonHome = moon.position.clone();
+  const matBefore = moon.material;
+  assert.equal(moon.material.transparent, false, 'the moon must never go transparent');
+
+  // The key is aimed FROM the moon: the direction from the sun's TARGET to the
+  // sun sits on the moon's own horizontal bearing. Measured from the target,
+  // not the origin — the light stands SUN_DIST out from what it is lighting,
+  // and that offset is what makes the shadow camera cover the staging.
+  const bearing = (v) => Math.atan2(v.x, v.z);
+  const fromTarget = sunHome.clone().sub(sun.target.position);
+  assert.ok(Math.abs(bearing(fromTarget) - bearing(moonHome)) < 0.05,
+    `the sun stands on the moon's own bearing (${bearing(fromTarget).toFixed(3)} vs ${bearing(moonHome).toFixed(3)})`);
 
   ctx._taps.forEach((cb) => cb(10, 10));
   assert.equal(root.fragment().touches, 2);
 
-  // simTime CARRIES ON from where the loops above left it. The going-out is
-  // timed off the case's own guarded clock, and the old glow was an accumulator
-  // that did not care what simTime said — so rewinding the clock here, as this
-  // test used to, now reads as the tap having happened in the future and
-  // nothing moves at all.
+  // simTime CARRIES ON from where the loops above left it. The swell is timed
+  // off the case's own guarded clock, so rewinding here — as this test used to
+  // — reads as the tap having happened in the future and nothing moves at all.
+  const paper = new THREE.Color(PAPER).getHexString();
+  const fogHome = root.scene.fog.color.getHexString();
+  assert.equal(root.scene.background.getHexString(), paper, 'the sky starts as paper');
+
   let t = 15;
-  for (let i = 0; i < 60 * 2; i++, t += 1 / 60) root.update(1 / 60, t);
-  const out = root.fragment();
-  assert.ok(out.dark > 0.9, `the moon is gone (${out.dark})`);
-  assert.equal(out.moonUp, false, 'the disc is not drawn at all');
-  assert.ok(lights.every(([l, base]) => l.intensity < base), 'and the evening went dim with it');
+  for (let i = 0; i < 60 * 3; i++, t += 1 / 60) root.update(1 / 60, t);
+  const up = root.fragment();
+  assert.ok(up.rise > 0.9, `the moon has come on (${up.rise})`);
+  assert.ok(moon.scale.x > 6, `and it is most of the sky (x${moon.scale.x.toFixed(1)})`);
+  assert.ok(moon.position.distanceTo(moonHome) < 1e-9,
+    'it SWELLS where it stands — approaching would put it in front of the mountains');
+  assert.ok(sun.position.distanceTo(sunHome) < 1e-9, 'the light does not move at all');
+  assert.equal(moon.material, matBefore, 'and the material was never swapped or faded');
+
+  // ONLY THE SKY. The background goes all the way to the moon's red; the fog —
+  // which is what the LAND dissolves into — comes barely a third as far, so the
+  // far meadow and the mountains stay their own colour (Frank: "the whole page
+  // is not gonna turn red, just the sky").
+  // measured as the SHIFT off paper, not the absolute warmth — paper is already
+  // a warm off-white, so its own redness swamps a ratio taken raw
+  const base = new THREE.Color(PAPER);
+  const shift = (c) => (c.r - c.b) - (base.r - base.b);
+  assert.ok(shift(root.scene.background) > 0.1, 'the sky went red');
+  assert.ok(shift(root.scene.fog.color) < shift(root.scene.background) * 0.6,
+    `and the land followed far less (${shift(root.scene.fog.color).toFixed(3)} vs ${shift(root.scene.background).toFixed(3)})`);
 
   for (let i = 0; i < 60 * 8; i++, t += 1 / 60) root.update(1 / 60, t);
   const back = root.fragment();
-  assert.equal(back.dark, 0, 'it comes back exactly, not asymptotically');
-  assert.equal(back.moonUp, true, 'the moon is up again');
-  for (const [l, base] of lights) assert.equal(l.intensity, base, 'and the lights are exactly where they were');
+  assert.equal(back.rise, 0, 'it comes back exactly, not asymptotically');
+  assert.equal(back.sky, 0);
+  assert.ok(Math.abs(moon.scale.x - 1) < 1e-9, 'the moon is its own size again');
+  assert.equal(root.scene.background.getHexString(), paper, 'and the sky is paper again');
+  assert.equal(root.scene.fog.color.getHexString(), fogHome, 'fog too, exactly');
+});
+
+// This case is where the grass shadow was CAUGHT (Frank: "usually grass doesn't
+// cast shadows") — moving the key onto the moon's low bearing threw 3.5x the
+// footprint the stock key does, and made visible something every page had been
+// doing. The fix went global, in tuftfield.js and ui/debug.js, so what is left
+// here is a witness: this page must not quietly go back to casting.
+test('the meadow casts no shadow, and the ground carries the dark instead', () => {
+  const root = k19.build(fakeCtx());
+  const field = root.scene.getObjectByName('grassfield');
+  assert.ok(field, 'there is a meadow');
+  assert.equal(field.userData.noCastShadow, true, 'it is excused CASTING');
+  assert.equal(field.receiveShadow, true, "but a tree's shadow still falls across it");
+  // and the occlusion that replaced it is on the ground under the grass
+  const ground = root.scene.getObjectByName('ground');
+  assert.ok(ground.material.map, "the meadow's own dark is baked into the ground");
+  assert.equal(ground.material.map.name, 'grass-shade');
 });
 
 // ---- the moon ---------------------------------------------------------------

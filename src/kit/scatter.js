@@ -129,7 +129,7 @@ export function makeBoulder({ size = 1.0, seed = 1, color = WASH.stone } = {}) {
 
 // (makeGrass — the old clump-scatter tufts — lived here until the cleanup
 // pass found nothing using it: the meadow is makeTuftField's job now, with
-// makeGrassField as the blade fallback, and only this file's own test kept
+// the grass field's own placement pass, and only this file's own test kept
 // it green. Deleted on Frank's word rather than kept-on-purpose like
 // makeTemple; the tuft construction it pioneered survives in tuftfield.js.)
 

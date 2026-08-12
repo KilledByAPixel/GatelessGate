@@ -143,19 +143,87 @@ test('a butterfly faces the way it is drifting', () => {
   assert.ok(headings.size > 5, 'the heading turns as the path wanders');
 });
 
-test('flit stirs them — they lift and beat quicker, then settle on their own', () => {
+// A STIR IS SPEED, NOT LIFT. Two earlier versions of this got it wrong in
+// opposite directions: the first added `E * 0.5 * lift` to y, which cannot move
+// a perched butterfly at all because lift is zero on the ground; the second
+// forced lift to 1 and shot the flock up its whole flying band in a fraction of
+// a second (Frank: "they fly up in the air way too fast... they get pushed up
+// right into the air. If they're on the ground, just resume flying"). What a
+// scare does now is run the path clock ahead — they cover more of the wander
+// they were already on, in the direction they were already going — and beat
+// about twice as fast. This is the assertion that it stays that way.
+test('flit stirs them — they cover more ground and beat quicker, then settle', () => {
+  const path = (stir) => {
+    const flock = makeButterflies({ count: 4, seed: 19 });
+    const each = butterflies(flock);
+    for (let t = 0; t <= 10; t += 1 / 60) flock.update(1 / 60, t);
+    const from = each.map((b) => b.position.clone());
+    if (stir) flock.flit();
+    let travelled = 0;
+    let prev = each.map((b) => b.position.clone());
+    for (let t = 10; t < 12; t += 1 / 60) {
+      flock.update(1 / 60, t);
+      each.forEach((b, i) => { travelled += prev[i].distanceTo(b.position); prev[i].copy(b.position); });
+    }
+    return { travelled, rose: each.reduce((s, b, i) => s + (b.position.y - from[i].y), 0) / each.length };
+  };
+
+  const calm = path(false);
+  const stirred = path(true);
+  assert.ok(stirred.travelled > calm.travelled * 1.3,
+    `a stirred flock covers more ground (${calm.travelled.toFixed(2)} -> ${stirred.travelled.toFixed(2)})`);
+
+  // and it is not a launch: the average height barely changes over the same
+  // two seconds. This is the number that was 2.16 IN ONE FRAME at the worst.
+  assert.ok(Math.abs(stirred.rose) < 0.9,
+    `nobody is thrown into the air (mean rise ${stirred.rose.toFixed(2)})`);
+
   const flock = makeButterflies({ count: 4, seed: 19 });
-  const each = butterflies(flock);
+  butterflies(flock);
   flock.update(1 / 60, 10);
-  assert.equal(flock.energy(), 0);
-  const avgY = () => each.reduce((s, b) => s + b.position.y, 0) / each.length;
-  const before = avgY();
   flock.flit();
   assert.ok(flock.energy() > 0.5, 'the stir registers at once');
-  flock.update(1 / 60, 10 + 1 / 60);
-  assert.ok(avgY() > before, `they lift when stirred (${before.toFixed(2)} -> ${avgY().toFixed(2)})`);
   for (let t = 10; t < 30; t += 1 / 30) flock.update(1 / 30, t);
   assert.ok(flock.energy() < 0.05, 'and it dies away on its own');
+});
+
+// The other half of the ask: a butterfly sitting in the grass has to get UP,
+// which the original flit could not do at all. On the round's own take-off
+// pacing, though — the same climb it makes when it leaves a perch unprompted.
+test('a scare gets a perched butterfly airborne, at take-off speed', () => {
+  const flock = makeButterflies({ count: 6, seed: 19, land: true });
+  const each = butterflies(flock);
+  let t = 0, perched = null;
+  for (; t < 40; t += 1 / 60) {
+    flock.update(1 / 60, t);
+    const low = each.find((n) => n.position.y < 0.4);
+    if (low) { perched = low; break; }
+  }
+  assert.ok(perched, 'somebody is in the grass to be scared');
+  const before = perched.position.y;
+
+  flock.flit();
+  let peak = before, climb = 0;
+  let airborneFrames = 0;
+  let prevY = perched.position.y;
+  for (let i = 0; i < 60 * 5; i++, t += 1 / 60) {
+    flock.update(1 / 60, t);
+    peak = Math.max(peak, perched.position.y);
+    // the CLIMB rate is what "fired up" would show in — the lateral speed is
+    // supposed to be high, that is the whole point of the boost
+    climb = Math.max(climb, Math.abs(perched.position.y - prevY));
+    prevY = perched.position.y;
+    if (perched.position.y > before + 0.4) airborneFrames++;
+  }
+  assert.ok(peak > before + 0.6, `it got right up (${before.toFixed(2)} -> ${peak.toFixed(2)})`);
+  assert.ok(climb < 0.09,
+    `and flew up rather than being fired up (fastest climb ${(climb * 60).toFixed(1)} u/s)`);
+  // AND IT STAYS UP. It used to pop up and drop straight back, because the
+  // startle envelope was timed on the boosted path clock — the faster the scare
+  // made them fly, the sooner the scare wore off (Frank: "sometimes they go up
+  // and then go back down immediately"). Two seconds of flying, minimum.
+  assert.ok(airborneFrames > 60 * 2,
+    `and stays up a while (${(airborneFrames / 60).toFixed(1)}s airborne)`);
 });
 
 test('deterministic — same seed same flight, different seed different flight, no wall clock', () => {

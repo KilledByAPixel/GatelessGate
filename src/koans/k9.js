@@ -216,7 +216,14 @@ const CAM = { distance: 17, target: [-0.3, 2.8, -1.6], heading: 31.5, pitch: 14.
   // cast at a larger BODY instead: f0 drops about six semitones and every
   // mode's decay grows with it, which is one number doing both halves of
   // what he asked for. The amplitudes are still exactly his.
-  audio && audio.bell({ preset: 'great', size: 3.4, at: hit.position });
+  // ...and struck harder than anything else in the book. A big bell is not
+  // just a low one (Frank: "can we make this one a little bit louder — it's
+  // still kind of hard to hear"), and the size increase alone made it deeper
+  // without making it arrive: casting the voice bigger spreads the same
+  // energy over more, longer-decaying modes, so the onset actually got
+  // quieter. gain is a plain strike velocity here, so this is how hard the
+  // beam swings.
+  audio && audio.bell({ preset: 'great', size: 3.4, gain: 2.2, at: hit.position });
   });
   
   return {

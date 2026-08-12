@@ -20,7 +20,11 @@ import { clamp } from '../util/math.js';
 // is twelve draws; they take no outline (an inverted hull on a paper-thin quad
 // is a blot).
 
-const TAU_E = 2.2;                 // e-folding of a flit, seconds
+// E-folding of a flit, in seconds. Lengthened with the startle envelope: the
+// excitement drives both the wingbeat and the path speed, and at 2.2 it was
+// three-quarters gone before a butterfly had finished climbing out of the grass
+// — up, and then cruising again while still plainly in the air.
+const TAU_E = 3.4;
 const HEAD_EPS = 0.12;             // seconds between the two path samples a heading needs
 
 // One wing, in the local xz plane, hinged at the body line x = 0 so
@@ -138,13 +142,33 @@ export function makeButterflies({
       // the share of the round spent perched — zero when landing is off,
       // which liftAt reads as "always airborne"
       down: land ? 0.24 + h(10) * 0.16 : 0,
-      scared: -99,          // sim time it was last startled — see startleAt
-      dartA: h(11) * Math.PI * 2,   // the direction it breaks in
+      scared: -99,          // WALL time it was last startled — see startleAt
+      wander: 0,            // extra path-seconds this one has been hurried along
     });
   }
 
   let clock = 0;
   const bursts = [];
+  // EXCITEMENT IS SPEED. What a scare should look like is a flock that gets on
+  // with what it was already doing, faster — "if they are flying, just move a
+  // bit faster than normal... move around more... like they would normally fly,
+  // but just faster in that direction" (Frank). So the flight is not redirected
+  // and nothing is thrown anywhere: the PATH CLOCK simply runs ahead while the
+  // excitement lasts, which carries every butterfly further along the wander it
+  // was already on, in the direction it was already going.
+  //
+  // This is the one piece of state in this file that is integrated rather than
+  // read from simTime, so the strict "pure function of t" claim in the header
+  // now has this exception. It is still deterministic — the same taps over the
+  // same steps give the same flight — and it is monotonic and continuous, so
+  // the path never jumps; it only ever gets ahead of itself.
+  // Extra path-seconds per second at full excitement. 2.6 measured as only
+  // 1.3x the ground covered — inside the noise of a wander, and Frank could not
+  // see it ("they don't seem to be moving any faster afterwards either, or
+  // maybe a tiny bit, but not much"). The wander is a noise field sampled at
+  // `rate`, so running its clock faster does not scale distance linearly; it
+  // takes a much bigger multiplier before the flock reads as hurrying.
+  const BOOST_RATE = 7.0;
 
   function energy() {
     let e = 0;
@@ -160,43 +184,51 @@ export function makeButterflies({
   // into it. Pure in t, like everything else here.
   const EASE = 0.13;                 // share of the round spent going down / up
 
-  // A SCARE PUTS A PERCHED ONE UP, and until this existed it could not. flit()
-  // only ever raised the flock by `E * 0.5 * lift` — multiplied by the very
-  // term that is ZERO while a butterfly is sitting in the grass, so the ones a
-  // reader would most expect to startle were the only ones that could not move
-  // at all (Frank: "make the butterflies a little more reactive when you click
-  // on them, especially if they're in their relaxed, sitting on the ground
-  // state — let's make sure they fly up off the ground").
+  // A SCARE ENDS THE PERCH. That is all it does to the height — it does not
+  // throw anything anywhere.
   //
-  // `startle` is a per-butterfly envelope, 1 at the scare and easing to 0, that
-  // liftAt takes the MAX against: whatever the round says, a scared butterfly
-  // is airborne. It rides on top of the schedule rather than rewriting it, so
-  // the round is still a pure function of t and nothing jumps — the perch it
-  // was on resumes underneath and it settles back into it.
-  const STARTLE = 1.9;               // seconds of forced flight after a scare
-  const STARTLE_DART = 0.42;         // and how far it breaks from the spot, out and back
-  // IT BEATS ITS WAY UP; it does not appear up there. Written as `1 - smooth(u)`
-  // this is 1 on the very frame of the scare, and lift is what interpolates a
-  // butterfly between the grass and its flying height — so the whole envelope
-  // applied at once and it teleported two units into the air (measured: a
-  // perched one jumped from y=0.32 to y=2.48 between two frames). The rise is
-  // its own fast ramp now, quick enough to read as alarm and slow enough to be
-  // a take-off.
-  const STARTLE_UP = 0.28;           // seconds to get off the ground
-  function startleAt(b, t) {
-    const u = (t - b.scared) / STARTLE;
-    if (!(u >= 0) || u >= 1) return 0;
-    return Math.min(smooth((t - b.scared) / STARTLE_UP), 1 - smooth(u));
-  }
-  // out and back: 0 at the scare, 1 halfway through, 0 again as it settles, so
-  // a startled butterfly leaves its blade of grass and returns to it
-  function dartAt(b, t) {
-    const u = (t - b.scared) / STARTLE;
-    return (u >= 0 && u < 1) ? Math.sin(Math.PI * u) : 0;
+  // flit() used to raise the flock by `E * 0.5 * lift`, multiplied by the very
+  // term that is ZERO while a butterfly sits in the grass, so the ones a reader
+  // would most expect to startle were the only ones that could not move at all.
+  // The first fix over-corrected into the opposite failure: forcing lift to 1
+  // shot them up their whole flying band in a fraction of a second, plus a
+  // sideways dart, and the flock read as being launched (Frank: "they fly up in
+  // the air way too fast... they, like, get pushed up right into the air. I
+  // don't want them to just instantly zoom up. If they're on the ground, just
+  // resume flying").
+  //
+  // So the envelope is now paced to the round's OWN take-off — EASE of a cycle,
+  // the same climb it makes when it leaves a perch unprompted — and there is no
+  // dart at all. A scared butterfly simply gets up, on the schedule's own
+  // terms, and everything else the scare does is speed (see `boost` below).
+  // TIMED ON THE WALL CLOCK, NOT THE PATH CLOCK — this is the bug that made a
+  // scare look broken. `scared` was stamped in path time and compared against
+  // the BOOSTED clock, and boost is exactly what a scare turns on: the flock
+  // flew faster, which ran the path clock ahead, which aged the startle
+  // envelope faster, which cancelled the scare early. The harder they were
+  // startled the sooner they gave up. What Frank saw was butterflies that
+  // "go up and then go back down immediately... there's definitely something
+  // glitchy happening still."
+  //
+  // It also never reached full height, for a second reason: the rise ramped
+  // over b.cyc * EASE (1.4-2.6s) while the decay was already falling from the
+  // first frame, so the MIN of the two peaked around 0.5 and came straight back
+  // down. The envelope holds at 1 now — up, a couple of seconds of actually
+  // flying around, then a slow release into whatever the round says next.
+  const STARTLE_UP = 1.1;            // seconds to climb out of the grass
+  const STARTLE_HOLD = 2.6;          // and to stay up there, flying
+  const STARTLE_OUT = 2.2;           // before the round takes over again
+  const STARTLE = STARTLE_UP + STARTLE_HOLD + STARTLE_OUT;
+  function startleAt(b) {
+    const u = clock - b.scared;
+    if (!(u >= 0) || u >= STARTLE) return 0;
+    if (u < STARTLE_UP) return smooth(u / STARTLE_UP);
+    if (u < STARTLE_UP + STARTLE_HOLD) return 1;
+    return 1 - smooth((u - STARTLE_UP - STARTLE_HOLD) / STARTLE_OUT);
   }
 
   function liftAt(b, t) {
-    const scared = startleAt(b, t);
+    const scared = startleAt(b);
     if (!b.down) return 1;           // land:false — always airborne, no ease dip
     return Math.max(scared, scheduledLift(b, t));
   }
@@ -239,29 +271,40 @@ export function makeButterflies({
     return out;
   }
 
-  // the whole path: x/z on the path clock, height on the ROUND's clock, since
+  // The whole path: x/z on the path clock, height on the ROUND's clock, since
   // the descent and the take-off are the round and must keep running while the
   // wander is stopped.
+  //
+  // THE HEIGHT BAND IS NOT BOOSTED, and that took a measurement to find. The
+  // excitement runs the path clock ahead so a stirred flock covers more ground
+  // — but the altitude a flying butterfly picks is another noise channel read
+  // off that same clock, so speeding it up sent them racing up and down their
+  // whole 0.7-2.4 band as well: a startled one climbed at 10.5 units a second,
+  // which is not "flying faster", it is thrashing. ht is the honest clock for
+  // that channel. Horizontal speed is the response; altitude keeps its own
+  // unhurried pace, which is what a butterfly actually looks like.
+  // THE BOOST REACHES THE WANDER AND NOTHING ELSE. It began as one offset added
+  // to the whole path clock, which is wrong twice over and both were measured:
+  //
+  //   - the HEIGHT is another noise channel on that clock, so a stirred flock
+  //     raced up and down its whole 0.7-2.4 band;
+  //   - the ROUND — fly a while, settle a while — is on that clock too, so the
+  //     take-off ease (0.13 of an 11-20s cycle, normally 1.4-2.6 seconds) ran in
+  //     about a fifth of a second. A perched butterfly did not climb out of the
+  //     grass, it was fired out of it, at 10 units a second.
+  //
+  // So the round, the height and the startle are all on the WALL clock, exactly
+  // as they were before any of this existed, and the only thing the excitement
+  // touches is how far along its own wander each butterfly has got. b.wander is
+  // that offset, integrated per butterfly in update() and only while it is
+  // actually flying — a scare cannot slide one that is sitting in the grass.
   function pathAt(b, t, out) {
-    const tp = pathTime(b, t);
-    xzAt(b, tp, out);
-    const u = clamp(noise1(tp * (rate * 1.6) + b.ph + 39, b.chan + 3) * 0.6 + b.yBias * 0.7, 0, 1);
+    xzAt(b, pathTime(b, t) + b.wander, out);
+    const u = clamp(noise1(pathTime(b, t) * (rate * 1.6) + b.ph + 39, b.chan + 3) * 0.6 + b.yBias * 0.7, 0, 1);
     const g = groundFn ? groundFn(out.x, out.z) : 0;
     const air = g + yLo + (yHi - yLo) * u;
     const sat = g + perch;
     out.y = sat + (air - sat) * liftAt(b, t);
-    // THE BREAK. A startled butterfly does not just rise on the spot: it darts
-    // clear and comes back. pathTime still counts it as perched — its wander is
-    // stopped, which is what keeps a landed one from sliding — so without this
-    // a scared one would go straight up like a lift and straight back down.
-    // Out and back along its own seeded bearing, exactly zero at both ends, so
-    // it returns to the blade of grass it left and nothing accumulates over
-    // repeated scares.
-    const dart = dartAt(b, t) * STARTLE_DART;
-    if (dart > 0) {
-      out.x += Math.cos(b.dartA) * dart;
-      out.z += Math.sin(b.dartA) * dart;
-    }
     return out;
   }
 
@@ -276,7 +319,7 @@ export function makeButterflies({
       // it is perched those two are the same point, atan2(0, 0) collapses to
       // zero, and the butterfly would spin to face north the moment it landed.
       // Stepping back in path time gives the heading it came in on and holds it.
-      xzAt(b, pathTime(b, clock) - HEAD_EPS, _q);
+      xzAt(b, pathTime(b, clock) + b.wander - HEAD_EPS, _q);
 
       // THE WINGS ARE A HINGE, AND ONLY A HINGE. The body used to ride the
       // stroke (position.y += 0.05·stroke), which at ten beats a second read
@@ -286,7 +329,10 @@ export function makeButterflies({
       // lives entirely in the wings' own rotation.z about the body line; the
       // body goes where the path says and nowhere else.
       const lift = liftAt(b, clock);
-      const beat = b.beat * (1 + E * 0.6);
+      // about twice as fast when stirred, and E is 1 at a single flit (Frank:
+      // "their wings are going a bit too fast... I want them to go maybe twice
+      // as fast") — this was 0.6, which barely read as a change at all
+      const beat = b.beat * (1 + E);
       const stroke = Math.sin(clock * beat * Math.PI * 2 + b.beatPh);
       // PERCHED, the wings stop BEATING but they do not stop moving: they stand
       // folded up together and open and close very slowly, about a sixth of a
@@ -298,7 +344,11 @@ export function makeButterflies({
       const flying = 0.55 + 0.62 * stroke;           // -0.07 .. 1.17 rad
       const flap = rest + (flying - rest) * lift;
 
-      b.node.position.set(_p.x, _p.y + E * 0.5 * lift, _p.z);   // flit: they lift when stirred
+      // Straight onto the path, with nothing added. `+ E * 0.5 * lift` used to
+      // hoist the whole flock half a unit whenever they were stirred, which is
+      // the same "shoved upward" read the forced lift had — the excitement is
+      // in how fast they are going now, not in how high they are held.
+      b.node.position.set(_p.x, _p.y, _p.z);
       // a landed butterfly sits level and keeps the heading it came in on
       b.node.rotation.set(0.12 * lift, Math.atan2(_p.x - _q.x, _p.z - _q.z), b.roll * lift);
       for (const { mesh, side } of b.wings) mesh.rotation.z = side * flap;
@@ -312,7 +362,8 @@ export function makeButterflies({
     flit() {
       bursts.push(clock);
       if (bursts.length > 6) bursts.shift();
-      // and every one of them is put up, perched or not
+      // and any of them sitting in the grass gets up — on the round's own
+      // take-off pacing, not thrown
       for (const b of flock) b.scared = clock;
       pose();
     },
@@ -322,6 +373,11 @@ export function makeButterflies({
     lift() { return flock.map((b) => liftAt(b, clock)); },
     update(dt, simTime) {
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
+      // the excitement hurries each FLYING butterfly along its own wander —
+      // see BOOST_RATE. Gated on lift so a scare never slides a perched one
+      // sideways through the grass, which is the bug pathTime exists to prevent.
+      const push = energy() * BOOST_RATE * Math.max(0, dt || 0);
+      if (push > 0) for (const b of flock) b.wander += push * liftAt(b, clock);
       while (bursts.length && clock - bursts[0] > 8 * TAU_E) bursts.shift();
       pose();
     },

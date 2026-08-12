@@ -4,8 +4,9 @@ export { makeGround, groundHeight } from './ground.js';
 export { makeMountains } from './mountains.js';
 export { makeForest } from './forest.js';
 export { makeRocks, makeBushes, makeBoulder, scatterPoints, mergeSimple } from './scatter.js';
-export { makeGrassField } from './grassfield.js';
+
 export { makeTuftField } from './tuftfield.js';
+export { makeGrassShade, grassShadeData, grassShadeUV } from './grassshade.js';
 export { makeLantern } from './lantern.js';
 export { makePath } from './path.js';
 export { makeSand } from './sand.js';

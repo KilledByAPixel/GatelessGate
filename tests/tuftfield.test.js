@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { tuftPixels, makeTuftField, TUFT_W, TUFT_H, TUFT_VARIANTS } from '../src/kit/tuftfield.js';
+import { GRASS_TONE } from '../src/kit/grassfield.js';
 
 // alpha coverage of a horizontal band of one atlas variant, as a fraction
 function coverage(data, variant, y0, y1) {
@@ -120,4 +121,49 @@ test('tufts respect keepouts the same way blades do', () => {
     assert.ok(Math.hypot(p.x, p.z) >= keep.r, `tuft ${i} outside the keepout: ${Math.hypot(p.x, p.z).toFixed(2)}`);
     assert.ok(s.x !== s.y || s.x !== 1, 'aspect varies per tuft');
   }
+});
+
+// THE TONE IS APPLIED ONCE. It used to be applied twice — the field material
+// carried GRASS_TONE and every instance colour carried it again, and three.js
+// multiplies the two — so the meadow rendered at the tone SQUARED: wash(0.40)
+// came out around wash(0.69), darker than INK_LIT, which is the floor the style
+// guide sets for anything lit. Nothing failed. The constant simply did not mean
+// what it said, and every attempt to retune the grass moved it about twice as
+// far as expected, which is a miserable thing to tune against.
+test('the meadow renders at its stated tone, not at the square of it', () => {
+  const f = makeTuftField({ count: 300, radius: 10, seed: 5 });
+  const mat = f.mesh.material;
+  assert.equal('#' + mat.color.getHexString(), GRASS_TONE.toLowerCase(),
+    'the material carries the tone itself');
+
+  // every instance colour is a VARIATION around 1, not a second copy of the base
+  const c = new THREE.Color();
+  let lo = Infinity, hi = -Infinity, sum = 0;
+  for (let i = 0; i < f.mesh.count; i++) {
+    f.mesh.getColorAt(i, c);
+    lo = Math.min(lo, c.r); hi = Math.max(hi, c.r); sum += c.r;
+  }
+  const mean = sum / f.mesh.count;
+  assert.ok(Math.abs(mean - 1) < 0.06, `instance colours hover around 1, got ${mean.toFixed(3)}`);
+  assert.ok(lo < 1 && hi > 1, 'and they vary either side of it, not one-sided');
+  assert.ok(hi - lo > 0.05, `there is still blade-to-blade drift (${(hi - lo).toFixed(3)})`);
+  // WHAT THE RAMP RECEIVES is material x instance, and that is where the tone
+  // and the drift both have to be checked. The multiplier's own spread looks
+  // alarming on its own (0.5 .. 1.5) purely because it is a ratio against a
+  // dark base — it is not a number anybody ever sees.
+  const want = new THREE.Color(GRASS_TONE);
+  assert.ok(Math.abs(mat.color.r * mean - want.r) < 0.02, 'material x instance lands on the tone');
+  const spread = mat.color.r * (hi - lo);
+  assert.ok(spread > 0.01, 'the meadow is not one flat colour');
+  assert.ok(spread < want.r * 1.2, `and it is drift, not colour noise (${spread.toFixed(3)})`);
+});
+
+test('setTone moves the meadow live, emissive floor included', () => {
+  const f = makeTuftField({ count: 100, radius: 10, seed: 5 });
+  const before = f.mesh.material.color.getHexString();
+  f.setTone('#334455');
+  assert.equal(f.mesh.material.color.getHexString(), '334455');
+  assert.equal(f.mesh.material.emissive.getHexString(), '334455',
+    'the dark-mass lift tracks the tone, or a lighter meadow reads flat');
+  assert.notEqual(f.mesh.material.color.getHexString(), before);
 });

@@ -10,27 +10,63 @@ import { addOutlines } from '../render/outlines.js';
 
 const ID = 19;
 const BASE_WIND = 0.20;
-// THE MOON GOES OUT. It used to brighten a few percent and swell a few percent
-// more — makeMoon's setGlow, deliberately tiny so a moon never blinks — which
-// on a page whose whole subject is the light was a change nobody could name
-// (Frank: "clicking on the moon maybe does something. Maybe it disappears the
-// moon, or changes it, or does something"). So it is the other direction, and
-// it is not small: the disc fades out of the sky altogether, the meadow goes
-// dim under it, and after a couple of seconds of a moonless evening both come
-// back. Nothing is lost and nothing is won; you took the moon away and gave it
-// back, which is the whole of what this page is for.
-const DARK_OUT = 1.5;     // seconds for the moon to go
-const DARK_HELD = 2.0;    // an evening with no moon in it
-const DARK_BACK = 2.6;    // and coming back, slower than it left
-const DARK_SPAN = DARK_OUT + DARK_HELD + DARK_BACK;
-const DIM = 0.55;         // how far the scene's own lights fall with it
+// THE MOON IS THE LIGHT, AND THE TAP SWELLS IT.
+//
+// Two earlier cuts of this are worth keeping on the record. The first was
+// makeMoon's setGlow — a few percent toward the paper and a few percent of
+// swell, deliberately tiny so a moon never blinks — which on the one page whose
+// subject IS the light was a change nobody could name. The second faded the
+// disc out by making its material transparent and running the opacity down, and
+// that one BROKE THE MOON: makeMoon's fragment shader forces `gl_FragColor.a =
+// 0.0` as its ink-mask marker (point 4 of that file's header — it is how the
+// disc opts out of the depth-edge Sobel), which is free while the material is
+// opaque and alpha is ignored, and catastrophic the moment `transparent = true`
+// makes the blender read it. The moon went pale instead of red and Frank caught
+// it at once: "the moon is not red anymore." NEVER set transparent on a
+// material whose shader writes alpha for a non-alpha purpose.
+//
+// So nothing here fades. The sun is placed on the moon's own bearing, so every
+// shadow in the meadow points away from it and the moon is visibly the thing
+// lighting the scene. A tap does not move it — a climb to the zenith was built
+// and worked, and Frank went the other way — it SWELLS: the disc grows until it
+// is most of the sky, and the sky itself goes red behind it, and then it settles
+// back to being a moon on a ridge. "Let's make it so the moon gets real big when
+// you click on it. And the whole page is not gonna turn red, just the sky, and
+// then it's gonna go back to its normal size."
+//
+// ONLY THE SKY. scene.background is taken all the way; the fog — which is what
+// the land dissolves INTO — comes less than half as far, so the far meadow and
+// the mountains stay their own colour and merely warm at the horizon. Tinting
+// the fog fully would turn every distant thing red, which is the page rather
+// than the sky; leaving it alone entirely puts a hard paper seam along the
+// ridge with a red sky above it. The split is the whole trick.
+const RISE_UP = 1.5;      // seconds for the moon to come on
+const RISE_HELD = 1.6;    // filling the sky
+const RISE_DOWN = 2.8;    // and settling back, slower than it came
+const RISE_SPAN = RISE_UP + RISE_HELD + RISE_DOWN;
+// How much bigger. The moon is 2.7 across at 60 out and the frame's half-height
+// at that distance is 60·tan(19°) ≈ 20.7, so ten times its radius overflows the
+// frame completely — which reads as a red wash rather than as a moon, because
+// no edge of the disc is left on screen. 7.5 puts the radius at 0.98 of half the
+// frame: it fills the sky above the ridge and the curve still runs out through
+// the corners, so the thing filling the sky is legibly a moon.
+const MOON_SWELL = 7.5;
+const SKY_TINT = 0.90;    // how far the background goes toward the moon's own red
+const FOG_TINT = 0.38;    // ...and how far the land's fog follows it. See above.
+// How high the sun sits when the moon is at rest. The moon itself is 6.4 up at
+// 60 out — about six degrees, a harvest moon on the ridge — and a key light at
+// six degrees throws shadows the length of the meadow, straight off the ±15
+// shadow frustum. The BEARING is the moon's, exactly; the elevation is a shot,
+// not a measurement, which is the honest way round for a diorama.
+const SUN_ELEV = 0.62;    // radians, ~36 degrees
+const SUN_DIST = 13;
 const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
-// 0 = the moon is up, 1 = it is gone
-function darkShape(u) {
-  if (!(u >= 0) || u >= DARK_SPAN) return 0;
-  if (u < DARK_OUT) return smooth(u / DARK_OUT);
-  if (u < DARK_OUT + DARK_HELD) return 1;
-  return 1 - smooth((u - DARK_OUT - DARK_HELD) / DARK_BACK);
+// 0 = a moon on a ridge, 1 = most of the sky
+function riseShape(u) {
+  if (!(u >= 0) || u >= RISE_SPAN) return 0;
+  if (u < RISE_UP) return smooth(u / RISE_UP);
+  if (u < RISE_UP + RISE_HELD) return 1;
+  return 1 - smooth((u - RISE_UP - RISE_HELD) / RISE_DOWN);
 }
 const BREEZE_TAU = 1.7;   // how long a crossing breath stays in the sound
 
@@ -226,25 +262,38 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   // through the weather they already share.
   let camera = null;
   let clock = 0;
-  let darkAt = -99;
+  let riseAt = -99;
   let breeze = 0;
   let touches = 0;
   const ground = scene.getObjectByName('ground');
   const meadow = ground ? [flowers.mesh, ground] : [flowers.mesh];
 
-  // The moon's own material and the scene's lights, captured at their resting
-  // values so the fade is an offset from the page as composed rather than a
-  // second set of numbers that has to be kept in step with it.
-  const moonMat = moon.material;
-  moonMat.transparent = true;
-  const moonOpacity = moonMat.opacity;
-  const lightRigs = [];
-  scene.traverse((o) => { if (o.isLight) lightRigs.push([o, o.intensity]); });
+  // THE SUN IS AIMED FROM THE MOON. makeLights puts its key over the staging's
+  // right shoulder — the book's default, and on this page it meant the shadows
+  // lay across the meadow from a direction with nothing in it while a moon
+  // stood plainly in the sky doing no work at all (Frank: "the light is not
+  // coming from the moon"). The bearing below is the moon's own; only the
+  // elevation is chosen, for the reason at SUN_ELEV.
+  const sun = scene.getObjectByProperty('isDirectionalLight', true);
+  const sunTargetAt = sun ? sun.target.position.clone() : new THREE.Vector3();
+
+  // the moon's resting spot and size, kept so the swell has somewhere to return
+  const moonHome = moon.position.clone();
+  const skyBase = new THREE.Color(PAPER);
+  const skyLit = new THREE.Color(ACCENT_LIGHT);
+  const homeDir = new THREE.Vector3(
+    Math.sin(MOON_BEARING) * Math.cos(SUN_ELEV),
+    Math.sin(SUN_ELEV),
+    -Math.cos(MOON_BEARING) * Math.cos(SUN_ELEV),
+  );
+  // the key stands on the moon's bearing and stays there — the swell is the
+  // moon coming on, not the sky turning over
+  if (sun) sun.position.copy(sunTargetAt).addScaledVector(homeDir, SUN_DIST);
 
   input.onTap(() => {
   if (!camera) return;
   if (input.raycastFirst(camera, [moon])) {
-  if (clock - darkAt >= DARK_SPAN) darkAt = clock;    // one going-out at a time
+  if (clock - riseAt >= RISE_SPAN) riseAt = clock;    // one swell at a time
   breeze = 1;
   touches++;
   return;
@@ -264,11 +313,16 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   world.update(dt, simTime);           // drives the meadow's wind
   flowers.update(dt, simTime);
 
-  // the moon going out, and the evening going with it
-  const dark = darkShape(clock - darkAt);
-  moonMat.opacity = moonOpacity * (1 - dark);
-  moon.visible = dark < 0.999;
-  for (const [l, base] of lightRigs) l.intensity = base * (1 - DIM * dark);
+  // THE MOON COMES ON. The disc swells where it stands — it does not
+  // approach, which would put it in front of the mountains; it grows, so
+  // the ridge stays silhouetted against it the whole way. The sky goes with
+  // it, and the land does not: background all the way to the moon's own
+  // red, fog barely more than a third of it (see SKY_TINT / FOG_TINT).
+  const rise = riseShape(clock - riseAt);
+  const s = 1 + (MOON_SWELL - 1) * rise;
+  moon.scale.set(s, s, 1);
+  scene.background.copy(skyBase).lerp(skyLit, SKY_TINT * rise);
+  scene.fog.color.copy(skyBase).lerp(skyLit, FOG_TINT * rise);
 
   // snap to rest rather than decaying asymptotically forever, so the wind
   // level settles on an exact value instead of creeping
@@ -278,9 +332,11 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   },
   fragment() {
   return {
-  dark: +darkShape(clock - darkAt).toFixed(4),
-  moonUp: moon.visible,
-  moonOpacity: +moonMat.opacity.toFixed(4),
+  rise: +riseShape(clock - riseAt).toFixed(4),
+  moonScale: +moon.scale.x.toFixed(3),
+  // finite scalars and booleans only — a debug fragment is not a place
+  // for a hex string (tests/staging.test.js)
+  sky: +(SKY_TINT * riseShape(clock - riseAt)).toFixed(4),
   lean: +flowers.lean().toFixed(4),
   gusts: flowers.gustCount(),
   blooms: flowers.blooms,

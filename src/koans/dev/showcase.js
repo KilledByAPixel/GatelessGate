@@ -5,7 +5,7 @@ import { addOutlines } from '../../render/outlines.js';
 import {
   makeAssembly, makeBasin, makeBell, makeBird, makeBirds, makeBowl,
   makeBuddha, makeBuffalo, makeBundle, makeCat, makeDog, makeDrum, makeFlag,
-  makeFlower, makeForest, makeFox, makeFurin, makeGate, makeGrassField,
+  makeFlower, makeForest, makeFox, makeFurin, makeGate,
   makeGround, makeHangingMonk, makeHorse, makeHut, makeKoi, makeLantern,
   makeLattice, makeMonk, makeMoon, makeOak, makeOdoshi, makePen, makePine,
   makePole, makeQuadruped, makeRack, makeScale,
@@ -275,8 +275,9 @@ export default {
     // rows either side, which is the collision dev/kit-preview.html already
     // learned the hard way.
     place(makeForest({ center: [0, 0, 0], spread: 3, count: 20, treeH: 2.2 }), -2.5, 'vegetation');
-    place(makeGrassField({ radius: 2.6, count: 1100, seed: 5 }), 3.5, 'vegetation');
-    place(makeTuftField({ radius: 2.6, count: 700, seed: 9 }), 8.5, 'vegetation');
+    // one grass row, not two: the geometric blade field was cut and the cards
+    // are the meadow now
+    place(makeTuftField({ radius: 2.6, count: 700, seed: 9 }), 5.5, 'vegetation');
     place(makeWildflowers({ radius: 2.2, count: 70, seed: 71 }), 13, 'vegetation');
     place(makeFlower({}), 16, 'vegetation');
 

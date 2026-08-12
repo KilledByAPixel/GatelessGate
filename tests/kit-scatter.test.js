@@ -5,7 +5,7 @@ import { makeRocks, makeBushes, scatterPoints } from '../src/kit/scatter.js';
 import { makeLantern } from '../src/kit/lantern.js';
 import { makePath } from '../src/kit/path.js';
 import { composeWorld } from '../src/kit/scenery.js';
-import { makeGrassField } from '../src/kit/grassfield.js';
+import { makeTuftField } from '../src/kit/tuftfield.js';
 import { groundHeight } from '../src/kit/ground.js';
 import k28 from '../src/koans/k28.js';
 import { eyePosition } from '../src/camera.js';
@@ -193,9 +193,9 @@ test('path.sample gives centerline point, heading, and across-path vector', () =
   assert.ok(Math.abs(s.y - groundHeight(s.x, s.z, { seed: 21 })) < 1e-6, 'y on ground');
 });
 
-test('makeGrassField: one instanced meadow, masked and ground-conforming', () => {
+test('makeTuftField: one instanced meadow, masked and ground-conforming', () => {
   const keepout = [{ x: 0, z: 0, r: 4 }];
-  const f = makeGrassField({ count: 3000, radius: 14, seed: 5, groundSeed: 21, keepout });
+  const f = makeTuftField({ count: 3000, radius: 14, seed: 5, groundSeed: 21, keepout });
   assert.equal(f.mesh.name, 'grassfield');
   assert.ok(f.mesh.isInstancedMesh, 'one instanced mesh = one draw call');
   assert.equal(f.mesh.userData.noOutline, true);
@@ -210,7 +210,7 @@ test('makeGrassField: one instanced meadow, masked and ground-conforming', () =>
     assert.ok(Math.abs(p.y - groundHeight(p.x, p.z, { seed: 21 })) < 1e-6, 'blades sit on the ground');
   }
   // deterministic, and the wind is a uniform write (no per-frame CPU work)
-  assert.equal(makeGrassField({ count: 3000, radius: 14, seed: 5, groundSeed: 21, keepout }).blades, f.blades);
+  assert.equal(makeTuftField({ count: 3000, radius: 14, seed: 5, groundSeed: 21, keepout }).blades, f.blades);
   assert.doesNotThrow(() => f.update(1 / 60, 1.5));
 });
 

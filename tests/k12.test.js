@@ -252,7 +252,11 @@ test('calling startles them, and the fragment stays finite', () => {
   assert.equal(root.fragment().calls, 1, 'the call landed');
   assert.ok(root.fragment().flutter > calm + 0.5, 'and it put them up');
 
-  for (let i = 0; i < 600; i++) root.update(1 / 60, 4 + i / 60);
+  // 20 seconds, not 10: the flit's e-folding was lengthened from 2.2s to 3.4s
+  // so the excitement lasts as long as the flight it drives (a scare used to be
+  // three-quarters spent before a butterfly had finished climbing out of the
+  // grass). Six e-folds still puts it comfortably under the floor.
+  for (let i = 0; i < 1200; i++) root.update(1 / 60, 4 + i / 60);
   const frag = root.fragment();
   assert.ok(frag.flutter < 0.05, `they settle back to playing, got ${frag.flutter}`);
   for (const [k, v] of Object.entries(frag)) {

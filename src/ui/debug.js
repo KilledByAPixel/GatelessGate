@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { setGrassPatchiness, setGrassReach, setGrassTaper } from '../kit/grassfield.js';
-import { setGrassStyle } from '../kit/scenery.js';
+import { wash } from '../palette.js';
 import { setFoliageWeather } from '../kit/foliage.js';
 import { setInkScale } from '../render/outlines.js';
 import { plainMaterial } from '../render/toon.js';
@@ -67,7 +67,7 @@ export function devModeOn() {
 const CONTROLS = [
   { group: 'Scene' },
   { key: 'grass', label: 'Grass field', type: 'bool', def: true },
-  { key: 'grassTufts', label: 'Grass tufts (re-enter)', type: 'bool', def: true },
+  { key: 'grassTone', label: 'Grass tone', type: 'range', def: 0.62, min: 0.2, max: 0.9, step: 0.01 },
   { key: 'grassWind', label: 'Grass wind', type: 'range', def: 3.0, min: 0, max: 9, step: 0.05 },
   { key: 'grassPatch', label: 'Grass patch (re-enter)', type: 'range', def: 0.7, min: 0, max: 0.8, step: 0.02 },
   // How far the meadow reaches, and how much of that reach it spends dissolving
@@ -375,7 +375,18 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
           // foam set it: an ocean-sized sheet outruns the sun's shadow camera
           // and the far-plane cut painted a phantom triangle of shadow on the
           // open sea (case 20).
-          o.castShadow = state.shadows && o.name !== 'ground' && !o.userData.noShadow;
+          // `noShadow` excuses a mesh from the shadow map entirely — water and
+          // foam set it. `noCastShadow` is the weaker half: do not CAST, but do
+          // still receive. The meadow needs exactly that, and needed a flag of
+          // its own to get it: tuftfield sets mesh.castShadow = false at build,
+          // and this line ran afterwards and turned it straight back on, so the
+          // grass has been casting shadow on every page against its own
+          // builder's stated intent. It is a field of camera-facing cards, and
+          // the shadow pass does not run the billboard shader, so what the map
+          // received was a grid of identical parallel quads — see grassshade.js
+          // for what replaced it.
+          o.castShadow = state.shadows && o.name !== 'ground'
+            && !o.userData.noShadow && !o.userData.noCastShadow;
           o.receiveShadow = state.shadows && !o.userData.noShadow;
           // Some materials must survive this swap untouched — `keepMaterial`.
           //
@@ -397,6 +408,17 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
       if (scene.fog) scene.fog.density = scene.userData._fog0 * state.fogMul;
 
       const field = scene.getObjectByName('grassfield');
+      // THE TONE, LIVE. Draggable rather than a re-enter knob because the
+      // meadow's colour is the material's alone now (tuftfield.js), so there is
+      // nothing per-instance to rebuild. Written to whatever material is on the
+      // mesh at this moment — the toon swap above has already run, and writing
+      // to the authored material instead would land on an object that is not
+      // being drawn, which is exactly how case 4's ink spent its life invisible.
+      if (field && field.material) {
+        const tone = wash(state.grassTone);
+        field.material.color.set(tone);
+        if (field.material.emissive) field.material.emissive.set(tone);
+      }
       if (field && field.userData.uniforms) {
         const u = field.userData.uniforms;
         // A case that pinned its own weather (composeWorld's grassWind /
@@ -456,7 +478,6 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     setGrassPatchiness(state.grassPatch);
     setGrassReach(state.grassReach);
     setGrassTaper(state.grassTaper);
-    setGrassStyle(state.grassTufts ? 'tufts' : 'blades');
     onLens && onLens(state.lens);
     onFreeCam && onFreeCam(state.freeCam);
     // After the traverse, not inside it: the guides are built FROM the finished

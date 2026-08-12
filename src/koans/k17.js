@@ -20,7 +20,12 @@ const ID = 17;
 // courtyard goes back to how it was so you can do the whole thing over.
 
 const ANSWER_DELAY = 0.55;      // he is across a courtyard, not beside you
-const BOW = 0.16;               // radians of lean
+// Radians of lean. 0.16 is nine degrees — a nod, and at this staging distance
+// not a visible one (Frank: "could we increase how much they bow? It's still
+// not quite enough"). 0.42 is twenty-four degrees, which is a bow you can see
+// two figures exchange from across a yard and still well short of the folding
+// bow k32's philosopher makes at 0.62.
+const BOW = 0.42;
 const BOW_IN = 1.1, BOW_HOLD = 1.9, BOW_OUT = 1.2;
 
 // wrapPi/bearing are the kit's now (faceMonk's convention, which chu's
@@ -67,7 +72,8 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   // courtyard that wanted to be red (it is two people and a call), so the
   // teacher on the platform takes the accent; deepened, since a whole figure
   // at full accent glares (Frank's call).
-  const chu = makeMonk({ height: 1.6, pose: 'sit', elder: true, color: ACCENT_DEEP });
+  const chu = makeMonk({ height: 1.6, pose: 'sit', elder: true, color: ACCENT_DEEP, bow: true });
+  const chuWaist = chu.getObjectByName('waist');
   const CHU_POS = new THREE.Vector3(-1.9, 0.34, -2.7);
   const OSHIN_POS = new THREE.Vector3(3.1, 0, 1.6);
   chu.position.copy(CHU_POS);
@@ -231,7 +237,14 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   // before the aimMonk audit. Bodies front +z, so a z-roll listed him
   // sideways while his teacher bowed back correctly on x.
   oshinWaist.rotation.x = BOW * lean;
-  chu.rotation.x = BOW * 0.7 * lean;          // seated front is +z: pitch, inside the yaw
+  // AND HE BENDS AT THE WAIST TOO. This was `chu.rotation.x`, which pitches
+  // the whole seated figure about its own origin down at deck level — so his
+  // knees and the staff lying beside him swung under the boards. Invisible at
+  // the old nine-degree bow, plain at twenty-four (Frank: "his legs and stuff
+  // go slightly under the ground, and his walking stick next to him goes under
+  // the ground"). makeFigure hinges seated bodies now, so this is the same
+  // gesture his student makes, from the same joint.
+  if (chuWaist) chuWaist.rotation.x = BOW * 0.7 * lean;
   if (done) { bowAt = -99; calls = 0; answered = 0; }
   },
   fragment() {

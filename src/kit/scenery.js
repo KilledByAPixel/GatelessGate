@@ -2,17 +2,16 @@ import { makeGround, groundHeight } from './ground.js';
 import { makeMountains, mountainFootprints } from './mountains.js';
 import { makeForest } from './forest.js';
 import { makeRocks, makeBushes, makeBoulder } from './scatter.js';
-import { makeGrassField, grassReach, grassArea, GRASS_BASE_AREA } from './grassfield.js';
+import { grassReach, grassArea, GRASS_BASE_AREA } from './grassfield.js';
 import { makeTuftField } from './tuftfield.js';
+import { makeGrassShade } from './grassshade.js';
 
-// Which grass renderer composeWorld builds. Both share grassPlacements and the
-// same wind uniforms; they differ only in what a grass plant IS — a geometric
-// blade, or a camera-facing card carrying a whole baked tuft. Tufts are the
-// default (Frank's idea: several times the apparent grass for a third of the
-// instances at two triangles each); blades stay as the fallback, one toggle
-// away in the debug panel.
-let grassStyle = 'tufts';
-export function setGrassStyle(v) { grassStyle = v === 'blades' ? 'blades' : 'tufts'; }
+// THERE IS ONE GRASS RENDERER. There were two — makeGrassField's geometric
+// blades and makeTuftField's camera-facing cards — chosen between here off a
+// `grassStyle` flag driven by a workbench switch that shipped defaulting to
+// tufts and never moved. The blades were dev-only for their whole life, so
+// every retune of the meadow had two places to land and one of them did not
+// matter. They were cut; the cards are the grass.
 import { makeTree } from './tree.js';
 import { makePine } from './pine.js';
 import { makeOak } from './oak.js';
@@ -245,6 +244,12 @@ export function composeWorld(scene, {
   // case can still pin its own and be immune to the sliders.
   grassRadius = null,
   grassTaper = null,
+  // THE DARK UNDER THE GRASS: true for the tuned default, a 0..1 number to set
+  // how deep it goes, false to switch it off for a page that wants clean ground
+  // (a snowfield, a swept apron). See grassshade.js — it is occlusion baked into
+  // the ground's colour, not a shadow, because a field of camera-facing cards
+  // cannot cast one that holds still.
+  grassShade = true,
   // HOW WINDY THIS CASE IS, for the grass alone. Each one is THE SAME NUMBER
   // ITS WORKBENCH SLIDER SHOWS — find a value by dragging, type that value
   // here. Not multipliers: a multiplier means the case reads differently
@@ -285,11 +290,12 @@ export function composeWorld(scene, {
   keepout = keepout.map(asCircle);
   if (grassKeepout) grassKeepout = grassKeepout.map(asCircle);
 
-  scene.add(makeGround({
+  const ground = makeGround({
     seed: groundSeed,
     ...(groundColor ? { color: groundColor } : {}),
     ...(shore ? { shore } : {}),
-  }));
+  });
+  scene.add(ground);
   // The mountains' base circles, computed ONCE from the same seeds the
   // meshes use: forests and scatter trees refuse to stand inside them
   // (Frank: "trees that are inside the mountain"). 0.85·r is where a
@@ -387,15 +393,13 @@ export function composeWorld(scene, {
   const radius = grassRadius === null ? reach : grassRadius;
   const rimTaper = grassTaper === null ? taper : grassTaper;
   const budget = grass * grassArea(radius, rimTaper) / GRASS_BASE_AREA;
-  const field = grassStyle === 'tufts'
-    ? makeTuftField({
-      count: Math.round(budget / 1.5), radius, taper: rimTaper, seed: seed * 81, groundSeed,
-      keepout: grassKeepout || keepout, groundFn,
-    })
-    : makeGrassField({
-      count: Math.round(budget), radius, taper: rimTaper, seed: seed * 81, groundSeed,
-      keepout: grassKeepout || keepout, groundFn,
-    });
+  // /1.5: a card carries a whole tuft, so it takes fewer of them to cover the
+  // same ground than it took blades — the budget above is still expressed in
+  // blade-equivalents so a case's grass count means what it always meant.
+  const field = makeTuftField({
+    count: Math.round(budget / 1.5), radius, taper: rimTaper, seed: seed * 81, groundSeed,
+    keepout: grassKeepout || keepout, groundFn,
+  });
 
   // The case's weather, applied here and left on the field for the workbench to
   // find. Applied as well as recorded: the field is right from its first frame,
@@ -409,10 +413,28 @@ export function composeWorld(scene, {
   if (grassGustSpeed !== null) gu.uniforms.uGustSpeed.value = grassGustSpeed;
   scene.add(field.mesh);
 
+  // THE DARK UNDER THE GRASS. Not a cast shadow — the meadow is billboards and
+  // cannot throw a sensible one (see grassshade.js) — but the ground genuinely
+  // is darker where the grass is thick, and that is the part that reads. Baked
+  // once here from the field's own placements and multiplied into the ground's
+  // colour through `map`, so it costs nothing per frame and cannot swim as the
+  // camera moves. plainMaterial() carries `map` across the workbench's toon
+  // swap, so this survives into the shipped look.
+  if (grassShade && field.spots.length) {
+    ground.material.map = makeGrassShade({
+      // the ground's OWN width, off the geometry rather than a constant here
+      // that could drift from makeGround's default
+      spots: field.spots, radius, groundSize: ground.geometry.parameters.width,
+      strength: grassShade === true ? undefined : grassShade,
+    });
+    ground.material.needsUpdate = true;
+  }
+
   return {
     trees: sceneTrees,
     mountainFootprints: footprints,
     grass: field,
+    ground,
     update(dt, simTime) { field.update(dt, simTime); },
   };
 }

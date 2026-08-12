@@ -80,13 +80,21 @@ const TAIL_CURL = 0.30;     // extra bend per joint at the peak of a stir
 const TAIL_SWEEP = 0.22;    // and the sideways sweep that goes with it
 const EAR_SWIVEL = 0.85;
 const EAR_SPREAD = 0.22;
-// The stretch itself, which did not exist: the whole barrel lengthens and
-// rises off the haunch and the shoulders roll. This is the part that actually
-// reads at distance — a silhouette changing shape, rather than details moving
-// inside one that does not.
-const STIR_RISE = 0.055;    // world units the body lifts at the peak
-const STIR_STRETCH = 0.075; // and how much longer it gets, as a scale fraction
-const STIR_LEAN = 0.13;     // radians the torso rolls into the stretch
+// THE BODY DOES NOT MOVE. A stretch was tried here — the barrel lengthening
+// 7.5%, lifting 0.055 off the haunch and the torso rolling into it — on the
+// theory that a silhouette changing shape reads further than details moving
+// inside one. It does, and it also comes apart: the barrel is a separate mesh
+// sitting on four legs that do not follow it, so lifting it opens a gap and the
+// cat visibly detaches from its own feet (Frank: "the cat does not look good.
+// The way it pulls its body up away from its legs looks bad... we should keep
+// the body where it is").
+//
+// What moves instead is a head TILT — a cat's actual "what was that" — and the
+// tail, wagging rather than merely curling, which is the one part of this animal
+// long enough to read at any distance whatever it does.
+const HEAD_TILT = 0.34;     // radians the skull cocks over at the peak of a stir
+const TAIL_WAG = 0.30;      // radians of sweep, either way
+const TAIL_WAG_HZ = 1.35;   // and how fast it goes back and forth
 
 export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit' } = {}) {
   const h = height;
@@ -252,8 +260,7 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
   // back to ignoring you.
   const body = torso.getObjectByName('body');
   const skullBaseX = skull.rotation.x;
-  const bodyBaseY = body.position.y;
-  const torsoBaseZ = torso.rotation.z;
+  const skullBaseZ = skull.rotation.z;
   let stirs = 0;
   let stirT = -1;      // -1 idle, else seconds into the stir
   let env = 0;         // 0..1, the shape of it
@@ -265,7 +272,10 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     return true;
   }
 
+  let clock = 0;
+
   function update(dt, simTime) {
+    clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
     if (stirT >= 0) {
       stirT += dt;
       if (stirT >= STIR_DUR) { stirT = -1; env = 0; }
@@ -284,8 +294,17 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
       j.rotation.x = j.userData.baseX
         + env * TAIL_CURL * (0.35 + 0.65 * w)
         + 0.012 * Math.sin(simTime * 0.50 - i * 0.7);
+      // THE WAG. The sweep used to be a one-way lean that rose and fell with
+      // the envelope — the tail leaned aside and came back once, which is not
+      // what a tail does. It oscillates now, at TAIL_WAG_HZ, with the envelope
+      // as its amplitude: it starts still, wags while the cat is stirred, and
+      // is still again at the end. The travelling phase offset down the joints
+      // (-i * 0.55) makes the wag run OUT along the tail instead of the whole
+      // thing swinging as one rigid rod.
       j.rotation.z = j.userData.baseZ
         + env * TAIL_SWEEP * (0.2 + 0.8 * w)
+        + env * TAIL_WAG * (0.25 + 0.75 * w)
+          * Math.sin(2 * Math.PI * TAIL_WAG_HZ * clock - i * 0.55)
         + 0.020 * Math.sin(simTime * 0.55 - i * 0.6);
     }
 
@@ -297,16 +316,11 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
         + EAR_SPREAD * env * k * Math.sign(ear.userData.baseZ || 1);
     }
 
-    // THE STRETCH. The barrel lengthens along its own axis and lifts, and the
-    // torso rolls a little into it — the shape change that makes a stir read
-    // from across a meadow. Composed with the breathing above rather than
-    // overwriting it: br is the resting scale, this rides on top.
-    body.scale.z = br * (1 + STIR_STRETCH * env);
-    body.position.y = bodyBaseY + STIR_RISE * env;
-    torso.rotation.z = torsoBaseZ + STIR_LEAN * env;
-
+    // The head comes round AND cocks over. The turn was always here; the tilt
+    // is what makes it read as a cat rather than as a head on a stick.
     skull.rotation.x = skullBaseX - 0.22 * env;
     skull.rotation.y = 0.46 * env;
+    skull.rotation.z = skullBaseZ + HEAD_TILT * env;
   }
 
   function meshes() {

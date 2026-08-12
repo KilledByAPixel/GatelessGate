@@ -468,9 +468,27 @@ export function makeFigure({
   // local +z, so a positive angle carries the chest forward), which means the
   // bow can ANIMATE — case 32's happens slowly, after twenty seconds of not
   // being touched. Costs one extra mesh, and only for figures that ask.
+  // SEATED FIGURES HINGE TOO, and for a while they did not — this block was
+  // guarded `&& !seated`, so a case that wanted a seated man to bow had no
+  // choice but to rotate the whole figure about its feet. Case 17's Chu did
+  // exactly that, and once his bow was deepened from nine degrees to
+  // twenty-four it became obvious what "rotate a seated man about the ground"
+  // means: his knees and the staff lying beside him swung underneath the
+  // terrain (Frank: "his legs and stuff go slightly under the ground, and his
+  // walking stick next to him goes under the ground — we need to just bend him
+  // at the waist").
+  //
+  // The sash sits in a different place on the two profiles, so the split does
+  // too: STAND_PROFILE's obi is at 0.452 of height, SIT_PROFILE's at 0.220 —
+  // read off the tables above rather than shared, because a seated man is
+  // folded and his waist is much nearer the ground. Everything below the split
+  // (the lap shelf, the cushion, the knees) stays where it is; the staff is
+  // added further down this function and so never joins the hinge at all,
+  // which is right for both stances — held in the hand it rides the arm, stood
+  // on the ground it stays stood on the ground.
   let waist = null;
-  if (bow !== false && bow !== 0 && !seated) {
-    const waistY = 0.452;                     // fraction of height: just under the obi
+  if (bow !== false && bow !== 0) {
+    const waistY = seated ? 0.220 : 0.452;    // fraction of height: at the obi
     const rows = st.profile;
     // the first ring at or above the sash — the two halves share it
     let k = rows.findIndex(([, y]) => y >= waistY);

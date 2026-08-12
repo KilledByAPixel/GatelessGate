@@ -128,7 +128,11 @@ export default {
     // — which is what he actually did: the bell had not rung, the drum had not
     // sounded, and he went back to his room. He settles again afterwards,
     // because the case is not resolved by his going and he will be back.
-    const BOWL_TURN = 1.15;      // radians away from Seppo, at the peak
+    // Radians off Seppo, at the peak. NEGATIVE: turning the other way swung him
+    // to show the reader his back, and the whole point of the beat is watching
+    // him decide to go (Frank: "let's make him turn in the opposite direction,
+    // so he's turning towards the viewer").
+    const BOWL_TURN = -Math.PI / 2;   // a square quarter-turn: he shows the reader his side
     const TURN_OUT = 0.55, TURN_HOLD = 0.9, TURN_BACK = 1.9;
     const TURN_SPAN = TURN_OUT + TURN_HOLD + TURN_BACK;
     const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));

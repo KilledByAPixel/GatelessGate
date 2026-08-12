@@ -285,7 +285,16 @@ export function makeTuftField({
   mesh.name = 'grassfield';          // the debug panel's toggles, wind sliders and
   mesh.userData.noOutline = true;    // material-swap exemption all key off this name
   mesh.userData.uniforms = uniforms;
+  // NO CAST, BUT STILL RECEIVE. `castShadow = false` alone did not hold: the
+  // workbench's apply() re-asserts castShadow on every mesh on every page build,
+  // so this line was overwritten before a frame was drawn and the meadow threw
+  // shadow everywhere. noCastShadow is the flag that survives it. Receiving
+  // stays on — a tree's shadow lying across the grass is right, and it is only
+  // the grass's OWN cast that is meaningless here (the cards face the camera,
+  // and the shadow pass does not run the billboard shader, so the map only ever
+  // saw a grid of parallel quads).
   mesh.castShadow = false;
+  mesh.userData.noCastShadow = true;
   mesh.receiveShadow = true;
 
   const m = new THREE.Matrix4();
@@ -304,7 +313,27 @@ export function makeTuftField({
     sc3.set(width * p.wide * s, height * p.tall * s, 1);
     m.compose(v, IDENTITY_Q, sc3);
     mesh.setMatrixAt(n, m);
+    // THE TONE IS THE MATERIAL'S; THE INSTANCE CARRIES ONLY THE VARIATION.
+    // This used to be `col.copy(base).offsetHSL(...)` — the full colour, base
+    // and all — while mat.color ALSO held the base, and three.js multiplies the
+    // two. So the meadow rendered at the tone SQUARED: GRASS_TONE said wash
+    // (0.40) and the grass came out around wash(0.69), darker than INK_LIT,
+    // which is the floor the style guide sets for anything lit. Nothing failed;
+    // the constant simply did not mean what it said, and every attempt to
+    // retune it moved the result about twice as far as expected.
+    //
+    // Dividing the varied colour BY the base leaves a multiplier hovering
+    // around 1 — the same blade-to-blade drift as before, to the bit — and lets
+    // mat.color be the tone on its own. Done this way rather than by offsetting
+    // white, because offsetHSL's lightness clamps at 1: a tint of +0.08 on
+    // white is silently dropped and the drift would come out one-sided and
+    // dark.
     col.copy(base).offsetHSL(p.tint[0], p.tint[1], p.tint[2]);
+    col.setRGB(
+      base.r > 1e-4 ? col.r / base.r : 1,
+      base.g > 1e-4 ? col.g / base.g : 1,
+      base.b > 1e-4 ? col.b / base.b : 1,
+    );
     mesh.setColorAt(n, col);
     n++;
   }
@@ -315,6 +344,19 @@ export function makeTuftField({
 
   return {
     mesh,
+    // The meadow's tone, live. mat.color IS the tone now (see the instance
+    // colours above), so this lands on the next frame without rebuilding the
+    // field — which is what makes it draggable in the workbench. The emissive
+    // floor tracks it, or a lighter meadow keeps a dark mass's lift and reads
+    // flat.
+    setTone(hex) {
+      mesh.material.color.set(hex);
+      if (mesh.material.emissive) mesh.material.emissive.set(hex);
+    },
+    // The placements themselves. grassshade.js bakes the ground's occlusion
+    // from these — the SAME array the instance matrices were written from, so
+    // the dark can never end up somewhere the grass is not.
+    spots,
     get tufts() { return mesh.count; },
     get blades() { return mesh.count; },   // API parity with the blade field
     setWind(w) { uniforms.uWind.value = w; },
@@ -330,7 +372,11 @@ export function makeTuftField({
     },
     update(dt, simTime) {
       uniforms.uTime.value = simTime;
-      // same spring + uniform writes as grassfield.js — see the note there
+      // The pointer's breeze: one spring integration + uniform writes, no
+      // per-instance CPU work and no allocation. The smoothed drag vector drives
+      // the spring; the uniforms read its state — bend with the stroke, swing
+      // back past rest on release, settle exactly. (This note used to point at
+      // makeGrassField's copy of it; that field was cut, so it lives here now.)
       const b = breezeState();
       pokeSpringStep(poke, b.strength * b.dirX, b.strength * b.dirZ, dt);
       const amt = Math.hypot(poke.px, poke.pz);

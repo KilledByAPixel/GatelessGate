@@ -4,7 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import { makeGround, groundHeight } from '../src/kit/ground.js';
 import { makeMountains } from '../src/kit/mountains.js';
 import { makeForest } from '../src/kit/forest.js';
-import { composeWorld, setGrassStyle } from '../src/kit/scenery.js';
+import { composeWorld } from '../src/kit/scenery.js';
 
 test('ground rolls in the distance but stays flat at center', () => {
   const g = makeGround({ seed: 21 });
@@ -76,9 +76,8 @@ test('composeWorld hands the case ground function through to its grass', () => {
   };
   const m = new THREE.Matrix4(), p = new THREE.Vector3();
   const q = new THREE.Quaternion(), s = new THREE.Vector3();
-  try {
-    for (const style of ['tufts', 'blades']) {
-      setGrassStyle(style);
+  {
+    const style = 'tufts';   // the only renderer — the blade field was cut
       const lifted = grassOf({ groundFn: fn });
       assert.ok(lifted && lifted.count > 100, `${style}: field built (${lifted && lifted.count})`);
       for (let i = 0; i < lifted.count; i++) {
@@ -96,9 +95,6 @@ test('composeWorld hands the case ground function through to its grass', () => {
         assert.ok(Math.abs(p.y - want) < 1e-5,
           `${style} instance ${i} stays on the terrain: y ${p.y} vs ${want}`);
       }
-    }
-  } finally {
-    setGrassStyle('tufts');   // the shipped default — leave the module as found
   }
 });
 
@@ -115,9 +111,8 @@ test('composeWorld gives each case its own grass weather, in the sliders\' own u
     composeWorld(scene, { seed: 3, grass: 800, trees: 0, rocks: 0, bushes: 0, ...opts });
     return scene.children.find((c) => c.name === 'grassfield');
   };
-  try {
-    for (const style of ['tufts', 'blades']) {
-      setGrassStyle(style);
+  {
+    const style = 'tufts';   // the only renderer — the blade field was cut
       // no weather asked for: the field keeps the builder's own values and says
       // so, which is the panel's cue to leave its sliders alone
       const plain = fieldFor({});
@@ -140,9 +135,6 @@ test('composeWorld gives each case its own grass weather, in the sliders\' own u
       // 0 is a real request (a dead-still scene), not "unset"
       assert.notEqual(fieldFor({ grassWind: 0 }).userData.caseWind, null, `${style}: 0 pins, not falls through`);
       assert.notEqual(fieldFor({ grassGustSpeed: 0 }).userData.caseGustSpeed, null, `${style}: drift 0 pins too`);
-    }
-  } finally {
-    setGrassStyle('tufts');   // the shipped default — leave the module as found
   }
 });
 
