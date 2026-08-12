@@ -1,7 +1,7 @@
 import { makeGround, groundHeight } from './ground.js';
 import { makeMountains, mountainFootprints } from './mountains.js';
 import { makeForest } from './forest.js';
-import { makeRocks, makeBushes } from './scatter.js';
+import { makeRocks, makeBushes, makeBoulder } from './scatter.js';
 import { makeGrassField, grassReach, grassArea, GRASS_BASE_AREA } from './grassfield.js';
 import { makeTuftField } from './tuftfield.js';
 
@@ -79,6 +79,33 @@ export function plantTree(scene, {
   t.rotation.y = rotation === null ? hash1(key, 7717) * TAU : rotation;
   if (scene) scene.add(t);
   return t;
+}
+
+// ONE BOULDER, WHERE YOU SAY — plantTree's sibling, for rock. Same contract:
+// only x and z required, y sampled from the same surface the scatter uses
+// (hand-placed y = 0 floats or sinks past the flat nine units), rotation and
+// shape seeded from the position unless pinned, and DELIBERATELY NO KEEPOUT
+// WORK — this is the override, so the case adds { at: <the rock>, r } itself.
+// Call it before the case's addOutlines or it ships without ink.
+// `size` is a plain scale on the ~1-unit lump cluster: 1.5–2.2 is "boulder",
+// chest-high to head-high beside a 1.6-unit figure.
+export function plantRock(scene, {
+  x = 0, z = 0,
+  size = 1.0,
+  seed = null,
+  rotation = null,
+  groundSeed = 21,
+  groundFn = null,
+  sink = 0.12,           // the scatter's own, scaled with the rock like its instances
+  color,
+} = {}) {
+  const key = seed === null ? (Math.round(x * 1000) * 31 + Math.round(z * 1000) * 131) | 0 : seed;
+  const rock = makeBoulder({ size, seed: key, ...(color === undefined ? {} : { color }) });
+  const y = (groundFn ? groundFn(x, z) : groundHeight(x, z, { seed: groundSeed })) - sink * size;
+  rock.position.set(x, y, z);
+  rock.rotation.y = rotation === null ? hash1(key, 7717) * TAU : rotation;
+  if (scene) scene.add(rock);
+  return rock;
 }
 
 // A keepout circle, written the way a case actually thinks about it: "keep the

@@ -114,6 +114,19 @@ export function makeBushes({ count = 9, seed = 61, groundSeed = 21, keepout = []
   return mesh;
 }
 
+// ONE rock, hand-sized: the same lump-cluster geometry the instanced scatter
+// draws, built as a single mesh so a case can stage a boulder on purpose.
+// The scatter's rocks skip outlines (userData.noOutline in instanced()) —
+// they are ground noise at pebble scale. A boulder is a prop, so this one
+// does NOT set the flag: it takes the ink pass like any staged thing.
+export function makeBoulder({ size = 1.0, seed = 1, color = WASH.stone } = {}) {
+  const mesh = new THREE.Mesh(rockGeometry(seed), toonMaterial({ color, flat: true }));
+  mesh.name = 'boulder';
+  // the scatter's own seeded y-squash, so no two boulders share a silhouette
+  mesh.scale.set(size, size * (0.8 + 0.4 * hash1(seed * 7 + 5, 9)), size);
+  return mesh;
+}
+
 // (makeGrass — the old clump-scatter tufts — lived here until the cleanup
 // pass found nothing using it: the meadow is makeTuftField's job now, with
 // makeGrassField as the blade fallback, and only this file's own test kept

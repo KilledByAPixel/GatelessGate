@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { composeWorld, plantTree } from '../src/kit/scenery.js';
+import { composeWorld, plantTree, plantRock } from '../src/kit/scenery.js';
 import { groundHeight } from '../src/kit/ground.js';
 import { layoutGuides, makeLayoutOverlay } from '../src/dev/overlay.js';
 
@@ -71,6 +71,50 @@ test('plantTree honours a case that owns its own ground', () => {
   const tall = plantTree(null, { x: 0, z: 0, kind: 'pine', height: 6.0 });
   const top = (m) => new THREE.Box3().setFromObject(m).max.y;
   assert.ok(top(tall) > top(short) + 3, `height reaches the builder: ${top(short)} vs ${top(tall)}`);
+});
+
+// ---- plantRock --------------------------------------------------------------
+
+test('plantRock stands a boulder on the terrain at the spot you name', () => {
+  const scene = new THREE.Scene();
+  // off the nine-unit flat middle, same reasoning as the plantTree test above
+  const b = plantRock(scene, { x: 13.5, z: -10.75, size: 1.8 });
+  assert.equal(b.name, 'boulder');
+  assert.equal(b.position.x, 13.5);
+  assert.equal(b.position.z, -10.75);
+  const want = groundHeight(13.5, -10.75, { seed: 21 }) - 0.12 * 1.8;
+  assert.ok(Math.abs(b.position.y - want) < 1e-9, `planted at ${b.position.y}, terrain is ${want}`);
+  assert.notEqual(want, -0.12 * 1.8, 'this spot must actually be off the flat, or the test proves nothing');
+  assert.ok(scene.children.includes(b), 'it joins the scene it was given');
+  // a boulder, not a pebble: size reaches the mesh
+  assert.ok(b.scale.x === 1.8 && b.scale.z === 1.8, 'size scales the footprint');
+  assert.ok(b.scale.y > 1.8 * 0.7 && b.scale.y < 1.8 * 1.3, 'with a seeded squash near it');
+});
+
+test('plantRock is seeded by where it stands, like plantTree', () => {
+  const a = plantRock(null, { x: 3, z: 4 });
+  const b = plantRock(null, { x: 3, z: 4 });
+  const elsewhere = plantRock(null, { x: 3.4, z: 4 });
+  assert.equal(a.rotation.y, b.rotation.y, 'same spot, same rock, every build');
+  assert.deepEqual(
+    Array.from(a.geometry.attributes.position.array),
+    Array.from(b.geometry.attributes.position.array), 'geometry too');
+  assert.notEqual(a.rotation.y, elsewhere.rotation.y, 'a different spot is a different rock');
+  // and both halves can be pinned
+  assert.equal(plantRock(null, { x: 3, z: 4, rotation: 1.2 }).rotation.y, 1.2);
+  const s1 = plantRock(null, { x: 0, z: 0, seed: 77 }).rotation.y;
+  const s2 = plantRock(null, { x: 9, z: -9, seed: 77 }).rotation.y;
+  assert.equal(s1, s2, 'a named seed outranks the position');
+});
+
+test('plantRock takes ink: no noOutline flag, unlike the scatter it borrows from', () => {
+  // the instanced scatter skips outlines at its size; a boulder is a staged
+  // prop and gets the hull like any other prop
+  const b = plantRock(null, { x: 1, z: 1 });
+  assert.ok(!b.userData.noOutline, 'a boulder is outlined');
+  const groundFn = () => 2.5;
+  assert.ok(Math.abs(plantRock(null, { x: 6, z: 6, groundFn }).position.y - (2.5 - 0.12)) < 1e-9,
+    'a case that owns its ground is honoured');
 });
 
 // ---- what composeWorld leaves behind ----------------------------------------
