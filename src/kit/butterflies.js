@@ -138,6 +138,8 @@ export function makeButterflies({
       // the share of the round spent perched — zero when landing is off,
       // which liftAt reads as "always airborne"
       down: land ? 0.24 + h(10) * 0.16 : 0,
+      scared: -99,          // sim time it was last startled — see startleAt
+      dartA: h(11) * Math.PI * 2,   // the direction it breaks in
     });
   }
 
@@ -157,8 +159,48 @@ export function makeButterflies({
   // the take-off, so a butterfly settles into the grass rather than dropping
   // into it. Pure in t, like everything else here.
   const EASE = 0.13;                 // share of the round spent going down / up
+
+  // A SCARE PUTS A PERCHED ONE UP, and until this existed it could not. flit()
+  // only ever raised the flock by `E * 0.5 * lift` — multiplied by the very
+  // term that is ZERO while a butterfly is sitting in the grass, so the ones a
+  // reader would most expect to startle were the only ones that could not move
+  // at all (Frank: "make the butterflies a little more reactive when you click
+  // on them, especially if they're in their relaxed, sitting on the ground
+  // state — let's make sure they fly up off the ground").
+  //
+  // `startle` is a per-butterfly envelope, 1 at the scare and easing to 0, that
+  // liftAt takes the MAX against: whatever the round says, a scared butterfly
+  // is airborne. It rides on top of the schedule rather than rewriting it, so
+  // the round is still a pure function of t and nothing jumps — the perch it
+  // was on resumes underneath and it settles back into it.
+  const STARTLE = 1.9;               // seconds of forced flight after a scare
+  const STARTLE_DART = 0.42;         // and how far it breaks from the spot, out and back
+  // IT BEATS ITS WAY UP; it does not appear up there. Written as `1 - smooth(u)`
+  // this is 1 on the very frame of the scare, and lift is what interpolates a
+  // butterfly between the grass and its flying height — so the whole envelope
+  // applied at once and it teleported two units into the air (measured: a
+  // perched one jumped from y=0.32 to y=2.48 between two frames). The rise is
+  // its own fast ramp now, quick enough to read as alarm and slow enough to be
+  // a take-off.
+  const STARTLE_UP = 0.28;           // seconds to get off the ground
+  function startleAt(b, t) {
+    const u = (t - b.scared) / STARTLE;
+    if (!(u >= 0) || u >= 1) return 0;
+    return Math.min(smooth((t - b.scared) / STARTLE_UP), 1 - smooth(u));
+  }
+  // out and back: 0 at the scare, 1 halfway through, 0 again as it settles, so
+  // a startled butterfly leaves its blade of grass and returns to it
+  function dartAt(b, t) {
+    const u = (t - b.scared) / STARTLE;
+    return (u >= 0 && u < 1) ? Math.sin(Math.PI * u) : 0;
+  }
+
   function liftAt(b, t) {
+    const scared = startleAt(b, t);
     if (!b.down) return 1;           // land:false — always airborne, no ease dip
+    return Math.max(scared, scheduledLift(b, t));
+  }
+  function scheduledLift(b, t) {
     const u = (t / b.cyc + b.cycPh) % 1;
     const downStart = 0.5;           // it flies the first half of its round
     const downEnd = downStart + b.down;
@@ -208,6 +250,18 @@ export function makeButterflies({
     const air = g + yLo + (yHi - yLo) * u;
     const sat = g + perch;
     out.y = sat + (air - sat) * liftAt(b, t);
+    // THE BREAK. A startled butterfly does not just rise on the spot: it darts
+    // clear and comes back. pathTime still counts it as perched — its wander is
+    // stopped, which is what keeps a landed one from sliding — so without this
+    // a scared one would go straight up like a lift and straight back down.
+    // Out and back along its own seeded bearing, exactly zero at both ends, so
+    // it returns to the blade of grass it left and nothing accumulates over
+    // repeated scares.
+    const dart = dartAt(b, t) * STARTLE_DART;
+    if (dart > 0) {
+      out.x += Math.cos(b.dartA) * dart;
+      out.z += Math.sin(b.dartA) * dart;
+    }
     return out;
   }
 
@@ -258,6 +312,8 @@ export function makeButterflies({
     flit() {
       bursts.push(clock);
       if (bursts.length > 6) bursts.shift();
+      // and every one of them is put up, perched or not
+      for (const b of flock) b.scared = clock;
       pose();
     },
     energy() { return energy(); },

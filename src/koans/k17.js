@@ -202,11 +202,20 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   if (answered >= 3) bowAt = clock;
   }
   
-  // he comes round a third of the way at each call, and all the way home
-  // again once the bowing is done
+  // He comes round a third of the way at each call, and all the way home
+  // again once the bowing is done.
+  //
+  // ON THE CALL, NOT ON THE ANSWER. This used to advance on `answered`, so
+  // nothing moved until ANSWER_DELAY had elapsed and the reply had sounded —
+  // a tap, a wait, and only then a turn. Frank: "I click on them, and it's a
+  // bit too much of a delay, because he's waiting for the sound. But really,
+  // as a user, I wanna see him turn as soon as I click on the guy, not after
+  // the sound happens." The turn is the acknowledgement and it belongs to the
+  // tap; the answer still lands a beat later, on its own clock, and the bow
+  // still waits for the third of them to actually arrive.
   const bowU = bowAt > -99 ? (clock - bowAt) : -1;
   const done = bowU > BOW_IN + BOW_HOLD + BOW_OUT;
-  const want = done ? AWAY : AWAY + wrapPi(TOWARD - AWAY) * Math.min(1, answered / 3);
+  const want = done ? AWAY : AWAY + wrapPi(TOWARD - AWAY) * Math.min(1, calls / 3);
   oshin.rotation.y += wrapPi(want - oshin.rotation.y) * (1 - Math.exp(-3.0 * step));
   
   // and then they bow to each other, which settles nothing

@@ -10,7 +10,28 @@ import { addOutlines } from '../render/outlines.js';
 
 const ID = 19;
 const BASE_WIND = 0.20;
-const GLOW_DUR = 5.2;     // seconds for the whole shift of light
+// THE MOON GOES OUT. It used to brighten a few percent and swell a few percent
+// more — makeMoon's setGlow, deliberately tiny so a moon never blinks — which
+// on a page whose whole subject is the light was a change nobody could name
+// (Frank: "clicking on the moon maybe does something. Maybe it disappears the
+// moon, or changes it, or does something"). So it is the other direction, and
+// it is not small: the disc fades out of the sky altogether, the meadow goes
+// dim under it, and after a couple of seconds of a moonless evening both come
+// back. Nothing is lost and nothing is won; you took the moon away and gave it
+// back, which is the whole of what this page is for.
+const DARK_OUT = 1.5;     // seconds for the moon to go
+const DARK_HELD = 2.0;    // an evening with no moon in it
+const DARK_BACK = 2.6;    // and coming back, slower than it left
+const DARK_SPAN = DARK_OUT + DARK_HELD + DARK_BACK;
+const DIM = 0.55;         // how far the scene's own lights fall with it
+const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+// 0 = the moon is up, 1 = it is gone
+function darkShape(u) {
+  if (!(u >= 0) || u >= DARK_SPAN) return 0;
+  if (u < DARK_OUT) return smooth(u / DARK_OUT);
+  if (u < DARK_OUT + DARK_HELD) return 1;
+  return 1 - smooth((u - DARK_OUT - DARK_HELD) / DARK_BACK);
+}
 const BREEZE_TAU = 1.7;   // how long a crossing breath stays in the sound
 
 // Every other case in this book has a thing at its centre — a dog, a flower, a
@@ -188,31 +209,48 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   addOutlines(scene, { width: 0.033, wobble: 0.7 });
   
   // ---- the moment: the weather ------------------------------------------
-  // Touch the meadow and a breath crosses it — in the sound, and in the
-  // blooms, which lean away from where you touched and come back. Touch the
-  // moon and the light shifts, and the same breath crosses from up there.
+  // Touch the meadow and a breath crosses it — in the sound, and in the wind
+  // the blooms and the grass are already leaning to. Touch the moon and the
+  // light shifts, and the same breath crosses from up there.
   //
   // Neither is a puzzle and neither is a goal. It is an evening walk; the only
   // thing to find is that the place answers when you touch it.
+  //
+  // NO GUST FRONT. Both taps used to call flowers.gustAt(), which sends a ring
+  // travelling outward and adds its envelope straight onto each bloom's lean.
+  // Stacked on the wind and the nod already in that sum, it drove the bend past
+  // anything a stem does — the blooms folded flat and read as being pulled
+  // under (Frank: "the flowers kinda get sucked into the ground... it doesn't
+  // look good at all. We should get rid of that"). The breath is now carried by
+  // the wind level alone, which the blooms and the grass answer together
+  // through the weather they already share.
   let camera = null;
-  let glowPhase = -1;
+  let clock = 0;
+  let darkAt = -99;
   let breeze = 0;
   let touches = 0;
   const ground = scene.getObjectByName('ground');
   const meadow = ground ? [flowers.mesh, ground] : [flowers.mesh];
-  
+
+  // The moon's own material and the scene's lights, captured at their resting
+  // values so the fade is an offset from the page as composed rather than a
+  // second set of numbers that has to be kept in step with it.
+  const moonMat = moon.material;
+  moonMat.transparent = true;
+  const moonOpacity = moonMat.opacity;
+  const lightRigs = [];
+  scene.traverse((o) => { if (o.isLight) lightRigs.push([o, o.intensity]); });
+
   input.onTap(() => {
   if (!camera) return;
   if (input.raycastFirst(camera, [moon])) {
-  if (glowPhase < 0) glowPhase = 0;
-  flowers.gustAt(moon.position.x * 0.10, moon.position.z * 0.10, 0.30);
+  if (clock - darkAt >= DARK_SPAN) darkAt = clock;    // one going-out at a time
   breeze = 1;
   touches++;
   return;
   }
   const hit = input.raycastFirst(camera, meadow);
   if (hit) {
-  flowers.gustAt(hit.point.x, hit.point.z, 0.44);
   breeze = 1;
   touches++;
   }
@@ -222,19 +260,16 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   scene,
   setCamera(c) { camera = c; },
   update(dt, simTime) {
+  clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
   world.update(dt, simTime);           // drives the meadow's wind
   flowers.update(dt, simTime);
-  
-  if (glowPhase >= 0) {
-  glowPhase += dt;
-  const t = glowPhase / GLOW_DUR;
-  if (t >= 1) { glowPhase = -1; moon.setGlow(0); }
-  else {
-  const e = t < 0.24 ? t / 0.24 : 1 - (t - 0.24) / 0.76;
-  moon.setGlow(e * e * (3 - 2 * e));
-  }
-  }
-  
+
+  // the moon going out, and the evening going with it
+  const dark = darkShape(clock - darkAt);
+  moonMat.opacity = moonOpacity * (1 - dark);
+  moon.visible = dark < 0.999;
+  for (const [l, base] of lightRigs) l.intensity = base * (1 - DIM * dark);
+
   // snap to rest rather than decaying asymptotically forever, so the wind
   // level settles on an exact value instead of creeping
   breeze *= Math.exp(-dt / BREEZE_TAU);
@@ -243,7 +278,9 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   },
   fragment() {
   return {
-  glow: +moon.glow().toFixed(4),
+  dark: +darkShape(clock - darkAt).toFixed(4),
+  moonUp: moon.visible,
+  moonOpacity: +moonMat.opacity.toFixed(4),
   lean: +flowers.lean().toFixed(4),
   gusts: flowers.gustCount(),
   blooms: flowers.blooms,

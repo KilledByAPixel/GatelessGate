@@ -11,26 +11,54 @@ const ID = 20;
 // "Why does the enlightened man not stand on his feet and explain himself?"
 // And: "If the feet of enlightenment moved, the great ocean would overflow."
 //
-// So he does not move — and now the great ocean is IN the picture to be
-// moved. He stands on a coast road; behind him the grass runs out into sand,
-// the sand into slow shoreward swells, the swells into paper. Push him and
-// THE WORLD MOVES INSTEAD — road, mountains, beach, and the whole sea lurch
-// and settle while he stays exactly where he is. The verse, staged literally.
+// So he does not move — and the world does. He stands on a coast road; behind
+// him the grass runs out into sand, the sand into slow shoreward swells, the
+// swells into paper. Touch him and A HARD WIND COMES THROUGH: the meadow lays
+// over, the gusts tear across it, the sound rises — and he stands there. The
+// verse, staged.
+//
+// IT USED TO BE A SHOVE, and the shove is the reason this comment is long.
+// Everything the world grammar built went into one group called `moving`, and
+// a tap translated that group a third of a metre and let it oscillate back —
+// "the world gives along the line you pushed from". Two things were wrong with
+// it. The reader could not tell what had happened (Frank: "I don't know what
+// that means, the world it gives along the line you pushed from"), and sliding
+// the group DRAGS THE GRASS THROUGH ITS OWN NOISE FIELD: the blades' wind is
+// computed from world position in the vertex shader, so translating the field
+// re-samples every blade against a gust pattern that did not move with it, and
+// the whole meadow boils (Frank: "it's basically causing the procedural
+// generation of the grass to get all messed up... that's why it looks like
+// it's wind, but it's actually not wind").
+//
+// Which is where the replacement came from — his own read: "that gives me the
+// idea to make it do the wind instead of trying to mess with the world." So
+// the wind is real now, driven through the field's own uWind rather than by
+// moving the field, and `moving` is gone. Nothing in this case translates
+// anything. (Dissolving it also handed composeWorld the actual scene, which is
+// where scene.userData.layout has to land for the workbench's layout guides to
+// find it — they had been silently dead on this case the whole time.)
 //
 // HE IS AN ORDINARY MAN. He was a colossus for a while — nearly three times a
 // man — taken straight from the verse. It did not survive being looked at
 // (Frank: "is the guy really big there? I can't really tell what's going
 // on"); ordinary is also the better reading — a giant who cannot be shoved is
-// physics; an ordinary man who cannot be shoved, while the ocean swings, is
-// the case.
-//
-// Mechanically that is one group: everything the world grammar builds goes
-// into `moving`, and the figure is parented to the scene root beside it.
+// physics; an ordinary man the weather cannot touch is the case.
 
-const SHOVE = 0.34;      // metres the world gives
-const PERIOD = 1.35;
-const OMEGA = (2 * Math.PI) / PERIOD;
-const TAU = 0.9;
+// The gust: straight up, then a long lay-over and a slow release. GUST_MULT is
+// a multiplier on whatever wind the case (or the workbench slider) is already
+// set to, so this rides the scene's own weather instead of replacing it.
+const GUST_MULT = 3.4;
+const GUST_IN = 0.35;    // it arrives all at once — that is what a squall is
+const GUST_HOLD = 1.6;
+const GUST_OUT = 4.5;    // and takes its time leaving
+const GUST_SPAN = GUST_IN + GUST_HOLD + GUST_OUT;
+const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+function gustShape(u) {
+  if (!(u >= 0) || u >= GUST_SPAN) return 0;
+  if (u < GUST_IN) return smooth(u / GUST_IN);
+  if (u < GUST_IN + GUST_HOLD) return 1;
+  return 1 - smooth((u - GUST_IN - GUST_HOLD) / GUST_OUT);
+}
 
 // The coast: sea to the -z, waterline 8 out, a 4-metre beach, the bed
 // settling 1.4 under the surface. ONE object, shared by the ground, the sand
@@ -74,16 +102,11 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
   scene.add(makeLights());
   
-  // EVERYTHING THAT CAN BE MOVED
-  const moving = new THREE.Group();
-  moving.name = 'moving-world';
-  scene.add(moving);
-  
   // a coast road, running parallel with the shoreline — the reader looks
   // across it to the sea, and it dead-ends into nothing (Frank: a road
   // aimed at the water "is going to be a dead end into the ocean")
   const path = makePath({ from: [-25, -.9], to: [15, 3.8], width: 1.8, seed: ID, groundSeed: 21, wander: 2.7 });
-  moving.add(path);
+  scene.add(path);
   
   // THE IMMOVABLE MAN — mid-stride, one sleeve forward, and not going
   // anywhere. A tall, heavy-set elder and nothing more; the book's own
@@ -109,7 +132,7 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   const monk = makeMonk({ height: 1.58 });
   monk.position.set(3.6, 0, 3.4);
   faceMonk(monk, colossus.position);
-  moving.add(monk);
+  scene.add(monk);
 
   // a lantern is the marker
   const MARKER = { x: -0.95, z: 1.0 };
@@ -120,8 +143,9 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   // ---- the coast itself ------------------------------------------------
   // The great ocean: a big sheet whose near edge hides under the sand and
   // whose far edges die in the fog, with one slow swell rolling shoreward.
-  // It sits in `moving` with everything else: push the man, and the sea
-  // itself gives.
+  // The sea has its own swell and is left to it — the wind that comes through
+  // when he is touched is the meadow's and the ear's, not a second set of
+  // waves fighting the one rolling shoreward.
   // THE RED SEA IS THE SEAL. The verse turns on the great ocean — "if the
   // feet of enlightenment moved, the great ocean would overflow" — so the
   // ocean takes the case's accent, not the staff (Frank: "it might even be
@@ -165,13 +189,13 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   ],
   });
   water.group.position.set(0, SHORE.sea, -(SHORE.dist + 43));
-  moving.add(water.group);
+  scene.add(water.group);
   
   // Wet sand, a step darker than the earth: the default pale ribbon was
   // nearly the foam's own white, and the wave-ends vanished against it —
   // the foam only reads if the sand it lands on is darker than it is.
   const sand = makeSand({ shore: SHORE, seed: ID, groundSeed: 21, color: wash(0.30) });
-  moving.add(sand);
+  scene.add(sand);
   
   // THE WAVE-ENDS — the foam that was the point of the ocean from Frank's
   // first sketch. Same period as the water's main swell, staggered per
@@ -187,9 +211,9 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   surfaceAt: (x, z, t) => SHORE.sea + water.heightAt(x, z + (SHORE.dist + 43), t),
   });
   foam.mesh.renderOrder = 1;
-  moving.add(foam.mesh);
+  scene.add(foam.mesh);
   
-  const world = composeWorld(moving, {
+  const world = composeWorld(scene, {
   view: CAM,
   seed: ID,
   groundSeed: 21,
@@ -235,24 +259,30 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   hit.position.set(0.4, H / 2, -0.8);
   scene.add(hit);
   
-  // ---- the moment: push him --------------------------------------------
+  // ---- the moment: the weather comes through, and he stands -------------
+  // The base is read ONCE, here, straight off the field the world grammar just
+  // built — which is the wind the case pinned, or the workbench slider, and by
+  // this point either has already been applied. The gust multiplies it and
+  // hands it back exactly on the way out, so the sliders are only ever taken
+  // over for the few seconds a squall is actually blowing.
+  const grass = world.grass;
+  const BASE_WIND = grass && grass.wind ? grass.wind() : 1;
   let camera = null;
   let clock = 0;
-  let shoves = 0;
-  const pushes = [];         // { t, dx, dz }
-  
+  let gusts = 0;
+  let gustAt = -99;
+  let blowing = false;
+
   input.onTap(() => {
   if (!camera) return;
   if (!input.raycastFirst(camera, [hit])) return;
-  // the world gives along the line you pushed from, which is to say: away
-  // from the camera
-  const dir = new THREE.Vector3(0.4 - camera.position.x, 0, -0.8 - camera.position.z);
-  if (dir.lengthSq() < 1e-6) dir.set(0, 0, 1);
-  dir.normalize();
-  pushes.push({ t: clock, dx: dir.x, dz: dir.z });
-  if (pushes.length > 5) pushes.shift();
-  shoves++;
-  audio && audio.knock({ force: 0.9, at: colossus.position });
+  if (clock - gustAt < GUST_IN + GUST_HOLD) return;   // let a squall land before the next
+  gustAt = clock;
+  gusts++;
+  // the sound of it arriving. Not an impact — nothing here is struck, and a
+  // knock said something had hit him, which is the one thing that never
+  // happens in this case.
+  audio && audio.breath({ force: 0.95, dur: GUST_SPAN * 0.7, at: colossus.position });
   });
   
   return {
@@ -271,25 +301,28 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   const h = water.heightAt(0, 43, clock);   // the guarded clock, never raw simTime
   audio.setWaterSwell(Math.max(0, Math.min(1, 0.5 + h / 0.17)));
   }
-  while (pushes.length && clock - pushes[0].t > 8 * TAU) pushes.shift();
-  
-  let ox = 0, oz = 0;
-  for (const p of pushes) {
-  const t = clock - p.t;
-  if (t < 0) continue;
-  const e = SHOVE * Math.exp(-t / TAU) * Math.sin(OMEGA * t);
-  ox += p.dx * e;
-  oz += p.dz * e;
+  // THE WIND, and only while there is one. Off the clock the field is left
+  // alone entirely — one release write when the squall ends and then hands
+  // off — so the workbench's wind slider is free except during a gust.
+  const g = gustShape(clock - gustAt);
+  if (g > 0) {
+  blowing = true;
+  grass && grass.setWind(BASE_WIND * (1 + GUST_MULT * g));
+  audio && audio.setWindLevel(0.22 * (1 + 2.4 * g));
+  } else if (blowing) {
+  blowing = false;
+  grass && grass.setWind(BASE_WIND);
+  audio && audio.setWindLevel(0.22);
   }
-  moving.position.set(ox, 0, oz);
   },
   fragment() {
   return {
-  shoves,
-  worldX: +moving.position.x.toFixed(4),
-  worldZ: +moving.position.z.toFixed(4),
+  gusts,
+  gust: +gustShape(clock - gustAt).toFixed(4),
+  wind: +(BASE_WIND * (1 + GUST_MULT * gustShape(clock - gustAt))).toFixed(3),
   // he has not moved, and never will
   manX: +colossus.position.x.toFixed(4),
+  manZ: +colossus.position.z.toFixed(4),
 };
       },
       dispose() { water.dispose(); foam.dispose(); },

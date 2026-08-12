@@ -146,7 +146,14 @@ test('the blooms carry the red, the stalks do not, and none of them grows in the
   assert.ok(inFrame > 20, `the drift has to be IN the picture, got ${inFrame}/${heads.count}`);
 });
 
-test('touching the meadow stirs the blooms; touching the moon shifts the light', () => {
+// THE GUST FRONT IS GONE. Both taps used to call flowers.gustAt(), whose
+// envelope added straight onto each bloom's lean and, stacked on the wind
+// already in that sum, folded the blooms flat — they read as being pulled
+// under (Frank: "the flowers kinda get sucked into the ground... we should
+// get rid of that"). The breath is carried by the wind level alone now, so
+// what this pins is the wind swelling and settling exactly, and the field
+// never being driven past its own resting sway.
+test('touching the meadow lifts the wind; touching the moon shifts the light', () => {
   const ctx = fakeCtx();
   const root = k19.build(ctx);
   root.setCamera(rigCamera());
@@ -165,28 +172,52 @@ test('touching the meadow stirs the blooms; touching the moon shifts the light',
   ctx._taps.forEach((cb) => cb(10, 10));
   let frag = root.fragment();
   assert.equal(frag.touches, 1);
-  assert.equal(frag.gusts, 1, 'a breath sets off across the field');
+  assert.equal(frag.gusts, 0, 'no gust front is fired at the blooms any more');
   assert.ok(frag.breeze > 0.9, 'and it is in the wind sound too');
 
   // it passes on its own. The breeze decays on a ~1.7 s time constant, and the
   // gust front expires rather than accumulating.
   for (let i = 0; i < 300; i++) root.update(1 / 60, i / 60);
   frag = root.fragment();
-  assert.equal(frag.gusts, 0, 'the gust crosses and is gone');
+  assert.equal(frag.gusts, 0, 'and none ever appears');
   assert.ok(frag.breeze < 0.1, `the wind settles back, got ${frag.breeze}`);
   for (let i = 0; i < 600; i++) root.update(1 / 60, 5 + i / 60);
   assert.equal(root.fragment().breeze, 0, 'and reaches rest exactly, rather than creeping');
   assert.ok(root.fragment().lean > 0 && root.fragment().lean < 0.5,
     'the field goes back to its resting sway');
 
-  // tap the moon
+  // TAP THE MOON AND IT GOES OUT. makeMoon's setGlow shifts the disc a few
+  // percent toward the paper and swells it 4.5% — deliberately tiny, so a moon
+  // never blinks — and on the one page whose subject IS the light that was a
+  // change nobody could name (Frank: "maybe it disappears the moon, or changes
+  // it, or does something"). It now fades out of the sky altogether, takes the
+  // scene's lights down with it, holds a moonless couple of seconds, and comes
+  // back slower than it left.
   ctx.input.raycastFirst = (cam, objs) => (objs.includes(moon) ? { object: moon, point: moon.position.clone() } : null);
+  const lights = [];
+  root.scene.traverse((o) => { if (o.isLight) lights.push([o, o.intensity]); });
+  assert.ok(lights.length > 0, 'the meadow is lit by something');
+
   ctx._taps.forEach((cb) => cb(10, 10));
   assert.equal(root.fragment().touches, 2);
-  for (let i = 0; i < 40; i++) root.update(1 / 60, 5 + i / 60);
-  assert.ok(root.fragment().glow > 0.2, 'the light comes up');
-  for (let i = 0; i < 400; i++) root.update(1 / 60, 6 + i / 60);
-  assert.equal(root.fragment().glow, 0, 'and goes back down again');
+
+  // simTime CARRIES ON from where the loops above left it. The going-out is
+  // timed off the case's own guarded clock, and the old glow was an accumulator
+  // that did not care what simTime said — so rewinding the clock here, as this
+  // test used to, now reads as the tap having happened in the future and
+  // nothing moves at all.
+  let t = 15;
+  for (let i = 0; i < 60 * 2; i++, t += 1 / 60) root.update(1 / 60, t);
+  const out = root.fragment();
+  assert.ok(out.dark > 0.9, `the moon is gone (${out.dark})`);
+  assert.equal(out.moonUp, false, 'the disc is not drawn at all');
+  assert.ok(lights.every(([l, base]) => l.intensity < base), 'and the evening went dim with it');
+
+  for (let i = 0; i < 60 * 8; i++, t += 1 / 60) root.update(1 / 60, t);
+  const back = root.fragment();
+  assert.equal(back.dark, 0, 'it comes back exactly, not asymptotically');
+  assert.equal(back.moonUp, true, 'the moon is up again');
+  for (const [l, base] of lights) assert.equal(l.intensity, base, 'and the lights are exactly where they were');
 });
 
 // ---- the moon ---------------------------------------------------------------

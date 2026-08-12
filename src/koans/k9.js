@@ -206,10 +206,17 @@ const CAM = { distance: 17, target: [-0.3, 2.8, -1.6], heading: 31.5, pitch: 14.
   if (clock - lastToll < 2.0) return;      // it does not hurry for anyone
   lastToll = clock;
   tolls++;
-  // the colossus's own bell: bigger and deeper than k16's temple bonshō,
+  // The colossus's own bell: bigger and deeper than k16's temple bonshō,
   // which is what "an octave under" was reaching for with a raw f0 —
-  // task-12's migration to Frank's tuned presets picks `great` outright
-  audio && audio.bell({ preset: 'great', at: hit.position });
+  // task-12's migration to Frank's tuned presets picks `great` outright.
+  //
+  // And then bigger still. `great` at its own 2.36 was not enough for a
+  // Buddha of this size (Frank: "it could be a deeper, more, like, longer
+  // sound of a bell, because it is a giant"), so the preset's tuned voice is
+  // cast at a larger BODY instead: f0 drops about six semitones and every
+  // mode's decay grows with it, which is one number doing both halves of
+  // what he asked for. The amplitudes are still exactly his.
+  audio && audio.bell({ preset: 'great', size: 3.4, at: hit.position });
   });
   
   return {

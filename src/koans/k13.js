@@ -3,10 +3,14 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeBell, makeDrum, makeBowl,
-  makeMonk, faceMonk, makeLights, addOutlines,
+  makeMonk, faceMonk, makeLights, addOutlines, tapMeshes,
 } from '../kit/index.js';
 
 const ID = 13;
+
+// the bowl is held under Tokusan's own transform, so its world spot is not its
+// .position — reused rather than allocated per tap
+const scratchPos = new THREE.Vector3();
 
 // Tokusan crossed the yard to dinner with his bowl in his hands, and the drum
 // had not been beaten. So the scene is the monastery yard at exactly that
@@ -116,6 +120,29 @@ export default {
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
     // ---- the moment: two instruments, neither of them the answer ----------
+    // AND THE BOWL, which is the third thing and the only red one. It was the
+    // seal of the case and the one object here you could not touch (Frank:
+    // "what could we do for clicking on the bowl for thirteen — the bowl,
+    // because the bowl is the thing that's red"). Touched, it answers as the
+    // empty piece of fired clay it is, and Tokusan turns back the way he came
+    // — which is what he actually did: the bell had not rung, the drum had not
+    // sounded, and he went back to his room. He settles again afterwards,
+    // because the case is not resolved by his going and he will be back.
+    const BOWL_TURN = 1.15;      // radians away from Seppo, at the peak
+    const TURN_OUT = 0.55, TURN_HOLD = 0.9, TURN_BACK = 1.9;
+    const TURN_SPAN = TURN_OUT + TURN_HOLD + TURN_BACK;
+    const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+    function turnShape(u) {
+      if (!(u >= 0) || u >= TURN_SPAN) return 0;
+      if (u < TURN_OUT) return ease(u / TURN_OUT);
+      if (u < TURN_OUT + TURN_HOLD) return 1;
+      return 1 - ease((u - TURN_OUT - TURN_HOLD) / TURN_BACK);
+    }
+    const AT_SEPPO = tokusan.rotation.y;
+    const bowlMeshes = tapMeshes(bowl);
+    let turnAt = -99;
+    let turns = 0;
+
     let camera = null;
     let clock = 0;
     let rings = 0, beats = 0;
@@ -127,6 +154,17 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
+      // the bowl first: it is small, it is held out in front of a figure who
+      // stands between the two instruments, and it must never lose a tap to
+      // one of the big forgiving pick volumes either side of him
+      if (input.raycastFirst(camera, bowlMeshes)) {
+        if (clock - turnAt < TURN_SPAN) return;      // let him finish going back
+        turnAt = clock;
+        turns++;
+        // fired clay, empty — k7's bowl and k40's vase are the precedent
+        audio && audio.ceramic({ force: 0.55, at: bowl.getWorldPosition(scratchPos) });
+        return;
+      }
       if (input.raycastFirst(camera, drum.pickTargets())) {
         drum.strike();
         beats++;
@@ -151,11 +189,15 @@ export default {
         world.update(dt, simTime);
         bell.update(dt, simTime);
         drum.update(dt, simTime);
+        // he turns back the way he came, and comes round again
+        tokusan.rotation.y = AT_SEPPO + BOWL_TURN * turnShape(clock - turnAt);
       },
       fragment() {
         return {
           rings,
           beats,
+          turns,
+          turned: +turnShape(clock - turnAt).toFixed(4),
           swing: +bell.swinging().toFixed(4),
           skin: +drum.ringing().toFixed(4),
         };

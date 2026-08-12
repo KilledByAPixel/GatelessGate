@@ -70,10 +70,23 @@ const SIT_TAIL = [-0.35, -0.20, -0.05, 0.05, 0.15, 0.35, 0.60];
 const STAND_TAIL = [-0.12, 0.02, 0.20, 0.42, 0.66, 0.90, 1.12];
 
 const STIR_DUR = 4.6;       // seconds for one unhurried stretch-and-settle
-const TAIL_CURL = 0.15;     // extra bend per joint at the peak of a stir
-const TAIL_SWEEP = 0.10;    // and the sideways sweep that goes with it
-const EAR_SWIVEL = 0.50;
-const EAR_SPREAD = 0.12;
+// HOW BIG A STIR IS. Every one of these was roughly doubled: the cat is 0.32
+// tall, it sits well back in both the cases that use it, and a stir of a tenth
+// of a radian in the tail with a 0.26 turn of a skull a few pixels across is
+// motion you can only find by looking for it (Frank: "the cat could move a
+// little bit more — it's not very visible that it's moving"). It is still a
+// cat noticing you and going back to ignoring you; it is just legible now.
+const TAIL_CURL = 0.30;     // extra bend per joint at the peak of a stir
+const TAIL_SWEEP = 0.22;    // and the sideways sweep that goes with it
+const EAR_SWIVEL = 0.85;
+const EAR_SPREAD = 0.22;
+// The stretch itself, which did not exist: the whole barrel lengthens and
+// rises off the haunch and the shoulders roll. This is the part that actually
+// reads at distance — a silhouette changing shape, rather than details moving
+// inside one that does not.
+const STIR_RISE = 0.055;    // world units the body lifts at the peak
+const STIR_STRETCH = 0.075; // and how much longer it gets, as a scale fraction
+const STIR_LEAN = 0.13;     // radians the torso rolls into the stretch
 
 export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit' } = {}) {
   const h = height;
@@ -239,6 +252,8 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
   // back to ignoring you.
   const body = torso.getObjectByName('body');
   const skullBaseX = skull.rotation.x;
+  const bodyBaseY = body.position.y;
+  const torsoBaseZ = torso.rotation.z;
   let stirs = 0;
   let stirT = -1;      // -1 idle, else seconds into the stir
   let env = 0;         // 0..1, the shape of it
@@ -282,8 +297,16 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
         + EAR_SPREAD * env * k * Math.sign(ear.userData.baseZ || 1);
     }
 
-    skull.rotation.x = skullBaseX - 0.10 * env;
-    skull.rotation.y = 0.26 * env;
+    // THE STRETCH. The barrel lengthens along its own axis and lifts, and the
+    // torso rolls a little into it — the shape change that makes a stir read
+    // from across a meadow. Composed with the breathing above rather than
+    // overwriting it: br is the resting scale, this rides on top.
+    body.scale.z = br * (1 + STIR_STRETCH * env);
+    body.position.y = bodyBaseY + STIR_RISE * env;
+    torso.rotation.z = torsoBaseZ + STIR_LEAN * env;
+
+    skull.rotation.x = skullBaseX - 0.22 * env;
+    skull.rotation.y = 0.46 * env;
   }
 
   function meshes() {

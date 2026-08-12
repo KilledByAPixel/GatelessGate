@@ -506,16 +506,25 @@ export function createAudio(save) {
     // `gain` here is a plain velocity now — strikeBell applies BELL.level to
     // the partials and TRANSIENT_SCALE to the mallet itself, so this call
     // site never has to know either constant exists.
-    bell({ size = BELL.size, f0 = null, preset = null, gain = 1, at = null } = {}) {
+    // `size` MAY BE PASSED ALONGSIDE A PRESET, and then it is the body size the
+    // preset's voice is built at — f0 falls as the bell grows and every mode's
+    // decay scales with it, so a bigger number is deeper AND longer in one
+    // move. The preset's tuned per-mode amplitudes are untouched, which is the
+    // point: Frank tuned those three arrays in dev/bell-audition.html and they
+    // are not something to edit by hand from a case. Case 9's colossus is the
+    // first caller — `great` is already the deepest of the three and its bell
+    // still wanted to be bigger than any bell in a temple.
+    bell({ size = null, f0 = null, preset = null, gain = 1, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
       let v, verbMix = BELL.verbMix, beam, ping, pingFreq;
       if (preset !== null) {
         const p = BELL_PRESETS[preset];
-        const voice = bellVoice(p.size);
+        const voice = bellVoice(size === null ? p.size : size);
         v = { f0: voice.f0, partials: applyBellPreset(voice, p) };
         ({ verbMix, beam, ping, pingFreq } = p);
       } else {
-        v = f0 === null ? bellVoice(size) : { f0, partials: bellPartials(f0) };
+        const s = size === null ? BELL.size : size;
+        v = f0 === null ? bellVoice(s) : { f0, partials: bellPartials(f0) };
       }
       const { dryLevel, sendLevel } = calibrateMix(verbMix, MIX_BELL.kd, MIX_BELL.ks);
       const bus = placed(at, sendLevel, bellTail(v), dryLevel);

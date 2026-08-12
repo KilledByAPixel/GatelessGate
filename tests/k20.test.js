@@ -31,17 +31,26 @@ test('case 20: the ambience finally names water — the bed the ocean was kept f
   assert.ok(layers.includes('wind'));
 });
 
-test('case 20: the man is out of the moving world, and the ocean is in it', () => {
+// NOTHING IN THIS CASE TRANSLATES ANYTHING ANY MORE. The staging used to hang
+// the whole world off a group called 'moving-world' that a tap shoved and let
+// oscillate back. Sliding that group dragged the grass field through its own
+// world-space noise and the meadow boiled, which is what the reader actually
+// saw (Frank: "it's basically causing the procedural generation of the grass to
+// get all messed up... that's why it looks like it's wind, but it's actually
+// not wind"). The group is dissolved; this is the assertion it stays that way.
+test('case 20: the world is flat on the scene root — no moving group', () => {
   const { root } = staged();
   const man = root.scene.getObjectByName('immovable-man');
-  const moving = root.scene.getObjectByName('moving-world');
-  assert.ok(man && moving);
-  assert.equal(man.parent, root.scene, 'the man hangs off the root, immovable');
-  assert.ok(moving.getObjectByName('water'), 'the ocean is in the moving world');
-  assert.ok(moving.getObjectByName('sand'), 'so is the beach');
-  let inMoving = false;
-  man.traverseAncestors((a) => { if (a === moving) inMoving = true; });
-  assert.ok(!inMoving);
+  assert.ok(man, 'the man is there');
+  assert.equal(root.scene.getObjectByName('moving-world'), undefined, 'the group is gone');
+  assert.equal(man.parent, root.scene, 'the man hangs off the root');
+  for (const name of ['water', 'sand', 'ground']) {
+    const o = root.scene.getObjectByName(name);
+    assert.ok(o, name + ' is staged');
+  }
+  // and composeWorld was handed the actual scene, which is the only place the
+  // workbench's layout guides look for their record
+  assert.ok(root.scene.userData.layout, 'scene.userData.layout is where the guides read it');
 });
 
 test('case 20: the sea is seaward, at sea level, below the meadow', () => {
@@ -62,16 +71,35 @@ test('case 20: the ground dives below sea level toward the sea', () => {
   assert.ok(sank > 50, `the seabed did not sink (${sank})`);
 });
 
-test('case 20: a shove still moves the world — ocean and all — and never the man', () => {
+// The shove became a squall (Frank: "that gives me the idea to make it do the
+// wind instead of trying to mess with the world"). The verse is unchanged —
+// the world moves and he does not — but what moves is the weather.
+test('case 20: a touch brings the wind through, and never moves the man', () => {
   const { ctx, root } = staged();
   const hit = root.scene.getObjectByName('colossus-hit');
+  const man = root.scene.getObjectByName('immovable-man');
+  const before = man.position.clone();
+
+  root.update(1 / 60, 0.1);
+  const calm = root.fragment();
+  assert.equal(calm.gusts, 0);
+  assert.equal(calm.gust, 0, 'no wind until it is asked for');
+
   ctx.input.raycastFirst = () => ({ object: hit, point: new THREE.Vector3(), distance: 1 });
   ctx._taps.forEach((cb) => cb());
-  root.update(1 / 60, 0.3);                    // a quarter-ish period into the sway
+  root.update(1 / 60, 0.5);                    // into the squall's rise
   const f = root.fragment();
-  assert.equal(f.shoves, 1);
-  assert.ok(Math.hypot(f.worldX, f.worldZ) > 0.01, 'the world did not give');
-  assert.equal(f.manX, 0.4, 'the man moved — he must never');
+  assert.equal(f.gusts, 1);
+  assert.ok(f.gust > 0.5, `the wind came up (${f.gust})`);
+  assert.ok(f.wind > calm.wind, 'and it is blowing harder than the weather it found');
+
+  // and it passes on its own, all the way back to rest
+  for (let i = 0; i < 60 * 9; i++) root.update(1 / 60, 0.5 + i / 60);
+  const after = root.fragment();
+  assert.equal(after.gust, 0, 'the squall blows itself out exactly');
+  assert.equal(after.manX, 0.4, 'he has not moved');
+  assert.equal(after.manZ, -0.8);
+  assert.ok(before.distanceTo(man.position) < 1e-9, 'he never moved at any point');
 });
 
 test('case 20: the ocean is actually swelling, not a still sheet', () => {
@@ -81,11 +109,10 @@ test('case 20: the ocean is actually swelling, not a still sheet', () => {
   assert.notDeepEqual(at(1.0), at(4.0), 'no drift: the ocean is a floor');
 });
 
-test('case 20: the foam rides the beach, inside the moving world', () => {
+test('case 20: the foam rides the beach', () => {
   const { root } = staged();
-  const moving = root.scene.getObjectByName('moving-world');
-  const foam = moving.getObjectByName('foam');
-  assert.ok(foam, 'the wave-ends are in the moving world — the shove sways them too');
+  const foam = root.scene.getObjectByName('foam');
+  assert.ok(foam, 'the wave-ends are staged on the shore');
   root.update(1 / 60, 2.0);
   const a = Array.from(foam.geometry.attributes.position.array);
   root.update(1 / 60, 5.0);

@@ -112,12 +112,30 @@ export function makeFlower({
     }
   }
 
+  // Detach one petal, KEEPING THE POSE IT WAS WEARING. Position alone was not
+  // enough: a petal is yawed around the pod and tipped outward, and the flower
+  // above it is itself turning (case 6 spins the bloom), so handing back only
+  // the world POSITION left the petal's local rotation to be reinterpreted
+  // against the scene root — it snapped to a different attitude on the frame it
+  // came off and read as being spat out of the middle of the bloom (Frank: "it
+  // looks almost like it's born kind of unsettlingly inside the flower, and
+  // it's kinda janky"). World quaternion and scale come with it now, so the
+  // first frame after release is pixel-identical to the last frame before it
+  // and the fall starts from where the petal actually was.
+  //
+  // The caller must add it to the SCENE ROOT; that is the frame these are in.
   g.dropPetal = () => {
     const petal = g.children.find((c) => c.name === 'petal');
     if (!petal) return null;
-    const world = petal.getWorldPosition(new THREE.Vector3()); // resolves the full ancestor chain
+    petal.updateWorldMatrix(true, false);          // the full ancestor chain, this frame's
+    const pos = new THREE.Vector3();
+    const quat = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+    petal.matrixWorld.decompose(pos, quat, scale);
     g.remove(petal);
-    petal.position.copy(world);   // correct once the caller adds it to the scene root
+    petal.position.copy(pos);
+    petal.quaternion.copy(quat);
+    petal.scale.copy(scale);
     return petal;
   };
   return g;

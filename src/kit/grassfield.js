@@ -431,6 +431,11 @@ export function makeGrassField({
     mesh,
     get blades() { return mesh.count; },
     setWind(w) { uniforms.uWind.value = w; },
+    // The level this field is CURRENTLY blowing at. Case 20 reads it once at
+    // build so a gust can multiply the weather already in force — pinned by the
+    // case or dragged on the workbench slider — and hand exactly that back
+    // afterwards, instead of guessing a base and overwriting whichever it was.
+    wind() { return uniforms.uWind.value; },
     setWindDir(x, z) { uniforms.uWindDir.value.set(x, z).normalize(); },
     setGust(scale, speed) {
       if (scale !== undefined) uniforms.uGustScale.value = scale;

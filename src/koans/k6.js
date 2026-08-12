@@ -12,6 +12,11 @@ const ID = 6;
 
 const PETAL_FALL = 5.0;     // seconds for a petal to reach the ground
 
+// the tumble, composed onto each petal's release pose — reused rather than
+// allocated per petal per frame
+const _spin = new THREE.Euler();
+const _tumble = new THREE.Quaternion();
+
 // NO SMILE. Kasyapa used to grow one while a petal was in the air — a bare
 // paper arc on his head, the one face rendered anywhere in this book, faded in
 // over 1.4s and left there. Frank cut it (this round). It was the design doc's
@@ -151,15 +156,32 @@ const CAM = { distance: 11, target: [1.05, 0.3, -3.35], heading: 17, pitch: 29.5
   let dropped = 0;
   const falling = [];          // { mesh, age, x0, y0, z0, spin, drift }
   
+  // EVERY TERM OF THE FALL STARTS AT ZERO, and it did not before. The sway used
+  // to be written as `z0 + cos(age·1.3)·0.12`, which is z0 + 0.12 on the first
+  // frame — the petal jumped a tenth of a unit sideways the instant it let go —
+  // and `rotation.x = sin(age·2.1)·0.5` overwrote whatever tilt it had been
+  // sitting at with a flat zero. Between that and dropPetal() losing the world
+  // orientation (fixed in the kit), a released petal snapped pose and position
+  // together and looked like it had been coughed out of the bloom.
+  //
+  // Now the release pose is the petal's own, kept, and everything below is an
+  // OFFSET from it: the sways are (cos - 1) and sin, both zero at age 0, the
+  // tumble is an added rotation starting at nothing, and the descent eases in
+  // rather than starting at full speed. It lets go, hangs for an instant, and
+  // goes.
   function releasePetal() {
   const petal = flower.dropPetal();
   if (!petal) return false;
-  scene.add(petal);                       // reparented to the root; keeps its world spot
+  scene.add(petal);                       // reparented to the root; keeps its whole pose
   falling.push({
   mesh: petal, age: 0,
   x0: petal.position.x, y0: petal.position.y, z0: petal.position.z,
+  // the attitude it came off wearing — the tumble is added to this
+  q0: petal.quaternion.clone(),
   drift: (hash1(dropped * 3 + 1, 6) - 0.5) * 0.9,
   spin: (hash1(dropped * 3 + 2, 6) - 0.5) * 2.4,
+  // which way it tips as it goes over, seeded so no two tumble alike
+  tipX: (hash1(dropped * 3 + 3, 6) - 0.5) * 1.6,
   });
   dropped++;
   return true;
@@ -207,14 +229,19 @@ const CAM = { distance: 11, target: [1.05, 0.3, -3.35], heading: 17, pitch: 29.5
   const f = falling[i];
   f.age += dt;
   const t = Math.min(1, f.age / PETAL_FALL);
-  // a leaf does not drop, it sways down
+  // A petal does not drop, it sways down — but it starts from rest. The
+  // descent eases in over the first fifth of the fall, so it detaches,
+  // hesitates, and then goes; the two sways are written to be exactly
+  // zero at age 0 so nothing moves on the frame it comes off.
+  const ease = t < 0.2 ? (t / 0.2) * (t / 0.2) * 0.2 : t;
   f.mesh.position.set(
   f.x0 + Math.sin(f.age * 1.7) * 0.16 + f.drift * t,
-  f.y0 - t * (f.y0 - 0.03),
-  f.z0 + Math.cos(f.age * 1.3) * 0.12,
+  f.y0 - ease * (f.y0 - 0.03),
+  f.z0 + (Math.cos(f.age * 1.3) - 1) * 0.12,
   );
-  f.mesh.rotation.y += f.spin * dt;
-  f.mesh.rotation.x = Math.sin(f.age * 2.1) * 0.5;
+  // the tumble, ADDED to the pose it let go in rather than replacing it
+  _spin.set(f.tipX * Math.sin(f.age * 2.1) * 0.5, f.spin * f.age, 0);
+  f.mesh.quaternion.copy(f.q0).multiply(_tumble.setFromEuler(_spin));
   if (t >= 1) falling.splice(i, 1);
   }
   },

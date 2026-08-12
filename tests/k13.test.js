@@ -5,6 +5,22 @@ import k13 from '../src/koans/k13.js';
 import { ACCENT } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
 
+// WHICH BRANCH A TAP LANDS IN, chosen by what the handler is actually offered
+// rather than by counting calls. The tap probes the bowl first (it is small, and
+// held out in front of a figure standing between two big forgiving pick
+// volumes), then the drum, then the bell — and the old stubs here answered "the
+// second distinct object list", so inserting the bowl silently moved every one
+// of them onto the wrong branch. Naming the target makes the harness say what it
+// means, and survives the next reordering.
+function hitOnly(ctx, name) {
+  ctx.input.raycastFirst = (cam, objs) => {
+    for (const o of objs || []) {
+      for (let n = o; n; n = n.parent) if (n.name === name) return { object: o };
+    }
+    return null;
+  };
+}
+
 // Case 13 had no dedicated test file before Task 5C. Adding one narrowly, to
 // pin the bell's tap cooldown found in review — the bell had none at all, so
 // a held pointer could stack audio.bell() calls without limit. The drum has
@@ -19,9 +35,6 @@ test('module shape matches the koan contract', () => {
 });
 
 test('a held pointer on the bell cannot ring it without limit; the drum is untouched', () => {
-  // The tap handler probes drum.pickTargets() first, then bell.pickTargets()
-  // (src/koans/k13.js) — so a raycastFirst that answers the SECOND distinct
-  // object list per tap and misses the first reaches the bell branch alone.
   const rings = [];
   const beats = [];
   const audio = { bell: (o) => rings.push(o.f0), drum: (o) => beats.push(o) };
@@ -30,12 +43,7 @@ test('a held pointer on the bell cannot ring it without limit; the drum is untou
   const root = k13.build(ctx);
   root.setCamera(new THREE.PerspectiveCamera());
 
-  let call = 0;
-  ctx.input.raycastFirst = (cam, objs) => {
-    call++;
-    if (call % 2 === 1) return null;          // miss the drum's list
-    return { object: objs[0] };               // hit the bell's list
-  };
+  hitOnly(ctx, 'bell');
 
   root.update(0, 0);
   ctx._taps.forEach((cb) => cb());   // first strike
@@ -58,7 +66,7 @@ test('the drum has no cooldown and answers every tap — its own voice now', () 
   ctx.audio = audio;
   const root = k13.build(ctx);
   root.setCamera(new THREE.PerspectiveCamera());
-  ctx.input.raycastFirst = (cam, objs) => ({ object: objs[0] });   // always hits the drum, checked first
+  hitOnly(ctx, 'drum');
 
   root.update(0, 0);
   ctx._taps.forEach((cb) => cb());

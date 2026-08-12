@@ -204,7 +204,38 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   scroll.add(hit);
   
   // ---- the moment: the ink will not take -------------------------------
-  const STROKE = 2.2;          // gather, hang, drain
+  // THE WHOLE PORTRAIT DRAINS, not just a beard. The refusal used to be a
+  // 0.34-unit cone of INK_LIT fading to 0.85 opacity under the painted chin,
+  // on a scroll a few units across — Frank, looking straight at it: "it doesn't
+  // seem like the ink is doing anything or draining away." It was a real
+  // effect that nothing at reading distance could resolve.
+  //
+  // So the event became the one thing on the scroll that IS big enough to read:
+  // its colour. The portrait is the case's accent, the only red on the page.
+  // Touch it and the red runs out of it — the whole figure goes to ink, holds
+  // there, and washes back to red (Frank's own idea: "if we could have the ink
+  // drain away so it's black, and then turn back to red again after a few
+  // seconds"). The beard still tries to come in while the colour is out, which
+  // is what the draining was FOR, and it is gone by the time the red returns.
+  // Nothing is achieved. He is still beardless.
+  //
+  // INK_LIT, not INK: this is a lit surface, and at raw INK the toon ramp's
+  // bands land at levels 9/19/30 and the portrait would go invisible rather
+  // than black (the style rule in CLAUDE.md).
+  const DRAIN = 0.85;          // the red runs out
+  const OUT = 1.9;             // and stays out this long
+  const BACK = 1.7;            // then washes back
+  const STROKE = DRAIN + OUT + BACK;
+  const RED = new THREE.Color(ACCENT);
+  const BLACK = new THREE.Color(INK_LIT);
+  // 0 at rest and at the end, 1 while the portrait is drained
+  function drainShape(u) {
+  if (!(u >= 0) || u >= STROKE) return 0;
+  if (u < DRAIN) { const t = u / DRAIN; return t * t * (3 - 2 * t); }
+  if (u < DRAIN + OUT) return 1;
+  const t = (u - DRAIN - OUT) / BACK;
+  return 1 - t * t * (3 - 2 * t);
+  }
   let camera = null;
   let clock = 0;
   let attempts = 0;
@@ -235,14 +266,23 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   // every other static-wind case that carries one)
   furin.setWindLevel(1);
   furin.update(dt, simTime);
+  // the red running out of him, and coming back
+  const drained = drainShape(clock - strokeAt);
+  paintMat.color.copy(RED).lerp(BLACK, drained);
+  // and the beard, which only exists while the ink is out of the picture
+  // — up fast, and gone before the colour returns
   const u = (clock - strokeAt) / STROKE;
-  // up fast, held a moment, then drained away
   const a = (u <= 0 || u >= 1) ? 0 : Math.min(1, u / 0.18, (1 - u) / 0.45);
   beardMat.opacity = 0.85 * a * a * (3 - 2 * a);
   beard.scale.y = 0.6 + 0.4 * a;
   },
   fragment() {
-  return { attempts, ink: +beardMat.opacity.toFixed(3), chimeStrikes: furin.strikes() };
+  return {
+  attempts,
+  drained: +drainShape(clock - strokeAt).toFixed(3),
+  ink: +beardMat.opacity.toFixed(3),
+  chimeStrikes: furin.strikes(),
+};
   },
   dispose() {},
 };

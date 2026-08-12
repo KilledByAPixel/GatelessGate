@@ -227,7 +227,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
     // pale sail is what keeps the silhouette legible at this distance, where
     // the fog has taken better than half of everything.
     const boat = makeBoat({ seed: ID, surfaceAt: seaSurface, color: ACCENT, sailColor: ACCENT });
-    boat.group.position.set(-8.5, SHORE.sea, -31);
+    boat.group.position.set(-6.5, SHORE.sea, -25);
     boat.group.rotation.y = Math.PI / 2 + 0.22;   // bow up the coast, quartering
     scene.add(boat.group);
 
@@ -273,15 +273,27 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
 
     addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
+    // THE SHIP IS WHAT YOU TOUCH (Frank: "let's have it so 11, you actually
+    // click on the boat — you will click on the bow"). It used to be the
+    // meditating monk's raised fist, a 0.34-radius cylinder at chest height:
+    // the koan's own gesture, and the smallest, most easily-missed thing on the
+    // page. The ship is the red mark in the picture, and the red mark is what a
+    // reader reaches for — the pattern half this book already runs on.
+    //
+    // Parented TO THE BOAT, so the box rides the swell with it. A hit proxy
+    // pinned at the boat's launch position would drift off the hull every time
+    // the sea lifted it. Generous by design: it is twenty-five units out and a
+    // few dozen pixels tall, so the box is most of a hull-length across and
+    // takes in the mast, which is the part that actually reads at that range.
     const hit = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.34, 0.34, 0.9, 7),
+      new THREE.BoxGeometry(3.8, 3.4, 2.2),
       new THREE.MeshBasicMaterial({ visible: false }));
-    hit.name = 'fist-hit';
+    hit.name = 'boat-hit';
     hit.userData.noOutline = true;
-    hit.position.set(monk.position.x, 0.44 + 1.05, monk.position.z + 0.15);
-    scene.add(hit);
+    hit.position.set(0, 1.2, 0);        // local to the boat: hull through masthead
+    boat.group.add(hit);
 
-    // ---- the moment: the same fist, twice --------------------------------
+    // ---- the moment: the same verdict, twice -----------------------------
     let camera = null;
     let clock = 0;
     let visits = 0;             // odd = dismissed, even = approved
