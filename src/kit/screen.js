@@ -179,7 +179,6 @@ export function makeScreen({
       const c = new THREE.Mesh(cordGeo, cordMat);
       c.name = 'cord';
       c.position.set(sx * width * 0.46, railY, cordFront);
-      c.userData.noOutline = true;      // a brushed line, not a rope
       group.add(c);
       cordMeshes.push(c);
     }
@@ -195,7 +194,6 @@ export function makeScreen({
       new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide }));
     pane.name = 'screen-hit';
     pane.position.set(0, height / 2, 0.03);
-    pane.userData.noOutline = true;
     group.add(pane);
     picks.unshift(pane);
   }

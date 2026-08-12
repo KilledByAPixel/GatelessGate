@@ -118,12 +118,11 @@ export function makeCliff({
   g.add(lip);
 
   // ---- the face: crags falling away, dissolving toward paper ---------------
-  // Row tones run dark -> pale with depth; the deepest row loses its outline
-  // too, so the bottom of the drop is already half paper.
+  // Row tones run dark -> pale with depth; the deepest row is already half paper.
   const ROWS = [
-    { y: -0.16, z: -0.40, tone: mixHex(color, INK, 0.26), outline: true },
-    { y: -0.46, z: -0.66, tone: mixHex(color, PAPER, 0.32), outline: true },
-    { y: -0.78, z: -0.92, tone: mixHex(color, PAPER, 0.62), outline: false },
+    { y: -0.16, z: -0.40, tone: mixHex(color, INK, 0.26) },
+    { y: -0.46, z: -0.66, tone: mixHex(color, PAPER, 0.32) },
+    { y: -0.78, z: -0.92, tone: mixHex(color, PAPER, 0.62) },
   ];
   ROWS.forEach((row, k) => {
     const geos = [];
@@ -140,7 +139,6 @@ export function makeCliff({
     }
     const m = new THREE.Mesh(mergeSimple(geos), toonMaterial({ color: row.tone, flat: true }));
     m.name = k === ROWS.length - 1 ? 'skirt' : 'face';
-    if (!row.outline) m.userData.noOutline = true;
     g.add(m);
   });
 
@@ -188,7 +186,6 @@ export function makeCliff({
         map: tex, transparent: true, opacity: bank.op, depthWrite: false,
       }));
     mesh.name = 'mist';
-    mesh.userData.noOutline = true;
     mesh.userData.keepMaterial = true;   // unlit, textured — the clone breaks both
     mesh.rotation.x = -Math.PI / 2;
     mesh.rotation.z = (rnd(j + 2) - 0.5) * 0.4;

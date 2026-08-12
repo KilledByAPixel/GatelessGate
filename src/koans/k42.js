@@ -105,7 +105,6 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   new THREE.CylinderGeometry(0.62, 0.62, 1.5, 8),
   new THREE.MeshBasicMaterial({ visible: false }));
   girlHit.name = 'girl-hit';
-  girlHit.userData.noOutline = true;
   girlHit.position.set(GIRL.x, 0.6, GIRL.z);
   scene.add(girlHit);
   
@@ -114,7 +113,6 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   new THREE.BoxGeometry(11, 0.2, 11),
   new THREE.MeshBasicMaterial({ visible: false }));
   floorHit.name = 'floor-hit';
-  floorHit.userData.noOutline = true;
   floorHit.position.set(0.8, 0.02, -0.6);
   scene.add(floorHit);
   

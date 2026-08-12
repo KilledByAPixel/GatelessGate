@@ -85,10 +85,8 @@ test('the topknot: one bun on the crown, proud of the skull line, in the figure\
     `the crest breaks the crown line: ${knot.position.y + rKnot} vs ${crown}`);
 
   // hair on an ink man, stone on a statue: the knot wears the head's own
-  // material (recolour the figure and the knot follows), and unlike the
-  // urna it is a silhouette event, so it keeps its outline
+  // material (recolour the figure and the knot follows)
   assert.equal(knot.material, head.material, 'the figure\'s own material');
-  assert.notEqual(knot.userData.noOutline, true, 'a silhouette event keeps its outline');
 
   // monks are untouched: no topknot on the shared figure
   const monk = makeFigure({ stance: 'sit', arms: 'fold', hat: false });
@@ -96,13 +94,12 @@ test('the topknot: one bun on the crown, proud of the skull line, in the figure\
   assert.equal(monkHead.children.length, 0, 'only the buddha wears the bun');
 });
 
-test('the urna: one small accent dot, sunk into the forehead, no outline', () => {
+test('the urna: one small accent dot, sunk into the forehead', () => {
   const H = 1.6;
   const b = makeBuddha({ height: H });
   const head = b.children.find((c) => c.name === 'head');
   const urna = head.children.find((c) => c.name === 'urna');
   assert.ok(urna, 'the urna is a child of the head — it travels with the skull');
-  assert.equal(urna.userData.noOutline, true);
   assert.equal(urna.material.color.getHexString(),
     new THREE.Color(ACCENT).getHexString(), 'the dot is the accent');
 
@@ -167,7 +164,6 @@ test('makeAssembly is one instanced, grounded, deterministic crowd', () => {
   assert.equal(a.name, 'assembly');
   assert.ok(a.isInstancedMesh, 'a single instanced mesh');
   assert.equal(a.count, 8);
-  assert.equal(a.userData.noOutline, true);
 
   // each instance is a seated MONK, not a pawn: the silhouette carries the
   // KNEES (two merged leg masses at ±x — the crowd folds the same legs the

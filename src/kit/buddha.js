@@ -87,7 +87,6 @@ export function makeBuddha({
     new THREE.SphereGeometry(URNA_R * r, 8, 6),
     toonMaterial({ color: markColor || markFor(color), flat: true }));
   urna.name = 'urna';
-  urna.userData.noOutline = true;   // a dot this small would drown in its own hull
   urna.position.set(
     0,
     Math.sin(URNA_ELEV) * r * URNA_SINK * HEAD_OBLONG[1],

@@ -9,7 +9,6 @@ import { composeWorld } from '../src/kit/scenery.js';
 test('ground rolls in the distance but stays flat at center', () => {
   const g = makeGround({ seed: 21 });
   assert.equal(g.name, 'ground');
-  assert.equal(g.userData.noOutline, true);
   const pos = g.geometry.attributes.position;
   let centerMax = 0, outerMax = 0;
   for (let i = 0; i < pos.count; i++) {
@@ -29,7 +28,6 @@ test('mountains form a distant arc of faceted cones', () => {
   const m = makeMountains({ count: 7, distance: 46, seed: 31 });
   assert.equal(m.children.length, 7);
   for (const peak of m.children) {
-    assert.equal(peak.userData.noOutline, true);
     const d = Math.hypot(peak.position.x, peak.position.z);
     assert.ok(d > 46 * 0.7, `mountain too close: ${d}`);
     assert.ok(peak.position.z < 0, 'mountains sit behind the scene (-z)');
@@ -51,7 +49,6 @@ test('forest mixes species into one merged mesh, still a single draw call', () =
   assert.ok(!f.isInstancedMesh, 'no longer instanced — species vary the geometry itself');
   assert.equal(f.children.length, 0, 'one mesh, not a group of per-species meshes');
   assert.equal(f.name, 'forest');
-  assert.equal(f.userData.noOutline, true);
   assert.ok(f.geometry.attributes.position.count > 0);
   // deterministic: same seed -> byte-identical merged geometry
   const f2 = makeForest({ count: 40, seed: 41 });

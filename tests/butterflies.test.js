@@ -5,8 +5,8 @@ import { makeButterflies } from '../src/kit/butterflies.js';
 import { ACCENT } from '../src/palette.js';
 
 // Two quads flapping and flying, playing around — and everything about that
-// which can drift: the wing count, the hulls, the flap, the wander staying
-// inside its box, the flit, and the determinism the whole book runs on.
+// which can drift: the wing count, the flap, the wander staying inside its
+// box, the flit, and the determinism the whole book runs on.
 
 function butterflies(flock) {
   const out = [];
@@ -14,7 +14,7 @@ function butterflies(flock) {
   return out;
 }
 
-test('a butterfly is two shaped wings and nothing else, red, unhulled, double-sided', () => {
+test('a butterfly is two shaped wings and nothing else, red, double-sided', () => {
   const flock = makeButterflies({ count: 6, seed: 19 });
   assert.equal(flock.group.name, 'butterflies');
   const each = butterflies(flock);
@@ -27,7 +27,6 @@ test('a butterfly is two shaped wings and nothing else, red, unhulled, double-si
     assert.equal(b.children.length, 2, 'and NOTHING else — no body, no antennae');
     for (const w of wings) {
       assert.equal(w.name, 'butterfly-wing');
-      assert.equal(w.userData.noOutline, true, 'a hull on a paper-thin wing is a blot');
       assert.equal(w.material.side, THREE.DoubleSide, 'wings read from both faces');
       assert.equal('#' + w.material.color.getHexString(), ACCENT.toLowerCase(), 'red by default');
       // A SHAPED wing, not a quad: eight outline points fanned into six

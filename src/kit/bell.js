@@ -153,7 +153,6 @@ export function makeBell({ height = 1.1, color = ACCENT, frameColor = WASH.dark,
     new THREE.CylinderGeometry(0.48 * H, 0.48 * H, 1.25 * H, 8),
     new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'bell-hit';
-  hit.userData.noOutline = true;
   hit.position.y = -linkLen - 0.5 * H;
   swing.add(hit);
 

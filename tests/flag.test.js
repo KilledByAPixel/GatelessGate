@@ -14,7 +14,6 @@ test('flag structure: pole, finial, cloth with matching vertex grid', () => {
   const cloth = f.group.children.find((c) => c.name === 'cloth');
   assert.ok(cloth, 'cloth mesh missing');
   assert.equal(cloth.geometry.attributes.position.count, 24 * 16);
-  assert.equal(cloth.userData.noOutline, true);
   assert.ok(f.group.children.find((c) => c.name === 'pole'));
 });
 

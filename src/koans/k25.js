@@ -62,7 +62,6 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   new THREE.CylinderGeometry(r, r * 0.94, 0.10, 13),
   toonMaterial({ color: wash(0.09 - i * 0.012), flat: true }));
   disc.name = 'cloud-disc';
-  disc.userData.noOutline = true;         // cloud has no contour
   disc.position.set((i % 2 ? 0.5 : -0.4) * i * 0.4, -0.18 - i * 0.12, -1.4 + i * 0.3);
   cloud.add(disc);
   }
@@ -210,7 +209,6 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   new THREE.BoxGeometry(0.9, 0.7, 0.8),
   new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'gavel-hit';
-  hit.userData.noOutline = true;
   hit.position.copy(gavel.position);
   hall.add(hit);
   

@@ -188,7 +188,6 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
       new THREE.BoxGeometry(22, 0.2, 22),
       new THREE.MeshBasicMaterial({ visible: false }));
     groundHit.name = 'snow-hit';
-    groundHit.userData.noOutline = true;
     groundHit.position.set(0.4, 0.02, -2.0);
     scene.add(groundHit);
 
@@ -197,7 +196,6 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
     wispMat.opacity = 0;
     const wisp = new THREE.Mesh(new THREE.SphereGeometry(0.30, 10, 8), wispMat);
     wisp.name = 'wisp';
-    wisp.userData.noOutline = true;
     wisp.visible = false;
     scene.add(wisp);
 

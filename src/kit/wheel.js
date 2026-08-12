@@ -108,7 +108,6 @@ export function makeWheel({
     new THREE.CylinderGeometry(0.34 * R, 0.34 * R, 0.5 * R, 8),
     new THREE.MeshBasicMaterial({ visible: false }));
   naveHit.name = 'nave-hit';
-  naveHit.userData.noOutline = true;
   naveHit.geometry.rotateX(Math.PI / 2);
   spin.add(naveHit);
 
@@ -116,7 +115,6 @@ export function makeWheel({
     new THREE.CylinderGeometry(R * 1.05, R * 1.05, 0.42 * R, 10),
     new THREE.MeshBasicMaterial({ visible: false }));
   wheelHit.name = 'wheel-hit';
-  wheelHit.userData.noOutline = true;
   wheelHit.geometry.rotateX(Math.PI / 2);
   spin.add(wheelHit);
 

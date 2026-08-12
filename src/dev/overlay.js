@@ -157,11 +157,9 @@ export function makeLayoutOverlay(scene, opts = {}) {
     const lines = new THREE.LineSegments(geo, mat);
     lines.name = `layout-${g.name}`;
     lines.renderOrder = 999;
-    lines.userData.noOutline = true;
     lines.frustumCulled = false;
     group.add(lines);
   }
-  group.userData.noOutline = true;
 
   group.dispose = () => {
     for (const l of group.children) { l.geometry.dispose(); l.material.dispose(); }

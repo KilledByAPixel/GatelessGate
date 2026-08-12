@@ -151,7 +151,6 @@ export function makeForest({
   const mat = toonMaterial({ color, flat: true });
   const mesh = new THREE.Mesh(merged, mat);
   mesh.name = 'forest';
-  mesh.userData.noOutline = true; // a background mass in fog, not a hero silhouette — see rocks/bushes/grass
   mesh.userData.instances = kept;  // self-describing, for the scene nets (positions are LOCAL to this mesh)
   return mesh;
 }

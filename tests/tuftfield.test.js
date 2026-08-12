@@ -69,7 +69,6 @@ test('the field wears the grassfield name and wiring the debug panel expects', (
   // the name; the wind sliders reach in through userData.uniforms
   const f = makeTuftField({ count: 200, seed: 11 });
   assert.equal(f.mesh.name, 'grassfield');
-  assert.ok(f.mesh.userData.noOutline);
   const u = f.mesh.userData.uniforms;
   for (const k of ['uTime', 'uWind', 'uWindDir', 'uGustScale', 'uGustSpeed', 'uPokePos', 'uPokeDir', 'uPokeAmt', 'uPokeR']) {
     assert.ok(u[k], `exposes ${k}`);

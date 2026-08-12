@@ -170,7 +170,6 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
   new THREE.CylinderGeometry(r + 0.22, r + 0.22, 0.7, 7),
   new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'stone-hit';
-  hit.userData.noOutline = true;
   pivot.add(hit);
   
   stones.push({ pivot, top, hit, y0: WY + 0.05, sunkAt: -99 });
@@ -259,7 +258,6 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
       center: [1.4, -2.0],
     });
     koi.group.position.set(0.4, WY, -1.6);
-    koi.group.traverse((o) => { o.userData.noOutline = true; });
     scene.add(koi.group);
 
     // ---- the moment: the words give way ----------------------------------

@@ -169,7 +169,6 @@ export function makeWildflowers({
     headGeometry(seed), toonMaterial({ color, flat: true }), Math.max(1, pts.length));
   mesh.count = pts.length;
   mesh.name = 'wildflowers';
-  mesh.userData.noOutline = true;   // an inverted hull on a five-pixel bloom is a smudge
   mesh.castShadow = false;
 
   // the STEMS ride as a child of the heads mesh — one scene.add carries both —
@@ -178,7 +177,6 @@ export function makeWildflowers({
     stemGeometry(), toonMaterial({ color: stemColor, flat: true }), Math.max(1, pts.length));
   stems.count = pts.length;
   stems.name = 'wildflower-stems';
-  stems.userData.noOutline = true;
   stems.castShadow = false;
   mesh.add(stems);
 

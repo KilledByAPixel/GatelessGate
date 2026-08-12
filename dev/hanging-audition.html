@@ -225,7 +225,6 @@
     const HANG_Y = LINTEL_Y - LINTEL_H / 2;
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), toonMaterial({ color: '#CFC7B2' }));
     ground.rotation.x = -Math.PI / 2;
-    ground.userData.noOutline = true;
     scene.add(ground);
 
     // ---- audio: the REAL engine, exactly as spatial-audition.html drives

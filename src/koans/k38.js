@@ -139,9 +139,7 @@ const CAM = { distance: 14.3, target: [1.05, 1.55, -1.6], heading: 156.5, pitch:
   });
   
   // ---- the leaves ------------------------------------------------------
-  // A fixed pool, borrowed and returned. Marked noOutline: an inverted-hull
-  // stroke is wider than a blade this thin, and would render each leaf as a
-  // solid ink fleck.
+  // A fixed pool, borrowed and returned.
   const leafGeo = new THREE.ConeGeometry(0.11, 0.32, 4);
   leafGeo.rotateX(Math.PI / 2);    // the blade lies flat, tip toward +z
   leafGeo.scale(1, 0.32, 1);       // and is pressed thin
@@ -151,7 +149,6 @@ const CAM = { distance: 14.3, target: [1.05, 1.55, -1.6], heading: 156.5, pitch:
   for (let i = 0; i < LEAF_POOL; i++) {
   const leaf = new THREE.Mesh(leafGeo, leafMat);
   leaf.name = 'leaf';
-  leaf.userData.noOutline = true;
   leaf.visible = false;
   scene.add(leaf);
   idle.push(leaf);

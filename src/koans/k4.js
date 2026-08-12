@@ -62,7 +62,6 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   new THREE.PlaneGeometry(SW, SH),
   toonMaterial({ color: WASH.mist, flat: true }));
   silk.name = 'silk';
-  silk.userData.noOutline = true;      // a hung sheet has no hull to outline
   scroll.add(silk);
   
   for (const sy of [-1, 1]) {
@@ -126,25 +125,22 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   //
   // If it does come back: sat ON the paint, not sunk into it — the paint is
   // pressed flat to 0.32 of its depth and a buried dot comes out the back of
-  // the silk. No outline; a hull round a mark this small is a blot.
+  // the silk.
   const mark = new THREE.Mesh(new THREE.SphereGeometry(0.030, 8, 6),
     toonMaterial({ color: INK, flat: true }));
   mark.name = 'mark';
-  mark.userData.noOutline = true;
   mark.scale.set(1, 1, 0.5);
   mark.position.set(0, 0.41, 0.040);
   // painted.add(mark);
   scroll.add(painted);
   
   // THE BEARD THAT WILL NOT TAKE. Present from the start and invisible; a
-  // tap gathers it and it drains away again. Never outlined — an outline
-  // would draw a hard edge round something that is meant to be wet ink.
+  // tap gathers it and it drains away again.
   const beardMat = toonMaterial({ color: INK_LIT, flat: true });
   beardMat.transparent = true;
   beardMat.opacity = 0;
   const beard = new THREE.Mesh(new THREE.ConeGeometry(0.115, 0.34, 7), beardMat);
   beard.name = 'beard';
-  beard.userData.noOutline = true;
   beard.rotation.x = Math.PI;          // point down, off the chin
   beard.position.set(0, 0.06, 0.04);
   beard.scale.z = 0.4;
@@ -198,7 +194,6 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   new THREE.BoxGeometry(SW * 1.2, SH * 1.1, 0.3),
   new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'scroll-hit';
-  hit.userData.noOutline = true;
   scroll.add(hit);
   
   // ---- the moment: the ink will not take -------------------------------

@@ -23,11 +23,8 @@ test('makeCliff is a wide broken lip that falls away into mist', () => {
   const mists = cliff.children.filter((c) => c.name === 'mist');
   assert.ok(mists.length >= 3, 'banks of mist lie in the void');
   for (const m of mists) {
-    assert.ok(m.material.transparent && m.userData.noOutline,
-      'mist is a soft unlit wash, not an outlined prop');
+    assert.ok(m.material.transparent, 'mist is a soft unlit wash');
   }
-  const skirt = cliff.children.find((c) => c.name === 'skirt');
-  assert.ok(skirt && skirt.userData.noOutline, 'the deepest row dissolves — no ink rim');
 
   const b = box(cliff);
   assert.ok(b.max.y > 0.1 && b.max.y < 1.4, `lip pokes modestly above the turf, got ${b.max.y}`);

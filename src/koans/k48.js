@@ -115,8 +115,7 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   scene.add(kembo);
   
   // THE STROKE — the figure one, hanging in the air off the stick. A flat
-  // slab, unoutlined, so it reads as a brush mark rather than as an object;
-  // it is drawn by scaling from its left end, which is where a brush starts.
+  // slab, drawn by scaling from its left end, which is where a brush starts.
   const stroke = new THREE.Group();
   stroke.name = 'stroke';
   const STROKE_L = 1.35;
@@ -124,7 +123,6 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   barGeo.translate(STROKE_L / 2, 0, 0);        // grows from its left end
   const bar = new THREE.Mesh(barGeo, toonMaterial({ color: ACCENT, flat: true }));
   bar.name = 'stroke-bar';
-  bar.userData.noOutline = true;
   stroke.add(bar);
   stroke.position.set(0.15, 1.95, -0.2);
   stroke.rotation.z = 0.04;                     // a hand's tilt, not a ruler's
@@ -249,7 +247,6 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   new THREE.BoxGeometry(STROKE_L * 1.2, 0.6, 0.5),
   new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'stroke-hit';
-  hit.userData.noOutline = true;
   hit.position.set(STROKE_L / 2, 0, 0);
   stroke.add(hit);
   

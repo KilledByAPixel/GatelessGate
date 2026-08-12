@@ -72,7 +72,6 @@ export function makePole({
     lineGeo.translate(0, len / 2, 0);
     const line = new THREE.Mesh(lineGeo, inkline);
     line.name = 'guy';
-    line.userData.noOutline = true;
     line.position.copy(from);
     line.quaternion.setFromUnitVectors(up, dir.normalize());
     g.add(line);
@@ -82,7 +81,6 @@ export function makePole({
     stakeGeo.translate(0, 0.09, 0);
     const stake = new THREE.Mesh(stakeGeo, inkline);
     stake.name = 'stake';
-    stake.userData.noOutline = true;
     stake.position.set(ax, 0, az);
     stake.quaternion.setFromUnitVectors(up,
       new THREE.Vector3(Math.cos(a) * 0.22, 1, Math.sin(a) * 0.22).normalize());

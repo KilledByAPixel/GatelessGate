@@ -137,7 +137,6 @@ const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 1
   new THREE.CylinderGeometry(0.85, 0.85, 1.6, 8),
   new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'fuketsu-hit';
-  hit.userData.noOutline = true;
   hit.position.set(0.8, 0.7, 0.6);
   scene.add(hit);
   

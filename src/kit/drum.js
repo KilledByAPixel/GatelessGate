@@ -160,7 +160,6 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
     new THREE.MeshBasicMaterial({ visible: false }));
   hit.geometry.rotateZ(Math.PI / 2);
   hit.name = 'drum-hit';
-  hit.userData.noOutline = true;
   hit.position.y = BARREL_Y;
   g.add(hit);
 

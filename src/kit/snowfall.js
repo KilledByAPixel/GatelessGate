@@ -77,7 +77,6 @@ export function makeSnow({
 
   const points = new THREE.Points(geo, mat);
   points.name = 'snow';
-  points.userData.noOutline = true;
   points.frustumCulled = false;
 
   const flakes = [];

@@ -61,7 +61,6 @@ function drawKey(mesh) {
     !!m.flatShading,
     m.emissive ? m.emissive.getHexString() : '-',
     m.emissiveIntensity ?? 1,
-    !!mesh.userData.noOutline,
     !!mesh.userData.keepMaterial,
     !!mesh.userData.noShadow,
     !!mesh.userData.noCastShadow,
@@ -169,7 +168,6 @@ export function bakeStatic(target, opts = {}) {
       let b = buckets.get(drawKey(o));
       if (!b) {
         b = { material: o.material, geos: [], userData: {} };
-        if (o.userData.noOutline) b.userData.noOutline = true;
         if (o.userData.keepMaterial) b.userData.keepMaterial = true;
         if (o.userData.noShadow) b.userData.noShadow = true;
         if (o.userData.noCastShadow) b.userData.noCastShadow = true;

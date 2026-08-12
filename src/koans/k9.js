@@ -188,7 +188,6 @@ const CAM = { distance: 17, target: [-0.3, 2.8, -1.6], heading: 31.5, pitch: 14.
   new THREE.CylinderGeometry(2.4, 2.8, 6.0, 8),
   new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'buddha-hit';
-  hit.userData.noOutline = true;
   hit.position.set(CX, SEAT_Y + 3.0, CZ);      // covers the taller crown too
   scene.add(hit);
   

@@ -73,7 +73,6 @@ export function makeCave({
     new THREE.BoxGeometry(width * 0.85, height * 0.75, depth * 1.9),
     new THREE.MeshBasicMaterial({ color: INK }));
   throat.name = 'throat';
-  throat.userData.noOutline = true;    // an ink hull around a hole in the light
   throat.position.set(0, height * 0.34, -depth * 0.95);
   g.add(throat);
 

@@ -39,7 +39,6 @@
       new THREE.PlaneGeometry(220, 220),
       toonMaterial({ color: '#CFC7B2' }));
     ground.rotation.x = -Math.PI / 2;
-    ground.userData.noOutline = true;
     scene.add(ground);
 
     const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 260);

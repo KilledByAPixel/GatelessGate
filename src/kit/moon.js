@@ -4,7 +4,7 @@ import { ACCENT_DEEP, PAPER } from '../palette.js';
 // A low harvest moon — "in autumn, a harvest moon" — standing far out beyond
 // the mountains. A disc on the horizon, not a lamp hung in the diorama.
 //
-// Four things keep it a moon rather than a prop, and all four are easy to lose:
+// Three things keep it a moon rather than a prop, and all three are easy to lose:
 //
 // 1. `material.fog = false`. Everything else in this book dissolves into the
 //    paper with distance (flag.js carries the same note for the same reason),
@@ -14,12 +14,10 @@ import { ACCENT_DEEP, PAPER } from '../palette.js';
 //    whichever of the three ramp bands the key light happens to hit — meaning
 //    its tone would swing with the staging's lighting rather than with the hour.
 //    A moon emits; MeshBasicMaterial is the honest material for it.
-// 3. `userData.noOutline`, so no inverted hull. An inked contour on a moon reads
-//    as a coin.
-// 4. ...and the same is true of the depth-edge ink PASS, which is a separate
-//    mechanism and on by default. The disc sits against nothing but sky, so the
-//    Sobel sees the largest depth discontinuity in the frame there. It opts out
-//    the way the grass does: by marking its fragments in alpha.
+// 3. The depth-edge ink PASS leaves it alone too — a separate mechanism, on by
+//    default. The disc sits against nothing but sky, so the Sobel sees the
+//    largest depth discontinuity in the frame there. It opts out the way the
+//    grass does: by marking its fragments in alpha.
 //
 // The disc is fixed, not billboarded. The camera orbits, but it does so within
 // ~14 units of the origin while the moon stands 60+ out, so across the whole
@@ -46,7 +44,6 @@ export function makeMoon({
 
   const mesh = new THREE.Mesh(geo, mat);
   mesh.name = 'moon';
-  mesh.userData.noOutline = true;
   // ...and the debug panel's toon toggle must not rebuild this as a lit Lambert,
   // which is exactly what it used to do — see the note in ui/debug.js. Point 2
   // above is only true if the material actually survives to render time.

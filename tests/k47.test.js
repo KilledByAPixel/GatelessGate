@@ -222,7 +222,6 @@ test('the tap zones are frames, not doorways — a tap through the arch falls th
     assert.ok(slabs.length >= 3, `gate ${i + 1} offers its posts and lintel to a fingertip`);
     for (const s of slabs) {
       assert.equal(s.visible, false, 'the renderer never sees a tap zone');
-      assert.equal(s.userData.noOutline, true, 'and the inker never inks one');
       // no slab may cover the middle of the doorway at torso height, or the
       // near gate would swallow taps aimed through its arch at the two beyond
       const { width, height } = s.geometry.parameters;

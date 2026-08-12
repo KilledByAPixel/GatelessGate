@@ -151,7 +151,6 @@ test('the butterflies are the seal, and they play where the lens is pointed', ()
       if (!o.isMesh) return;
       assert.equal('#' + o.material.color.getHexString(), ACCENT.toLowerCase(),
         'they carry this case\'s one red');
-      assert.equal(o.userData.noOutline, true, 'a hull on a paper-thin wing is a blot');
     });
   }
 

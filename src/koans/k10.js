@@ -127,7 +127,6 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 17.2 
   new THREE.CylinderGeometry(0.16, 0.16, 0.22, 6),
   new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'cup-hit';
-  hit.userData.noOutline = true;
   hit.position.y = 0.09;
   c.pivot.add(hit);
   c.hit = hit;

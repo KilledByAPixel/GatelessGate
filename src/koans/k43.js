@@ -129,7 +129,6 @@ const CAM = { distance: 10.6, target: [0.7, 0.7, -0.55], heading: 12, pitch: 5.5
   new THREE.BoxGeometry(0.26, STAFF_L * 1.2, 0.26),
   new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'staff-hit';
-  hit.userData.noOutline = true;
   hit.position.y = -STAFF_L / 2;
   hold.add(hit);
   

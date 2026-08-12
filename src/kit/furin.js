@@ -709,7 +709,6 @@ export function makeFurin({
         single ? singleTubeR * 1.6 : 0.20 * S, len * 1.05, 6),
       new THREE.MeshBasicMaterial({ visible: false }));
     sleeve.name = 'tube-hit';
-    sleeve.userData.noOutline = true;
     sleeve.userData.tube = i;
     sleeve.position.copy(tube.position);
     body.add(sleeve);
@@ -807,7 +806,6 @@ export function makeFurin({
   tagGeo.translate(0, -tagH / 2, 0);
   const tag = new THREE.Mesh(tagGeo, toonMaterial({ color: PAPER, side: THREE.DoubleSide }));
   tag.name = 'tag';
-  tag.userData.noOutline = true;      // an open surface; the inverted hull doesn't suit it
   tag.userData.tube = null;           // the whole chime, not any one tube
   // A single's paper turns on its own thread (SPIN, above) — so it needs a
   // pivot of its own, hung at the mouth, with the paper below it. A ring's
@@ -907,7 +905,6 @@ export function makeFurin({
     new THREE.CylinderGeometry(hitR, hitR, hitH, 6),
     new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'furin-hit';
-  hit.userData.noOutline = true;
   hit.userData.tube = null;           // the whole chime, not any one tube
   hit.position.y = single ? -hitH / 2 : -1.05 * S;
   body.add(hit);

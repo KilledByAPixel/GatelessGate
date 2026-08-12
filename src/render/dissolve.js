@@ -53,7 +53,6 @@ export function makeDissolve() {
   mesh.name = 'dissolve';
   mesh.frustumCulled = false;
   mesh.renderOrder = 1000;
-  mesh.userData.noOutline = true;
 
   let anim = null; // { from, to, dur, el, res }
   const api = {

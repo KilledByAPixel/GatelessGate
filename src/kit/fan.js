@@ -55,7 +55,6 @@ export function makeFan({
   const leaf = new THREE.Mesh(geo,
     toonMaterial({ color, flat: true, side: THREE.DoubleSide }));
   leaf.name = 'fan-leaf';
-  leaf.userData.noOutline = true;
   leaf.position.y = handleLen;
   group.add(leaf);
 

@@ -33,7 +33,6 @@ export function scatterPoints({ count, rMin = 4, rMax = 24, seed = 1, keepout = 
 function instanced(geo, color, pts, { yOf, scaleOf, tintSpread = 0.06, sink = 0 }) {
   const mat = toonMaterial({ color, flat: true });
   const mesh = new THREE.InstancedMesh(geo, mat, pts.length);
-  mesh.userData.noOutline = true;
   pts.forEach((pt, i) => {
     const sc = scaleOf(pt.u);
     _p.set(pt.x, (yOf ? yOf(pt) : 0) - sink * sc, pt.z);
@@ -116,9 +115,6 @@ export function makeBushes({ count = 9, seed = 61, groundSeed = 21, keepout = []
 
 // ONE rock, hand-sized: the same lump-cluster geometry the instanced scatter
 // draws, built as a single mesh so a case can stage a boulder on purpose.
-// The scatter's rocks skip outlines (userData.noOutline in instanced()) —
-// they are ground noise at pebble scale. A boulder is a prop, so this one
-// does NOT set the flag: it takes the ink pass like any staged thing.
 export function makeBoulder({ size = 1.0, seed = 1, color = WASH.stone } = {}) {
   const mesh = new THREE.Mesh(rockGeometry(seed), toonMaterial({ color, flat: true }));
   mesh.name = 'boulder';

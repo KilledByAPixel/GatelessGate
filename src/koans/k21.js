@@ -169,7 +169,6 @@ const CAM = { distance: 10, target: [0.8, 0.9, 0.2], heading: 4, pitch: 14 };
       new THREE.BoxGeometry(0.95, 0.6, 0.95),
       new THREE.MeshBasicMaterial({ visible: false }));
     hit.name = 'stick-hit';
-    hit.userData.noOutline = true;
     hit.position.set(0.8, 0.3, 0.2);
     scene.add(hit);
 

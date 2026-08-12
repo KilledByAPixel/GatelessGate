@@ -8,13 +8,12 @@ test('makeFan is a two-mesh ōgi: pleated wedge on a grip', () => {
   assert.equal(f.name, 'fan');
 
   // two meshes and no more — the fan appears in held poses where every extra
-  // mesh is an extra outline draw
+  // mesh is an extra draw call
   const meshes = [];
   f.traverse((o) => { if (o.isMesh) meshes.push(o.name); });
   assert.deepEqual(meshes.sort(), ['fan-handle', 'fan-leaf']);
 
   const leaf = f.children.find((c) => c.name === 'fan-leaf');
-  assert.ok(leaf.userData.noOutline, 'the leaf is an open sheet: no inverted hull');
   assert.equal(leaf.material.side, THREE.DoubleSide, 'a sheet shows both faces');
 
   // the group origin is the hand: grip at the bottom, leaf opening up +Y

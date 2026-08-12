@@ -59,6 +59,5 @@ export function makeSand({
   mat.polygonOffsetFactor = -1;
   const mesh = new THREE.Mesh(geo, mat);
   mesh.name = 'sand';
-  mesh.userData.noOutline = true;                // a wash of ground, not a contour
   return mesh;
 }

@@ -34,7 +34,6 @@ export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed 
   // The seal sits IN the wash, not on top of it. Excluding it from fog made it
   // the brightest thing in frame and read as a sticker rather than pigment.
   mesh.name = 'cloth';
-  mesh.userData.noOutline = true; // inverted hull doesn't suit an open surface
   mesh.position.set(0.045, poleH - 0.06, 0);
   group.add(mesh);
 

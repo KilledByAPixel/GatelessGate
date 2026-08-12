@@ -107,11 +107,7 @@ test('plantRock is seeded by where it stands, like plantTree', () => {
   assert.equal(s1, s2, 'a named seed outranks the position');
 });
 
-test('plantRock takes ink: no noOutline flag, unlike the scatter it borrows from', () => {
-  // the instanced scatter skips outlines at its size; a boulder is a staged
-  // prop and gets the hull like any other prop
-  const b = plantRock(null, { x: 1, z: 1 });
-  assert.ok(!b.userData.noOutline, 'a boulder is outlined');
+test('plantRock honours a case-owned ground function', () => {
   const groundFn = () => 2.5;
   assert.ok(Math.abs(plantRock(null, { x: 6, z: 6, groundFn }).position.y - (2.5 - 0.12)) < 1e-9,
     'a case that owns its ground is honoured');

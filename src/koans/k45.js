@@ -278,7 +278,6 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
       new THREE.BoxGeometry(2.0, 1.9, 1.3),
       new THREE.MeshBasicMaterial({ visible: false }));
     hit.name = 'horse-hit';
-    hit.userData.noOutline = true;
     hit.position.set(horseX, 0.95, horseZ);
     hit.rotation.y = horse.group.rotation.y;
     scene.add(hit);

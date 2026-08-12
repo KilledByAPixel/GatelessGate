@@ -103,7 +103,6 @@ export function makeButterflies({
     for (const side of [-1, 1]) {
       const w = new THREE.Mesh(wingGeometry(size, side), mat);
       w.name = 'butterfly-wing';
-      w.userData.noOutline = true;
       w.castShadow = false;
       b.add(w);
       wings.push({ mesh: w, side });

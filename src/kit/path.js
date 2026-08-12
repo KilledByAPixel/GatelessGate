@@ -89,7 +89,6 @@ export function makePath({
   mat.polygonOffsetFactor = -1;
   const mesh = new THREE.Mesh(geo, mat);
   mesh.name = 'path';
-  mesh.userData.noOutline = true; // a worn track, not a contour
 
   // sample the centerline at t∈[0,1] so props (gate, lanterns) sit ON the path.
   // `heading` is a rotation.y that aligns a gate's opening along the trail;

@@ -274,7 +274,7 @@ test('the meadow casts no shadow, and the ground carries the dark instead', () =
 
 // ---- the moon ---------------------------------------------------------------
 
-test('the moon is fog-exempt, far out past the mountains, and takes no outline', () => {
+test('the moon is fog-exempt and far out past the mountains', () => {
   const m = makeMoon({ radius: 3.0, distance: 60, height: 9.2, azimuth: -0.28 });
   assert.equal(m.name, 'moon');
 
@@ -282,8 +282,7 @@ test('the moon is fog-exempt, far out past the mountains, and takes no outline',
   // distance; at 60 units FogExp2(0.030) would wash the disc away completely.
   assert.equal(m.material.fog, false, 'the moon must opt out of fog or it vanishes');
 
-  // an inked contour on a moon reads as a coin — both mechanisms have to know
-  assert.equal(m.userData.noOutline, true, 'no inverted hull');
+  // an inked contour on a moon reads as a coin — the depth-edge pass has to know
   assert.equal(typeof m.material.customProgramCacheKey, 'function', 'opts out of the depth-edge ink pass');
 
   // beyond the mountain bands, which composeWorld puts 33-52 out
@@ -365,7 +364,6 @@ test('wildflowers place exactly the count asked for, in two instanced draws (pal
   const f = makeWildflowers({ count: 60, radius: 18, rMin: 3, seed: 19, groundSeed: 21 });
   assert.equal(f.mesh.name, 'wildflowers');
   assert.ok(f.mesh.isInstancedMesh, 'the heads are one instanced mesh');
-  assert.equal(f.mesh.userData.noOutline, true, 'an inverted hull on a five-pixel bloom is a smudge');
   assert.equal(f.mesh.count, 60, `asked for 60, got ${f.mesh.count}`);
   assert.equal(f.blooms, 60);
   assert.equal(f.points.length, 60);

@@ -12,11 +12,10 @@ const vertsOf = (mesh) => {
   return out;
 };
 
-test('one mesh, one draw call, no outline, named sand', () => {
+test('one mesh, one draw call, named sand', () => {
   const sand = makeSand({ shore: SHORE });
   assert.ok(sand.isMesh);
   assert.equal(sand.name, 'sand');
-  assert.equal(sand.userData.noOutline, true);
   assert.equal(sand.children.length, 0);
 });
 

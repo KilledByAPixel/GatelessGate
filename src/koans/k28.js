@@ -104,7 +104,6 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   flameGeo.translate(0, -0.10, 0);         // keep the old cone's centre so nothing re-frames
   const flame = new THREE.Mesh(flameGeo, flameMat);
   flame.name = 'flame';
-  flame.userData.noOutline = true;
   flame.position.set(-.8, 1.0, -1.7);     // base at 0.68 — the kit candle's tip
   scene.add(flame);
   
@@ -171,7 +170,6 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   });
   const stars = new THREE.Points(starGeo, starMat);
   stars.name = 'stars';
-  stars.userData.noOutline = true;
   stars.frustumCulled = false;
   scene.add(stars);
   
@@ -208,7 +206,6 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   new THREE.CylinderGeometry(0.5, 0.5, 1.6, 7),
   new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'flame-hit';
-  hit.userData.noOutline = true;
   hit.position.set(0.5, 0.8, -1.7);
   scene.add(hit);
   

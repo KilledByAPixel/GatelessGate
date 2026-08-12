@@ -305,7 +305,6 @@ test('case 39: the fish are unlit, or they vanish under the sheet', () => {
   for (const b of bodies) {
     assert.ok(b.material.isMeshBasicMaterial, 'unlit — the water eats toon shading');
     assert.equal(b.userData.keepMaterial, true, 'and the workbench must not relight it');
-    assert.equal(b.userData.noOutline, true, 'no ink hull on a thing seen through water');
   }
 });
 

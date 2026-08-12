@@ -51,6 +51,5 @@ export function makeGround({ size = 150, seed = 21, roll = 1.1, flatRadius = 9, 
   geo.computeVertexNormals();
   const mesh = new THREE.Mesh(geo, toonMaterial({ color }));
   mesh.name = 'ground';
-  mesh.userData.noOutline = true; // a wash, not a contour
   return mesh;
 }

@@ -253,7 +253,6 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   new THREE.CylinderGeometry(0.6, 0.7, H, 8),
   new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'colossus-hit';
-  hit.userData.noOutline = true;
   hit.position.set(0.4, H / 2, -0.8);
   scene.add(hit);
   

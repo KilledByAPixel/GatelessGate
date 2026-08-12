@@ -519,7 +519,6 @@ export function makeCylinderChime({
     new THREE.CylinderGeometry(BODY_R * 1.6, BODY_R * 1.6, BODY_LEN * 1.15, 8),
     new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'cylinder-hit';
-  hit.userData.noOutline = true;
   hit.position.y = bodyTopY - BODY_LEN / 2;
   swing.add(hit);
 
@@ -551,10 +550,11 @@ export function makeCylinderChime({
   // clapper, visible in the open ring among the tubes, this one sits INSIDE
   // a solid, opaque bronze cylinder and — now that THE WALL, below, keeps
   // its swing bounded to GAP_ANGLE of the body's own rotation — can never
-  // swing clear of the body's silhouette either) and marked it noOutline on
-  // those grounds, which only ever saved the outline's own draw call, not
-  // the clapper's own. Deleting the mesh outright removes both: the book
-  // was spending a draw rendering something nobody could ever see, and the
+  // swing clear of the body's silhouette either) and excluded it from the
+  // hull outline on those grounds, which only ever saved the hull's own
+  // draw call, not the clapper's own. Deleting the mesh outright removes
+  // both: the book was spending a draw rendering something nobody could
+  // ever see, and the
   // thing occasionally visible poking through the wall (a rendering
   // artifact of a solid disc swinging inside a low-poly, unlined tube, not
   // a physics bug — THE WALL already keeps the underlying angle bounded)

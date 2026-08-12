@@ -162,7 +162,6 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   new THREE.BoxGeometry(1.5, 1.6, 1.5),
   new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'chu-hit';
-  hit.userData.noOutline = true;
   hit.position.set(CHU_POS.x, CHU_POS.y + 0.6, CHU_POS.z);
   scene.add(hit);
   

@@ -103,13 +103,11 @@ export function makeLantern({ height = 1.15, color = WASH.stone } = {}) {
   g.add(firebox);
 
   // CANDLE — pale wax standing on the sill floor, sunk a hair so it reads as
-  // set into the chamber rather than balanced on the lip. noOutline: at this
-  // size the inverted hull would swallow it whole.
+  // set into the chamber rather than balanced on the lip.
   const CAND_R = 0.027 * H;
   const CAND_H = 0.14 * H;
   const candle = new THREE.Mesh(new THREE.CylinderGeometry(CAND_R * 0.92, CAND_R, CAND_H, 7), waxMat);
   candle.name = 'candle';
-  candle.userData.noOutline = true;
   candle.position.y = FBOX_BOT + SILL_H - 0.01 * H + CAND_H / 2;
   g.add(candle);
 

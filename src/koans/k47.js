@@ -144,7 +144,6 @@ const CAM = { distance: 14.5, target: [-0.6, 0.8, -10.85], heading: 6.5, pitch: 
   );
   slab.name = 'gatehit';
   slab.visible = false;             // the raycaster still sees it; the renderer never does
-  slab.userData.noOutline = true;
   slab.position.set(p.x, p.y, 0);
   gate.add(slab);
   hitSlabs.push(slab);

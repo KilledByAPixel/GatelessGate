@@ -161,7 +161,6 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   new THREE.CylinderGeometry(0.7, 0.7, 1.8, 8),
   new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'woman-hit';
-  hit.userData.noOutline = true;
   hit.position.set(WOMAN.x, 0.9, WOMAN.z);
   scene.add(hit);
   

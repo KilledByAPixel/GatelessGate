@@ -287,7 +287,6 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
       new THREE.BoxGeometry(3.8, 3.4, 2.2),
       new THREE.MeshBasicMaterial({ visible: false }));
     hit.name = 'boat-hit';
-    hit.userData.noOutline = true;
     hit.position.set(0, 1.2, 0);        // local to the boat: hull through masthead
     boat.group.add(hit);
 

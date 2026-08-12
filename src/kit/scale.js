@@ -105,7 +105,6 @@ export function makeScale({ height = 1.35, color = WASH.dark, panColor = WASH.st
     new THREE.BoxGeometry(BEAM_L * 1.05, 0.62 * H, 0.4 * H),
     new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'scale-hit';
-  hit.userData.noOutline = true;
   hit.position.y = H - 0.13 * H;
   g.add(hit);
 

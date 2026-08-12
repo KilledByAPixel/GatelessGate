@@ -190,7 +190,6 @@ export default {
         new THREE.BoxGeometry(w, h, d),
         new THREE.MeshBasicMaterial({ visible: false }));
       m.name = name;
-      m.userData.noOutline = true;
       m.position.set(x, groundHeight(x, z, { seed: 21 }) + h / 2, z);
       scene.add(m);
       return m;

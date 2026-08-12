@@ -63,24 +63,12 @@ test('makePole stands from the ground and topY is the cap\'s upper face', () => 
   }
 });
 
-test('makePole is deterministic by seed, and its hairlines are marked noOutline', () => {
+test('makePole is deterministic by seed', () => {
   const a = makePole({ height: 8, seed: 46 }).anchors;
   const b = makePole({ height: 8, seed: 46 }).anchors;
   const c = makePole({ height: 8, seed: 7 }).anchors;
   assert.deepEqual(a, b, 'same seed, same rigging');
   assert.notDeepEqual(a, c, 'different seed, different rigging');
-
-  // Lines and stakes are thin enough that the old inverted-hull ink pass
-  // would have swallowed them whole (the case-3 finger lesson); they still
-  // carry the noOutline flag that opted them out of it.
-  const pole = makePole({ height: 8, seed: 46 });
-  for (const child of pole.children) {
-    if (child.name === 'guy' || child.name === 'stake') {
-      assert.ok(child.userData.noOutline, `${child.name} must be marked noOutline`);
-    }
-  }
-  assert.ok(!pole.children.find((m) => m.name === 'shaft').userData.noOutline, 'the mast keeps its ink');
-  assert.ok(!pole.children.find((m) => m.name === 'cap').userData.noOutline, 'so does the seat');
 });
 
 // ---- the module contract --------------------------------------------------

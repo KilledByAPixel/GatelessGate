@@ -275,7 +275,6 @@ export function makeWater({
   }
   const surface = new THREE.Mesh(geo, mat);
   surface.name = 'surface';
-  surface.userData.noOutline = true;
   // Water never joins the shadow map, either side of it. An ocean-sized sheet
   // outruns the sun's little shadow camera (far = 42), and where the far
   // plane slices the sheet the lookup paints a phantom wedge — Frank found a

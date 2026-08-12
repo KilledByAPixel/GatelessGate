@@ -15,12 +15,9 @@ function birdNodes(flock) {
   return out;
 }
 
-test('a bird is three meshes — one merged body and two wings — with no outline', () => {
+test('a bird is three meshes — one merged body and two wings', () => {
   const b = makeBird({ size: 0.5 });
   assert.equal(birdMeshes(b.group), 3);
-  b.group.traverse((o) => {
-    if (o.isMesh) assert.equal(o.userData.noOutline, true, 'birds never take an inverted hull');
-  });
 });
 
 test('the wings beat — a flap moves the wing hinges', () => {

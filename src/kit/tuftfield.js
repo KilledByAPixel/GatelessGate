@@ -283,7 +283,7 @@ export function makeTuftField({
   const spots = grassPlacements({ count, radius, taper, inner, seed, groundSeed, keepout, groundFn });
   const mesh = new THREE.InstancedMesh(geo, mat, Math.max(1, spots.length));
   mesh.name = 'grassfield';          // the debug panel's toggles, wind sliders and
-  mesh.userData.noOutline = true;    // material-swap exemption all key off this name
+                                      // material-swap exemption all key off this name
   mesh.userData.uniforms = uniforms;
   // NO CAST, BUT STILL RECEIVE. `castShadow = false` alone did not hold: the
   // workbench's apply() re-asserts castShadow on every mesh on every page build,

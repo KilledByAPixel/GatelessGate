@@ -31,7 +31,6 @@ test('rocks/bushes are single instanced meshes sitting on the ground', () => {
     const m = make({ seed: 7, groundSeed: 21 });
     assert.ok(m.isInstancedMesh, `${name} instanced`);
     assert.equal(m.name, name);
-    assert.equal(m.userData.noOutline, true);
     assert.ok(m.count > 0);
     const m4 = new THREE.Matrix4();
     m.getMatrixAt(0, m4);
@@ -160,7 +159,6 @@ test('lantern roof rim kicks up above the low point just behind it', () => {
 test('path is a draped ribbon from A to B', () => {
   const p = makePath({ from: [0, 8], to: [0, -30], seed: 91, groundSeed: 21 });
   assert.equal(p.name, 'path');
-  assert.equal(p.userData.noOutline, true);
   const pos = p.geometry.attributes.position;
   assert.ok(pos.count >= 40, 'enough samples');
   let minZ = Infinity, maxZ = -Infinity;
@@ -198,7 +196,6 @@ test('makeTuftField: one instanced meadow, masked and ground-conforming', () => 
   const f = makeTuftField({ count: 3000, radius: 14, seed: 5, groundSeed: 21, keepout });
   assert.equal(f.mesh.name, 'grassfield');
   assert.ok(f.mesh.isInstancedMesh, 'one instanced mesh = one draw call');
-  assert.equal(f.mesh.userData.noOutline, true);
   assert.ok(f.blades > 500, `placed blades, got ${f.blades}`);
 
   const m4 = new THREE.Matrix4();

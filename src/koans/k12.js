@@ -207,7 +207,6 @@ export default {
       new THREE.CylinderGeometry(0.8, 0.8, 2.0, 8),
       new THREE.MeshBasicMaterial({ visible: false }));
     hit.name = 'zuigan-hit';
-    hit.userData.noOutline = true;
     hit.position.set(ZUIGAN.x, 1.0, ZUIGAN.z);
     scene.add(hit);
 

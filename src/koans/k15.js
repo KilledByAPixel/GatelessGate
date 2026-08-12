@@ -169,7 +169,6 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -5, pitch: 13.
   new THREE.BoxGeometry(3.4, 3.2, 0.9),
   new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'gate-hit';
-  hit.userData.noOutline = true;
   hit.position.set(0.5, 1.6, -1.2);
   hit.rotation.y = -0.16;
   scene.add(hit);

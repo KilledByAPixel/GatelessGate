@@ -109,7 +109,6 @@ export function makeOdoshi({ size = 1, seed = 7, period = 32, phase = null, onPo
     new THREE.BoxGeometry(1.5 * S, 0.6 * S, 0.45 * S),
     new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'odoshi-hit';
-  hit.userData.noOutline = true;
   hit.position.y = PIVOT_Y;
   g.add(hit);
 

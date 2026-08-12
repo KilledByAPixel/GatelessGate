@@ -132,7 +132,6 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 31.5, pitch: 2
   new THREE.BoxGeometry(w, h, d),
   new THREE.MeshBasicMaterial({ visible: false }));
   m.name = name;
-  m.userData.noOutline = true;
   m.position.set(x, y, z);
   parent.add(m);
   return m;

@@ -38,7 +38,6 @@ export function makeAssembly({ count = 8, radius = 3.0, center = [0, 0], facing 
 
   const mesh = new THREE.InstancedMesh(geo, toonMaterial({ color, flat: true }), count);
   mesh.name = 'assembly';
-  mesh.userData.noOutline = true;
 
   const m = new THREE.Matrix4();
   const col = new THREE.Color();

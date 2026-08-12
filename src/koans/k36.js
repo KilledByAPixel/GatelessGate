@@ -162,7 +162,6 @@ const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch:
   new THREE.CylinderGeometry(1.0, 1.0, 2.0, 8),
   new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'master-hit';
-  hit.userData.noOutline = true;
   hit.position.set(master.position.x, 1.0, master.position.z);
   scene.add(hit);
   

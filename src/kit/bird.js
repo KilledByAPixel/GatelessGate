@@ -91,7 +91,6 @@ export function makeBird({ size = 0.5, color, seed = 0 } = {}) {
 
   const body = new THREE.Mesh(bodyGeometry(size), mat);
   body.name = 'bird-body';
-  body.userData.noOutline = true;
   g.add(body);
 
   const wings = [];
@@ -100,7 +99,6 @@ export function makeBird({ size = 0.5, color, seed = 0 } = {}) {
     w.position.set(side * 0.08 * size, 0.02 * size, 0.02 * size);
     const mesh = new THREE.Mesh(wingGeometry(size, side), mat);
     mesh.name = 'bird-wing';
-    mesh.userData.noOutline = true;
     w.add(mesh);
     g.add(w);
     wings.push({ hinge: w, mesh, side });

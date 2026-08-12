@@ -60,7 +60,7 @@ test('makeWater is a flat surface that ripples on demand', () => {
   const w = makeWater({ size: 2 });
   assert.equal(w.group.name, 'water');
   const surface = w.group.children.find((c) => c.name === 'surface');
-  assert.ok(surface && surface.userData.noOutline, 'surface skips outlines');
+  assert.ok(surface, 'water has a surface mesh');
   const box = new THREE.Box3().setFromObject(surface);
   assert.ok(Math.abs(box.max.y) < 0.05 && Math.abs(box.min.y) < 0.05, 'flat at y=0');
   assert.equal(w.rippleCount(), 0);

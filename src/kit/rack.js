@@ -78,7 +78,6 @@ export function makeRack({ height = 1.25, color = WASH.dark, staffColor = WASH.m
     new THREE.BoxGeometry(SPREAD + 0.5 * H, 1.7 * H, 0.6 * H),
     new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'rack-hit';
-  hit.userData.noOutline = true;
   hit.position.y = 0.85 * H;
   g.add(hit);
 

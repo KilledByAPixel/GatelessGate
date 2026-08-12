@@ -41,7 +41,6 @@ export function makeRain({
 
   const lines = new THREE.LineSegments(geo, mat);
   lines.name = 'rain';
-  lines.userData.noOutline = true;
   lines.frustumCulled = false;
 
   const drops = [];
