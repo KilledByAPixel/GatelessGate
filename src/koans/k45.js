@@ -48,7 +48,7 @@ const ID = 45;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 7.9, target: [1.55, 1.05, -0.6], heading: -24.5, pitch: 13.5 };
+const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 42, pitch: 16 };
   export default {
   id: ID,
   slug: 'who-is-he',
@@ -75,11 +75,11 @@ const CAM = { distance: 7.9, target: [1.55, 1.05, -0.6], heading: -24.5, pitch: 
   // whole picture is the red horse, so the crowd stays monochrome.
   const stallKeepout = [];
   const stalls = [
-  { t: 0.18, sidesign: -1, off: 2.8, w: 1.7 },
+  { t: 0.25, sidesign: -1, off: 1.8, w: 2.1 },
   { t: 0.30, sidesign: 1, off: 2.7, w: 1.9 },
-  { t: 0.46, sidesign: -1, off: 2.7, w: 1.7 },
-  { t: 0.62, sidesign: 1, off: 2.9, w: 1.8 },
-  { t: 0.78, sidesign: -1, off: 2.7, w: 1.6 },
+  { t: 0.59, sidesign: -1, off: 2.7, w: 3.7 },
+  { t: 0.62, sidesign: 1, off: 2.5, w: 1.8 },
+  { t: 0.78, sidesign: -1, off: 2.1, w: 1.6 },
   ];
   const keepers = [];
   for (let i = 0; i < stalls.length; i++) {
@@ -99,7 +99,7 @@ const CAM = { distance: 7.9, target: [1.55, 1.05, -0.6], heading: -24.5, pitch: 
   stall.position.set(sx, 0, sz);
   stall.rotation.y = heading;
   scene.add(stall);
-  stallKeepout.push({ x: sx, z: sz, r: Math.max(s.w, 1.4) });
+  stallKeepout.push({ x: sx, z: sz, r: Math.max(s.w*.7, 1.4) });
   
   // a keeper a step behind the counter, facing the lane — but the last
   // three stalls stand unattended, which reads as a real market (and the
@@ -189,7 +189,7 @@ const CAM = { distance: 7.9, target: [1.55, 1.05, -0.6], heading: -24.5, pitch: 
 };
     // dotted along both sides of the lane, in the gaps between the stalls
     const crowd = [
-      bystander(road.sample(0.38).x - 1.4, road.sample(0.38).z + 0.3, 1.2, 1.6),
+      bystander(road.sample(0.44).x - 2.4, road.sample(0.44).z + 0.3, 1.2, 1.6),
       bystander(road.sample(0.52).x + 1.5, road.sample(0.52).z - 0.2, -1.9, 1.5),
       bystander(road.sample(0.7).x - 1.2, road.sample(0.7).z + 0.1, 0.6, 1.62),
       bystander(road.sample(0.24).x + 1.3, road.sample(0.24).z + 0.2, -0.8, 1.35),

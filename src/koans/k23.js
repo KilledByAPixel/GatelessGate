@@ -194,7 +194,7 @@ const CAM = { distance: 10.4, target: [0.2, 1.0, -0.9], heading: 31.5, pitch: 18
     const boulders = [
       plantRock(scene, { x: -7.2, z: -12.5, size: 2.0 }),
       plantRock(scene, { x: 4.8, z: -9.8, size: 1.6 }),
-      plantRock(scene, { x: -1.6, z: -16.5, size: 2.4 }),
+      plantRock(scene, { x: .6, z: -9.5, size: 3.4 }),
     ];
     const pine = plantTree(scene, { x: -6.0, z: -8.2, kind: 'pine', height: 3.8 });
     pine.rotation.z = -0.10;   // leaned downwind (+x, the gust direction)
