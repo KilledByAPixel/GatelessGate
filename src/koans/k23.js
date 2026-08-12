@@ -2,7 +2,8 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import {
-  aimMonk, composeWorld, makeBundle, makeMonk, makePath, tapMeshes,
+  composeWorld, faceMonk, makeBundle, makeMonk, makePath, plantRock,
+  plantTree, tapMeshes,
 } from '../kit/index.js';
 import { toonMaterial, makeLights } from '../render/toon.js';
 import { addOutlines } from '../render/outlines.js';
@@ -10,14 +11,18 @@ import { hash1 } from '../util/noise.js';
 
 const ID = 23;
 
-// THE STAGING IS AN ABSENCE.
+// THE MEETING ON THE PASS.
 //
-// The case has three presences — the patriarch, the pursuer, the treasure —
-// and the scene keeps only two. The patriarch has already withdrawn: the trail
-// he left by runs on over the pass and into the fog, and nothing stands on it.
-// Playing his half of the encounter with a figure would turn the koan into a
-// standoff; playing it with empty road turns it into what it is, a man alone
-// with the thing he thought he wanted.
+// The staging used to keep the patriarch out of the frame entirely — "an
+// absence", the road he left by running empty over the pass — on the theory
+// that playing his half with a figure would turn the koan into a standoff.
+// Frank reversed it (2026-08-11): the case text has the two of them in
+// dialogue — E-myo caught up, could not lift the robe, and ASKED, and the
+// patriarch answered "do not think good, do not think not-good". So the
+// scene is that exchange: the patriarch stands a couple of paces beyond the
+// stone, facing E-myo across it, and the treasure lies between them. E-myo
+// keeps his mid-reach tremor — it reads as the asking now — and the tap
+// still plays the pull that fails.
 //
 // So: high country. A mountain trail wanders through from the near foreground
 // and runs out toward the ranges. A flat-topped stone waits a step off its
@@ -35,6 +40,7 @@ const STONE_T = 0.35;      // where along the trail the stone waits
 const STONE_OFF = -1.05;   // a step off the trail's west edge
 const APPROACH = 2.12;     // bearing E-myo -> stone (see above)
 const PACE = 1.38;         // how far short of it he has stopped
+const PATRIARCH_PACE = 1.7;  // how far beyond the stone he stands — the treasure between them
 const STONE_H = 0.52;
 const STONE_R = 0.44;      // top radius — the flat the bundle sits on
 const EMYO_H = 1.6;
@@ -56,7 +62,7 @@ const STIR = (t) => 0.007 * (0.62 * Math.sin(t * 11.3) + 0.38 * Math.sin(t * 6.7
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.6, target: [-0.3, 0.92, -0.6], heading: 31.5, pitch: 20.1 };
+const CAM = { distance: 10.4, target: [0.2, 1.0, -0.9], heading: 31.5, pitch: 18.5 };
   export default {
   id: ID,
   slug: 'do-not-think-good-do-not-think-not-good',
@@ -67,9 +73,12 @@ const CAM = { distance: 9.6, target: [-0.3, 0.92, -0.6], heading: 31.5, pitch: 2
   ambience: ['wind:0.22:pine', 'music'],   // high open country — more wind than the meadows
   
   // Close framing for a small subject (k3's precedent): the treasure is a
-  // 0.4-unit stack on a half-unit stone. Numbers baked from the staged
-  // positions — stone (0.09, -0.81), E-myo (-1.08, -0.09) — with the target
-  // biased toward the bundle and lifted to the line between his chest and it.
+  // 0.4-unit stack on a half-unit stone, now with the patriarch standing
+  // beyond it. Numbers baked from the staged positions — stone (0.09, -0.81),
+  // E-myo (-1.08, -0.09), the patriarch (1.54, -1.69) — with distance and
+  // target pulled back and toward the pair's midpoint (2026-08-11 restage)
+  // so both men clear the frame and read apart on screen, not just in world
+  // space (rigCamera's screen-separation check, k23.test.js).
   camera: CAM,
   
   build(ctx) {
@@ -133,24 +142,68 @@ const CAM = { distance: 9.6, target: [-0.3, 0.92, -0.6], heading: 31.5, pitch: 2
     // Leaned a few degrees into the reach; the tap plays the pull itself.
     const emyo = makeMonk({ height: EMYO_H, stout: 1.04, pose: 'point' });
     emyo.position.set(EMYO.x, 0, EMYO.z);
-    aimMonk(emyo, { x: STONE.x, z: STONE.z });
+    // faceMonk, not aimMonk (2026-08-11 restage): with the patriarch now in
+    // the frame, E-myo's BODY has to read as turned toward him — bodies
+    // front local +z is the kit convention the pair-facing check holds both
+    // men to. The reach below carries the ARM_YAW compensation this trades
+    // for.
+    faceMonk(emyo, { x: STONE.x, z: STONE.z });
     emyo.rotation.z = -0.06;
     scene.add(emyo);
 
+    // THE PATRIARCH, a couple of paces beyond the stone, facing E-myo over
+    // it. Same bearing line as the reach (APPROACH): the three are collinear,
+    // so the k2 eclipse rule holds for the pair exactly as it did for one.
+    const patriarch = makeMonk({ height: 1.66, elder: true });
+    patriarch.position.set(
+      STONE.x + Math.sin(APPROACH) * PATRIARCH_PACE,
+      0,
+      STONE.z + Math.cos(APPROACH) * PATRIARCH_PACE);
+    faceMonk(patriarch, { x: EMYO.x, z: EMYO.z });
+    scene.add(patriarch);
+    patriarch.userData.role = 'patriarch';
+    emyo.userData.role = 'emyo';
+
     // flatten the raised sleeve onto the line from his shoulder to the robe.
     // The posed arm is the one pose:'point' swung past vertical; its stock
-    // rotation.y (0.15) is zeroed so the reach reads clean in profile.
+    // rotation.y (0.15) is zeroed and replaced with ARM_YAW. SLEEVE_DOWN's
+    // elevation math was derived assuming the body's own forward axis (once
+    // local +x, via the old aimMonk staging) carries the reach — now the
+    // body fronts local +z (faceMonk, for the pair-facing above), so the arm
+    // needs the missing quarter turn back, ON THE ARM, to land in the same
+    // place: rotation.z is untouched (still the elevation SLEEVE_DOWN
+    // returns), rotation.y is the constant -PI/2 that remaps it from the
+    // body's local +x onto local +z. Checked bit-for-bit against the old
+    // aimMonk staging's world-space reach direction before this changed.
+    const ARM_YAW = -Math.PI / 2;
     const reach = emyo.children
       .filter((c) => c.name === 'arm')
       .sort((a, b) => b.rotation.z - a.rotation.z)[0];
     const span = Math.hypot(STONE.x - EMYO.x, STONE.z - EMYO.z);
     const REACH_Z = SLEEVE_DOWN(span, STONE_H + 0.10);
-    reach.rotation.set(0, 0, REACH_Z);
+    reach.rotation.set(0, ARM_YAW, REACH_Z);
+
+    // The pass is dressed now: a few boulders where the ranges meet the
+    // meadow, and one pine the wind has been leaning on for years.
+    const boulders = [
+      plantRock(scene, { x: -7.2, z: -12.5, size: 2.0 }),
+      plantRock(scene, { x: 4.8, z: -9.8, size: 1.6 }),
+      plantRock(scene, { x: -1.6, z: -16.5, size: 2.4 }),
+    ];
+    const pine = plantTree(scene, { x: -6.0, z: -8.2, kind: 'pine', height: 3.8 });
+    pine.rotation.z = -0.10;   // leaned downwind (+x, the gust direction)
 
     const world = composeWorld(scene, {
       view: CAM,
       seed: ID,
       groundSeed: 21,
+      // High open country: the wind the ambience already promises. Leans
+      // further (amplitude up from the slider default 3.0), broader gusts
+      // (patch below the default 0.08 — LOWER is broader), travelling fast
+      // enough to visibly cross the meadow (drift up from the default 12).
+      grassWind: 4.5,
+      grassGustScale: 0.05,
+      grassGustSpeed: 26,
       // High and sparse: two trees where the meadow cases keep five, twice the
       // stone. The country does the talking here.
       trees: 2,
@@ -160,6 +213,9 @@ const CAM = { distance: 9.6, target: [-0.3, 0.92, -0.6], heading: 31.5, pitch: 2
         ...path.keepout(26, 1.25),
         { x: STONE.x, z: STONE.z, r: 1.6 },
         { x: EMYO.x, z: EMYO.z, r: 1.2 },
+        { at: patriarch, r: 1.2 },
+        ...boulders.map((b) => ({ at: b, r: b.scale.x + 0.5 })),
+        { at: pine, r: 1.5 },
         // the right-hand end of the camera arc dips inside the tree ring
         // (z < 6, r ~ 8) — nothing gets to stand between the lens and the stone
         { x: 7.5, z: 0.7, r: 3.2 },

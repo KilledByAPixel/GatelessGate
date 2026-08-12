@@ -5,6 +5,7 @@ import { makeBundle } from '../src/kit/bundle.js';
 import k23 from '../src/koans/k23.js';
 import { ACCENT } from '../src/palette.js';
 import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
+import { rigCamera } from './helpers/rig-camera.js';
 
 const box = (o) => new THREE.Box3().setFromObject(o);
 const accentHex = new THREE.Color(ACCENT).getHexString();
@@ -132,16 +133,23 @@ test('module shape matches the koan contract', () => {
   assert.equal(typeof k23.build, 'function');
 });
 
-test('build stages ONE man, a stone off the trail, and the treasure on the stone', () => {
+test('build stages the meeting: E-myo reaching, the patriarch across the stone', () => {
   const built = k23.build(fakeCtx());
   assert.ok(built.scene instanceof THREE.Scene);
   for (const fn of ['update', 'dispose', 'fragment']) {
     assert.equal(typeof built[fn], 'function', `root.${fn} missing`);
   }
 
+  // TWO men now — Frank's call (2026-08-11), reversing the old absence
+  // staging: the case text has them in dialogue, so the scene does too.
   const monks = [];
   built.scene.traverse((o) => { if (o.name === 'monk') monks.push(o); });
-  assert.equal(monks.length, 1, 'E-myo alone — the patriarch has already withdrawn');
+  assert.equal(monks.length, 2, 'E-myo and the patriarch, talking across the stone');
+  const emyo = monks.find((m) => m.userData.role === 'emyo');
+  const patriarch = monks.find((m) => m.userData.role === 'patriarch');
+  assert.ok(emyo && patriarch, 'both tagged on purpose, not guessed at (the k45 lesson)');
+  assert.ok(patriarch.getObjectByName('staff'), 'the patriarch is the elder — the staff marks him');
+  assert.ok(!emyo.getObjectByName('staff'), 'E-myo carries nothing but the reach');
 
   const stone = built.scene.getObjectByName('stone');
   const bundle = built.scene.getObjectByName('bundle');
@@ -155,15 +163,45 @@ test('build stages ONE man, a stone off the trail, and the treasure on the stone
   assert.ok(Math.hypot(bundle.position.x - stone.position.x, bundle.position.z - stone.position.z) < 0.05,
     'centred on the stone');
 
-  // E-myo is a pace short of it: near, reaching, not touching
-  const d = Math.hypot(monks[0].position.x - stone.position.x, monks[0].position.z - stone.position.z);
-  assert.ok(d > 1.0 && d < 1.8, `one pace from the treasure, got ${d}`);
+  // E-myo a pace short of it; the patriarch a couple of paces beyond it —
+  // the treasure lies BETWEEN them, which is the whole picture
+  const flat = (m) => ({ x: m.position.x, z: m.position.z });
+  const d = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
+  const S = { x: stone.position.x, z: stone.position.z };
+  assert.ok(d(flat(emyo), S) > 1.0 && d(flat(emyo), S) < 1.8, `one pace from the treasure, got ${d(flat(emyo), S)}`);
+  assert.ok(d(flat(patriarch), S) > 1.2 && d(flat(patriarch), S) < 2.4,
+    `the patriarch stands off beyond it, got ${d(flat(patriarch), S)}`);
+  assert.ok(d(flat(emyo), flat(patriarch)) > d(flat(emyo), S), 'the stone sits between them, not beside them');
 
-  // his raised sleeve has been flattened from the sky-pointing stock pose
-  // (rotation.z ~2.19) down onto the line to the robe
-  const arms = monks[0].children.filter((c) => c.name === 'arm');
+  // FACING each other — bodies front local +z (the kit convention)
+  for (const [self, other] of [[patriarch, emyo], [emyo, patriarch]]) {
+    const fx = Math.sin(self.rotation.y), fz = Math.cos(self.rotation.y);
+    const dx = other.position.x - self.position.x, dz = other.position.z - self.position.z;
+    assert.ok((fx * dx + fz * dz) / Math.hypot(dx, dz) > 0.85,
+      'each is turned to the other — E-myo through the stone, the patriarch over it');
+  }
+
+  // his raised sleeve is still flattened onto the line to the robe
+  const arms = emyo.children.filter((c) => c.name === 'arm');
   const reach = arms.map((a) => a.rotation.z).sort((a, b) => b - a)[0];
   assert.ok(reach > 1.0 && reach < 1.6, `the reach aims at the bundle, not the sky: ${reach}`);
+
+  // AND THEY READ AS TWO from the home framing (the case-7 lesson: world
+  // distance is not screen separation)
+  const cam = rigCamera(k23.camera);
+  const at = (m) => new THREE.Vector3(m.position.x, 0.9, m.position.z).project(cam);
+  const a = at(emyo), b = at(patriarch);
+  for (const v of [a, b]) {
+    assert.ok(Math.abs(v.x) < 0.95 && Math.abs(v.y) < 0.95 && v.z < 1, 'both are in the picture');
+  }
+  const sep = Math.hypot(a.x - b.x, a.y - b.y);
+  assert.ok(sep > 0.12, `two men, not one with a shadow: ${sep.toFixed(3)} of half-frame`);
+
+  // the high country is dressed: boulders by the pass, and the lone pine
+  const boulders = [];
+  built.scene.traverse((o) => { if (o.name === 'boulder') boulders.push(o); });
+  assert.ok(boulders.length >= 2 && boulders.length <= 4, `a few boulders, got ${boulders.length}`);
+  assert.ok(built.scene.getObjectByName('pine'), 'the wind-bent pine stands');
 });
 
 test('robe AND bowl both wear the seal — the pair is the treasure', () => {
