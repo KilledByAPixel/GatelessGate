@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import { smoothstep as SS } from '../util/math.js';
 import {
-  addOutlines, composeWorld, groundHeight, makeButterflies, makeCliff,
+  composeWorld, groundHeight, makeButterflies, makeCliff,
   makeLights, makeMonk,
 } from '../kit/index.js';
 
@@ -202,8 +202,6 @@ export default {
     }
     gpos.needsUpdate = true;
     groundMesh.geometry.computeVertexNormals();
-
-    addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
     const hit = new THREE.Mesh(
       new THREE.CylinderGeometry(0.8, 0.8, 2.0, 8),

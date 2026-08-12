@@ -97,7 +97,7 @@ test('horns and ears point away from the skull, not across it', () => {
   // vanished into it — the buffalo shipped hornless-looking for weeks.
   const b = makeBuffalo({ height: 1.4 });
   const horns = [];
-  b.group.traverse((o) => { if (o.name === 'horn' && !o.userData.isOutline) horns.push(o); });
+  b.group.traverse((o) => { if (o.name === 'horn') horns.push(o); });
   assert.equal(horns.length, 2);
   for (const horn of horns) {
     const base = horn.position.x;

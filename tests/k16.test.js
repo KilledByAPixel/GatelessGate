@@ -289,7 +289,7 @@ test('the hall never stands between the camera and the bell across the orbit arc
     const len = dir.length();
     ray.set(cam.position, dir.normalize());
     const blocker = ray.intersectObject(hall, true)
-      .find((h) => h.distance < len - 0.3 && !h.object.userData.isOutline);
+      .find((h) => h.distance < len - 0.3);
     assert.ok(!blocker,
       `at heading ${(HOME.heading + d).toFixed(1)} the hall hides the bell (${blocker && blocker.object.name})`);
   }

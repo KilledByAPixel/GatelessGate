@@ -41,7 +41,7 @@ test('the portrait is the case\'s one red, and nothing else', () => {
   const painted = scene.getObjectByName('painted');
   const colors = new Set();
   painted.traverse((o) => {
-    if (o.isMesh && !o.userData.isOutline && o.name !== 'beard') colors.add('#' + o.material.color.getHexString());
+    if (o.isMesh && o.name !== 'beard') colors.add('#' + o.material.color.getHexString());
   });
   assert.deepEqual([...colors], [ACCENT.toLowerCase()],
     `the portrait is flat accent throughout, got ${[...colors].join(', ')}`);

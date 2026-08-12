@@ -2,7 +2,7 @@ import * as THREE from '../lib/three.module.js';
 import { PAPER, ACCENT_DEEP, wash } from './palette.js';
 import {
   composeWorld, makePath, makeLantern, makeGate, makeMonk,
-  makeLights, addOutlines, makeCylinderChime,
+  makeLights, makeCylinderChime,
 } from './kit/index.js';
 import { introPath } from './intro_rails.js';
 
@@ -129,7 +129,6 @@ export function buildHub({
     mountains,
   });
 
-  addOutlines(scene, { width: 0.035, wobble: 0.7 });
   // the meadow breathes, so the idling scene is never static
   return {
     scene,

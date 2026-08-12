@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeRain, makeMonk, faceMonk,
-  makeLights, addOutlines, toonMaterial, makeFurin,
+  makeLights, toonMaterial, makeFurin,
 } from '../kit/index.js';
 
 const ID = 34;
@@ -128,9 +128,7 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   { x: 0.9, z: -0.7, r: 1.7 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.030, wobble: 0.7 });
-  
+
   const hit = new THREE.Mesh(
   new THREE.CylinderGeometry(1.7, 1.7, 0.9, 8),
   new THREE.MeshBasicMaterial({ visible: false }));

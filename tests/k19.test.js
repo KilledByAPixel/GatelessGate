@@ -92,7 +92,7 @@ test('NOTHING STANDS IN FRONT OF THE MOON, at any camera angle', () => {
       assert.ok(len < 100, `the moon must stay inside the far plane, got ${len.toFixed(1)}`);
       ray.set(cam.position, dir.normalize());
       const blocker = ray.intersectObjects(root.scene.children, true)
-        .find((h) => h.distance < len - 0.5 && h.object.name !== 'moon' && !h.object.userData.isOutline);
+        .find((h) => h.distance < len - 0.5 && h.object.name !== 'moon');
       assert.ok(!blocker, `at heading ${az.toFixed(1)} the moon is occluded by ${blocker && blocker.object.name}`);
     }
   }

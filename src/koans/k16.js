@@ -6,7 +6,6 @@ import {
   makeDrum, makeHut, makeLantern, makeMonk, makePath, wrapPi,
 } from '../kit/index.js';
 import { makeLights } from '../render/toon.js';
-import { addOutlines } from '../render/outlines.js';
 
 const ID = 16;
 
@@ -158,8 +157,6 @@ export default {
         { x: bell.group.position.x, z: bell.group.position.z, r: 0.9 },
       ],
     });
-
-    addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
     // ---- the moment: answer the bell -------------------------------------
     // Tap the bell and it swings and RINGS — the first audible moment in the

@@ -4,7 +4,7 @@ import { PAPER, ACCENT, WASH } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeHut, makeMonk, aimMonk, faceMonk, makeLantern,
-  makeScale, makeLights, addOutlines, toonMaterial, makeFurin,
+  makeScale, makeLights, toonMaterial, makeFurin,
 } from '../kit/index.js';
 
 const ID = 31;
@@ -156,9 +156,7 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   { x: stall.position.x, z: stall.position.z, r: 1.8 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   const hit = new THREE.Mesh(
   new THREE.CylinderGeometry(0.7, 0.7, 1.8, 8),
   new THREE.MeshBasicMaterial({ visible: false }));

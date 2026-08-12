@@ -6,7 +6,6 @@ import {
   makeVeranda,
 } from '../kit/index.js';
 import { makeLights } from '../render/toon.js';
-import { addOutlines } from '../render/outlines.js';
 
 const ID = 26;
 
@@ -145,9 +144,7 @@ const CAM = { distance: 11.3, target: [-0.3, 1.15, 0.1], heading: 26, pitch: 23 
   { count: 4, distance: 27, arcCenter: -0.06, arcSpan: 0.9, color: wash(0.32), hScale: 0.62 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the moment: the screen goes up, and the sky is there ---------------
   // Tap it and it rolls; tap it again and it comes down. Nothing is scored and
   // nothing is announced — the payoff is only that the country appears. The

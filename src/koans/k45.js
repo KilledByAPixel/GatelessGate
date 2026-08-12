@@ -4,7 +4,7 @@ import { PAPER, ACCENT, ACCENT_DEEP, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeStall, makeHorse,
-  makeLights, addOutlines, plantTree, bakeStatic,
+  makeLights, plantTree, bakeStatic,
 } from '../kit/index.js';
 
 const ID = 45;
@@ -245,14 +245,9 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
 
     // ---- THE BAKE ---------------------------------------------------------
     // NOTHING IN THIS STREET MOVES (see the header), so nearly all of it can be
-    // merged down to one mesh per material — measured at 140 draw calls before
-    // this, 60 after. This is what the second keeper and the bystanders' arms
-    // above are paid for with: a figure added to a baked crowd costs nothing
-    // at all.
-    //
-    // BEFORE addOutlines, always: the ink pass then hangs one shell on the
-    // merged mesh instead of one on every piece of every person, which is where
-    // half of the saving is.
+    // merged down to one mesh per material — this is what the second keeper
+    // and the bystanders' arms above are paid for with: a figure added to a
+    // baked crowd costs nothing at all.
     //
     // The two who are MEETING are deliberately left alone. A baked figure has
     // no parts to find, and the elder's staff is exactly the kind of thing this
@@ -265,16 +260,11 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
     // move" and merges them in. Harmless today — this case never calls
     // horse.update()'s tail sway, only the shy/settle on the group itself —
     // but if a later case wants this horse's tail alive, that bake needs
-    // { keep: ['tail'] } (not added here: measured at 2 draws fully baked vs.
-    // 6 with the tail kept — its two segment meshes stay unbaked and each
-    // still takes its own ink shell, the same doubling k24's buffalo pays
-    // above, so the motion nothing here uses would cost four draws back, not
-    // two).
+    // { keep: ['tail'] } (not added here: its two segment meshes would stay
+    // unbaked, costing two draws back for motion nothing here uses).
     bakeStatic(stallGroups, { name: 'stalls' });
     bakeStatic([...keepers, cust, ...crowd], { name: 'crowd' });
     bakeStatic(horse.group);
-
-    addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
     // ---- the moment: the horse you are not to ride -----------------------
     // "Do not ride another's horse." Reach for the one red thing in the street

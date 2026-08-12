@@ -2,7 +2,7 @@ import * as THREE from '../../../lib/three.module.js';
 import MATTER from '../text/matter.js';
 import { PAPER, WASH, wash, ACCENT_DEEP } from '../../palette.js';
 import {
-  addOutlines, composeWorld, faceMonk, groundHeight, makeBell, makeFlag,
+  composeWorld, faceMonk, groundHeight, makeBell, makeFlag,
   makeLantern, makeLights, makeMonk, makePath, plantTree,
 } from '../../kit/index.js';
 
@@ -167,9 +167,7 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   { at: flag.group, r: 0.4 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the first touches in the book -----------------------------------
   // k16's bell idiom (strike + temple preset + the 0.5s held-pointer floor)
   // and k29's flag idiom (hover ruffles; a tap is a firmer brush of the

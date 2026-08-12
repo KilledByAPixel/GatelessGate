@@ -3,7 +3,6 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, wash } from '../palette.js';
 import { composeWorld, faceMonk, makeMonk, makePole, tapMeshes } from '../kit/index.js';
 import { makeLights } from '../render/toon.js';
-import { addOutlines } from '../render/outlines.js';
 import { noise1 } from '../util/noise.js';
 
 const ID = 46;
@@ -173,8 +172,6 @@ export default {
         { center: [15, 0, -32], spread: 13, count: 40, color: wash(0.55) },
       ],
     });
-
-    addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
     // ---- interaction ------------------------------------------------------
     let camera = null;

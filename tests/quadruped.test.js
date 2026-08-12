@@ -83,7 +83,7 @@ test('ear bases are buried inside the skull — no gap — for dog and fox', () 
     const r = head.geometry.parameters.radius;
     const centre = head.getWorldPosition(new THREE.Vector3());
     const ears = [];
-    root.traverse((o) => { if (o.name === 'ear' && !o.userData.isOutline) ears.push(o); });
+    root.traverse((o) => { if (o.name === 'ear') ears.push(o); });
     assert.strictEqual(ears.length, 2, `${label} has two ears`);
     for (const ear of ears) {
       // the geometry is base-hinged (root ring at the origin), so the mesh

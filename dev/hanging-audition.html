@@ -10,11 +10,10 @@
     gravity... very slow, like they have a lot of dampening") is about how the
     MOTION LOOKS, so a slider-only page cannot settle it. This page renders the
     real hanging objects with the project's real renderer and materials
-    (src/render/toon.js, src/render/outlines.js — the same toonMaterial/
-    addOutlines every case uses, not a stand-in), drives the real audio engine
-    exactly as spatial-audition.html does (so a strike heard here is the strike
-    the book plays), and click-to-taps through src/input.js the same way a
-    case does.
+    (src/render/toon.js — the same toonMaterial every case uses, not a
+    stand-in), drives the real audio engine exactly as spatial-audition.html
+    does (so a strike heard here is the strike the book plays), and
+    click-to-taps through src/input.js the same way a case does.
 
     THREE CONNECTED PROBLEMS this settles:
       1. a single-tube furin's size now implies its note (kit/furin.js's
@@ -179,7 +178,7 @@
   <script type="module">
     import * as THREE from '../lib/three.module.js';
     import { PAPER } from '../src/palette.js';
-    import { makeLights, toonMaterial, addOutlines } from '../src/kit/index.js';
+    import { makeLights, toonMaterial } from '../src/kit/index.js';
     import { makeFurin, SWING, CLAP_FORCE, SPIN, SINGLE_BODY_LEN } from '../src/kit/furin.js';
     import { makeCylinderChime, CYL_SWING, CYL_FORCE } from '../src/kit/cylinder.js';
     import { makeScreen, CLATTER } from '../src/kit/screen.js';
@@ -188,9 +187,8 @@
     import { createAudio } from '../src/audio/engine.js';
 
     // ---- renderer, matching kit-preview.html's convention: the project's
-    // real toon materials and inverted-hull outlines, no post-processing
-    // pipeline (that's the main app's cinematic tone-mapping, not needed to
-    // judge geometry/motion) --------------------------------------------
+    // real toon materials, no post-processing pipeline (that's the main
+    // app's cinematic tone-mapping, not needed to judge geometry/motion) ---
     const stage = document.getElementById('stage');
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(2, devicePixelRatio));
@@ -229,12 +227,6 @@
     ground.rotation.x = -Math.PI / 2;
     ground.userData.noOutline = true;
     scene.add(ground);
-    // addOutlines() (src/render/outlines.js) is a one-time traverse — see the
-    // longer comment near addFurin()/addCylinder() below for why every
-    // dynamically-added hanging object gets its OWN call instead of relying
-    // on this one. This call covers only the static set-dressing built so far
-    // (the lintel; the ground opts out via noOutline).
-    addOutlines(scene, { width: 0.035, wobble: 0.7 });
 
     // ---- audio: the REAL engine, exactly as spatial-audition.html drives
     // it, so a tap heard here is the tap the book plays --------------------
@@ -273,17 +265,6 @@
       live = { objs: [] };
     }
 
-    // addOutlines() (src/render/outlines.js) does a ONE-TIME traverse of
-    // whatever root it's given — it does not track objects added to the
-    // scene LATER. This harness rebuilds its hanging object on every mode
-    // switch and every size-slider change, so the once-per-case pattern
-    // (call it once on the whole scene after everything is built) would
-    // leave every furin/cylinder built after the first page load with no
-    // outline at all. Instead, outline each new group the moment it is
-    // added — the static lintel/ground get theirs once at startup (see the
-    // bottom of this file), everything built afterward gets its own call
-    // right here.
-    const OUTLINE_OPTS = { width: 0.035, wobble: 0.7 };
     function addFurin(opts, x) {
       const f = makeFurin({
         ...opts,
@@ -291,7 +272,6 @@
       });
       f.group.position.set(x, HANG_Y, 0);
       scene.add(f.group);
-      addOutlines(f.group, OUTLINE_OPTS);
       live.objs.push(f);
       return f;
     }
@@ -302,7 +282,6 @@
       });
       c.group.position.set(x, HANG_Y, 0);
       scene.add(c.group);
-      addOutlines(c.group, OUTLINE_OPTS);
       live.objs.push(c);
       return c;
     }
@@ -319,7 +298,6 @@
       s.group.position.set(0, 0, 0);
       s.group.visible = false;
       scene.add(s.group);
-      addOutlines(s.group, OUTLINE_OPTS);
       return s;
     }
     screenObj = buildScreen();

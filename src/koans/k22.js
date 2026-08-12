@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeGate, makeFlag, makeMonk, faceMonk, makeLantern,
-  makeLights, addOutlines, makeFurin, makeSign,
+  makeLights, makeFurin, makeSign,
 } from '../kit/index.js';
 import { clothEnergy } from '../sim/verlet.js';
 
@@ -139,9 +139,7 @@ const CAM = { distance: 10.6, target: [0.4, 1.9, -0.2], heading: 33, pitch: 12.5
   { at: sign, r: 0.5 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the moment: the sign comes down ---------------------------------
   // Brush the banner and it ruffles; touch it and it stops flying. Both live
   // in the flag component (see case 29's note on restraint) — a stilled sign

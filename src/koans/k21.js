@@ -4,7 +4,7 @@ import { PAPER, ACCENT, INK_LIT } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makeMonk, faceMonk, makeButterflies, makeWildflowers,
-  makeLights, addOutlines, toonMaterial,
+  makeLights, toonMaterial,
 } from '../kit/index.js';
 
 const ID = 21;
@@ -164,8 +164,6 @@ const CAM = { distance: 10, target: [0.8, 0.9, 0.2], heading: 4, pitch: 14 };
       // has instead of scenery
       grassKeepout: [{ at: stick, r: 1.2 }],
     });
-
-    addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
     const hit = new THREE.Mesh(
       new THREE.BoxGeometry(0.95, 0.6, 0.95),

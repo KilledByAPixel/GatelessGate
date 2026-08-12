@@ -1,7 +1,6 @@
 import * as THREE from '../../../lib/three.module.js';
 import { PAPER, INK, ACCENT, ACCENT_DEEP } from '../../palette.js';
 import { makeLights } from '../../render/toon.js';
-import { addOutlines } from '../../render/outlines.js';
 import {
   makeAssembly, makeBasin, makeBell, makeBird, makeBirds, makeBowl,
   makeBuddha, makeBuffalo, makeBundle, makeCat, makeDog, makeDrum, makeFlag,
@@ -19,9 +18,9 @@ import {
 // spine, not in the contents. It exists so a change to a shared builder can be
 // judged against every OTHER builder at once — the thing `dev/kit-preview.html`
 // does on a bare plane, but inside the real pipeline. Same toon ramp, same
-// inverted-hull ink, same fog-to-paper, same post spine, same ink dissolve on
-// the way in. A model that looks right on the workbench and wrong here is
-// wrong; this is the room that says which.
+// fog-to-paper, same post spine, same ink dissolve on the way in. A model
+// that looks right on the workbench and wrong here is wrong; this is the
+// room that says which.
 //
 // THE DRAW BUDGET DOES NOT APPLY HERE, and that is deliberate: forty-odd models
 // at once is several times a case's allowance and always will be. Nothing had to
@@ -155,7 +154,7 @@ export default {
   text: {
     note: [
       'Every model the kit builds, in one room, through the book\'s own renderer — '
-      + 'the same toon ramp, the same brushed outlines, the same fog into paper.',
+      + 'the same toon ramp, the same ink edges, the same fog into paper.',
       'Front to back: the animals, the people, what grows, what is built, what is used. '
       + 'Anything with a behaviour is running — the fox breathes, the wheel turns, '
       + 'the water swells, the flag takes the wind.',
@@ -318,12 +317,8 @@ export default {
     // existence at full zoom. Case 19 hit the same wall from the other side.
     scene.add(makeMoon({ radius: 2.6, distance: 44, height: 10.5, azimuth: 0.3 }));
 
-    // Ink LAST, as always: anything added after this pass ships without an
-    // outline and reads as a different material from everything around it.
-    addOutlines(scene, { width: 0.033, wobble: 0.7 });
-
-    // Captions go on after the ink because they are not part of the picture —
-    // they are the contact sheet's handwriting in the margin.
+    // Captions go on last because they are not part of the picture — they
+    // are the contact sheet's handwriting in the margin.
     for (const [name, z] of Object.entries(ROWS)) {
       const label = makeRowLabel(name);
       if (!label) continue;
@@ -356,7 +351,7 @@ export default {
       },
       fragment() {
         let meshes = 0;
-        scene.traverse((o) => { if (o.isMesh && !o.userData.isOutline) meshes++; });
+        scene.traverse((o) => { if (o.isMesh) meshes++; });
         return { models: animated.length, meshes, labels: labels.length, camera: !!camera };
       },
       dispose() {

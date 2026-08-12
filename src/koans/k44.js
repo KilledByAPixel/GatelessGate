@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeRack, makeLantern, makeMonk, faceMonk,
-  makeLights, addOutlines, makeFurin,
+  makeLights, makeFurin,
 } from '../kit/index.js';
 
 const ID = 44;
@@ -102,9 +102,7 @@ const CAM = { distance: 9.2, target: [0.1, 1.15, 0.6], heading: 36.5, pitch: 18.
   { x: 0.9, z: 0.6, r: 0.9 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the moment: given, taken, given ---------------------------------
   let camera = null;
   let swaps = 0;

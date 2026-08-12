@@ -3,7 +3,7 @@ import MATTER from '../text/matter.js';
 import { buildHub } from '../../intro.js';
 import { WASH } from '../../palette.js';
 import {
-  makeBuddha, makeCat, makeWildflowers, groundHeight, toonMaterial, addOutlines,
+  makeBuddha, makeCat, makeWildflowers, groundHeight, toonMaterial,
   plantTree,
 } from '../../kit/index.js';
 import { eyePosition } from '../../camera.js';
@@ -164,12 +164,6 @@ export default {
     cat.group.position.set(CAT.x, groundHeight(CAT.x, CAT.z, { seed: built.groundSeed }), CAT.z);
     cat.group.rotation.y = psi;
     scene.add(cat.group);
-
-    // buildHub outlined its scene before these three existed; the call is
-    // per-mesh idempotent, so scoping a second one to the additions is safe
-    addOutlines(mat, { width: 0.035, wobble: 0.7 });
-    addOutlines(buddha, { width: 0.035, wobble: 0.7 });
-    addOutlines(cat.group, { width: 0.035, wobble: 0.7 });
 
     // A small clearing, only where the two of them actually sit: the hub placed
     // its scatter with no keepout here, so retire any instance that landed

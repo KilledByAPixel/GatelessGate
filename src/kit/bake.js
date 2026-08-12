@@ -5,9 +5,8 @@ import { mergeSimple } from './scatter.js';
 //
 // Figures and animals are built part by part — a monk is a robe, two sleeves,
 // a head, sometimes a hat and a staff; a horse is eleven pieces — and every
-// one of those is a draw call, doubled by the inverted-hull shell addOutlines
-// hangs on it. A crowd therefore costs its scene most of the budget, and the
-// cases that have crowds used to pay for them by cutting detail: k45's
+// one of those is a draw call. A crowd therefore costs its scene most of the
+// budget, and the cases that have crowds used to pay for them by cutting
 // bystanders went without arms and three of its five stalls went without
 // keepers, for no reason but this. This module is why neither cut is needed
 // any more — the bystanders have their arms back and the second keeper is
@@ -24,9 +23,8 @@ import { mergeSimple } from './scatter.js';
 // not passed in.
 //
 // THE ORDER IS THE CONTRACT: call this after the case has finished posing,
-// recolouring and composing, and BEFORE addOutlines — so the ink pass sees one
-// mesh and hangs one shell. Finding a shell already in place is a hard error
-// rather than a silent doubling of the very thing this is for.
+// recolouring and composing — merging a part before its final pose or colour
+// bakes in the wrong one, with nothing left afterward to fix it on.
 //
 // The single-prop form mutates the prop IN PLACE and returns it, rather than
 // returning a replacement: cases hold references to what they built (k45
@@ -44,10 +42,9 @@ import { mergeSimple } from './scatter.js';
 // identity: every makeMonk mints its own toonMaterial, so identity would leave
 // nine monks as nine meshes and the whole point would be lost. The userData
 // flags are in the key because they change how the mesh is treated downstream
-// — noOutline decides whether the ink pass touches it, keepMaterial whether
-// the workbench's plain-Lambert rebuild does, noShadow/noCastShadow whether
-// debug.js's shadow pass touches it (water.js, foam.js) — and two meshes that
-// disagree about any of them cannot share one. emissive/emissiveIntensity are
+// — keepMaterial whether the workbench's plain-Lambert rebuild does,
+// noShadow/noCastShadow whether debug.js's shadow pass touches it (water.js,
+// foam.js) — and two meshes that disagree about any of them cannot share one. emissive/emissiveIntensity are
 // in the key for the same reason colour is: toon.js's seal glow
 // (`toonMaterial({ glow: false })`) exists precisely so two accent-coloured
 // materials CAN differ only by glow, and a merge that ignored it would spread
@@ -96,7 +93,7 @@ function canMerge(o) {
   if (!o.isMesh) return false;
   if (o.isInstancedMesh || o.isPoints) return false;      // already one draw
   if (o.visible === false) return false;                  // hit proxies
-  if (o.userData.foliageWind) return false;               // wind attributes + a matched shell
+  if (o.userData.foliageWind) return false;               // carries wind attributes
   if (!o.material || !o.geometry) return false;
   if (o.material.isMaterial !== true) return false;        // material arrays: one mesh, several draws
   for (const name of Object.keys(o.geometry.attributes)) {
@@ -132,14 +129,6 @@ export function bakeStatic(target, opts = {}) {
   // EXCEPT for one part — case 24's grazing buffalo, twelve static pieces and
   // a tail that swings — would otherwise have to stay unbaked entirely.
   const keep = new Set(opts.keep || []);
-
-  for (const t of targets) {
-    t.traverse((o) => {
-      if (o.userData.isOutline) {
-        throw new Error('bakeStatic: this prop already carries outline shells — bake BEFORE addOutlines');
-      }
-    });
-  }
 
   // THE FRAME the geometry is baked into.
   //   single — the prop's own frame, so the prop keeps its position and

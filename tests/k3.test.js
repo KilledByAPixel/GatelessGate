@@ -9,12 +9,11 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 
 const ACCENT_HEX = new THREE.Color(ACCENT).getHexString();
 
-// every mesh actually painted in the accent — outline shells carry a
-// ShaderMaterial with no .color, so they never count
+// every mesh actually painted in the accent
 function accentMeshes(root) {
   const out = [];
   root.traverse((o) => {
-    if (!o.isMesh || o.userData.isOutline) return;
+    if (!o.isMesh) return;
     const c = o.material && o.material.color;
     if (c && c.getHexString() === ACCENT_HEX) out.push(o);
   });
@@ -59,9 +58,8 @@ test('the seal is one mesh, slim, and standing on its base', () => {
   assert.equal(f.name, 'finger');
   assert.ok(f.isMesh, 'a single mesh');
   // ONE mesh matters: the one-seal count in the scene below is only meaningful
-  // while a finger cannot quietly become a shaft plus a capping sphere. Its
-  // own thin outline hull is the one child it is allowed.
-  const parts = f.children.filter((c) => !c.userData.isOutline);
+  // while a finger cannot quietly become a shaft plus a capping sphere.
+  const parts = f.children;
   assert.equal(parts.length, 0, 'a finger is not assembled from parts');
 
   const geo = f.geometry;

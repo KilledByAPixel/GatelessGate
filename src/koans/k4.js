@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, INK, INK_LIT } from '../palette.js';
 import {
   composeWorld, makeVeranda, makeMonk, aimMonk, makeLantern,
-  makeLights, addOutlines, toonMaterial, makeFurin, makeVase, plantTree
+  makeLights, toonMaterial, makeFurin, makeVase, plantTree
 } from '../kit/index.js';
 
 const ID = 4;
@@ -193,9 +193,7 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   ],
   grassKeepout: [{ x: 0.2, z: -2.6, r: 3.2 }],
   });
-  
-  addOutlines(scene, { width: 0.030, wobble: 0.7 });
-  
+
   const hit = new THREE.Mesh(
   new THREE.BoxGeometry(SW * 1.2, SH * 1.1, 0.3),
   new THREE.MeshBasicMaterial({ visible: false }));
@@ -237,7 +235,7 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   // Anything in this book that animates a COLOUR or an OPACITY has to do it
   // this way, or mark the mesh `keepMaterial` and accept raw toon shading.
   const paintedMeshes = [];
-  painted.traverse((o) => { if (o.isMesh && !o.userData.isOutline && o.name !== 'beard') paintedMeshes.push(o); });
+  painted.traverse((o) => { if (o.isMesh && o.name !== 'beard') paintedMeshes.push(o); });
   // INK_LIT, not INK: this is a lit surface, and at raw INK the toon ramp's
   // bands land at levels 9/19/30 and the portrait would go invisible rather
   // than black (the style rule in CLAUDE.md).

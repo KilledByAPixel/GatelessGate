@@ -9,7 +9,7 @@ const box = (o) => { o.updateWorldMatrix(true, true); return new THREE.Box3().se
 const part = (root, name) => { const o = root.getObjectByName(name); assert.ok(o, `has a ${name}`); return o; };
 const all = (root, name) => {
   const out = [];
-  root.traverse((o) => { if (o.name === name && !o.userData.isOutline) out.push(o); });
+  root.traverse((o) => { if (o.name === name) out.push(o); });
   return out;
 };
 

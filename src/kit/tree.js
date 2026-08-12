@@ -8,8 +8,8 @@ import { GRAY_DARK, WASH } from '../palette.js';
 // A deciduous ink tree grown recursively: the trunk forks into limbs, those
 // fork again, and foliage sits at the branch tips. The whole skeleton is merged
 // into ONE mesh and all the foliage into another, so a tree with ~25 limbs and
-// ~15 leaf clusters still costs two draw calls (four with outlines) — the same
-// as the old five-blob version it replaces.
+// ~15 leaf clusters still costs two draw calls — the same as the old
+// five-blob version it replaces.
 //
 // Everything derives from hash1(seed), so a given seed always grows the same tree.
 export function makeTree({
@@ -187,7 +187,7 @@ export function makeTree({
     }),
     applyFoliageWind(toonMaterial({ color: trunkColor, flat: true })));
   trunk.name = 'trunk';
-  trunk.userData.foliageWind = true;   // the outline shell must move with it — see render/outlines.js
+  trunk.userData.foliageWind = true;   // carries wind attributes — keeps bakeStatic off it
   const canopy = new THREE.Mesh(
     mergeSimple(leaves, {
       aSway: norm(leafSway), aPhase: leafPhase,

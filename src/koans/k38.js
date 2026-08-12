@@ -6,7 +6,6 @@ import {
   tapMeshes,
 } from '../kit/index.js';
 import { makeLights, toonMaterial } from '../render/toon.js';
-import { addOutlines } from '../render/outlines.js';
 import { hash1 } from '../util/noise.js';
 
 const ID = 38;
@@ -140,9 +139,9 @@ const CAM = { distance: 14.3, target: [1.05, 1.55, -1.6], heading: 156.5, pitch:
   });
   
   // ---- the leaves ------------------------------------------------------
-  // A fixed pool, borrowed and returned. Built before addOutlines and marked
-  // noOutline: an inverted-hull stroke is wider than a blade this thin, and
-  // would render each leaf as a solid ink fleck.
+  // A fixed pool, borrowed and returned. Marked noOutline: an inverted-hull
+  // stroke is wider than a blade this thin, and would render each leaf as a
+  // solid ink fleck.
   const leafGeo = new THREE.ConeGeometry(0.11, 0.32, 4);
   leafGeo.rotateX(Math.PI / 2);    // the blade lies flat, tip toward +z
   leafGeo.scale(1, 0.32, 1);       // and is pressed thin
@@ -157,9 +156,7 @@ const CAM = { distance: 14.3, target: [1.05, 1.55, -1.6], heading: 156.5, pitch:
   scene.add(leaf);
   idle.push(leaf);
   }
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // Where a leaf can let go, in world space. Only the outer clumps: a leaf
   // released from the middle of the crown falls through the mass unseen.
   const anchors = oak.canopyPoints.map((p) => oak.localToWorld(p.clone()));

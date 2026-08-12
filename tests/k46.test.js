@@ -2,7 +2,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makePole } from '../src/kit/pole.js';
-import { addOutlines } from '../src/render/outlines.js';
 import k46 from '../src/koans/k46.js';
 import { ACCENT } from '../src/palette.js';
 import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
@@ -12,14 +11,13 @@ const ACCENT_HEX = new THREE.Color(ACCENT).getHexString();
 
 const fakeCtx = () => sharedCtx({ accent: k46.accent });
 
-// Box of an object EXCLUDING outline shells — the inverted hull hangs ~0.06
-// below every mesh, which would smear the load-bearing seat assertion.
+// Box of an object's own meshes.
 function inkBox(root) {
   root.updateMatrixWorld(true);
   const box = new THREE.Box3();
   const b = new THREE.Box3();
   root.traverse((o) => {
-    if (!o.isMesh || o.userData.isOutline) return;
+    if (!o.isMesh) return;
     if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
     b.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
     box.union(b);
@@ -65,25 +63,24 @@ test('makePole stands from the ground and topY is the cap\'s upper face', () => 
   }
 });
 
-test('makePole is deterministic by seed, and its hairlines opt out of the outline pass', () => {
+test('makePole is deterministic by seed, and its hairlines are marked noOutline', () => {
   const a = makePole({ height: 8, seed: 46 }).anchors;
   const b = makePole({ height: 8, seed: 46 }).anchors;
   const c = makePole({ height: 8, seed: 7 }).anchors;
   assert.deepEqual(a, b, 'same seed, same rigging');
   assert.notDeepEqual(a, c, 'different seed, different rigging');
 
-  // a 0.012 line under the house 0.033 hull would be swallowed whole (the
-  // case-3 finger lesson), so lines and stakes are drawn as ink instead
+  // Lines and stakes are thin enough that the old inverted-hull ink pass
+  // would have swallowed them whole (the case-3 finger lesson); they still
+  // carry the noOutline flag that opted them out of it.
   const pole = makePole({ height: 8, seed: 46 });
-  addOutlines(pole, { width: 0.033, wobble: 0.7 });
-  const outlined = (m) => m.children.some((ch) => ch.userData.isOutline);
   for (const child of pole.children) {
     if (child.name === 'guy' || child.name === 'stake') {
-      assert.ok(child.userData.noOutline && !outlined(child), `${child.name} must not carry a hull`);
+      assert.ok(child.userData.noOutline, `${child.name} must be marked noOutline`);
     }
   }
-  assert.ok(outlined(pole.children.find((m) => m.name === 'shaft')), 'the mast itself keeps the house stroke');
-  assert.ok(outlined(pole.children.find((m) => m.name === 'cap')), 'so does the seat');
+  assert.ok(!pole.children.find((m) => m.name === 'shaft').userData.noOutline, 'the mast keeps its ink');
+  assert.ok(!pole.children.find((m) => m.name === 'cap').userData.noOutline, 'so does the seat');
 });
 
 // ---- the module contract --------------------------------------------------
@@ -146,7 +143,7 @@ test('one ink sitter seated exactly on the red pole\'s cap, two grey watchers fa
   // unbroken line, and the man on the cap is a dark mark on top of it.
   const accentMeshes = [];
   scene.traverse((o) => {
-    if (o.isMesh && !o.userData.isOutline && o.material && o.material.color
+    if (o.isMesh && o.material && o.material.color
       && o.material.color.getHexString() === ACCENT_HEX) accentMeshes.push(o);
   });
   assert.ok(accentMeshes.length > 0, 'the seal exists');
@@ -156,7 +153,7 @@ test('one ink sitter seated exactly on the red pole\'s cap, two grey watchers fa
       `every accent mesh belongs to the pole, found stray "${m.name}"`);
   }
   sitter.traverse((o) => {
-    if (o.isMesh && !o.userData.isOutline && o.material && o.material.color) {
+    if (o.isMesh && o.material && o.material.color) {
       assert.notEqual(o.material.color.getHexString(), ACCENT_HEX,
         'the sitter is ink, not accent — one red voice, and it is the pole');
     }
@@ -165,7 +162,7 @@ test('one ink sitter seated exactly on the red pole\'s cap, two grey watchers fa
     'the pole itself carries the seal');
   const guys = [];
   pole.traverse((o) => {
-    if (o.isMesh && !o.userData.isOutline && o.material.color && /guy|stake|line/.test(o.name)) guys.push(o);
+    if (o.isMesh && o.material.color && /guy|stake|line/.test(o.name)) guys.push(o);
   });
   for (const g of guys) {
     assert.notEqual(g.material.color.getHexString(), ACCENT_HEX, 'guy lines stay grey hairlines');
@@ -178,7 +175,7 @@ test('one ink sitter seated exactly on the red pole\'s cap, two grey watchers fa
     const mb = inkBox(m);
     assert.ok(mb.min.y > -0.05 && mb.max.y < 3, `a watcher stands on the meadow: ${mb.min.y}..${mb.max.y}`);
     m.traverse((o) => {
-      if (o.isMesh && !o.userData.isOutline) {
+      if (o.isMesh) {
         assert.notEqual(o.material.color.getHexString(), ACCENT_HEX, 'no second red figure');
       }
     });
@@ -260,7 +257,7 @@ test('clear paper behind the sitter at the home heading — no ridge, no tree', 
       const dist = dir.length();
       ray.set(cam.position, dir.normalize());
       const beyond = ray.intersectObjects(scene.children, true)
-        .filter((h) => h.distance > dist + 0.6 && !h.object.userData.isOutline);
+        .filter((h) => h.distance > dist + 0.6);
       for (const h of beyond) {
         assert.ok(!['mountain', 'tree', 'forest'].includes(h.object.name),
           `at pitch ${pitch} the red sits on "${h.object.name}" instead of paper`);

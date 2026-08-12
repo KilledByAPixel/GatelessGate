@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeLantern, makeMonk, aimMonk, faceMonk, makeGate, makeFlag,
-  makeLights, addOutlines, makeFurin,
+  makeLights, makeFurin,
 } from '../kit/index.js';
 import { clothEnergy } from '../sim/verlet.js';
 
@@ -222,8 +222,6 @@ export default {
       gate.add(single.group);
       return single;
     });
-
-    addOutlines(scene, { width: 0.035, wobble: 0.7 });
 
     const baseWind = BASE_WIND;
     let camera = null;

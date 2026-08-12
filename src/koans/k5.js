@@ -7,7 +7,6 @@ import {
 } from '../kit/index.js';
 import { noise1 } from '../util/noise.js';
 import { makeLights, toonMaterial } from '../render/toon.js';
-import { addOutlines } from '../render/outlines.js';
 import { smoothstep as SS } from '../util/math.js';
 
 const ID = 5;
@@ -276,9 +275,7 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6
   }
   gpos.needsUpdate = true;
   groundMesh.geometry.computeVertexNormals();
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the moment ------------------------------------------------------
   // Touch him and he swings a little, and steadies, and goes on hanging.
   // He never answers. He never falls. That is the whole koan, and the scene

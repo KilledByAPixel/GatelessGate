@@ -325,7 +325,7 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
 
   function meshes() {
     const out = [];
-    group.traverse((o) => { if (o.isMesh && !o.userData.isOutline) out.push(o); });
+    group.traverse((o) => { if (o.isMesh) out.push(o); });
     return out;
   }
 

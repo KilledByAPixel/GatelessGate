@@ -26,8 +26,7 @@ for (const c of CASES) {
     const count = g.index ? g.index.count / 3 : (g.attributes.position ? g.attributes.position.count / 3 : 0);
     const n = (o.isInstancedMesh ? o.count : 1);
     if (o.isInstancedMesh) instances += o.count;
-    if (o.userData.isOutline) { outlines++; outlineTris += count * n; }
-    else { meshes++; tris += count * n; }
+    meshes++; tris += count * n;
   });
   rows.push({ id: c.id, title: c.title.slice(0, 30), meshes, outlines, instances,
     ktris: tris / 1000, koutline: outlineTris / 1000 });

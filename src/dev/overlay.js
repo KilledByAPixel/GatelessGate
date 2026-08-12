@@ -109,7 +109,7 @@ export function layoutGuides(scene, { target = null } = {}) {
   for (const o of (scene && scene.children) || []) {
     // `layout-` skips the guides themselves: rebuilding while one is still
     // attached would put a marker on the overlay, at the origin, every time.
-    if (!o.name || AGGREGATE.has(o.name) || o.isLight || o.userData.isOutline
+    if (!o.name || AGGREGATE.has(o.name) || o.isLight
       || o.name.startsWith('layout-')) continue;
     const { x, y, z } = o.position;
     if (![x, y, z].every(Number.isFinite)) continue;

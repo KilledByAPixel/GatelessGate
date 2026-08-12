@@ -17,7 +17,7 @@ function shipBounds(boat, aspect) {
   const v = new THREE.Vector3();
   const b = { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity, off: 0, n: 0 };
   boat.traverse((o) => {
-    if (!o.isMesh || o.userData.isOutline) return;
+    if (!o.isMesh) return;
     const pos = o.geometry.getAttribute('position');
     for (let i = 0; i < pos.count; i++) {
       v.fromBufferAttribute(pos, i);
@@ -36,7 +36,7 @@ test('a ship stands out on the eastern sea', () => {
   const root = built();
   const boat = root.scene.getObjectByName('boat');
   assert.ok(boat, 'the sea is not empty');
-  const parts = boat.children.filter((c) => !c.userData.isOutline).map((c) => c.name);
+  const parts = boat.children.map((c) => c.name);
   for (const want of ['hull', 'mast', 'sail']) assert.ok(parts.includes(want), `it has a ${want}`);
   assert.ok(boat.position.z < -18, 'and it is seaward of the waterline, not beached');
 });

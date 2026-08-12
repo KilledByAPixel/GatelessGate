@@ -46,9 +46,6 @@ const SPECIES = { tree: makeTree, pine: makePine, oak: makeOak };
 // the ground back there"). This samples the same surface the scatter does, and
 // takes `groundFn` for a case whose ground is more than the terrain function.
 //
-// Call it BEFORE the case's addOutlines, or the tree ships without ink. If you
-// find one that did, addOutlines is idempotent — it skips anything already
-// carrying a hull — so calling it a second time inks the newcomer and nothing else.
 export function plantTree(scene, {
   x = 0, z = 0,
   kind = 'tree',
@@ -85,7 +82,6 @@ export function plantTree(scene, {
 // (hand-placed y = 0 floats or sinks past the flat nine units), rotation and
 // shape seeded from the position unless pinned, and DELIBERATELY NO KEEPOUT
 // WORK — this is the override, so the case adds { at: <the rock>, r } itself.
-// Call it before the case's addOutlines or it ships without ink.
 // `size` is a plain scale on the ~1-unit lump cluster: 1.5–2.2 is "boulder",
 // chest-high to head-high beside a 1.6-unit figure.
 export function plantRock(scene, {

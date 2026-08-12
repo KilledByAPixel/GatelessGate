@@ -20,7 +20,7 @@ function lowest(obj) {
   obj.updateMatrixWorld(true);
   const box = new THREE.Box3(), b = new THREE.Box3();
   obj.traverse((o) => {
-    if (!o.isMesh || o.userData.isOutline) return;
+    if (!o.isMesh) return;
     if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
     b.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
     box.union(b);

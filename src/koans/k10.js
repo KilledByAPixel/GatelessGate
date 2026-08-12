@@ -4,7 +4,7 @@ import { PAPER, ACCENT, WASH } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeHut, makeMonk, faceMonk, makeVase,
-  makeLights, addOutlines, toonMaterial, plantTree,
+  makeLights, toonMaterial, plantTree,
 } from '../kit/index.js';
 
 const ID = 10;
@@ -120,9 +120,7 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 17.2 
   { at: mat, r: 1.7 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.030, wobble: 0.7 });
-  
+
   // forgiving targets, because a wine cup is 6cm across
   for (const c of cups) {
   const hit = new THREE.Mesh(

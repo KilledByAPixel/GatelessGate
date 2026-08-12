@@ -150,6 +150,6 @@ export function makePine({ height = 4, tiers = 5, seed = 3, color = WASH.dark } 
     pineGeometry({ height, tiers, seed }),
     applyFoliageWind(toonMaterial({ color, flat: true })));
   mesh.name = 'pine';
-  mesh.userData.foliageWind = true;   // the outline shell moves with it — render/outlines.js
+  mesh.userData.foliageWind = true;   // carries wind attributes — keeps bakeStatic off it
   return mesh;
 }

@@ -15,8 +15,7 @@
     import { PAPER, INK, ACCENT_DEEP } from '../src/palette.js';
     import {
       makeDog, makeBuffalo, makeBuddha, makeMonk, makeFlower, makeBowl,
-      makeWater, makeHut, makeLattice, makeAssembly, makeLights, addOutlines,
-      setInkScale, toonMaterial,
+      makeWater, makeHut, makeLattice, makeAssembly, makeLights, toonMaterial,
       makeFox, makeCat, makeHorse, makeKoi, makeBird, makeBirds,
       makeHangingMonk,
       makeTree, makePine, makeOak, makeForest, makeGrassField, makeTuftField, makeWildflowers,
@@ -175,21 +174,6 @@
     fanProp.position.y = 1.0;
     place(makePole({}), 24, 22, 0, 'pole');
     place(makeBundle({}), 30, 22, 0, 'bundle');
-
-    // ?ink=<number> — 0 skips the inverted-hull outline pass entirely, for
-    // judging shots that want raw silhouette/form with no ink dressing on
-    // top; any other number keeps the pass and sets the global ink-width
-    // scale (setInkScale) to it. Param absent leaves the module's own
-    // scale-0 default, so the hull sits hidden (NOT the app's look any
-    // more — the app mounts with a 0.1 hairline since debug.js v6) — but
-    // the outlines ARE still built, so setInkScale from the console (or a
-    // later ?ink=N reload) brings them back without re-adding anything.
-    const inkParam = new URLSearchParams(location.search).get('ink');
-    if (inkParam !== '0') {
-      addOutlines(scene, { width: 0.035, wobble: 0.7 });
-      const inkScale = parseFloat(inkParam);
-      if (Number.isFinite(inkScale)) setInkScale(inkScale);
-    }
 
     const VIEWS = {
       wide:    { p: [0, 26, 100], t: [0, 2, 9] },

@@ -65,7 +65,7 @@ test('the horse is the one red thing, and it stands still', () => {
   const want = new Set([ACCENT, ACCENT_DEEP, ACCENT_LIGHT].map((c) => new THREE.Color(c).getHexString()));
   const reds = [];
   root.scene.traverse((o) => {
-    if (o.isMesh && !o.userData.isOutline && o.material && o.material.color
+    if (o.isMesh && o.material && o.material.color
         && want.has(o.material.color.getHexString())) reds.push(o);
   });
   assert.ok(reds.length > 0, 'the horse is red');

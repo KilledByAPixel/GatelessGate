@@ -58,11 +58,10 @@
       const { obj } = instantiate(entry, KIT);   // normalizes + settles rest pose
 
       if (mode === 'silhouette') {
-        // flat ink, no lights, outline shells hidden: the naked shape
+        // flat ink, no lights: the naked shape
         const ink = new THREE.MeshBasicMaterial({ color: 0x14110c });
         obj.traverse((o) => {
           if (!o.isMesh) return;
-          if (o.userData.isOutline) { o.visible = false; return; }
           o.material = ink;
         });
       } else {

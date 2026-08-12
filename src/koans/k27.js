@@ -4,8 +4,7 @@ import { PAPER, ACCENT, ACCENT_LIGHT, mixHex } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeHut, makeOak, makeMoon, makeMonk, faceMonk, makeLantern,
-  makeLights, addOutlines,
-} from '../kit/index.js';
+  makeLights, } from '../kit/index.js';
 
 const ID = 27;
 
@@ -126,9 +125,7 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 31.5, pitch: 2
   { at: hall, r: 2.1 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- targets ----------------------------------------------------------
   const mkHit = (name, x, y, z, w, h, d, parent) => {
   const m = new THREE.Mesh(

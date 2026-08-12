@@ -5,7 +5,7 @@ import { hash1 } from '../util/noise.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeCave, makeSnow, makePine, makeMonk, faceMonk,
-  makeLights, addOutlines, toonMaterial, plantRock,
+  makeLights, toonMaterial, plantRock,
 } from '../kit/index.js';
 
 const ID = 41;
@@ -175,8 +175,6 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
       // snow covers everything: no grass anywhere near the clearing
       grassKeepout: [{ x: 0.4, z: -3.0, r: 13 }],
     });
-
-    addOutlines(scene, { width: 0.030, wobble: 0.7 });
 
     // THE SNOW, falling. Paper-coloured, so it is nearly invisible against the
     // sky and unmistakable against the cave mouth and the figures.

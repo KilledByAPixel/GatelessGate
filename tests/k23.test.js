@@ -219,7 +219,7 @@ test('robe AND bowl both wear the seal — the pair is the treasure', () => {
   const bowl = bundle.children.find((c) => c.name === 'bowl');
   let bowlRed = 0, bowlMeshes = 0;
   bowl.traverse((o) => {
-    if (o.isMesh && !o.userData.isOutline && o.material && o.material.color) {
+    if (o.isMesh && o.material && o.material.color) {
       bowlMeshes++;
       if (o.material.color.getHexString() === accentHex) bowlRed++;
     }
@@ -230,7 +230,7 @@ test('robe AND bowl both wear the seal — the pair is the treasure', () => {
   // page's one red thing
   let strays = 0;
   built.scene.traverse((o) => {
-    if (o.isMesh && !o.userData.isOutline && o.material && o.material.color
+    if (o.isMesh && o.material && o.material.color
       && o.material.color.getHexString() === accentHex) {
       let p = o, inBundle = false;
       while (p) { if (p === bundle) inBundle = true; p = p.parent; }

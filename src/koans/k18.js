@@ -4,7 +4,7 @@ import { PAPER, ACCENT, WASH } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makePath, makeScale, makeMonk, aimMonk, faceMonk, makeHut,
-  makeLights, addOutlines, toonMaterial,
+  makeLights, toonMaterial,
 } from '../kit/index.js';
 
 const ID = 18;
@@ -138,9 +138,7 @@ const CAM = { distance: 11, target: [-0.5, 1, 0.5], heading: 46, pitch: 21.5 };
   { at: hut, r: 2.2 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the moment: it always says the same thing ------------------------
   let camera = null;
   let nudges = 0;

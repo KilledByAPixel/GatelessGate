@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeBasin, makeBowl, makeWater, makeMonk, faceMonk,
-  makeOdoshi, makeLights, addOutlines, tapMeshes,
+  makeOdoshi, makeLights, tapMeshes,
 } from '../kit/index.js';
 
 const ID = 7;
@@ -150,8 +150,6 @@ export default {
         { at: basin, r: 0.62 },
       ],
     });
-
-    addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
     // ---- the moment: the water answers as water, the bowl as a bowl ------
     let camera = null;

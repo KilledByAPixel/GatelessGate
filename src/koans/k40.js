@@ -6,7 +6,6 @@ import {
   makeVase, tapMeshes,
 } from '../kit/index.js';
 import { makeLights } from '../render/toon.js';
-import { addOutlines } from '../render/outlines.js';
 
 const ID = 40;
 
@@ -139,9 +138,7 @@ const CAM = { distance: 10.8, target: [2.05, 1, -0.5], heading: 57.5, pitch: 20 
   { x: CROWD.x, z: CROWD.z, r: 2.6 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the moment: it rocks, and rights itself --------------------------
   // Touch the vase and it tips a few degrees and wobbles back upright. That
   // is all, and it is the whole case held open: the reader's tap is Isan's

@@ -5,7 +5,7 @@ import { hash1 } from '../util/noise.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeVeranda, makeLantern, makeMonk, aimMonk, faceMonk,
-  makeLights, addOutlines, toonMaterial, makeCylinderChime,
+  makeLights, toonMaterial, makeCylinderChime,
 } from '../kit/index.js';
 
 const ID = 28;
@@ -203,9 +203,7 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   { x: -1.8, z: -2.8, r: 2.9 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   const hit = new THREE.Mesh(
   new THREE.CylinderGeometry(0.5, 0.5, 1.6, 7),
   new THREE.MeshBasicMaterial({ visible: false }));

@@ -60,9 +60,8 @@ const CORD_VARY = 0.06;     // ...and a little either way, so a pair is not a ma
 // and that is right for anything the case is composing deliberately. This
 // builder is the opposite: its whole point is that `chimes: 7` is the entire
 // instruction, and a second word you have to remember or get silence is not
-// that. There is exactly one audio engine in the app; main.js hands it over at
-// startup, the same way outlines.js takes its ink scale and scenery.js its
-// grass style.
+// that. There is exactly one audio engine in the app; main.js hands it over
+// at startup.
 //
 // Resolved AT STRIKE TIME, not at build: a scene built before startup finished
 // would otherwise capture a null and stay mute for its whole life. An explicit

@@ -5,7 +5,6 @@ import {
   composeWorld, faceMonk, makeHut, makeLantern, makeMonk, makePath, tapMeshes,
 } from '../kit/index.js';
 import { makeLights, toonMaterial } from '../render/toon.js';
-import { addOutlines } from '../render/outlines.js';
 
 const ID = 3;
 
@@ -124,10 +123,6 @@ function raiseFinger(monk, { length = 0.15, radius = 0.025, withFinger = true } 
   let finger = null;
   if (withFinger) {
     finger = makeFinger(length, radius);
-    // Its own outline, thin, added BEFORE the scene-wide pass can claim it: the
-    // house stroke is 0.033 wide and this digit is 0.05 across, so the standard
-    // inverted hull would swallow the red completely.
-    addOutlines(finger, { width: 0.007, wobble: 0.4 });
     monk.add(finger);
   }
   const f = { monk, arm, finger, radius, restZ: arm.rotation.z, lift: 0, since: -1 };
@@ -266,9 +261,7 @@ const CAM = { distance: 9.6, target: [0.7, 1.25, 0.55], heading: 16, pitch: 15.5
   { x: (GUTEI.x + BOY.x) / 2, z: (GUTEI.z + BOY.z) / 2, r: 2.9 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the moment: touch one of them, and the other one answers ----------
   // The imitation IS the koan, so the imitation is the thing you can reach.
   // No prompt says so and nothing is scored; it is a small ambient echo, and

@@ -30,12 +30,11 @@ const boxOf = (scene, name) => {
   return found ? new THREE.Box3().setFromObject(found) : null;
 };
 
-// Every real mesh in the scene, minus the inverted-hull outlines (which are
-// backface-only shells and would answer a ray from outside the object).
+// Every real mesh in the scene.
 function solids(scene) {
   const out = [];
   scene.traverse((o) => {
-    if (o.isMesh && !o.userData.isOutline) out.push(o);
+    if (o.isMesh) out.push(o);
   });
   return out;
 }

@@ -4,7 +4,7 @@ import { PAPER, ACCENT, ACCENT_DEEP } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeVeranda, makeMonk, makeLantern, wrapPi, bearing,
-  makeLights, addOutlines, toonMaterial, makeCylinderChime,
+  makeLights, toonMaterial, makeCylinderChime,
 } from '../kit/index.js';
 
 const ID = 17;
@@ -157,9 +157,7 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   { x: veranda.position.x+1., z: veranda.position.z+1.5, r: 2.7 }, // nudge it a bit
   ],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   const hit = new THREE.Mesh(
   new THREE.BoxGeometry(1.5, 1.6, 1.5),
   new THREE.MeshBasicMaterial({ visible: false }));

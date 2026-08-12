@@ -6,7 +6,6 @@ import {
   plantTree, tapMeshes,
 } from '../kit/index.js';
 import { toonMaterial, makeLights } from '../render/toon.js';
-import { addOutlines } from '../render/outlines.js';
 import { hash1 } from '../util/noise.js';
 
 const ID = 23;
@@ -258,8 +257,6 @@ const CAM = { distance: 10.1, target: [0.2, 1.3, -0.9], heading: 31.5, pitch: 16
         { count: 3, distance: 29, arcCenter: 0.85, arcSpan: 1.5, color: wash(0.31), hScale: 0.55 },
       ],
     });
-
-    addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
     // ---- the moment: take them now ---------------------------------------
     // Tap the treasure and it obliges with everything it has: a degree and a

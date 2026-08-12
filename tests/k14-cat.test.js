@@ -137,7 +137,7 @@ test('the cat ears lean away from the skull, not across it', () => {
   const cat = makeCat({ height: 1.0, pose: 'stand' });
   cat.group.updateMatrixWorld(true);
   const ears = [];
-  cat.group.traverse((o) => { if (o.name === 'ear' && !o.userData.isOutline) ears.push(o); });
+  cat.group.traverse((o) => { if (o.name === 'ear') ears.push(o); });
   assert.equal(ears.length, 2);
 
   for (const ear of ears) {
@@ -291,7 +291,7 @@ test('case 14 stages the cat ALIVE and whole — nothing in the scene cuts it', 
 
   // whole: one body, one head, four legs, two ears, one tail — all still attached
   const parts = {};
-  cat.traverse((o) => { if (!o.userData.isOutline) parts[o.name] = (parts[o.name] || 0) + 1; });
+  cat.traverse((o) => { parts[o.name] = (parts[o.name] || 0) + 1; });
   assert.equal(parts.body, 1);
   assert.equal(parts.head, 1);
   assert.equal(parts.leg, 4);
@@ -300,7 +300,7 @@ test('case 14 stages the cat ALIVE and whole — nothing in the scene cuts it', 
 
   // and it is the red seal: full accent, the only warm note in the case
   const mats = new Set();
-  cat.traverse((o) => { if (o.isMesh && !o.userData.isOutline) mats.add(o.material); });
+  cat.traverse((o) => { if (o.isMesh) mats.add(o.material); });
   for (const m of mats) {
     assert.equal('#' + m.color.getHexString(), k14.accent.toLowerCase(), 'the cat carries the accent');
   }

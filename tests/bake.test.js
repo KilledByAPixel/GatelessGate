@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { bakeStatic } from '../src/kit/bake.js';
 import { makeMonk } from '../src/kit/monk.js';
-import { addOutlines } from '../src/render/outlines.js';
 
 // THE WHOLE CORRECTNESS CLAIM, in one helper: a bake is a pure regrouping of
 // triangles. Not fewer, not moved, not flipped — the same set of triangles in
@@ -22,7 +21,7 @@ function worldTriangles(root) {
   const n = new THREE.Vector3();
   const nm = new THREE.Matrix3();
   root.traverse((o) => {
-    if (!o.isMesh || o.userData.isOutline) return;
+    if (!o.isMesh) return;
     nm.getNormalMatrix(o.matrixWorld);
     const geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry;
     const pos = geo.attributes.position;
@@ -289,21 +288,6 @@ test('a light and a line inside a baked prop both survive', () => {
   assert.ok(prop.children.includes(light), 'the light is still in the scene');
   assert.ok(prop.children.includes(line), 'the line is still in the scene');
   assert.ok(Math.abs(light.position.x - 0.2) < 1e-6, 'and still where it was placed');
-});
-
-// ORDER IS THE CONTRACT. Baking after the ink pass would merge the shells into
-// the prop and hang fresh ones on top of that — silently doubling the exact
-// thing the bake exists to halve. Loud instead.
-test('baking after addOutlines throws', () => {
-  const prop = new THREE.Group();
-  prop.name = 'prop';
-  const mat = new THREE.MeshBasicMaterial({ color: 0x333333 });
-  prop.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat));
-  prop.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat));
-  new THREE.Scene().add(prop);
-  addOutlines(prop, { width: 0.03, wobble: 0.7 });
-
-  assert.throws(() => bakeStatic(prop), /before addOutlines/i);
 });
 
 test('several props on the same material become one mesh', () => {

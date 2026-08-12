@@ -6,7 +6,6 @@ import {
   plantTree, plantRock, tapMeshes,
 } from '../kit/index.js';
 import { makeLights } from '../render/toon.js';
-import { addOutlines } from '../render/outlines.js';
 
 const ID = 2;
 
@@ -141,9 +140,7 @@ const CAM = { distance: 11.0, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 1
   // sitting in the grass like any animal, and so are the monks.
   grassKeepout: cave.floor(0.15),
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the moment: the fox notices you ---------------------------------
   // An ear, a turn of the head, one sweep of the brush, and then it is a fox
   // sitting outside a cave again. Nothing is asked of you and nothing is won.

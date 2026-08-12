@@ -6,7 +6,6 @@ import {
   makeWildflowers,
 } from '../kit/index.js';
 import { makeLights } from '../render/toon.js';
-import { addOutlines } from '../render/outlines.js';
 
 const ID = 19;
 const BASE_WIND = 0.20;
@@ -241,9 +240,7 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   { center: [16, 0, -31], spread: 14, count: 40, color: wash(0.55) },
   ],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the moment: the weather ------------------------------------------
   // Touch the meadow and a breath crosses it — in the sound, and in the wind
   // the blooms and the grass are already leaning to. Touch the moon and the

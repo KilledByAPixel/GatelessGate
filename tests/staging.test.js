@@ -14,9 +14,9 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 // Forty-odd dioramas is more art than any one of them can carry a bespoke test
 // for, and bespoke tests are the wrong shape for this anyway: what goes wrong
 // at volume is never "the composition is subtly off", it is a typo'd slug, an
-// import that was never added, a fūrin hung after addOutlines, a fragment that
-// returns an object where the debug panel wants numbers, or a scene that
-// quietly allocates four hundred draw calls.
+// import that was never added, a fragment that returns an object where the
+// debug panel wants numbers, or a scene that quietly allocates four hundred
+// draw calls.
 //
 // So this builds EVERY staged case, with no audio and no camera, and holds all
 // of them to the contract at once. A case that passes here is wired up; whether
@@ -297,7 +297,7 @@ test('the seal of each case is actually in the picture', async () => {
       .map((c) => new THREE.Color(c).getHexString()));
     const seals = [];
     root.scene.traverse((o) => {
-      if (!o.isMesh || o.userData.isOutline || !o.material || !o.material.color) return;
+      if (!o.isMesh || !o.material || !o.material.color) return;
       if (!want.has(o.material.color.getHexString())) return;
       seals.push(o.getWorldPosition(new THREE.Vector3()));
     });
@@ -318,8 +318,8 @@ test('the seal of each case is actually in the picture', async () => {
 
 test('no staged scene blows the draw budget', async () => {
   // DRAW_BUDGET (src/budget.js — the number the workbench readout shows live)
-  // per scene, and outlines double every mesh that takes one. Instanced
-  // fields (the meadow) are one call however many blades they carry.
+  // per scene. Instanced fields (the meadow) are one call however many
+  // blades they carry.
   const over = [];
   for (const entry of staged) {
     const mod = await loadKoan(entry.slug);

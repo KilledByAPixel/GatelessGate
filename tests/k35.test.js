@@ -55,7 +55,7 @@ test('the two of her are solid — no ghosting anywhere on either', () => {
   assert.equal(souls.length, 2, 'two of her');
   for (const s of souls) {
     s.traverse((o) => {
-      if (!o.isMesh || o.userData.isOutline || !o.material) return;
+      if (!o.isMesh || !o.material) return;
       assert.equal(o.material.transparent, false, 'she is a woman, not an apparition');
       assert.equal(o.material.opacity, 1);
       assert.notEqual(o.material.depthWrite, false);
@@ -71,7 +71,7 @@ test('both of her carry the same red, and nobody else in the scene does', () => 
   const isRed = (root) => {
     let found = false;
     root.traverse((o) => {
-      if (o.isMesh && !o.userData.isOutline && o.material && o.material.color
+      if (o.isMesh && o.material && o.material.color
         && reds.has(o.material.color.getHexString())) found = true;
     });
     return found;

@@ -5,7 +5,6 @@ import {
   composeWorld, groundHeight, makeFurin, makeGate, makeMonk, makePath,
 } from '../kit/index.js';
 import { makeLights } from '../render/toon.js';
-import { addOutlines } from '../render/outlines.js';
 
 const ID = 47;
 const GROUND_SEED = 21;
@@ -201,9 +200,7 @@ const CAM = { distance: 14.5, target: [-0.6, 0.8, -10.85], heading: 6.5, pitch: 
   });
   furin.group.position.set(1.2, GATES[0].height, 0);
   gates[0].gate.add(furin.group);
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the moment: three notes ------------------------------------------
   // Tap a barrier and it answers with one slow bell tone — the nearest gate
   // the deepest. Nothing advances, nothing unlocks; each barrier simply has

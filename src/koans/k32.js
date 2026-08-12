@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, wash } from '../palette.js';
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk, makeAssembly,
-  makeWildflowers, makeLights, addOutlines, toonMaterial,
+  makeWildflowers, makeLights, toonMaterial,
 } from '../kit/index.js';
 
 const ID = 32;
@@ -130,9 +130,7 @@ const CAM = { distance: 9, target: [1.45, 1, -0.95], heading: 31.5, pitch: 23 };
   ],
   });
   scene.add(flowers.mesh);
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the moment: ask, and be answered with nothing --------------------
   let clock = 0;
   let askedAt = -99;

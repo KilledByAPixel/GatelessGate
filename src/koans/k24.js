@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeWildflowers, makeBirds, makeMonk, faceMonk,
-  makeBuffalo, makeLights, addOutlines, bakeStatic,
+  makeBuffalo, makeLights, bakeStatic,
 } from '../kit/index.js';
 
 const ID = 24;
@@ -116,8 +116,7 @@ const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 1
   
   // ---- THE BAKE ---------------------------------------------------------
   // Fuketsu and his questioner stand; the buffalo grazes without going
-  // anywhere. All of that is one mesh per material once it is merged, before
-  // the ink pass doubles it — 135 draw calls to 91.
+  // anywhere. All of that is one mesh per material once it is merged.
   //
   // NOT THE BIRDS. They are the seal of this case and every one of them
   // flaps: three meshes apiece that have to stay three meshes.
@@ -125,17 +124,15 @@ const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 1
   // The buffalo keeps its TAIL. Twelve of its eighteen pieces never move,
   // but the tail swings on makeTail's own clock (buffalo.update), and a
   // merged tail is a tail that has stopped. Its six segment meshes stay
-  // unbaked and each still takes its own ink shell, which is why this scene
-  // lands at 91 rather than the ~84 a fully-still prop would have reached.
+  // unbaked, which is why this scene costs six draws more than a fully-still
+  // prop would have.
   //
   // The trees and pines are not passed in at all — bakeStatic would refuse
-  // them anyway (their canopies carry wind attributes and a shell that reads
-  // them), and asking is just a slower way of being told no.
+  // them anyway (their canopies carry wind attributes a merge would drop),
+  // and asking is just a slower way of being told no.
   bakeStatic([fuketsu, monk], { name: 'the-two' });
   bakeStatic(buffalo.group, { keep: ['tail'] });
 
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
   const hit = new THREE.Mesh(
   new THREE.CylinderGeometry(0.85, 0.85, 1.6, 8),
   new THREE.MeshBasicMaterial({ visible: false }));

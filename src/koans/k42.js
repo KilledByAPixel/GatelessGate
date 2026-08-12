@@ -4,7 +4,7 @@ import { PAPER, ACCENT_DEEP, wash } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk,
-  makeLights, addOutlines, toonMaterial,
+  makeLights, toonMaterial,
 } from '../kit/index.js';
 
 const ID = 42;
@@ -100,9 +100,7 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   // Momyo comes through it
   grassKeepout: [{ x: 0.8, z: -1.8, r: 2.4 }],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   const girlHit = new THREE.Mesh(
   new THREE.CylinderGeometry(0.62, 0.62, 1.5, 8),
   new THREE.MeshBasicMaterial({ visible: false }));

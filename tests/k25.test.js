@@ -116,7 +116,7 @@ test("the back screen fills the hall's own bay, in the plane of its posts", () =
   const solid = (o) => {
     const b = new THREE.Box3(), t = new THREE.Box3();
     o.traverse((m) => {
-      if (!m.isMesh || m.userData.isOutline || m.name === 'screen-hit') return;
+      if (!m.isMesh || m.name === 'screen-hit') return;
       if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
       t.copy(m.geometry.boundingBox).applyMatrix4(m.matrixWorld); b.union(t);
     });

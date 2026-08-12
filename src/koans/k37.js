@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP } from '../palette.js';
 import {
   composeWorld, makeBuffalo, makePen, makeMonk, faceMonk,
-  makeLights, addOutlines, tapMeshes,
+  makeLights, tapMeshes,
 } from '../kit/index.js';
 
 const ID = 37;
@@ -75,9 +75,7 @@ const CAM = { distance: 13.8, target: [1.45, 1, -1.5], heading: 29, pitch: 23.5 
   // hooves in life, so let it
   grassKeepout: [],
   });
-  
-  addOutlines(scene, { width: 0.035, wobble: 0.7 });
-  
+
   // ---- the moment: the tail --------------------------------------------
   // Tug it and it swishes. It never passes. That is the whole koan, and
   // nothing in the UI says so.

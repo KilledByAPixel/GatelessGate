@@ -39,7 +39,7 @@ test('the gate is the one red thing — the book\'s closing seal', () => {
   const want = new Set([ACCENT, ACCENT_DEEP, ACCENT_LIGHT].map((c) => new THREE.Color(c).getHexString()));
   const reds = new Set();
   root.scene.traverse((o) => {
-    if (o.isMesh && !o.userData.isOutline && o.material && o.material.color
+    if (o.isMesh && o.material && o.material.color
         && want.has(o.material.color.getHexString())) reds.add(o.name);
   });
   // every red mesh is a piece of the gate, and nothing else in the scene is red

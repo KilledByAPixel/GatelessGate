@@ -35,9 +35,9 @@ import * as THREE from '../../lib/three.module.js';
 // be blowing. Deterministic: everything is a function of simTime and the baked
 // attributes, no Math.random, no wall clock.
 
-// One shared record, INK_SCALE's pattern (render/outlines.js): every foliage
-// material references these SAME uniform objects, so stepFoliageWind below is a
-// single write that reaches every tree in the scene — and a tree built later
+// One shared record: every foliage material references these SAME uniform
+// objects, so stepFoliageWind below is a single write that reaches every
+// tree in the scene — and a tree built later
 // picks up the current wind with no wiring. `uFoliageWind` at 0 leaves every
 // vertex exactly where the geometry put it, which is what makes this safe to
 // switch off and what keeps a windless scene bit-identical to one built before

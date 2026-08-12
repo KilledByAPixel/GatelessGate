@@ -3,8 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, wash } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeMoon, makeMonk, faceMonk,
-  plantTree, groundHeight, makeLights, addOutlines,
-} from '../kit/index.js';
+  plantTree, groundHeight, makeLights, } from '../kit/index.js';
 
 const ID = 35;
 
@@ -182,8 +181,6 @@ export default {
         { at: sitter, r: 0.85 },
       ],
     });
-
-    addOutlines(scene, { width: 0.030, wobble: 0.7 });
 
     // One hit box per life, sized to what stands inside it: the family's takes
     // the mother and both children, so a reader who taps a child has tapped

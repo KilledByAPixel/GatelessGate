@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeDog, makeHut, makeLantern,
-  makeLights, addOutlines, tapMeshes, plantTree,
+  makeLights, tapMeshes, plantTree,
 } from '../kit/index.js';
 
 const ID = 1;
@@ -98,9 +98,7 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   { x: LANTERN.x, z: LANTERN.z, r: 0.4 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.035, wobble: 0.7 });
-  
+
   // ---- the moment: Mu -------------------------------------------------
   // Touch the dog and the world empties. The fog swells until every tree,
   // mountain and figure is gone into the paper, holds a beat, then breathes

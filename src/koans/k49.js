@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeBasin, makeWater, makeKoi, makeBirds, makeMonk, faceMonk,
-  makeGate, makeLights, addOutlines, makeCylinderChime,
+  makeGate, makeLights, makeCylinderChime,
 } from '../kit/index.js';
 
 const ID = 49;
@@ -136,11 +136,8 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   grassGustScale: 0.1,   // "Gust patch"  — gust breadth (~1/value units across)
   grassGustSpeed: 4.1,   // "Gust drift"  — how fast gusts cross the meadow
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
-  // face him on down the road, away from us — he has gone through (aimed after
-  // outlines, since it is a pure transform)
+
+  // face him on down the road, away from us — he has gone through
   const away = road.sample(0.1);
   faceMonk(you, { x: away.x, z: away.z });
   

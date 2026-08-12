@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeBell, makeDrum, makeBowl,
-  makeMonk, faceMonk, makeLights, addOutlines, tapMeshes,
+  makeMonk, faceMonk, makeLights, tapMeshes,
 } from '../kit/index.js';
 
 const ID = 13;
@@ -116,8 +116,6 @@ export default {
         { x: 1.9, z: -0.4, r: 0.8 },
       ],
     });
-
-    addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
     // ---- the moment: two instruments, neither of them the answer ----------
     // AND THE BOWL, which is the third thing and the only red one. It was the

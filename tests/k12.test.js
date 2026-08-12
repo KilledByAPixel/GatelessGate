@@ -96,7 +96,7 @@ test('the man carries no red: his staff is his own, and ink', () => {
     'the staff gave up the red (Frank) — the butterflies carry it now');
   // and nothing else on him took it either
   zuigan.traverse((o) => {
-    if (!o.isMesh || o.userData.isOutline) return;
+    if (!o.isMesh) return;
     assert.notEqual('#' + o.material.color.getHexString(), ACCENT.toLowerCase(),
       `${o.name} is wearing the accent`);
   });

@@ -237,7 +237,6 @@ function showModel(index) {
     if (silhouette) {
       obj.traverse((o) => {
         if (!o.isMesh) return;
-        if (o.userData.isOutline) { o.visible = false; return; }
         o.material = INK_MAT;
       });
     }

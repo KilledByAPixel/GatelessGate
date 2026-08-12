@@ -3,8 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import { slugify } from './index.js';
 import {
-  composeWorld, makePath, makeLights, addOutlines,
-} from '../kit/index.js';
+  composeWorld, makePath, makeLights, } from '../kit/index.js';
 
 // Every case in the book is readable, whether or not it has been staged yet.
 //
@@ -72,8 +71,6 @@ export function makeDefaultCase(id) {
         ],
         grassKeepout: path.keepout(24, 1.0),
       });
-
-      addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
       return {
         scene,

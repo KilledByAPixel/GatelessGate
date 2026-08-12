@@ -2,7 +2,6 @@ import * as THREE from '../../lib/three.module.js';
 import { setGrassPatchiness, setGrassReach, setGrassTaper } from '../kit/grassfield.js';
 import { wash } from '../palette.js';
 import { setFoliageWeather } from '../kit/foliage.js';
-import { setInkScale } from '../render/outlines.js';
 import { plainMaterial } from '../render/toon.js';
 import { DRAW_BUDGET, DRAW_WARN } from '../budget.js';
 
@@ -15,12 +14,10 @@ import { DRAW_BUDGET, DRAW_WARN } from '../budget.js';
 // after every scene swap, so settings survive moving between cases.
 
 // Defaults are the INK & SEAL preset: no toon banding, depth-driven ink, real
-// contact shadows, paper pass at full grain, no quantisation, and — since v6 —
-// a hairline of inverted-hull ink back ON by default (outlines: true, inkWidth
-// 0.1) over the depth-ink pass that carries the edges; the "Ink width" slider
-// stays the live knob for dialing the hull (Frank). One red seal per koan.
-// bumped when a default LOOK changes, since a stored state would otherwise
-// mask it: v3 turned the ink outlines on, v4 dropped ink strength to 0.5,
+// contact shadows, paper pass at full grain, no quantisation. One red seal
+// per koan. The version suffix on KEY below is bumped when a default LOOK
+// changes, since a stored state would otherwise mask it: v3 turned the ink
+// outlines on (the hull, since deleted), v4 dropped ink strength to 0.5,
 // v5 turned the hull off by default (ink width 0), v6 is Frank's live tune
 // of the weather: more wind in the grass, a broader and slower-drifting
 // gust, patchier placement, and a hairline of hull ink back on (all Frank).
@@ -96,8 +93,6 @@ const CONTROLS = [
 
   { group: 'Render' },
   { key: 'toon', label: 'Toon shader', type: 'bool', def: false },
-  { key: 'outlines', label: 'Ink outlines (hull)', type: 'bool', def: true },
-  { key: 'inkWidth', label: 'Ink width', type: 'range', def: 0.1, min: 0, max: 3, step: 0.05 },
   { key: 'grain', label: 'Paper texture', type: 'bool', def: true },   // master: off = no paper at all
   { key: 'shadows', label: 'Real shadows', type: 'bool', def: true },
   { key: 'fogMul', label: 'Fog ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
@@ -338,12 +333,6 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
   let windField = null;
 
   function apply() {
-    // Before the traverse: setInkScale drives the shared width uniform and
-    // shows/hides every outline mesh in every scene (hidden at 0, where the
-    // zero-width shell would z-fight its source). The traverse below then
-    // ANDs in the hull checkbox for the active scene, so "outlines off"
-    // still wins over a non-zero width.
-    setInkScale(state.inkWidth);
     const scene = getScene && getScene();
     if (scene) {
       if (scene.fog && scene.userData._fog0 === undefined) scene.userData._fog0 = scene.fog.density;
@@ -358,7 +347,6 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
           case 'path': o.visible = state.path; break;
           default: break;
         }
-        if (o.userData.isOutline) o.visible = state.outlines && state.inkWidth > 0;
 
         if (o.isDirectionalLight) {
           if (o.userData._i0 === undefined) o.userData._i0 = o.intensity;
@@ -370,7 +358,7 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
           o.intensity = o.userData._i0 * state.ambMul;
         }
 
-        if (o.isMesh && !o.userData.isOutline) {
+        if (o.isMesh) {
           // `noShadow` opts a mesh out of the shadow map entirely — water and
           // foam set it: an ocean-sized sheet outruns the sun's shadow camera
           // and the far-plane cut painted a phantom triangle of shadow on the

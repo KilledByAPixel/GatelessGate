@@ -4,8 +4,7 @@ import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makePine,
   makeHorse, makeBundle,
-  makeLights, addOutlines,
-} from '../kit/index.js';
+  makeLights, } from '../kit/index.js';
 
 const ID = 36;
 
@@ -158,9 +157,7 @@ const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch:
   ],
   grassKeepout: road.keepout(28, 1.0),
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   const hit = new THREE.Mesh(
   new THREE.CylinderGeometry(1.0, 1.0, 2.0, 8),
   new THREE.MeshBasicMaterial({ visible: false }));

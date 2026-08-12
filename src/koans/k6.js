@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk, makeFlower, makeAssembly, makeCat,
-  makeLights, addOutlines, toonMaterial, tapMeshes,
+  makeLights, toonMaterial, tapMeshes,
 } from '../kit/index.js';
 import { hash1 } from '../util/noise.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
@@ -147,9 +147,7 @@ const CAM = { distance: 11, target: [1.05, 0.3, -3.35], heading: 17, pitch: 29.5
   { x: CAT.x, z: CAT.z, r: 0.7 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the moment: the flower, and the petal --------------------------
   let camera = null;
   let clock = 0;           // the house simTime guard — see update()

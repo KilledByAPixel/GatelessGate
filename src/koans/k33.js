@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK_LIT, WASH } from '../palette.js';
 import {
   composeWorld, makeBasin, makeWater, makeKoi, makeMonk, faceMonk, makeLantern,
-  makeLights, addOutlines, toonMaterial,
+  makeLights, toonMaterial,
 } from '../kit/index.js';
 import { POND, BANK } from './k30.js';
 
@@ -129,9 +129,7 @@ const CAM = { distance: 14.2, target: [0.95, 0.9, -1.4], heading: 31.5, pitch: 2
   { x: BANK.x, z: BANK.z, r: 1.2 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the moment: the water is still the water ------------------------
   let camera = null;
   let rippled = 0;

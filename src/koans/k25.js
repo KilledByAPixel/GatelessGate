@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
-  addOutlines, composeWorld, faceMonk, makeAssembly, makeLights, makeMonk,
+  composeWorld, faceMonk, makeAssembly, makeLights, makeMonk,
   makeScreen, makeVeranda, mergeSimple, toonMaterial,
 } from '../kit/index.js';
 
@@ -205,9 +205,7 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   keepout: [{ x: 0.2, z: -2.0, r: 8.0 }],
   grassKeepout: [{ x: -.3, z: -2.0, r: 4.4 }],
   });
-  
-  addOutlines(scene, { width: 0.030, wobble: 0.8 });
-  
+
   const hit = new THREE.Mesh(
   new THREE.BoxGeometry(0.9, 0.7, 0.8),
   new THREE.MeshBasicMaterial({ visible: false }));

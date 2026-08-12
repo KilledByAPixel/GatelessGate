@@ -5,7 +5,6 @@ import {
   aimMonk, composeWorld, faceMonk, makeAssembly, makeCat, makeHut, makeMonk,
 } from '../kit/index.js';
 import { makeLights, toonMaterial } from '../render/toon.js';
-import { addOutlines } from '../render/outlines.js';
 
 const ID = 14;
 
@@ -159,9 +158,7 @@ const CAM = { distance: 11.5, target: [1.15, 1.2, -1], heading: 34, pitch: 27 };
   // stand in the meadow, which is where monks stand.
   grassKeepout: [{ x: C.x, z: C.z, r: 2.15 }],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the moment: the cat is fine --------------------------------------
   // Touch it and it stretches, swivels an ear and curls its tail, then settles
   // back to ignoring everyone. That is the whole interaction, and it is meant

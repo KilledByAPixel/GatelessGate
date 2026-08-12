@@ -6,7 +6,7 @@ import { hash1 } from '../util/noise.js';
 import { clamp01, smoothstep as SS } from '../util/math.js';
 import {
   composeWorld, makeWater, makeKoi, makeMonk, aimMonk, faceMonk,
-  makeLights, addOutlines, toonMaterial, setSeal,
+  makeLights, toonMaterial, setSeal,
 } from '../kit/index.js';
 
 const ID = 39;
@@ -259,16 +259,8 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
       center: [1.4, -2.0],
     });
     koi.group.position.set(0.4, WY, -1.6);
-    // NO HULLS ON A SUBMERGED FISH. addOutlines gives everything an inverted
-    // ink hull, which is right for a thing standing in the light and wrong for
-    // one lying under a dark sheet: the body blends almost into the water and
-    // the hull does not, so four koi came out as four ink scratches with
-    // nothing inside them. Bodies only, and they read as what they are — a
-    // paleness moving under the surface.
     koi.group.traverse((o) => { o.userData.noOutline = true; });
     scene.add(koi.group);
-
-    addOutlines(scene, { width: 0.030, wobble: 0.7 });
 
     // ---- the moment: the words give way ----------------------------------
     let camera = null;

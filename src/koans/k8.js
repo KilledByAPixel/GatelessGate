@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeWheel, makeMonk, faceMonk, makeStall, makeHut,
-  makeLights, addOutlines, toonMaterial,
+  makeLights, toonMaterial,
 } from '../kit/index.js';
 
 const ID = 8;
@@ -133,9 +133,7 @@ const CAM = { distance: 9, target: [0.7, 1.25, 0.4], heading: 31.5, pitch: 19 };
   { at: hut, r: 1.9 },
   ],
   });
-  
-  addOutlines(scene, { width: 0.033, wobble: 0.7 });
-  
+
   // ---- the moment: take out the nave -----------------------------------
   let camera = null;
   let pulls = 0;

@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK_LIT, WASH, wash } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeMonk, faceMonk, wrapPi, bearing,
-  makeLights, addOutlines, toonMaterial, groundHeight,
+  makeLights, toonMaterial, groundHeight,
   makeWater, makeSand, makeFoam, makeBoat,
 } from '../kit/index.js';
 
@@ -270,8 +270,6 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
         return r > 0 ? Math.max(g, r) : g;
       },
     });
-
-    addOutlines(scene, { width: 0.033, wobble: 0.7 });
 
     // THE SHIP IS WHAT YOU TOUCH (Frank: "let's have it so 11, you actually
     // click on the boat — you will click on the bow"). It used to be the
