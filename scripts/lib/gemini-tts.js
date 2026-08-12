@@ -110,21 +110,44 @@ export class DailyQuotaError extends Error {
   constructor(message) { super(message); this.name = 'DailyQuotaError'; this.daily = true; }
 }
 
+// Node's fetch has no default deadline, so a connection that stalls mid-request
+// hangs forever: no error, no retry, no progress, and the backoff below never
+// gets a chance to run because the request never returns. A 116-unit bake wedged
+// exactly this way on 2026-08-11, silent for a quarter of an hour with the
+// process still alive. Generous enough that a slow-but-working request survives —
+// the longest sections take well under a minute — and short enough that a wedged
+// one is caught and retried rather than costing the night.
+const REQUEST_TIMEOUT_MS = 120000;
+
 export async function speak({ key, model, prompt, voice, tries = 5 }) {
   // A per-minute 429 needs to be waited out rather than retried promptly — start well
   // above the second-scale backoff a 5xx would want.
   let wait = 5000;
   for (let attempt = 1; ; attempt++) {
-    const res = await fetch(ENDPOINT, {
-      method: 'POST',
-      headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        input: prompt,
-        response_format: { type: 'audio' },
-        generation_config: { speech_config: [{ voice }] },
-      }),
-    });
+    let res;
+    try {
+      res = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          input: prompt,
+          response_format: { type: 'audio' },
+          generation_config: { speech_config: [{ voice }] },
+        }),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+    } catch (e) {
+      // A timeout or a dropped socket is exactly as transient as a 5xx, and is
+      // retried on the same ladder. Anything still failing after `tries` is
+      // reported with its cause so a network problem does not read as a bad take.
+      if (attempt >= tries) {
+        throw new Error(`Gemini TTS request failed after ${tries} tries: ${e.name}: ${e.message}`);
+      }
+      await new Promise((r) => setTimeout(r, wait));
+      wait *= 2;
+      continue;
+    }
 
     if (res.ok) {
       const json = await res.json();
