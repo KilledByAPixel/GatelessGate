@@ -51,7 +51,7 @@ Names follow the 1934 translation, which gives them in their Japanese readings, 
 
 The Buddha's teaching takes mind as its source, and no gate as its gate. If there is no gate, then how do you pass through?
 
-It is said that what comes in through the gate can never be your own treasure. What you gain from outside conditions has a beginning and an end; it comes together and it falls apart. Even saying that much is raising waves where there is no wind, cutting into healthy flesh. Worse still to snag on words and phrases and go hunting for meaning. Swinging a stick at the moon. Scratching an itch through your boot. What has any of it to do with anything?
+It is said that what comes in through the gate can never be your own treasure. What you gain from outside conditions has a start and a finish; it comes together and it falls apart. Even saying that much is raising waves where there is no wind, cutting into healthy flesh. Worse still to snag on words and phrases and go hunting for meaning. Swinging a stick at the moon. Scratching an itch through your boot. What has any of it to do with anything?
 
 In the summer of 1228 I was head monk at Ryusho, in Onshu. Monks kept coming to ask for instruction, so I took the old teachers' koans and used them the way you'd grab a piece of broken tile to knock at a gate, leading each student on according to what they needed. I copied them down as they came, and before I knew it there was a book. I never put them in any order. Forty-eight of them altogether. The whole thing goes under the name Mumonkan, "The Gateless Gate."
 
@@ -62,7 +62,7 @@ If you push forward bravely, regardless of all danger, then eight-armed Nata can
 The Great Way is gateless,
 approached by a thousand roads.
 Once past this barrier
-you walk unhindered through heaven and earth.
+you walk alone through heaven and earth.
 
 ## 1. Joshu's Dog
 
@@ -1191,7 +1191,7 @@ Talk like that is smearing milk on red clay. Get through the Gateless Gate and y
 
 ### The Verse
 
-The mind of Nirvana is easy to see.
+The mind of Nirvana is the easy part.
 Telling one thing from another is hard.
 Where that telling is clear,
 house and country come to rest on their own.

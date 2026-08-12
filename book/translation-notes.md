@@ -1,36 +1,55 @@
-# The Gateless Gate — front and back matter
+# The Gateless Gate — editorial and translation notes
 
-> **What this is.** The scholarly record behind the new English translation of
-> the front and back matter: the Chinese from CBETA/Taishō T48n2005, the exact
-> page and line spans, what each choice was, and what is still unresolved.
-> Nothing builds from this file.
+> **What this is.** The record behind the 2026 edition. It covers two separate
+> pieces of work:
 >
-> The four pieces that ship — Mumon's preface, his afterword, the Zen Warnings
-> and Amban's letter — have their English in
-> [gateless-gate.md](gateless-gate.md), which is the source the book is built
-> from; here they carry a pointer instead, so no English word has two homes.
-> The seven pieces that do NOT ship keep their English in full below. This is
-> the only place they exist.
+> **Part One — new translations.** The front and back matter, translated from the
+> Chinese of CBETA/Taishō T48n2005: the exact page and line spans, what each choice
+> was, and what is still unresolved.
 >
-> **One editorial drop, recorded here because nowhere else holds it.** Mumon
-> points at his own verse twice in running prose — "The verse:" closing the
-> preface, and "…you have let yourself down. As the lines have it:" closing the
-> afterword. Neither is carried into the book: a **The Verse** heading stands
-> where they stood and says the same thing, and leaving both would have the page
-> announce the verse twice. The phrases are translated, they are Mumon's, and
-> they are written out here so that deleting the working drafts did not delete
-> them.
+> **Part Two — the edit of the forty-nine cases.** The 1934 Senzaki/Reps English,
+> modernised throughout in August 2026. The earlier version of this file said "none
+> of the cases is touched here." That is no longer true of the edition, and Part Two
+> is what changed.
 >
-> The collation against a non-CBETA witness is still owed, and wants a machine
-> that can reach Chinese Wikisource — see "Source" below.
+> Nothing builds from this file. It does not ship with the book.
+>
+> The four pieces that ship — Mumon's preface, his afterword, the Zen Warnings and
+> Amban's letter — have their English in [gateless-gate.md](gateless-gate.md), which
+> is the source the book is built from; here they carry a pointer instead, so no
+> English word has two homes. The seven pieces that do NOT ship keep their English
+> in full below. This is the only place they exist.
+>
+> **One editorial drop, recorded here because nowhere else holds it.** Mumon points
+> at his own verse twice in running prose — "The verse:" closing the preface, and
+> "…you have let yourself down. As the lines have it:" closing the afterword. Neither
+> is carried into the book: a **The Verse** heading stands where they stood and says
+> the same thing, and leaving both would have the page announce the verse twice. The
+> phrases are translated, they are Mumon's, and they are written out here so that
+> deleting the working drafts did not delete them.
+>
+> The collation against a non-CBETA witness is still owed, and wants a machine that
+> can reach Chinese Wikisource — see "Source" below.
 
+Translations prepared 27 July 2026. Cases edited and the whole book brought into one
+register, 11 August 2026.
 
-New English translation for this edition, with the Chinese source alongside.
-Prepared 27 July 2026.
+---
+---
 
-The 1934 Senzaki/Reps rendering carries only the forty-eight cases and Amban's forty-ninth.
-Everything below is the material that wraps them in the Chinese original and has never
-appeared in our edition. **None of the cases is touched here.**
+# PART ONE — THE NEW TRANSLATIONS
+
+The 1934 Senzaki/Reps rendering carries only the forty-eight cases and Amban's
+forty-ninth. Everything in Part One is the material that wraps them in the Chinese
+original.
+
+**A correction to what this file used to claim.** An earlier draft said this material
+"has never appeared in our edition," which was true, but the book's front matter went
+further and said it appears "in no earlier English edition of the Mumonkan." That is
+false: Blyth, Shibayama, Sekida and Aitken all carry this apparatus, and an English
+"Zen Warnings" is in open circulation. The front matter now claims only what is true —
+that these are new translations made for this edition, and that the 1934 text it rests
+on carries none of them.
 
 ---
 
@@ -117,8 +136,10 @@ It is not duplicated here — a second copy is a second thing to keep true.
   preface gives the same year independently. **The span of 夏 is left open — see the flag
   below.**
 - **東嘉 is Wenzhou** — an old literary name for it, from 永嘉, and 龍翔 is 江心龍翔寺, today's
-  江心寺, on the island in the Ou River. Rendered "Wenzhou" because "Dongjia" names nothing an
-  English reader can hold. The Chinese says 東嘉. (Sources giving 福州 for 東嘉 are wrong.)
+  江心寺, on the island in the Ou River. The Chinese says 東嘉, which names nothing an English
+  reader can hold, so the place is named rather than transliterated. **Since August 2026 it
+  reads "Ryusho, in Onshu"** — the Japanese readings of 龍翔 and 溫州, per Part Two §3. The
+  earlier draft read "Longxiang in Wenzhou." (Sources giving 福州 for 東嘉 are wrong.)
 - **首眾 is the same office as 首座** — head monk, the senior monk under the abbot. Kept as
   "head monk" here and in Zongshou's note, where the same office recurs.
 - **敲門瓦子** — the broken roof-tile you pick up to bang on someone's door and drop the moment
@@ -129,8 +150,10 @@ It is not duplicated here — a second copy is a second thing to keep true.
   patriarchs; two threes, the six Chinese. The multiplication was done in the English and the
   word "patriarchs" supplied once, which the Chinese leaves implicit. A Song reader
   decompressed this instantly; an English reader stops and does sums. **Deliberate loss.**
-- **那吒 / Nezha** appears in no case of the 1934 book, so there is no romanisation to inherit.
-  Pinyin; the Japanese reading would be Nata.
+- **那吒 / Nata.** Appears in no case of the 1934 book, so there is no romanisation to
+  inherit. **The August 2026 pass adopted the Japanese reading, Nata**, under the rule in
+  Part Two §3: the shipped text uses the Japanese readings throughout, because that is the
+  route the book took into English. The Pinyin is Nezha.
 - **眨** at p.292b22 is CBETA's correction. The Taishō prints 貶.
 - **無門 is doing three jobs at once** — "no gate", the author's name, and the book's title —
   and it goes on doing them in the afterword, in Huanglong's Three Barriers, in Zongshou's
@@ -348,9 +371,11 @@ It is not duplicated here — a second copy is a second thing to keep true.
   earlier draft attributed the couplet to Xuansha. That was wrong — contamination from the
   Xuansha quotation three lines above. Dropped.)
 - **玄沙 Xuansha Shibei (835–908), 白雲 Baiyun Shouduan (1025–1072), 楊岐 Yangqi Fanghui
-  (992–1049).** Pinyin: none of them is named in the 48 cases, so there is no 1934
-  romanisation to inherit. Their Japanese readings — Gensha, Hakuun, Yōgi — are more familiar
-  to English Zen readers, and a case could be made for them; this is a choice, not a fact.
+  (992–1049).** None is named in the 48 cases, so there was no 1934 romanisation to inherit,
+  and the July draft used Pinyin. **The August 2026 pass changed all three to the Japanese
+  readings — Gensha, Hakuun, Yogi** — because the shipped book is a Japanese-lineage Mumonkan
+  throughout and Pinyin in the back matter was the only place it broke. Macrons dropped to
+  match the 1934 book's bare *Joshu*, *Hyakujo*. See Part Two §3.
 - **CBETA's pointing is not followed here.** It puts a period after 為甚麼, splitting it from
   透不過; that yields "Just this thing — why? Cannot get through," which is not speech. Joined,
   which also keeps 透不過 inside Baiyun's quotation rather than making it Mumon's aside, and
@@ -432,7 +457,10 @@ It is not duplicated here — a second copy is a second thing to keep true.
 - **枷** is a cangue, the wooden collar locked round a prisoner's neck. "A board round your
   neck" is the object in words a reader already owns; "cangue" would need explaining.
 - **禪箴 / "Zen Warnings".** 箴 is a needle, and the genre-word is "admonition" — but that is a
-  word this voice would not use, and the piece it heads is eleven flat traps. A choice.
+  word this voice would not use, and the piece it heads is eleven flat traps. A choice — and
+  **not an original one**: "Zen Warnings" is already current as an English title for this
+  section. That is one of the facts that sank the front matter's "no earlier English edition"
+  claim.
 
 **Source:** CBETA T48n2005 p.299a29–b06, retrieved 27 July 2026.
 
@@ -830,6 +858,243 @@ done.
 
 **Source:** CBETA T48n2005 p.299c23–c25, retrieved 27 July 2026.
 
+
+---
+---
+
+# PART TWO — THE EDIT OF THE FORTY-NINE CASES
+
+August 2026. The cases are the 1934 Senzaki/Reps English, in the United States public
+domain, reached by way of sacred-texts.com. **No case was retranslated from the
+Chinese** except at the two places recorded in §7, both of which are flagged in the
+book's own front matter as editing rather than translation.
+
+## 1. What the base text was like
+
+Senzaki was a Japanese Rinzai monk; Reps was the American who worked the English with
+him. The book therefore arrived already in Japanese readings, and its faults are of
+three distinct kinds, which want three distinct remedies:
+
+- **Edwardian abstraction** in the capping verses — *emancipated*, *abstruse*,
+  *illumined*, *grievous*, *ineffable*.
+- **Philosophy-department English** where the Chinese is concrete — *subjectivity and
+  objectivity*, *the perception world*, *cognition and noncognition*, *discontinuation*.
+- **1930s American slang**, which is not archaism but a translator's voice — *city
+  slicker*, *country dub*, *dunce*, *uppercut*, *doughnuts*, *chatterbox*.
+
+Overlaid on all three, the capping verses had at some point been flattened into prose:
+**23 of the 49 arrived as run-on paragraphs.**
+
+## 2. The verses
+
+- **All 49 capping verses are set as four lines.** Twenty-three were re-broken from
+  prose. Two needed reshaping rather than re-breaking: **case 9** had five sentence-units
+  and its last two were merged; **case 44** had three and its long opening was split.
+- **Sentence case**, not a capital on every line. Capitalising each line is a
+  19th-century convention the newly translated verses did not follow, so 49 verses were
+  brought to the 2 rather than the reverse.
+- **Line balance was treated as part of the four-line rule.** Cases 17, 28 and 46 were
+  compliant and still ungainly (17 ran 16/15/11/5 words). Case 28's repair was the most
+  substantive: the Chinese is a chiasmus — 聞名不如見面／見面不如聞名, the line turning
+  around and walking back — and the 1934 English had padded the reversal into fifteen
+  words and killed it. Restoring it removed words rather than adding them.
+
+## 3. Names
+
+**The rule: Chinese and Japanese Zen figures take Japanese readings; Indian figures keep
+Sanskrit forms.** This is not a new policy — it is what the 1934 cases already did, since
+that is the transmission Senzaki received. The July translations broke it by using Pinyin
+in the back matter, which meant the preface introduced the author as *Wumen Huikai* and
+case 1 then handed the reader *Joshu* with no signal they were the same system.
+
+Changed in the shipped matter: Wumen Huikai → **Mumon Ekai** · Longxiang → **Ryusho** ·
+Wenzhou → **Onshu** · Nezha → **Nata** · Xuansha → **Gensha** · Baiyun → **Hakuun** ·
+Yangqi → **Yogi** · Shaoding → **Jotei**. No macrons, matching the 1934 book's bare
+*Joshu* and *Hyakujo*.
+
+**Bibliographic citations keep the Chinese** — `Wumen Huikai's Chinese of 1228`, `the
+Taishō canon (CBETA T48n2005)` — because those identify a source document that has to
+resolve. The provenance section now states this policy outright, and names *Mumon Ekai*
+so the colophon's signature connects to the rest.
+
+Collisions resolved inside the cases:
+
+- **Kashapa** now belongs only to the **Kashapa Buddha** of case 2, a past buddha.
+  Ananda's colleague is **Mahakashapa** everywhere, including case 22's title, which the
+  1934 text left bare. The two were one character apart for two different beings.
+- **Goso** and *Hoen* were the same man, 五祖法演, split across cases 35/36/37 and 45 with
+  nothing linking them. Now Goso throughout.
+- **Seijo** is genuinely two people — the master of case 9 and the girl of case 35.
+  Inherited, correct, left alone.
+
+## 4. Person and gender
+
+**Generic third person became second person.** The argument is not primarily about
+gender. Mumon's commentaries are addressed at the reader — the book already contained
+190 instances of *you* and seventeen direct-address formulas — and the generic *he* was
+a distancing device working against the koan. *"If anyone understands this, he is a
+graduate of Zen"* holds the reader at arm's length; *"If you understand this, you are a
+graduate of Zen"* puts them on the spot, which is the mechanism.
+
+Roughly 30 passages converted. Constraints observed:
+
+- **Real people keep their pronouns.** *Joshu's tongue has no bone so **he** can use it
+  freely.*
+- **Where "you" would change the question, it was not forced.** Case 2 asks about a
+  *category* — "are **you** subject to the law of causation?" is a different question with
+  a different answer. That noun went neutral instead: **the enlightened person** (case 2
+  ×6, and case 20's title). Case 9's comment is a maxim about categories and went plural.
+- **Specific or indefinite people keep *man*** — Joshu, the man at the gate, the man in
+  the tree, the man selling fried cakes. **Technical terms stay** — *the true man*, 真人.
+- **Orphaned pronouns are the failure mode.** Neutralising a noun strands the pronouns
+  after it: case 20 needed *their feet* and *themselves* in the prose, and *its head* in
+  the verse.
+
+The book's front matter discloses this in one clause — *"the reader addressed directly
+where the old text spoke of a hypothetical man"* — on the principle that editions which
+say what they did age better than editions that do not.
+
+## 5. Vocabulary
+
+**A word is chosen for the sentence it is in, not matched to its earlier self.**
+*Emancipated* (5 instances, 解脱) became **free / set free / freeing / fully free /
+enlightened**. *Intimately* (4, 親切) became **fully / thoroughly / to the point /
+deeply**. *Surpass* (6) became **match / equal / go beyond / get ahead of**.
+
+**But repetition that is doing work stays.** Case 28's verse repeats *surpass* on
+purpose. That is the same fact as §2's chiasmus, seen from the vocabulary side.
+
+Selected substitutions, with the reason where it is not obvious:
+
+| Out | In | Why |
+|---|---|---|
+| the four gratifications | the four debts of gratitude | 四恩; the standard English, and self-explanatory |
+| subjectivity and objectivity | inside and outside | 内外打成一片 |
+| the perception / nonperception world; cognition, noncognition | knowing / not-knowing; a delusion, blankness | 道不屬知，不屬不知。知是妄覺，不知是無記 — two plain words, not four abstractions |
+| stride of Dharma | gate of Dharma | 法門 is a *gate*; "stride" looks like an error upstream, and the correction echoes the title |
+| Grdhrakuta | Vulture Peak | 靈鷲山 / Gṛdhrakūṭa **means** vulture peak; the 1934 text simply left it untranslated |
+| the Chinese god who pushed aside a mountain | a god once split a mountain with one hand | 巨靈 split Mount Hua; "the Chinese god" named nobody and pictured nothing |
+| tangling ghost | tangled ghost | 依草附木的精靈. *Hungry ghost* was considered and rejected: 餓鬼 is a different being in a different realm, and the error would be visible to a Buddhist reader |
+| dumb man | a man who cannot speak | meant mute, now reads as stupid |
+| Hindu (of Bodhidharma) | foreigner | 胡 is rude but not a religious claim, and Bodhidharma was a Buddhist |
+| the chatterbox (case 40) | cutting off all the talk | 周遮 is **verbiage, not a person**; the 1934 text made an abstract noun into a character, which is why the phrase had no antecedent |
+
+**The register test that mattered most: does the modern connotation point the wrong
+way?** This is worse than datedness, because the reader is misled without noticing.
+Two caught: *all-round man* (通方 means total depth; the English reads as *generalist*,
+nearly the opposite) and *the outsider's road* (外道 is a condemnation; *outsider* in
+current English is a compliment).
+
+**Reps's Americana was not swept out wholesale.** It is a translator's voice, not
+sloppiness, and stripping it makes the book more neutral and less alive. Four were
+replaced because they had stopped working — *country dub* (opaque), *dunce*
+(schoolroom-Victorian), *uppercut* (anachronistic in a Tang monastery), *church-goer*
+(wrong religion). These were kept: *city slicker*, *turned the tables*, *overplayed his
+hand*, and *sold dog meat under the sign of mutton*, which is not Reps at all but a
+genuine Chinese idiom, 掛羊頭賣狗肉, that survived translation intact.
+
+**"Dried Dung" (case 21) was kept knowingly.** 乾屎橛 is a dried shit-stick — the wiping
+stick from the latrine, the filthiest object in the monastery — and the koan's force is
+the maximum contrast between the question and the answer. Senzaki and Reps, privately
+printing in Los Angeles in 1934, were never going to set that in type; nearly every
+modern translation restores it. It is not restored here. That is a publishing decision,
+made with the philology in view, not an oversight.
+
+## 6. Syntax
+
+Vocabulary and syntax are different faults and were swept separately. Eighteen sentences
+were repaired: thirteen ungrammatical, five that parse but say something other than what
+is meant. Representative:
+
+- *"He made the good listeners **as bad**"* (case 6) — comparison with no second term.
+- *"master or no master **can stop it**"* (case 8's verse) — the negation had gone
+  missing, so the line asserted the opposite of its plain sense.
+- *"Old Joshu **played the spy's work**"* (case 31) — fuses *play a part* with *do work*.
+- *"you should feel **like drinking** a hot iron ball"* (case 1) — reads as *you should
+  want one*, the opposite of the intended agony, and one does not drink a ball. Now
+  *"feel as if you had swallowed."*
+- *"his teaching was **just as useless**"* (case 21) — as useless as what? The sentences
+  were merged so the comparison has its second term.
+
+## 7. Two places the edit reached the Chinese
+
+Both are departures from the "no case retranslated" rule and are recorded as such.
+
+- **Case 29 — a recovered joke.** Mumon's comment in Chinese is 不是風動，不是幡動，**不是
+  心動** — three negations. The sixth patriarch said mind *is* moving; Mumon negates that
+  too, out-doing him, and then asks 甚處見祖師. The 1934 English turned the third negation
+  into an affirmation and collapsed the comment into a restatement of the case. Restored.
+- **Case 37 — a substitution, not a restoration.** The Chinese is 水牯牛過**窗櫺**, a
+  buffalo passing through a **window lattice**: head, horns and four hooves through the
+  bars, and the tail stuck. The 1934 English has him leaving an enclosure at a cliff edge
+  — **no aperture at all**, which leaves the koan with nothing for the tail to be caught
+  in. The edition puts a **gate** there instead of a window. That is not what the Chinese
+  says; it restores the mechanism (opening, stuck tail) and chimes with the book's own
+  gate imagery, and the artwork shows a gate. **Recorded as a knowing departure.**
+
+**關 renders two ways, on purpose.** *Barrier* for the single obstacle you break through
+— case 1's 祖師關, the preface, the afterword's 掉臂度關. *Gate* for checkpoints passed in
+sequence — case 47's three, whose title has always been "Three Gates of Tosotsu." The
+distinction is functional, not accidental, and it is why case 37's buffalo can go through
+a gate without colliding with case 1's barrier.
+
+## 8. Method
+
+Rules were applied by script with an exact-match, count-checked replacement for every
+change, so that a silent partial match fails loudly rather than half-applying. After each
+bulk pass the file was verified for: 51 `##` pages, 154 `###` sections, every `The Verse`
+exactly four lines, no consecutive blank lines, no trailing whitespace, one trailing
+newline, no dashes.
+
+**That verification earned its keep.** A scripted sentence-case pass silently added a
+second blank line after **every one of the 51 verses**. Since a blank line is a stanza
+break in the build format, it would have shipped 51 spurious breaks.
+
+Three independent read-throughs were run at the end, each blind to the editorial
+decisions:
+
+- a **cold reader**, instructed to read as someone who knows nothing about Zen and report
+  every place they stumbled;
+- a **consistency audit**, cross-referencing names, formulas, and repeated concepts across
+  all 49 cases;
+- a **syntax sweep** in two halves, reading every sentence against the single question
+  "does this parse as English."
+
+The cold read is the one worth defending as method. It caught what rule-based passes
+structurally cannot: that case 37's koan had no aperture in it, that case 40's verse
+named a person who was never there, and — usefully against us — that case 28's restored
+chiasmus *reads like a typesetting error* to someone who does not know the Chinese.
+
+## 9. Known losses
+
+- **Case 17's fourth line.** 赤腳上刀山, "climb the sword mountain barefoot," which the
+  1934 English flattens to "you will be in trouble too." A vivid image reduced to a shrug.
+  Not restored: restoring it is retranslation.
+- **Case 37's window lattice**, replaced by a gate (§7).
+- **無門 doing three jobs at once** — "no gate," the author's name, the book's title. Part
+  One records this as the largest unavoidable loss in the translated matter; it is equally
+  true across the cases.
+- **Case 24's title** matches case 32's wording better than its own case's. Kept: the
+  titles are what readers recognise.
+
+## 10. Narration
+
+Each `###` section is baked to an audio file. The front matter sits under no `###`
+heading and is therefore not narrated — which is fortunate, since it holds the markdown
+link, `CBETA T48n2005`, `©`, `CC BY-NC-ND 4.0` and `NOTICE.md`. The narrated body is pure
+ASCII: straight quotes, no curly quotes, no ellipses, and only two non-ASCII characters in
+the whole file, both in front matter (`Taishō`, `©`).
+
+**Audition the Zen Warnings first.** Its eleven couplets depend on the line break after
+each colon; without a pause there the section becomes a stream of contradictory fragments.
+`108,000` (case 25) is the only comma-grouped numeral in a book that otherwise spells every
+quantity out, and `1228` in the colophon follows a comma, where some engines read the digits
+individually.
+
+Three `##` page titles changed and may need narration keys rebuilt: **case 20** (The
+Enlightened Man → The Enlightened Person), **case 22** (Kashapa's → Mahakashapa's Preaching
+Sign), **case 37** (A Buffalo Passes Through the Enclosure → the Gate).
+
 ---
 ---
 
@@ -880,18 +1145,44 @@ doing so. But 大道無門 has only so many English shapes, and a check run afte
 short runs that land on the same words a published translator used. They are listed so that
 nobody has to discover them later:
 
-- **"the family treasure"** for 家珍 — Aitken has the same three words. Changed here to "the
-  treasure of your own house".
-- **"has a beginning and an end"** for 始終 — Aitken again. Changed to "has a start and a
-  finish".
-- **"The great way has no gate"** for 大道無門 — Aitken's line almost exactly. Changed to
-  "The great road has no gate", which also picks up the road/roads echo the Chinese has in
-  道/路.
-- **"you walk … alone"** for 獨步 — the frame is Aitken's, and 獨步 does not offer many
-  alternatives. Reworked to "you go alone through heaven and earth".
+- **"the family treasure"** for 家珍 — Aitken has the same three words. The shipped text
+  reads "can never be your own treasure", which is clear of it.
+- **"has a beginning and an end"** for 始終 — Aitken again. Changed to **"has a start and a
+  finish"**. ⚑ **This one was accidentally re-created in August 2026** and has been restored:
+  a grammar pass repaired a misspelling in the clause and, in doing so, reverted the wording
+  to Aitken's. A deliberate divergence is invisible to a proofreader, which is exactly why it
+  is written down here. Anyone editing this clause again should leave *start* and *finish*
+  alone.
+- **"The great way has no gate"** for 大道無門 — Aitken's line almost exactly. The July draft
+  changed it to "The great road has no gate". **Settled August 2026: the verse reads "The
+  Great Way is gateless," and the coincidence is accepted.** "The Great Way" for 大道 is close
+  to forced — 道 is *Way* in every philosophical register of English — and "great road" was
+  buying distance at the cost of the weaker noun *and* the word the next line needs for 路.
+  The predicate is genuinely ours, and *gateless* is the word in the book's own title, so the
+  first line of the first verse chimes with the cover. A coincidence on a forced phrase, in
+  exchange for the title echo, is the right trade.
+- **"you walk … alone"** for 獨步 — the frame is Aitken's. **Settled August 2026: the verse
+  reads "you walk alone through heaven and earth," and this file's own earlier advice was
+  overruled.** The July draft's "you go alone" bought distance; the shipped text before this
+  read "you walk unhindered," which cleared Aitken entirely but was **wrong** — 獨步 is
+  literally *alone-step*, and *unhindered* is a different and weaker claim. This file already
+  conceded that "獨步 does not offer many alternatives." **Where a coincidence is forced by
+  the source, accuracy wins.** The line as a whole is still distinct from Aitken's "You walk
+  the universe alone," since 乾坤 is rendered literally here where he generalised.
 - **"the mind of nirvana is easy to…"** for 涅槃心易曉 — a five-word run shared with J. C.
-  Cleary. The predicate was changed ("easy enough to make out"); the opening is close to
-  forced and remains close.
+  Cleary. **Settled August 2026 by changing what the line does rather than which verb ends
+  it.** Swapping only the final word left almost the whole run standing; the July draft's
+  "easy enough to make out" cleared it but was vague and hedged. The couplet is a reversal —
+  you expect enlightenment to be the hard part, and Mumon says it is the easy half — so the
+  English now says so outright:
+
+  > The mind of Nirvana is **the easy part**.
+  > Telling one thing from another **is hard**.
+
+  *The easy part* / *is hard* is a matched pair across the two lines, which is the shape of
+  易/難 in the Chinese, and it breaks the shared run at the point where the run actually lives.
+  A comparative (*is harder*) was tried and dropped: it makes the opposition relative where
+  the Chinese states it flat. 難 says *hard*, not *harder*.
 
 **Not yet re-checked:** the Zen Warnings, Huanglong's Three Barriers and Zongshou's verse.
 The published volumes carrying that back matter could not be fetched past their front
@@ -923,16 +1214,25 @@ Three further traps were found that the brief does not list:
 
 - **瑞巖 is two different mountains.** Zongshou's is in Ningbo; case 12's is in Taizhou. Carrying
   the 1934 romanisation "Zuigan" across sends the reader to the wrong man.
-- **五祖 is two different men.** In the 1934 cases it is Fayan; in Huanglong's Three Barriers it
-  is almost certainly Hongren. Following the naming rule here would introduce the error.
+- **五祖 is two different men.** In the 1934 cases it is Fayan — who appears as **Goso in cases
+  35, 36, 37 and 45** (an earlier draft of this file said 38; case 38 is Joshu's oak tree). In
+  Huanglong's Three Barriers it is almost certainly Hongren. Following the naming rule here
+  would introduce the error.
 - **幹緣 is not 勸緣.** The first runs the project; the second raises the money.
 
 ---
 
 # Names
 
-Romanised per the brief: the 1934 edition's Japanese readings where a name also appears in its
-forty-eight cases, Pinyin elsewhere, with the choice noted.
+**The rule changed in August 2026.** The July draft used the 1934 edition's Japanese readings
+only where a name also appeared in the forty-eight cases, and Pinyin elsewhere. That left the
+front matter introducing the author as *Wumen Huikai* and case 1 handing the reader *Joshu*,
+with nothing to say they were the same system.
+
+**The shipped text now uses Japanese readings throughout** — for Chinese and Japanese Zen
+figures; Indian figures keep their Sanskrit forms. Pieces that do **not** ship keep Pinyin,
+since they are scholarly apparatus rather than reading text, and bibliographic citations keep
+the Chinese. The provenance section states this policy so a reader can see it is deliberate.
 
 | Chinese | Used here | Basis |
 |---|---|---|
@@ -941,23 +1241,45 @@ forty-eight cases, Pinyin elsewhere, with the choice noted.
 | 安晚 | Amban | 1934 (case 49) |
 | 兜率 | Tosotsu | 1934 (case 47) |
 | 五祖 (in 黃龍三關) | the Fifth Patriarch | **deliberate departure** — "Goso" is Fayan in the 1934 cases; see the flag |
-| 陳塤 | Chen Xun | Pinyin — not in the cases |
-| 孟珙 | Meng Gong | Pinyin |
-| 無庵 | Wu'an | Pinyin — Meng Gong's own 號 |
-| 無量宗壽 | Wuliang Zongshou | Pinyin |
-| 彌衍宗紹 | Miyan Zongshao | Pinyin |
-| 黃龍 | Huanglong | Pinyin (Jp. Ōryū) |
-| 玄沙 | Xuansha | Pinyin (Jp. Gensha) |
-| 白雲 | Baiyun | Pinyin (Jp. Hakuun) |
-| 楊岐 | Yangqi | Pinyin (Jp. Yōgi) |
+| 玄沙 | **Gensha** | ships — Japanese reading (Ch. Xuansha) |
+| 白雲 | **Hakuun** | ships — Japanese reading (Ch. Baiyun) |
+| 楊岐 | **Yogi** | ships — Japanese reading (Ch. Yangqi), no macron |
+| 那吒 | **Nata** | ships — Japanese reading (Ch. Nezha) |
+| 龍翔 | **Ryusho** | ships — Japanese reading (Ch. Longxiang) |
+| 東嘉 / 溫州 | **Onshu** | ships — Japanese reading (Ch. Wenzhou) |
+| 紹定 | **Jotei** | ships — Japanese reading (Ch. Shaoding) |
+| 陳塤 | Chen Xun | Pinyin — does not ship |
+| 孟珙 | Meng Gong | Pinyin — does not ship |
+| 無庵 | Wu'an | Pinyin — Meng Gong's own 號; does not ship |
+| 無量宗壽 | Wuliang Zongshou | Pinyin — does not ship |
+| 彌衍宗紹 | Miyan Zongshao | Pinyin — does not ship |
+| 黃龍 | Huanglong | Pinyin — does not ship (Jp. Ōryū) |
 | 瑞巖 (Ningbo) | Ruiyan | Pinyin — **not** "Zuigan"; different house from case 12 |
-| 那吒 | Nezha | Pinyin (Jp. Nata) |
+| 迦葉 (the disciple) | Mahakashapa | 1934, standardised — bare *Kashapa* now belongs only to the Kashapa Buddha of case 2 |
+| 五祖法演 | Goso | 1934 — standardised; *Hoen* in case 45 was the same man |
 | 常牧 | Jōboku | Japanese — a Japanese colophon written in Japan |
 | 廣園寺 | Kōonji | Japanese — the temple's own reading |
 
 ---
 
-*New translation prepared for this edition with AI assistance, July 2026. Not by Senzaki and
-Reps, and not written to be mistaken for them. The uncertainty flags above are the honest
-state of the text and are meant to be read, and acted on, by someone who reads Classical
-Chinese.*
+---
+
+# For whoever edits this next
+
+Three things this file exists to prevent:
+
+1. **Do not "fix" a deliberate divergence.** Several wordings are odd on purpose, to avoid
+   coinciding with a published translation. They look like errors and one has already been
+   reverted by accident. The list is above.
+2. **Do not harmonise the flagged uncertainties.** Where the Chinese will not decide between
+   two readings, the English was built to survive both. Picking one quietly loses information
+   that took real work to establish.
+3. **Verify the structure after any bulk edit.** 51 `##` pages, 154 `###` sections, every
+   `The Verse` exactly four lines, no consecutive blank lines, one trailing newline, no
+   dashes. A scripted pass once added a blank line after all 51 verses without a single
+   visible symptom.
+
+*Translations prepared July 2026; cases edited and the whole book brought into one register
+August 2026; both with AI assistance. Not by Senzaki and Reps, and not written to be mistaken
+for them. The uncertainty flags above are the honest state of the text and are meant to be
+read, and acted on, by someone who reads Classical Chinese.*
