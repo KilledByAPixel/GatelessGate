@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   bearing, composeWorld, faceMonk, makeCave, makeFox, makeMonk, makeRain,
-  plantTree, tapMeshes,
+  plantTree, plantRock, tapMeshes,
 } from '../kit/index.js';
 import { makeLights } from '../render/toon.js';
 import { addOutlines } from '../render/outlines.js';
@@ -117,7 +117,11 @@ const CAM = { distance: 11.0, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 1
 
   plantTree(scene, { x: 2.2, z: -5.7, height: 4.7 });
   plantTree(scene, { x: -4.7, z: -.7, height: 4.4, kind: 'pine' });
-  
+
+  // the cave's own rubble — a mountainside sheds rock, and the mouth earns it
+  const b1 = plantRock(scene, { x: -3.9, z: -4.5, size: 1.7 });
+  const b2 = plantRock(scene, { x: -3.2, z: -0.8, size: 1.0 });
+
   const world = composeWorld(scene, {
   view: CAM,
   seed: ID,
@@ -130,6 +134,8 @@ const CAM = { distance: 11.0, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 1
   { x: FOX.x, z: FOX.z, r: 1.4 },
   { x: HYAKUJO.x, z: HYAKUJO.z, r: 1.2 },
   ...MONKS.map((m) => ({ x: m.x, z: m.z, r: 1.1 })),
+  { at: b1, r: 2.2 },
+  { at: b2, r: 1.5 },
   ],
   // only the cave's own stone floor actually covers ground. The fox is
   // sitting in the grass like any animal, and so are the monks.

@@ -5,7 +5,7 @@ import { hash1 } from '../util/noise.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeCave, makeSnow, makePine, makeMonk, faceMonk,
-  makeLights, addOutlines, toonMaterial,
+  makeLights, addOutlines, toonMaterial, plantRock,
 } from '../kit/index.js';
 
 const ID = 41;
@@ -150,6 +150,11 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
     pine.position.set(PINE.x, 0, PINE.z);
     scene.add(pine);
 
+    // stone shoulders in the open snow, balancing the pine across the frame —
+    // pale ground, dark rock, and the snowfall passing in front of both
+    const b1 = plantRock(scene, { x: 3.9, z: -3.4, size: 1.8 });
+    const b2 = plantRock(scene, { x: 2.8, z: -1.1, size: 1.0 });
+
     const world = composeWorld(scene, {
       view: CAM,
       seed: ID,
@@ -164,6 +169,8 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
         { at: cave, r: 3.0 },
         { x: 1.5, z: -1.9, r: 1.2 },
         { x: PINE.x, z: PINE.z, r: 1.6 },
+        { at: b1, r: 2.3 },
+        { at: b2, r: 1.4 },
       ],
       // snow covers everything: no grass anywhere near the clearing
       grassKeepout: [{ x: 0.4, z: -3.0, r: 13 }],
