@@ -32,6 +32,13 @@ import { mergeSimple } from './scatter.js';
 // returning a replacement: cases hold references to what they built (k45
 // writes `horse.group.rotation.y` every frame) and tests find props by name,
 // and a swap would leave every one of those pointing at a detached group.
+//
+// THE ADOPTION HAZARD IS BROADER THAN "getObjectByName finds nothing" — that
+// covers lookups BY NAME, but anything that finds a part by TRAVERSAL breaks
+// too, and more quietly. chimes.js's `collectChimes` finds every hung fūrin
+// by sweeping a scene for `userData.hungBy === 'hangChimes'` on a group; bake
+// a `makeHut` or `makeGate` prop that hangs one and the group is gone, so the
+// chime never rings and nothing in the console says why.
 
 // What makes two meshes the same DRAW. Material equivalence, not object
 // identity: every makeMonk mints its own toonMaterial, so identity would leave
