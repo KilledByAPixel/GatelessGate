@@ -122,7 +122,7 @@ export function bakeStatic(target, opts = {}) {
   }
 
   // Names whose whole subtree stays out of the merge. A prop that is still
-  // EXCEPT for one part — case 24's grazing buffalo, sixteen static pieces and
+  // EXCEPT for one part — case 24's grazing buffalo, twelve static pieces and
   // a tail that swings — would otherwise have to stay unbaked entirely.
   const keep = new Set(opts.keep || []);
 

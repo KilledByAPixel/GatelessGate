@@ -265,8 +265,11 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
     // move" and merges them in. Harmless today — this case never calls
     // horse.update()'s tail sway, only the shy/settle on the group itself —
     // but if a later case wants this horse's tail alive, that bake needs
-    // { keep: ['tail'] } (not added here: it would cost two draws back for a
-    // motion nothing here uses).
+    // { keep: ['tail'] } (not added here: measured at 2 draws fully baked vs.
+    // 6 with the tail kept — its two segment meshes stay unbaked and each
+    // still takes its own ink shell, the same doubling k24's buffalo pays
+    // above, so the motion nothing here uses would cost four draws back, not
+    // two).
     bakeStatic(stallGroups, { name: 'stalls' });
     bakeStatic([...keepers, cust, ...crowd], { name: 'crowd' });
     bakeStatic(horse.group);

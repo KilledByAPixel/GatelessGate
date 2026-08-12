@@ -342,9 +342,9 @@ test('props that do not share a parent are a mistake unless you say where', () =
   assert.equal(crowd.parent, scene);
 });
 
-// The buffalo of case 24 is the motivating case: sixteen still pieces and a
+// The buffalo of case 24 is the motivating case: twelve still pieces and a
 // tail that swings. Without this the whole animal has to stay unbaked for the
-// sake of two segments.
+// sake of six segments.
 test('keep leaves a named subtree out of the merge, still animatable', () => {
   const scene = new THREE.Scene();
   const beast = new THREE.Group();

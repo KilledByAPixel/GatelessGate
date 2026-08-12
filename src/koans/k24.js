@@ -122,9 +122,9 @@ const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 1
   // NOT THE BIRDS. They are the seal of this case and every one of them
   // flaps: three meshes apiece that have to stay three meshes.
   //
-  // The buffalo keeps its TAIL. Sixteen of its eighteen pieces never move,
+  // The buffalo keeps its TAIL. Twelve of its eighteen pieces never move,
   // but the tail swings on makeTail's own clock (buffalo.update), and a
-  // merged tail is a tail that has stopped. Its seven segment meshes stay
+  // merged tail is a tail that has stopped. Its six segment meshes stay
   // unbaked and each still takes its own ink shell, which is why this scene
   // lands at 91 rather than the ~84 a fully-still prop would have reached.
   //
