@@ -4,7 +4,7 @@ import { PAPER, ACCENT, ACCENT_DEEP, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeStall, makeHorse,
-  makeLights, addOutlines,
+  makeLights, addOutlines, plantTree,
 } from '../kit/index.js';
 
 const ID = 45;
@@ -68,6 +68,8 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
   
   const road = makePath({ from: [5.6, 7.4], to: [-4.8, -17], width: 1.6, seed: ID, groundSeed: 21, wander: 0.6 });
   scene.add(road);
+
+  plantTree(scene, { x: -3.2, z: -2.4, height: 4.4 });
   
   // ---- THE MARKET -------------------------------------------------------
   // A short row of stalls down the lane, each turned to face the road, with
@@ -104,7 +106,7 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
   // a keeper a step behind the counter, facing the lane — but the last
   // three stalls stand unattended, which reads as a real market (and the
   // draw budget is why the far end minds itself)
-  if (i < 2) {
+  if (i == 0) {
   const back = 0.5;
   const kx = sx - faceX / Math.hypot(faceX, faceZ) * back;
   const kz = sz - faceZ / Math.hypot(faceX, faceZ) * back;
@@ -181,8 +183,8 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
   // just with the cheap options — no hat, no sleeves — so they are dark robed
   // shapes like the monks rather than a separate kind of thing, and a crowd of
   // them still fits the draw budget.
-  const bystander = (x, z, facing, h = 1.56) => {
-  const f = makeMonk({ height: h, hat: false, arms: false });
+  const bystander = (x, z, facing, h = 1.56, hat=false) => {
+  const f = makeMonk({ height: h, hat: hat, arms: false });
   f.position.set(x, 0, z);
   f.rotation.y = facing;
   return f;
@@ -191,7 +193,7 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
     const crowd = [
       bystander(road.sample(0.44).x - 2.4, road.sample(0.44).z + 0.3, 1.2, 1.6),
       bystander(road.sample(0.52).x + 1.5, road.sample(0.52).z - 0.2, -1.9, 1.5),
-      bystander(road.sample(0.7).x - 1.2, road.sample(0.7).z + 0.1, 0.6, 1.62),
+      bystander(road.sample(0.7).x - 1.2, road.sample(0.7).z + 0.1, 0.6, 1.62, true),
       bystander(road.sample(0.24).x + 1.3, road.sample(0.24).z + 0.2, -0.8, 1.35),
       bystander(road.sample(0.68).x + 1.4, road.sample(0.68).z - 0.3, 2.4, 1.52),
     ];
@@ -222,7 +224,8 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
       view: CAM,
       seed: ID,
       groundSeed: 21,
-      trees: 1,           // the stalls are the scene now — one tree, no more
+      trees: 0,
+      rocks: 0,
       keepout: [
         ...road.keepout(26, 1.4),
         { x: horseX, z: horseZ, r: 1.4 },
