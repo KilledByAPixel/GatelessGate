@@ -72,9 +72,10 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
   plantTree(scene, { x: -3.2, z: -2.4, height: 4.4 });
   
   // ---- THE MARKET -------------------------------------------------------
-  // A short row of stalls down the lane, each turned to face the road, with
-  // someone behind the counter. All ink and wash — the one warm mark in the
-  // whole picture is the red horse, so the crowd stays monochrome.
+  // A short row of stalls down the lane, each turned to face the road — the
+  // near two keep a keeper behind the counter, the rest stand unattended (see
+  // below). All ink and wash — the one warm mark in the whole picture is the
+  // red horse, so the crowd stays monochrome.
   const stallKeepout = [];
   const stalls = [
   { t: 0.25, sidesign: -1, off: 1.8, w: 2.1 },
@@ -170,10 +171,10 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
   younger.position.set(meetAt.x - axis.x * GAP, 0, meetAt.z - axis.z * GAP);
   faceMonk(elder, younger.position);
   faceMonk(younger, elder.position);
-  // tagged rather than renamed: every figure in the book is a 'monk' and the
-  // street's census counts them by that name, but the two who are MEETING have
-  // to be findable on purpose — the closest pair in a crowded lane is not
-  // reliably them (a keeper and his customer stand nearer than these two do)
+  // tagged rather than renamed: after THE BAKE below, these two are the only
+  // 'monk' groups left in the scene at all — the rest of the crowd is merged
+  // away, and named(scene, 'monk') already returns just this pair. The tag is
+  // what is still needed: it says which one is the elder and which is not.
   elder.userData.meeting = 'elder';
   younger.userData.meeting = 'younger';
   scene.add(elder);
@@ -244,9 +245,10 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
 
     // ---- THE BAKE ---------------------------------------------------------
     // NOTHING IN THIS STREET MOVES (see the header), so nearly all of it can be
-    // merged down to one mesh per material — 141 draw calls to about 59. This
-    // is what the second keeper and the bystanders' arms above are paid for
-    // with: a figure added to a baked crowd costs nothing at all.
+    // merged down to one mesh per material — measured at 140 draw calls before
+    // this, 60 after. This is what the second keeper and the bystanders' arms
+    // above are paid for with: a figure added to a baked crowd costs nothing
+    // at all.
     //
     // BEFORE addOutlines, always: the ink pass then hangs one shell on the
     // merged mesh instead of one on every piece of every person, which is where
@@ -254,8 +256,17 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
     //
     // The two who are MEETING are deliberately left alone. A baked figure has
     // no parts to find, and the elder's staff is exactly the kind of thing this
-    // case is read by — they are the koan's whole image, and they cost eleven
+    // case is read by — they are the koan's whole image, and they cost twelve
     // meshes between them, which the rest of the street has now paid for.
+    //
+    // The horse gives up its tail rig in the same stroke: makeHorse's tail is
+    // a verlet strand, but its segments are plain cylinders like any other
+    // static part, so bakeStatic can't tell "still" from "never asked to
+    // move" and merges them in. Harmless today — this case never calls
+    // horse.update()'s tail sway, only the shy/settle on the group itself —
+    // but if a later case wants this horse's tail alive, that bake needs
+    // { keep: ['tail'] } (not added here: it would cost two draws back for a
+    // motion nothing here uses).
     bakeStatic(stallGroups, { name: 'stalls' });
     bakeStatic([...keepers, cust, ...crowd], { name: 'crowd' });
     bakeStatic(horse.group);
