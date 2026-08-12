@@ -26,7 +26,7 @@ const named = (scene, name) => {
 
 test('the market is there: a row of stalls', () => {
   const { root } = staged();
-  assert.equal(named(root.scene, 'stall').length, 3, 'three stalls line the lane');
+  assert.equal(named(root.scene, 'stall').length, 5, 'five stalls line the lane');
 });
 
 test('the horse is the one red thing, and it stands still', () => {
@@ -65,7 +65,7 @@ function isDescendant(root, node) {
 test('the whole street stands still', () => {
   const { root } = staged();
   const monks = named(root.scene, 'monk');
-  assert.ok(monks.length >= 5, 'keepers, a customer, and the two who are meeting');
+  assert.ok(monks.length >= 10, 'keepers, customers, bystanders, and the two who are meeting');
   const start = new Map(monks.map((m) => [m.uuid, m.position.clone()]));
   for (let i = 0; i < 60 * 12; i++) root.update(1 / 60, i / 60);
   for (const m of monks) {
@@ -156,7 +156,7 @@ test('no figure is steered by the camera — swing it and the street is unchange
   root.scene.traverse((o) => {
     if (o.name === 'monk' || o.name === 'horse') figures.push({ o, at: o.position.clone(), ry: o.rotation.y });
   });
-  assert.ok(figures.length >= 7, 'a street full of people');
+  assert.ok(figures.length >= 11, 'a street full of people');
 
   for (let i = 0; i < 60 * 20; i++) {
     // orbit hard: the motion that used to sweep his mark across the street

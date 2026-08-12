@@ -75,9 +75,11 @@ const CAM = { distance: 7.9, target: [1.55, 1.05, -0.6], heading: -24.5, pitch: 
   // whole picture is the red horse, so the crowd stays monochrome.
   const stallKeepout = [];
   const stalls = [
+  { t: 0.18, sidesign: -1, off: 2.8, w: 1.7 },
   { t: 0.30, sidesign: 1, off: 2.7, w: 1.9 },
   { t: 0.46, sidesign: -1, off: 2.7, w: 1.7 },
   { t: 0.62, sidesign: 1, off: 2.9, w: 1.8 },
+  { t: 0.78, sidesign: -1, off: 2.7, w: 1.6 },
   ];
   const keepers = [];
   for (let i = 0; i < stalls.length; i++) {
@@ -100,8 +102,8 @@ const CAM = { distance: 7.9, target: [1.55, 1.05, -0.6], heading: -24.5, pitch: 
   stallKeepout.push({ x: sx, z: sz, r: Math.max(s.w, 1.4) });
   
   // a keeper a step behind the counter, facing the lane — but the last
-  // stall is left unattended, which reads as a real market (and keeps the
-  // draw budget honest with a crowd still to place)
+  // three stalls stand unattended, which reads as a real market (and the
+  // draw budget is why the far end minds itself)
   if (i < 2) {
   const back = 0.5;
   const kx = sx - faceX / Math.hypot(faceX, faceZ) * back;
@@ -117,17 +119,17 @@ const CAM = { distance: 7.9, target: [1.55, 1.05, -0.6], heading: -24.5, pitch: 
   
   // a customer waiting at the middle stall's counter, on the lane side and
   // turned to face the stall
-  const mid = road.sample(stalls[1].t);
+  const mid = road.sample(stalls[2].t);
   const cust = makeMonk({ height: 1.58, elder: true, hat: false, stout: 1.2 });
-  const cx = mid.x + mid.perp.x * (stalls[1].off - 1.5) * stalls[1].sidesign;
-  const cz = mid.z + mid.perp.z * (stalls[1].off - 1.5) * stalls[1].sidesign;
+  const cx = mid.x + mid.perp.x * (stalls[2].off - 1.5) * stalls[2].sidesign;
+  const cz = mid.z + mid.perp.z * (stalls[2].off - 1.5) * stalls[2].sidesign;
   cust.position.set(cx, 0, cz);
-  const stallX = mid.x + mid.perp.x * stalls[1].off * stalls[1].sidesign;
-  const stallZ = mid.z + mid.perp.z * stalls[1].off * stalls[1].sidesign;
+  const stallX = mid.x + mid.perp.x * stalls[2].off * stalls[2].sidesign;
+  const stallZ = mid.z + mid.perp.z * stalls[2].off * stalls[2].sidesign;
   cust.rotation.y = Math.atan2(stallX - cx, stallZ - cz);
   scene.add(cust);
   stallKeepout.push({ x: cx, z: cz, r: 0.7 });
-  
+
   // THE MEETING — Mumon's own image, standing in the middle of the street:
   // "it is as if you met your own father on a busy street. There is no need to
   // ask anyone whether or not your recognition is true." An elder and a
@@ -190,6 +192,8 @@ const CAM = { distance: 7.9, target: [1.55, 1.05, -0.6], heading: -24.5, pitch: 
       bystander(road.sample(0.38).x - 1.4, road.sample(0.38).z + 0.3, 1.2, 1.6),
       bystander(road.sample(0.52).x + 1.5, road.sample(0.52).z - 0.2, -1.9, 1.5),
       bystander(road.sample(0.7).x - 1.2, road.sample(0.7).z + 0.1, 0.6, 1.62),
+      bystander(road.sample(0.24).x + 1.3, road.sample(0.24).z + 0.2, -0.8, 1.35),
+      bystander(road.sample(0.68).x + 1.4, road.sample(0.68).z - 0.3, 2.4, 1.52),
     ];
     for (const c of crowd) scene.add(c);
 
@@ -199,12 +203,12 @@ const CAM = { distance: 7.9, target: [1.55, 1.05, -0.6], heading: -24.5, pitch: 
     // A larger red than a held seal, so it takes the deep mix rather than
     // glaring full accent across a whole animal.
     const horse = makeHorse({ height: 1.5, color: ACCENT_DEEP, seed: ID });
-    // beside the first stall, not in front of it — pulled back along the lane so
-    // it does not block the counter, and standing a clear step off the road
+    // beside the t-0.30 stall, not in front of it — pulled back along the lane
+    // so it does not block the counter, and standing a clear step off the road
     // rather than at its very edge (Frank: it was a little too close, so it
     // moved back — tethered on the grass, not loitering in the traffic)
     const hp = road.sample(0.35);
-    const side = stalls[0].sidesign;
+    const side = stalls[1].sidesign;
     const horseX = hp.x + hp.perp.x * 1.95 * side;
     const horseZ = hp.z + hp.perp.z * 1.95 * side;
     horse.group.position.set(horseX, 0, horseZ);
