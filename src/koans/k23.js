@@ -37,10 +37,10 @@ const ID = 23;
 // of the drag).
 const TRAIL = { from: [1.6, 9], to: [-3.2, -20], width: 1.35, wander: 1.85 };
 const STONE_T = 0.35;      // where along the trail the stone waits
-const STONE_OFF = -1.05;   // a step off the trail's west edge
+const STONE_OFF = -1.45;   // a step off the trail's west edge
 const APPROACH = 2.12;     // bearing E-myo -> stone (see above)
 const PACE = 1.38;         // how far short of it he has stopped
-const PATRIARCH_PACE = 1.7;  // how far beyond the stone he stands — the treasure between them
+const PATRIARCH_PACE = 1.5;  // how far beyond the stone he stands — the treasure between them
 const STONE_H = 0.52;
 const STONE_R = 0.44;      // top radius — the flat the bundle sits on
 const EMYO_H = 1.6;
@@ -62,7 +62,7 @@ const STIR = (t) => 0.007 * (0.62 * Math.sin(t * 11.3) + 0.38 * Math.sin(t * 6.7
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.4, target: [0.2, 1.0, -0.9], heading: 31.5, pitch: 18.5 };
+const CAM = { distance: 10.1, target: [0.2, 1.3, -0.9], heading: 31.5, pitch: 16 };
   export default {
   id: ID,
   slug: 'do-not-think-good-do-not-think-not-good',
@@ -203,8 +203,8 @@ const CAM = { distance: 10.4, target: [0.2, 1.0, -0.9], heading: 31.5, pitch: 18
     // of hut a pass keeps for weather, threshold turned back toward the road.
     // Numbers are placement starts, his to tune.
     const hut = makeHut({ width: 2.4, height: 2.1, depth: 2.0, chimes: ID });
-    hut.position.set(5.8, 0, -6.8);
-    faceMonk(hut, { x: STONE.x, z: STONE.z });
+    hut.position.set(-3.8, 0, -4.8);
+    hut.rotateY(0.65);
     scene.add(hut);
 
     const world = composeWorld(scene, {
