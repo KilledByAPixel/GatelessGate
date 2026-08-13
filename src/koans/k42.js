@@ -109,7 +109,7 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: -78, pitch: 59 } }));
   
   // the Buddha, back and above, presiding over an argument he has already
   // settled — the same ordinary figure as everyone in it (overnight pass 2);

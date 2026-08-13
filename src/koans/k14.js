@@ -69,7 +69,9 @@ const CAM = { distance: 11.5, target: [1.15, 1.2, -1], heading: 34, pitch: 27 };
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
-  scene.add(makeLights());
+  // High and short-shadowed. The other sensitive case handled the
+  // same way case 3 is — see the note there.
+  scene.add(makeLights({ sun: { heading: 74, pitch: 64 } }));
   
   // ---- the courtyard ----------------------------------------------------
   // Swept ground, and the only footprint in the case that genuinely covers

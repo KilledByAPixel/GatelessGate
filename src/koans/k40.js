@@ -60,7 +60,7 @@ const CAM = { distance: 10.8, target: [2.05, 1, -0.5], heading: 57.5, pitch: 20 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: -27, pitch: 52 } }));
   
   // ---- the hall ---------------------------------------------------------
   // Set well back, open front toward the clearing: the gathering happens

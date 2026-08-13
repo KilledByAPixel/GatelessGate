@@ -40,7 +40,7 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: -48, pitch: 38 } }));
   
   // the bay the scroll hangs in
   const veranda = makeVeranda({ width: 4.6, depth: 3.6, height: VERANDA_H });

@@ -64,7 +64,10 @@ const CAM = { distance: 11, target: [1.05, 0.3, -3.35], heading: 17, pitch: 29.5
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
-  scene.add(makeLights());
+  // Contre-jour — the one image in the book that asks for it. The
+  // light is behind the held flower, so the petal is lit through and
+  // the assembly watching it are edges.
+  scene.add(makeLights({ sun: { heading: 167, pitch: 40 } }));
   
   // Vulture Peak: the Buddha raised on a low stone, the assembly below him.
   // The stone came down with the statue (overnight pass 2: he is the same

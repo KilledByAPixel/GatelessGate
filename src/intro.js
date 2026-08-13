@@ -2,7 +2,7 @@ import * as THREE from '../lib/three.module.js';
 import { PAPER, ACCENT_DEEP, wash } from './palette.js';
 import {
   composeWorld, makePath, makeLantern, makeGate, makeMonk,
-  makeLights, makeCylinderChime, tapMeshes,
+  makeLights, makeCylinderChime, tapMeshes, SUN_DEFAULT,
 } from './kit/index.js';
 import { introPath } from './intro_rails.js';
 
@@ -53,6 +53,11 @@ export function buildHub({
   gate: withGate = true, path: withPath = true,
   monk: withMonk = true, lanterns: withLanterns = true,
   seed = 10, groundSeed = 7, pathSeed = 93,
+  // Where the key stands (render/lights.js). Out here because the hub is built
+  // twice — the title screen and Contents on one side, the afterword on the
+  // other — and those are two different places under two different suns, the
+  // same way they are two different rolls of the land.
+  sun = SUN_DEFAULT,
   // The horizon, passed straight to composeWorld. Out here because no seed can
   // fix a wall: fourteen peaks over this arc leave no bearing the road can run
   // out on without ending in one, so a scene that wants its road to vanish into
@@ -73,7 +78,7 @@ export function buildHub({
   // camera side and widened just enough that every caster whose shadow can land
   // in frame fits; 2048/30 ≈ 68 texels/unit, still contact-shadow territory,
   // not the 56-unit mush lights.js warns about.
-  scene.add(makeLights({ focus: [4.5, 0, 0], radius: 15 }));
+  scene.add(makeLights({ focus: [4.5, 0, 0], radius: 15, sun }));
 
   // The path is ALWAYS built: it is the placement maths for the gate, the
   // lanterns and the monk, and gateTarget is a point on it. Only whether it is

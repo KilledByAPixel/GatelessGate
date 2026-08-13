@@ -80,7 +80,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: -18, pitch: 60 } }));
   
   // the path Joshu came up, twice — a coast road now, running with the
   // shoreline behind the hermit's rise. It used to run to (-3.4, -17),

@@ -374,3 +374,39 @@ test('every staged case names a complete camera of its own', async () => {
   }
   assert.deepEqual(bad, [], `incomplete camera blocks: ${JSON.stringify(bad)}`);
 });
+
+// Case 19 aims its key at its own moon, every frame, and clears the aim record
+// to say so (k19.js). Nothing else in the book owns its light outright.
+const SUN_OWNED_BY_CASE = [19];
+
+test('every staged case stands its key somewhere a sun could be', async () => {
+  // The band, not the angle: a key raking in almost level throws shadows that
+  // run off the end of the shadow camera, and one nearly overhead loses the
+  // form modelling the whole rig exists for. Between those two a case may aim
+  // anywhere it likes — the point of a per-case aim is that they differ.
+  const bad = [];
+  const aims = [];
+  for (const entry of staged) {
+    const mod = await loadKoan(entry.slug);
+    const root = mod.build(fakeCtx());
+    root.update(1 / 60, 0);
+    const sun = root.scene.getObjectByProperty('isDirectionalLight', true);
+    if (!sun) { bad.push([entry.id, 'no key light at all']); continue; }
+    if (!sun.position.toArray().every(Number.isFinite)) {
+      bad.push([entry.id, `key at ${sun.position.toArray()}`]); continue;
+    }
+    if (SUN_OWNED_BY_CASE.includes(entry.id)) continue;
+    const aim = sun.userData.aim;
+    if (!aim) { bad.push([entry.id, 'no aim recorded — the workbench cannot drive it']); continue; }
+    if (!(aim.pitch >= 28 && aim.pitch <= 70)) bad.push([entry.id, `pitch ${aim.pitch} is outside the band`]);
+    if (!Number.isFinite(aim.heading)) bad.push([entry.id, `heading ${aim.heading}`]);
+    aims.push(aim);
+  }
+  assert.deepEqual(bad, [], `keys aimed badly: ${JSON.stringify(bad)}`);
+
+  // ...and they are genuinely spread, rather than one direction with a handful
+  // of exceptions — which is what the book was before the lighting pass, and
+  // what it would silently drift back into one copied block at a time.
+  const quadrants = new Set(aims.map((a) => Math.floor((((a.heading % 360) + 360) % 360) / 90)));
+  assert.equal(quadrants.size, 4, `the key never stands in every quarter: ${[...quadrants]}`);
+});

@@ -50,7 +50,11 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
-  scene.add(makeLights());
+  // "Under blue sky, in bright sunlight" — the case names its own
+  // weather, so this is the highest sun in the book and the pond
+  // takes it nearly flat. Case 33 is the same pond under the
+  // opposite light.
+  scene.add(makeLights({ sun: { heading: 61, pitch: 66 } }));
   
   // the pond: an OPEN stone basin and a still sheet inside it. It used to be a
   // solid cylinder, whose top cap sealed the water and the fish underneath it —

@@ -67,7 +67,7 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: 135, pitch: 39 } }));
   
   // the teacher's veranda, back-left, open onto the courtyard
   const veranda = makeVeranda({ width: 4.2, depth: 3.4, height: 3.0 });

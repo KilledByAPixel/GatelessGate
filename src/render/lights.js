@@ -3,6 +3,40 @@
 // model and outlived the one it shared a file with.
 import * as THREE from '../../lib/three.module.js';
 import { PAPER, WASH } from '../palette.js';
+import { eyePosition } from '../camera.js';
+
+// WHERE THE KEY STANDS, in the same vocabulary a case's `camera:` block speaks:
+// heading in degrees around the focus (0 is square in front, on +z), pitch in
+// degrees above it. A case names its own with `sun: { heading, pitch }`, and
+// these are the numbers the workbench's "Sun heading"/"Sun height" sliders
+// read, so an angle found by dragging is the angle typed into the file.
+//
+// Relative to the case's own camera heading, the aim is what kind of light it
+// is: a small difference is frontal and flat, a quarter turn rakes across the
+// staging, and a half turn is contre-jour with the shadows running toward the
+// reader. The default sits a little to the camera's right of most cases'
+// framing — a mild three-quarter key, which is what the whole book was lit by
+// before any case could name its own.
+export const SUN_DEFAULT = { heading: 51, pitch: 52 };
+
+// The key's height above the focus is FIXED and the pitch moves it out rather
+// than down, so a low sun does not sink below the canopy it is meant to be
+// casting from — the shadow camera's near plane clips anything standing above
+// the light, and a tree that loses its shadow that way fails silently.
+const SUN_HEIGHT = 9;
+
+// Aim an existing key. Split out because the workbench drives the same light
+// live: one path from the case's numbers to the light's position, so a dragged
+// angle and an authored one cannot land in different places.
+export function aimSun(sun, { heading, pitch } = SUN_DEFAULT) {
+  const t = sun.target.position;
+  const [x, y, z] = eyePosition(
+    { heading, pitch, distance: SUN_HEIGHT / Math.sin(pitch * Math.PI / 180) },
+    [t.x, t.y, t.z],
+  );
+  sun.position.set(x, y, z);
+  sun.userData.aim = { heading, pitch };
+}
 
 // Key + fill. Two things matter here:
 //
@@ -18,7 +52,7 @@ import { PAPER, WASH } from '../palette.js';
 //    surface equally, which erases form — the single biggest reason the scene
 //    read flat. A hemisphere is brighter from the sky and darker underneath, so
 //    a robe or a stone still has a shaded side.
-export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 15 } = {}) {
+export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 15, sun: aim = SUN_DEFAULT } = {}) {
   const g = new THREE.Group();
   g.name = 'lights';
 
@@ -28,7 +62,7 @@ export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 15 }
   // else back down — and those two cannot share one number, so they don't. The
   // red's extra brightness moved into the materials themselves as SEAL_GLOW
   // (material.js), where the sun can't take it away, and the key came back to
-  // the scene light he approved, nudged up as asked.
+  // the level the scene was right at.
   //
   // Measured on case 29 (blown-white % of frame / peak red chroma):
   //   sun 6.5 no glow: 3.5% / 140     <- "before", scene right, red weak
@@ -39,8 +73,8 @@ export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 15 }
   // pulling the fill down as well would crush the shadow side of every form and
   // lose the wash.
   const sun = new THREE.DirectionalLight(0xffffff, 6.7);
-  sun.position.set(focus[0] + 5.5, 9, focus[2] + 4.5);
   sun.target.position.set(focus[0], 0, focus[2]);
+  aimSun(sun, aim);
   g.add(sun, sun.target);
 
   if (shadow) {

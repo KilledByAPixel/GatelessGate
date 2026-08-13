@@ -113,7 +113,11 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
-  scene.add(makeLights());
+  // Low, and from over the sea rather than over the land behind it
+  // (the shore runs out to -z). The swell carries the light back
+  // toward the reader; a key on the land side left the biggest
+  // object on the page — this case's own seal — flat.
+  scene.add(makeLights({ sun: { heading: 160, pitch: 35 } }));
   
   // a coast road, running parallel with the shoreline — the reader looks across
   // it to the sea, and it dead-ends into nothing — a road aimed at the water is

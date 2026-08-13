@@ -41,7 +41,11 @@ const CAM = { distance: 14.2, target: [0.95, 0.9, -1.4], heading: 31.5, pitch: 2
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
-  scene.add(makeLights());
+  // The mirror of case 30, which is the point of the pair: the same
+  // pond, the same seat, the light come round to the far side and
+  // dropped. The water glares and the figure on the bank goes to
+  // silhouette.
+  scene.add(makeLights({ sun: { heading: -118, pitch: 36 } }));
   
   // the same open stone basin, from the same shared dimensions
   const lip = makeBasin({

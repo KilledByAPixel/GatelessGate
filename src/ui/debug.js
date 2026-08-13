@@ -3,6 +3,7 @@ import { setGrassPatchiness, setGrassReach, setGrassTaper } from '../kit/grassfi
 import { LAMBERT_LIFT } from '../kit/tuftfield.js';
 import { wash } from '../palette.js';
 import { setFoliageWeather } from '../kit/foliage.js';
+import { aimSun, SUN_DEFAULT } from '../render/lights.js';
 import { DRAW_BUDGET, DRAW_WARN } from '../budget.js';
 
 // A workbench: a toolbar button top-right of the stage, and a plain panel that
@@ -95,6 +96,12 @@ const CONTROLS = [
   { key: 'shadows', label: 'Real shadows', type: 'bool', def: true },
   { key: 'fogMul', label: 'Fog ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
   { key: 'sunMul', label: 'Sun ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
+  // WHERE THE KEY STANDS, live. Both are the same numbers a case writes in its
+  // `sun:` block (render/lights.js), so an angle found by dragging is the angle
+  // typed into the file. A case that names its own aim MOVES THESE on arrival,
+  // the same adoption the wind sliders do — see apply().
+  { key: 'sunHeading', label: 'Sun heading°', type: 'range', def: SUN_DEFAULT.heading, min: -180, max: 180, step: 1 },
+  { key: 'sunPitch', label: 'Sun height°', type: 'range', def: SUN_DEFAULT.pitch, min: 12, max: 84, step: 1 },
   { key: 'ambMul', label: 'Ambient ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
 
   { group: 'Post' },
@@ -320,6 +327,8 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
   // The grass field the wind slider was last synced against. A page turn builds
   // a new one, which is the signal to adopt that case's pinned wind (below).
   let windField = null;
+  // ...and the same for the key, which every case now aims for itself.
+  let sunLight = null;
 
   function apply() {
     const scene = getScene && getScene();
@@ -341,6 +350,24 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
           if (o.userData._i0 === undefined) o.userData._i0 = o.intensity;
           o.intensity = o.userData._i0 * state.sunMul;
           o.castShadow = state.shadows;
+          // THE AIM, adopted then driven — the same two-step the wind sliders
+          // use below, and for the same reason: apply() runs on every page
+          // build, so writing the sliders straight into the light would erase
+          // the case's own sun on the frame the scene was born. Only a NEW
+          // light adopts, or every apply would drag the sliders back
+          // mid-tweak. The wrap keeps an aim past half a turn (a backlight)
+          // on the slider's own scale instead of pinning it to the end stop.
+          if (o.userData.aim && o !== sunLight) {
+            sunLight = o;
+            const h = ((o.userData.aim.heading + 180) % 360 + 360) % 360 - 180;
+            if (h !== state.sunHeading) { state.sunHeading = h; syncRow('sunHeading'); }
+            if (o.userData.aim.pitch !== state.sunPitch) {
+              state.sunPitch = o.userData.aim.pitch; syncRow('sunPitch');
+            }
+          }
+          // k19 aims its key at the moon every frame and owns it outright; a
+          // light with no aim recorded is one this panel must not move.
+          if (o.userData.aim) aimSun(o, { heading: state.sunHeading, pitch: state.sunPitch });
         }
         if (o.isAmbientLight || o.isHemisphereLight) {
           if (o.userData._i0 === undefined) o.userData._i0 = o.intensity;

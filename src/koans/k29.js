@@ -56,7 +56,7 @@ export default {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.03);
-    scene.add(makeLights());
+    scene.add(makeLights({ sun: { heading: -58, pitch: 46 } }));
 
     // the road to the temple runs from the foreground into the fog; everything
     // is placed ON it via path.sample so the gate spans the trail and the

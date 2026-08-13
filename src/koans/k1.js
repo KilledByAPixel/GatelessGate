@@ -29,7 +29,7 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, FOG_BASE);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: 104, pitch: 44 } }));
   
   const path = makePath({ from: [1.2, 9], to: [1.2, -34], width: 1.7, seed: 13, groundSeed: 21, wander: 3.1 });
   scene.add(path);

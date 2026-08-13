@@ -98,7 +98,9 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
-  scene.add(makeLights());
+  // The last page: the day ending behind the same torii the book
+  // opened on, with the shadows running back toward the reader.
+  scene.add(makeLights({ sun: { heading: 198, pitch: 33 } }));
   
   // the path that has run under the whole book, one last time, straight down
   // into the fog

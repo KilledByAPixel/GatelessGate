@@ -49,7 +49,7 @@ const CAM = { distance: 10.6, target: [0.4, 1.9, -0.2], heading: 33, pitch: 12.5
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: -37, pitch: 50 } }));
   
   // The road is plain stone. It carried the seal for a while (case 29 owns the
   // red flag, so this case painted its banner plain and warmed the road up to

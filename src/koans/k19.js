@@ -289,8 +289,11 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   // lay across the meadow from a direction with nothing in it while a moon
   // stood plainly in the sky doing no work at all — the light visibly did not
   // come from it. The bearing below is the moon's own; only the elevation is
-  // chosen, for the reason at SUN_ELEV.
+  // chosen, for the reason at SUN_ELEV. Every other case names a fixed `sun:`
+  // aim instead; this one's moves with the swell, so it clears the aim record
+  // to claim the light outright and the workbench's sun sliders leave it alone.
   const sun = scene.getObjectByProperty('isDirectionalLight', true);
+  if (sun) sun.userData.aim = null;
   const sunTargetAt = sun ? sun.target.position.clone() : new THREE.Vector3();
 
   // the moon's resting spot and size, kept so the swell has somewhere to return

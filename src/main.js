@@ -70,7 +70,11 @@ const narration = createNarration();
 // manager empty so the first reveal is the ink curtain rather than a torn-off
 // still of a gate that was never drawn. The boot block at the bottom of this
 // file activates it on the ordinary path.
-const hub = buildHub();
+// The key stands well round to the left of the opening dolly, so the torii is
+// raked rather than lit square on and the road runs into its own shadow. The
+// afterword builds the same hub under the book's default sun — different land,
+// different light, the two hub scenes told apart by more than their seeds.
+const hub = buildHub({ sun: { heading: -66, pitch: 45 } });
 
 let mode = 'intro';
 let simTime = 0;

@@ -113,7 +113,7 @@ const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch:
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.032);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: 70, pitch: 45 } }));
   
   // one road, running away into the fog in both directions
   const road = makePath({ from: [6.0, 7.0], to: [-5.5, -17], width: 1.6, seed: ID, groundSeed: 21, wander: 0.5 });
