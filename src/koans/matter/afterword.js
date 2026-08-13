@@ -4,7 +4,7 @@ import { buildHub } from '../../intro.js';
 import { ACCENT, WASH } from '../../palette.js';
 import {
   makeBuddha, makeCat, makeWildflowers, groundHeight, washMaterial,
-  plantTree,
+  plantTree, plantRock,
 } from '../../kit/index.js';
 import { eyePosition } from '../../camera.js';
 
@@ -121,6 +121,11 @@ export default {
         built.trees.splice(built.trees.indexOf(t), 1);
       }
     }
+
+    let rock = plantRock(scene, { x: -6.9, z: -7.5, size: 2, sink: -.2 });
+    rock.rotation.y = 3;
+
+    let rock2 = plantRock(scene, { x: -3.3, z: -5.5, size: 1, sink: -.2 });
 
     const bodhi = plantTree(scene, {
       x: tx, z: tz, kind: TREE.kind, height: TREE.height, seed: TREE.seed,

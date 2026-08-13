@@ -2,7 +2,7 @@ import * as THREE from '../lib/three.module.js';
 import { PAPER, ACCENT_DEEP, wash } from './palette.js';
 import {
   composeWorld, makePath, makeLantern, makeGate, makeMonk,
-  makeLights, makeCylinderChime, tapMeshes, SUN_DEFAULT,
+  makeLights, makeCylinderChime, tapMeshes, SUN_DEFAULT, plantRock
 } from './kit/index.js';
 import { introPath } from './intro_rails.js';
 
@@ -80,6 +80,9 @@ export function buildHub({
   // not the 56-unit mush lights.js warns about.
   scene.add(makeLights({ focus: [4.5, 0, 0], radius: 15, sun }));
 
+  let rock = plantRock(scene, { x: 6.9, z: -9.5, size: 2, sink: -.2 });
+  rock.rotation.y = 3;
+  
   // The path is ALWAYS built: it is the placement maths for the gate, the
   // lanterns and the monk, and gateTarget is a point on it. Only whether it is
   // drawn is optional — and when it is not drawn its keepout must go too, or
