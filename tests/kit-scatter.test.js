@@ -191,6 +191,54 @@ test('path.sample gives centerline point, heading, and across-path vector', () =
   assert.ok(Math.abs(s.y - groundHeight(s.x, s.z, { seed: 21 })) < 1e-6, 'y on ground');
 });
 
+test('path.keepout tapers with the stroke and never uncovers the ribbon', () => {
+  // Two failure modes, both shipped once, hold this test's two halves:
+  // the chain at constant radius left a full-width bald strip around the
+  // hair-thin tip (Frank: "the grass keepout does not taper"), and radii
+  // scaled in place came apart between beads (Frank: "grass appearing on
+  // top of the road in the tapered area"). Tapering correctly means smaller
+  // circles AND proportionally tighter spacing — so the check that matters
+  // is COVERAGE: everywhere along the stroke, the ribbon's own edge is
+  // inside some circle, while the verge still narrows to a hair at the tip.
+  const WIDTH = 1.6, R = 1.2, TAPER = 0.45;
+  const p = makePath({ from: [0, 8], to: [0, -30], width: WIDTH, seed: 91, groundSeed: 21, taper: TAPER });
+  const ring = p.keepout(24, R);
+  // the ribbon's own width factor (path.js's taperAt, restated)
+  const taperAt = (t) => {
+    if (t <= 1 - TAPER) return 1;
+    const s = (1 - t) / TAPER;
+    const ss = s * s * (3 - 2 * s);
+    return Math.max(0.03, 0.3 * ss + 0.7 * s);
+  };
+
+  // coverage: both edges of the ribbon, densely sampled, inside the mask
+  for (let i = 0; i <= 400; i++) {
+    const t = i / 400;
+    const s = p.sample(t);
+    const half = (WIDTH / 2) * 0.85 * taperAt(t);   // the ribbon's thin side
+    for (const side of [1, -1]) {
+      const ex = s.x + s.perp.x * half * side;
+      const ez = s.z + s.perp.z * half * side;
+      const covered = ring.some((k) => Math.hypot(ex - k.x, ez - k.z) <= k.r);
+      assert.ok(covered, `ribbon edge uncovered at t=${t.toFixed(3)} (side ${side})`);
+    }
+  }
+
+  // ...while the verge still narrows: full r along the body, small at the tip
+  for (const k of ring.slice(0, 10)) assert.ok(Math.abs(k.r - R) < 1e-9, `body at full r, got ${k.r}`);
+  const radii = ring.map((k) => k.r);
+  for (let i = 1; i < radii.length; i++) {
+    assert.ok(radii[i] <= radii[i - 1] + 1e-9, 'the chain only ever narrows');
+  }
+  assert.ok(radii.at(-1) <= R * 0.12 + 1e-9, `the tip verge is small, got ${radii.at(-1)}`);
+  // and the tail is denser than the body — the other half of self-similar
+  assert.ok(ring.length > 25, `tail densification expected, got ${ring.length} circles`);
+
+  // taper: 0 keeps the square-ended road's constant chain
+  const square = makePath({ from: [0, 8], to: [0, -30], width: WIDTH, seed: 91, groundSeed: 21, taper: 0 });
+  for (const k of square.keepout(24, R)) assert.ok(Math.abs(k.r - R) < 1e-9);
+});
+
 test('makeTuftField: one instanced meadow, masked and ground-conforming', () => {
   const keepout = [{ x: 0, z: 0, r: 4 }];
   const f = makeTuftField({ count: 3000, radius: 14, seed: 5, groundSeed: 21, keepout });

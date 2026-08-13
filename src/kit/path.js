@@ -26,6 +26,19 @@ export function makePath({
   groundFn = null,
 } = {}) {
   const groundAt = groundFn || ((x, z) => groundHeight(x, z, { seed: groundSeed }));
+  // The stroke's width factor at t: 1 along the body, thinning through the
+  // tail. ONE function, shared by the ribbon and keepout() below, because the
+  // two used to disagree: the ribbon tapered and the mask did not, so every
+  // road ended in a full-width bald strip of cleared grass around a
+  // hair-thin tip (Frank: "the path tapers at the end, but the grass keepout
+  // does not taper... it looks kinda weird"). See the curve's own comment in
+  // the ribbon loop for why it is mostly-linear rather than a smoothstep.
+  const taperAt = (t) => {
+    if (taper <= 0 || t <= 1 - taper) return 1;
+    const s = (1 - t) / taper;               // 1 at taper start -> 0 at the tip
+    const ss = s * s * (3 - 2 * s);
+    return Math.max(0.03, 0.3 * ss + 0.7 * s);
+  };
   const pts = [];
   for (let i = 0; i <= samples; i++) {
     const t = i / samples;
@@ -49,27 +62,19 @@ export function makePath({
     let dx = nx - px, dz = nz - pz;
     const len = Math.hypot(dx, dz) || 1;
     dx /= len; dz /= len;
-    let w = width / 2 * (0.85 + 0.3 * noise1(i * 0.7, seed + 5));
-    if (taper > 0) {
-      const t = i / samples;
-      if (t > 1 - taper) {
-        const s = (1 - t) / taper;               // 1 at taper start -> 0 at the tip
-        // A LONG THIN TAIL, not a sudden point (Frank: "the road tapers too
-        // quickly at its ends"). Smoothstep alone was the wrong curve for a
-        // brush lift: near the tip it behaves like 3s², so four fifths of the
-        // taper stayed at almost full width and the whole narrowing crammed
-        // into the last fifth — which reads as the road being cut off, the
-        // very thing the taper was added to avoid. Mixing it mostly-linear
-        // triples the width through the tail, so the stroke thins steadily
-        // over its whole run and ends in a fine line. The smoothstep share is
-        // what keeps a little softness at the taper's START, where a purely
-        // linear ramp would leave a faint crease across the road.
-        const ss = s * s * (3 - 2 * s);
-        // floor at a hair's width: a true point makes degenerate faces whose
-        // normals go NaN in computeVertexNormals
-        w *= Math.max(0.03, 0.3 * ss + 0.7 * s);
-      }
-    }
+    // A LONG THIN TAIL, not a sudden point (Frank: "the road tapers too
+    // quickly at its ends"). Smoothstep alone was the wrong curve for a
+    // brush lift: near the tip it behaves like 3s², so four fifths of the
+    // taper stayed at almost full width and the whole narrowing crammed
+    // into the last fifth — which reads as the road being cut off, the
+    // very thing the taper was added to avoid. Mixing it mostly-linear
+    // (taperAt above) triples the width through the tail, so the stroke
+    // thins steadily over its whole run and ends in a fine line. The
+    // smoothstep share is what keeps a little softness at the taper's
+    // START, where a purely linear ramp would leave a faint crease across
+    // the road. The 0.03 floor is a hair's width: a true point makes
+    // degenerate faces whose normals go NaN in computeVertexNormals.
+    const w = width / 2 * (0.85 + 0.3 * noise1(i * 0.7, seed + 5)) * taperAt(i / samples);
     const lx = x - dz * w, lz = z + dx * w;
     const rx = x + dz * w, rz = z - dx * w;
     const yl = groundAt(lx, lz) + 0.03;
@@ -114,12 +119,37 @@ export function makePath({
   // A chain of keepout circles following the trail, for scatter/grass masks.
   // A path is a ribbon, so a couple of circles cannot mask it — without this,
   // grass grows straight through the road.
+  //
+  // THE CHAIN TAPERS THE WAY THE STROKE DOES, and that takes BOTH knobs. The
+  // first fix scaled only the radii (Frank: "the grass keepout does not
+  // taper... it looks kinda weird") and was wrong in the other direction
+  // (Frank again: "grass appearing on top of the road in the tapered area"):
+  // a chain of circles only masks a ribbon because neighbours OVERLAP, and
+  // the caller's spacing is tuned so full-size circles barely do — shrink
+  // the radii in place and the chain comes apart mid-taper, with grass in
+  // the gaps between beads. Self-similar is the rule: through the tail the
+  // circles get smaller AND proportionally closer together (step ≈ 1.1× the
+  // local radius, the same ratio the full-size body chain runs at), so every
+  // stretch of the narrowing stroke is covered by the same geometry that
+  // covers its body. The radius floor keeps the march finite; at that size
+  // the ribbon is a hair and the cleared verge with it.
   mesh.keepout = (count = 24, r = width * 0.8) => {
-    const out = [];
-    for (let i = 0; i <= count; i++) {
-      const p = mesh.sample(i / count);
-      out.push({ x: p.x, z: p.z, r });
+    let L = 0;   // chain length, for converting a world step to a t step
+    for (let i = 1; i <= samples; i++) {
+      L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
     }
+    const radiusAt = (t) => r * Math.max(taperAt(t), 0.12);
+    const bodyStep = L / count;              // the caller's own density
+    const out = [];
+    let t = 0;
+    while (t < 1) {
+      const p = mesh.sample(t);
+      const rr = radiusAt(t);
+      out.push({ x: p.x, z: p.z, r: rr });
+      t += Math.min(bodyStep, 1.1 * rr) / L;
+    }
+    const tip = mesh.sample(1);
+    out.push({ x: tip.x, z: tip.z, r: radiusAt(1) });
     return out;
   };
 
