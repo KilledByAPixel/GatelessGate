@@ -817,14 +817,14 @@ export function ceramicPartials(f0 = CERAMIC.f0, decay = CERAMIC.decay) {
 }
 
 // Solid timber, struck. CODE REVIEW CAUGHT: the comment this replaced claimed
-// the difference from the odoshi's HOLLOW bamboo (bambooPartials) lived in
-// the modal series — it does not. Same 0.5 damping exponent, near-identical
-// ratios (1/2.41/4.02 here vs bamboo's 1/2.28/3.85), and this table's 190 Hz
+// the difference from the odoshi's HOLLOW bamboo (bambooPartials) lived in the
+// modal series — it does not. Same 0.5 damping exponent, near-identical ratios
+// (1/2.41/4.02 here vs bamboo's 1/2.28/3.85), and this table's 190 Hz
 // fundamental actually sits BELOW bamboo's 220 Hz, so register isn't the tell
 // either. What actually separates the two is each voice's own TRANSIENT (its
 // own knock, tuned separately at its engine.js call site) and LEVEL, plus a
-// shorter decay here than the odoshi's — almost no tail at all. A tree trunk
-// is the most inert thing in the book.
+// shorter decay here than the odoshi's — almost no tail at all. A tree trunk is
+// the most inert thing in the book.
 export const WOOD = { f0: 190, level: 0.09, decay: 0.26, verbMix: 0.3, tail: 1 };
 
 export function woodPartials(f0 = WOOD.f0, decay = WOOD.decay) {

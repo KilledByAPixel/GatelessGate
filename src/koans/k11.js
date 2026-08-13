@@ -89,11 +89,11 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
   const path = makePath({ from: [8.0, 1.6], to: [-15, 2.0], width: 1.2, seed: ID, groundSeed: 21, wander: 1.6 });
   scene.add(path);
   
-  // the hut he retired to, on its rise — set OFF to the side of the road — the
-  // hill was blocking the main path. It used to sit at x -0.4, where the path's
-  // closest approach was 2.2 units from its center, well inside the 3.6 base —
-  // the road ran straight into the slope and vanished. At -2.8 the centerline
-  // clears the base by ~0.9 at its nearest sample).
+  // the hut he retired to, on its rise — set OFF to the side of the road,
+  // because the hill was blocking it. Sited nearer the centre, the path's
+  // closest approach fell well INSIDE the rise's base and the road ran straight
+  // into the slope and vanished; from here the centerline clears the base at
+  // every sample.
   const RISE = { x: -2.8, z: -2.6, rTop: 3.0, rBase: 3.6, h: 0.45, sides: 10 };
   const RISE_TOP_Y = 0.22 + RISE.h / 2;          // the plateau's world height
   const rise = new THREE.Mesh(

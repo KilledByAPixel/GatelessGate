@@ -34,10 +34,10 @@ function bodyGeometry(s) {
   body.scale(1, 0.7, 2.5);                   // long and flat, not a ball
   parts.push(body);
 
-  // a suggestion of a head: a small bump at the front, not a sphere on a
-  // neck — sized up a touch from the first pass so the close-up single reads as
-  // having a head at all, short of the too-big mistake the header above still
-  // warns against.
+  // a suggestion of a head: a small bump at the front, not a sphere on a neck —
+  // sized up a touch from the first pass so the close-up single reads as having
+  // a head at all, short of the too-big mistake the header above still warns
+  // against.
   const head = new THREE.SphereGeometry(0.105 * s, 7, 5);
   head.scale(1, 0.82, 1.05);
   head.translate(0, 0.025 * s, 0.43 * s);

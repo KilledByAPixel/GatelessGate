@@ -58,9 +58,8 @@ export function makeGate({
   }
 
   // KASAGI — flat centre span, two tilted end wings pivoting flush off its
-  // corners. Overall horizontal footprint matches the old flat lintel
-  // (width * 1.4) so k47's tap slab, sized off that same formula, still
-  // covers it.
+  // corners. Overall horizontal footprint matches the old flat lintel, so
+  // k47's tap slab — sized off the same formula — still covers it.
   const KASAGI_LEN = width * 1.4, KASAGI_H = 0.18, KASAGI_D = 0.34;
   const WING_LEN = KASAGI_LEN * 0.24, WING_TILT = 0.18;
   const CENTER_LEN = KASAGI_LEN - 2 * WING_LEN;

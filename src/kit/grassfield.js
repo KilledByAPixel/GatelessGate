@@ -236,7 +236,7 @@ export function grassPlacements({
 // the tone the meadow actually renders at.
 //
 // A step LIGHTER than it had been landing on, which is what the ground
-// occlusion bought. The grass no longer has to carry the sense
-// of mass on its own now that the earth under it is darker where it is thick
-// (grassshade.js), so the blades themselves can come up out of the wash.
+// occlusion bought. The grass no longer has to carry the sense of mass on its
+// own now that the earth under it is darker where it is thick (grassshade.js),
+// so the blades themselves can come up out of the wash.
 export const GRASS_TONE = wash(0.62);

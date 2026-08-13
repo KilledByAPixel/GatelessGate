@@ -568,13 +568,13 @@ export function makeFigure({
       // way the upright plant stayed clear of the hem
       staff.position.z -= dz * staffLen * 0.5;
     } else {
-    // NEAR-VERTICAL, not leaned in. The old 0.08 rad lean tipped the top
-    // toward the figure, which put the shaft at ~0.194·h off the axis right
-    // at hat-brim height — the brim reaches 0.192·h — so from roughly half
-    // of all camera bearings the staff read as growing out of the wearer's
-    // hat (k11/k19/k21/k22/k27/k31/k34/k36/k39, the "not in the right
-    // place" audit). Leaned back a hair, the shaft clears the brim and still
-    // passes within a hand's reach of the resting cuff, so it reads as the same
+    // NEAR-VERTICAL, not leaned in. The old 0.08 rad lean tipped the top toward
+    // the figure, which put the shaft at ~0.194·h off the axis right at
+    // hat-brim height — the brim reaches 0.192·h — so from roughly half of all
+    // camera bearings the staff read as growing out of the wearer's hat
+    // (k11/k19/k21/k22/k27/k31/k34/k36/k39, the "not in the right place"
+    // audit). Leaned back a hair, the shaft clears the brim and still passes
+    // within a hand's reach of the resting cuff, so it reads as the same
     // planted, gripped staff — just beside the monk instead of through his hat.
     // The plant distances (staffX) are untouched.
       staff.rotation.z = 0.02;

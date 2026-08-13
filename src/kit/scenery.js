@@ -383,9 +383,10 @@ export function composeWorld(scene, {
   const radius = grassRadius === null ? reach : grassRadius;
   const rimTaper = grassTaper === null ? taper : grassTaper;
   const budget = grass * grassArea(radius, rimTaper) / GRASS_BASE_AREA;
-  // /1.5: a card carries a whole tuft, so it takes fewer of them to cover the
-  // same ground than it took blades — the budget above is still expressed in
-  // blade-equivalents so a case's grass count means what it always meant.
+  // A card carries a whole tuft, so it takes FEWER of them to cover the same
+  // ground than it took blades — hence the divisor. The budget above is still
+  // expressed in blade-equivalents, so a case's grass count means what it always
+  // meant.
   const field = makeTuftField({
     count: Math.round(budget / 1.5), radius, taper: rimTaper, seed: seed * 81, groundSeed,
     keepout: grassKeepout || keepout, groundFn,

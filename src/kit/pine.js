@@ -67,10 +67,11 @@ const TIER_FLEX = 0.16;     // how much more than the bole a tier flexes at its 
                             // height. Small on purpose: this is the whole margin
                             // by which a tier may leave the trunk's curve.
 const TIER_LIFE = 0.30;     // the tiers' share of the leaf flutter — the pine's own
-                            // "needles moving" dial, separate from the bend above.
-                            // A full cluster-shiver on a cone this size is pure
-                            // lateral slide; damping it to nothing overshot the
-                            // correction. This is life without slide.
+                            // "needles moving" dial, separate from the bend
+                            // above. A full cluster-shiver on a cone this size
+                            // is pure lateral slide; damping it to nothing
+                            // overshot the correction. This is life without
+                            // slide.
 
 export function pineGeometry({ height = 4, tiers = 5, seed = 3 } = {}) {
   const parts = [];

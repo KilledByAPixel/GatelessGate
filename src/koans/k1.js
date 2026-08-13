@@ -36,9 +36,9 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   
   // Joshu's hermitage, back off the road behind him — the place the monk walked
   // here to reach (the opening page was two figures and a dog in an empty
-  // meadow, which read as too bare). The path samples at z≈-4.5 put the road at
-  // x≈0.5, so the hut at -3.8 keeps a clear verge between its threshold and the
-  // traffic.
+  // meadow, which read as too bare). Set off the road far enough that a clear
+  // verge stays between its threshold and the traffic, measured against where
+  // the path actually samples at this depth.
   const HUT = { x: -3.8, z: -4.5 };
   const hut = makeHut({ width: 3.0, height: 2.3, depth: 2.4, chimes:4});
   hut.position.set(HUT.x, 0, HUT.z);
