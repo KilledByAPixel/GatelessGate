@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeLantern, makeMonk, aimMonk, faceMonk, makeGate, makeFlag,
-  makeLights, makeFurin,
+  makeLights, makeFurin, setFoliageWeather, foliageWind,
 } from '../kit/index.js';
 import { clothEnergy } from '../sim/verlet.js';
 
@@ -226,6 +226,68 @@ export default {
     const baseWind = BASE_WIND;
     let camera = null;
 
+    // ---- THE WHOLE SCENE'S WIND, not just the flag's ---------------------
+    // Stopping the flag used to stop the flag, the chimes and the sound, and
+    // leave the meadow laying over and the trees working away behind it
+    // (Frank: "let's make it so the wind actually stops when you click on it
+    // and the flag stops — the wind is still moving on the grass and on the
+    // trees"). On a page whose entire argument is what the wind is and is not,
+    // a still flag over a moving meadow is the case refuting itself.
+    //
+    // Both fields are held only WHILE the flag is not at full wind, and handed
+    // back exactly on the way out — the same contract case 20's squall keeps
+    // with the same two sliders, and the reason `base` is sampled at the moment
+    // of taking over rather than at build: the workbench's own values are what
+    // the page is wearing, and dragging a slider mid-page must still land.
+    //
+    // The grass field is this scene's own object; the FOLIAGE wind is one
+    // module-level uniform shared by every tree in the book (kit/foliage.js),
+    // so leaving it down would follow the reader to the next page. It does not,
+    // twice over: the release below hands it back the moment the flag comes up,
+    // and dispose() hands it back if the reader leaves the page with the flag
+    // still down. (debug.apply() would also rewrite it on the next page build,
+    // but a case should not need the workbench to clean up after it.)
+    //
+    // IT DOES NOT GO TO ZERO. A dead-still meadow and dead-still trees read as
+    // the picture having crashed rather than as the wind having dropped (Frank:
+    // "it looks almost like it's frozen... let's just set the wind down to,
+    // like, a tenth of what it normally is or something like that instead of
+    // zero"). A tenth still reads plainly as stopped next to the flag's own
+    // full lean, and the page stays alive.
+    //
+    // The floor is on the two FIELDS only. The chimes and the audible wind
+    // still go all the way to silence with the flag: that is Mumon's argument
+    // staged as sound and it is what the case is for — and at a tenth of a
+    // wind a fūrin would barely speak anyway.
+    const STILL = 0.1;
+    const grass = world.grass;
+    let held = false;
+    let grassBase = 1;
+    let treeBase = 1;
+    const sample = () => {
+      grassBase = grass && grass.wind ? grass.wind() : 1;
+      treeBase = foliageWind();
+    };
+    const release = () => {
+      held = false;
+      grass && grass.setWind(grassBase);
+      setFoliageWeather({ wind: treeBase });
+    };
+    function weather(level) {
+      // what the fields answer: full wind at the flag's full lean, never below
+      // a tenth of it
+      const scale = STILL + (1 - STILL) * level;
+      if (scale > 0.999) {
+        // free: whatever the sliders say IS the weather, and it is what we
+        // will hand back
+        if (held) release(); else sample();
+        return;
+      }
+      if (!held) { held = true; sample(); }
+      grass && grass.setWind(grassBase * scale);
+      setFoliageWeather({ wind: treeBase * scale });
+    }
+
     // hover the cloth -> local puff; tap the cloth -> toggle the wind
     input.onHover(() => {
       if (!camera) return;
@@ -263,6 +325,9 @@ export default {
       update(dt, simTime) {
         flag.update(dt, simTime);
         world.update(dt, simTime);            // drives the meadow's wind
+        // and the meadow and the wood answer it too. Order against
+        // world.update is free: both of these are uniforms, read at draw.
+        weather(flag.windLevel());
         const level = flag.windLevel() * baseWind;
         audio && audio.setWindLevel(level);
         // all three answer the same wind — stilling the flag has to still
@@ -276,13 +341,19 @@ export default {
         return {
           windOn: flag.isWindOn(),
           windLevel: +flag.windLevel().toFixed(4),
+          // the same wind reaching the other two things that show it
+          grassWind: +(grass && grass.wind ? grass.wind() : 0).toFixed(4),
+          treeWind: +foliageWind().toFixed(4),
           clothEnergy: +clothEnergy(flag.cloth).toFixed(6),
           // summed, not per-chime — a debug-panel fragment is finite numbers
           // and booleans only (tests/staging.test.js), no arrays
           singleStrikes: singles.reduce((n, s) => n + s.strikes(), 0),
         };
       },
-      dispose() {},
+      // the trees' wind is one uniform shared by the whole book, so a reader
+      // who turns this page with the flag still down must not take a stilled
+      // wood with them
+      dispose() { if (held) release(); },
     };
   },
 };

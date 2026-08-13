@@ -21,7 +21,11 @@ const ID = 28;
 // page goes to ink, and then the stars come up — which were there the whole
 // time and could not be seen while the little light was burning.
 //
-// Blow it out again and it relights; nothing here is a one-way door.
+// Blow it out again and it relights; nothing here is a one-way door. AND IT
+// RELIGHTS ITSELF (Frank: "the candle will come back on after a couple seconds,
+// maybe, like, five seconds or so") — the dark is a held breath, not a state
+// the page settles into. It also means a reader who taps once and reads on gets
+// the whole event, arrival and departure, without having to know to tap again.
 //
 // (The design doc's microphone is not wired in tonight — the tap is the whole
 // interaction, and it was never meant to be the lesser option.)
@@ -29,6 +33,13 @@ const ID = 28;
 const NIGHT = mixHex(PAPER, INK, 0.38);     // the page at this hour
 const DARK = mixHex(PAPER, INK, 0.93);      // and with the candle out
 const FADE = 1.5;                            // seconds to fall dark, and to come back
+// Seconds from the breath to the wick catching again, measured from the tap and
+// not from the moment it is fully dark — so of these five the page spends the
+// first 1.5 going out, about 3.5 in full dark under the stars, and then FADE
+// more coming back with the stars still up for most of it. A tap of any kind
+// cancels it: a reader who lights it by hand is not overruled two seconds
+// later, and one who blows it out again gets a fresh five.
+const RELIGHT = 5.0;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
@@ -221,6 +232,16 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   let lit = true;
   let changedAt = -99;
   let blows = 0;
+  let relights = 0;        // times it came back on its own, unasked
+  let relightAt = null;    // when it will, or null if nothing is pending
+
+  // one place the wick catches, so the hand and the clock light it identically
+  const light = () => {
+    lit = true;
+    changedAt = clock;
+    relightAt = null;
+    audio && audio.chimeStrike({ tube: 4, force: 0.5, at: flame.position });
+  };
   
   input.onTap(() => {
   if (!camera) return;
@@ -232,12 +253,16 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   // a sliver to hit on a phone), but the flame and the kit's candle are
   // listed too so a dead-on tap works even if the cylinder ever moves
   if (!input.raycastFirst(camera, [hit, flame, candle])) return;
-  lit = !lit;
-  changedAt = clock;
   blows++;
   // out is a breath; lit again is the smallest bell in the set
-  if (lit) audio && audio.chimeStrike({ tube: 4, force: 0.5, at: flame.position });
-  else audio && audio.knock({ force: 0.22, at: flame.position });
+  if (lit) {
+  lit = false;
+  changedAt = clock;
+  relightAt = clock + RELIGHT;    // it will come back on its own
+  audio && audio.knock({ force: 0.22, at: flame.position });
+  } else {
+  light();                        // ...unless the reader beats the clock to it
+  }
   });
   
   return {
@@ -248,6 +273,12 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   world.update(dt, simTime);
   nightChime.setWindLevel(1);    // a still night, but see k47's furin
   nightChime.update(dt, simTime);
+
+  // the wick catches again by itself. Guarded on `!lit` as well as the
+  // clock so a pending relight can never fire on an already-burning
+  // candle — the tap clears it, but a guard here costs nothing and is
+  // what makes that a belt-and-braces rather than a load-bearing one.
+  if (relightAt !== null && !lit && clock >= relightAt) { relights++; light(); }
   
   // 0 = the lamp is burning, 1 = it is out and the sky has arrived
   const k = clamp01((clock - changedAt) / FADE);
@@ -278,6 +309,7 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   return {
   blows,
   lit,
+  relights,
   dark: +(starMat.opacity / 0.92).toFixed(3),
   chimeStrikes: nightChime.strikes(),
 };

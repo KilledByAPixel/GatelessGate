@@ -5,6 +5,7 @@ import * as THREE from '../lib/three.module.js';
 import k29 from '../src/koans/k29.js';
 import { clothEnergy } from '../src/sim/verlet.js';
 import { noteForSize, makeFurin, SWING, SINGLE_BODY_LEN } from '../src/kit/furin.js';
+import { setFoliageWeather, foliageWind } from '../src/kit/foliage.js';
 import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 
 const fakeCtx = () => sharedCtx({
@@ -415,4 +416,68 @@ test('a tap rings exactly one chime, even with several hanging, and never also t
   taps.forEach((cb) => cb());
   assert.equal(struck.length, 1, `one tap on one chime's sleeve should ring exactly one chime, got ${struck.length}`);
   assert.equal(k.fragment().windOn, true, 'ringing a chime must not also toggle the wind');
+});
+
+// ---- the wind is the whole page -------------------------------------------
+// Stopping the flag used to stop the flag, the chimes and the sound, and leave
+// the meadow laying over and the wood working away behind it (Frank: "let's
+// make it so the wind actually stops when you click on it and the flag stops —
+// the wind is still moving on the grass and on the trees"). On a page whose
+// entire argument is what the wind is and is not, a still flag over a moving
+// meadow is the case refuting itself.
+test('stilling the flag stills the meadow and the wood too', () => {
+  // the trees' wind is one module-level uniform shared by the whole book, so
+  // this test states the weather it starts from rather than inheriting
+  // whatever the last test in this file left behind
+  setFoliageWeather({ wind: 1 });
+  const ctx = fakeCtx();
+  const k = k29.build(ctx);
+  k.setCamera(new THREE.PerspectiveCamera());
+  const cloth = k.scene.getObjectByName('cloth');
+  ctx.input.raycastFirst = (cam, targets) => (targets.includes(cloth)
+    ? { object: cloth, point: new THREE.Vector3(0, 3, 0) } : null);
+
+  let t = 0;
+  const run = (secs) => { for (const end = t + secs; t < end; t += 1 / 60) k.update(1 / 60, t); };
+  run(1);
+  const on = k.fragment();
+  assert.ok(on.grassWind > 0.1, `the meadow is alive to begin with (${on.grassWind})`);
+  assert.equal(on.treeWind, 1, 'and the wood is on the weather this test set');
+
+  ctx._taps.forEach((cb) => cb());
+  run(6);
+  const off = k.fragment();
+  assert.equal(off.windOn, false);
+  // A TENTH, NOT ZERO. Dead-still reads as the picture having crashed rather
+  // than as the wind having dropped (Frank: "it looks almost like it's
+  // frozen"), so the fields keep a floor the flag itself does not.
+  assert.ok(off.grassWind < on.grassWind * 0.2, `the grass drops with the flag (${off.grassWind})`);
+  assert.ok(off.grassWind > on.grassWind * 0.05, `but does not freeze (${off.grassWind})`);
+  assert.ok(off.treeWind < 0.2 && off.treeWind > 0.05, `and the wood does the same (${off.treeWind})`);
+
+  // and it is HANDED BACK, exactly — the workbench sliders are only ever taken
+  // over for as long as the flag is actually down
+  ctx._taps.forEach((cb) => cb());
+  run(8);
+  const again = k.fragment();
+  assert.equal(again.windOn, true);
+  assert.equal(again.grassWind, on.grassWind, 'the meadow gets its own wind back, to the number');
+  assert.equal(again.treeWind, on.treeWind, 'and so does the wood');
+});
+
+test('leaving the page with the flag down does not take a stilled wood along', () => {
+  // one uniform, every tree in the book: the release has to happen on dispose
+  // as well as on the flag coming back up
+  setFoliageWeather({ wind: 1 });
+  const ctx = fakeCtx();
+  const k = k29.build(ctx);
+  k.setCamera(new THREE.PerspectiveCamera());
+  const cloth = k.scene.getObjectByName('cloth');
+  ctx.input.raycastFirst = (cam, targets) => (targets.includes(cloth)
+    ? { object: cloth, point: new THREE.Vector3(0, 3, 0) } : null);
+  ctx._taps.forEach((cb) => cb());
+  for (let i = 0; i < 60 * 6; i++) k.update(1 / 60, i / 60);
+  assert.ok(foliageWind() < 0.3, 'the wood is stilled while the page is open');
+  k.dispose();
+  assert.equal(foliageWind(), 1, 'and is handed back on the way out');
 });

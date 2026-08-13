@@ -121,3 +121,43 @@ test('the flock is deterministic — same seed, same flight', () => {
   };
   assert.deepEqual(run(), run());
 });
+
+// ---- aiming at them --------------------------------------------------------
+// A bird is three small meshes with a wingspan of about `size`, cruising
+// several units up: aimed at directly it is a target of a degree or two. Each
+// carries an invisible sphere three times its own span, and pick() belongs to
+// the component rather than to the case (the fūrin's idiom).
+test('every bird carries a hit proxy that travels with it', () => {
+  const flock = makeBirds({ count: 5, seed: 24, size: 0.5 });
+  const proxies = [];
+  flock.group.traverse((o) => { if (o.name === 'bird-hit') proxies.push(o); });
+  assert.equal(proxies.length, 5, 'one apiece');
+  assert.equal(proxies.every((p) => p.material.visible === false), true, 'and none of them draws');
+  // parented to the bird, so it needs no per-frame bookkeeping
+  const nodes = birdNodes(flock);
+  assert.equal(proxies.every((p) => nodes.includes(p.parent)), true);
+  // three times the wingspan: a real target, still local to one bird
+  const r = proxies[0].geometry.boundingSphere
+    || (proxies[0].geometry.computeBoundingSphere(), proxies[0].geometry.boundingSphere);
+  assert.ok(r.radius > 1.0 && r.radius < 2.0, `generous but not the whole sky (${r.radius})`);
+});
+
+test('pick returns which bird was hit, and is safe before a camera exists', () => {
+  const flock = makeBirds({ count: 4, seed: 24 });
+  const proxies = [];
+  flock.group.traverse((o) => { if (o.name === 'bird-hit') proxies.push(o); });
+  const input = { raycastFirst: (cam, objs) => (objs.includes(proxies[2]) ? { object: proxies[2] } : null) };
+  assert.equal(flock.pick(null, input), null, 'no camera, no pick — never a throw');
+  assert.equal(flock.pick({}, null), null, 'and no input either');
+  assert.deepEqual(flock.pick({}, input), { bird: 2 });
+  assert.equal(flock.pick({}, { raycastFirst: () => null }), null, 'a miss is a miss');
+});
+
+test('a proxy costs no draw call — invisible materials are not drawn', () => {
+  // the same trade every hit proxy in the book makes, asserted here because the
+  // flock adds one per bird and case 24 hangs nine
+  const flock = makeBirds({ count: 9, seed: 24 });
+  let drawn = 0;
+  flock.group.traverse((o) => { if (o.isMesh && o.material.visible !== false) drawn++; });
+  assert.equal(drawn, 9 * 3, 'nine birds, three meshes each, and nothing else');
+});

@@ -266,8 +266,13 @@ const OVER_BUDGET_BY_HISTORY = {};
 // 24's is the BIRDS (the meadow's blooms went to the kit's pale default when
 // Frank ruled petals whitish by default) — a flock circling at altitude that
 // crosses the frame rather than sitting in it, so its world positions at t=0
-// prove nothing; 27's is the moon,
-// sixty units out beyond the mountains; 22's is the PATH, a ground-spanning
+// prove nothing; 27's is the moon, sixty units out beyond the mountains — and
+// measured while this exemption was being re-checked, it projects to screen
+// y = 1.40 at the home framing and is off the edge at ALL 36 headings the orbit
+// can reach, because that case pitches 22.4 degrees DOWN where case 19 (whose
+// moon is its subject) pitches 8.6. Left as it is on Frank's call: "we don't
+// need to see the moon in that one... I could aim the camera if I wanted to.
+// I'm controlling the camera for these"; 22's is the PATH, a ground-spanning
 // ribbon whose mesh origin is not a meaningful point to project (the road is
 // inherently in frame — it is the ground you are looking at). 36 used to be
 // here while its master opened far off in the fog; he now opens a stride

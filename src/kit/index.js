@@ -5,6 +5,9 @@ export { makeForest } from './forest.js';
 export { makeRocks, makeBushes, makeBoulder, scatterPoints, mergeSimple } from './scatter.js';
 
 export { makeTuftField } from './tuftfield.js';
+// the trees' half of the weather — a case stills the wood through these two,
+// the way it stills the meadow through world.grass.setWind (see k29)
+export { setFoliageWeather, foliageWind } from './foliage.js';
 export { makeGrassShade, grassShadeData, grassShadeUV } from './grassshade.js';
 export { makeLantern } from './lantern.js';
 export { makePath } from './path.js';

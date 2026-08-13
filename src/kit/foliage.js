@@ -234,3 +234,14 @@ export function setFoliageWeather({ wind, gustScale, gustSpeed } = {}) {
   if (Number.isFinite(gustScale)) FOLIAGE.uFoliageGustScale.value = gustScale;
   if (Number.isFinite(gustSpeed)) FOLIAGE.uFoliageGustSpeed.value = gustSpeed;
 }
+
+// What the trees are answering right now, IN THE SAME UNITS setFoliageWeather
+// takes — the grass's wind, before the share above is applied — so a case that
+// wants to hold the wood still for a moment (case 29, when the flag stops) can
+// read the weather it found, scale it, and hand back exactly that. Reading the
+// uniform directly and writing it back would have divided by the share once and
+// never multiplied it again, which is a wood 34% as lively every time the flag
+// came back up.
+export function foliageWind() {
+  return FOLIAGE.uFoliageWind.value / FOLIAGE_WIND_SHARE;
+}

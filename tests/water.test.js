@@ -586,3 +586,63 @@ test('default density resolves the ripple wavelength', () => {
     assert.ok(cell <= 0.31 + 1e-9, `size ${size}: cell ${cell} undersamples a 0.62 crest`);
   }
 });
+
+// ---- the wind's other half: how BIG the sea runs --------------------------
+// setRush is pace, setSwellGain is height. The case-20 squall drives both off
+// one envelope (Frank: "can we also try increasing the amplitude of the ocean
+// waves too? So it looks like they're actually getting bigger") — pace alone
+// read as the film being sped up rather than as weather.
+test('setSwellGain scales the swell, and hands it back exactly', () => {
+  const w = makeWater({
+    shape: 'square', size: 40, segments: 32, swell: 1,
+    drift: [{ dx: 0, dz: 1, amp: 0.06, wavelength: 8, period: 6 }],
+  });
+  const span = () => {
+    w.update(1 / 60, 3.0);
+    const v = verts(w);
+    return Math.max(...v.map((p) => p.y)) - Math.min(...v.map((p) => p.y));
+  };
+  const calm = span();
+  w.setSwellGain(2);
+  const rough = span();
+  assert.ok(rough > calm * 1.8, `the sea runs higher (${calm.toFixed(4)} -> ${rough.toFixed(4)})`);
+  w.setSwellGain(1);
+  assert.ok(Math.abs(span() - calm) < 1e-12, 'and comes back to exactly the sea it was');
+});
+
+test('a swell gain is a scale, not a phase — the wave stays where it was', () => {
+  // The whole reason this is allowed to be a plain multiplier where setRush had
+  // to be an integrated offset. A gained surface must be the ungained surface
+  // at the SAME instant, times the gain, vertex for vertex: same crests, same
+  // troughs, same positions, just taller. Multiplying a CLOCK instead would
+  // move every crest along the swell — the bug the birds and the butterflies
+  // both shipped.
+  const mk = (gain) => {
+    const w = makeWater({
+      shape: 'square', size: 40, segments: 24, swell: 1,
+      drift: [{ dx: 0, dz: 1, amp: 0.06, wavelength: 8, period: 6 }],
+    });
+    w.setSwellGain(gain);
+    for (let t = 0; t < 2; t += 1 / 60) w.update(1 / 60, t);
+    return verts(w).map((p) => p.y);
+  };
+  const plain = mk(1);
+  const gained = mk(1.9);
+  for (let i = 0; i < plain.length; i++) {
+    // 1e-6: the positions are read back out of a float32 buffer
+    assert.ok(Math.abs(gained[i] - plain[i] * 1.9) < 1e-6,
+      `vertex ${i} is not simply 1.9x taller (${plain[i]} -> ${gained[i]})`);
+  }
+});
+
+test('the gain never touches a tap ripple — the finger is not the weather', () => {
+  const mk = (gain) => {
+    const w = makeWater({ shape: 'round', size: 6, swell: 0 });   // no swell at all
+    w.setSwellGain(gain);
+    w.update(1 / 60, 0);
+    w.ripple(0, 0);
+    for (let t = 1 / 60; t < 0.6; t += 1 / 60) w.update(1 / 60, t);
+    return verts(w).map((p) => p.y);
+  };
+  assert.deepEqual(mk(3), mk(1), 'a ripple is the same size whatever the sea is doing');
+});

@@ -93,22 +93,33 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   scene.add(leg);
   }
   
-  // two cups on the bench — the tea nobody in this case ever drinks
+  // Two cups on the bench — the tea nobody in this case ever drinks. They
+  // used to be the seal, and two 5cm cylinders on a bench in the middle
+  // distance is a poor place to spend the one warm note on a page: at the
+  // home lens they read as two red specks and the woman giving the answer —
+  // who IS the case — was painted the same ink as everybody else. The seal
+  // moved to her (Frank: "let's have the old woman be red instead of the
+  // little cups there"). Stall timber, now, like the bench they stand on.
   for (const off of [-0.35, 0.3]) {
   const cup = new THREE.Mesh(
   new THREE.CylinderGeometry(0.055, 0.045, 0.075, 8),
-  washMaterial({ color: ACCENT, flat: true }));
+  washMaterial({ color: WASH.mid, flat: true }));
   cup.name = 'cup';
   cup.position.set(-1.4 + off * Math.cos(0.7), 0.50, -1.5 - off * Math.sin(0.7));
   scene.add(cup);
   }
   
-  // THE OLD WOMAN, at her stall, with the answer ready
-  const woman = makeMonk({ height: 1.5, hat: false, stout: 1.08, pose: 'point' });
+  // THE OLD WOMAN, at her stall, with the answer ready — and this page's one
+  // warm note, since the answer is hers and the whole case is an argument
+  // about what she is. The book's other red figure (case 4's portrait of
+  // Bodhidharma) is a painting of a man; this is a woman at a roadside stall,
+  // and the accent is doing the same job in both: naming who the case is
+  // about before a word of it is read.
+  const woman = makeMonk({ height: 1.5, hat: false, stout: 1.08, pose: 'point', color: ACCENT });
   const WOMAN = new THREE.Vector3(-0.7, 0, -0.9);
   woman.position.copy(WOMAN);
   // she points UP THE ROAD, not at whoever asked — that is the whole joke
-  aimMonk(woman, { x: -4.4, z: -16 });
+  aimMonk(woman, { x: 5, z: -29 });
   scene.add(woman);
   const arm = woman.children
   .filter((c) => c.name === 'arm')

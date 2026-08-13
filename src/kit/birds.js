@@ -9,10 +9,15 @@ import { clamp } from '../util/math.js';
 // spot or hovering in place (Frank). They never land; this is birds seen from
 // below, the way they are in the two cases that use them.
 //
-// It is all a closed form over the simTime handed to update() — a bird's path
-// is a function of (simTime, seed), nothing is integrated or stored — so the
-// flock is identical every run and replays exactly. scatter() layers a decaying
-// alarm on top: touched, they climb, quicken and beat harder, then settle.
+// The circuit is INTEGRATED — `travel` below is how far round the flock has
+// actually flown, advanced by dt every tick — while the slow wander of each
+// circuit's centre is still a closed form over simTime. Given the same steps
+// the flock is identical every run, which is the determinism the book asks for;
+// what it is no longer is a function of simTime alone. See `travel` for the bug
+// that made the difference matter.
+//
+// scatter() layers a decaying alarm on top: touched, they climb, quicken and
+// beat harder, then settle. pick() is how a case lets the reader aim at them.
 
 const TAU_E = 2.6;                 // e-folding of a scatter alarm, seconds
 
@@ -26,13 +31,41 @@ export function makeBirds({
   heightVary = 2.6,                // spread of cruise altitudes about `height`
   spread = 5.0,
   rate = 0.5,                      // angular speed of the circuit, rad/s-ish
+  // HOW MUCH FASTER A SCATTER MAKES THEM FLY, as extra circuit-seconds per
+  // second at full alarm: 0 is a flock that climbs and beats harder without
+  // going anywhere quicker, 1 doubles the circuit at the peak. This is THE
+  // knob for "make the birds go faster when you click them" (Frank, case 24),
+  // and it is per-flock rather than a module constant because case 49's birds
+  // are scenery in a scene about a temple bell and have no reason to inherit
+  // case 24's answer. `hurryBeat` is the same for the WINGS, kept separate on
+  // purpose — Frank asked for exactly this split once already ("move faster,
+  // but flap wings less fast"), and a flock that speeds up without beating
+  // proportionally harder is the whole difference between hurrying and
+  // panicking.
+  hurry = 0.9,
+  hurryBeat = 0.7,
 } = {}) {
   const g = new THREE.Group();
   g.name = 'birds';
 
+  // A bird is three small meshes with a wingspan of about `size`, cruising
+  // several units up: aimed at directly it is a target of a degree or two, which
+  // is not a tap on a phone and barely one with a mouse. Each carries an
+  // invisible sphere three times its own span, parented to the bird so it needs
+  // no per-frame bookkeeping. An invisible material draws nothing, so this costs
+  // no draw calls — the same trade every hit proxy in the book makes.
+  const PROXY_R = size * 3;
+  const proxyMat = new THREE.MeshBasicMaterial({ visible: false });
+  const proxyGeo = new THREE.SphereGeometry(PROXY_R, 6, 4);
+  const proxies = [];
+
   const flock = [];
   for (let i = 0; i < count; i++) {
     const bird = makeBird({ size, color, seed: seed + i });
+    const proxy = new THREE.Mesh(proxyGeo, proxyMat);
+    proxy.name = 'bird-hit';
+    bird.group.add(proxy);
+    proxies.push(proxy);
     g.add(bird.group);
     const h = (n) => hash1(i * 11 + n, seed);
     flock.push({
@@ -57,8 +90,8 @@ export function makeBirds({
 
   let clock = 0;
   const bursts = [];
-  // HOW FAR THE ALARM HAS CARRIED THEM, in extra seconds of circuit. It has to
-  // be integrated, and this is the whole bug it exists to fix.
+  // HOW FAR ROUND THEY HAVE FLOWN, in circuit-seconds. It has to be integrated,
+  // and the bug it exists to fix is the reason nothing here reads `t` any more.
   //
   // The circuit angle was `phase + t * angRate * dir * (1 + E * 0.9)` — the
   // excitement multiplying ABSOLUTE TIME. E steps from 0 to 1 the instant a
@@ -68,12 +101,32 @@ export function makeBirds({
   // birds flew round their circuits backwards (Frank: "the birds go really fast
   // for some reason when you click... and they go, like, backwards").
   //
-  // An accumulated offset can only ever move forward, at a rate the alarm sets,
-  // so the circuit stays continuous through both the arrival and the decay.
-  // Same fix, same reason, as the butterflies' wander.
-  const HURRY_TURN = 0.9;    // extra circuit-seconds per second, at full alarm
-  const HURRY_BEAT = 0.7;    // ...and extra beat-seconds, which had the same flaw
-  let hurry = 0;
+  // An accumulated angle moves at whatever rate is asked for on the frame it is
+  // asked, so the circuit stays continuous through both the arrival and the
+  // decay. Same fix, same reason, as the butterflies' wander.
+  //
+  // The first version of that fix kept `t` and added an offset beside it
+  // (`t + hurry * HURRY_TURN`), which is continuous and correct and still
+  // cannot express what reverse() needs: `t` only ever counts up, so the total
+  // could only be slowed, never turned around. So the base rate came inside the
+  // accumulator too, and `travel` is now the whole angle rather than a
+  // correction to one. `beats` is the same story for the wings.
+  const HURRY_TURN = Math.max(0, hurry);        // extra circuit-seconds per second, at full alarm
+  const HURRY_BEAT = Math.max(0, hurryBeat);    // ...and extra beat-seconds, which had the same flaw
+  let travel = 0;
+  let beats = 0;
+
+  // FLYING BACKWARDS was built here and then cut, and is worth one note. Frank:
+  // "a weird idea... they're gonna slow down and then start flying backwards for
+  // a bit and then slow down and then start flying normal again" — a signed rate
+  // on the circuit easing down through zero and back, with the heading left as
+  // the circuit tangent so they slid tail-first rather than turning round. It
+  // worked, and he changed his mind on seeing it described ("let's just have the
+  // birds fly faster for a bit"). What it left behind is `travel` itself: the
+  // reversal is the one thing the old `t + hurry` form could not express at any
+  // value, so it is the reason the base rate came inside the accumulator, and
+  // that is a straightforwardly better shape whether or not anything ever flies
+  // astern again.
 
 // AN ALARM HAS AN ATTACK. This was a bare decaying exponential, and exp(-0) is
 // 1 — so on the frame a burst landed the energy went from 0 to 1 in one step,
@@ -95,7 +148,7 @@ const ATTACK = 0.30;               // seconds for an alarm to come up
 
   function poseBird(b, E) {
     const t = clock;
-    const a = b.phase + (t + hurry * HURRY_TURN) * b.angRate * b.dir;
+    const a = b.phase + travel * b.angRate * b.dir;
     // the circuit, plus a slow drift of its centre across the scene
     const dx = (noise1(t * b.driftRate + b.driftPh, seed + 1) - 0.5) * b.driftAmp;
     const dz = (noise1(t * b.driftRate + b.driftPh + 5, seed + 2) - 0.5) * b.driftAmp;
@@ -110,11 +163,11 @@ const ATTACK = 0.30;               // seconds for an alarm to come up
     b.bird.group.rotation.y = Math.atan2(vx, vz);
 
     // the wingbeat carried the identical fault — a changing multiplier on t
-    // skips the phase — so it rides the same accumulator. AMPLITUDE may still
+    // skips the phase — so it rides its own accumulator. AMPLITUDE may still
     // read E directly: that is a scale, not a phase, and scaling is continuous.
-    const flap = Math.sin((t + hurry * HURRY_BEAT) * b.beat + b.phase) * (0.5 + E * 0.25);
+    const flap = Math.sin(beats * b.beat + b.phase) * (0.5 + E * 0.25);
     // bank into the turn, with a little beat-driven wobble
-    const roll = -0.22 * b.dir + Math.sin(t * b.beat + b.phase) * 0.08;
+    const roll = -0.22 * b.dir + Math.sin(beats * b.beat + b.phase) * 0.08;
     b.bird.pose({ flap, roll, pitch: -0.05 });
   }
 
@@ -133,10 +186,27 @@ const ATTACK = 0.30;               // seconds for an alarm to come up
       pose();
     },
     energy() { return energy(); },
+    // THE FLOCK IS THE TARGET, and a bird is a 0.5-unit mark forty feet up: the
+    // meshes themselves are all but untappable on a phone, so each one carries
+    // a generous invisible sphere that travels with it (the furin's idiom —
+    // pick() belongs to the component, not to the case). Returns the bird's
+    // index, or null. Safe before setCamera and with no audio engine.
+    pick(camera, input) {
+      if (!camera || !input || !input.raycastFirst) return null;
+      const hit = input.raycastFirst(camera, proxies);
+      if (!hit) return null;
+      const i = proxies.indexOf(hit.object);
+      return { bird: i < 0 ? 0 : i };
+    },
     count() { return flock.length; },
     update(dt, simTime) {
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
-      hurry += energy() * Math.max(0, dt || 0);
+      const step = Math.max(0, dt || 0);
+      // the circuit's own pace plus whatever the alarm is adding — a rate, so
+      // it can change on any frame without the angle jumping
+      const E = energy();
+      travel += (1 + E * HURRY_TURN) * step;
+      beats += (1 + E * HURRY_BEAT) * step;
       while (bursts.length && clock - bursts[0] > 8 * TAU_E) bursts.shift();
       pose();
     },

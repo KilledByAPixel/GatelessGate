@@ -133,3 +133,34 @@ test('case 20: the surf breathes — update feeds the swell to the audio', () =>
   const spread = Math.max(...calls) - Math.min(...calls);
   assert.ok(spread > 0.3, `the surf actually breathes (spread ${spread})`);
 });
+
+// The squall drives the sea two ways — faster AND higher. Pace alone read as
+// the film being sped up rather than as weather (Frank: "can we also try
+// increasing the amplitude of the ocean waves too? So it looks like they're
+// actually getting bigger").
+test('case 20: the squall raises the sea, and puts it back', () => {
+  const { ctx, root } = staged();
+  const surface = root.scene.getObjectByName('surface');
+  const span = () => {
+    const p = surface.geometry.attributes.position;
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (let i = 0; i < p.count; i++) { const y = p.getY(i); if (y < lo) lo = y; if (y > hi) hi = y; }
+    return hi - lo;
+  };
+  let t = 0;
+  let calm = 0;
+  for (; t < 4; t += 1 / 60) { root.update(1 / 60, t); calm = Math.max(calm, span()); }
+  assert.equal(root.fragment().seaLift, 1, 'the sea rests at its own height');
+
+  ctx.input.raycastFirst = () => ({ object: surface, point: new THREE.Vector3(), distance: 1 });
+  ctx._taps.forEach((cb) => cb());
+  let rough = 0;
+  for (const end = t + 4; t < end; t += 1 / 60) { root.update(1 / 60, t); rough = Math.max(rough, span()); }
+  assert.ok(rough > calm * 1.5, `the crests genuinely grow (${calm.toFixed(3)} -> ${rough.toFixed(3)})`);
+  assert.ok(root.fragment().seaLift > 1.5, 'and the case says so');
+
+  for (const end = t + 9; t < end; t += 1 / 60) root.update(1 / 60, t);
+  assert.equal(root.fragment().seaLift, 1, 'the squall hands the sea back exactly');
+  assert.equal(root.fragment().seaRush, 0);
+});

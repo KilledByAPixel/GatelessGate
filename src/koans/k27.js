@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_LIGHT, mixHex } from '../palette.js';
 import { clamp01 } from '../util/math.js';
+import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makePath, makeHut, makeOak, makeMoon, makeMonk, faceMonk, makeLantern,
   makeLights, } from '../kit/index.js';
@@ -12,20 +13,87 @@ const ID = 27;
 // it?" — "It is not mind, it is not Buddha, it is not things."
 //
 // Nansen answers by naming three things and taking all three away, and Mumon
-// says he gave away his treasure-words and must have been greatly upset. So
-// the scene is built to be taken away: a hall, a tree, a moon — the three
-// things any ink painting of this kind would have — and touching one removes
-// it. Remove all three and you are looking at paper, fog, and the ground,
-// which is the answer stated as a picture.
+// says he gave away his treasure-words and must have been greatly upset.
 //
-// Touch the empty ground and they come back, because the case is a sentence
-// somebody said once, not a state you are meant to reach and hold.
-
-const GONE = 1.6;         // seconds to leave
+// So the scene is built to be taken away — and TOUCH ANYWHERE and it all gets
+// SMALL. The two men, the hall, the lantern, every tree on the page, the
+// scattered rocks and bushes: everything a finger could be pointed at goes down
+// to a tenth of itself, holds there, and comes back up. They never vanish. "It
+// is not mind, it is not Buddha, it is not things" is not a claim that there is
+// nothing; it is a refusal of the thing you named, and a hall you could pick up
+// between two fingers is that refusal with the hall still standing in it.
+//
+// FOUR VERSIONS GOT HERE. The three that failed are kept because between them
+// they map a constraint that binds every case in this book:
+//
+//   1. THEY SANK into the ground, on three separate hit boxes with a fourth for
+//      undo. A switchboard with a trapdoor animation, and three targets make a
+//      checklist where Nansen said one sentence (Frank: "I don't actually like
+//      that one at all").
+//   2. THE INK DRAINED — colour to the sky, then an opacity down. It blinked
+//      (Frank: "they just kind of blink off after they turn the colour").
+//   3. THE COLOUR WASH DONE EXACTLY: `color` to black while `emissive` goes to
+//      the sky renders a lit surface as flat sky under any light, which is a
+//      true vanish where the sky is what is behind it — and this hall stands
+//      against the meadow, so it became a hall-shaped patch of sky laid over
+//      the trees. A staggered per-mesh alpha after it was still no good (Frank:
+//      "the way they're changing colour now looks really bad, probably because
+//      they're trying to fade them out — and the alpha still doesn't really
+//      work properly").
+//
+// THE INK PASS CANNOT FADE, and that is the common cause. It is a Sobel over
+// the depth buffer, so a thing wears a full-strength outline for exactly as
+// long as it writes depth and none at all afterwards — no alpha, no threshold,
+// no ordering trick changes it. Every disappearance therefore ends in one frame
+// where the strongest mark in the picture leaves at once, and the more
+// carefully the fill had been faded, the more that last frame stood out.
+// Staggering it across the hall's 21 meshes turned the pop into a dissolve, and
+// a dissolve was not what this wanted either.
+//
+// A SCALE HAS NO SUCH FRAME. The outline shrinks with the shape because it IS
+// the shape's own depth edge; the shadow shrinks with it for the same reason;
+// the foliage wind is applied in object space, so a small tree sways a small
+// amount. There is no threshold anywhere in it, which is why this is the one
+// version with no special cases in it at all.
+//
+// THE MOON IS THE EXCEPTION, and it earns it: sixty units out, a moon that got
+// smaller would read as the moon leaving rather than as the picture doing
+// anything. It keeps the colour fade, which is the one that worked (Frank: "the
+// moon already fades out perfectly fine") — it can, because it is UNLIT and
+// unfogged, so a disc painted exactly the sky colour is an exact vanish with no
+// blending involved. What it must never take is `transparent = true`: makeMoon
+// forces `gl_FragColor.a = 0.0` as an ink-mask marker, free while the material
+// is opaque and fatal the instant the blender reads it. This case set that line
+// at build for version 2's opacity fade, so its moon was INVISIBLE from the day
+// it was staged — which nobody caught, because a missing moon in a scene about
+// things going missing does not look like a bug. k19's header carries the rule
+// in capitals, having been bitten first.
+//
+// WHAT STAYS: the road, the mountains, the far forests, the grass. None of them
+// is a thing anyone points at — they are the ground the pointing happens on.
+const SMALL = 0.1;        // what they shrink to, as a fraction of themselves
+const DRAIN = 2;        // seconds to get there
+const STAGGER = 0.5;     // ...and the four kinds of thing do not go at once
+const EMPTY = 2.0;        // how long the page is held with them small
+const BACK = 1;         // and how long they take to come back up
+const OFFSET = 0.42;      // seeded spread WITHIN a kind, so a wood is not a switch
+// The four kinds, in the order they shrink: the two men, the hall, the trees,
+// and back in reverse. The moon is not one of them — it is sixty units out and
+// a moon that got smaller would read as the moon leaving rather than as the
+// picture doing anything, so it keeps the colour fade it already had (Frank:
+// "the moon already fades out perfectly fine, so you could just leave that").
+const COUNT = 4;
+const GONE_AT = (COUNT - 1) * STAGGER + DRAIN;
+const RETURN_AT = GONE_AT + EMPTY;
+const CYCLE = RETURN_AT + (COUNT - 1) * STAGGER + BACK;
 const ease = (k) => k * k * (3 - 2 * k);
-// each thing's hit box is nested under its own group (hallGroup/treeGroup/
-// moonGroup), so its local position is not its world position — one scratch
-// vector, reused across all three
+// How far through going thing `i` is at `u` seconds past the touch: 0 is full
+// size, 1 is a tenth of it.
+function awayAt(i, u) {
+  if (!(u >= 0) || u >= CYCLE) return 0;
+  if (u < RETURN_AT) return ease(clamp01((u - i * STAGGER) / DRAIN));
+  return 1 - ease(clamp01((u - RETURN_AT - (COUNT - 1 - i) * STAGGER) / BACK));
+}
 const scratchPos = new THREE.Vector3();
 
 // The framing, named so composeWorld can have it too: `view` lets the
@@ -126,93 +194,185 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 31.5, pitch: 2
   ],
   });
 
-  // ---- targets ----------------------------------------------------------
-  const mkHit = (name, x, y, z, w, h, d, parent) => {
-  const m = new THREE.Mesh(
-  new THREE.BoxGeometry(w, h, d),
-  new THREE.MeshBasicMaterial({ visible: false }));
-  m.name = name;
-  m.position.set(x, y, z);
-  parent.add(m);
-  return m;
+  // ---- what shrinks, and when --------------------------------------------
+  // Every prop scales about ITS OWN origin, which for everything the kit builds
+  // is the point it stands on — so a shrinking thing stays planted where it was
+  // instead of sliding toward the world origin. That is why these are the props
+  // themselves and never the wrapper groups around them: hallGroup's origin is
+  // the middle of the scene, and scaling it would walk the hall across the
+  // meadow on its way down.
+  //
+  // `kind` is which of the four staggered beats a prop belongs to; `lead` is a
+  // seeded offset WITHIN its beat, so the seven scattered trees fold away as a
+  // wood rather than as one switch.
+  const shrinkers = [];
+  const add = (obj, kind) => {
+    if (obj) shrinkers.push({ obj, kind, lead: 0, base: obj.scale.clone() });
+  };
+  add(monk, 0);
+  add(nansen, 0);
+  add(hall, 1);
+  add(lantern, 1);              // the other built thing on the page
+  add(oakRoot, 2);
+  // ...AND EVERY OTHER TREE ON THE PAGE (Frank: "the temple, the trees, all of
+  // the trees, and the people all shrink down"). composeWorld hands back the
+  // midground wood it planted; the far forests are not in it and stay put,
+  // being a mass in the fog rather than things anyone could point at.
+  for (const t of world.trees) add(t, 2);
+
+  // ---- and the scatter, which is not props at all -------------------------
+  // The rocks and the bushes (Frank: "can we also do the rocks too, and the
+  // lantern?") are ONE InstancedMesh each — twelve rocks and nine bushes drawn
+  // in a single call, with a matrix per instance. Scaling the mesh would scale
+  // about the SCENE origin and walk the whole scatter into the middle of the
+  // meadow, so each instance's own matrix is recomposed instead: same position,
+  // same rotation, a smaller scale. Twenty-one composes a frame while the
+  // gesture is running and none at all while it is not.
+  const scratchM = new THREE.Matrix4();
+  const scratchQ = new THREE.Quaternion();
+  const scratchS = new THREE.Vector3();
+  const fields = [];
+  for (const [name, kind] of [['rocks', 3], ['bushes', 2]]) {
+    const mesh = scene.getObjectByName(name);
+    if (!mesh || !mesh.isInstancedMesh) continue;
+    const base = [];
+    for (let i = 0; i < mesh.count; i++) {
+      const p = new THREE.Vector3();
+      const q = new THREE.Quaternion();
+      const s = new THREE.Vector3();
+      mesh.getMatrixAt(i, scratchM);
+      scratchM.decompose(p, q, s);
+      // its own lead, like every other thing, so a scatter field does not
+      // snap down as one object
+      base.push({ p, q, s, lead: (hash1(i * 13 + 5, ID) - 0.5) * OFFSET });
+    }
+    fields.push({ mesh, kind, base, wrote: false });
+  }
+
+  // Spread each beat's leads across OFFSET, shuffled by hash so the order is
+  // scattered through the wood rather than following the order the scatter
+  // loop happened to plant them in.
+  for (const kind of [0, 1, 2, 3]) {
+    const inKind = shrinkers.filter((s) => s.kind === kind);
+    const n = Math.max(1, inKind.length - 1);
+    inKind
+      .map((s, i) => [s, hash1(i * 7 + 1 + kind * 91, ID)])
+      .sort((a, b) => a[1] - b[1])
+      .forEach(([s], rank) => { s.lead = (rank / n - 0.5) * OFFSET; });
+  }
+
+  // THE MOON DOES NOT SHRINK. It is sixty units out, so a smaller moon would
+  // read as the moon leaving rather than as the picture doing anything — and it
+  // is the one thing here that already went away cleanly, by colour alone
+  // (Frank: "the moon already fades out perfectly fine"). It can do that because
+  // it is UNLIT and unfogged, so a disc painted exactly the sky colour is an
+  // exact vanish with no blending involved. What it must never take is a
+  // `transparent = true`: makeMoon's shader forces `gl_FragColor.a = 0.0` as an
+  // ink-mask marker, free while the material is opaque and fatal the instant the
+  // blender reads it — see point 4 in the header.
+  const SKY_C = new THREE.Color(SKY);
+  const moonBase = moon.material ? moon.material.color.clone() : null;
+  const MOON_KIND = 3;
+  // the hall's own eave chime goes quiet while the hall is not there — a bell
+  // ringing over a vanished building is the one thing that would give the
+  // trick away. Nobody else writes this: hangChimes sets it once and main.js
+  // only ever calls update() (src/kit/chimes.js).
+  const hallChimes = hall.chimes || [];
+  const chimeWind = hallChimes.map((c) => c.windLevel());
+
+  // ---- the moment: one touch, and the page empties ----------------------
+  let camera = null;
+  let clock = 0;
+  let touches = 0;
+  let touchedAt = -1e9;
+  const song = [];
+
+  input.onTap(() => {
+  if (!camera) return;
+  // ANYWHERE, and that includes the hall's own hung fūrin. There is nothing
+  // to aim at (case 32's idiom): the reader is not meant to hunt three hit
+  // boxes and collect the set, they are meant to touch the picture and watch
+  // it go. A first cut probed the chime and swallowed the touch so a tap
+  // aimed at the bell would not also empty the page — which is the right
+  // instinct on a page with targets and the wrong one here, where "aimed at"
+  // is a category that does not exist. The bell rings (main.js sweeps every
+  // scene for hung chimes and owns the ringing) and the page empties, and
+  // then the hall takes the bell with it, which is a better second beat than
+  // a swallowed touch.
+  // let the sentence finish — CYCLE plus the widest seeded lead, so the last
+  // straggling part is back before another touch can start it over
+  if (clock - touchedAt < CYCLE + OFFSET / 2) return;
+  touchedAt = clock;
+  touches++;
+  // three notes as the three things go, lower and softer each time, and one
+  // last one under the page when the world comes back
+  song.length = 0;
+  song.push([clock + 0.7, 1, 0.5], [clock + 0.7 + STAGGER, 2, 0.4],
+  [clock + 0.7 + 2 * STAGGER, 3, 0.32], [clock + RETURN_AT, 0, 0.45]);
+  });
+
+  return {
+  scene,
+  setCamera(c) { camera = c; },
+  update(dt, simTime) {
+  clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
+  world.update(dt, simTime);
+
+  const u = clock - touchedAt;
+  // EVERY PROP, ON ITS OWN CLOCK. One write each, and the write is a scale —
+  // no material is touched, so there is nothing here that the workbench's
+  // material swap could take out from under this the way it did case 4.
+  for (const s of shrinkers) {
+  const k = 1 - (1 - SMALL) * awayAt(s.kind, u - s.lead);
+  s.obj.scale.copy(s.base).multiplyScalar(k);
+  }
+  // the instanced scatter, one matrix at a time. Written only while the
+  // gesture is running, plus the one frame that puts it back at rest.
+  const running = u >= -OFFSET && u < CYCLE + OFFSET;
+  for (const f of fields) {
+  if (!running && !f.wrote) continue;
+  for (let i = 0; i < f.base.length; i++) {
+  const b = f.base[i];
+  const k = 1 - (1 - SMALL) * awayAt(f.kind, u - b.lead);
+  scratchM.compose(b.p, scratchQ.copy(b.q), scratchS.copy(b.s).multiplyScalar(k));
+  f.mesh.setMatrixAt(i, scratchM);
+  }
+  f.mesh.instanceMatrix.needsUpdate = true;
+  f.wrote = running;
+  }
+  // the moon keeps its colour fade, and nothing else on this page has one
+  if (moonBase) moon.material.color.copy(moonBase).lerp(SKY_C, awayAt(MOON_KIND, u));
+  // The hall's eave chime rides the hall down: a tenth-scale bell ringing at
+  // full voice would be the one thing to give it away. Nobody else writes
+  // this — hangChimes sets it once and main.js only ever calls update().
+  const hallSize = 1 - awayAt(1, u);
+  hallChimes.forEach((c, i) => c.setWindLevel(chimeWind[i] * hallSize));
+
+  while (song.length && clock >= song[0][0]) {
+  const [, tube, force] = song.shift();
+  audio && audio.chimeStrike({ tube, force, at: scratchPos.set(0.3, 1.4, -2.0) });
+  }
+  },
+  fragment() {
+  const u = clock - touchedAt;
+  // Sampled at BOTH EDGES of the seeded spread as well as the middle, because
+  // every thing on the page carries a lead of up to +-OFFSET/2 and the
+  // summary has to be true of the stragglers too: `away` is what the
+  // furthest-along thing is doing, `small` is only true once the last one
+  // has arrived. Reading the middle alone made `small` go true while a rock
+  // with a late lead was still on its way down.
+  const edges = [u - OFFSET / 2, u, u + OFFSET / 2];
+  const byKind = [0, 1, 2, MOON_KIND].map((i) => edges.map((e) => awayAt(i, e)));
+  return {
+  touches,
+  away: +Math.max(...byKind.flat()).toFixed(3),
+  // what the hall is down to, as a fraction of itself — the number the
+  // whole gesture is actually made of
+  size: +(1 - (1 - SMALL) * awayAt(1, u)).toFixed(3),
+  // the held beat this whole case is built around: everything named,
+  // all the way down at once
+  small: byKind.every((v) => Math.min(...v) > 0.999),
 };
-    const hallHit = mkHit('hall-hit', -2.2, 1.3, -4.4, 4.0, 2.8, 3.4, hallGroup);
-    const treeHit = mkHit('tree-hit', TREE.x, 2.6, TREE.z, 3.6, 5.2, 3.6, treeGroup);
-    // the moon is 60 units out; its target is a panel hung in front of it on
-    // the same bearing, sized so it covers the disc from the reachable arc
-    const moonWorld = new THREE.Vector3();
-    moon.getWorldPosition(moonWorld);
-    const moonHit = mkHit('moon-hit', moonWorld.x, moonWorld.y, moonWorld.z, 9, 9, 9, moonGroup);
-    moonHit.lookAt(0, 2, 0);
-
-    // and the ground itself, which is what is left
-    const groundHit = mkHit('ground-hit', 0.4, 0.02, 0.4, 26, 0.2, 26, scene);
-
-    // ---- the moment: take them away --------------------------------------
-    const THINGS = [
-      { group: hallGroup, hit: hallHit, sink: 4.2, at: -99, gone: false },
-      { group: treeGroup, hit: treeHit, sink: 6.4, at: -99, gone: false },
-      { group: moonGroup, hit: moonHit, sink: 0, at: -99, gone: false, fade: moon },
-    ];
-    if (moon.material) { moon.material.transparent = true; }
-
-    let camera = null;
-    let clock = 0;
-    let removed = 0;
-    let restoredAt = -99;
-
-    input.onTap(() => {
-      if (!camera) return;
-      for (const t of THINGS) {
-        if (t.gone) continue;
-        if (!input.raycastFirst(camera, [t.hit])) continue;
-        t.at = clock;
-        t.gone = true;
-        removed++;
-        // each thing goes with a lower, softer sound than the last, until
-        // there is nothing left to make one
-        audio && audio.chimeStrike({
-          tube: Math.min(4, removed), force: 0.6 - removed * 0.12,
-          at: t.hit.getWorldPosition(scratchPos),
-        });
-        return;
-      }
-      // touching what is left brings them back
-      if (removed > 0 && input.raycastFirst(camera, [groundHit])) {
-        restoredAt = clock;
-        for (const t of THINGS) { t.gone = false; t.at = -99; }
-        removed = 0;
-        audio && audio.chimeStrike({ tube: 0, force: 0.5, at: groundHit.position });
-      }
-    });
-
-    return {
-      scene,
-      setCamera(c) { camera = c; },
-      update(dt, simTime) {
-        clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
-        world.update(dt, simTime);
-
-        for (const t of THINGS) {
-          // leaving, or coming back from wherever it went
-          const leaving = t.gone ? clamp01((clock - t.at) / GONE) : 0;
-          const returning = (!t.gone && restoredAt > -99) ? clamp01((clock - restoredAt) / GONE) : 1;
-          const away = t.gone ? ease(leaving) : 1 - ease(returning);
-          if (t.fade) {
-            t.fade.material.opacity = 1 - away;
-            t.group.visible = away < 0.999;
-          } else {
-            t.group.position.y = -t.sink * away;
-            t.group.visible = away < 0.999;
-          }
-        }
-      },
-      fragment() {
-        return {
-          removed,
-          standing: THINGS.length - removed,
-          empty: removed === THINGS.length,
-        };
       },
       dispose() {},
     };

@@ -59,6 +59,15 @@ const GUST_MULT = 6;
 // blowing the waves"). 1.6 nearly triples the swell's travel at the peak, which
 // is a squall rather than a change of tide.
 const SEA_RUSH = 1.6;
+// ...and how much HIGHER it runs while it blows. Pace alone read as the film
+// being sped up rather than as weather (Frank: "can we also try increasing the
+// amplitude of the ocean waves too? So it looks like they're actually getting
+// bigger"). +0.9 at the peak takes the drift's three crossing swells from a
+// combined 0.084 to 0.16 — a squall's chop rather than a change of tide — and
+// the foam rides water.heightAt, so the wave-ends climb the beach with it for
+// nothing. It is a scale on the amplitude, not on the clock, which is why this
+// one is allowed to be a plain multiplier (see setSwellGain in kit/water.js).
+const SEA_LIFT = 1.5;
 const GUST_IN = 0.35;    // it arrives all at once — that is what a squall is
 const GUST_HOLD = 3;
 const GUST_OUT = 4.5;    // and takes its time leaving
@@ -154,9 +163,9 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   // ---- the coast itself ------------------------------------------------
   // The great ocean: a big sheet whose near edge hides under the sand and
   // whose far edges die in the fog, with one slow swell rolling shoreward.
-  // The sea has its own swell and is left to it — the wind that comes through
-  // when he is touched is the meadow's and the ear's, not a second set of
-  // waves fighting the one rolling shoreward.
+  // The squall reaches it: the sea keeps its own three crossing swells and the
+  // wind drives THOSE harder and faster (SEA_RUSH, SEA_LIFT) rather than laying
+  // a second set of waves over them — one sea getting rough, not two seas.
   // THE RED SEA IS THE SEAL. The verse turns on the great ocean — "if the
   // feet of enlightenment moved, the great ocean would overflow" — so the
   // ocean takes the case's accent, not the staff (Frank: "it might even be
@@ -320,11 +329,13 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   blowing = true;
   grass && grass.setWind(BASE_WIND * (1 + GUST_MULT * g));
   water.setRush(SEA_RUSH * g);
+  water.setSwellGain(1 + SEA_LIFT * g);
   audio && audio.setWindLevel(0.22 * (1 + 2.4 * g));
   } else if (blowing) {
   blowing = false;
   grass && grass.setWind(BASE_WIND);
   water.setRush(0);
+  water.setSwellGain(1);
   audio && audio.setWindLevel(0.22);
   }
   },
@@ -334,6 +345,7 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   gust: +gustShape(clock - gustAt).toFixed(4),
   wind: +(BASE_WIND * (1 + GUST_MULT * gustShape(clock - gustAt))).toFixed(3),
   seaRush: +water.rush().toFixed(3),
+  seaLift: +water.swellGain().toFixed(3),
   // he has not moved, and never will
   manX: +colossus.position.x.toFixed(4),
   manZ: +colossus.position.z.toFixed(4),

@@ -328,7 +328,7 @@ export function makeWater({
       for (const c of driftComps) {
         h += c.amp * Math.sin(((x * c.dx + z * c.dz) / c.wavelength - t / c.period) * Math.PI * 2 + c.phase);
       }
-      return h;
+      return h * swellGain;
     }
     : () => 0;
 
@@ -368,6 +368,21 @@ export function makeWater({
   let hurried = 0;      // ...accumulated
   const waveClock = () => clock + hurried;
 
+  // AND HOW BIG THE SEA IS RUNNING. rush is pace; this is height (Frank, on the
+  // squall: "can we also try increasing the amplitude of the ocean waves too?
+  // So it looks like they're actually getting bigger"). A wind that only made
+  // the same waves arrive sooner read as a film speeding up rather than as
+  // weather.
+  //
+  // Unlike rush this may be a plain multiplier and not an integrated offset,
+  // and the difference is the whole reason the bug that caught the birds, the
+  // butterflies and nearly the sea cannot happen here: it scales the wave's
+  // AMPLITUDE, not its phase. Doubling an amplitude mid-crest moves the water;
+  // doubling a phase teleports it. Anything continuous in time stays continuous
+  // through this — which is why the case drives it straight off its gust
+  // envelope with no smoothing of its own.
+  let swellGain = 1;
+
   // The idle-swell term alone — shared by waveAt (which adds the ripples on
   // top) and swellAt (which deliberately does not).
   function idleAt(x, z, t) {
@@ -379,7 +394,7 @@ export function makeWater({
     // nothing at all until the amplitude made it a seesaw. Short wavelets
     // moving briskly at small amplitude is what actually reads as wind.
     return IA === 0 ? 0
-      : IA * (Math.sin(x * k1 + t * 3 + p1) + Math.sin(z * k2 + t * 5 + p2));
+      : IA * swellGain * (Math.sin(x * k1 + t * 3 + p1) + Math.sin(z * k2 + t * 5 + p2));
   }
 
   // The one place the wave is defined — the free surface, before the container
@@ -578,6 +593,13 @@ export function makeWater({
     // rate, not a switch.
     setRush(v) { rush = Number.isFinite(v) && v > 0 ? v : 0; },
     rush: () => rush,
+    // How high the swell is running against its own resting height: 1 is the
+    // sea the case dialled in, 2 is twice the crest. It scales the idle swell
+    // and the ocean drift TOGETHER — a wind does not pick one — but never the
+    // ripples: a tap's ring is the reader's finger, not the weather, and it
+    // should read the same size whatever the sea is doing.
+    setSwellGain(v) { swellGain = Number.isFinite(v) && v > 0 ? v : 0; },
+    swellGain: () => swellGain,
     update(dt, simTime) {
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
       hurried += rush * Math.max(0, dt || 0);
