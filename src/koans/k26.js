@@ -124,7 +124,7 @@ const CAM = { distance: 11.3, target: [-0.3, 1.15, 0.1], heading: 26, pitch: 23 
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  seed: 1207,
   groundSeed: 21,
   trees: 2,
   keepout: [

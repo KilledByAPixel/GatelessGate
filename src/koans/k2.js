@@ -122,8 +122,7 @@ const CAM = { distance: 11.0, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 1
 
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
-  treeKind: 'pine',
+  seed: ID+2,
   groundSeed: 21,
   trees: 5,        // a wooded mountainside, not a lawn
   keepout: [

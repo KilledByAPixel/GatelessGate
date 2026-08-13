@@ -104,7 +104,7 @@ export default {
     // shared grammar, kept off the staging and the path by keepouts
     const world = composeWorld(scene, {
       view: CAM,
-      seed: 29,
+      seed: 31,
       groundSeed: 21,
       keepout: [
         ...path.keepout(26, 1.15),             // the worn trail, masked along its whole run

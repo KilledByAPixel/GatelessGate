@@ -135,7 +135,7 @@ export default {
 
     const world = composeWorld(scene, {
       view: CAM,
-      seed: ID,
+      seed: ID+1,
       groundSeed: 21,
       trees: 3,
       keepout: [

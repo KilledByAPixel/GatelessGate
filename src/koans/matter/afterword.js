@@ -122,10 +122,9 @@ export default {
       }
     }
 
-    let rock = plantRock(scene, { x: -6.9, z: -7.5, size: 2, sink: -.2 });
+    const rock = plantRock(scene, { x: -6.9, z: -7.5, size: 2, sink: -.2 });
     rock.rotation.y = 3;
-
-    let rock2 = plantRock(scene, { x: -3.3, z: -5.5, size: 1, sink: -.2 });
+    plantRock(scene, { x: -3.3, z: -5.5, size: 1, sink: -.2 });
 
     const bodhi = plantTree(scene, {
       x: tx, z: tz, kind: TREE.kind, height: TREE.height, seed: TREE.seed,

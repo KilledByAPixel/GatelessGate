@@ -186,6 +186,8 @@ export default {
       seed: ID+1,
       groundSeed: 21,
       trees: 13,
+      grassRadius: 32,
+      grassTaper: .4,
       keepout: [
         { x: POLE.x, z: POLE.z, r: 1.4 },
         ...pole.anchors.map((a) => ({ x: POLE.x + a.x, z: POLE.z + a.z, r: 0.5 })),

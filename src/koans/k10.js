@@ -24,7 +24,7 @@ const RIGHT_AFTER = 4.5;  // and how long all three lie there before standing up
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 17.2 };
+const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 11 };
   export default {
   id: ID,
   slug: 'seizei-alone-and-poor',

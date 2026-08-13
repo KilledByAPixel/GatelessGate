@@ -128,7 +128,7 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: 33,
+  seed: 33, // same as case 33 so the pond and its koi are identical
   groundSeed: 21,
   trees: 4,
   keepout: [
