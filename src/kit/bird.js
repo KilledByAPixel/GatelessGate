@@ -7,8 +7,8 @@ import { mergeSimple } from './scatter.js';
 //
 // Kept deliberately simple. An earlier pass gave it a spindle body, a head, a
 // beak, a tail and little legs, and it read as fiddly and wrong — the head too
-// big, the legs pointless on a bird that only flies, the wings too sharp
-// (Frank). The flat two-stroke chevron it replaced was almost better. So this
+// big, the legs pointless on a bird that only flies, the wings too sharp.
+// The flat two-stroke chevron it replaced was almost better. So this
 // is barely more than that chevron: a small flattened body, a head with a
 // beak, a short tail, and two broad blunt wings. No legs.
 //
@@ -43,9 +43,9 @@ function bodyGeometry(s) {
   head.translate(0, 0.025 * s, 0.43 * s);
   parts.push(head);
 
-  // a small beak — just a nub at the front of the head, back after Frank
-  // noticed it was gone. Kept tiny so it reads as a point, not the fiddly cone
-  // the earlier detailed bird had.
+  // a small beak — just a nub at the front of the head, restored after it went
+  // missing. Kept tiny so it reads as a point, not the fiddly cone the earlier
+  // detailed bird had.
   const beak = new THREE.ConeGeometry(0.035 * s, 0.14 * s, 4);
   beak.rotateX(Math.PI / 2);
   beak.translate(0, 0.015 * s, 0.555 * s);
@@ -61,14 +61,14 @@ function bodyGeometry(s) {
 }
 
 // a wing: a broad blunt paddle, hinged at the root (x = 0). Two triangles make
-// a quad with a rounded-off outer edge rather than one sharp point (Frank: the
-// wings were too pointy).
+// a quad with a rounded-off outer edge rather than one sharp point: the wings
+// read as too pointy otherwise.
 function wingGeometry(s, side) {
   const g = new THREE.BufferGeometry();
   const t = side;
   const v = new Float32Array([
     // inner edge, at the body
-    // span stretched 0.60 -> 0.80 (Frank: 'longer from the body, not wider')
+    // the span reaches further from the body without getting wider
     0, 0, 0.16 * s,          // root front
     0, 0, -0.20 * s,         // root back
     0.80 * s * t, 0, -0.12 * s,   // outer back

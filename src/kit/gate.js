@@ -42,8 +42,7 @@ export function makeGate({
   // span only reaches ±0.364·width — so the posts always sit under the tilted
   // WINGS, whose undersides lift off y = height as they sweep up. A post cut
   // to exactly `height` therefore leaves a sliver of daylight between its top
-  // and the lintel (≈0.06–0.08 across the widths in use; Frank's redo-round
-  // note). Run the post up INTO the kasagi instead: 0.12 extra always lands
+  // and the lintel. Run the post up INTO the kasagi instead: 0.12 extra always lands
   // inside the lintel's own box (max gap ~0.08, box depth 0.18), so the join
   // is buried and nothing pokes out the top.
   const POST_BURY = 0.12;

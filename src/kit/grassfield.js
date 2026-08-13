@@ -14,8 +14,8 @@ import { hash1, fbm2 } from '../util/noise.js';
 // `composeWorld` chose between the two off a `grassStyle` flag that the
 // workbench's "Grass tufts" switch drove. The switch shipped defaulting to
 // tufts and stayed there, so the blades were dev-only for their whole life and
-// were cut (Frank, this round: "we don't actually use those anywhere... let's
-// remove those old 3D grass things"). Two field implementations, one of them
+// were cut, since nothing shipped ever used them. Two field implementations,
+// one of them
 // unreachable, is also two places every retune had to be made and one of them
 // silently didn't matter.
 //
@@ -44,9 +44,8 @@ export function setGrassPatchiness(v) { defaultPatchiness = v; }
 // Same deal as patchiness — baked at build time, so the workbench's two sliders
 // set these and the change lands on the next page.
 //
-// Frank: "can we do something with the grass to make it taper off a little bit
-// more instead of stopping so abruptly... and it could go a little bit further."
-// Both halves of that are here. Only composeWorld reads them; a builder called
+// The meadow should reach further AND taper off rather than stopping abruptly;
+// both halves of that are here. Only composeWorld reads them; a builder called
 // directly (the showcase, kit-preview) still gets its own radius and the stock
 // taper, because those are small display fields and not a horizon.
 let defaultReach = 24;      // world units from the origin to the last straggler

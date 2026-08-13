@@ -10,11 +10,9 @@ import { applyFoliageWind } from './foliage.js';
 //
 // This model has been two other things. First a stack of concentric cones on
 // a stub (too mechanical), then a sumi-e experiment — an elbowed trunk with
-// flat cloud-pads kicked off to alternating sides. Frank ended that one:
-// "maybe you did a pass on it and messed it up so it was more interesting
-// looking... it looks really weird. Make it more like a straight-up pine
-// tree, same geometries, more straight up, pointy top like a pine tree has."
-// So: the classic silhouette, kept honest by SMALL seeded irregularities
+// flat cloud-pads kicked off to alternating sides — more interesting, and
+// unmistakably wrong. What a pine wants is to be a pine: straight up, pointy
+// top. So: the classic silhouette, kept honest by SMALL seeded irregularities
 // (tier radius, spin, a slight off-centre set) instead of by crooking the
 // whole tree. A stand of them varies without any one of them looking bent.
 //
@@ -27,15 +25,13 @@ import { applyFoliageWind } from './foliage.js';
 // pineGeometry() returns ONE merged BufferGeometry so a whole stand can be
 // drawn as a single InstancedMesh (see makeForest); makePine() wraps it in a
 // mesh for the hero pine placed by hand (cases 36, 41).
-// THE WIND GOES THROUGH IT — as a BEND, tier riding tier (Frank: "it would be
-// cool for the pine if it also, like, bend a little bit where it was like a
-// hierarchy and each kind of successive one was bent a little, so it swayed a
-// tiny little bit").
+// THE WIND GOES THROUGH IT — as a BEND, tier riding tier, each successive tier
+// bent a little more than the one below it.
 //
 // The first attempt displaced each tier on its own and was wrong in two ways at
-// once, both of which Frank named: "the ones on the top move more, they're
-// moving way too much", and "it feels kinda lopsided... moving way too much off
-// the side". Both are the same mistake. A tier translated sideways while the
+// once: the top tiers moved far too much, and the whole tree read as lopsided,
+// sliding off to one side. Both are the same mistake. A tier translated
+// sideways while the
 // bole underneath it stands still does not read as a tree bending, it reads as
 // cones sliding off a pole — and the lateral flutter the leaf clusters use, put
 // on a solid cone the size of a tier, is pure sideways slide.
@@ -55,8 +51,8 @@ import { applyFoliageWind } from './foliage.js';
 // out to be wrong. 0.62 was damping for "moving way too much"; what was
 // actually too much was the sideways slide of tiers displaced independently of
 // a motionless bole, which the cantilever fixed on its own. With that gone the
-// damping only made the tree lifeless, and Frank read the result exactly right:
-// "the pine is moving even less than the other tree."
+// damping only made the tree lifeless — visibly stiller than the broadleaf
+// beside it.
 //
 // Which it structurally would at parity. A broadleaf carries EVERY leaf cluster
 // out at sway ~1, while a column's weight is height-squared, so most of a
@@ -67,7 +63,7 @@ const MAST_SWAY = 1.95;
 const TIER_LAG = 0.28;      // radians of phase per tier — the lag that curves the
                             // mast as it sways. 1.35 made each tier its own event;
                             // a quarter-radian reads as one bend arriving late at
-                            // the top, which is the hierarchy Frank asked for.
+                            // the top, which is the hierarchy this is for.
 const TIER_FLEX = 0.16;     // how much more than the bole a tier flexes at its own
                             // height. Small on purpose: this is the whole margin
                             // by which a tier may leave the trunk's curve.

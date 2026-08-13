@@ -13,7 +13,7 @@ import { wash } from '../palette.js';
 // tap's answer. It lengthens the streaks and lifts opacity, HOLDS for the
 // same 2.5s the audio surge holds (makeRainBed.surge in audio/synths.js —
 // the two must move together or the tap reads as nothing, which is exactly
-// what Frank reported before they were synced), then decays on the same
+// what a tap read as before they were synced), then decays on the same
 // tau. Speed itself never changes, which keeps the closed form closed.
 
 export function makeRain({

@@ -68,8 +68,8 @@ export function makeSand({
   // further. Polygon offset moves depth WITHOUT moving geometry, the depth-edge
   // ink pass Sobels that buffer, and the seaward edge runs on under the water
   // against un-offset ground — so the buffer carried a step the scene did not
-  // and the ink drew a dark line along the waterline (Frank: "right at the
-  // bottom of the sand where it tapers down... it looks a little not so good").
+  // and the ink drew a dark line along the waterline, right where the sand
+  // tapers into the water.
   const mat = washMaterial({ color });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.name = 'sand';

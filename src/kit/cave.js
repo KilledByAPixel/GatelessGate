@@ -66,8 +66,8 @@ export function makeCave({
   // front face only depth*0.25 behind the mouth, which put the dark almost in
   // the opening: there was nowhere inside to BE, so a figure meant to be
   // sitting in the cave either vanished into the box or perched on its lip
-  // (Frank: "he'd be further into the cave... it feels like there's just a
-  // wall there, there's not any kind of depth"). Longer, and its face pushed
+  // — the mouth read as a wall with no depth behind it. Longer, and its face
+  // pushed
   // back to depth*0.62 behind the origin, so the mouth opens onto a room.
   const throat = new THREE.Mesh(
     new THREE.BoxGeometry(width * 0.85, height * 0.75, depth * 1.9),

@@ -28,8 +28,8 @@ import {
 //
 // THEY ALSO ANSWER THE MEADOW'S WIND AND THE READER'S HAND, because a bloom
 // standing dead still in grass that is visibly leaning reads as a plastic
-// flower stuck in a moving field (Frank: "make the flowers also move with the
-// wind and when the mouse is moved over them like the grass does"). Both are
+// flower stuck in a moving field. They answer the wind and the pointer the
+// same way the grass does, and both are
 // the GRASS's models, re-read on the CPU rather than reinvented:
 //
 //   THE WIND is the same drifting gust noise tuftfield.js samples in GLSL —
@@ -87,7 +87,7 @@ const POKE_LEAN = 0.55;
 // sitting on top of it. They are separate because head and stalk never share a
 // tone — "by default the petals should be whitish, kind of the same colour
 // family as the ground, and the stalk the same kind of colour as the grass"
-// (Frank) — and when a case DOES put its accent on the heads (pass `color`),
+// — and when a case DOES put its accent on the heads (pass `color`),
 // the seal-glow emissive on accent materials (material.js) could not be split
 // per-vertex inside one mesh anyway. The two instanced meshes share every
 // instance matrix, so they stay one bloom in motion.

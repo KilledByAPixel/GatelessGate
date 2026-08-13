@@ -68,8 +68,8 @@ export function makeTree({
   }
 
   // a joint ball where two segments meet at an angle: cylinders touching
-  // edge-to-edge open a wedge of daylight at every node (Frank: "the tree
-  // has gaps at the nodes"), and a knot there both closes it and reads as
+  // edge-to-edge open a wedge of daylight at every node, and a knot there both
+  // closes it and reads as
   // the burl a real fork grows. Merged into the trunk mesh — zero draws.
   function pushKnot(m, r, run = 0, phase = 0) {
     const knot = new THREE.DodecahedronGeometry(r, 0);
@@ -111,7 +111,7 @@ export function makeTree({
       const droop = 0.12 + 0.14 * droopRnd() + (level - 2) * 0.05;
       const curve = (droopRnd() - 0.5) * 0.4;
       const bent = joint.clone().multiply(RY(curve)).multiply(RZ(droop));
-      pushKnot(joint, rad * 0.81, run + half, phase);      // cover the sag's elbow (trimmed 5% — proud knots read as galls, Frank)
+      pushKnot(joint, rad * 0.81, run + half, phase);      // cover the sag's elbow (trimmed 5%: proud knots read as galls)
       pushSeg(bent, half, rad * 0.68, rad * 0.82, run + len, phase);
       tip = bent.clone().multiply(T(0, half, 0));
     } else {

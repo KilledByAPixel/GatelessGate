@@ -7,8 +7,7 @@ import { clamp } from '../util/math.js';
 // A handful of butterflies playing over a meadow. Each one is two small quads
 // hinged at the body line — nothing else; at any case's camera distance a
 // butterfly IS its wings — flapping on a seeded beat and fluttering along a
-// seeded wander path. "Simple: two quads basically stuck together, flapping
-// and flying, playing around" (Frank).
+// seeded wander path. Simple: two quads stuck together, flapping and flying.
 //
 // Like birds.js, the whole flight is a closed form over the simTime handed to
 // update(): a butterfly's position is a function of (simTime, seed), nothing is
@@ -31,8 +30,7 @@ const HEAD_EPS = 0.12;             // seconds between the two path samples a hea
 //
 // A REAL WING OUTLINE, not a quad. The first pass was two triangles making a
 // swept rectangle, which reads as a bow-tie once you can see it at all
-// (Frank: "could we make the butterfly wings a little more shaped like a
-// butterfly wing?"). This is the actual silhouette in the fewest points that
+// once you can see it at all. This is the actual silhouette in the fewest points that
 // can carry it: a long forewing sweeping up and out to a squared tip, a NOTCH
 // where the two wings meet, and a rounder hindwing lobe trailing behind it.
 // Eight boundary points, fanned from the root — six triangles, still nothing.
@@ -75,15 +73,13 @@ export function makeButterflies({
   rate = 0.16,                     // wander speed — a flutter, not a bee-line
   // How high a landed one sits. GRASS-TIP, not ground: grassfield's blade is
   // 0.34 tall, and at 0.16 a butterfly settled halfway down inside the field and
-  // read as landing in the dirt between the blades (Frank: "put them a little
-  // bit above the ground — or have them land on a grass puff, since there's
-  // grass all over"). At the tip height it perches ON the meadow wherever it
+  // read as landing in the dirt between the blades. At the tip height it
+  // perches ON the meadow wherever it
   // comes down, which is the same effect without picking a blade to sit on.
   perch = 0.32,
   // Whether they ever settle. The fly-land-fly round is most of what makes
   // these read as BUTTERFLIES; k21's flies pass false — flies over dung
-  // circle without resting, and a landed one read badly there (Frank:
-  // "don't have them land... just have them fly"). With land off, perch and
+  // circle without resting, and a landed one read badly there. With land off, perch and
   // the round's timings are simply never consulted.
   land = true,
   groundFn = null,                 // (x, z) => terrain height; flat ground without one
@@ -111,8 +107,8 @@ export function makeButterflies({
     const h = (n) => hash1(i * 13 + n, seed);
     // THEY SPREAD OUT. The wander used to be one noise field read straight
     // into ±radius, and noise rarely reaches its own extremes, so the whole
-    // flock hovered near the centre (Frank: "I want them to be more around —
-    // they're just kinda centred"). Each one now owns a HOME somewhere in the
+    // flock hovered near the centre rather than spreading over the disc. Each
+    // one now owns a HOME somewhere in the
     // disc (sqrt for even area) and only wanders locally around it.
     const homeA = h(6) * Math.PI * 2;
     const homeR = Math.sqrt(h(7)) * radius * 0.85;
@@ -122,9 +118,9 @@ export function makeButterflies({
       // each butterfly owns a lane of the noise field and a beat of its own
       ph: h(1) * 64,                       // where in the field its path starts
       chan: seed + i * 3,                  // its private noise channels
-      // Wingbeats per second-ish, seeded. HALVED from 7.5-12 (Frank: "the wings
-      // are flapping a bit fast — about half as fast"): a real butterfly does
-      // beat this quickly, but at diorama scale the wings blur into a flicker,
+      // Wingbeats per second-ish, seeded, and HALVED from what a real butterfly
+      // does: it genuinely beats that quickly, but at diorama scale the wings
+      // blur into a flicker,
       // and the whole point of the piece is that you can see the shape opening
       // and closing.
       beat: 3.75 + h(2) * 2.25,
@@ -150,7 +146,7 @@ export function makeButterflies({
   // EXCITEMENT IS SPEED. What a scare should look like is a flock that gets on
   // with what it was already doing, faster — "if they are flying, just move a
   // bit faster than normal... move around more... like they would normally fly,
-  // but just faster in that direction" (Frank). So the flight is not redirected
+  // but just faster in that direction. So the flight is not redirected
   // and nothing is thrown anywhere: the PATH CLOCK simply runs ahead while the
   // excitement lasts, which carries every butterfly further along the wander it
   // was already on, in the direction it was already going.
@@ -160,10 +156,9 @@ export function makeButterflies({
   // now has this exception. It is still deterministic — the same taps over the
   // same steps give the same flight — and it is monotonic and continuous, so
   // the path never jumps; it only ever gets ahead of itself.
-  // Extra path-seconds per second at full excitement. 2.6 measured as only
-  // 1.3x the ground covered — inside the noise of a wander, and Frank could not
-  // see it ("they don't seem to be moving any faster afterwards either, or
-  // maybe a tiny bit, but not much"). The wander is a noise field sampled at
+  // Extra path-seconds per second at full excitement. A modest multiplier
+  // bought only about 1.3x the ground covered — inside the noise of a wander,
+  // and invisible. The wander is a noise field sampled at
   // `rate`, so running its clock faster does not scale distance linearly; it
   // takes a much bigger multiplier before the flock reads as hurrying.
   const BOOST_RATE = 9.5;
@@ -172,8 +167,8 @@ export function makeButterflies({
   // through the grass) because wings beat whether or not the insect is going
   // anywhere. BEAT_SHARE buys about a third again at full excitement rather
   // than the double it had: doubling was more than the eye can follow at this
-  // scale (Frank: "they just flap their wings too fast... move faster, but flap
-  // wings less fast"), and the movement is where the excitement should read.
+  // scale — faster movement with less frantic flapping reads better — and the
+  // movement is where the excitement should show.
   const BEAT_SHARE = 0.35;
   let beatBoost = 0;
 
@@ -211,10 +206,8 @@ const ATTACK = 0.30;               // seconds for an alarm to come up
   // would most expect to startle were the only ones that could not move at all.
   // The first fix over-corrected into the opposite failure: forcing lift to 1
   // shot them up their whole flying band in a fraction of a second, plus a
-  // sideways dart, and the flock read as being launched (Frank: "they fly up in
-  // the air way too fast... they, like, get pushed up right into the air. I
-  // don't want them to just instantly zoom up. If they're on the ground, just
-  // resume flying").
+  // sideways dart, and the flock read as being launched rather than as simply
+  // resuming flight.
   //
   // So the envelope is now paced to the round's OWN take-off — EASE of a cycle,
   // the same climb it makes when it leaves a perch unprompted — and there is no
@@ -225,9 +218,8 @@ const ATTACK = 0.30;               // seconds for an alarm to come up
   // the BOOSTED clock, and boost is exactly what a scare turns on: the flock
   // flew faster, which ran the path clock ahead, which aged the startle
   // envelope faster, which cancelled the scare early. The harder they were
-  // startled the sooner they gave up. What Frank saw was butterflies that
-  // "go up and then go back down immediately... there's definitely something
-  // glitchy happening still."
+  // startled the sooner they gave up — they went up and came straight back
+  // down, which read as a glitch.
   //
   // It also never reached full height, for a second reason: the rise ramped
   // over b.cyc * EASE (1.4-2.6s) while the decay was already falling from the
@@ -264,8 +256,8 @@ const ATTACK = 0.30;               // seconds for an alarm to come up
 
   // A LANDED BUTTERFLY IS LANDED. The wander is a function of time, so while one
   // was perched its x/z kept drifting and it slid across the grass with its
-  // wings shut (Frank: "they still kinda slide along the ground — they need to
-  // actually stop in place, like they've landed on top of one of the grass").
+  // wings shut, instead of stopping in place on top of the grass where it
+  // came down.
   //
   // Fixed by stopping the PATH'S OWN CLOCK for the duration of the perch, rather
   // than by clamping the position: subtract every second this butterfly has
@@ -343,8 +335,8 @@ const ATTACK = 0.30;               // seconds for an alarm to come up
       // THE WINGS ARE A HINGE, AND ONLY A HINGE. The body used to ride the
       // stroke (position.y += 0.05·stroke), which at ten beats a second read
       // as the whole insect juddering up and down rather than flapping
-      // (Frank: "it looks like they're just rapidly moving up and down when
-      // they flap... their centre of mass won't be affected"). The flap now
+      // rather than flapping — a real butterfly's centre of mass barely moves
+      // with the stroke. The flap now
       // lives entirely in the wings' own rotation.z about the body line; the
       // body goes where the path says and nowhere else.
       const lift = liftAt(b, clock);
@@ -352,16 +344,15 @@ const ATTACK = 0.30;               // seconds for an alarm to come up
       // `b.beat * (1 + E)` multiplied ABSOLUTE TIME by a changing number, which
       // skips the wing's phase every time E moves (the birds had the identical
       // fault in their circuit, where it was visible as flying backwards). And
-      // doubling the rate was simply too much to look at: Frank, watching it,
-      // "they just flap their wings too fast... move faster, but flap wings
-      // less fast." So the extra rides an accumulator like everything else
+      // doubling the rate was simply too much to look at — faster movement with
+      // less frantic flapping is the read that works. So the extra rides an
+      // accumulator like everything else
       // here, and it buys about a third again rather than double.
       const stroke = Math.sin((clock + beatBoost * BEAT_SHARE) * b.beat * Math.PI * 2 + b.beatPh);
       // PERCHED, the wings stop BEATING but they do not stop moving: they stand
       // folded up together and open and close very slowly, about a sixth of a
-      // radian either way once every ten seconds or so (Frank: "when they're
-      // stationary they can still move their wings a little — really slowly, so
-      // they're not fully not moving"). Each one breathes on its own phase, so a
+      // radian either way once every ten seconds or so — stationary, but never
+      // fully still. Each one breathes on its own phase, so a
       // row of perched butterflies never pulses in unison.
       const rest = 1.02 + 0.17 * Math.sin(clock * 0.55 + b.beatPh);
       const flying = 0.55 + 0.62 * stroke;           // -0.07 .. 1.17 rad

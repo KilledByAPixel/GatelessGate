@@ -117,9 +117,9 @@ export function makeFlower({
   // above it is itself turning (case 6 spins the bloom), so handing back only
   // the world POSITION left the petal's local rotation to be reinterpreted
   // against the scene root — it snapped to a different attitude on the frame it
-  // came off and read as being spat out of the middle of the bloom (Frank: "it
-  // looks almost like it's born kind of unsettlingly inside the flower, and
-  // it's kinda janky"). World quaternion and scale come with it now, so the
+  // came off and read as being spat out of the middle of the bloom, born
+  // inside the flower rather than falling off it. World quaternion and scale
+  // come with it now, so the
   // first frame after release is pixel-identical to the last frame before it
   // and the fall starts from where the petal actually was.
   //

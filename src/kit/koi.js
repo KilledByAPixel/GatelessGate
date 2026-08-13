@@ -130,8 +130,8 @@ export function makeKoi({
   // Optional: a height sampler in the water's own frame, (x, z, t?) => y.
   // Given one, the fish ride it — which ties the school to the water instead
   // of leaving it swimming in a separate layer. The pond cases pass the
-  // water's swellAt (idle swell + drift, NO ripple term): Frank ruled that a
-  // tap above the school must not toss the fish, so the reader's ripples pass
+  // water's swellAt (idle swell + drift, NO ripple term): a tap above the
+  // school must not toss the fish, so the reader's ripples pass
   // over them and only the water's own breathing moves them. heightAt still
   // works here for a surface that SHOULD carry everything — the ocean boats
   // ride the full field for exactly that reason.

@@ -3,9 +3,8 @@ import { washMaterial } from '../render/material.js';
 import { INK, INK_LIT, ACCENT, ACCENT_DEEP, ACCENT_LIGHT, ACCENT_PALE } from '../palette.js';
 import { makeFigure, HEAD_OBLONG } from './figure.js';
 
-// The Buddha is NOT special (Frank, overnight pass 2: "Buddha is not supposed
-// to have a whole special different look — use the same biped kit everyone
-// else is using. He shouldn't be bigger than anyone else.").
+// The Buddha is NOT special: the same biped kit as everyone else, at the same
+// size as everyone else. No bespoke look, no extra height.
 //
 // Two bespoke models died to learn this — round 1 "a fire hydrant / chess
 // bishop", round 2 a fine statue that still read as a different species from
@@ -24,8 +23,8 @@ import { makeFigure, HEAD_OBLONG } from './figure.js';
 //
 // IT CONTRASTS WITH THE HEAD, which is the whole job of a mark. It used to be
 // ACCENT unconditionally — right for an ink statue and useless on a red one,
-// where a red dot on a red skull leaves nothing but a bump (Frank: "we still
-// need to add the black dot to the head of the red figures"). The comment on
+// where a red dot on a red skull leaves nothing but a bump, and the mark on a
+// red figure simply went missing. The comment on
 // URNA_SINK below is the record of trying to solve that with GEOMETRY instead:
 // the dot was buried deeper so its silhouette would carry what its colour no
 // longer could. A mark that has to be read as a lump is not a mark. So a red

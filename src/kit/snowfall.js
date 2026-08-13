@@ -8,8 +8,7 @@ import { SNOW } from '../palette.js';
 // the paper showing through — invisible against the sky, present against ink.
 // That works for snow LYING on the ground and not for snow in the air: the same
 // case covers its earth in wash(0.06), so falling flake and snowed-under ground
-// were the same tone and the weather simply vanished into it (Frank: "the
-// falling snow is not white, it's the same colour as the ground"). Falling snow
+// were the same tone and the weather simply vanished into it. Falling snow
 // is the one thing in the book brighter than the page — see SNOW in palette.js.
 //
 // One THREE.Points, no meshes. Each flake's fall is a closed form over
@@ -18,7 +17,7 @@ import { SNOW } from '../palette.js';
 
 // ROUND FLAKES. A PointsMaterial with no map draws every point as a hard
 // SQUARE, so the weather was three hundred little tiles tumbling past the cave
-// mouth (Frank). The fix is a texture, and this book downloads nothing — so it
+// mouth. The fix is a texture, and this book downloads nothing — so it
 // is generated: one 32x32 white disc with a feathered alpha edge, solid to 0.62
 // of its radius and gone by the rim.
 //

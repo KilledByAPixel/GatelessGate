@@ -6,7 +6,7 @@ import { clamp } from '../util/math.js';
 
 // A flock crossing the sky. Each bird flies a wide, slowly drifting circuit at
 // altitude — so it actually travels across the scene rather than circling one
-// spot or hovering in place (Frank). They never land; this is birds seen from
+// spot or hovering in place. They never land; this is birds seen from
 // below, the way they are in the two cases that use them.
 //
 // The circuit is INTEGRATED — `travel` below is how far round the flock has
@@ -34,12 +34,12 @@ export function makeBirds({
   // HOW MUCH FASTER A SCATTER MAKES THEM FLY, as extra circuit-seconds per
   // second at full alarm: 0 is a flock that climbs and beats harder without
   // going anywhere quicker, 1 doubles the circuit at the peak. This is THE
-  // knob for "make the birds go faster when you click them" (Frank, case 24),
-  // and it is per-flock rather than a module constant because case 49's birds
+  // knob for making the birds go faster when you click them (case 24), and it
+  // is per-flock rather than a module constant because case 49's birds
   // are scenery in a scene about a temple bell and have no reason to inherit
   // case 24's answer. `hurryBeat` is the same for the WINGS, kept separate on
-  // purpose — Frank asked for exactly this split once already ("move faster,
-  // but flap wings less fast"), and a flock that speeds up without beating
+  // purpose — moving faster and flapping harder are separately askable, and a
+  // flock that speeds up without beating
   // proportionally harder is the whole difference between hurrying and
   // panicking.
   hurry = 0.9,
@@ -98,8 +98,8 @@ export function makeBirds({
   // scatter lands, so the angle jumped by t * angRate * 0.9 on that one frame:
   // a minute into a page that is twenty-seven radians, four whole laps in a
   // single step. Then, as E decayed back down, the same term SHRANK, and the
-  // birds flew round their circuits backwards (Frank: "the birds go really fast
-  // for some reason when you click... and they go, like, backwards").
+  // birds flew round their circuits backwards — very fast on the click, then
+  // in reverse.
   //
   // An accumulated angle moves at whatever rate is asked for on the frame it is
   // asked, so the circuit stays continuous through both the arrival and the
@@ -116,10 +116,9 @@ export function makeBirds({
   let travel = 0;
   let beats = 0;
 
-  // FLYING BACKWARDS was built here and then cut, and is worth one note. Frank:
-  // "a weird idea... they're gonna slow down and then start flying backwards for
-  // a bit and then slow down and then start flying normal again" — a signed rate
-  // on the circuit easing down through zero and back, with the heading left as
+  // FLYING BACKWARDS was built here and then cut, and is worth one note. The
+  // idea was to slow down, fly backwards a while, then slow and resume: a signed
+  // rate on the circuit easing down through zero and back, with the heading left as
   // the circuit tangent so they slid tail-first rather than turning round. It
   // worked, and he changed his mind on seeing it described ("let's just have the
   // birds fly faster for a bit"). What it left behind is `travel` itself: the

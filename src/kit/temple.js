@@ -14,15 +14,14 @@ import { WASH } from '../palette.js';
 // establishment behind it), placed in both, and then pulled: seen in the
 // scenes it did not earn its place — "let's get rid of the temples, it was a
 // nice try" — but the piece itself is kept for a case that wants one later
-// (Frank: "we might wanna use them again"). It is complete and was working;
+// in case one is wanted again. It is complete and was working;
 // what was wrong was the picture, not the component.
 //
 // If you place one, read the SCALE note at the bottom of this file first. The
 // mistake is easy to repeat and hard to see coming.
 //
-// Frank: "we could reuse the hut and maybe put in the distance larger with a
-// couple other smaller huts next to it... and that could be kind of a bit in
-// the distance, so we don't need so much detail there."
+// The idea: reuse the hut's language at a larger scale, set well back with a
+// couple of smaller huts beside it, where distance excuses the lack of detail.
 //
 // It reuses the hut's LANGUAGE, not the hut. Under the inverted-hull outline
 // (the hull, since deleted), makeHut's five meshes cost five hull outlines on

@@ -80,19 +80,19 @@ export function makeForest({
   // Circles ({x, z, r}) no tree may stand in — composeWorld passes the
   // mountains' footprints. Instances that land inside are SKIPPED, not
   // re-rolled: every surviving tree keeps the exact position it always
-  // had, and the stand just thins where the rock eats its disc. (Frank:
-  // "clearly, obviously, trees that are inside the mountain.")
+  // had, and the stand just thins where the rock eats its disc — otherwise
+  // there are visibly trees standing inside the mountain.
   avoid = [],
   // The stand's species: 'mixed' is the classic conifer-heavy blend below;
   // 'pine' and 'tree' (broadleaf — sapling and oak silhouettes) follow a
-  // case's treeKind so the fog line agrees with the midground (Frank found
-  // a broadleaf standing in his all-pine scene — it was a forest member,
-  // which used to ignore the scatter's species entirely).
+  // case's treeKind so the fog line agrees with the midground. A broadleaf
+  // once turned up in an all-pine scene: it was a forest member, and forest
+  // members used to ignore the scatter's species entirely.
   kind = 'mixed',
   // The terrain the bases stand on. They used to sit at a flat y = -0.45 and
   // trust the roll to meet them — near the flat middle it does, but a stand
   // out at 25+ units can sit where the ground rises a full unit or falls
-  // away, and Frank watched background trees bury to the canopy. Each base
+  // away, which buried background trees to the canopy. Each base
   // now samples the same terrain the ground mesh is built from, sunk a
   // little so no trunk ever hovers on a downslope edge.
   groundSeed = 21,

@@ -11,9 +11,8 @@ import { WASH, PAPER, INK, mixHex } from '../palette.js';
 // separate meshes at a fixed world height, so nothing here may rename the
 // group or drift its rough silhouette/scale out from under it.
 //
-// THE FIREBOX IS TRULY OPEN NOW (Frank, round 2: "I feel like there's
-// something like a glass effect on the lantern walls — make it just an open
-// lantern so we can see the flame better"). Round 1 opened the chamber into
+// THE FIREBOX IS TRULY OPEN NOW. The half-open version read as glass in the
+// lantern walls and hid the flame. Round 1 opened the chamber into
 // a sill band, four corner pillars, and a header band, but lined the cavity
 // with a dark BackSide interior box so nothing showed through — and that
 // lining read as smoked-glass panes from the case camera. It is deleted

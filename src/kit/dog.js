@@ -17,7 +17,7 @@ import { makeQuadruped } from './quadruped.js';
 // enough to read as weight at k1 scale, not enough to look fed. A `chest`
 // brisket was tried here and CUT: hung ahead of the foreleg it never merged
 // with the body line, and at case distance it read as "something weird
-// hanging below his chest, like a round ball" (Frank) — the plain barrel
+// hanging below his chest, like a round ball" — the plain barrel
 // beats a bolted-on lump. The existing cocked-up tail (`tilt: -1.0`) and
 // the k1 module's own `dog.rotation.y` (which turns the whole animal, head
 // included, back up the road toward the monks — the "head tilt toward the
@@ -28,7 +28,7 @@ import { makeQuadruped } from './quadruped.js';
 // barrel's axis — which put the visible root at the top of the rump, perched
 // ON the outline instead of growing out of it, and together with the proud
 // haunch it broke the topline as "something weird on the top of its butt"
-// (Frank). Same cure as the fox's brush: pin the ROOT to a stated point just
+// Same cure as the fox's brush: pin the ROOT to a stated point just
 // under the rump's surface and solve the centre the quadruped wants, so the
 // cocked tail emerges from inside the body at any length or angle.
 const TAIL_TILT = -1.0;                  // rad: up and back — the cocked tail is the read
@@ -61,7 +61,7 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // rump: `back` (0.28) sits just short of `hipZ` (0.30) so the mass
     // gathers where the hind legs actually drive into the barrel. LOW AND
     // LONG: an earlier round stood it 0.04h proud of the barrel line and the
-    // bump over the hips was the first thing Frank saw. `up + r*scaleY` =
+    // bump over the hips was the first thing anyone saw. `up + r*scaleY` =
     // 0.10 + 0.109 = 0.209 now clears `bodyR` (0.20) by under 0.01h — the
     // haunch thickens the topline without breaking it — and the longer
     // scaleZ lets the extra weight run INTO the back instead of up off it.

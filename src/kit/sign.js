@@ -5,8 +5,7 @@ import { WASH } from '../palette.js';
 
 // A signboard on a post. Deliberately the plainest object in the kit: a
 // rectangular board on a rectangular post, nothing written on it, nothing
-// hanging off it (Frank: "no writing or special object, just like a rectangular
-// sign with a rectangular post").
+// hanging off it: a rectangular sign on a rectangular post, and nothing else.
 //
 // THE WHOLE SILHOUETTE IS TWO RECTANGLES — an upright bar with a wider slab
 // near the top. That reading is what makes it a sign rather than a marker or a

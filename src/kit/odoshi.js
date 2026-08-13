@@ -76,8 +76,7 @@ export function makeOdoshi({ size = 1, seed = 7, period = 32, phase = null, onPo
 
   // The strike stone, placed so the butt's underside RESTS on it at the rest
   // angle — contact by construction, not by eye. The first cut floated the
-  // stone 0.19 under the butt and the return swung through it (Frank's
-  // "bends through the stump").
+  // stone under the butt with a gap, and the return swung straight through it.
   const BUTT_X = 0.12 * S - LEN / 2;                       // the butt end, local
   const buttY = PIVOT_Y + BUTT_X * Math.sin(REST);         // its height at rest
   const stoneTop = buttY - 0.075 * S;                      // meet the underside

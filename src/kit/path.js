@@ -9,7 +9,7 @@ import { WASH } from '../palette.js';
 //
 // THE ENDING IS A BRUSHSTROKE. The road audit found nearly every road in
 // the book stopping square-ended at r≈18, in plain meadow, well before the
-// fog (Frank: "it ends abruptly in a lot of these") — so by default the far
+// fog, ending abruptly — so by default the far
 // end now TAPERS to a point over its last stretch, the way ink thins when
 // the brush lifts: the road reads as continuing beyond what is drawn.
 // `taper: 0` restores the square end. `via` bends the centerline (a
@@ -30,8 +30,7 @@ export function makePath({
   // tail. ONE function, shared by the ribbon and keepout() below, because the
   // two used to disagree: the ribbon tapered and the mask did not, so every
   // road ended in a full-width bald strip of cleared grass around a
-  // hair-thin tip (Frank: "the path tapers at the end, but the grass keepout
-  // does not taper... it looks kinda weird"). See the curve's own comment in
+  // hair-thin tip. See the curve's own comment in
   // the ribbon loop for why it is mostly-linear rather than a smoothstep.
   const taperAt = (t) => {
     if (taper <= 0 || t <= 1 - taper) return 1;
@@ -62,8 +61,8 @@ export function makePath({
     let dx = nx - px, dz = nz - pz;
     const len = Math.hypot(dx, dz) || 1;
     dx /= len; dz /= len;
-    // A LONG THIN TAIL, not a sudden point (Frank: "the road tapers too
-    // quickly at its ends"). Smoothstep alone was the wrong curve for a
+    // A LONG THIN TAIL, not a sudden point — the road used to taper far too
+    // quickly at its ends. Smoothstep alone was the wrong curve for a
     // brush lift: near the tip it behaves like 3s², so four fifths of the
     // taper stayed at almost full width and the whole narrowing crammed
     // into the last fifth — which reads as the road being cut off, the
@@ -121,9 +120,8 @@ export function makePath({
   // grass grows straight through the road.
   //
   // THE CHAIN TAPERS THE WAY THE STROKE DOES, and that takes BOTH knobs. The
-  // first fix scaled only the radii (Frank: "the grass keepout does not
-  // taper... it looks kinda weird") and was wrong in the other direction
-  // (Frank again: "grass appearing on top of the road in the tapered area"):
+  // first fix scaled only the radii, which left grass growing on top of the
+  // road through the tapered stretch:
   // a chain of circles only masks a ribbon because neighbours OVERLAP, and
   // the caller's spacing is tuned so full-size circles barely do — shrink
   // the radii in place and the chain comes apart mid-taper, with grass in

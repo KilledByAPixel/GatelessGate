@@ -19,8 +19,7 @@ import { mergeSimple } from './scatter.js';
 //      transform, name and material stay the plan's.
 //   2. A SMALL HEAD, carried forward off the top of that line, poll around
 //      1.17x withers (was 1.4x — llama). ONE PIECE now: the box skull +
-//      cylinder muzzle pair read as parts ("if there was a way to nail the
-//      vertices together to create a smoother shaped head" — Frank), so the
+//      cylinder muzzle pair read as two parts rather than one smooth head, so the
 //      head is a single koi-style ring loft from poll to nostril, tapering
 //      continuously, tilted down the neck line by the same head.tilt. The
 //      snout mesh is GONE (11 meshes now, was 12 — back when k45's scene was
@@ -110,7 +109,7 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
 
   // ---- ONE head: poll to nostril in a single loft -------------------------
   // The box skull + cylinder muzzle read as two parts bolted together; this
-  // nails the vertices into one continuous form (Frank's ask). Rings of
+  // nails the vertices into one continuous form. Rings of
   // [z, halfW, halfH, yOff] in units of height, head-local: +z out the nose,
   // the mesh transform still carrying head.tilt down the neck line. Full at
   // the cheek, one unbroken taper to a blunt nostril — same koi-style loft,

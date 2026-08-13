@@ -11,7 +11,7 @@ import { clamp01 } from '../util/math.js';
 // the water did not know where its own edge was. A square sheet sat in case 7's
 // round basin and cases 30/33's round pond with its corners poking out through
 // the stone, and in case 39 a ring started near the bank simply kept growing
-// out over the grass (Frank).
+// out over the grass.
 //
 // So the surface is now a real grid whose tessellation follows the container —
 // one uniform grid, cut to a circle for a basin or pond and left square for
@@ -60,7 +60,7 @@ const STIR_AMP = 0.2;         // fraction of STRIKE at full stroke speed. Set
                                // every STIR_SPACING, packets 0.42 wide) still
                                // sum to about half a tap — at 0.33 the combined
                                // crest reached 3/4 of a tap, which is no longer
-                               // "a little motion, less than clicking" (Frank)
+                               // a little motion, less than a click's
 
 const smooth = (t) => t * t * (3 - 2 * t);
 
@@ -100,14 +100,14 @@ function squareGrid(size, n) {
   return { pos, idx, edge };
 }
 
-// A disc cut out of the SAME uniform grid, Frank's way: drop the cells that
+// A disc cut out of the SAME uniform grid: drop the cells that
 // fall outside the circle and pull the vertices that overhang it back onto the
 // rim.
 //
 // This started as a polar grid — rings and spokes — which has an exact rim for
 // free but crowds vertices at the hub, thins them toward the edge, and runs
 // every spoke into one shared centre vertex. The result reads as a bias at the
-// centre of the pond, and Frank spotted it on sight. A cut square grid has
+// centre of the pond, visible at a glance. A cut square grid has
 // uniform density everywhere and no singularity; the price is a few irregular
 // triangles around the rim, and those are exactly the ones pinned flat, so
 // nobody ever sees them move.
@@ -161,8 +161,8 @@ function discGrid(radius, n, radiusAt) {
 }
 
 // ---- the blob outline ------------------------------------------------------
-// A natural pond edge for open water (Frank, case 39: "make that pond less
-// square-shaped — more organically shaped, kinda roundish"). Three low
+// A natural pond edge for open water — case 39's wanted to be organic and
+// roundish rather than square. Three low
 // harmonics with seeded phases, and the wobble only ever pulls INWARD from the
 // stated radius — the sum of the amplitudes is subtracted up front — so `size`
 // stays an honest bound: a blob never reaches past where a round surface of
@@ -196,8 +196,8 @@ export function makeWater({
   // The free-ocean term (case 20): slow waves traveling toward (dx, dz) at
   // wavelength/period units/sec. One component object, or an ARRAY of them —
   // a real sea is never one sine: a single component renders as parallel
-  // bars (Frank: "the waves are mostly horizontal... they don't look like
-  // normal waves"), and it takes two or three crossing swells at slightly
+  // bars running one way rather than as waves, and it takes two or three
+  // crossing swells at slightly
   // different headings to break the crests into water. DELIBERATELY
   // UNMASKED — it ignores the rim pinning, because an ocean has no rim to
   // protect: the near edge is buried under the sand ribbon and the far
@@ -207,9 +207,9 @@ export function makeWater({
   // that component's speed away from the wavelength/period you dialled in.
   drift = null,
   // Per-vertex opacity, (x, z) => 0..1 in the surface's LOCAL plan coords —
-  // how an ocean is transparent over the sand and deepens seaward (Frank:
-  // "more transparent at the shoreline... more red in the distance"; the fog
-  // still owns the far fade to paper, this shapes the band before it).
+  // how an ocean is transparent over the sand and deepens seaward — clearer at
+  // the shoreline, fuller in colour with distance. The fog still owns the far
+  // fade to paper; this shapes the band before it.
   // Evaluated ONCE at build; the ramp is geography, not animation. When set,
   // the material's own `opacity` still multiplies on top. Off by default —
   // every existing surface is byte-identical.
@@ -240,8 +240,8 @@ export function makeWater({
   // WATER IS THE ONE SURFACE THAT GLINTS. Everything else in the book wears
   // plain Lambert, which has no specular at all, so a pond lit from the side
   // was a flat coloured disc — and on a RED pond that reads as paint rather
-  // than water (Frank: "we want a high specular on the water... the white
-  // specular of the light where the surface of the water is red"). Phong for
+  // than water. Water wants a high white specular, whatever colour the sheet
+  // itself is painted. Phong for
   // this one mesh: the diffuse keeps the case's colour, the highlight stays
   // white, and it travels with the camera the way a real sheet does.
   //
@@ -277,8 +277,8 @@ export function makeWater({
   surface.name = 'surface';
   // Water never joins the shadow map, either side of it. An ocean-sized sheet
   // outruns the sun's little shadow camera (far = 42), and where the far
-  // plane slices the sheet the lookup paints a phantom wedge — Frank found a
-  // triangle of shadow mid-sea, cast by nothing. A glinting transparency has
+  // plane slices the sheet the lookup paints a phantom wedge — a triangle of
+  // shadow mid-sea, cast by nothing. A glinting transparency has
   // no business catching monk shadows anyway.
   surface.userData.noShadow = true;
   group.add(surface);
@@ -297,8 +297,8 @@ export function makeWater({
   }
 
   // Idle swell: two crossed wavelets with seeded phases — the wind's
-  // breathing. A flat 0.012 was invisible on the ponds (Frank: "it's not
-  // perfectly still... a little motion of the water"), so like STRIKE it now
+  // breathing. A flat 0.012 was invisible on the ponds, which should never look
+  // perfectly still, so like STRIKE it now
   // grows with the container and stops: readable on a pond, proportionate in
   // case 7's basin, capped on open water. Kept well under a tap's crest so a
   // strike still owns the surface ("pretty subtle, so you can still see when
@@ -310,7 +310,7 @@ export function makeWater({
   // k of 5/11 over a pond half-width: wavelengths ~1.3 and ~0.6 units, so a
   // pond carries a few visible crests. The first pass used 1.7/2.3 — a wave
   // LONGER than the pond, which could only tilt the whole sheet: invisible
-  // small, a seesaw big (Frank tuned these by eye).
+  // small, a seesaw big. Tuned by eye.
   const k1 = 5 / Math.max(1, half);
   const k2 = 11 / Math.max(1, half);
 
@@ -333,7 +333,7 @@ export function makeWater({
     : () => 0;
 
   // The old cap here — "a ripple can never outlive its crossing" — was the
-  // no-bounce assumption in constant form, and with Frank's SPEED it was
+  // no-bounce assumption in constant form, and at the shipped SPEED it was
   // killing a pond ripple at ~1.5s while TAU promised 3.5. Reflections repeal
   // it: a ring re-crosses as often as its amplitude lasts, so the only stop
   // is the decay itself. Past three TAU the crest is under 5% of its strike
@@ -368,10 +368,9 @@ export function makeWater({
   let hurried = 0;      // ...accumulated
   const waveClock = () => clock + hurried;
 
-  // AND HOW BIG THE SEA IS RUNNING. rush is pace; this is height (Frank, on the
-  // squall: "can we also try increasing the amplitude of the ocean waves too?
-  // So it looks like they're actually getting bigger"). A wind that only made
-  // the same waves arrive sooner read as a film speeding up rather than as
+  // AND HOW BIG THE SEA IS RUNNING. rush is pace; this is height — under a
+  // squall the waves have to get BIGGER, not just arrive sooner. A wind that
+  // only changed their pace read as a film speeding up rather than as
   // weather.
   //
   // Unlike rush this may be a plain multiplier and not an integrated offset,
@@ -388,8 +387,8 @@ export function makeWater({
   function idleAt(x, z, t) {
     // no swell means no idle term at all, rather than one multiplied by zero —
     // dead-still water stays exactly flat, and skips two sines per vertex
-    // 3/5 rad/s — ~2s periods, a brisk shimmer. Frank tuned these by eye
-    // alongside k1/k2: the first pass went slow (0.55/0.42, ~11-15s periods)
+    // 3/5 rad/s — ~2s periods, a brisk shimmer. Tuned by eye alongside k1/k2:
+    // the first pass went slow (0.55/0.42, ~11-15s periods)
     // chasing "low frequency", and at pond-sized wavelengths that read as
     // nothing at all until the amplitude made it a seesaw. Short wavelets
     // moving briskly at small amplitude is what actually reads as wind.
@@ -482,8 +481,8 @@ export function makeWater({
   }
 
   // The surface WITHOUT the taps: idle swell + drift, edge-masked, no ripple
-  // term. This is what the koi ride (Frank: a tap above the school must not
-  // toss the fish) — anything that should feel the water breathe but ignore
+  // term. This is what the koi ride — a tap above the school must not toss the
+  // fish — so anything that should feel the water breathe but ignore
   // the reader's finger samples this instead of heightAt.
   function swellAt(x, z, t = waveClock()) {
     const m = maskAt(x, z);

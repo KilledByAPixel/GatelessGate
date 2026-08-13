@@ -53,8 +53,8 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // sprouting from the hump — if the head moves, move the horns with it.
     //
     // THE HORN IS SMALL, THICK AND CURVED — "round, curved, like a devil's
-    // horn almost, small curved pointy horn" (Frank; the long straight cones
-    // read as "spikes coming up from its ears"). `curve` (quadruped.js) lofts
+    // horn almost, small curved pointy horn" — the long straight cones it
+    // replaced read as spikes coming up from its ears. `curve` (quadruped.js) lofts
     // the cone along an arc bending toward local -z, so with a wide `sweep`
     // the pair leaves the SIDES of the skull, stands up-and-out, and hooks
     // back over the neck like local/refs/buffaloHead.png. Short (0.5, was

@@ -72,14 +72,14 @@ export function makeLattice({ width = 2.2, height = 2.0, bars = 5, color = WASH.
 //
 // `doors` hangs two lattice leaves on the open side's corner posts, each half
 // the side wide, swung OUTWARD — the side reads as double doors somebody
-// pushed open and left, rather than a wall that was never built (Frank, case
-// 37: "on the open side it has the 2 panels rotating open like double doors
-// pushed open"). A number swings both leaves by that angle (radians); a
+// pushed open and left, rather than a wall that was never built — case 37's
+// two panels swing open like doors somebody went through. A number swings both
+// leaves by that angle (radians); a
 // two-element array gives each leaf its own — [first corner, second corner]
 // in the build's own [-1, +1] order along the side — and 0 for a leaf means
 // it stands CLOSED in the wall plane, a real shut door, not a missing one
-// (Frank's second pass: "only one half... partially open — it's too open
-// right now"). `doors: 0` or omitted keeps the plain missing side.
+// — a pen standing wide open reads as unbuilt, so one leaf shut and one ajar
+// is usually what a scene wants. `doors: 0` or omitted keeps the plain missing side.
 export function makePen({
   size = 5.4, height = 1.9, open = '+x', panelsPerSide = 2, bars = 4, color = WASH.dark,
   doors = 0,

@@ -43,7 +43,7 @@ export function makeHangingMonk({ height = 1.6, color = INK_LIT, seed = 5 } = {}
   // the collar sits just under the skull. The head can't move (its front is the
   // bite, pinned to the branch at the origin), so closing the gap means raising
   // the body to it, which also shortens the neck to a real neck rather than a
-  // long stalk (Frank: the neck was still too long — bring the body up).
+  // long stalk — the neck read as too long until the body came up to meet it.
   const LIFT = 0.075 * h;
 
   const body = new THREE.Mesh(new THREE.LatheGeometry(profile, 10), mat);
@@ -56,8 +56,8 @@ export function makeHangingMonk({ height = 1.6, color = INK_LIT, seed = 5 } = {}
   // THE BITE. The group origin is the mouth, and the mouth is on the head's
   // upper-front surface — so the head hangs BELOW AND BEHIND the origin,
   // reaching up-and-forward to it, and when the case sets the origin against
-  // the branch the front of his face presses INTO the wood. Frank's note, and
-  // he's right about the physics: a man hanging by his teeth tips back, chin
+  // the branch the front of his face presses INTO the wood, which is what the
+  // physics asks for: a man hanging by his teeth tips back, chin
   // up, crown away — he dangles from his jaw, he doesn't stand under it.
   // (The head is a featureless sphere, so the tilt is drawn mostly by
   // OFFSETS — head behind the pivot, body further behind still. A later pass
@@ -75,7 +75,7 @@ export function makeHangingMonk({ height = 1.6, color = INK_LIT, seed = 5 } = {}
 
   // A NECK, bridging the collar to the head. Featureless solids left a visible
   // gap between the hanging robe and the sphere, so the head read as floating a
-  // little clear of the body (Frank's note). A short tapered column filling that
+  // little clear of the body. A short tapered column filling that
   // span — thin under the skull, swelling into the collar — reads as fully
   // connected without moving either piece. It leans back a touch to follow the
   // head, which hangs behind the pivot.

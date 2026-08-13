@@ -2,10 +2,9 @@ import * as THREE from '../../lib/three.module.js';
 
 // THE WIND IN THE TREES — per-part, in the vertex shader.
 //
-// Frank, on why the old version was pulled: "we stopped having them affect by
-// wind because it didn't look so good... we were kind of affecting the angle of
-// the whole entire tree. So instead of that, I think it'll be cool if we
-// rustled individual foliage." That is the whole design brief. The v1 breeze
+// The old version was pulled because it moved the angle of the WHOLE TREE,
+// which never looked right; individual foliage rustling is the design instead.
+// The v1 breeze
 // leaned each tree about its base pivot, which is a tree bowing, and a bowing
 // tree reads as a tree being pushed over rather than as wind moving through it.
 //
@@ -19,8 +18,8 @@ import * as THREE from '../../lib/three.module.js';
 //
 //   aSway   how far along the plant this vertex is, 0 at the foot and 1 at the
 //           outermost leaf — CUMULATIVE PATH LENGTH from the trunk base, not
-//           branch depth. This is the trick that buys the hierarchy Frank asked
-//           about ("have branches bend and then the branches above it bend"):
+//           branch depth. This is the trick that buys the hierarchy — branches
+//           bending, and the branches above them bending too:
 //           a leaf on a third-level limb carries its parents' whole run in its
 //           own weight, so when it moves, everything between it and the trunk
 //           has visibly moved too. No bone chain, no accumulation pass — the
@@ -54,7 +53,7 @@ export const FOLIAGE = {
 // gust — THE MASTER DIAL, both species, everything. This is a brush-and-ink
 // book and the trees are midground furniture, so the read wanted is "alive",
 // not "storm"; 0.10 turned out to be under-alive on the first live pass and
-// this is Frank's second raise ("both trees move a little more"). The ceiling
+// this is the second raise on it. The ceiling
 // is not a matter of taste: past about 0.25 the branching profile starts to
 // carry visible motion down into the bole, and a moving bole is the whole-tree
 // bowing that this system was built to get rid of.
@@ -64,8 +63,7 @@ export const FOLIAGE_REACH = 0.15;
 // a broadleaf's canopy, 0 on wood, a fraction on a pine's tiers), so a limb
 // never buzzes. THIS IS THE BROADLEAF LEAF DIAL: turn it up and the round
 // trees' clusters shiver harder without touching the branches under them or
-// the pines. 0.35 -> 0.55 on Frank's read of the first live pass ("they're not
-// moving quite as much as I would like").
+// the pines. Raised after the first live pass, which read as under-moved.
 export const FOLIAGE_FLUTTER = 0.35;
 
 // How stiff a branching plant is along its own length — the exponent on aSway
@@ -148,8 +146,8 @@ vec3 ggFoliageOffset(vec3 pos, vec2 world) {
   //   aColumn > 0 — THE BENDING COLUMN (pine.js), and it exists because the
   //     branching model was WRONG for a pine. Displacing each tier on its own
   //     slides the cones sideways off a bole that is not moving, which is
-  //     exactly what Frank saw: "it feels kinda lopsided with how much it's
-  //     moving, the top one, and it's moving way too much off the side." A
+  //     exactly how it read: lopsided, the top tier moving far too much off
+  //     to the side. A
   //     conifer is a mast: it bends as ONE cantilever rooted at the ground, and
   //     the tiers ride that bend rather than swimming against it. aColumn is
   //     1/height, so aColumn * y is the height fraction and its SQUARE is the
@@ -168,9 +166,8 @@ vec3 ggFoliageOffset(vec3 pos, vec2 world) {
   // because the first version was a pair of sines scaled to stay positive, so
   // every tree leaned permanently downwind and merely pulsed, while the meadow
   // beside it rocked symmetrically through upright. Half of every cycle they
-  // were leaning opposite ways, which is precisely what Frank saw: "they seem
-  // to be moving in the opposite direction of the grass... at least the sway
-  // is." Same field, same mapping, same instant: now they lean together and
+  // were leaning opposite ways — the trees swaying against the grass rather
+  // than with it. Same field, same mapping, same instant: now they lean together and
   // come back together, because it is one wind and not two.
   float swing = gust * 2.0 - 1.0;
   vec3 off = vec3(uFoliageDir.x, 0.0, uFoliageDir.y)

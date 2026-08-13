@@ -36,8 +36,8 @@ const smooth = (t) => t * t * (3 - 2 * t);
 // drum. PROBLEM 3, task-swing-tune-brief.md: the first cut (0.12) undershot
 // that goal into silence — it sat UNDER k28's 0.22, the quietest of the
 // book's other 20 audio.knock() call sites (a typical knock runs ~0.9), and
-// Frank heard nothing: "the clatter fires correctly... but Frank hears
-// nothing." Erring quiet the first time erred past audible. Raised well
+// it was inaudible: the clatter fired correctly and nobody could hear it.
+// Erring quiet the first time erred past audible. Raised well
 // clear of 0.22 (see CLATTER's own comment for the exact starting number) —
 // still a texture, not a drum roll, but one that is actually there.
 //
@@ -80,9 +80,8 @@ export function makeScreen({
   // A FIXED SCREEN INSTEAD OF A HANGING ONE. A sudare is a blind: a roller with
   // material winding onto it and two pull cords. That needs a lintel to hang
   // from, and case 25's dream hall has no wall behind the deck — so it read as
-  // slats and cords floating in the air with nothing holding them up (Frank:
-  // "the screen behind them is not attached right; let's just make it composed
-  // of horizontal slats"). Fixed swaps the roller for a plain head rail and
+  // slats and cords floating in the air with nothing holding them up. Fixed
+  // swaps the roller for a plain head rail and
   // adds two stiles down the ends, so the same slats are visibly HELD by
   // something. It does not roll: roll/unroll/toggle become no-ops and there is
   // no clatter, because nothing moves.

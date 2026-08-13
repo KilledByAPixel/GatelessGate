@@ -73,8 +73,7 @@ const STIR_DUR = 4.6;       // seconds for one unhurried stretch-and-settle
 // HOW BIG A STIR IS. Every one of these was roughly doubled: the cat is 0.32
 // tall, it sits well back in both the cases that use it, and a stir of a tenth
 // of a radian in the tail with a 0.26 turn of a skull a few pixels across is
-// motion you can only find by looking for it (Frank: "the cat could move a
-// little bit more — it's not very visible that it's moving"). It is still a
+// motion you can only find by looking for it. It is still a
 // cat noticing you and going back to ignoring you; it is just legible now.
 const TAIL_CURL = 0.30;     // extra bend per joint at the peak of a stir
 const TAIL_SWEEP = 0.22;    // and the sideways sweep that goes with it
@@ -85,9 +84,7 @@ const EAR_SPREAD = 0.22;
 // theory that a silhouette changing shape reads further than details moving
 // inside one. It does, and it also comes apart: the barrel is a separate mesh
 // sitting on four legs that do not follow it, so lifting it opens a gap and the
-// cat visibly detaches from its own feet (Frank: "the cat does not look good.
-// The way it pulls its body up away from its legs looks bad... we should keep
-// the body where it is").
+// cat visibly detaches from its own feet. The body stays where it is.
 //
 // What moves instead is a head TILT — a cat's actual "what was that" — and the
 // tail, wagging rather than merely curling, which is the one part of this animal
@@ -117,7 +114,7 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     // NO haunch, NO shoulder. The polish pass hung both masses on this barrel
     // to sell a crouch, and seated — the only pose the book ever shows — the
     // pitched-torso transform below swung them up into "weird things sticking
-    // out of its back" (Frank). A cat's barrel at bodyR 0.23 is already the
+    // out of its back. A cat's barrel at bodyR 0.23 is already the
     // roundest in the kit; it reads as one animal without bolted-on lumps,
     // and the plain silhouette beats a broken one.
     // no tail here either; this one is jointed and built below
@@ -238,7 +235,7 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     // Cut 30% longer than the joint spacing (still centred on it), so each
     // segment overlaps its neighbour and a curled joint never opens
     // daylight. Replaced a merged joint ball — even trimmed flush it beaded
-    // the tail (Frank); overlap covers the same gap without touching the
+    // the tail; overlap covers the same gap without touching the
     // silhouette.
     const seg = new THREE.Mesh(new THREE.CylinderGeometry(
       (TAIL_R0 + (TAIL_R1 - TAIL_R0) * b) * h,

@@ -16,8 +16,7 @@ import { RIM_SHRINK } from './grassfield.js';
 // That is not a lighting effect, it is an accident, and it is why the meadow
 // now sets noCastShadow.
 //
-// What is left is the thing that actually reads (Frank: "I do kind of like how
-// it darkens the area under where the grass is"): the ground is simply darker
+// What is left is the thing that actually reads: the ground is simply darker
 // where the grass is thick. That is what occlusion IS, it does not care where
 // the light is, it cannot swim as the camera moves, and it costs nothing per
 // frame. It is built from the REAL placements — the same array the instances

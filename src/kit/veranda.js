@@ -68,8 +68,8 @@ export function makeVeranda({
   // At y = 0 the stub piers above are the whole story. But a case that raises
   // the group (case 25 floats its dream hall `legs` above the terrain) leaves
   // daylight under the boards, and a floor standing on air reads as a bug, not
-  // a dream (Frank: "it's okay if the platform is above the ground as long as
-  // it has some type of frame lifting it up off the ground"). `legs` is how
+  // a dream. A platform may float, so long as a frame is visibly holding it
+  // up. `legs` is how
   // far below the group's origin the ground lies: four square corner legs run
   // from under the boards down past it (with a generous buried margin, since
   // composeWorld terrain rolls), and a skirting rail ties them just above the
@@ -174,9 +174,8 @@ export function makeVeranda({
   // scroll)" — but a case still had to work out the other three numbers by
   // reading this file, and case 25 got all of them wrong: its screen stood 1.3
   // units BEHIND the post line, out past the back of the deck over open
-  // ground, at 3.0 wide in a 5.4 bay and 2.3 tall in a 2.86 one (Frank: "the
-  // screen on 25 still does not match up with the back wall there and is also
-  // too far behind the wall").
+  // ground, at 3.0 wide in a 5.4 bay and 2.3 tall in a 2.86 one — visibly
+  // mismatched with the back wall, and set too far behind it.
   //
   //   width   post to post, corner to corner
   //   height  deck boards up to the underside of the beam

@@ -75,8 +75,8 @@ export function makeQuadruped({
   // constant: the belly formula above is exact only at the barrel's
   // cylindrical mid-span, so a species whose hips sit near the capsule's
   // rounding caps — or whose barrel is pitched — shows a sliver of air at
-  // the join. Cranking legBury is the one-number fix (Frank: "I need a way
-  // to adjust the legs to be inside the body more").
+  // the join. Cranking legBury is the one-number fix for pushing the legs
+  // further inside the body.
   const legTop = belly + legBury * h;
   const knee = (legs && legs.knee) || 0;
 
@@ -134,8 +134,8 @@ export function makeQuadruped({
     return geo;
   };
 
-  // A LIMB, NOT A DOWEL (Frank: "the legs are mostly just sticks", across
-  // every animal). A real leg spends its width unevenly: broad where the
+  // A LIMB, NOT A DOWEL — across every animal the legs read as plain sticks.
+  // A real leg spends its width unevenly: broad where the
   // thigh leaves the body, a pinch at the knee line, a slim cannon bone, and
   // a small flare back out at the foot. Four rings say all of that in one
   // mesh — same count as the old cylinder, so no species pays a draw for it.
@@ -177,7 +177,7 @@ export function makeQuadruped({
 
       // THE KNEE BALL. Two lofts meeting at an angle touch edge-to-edge and
       // open a wedge of daylight on the OUTSIDE of the bend ("there's like a
-      // gap where the two cylinders are touching" — Frank). A ball of the
+      // gap where the two cylinders are touching"). A ball of the
       // joint's own radius, centred exactly on the hinge point, keeps the
       // joint covered at any bend — and it is MERGED into the thigh's
       // geometry rather than added as a child, so it costs no mesh and no
@@ -325,8 +325,8 @@ export function makeQuadruped({
   // {x, up, fwd} into a direction and snapped the base onto the surface at a
   // fixed sink: the magnitudes did nothing (the dog's x: 0.005 still landed
   // 45° out on the crown, because only the RATIO survived), and the
-  // ear-to-head distance was untunable — Frank fought exactly that in the
-  // model viewer and could not win, because the knob did not exist.
+  // ear-to-head distance was untunable: no amount of work in the model viewer
+  // could move it, because the knob did not exist.
   if (ears) {
     if (ears.up !== undefined || ears.fwd !== undefined) {
       throw new Error('ears take direct head-relative offsets { r, h, x, y, z, tilt } now — '
@@ -360,8 +360,8 @@ export function makeQuadruped({
     }
   }
 
-  // A HORN IS AN ARC, NOT A SPIKE (Frank, on the buffalo: "they're supposed to
-  // be ROUND, curved — like a devil's horn almost"). `horns.curve` (additive;
+  // A HORN IS AN ARC, NOT A SPIKE — a buffalo's are round and curved, like a
+  // devil's horn. `horns.curve` (additive;
   // absent keeps the legacy straight cone) lofts the rings along a quadratic
   // arc instead: the horn leaves its base along local +y, then bends toward
   // local -z — up, then hooking back — with the radius shrinking to a point.
@@ -403,8 +403,8 @@ export function makeQuadruped({
       seed,
       // How the tail leaves the rump. Down and BACK by default rather than
       // straight down: a strand pinned at one node hangs flat against the
-      // flank, and a swish then swings it through the animal (Frank, on the
-      // buffalo: "it kinda rotates around inside its body"). Held a little
+      // flank, and a swish then swings it through the animal — the buffalo's
+      // rotated around inside its own barrel. Held a little
       // clear of the body, the same swish whips outward, which is what a tail
       // does. `tail.root` overrides it for a beast that carries its own
       // differently.

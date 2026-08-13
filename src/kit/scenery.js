@@ -42,8 +42,8 @@ const SPECIES = { tree: makeTree, pine: makePine, oak: makeOak };
 // The y is the whole reason this exists. groundHeight is flat within nine units
 // of the origin, so every tree hand-placed near the middle of a scene got away
 // with y = 0 for years; out past that the terrain rolls a unit either way and a
-// tree at 0 floats or sinks (Frank, of the fog-line stands: "they're sunk below
-// the ground back there"). This samples the same surface the scatter does, and
+// tree at 0 floats or sinks — the fog-line stands sat buried. This samples the
+// same surface the scatter does, and
 // takes `groundFn` for a case whose ground is more than the terrain function.
 //
 export function plantTree(scene, {
@@ -109,9 +109,7 @@ export function plantRock(scene, {
 //
 // The alternative was writing them twice: `monk.position.set(3.6, 0, 3.4)` and
 // then `{ x: 3.6, z: 3.4, r: 1.2 }` a few lines later, two sets of numbers for
-// one fact (Frank: "we do want the grass keepout to be based on the object
-// position, but the position is not passed in, so you have to maintain two
-// different sets of numbers, and it's not ideal"). They drift the moment anyone
+// one fact. They drift the moment anyone
 // nudges a figure, and nothing fails — the scatter just quietly stops respecting
 // something, or clears a bald patch of grass where nothing stands any more.
 //
@@ -131,9 +129,9 @@ const asCircle = (k) => (k && k.at ? around(k.at, k.r) : k);
 //
 // Half the midground trees in the book stand where the lens never points: 51%
 // are outside the frame at the home framing and 18% are outside it at EVERY
-// heading the orbit can reach. Those last ones are pure waste (Frank: "don't
-// let trees spawn behind the default camera, that ends up being a waste since
-// you can never see them") — and because the placement loop RETRIES on a
+// heading the orbit can reach. Those last ones are pure waste — nothing should
+// spawn where the camera can never point — and because the placement loop
+// RETRIES on a
 // rejection, refusing them does not thin the wood, it moves those trees to
 // where they show. Same budget, more scene.
 //
@@ -214,8 +212,8 @@ export function composeWorld(scene, {
   groundFn = null,
   trees = 5,
   treeRing = [7, 20],
-  // The scatter's species (Frank: "I control what type of trees are in a
-  // scene"): 'tree' (the broadleaf, bit-identical to before this
+  // The scatter's species, so a case controls what grows in it:
+  // 'tree' (the broadleaf, bit-identical to before this
   // option existed), 'pine', or 'mixed' — a seeded half-and-half. The wind
   // FLAVOR in a case's ambience ('wind:0.2:pine') is a separate, audio-only
   // choice; matching the two is the case's own job.
@@ -294,7 +292,7 @@ export function composeWorld(scene, {
   scene.add(ground);
   // The mountains' base circles, computed ONCE from the same seeds the
   // meshes use: forests and scatter trees refuse to stand inside them
-  // (Frank: "trees that are inside the mountain"). 0.85·r is where a
+  // — otherwise trees stand inside the mountain. 0.85·r is where a
   // trunk starts piercing visible rock; the very skirt stays plantable
   // and reads as brush at fog distance.
   const footprints = mountains.flatMap((m, i) =>
@@ -351,8 +349,8 @@ export function composeWorld(scene, {
       : makeTree({ seed: seed * 100 + placed, height: 2.6 + hash1(tries * 5 + 4, seed) * 1.6 });
     // ON the terrain, not at sea level: the ring reaches r = 20 and the
     // ground out there rolls a good unit either way — trees planted at y 0
-    // floated on the dips and buried on the rises (Frank: "they're sunk
-    // below the ground back there"). Slight sink so no trunk hovers on a
+    // floated on the dips and buried on the rises. Slight sink so no trunk
+    // hovers on a
     // slope edge. groundFn first, same as the grass: a case with reshaped
     // terrain owns the surface.
     const ty = (groundFn ? groundFn(x, z) : groundHeight(x, z, { seed: groundSeed })) - 0.06;
@@ -364,9 +362,9 @@ export function composeWorld(scene, {
   }
 
   // The trees deliberately do NOT answer the pointer's breeze. v1 tilted each
-  // scattered tree on a damped spring and Frank pulled it: "the trees are
-  // getting knocked around way too much... we don't wanna go by the base of
-  // the tree" — a whole-group tilt pivots at the trunk's base, and no gentle
+  // scattered tree on a damped spring, and it was pulled: the trees were
+  // knocked around far too much — a whole-group tilt pivots at the trunk's
+  // base, and no gentle
   // amplitude makes that read as a canopy. The grass is the instrument now;
   // if trees ever join back in it has to be canopy-only deformation, not a
   // base pivot (treeSpringStep in breeze.js is kept, uncalled, for that day).
@@ -377,7 +375,7 @@ export function composeWorld(scene, {
   // the meadow: one instanced field, wind animated in the vertex shader. The
   // caller must drive world.update(dt, simTime) or the wind stands still.
   // `grass` is a blade budget; a tuft card shows several blades. The divisor
-  // was 3 at first; Frank asked for about twice the coverage, and at two
+  // was 3 at first, and about twice the coverage reads better; at two
   // triangles each even this is a fraction of the blade field's geometry.
   //
   // THE REACH, and why the budget moves with it. Both fields place at even area
