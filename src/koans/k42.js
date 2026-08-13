@@ -66,6 +66,25 @@ const TURN_HZ = 0.21;     // slowest of the four — a drift, not a spin
 const BOB = 0.055;        // metres of rise and fall inside the hover itself
 const BOB_HZ = 0.47;
 const TAU = Math.PI * 2;   // the two given in Hz read as Hz
+
+// HER BELL'S PITCH, and this is the knob. Bells in this book are addressed by
+// SIZE rather than by frequency (src/audio/synths.js's bellVoice): the
+// fundamental is BELL_REF_HZ / size, with BELL_REF_HZ = 110, so a SMALLER
+// number is a HIGHER bell. Passed alongside `preset`, it overrides the preset's
+// own size and keeps everything else the preset is for — its partial dressing,
+// ring length, beam, ping and reverb mix. (`f0` is not the way in here: bell()
+// only reads it when no preset is given, so `{ preset, f0 }` silently ignores
+// the f0.)
+//
+//   0.25 -> 440 Hz (A4)      0.38 -> 289 Hz (~D4, the 'hand' preset's own)
+//   0.30 -> 367 Hz (~F#4)    0.50 -> 220 Hz (A3)
+//   0.35 -> 314 Hz (~D#4)    0.75 -> 147 Hz (~D3)
+//
+// One caveat worth knowing before dialling: size scales the DECAY too
+// (`decay: d * s` in modesAt), which is physically true of real bells — a
+// smaller one rings higher AND shorter. There is no pitch-only control, so a
+// big move here changes the length of the note as well as its note.
+const BELL_SIZE = 0.42;
 const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 // 0 on the boards, 1 at the top. A pure function of seconds since she began to
 // rise, so nothing accumulates and she is exactly back where she sat.
@@ -202,9 +221,8 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   // somebody trying — and it was the right note when this was Manjusri's
   // useless snap. What answers now is her coming out of samadhi, which is
   // the one thing in the case that actually happens, and a struck bell is
-  // what the book uses when something turns over. The smallest preset and a
-  // modest gain: she is a small figure and this is not a temple bell.
-  audio && audio.bell({ preset: 'hand', gain: 0.38, at: GIRL });
+  // what the book uses when something turns over.
+  audio && audio.bell({ preset: 'hand', size: BELL_SIZE, gain: 0.38, at: GIRL });
   });
   
   return {
