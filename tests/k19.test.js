@@ -282,8 +282,16 @@ test('the moon is fog-exempt and far out past the mountains', () => {
   // distance; at 60 units FogExp2(0.030) would wash the disc away completely.
   assert.equal(m.material.fog, false, 'the moon must opt out of fog or it vanishes');
 
-  // an inked contour on a moon reads as a coin — the depth-edge pass has to know
-  assert.equal(typeof m.material.customProgramCacheKey, 'function', 'opts out of the depth-edge ink pass');
+  // an inked contour on a moon reads as a coin — the depth-edge pass has to know.
+  // typeof-only would pass for ANY material (THREE.Material.prototype already
+  // defines a no-op customProgramCacheKey), so this pins the real mechanism:
+  // the 'moon-noink' cache key (see moon.js) plus the alpha-zeroing injection
+  // that actually marks the fragment out of the ink mask.
+  assert.equal(m.material.customProgramCacheKey(), 'moon-noink', 'the moon owns a distinct cache key');
+  assert.ok(m.material.onBeforeCompile, 'has an onBeforeCompile hook to inject the alpha marker');
+  const shader = { fragmentShader: '#include <dithering_fragment>', vertexShader: '', uniforms: {} };
+  m.material.onBeforeCompile(shader);
+  assert.match(shader.fragmentShader, /gl_FragColor\.a = 0\.0;/, 'the fragment is marked out of the ink mask');
 
   // beyond the mountain bands, which composeWorld puts 33-52 out
   const r = Math.hypot(m.position.x, m.position.z);

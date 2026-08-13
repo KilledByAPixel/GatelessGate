@@ -194,8 +194,18 @@ test('applyFoliageWind hangs both hooks a material needs to animate', () => {
   // which case loaded first. Both hooks are this function's whole job, so
   // this is a test of applyFoliageWind itself, not of any rebuild downstream.
   const m = applyFoliageWind(new THREE.MeshLambertMaterial({ color: 0x333333 }));
-  assert.equal(typeof m.onBeforeCompile, 'function');
-  assert.equal(typeof m.customProgramCacheKey, 'function');
+  // typeof-only checks pass on ANY material — THREE.Material.prototype already
+  // defines both as a no-op and a `""` key, so a bare, untouched
+  // MeshLambertMaterial reports 'function' for each too. Object.hasOwn pins
+  // that applyFoliageWind actually hung its OWN hooks on this instance.
+  assert.ok(Object.hasOwn(m, 'onBeforeCompile'), 'onBeforeCompile must be an own property, not inherited');
+  assert.ok(Object.hasOwn(m, 'customProgramCacheKey'), 'customProgramCacheKey must be an own property, not inherited');
+  // and the cache key's VALUE, not just its type: a key that fell back to the
+  // prototype's `""` would still be 'function' but would no longer distinguish
+  // a wind-injected material from a plain one.
+  const key = m.customProgramCacheKey();
+  assert.equal(typeof key, 'string');
+  assert.ok(key.length > 0, 'the cache key must be a non-empty string, distinct from the prototype default ""');
 });
 
 test('a pine and a tree both carry the foliageWind flag bakeStatic reads', () => {
