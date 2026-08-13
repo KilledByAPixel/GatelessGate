@@ -181,8 +181,15 @@ test('flit stirs them — they cover more ground and beat quicker, then settle',
   butterflies(flock);
   flock.update(1 / 60, 10);
   flock.flit();
-  assert.ok(flock.energy() > 0.5, 'the stir registers at once');
-  for (let t = 10; t < 30; t += 1 / 30) flock.update(1 / 30, t);
+  // THE ALARM HAS AN ATTACK NOW. It used to be a bare decaying exponential, and
+  // exp(-0) is 1, so energy stepped 0 -> 1 on the frame the burst landed and
+  // every term reading it stepped with it — birds.js had the same envelope and
+  // the same `E * 2.2` climb, which teleported the flock 2.2 units into the air
+  // between two frames. It comes UP over ~0.3s now.
+  assert.ok(flock.energy() < 0.2, 'nothing snaps on the frame of the tap');
+  for (let t = 10; t < 10.5; t += 1 / 60) flock.update(1 / 60, t);
+  assert.ok(flock.energy() > 0.5, 'but it is plainly up within half a second');
+  for (let t = 10.5; t < 32; t += 1 / 30) flock.update(1 / 30, t);
   assert.ok(flock.energy() < 0.05, 'and it dies away on its own');
 });
 

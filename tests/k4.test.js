@@ -47,13 +47,18 @@ test('the portrait is the case\'s one red, and nothing else', () => {
     `the portrait is flat accent throughout, got ${[...colors].join(', ')}`);
 });
 
-test('the beard is ink, and starts invisible', () => {
+test('the beard is RED, and starts invisible', () => {
   // Wakuan's complaint is that the fellow has no beard. The scene agrees with
-  // him at rest: the beard exists, in ink, at zero opacity.
+  // him at rest: the beard exists, at zero opacity.
+  //
+  // RED, not ink. The portrait drains to ink under it over the same envelope, so
+  // while the beard is up it is the only warm mark on the page — a black figure
+  // wearing the one thing it is famous for not having (Frank: "the beard will
+  // appear and be red, so it will stand out").
   const scene = staged().scene;
   const beard = scene.getObjectByName('beard');
   assert.ok(beard, 'the beard is built even though it cannot be seen');
-  assert.equal('#' + beard.material.color.getHexString(), INK_LIT.toLowerCase(),
-    'ink, so it never competes with the paint for the seal');
+  assert.equal('#' + beard.material.color.getHexString(), ACCENT.toLowerCase(),
+    'the beard carries the red while the portrait gives it up');
   assert.equal(beard.material.opacity, 0, 'and the portrait is beardless until touched');
 });

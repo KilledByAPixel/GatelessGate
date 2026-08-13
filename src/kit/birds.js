@@ -57,16 +57,45 @@ export function makeBirds({
 
   let clock = 0;
   const bursts = [];
+  // HOW FAR THE ALARM HAS CARRIED THEM, in extra seconds of circuit. It has to
+  // be integrated, and this is the whole bug it exists to fix.
+  //
+  // The circuit angle was `phase + t * angRate * dir * (1 + E * 0.9)` — the
+  // excitement multiplying ABSOLUTE TIME. E steps from 0 to 1 the instant a
+  // scatter lands, so the angle jumped by t * angRate * 0.9 on that one frame:
+  // a minute into a page that is twenty-seven radians, four whole laps in a
+  // single step. Then, as E decayed back down, the same term SHRANK, and the
+  // birds flew round their circuits backwards (Frank: "the birds go really fast
+  // for some reason when you click... and they go, like, backwards").
+  //
+  // An accumulated offset can only ever move forward, at a rate the alarm sets,
+  // so the circuit stays continuous through both the arrival and the decay.
+  // Same fix, same reason, as the butterflies' wander.
+  const HURRY_TURN = 0.9;    // extra circuit-seconds per second, at full alarm
+  const HURRY_BEAT = 0.7;    // ...and extra beat-seconds, which had the same flaw
+  let hurry = 0;
 
+// AN ALARM HAS AN ATTACK. This was a bare decaying exponential, and exp(-0) is
+// 1 — so on the frame a burst landed the energy went from 0 to 1 in one step,
+// and every term that reads it directly went with it. The birds' climb is
+// `E * 2.2`, so a scatter teleported the whole flock 2.2 units into the air
+// between two frames; the wing amplitude snapped open the same way. Giving the
+// envelope a short rise fixes all of them at once, which is the right place for
+// it — the alternative is remembering to smooth every reader of E forever.
+const ATTACK = 0.30;               // seconds for an alarm to come up
   function energy() {
     let e = 0;
-    for (const t0 of bursts) if (clock >= t0) e += Math.exp(-(clock - t0) / TAU_E);
+    for (const t0 of bursts) {
+      const u = clock - t0;
+      if (u < 0) continue;
+      e += (1 - Math.exp(-u / ATTACK)) * Math.exp(-u / TAU_E);
+    }
     return clamp(e, 0, 3);
   }
 
   function poseBird(b, E) {
     const t = clock;
-    const a = b.phase + t * b.angRate * b.dir * (1 + E * 0.9);
+    const a = b.phase + (t + hurry * HURRY_TURN) * b.angRate * b.dir;
     // the circuit, plus a slow drift of its centre across the scene
     const dx = (noise1(t * b.driftRate + b.driftPh, seed + 1) - 0.5) * b.driftAmp;
     const dz = (noise1(t * b.driftRate + b.driftPh + 5, seed + 2) - 0.5) * b.driftAmp;
@@ -80,7 +109,10 @@ export function makeBirds({
     b.bird.group.position.set(x, y, z);
     b.bird.group.rotation.y = Math.atan2(vx, vz);
 
-    const flap = Math.sin(t * b.beat * (1 + E * 0.7) + b.phase) * (0.5 + E * 0.25);
+    // the wingbeat carried the identical fault — a changing multiplier on t
+    // skips the phase — so it rides the same accumulator. AMPLITUDE may still
+    // read E directly: that is a scale, not a phase, and scaling is continuous.
+    const flap = Math.sin((t + hurry * HURRY_BEAT) * b.beat + b.phase) * (0.5 + E * 0.25);
     // bank into the turn, with a little beat-driven wobble
     const roll = -0.22 * b.dir + Math.sin(t * b.beat + b.phase) * 0.08;
     b.bird.pose({ flap, roll, pitch: -0.05 });
@@ -104,6 +136,7 @@ export function makeBirds({
     count() { return flock.length; },
     update(dt, simTime) {
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
+      hurry += energy() * Math.max(0, dt || 0);
       while (bursts.length && clock - bursts[0] > 8 * TAU_E) bursts.shift();
       pose();
     },

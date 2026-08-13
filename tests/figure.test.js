@@ -184,11 +184,24 @@ test('a seated elder SETS HIS STAFF DOWN; the standing plant is untouched', () =
   assert.ok(kneelDist > (KNEEL_HEM + STAFF_R) * 1.6, `kneeling staff: ${kneelDist}`);
 });
 
-test('monk keeps its contract: poses, arms:false, point/raise angles distinct', () => {
+test('monk keeps its contract: poses, arms always, point/raise angles distinct', () => {
   for (const pose of ['stand', 'sit', 'point', 'raise'])
     assert.ok(makeMonk({ pose }).getObjectByName('head'), pose);
-  const bare = makeMonk({ arms: false });
-  assert.strictEqual(bare.children.filter((c) => c.name === 'arm').length, 0);
+  // EVERY figure has arms, in every pose. This used to assert the opposite for
+  // `arms: false` — the cheap-crowd opt-out — which bakeStatic made pointless
+  // and Frank retired: "we don't want anyone to get rid of arms anyway."
+  // Passing the dead option must not resurrect it as a way to lose them.
+  // Counted by TRAVERSAL, not by direct children: the bow re-parents
+  // everything above the sash into a 'waist' group, arms included.
+  const armCount = (m) => {
+    let n = 0;
+    m.traverse((c) => { if (c.name === 'arm') n++; });
+    return n;
+  };
+  for (const pose of ['stand', 'sit', 'point', 'raise', 'fold', 'bow'])
+    assert.strictEqual(armCount(makeMonk({ pose })), 2, `${pose} keeps both arms`);
+  assert.strictEqual(armCount(makeMonk({ arms: false })), 2,
+    'the retired arms option is inert, not a back door');
   const arm = (m) => m.children.filter((c) => c.name === 'arm').pop();
   assert.notStrictEqual(arm(makeMonk({ pose: 'point' })).rotation.z.toFixed(3),
                         arm(makeMonk({ pose: 'raise' })).rotation.z.toFixed(3));

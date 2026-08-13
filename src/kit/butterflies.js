@@ -166,11 +166,32 @@ export function makeButterflies({
   // maybe a tiny bit, but not much"). The wander is a noise field sampled at
   // `rate`, so running its clock faster does not scale distance linearly; it
   // takes a much bigger multiplier before the flock reads as hurrying.
-  const BOOST_RATE = 7.0;
+  const BOOST_RATE = 9.5;
+  // The wingbeat's own accumulator. It has to be separate from the per-butterfly
+  // wander (which is gated on being airborne — a perched one must not slide
+  // through the grass) because wings beat whether or not the insect is going
+  // anywhere. BEAT_SHARE buys about a third again at full excitement rather
+  // than the double it had: doubling was more than the eye can follow at this
+  // scale (Frank: "they just flap their wings too fast... move faster, but flap
+  // wings less fast"), and the movement is where the excitement should read.
+  const BEAT_SHARE = 0.35;
+  let beatBoost = 0;
 
+// AN ALARM HAS AN ATTACK. This was a bare decaying exponential, and exp(-0) is
+// 1 — so on the frame a burst landed the energy went from 0 to 1 in one step,
+// and every term that reads it directly went with it. The birds' climb is
+// `E * 2.2`, so a scatter teleported the whole flock 2.2 units into the air
+// between two frames; the wing amplitude snapped open the same way. Giving the
+// envelope a short rise fixes all of them at once, which is the right place for
+// it — the alternative is remembering to smooth every reader of E forever.
+const ATTACK = 0.30;               // seconds for an alarm to come up
   function energy() {
     let e = 0;
-    for (const t0 of bursts) if (clock >= t0) e += Math.exp(-(clock - t0) / TAU_E);
+    for (const t0 of bursts) {
+      const u = clock - t0;
+      if (u < 0) continue;
+      e += (1 - Math.exp(-u / ATTACK)) * Math.exp(-u / TAU_E);
+    }
     return clamp(e, 0, 2);
   }
 
@@ -327,11 +348,15 @@ export function makeButterflies({
       // lives entirely in the wings' own rotation.z about the body line; the
       // body goes where the path says and nowhere else.
       const lift = liftAt(b, clock);
-      // about twice as fast when stirred, and E is 1 at a single flit (Frank:
-      // "their wings are going a bit too fast... I want them to go maybe twice
-      // as fast") — this was 0.6, which barely read as a change at all
-      const beat = b.beat * (1 + E);
-      const stroke = Math.sin(clock * beat * Math.PI * 2 + b.beatPh);
+      // QUICKER, NOT FRANTIC — and phase-continuous. Two things were wrong.
+      // `b.beat * (1 + E)` multiplied ABSOLUTE TIME by a changing number, which
+      // skips the wing's phase every time E moves (the birds had the identical
+      // fault in their circuit, where it was visible as flying backwards). And
+      // doubling the rate was simply too much to look at: Frank, watching it,
+      // "they just flap their wings too fast... move faster, but flap wings
+      // less fast." So the extra rides an accumulator like everything else
+      // here, and it buys about a third again rather than double.
+      const stroke = Math.sin((clock + beatBoost * BEAT_SHARE) * b.beat * Math.PI * 2 + b.beatPh);
       // PERCHED, the wings stop BEATING but they do not stop moving: they stand
       // folded up together and open and close very slowly, about a sixth of a
       // radian either way once every ten seconds or so (Frank: "when they're
@@ -374,6 +399,7 @@ export function makeButterflies({
       // the excitement hurries each FLYING butterfly along its own wander —
       // see BOOST_RATE. Gated on lift so a scare never slides a perched one
       // sideways through the grass, which is the bug pathTime exists to prevent.
+      beatBoost += energy() * Math.max(0, dt || 0);
       const push = energy() * BOOST_RATE * Math.max(0, dt || 0);
       if (push > 0) for (const b of flock) b.wander += push * liftAt(b, clock);
       while (bursts.length && clock - bursts[0] > 8 * TAU_E) bursts.shift();

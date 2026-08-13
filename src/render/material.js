@@ -16,7 +16,7 @@ import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../palette.js';
 // what Frank approved under the hard one.
 const SEAL = new Set([ACCENT, ACCENT_DEEP, ACCENT_LIGHT]
   .map((c) => new THREE.Color(c).getHexString()));
-const SEAL_GLOW = 0.5;
+export const SEAL_GLOW = 0.5;
 
 // `glow: false` opts a surface OUT of the seal glow even when it is painted in
 // an accent colour. The glow exists for a small held thing — a bowl, a dot, a

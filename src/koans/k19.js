@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_LIGHT, wash } from '../palette.js';
 import {
   composeWorld, faceMonk, makeDog, makeMonk, makeMoon, makePath,
-  makeWildflowers,
+  makeWildflowers, makeSnow,
 } from '../kit/index.js';
 import { makeLights } from '../render/lights.js';
 
@@ -52,6 +52,28 @@ const RISE_SPAN = RISE_UP + RISE_HELD + RISE_DOWN;
 const MOON_SWELL = 7.5;
 const SKY_TINT = 0.90;    // how far the background goes toward the moon's own red
 const FOG_TINT = 0.38;    // ...and how far the land's fog follows it. See above.
+
+// AND IT SNOWS. The verse is the whole of this page — "in spring, hundreds of
+// flowers; in autumn, a harvest moon; in summer, a refreshing breeze; in winter,
+// snow will accompany you" — and the diorama had three of those four. The
+// flowers are the verge, the moon is the ridge, the breeze is in the wind and
+// the sound. Winter was the missing line, and touching the moon is where it
+// goes: the sky reddens, the disc comes on, and it begins to snow (Frank: "it
+// does mention snow here too... drop some snow when you click on the moon").
+//
+// It runs LONGER than the moon does. The swell is over in six seconds; the
+// snow comes on with it and is still tailing off well after, which is how
+// weather actually leaves — the flakes already in the air have to land.
+const SNOW_IN = 1.2;
+const SNOW_HELD = 5.0;
+const SNOW_OUT = 4.5;
+const SNOW_SPAN = SNOW_IN + SNOW_HELD + SNOW_OUT;
+function snowShape(u) {
+  if (!(u >= 0) || u >= SNOW_SPAN) return 0;
+  if (u < SNOW_IN) return smooth(u / SNOW_IN);
+  if (u < SNOW_IN + SNOW_HELD) return 1;
+  return 1 - smooth((u - SNOW_IN - SNOW_HELD) / SNOW_OUT);
+}
 // How high the sun sits when the moon is at rest. The moon itself is 6.4 up at
 // 60 out — about six degrees, a harvest moon on the ridge — and a key light at
 // six degrees throws shadows the length of the meadow, straight off the ±15
@@ -276,6 +298,17 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
 
   // the moon's resting spot and size, kept so the swell has somewhere to return
   const moonHome = moon.position.clone();
+  // The winter line of the verse, waiting. Built once and left invisible —
+  // makeSnow's flakes are a closed form over simTime, so a hidden snowfall
+  // costs one skipped draw call and nothing else, and it is already falling
+  // properly the moment it is shown rather than starting from a flat sheet.
+  const snow = makeSnow({ count: 260, seed: ID, width: 30, depth: 30, height: 15 });
+  snow.points.position.set(1.0, 0, -3.0);
+  snow.points.visible = false;
+  snow.points.material.transparent = true;
+  const snowAlpha = snow.points.material.opacity;
+  scene.add(snow.points);
+
   const skyBase = new THREE.Color(PAPER);
   const skyLit = new THREE.Color(ACCENT_LIGHT);
   const homeDir = new THREE.Vector3(
@@ -290,7 +323,8 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   input.onTap(() => {
   if (!camera) return;
   if (input.raycastFirst(camera, [moon])) {
-  if (clock - riseAt >= RISE_SPAN) riseAt = clock;    // one swell at a time
+  // the snow outlasts the swell, so THAT is what gates a second touch
+  if (clock - riseAt >= SNOW_SPAN) riseAt = clock;
   breeze = 1;
   touches++;
   return;
@@ -315,6 +349,12 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   // the ridge stays silhouetted against it the whole way. The sky goes with
   // it, and the land does not: background all the way to the moon's own
   // red, fog barely more than a third of it (see SKY_TINT / FOG_TINT).
+  // the snow, on its own longer clock — see SNOW_SPAN
+  snow.update(dt, simTime);
+  const fall = snowShape(clock - riseAt);
+  snow.points.visible = fall > 0.01;
+  snow.points.material.opacity = snowAlpha * fall;
+
   const rise = riseShape(clock - riseAt);
   const s = 1 + (MOON_SWELL - 1) * rise;
   moon.scale.set(s, s, 1);
@@ -330,6 +370,7 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   fragment() {
   return {
   rise: +riseShape(clock - riseAt).toFixed(4),
+  snow: +snowShape(clock - riseAt).toFixed(4),
   moonScale: +moon.scale.x.toFixed(3),
   // finite scalars and booleans only — a debug fragment is not a place
   // for a hex string (tests/staging.test.js)

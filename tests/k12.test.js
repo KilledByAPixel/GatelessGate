@@ -249,6 +249,10 @@ test('calling startles them, and the fragment stays finite', () => {
   ctx.input.raycastFirst = (cam, objs) => (objs.includes(hit) ? { object: hit, point: new THREE.Vector3() } : null);
   ctx._taps.forEach((cb) => cb(10, 10));
   assert.equal(root.fragment().calls, 1, 'the call landed');
+  // half a second in, not on the tap's own frame: the alarm envelope has an
+  // attack now, so nothing in the flock snaps to its excited state (see
+  // butterflies.test.js for what that cost the birds)
+  for (let i = 0; i < 30; i++) root.update(1 / 60, 4 + i / 60);
   assert.ok(root.fragment().flutter > calm + 0.5, 'and it put them up');
 
   // 20 seconds, not 10: the flit's e-folding was lengthened from 2.2s to 3.4s

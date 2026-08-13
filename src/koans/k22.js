@@ -140,13 +140,37 @@ const CAM = { distance: 10.6, target: [0.4, 1.9, -0.2], heading: 33, pitch: 12.5
   ],
   });
 
-  // ---- the moment: the sign comes down ---------------------------------
-  // Brush the banner and it ruffles; touch it and it stops flying. Both live
-  // in the flag component (see case 29's note on restraint) — a stilled sign
-  // is a hall with no teacher named on it, which is exactly the moment the
-  // case is describing.
+  // ---- the moment: the sign turns, and the banner stills ----------------
+  // TWO THINGS ANSWER HERE, and they are different objects. The BANNER on the
+  // pole is the flag: brush it and it ruffles, touch it and it stops flying —
+  // a sign that has stopped flying is a hall with no teacher named on it, which
+  // is the case. The SIGN is the red board standing beside it, and touching
+  // that turns it half a round to face the other way; touch it again and it
+  // goes on round the same way (Frank: "when you click again it rotates again,
+  // 180 each time").
+  //
+  // Same direction matters. Alternating would read as undoing the last tap;
+  // going on round reads as a sign being turned to face away from you, and then
+  // turned again, and never once saying anything different.
+  //
+  // The turn was briefly wired to the FLAG's pole, which was simply the wrong
+  // object — the banner already had a job, and the sign, which is the one red
+  // thing on the page, had none.
+  const HALF = Math.PI;
+  const TURN = 1.6;                  // seconds for one half-turn — slow enough to watch
+  const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+  const signYaw0 = sign.rotation.y;
+  const signTargets = [];
+  sign.traverse((o) => { if (o.isMesh) signTargets.push(o); });
   let camera = null;
+  let clock = 0;
   let stills = 0;
+  let turns = 0;
+  // null, not -99: ease() would be 1 before anything had been touched and the
+  // sign would be born already half-turned. It rests square and waits.
+  let turnAt = null;
+  let turnFrom = 0;                  // radians already turned when this one began
+  let signYaw = 0;                   // ...and where it is now, relative to rest
   
   input.onHover(() => {
   if (!camera) return;
@@ -162,6 +186,17 @@ const CAM = { distance: 10.6, target: [0.4, 1.9, -0.2], heading: 33, pitch: 12.5
   // check below, so ringing the chime never also toggles the wind
   const chimeHit = furin.pick(camera, input);
   if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
+  // THE SIGN, probed before the banner. It is a solid board and the banner is a
+  // big flapping sheet behind it, so a tap meant for the board must never be
+  // eaten by cloth that happens to be streaming across it that frame.
+  if (input.raycastFirst(camera, signTargets)) {
+  turns++;
+  turnFrom = signYaw;
+  turnAt = clock;
+  // a board swinging round on its post — wood, not a bell
+  audio && audio.knock({ force: 0.45, at: sign.getWorldPosition(scratchPos) });
+  return;
+  }
   if (!input.raycastFirst(camera, [flag.mesh])) return;
   const on = flag.toggleWind();
   stills++;
@@ -176,17 +211,24 @@ const CAM = { distance: 10.6, target: [0.4, 1.9, -0.2], heading: 33, pitch: 12.5
   scene,
   setCamera(c) { camera = c; },
   update(dt, simTime) {
+  clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
   world.update(dt, simTime);
   flag.update(dt, simTime);
-  // the chime rides the SAME wind the flag does, so stilling the sign
-  // stills it too — case 29's own rule for a hanging voice sharing a
-  // scene with a wind toggle
+  // THE TURN. Eased from wherever the last one had got to, so a tap landing
+  // mid-swing carries on from there instead of snapping back to a whole
+  // number of half-turns. It only ever adds, so the sign keeps going round
+  // the same way however often it is touched.
+  signYaw = turnAt === null ? 0 : turnFrom + HALF * ease((clock - turnAt) / TURN);
+  sign.rotation.y = signYaw0 + signYaw;
   furin.setWindLevel(flag.windLevel());
   furin.update(dt, simTime);
   },
   fragment() {
   return {
   stills,
+  turns,
+  // in half-turns, so a whole number means it is sitting still
+  turned: +(signYaw / HALF).toFixed(3),
   windOn: flag.isWindOn(),
   windLevel: +flag.windLevel().toFixed(4),
   clothEnergy: +clothEnergy(flag.cloth).toFixed(6),

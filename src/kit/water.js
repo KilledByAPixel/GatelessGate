@@ -354,6 +354,19 @@ export function makeWater({
   let next = 0;
   let stirNext = 0;
   let clock = 0;
+  // WIND ON THE WATER. A case can ask the swell to run faster for a while
+  // (case 20's squall), and the extra has to be an INTEGRATED offset rather
+  // than a multiplier on the clock: multiplying absolute time by a changing
+  // number skips the wave's phase, which is a whole ocean jumping sideways.
+  // The birds and the butterflies both shipped that bug; the sea does not get
+  // to make it a third time.
+  //
+  // Ripple bookkeeping stays on the REAL clock — a ripple is a one-shot
+  // stamped when the reader touched the water, and it should live out its own
+  // second and a half whatever the wind is doing.
+  let rush = 0;         // extra wave-seconds per second, right now
+  let hurried = 0;      // ...accumulated
+  const waveClock = () => clock + hurried;
 
   // The idle-swell term alone — shared by waveAt (which adds the ripples on
   // top) and swellAt (which deliberately does not).
@@ -448,7 +461,7 @@ export function makeWater({
     return smooth(clamp01(wallDistance(x, z) / band));
   }
 
-  function heightAt(x, z, t = clock) {
+  function heightAt(x, z, t = waveClock()) {
     const m = maskAt(x, z);
     return (m > 0 ? waveAt(x, z, t) * m : 0) + driftAt(x, z, t);
   }
@@ -457,7 +470,7 @@ export function makeWater({
   // term. This is what the koi ride (Frank: a tap above the school must not
   // toss the fish) — anything that should feel the water breathe but ignore
   // the reader's finger samples this instead of heightAt.
-  function swellAt(x, z, t = clock) {
+  function swellAt(x, z, t = waveClock()) {
     const m = maskAt(x, z);
     return (m > 0 ? idleAt(x, z, t) * m : 0) + driftAt(x, z, t);
   }
@@ -465,8 +478,9 @@ export function makeWater({
   function displace() {
     for (let i = 0; i < count; i++) {
       const m = mask[i];
-      position[i * 3 + 1] = (m > 0 ? waveAt(px[i], pz[i], clock) * m : 0)
-        + driftAt(px[i], pz[i], clock);
+      const wt = waveClock();
+      position[i * 3 + 1] = (m > 0 ? waveAt(px[i], pz[i], wt) * m : 0)
+        + driftAt(px[i], pz[i], wt);
     }
     geo.attributes.position.needsUpdate = true;
     geo.computeVertexNormals();
@@ -559,8 +573,14 @@ export function makeWater({
     // signed distance to the shore in local space (positive = in the water):
     // how a case checks its stepping stones actually stand in a blob pond
     shoreDistance: wallDistance,
+    // How much faster than its own pace the sea is running: 0 is calm weather,
+    // 1 doubles the swell's travel. Set it every frame from an envelope; it is a
+    // rate, not a switch.
+    setRush(v) { rush = Number.isFinite(v) && v > 0 ? v : 0; },
+    rush: () => rush,
     update(dt, simTime) {
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
+      hurried += rush * Math.max(0, dt || 0);
       displace();
     },
     rippleCount() {

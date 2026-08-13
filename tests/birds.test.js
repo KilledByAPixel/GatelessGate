@@ -86,8 +86,14 @@ test('scatter raises the flock energy, which decays back to nothing', () => {
   flock.update(1 / 60, 10);
   assert.equal(flock.energy(), 0);
   flock.scatter();
-  assert.ok(flock.energy() > 0.5, 'the alarm registers at once');
-  for (let t = 10; t < 40; t += 1 / 30) flock.update(1 / 30, t);
+  // THE ALARM HAS AN ATTACK. It was a bare decaying exponential and exp(-0) is
+  // 1, so energy stepped 0 -> 1 on the frame the burst landed — and the climb
+  // is `E * 2.2`, which teleported the whole flock 2.2 units into the air
+  // between two frames. It comes up over ~0.3s now.
+  assert.ok(flock.energy() < 0.2, 'nothing snaps on the frame of the scatter');
+  for (let t = 10; t < 10.5; t += 1 / 60) flock.update(1 / 60, t);
+  assert.ok(flock.energy() > 0.5, 'but the alarm is plainly up within half a second');
+  for (let t = 10.5; t < 42; t += 1 / 30) flock.update(1 / 30, t);
   assert.ok(flock.energy() < 0.05, 'and dies away on its own');
 });
 

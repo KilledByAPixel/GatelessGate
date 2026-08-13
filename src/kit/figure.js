@@ -250,9 +250,16 @@ const KNEE = { r: 0.09, scale: [1.5, 0.75, 1.1], x: 0.18, y: 0.095, z: 0.095, ya
 // exactly that in case 17 ("an extra thin rectangular shaped thing below this
 // guy"). The body's other masses are unchanged, so he still sits on his own
 // legs at the same height either way.
-export function seatedBodyGeometry({ height, width = 1, segments = 10, cushion: withCushion = true } = {}) {
+// `profile` defaults to the whole seated body. The waist hinge passes the rows
+// BELOW the sash instead, so the lower half it builds is still a real seated
+// body — cushion, shins and knees included — rather than a bare robe lathe. All
+// three of those masses live under the sash, so truncating the profile does not
+// lose any of them.
+export function seatedBodyGeometry({
+  height, width = 1, segments = 10, cushion: withCushion = true, profile = SIT_PROFILE,
+} = {}) {
   const lathe = new THREE.LatheGeometry(
-    SIT_PROFILE.map(([r, y], i) => new THREE.Vector2((i ? r * width : r) * height, y * height)),
+    profile.map(([r, y], i) => new THREE.Vector2((i ? r * width : r) * height, y * height)),
     segments);
   const cushion = new THREE.CylinderGeometry(
     CUSHION.rTop * width * height, CUSHION.r * width * height, CUSHION.hh * height, 10);
@@ -350,10 +357,9 @@ const STANCES = { stand: STAND_STANCE, sit: SIT_STANCE, kneel: KNEEL_STANCE };
 // the assembly
 // ---------------------------------------------------------------------------
 
-// You select what a given figure has: `stance`, `arms` (the gesture, or null
-// to drop the sleeves entirely for a cheap crowd figure — a robe and a head,
-// which is all a person in the background needs), `hat`, `elder` (a staff),
-// `stout`, `color`.
+// You select what a given figure has: `stance`, `arms` (which gesture), `hat`,
+// `elder` (a staff), `stout`, `color`. Every figure has arms — `arms` chooses
+// how they are held, never whether they exist.
 //
 // Children are named 'body', 'head', 'arm' (×2), 'hat', 'staff'. Those names
 // are API: cases reach in by name to re-pose a sleeve, recolour a staff, or
@@ -427,20 +433,19 @@ export function makeFigure({
     g.add(arm);
     return arm;
   };
-  // a background figure can skip its sleeves — two fewer meshes apiece. That
-  // used to be what let a crowd fit the draw budget at all; now that a still
-  // crowd bakes down to one mesh with `bakeStatic`, arms cost nothing there,
-  // so this option is for a figure that stays unbaked and needs the meshes
-  // shaved some other way.
-  if (arms) {
-    for (const side of [-1, 1]) {
-      // the gesture arm (point/raise, always the right) stays a single
-      // sleeve; everything else folds when the pose or the stance says so —
-      // a seated pointing teacher still keeps his OTHER hand in his lap
-      const gesture = (arms === 'point' || arms === 'raise') && side === 1;
-      if (!gesture && (arms === 'fold' || seated)) makeFoldedArm(side);
-      else makeSleeve(side);
-    }
+  // EVERY FIGURE HAS ARMS. There used to be an opt-out here — a background
+  // figure could skip its sleeves for two fewer meshes apiece, which was once
+  // what let a crowd fit the draw budget at all. `bakeStatic` merges a still
+  // crowd down to one mesh, so arms became free exactly where the option was
+  // wanted, and no case ever passed it again. Retired on Frank's call: "we
+  // don't want anyone to get rid of arms anyway."
+  for (const side of [-1, 1]) {
+    // the gesture arm (point/raise, always the right) stays a single
+    // sleeve; everything else folds when the pose or the stance says so —
+    // a seated pointing teacher still keeps his OTHER hand in his lap
+    const gesture = (arms === 'point' || arms === 'raise') && side === 1;
+    if (!gesture && (arms === 'fold' || seated)) makeFoldedArm(side);
+    else makeSleeve(side);
   }
 
   const head = sphereHead({ height, mat });
@@ -502,7 +507,20 @@ export function makeFigure({
 
     const oldBody = g.children.find((c) => c.name === 'body');
     if (oldBody) { g.remove(oldBody); oldBody.geometry.dispose(); }
-    g.add(robeLathe(lower, height, mat));
+    // A STANDING body IS its lathe, so re-lathing the lower rows rebuilds it
+    // exactly. A SEATED one is not: seatedBodyGeometry merges the lathe with a
+    // cushion, a shin mass and two knees, and replacing it with a bare lathe
+    // deleted all three — the teacher in case 17 lost his legs the moment
+    // seated figures were allowed to hinge (Frank, at once: "the teacher has no
+    // legs now"). Ask the seated builder for the lower half instead.
+    if (seated) {
+      const half = new THREE.Mesh(
+        seatedBodyGeometry({ height, width: s, cushion, profile: lower }), mat);
+      half.name = 'body';
+      g.add(half);
+    } else {
+      g.add(robeLathe(lower, height, mat));
+    }
 
     waist = new THREE.Group();
     waist.name = 'waist';

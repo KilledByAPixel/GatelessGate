@@ -91,8 +91,14 @@ test('NOTHING STANDS IN FRONT OF THE MOON, at any camera angle', () => {
       const len = dir.length();
       assert.ok(len < 100, `the moon must stay inside the far plane, got ${len.toFixed(1)}`);
       ray.set(cam.position, dir.normalize());
+      // Invisible things do not occlude. The snowfall hangs between the camera
+      // and the moon and stays hidden until the moon is touched — it is the
+      // verse's winter line, see the case — so a raycast finds it and a reader
+      // never does. Anything switched off, or inside something switched off, is
+      // not a blocker.
+      const shown = (o) => { for (let n = o; n; n = n.parent) if (!n.visible) return false; return true; };
       const blocker = ray.intersectObjects(root.scene.children, true)
-        .find((h) => h.distance < len - 0.5 && h.object.name !== 'moon');
+        .find((h) => h.distance < len - 0.5 && h.object.name !== 'moon' && shown(h.object));
       assert.ok(!blocker, `at heading ${az.toFixed(1)} the moon is occluded by ${blocker && blocker.object.name}`);
     }
   }

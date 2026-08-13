@@ -44,6 +44,16 @@ export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed 
     }
     p.needsUpdate = true;
     geo.computeVertexNormals();
+    // AND THE BOUNDS, or half the banner cannot be touched. three.js's
+    // Mesh.raycast tests the geometry's bounding SPHERE before it looks at a
+    // single triangle, and this cloth is simulated: the sphere was computed
+    // once from the flat undisplaced plane, and every frame after that the
+    // banner streams somewhere the stale sphere does not cover. A tap aimed at
+    // the flying half of the flag was rejected before the triangles were ever
+    // considered — which is why case 22 read as doing nothing at all some of
+    // the time (Frank: "twenty two does not seem to do anything"). 384 vertices
+    // a frame is nothing; being able to touch the thing is not.
+    geo.computeBoundingSphere();
   };
   copyPositions();
 

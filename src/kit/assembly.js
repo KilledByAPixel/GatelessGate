@@ -14,8 +14,10 @@ import { seatedBodyGeometry, HAT_PROFILE } from './figure.js';
 // first and Frank called it what it was ("a triangle with a little tiny
 // circle head"). The obi pinch, the collar step and the hat brim are all
 // silhouette events, so they survive fog distance for free — a crowd member
-// is the hero monk's shape with the sleeves dropped, which is exactly the
-// economy figure.js's `arms: null` crowd option already promises.
+// is the hero monk's shape with the sleeves dropped. It builds that geometry
+// itself, and it is now the ONLY thing in the kit that drops them: figure.js
+// used to take `arms: null` for the same economy, but bakeStatic made arms
+// free on a still crowd and the option was retired unused.
 const FIG_H = 1.5;    // the height each crowd figure is authored at (world units)
 const SLIM = 0.8;     // radial squeeze — figure.js's `stout`, run below 1: a
                       //   full-width seated figure is ~1.0 wide at this height

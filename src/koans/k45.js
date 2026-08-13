@@ -204,6 +204,15 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
       bystander(road.sample(0.7).x - 1.2, road.sample(0.7).z + 0.1, 0.6, 1.62, true),
       bystander(road.sample(0.24).x + 1.3, road.sample(0.24).z + 0.2, -0.8, 1.35),
       bystander(road.sample(0.68).x + 1.4, road.sample(0.68).z - 0.3, 2.4, 1.52),
+      // Three more, and the reason is the draw budget rather than the staging:
+      // this page renders at 57 calls against a ceiling of 150, and the crowd
+      // IS the case — "the crowd is what makes the recognition worth anything."
+      // A busy street should look busy while there is room to pay for it.
+      // Spread down the far end of the lane and across the near verge, so they
+      // deepen the street rather than crowding the meeting in the middle.
+      bystander(road.sample(0.83).x - 1.6, road.sample(0.83).z + 0.4, 1.9, 1.58, true),
+      bystander(road.sample(0.19).x - 1.8, road.sample(0.19).z - 0.4, 2.7, 1.47),
+      bystander(road.sample(0.58).x + 2.2, road.sample(0.58).z + 0.6, -1.3, 1.64),
     ];
     for (const c of crowd) scene.add(c);
 

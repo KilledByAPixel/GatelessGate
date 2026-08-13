@@ -20,6 +20,21 @@ import { makeBowl } from './bowl.js';
 const DUR = 0.8;          // seconds, strain to stillness
 const MAX_TILT = 0.028;   // radians (~1.6 degrees) — the whole concession
 
+// AND THEN IT HOPS. The lean alone was the whole answer for a long while and it
+// was too small to find: a degree and a half on a stack a third of a unit tall,
+// at case-23 staging distance, is motion you have to be told about. Frank asked
+// for the bigger read — "have it bounce up off the platform, bounce up in the
+// air and then land again" — which is the same refusal said louder. Reach for
+// it and it is not there; it comes back down exactly where it was, so the
+// tenth attempt still gets what the first did.
+//
+// A real arc, not a sine: up fast, slow at the top, down fast, because that is
+// what the eye knows a thrown thing does. HOP_DUR is short — this is a hop, not
+// a levitation.
+const HOP_H = 0.34;       // world units at the top of the arc
+const HOP_DUR = 0.62;     // seconds, leaving to landing
+const HOP_SPIN = 0.5;     // radians of lazy turn while it is up
+
 export function makeBundle({
   width = 0.46, color = WASH.dark, bowlColor = WASH.mid, ropeColor = WASH.deep, seed = 23,
 } = {}) {
@@ -115,6 +130,13 @@ export function makeBundle({
   g.add(bowl);
 
   // ---- the refusal ------------------------------------------------------
+  // THE REST POSE IS READ ON THE FIRST UPDATE, NOT AT BUILD. A case makes the
+  // bundle and THEN sets where it stands (k23 puts it on top of a stone), so
+  // anything captured in this function body is the pose before placement —
+  // taking it here would have driven the hop's landing to y = 0 and dropped the
+  // treasure through the rock it sits on.
+  let restY = null;
+  let yaw0 = 0;
   let started = -1;     // sim time the one permitted motion began
   let dir = 0;          // world heading the stack leans toward
   let budges = 0;
@@ -130,13 +152,24 @@ export function makeBundle({
     return MAX_TILT * e * e * (3 - 2 * e);
   };
 
+  // The arc. 4h(1-h) is a parabola through 0 at both ends and 1 at the top —
+  // fast off the stone, slow at the apex, fast back down, which is the shape a
+  // thrown thing actually has. Exactly 0 at both ends, so the stack lands back
+  // on its rest height rather than a hair above or below it.
+  const hopAt = (t) => {
+    if (started < 0) return 0;
+    const u = (t - started) / HOP_DUR;
+    if (u <= 0 || u >= 1) return 0;
+    return HOP_H * 4 * u * (1 - u);
+  };
+
   return {
     group: g,
     maxTilt: MAX_TILT,
     // Try to take it. `toward` is a world heading (the hand that pulls); the
-    // stack leans that way by MAX_TILT and settles back where it was. While a
-    // budge is in flight further attempts are absorbed — tap it all day and it
-    // never does more than this.
+    // stack hops clear, turning as it goes, leans that way as it lands, and
+    // settles back exactly where it was. While one is in flight further
+    // attempts are absorbed — tap it all day and it never does more than this.
     budge(toward = 0) {
       if (started >= 0 && now - started < DUR) return false;
       started = now;
@@ -144,13 +177,22 @@ export function makeBundle({
       budges++;
       return true;
     },
+    // how high it is off its rest, right now — 0 at rest and at the landing
+    hop: () => hopAt(now),
     update(dt, simTime) {
       now = simTime;
+      if (restY === null) { restY = g.position.y; yaw0 = g.rotation.y; }
       const a = amount(simTime);
-      // compensate for the group's own yaw so `dir` stays a world heading
-      const d = dir - g.rotation.y;
+      const h = hopAt(simTime);
+      g.position.y = restY + h;
+      // compensate for the RESTING yaw so `dir` stays a world heading. Reading
+      // g.rotation.y here instead would feed the spin below back into the lean
+      // and walk its direction round the compass over successive hops.
+      const d = dir - yaw0;
       g.rotation.x = a * Math.cos(d);
       g.rotation.z = -a * Math.sin(d);
+      // a lazy turn while it is off the stone, unwinding exactly as it lands
+      g.rotation.y = yaw0 + HOP_SPIN * (h / HOP_H);
     },
     tilt: () => amount(now),
     budges: () => budges,

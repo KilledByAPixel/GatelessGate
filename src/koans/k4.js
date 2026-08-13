@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, INK, INK_LIT } from '../palette.js';
+import { SEAL_GLOW } from '../render/material.js';
 import {
   composeWorld, makeVeranda, makeMonk, aimMonk, makeLantern,
   makeLights, washMaterial, makeFurin, makeVase, plantTree
@@ -136,7 +137,13 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   
   // THE BEARD THAT WILL NOT TAKE. Present from the start and invisible; a
   // tap gathers it and it drains away again.
-  const beardMat = washMaterial({ color: INK_LIT, flat: true });
+  // THE BEARD IS RED, and it is the only red left while it is up: the portrait
+  // drains to ink underneath it over the same envelope, so what you get is a
+  // black figure wearing the one bright mark on the page (Frank: "the figure is
+  // gonna turn black like it does now, but the beard will appear and be red, so
+  // it will stand out"). Which is also the case, drawn: the thing that is not
+  // there is the only thing you can see.
+  const beardMat = washMaterial({ color: ACCENT, flat: true });
   beardMat.transparent = true;
   beardMat.opacity = 0;
   const beard = new THREE.Mesh(new THREE.ConeGeometry(0.115, 0.34, 7), beardMat);
@@ -241,7 +248,16 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   const BACK = 1.7;            // then washes back
   const STROKE = DRAIN + OUT + BACK;
   const RED = new THREE.Color(ACCENT);
-  const BLACK = new THREE.Color(INK_LIT);
+  const BLACK = new THREE.Color(INK);
+  // THE GLOW HAS TO DRAIN TOO. washMaterial gives any accent-family colour an
+  // emissive of its own colour at SEAL_GLOW — that is what makes the reds in
+  // this book carry — and emissive light does not care what the diffuse colour
+  // says. So draining the diffuse alone left the portrait lit red from inside: it
+  // went dark-ish and stayed warm, and never read as ink (Frank: "the figure
+  // doesn't go quite fully black, it's still kind of reddish"). Both halves
+  // move together now, and the target is raw INK rather than INK_LIT because
+  // this is the one moment the case wants an actual hole in the page.
+  const GLOW = SEAL_GLOW;
   // 0 at rest and at the end, 1 while the portrait is drained
   function drainShape(u) {
   if (!(u >= 0) || u >= STROKE) return 0;
@@ -282,7 +298,13 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   furin.update(dt, simTime);
   // the red running out of him, and coming back
   const drained = drainShape(clock - strokeAt);
-  for (const m of paintedMeshes) m.material.color.copy(RED).lerp(BLACK, drained);
+  for (const m of paintedMeshes) {
+  m.material.color.copy(RED).lerp(BLACK, drained);
+  if (m.material.emissive) {
+  m.material.emissive.copy(RED).multiplyScalar(1 - drained);
+  m.material.emissiveIntensity = GLOW;
+  }
+  }
   // and the beard, which only exists while the ink is out of the picture
   // — up fast, and gone before the colour returns
   const u = (clock - strokeAt) / STROKE;

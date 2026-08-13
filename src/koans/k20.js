@@ -13,9 +13,14 @@ const ID = 20;
 //
 // So he does not move — and the world does. He stands on a coast road; behind
 // him the grass runs out into sand, the sand into slow shoreward swells, the
-// swells into paper. Touch him and A HARD WIND COMES THROUGH: the meadow lays
-// over, the gusts tear across it, the sound rises — and he stands there. The
-// verse, staged.
+// swells into paper. TOUCH THE SEA and a hard wind comes through: the meadow
+// lays over, the swell picks up and runs, the sound rises — and he stands
+// there. The verse, staged.
+//
+// The tap used to be on HIM, which put the one thing in the picture that never
+// reacts in charge of the only thing that does, and left the ocean — the
+// biggest object on the page, and this case's own seal — inert (Frank: "we're
+// gonna have you click the ocean instead of the guy").
 //
 // IT USED TO BE A SHOVE, and the shove is the reason this comment is long.
 // Everything the world grammar built went into one group called `moving`, and
@@ -48,6 +53,12 @@ const ID = 20;
 // a multiplier on whatever wind the case (or the workbench slider) is already
 // set to, so this rides the scene's own weather instead of replacing it.
 const GUST_MULT = 6;
+// ...and how much faster the sea runs while it blows. The wind is on the water
+// as well as the meadow now (Frank: "I also wanna make the ocean waves move
+// more quickly when that wind is happening, so it looks like the wind is
+// blowing the waves"). 1.6 nearly triples the swell's travel at the peak, which
+// is a squall rather than a change of tide.
+const SEA_RUSH = 1.6;
 const GUST_IN = 0.35;    // it arrives all at once — that is what a squall is
 const GUST_HOLD = 3;
 const GUST_OUT = 4.5;    // and takes its time leaving
@@ -249,19 +260,17 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   ],
   });
 
-  const hit = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.6, 0.7, H, 8),
-  new THREE.MeshBasicMaterial({ visible: false }));
-  hit.name = 'colossus-hit';
-  hit.position.set(0.4, H / 2, -0.8);
-  scene.add(hit);
-  
+  // (The man's own hit cylinder is gone with the tap that used it. He is the
+  // one thing on this page that answers to nothing at all, and giving him an
+  // invisible pick volume anyway was a draw call spent on a lie.)
+
   // ---- the moment: the weather comes through, and he stands -------------
   // The base is read ONCE, here, straight off the field the world grammar just
   // built — which is the wind the case pinned, or the workbench slider, and by
   // this point either has already been applied. The gust multiplies it and
   // hands it back exactly on the way out, so the sliders are only ever taken
   // over for the few seconds a squall is actually blowing.
+  const surface = water.group.children.find((c) => c.name === 'surface');
   const grass = world.grass;
   const BASE_WIND = grass && grass.wind ? grass.wind() : 1;
   let camera = null;
@@ -270,9 +279,14 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   let gustAt = -99;
   let blowing = false;
 
+  // THE SEA IS WHAT YOU TOUCH. It was the man — which put the one thing in the
+  // picture that never reacts in charge of the only thing that does, and left
+  // the ocean, the biggest object on the page and the case's own seal, inert
+  // (Frank: "we're gonna have you click the ocean instead of the guy"). Touch
+  // the water and the weather comes; he still does not move, which is the case.
   input.onTap(() => {
   if (!camera) return;
-  if (!input.raycastFirst(camera, [hit])) return;
+  if (!surface || !input.raycastFirst(camera, [surface])) return;
   if (clock - gustAt < GUST_IN + GUST_HOLD) return;   // let a squall land before the next
   gustAt = clock;
   gusts++;
@@ -305,10 +319,12 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   if (g > 0) {
   blowing = true;
   grass && grass.setWind(BASE_WIND * (1 + GUST_MULT * g));
+  water.setRush(SEA_RUSH * g);
   audio && audio.setWindLevel(0.22 * (1 + 2.4 * g));
   } else if (blowing) {
   blowing = false;
   grass && grass.setWind(BASE_WIND);
+  water.setRush(0);
   audio && audio.setWindLevel(0.22);
   }
   },
@@ -317,6 +333,7 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   gusts,
   gust: +gustShape(clock - gustAt).toFixed(4),
   wind: +(BASE_WIND * (1 + GUST_MULT * gustShape(clock - gustAt))).toFixed(3),
+  seaRush: +water.rush().toFixed(3),
   // he has not moved, and never will
   manX: +colossus.position.x.toFixed(4),
   manZ: +colossus.position.z.toFixed(4),

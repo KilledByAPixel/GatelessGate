@@ -76,7 +76,8 @@ test('case 20: the ground dives below sea level toward the sea', () => {
 // the world moves and he does not — but what moves is the weather.
 test('case 20: a touch brings the wind through, and never moves the man', () => {
   const { ctx, root } = staged();
-  const hit = root.scene.getObjectByName('colossus-hit');
+  // the SEA is the target now, not the man — he answers to nothing
+  const hit = root.scene.getObjectByName('surface');
   const man = root.scene.getObjectByName('immovable-man');
   const before = man.position.clone();
 

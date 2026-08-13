@@ -15,8 +15,8 @@ import { INK_LIT } from '../palette.js';
 // same gesture), 'sit' (seated proportions, elbowed arms folded, hands
 // together in the lap), 'fold' (standing, the same folded arms held at the
 // belly — a monk waiting, hands in his sleeves).
-// `arms: false` drops the sleeves for a cheap crowd figure — a robe and a
-// head, which is all a person in the background needs.
+// The pose chooses how the arms are held. There is no way to ask for a monk
+// without them — see figure.js for why that option is gone.
 const POSES = {
   stand: { stance: 'stand', arms: 'rest' },
   sit: { stance: 'sit', arms: 'fold' },
@@ -31,7 +31,7 @@ const POSES = {
 };
 
 export function makeMonk({
-  height = 1.6, stout = 1, color = INK_LIT, hat = true, pose = 'stand', elder = false, arms = true,
+  height = 1.6, stout = 1, color = INK_LIT, hat = true, pose = 'stand', elder = false,
   staffAng,   // optional plant-bearing override, passed through to the figure
   cushion = true,   // seated only — false where the case lays its own mat
   bow,              // true = hinge him at the waist; a number also sets the angle
@@ -40,7 +40,7 @@ export function makeMonk({
   const g = makeFigure({
     height, stout, color, hat, elder, staffAng, cushion,
     stance: p.stance,
-    arms: arms ? p.arms : null,
+    arms: p.arms,
     bow: bow !== undefined ? bow : (p.bow || 0),
   });
   g.name = 'monk';
