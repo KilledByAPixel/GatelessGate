@@ -104,7 +104,7 @@ const CONTROLS = [
   { key: 'quantAmt', label: '· amount', type: 'range', def: 0.7, min: 0, max: 1, step: 0.05 },
   { key: 'pInk', label: 'Ink (depth edges)', type: 'bool', def: true },
   { key: 'inkStrength', label: '· strength', type: 'range', def: 0.5, min: 0, max: 1, step: 0.05 },
-  { key: 'inkThresh', label: '· threshold', type: 'range', def: 0.06, min: 0.01, max: 0.4, step: 0.01 },
+  { key: 'inkThresh', label: '· threshold', type: 'range', def: 0.05, min: 0.01, max: 0.4, step: 0.01 },
   { key: 'inkFade', label: '· distance fade', type: 'range', def: 0.45, min: 0.05, max: 1, step: 0.05 },
   { key: 'pPaper', label: 'Paper via shader', type: 'bool', def: true },
   { key: 'paperAmt', label: '· grain', type: 'range', def: 1.0, min: 0, max: 1, step: 0.05 },
