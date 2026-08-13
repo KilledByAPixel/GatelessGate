@@ -68,7 +68,7 @@ export function makeButterflies({
   count = 6,
   seed = 19,
   size = 0.34,
-  color = ACCENT,                  // red ones — the accent family glows (toon.js)
+  color = ACCENT,                  // red ones — the accent family glows (material.js)
   center = [0, 0],
   radius = 3.2,                    // how far the wander may stray from the centre
   height = [0.7, 2.4],             // the band they play in, above the ground

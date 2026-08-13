@@ -88,7 +88,7 @@ const POKE_LEAN = 0.55;
 // tone — "by default the petals should be whitish, kind of the same colour
 // family as the ground, and the stalk the same kind of colour as the grass"
 // (Frank) — and when a case DOES put its accent on the heads (pass `color`),
-// the seal-glow emissive on accent materials (toon.js) could not be split
+// the seal-glow emissive on accent materials (material.js) could not be split
 // per-vertex inside one mesh anyway. The two instanced meshes share every
 // instance matrix, so they stay one bloom in motion.
 // The stem's base is at the local origin, so an instance plants exactly on

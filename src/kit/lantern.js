@@ -30,8 +30,9 @@ import { WASH, PAPER, INK, mixHex } from '../palette.js';
 // genuine colour step on the one-stone rule.
 //
 // One material still colours all the stone, so the parts separate by SHADE,
-// not hue: base/post/jewel keep round toon shading, the firebox stonework and
-// roof are flat-shaded — the same round-vs-flat rhythm gate.js and hut.js use.
+// not hue: base/post/jewel keep round (smooth-normal) shading, the firebox
+// stonework and roof are flat-shaded — the same round-vs-flat rhythm gate.js
+// and hut.js use.
 // Mesh count: six (base, post, firebox, candle, roof, jewel) — the platform,
 // sill, header and four pillars all merge into the one 'firebox' mesh.
 export function makeLantern({ height = 1.15, color = WASH.stone } = {}) {

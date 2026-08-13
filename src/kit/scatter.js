@@ -130,7 +130,7 @@ export function makeBoulder({ size = 1.0, seed = 1, color = WASH.stone } = {}) {
 // makeTemple; the tuft construction it pioneered survives in tuftfield.js.)
 
 // Minimal non-indexed geometry merge (position + normal only) — enough for
-// toon-shaded props without pulling in the BufferGeometryUtils addon.
+// lit props without pulling in the BufferGeometryUtils addon.
 //
 // `extras` is an optional map of PER-PART scalars to spread across that part's
 // vertices: { aSway: [0.1, 0.4, ...] }, one number per geometry in `geos`, out

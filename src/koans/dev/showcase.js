@@ -17,7 +17,7 @@ import {
 // A developer page, not a page of the book: no number, no seal, not in the
 // spine, not in the contents. It exists so a change to a shared builder can be
 // judged against every OTHER builder at once — the thing `dev/kit-preview.html`
-// does on a bare plane, but inside the real pipeline. Same toon ramp, same
+// does on a bare plane, but inside the real pipeline. Same Lambert shading, same
 // fog-to-paper, same post spine, same ink dissolve on the way in. A model
 // that looks right on the workbench and wrong here is wrong; this is the
 // room that says which.
@@ -154,7 +154,7 @@ export default {
   text: {
     note: [
       'Every model the kit builds, in one room, through the book\'s own renderer — '
-      + 'the same toon ramp, the same ink edges, the same fog into paper.',
+      + 'the same shading, the same ink edges, the same fog into paper.',
       'Front to back: the animals, the people, what grows, what is built, what is used. '
       + 'Anything with a behaviour is running — the fox breathes, the wheel turns, '
       + 'the water swells, the flag takes the wind.',
