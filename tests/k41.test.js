@@ -8,8 +8,8 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 // where you reach, climbs, shrinks, and is gone off the top of the frame —
 // every time, as many at once as you like.
 test('a grasp is not the same note twice running', () => {
-  // Frank: "kind of a note that plays... kind of a choose between a couple
-  // different possible chime sounds." With several wisps in the air at once the
+  // A choice between a few near notes rather than one repeated tube. With
+  // several wisps in the air at once the
   // single repeated tube read as a UI click; three near-neighbours off the top
   // of the chime read as the same small thing happening again. Seeded from the
   // count, like everything else in this book that varies — there is no

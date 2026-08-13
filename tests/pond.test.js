@@ -53,7 +53,7 @@ function lookDown(scene, x, z) {
 }
 
 // WHERE to look is read off the water itself, not written down beside it. Case
-// 7's basin used to be a pair of literals here, and when Frank moved the basin a
+// 7's basin used to be a pair of literals here, and when the basin moved a
 // unit across the garden the ray went on staring at the old spot and reported
 // that the vessel was full of footpath. A test that has to be edited every time
 // a prop moves is a test that will one day be edited wrongly.
@@ -94,11 +94,9 @@ for (const [label, mod] of [
   });
 }
 
-// The pair's reds (Frank, overnight pass 2 + morning notes + polish round 2):
-// in case 33 the koi wear the case's one red; in case 30 the red is the urna
-// AND — Frank's later ruling, knowingly doubling it — the pond sheet itself
-// ("make the pond water red — the surface of the water itself, not the fish,
-// not the sides"). The mat is dark in BOTH scenes — same mat, same spot,
+// The pair's reds: in case 33 the koi wear the case's one red; in case 30 the
+// red is the urna AND — knowingly doubling it — the pond sheet itself, the
+// surface of the water and not the fish or the sides. The mat is dark in BOTH scenes — same mat, same spot,
 // occupied in 30 and bare in 33 — so the check is written against both:
 // same pond, different carriers, and the mat never competes with either.
 test('case 33: the koi carry the red and the mat has gone to ink', () => {
@@ -136,16 +134,15 @@ test('case 30: the reds are the urna and the water sheet — koi ink, stone bare
   });
   assert.ok(urna, 'the seated buddha carries his forehead dot');
   assert.equal(urna.material.color.getHexString(), red, 'the urna keeps its red');
-  // Frank: "the surface of the water itself" — the sheet is red, but the LIGHT
-  // mix. Full accent over a pond-sized area read as blood ("a little bit too
-  // red... it looks like the blood almost"), and the deep mix then read as too
-  // dark ("more like a pinkish red... slightly more pinkish").
+  // The sheet is red, but in the LIGHT mix. Full accent over a pond-sized area
+  // read as blood, and the deep mix then read as too dark; what water wants is
+  // pinker than either.
   const surface = surfaceMesh(root.scene);
   assert.equal(surface.material.color.getHexString(), pink,
-    'the pond sheet wears the PALE accent (Frank\'s ruling)');
+    'the pond sheet wears the PALE accent');
   // and it does NOT take the seal glow: emissive light is the same from every
   // angle, so it flattens the water's own Phong shading and the ripples stop
-  // reading — which is exactly what Frank saw ("I barely see it do anything")
+  // reading — the ripples became all but invisible
   assert.equal(surface.material.emissive.getHexString(), '000000',
     'water never glows: it has to shade, or its ripples vanish');
   // ...and the red is NOT on the fish and NOT on the sides

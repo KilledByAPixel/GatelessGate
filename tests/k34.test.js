@@ -10,9 +10,8 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 // second sentence walks out of — the red house — with a reading mat and a
 // student still on it, and rain overhead.
 //
-// TOUCH THE HOUSE and the shower leans in for a moment (Frank: "let's have it
-// so you click on the house — since the house is red, you click on that to
-// start the rain surge"). It used to be the MAT, which is a low pale rectangle
+// TOUCH THE HOUSE and the shower leans in for a moment: the house is the red
+// thing, so the house is what you touch. It used to be the MAT, which is a low pale rectangle
 // mostly hidden under a seated monk: the one thing on the page the composition
 // does not point at, on a page whose single red object is the house.
 
@@ -121,8 +120,8 @@ test('case 34: the surge passes on its own, and asking again works', () => {
   assert.equal(root.fragment().disturbed, 2, 'and it can be asked again');
 });
 
-// THE SURGE IS WEATHER, not just water (Frank: "let's have even more rain, and
-// also increase the wind during the swell"). Rain falling plumb while the
+// THE SURGE IS WEATHER, not just water — more rain AND more wind together.
+// Rain falling plumb while the
 // meadow lies over is two weathers on one page, so the shower leans with it.
 // All of it rides ONE envelope — the rain's own surge level — so the grass, the
 // wood, the lean, the chime and the ear cannot drift apart.

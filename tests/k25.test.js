@@ -12,15 +12,15 @@ test('module shape matches the koan contract', () => {
   assert.equal(typeof k25.build, 'function');
 });
 
-// THE FLOATING-HALL / SUNKEN-MONK BUG (Frank's live feedback).
+// THE FLOATING-HALL / SUNKEN-MONK BUG.
 //
 // Three things were adrift at once: the veranda hovered 0.32 up with daylight
 // under it and no structure reaching the ground; the crowd sat 0.34 above the
 // terrain (which is FLAT at y = 0 inside groundHeight's flatRadius here); and
 // the seats + monks were placed for a much thinner deck than the veranda
 // actually builds, so every figure stood 0.14 INSIDE the boards — a seated
-// robe with its base swallowed is exactly the "really squat and fat" blob
-// Frank called out. The dream may float; it must float on a frame.
+// robe with its base swallowed reads as a squat, fat blob. The dream may
+// float; it must float on a frame.
 test('the hall stands on legs, the crowd on the ground, the monks on the boards', () => {
   const built = k25.build(fakeCtx());
   const scene = built.scene;
@@ -67,8 +67,8 @@ test('the hall stands on legs, the crowd on the ground, the monks on the boards'
 // while a tuft's world position never moves. k25 rocks the whole `hall`, and
 // composeWorld had attached the ground+grass to `hall`, so every tuft's world
 // position changed every frame and its hashed attributes re-rolled: the meadow
-// visibly re-randomised per frame (Frank: "like it's regenerated randomly every
-// frame"). The dream furniture may rock; the surrounding world may NOT, because
+// visibly re-randomised per frame, as though the meadow were regenerated on
+// every one. The dream furniture may rock; the surrounding world may NOT, because
 // the world carries the grass.
 test('the meadow does not move when the dream rocks', () => {
   const built = k25.build(fakeCtx());
@@ -107,9 +107,9 @@ test('the meadow does not move when the dream rocks', () => {
 test("the back screen fills the hall's own bay, in the plane of its posts", () => {
   // Three numbers were guessed at and all three were wrong: the screen stood
   // 1.3 units BEHIND the post line — out past the back of the deck, over open
-  // ground — at 3.0 wide in a 5.4 bay and 2.3 tall in a 2.86 one (Frank: "still
-  // does not match up with the back wall there and is also too far behind the
-  // wall"). It reads veranda.opening now, so it cannot drift from the frame it
+  // ground — at 3.0 wide in a 5.4 bay and 2.3 tall in a 2.86 one, visibly
+  // mismatched with the back wall and set too far behind it.
+  // It reads veranda.opening now, so it cannot drift from the frame it
   // is set into whatever size that frame becomes.
   const root = k25.build(fakeCtx({ accent: k25.accent }));
   root.scene.updateMatrixWorld(true);

@@ -168,8 +168,8 @@ test('build stages the predicament: cliff, grey oak, one man alone over a real d
 
   const found = { cliff: [], oak: [], hangingmonk: [], monk: [], fallenhat: [], branch: [] };
   built.scene.traverse((o) => { if (found[o.name]) found[o.name].push(o); });
-  // ONE precipice, built as two makeCliff segments since Frank's 2026-08-10
-  // tweak ran the lip on past both edges of the frame (the wall used to end
+  // ONE precipice, built as two makeCliff segments since a retune ran the lip
+  // on past both edges of the frame (the wall used to end
   // in shot). Segments of the same wall share the origin line: same yaw,
   // same x — a segment breaking rank would be a genuine second cliff.
   assert.equal(found.cliff.length, 2, 'one precipice, two segments of wall');
@@ -179,7 +179,7 @@ test('build stages the predicament: cliff, grey oak, one man alone over a real d
   assert.equal(found.oak.length, 1, 'one tree at its lip');
   assert.equal(found.branch.length, 1, 'one stout limb over the drop');
   assert.equal(found.hangingmonk.length, 1, 'one man hanging by his teeth');
-  // The questioner is back (Frank, round 12) — and where he stands is the whole
+  // The questioner is back — and where he stands is the whole
   // point of him: on GROUND, east of the lip, under the crown, turned to face
   // the man over the drop. A questioner hovering above the gorge, or aimed at
   // the horizon by the wrong one of monk.js's two verbs, is not a questioner.
@@ -305,9 +305,9 @@ test('tapping the hanging man sways him; he steadies; he never answers, never fa
 test('no cliff lays paper over its own drop', () => {
   // A fog fill used to hang under the crags: an unlit near-paper solid that
   // made everything past the fog line paper instead of landscape. It read as a
-  // slab laid across the chasm, which is how it got noticed at all (Frank: "it
-  // looks like there might be another piece of geo on top of the cliff
-  // bottom"), and both cases that carve a real gorge look better with the drop
+  // slab laid across the chasm — a stray piece of geometry sitting on the cliff
+  // bottom, which is how it got noticed at all — and both cases that carve a
+  // real gorge look better with the drop
   // visible. Nothing builds it now — this is what would notice it coming back.
   const cliff = makeCliff({ width: 11, drop: 7, depth: 2.2, seed: 5, fogTop: -2.8, groundSeed: 21 });
   assert.equal(cliff.getObjectByName('fogfill'), undefined,
@@ -322,8 +322,8 @@ test('no cliff lays paper over its own drop', () => {
 test('case 5 shows its gorge: no paper lid over the drop it carved', () => {
   // The kit fills a gorge with unlit near-paper by default, so everything past
   // the fog line is paper rather than landscape. This case carves a real gorge
-  // with banked sides and a far wall and wants it SEEN (Frank: "it looks better
-  // without it, where it just looks like a normal terrain deformation"). If a
+  // with banked sides and a far wall and wants it SEEN, reading as an ordinary
+  // terrain deformation. If a
   // future edit switches the fill back on, the carve stops being visible and
   // nothing else in this file would notice.
   const root = k5.build(fakeCtx());

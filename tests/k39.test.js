@@ -6,7 +6,7 @@ import k39, { nextRed } from '../src/koans/k39.js';
 import { ACCENT } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
 
-// Case 39's three rulings from Frank, pinned:
+// Case 39's three rulings, pinned:
 //
 //   1. "Make that pond less square-shaped — more organically shaped, kinda
 //      roundish." The water is a seeded blob now; what this file owns is that
@@ -29,9 +29,8 @@ test('nextRed: sinking a stone that is not red moves nothing', () => {
 });
 
 test('nextRed: sinking the red hands it to the NEAREST survivor, not across the pond', () => {
-  // Frank: "the next red one that appears is on the opposite direction, all
-  // the way on the other side, and that's wrong — we want the closest one to
-  // turn red next, and then they keep coming from the same side."
+  // Handing the red across the pond is wrong: the CLOSEST survivor takes it,
+  // so they keep coming from the same side.
   // red on the far stone, everything else standing: its own neighbour takes it
   assert.equal(nextRed(6, 6, [false, false, false, false, false, false, true]), 5);
   // mid-line, with the near-side neighbour gone: the far-side one is nearest
@@ -141,8 +140,8 @@ test('case 39: exactly one red stone, starting at the far end of the line', () =
 });
 
 test('case 39: a grey stone holds — it knocks, and nothing sinks', () => {
-  // Frank: "make it so you can only push the red stone." Someone else's
-  // phrase is perfectly load-bearing.
+  // Only the red stone can be pushed under. Someone else's phrase is
+  // perfectly load-bearing.
   const { root, tops, tap } = staged();
   root.update(1 / 60, 1);
   tap(2);
@@ -175,8 +174,7 @@ test('case 39: only the red sinks, so the crossing dismantles from the far end i
   const { root, tops, tap } = staged();
   let t = 1;
   // THE HANDOVER WAITS FOR THE SINK. The red stays on the stone you touched
-  // until it has actually gone under (Frank: "the next one turns red a bit
-  // too early — it shouldn't turn red until that one has gone under"), so
+  // until it has actually gone under — nothing turns red early — so
   // every tap here is followed by a step past SINK (1.1s) before reading.
   const sink = (i) => { tap(i); t += 1.6; root.update(1 / 60, t); };
 
@@ -217,10 +215,9 @@ test('case 39: when the stones surface again the red is back on the far one', ()
 });
 
 // ---- the pond is a HOLE ------------------------------------------------------
-// Frank: "we've got the water lifted up above the ground to fix the z-fighting...
-// we could deform the ground where the water is, so it rapidly slopes down and
-// is deep enough that there's no z-fighting, and we wouldn't have this weird
-// thing where it's floating above the ground."
+// Lifting the water above the ground to dodge z-fighting leaves it visibly
+// floating. Deform the GROUND instead: slope it rapidly down where the water
+// is, deep enough that nothing z-fights.
 //
 // Both halves of that have to hold at once, and neither shows up as an error if
 // it breaks — a sheet back above the meadow just looks slightly wrong, and a bed
@@ -307,10 +304,10 @@ test('case 39: the fish are unlit, or they vanish under the sheet', () => {
   }
 });
 
-// ---- the gradient pond (Frank's second pond ruling) -------------------------
-// "The water more shallow where the stones are... deeper farther away where
-// the fish are. The stones can be a bit taller, so they're fully touching the
-// bottom of the pond. The fish are further back where it can be a bit deeper,
+// ---- the gradient pond ------------------------------------------------------
+// Shallow where the stones are, deeper farther out where the fish are. The
+// stones stand fully on the bottom; the fish sit further back where it is
+// deeper,
 // positioned so they're not overlapping with the stones."
 
 function bedYAt(ground, x, z) {

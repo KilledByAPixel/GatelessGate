@@ -5,7 +5,7 @@ import k15 from '../src/koans/k15.js';
 import { noteForSize, makeFurin, SWING, SINGLE_BODY_LEN } from '../src/kit/furin.js';
 
 // Case 15 is Tozan's three blows, and it now hangs three fūrin under Ummon's
-// gate — one per blow, Frank's own reading of the case. What is worth
+// gate — one per blow, which is the reading of the case. What is worth
 // protecting here is what makes them THREE rather than one repeated: three
 // sizes, three notes, and enough room to swing without passing through each
 // other.
@@ -74,8 +74,8 @@ test('the three notes actually reach the audio engine, one per chime', () => {
 test("case 15's chimes stay clear of each other at the LIVE swing cap, counter-phase", () => {
   // Same guard case 29 carries, and for the same reason: the spacing was
   // chosen against a particular SWING.maxOmegaFrac, and raising that cap is
-  // exactly what someone would do next — Frank has asked for a BIGGER swing
-  // twice now, never a smaller one. Recomputed from the real staged scene and
+  // exactly what someone would do next: the swing has been asked to get BIGGER
+  // twice now, never smaller. Recomputed from the real staged scene and
   // the live constant, so raising it past what this gate's lintel tolerates
   // fails here rather than silently pushing two chimes through each other.
   //
@@ -210,8 +210,7 @@ test('a tap rings one chime and never also starts a beating', () => {
 });
 
 test('the staff comes down with each blow, and is still between beatings', () => {
-  // Frank's audit ("you can see it... he could be holding it and then bring
-  // it down or something") reversed the original never-moves staging note —
+  // The interaction audit reversed the original never-moves staging note —
   // the staff tips about its planted base once per knock, at empty air, and
   // rests at exactly its built pose otherwise.
   let onTap = null;
@@ -244,8 +243,7 @@ test('the staff comes down with each blow, and is still between beatings', () =>
 });
 
 test('touching Tozan deepens his bow, and never starts a beating', () => {
-  // Frank's audit: "could we have Tozan do some kind of animation in fifteen
-  // when you click on them? even if you just bow." The held BOW dips by DIP
+  // The one figure the reader can reach has to answer. The held BOW dips by DIP
   // and comes back up; the probe sits before the gate's forgiving hit-box, so
   // touching the man is never read as starting the blows.
   let onTap = null;

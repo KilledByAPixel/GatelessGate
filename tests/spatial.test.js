@@ -81,9 +81,9 @@ test('every output stays in range across a full sweep', () => {
       assert.ok(s.pan >= -1 && s.pan <= 1, `pan out of range at ${x},${z}: ${s.pan}`);
       // Gain is no longer bounded by 1 — being NEARER than the reference
       // distance is now louder than the reference, which is the whole point
-      // of SPATIAL.nearClamp (Frank: "the minimum and the maximum sound
-      // about the same to me," because the old max(ref,d) pinned every
-      // distance inside `ref` to exactly 1). What must still hold is that it
+      // of SPATIAL.nearClamp — the near and far ends used to sound much the
+      // same, because the old max(ref,d) pinned every distance inside `ref` to
+      // exactly 1. What must still hold is that it
       // is BOUNDED: the clamp is the only thing standing between a sound
       // approaching the camera and a divide-by-zero into the master bus.
       // Derived from the live constants, so moving nearClamp moves the
@@ -98,9 +98,8 @@ test('every output stays in range across a full sweep', () => {
 });
 
 test('nearer is louder, across the whole range the book is viewed from', () => {
-  // THE BUG Frank heard in dev/spatial-audition.html: "there's not that much
-  // of a difference at all between the distance between four and twenty two.
-  // The minimum and the maximum sound about the same to me." `gain` was
+  // THE BUG, heard in dev/spatial-audition.html: across the book's whole range
+  // of distances the near and far ends sounded about the same. `gain` was
   // `(ref / max(ref, d))^rolloff`, so every distance nearer than the
   // reference produced EXACTLY 1 — the near half of the range was one flat
   // level, and the far half only moved 5dB.

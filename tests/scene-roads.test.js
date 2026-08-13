@@ -9,8 +9,8 @@ import { mountainFootprints } from '../src/kit/mountains.js';
 // enforce, and the difference is the point. A tree is a solid object standing
 // in the near field; a road is a tapering mark that makePath has already
 // dissolved to a hair, and it ends out where the fog has washed the rock to
-// near-paper anyway. A road aimed off into the hills is a composition Frank
-// wants available — "sometimes I want the road kind of going out that way".
+// near-paper anyway. A road aimed off into the hills is a composition that has
+// to stay available.
 //
 // So the bar is only that a road may not end in the CORE of a peak. Reference
 // case: k28's road ends 6.6 from a mountain of radius 10.6 — 0.62 of the way

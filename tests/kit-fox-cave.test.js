@@ -72,8 +72,8 @@ test('the fox is longer and lower than the dog it is built from', () => {
 test('the brush is thick, trails well behind the rump, and reads as a tail not a flag', () => {
   // The tail is most of what makes a fox a fox. The dog's is cocked UP and thin;
   // if this one ever ends up looking like that the animal stops reading.
-  // (The old "carried below the back line" pin is gone: Frank's 2026-08-01
-  // retune cocked the brush up on purpose — TAIL_TILT -1.72 -> -1.2 — so the
+  // (The old "carried below the back line" pin is gone: a retune cocked the
+  // brush up on purpose — TAIL_TILT -1.72 -> -1.2 — so the
   // claim that survives is that it still runs BACKWARD far more than up.)
   //
   // 2026-08-05 "model tweaks": the barrel widened (BODY_R 0.16 -> 0.19) faster

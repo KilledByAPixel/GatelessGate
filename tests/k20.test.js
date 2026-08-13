@@ -35,9 +35,7 @@ test('case 20: the ambience finally names water — the bed the ocean was kept f
 // the whole world off a group called 'moving-world' that a tap shoved and let
 // oscillate back. Sliding that group dragged the grass field through its own
 // world-space noise and the meadow boiled, which is what the reader actually
-// saw (Frank: "it's basically causing the procedural generation of the grass to
-// get all messed up... that's why it looks like it's wind, but it's actually
-// not wind"). The group is dissolved; this is the assertion it stays that way.
+// saw: it looks like wind, and it is not wind. The group is dissolved; this is the assertion it stays that way.
 test('case 20: the world is flat on the scene root — no moving group', () => {
   const { root } = staged();
   const man = root.scene.getObjectByName('immovable-man');
@@ -71,8 +69,8 @@ test('case 20: the ground dives below sea level toward the sea', () => {
   assert.ok(sank > 50, `the seabed did not sink (${sank})`);
 });
 
-// The shove became a squall (Frank: "that gives me the idea to make it do the
-// wind instead of trying to mess with the world"). The verse is unchanged —
+// The shove became a squall — the weather moves instead of the world. The
+// verse is unchanged —
 // the world moves and he does not — but what moves is the weather.
 test('case 20: a touch brings the wind through, and never moves the man', () => {
   const { ctx, root } = staged();
@@ -135,9 +133,8 @@ test('case 20: the surf breathes — update feeds the swell to the audio', () =>
 });
 
 // The squall drives the sea two ways — faster AND higher. Pace alone read as
-// the film being sped up rather than as weather (Frank: "can we also try
-// increasing the amplitude of the ocean waves too? So it looks like they're
-// actually getting bigger").
+// the film being sped up rather than as weather: the waves have to get BIGGER,
+// not just arrive sooner.
 test('case 20: the squall raises the sea, and puts it back', () => {
   const { ctx, root } = staged();
   const surface = root.scene.getObjectByName('surface');

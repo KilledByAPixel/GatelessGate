@@ -111,9 +111,9 @@ test('horns and ears point away from the skull, not across it', () => {
   const spread = new THREE.Box3().setFromObject(horns[0]).union(
     new THREE.Box3().setFromObject(horns[1]));
   const head = new THREE.Box3().setFromObject(b.group.getObjectByName('head'));
-  // Was * 1.8, sized against the old 0.36-wide box skull. Frank's 2026-08-01
-  // retune (524f3ad) rebuilt the head as a 0.6-wide sphere with the horns
-  // kept — the ratio fell to ~1.36 by his choice. The claim that survives is
+  // Was * 1.8, sized against the old 0.36-wide box skull. A retune (524f3ad)
+  // rebuilt the head as a 0.6-wide sphere with the horns kept, and the ratio
+  // fell to ~1.36 on purpose. The claim that survives is
   // the direction: the sweep still clearly outreaches the skull.
   assert.ok(spread.max.x - spread.min.x > (head.max.x - head.min.x) * 1.2,
     'the sweep reads wider than the skull at a distance');
@@ -137,10 +137,9 @@ test('makeBuffalo is a grounded beast with horns and a live tail', () => {
 
 // ---- the tail leaves the body ----------------------------------------------
 // A strand pinned at ONE node hangs flat against the animal's flank, and a
-// swish then swings it through the body (Frank, on the buffalo: "it kinda flips
-// around, like, rotates around inside its body... at least for the first
-// segment of the tail, try to aim it up, tilt it out so that it's not away from
-// the body, so it's gonna kind of whip outwards").
+// swish then swings it through the body — the buffalo's rotated around inside
+// its own barrel. Aiming the first segment up and out is what makes it whip
+// clear of the flank instead.
 //
 // `root` pins the SECOND node as well, at a chosen offset from the first: the
 // root segment becomes a rigid stub held wherever the caller aims it, and the

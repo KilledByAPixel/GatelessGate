@@ -6,10 +6,9 @@ import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../src/palette.js';
 import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 import { rigCamera } from './helpers/rig-camera.js';
 
-// Case 35, the two souls. Frank restaged it: "instead of these 2 people
-// walking, lets have 1 red person standing on the road with 2 children at
-// either side. the other red person will be medtating under a tree nearby.
-// also they will not be transparent anymore."
+// Case 35, the two souls, restaged: instead of two people walking, one red
+// figure stands on the road with a child at either side, and the other
+// meditates under a tree nearby. Neither is transparent.
 //
 // So both of Seijo's lives are staged whole and solid — the family on the
 // road, the woman under the tree — and the thing that used to carry the case's
@@ -47,9 +46,9 @@ const toRoad = (road, p) => {
 
 test('the two of her are solid — no ghosting anywhere on either', () => {
   // The old staging made both figures translucent and depthWrite:false, which
-  // was the case's answer to "which is the true one": neither, quite. Frank
-  // took it out ("they will not be transparent anymore"), so a stray clone of
-  // that block coming back is a regression, not a tweak.
+  // was the case's answer to "which is the true one": neither, quite. It was
+  // taken out — neither figure is transparent now — so a stray clone of that
+  // block coming back is a regression, not a tweak.
   const built = staged();
   const souls = collect(built.scene, 'soul');
   assert.equal(souls.length, 2, 'two of her');
@@ -198,8 +197,8 @@ test('touch either of her and BOTH answer, by the same amount', () => {
 test('she ROCKS: the answer swings both ways and settles, never a tip', () => {
   // It used to set an envelope to 1 on the frame of the tap and decay it
   // linearly, so both of her snapped into a lean in one frame and crept back
-  // out of it (Frank: "can we make them rock back and forth a bit instead of
-  // how they tip instantly, it looks bad"). The same fault as case 36's bow and
+  // out of it — tipping instantly instead of rocking back and forth. The same
+  // fault as case 36's bow and
   // the birds' and butterflies' alarms: an envelope a touch sets to 1 has no
   // attack. A damped oscillation has none of that — sin(0) is 0, so it starts
   // from exactly where she was standing.

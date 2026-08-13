@@ -66,7 +66,7 @@ test('a knee splits the hind legs into leg + shin, and only the hind legs', () =
 
 // EARS ARE PLACED DIRECTLY — { x, y, z } are the base's offsets from the
 // head's centre, so how close an ear sits to the skull is a dial the species
-// (and Frank, live in the model viewer) turn by hand. The invariant worth
+// (and anyone working live in the model viewer) turns by hand. The invariant worth
 // pinning is the JOIN: each shipped ear's base must sit INSIDE its skull —
 // buried, never gapped — and still near the surface, not sunk to the core.
 // Checked on the real species builds, not a synthetic option set, because
@@ -128,7 +128,7 @@ test('the ear base flares wider than the ear itself', () => {
 
 // THE KNEE BALL: two lofts meeting at an angle open a wedge of daylight on
 // the outside of the bend ("there's like a gap where the two cylinders are
-// touching" — Frank). A ball of the joint's own radius is MERGED into the
+// touching"). A ball of the joint's own radius is MERGED into the
 // thigh geometry at the hinge point — no extra mesh, no draw call, and the
 // joint stays covered at any bend.
 test('the knee ball caps the hock joint inside the thigh mesh', () => {
@@ -150,7 +150,7 @@ test('the knee ball caps the hock joint inside the thigh mesh', () => {
 
 // THE SKULL SQUISH: head.scaleX/scaleY/scaleZ (default 1) reshape the head
 // per axis — "not just a sphere... an x y z scale, defaulting to one, to
-// tweak the kind of shape of the head" (Frank).
+// tweak the kind of shape of the head".
 test('head scaleX/scaleY/scaleZ squish the skull, and default to exactly 1', () => {
   const r = 0.2;
   const head = (opts) => {
@@ -264,8 +264,8 @@ test('the ear hinge channel (rotation.x) is left free for the species to animate
 });
 
 test('the dog dropped the chest ball; the haunch stays', () => {
-  // Frank: "he has something weird hanging below his chest now, like a round
-  // ball type thing" — the brisket never merged with the body line, so the
+  // The brisket read as a round ball hanging below the chest — it never merged
+  // with the body line, so the
   // dog stopped asking for it. The option itself stays on the shared plan.
   const dog = makeDog({});
   assert.strictEqual(dog.getObjectByName('chest'), undefined, 'no brisket');

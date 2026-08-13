@@ -53,8 +53,8 @@ test('the beard is RED, and starts invisible', () => {
   //
   // RED, not ink. The portrait drains to ink under it over the same envelope, so
   // while the beard is up it is the only warm mark on the page — a black figure
-  // wearing the one thing it is famous for not having (Frank: "the beard will
-  // appear and be red, so it will stand out").
+  // wearing the one thing it is famous for not having — and the beard is the
+  // only red left while it is up, so it stands out.
   const scene = staged().scene;
   const beard = scene.getObjectByName('beard');
   assert.ok(beard, 'the beard is built even though it cannot be seen');

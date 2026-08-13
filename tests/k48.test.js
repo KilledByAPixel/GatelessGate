@@ -111,8 +111,8 @@ test('the ship rides the same swell the foam does', () => {
 // ---- the fan, and the shower it calls -------------------------------------
 // THE STROKE IS GONE. Kembo "draws the figure one in the air", so a red bar
 // used to hang there and a tap redrew it left to right at the speed of a brush.
-// It never read as a mark being made (Frank: "the thing that comes out, like a
-// rectangle kinda comes out, appears — let's get rid of that"): a horizontal
+// It never read as a mark being made — what came out read as a rectangle
+// appearing: a horizontal
 // slab in mid-air has no brush behind it and nothing in the picture explains
 // where it came from. What replaced it is Ummon's half of the case — his fan
 // jumped to the thirty-third heaven and struck the carp of the eastern sea, so

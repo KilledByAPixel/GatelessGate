@@ -13,8 +13,7 @@ import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 // Case 19 has no object at its centre, so its two red seals are weather: the
 // harvest moon and the wildflowers along the verge — spring and autumn, the
 // verse's first two lines, in the same picture. (Butterflies held the near seal
-// for a round; Frank has since put the blooms back and moved the butterflies to
-// case 12.) Both are easy to get subtly wrong in ways nothing else in the suite
+// for a round; the blooms are back and the butterflies moved to case 12.) Both are easy to get subtly wrong in ways nothing else in the suite
 // would catch — a moon that the fog quietly erases, or that a pale invisible
 // slope stands in front of; blooms that grow in the middle of the road.
 
@@ -155,8 +154,8 @@ test('the blooms carry the red, the stalks do not, and none of them grows in the
 // THE GUST FRONT IS GONE. Both taps used to call flowers.gustAt(), whose
 // envelope added straight onto each bloom's lean and, stacked on the wind
 // already in that sum, folded the blooms flat — they read as being pulled
-// under (Frank: "the flowers kinda get sucked into the ground... we should
-// get rid of that"). The breath is carried by the wind level alone now, so
+// under, as though sucked into the ground. The breath is carried by the wind
+// level alone now, so
 // what this pins is the wind swelling and settling exactly, and the field
 // never being driven past its own resting sway.
 test('touching the meadow lifts the wind; touching the moon shifts the light', () => {
@@ -201,7 +200,7 @@ test('touching the meadow lifts the wind; touching the moon shifts the light', (
   // the disc a few percent toward the paper, which nobody could see; fading the
   // disc out by opacity BROKE it, because makeMoon's shader writes
   // gl_FragColor.a = 0 as an ink-mask marker and turning on `transparent` makes
-  // the blender read that as see-through (Frank: "the moon is not red anymore").
+  // the blender read that as see-through, and the moon stopped being red.
   // Nothing here touches the moon's material at all now.
   ctx.input.raycastFirst = (cam, objs) => (objs.includes(moon) ? { object: moon, point: moon.position.clone() } : null);
   const sun = root.scene.getObjectByProperty('isDirectionalLight', true);
@@ -242,8 +241,8 @@ test('touching the meadow lifts the wind; touching the moon shifts the light', (
 
   // ONLY THE SKY. The background goes all the way to the moon's red; the fog —
   // which is what the LAND dissolves into — comes barely a third as far, so the
-  // far meadow and the mountains stay their own colour (Frank: "the whole page
-  // is not gonna turn red, just the sky").
+  // far meadow and the mountains stay their own colour: the SKY reddens, never
+  // the whole page.
   // measured as the SHIFT off paper, not the absolute warmth — paper is already
   // a warm off-white, so its own redness swamps a ratio taken raw
   const base = new THREE.Color(PAPER);
@@ -261,8 +260,8 @@ test('touching the meadow lifts the wind; touching the moon shifts the light', (
   assert.equal(root.scene.fog.color.getHexString(), fogHome, 'fog too, exactly');
 });
 
-// This case is where the grass shadow was CAUGHT (Frank: "usually grass doesn't
-// cast shadows") — moving the key onto the moon's low bearing threw 3.5x the
+// This case is where the grass shadow was CAUGHT — grass has no business
+// casting one — when moving the key onto the moon's low bearing threw 3.5x the
 // footprint the stock key does, and made visible something every page had been
 // doing. The fix went global, in tuftfield.js and ui/debug.js, so what is left
 // here is a witness: this page must not quietly go back to casting.
@@ -382,9 +381,9 @@ test('wildflowers place exactly the count asked for, in two instanced draws (pal
   assert.equal(f.blooms, 60);
   assert.equal(f.points.length, 60);
 
-  // BY DEFAULT NOTHING IS RED (Frank: "the petals should be whitish, the same
-  // colour family as the ground, and the stalk the same kind of colour as the
-  // grass"). Heads sit just off the paper, stems wear the grass tone, and
+  // BY DEFAULT NOTHING IS RED: petals whitish, in the ground's own colour
+  // family, and stalks in the grass's. Heads sit just off the paper, stems
+  // wear the grass tone, and
   // neither may trip the seal-glow emissive that accent-family colours get.
   assert.equal(f.mesh.material.color.getHexString(), new THREE.Color(wash(0.10)).getHexString(),
     'default petals are whitish, in the ground family');

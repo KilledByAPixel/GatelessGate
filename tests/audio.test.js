@@ -351,13 +351,13 @@ test('emitterCount counts sound sources, not beds', () => {
 });
 
 test('the bell has treble — it can actually ding', () => {
-  // THE BUG Frank heard: "almost like a dull thud and then a bit of reverb,
-  // rather than a ding and then a bit of a continued ring." The old table
+  // THE BUG: a dull thud and a bit of reverb, rather than a ding and a
+  // continued ring. The old table
   // stopped at 5.43x the fundamental, so case 16's bell (f0 98) had NOTHING
   // above 532 Hz. The ear peaks at 2-5 kHz and a struck-metal ding lives at
   // 1-4 kHz. It was not that the bell rang badly; there was no bell up there
-  // to ring. Frank ranked case 26 (f0 150) over 16 (f0 98) over 9 (f0 49) —
-  // exactly the order of their treble ceilings.
+  // to ring. Ranked by ear the three bell cases came out 26 (f0 150) over 16
+  // (f0 98) over 9 (f0 49) — exactly the order of their treble ceilings.
   const { partials } = bellVoice(1);
   const top = Math.max(...partials.map((p) => p.freq));
   assert.ok(top > 1200, `still no treble: the voice tops out at ${Math.round(top)} Hz`);
@@ -445,10 +445,10 @@ test('bellTail tracks the voice actually struck, not a guess sized to one pitch'
 });
 
 test('the shimmer cluster gives even a great bell some treble', () => {
-  // Frank pinned `brightness` at its maximum on all three presets — he was
-  // asking for treble the model could not make. The named series stops at
+  // `brightness` ended up pinned at its maximum on all three presets, asking
+  // for treble the model could not make. The named series stops at
   // 15.1x, so the ceiling falls with the pitch: the `great` bell at 46.6 Hz
-  // had NOTHING above 704 Hz, which is why he hauled its clang to 2.59 and
+  // had NOTHING above 704 Hz, which is why its clang went to 2.59 and
   // its brightness to the stop. A real bell's modal density RISES with
   // frequency; the shimmer cluster is that, and it is what fills the gaps a
   // sparse sine stack leaves in the 1-6 kHz band.
@@ -507,10 +507,10 @@ test('shimmer modes are single oscillators, not wasted pairs', () => {
   for (const p of partials.slice(0, 11)) assert.ok(p.detune > 0);
 });
 
-test("the three presets are Frank's bells: bigger is lower, longer, clangier", () => {
-  // The family he arrived at by ear, which is real bell physics: a bigger bell
+test('the three presets are one family: bigger is lower, longer, clangier', () => {
+  // The family arrived at by ear, which is real bell physics: a bigger bell
   // is lower AND rings longer AND clangs harder AND pings LOWER AND sits in
-  // more room. If a change breaks this ordering it has broken his tuning.
+  // more room. If a change breaks this ordering it has broken the tuning.
   const { hand, temple, great } = BELL_PRESETS;
   assert.ok(hand.size < temple.size && temple.size < great.size);
   assert.ok(hand.ring < temple.ring && temple.ring <= great.ring);
@@ -523,11 +523,11 @@ test("the three presets are Frank's bells: bigger is lower, longer, clangier", (
 // ---- fix round: the faithfulness deliverable itself was uncovered — a
 // wrong-but-plausible refit passed every test above. These pin it down.
 
-test("preset ampMult is EXACT, not fit — zero residual against Frank's original macros", () => {
+test('preset ampMult is EXACT, not fit — zero residual against the original macros', () => {
   // CODE REVIEW CAUGHT: BELL_PRESETS used to store a lossy amplitude-weighted
   // FIT onto four bands (worst case: hand idx1, the strike note, at +140%).
-  // ampMult must now reproduce EXACTLY what Frank's ORIGINAL, overlapping
-  // macros (task-5b-brief.md's top table: brightness on freq > 700 Hz, hum
+  // ampMult must now reproduce EXACTLY what the ORIGINAL, overlapping
+  // macros (brightness on freq > 700 Hz, hum
   // on mode 0 alone, clang on the top FOUR modes by INDEX) produced per
   // named mode — recomputed here from that formula, independently of
   // whatever synths.js currently ships, so a future refit that reintroduces
@@ -550,7 +550,7 @@ test("preset ampMult is EXACT, not fit — zero residual against Frank's origina
     assert.equal(actual.length, NAMED_MODE_COUNT, `${name}: ampMult is not one entry per named mode`);
     for (let i = 0; i < NAMED_MODE_COUNT; i++) {
       assert.ok(Math.abs(actual[i] - expected[i]) < 1e-9,
-        `${name} mode ${i}: shipped ${actual[i]}, Frank's original macros produced ${expected[i]} — this is drift, not a rounding difference`);
+        `${name} mode ${i}: shipped ${actual[i]}, the original macros produced ${expected[i]} — this is drift, not a rounding difference`);
     }
   }
 });
@@ -592,7 +592,7 @@ test('shimmer modes above ~16kHz are dropped, not aliased', () => {
 
 test('applyBellPreset renormalizes so a dressed preset never sums louder than its own bare voice', () => {
   // CODE REVIEW CAUGHT: BELL.level is calibrated against the UNDRESSED
-  // partial-table sum (see BELL's own comment). Frank's per-mode multipliers
+  // partial-table sum (see BELL's own comment). The per-mode multipliers
   // push a dressed sum well past that with no cap otherwise — measured:
   // hand ~2.24x, temple ~1.85x, great ~1.39x — a real clip risk on a path no
   // case calls yet. applyBellPreset must claw the sum back to parity, per
@@ -609,7 +609,7 @@ test('applyBellPreset renormalizes so a dressed preset never sums louder than it
 
 test('applyBellPreset renormalization preserves every ratio between two modes exactly', () => {
   // A single scalar over the whole voice corrects the OVERALL level; it must
-  // not touch the SHAPE Frank tuned between any two of his own modes — the
+  // not touch the SHAPE tuned between any two modes — the
   // ratio of dressed amps must equal the ratio of (base amp * ampMult) for
   // every pair, unchanged by whatever the normalizer turns out to be.
   const preset = BELL_PRESETS.hand;
@@ -1325,7 +1325,7 @@ test('jitterHz stays within ±STRIKE_JITTER_CENTS and is centred', () => {
 test('the rain bed is a steady shower: continuous, level, bounded, loopable', () => {
   // Revision note: this test's first life pinned the OPPOSITE (crest > 6,
   // "patter, not wash") — the theory that discrete drops distinguish rain
-  // from surf. Frank's ear overruled it: sparse ticks read as dripping taps.
+  // from surf. That was overruled by ear: sparse ticks read as dripping taps.
   // What distinguishes rain from surf is steadiness (see RAIN's comment in
   // synths.js), so that is what gets pinned now, from both sides.
   const SR = 44100;

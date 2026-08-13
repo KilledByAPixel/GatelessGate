@@ -177,7 +177,7 @@ test('a scene can be built without its gate, path, monk or lanterns', () => {
   assert.equal(typeof bare.dispose, 'function');
 });
 
-// THE PREFACE'S OWN SCENE (Frank: "let's create a separate preface scene").
+// THE PREFACE'S OWN SCENE, not the hub with a prop removed.
 // It used to be the hub with the gate removed; it is a bespoke diorama now —
 // the road the reader arrives on FORKS ("thousands of roads enter it"), a
 // bonshō and a flag stand either side of the split, and no gate exists
@@ -235,8 +235,8 @@ test('the preface carries the bell and the flag, and both answer a touch', async
   }
 });
 
-// Frank: "how do we have this set up differently at all? because right now it
-// looks exactly the same." The preface answered that by leaving the hub
+// The preface used to read as identical to the Contents. It answered that by
+// leaving the hub
 // machinery entirely — it is a different KIND of scene now, which this file
 // pins above. The Contents and the afterword still both render buildHub, so
 // the old convergence risk — one shared seed constant quietly making them the
@@ -295,8 +295,7 @@ test('the afterword seats its meditator UNDER a tree, whatever the seed does', a
 });
 
 test('the cat stayed behind too, sitting beside him and looking the same way', async () => {
-  // Frank: "for the afterword lets add the cat to the scene sitting nearby."
-  // Derived off the meditator the same way he is derived off his tree, so it
+  // The cat sits nearby in the afterword. Derived off the meditator the same way he is derived off his tree, so it
   // follows him if the seed moves him — the failure this page has already had
   // once, when a written-down coordinate outlived the scatter that produced it.
   const built = (await loadKoan(AFTERWORD_SLUG)).build();
@@ -410,7 +409,7 @@ test('the afterword\'s own build() clears the whole stage', async () => {
 });
 
 test('the preface monk rings the bell — the red figure acts through the bonshō', async () => {
-  // Frank's audit: "when you click on the red guy, it rings the bell." Same
+  // Touching the red figure rings the bell. Same
   // strike and the same 0.5s floor as tapping the bonshō itself, spatialised
   // at the bell — the bell is what sounds, whoever asked it to.
   const taps = [];

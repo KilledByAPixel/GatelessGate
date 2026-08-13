@@ -50,9 +50,8 @@ test('lantern stacks its stones above y=0', () => {
 });
 
 test('lantern firebox is a truly open chamber — no interior box, candle inside', () => {
-  // Fix round 3 (Frank: "there's something like a glass effect on the lantern
-  // walls — make it just an open lantern so we can see the flame better"):
-  // round 2's dark BackSide interior box read as smoked-glass panes, so it is
+  // Fix round 3: round 2's dark BackSide interior box read as smoked-glass
+  // panes over the firebox, hiding the flame, so it is
   // deleted outright. Open now means OPEN — a level ray through a face sails
   // clean out the far side and lands on nothing at all.
   const l = makeLantern({});
@@ -90,8 +89,8 @@ test('lantern firebox is a truly open chamber — no interior box, candle inside
 });
 
 test('case 28\'s flame is visible from the case\'s own home camera', () => {
-  // Fix round 1 measured band overlap; round 2 asserts the thing Frank
-  // actually asked for — an unobstructed SIGHT-LINE. The home camera pose comes
+  // Fix round 1 measured band overlap; round 2 asserts the thing that actually
+  // matters — an unobstructed SIGHT-LINE. The home camera pose comes
   // from the rig's own eyePosition rather than a reproduced copy of its trig
   // (the disclosed reproduce-the-formula tradeoff the roof-rim test below still
   // carries), and a ray from there to the flame must reach it before any
@@ -127,7 +126,7 @@ test('lantern roof rim kicks up above the low point just behind it', () => {
   // Mutation-provable: flip the sign of LIP in the builder and this goes
   // false. The rim radius is READ BACK off the geometry rather than restated
   // here — it used to be a copy of the builder's 0.21·H constant, and the
-  // moment Frank retuned the roof (0.25·H, and the dip flattened to zero) the
+  // moment the roof was retuned (0.25·H, and the dip flattened to zero) the
   // buckets stopped matching any vertex and the test failed for the wrong
   // reason. What is being pinned is the SHAPE, not the numbers.
   const H = 1.15;
@@ -194,9 +193,9 @@ test('path.sample gives centerline point, heading, and across-path vector', () =
 test('path.keepout tapers with the stroke and never uncovers the ribbon', () => {
   // Two failure modes, both shipped once, hold this test's two halves:
   // the chain at constant radius left a full-width bald strip around the
-  // hair-thin tip (Frank: "the grass keepout does not taper"), and radii
-  // scaled in place came apart between beads (Frank: "grass appearing on
-  // top of the road in the tapered area"). Tapering correctly means smaller
+  // hair-thin tip — the keepout not tapering with the road — and radii
+  // scaled in place came apart between beads, letting grass grow on top of the
+  // road through the taper. Tapering correctly means smaller
   // circles AND proportionally tighter spacing — so the check that matters
   // is COVERAGE: everywhere along the stroke, the ribbon's own edge is
   // inside some circle, while the verge still narrows to a hair at the tip.

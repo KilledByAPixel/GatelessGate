@@ -214,10 +214,9 @@
     const lintel = new THREE.Mesh(new THREE.BoxGeometry(3.4, LINTEL_H, 0.32), lintelMat);
     lintel.position.set(0, LINTEL_Y, 0);
     scene.add(lintel);
-    // THE HANG POINT — a real bug Frank caught by eye: "their pivot point
-    // should be the connection point where they're connected to the thing
-    // above, and it's not set up properly. So the lowest one is right now
-    // actually inside the top of the wall, or the ceiling." Every hanging
+    // THE HANG POINT — a real bug, caught by eye. A hanging thing's pivot has
+    // to BE the point it is attached by, and it was not: the lowest chime sat
+    // inside the ceiling it hung from. Every hanging
     // object was placed at LINTEL_Y — the beam's CENTRE — so the top of every
     // cord was buried half a beam deep, and a small chime (whose cord scales
     // with its size) disappeared into the wood entirely. A thing hangs from
@@ -327,10 +326,8 @@
     // anyway). If k29.js's own numbers move, this mode drifts until someone
     // updates it here too — no test enforces this pairing; tests/k29.test.js
     // checks the REAL case, this is only what the harness shows.
-    // (The five-tube ring that used to hang here alongside them is gone —
-    // Frank's own call: "for case twenty nine, let's get rid of the five-tube
-    // ring that's placed. So it's just gonna have three, the three different
-    // sizes.")
+    // (The five-tube ring that used to hang here alongside them is gone: case
+    // 29 is three singles at three sizes and nothing else.)
     const CASE29_LAYOUT = {
       singleX: [-0.72, 0, 0.72],
       singleSizes: [0.18, 0.12, 0.09],
@@ -345,8 +342,8 @@
     };
     // Absolute cord lengths for the "three sizes" mode, matching what k29
     // now does. With cord measured in units of SIZE the smallest chime gets
-    // the shortest string and ends up pinned to the beam — Frank: "the small
-    // ones are not hanging low enough." These bring all three bottom edges
+    // the shortest string and ends up pinned to the beam, which is exactly the
+    // chime that most needs to reach down. These bring all three bottom edges
     // to roughly the same line, so the set reads as three SIZES rather than
     // three heights.
     // ...and SOLVED from the size rather than listed, so dragging a size
@@ -591,7 +588,7 @@
     // follow-up: these two numbers ARE the ring-down's diminuendo shape
     // (cylinder.js's own FORCE NORMALISATION comment has the measured
     // before/after), and until now they were plain consts a slider on this
-    // page couldn't reach — the exact thing Frank needs to judge whether the
+    // page couldn't reach — the exact thing needed to judge whether the
     // taper reads as a bell fading or a sustained ring that just softens
     // near the tail. Same live-object-write pattern as CYL_SWING/BRONZE.
     const cylForceWrap = document.getElementById('cyl-force-fields');

@@ -8,9 +8,8 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 // pass through. Why can't his tail pass too?"
 //
 // Tug the tail and he swings CLOCKWISE to face away, stops and shakes it, then
-// carries on the same way round until he is standing exactly as he was (Frank:
-// "the buffalo is facing towards us, so let's have it turn around clockwise,
-// then shake its tail, then turn back clockwise, completing a full circle").
+// carries on the same way round until he is standing exactly as he was — one
+// full circle, always clockwise.
 // Everything passes through, his tail comes round after it, and nothing has
 // happened — which is the koan.
 
@@ -146,9 +145,8 @@ test('case 37: the whole animal is the target, not just his tail', () => {
   // It WAS the tail alone — the one part of him painted full ACCENT against
   // his deepened body, so the small thing the reader is invited to touch was
   // the small thing the case is named for. A lovely argument, and it meant the
-  // page was dead to anybody who did the obvious thing (Frank: "I'm still not
-  // getting anything from thirty seven with the buffalo. Click on the buffalo,
-  // and I don't see it turn around. I don't see it do anything").
+  // page was dead to anybody who did the obvious thing: clicking the buffalo
+  // itself produced nothing at all.
   //
   // A target chosen because it is thematically right is still wrong if it is
   // not the thing a hand goes to.

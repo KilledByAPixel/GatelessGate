@@ -14,8 +14,7 @@ const main = readFileSync(join(ROOT, 'src/main.js'), 'utf8');
 // input.clear() empties the whole tap-callback list. That is right for the page
 // being left and wrong for main.js's own handlers, which are registered once at
 // startup — so the first page turn dropped them for the rest of the session and
-// the kit's hung chimes became unclickable with nothing to read (Frank: "i
-// still cant click on the chimes connected to the huts"). clearInput() is the
+// the kit's hung chimes became unclickable with nothing to read. clearInput() is the
 // one way to do it, and it puts main's handlers back.
 test('main.js never wipes its own tap handlers', () => {
   const wrapper = main.match(/function clearInput\(\)\s*\{[\s\S]*?\n\}/);

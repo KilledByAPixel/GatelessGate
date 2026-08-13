@@ -99,13 +99,12 @@ test('hang point: every mesh hangs below the origin', () => {
 
 test('grabbing the WHOLE ring rings a cluster — several tubes, one side', () => {
   // THE TWO COMPLAINTS THIS SITS BETWEEN, because they sound contradictory
-  // and are not. Frank, originally: "hitting this one thing causes a whole
-  // bunch of sounds" — that was ring() firing tube k AND an arbitrary k+1
-  // with no way to touch a specific tube at all, and the answer was per-tube
-  // picking (the test below this one). Frank, after that shipped: "when I
-  // click on it, I only ever hear one sound. I never hear more than one
-  // sound on the five tube ring... that's kind of the whole point of those
-  // multi ones." The distinction is WHAT WAS TOUCHED: naming a tube rings
+  // and are not. FIRST: touching one thing made a whole bunch of sounds —
+  // ring() fired tube k AND an arbitrary k+1, with no way to touch a specific
+  // tube at all, and the answer was per-tube picking (the test below this one).
+  // THEN, once that shipped: a tap only ever made ONE sound, on a five-tube
+  // ring where several notes at once is the whole point. The distinction is
+  // WHAT WAS TOUCHED: naming a tube rings
   // that tube alone; closing your hand on the whole chime brushes the side
   // it came from and several speak.
   //
@@ -126,8 +125,8 @@ test('grabbing the WHOLE ring rings a cluster — several tubes, one side', () =
 });
 
 test('a tap keeps ringing as it settles, and the ring-down fades out', () => {
-  // Frank, on the singles: "I would expect it would maybe get knocked more
-  // than once while it's getting knocked around." The clapper is a second
+  // A knocked-about single should get knocked more than once. The clapper is
+  // a second
   // pendulum now, so the swing a tap kicks off keeps meeting the tubes —
   // and each meeting is softer than the last, because the force tracks the
   // closing velocity and the swing is decaying.
@@ -159,9 +158,9 @@ test('a tap keeps ringing as it settles, and the ring-down fades out', () => {
 
 test('the wind never rings the clapper — the ambient pacing belongs to the weather', () => {
   // THE INVARIANT the clapper's torque is designed around (kit/furin.js, THE
-  // CLAPPER). Frank auditioned and approved the chime's strike weather; the
-  // clapper is a TAP mechanism and must not start contributing wind strikes
-  // behind its back.
+  // CLAPPER). The chime's strike weather is settled and approved; the clapper
+  // is a TAP mechanism and must not start contributing wind strikes behind its
+  // back.
   //
   // WHAT ACTUALLY HOLDS IT, measured rather than assumed — because the first
   // draft of this comment claimed a guarantee stronger than the one the code
@@ -195,8 +194,8 @@ test('the wind never rings the clapper — the ambient pacing belongs to the wea
 });
 
 test('a tap rings ONE tube — the one you touched', () => {
-  // Frank: "just hitting, like, one of them, hitting this one thing causes a
-  // whole bunch of sounds." ring() fired tube k AND k+1, and the only pick
+  // Hitting one tube used to cause a whole bunch of sounds: ring() fired tube
+  // k AND k+1, and the only pick
   // target was a drum around the whole ring, so there was no way to touch a
   // single tube even if it had wanted to.
   const hits = [];
@@ -262,10 +261,10 @@ test('a single-tube chime is one tube on a cord, with no ring', () => {
 
 test('a single is a BELL with the clapper hidden inside it, and the paper hangs below', () => {
   // THE SHAPE, replacing two tests that measured the thing this is not.
-  // Frank, having gone and looked real ones up: "the clapper is kind of next
-  // to the chime, but it's not actually connected to anything... widen the
-  // chime's radius a bit and get rid of the separate clapper, and it'd be
-  // like the bronze cylinder where the clapper is just inside and we don't
+  // A real 風鈴 is a small bell with the clapper hidden inside it. What was
+  // here had the clapper off to the SIDE, connected to nothing. Widen the
+  // body and drop the separate clapper and it becomes what the bronze
+  // cylinder already is: the clapper is just inside and we don't
   // render it. Below the chime there's a hanging rectangular piece of paper."
   //
   // What was there was a Western tubular chime — a 22:1 wire — carrying a
@@ -316,8 +315,8 @@ test('a single is a BELL with the clapper hidden inside it, and the paper hangs 
 });
 
 test("the paper turns on its thread, harder for a harder knock, and never winds up", () => {
-  // Frank: "that could also rotate around the vertical axis as a swing, so
-  // it kind of starts spinning, and it has a kind of a spin parameter."
+  // The paper strip turns about the vertical axis too, and past a hard enough
+  // knock it goes right over and spins.
   const turns = (force) => {
     const f = makeFurin({ tubes: 1, size: 0.17, seed: 8 });
     const pivot = f.group.getObjectByName('spin-pivot');
@@ -327,8 +326,8 @@ test("the paper turns on its thread, harder for a harder knock, and never winds 
     f.ring(force);
     let peak = 0;
     // 60s, not the 25s this used to run. The strip was deliberately loosened
-    // (SPIN.damping tau 3.0s -> 6.5s, Frank: "the paper part should spin
-    // around a bit more with low resistance") and settling time scales with
+    // (SPIN.damping tau 3.0s -> 6.5s, for a strip that turns with very little
+    // resistance) and settling time scales with
     // tau — at 25s it is still 0.07 rad short of its rest angle, which is the
     // strip still moving, not the strip parked. Same claim, measured after
     // the same number of time constants.
@@ -488,14 +487,14 @@ test('a knocked chime SWINGS — it crosses centre, it does not just lean back',
   // the tap and eased back without ever passing through the middle. That was
   // replaced by a real superposed-impulse pendulum term (poseTerm), which DID
   // cross centre — but the WIND lean was still read straight off the gust
-  // curve every frame with no inertia at all, which is what Frank was
-  // actually pointing at: "it kinda gets held in position weirdly." This test
+  // curve every frame with no inertia at all — the chime read as being HELD
+  // in position rather than swinging. This test
   // predates that second fix and still exercises the tap in isolation (wind
   // off), so its assertions carry over unchanged onto the new model — a real
   // driven pendulum (src/kit/pendulum.js) with taps as velocity kicks
   // (ring()/tapKick) rather than a decaying-sine term superposed on a
-  // kinematic lean. Frank: "it has, like, a weird dampening on its rotation.
-  // It doesn't swing back and forth, like, I would expect it to."
+  // kinematic lean, which read as a strange damping that never let it swing
+  // back and forth at all.
   const f = makeFurin({ seed: 3, phase: 0, onStrike: () => {} });
   f.setWindLevel(0);
   const swing = f.group.getObjectByName('swing');
@@ -825,8 +824,7 @@ test('SUSTAINED rapid mashing — real elapsed time between kicks, not an instan
 });
 
 test('it hangs by a STRING, and swings from the knot at the top of it', () => {
-  // Frank: "the furin should have a string attached to the top of it, and
-  // rotate around the string attach point — that is the rotation point."
+  // A furin hangs by a string, and the point it is tied at IS its pivot.
   const S = 0.2;
   const f = makeFurin({ size: S, seed: 5 });
   const cord = f.group.getObjectByName('cord');
@@ -860,10 +858,9 @@ test('it hangs by a STRING, and swings from the knot at the top of it', () => {
 // THE OPENING. simTime is global and never resets per case, so a fresh load is
 // the one moment the book reads these curves at t = 0. Both were sums of two
 // sines with no offset — zero AND rising at the origin, adding coherently —
-// so every session opened on weather it almost never sees otherwise. Frank:
-// "the chimes are a lot louder initially, and then they kinda quiet down...
-// I'm not getting the right vibe of what the actual scene is supposed to be
-// like until it settles."
+// so every session opened on weather it almost never sees otherwise — the
+// chimes came in much louder at first and quieted down once it settled, so the
+// scene never opened as itself.
 // ---------------------------------------------------------------------------
 
 test('a chime does not open a session mid-flurry', () => {

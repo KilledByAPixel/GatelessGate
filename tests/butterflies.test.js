@@ -30,7 +30,7 @@ test('a butterfly is two shaped wings and nothing else, red, double-sided', () =
       assert.equal(w.material.side, THREE.DoubleSide, 'wings read from both faces');
       assert.equal('#' + w.material.color.getHexString(), ACCENT.toLowerCase(), 'red by default');
       // A SHAPED wing, not a quad: eight outline points fanned into six
-      // triangles (Frank asked for a wing shape rather than a bow-tie), still
+      // triangles — a wing shape rather than a bow-tie — still
       // hinged on the body line so every root vertex sits at x = 0.
       const pos = w.geometry.getAttribute('position');
       assert.equal(pos.count, 18, 'eight outline points, fanned');
@@ -59,8 +59,8 @@ test('the wings flap — a seeded beat, wings mirrored about the body line', () 
   assert.ok(Math.min(...angles) < 0.2, 'and spread nearly flat again');
 });
 
-// Frank, on the perched ones: "they can still move their wings a little even
-// though they're stationary — really slowly, so they're not fully not moving."
+// A perched butterfly still moves its wings a little — very slowly, never
+// fully still.
 // So the pause is a change of PACE, not a freeze: the wings must keep opening
 // and closing, far slower and far shallower than a beat, and never sit still.
 test('a perched butterfly keeps breathing with its wings, very slowly', () => {
@@ -93,8 +93,8 @@ test('a perched butterfly keeps breathing with its wings, very slowly', () => {
 });
 
 test('they fly, they stay in their box, and they COME DOWN to the grass', () => {
-  // Frank asked for a round rather than a hover: "changing height as well,
-  // like kinda landing on the grass for a little bit and flying away." So the
+  // A ROUND rather than a hover: they change height, land on the grass a
+  // while, and fly away again. So the
   // old "never lands" claim is exactly inverted — what has to hold now is
   // that they use the whole band, touch down, and never sink through it.
   const flock = makeButterflies({ count: 5, seed: 19, center: [2, -1], radius: 3, height: [0.6, 2.2] });
@@ -146,8 +146,8 @@ test('a butterfly faces the way it is drifting', () => {
 // opposite directions: the first added `E * 0.5 * lift` to y, which cannot move
 // a perched butterfly at all because lift is zero on the ground; the second
 // forced lift to 1 and shot the flock up its whole flying band in a fraction of
-// a second (Frank: "they fly up in the air way too fast... they get pushed up
-// right into the air. If they're on the ground, just resume flying"). What a
+// a second, so the flock read as being launched rather than as resuming
+// flight. What a
 // scare does now is run the path clock ahead — they cover more of the wander
 // they were already on, in the direction they were already going — and beat
 // about twice as fast. This is the assertion that it stays that way.
@@ -226,8 +226,8 @@ test('a scare gets a perched butterfly airborne, at take-off speed', () => {
     `and flew up rather than being fired up (fastest climb ${(climb * 60).toFixed(1)} u/s)`);
   // AND IT STAYS UP. It used to pop up and drop straight back, because the
   // startle envelope was timed on the boosted path clock — the faster the scare
-  // made them fly, the sooner the scare wore off (Frank: "sometimes they go up
-  // and then go back down immediately"). Two seconds of flying, minimum.
+  // made them fly, the sooner the scare wore off — up and straight back down.
+  // Two seconds of flying, minimum.
   assert.ok(airborneFrames > 60 * 2,
     `and stays up a while (${(airborneFrames / 60).toFixed(1)}s airborne)`);
 });
@@ -251,7 +251,7 @@ test('deterministic — same seed same flight, different seed different flight, 
 });
 
 test('land: false keeps every one airborne for good — the k21 flies', () => {
-  // Frank: "don't have them land... just have them fly" — a settled fly with
+  // The k21 flies never land — a settled fly with
   // slowly breathing wings read as a resting butterfly, the wrong creature
   // over dung. With landing off, lift is 1 at every instant: no perch, and
   // no ease-dip where the round's descent used to begin.

@@ -125,8 +125,7 @@ test('one ink sitter seated exactly on the red pole\'s cap, two grey watchers fa
   assert.ok(Math.abs(seatY - capTop) <= 0.02,
     `and topY is honest — the cap's real upper face is ${capTop}`);
 
-  // The red seal is the POLE ALONE — the sitter went back to ink (Frank:
-  // "just the pole red, not the guy at the top"). Every accent mesh must
+  // The red seal is the POLE ALONE — the sitter went back to ink. Every accent mesh must
   // belong to the pole; the guy lines stay grey so the red reads as one
   // unbroken line, and the man on the cap is a dark mark on top of it.
   const accentMeshes = [];
@@ -305,9 +304,8 @@ test('runs without audio or renderer and reports a finite fragment', () => {
 // ---- the pole owns the page -----------------------------------------------
 // THE SITTER USED TO BE A TARGET. Tap him and he tipped forward seven degrees,
 // held at the edge of the step the koan demands, and settled back — the more
-// literal reading of "proceed from the top of a hundred-foot pole", and Frank
-// cut it on sight ("I don't really like how you can click on the guy at the top
-// to make them lean a little bit"). Two targets on a page whose whole subject
+// literal reading of "proceed from the top of a hundred-foot pole", and it was
+// cut on sight. Two targets on a page whose whole subject
 // is ONE vertical object was one too many, and at this distance a seven-degree
 // tip on a 1.3-unit figure eight units up is a couple of pixels: a thing the
 // code knew about and the reader did not.
@@ -341,8 +339,8 @@ test('the sitter is no longer a target of his own — the pole is the page', () 
 });
 
 test('tap the pole: it wobbles on BOTH axes, out of step with each other', () => {
-  // Frank: "can we give it, like, kind of a random wobble... sine waves for
-  // both axes of the rotation, so we could use different values." One damped
+  // A separate sine per axis, at values of their own, for a wobble that is not
+  // one lean scaled onto two axes. One damped
   // sine per axis at frequencies that do not divide into each other, with a
   // quarter turn of phase between them — so the tip of the mast traces an
   // opening spiral rather than swinging in a plane and back. A pole struck by a
@@ -422,9 +420,8 @@ test('a held pointer on the pole cannot ring the bell without limit', () => {
 });
 
 test('every tap shoves it a different way, and the same page shoves it the same way twice', () => {
-  // Frank: "can we randomize how it occurs, so it's not always in the same
-  // exact angle each time — either rotate it or pick a different starting
-  // value." The whole traced figure is turned by a bearing drawn per tap,
+  // Every tap should shove it a different way rather than always at the same
+  // exact angle. The whole traced figure is turned by a bearing drawn per tap,
   // rather than the two sines being re-tuned: a rotation keeps the character of
   // the wobble exactly — same frequencies, same uneven decay, same opening
   // spiral — and changes only which way the pole was pushed. Re-picking the
@@ -467,8 +464,8 @@ test('a tap never starts the wobble already moving', () => {
   // The z axis had a quarter turn of phase on it — a decent way to make two
   // sines trace a circle, and it meant sin() was at its PEAK on the frame of
   // the tap: the mast jumped to eight hundredths of a radian in one frame
-  // (Frank: "as soon as you click on it, it snaps to the new position... it's
-  // not gonna snap, it's gonna start moving"). Both start at zero now, and the
+  // — it SNAPPED to a new position on the tap instead of starting to move.
+  // Both start at zero now, and the
   // spiral comes from the two frequencies not dividing into each other.
   const ctx = fakeCtx();
   const built = k46.build(ctx);
@@ -496,9 +493,9 @@ test('taps ACCUMULATE — hammering it while it moves never pops', () => {
   // was one envelope scaled onto two axes; the second was two damped sines
   // restarted from zero on every tap. Both were SHAPES, and a shape has to
   // start somewhere — so a second tap while the mast was still moving threw
-  // away whatever it was doing and began again from nothing (Frank: "if you
-  // click multiple times while it's still moving, it starts to pop. So what we
-  // kinda wanna do is apply, like, an acceleration").
+  // away whatever it was doing and began again from nothing, so tapping
+  // repeatedly made it pop. What it wants is an ACCELERATION applied to
+  // something already in motion.
   //
   // kickPendulum touches only omega, so the rendered ANGLE is untouched at the
   // instant a tap lands and a second shove adds to the first — the way a second
@@ -519,7 +516,7 @@ test('taps ACCUMULATE — hammering it while it moves never pops', () => {
   let peak = 0;
   for (let i = 0; i < 60 * 10; i++) {
     // a tap roughly every third of a second for four seconds, straight through
-    // the wobble — exactly what Frank did
+    // the wobble — exactly what a reader does
     if (i < 60 * 4 && i % 21 === 0) ctx._taps.forEach((cb) => cb(400, 300));
     step();
     worst = Math.max(worst, Math.hypot(mast.rotation.x - prev[0], mast.rotation.z - prev[1]));

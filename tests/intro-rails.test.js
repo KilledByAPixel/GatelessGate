@@ -38,8 +38,8 @@ test('the look never collapses onto the eye, right to the end', () => {
   }
 });
 
-// The regression Frank reported: "it doesn't go quite through the gate all the
-// way." The dolly ended at z -3 and the gate stands at z -6. Pinned against the
+// The regression: the dolly did not go all the way through the gate. It ended
+// at z -3 and the gate stands at z -6. Pinned against the
 // hub's OWN gate position rather than a copy of it, so moving the gate along
 // the path can never silently leave the camera stopping short again.
 //

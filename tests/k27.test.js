@@ -41,7 +41,7 @@ function staged() {
   let t = 0;
   const run = (secs) => { for (const end = t + secs; t < end; t += 1 / 60) root.update(1 / 60, t); };
   // Step until something is true, rather than for a hardcoded number of
-  // seconds. DRAIN, STAGGER, EMPTY and BACK are tuning knobs Frank moves by eye
+  // seconds. DRAIN, STAGGER, EMPTY and BACK are tuning knobs moved by eye
   // — they have already been retuned twice — and a test that bakes in "2.6
   // seconds gets you to the bottom" fails on the next pass over the numbers
   // without anything being wrong. These tests are about what happens, not when.
@@ -86,8 +86,8 @@ test('case 27: one touch shrinks the hall, every tree, and both men', () => {
   assert.equal(names.monk, 2, 'and both men');
   assert.equal(names.lantern, 1, 'and the lantern');
   // the hero oak plus composeWorld's midground wood — every tree on the page,
-  // whichever kind the scatter happened to plant (Frank: "the temple, the
-  // trees, ALL of the trees, and the people")
+  // whichever kind the scatter happened to plant — the hall, every tree, and
+  // the people
   const wood = (names.oak || 0) + (names.tree || 0) + (names.pine || 0);
   assert.ok(wood >= 8, `every tree on the page goes with them (${wood})`);
 });
@@ -185,9 +185,9 @@ test('case 27: they shrink to a tenth, hold there, and come back to full size', 
   assert.equal(root.fragment().size, 1);
 });
 
-// THE ANTI-POP TEST, and the one this case exists to satisfy. Frank's complaint
-// about all three earlier versions was abruptness — "it turns red and then it
-// pops away in an instant", "the alpha still doesn't really work properly". A
+// THE ANTI-POP TEST, and the one this case exists to satisfy. The complaint
+// about all three earlier versions was abruptness: things turned red and popped
+// away in an instant, and the alpha never worked properly. A
 // thing may take as long as it likes to go; what it may not do is change by a
 // lot on one frame.
 test('case 27: no frame of the going or the coming back is a jump', () => {

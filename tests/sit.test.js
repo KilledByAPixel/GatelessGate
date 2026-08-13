@@ -36,8 +36,8 @@ test('seconds are always two digits, minutes never padded', () => {
   }
 });
 
-// Frank on the old timer: "that bell that rings when it starts the sit is just
-// such a low thud — it should be a nice ting, a ding kind of bell". The bell was
+// The old timer's bell read as a low thud where a hand bell wants a clean
+// ting. It was
 // bellPartials at 70 Hz, a bonshō an octave below anything you could call a
 // ding. The sit bell is its own voice now, four octaves up.
 test('the sit bell is a ting, not a thud', () => {

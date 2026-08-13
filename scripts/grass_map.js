@@ -1,5 +1,5 @@
 // Diagnostic: reproduce the grass placement rules and print a coverage map.
-// Frank reported "a huge square being clipped out" around the staging in k29.
+// Written to chase a huge square of grass being clipped out around k29's staging.
 // Nothing here draws — it just asks which of the three rejection rules
 // (rim thinning / patchiness / keepout) is throwing blades away, and where.
 import { hash1 } from '../src/util/noise.js';
@@ -109,7 +109,7 @@ console.log(`\npatchiness ${PATCHINESS} · near field (r<12): ${nearKept}/${near
   `(${(100 * (1 - nearKept / near)).toFixed(0)}% bare)`);
 
 // The camera always looks at the staging, so a bald patch THERE is the failure
-// Frank actually reported. Check the spots each case stands its figures on.
+// that actually gets noticed. Check the spots each case stands its figures on.
 // each case seeds its own field (composeWorld: seed * 81), so check each one's
 for (const [name, x, z, s] of [['k29 monks', 1.4, 1.7, 29], ['k29 gate', 1.4, -2.6, 29],
   ['k6 assembly', 1.2, -2.2, 6], ['k7 basin', 2.15, 0.9, 7], ['k37 buffalo', 1.0, 0.1, 37],

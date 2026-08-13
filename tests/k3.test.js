@@ -127,10 +127,10 @@ test('the staging keeps the two figures apart and inside the meadow', () => {
   const root = k3.build(fakeCtx());
   const a = guteiOf(root.scene), b = boyOf(root.scene);
   assert.ok(a && b, 'master and boy both present');
-  // The floor was 2.0 until Frank's hand-nudge pulled Gutei a step toward the
-  // boy (k3.js: "nudged by hand", gap now ~1.84). The pin's job is "not a
-  // huddle, not a shout", and his staging call is the eye this net serves —
-  // the bounds follow it.
+  // The floor was 2.0 until a hand-nudge pulled Gutei a step toward the boy
+  // (k3.js: "nudged by hand", gap now ~1.84). The pin's job is "not a huddle,
+  // not a shout", and the staging is the eye this net serves — the bounds
+  // follow it.
   const gap = Math.hypot(a.position.x - b.position.x, a.position.z - b.position.z);
   assert.ok(gap > 1.5 && gap < 4.0, `a few steps apart, not a huddle or a shout: ${gap.toFixed(2)}`);
 
@@ -139,7 +139,7 @@ test('the staging keeps the two figures apart and inside the meadow', () => {
       `figure inside the staging box: ${m.position.x}, ${m.position.z}`);
   }
   // Both sleeves are presented broadly the same way — the boy is copying, not
-  // arguing. This was an exact-equality pin until Frank's hand-tweak turned
+  // arguing. This was an exact-equality pin until a hand-tweak turned
   // the boy a half radian toward Gutei's finger ("slight turn to face
   // Gutei's finger" — k3.js); the band still fails an about-face or a
   // profile, which is what "a copy, not a confrontation" actually needs.

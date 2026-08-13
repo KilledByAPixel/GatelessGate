@@ -15,7 +15,7 @@ test('makeLights: a shadow-casting key, a hemisphere fill, and a tight shadow fr
 
   // A tight frustum is the whole point: spread over 56 units a map this size
   // stair-steps; ~100 texels/unit reads as contact shadow. The map grew with
-  // the frustum (2048/±10 -> 3072/±15, Frank's fifty-percent ask) so the
+  // the frustum (2048/±10 -> 3072/±15, half again as wide) so the
   // density never moved — both pairs sit at ~100/unit, and this pins that
   // the ratio survives future retunes of either number.
   const c = sun.shadow.camera;

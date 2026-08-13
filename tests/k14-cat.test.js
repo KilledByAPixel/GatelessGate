@@ -114,10 +114,10 @@ test('makeCat is cat-sized, not a small dog', () => {
   };
 
   // at the same withers height a cat is still the shorter-legged animal.
-  // (This used to demand a 10% margin AND a rounder barrel — Frank's dog
-  // retune of 2026-08-01 (bodyR 0.20 -> 0.25, hipX 0.13 -> 0.10) fattened
-  // the dog to the cat's own roundness and sank its leg line, both on
-  // purpose, so those cross-species ratios stopped being his intent. The
+  // (This used to demand a 10% margin AND a rounder barrel — a dog retune
+  // (bodyR 0.20 -> 0.25, hipX 0.13 -> 0.10) fattened the dog to the cat's own
+  // roundness and sank its leg line, both on purpose, so those cross-species
+  // ratios stopped being the intent. The
   // direction still holds and stays pinned; the margins belong to him.)
   const cat = makeCat({ height: 0.5, pose: 'stand' });
   const dog = makeDog({ height: 0.5 });
@@ -150,7 +150,7 @@ test('the cat ears lean away from the skull, not across it', () => {
   }
   const spread = box(ears[0]).union(box(ears[1]));
   const skull = box(cat.group.getObjectByName('head'));
-  // Was * 1.2 — Frank's 2026-08-01 retune shrank the cat's ears (r/h/x all
+  // Was * 1.2 — a retune shrank the cat's ears (r/h/x all
   // down) on purpose, spending that margin. The claim that survives is the
   // DIRECTION: the pair still spans the skull rather than stacking on top.
   assert.ok(spread.max.x - spread.min.x > (skull.max.x - skull.min.x) * 0.9,
@@ -326,9 +326,9 @@ test('tapping the cat stirs it — and that is the whole of it', () => {
 });
 
 test('touching the cat answers with fur now, and with nothing sharper', () => {
-  // Frank's audit reversed the case's pinned silence for the CAT ONLY ("a
-  // sound feedback queue when you click on the cat" — see SILENT_BY_HISTORY
-  // in tests/staging.test.js, where case 14 came off the list). The voice is
+  // The interaction audit reversed the case's pinned silence for the CAT ONLY:
+  // a touched thing has to answer (see SILENT_BY_HISTORY in
+  // tests/staging.test.js, where case 14 came off the list). The voice is
   // cloth — a brush of fur — and held soft: anything that reads as an impact
   // is the exact wrong note anywhere near this cat.
   let onTap = null;

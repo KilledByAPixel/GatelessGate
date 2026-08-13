@@ -123,8 +123,8 @@ test('unquoted searching finds the case a word came from', () => {
 });
 
 test('results come back in book order, always', () => {
-  // Frank, reading a result list: "they should always show a number order."
-  // The list is rendered exactly like the Contents — numeral in the left
+  // Results always run in number order. The list is rendered exactly like the
+  // Contents — numeral in the left
   // column — so a reader scans it as the Contents with rows removed, and
   // numbers that jump around read as a fault rather than as a ranking.
   // Relevance ordering (title hits first) is deliberately gone; `score` is

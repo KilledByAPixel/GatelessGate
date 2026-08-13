@@ -11,7 +11,7 @@ import { gustPhase, gustBuffet } from '../src/audio/synths.js';
 // answering that fast band differently (see cylinder.js's THE MECHANISM,
 // TWICE: the old decorrelated-reads design was level-triggered, and a held
 // gust parked the clapper on the wall and metronomed at the refractory —
-// Frank's 2026-08-11 hut-chime complaint, measured at a 0.52s MEDIAN gap).
+// the hut chimes' soft-metronome bug, measured at a 0.52s MEDIAN gap).
 // The resulting strikes are a physical consequence of frequency response,
 // not a scheduled event.
 //
@@ -226,8 +226,8 @@ test('a steady wind produces strikes that are IRREGULARLY spaced, not a metronom
   assert.ok(max > min * 3, `spread too narrow to read as irregular: min ${min}, max ${max}`);
 });
 
-// THE REGRESSION THIS REDESIGN EXISTS FOR (Frank, 2026-08-11, the hut
-// chimes): under the old decorrelated-reads mechanism a high gust held the
+// THE REGRESSION THIS REDESIGN EXISTS FOR (the hut chimes' soft metronome):
+// under the old decorrelated-reads mechanism a high gust held the
 // two equilibria apart past the contact gap, the clapper rested on the wall,
 // and REFRACTORY metered a soft metronome — measured at wind 1: 1200-1430
 // strikes/hour with a MEDIAN gap of 0.52s (the refractory window itself),
@@ -430,8 +430,8 @@ test('a decaying tap ring-down reports DECREASING force, not a column of 1.00s',
   // values must run meaningfully quieter than its early ones.
   // AT A REFERENCE KICK, not the shipped one. This test guards the FORCE
   // LAW, and the law's decay only shows across a long ring-down — several
-  // natural periods of re-strikes. Frank's ear-tuned tapKick (1.0 rad/s as
-  // of his harness pass) swings barely past GAP_ANGLE, giving half a dozen
+  // natural periods of re-strikes. The shipped ear-tuned tapKick (1.0 rad/s)
+  // swings barely past GAP_ANGLE, giving half a dozen
   // mid-scale, phase-noisy contacts: too short a sequence to judge a
   // diminuendo, and not what this test is about. CYL_SWING is live-mutable
   // by design (the harness writes it), so the test borrows that: pin the
@@ -465,7 +465,7 @@ test('a decaying tap ring-down reports DECREASING force, not a column of 1.00s',
   // FIRST: the last strike is meaningfully quieter than the loudest. The
   // threshold here was 0.75 — only -2.5dB — and that is exactly how a law
   // whose whole upper segment spanned 0.7 to 1.0 passed this test while
-  // Frank heard "every time it knocks, it doesn't sound less loud." -7dB is
+  // every knock still sounded exactly as loud as the last. -7dB is
   // the difference between a fade and a technicality.
   const max = Math.max(...forces);
   const last = forces[forces.length - 1];

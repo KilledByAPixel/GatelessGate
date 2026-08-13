@@ -128,8 +128,8 @@ test('rolling clacks once per slat, quietly, placed in world space', () => {
     assert.ok(Number.isFinite(c.force) && c.force > 0, 'a real, positive force');
     // task-swing-tune-brief.md, PROBLEM 3: CLACK_FORCE=0.12 was the QUIETEST
     // of all 21 audio.knock() call sites in the book — UNDER k28's 0.22 (the
-    // next quietest), not just close to it — and Frank heard nothing: "the
-    // clatter fires correctly... but Frank hears nothing." THIS ASSERTION
+    // next quietest), not just close to it — and it was simply inaudible: the
+    // clatter fired correctly and nobody could hear it. THIS ASSERTION
     // USED TO PIN THE BUG: `c.force < 0.22` — the exact inversion of what the
     // brief now asks for, written when the instruction was "err quiet" and
     // never revisited once that erred past audible. Flipped: still a quiet
@@ -155,8 +155,8 @@ test('rolling clacks once per slat, quietly, placed in world space', () => {
 });
 
 test('CLATTER.force is a live, mutable export — a harness slider reaches a roll already in progress', () => {
-  // "Make it reachable from the harness so Frank can set it by ear"
-  // (task-swing-tune-brief.md, PROBLEM 3) means dev/hanging-audition.html
+  // Reachable from the harness, so it can be set by ear: that means
+  // dev/hanging-audition.html
   // has to be able to write CLATTER.force = x and hear the very next clack
   // change — same pattern SPATIAL (src/audio/spatial.js) already proves out
   // for bell-audition/spatial-audition. Pinned directly: change it mid-roll,
@@ -493,9 +493,8 @@ test('tapping the screen rolls it up and opens the bay', () => {
 
 test('a fixed screen is held by something, and stays put', () => {
   // Case 25's dream hall is an open deck with no wall behind it, so a sudare's
-  // roller and pull cords hung in daylight holding nothing up (Frank: "the
-  // screen behind them is not attached right; let's just make it composed of
-  // horizontal slats"). Fixed keeps the slats and gives them a frame.
+  // roller and pull cords hung in daylight holding nothing up. Fixed keeps the
+  // slats and gives them a frame.
   const w = makeScreen({ width: 3.0, height: 2.3, slats: 11, seed: 25, fixed: true });
   const named = (n) => { const out = []; w.group.traverse((o) => { if (o.name === n) out.push(o); }); return out; };
 

@@ -7,9 +7,8 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 // No tree stands inside a mountain — scatter trees AND forest instances.
 // The real offenders were the forests: a stand's disc (spread up to 16)
 // overlaps the near mountain band's footprints wholesale, and for months
-// the trees simply didn't know (Frank: "a lot of the trees are stuck
-// inside mountains... clearly, obviously, trees that are inside the
-// mountain"). makeForest skips those instances and composeWorld's scatter
+// the trees simply didn't know, so plenty of them stood inside the rock.
+// makeForest skips those instances and composeWorld's scatter
 // rejects those candidates now; this net keeps it that way for every
 // scene — the 49 cases and both matter pages.
 //
@@ -51,7 +50,7 @@ test('no scatter tree stands inside a mountain, anywhere in the book', async () 
     assert.ok(feet.length > 0, `${slug}: mountains carry no footprints`);
     // presence of the instances PROPERTY proves the avoid-aware path built
     // this forest; an EMPTY list is legal (k44's stands sat entirely inside
-    // mountain rock — invisible before, empty now, and flagged to Frank)
+    // mountain rock — invisible before, empty now, and worth flagging)
     let stamped = 0;
     built.scene.traverse((o) => { if (o.name === 'forest') { assert.ok(Array.isArray(o.userData.instances), `${slug}: forest without instances stamp`); stamped++; } });
     assert.ok(stamped > 0, `${slug}: no forest meshes at all`);

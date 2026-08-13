@@ -73,8 +73,7 @@ test('the upper edge is wavy, not ruler-straight, and seeded', () => {
 // geometry, the depth-edge ink pass Sobels that buffer, and the sand's seaward
 // edge runs on under the water against un-offset ground — so the buffer carried a
 // step the scene did not, and the ink drew a dark line along the waterline
-// (Frank: "right at the bottom of the sand where it tapers down... it looks a
-// little not so good").
+// — a dark line right at the bottom of the sand where it tapers into the water.
 //
 // The z-fighting it was there to prevent is prevented by the +0.025 lift in the
 // geometry above, which is doing the real work.

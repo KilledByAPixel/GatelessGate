@@ -82,7 +82,7 @@ test('an interrupting capture bakes the composite: fresh scene, then the old sti
   // partway into the scene behind it — so it renders the new scene AND then
   // composites the old still (the dissolve quad) over it, rather than snapping
   // to a clean frame. That is the difference between paging that flows and
-  // paging that jumps (Frank). Two renders on the interrupt, one on the plain.
+  // paging that jumps. Two renders on the interrupt, one on the plain.
   const r = stubRenderer();
   const f = makeFreeze(r, null, 640, 480);
 

@@ -13,7 +13,7 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 // plane and never again, so every frame the cloth streamed somewhere the stale
 // sphere did not cover, and a tap aimed at the flying half was rejected before
 // any triangle was considered. That is why this case read as doing nothing at
-// all some of the time (Frank: "twenty two does not seem to do anything").
+// all some of the time, so the case appeared to do nothing.
 test('the banner can be touched where it actually is, not where it was built', () => {
   const ctx = fakeCtx();
   const root = k22.build(ctx);
@@ -36,8 +36,8 @@ test('the banner can be touched where it actually is, not where it was built', (
 // TWO OBJECTS, TWO ANSWERS. The banner on the pole is the flag — touch it and
 // the wind stops, which is the case. The SIGN is the red board standing beside
 // it, and touching that turns it half a round; touch it again and it goes on
-// round the same way (Frank: "when you click again it rotates again, 180 each
-// time"). The turn was briefly wired to the flag's pole, which was the wrong
+// round the same way, half a turn per tap. The turn was briefly wired to the
+// flag's pole, which was the wrong
 // object entirely — the banner already had a job and the sign had none.
 test('the sign rests square, then sweeps 180 degrees per tap, always the same way', () => {
   const ctx = fakeCtx();
