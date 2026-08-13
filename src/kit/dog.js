@@ -50,11 +50,11 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     neck: { r: 0.15, len: 0.26 },
     head: { shape: 'sphere', r: 0.165, fwd: 0.55, up: 0.30 },
     snout: { r0: 0.06, r1: 0.1, len: 0.2, fwd: 0.7, up: 0.24 },
-    // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): r width, h
-    // length, x/y/z = base offset from the head's CENTRE (keep the offsets
-    // inside the head's own radius, above, to bury the join), tilt = outward lean.
-    // These numbers reproduce the old aim-ray placement exactly (45° out on
-    // the crown); they are a starting point to tune, not a keeper.
+    // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): r width, h length,
+    // x/y/z = base offset from the head's CENTRE (keep the offsets inside the
+    // head's own radius, above, to bury the join), tilt = outward lean. These
+    // numbers reproduce the old aim-ray placement exactly (45° out on the
+    // crown); they are a starting point to tune, not a keeper.
     ears: { r: 0.07, h: 0.16, x: 0.07, y: 0.08, z: -.03, tilt: 1.6 },
     // rump: `back` sits just short of `hipZ` so the mass gathers where the hind
     // legs actually drive into the barrel. LOW AND LONG: an earlier round stood

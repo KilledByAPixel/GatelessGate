@@ -226,41 +226,32 @@ export function clapForce(relOmega, capOmega) {
   return Math.pow(clamp(Math.abs(relOmega) / cap, 0, 1), gamma);
 }
 
-// NOTE FROM SIZE — the single-tube variant only (task-swing-tune-brief.md,
-// PROBLEM 1: "In twenty nine, there are three wind chimes that play
-// different sounds... but the actual size of them doesn't change"). A
-// tubes:1 chime always reports tube index 0 — there is only one tube — so
-// cases used to choose the pitch themselves regardless of geometry (k29.js
-// substituted three explicit notes in onStrike, the last place in the book
-// where a case picked a note independent of the size that's supposed to
-// imply it: audio.bell() already takes a size and derives pitch, and
-// src/kit/cylinder.js's own noteForSize already does this for the bronze
-// cylinder). Now the case asks for a `size` and the note follows, the same
-// rule everywhere else.
+// NOTE FROM SIZE — the single-tube variant only. A tubes:1 chime always reports
+// tube index 0, there being only one tube, so cases used to choose the pitch
+// themselves regardless of geometry: three chimes of visibly different size
+// could sound the same, or the same size sound different. That was the last
+// place in the book where a case picked a note independent of the size that is
+// supposed to imply it — audio.bell() already derives pitch from size, and
+// cylinder.js's own noteForSize already does this for the bronze. Now the case
+// asks for a `size` and the note follows.
 //
 // THE PHYSICS: a free-free bar's fundamental runs f ~ thickness/length^2.
-// Modelled here holding thickness CONSTANT — the actual tube geometry below
-// scales diameter too, but only WEAKLY and on purpose (DIAM_WEAK_EXP), and
-// that weak cosmetic term is deliberately left OUT of the pitch model: the
-// "note" reported to onStrike is a picked synth parameter, not a
-// measurement taken off the mesh, so there is nothing to reconcile by
-// making the model track a decoration. A length ratio r therefore implies a
-// frequency ratio of 1/r^2; the book's scale runs NOTE_PER_OCTAVE=5 degrees
-// per octave (src/audio/tuning.js's SCALES are each five notes long,
-// matching cylinder.js's own NOTE_SPAN comment), so a length ratio maps to
-// a degree shift of -2*NOTE_PER_OCTAVE*log2(r) — the 2 is the square in
-// f~1/L^2, NOTE_PER_OCTAVE converts an octave of frequency into degrees.
-// Checks out against the brief's own worked example: r=1.41 (root-2) gives
-// a 5-degree (one octave) shift, r=2 gives 10 degrees (two octaves) — "an
-// octave down is a tube 1.41x longer, two octaves is 2x longer."
+// Modelled holding thickness CONSTANT — the tube geometry below scales diameter
+// too, but only weakly and on purpose (DIAM_WEAK_EXP), and that cosmetic term is
+// deliberately left OUT: the "note" reported to onStrike is a picked synth
+// parameter, not a measurement taken off the mesh, so there is nothing to
+// reconcile by making the model track a decoration. A length ratio r implies a
+// frequency ratio of 1/r^2, and the book's scale is a fixed number of degrees
+// per octave, so the shift is -2*NOTE_PER_OCTAVE*log2(r): the 2 is the square in
+// f~1/L^2, and NOTE_PER_OCTAVE converts an octave of frequency into degrees. It
+// checks out against the intended feel — an octave down is a tube root-2 longer,
+// two octaves a tube twice as long.
 //
-// SIZE_REF is the book's long-standing furin default — every staged chime
-// used this size before this task — so note 0 falls at the size a case has
-// always used, and a case that never touches size sounds exactly as it
-// always has; SIZE_MIN/MAX bound the exported function the same way
-// cylinder.js's own noteForSize bounds itself, so a future caller outside
-// the sizes this task actually exercises can't extrapolate into an
-// implausible octave.
+// SIZE_REF is the book's long-standing furin default, so note 0 falls at the size
+// cases have always used and one that never touches size sounds exactly as it
+// always has. SIZE_MIN/MAX bound the exported function the way cylinder.js's own
+// noteForSize bounds itself, so a caller outside the exercised range cannot
+// extrapolate into an implausible octave.
 const SIZE_REF = 0.17;
 const SIZE_MIN = 0.08, SIZE_MAX = 0.34;
 const NOTE_PER_OCTAVE = 5;
@@ -323,8 +314,8 @@ const SINGLE_THREAD = 0.10;      // x S, the bit of cord between mouth and paper
 const TANZAKU_LEN = 0.85;        // x S
 const TANZAKU_WIDE = 1.5;        // x the body radius
 // How far past the contact point the clapper's own pendulum reaches, as a
-// fraction of the way to the centre of the paper hanging below it — see
-// CLAP_L in makeFurin for why this is not simply the contact depth.
+// fraction of the way to the centre of the paper hanging below it — see CLAP_L
+// in makeFurin for why this is not simply the contact depth.
 //
 // SWEPT, on a full-force tap in still air: at zero the clapper rides the body
 // and a tap makes one sound, and the knock count climbs steeply from there to a
@@ -369,9 +360,9 @@ const CLAP_REACH = 0.15;
 //
 // The restoring torsion is -stiffness*sin(theta), so it can only balance a
 // drive whose magnitude is under `stiffness`. Above that there is NO
-// equilibrium at any angle: the strip goes over the top and keeps
-// accelerating, winding up forever — which is precisely the failure the
-// "never winds up" test in tests/furin.test.js exists to catch.
+// equilibrium at any angle: the strip goes over the top and keeps accelerating,
+// winding up forever — which is precisely the failure the "never winds up" test
+// in tests/furin.test.js exists to catch.
 //
 // It has been violated twice. Once by a gain chosen for feel alone, which
 // measured 41 turns of sweep — a pinwheel, not a poem-strip. Once more, subtly,
@@ -487,31 +478,26 @@ export function makeFurin({
   // MASHED burst — see SWING's own comment for why maxOmegaFrac sits
   // meaningfully above tapPeak, not just above it.
   //
-  // THE ENERGY CAP, below. Code review caught that the velocity clamp ALONE
-  // does not deliver the promise two paragraphs up: it bounds omega at the
-  // INSTANT of a kick, not the pendulum's accumulated motion, so a real,
-  // sustained mash — taps landing every frame or two, with real elapsed
-  // time and therefore real theta motion IN BETWEEN them — re-arms omega to
-  // the ceiling on every single kick regardless of how much gravity had
-  // already fought it down since the last one. That is "holding the
-  // throttle open," not "capping a burst": measured, 20 taps/sec for 3s
-  // drove the swing to 16+ rad — multiple full rotations — a literal
-  // windmill, the exact thing this comment has always claimed could not
-  // happen. A cap on velocity alone cannot fix this; the pendulum's actual
-  // mechanical energy is what has to stay bounded regardless of how many
-  // kicks land or how far apart in time.
+  // THE ENERGY CAP, below, because A VELOCITY CLAMP ALONE DOES NOT HOLD THE
+  // PROMISE ABOVE. It bounds omega at the INSTANT of a kick, not the pendulum's
+  // accumulated motion, so a sustained mash — taps landing every frame or two,
+  // with real elapsed time and real theta motion in between — re-arms omega to
+  // the ceiling on every kick regardless of how far gravity had fought it down
+  // since the last one. That is holding the throttle open, not capping a burst:
+  // measured, a few seconds of frame-rate tapping drove the swing through
+  // multiple full rotations. A literal windmill, and exactly what this file
+  // claimed could not happen.
   //
-  // maxEnergy is pendulumEnergy() at theta=0, omega=maxOmega — the energy a
-  // single, maximally-hard tap from rest reaches. Capping TOTAL energy to
-  // that ceiling on every kick means no amount of mashing, at any rate, can
-  // ever exceed what one perfect tap already could — the invariant the file
-  // names above, now actually held. Velocity is still what gets adjusted
-  // (never theta — a kick is a velocity event, per kickPendulum's own
-  // contract), just solved from the ENERGY budget rather than a flat
-  // ceiling: keAllowed is whatever is left after the pose's own potential
-  // energy at the CURRENT theta, so a kick landing while already swung out
-  // wide is capped harder than one landing near the bottom, which is
-  // exactly the physical picture (there is less "room" left to add).
+  // So the bounded quantity is mechanical ENERGY, not velocity. maxEnergy is
+  // what a single maximally-hard tap from rest reaches, and capping total energy
+  // there on every kick means no amount of mashing, at any rate, can exceed what
+  // one perfect tap already could. Velocity is still what gets adjusted — never
+  // theta, since a kick is a velocity event per kickPendulum's own contract —
+  // just solved from the energy budget rather than a flat ceiling: what is
+  // allowed is whatever is left after the pose's own potential energy at the
+  // CURRENT theta, so a kick landing while already swung out wide is capped
+  // harder than one landing near the bottom. Which is the physical picture:
+  // there is less room left to add.
   function tapKick(force) {
     // The paper takes the knock too, and its own restoring torque is weak
     // enough that a solid one sends it over the top and spinning (see SPIN).
@@ -633,15 +619,14 @@ export function makeFurin({
   // version before this hung the disc out to the side to avoid being impaled on
   // the one tube, and read as connected to nothing.
   const clapperR = single ? SINGLE_CLAP_FRAC * singleTubeR : 0.16 * S;
-  // The clapper's pivot, parented under the body rather than fixed in it —
-  // see THE CLAPPER at the top of this file. Parenting it here, at the cap,
-  // means its local rotation IS the clapper's angle relative to the body,
-  // which is exactly the quantity the contact check works in; and on screen
-  // a ring's disc reads as hanging from the cap and swinging among the
-  // tubes, which is what a fūrin's clapper does. It survives on a single as
-  // a bookkeeping node with no geometry (an empty Group costs no draw call)
-  // so tests and the harness can read the clapper's pose without reaching
-  // into this closure.
+  // The clapper's pivot, parented under the body rather than fixed in it — see
+  // THE CLAPPER at the top of this file. Parenting it here, at the cap, means
+  // its local rotation IS the clapper's angle relative to the body, which is
+  // exactly the quantity the contact check works in; and on screen a ring's
+  // disc reads as hanging from the cap and swinging among the tubes, which is
+  // what a fūrin's clapper does. It survives on a single as a bookkeeping node
+  // with no geometry (an empty Group costs no draw call) so tests and the
+  // harness can read the clapper's pose without reaching into this closure.
   // (The physics models both as pendulums from the group origin, so the
   // render's pivot sits one cord-length below where the model's does. At the
   // cord lengths this kit uses — a tenth of a unit — that displacement is
@@ -710,14 +695,13 @@ export function makeFurin({
     ? (singleTubeR - clapperR) * 0.9
     : 0.33 * S - clapperR - 0.075 * S;
   const GAP_ANGLE = CONTACT_CLEAR / CONTACT_Y;
-  // WHERE IT TOUCHES vs HOW FAST IT SWINGS are two different numbers — the
-  // same split kit/cylinder.js draws between its own CONTACT_Y and L_clap,
-  // and the single-tube fūrin needs it for a reason that only appeared when
-  // the body took its real proportions. Shortening a 1.7S pipe to a 0.85S
-  // bell also shortened the clapper's hang, which brought its period close
-  // enough to the body's that it simply RODE the body instead of lagging
-  // behind it: measured, a full-force tap on a size-0.18 single went from
-  // ten knocks to zero.
+  // WHERE IT TOUCHES vs HOW FAST IT SWINGS are two different numbers — the same
+  // split kit/cylinder.js draws between its own CONTACT_Y and L_clap, and the
+  // single-tube fūrin needs it for a reason that only appeared when the body
+  // took its real proportions. Shortening a 1.7S pipe to a 0.85S bell also
+  // shortened the clapper's hang, which brought its period close enough to the
+  // body's that it simply RODE the body instead of lagging behind it: measured,
+  // a full-force tap on a size-0.18 single went from ten knocks to zero.
   //
   // The physics that was missing is the paper. A fūrin's clapper hangs on a
   // slack thread with the tanzaku's own weight below it — the thing does not
@@ -822,8 +806,8 @@ export function makeFurin({
       fire(i, force * (0.55 + 0.45 * dot));
     }
     // A ring wide enough to leave a gap in every direction (a two-tube ring
-    // struck square between them) would otherwise swallow the contact
-    // silently. Ring the nearest tube instead: a touch always sounds.
+    // struck square between them) would otherwise swallow the contact silently.
+    // Ring the nearest tube instead: a touch always sounds.
     if (!any) fire(bestI, force * 0.55);
   }
 
@@ -1119,14 +1103,13 @@ export function makeFurin({
     },
     // the pointer passing over: a nudge, not a knock — the same kick at a
     // fraction of the force, and no strike. CHANGED CHARACTER under the
-    // pendulum: the old model summed up to 8 superposed impulses, so
-    // spamming hoverAt() topped out around 0.05 rad; this model has one
-    // omega, and repeated hovers now saturate at SWING.maxOmegaFrac*omega0
-    // rad (a live value, currently 0.65 — see SWING's own comment, which
-    // records 0.85 as the draft code review rejected — the same
-    // ceiling a full-force tap can reach). Latent today — no case calls
-    // hoverAt() — flagged here so it is not discovered by surprise if one
-    // starts to.
+    // pendulum: the old model summed up to 8 superposed impulses, so spamming
+    // hoverAt() topped out around 0.05 rad; this model has one omega, and
+    // repeated hovers now saturate at SWING.maxOmegaFrac*omega0 rad (a live
+    // value, currently 0.65 — see SWING's own comment, which records 0.85 as
+    // the draft code review rejected — the same ceiling a full-force tap can
+    // reach). Latent today — no case calls hoverAt() — flagged here so it is
+    // not discovered by surprise if one starts to.
     hoverAt() {
       tapKick(0.18);
     },

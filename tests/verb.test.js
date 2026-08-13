@@ -62,9 +62,8 @@ test('the room is outdoor air, not a stone cistern', () => {
   const ir = reverbIR(48000, 1.8, 1013);
   assert.equal(ir.length, Math.round(1.8 * 48000));
 
-  // Darker at the HEAD than the old room was — the previous curve opened at
-  // 4.2 kHz, which is a tiled bathroom. Zero-crossing rate over the first
-  // 10 ms stands in for brightness.
+  // Darker at the HEAD than the old room was — the previous curve opened high
+  // enough to read as a tiled bathroom.
   const zc = (arr) => { let c = 0; for (let i = 1; i < arr.length; i++) if ((arr[i] >= 0) !== (arr[i - 1] >= 0)) c++; return c; };
   // Zero-crossing rate over the first 10 ms as a brightness proxy. This is
   // NOT "fc crossings a second" — that estimate assumed something closer to

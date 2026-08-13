@@ -458,8 +458,7 @@ export function createAudio(save) {
     // setGust idiom, one line wide.
     // Modulates the running bed around its recipe level (×0.7 quiet trough to
     // ×1.3 arriving crest); no water bed running means silence stays silence.
-    // setLevel's own setTargetAtTime smoothing turns per-frame calls into a
-    // glide rather than a zipper.
+    // Per-frame calls glide rather than zipper, same as setRainLevel above.
     setWaterSwell(v) {
       if (water) water.setLevel(WATER.bedLevel * waterRecipeLevel * (0.7 + 0.6 * v));
     },

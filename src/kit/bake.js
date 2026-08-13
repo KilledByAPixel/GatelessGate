@@ -42,14 +42,14 @@ import { mergeSimple } from './scatter.js';
 // What makes two meshes the same DRAW. Material equivalence, not object
 // identity: every makeMonk mints its own washMaterial, so identity would leave
 // nine monks as nine meshes and the whole point would be lost. The userData
-// flags are in the key because they change how the mesh is treated downstream
-// — noShadow/noCastShadow whether debug.js's shadow pass touches it (water.js,
-// foam.js) — and two meshes that disagree about either cannot share one. emissive/emissiveIntensity are
-// in the key for the same reason colour is: material.js's seal glow
-// (`washMaterial({ glow: false })`) exists precisely so two accent-coloured
-// materials CAN differ only by glow, and a merge that ignored it would spread
-// one mesh's glow across the other's surface — the case-30 pond bug material.js's
-// own comment records, again.
+// flags are in the key because they change how the mesh is treated downstream —
+// noShadow/noCastShadow decide whether debug.js's shadow pass touches it
+// (water.js, foam.js) — and two meshes that disagree about either cannot share
+// one. emissive/emissiveIntensity are in the key for the same reason colour is:
+// material.js's seal glow (`washMaterial({ glow: false })`) exists precisely so
+// two accent-coloured materials CAN differ only by glow, and a merge that
+// ignored it would spread one mesh's glow across the other's surface — the
+// case-30 pond bug material.js's own comment records.
 function drawKey(mesh) {
   const m = mesh.material;
   return [
