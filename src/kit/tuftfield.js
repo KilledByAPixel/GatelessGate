@@ -1,5 +1,4 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonRamp } from '../render/toon.js';
 import { hash1 } from '../util/noise.js';
 import { grassPlacements, GRASS_TONE, RIM_SHRINK, GRASS_BASE_TAPER } from './grassfield.js';
 import { breezeState, makePokeSpring, pokeSpringStep, GRASS_POKE_RADIUS } from './breeze.js';
@@ -11,12 +10,14 @@ import { breezeState, makePokeSpring, pokeSpringStep, GRASS_POKE_RADIUS } from '
 // actually grows: in clumps, not in isolated spikes. Still ONE draw call.
 //
 // Wind is a SHEAR, not a bend: the quad's base stays pinned to the ground and
-// its top slides sideways, driven by the same scrolling noise field the blade
-// grass uses (a plane wave read as a bar sweeping the field; the drifting noise
-// map was the fix, and both fields share its exact grammar).
+// its top slides sideways, driven by a scrolling noise field (a plane wave
+// read as a bar sweeping the field; the drifting noise map was the fix for
+// gusts pumping every plant in place instead of arriving and passing).
 //
-// The blade field (grassfield.js) stays as the fallback — same placements, same
-// wind uniforms, swappable from the debug panel.
+// grassfield.js is the placement layer this field stands on — grassPlacements,
+// the patchiness, the reach/taper knobs — not a second renderer: its own
+// header says it builds no mesh any more. This is the only grass renderer
+// (see scenery.js's "THERE IS ONE GRASS RENDERER").
 
 // ---- the tuft texture, rasterised in pure JS ------------------------------
 // No canvas: tests run under node, and a DataTexture from a pure function is
@@ -96,6 +97,21 @@ function tuftTexture() {
   return sharedTexture;
 }
 
+// THE LIFT. Every tuft takes the world-up normal (see the beginnormal_vertex
+// override below), so the whole field is a single N·L = 0.785 against the
+// key. Under the 3-step toon ramp that value landed on the ramp's TOP step
+// and rendered at 1.0, and a 0.16 emissive floor sat on top of it to stop the
+// ramp's bottom step taking a shadowed field to near-black. Lambert takes
+// 0.785 directly and needs no floor — so the colour is lifted to land the
+// unshadowed field at the luminance the ramp gave it. Derived 2026-08-12, not
+// eyeballed: (S + H + 0.16) / (0.785·S + H) with S the key's intensity (6.7,
+// read from makeLights()) and H the hemisphere's contribution to an up-facing
+// normal (its intensity 0.62 x PAPER's linear luminance ~0.8495, i.e.
+// ~0.5267) — lift = (6.7 + 0.5267 + 0.16) / (0.78484*6.7 + 0.5267) ≈ 1.2768.
+// Exported so setTone() below and the tests share this exact number rather
+// than each carrying their own copy that could drift out of sync.
+export const LAMBERT_LIFT = 1.2768;
+
 // ---- the field ------------------------------------------------------------
 export function makeTuftField({
   count = 12000, radius = 20, taper = GRASS_BASE_TAPER, inner = 0, seed = 5, groundSeed = 21,
@@ -119,7 +135,7 @@ export function makeTuftField({
     uWindDir: { value: new THREE.Vector2(windDir[0], windDir[1]).normalize() },
     uGustScale: { value: gustScale },
     uGustSpeed: { value: gustSpeed },
-    // the pointer's breeze — same quartet as grassfield.js, kept in lockstep.
+    // the pointer's breeze, from breeze.js's shared spring.
     // uPokeAmt defaults to 0: an unpoked scene renders exactly as before.
     uPokePos: { value: new THREE.Vector2(0, 0) },
     uPokeDir: { value: new THREE.Vector2(0, 0) },
@@ -129,19 +145,15 @@ export function makeTuftField({
   // The response spring: one per field, integrated once per tick in update().
   const poke = makePokeSpring();
 
-  // Toon material built by hand rather than via toonMaterial(): it needs the
-  // atlas as an alpha-tested map, and cutout (not blending) is the point — no
-  // sorting, depth-writes on, MSAA still smooths the quad edges.
-  const mat = new THREE.MeshToonMaterial({
-    color, gradientMap: toonRamp(), map: tuftTexture(), alphaTest: 0.35,
+  // Lambert, built by hand rather than via washMaterial(): it needs the atlas
+  // as an alpha-tested map, and cutout (not blending) is the point — no
+  // sorting, depth-writes on, MSAA still smooths the quad edges. Colour is
+  // lifted by LAMBERT_LIFT (see its derivation above) to land the unshadowed
+  // field at the luminance the old toon ramp gave it.
+  const lit = new THREE.Color(color).multiplyScalar(LAMBERT_LIFT);
+  const mat = new THREE.MeshLambertMaterial({
+    color: lit, map: tuftTexture(), alphaTest: 0.35,
   });
-  // Same dark-mass symptom grassfield.js carries, same fix: a small emissive
-  // floor tied to the tuft's own colour, so the toon ramp's shadow band can no
-  // longer take a whole dense field down to near-black. See grassfield.js for
-  // the full reasoning — kept in lockstep so the two renderers still look like
-  // the same grass when the debug panel swaps between them.
-  mat.emissive = new THREE.Color(color);
-  mat.emissiveIntensity = 0.16;
 
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
@@ -156,9 +168,8 @@ export function makeTuftField({
       uniform float uPokeAmt;
       uniform float uPokeR;
 
-      // The SAME gust grammar as grassfield.js, kept in lockstep on purpose:
-      // a value-noise field that drifts downwind, so gusts arrive and pass
-      // instead of every plant metronoming in place. If one changes, change both.
+      // A value-noise field that drifts downwind, so gusts arrive and pass
+      // instead of every plant metronoming in place.
       float ggHash(vec2 p) {
         p = fract(p * vec2(123.34, 456.21));
         p += dot(p, p + 45.32);
@@ -247,11 +258,11 @@ export function makeTuftField({
         // right axis; that is what "left and right" means on a card.
         float sw = dot((viewMatrix * vec4(swayW.x, 0.0, swayW.y, 0.0)).xyz, rightV) + lean;
 
-        // tip micro-flutter, in lockstep with grassfield.js: a second, faster,
-        // smaller ripple with a seeded per-tuft phase and detuned frequency,
-        // added to the shear — the t^2 weighting below keeps it at the tips —
-        // so the field shimmers instead of swaying as one. Rides uWind and the
-        // gust: a windless scene stays bit-identical to the pre-flutter render.
+        // tip micro-flutter: a second, faster, smaller ripple with a seeded
+        // per-tuft phase and detuned frequency, added to the shear — the t^2
+        // weighting below keeps it at the tips — so the field shimmers instead
+        // of swaying as one. Rides uWind and the gust: a windless scene stays
+        // bit-identical to the pre-flutter render.
         float flPhase = ggHash(iw.xz * 3.71 + 7.13) * 6.2832;
         float flFreq = 5.7 + 2.6 * ggHash(iw.xz * 1.93 + 2.17);
         sw += sin(uTime * flFreq + flPhase) * uWind * 0.035 * (0.35 + 0.65 * gust);
@@ -346,12 +357,11 @@ export function makeTuftField({
     mesh,
     // The meadow's tone, live. mat.color IS the tone now (see the instance
     // colours above), so this lands on the next frame without rebuilding the
-    // field — which is what makes it draggable in the workbench. The emissive
-    // floor tracks it, or a lighter meadow keeps a dark mass's lift and reads
-    // flat.
+    // field — which is what makes it draggable in the workbench. Carries the
+    // same LAMBERT_LIFT the constructor applies, or a live-dragged tone would
+    // land darker than the one the field was built with.
     setTone(hex) {
-      mesh.material.color.set(hex);
-      if (mesh.material.emissive) mesh.material.emissive.set(hex);
+      mesh.material.color.set(hex).multiplyScalar(LAMBERT_LIFT);
     },
     // The placements themselves. grassshade.js bakes the ground's occlusion
     // from these — the SAME array the instance matrices were written from, so
