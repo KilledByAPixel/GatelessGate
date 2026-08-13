@@ -4,7 +4,7 @@ import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, faceMonk, groundHeight, makeBoat, makeFan, makeFoam,
-  makeLights, makeMonk, makePath, makeRain, makeSand, makeWater, washMaterial,
+  makeLights, makeMonk, makePath, makeRain, makeSand, makeWater, washMaterial, plantRock,
   tapMeshes, setFoliageWeather, foliageWind,
 } from '../kit/index.js';
 
@@ -134,7 +134,7 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   // answer to the same question WAS a fan.)
   const KH = 1.68;
   const kembo = makeMonk({ height: KH, pose: 'raise' });
-  kembo.position.set(-1.2, 0, -0.6);
+  kembo.position.set(-1.8, 0, -1.6);
   faceMonk(kembo, { x: 4.0, z: 2.6 });
   const raisedArm = kembo.children
   .filter((c) => c.name === 'arm')
@@ -163,15 +163,6 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   pupil.position.set(3.2, 0, 2.4);
   faceMonk(pupil, kembo.position);
   scene.add(pupil);
-  
-  // a roadside stone, now just scenery
-  const rock = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.52, 0.62, 0.34, 7),
-  washMaterial({ color: WASH.stone, flat: true }));
-  rock.name = 'rock';
-  rock.position.set(-3.3, 0.17, 1.6);
-  rock.rotation.y = 0.6;
-  scene.add(rock);
   
   // ---- the eastern sea -------------------------------------------------
   // Case 20's coast, in this case's own dress: an ink sea, transparent in
@@ -248,7 +239,7 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   // grass must plant on the TRUE shored surface, or tufts near the
   // feathered keepout edge stand on the unshored height (case 20's find)
   groundFn: (x, z) => groundHeight(x, z, { seed: 21, shore: SHORE }),
-  trees: 4,
+  trees: 7,
   // the land at the reader's back and sides — nothing stands in the sea
   mountains: [
   { count: 7, distance: 52, arcCenter: Math.PI, arcSpan: 3.6, color: wash(0.16) },
@@ -262,7 +253,6 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   ...road.keepout(26, 1.4),
   { at: kembo, r: 1.3 },
   { at: pupil, r: 1.2 },
-  { at: rock, r: 1.0 },
   ...SEA_KEEP,
   ],
   grassKeepout: [
@@ -270,6 +260,13 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   ...SEA_KEEP,
   ],
   });
+
+  const rock = plantRock(scene, { x: 2.9, z: -7.5, size: 2, sink: -.2 });
+  rock.rotation.y = 3;
+  const rock2 = plantRock(scene, { x: .9, z: 1.5, size: 1.5, sink: -.2 });
+  rock2.rotation.y = 2;
+  const rock3 = plantRock(scene, { x: -8.9, z: -9.5, size: 1.5, sink: -.2 });
+  rock3.rotation.z = 3;
 
   // THE FAN IS THE TARGET, and it needs no proxy of its own: it is a
   // half-metre red wedge held up over everything else in the picture, which
@@ -286,7 +283,7 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   let wavedAt = -99;
   let waves = 0;
   const ARM_REST = raisedArm ? raisedArm.rotation.x : 0;
-
+  
   // THE SHOWER, built dry. The drops keep their seeded phases at level 0, so a
   // second shower is the same shower rather than a new one starting from
   // wherever the clock happened to be. The field is centred on the staging and
