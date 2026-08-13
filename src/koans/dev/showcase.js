@@ -190,7 +190,21 @@ export default {
     // legible. Fog is present because nothing in this book meets a horizon —
     // the far ground still has to wash out into the paper.
     scene.fog = new THREE.FogExp2(PAPER, 0.0075);
-    scene.add(makeLights({ focus: [0, 0, -16], radius: 26 }));
+    // LIT LIKE A PAGE, which is the whole job of this room: a model judged here
+    // has to predict how it will read in a case. It did not, on two counts.
+    //
+    // The key stood at the book's default heading against a camera at 0, which
+    // is a far harder side-rake than any real page — every case is framed from
+    // somewhere around the same quarter as its key, so the reader sees a mild
+    // three-quarter light, and the gallery was showing every model a good deal
+    // more raked than that. The aim below is that same relationship, measured
+    // off THIS room's camera heading rather than a case's.
+    //
+    // And the shadow map has to grow with the frustum. This room is forty units
+    // deep, so it needs a much wider shadow camera than a diorama's staging —
+    // at the stock map that was barely half the book's texel density, and the
+    // contact shadows read chunky next to the ones on a real page.
+    scene.add(makeLights({ focus: [0, 0, -16], radius: 26, mapSize: 4096, sun: { heading: 20, pitch: 52 } }));
 
     // Dead flat, on purpose. Every field in the kit places its blades with
     // groundHeight() in its OWN local space, which is level inside the default

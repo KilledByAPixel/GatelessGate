@@ -54,13 +54,16 @@ export function aimSun(sun, { heading, pitch } = SUN_DEFAULT) {
 //    like stair-stepped garbage; that derivation set the original ±10/2048
 //    pair). The frustum went ±10 → ±15 to bring in the trees that were falling
 //    outside the shadowed range, and the map went 2048 → 3072 with it, so the
-//    coverage grew without the
-//    texel density moving: 3072 over 30 units ≈ 102/unit, same as before.
+//    coverage grew without the texel density moving: 3072 over 30 units ≈
+//    102/unit, same as before. THE TWO MOVE TOGETHER — a scene that needs a
+//    wider frustum than a diorama's staging (the showcase's forty-unit room)
+//    has to raise `mapSize` with it or it silently gets half the density and
+//    its shadows read chunky next to every real page's.
 // 2. The fill is a hemisphere, not a flat ambient. A uniform ambient lifts every
 //    surface equally, which erases form — the single biggest reason the scene
 //    read flat. A hemisphere is brighter from the sky and darker underneath, so
 //    a robe or a stone still has a shaded side.
-export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 15, sun: aim = SUN_DEFAULT } = {}) {
+export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 15, sun: aim = SUN_DEFAULT, mapSize = 3072 } = {}) {
   const g = new THREE.Group();
   g.name = 'lights';
 
@@ -87,7 +90,7 @@ export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 15, 
 
   if (shadow) {
     sun.castShadow = true;
-    sun.shadow.mapSize.set(3072, 3072);
+    sun.shadow.mapSize.set(mapSize, mapSize);
     const c = sun.shadow.camera;
     c.left = -radius; c.right = radius; c.top = radius; c.bottom = -radius;
     c.near = 0.5; c.far = 48;   // the wider frustum's far corners need the extra depth
