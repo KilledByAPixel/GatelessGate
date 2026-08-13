@@ -299,14 +299,14 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // what kneeling is — the hem spread of a folded figure carried at most of a
 // standing figure's height.
 // `staffX` is where the elder's staff plants, laterally, in fractions of
-// height — and it is per-stance because the hem is. A standing hem reaches
-// 0.212h and the staff at 0.26h stands clear of it; a seated figure's knees
-// reach 0.3375h, so the same 0.26h planted the staff INSIDE the cloth and it emerged
-// through the robe like a stick stuck in a tent (k17's report — fixed there
-// by hand first, at 0.58/1.6h = 0.3625h, which is the number promoted here:
-// past the hem plus the staff's own radius, so it reads as the teacher's
-// staff set down beside him, within reach). Standing keeps 0.26 exactly —
-// every standing elder in the book is framed around it.
+// height — and it is per-stance because the hem is. A standing hem clears the
+// standing plant comfortably; a seated figure's knees reach much further out,
+// so the SAME plant put the staff inside the cloth and it emerged through the
+// robe like a stick stuck in a tent. Case 17 fixed that by hand first, and its
+// number is what the seated stance carries here: past the hem plus the staff's
+// own radius, so it reads as the teacher's staff set down within reach. The
+// standing plant is untouched — every standing elder in the book is framed
+// around it.
 // `staffAng` is the BEARING of the staff plant, radians around +y off the
 // local +x axis (toward +z). It exists because of a systematic staging
 // coincidence the grip audit found: cases aim a standing elder at something
@@ -314,10 +314,9 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // camera looks over his shoulder at the same target — so a staff planted ON
 // the +x axis sits exactly on the camera→figure→target line and reads as
 // growing out of the wearer's hat (k11/k19/k21/k22/k27/k31/k34/k36/k39).
-// Swinging the standing plant off the facing axis (0.2 rad ≈ 11° shipped —
-// it began near 50° and was eased back in a later tweaks round) keeps it
-// the same distance out — past the hem, beside the resting sleeve — but
-// breaks the alignment for over-the-shoulder cameras. Seated figures face local +z
+// Swinging the standing plant off the facing axis keeps it the same distance
+// out — past the hem, beside the resting sleeve — but breaks the alignment for
+// over-the-shoulder cameras. Seated figures face local +z
 // (the folded sleeves), so their +x plant already IS the side plant and
 // stays at 0. Cases with a bearing-sensitive staging can override with the
 // `staffAng` option (additive; 0 = the old on-axis plant).
@@ -329,11 +328,11 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // The inward swing (the cuffs crossing to the centre) is the same for all.
 const KNEEL = 0.5;
 const STAND_STANCE = { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.765, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.2, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.92 };
-// Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did:
-// the chest run in SIT_PROFILE was lengthened and steepened so a meditator
-// sits STRAIGHT, the way the Buddha does — the crown now
-// tops out at 0.610·h, still comfortably a seated man, and the fold angle
-// eases to -0.44 so the cuffs keep landing in the lap the knees now frame.
+// Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did: the
+// chest run in SIT_PROFILE was lengthened and steepened so a meditator sits
+// STRAIGHT, the way the Buddha does — the crown now tops out at 0.610·h, still
+// comfortably a seated man, and the fold angle eases to -0.44 so the cuffs keep
+// landing in the lap the knees now frame.
 const SIT_STANCE = { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, head: 0.545, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31, foldCross: 1.1 };
 // Kneel is DERIVED, field by field, from whatever stand and sit currently
 // are. It used to repeat their values as literals, and every retune of the

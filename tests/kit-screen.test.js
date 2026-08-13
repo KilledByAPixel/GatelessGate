@@ -129,13 +129,14 @@ test('rolling clacks once per slat, quietly, placed in world space', () => {
     // task-swing-tune-brief.md, PROBLEM 3: CLACK_FORCE=0.12 was the QUIETEST of
     // all 21 audio.knock() call sites in the book — UNDER k28's 0.22 (the next
     // quietest), not just close to it — and it was simply inaudible: the
-    // clatter fired correctly and nobody could hear it. THIS ASSERTION USED TO
-    // PIN THE BUG: `c.force < 0.22` — the exact inversion of what the brief now
-    // asks for, written when the instruction was "err quiet" and never
-    // revisited once that erred past audible. Flipped: still a quiet texture
-    // (eleven of these should read as "the screen is moving," not a drum roll —
-    // see the upper bound), but no longer able to pass at a level nobody can
-    // hear.
+    // clatter fired correctly and nobody could hear it.
+    //
+    // THIS ASSERTION USED TO PIN THE BUG: `c.force < 0.22` — the exact
+    // inversion of what is wanted, written when the instruction was "err quiet"
+    // and never revisited once that erred past audible. Flipped: still a quiet
+    // texture (eleven of these should read as "the screen is moving," not a
+    // drum roll — see the upper bound), but no longer able to pass at a level
+    // nobody can hear.
     assert.ok(c.force > 0.22, `at or under the book's next-quietest knock (k28's 0.22) — inaudible: ${c.force}`);
     // still a texture, not an event: comfortably under a typical knock's 0.9
     assert.ok(c.force < 0.6, `too loud for a texture, not a drum roll: ${c.force}`);

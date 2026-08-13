@@ -99,10 +99,10 @@ test('the seated figure folds real legs — knees at ±x, lap valley, torso inse
   assert.ok(lap > 0 && lap < knees * 0.52, `the lap turns in hard: ${lap} vs ${knees}`);
   assert.ok(aboveLap > 0 && aboveLap < knees * 0.52, `the torso rises inset: ${aboveLap} vs ${knees}`);
 
-  // THE STRAIGHT BACK, the way the Buddha's is: the chest
-  // ring near the shoulder keeps at least 85% of the blouse ring's width —
-  // a vertical run, not a slump that tapers away — and the crown of the
-  // seated figure rises to 0.60·h
+  // THE STRAIGHT BACK, the way the Buddha's is: the chest ring near the
+  // shoulder keeps at least 85% of the blouse ring's width — a vertical run,
+  // not a slump that tapers away — and the crown of the seated figure rises to
+  // 0.60·h
   const blouse = maxRadiusInBand(body, 0.255 * H, 0.275 * H);
   const chest = maxRadiusInBand(body, 0.415 * H, 0.435 * H);
   assert.ok(blouse > 0 && chest > 0, 'both torso rings exist');
