@@ -63,22 +63,29 @@ export const SNOW = mixHex(PAPER, '#FFFFFF', 0.85);
 
 // THE DARKEST THING THE LIGHT IS ALLOWED TO TOUCH.
 //
-// Anything lit is painted in this, not in INK. At INK itself the toon ramp has
-// nothing to work with: the shared ramp multiplies the surface by 0.31 / 0.63 /
-// 1.0, so an INK robe's three bands land on levels 9, 19 and 30 out of 255 — a
-// ten-level spread that no screen shows and no eye reads. Every monk came out as
-// a flat black cut-out while the rest of the scene had visible form (Frank:
-// "they're a lot darker black than everything else... make them slightly less
-// dark so we could see some of their shadows"), and the same was quietly true of
-// every torii, pole and cord painted the same way.
+// Anything lit is painted in this, not in INK. This constant was tuned while
+// the book still shaded through a 3-step toon ramp, and the reasoning that
+// justified it then was quantitative: a fixed multiply by 0.31 / 0.63 / 1.0
+// put an INK robe's three bands at levels 9, 19 and 30 out of 255 — a
+// ten-level spread that no screen shows and no eye reads — and every monk
+// came out as a flat black cut-out while the rest of the scene had visible
+// form (Frank: "they're a lot darker black than everything else... make them
+// slightly less dark so we could see some of their shadows"), the same
+// quietly true of every torii, pole and cord painted the same way. Lifted a
+// fifth of the way back toward the paper, the same ramp landed on 22 / 46 /
+// 73 — three times the separation, and enough that the crown of a hat, its
+// brim and the shoulder under it read as three different tones.
 //
-// Lifted a fifth of the way back toward the paper, the same ramp lands on
-// 22 / 46 / 73 — three times the separation, and enough that the crown of a hat,
-// its brim and the shoulder under it are three different tones. Judged by
-// rendering case 4 at 1.00, 0.86 and 0.78 and looking: at 0.86 the shading is
-// technically there and still not visible, which is the trap this constant
-// exists to avoid. It is still the darkest paint in the book; it is simply paint
-// rather than a hole in the page.
+// The book now shades through plain Lambert, which has no fixed bands to
+// quote a level from — the surface takes a continuous value that depends on
+// its normal against the key light, not one of three multipliers. That exact
+// arithmetic is retired along with the ramp and has not been re-derived for
+// Lambert; what is unchanged is the constant itself (still wash(0.80), still
+// judged by rendering case 4 at 1.00, 0.86 and 0.78 and looking — 0.86 read
+// as technically shaded and still too dark) and the shape of the argument:
+// raw INK reads as void once it is lit, so anything the light is meant to
+// model gets this instead. It is still the darkest paint in the book; it is
+// simply paint rather than a hole in the page.
 //
 // WHAT IS LEFT AT INK: voids. A cave throat, a doorway at night — surfaces that
 // are unlit on purpose, where there is no shading to lose because there is no

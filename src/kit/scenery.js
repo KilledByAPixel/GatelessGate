@@ -414,8 +414,8 @@ export function composeWorld(scene, {
   // is darker where the grass is thick, and that is the part that reads. Baked
   // once here from the field's own placements and multiplied into the ground's
   // colour through `map`, so it costs nothing per frame and cannot swim as the
-  // camera moves. plainMaterial() carries `map` across the workbench's toon
-  // swap, so this survives into the shipped look.
+  // camera moves. Nothing rebuilds this material on the way to the screen, so
+  // the map reaches the shipped look exactly as set here.
   if (grassShade && field.spots.length) {
     ground.material.map = makeGrassShade({
       // the ground's OWN width, off the geometry rather than a constant here

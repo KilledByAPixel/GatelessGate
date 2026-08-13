@@ -144,8 +144,8 @@ test('case 30: the reds are the urna and the water sheet — koi ink, stone bare
   assert.equal(surface.material.color.getHexString(), pink,
     'the pond sheet wears the PALE accent (Frank\'s ruling)');
   // and it does NOT take the seal glow: emissive light is the same from every
-  // angle, so it flattens the toon ramp and the ripples stop reading — which
-  // is exactly what Frank saw ("I barely see it do anything")
+  // angle, so it flattens the water's own Phong shading and the ripples stop
+  // reading — which is exactly what Frank saw ("I barely see it do anything")
   assert.equal(surface.material.emissive.getHexString(), '000000',
     'water never glows: it has to shade, or its ripples vanish');
   // ...and the red is NOT on the fish and NOT on the sides

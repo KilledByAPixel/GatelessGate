@@ -19,10 +19,11 @@
     Keys: up/down step models · drag orbit · wheel zoom · T turntable
           R reset view · S silhouette · L fill lights · G gallery
 
-    Shading is the book's SHIPPED look — plain Lambert, because the book runs
-    with the toon toggle off (debug.js). L adds/removes two dim tinted fills
+    Shading is the book's SHIPPED look, with no code needed to make it so: the
+    kit builds plain Lambert materials and nothing rebuilds them on the way to
+    the screen, here or anywhere else. L adds/removes two dim tinted fills
     that are the viewer's own, for the far side of an orbit; off is the book's
-    rig alone. See src/modelviewer/shading.js for why that matters.
+    rig alone.
     Serve over HTTP (npx -y http-server -p 8105 -c-1 .) — ES modules and the
     hot-reload poll both fail from file://. The page lives in dev/ with the
     other harnesses; its code is still src/modelviewer/ because the roster

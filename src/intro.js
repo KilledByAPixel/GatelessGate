@@ -54,7 +54,7 @@ export function buildHub({
   // shadow of the tree right in front of the camera is cut off." Centered
   // between the gate and the camera side and widened just enough that every
   // caster whose shadow can land in frame fits; 2048/30 ≈ 68 texels/unit,
-  // still contact-shadow territory, not the 56-unit mush toon.js warns about.
+  // still contact-shadow territory, not the 56-unit mush lights.js warns about.
   scene.add(makeLights({ focus: [4.5, 0, 0], radius: 15 }));
 
   // The path is ALWAYS built: it is the placement maths for the gate, the

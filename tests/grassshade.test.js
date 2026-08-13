@@ -5,7 +5,6 @@ import { grassShadeData, grassShadeUV, makeGrassShade, SHADE_STRENGTH } from '..
 import { grassPlacements } from '../src/kit/grassfield.js';
 import { composeWorld } from '../src/kit/scenery.js';
 import { makeGround } from '../src/kit/ground.js';
-import { plainMaterial } from '../src/render/material.js';
 
 // The meadow is a field of camera-facing cards. It cannot cast a shadow that
 // holds still — a billboard's silhouette is defined against the VIEWER — and it
@@ -117,18 +116,6 @@ test('composeWorld paints the shade onto the ground, and can be told not to', ()
   composeWorld(bare, { seed: 19, grass: 4000, trees: 0, rocks: 0, bushes: 0, grassShade: false });
   assert.equal(bare.getObjectByName('ground').material.map, null,
     'grassShade:false leaves the ground clean');
-});
-
-// The shipped look rebuilds every lit material as a plain Lambert. A clone that
-// dropped `map` would make this whole thing render to nowhere, which is exactly
-// how case 4's ink drain and its beard spent their lives invisible.
-test('the shade survives the workbench material swap', () => {
-  const scene = new THREE.Scene();
-  composeWorld(scene, { seed: 3, grass: 3000, trees: 0, rocks: 0, bushes: 0 });
-  const ground = scene.getObjectByName('ground');
-  const swapped = plainMaterial(ground.material);
-  assert.ok(swapped.map, 'plainMaterial carries the map across');
-  assert.equal(swapped.map, ground.material.map, 'the same texture, not a stripped copy');
 });
 
 test('the meadow does not cast shadow, but still receives one', () => {

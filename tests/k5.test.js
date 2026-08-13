@@ -317,10 +317,6 @@ test('no cliff lays paper over its own drop', () => {
   let banks = 0;
   cliff.traverse((o) => { if (o.name === 'mist') banks++; });
   assert.ok(banks >= 3, `the mist does the softening now, got ${banks} banks`);
-  cliff.traverse((o) => {
-    if (o.name !== 'mist') return;
-    assert.equal(o.userData.keepMaterial, true, 'unlit and textured — the toon clone breaks both');
-  });
 });
 
 test('case 5 shows its gorge: no paper lid over the drop it carved', () => {

@@ -54,7 +54,7 @@ test('foamCycle: rises before it fades — the sweep leads, the soak trails', ()
 
 const SHORE = { dx: 0, dz: -1, dist: 8, width: 4, sea: -0.35, depth: 1.4 };
 
-test('makeFoam: one mesh, unlit snow, kept material', async () => {
+test('makeFoam: one mesh, unlit snow', async () => {
   const { makeFoam } = await import('../src/kit/foam.js');
   const foam = makeFoam({ shore: SHORE, seed: 20 });
   assert.ok(foam.mesh.isMesh);
@@ -63,7 +63,6 @@ test('makeFoam: one mesh, unlit snow, kept material', async () => {
   assert.ok(foam.mesh.material.isMeshBasicMaterial, 'foam is unlit');
   assert.equal(foam.mesh.material.transparent, true);
   assert.equal(foam.mesh.material.depthWrite, false);
-  assert.equal(foam.mesh.userData.keepMaterial, true);
 });
 
 test('makeFoam: strips live on the beach, hug the sand, and ride the sea past the waterline', async () => {

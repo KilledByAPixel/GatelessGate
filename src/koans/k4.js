@@ -212,28 +212,30 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   // is what the draining was FOR, and it is gone by the time the red returns.
   // Nothing is achieved. He is still beardless.
   //
-  // WRITE THE MATERIAL THAT IS ON THE MESH, NOT THE ONE YOU AUTHORED. This is
-  // why the beard never appeared and why the first cut of the drain did not
-  // either (Frank, twice: "it doesn't seem like the ink is doing anything";
-  // "I'm not seeing anything of four when I click on the red portrait").
+  // WRITE THE MATERIAL THAT IS ON THE MESH, NOT A REFERENCE CAPTURED AT BUILD
+  // TIME. This is why the beard never appeared and why the first cut of the
+  // drain did not either (Frank, twice: "it doesn't seem like the ink is
+  // doing anything"; "I'm not seeing anything of four when I click on the red
+  // portrait").
   //
-  // The workbench's `toon` flag defaults to FALSE, which is the shipped look,
-  // and ui/debug.js's apply() rebuilds every lit mesh's material as a plain
-  // Lambert: it stashes the authored one on `userData._matToon` and hangs a
-  // CLONE on the mesh. So `beardMat.opacity = ...` and `paintMat.color = ...`
-  // were both writing to an object that had been swapped off the mesh before a
-  // single frame was drawn. Nothing failed; the effect simply rendered to
-  // nowhere, and it had been doing that since the case was staged.
-  //
-  // Resolved per frame rather than cached, because apply() re-runs on every
-  // page build and every flag change and hands out fresh clones each time.
-  // Anything in this book that animates a COLOUR or an OPACITY has to do it
-  // this way, or mark the mesh `keepMaterial` and accept raw toon shading.
+  // The bug, now historical: the debug workbench used to rebuild every lit
+  // mesh's material as a plain Lambert on the shipped default, stashing the
+  // authored one in a cache slot on the mesh and hanging a CLONE in its
+  // place. So `beardMat.opacity = ...` and `paintMat.color = ...` —
+  // references captured once at build time — were both writing to an object
+  // that had been swapped off the mesh before a single frame was drawn.
+  // Nothing failed; the effect simply rendered to nowhere, and it had been
+  // doing that since the case was staged. Nothing rebuilds a material now
+  // (see src/render/material.js), so this exact trap is gone — the loop
+  // below still reads `m.material` fresh off each mesh rather than a
+  // captured reference, which costs nothing and needs no caveat to justify
+  // it.
   const paintedMeshes = [];
   painted.traverse((o) => { if (o.isMesh && o.name !== 'beard') paintedMeshes.push(o); });
-  // INK_LIT, not INK: this is a lit surface, and at raw INK the toon ramp's
-  // bands land at levels 9/19/30 and the portrait would go invisible rather
-  // than black (the style rule in CLAUDE.md).
+  // INK_LIT, not INK: this is a lit surface, and raw INK reads as void once
+  // lit rather than as the black it looks like unlit (see palette.js's own
+  // comment on INK_LIT for the fuller argument, including what changed when
+  // the toon ramp it was tuned under retired).
   const DRAIN = 0.85;          // the red runs out
   const OUT = 1.9;             // and stays out this long
   const BACK = 1.7;            // then washes back

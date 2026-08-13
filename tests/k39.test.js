@@ -294,17 +294,16 @@ test('case 39: the bed is dug out under the water and untouched outside it', () 
 });
 
 test('case 39: the fish are unlit, or they vanish under the sheet', () => {
-  // A submerged koi is composited at (1 - opacity) of itself, and the toon ramp
-  // then spends most of that on shading: lit, repainting one from mid grey to
-  // nearly paper moves the rendered pixel by three levels and the fish reads as
-  // nothing but its own depth-ink outline. This is that fix, pinned.
+  // A submerged koi is composited at (1 - opacity) of itself, so whatever
+  // contrast it has left is already cut to a fraction before any shading of
+  // its own is layered on top — a lit fish reads as nothing but its own
+  // depth-ink outline. This is that fix, pinned.
   const { root } = pondParts();
   const bodies = [];
   root.scene.traverse((o) => { if (o.name === 'koi-body') bodies.push(o); });
   assert.ok(bodies.length >= 3, `there are fish in the pond, got ${bodies.length}`);
   for (const b of bodies) {
-    assert.ok(b.material.isMeshBasicMaterial, 'unlit — the water eats toon shading');
-    assert.equal(b.userData.keepMaterial, true, 'and the workbench must not relight it');
+    assert.ok(b.material.isMeshBasicMaterial, 'unlit — the water eats any shading it would carry');
   }
 });
 

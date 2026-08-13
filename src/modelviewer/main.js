@@ -22,7 +22,6 @@ import { PAPER, wash } from '../palette.js';
 import { ROSTER as STATIC_ROSTER, instantiate } from './roster.js';
 import * as STATIC_KIT from '../kit/index.js';
 import { makeViewerLights } from './lights.js';
-import { applyBookShading } from './shading.js';
 import { createGallery } from './gallery.js';
 import * as checklist from './checklist.js';
 
@@ -231,9 +230,9 @@ function showModel(index) {
 
   try {
     const { obj, built } = instantiate(entry, liveKit);
-    // Before the silhouette check: silhouette flattens everything to ink
-    // anyway, and the shading swap would only be thrown away.
-    if (!silhouette) applyBookShading(obj);
+    // The kit's own materials are what render — no rebuild between builder and
+    // screen. Silhouette overrides them all to flat ink below; the book look
+    // otherwise needs nothing done to it here.
     if (silhouette) {
       obj.traverse((o) => {
         if (!o.isMesh) return;

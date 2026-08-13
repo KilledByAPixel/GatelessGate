@@ -191,7 +191,7 @@ export function makeWater({
                            // a ripple under a rim it must not slop over
   opacity = 0.72,          // how much the surface hides what is under it — a
                            // pond with koi wants this lower so the fish read
-  specular = 0.55,         // the white glint; 0 drops back to the toon ramp
+  specular = 0.55,         // the white glint; 0 drops back to plain Lambert
   shininess = 64,
   // The free-ocean term (case 20): slow waves traveling toward (dx, dz) at
   // wavelength/period units/sec. One component object, or an ARRAY of them —
@@ -238,7 +238,7 @@ export function makeWater({
   geo.computeVertexNormals();
 
   // WATER IS THE ONE SURFACE THAT GLINTS. Everything else in the book wears
-  // the toon ramp, which has no specular at all, so a pond lit from the side
+  // plain Lambert, which has no specular at all, so a pond lit from the side
   // was a flat coloured disc — and on a RED pond that reads as paint rather
   // than water (Frank: "we want a high specular on the water... the white
   // specular of the light where the surface of the water is red"). Phong for
@@ -281,10 +281,6 @@ export function makeWater({
   // triangle of shadow mid-sea, cast by nothing. A glinting transparency has
   // no business catching monk shadows anyway.
   surface.userData.noShadow = true;
-  // The debug workbench rebuilds every material as a plain Lambert on the
-  // shipped default, which would drop the specular on the floor. This is
-  // exactly what keepMaterial is for — the moon learned it the hard way.
-  surface.userData.keepMaterial = true;
   group.add(surface);
 
   const count = position.length / 3;

@@ -3,7 +3,6 @@ import { setGrassPatchiness, setGrassReach, setGrassTaper } from '../kit/grassfi
 import { LAMBERT_LIFT } from '../kit/tuftfield.js';
 import { wash } from '../palette.js';
 import { setFoliageWeather } from '../kit/foliage.js';
-import { plainMaterial } from '../render/material.js';
 import { DRAW_BUDGET, DRAW_WARN } from '../budget.js';
 
 // A workbench: a toolbar button top-right of the stage, and a plain panel that
@@ -93,7 +92,6 @@ const CONTROLS = [
   { action: 'shot', label: 'Screenshot (P)', text: 'Save' },
 
   { group: 'Render' },
-  { key: 'toon', label: 'Toon shader', type: 'bool', def: false },
   { key: 'grain', label: 'Paper texture', type: 'bool', def: true },   // master: off = no paper at all
   { key: 'shadows', label: 'Real shadows', type: 'bool', def: true },
   { key: 'fogMul', label: 'Fog ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
@@ -319,15 +317,6 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
   // ---- application --------------------------------------------------------
   // Authored values are captured the first time a scene is seen, so the sliders
   // act as multipliers over whatever each case intended rather than flat values.
-  // The clone itself is plainMaterial() in render/material.js — the model viewer
-  // needs the identical one, and the list of properties it has been caught
-  // dropping is long enough that a second copy would repeat it. This is only
-  // the cache: one plain material per mesh, built the first time it is asked
-  // for and reused for every later toggle.
-  function plainMaterialFor(mesh) {
-    if (!mesh.userData._matPlain) mesh.userData._matPlain = plainMaterial(mesh.userData._matToon);
-    return mesh.userData._matPlain;
-  }
 
   // The grass field the wind slider was last synced against. A page turn builds
   // a new one, which is the signal to adopt that case's pinned wind (below).
@@ -377,20 +366,6 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
           o.castShadow = state.shadows && o.name !== 'ground'
             && !o.userData.noShadow && !o.userData.noCastShadow;
           o.receiveShadow = state.shadows && !o.userData.noShadow;
-          // Some materials must survive this swap untouched — `keepMaterial`.
-          //
-          // The toon toggle rebuilds every material as a plain Lambert, which
-          // silently destroys anything the original did beyond carrying a
-          // colour: the grass's wind bend lives in its shader and would freeze
-          // mid-stride, and the moon is deliberately UNLIT — cloning it to
-          // Lambert put it under the sun, so it darkened and brightened with the
-          // lighting like any other surface. That cost an evening of arguing
-          // about the wrong cause, because the source material said Basic while
-          // the running scene said Lambert.
-          if (o.name !== 'grassfield' && !o.userData.keepMaterial) {
-            if (!o.userData._matToon) o.userData._matToon = o.material;
-            o.material = state.toon ? o.userData._matToon : plainMaterialFor(o);
-          }
         }
       });
 

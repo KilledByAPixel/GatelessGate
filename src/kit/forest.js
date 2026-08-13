@@ -23,9 +23,9 @@ import { mergeSimple } from './scatter.js';
 // stand held one species: one mesh, however many trees or species it mixes.
 // Trunk/canopy hue (oak/tree normally keep those separate — see oak.js,
 // tree.js) is deliberately NOT preserved here: at forest distance, under fog,
-// through the toon ramp's flat shading, bark barely reads apart from foliage
-// anyway, and folding both into the forest's one flat `color` is what keeps
-// the whole stand a single draw call no matter how many species it mixes.
+// bark barely reads apart from foliage anyway, and folding both into the
+// forest's one flat `color` is what keeps the whole stand a single draw call
+// no matter how many species it mixes.
 const PINE_TEMPLATES = 3;
 const TREE_TEMPLATES = 3;
 const OAK_TEMPLATES = 2;

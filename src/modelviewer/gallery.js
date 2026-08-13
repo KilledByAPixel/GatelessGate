@@ -16,7 +16,6 @@ import * as THREE from '../../lib/three.module.js';
 import { PAPER } from '../palette.js';
 import { instantiate } from './roster.js';
 import { makeViewerLights } from './lights.js';
-import { applyBookShading } from './shading.js';
 import * as checklist from './checklist.js';
 
 const SPACING = 120;            // wide vs the narrow FOV: neighbors stay out of frame
@@ -124,8 +123,7 @@ export function createGallery({ getKit, getRoster, getFills, toast, onChecklistC
       const dom = cellDom(entry);
       grid.append(dom.root);
       try {
-        const { obj } = instantiate(entry, getKit());
-        applyBookShading(obj);       // the shipped Lambert, same as single view
+        const { obj } = instantiate(entry, getKit());     // the shipped Lambert, same as single view
         const group = new THREE.Group();
         group.add(obj);
         group.position.x = i * SPACING;

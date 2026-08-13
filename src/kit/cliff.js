@@ -186,7 +186,6 @@ export function makeCliff({
         map: tex, transparent: true, opacity: bank.op, depthWrite: false,
       }));
     mesh.name = 'mist';
-    mesh.userData.keepMaterial = true;   // unlit, textured — the clone breaks both
     mesh.rotation.x = -Math.PI / 2;
     mesh.rotation.z = (rnd(j + 2) - 0.5) * 0.4;
     mesh.scale.set(bank.sx, bank.sz, 1);

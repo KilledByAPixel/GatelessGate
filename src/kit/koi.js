@@ -144,18 +144,20 @@ export function makeKoi({
   ride = 1,
   // UNLIT, for a fish under a sheet you can only partly see through.
   //
-  // A submerged koi is composited as (1 - opacity) of itself, so whatever
-  // contrast it has left is already cut to a fraction — and the toon ramp then
-  // spends most of that fraction on shading. A lit fish under case 39's pond
-  // arrives as 0.28 x 0.31 x its own colour: repainting it from mid grey to
-  // nearly paper moved the rendered result by three levels out of 255, and the
-  // fish read as nothing but the post pass's depth-ink outline, a fish-shaped
-  // scratch with pond showing through it. Unlit, the same fish keeps its full
-  // value through the water and reads as what it is: a paleness moving down
-  // there. It costs the shading, which nobody can see under water anyway.
-  //
-  // keepMaterial goes with it, or the debug workbench's plain-Lambert rebuild
-  // (the shipped default) quietly puts the lighting straight back.
+  // A submerged koi is composited at (1 - opacity) of itself, so whatever
+  // contrast it has left is already cut to a fraction before any shading gets
+  // layered on top of it. A lit fish spends that thin fraction on shading
+  // variation across its body rather than on being visible at all, and reads
+  // as little more than the post pass's depth-ink outline — a fish-shaped
+  // scratch with pond showing through it. (The old toon ramp made this worse
+  // in a way this comment used to quantify — its fixed 0.31/0.63/1.0 bands
+  // meant a fish landing on the wrong one nearly vanished outright. Lambert
+  // shades continuously instead, so that exact arithmetic no longer applies;
+  // re-deriving an equivalent number would need the fish's actual normal
+  // distribution under the key light, which nothing here computes.) Unlit,
+  // the same fish keeps its full value through the water and reads as what
+  // it is: a paleness moving down there. It costs the shading, which nobody
+  // can see under water anyway.
   unlit = false,
 } = {}) {
   const g = new THREE.Group();
@@ -191,7 +193,6 @@ export function makeKoi({
     f.name = 'fish';
     const mesh = new THREE.Mesh(template.clone(), mat);
     mesh.name = 'koi-body';
-    if (unlit) mesh.userData.keepMaterial = true;
     // the wave displaces vertices past the rest pose; pad the culling sphere
     // so a fish at the frame's edge doesn't pop out mid-tailbeat
     mesh.geometry.computeBoundingSphere();

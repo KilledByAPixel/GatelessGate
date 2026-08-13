@@ -10,9 +10,9 @@ import { ACCENT_DEEP, PAPER } from '../palette.js';
 //    paper with distance (flag.js carries the same note for the same reason),
 //    and at sixty-odd units an exponential fog erases the disc completely. The
 //    weather is the one thing that does not touch the moon.
-// 2. It is UNLIT. A toon-shaded disc has a single normal, so it lands wholly in
-//    whichever of the three ramp bands the key light happens to hit — meaning
-//    its tone would swing with the staging's lighting rather than with the hour.
+// 2. It is UNLIT. A lit disc has a single normal, so it would take one shade
+//    of N·L against the key light — meaning its tone would swing with the
+//    staging's lighting rather than with the hour.
 //    A moon emits; MeshBasicMaterial is the honest material for it.
 // 3. The depth-edge ink PASS leaves it alone too — a separate mechanism, on by
 //    default. The disc sits against nothing but sky, so the Sobel sees the
@@ -44,10 +44,6 @@ export function makeMoon({
 
   const mesh = new THREE.Mesh(geo, mat);
   mesh.name = 'moon';
-  // ...and the debug panel's toon toggle must not rebuild this as a lit Lambert,
-  // which is exactly what it used to do — see the note in ui/debug.js. Point 2
-  // above is only true if the material actually survives to render time.
-  mesh.userData.keepMaterial = true;
   mesh.position.set(Math.sin(azimuth) * distance, height, -Math.cos(azimuth) * distance);
   // face the staging, standing plumb — lookAt at its own height keeps the disc
   // vertical instead of tipping it down toward the ground plane

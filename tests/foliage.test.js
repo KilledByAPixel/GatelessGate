@@ -4,10 +4,9 @@ import * as THREE from '../lib/three.module.js';
 import { mergeSimple } from '../src/kit/scatter.js';
 import { makeTree } from '../src/kit/tree.js';
 import { pineGeometry, makePine } from '../src/kit/pine.js';
-import { plainMaterial } from '../src/render/material.js';
 import {
   FOLIAGE, FOLIAGE_PARS, FOLIAGE_BODY, FOLIAGE_WIND_SHARE,
-  applyFoliageWind, stepFoliageWind, setFoliageWeather,
+  stepFoliageWind, setFoliageWeather,
 } from '../src/kit/foliage.js';
 
 // The wind in the trees is baked, not animated: the mesh is merged and there
@@ -185,29 +184,6 @@ test('a broadleaf is not a mast — it keeps the branching model', () => {
 });
 
 // ---- the material plumbing --------------------------------------------------
-
-test('the wind survives the material swap that ships', () => {
-  // THE TRAP: the shipped look is NOT the toon ramp — debug.js rebuilds every
-  // lit surface as a plain Lambert, and that rebuild used to drop
-  // onBeforeCompile. Foliage animated in the workbench and stood dead still in
-  // the book. plainMaterial has to carry the hook across.
-  const src = applyFoliageWind(new THREE.MeshLambertMaterial({ color: 0x333333 }));
-  assert.equal(typeof src.onBeforeCompile, 'function');
-  assert.equal(typeof src.customProgramCacheKey, 'function');
-
-  const swapped = plainMaterial(src);
-  assert.equal(swapped.onBeforeCompile, src.onBeforeCompile, 'the hook crosses the rebuild');
-  assert.equal(swapped.customProgramCacheKey, src.customProgramCacheKey,
-    'and its cache key, or three.js hands both materials one compiled program');
-
-  // An ordinary material is untouched by the feature existing. Asserted with
-  // hasOwn, because READING either property always finds THREE's prototype
-  // default — which is exactly the trap that made the guards inside
-  // plainMaterial fire for every material until they used hasOwn too.
-  const plain = plainMaterial(new THREE.MeshLambertMaterial({ color: 0x333333 }));
-  assert.equal(Object.hasOwn(plain, 'customProgramCacheKey'), false);
-  assert.equal(Object.hasOwn(plain, 'onBeforeCompile'), false);
-});
 
 test('a pine and a tree both carry the foliageWind flag bakeStatic reads', () => {
   // bakeStatic's canMerge refuses to merge a foliage-wind mesh, because

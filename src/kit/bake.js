@@ -42,9 +42,8 @@ import { mergeSimple } from './scatter.js';
 // identity: every makeMonk mints its own washMaterial, so identity would leave
 // nine monks as nine meshes and the whole point would be lost. The userData
 // flags are in the key because they change how the mesh is treated downstream
-// — keepMaterial whether the workbench's plain-Lambert rebuild does,
-// noShadow/noCastShadow whether debug.js's shadow pass touches it (water.js,
-// foam.js) — and two meshes that disagree about any of them cannot share one. emissive/emissiveIntensity are
+// — noShadow/noCastShadow whether debug.js's shadow pass touches it (water.js,
+// foam.js) — and two meshes that disagree about either cannot share one. emissive/emissiveIntensity are
 // in the key for the same reason colour is: material.js's seal glow
 // (`washMaterial({ glow: false })`) exists precisely so two accent-coloured
 // materials CAN differ only by glow, and a merge that ignored it would spread
@@ -61,7 +60,6 @@ function drawKey(mesh) {
     !!m.flatShading,
     m.emissive ? m.emissive.getHexString() : '-',
     m.emissiveIntensity ?? 1,
-    !!mesh.userData.keepMaterial,
     !!mesh.userData.noShadow,
     !!mesh.userData.noCastShadow,
   ].join('|');
@@ -73,8 +71,10 @@ function drawKey(mesh) {
 // …) samples by uv, so the refusal has to be the general rule rather than a
 // list of the two slots this kit happens to use today — a normal-mapped
 // material merged through a narrow list would sample (0,0) everywhere and
-// render flat with nothing failing, the exact failure shape material.js's
-// plainMaterial comment records happening five separate times.
+// render flat with nothing failing. (The cliff's mist sprites hit this same
+// failure shape a different way once: a material that lost its map some
+// other way rendered as a bare tinted quad, and nobody could tell what the
+// pale rectangles were.)
 function usesUV(m) {
   for (const key in m) {
     if (key.endsWith('Map') && m[key]) return true;
@@ -166,7 +166,6 @@ export function bakeStatic(target, opts = {}) {
       let b = buckets.get(drawKey(o));
       if (!b) {
         b = { material: o.material, geos: [], userData: {} };
-        if (o.userData.keepMaterial) b.userData.keepMaterial = true;
         if (o.userData.noShadow) b.userData.noShadow = true;
         if (o.userData.noCastShadow) b.userData.noCastShadow = true;
         buckets.set(drawKey(o), b);

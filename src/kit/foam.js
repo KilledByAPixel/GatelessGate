@@ -99,7 +99,6 @@ export function makeFoam({
   });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.name = 'foam';
-  mesh.userData.keepMaterial = true;   // the workbench must not relight snow
   mesh.userData.noShadow = true;       // a transparency, like the water it rides — see water.js
   mesh.frustumCulled = false;          // the strips move; a stale box would cull them
 

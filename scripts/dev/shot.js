@@ -3,7 +3,7 @@
 //
 //   node scripts/dev/shot.js --model dog --out sil-dog     # SILHOUETTE GRID (the primary
 //       judging artifact: front/3-4/side/top of ONE model, flat ink, auto-framed)
-//   node scripts/dev/shot.js --model dog --mode toon --out toon-dog
+//   node scripts/dev/shot.js --model dog --mode lit --out lit-dog
 //   node scripts/dev/shot.js --kit dog --out after-dog     # full workbench view (hand-authored VIEWS)
 //   node scripts/dev/shot.js --kit fan --view fan-side --out after-fan-side
 //   node scripts/dev/shot.js --case 1 --out redo-k1        # case NUMBER (or preface/afterword)
@@ -59,7 +59,7 @@ if (flag('jobs')) {
   }];
 }
 if (!jobs.length || jobs.some((j) => !j.out || !(j.model || j.kit || j.case || j.expr))) {
-  console.error('usage: shot.js --model <name> [--mode silhouette|toon] --out <name>');
+  console.error('usage: shot.js --model <name> [--mode silhouette|lit] --out <name>');
   console.error('       shot.js --kit <model> [--view <view>] --out <name>');
   console.error('       shot.js --case <slug> --out <name>');
   console.error('       shot.js --expr "<js returning a dataURL>" --out <name>  (add --page kit|app, or --url /any/page.html)');
@@ -90,7 +90,7 @@ await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const BASE = `http://127.0.0.1:${server.address().port}`;
 
 // ---- one headless chrome, killed hard on the way out -------------------
-// "lights": "book" drops the viewer's two extra fills from a toon shot, for
+// "lights": "book" drops the viewer's two extra fills from a lit shot, for
 // the A/B against the light the case will actually be lit by. Silhouette mode
 // has no lights at all, so it ignores this.
 const pageUrlFor = (job) => job.model

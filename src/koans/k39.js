@@ -129,16 +129,11 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
   // at a time (see nextRed above).
   //
   // It is applied by RECOLOURING each stone's own material rather than by
-  // swapping a shared red one in. Swapping looked identical in isolation and
-  // was wrong in the app: the debug workbench caches a plain-Lambert clone
-  // per mesh, and on the shipped default that clone is what actually
-  // renders — so assigning a fresh washMaterial at runtime dropped a
-  // differently-lit material into a scene of clones, and every stone the
-  // repaint touched changed tone at once (Frank: "the other rocks change
-  // their colour a little bit... they suddenly turn a more bright colour",
-  // and the red itself "looks a little more red than the other red
-  // objects"). Recolour whatever material is on the mesh — and both cached
-  // copies, so toggling the toon shader cannot resurrect a stale colour.
+  // swapping a shared red one in — cheaper (no new material, no fresh shader
+  // link) and it cannot drop whatever else the stone's material carries the
+  // way a hand-built replacement could forget to (see setSeal's comment in
+  // render/material.js, which used to run into exactly this on these same
+  // stones).
   const stones = [];
   for (let i = 0; i < STONES; i++) {
   const t = i / (STONES - 1);
@@ -180,11 +175,8 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
   for (let i = 0; i < stones.length; i++) {
   const top = stones[i].top;
   const isRed = i === red;
-  for (const m of [top.material, top.userData._matToon, top.userData._matPlain]) {
-  if (!m || !m.color) continue;
-  m.color.set(isRed ? ACCENT : WASH.stone);
-  setSeal(m, isRed);
-  }
+  top.material.color.set(isRed ? ACCENT : WASH.stone);
+  setSeal(top.material, isRed);
   }
 };
     paint();
