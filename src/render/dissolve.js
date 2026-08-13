@@ -63,6 +63,10 @@ export function makeDissolve() {
       mesh.visible = t < 1;
     },
     setAspect(a) { mat.uniforms.uAspect.value = a; },
+    // The curtain is the PAGE, so it follows the page's colour: with the
+    // reading light down (render/nightsky.js) a paper-coloured cover would
+    // flash white over the whole frame at every turn between two dark scenes.
+    setPaper(hex) { mat.uniforms.uPaper.value.set(hex); },
     animateTo(to, dur = 0.8) {
       return new Promise((res) => {
         // A NEW STAIN, but only when nobody can see the old one change. At t = 0

@@ -29,6 +29,8 @@ import { makePageCard, pageCardLabel } from './ui/page_card.js';
 import { makeSit } from './sit.js';
 import { makeThemeButton } from './ui/theme.js';
 import { readTheme, nextTheme } from './ui/theme_state.js';
+import { applyNightSky, fogFor } from './render/nightsky.js';
+import { PAPER } from './palette.js';
 import { makeRouter } from './router.js';
 import { readingOrder, pageTarget, loopNextSlug } from './spine.js';
 
@@ -154,10 +156,25 @@ let devMode = devModeOn();
 // view has been disposed are dropped on the way past rather than tracked.
 let theme = readTheme(save.state().theme);
 let themeBtns = [];
+// THE READING LIGHT REACHES THE SKY. The page's two skins used to stop at the
+// text panel; now the paper the diorama is painted on goes dark with it, and
+// only that — the key and the fill are untouched, so every lit surface keeps
+// the value it had (render/nightsky.js). Applied here AND on every scene swap,
+// since a page built while the light is down has to arrive already dark.
+function applySky() {
+  const night = theme === 'dark';
+  const active = scenes.active();
+  if (active) applyNightSky(active.scene, night);
+  // The curtain follows the FOG, not the sky: a dissolve is the page going to
+  // ink and back, and the fog colour is what the page dissolves into. With the
+  // fog left alone (the default) the curtain stays paper, exactly as it was.
+  dissolve.setPaper(fogFor(PAPER, night));
+}
 function applyTheme() {
   panel.classList.toggle('dark', theme === 'dark');
   themeBtns = themeBtns.filter((b) => b.el.isConnected || !b.el.parentNode);
   for (const b of themeBtns) b.refresh();
+  applySky();
 }
 function toggleTheme() {
   theme = nextTheme(theme);
@@ -721,6 +738,9 @@ const debug = makeDebug({
   onSound: () => setSoundLabel(),
   onLens: (fov) => applyLens(fov),
   onLayout: (on) => setLayout(on),
+  // the workbench moved how far the page goes after dark; re-apply through
+  // the one path that owns the sky
+  onNightDepth: () => applySky(),
   // Opening the workbench narrows the stage, and no resize event fires for a
   // layout change inside the page.
   onPanel: () => applyStageSize(),
@@ -915,6 +935,7 @@ function buildKoan(mod, slug) {
   built.setCamera && built.setCamera(camera);
   const prev = scenes.active();
   scenes.setActive(built);
+  applySky();
   debugApply();
   if (prev && prev !== hub && prev !== built) { disposeRoot(prev); prev.dispose && prev.dispose(); }
   koan = built; koanSlug = slug;
@@ -1085,6 +1106,7 @@ async function exit() {
   await transition(() => {
     const prev = scenes.active();
     scenes.setActive(hub);
+    applySky();
     debugApply();
     if (prev && prev !== hub) { disposeRoot(prev); prev.dispose && prev.dispose(); }
     koan = null; koanSlug = null;
@@ -1482,6 +1504,7 @@ if (booted && booted.view === 'case' && devOpen(booted.slug)) {
     enter(booted.slug).catch(() => {
       router.set({ view: 'contents' }, { replace: true });
       scenes.setActive(hub);
+      applySky();
       dissolve.set(1);
       startIntro();
     });
@@ -1493,6 +1516,7 @@ if (booted && booted.view === 'case' && devOpen(booted.slug)) {
   // return the reader to the URL that never resolved to anything.
   router.set({ view: 'contents' }, { replace: true });
   scenes.setActive(hub);
+  applySky();
   // The workbench has to meet the hub before the first frame, the way it meets
   // every case in buildKoan and the hub again in exit(). Without this the title
   // screen and the contents were the only two scenes in the book it never

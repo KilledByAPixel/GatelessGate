@@ -6,6 +6,7 @@ import {
   makeWildflowers, makeSnow,
 } from '../kit/index.js';
 import { makeLights } from '../render/lights.js';
+import { pageBase, fogBase } from '../render/nightsky.js';
 
 const ID = 19;
 const BASE_WIND = 0.20;
@@ -310,6 +311,7 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   scene.add(snow.points);
 
   const skyBase = new THREE.Color(PAPER);
+  const fogFrom = new THREE.Color(PAPER);
   const skyLit = new THREE.Color(ACCENT_LIGHT);
   const homeDir = new THREE.Vector3(
     Math.sin(MOON_BEARING) * Math.cos(SUN_ELEV),
@@ -358,8 +360,15 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   const rise = riseShape(clock - riseAt);
   const s = 1 + (MOON_SWELL - 1) * rise;
   moon.scale.set(s, s, 1);
+  // What this swell starts FROM, read live rather than from the palette: the
+  // reading light can take the page dark under us (render/nightsky.js), and
+  // lerping from the constant would put it back on the next frame. TWO bases,
+  // because that module splits the sky from the fog exactly as this case does
+  // — taking the fog from the sky's base would darken a fog it had left alone.
+  skyBase.set(pageBase(scene, PAPER));
+  fogFrom.set(fogBase(scene, PAPER));
   scene.background.copy(skyBase).lerp(skyLit, SKY_TINT * rise);
-  scene.fog.color.copy(skyBase).lerp(skyLit, FOG_TINT * rise);
+  scene.fog.color.copy(fogFrom).lerp(skyLit, FOG_TINT * rise);
 
   // snap to rest rather than decaying asymptotically forever, so the wind
   // level settles on an exact value instead of creeping
