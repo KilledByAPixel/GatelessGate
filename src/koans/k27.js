@@ -23,20 +23,14 @@ const ID = 27;
 // nothing; it is a refusal of the thing you named, and a hall you could pick up
 // between two fingers is that refusal with the hall still standing in it.
 //
-// FOUR VERSIONS GOT HERE. The three that failed are kept because between them
-// they map a constraint that binds every case in this book:
-//
-//   1. THEY SANK into the ground, on three separate hit boxes with a fourth for
-//      undo. A switchboard with a trapdoor animation, and three targets make a
-//      checklist where Nansen said one sentence.
-//   2. THE INK DRAINED — colour to the sky, then an opacity down. It blinked
-//      — they turned colour and then simply blinked off.
-//   3. THE COLOUR WASH DONE EXACTLY: `color` to black while `emissive` goes to
-//      the sky renders a lit surface as flat sky under any light, which is a
-//      true vanish where the sky is what is behind it — and this hall stands
-//      against the meadow, so it became a hall-shaped patch of sky laid over
-//      the trees. A staggered per-mesh alpha after it was no better: the colour
-//      change read badly and the alpha never worked properly.
+// THREE VERSIONS FAILED FIRST, and between them they map a constraint that
+// binds every case in this book. They sank into the ground, on three hit boxes
+// with a fourth for undo — a switchboard where Nansen said one sentence. The
+// ink drained, and they blinked off. The colour wash was then done exactly
+// (`color` to black while `emissive` goes to the sky renders a lit surface as
+// flat sky under any light) — a true vanish where the sky is what is behind
+// it, except this hall stands against the meadow, so it became a hall-shaped
+// patch of sky laid over the trees.
 //
 // THE INK PASS CANNOT FADE, and that is the common cause. It is a Sobel over
 // the depth buffer, so a thing wears a full-strength outline for exactly as
@@ -44,8 +38,8 @@ const ID = 27;
 // no ordering trick changes it. Every disappearance therefore ends in one frame
 // where the strongest mark in the picture leaves at once, and the more
 // carefully the fill had been faded, the more that last frame stood out.
-// Staggering it across the hall's 21 meshes turned the pop into a dissolve, and
-// a dissolve was not what this wanted either.
+// Staggering it across the hall's meshes turned the pop into a dissolve, and a
+// dissolve was not what this wanted either.
 //
 // A SCALE HAS NO SUCH FRAME. The outline shrinks with the shape because it IS
 // the shape's own depth edge; the shadow shrinks with it for the same reason;
@@ -53,18 +47,7 @@ const ID = 27;
 // amount. There is no threshold anywhere in it, which is why this is the one
 // version with no special cases in it at all.
 //
-// THE MOON IS THE EXCEPTION, and it earns it: sixty units out, a moon that got
-// smaller would read as the moon leaving rather than as the picture doing
-// anything. It keeps the colour fade, which is the one that worked — it can,
-// because it is UNLIT and
-// unfogged, so a disc painted exactly the sky colour is an exact vanish with no
-// blending involved. What it must never take is `transparent = true`: makeMoon
-// forces `gl_FragColor.a = 0.0` as an ink-mask marker, free while the material
-// is opaque and fatal the instant the blender reads it. This case set that line
-// at build for version 2's opacity fade, so its moon was INVISIBLE from the day
-// it was staged — which nobody caught, because a missing moon in a scene about
-// things going missing does not look like a bug. k19's header carries the rule
-// in capitals, having been bitten first.
+// THE MOON IS THE EXCEPTION — see its own note at the shrink list below.
 //
 // WHAT STAYS: the road, the mountains, the far forests, the grass. None of them
 // is a thing anyone points at — they are the ground the pointing happens on.
@@ -259,13 +242,17 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 31.5, pitch: 2
 
   // THE MOON DOES NOT SHRINK. It is sixty units out, so a smaller moon would
   // read as the moon leaving rather than as the picture doing anything — and it
-  // is the one thing here that already went away cleanly, by colour alone
-  // and cleanly. It can do that because
-  // it is UNLIT and unfogged, so a disc painted exactly the sky colour is an
-  // exact vanish with no blending involved. What it must never take is a
-  // `transparent = true`: makeMoon's shader forces `gl_FragColor.a = 0.0` as an
-  // ink-mask marker, free while the material is opaque and fatal the instant the
-  // blender reads it — see point 4 in the header.
+  // is the one thing here that already goes away cleanly, by colour alone. It
+  // can do that because it is UNLIT and unfogged, so a disc painted exactly the
+  // sky colour is an exact vanish with no blending involved.
+  //
+  // What it must NEVER take is `transparent = true`: makeMoon's shader forces
+  // `gl_FragColor.a = 0.0` as an ink-mask marker, free while the material is
+  // opaque and fatal the instant the blender reads it. This case set that flag
+  // once, for an opacity fade, and its moon was INVISIBLE from the day it was
+  // staged — which nobody caught, because a missing moon in a scene about
+  // things going missing does not look like a bug. k19's header carries the
+  // rule in capitals, having been bitten first.
   const SKY_C = new THREE.Color(SKY);
   const moonBase = moon.material ? moon.material.color.clone() : null;
   const MOON_KIND = 3;

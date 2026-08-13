@@ -3,8 +3,7 @@
 
 import * as THREE from '../lib/three.module.js';
 import { noise1 } from './util/noise.js';
-
-const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+import { clamp } from './util/math.js';
 
 // ---------------------------------------------------------------------------
 // HEADING AND PITCH, IN DEGREES — the one vocabulary

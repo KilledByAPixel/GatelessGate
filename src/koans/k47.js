@@ -5,6 +5,7 @@ import {
   composeWorld, groundHeight, makeGate, makeMonk, makePath,
 } from '../kit/index.js';
 import { makeLights } from '../render/lights.js';
+import { clamp01, smoothstep } from '../util/math.js';
 
 const ID = 47;
 const GROUND_SEED = 21;
@@ -82,8 +83,7 @@ const SLOT_T = [0.02, 0.22, 0.42, 0.70, 0.96];
 const SLOT_S = [1.07, 1.0, 0.9375, 0.875, 0.10];
 const GONE = SLOT_T.length - 1;   // the last slot: deep enough that the fog has it
 const SLIDE = 2.4;        // seconds for the road to move one place
-const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
-const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+const ease = (t) => smoothstep(0, 1, t);
 const GATE_W = 3.2;       // every gate is built at the near barrier's size and
 const GATE_H = 2.9;       // scaled into its slot from there
 

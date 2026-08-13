@@ -116,67 +116,43 @@ export default {
       grassKeepout: path.keepout(26, 1.05),
     });
 
-    // THREE single-tube fūrin under the gate's lintel, one size each —
-    // single chimes, each with one tone, each knocked on its own: three
-    // separate voices answering the same wind in their own time is the
-    // koan's own argument (not the wind, not the flag) staged as sound.
+    // THREE single-tube fūrin under the gate's lintel, one size each — three
+    // separate voices answering the same wind in their own time, which is the
+    // koan's own argument (not the wind, not the flag) staged as sound. A
+    // five-tube ring hung here too for a while; a cluster and three single
+    // notes under one beam was two ideas competing.
     //
-    // THE RING IS GONE, once it was staged: three singles at three sizes, and
-    // nothing else. A five-note cluster and three single notes under one
-    // beam was two ideas competing; three singles at three sizes is the one
-    // idea, and the sizes are visible from the road. (Its removal also
-    // returns 6 draws and the whole left end of the lintel, which is why
-    // every position below could be respread.)
+    // ANYTHING HUNG ON A GATE: CHECK THE POST RADIUS AT THE HANG HEIGHT, not
+    // at the foot. The ring used to hang exactly on the right post's own axis,
+    // where the taper still left the post wider than the chime for its whole
+    // vertical extent — it had been invisible, not merely close, since the day
+    // the case was staged.
     //
-    // BURIED CHIME, FOUND DURING AN EARLIER REVIEW and worth keeping on the
-    // record: the ring used to hang at local (1.2, 2.6, 0) — exactly on the
-    // right post's own axis (post x = +-width/2 = +-1.2, z = 0, same as the
-    // chime), and the post's radius there (~0.0913, tapered from
-    // POST_BOTTOM_R 0.12 to POST_TOP_R 0.09, src/kit/gate.js) exceeded the
-    // ring's own widest point for its whole vertical extent. It had been
-    // invisible, not merely close, since the day the case was staged. The
-    // lesson generalises to anything hung on a gate: check the post radius
-    // at the hang height, not at the foot.
+    // POSITIONS are measured off src/kit/gate.js rather than typed: only the
+    // kasagi's flat CENTRE span is flush underside with no gap to the wood, and
+    // past that its wings tilt up over the posts. All three hang on that span.
     //
-    // POSITIONS, measured off src/kit/gate.js at this case's default width
-    // (2.4) and height (2.6): the kasagi's overall footprint is
-    // width*1.4 = 3.36, but only its flat CENTRE span is flush with
-    // y = height+0.09 - KASAGI_H/2 = 2.6 — that span is
-    // width*1.4 - 2*(width*1.4*0.24) = 1.7472 wide, so |x| < 0.8736 is flush
-    // underside with no gap to the wood. Past that the kasagi's wing tilts
-    // upward, and the posts stand at +-width/2 = +-1.2 under that wing. All
-    // three hang on the flat span, evenly spread across it now that the ring
-    // no longer takes its left end.
+    // MAX-AMPLITUDE CHECK. A fūrin's cord, cap, tubes and tag are ONE rigid
+    // body pivoting at the hang point, so a bigger swing can never make one
+    // collide with ITSELF; the risk is external — the whole assembly
+    // displacing sideways into a NEIGHBOUR. (The clapper swings independently
+    // inside that assembly, but a real collision bounds it to the tubes' own
+    // clearance, so it never widens the silhouette this measures.)
     //
-    // MAX-AMPLITUDE CHECK (task-swing-tune-brief.md: "a bigger fūrin swing
-    // must not push tubes through the cap or through each other"). A fūrin's
-    // cord, cap, tubes and tag are ONE rigid body pivoting at the hang
-    // point, so a bigger swing can never make one collide with ITSELF; the
-    // risk is external — the whole assembly displacing sideways into a
-    // NEIGHBOUR. (The clapper does now swing independently inside that
-    // assembly — see THE CLAPPER in kit/furin.js — but it is bounded to the
-    // tubes' own clearance by a real collision, so it never widens the
-    // silhouette this check measures.)
+    // THE WORST CASE IS COUNTER-PHASE, and a check that swings every chime the
+    // SAME way measures nearly the BEST one — adjacent chimes displace together
+    // and the gap barely changes. Counter-phase needs no contrivance to reach:
+    // two ordinary taps half a period apart, or one tap against a wind lean. A
+    // real, measured collision hid behind the easier check once.
+    // tests/k29.test.js does it properly — real module, VISIBLE meshes only
+    // (oversized pick drums may overlap; a forgiving tap zone is not a visual
+    // bug), every pair's own worst-case sign combination, against the LIVE
+    // SWING.maxOmegaFrac rather than a copied number — so raising the swing cap
+    // fails the test instead of silently pushing two chimes through each other.
     //
-    // A CODE REVIEW ONCE CAUGHT A REAL, MEASURED COLLISION here by noticing
-    // that the check swung every chime the SAME direction — nearly the BEST
-    // case, since adjacent chimes then displace together and the gap barely
-    // changes. The worst case is COUNTER-phase (adjacent chimes swung toward
-    // EACH OTHER), which needs no special engineering to reach: two ordinary
-    // taps landing about half a period apart, or one tap against an existing
-    // wind lean. tests/k29.test.js checks it that way — real module, VISIBLE
-    // meshes only (the invisible oversized pick drums are allowed to
-    // overlap; a forgiving tap zone is not a visual bug), every pair's own
-    // worst-case sign combination — against the LIVE SWING.maxOmegaFrac
-    // rather than a copied number, so raising the swing cap fails the test
-    // rather than silently pushing two chimes through each other.
-    //
-    // TIE BEAM CLEARANCE: the nuki (src/kit/gate.js's cross-tie) sits at
-    // y = height*0.78 = 2.028, top face at 2.098, spanning the same x range
-    // as every chime here. Swinging away from vertical only ever SHORTENS a
-    // chime's drop (cos(theta) < 1), so REST is the worst case for this
-    // clearance, and X is irrelevant to it (the nuki spans the whole width).
-    // SINGLE_CORD below is what sets it — see its own comment.
+    // TIE BEAM CLEARANCE: the nuki spans the same x range as every chime, so x
+    // is irrelevant to it, and swinging off vertical only ever SHORTENS a
+    // chime's drop — REST is the worst case. SINGLE_CORD below is what sets it.
     const SINGLE_X = [-0.72, 0, 0.72];
     // SIZES: PROBLEM 1, task-swing-tune-brief.md — "the lower ones are
     // bigger... probably the length, maybe a little bit of both." Each

@@ -5,7 +5,10 @@
 // Pure and Node-tested; the node graph that applies these numbers is in the
 // same file below, browser-only, per the codebase's split. Nothing here imports
 // THREE — positions cross the boundary as plain {x, y, z}, which is also why
-// engine.js can stay THREE-free.
+// engine.js can stay THREE-free. (util/math.js is fine: it is pure scalar
+// arithmetic and imports nothing itself.)
+
+import { clamp } from '../util/math.js';
 
 export const SPATIAL = {
   // Distance at which gain is unity, and how fast it falls past that.
@@ -63,8 +66,6 @@ export const SPATIAL = {
   backGain: 0.85,
   backTone: 0.55,
 };
-
-const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
 export function spatialFor(source, listener, tune = SPATIAL) {
   const p = listener.pos;

@@ -25,40 +25,37 @@ import { applyFoliageWind } from './foliage.js';
 // pineGeometry() returns ONE merged BufferGeometry so a whole stand can be
 // drawn as a single InstancedMesh (see makeForest); makePine() wraps it in a
 // mesh for the hero pine placed by hand (cases 36, 41).
-// THE WIND GOES THROUGH IT — as a BEND, tier riding tier, each successive tier
-// bent a little more than the one below it.
 //
-// The first attempt displaced each tier on its own and was wrong in two ways at
-// once: the top tiers moved far too much, and the whole tree read as lopsided,
-// sliding off to one side. Both are the same mistake. A tier translated
-// sideways while the
-// bole underneath it stands still does not read as a tree bending, it reads as
-// cones sliding off a pole — and the lateral flutter the leaf clusters use, put
-// on a solid cone the size of a tier, is pure sideways slide.
+// THE WIND GOES THROUGH IT — as a BEND, tier riding tier, each bent a little
+// more than the one below. The first attempt displaced each tier on its own and
+// was wrong in two ways at once: the top tiers moved far too much, and the whole
+// tree read as lopsided, sliding off to one side. Both are the same mistake. A
+// tier translated sideways while the bole underneath it stands still does not
+// read as a tree bending, it reads as cones sliding off a pole — and the lateral
+// flutter the leaf clusters use, put on a solid cone the size of a tier, is pure
+// sideways slide.
 //
-// So the pine is a CANTILEVER now: the whole tree, trunk included, bends about
-// its own foot on a height-squared curve (aColumn in kit/foliage.js), which
-// pins the base without pinning the tree. The tiers are along for that ride at
-// very nearly the bole's own weight, and everything below is what is left of
-// "each one moves on its own" — deliberately small, because the ride IS the
-// effect and any tier that argues with it goes back to sliding.
+// So the pine is a CANTILEVER: the whole tree, trunk included, bends about its
+// own foot on a height-squared curve (aColumn in kit/foliage.js), which pins the
+// base without pinning the tree. The tiers ride that at very nearly the bole's
+// own weight, and what is left of "each one moves on its own" is deliberately
+// small, because the ride IS the effect and any tier that argues with it goes
+// back to sliding.
+
 // How far the mast leans relative to a broadleaf's outermost foliage. THE DIAL
 // FOR HOW MUCH A PINE BENDS — TIER_LAG is the separate one for whether that
 // bend reads as a hierarchy.
 //
-// It went 1.0 -> 0.62 -> 0.95 across two live passes, and the round trip is
-// worth recording because the second move was made for a reason that turned
-// out to be wrong. 0.62 was damping for "moving way too much"; what was
-// actually too much was the sideways slide of tiers displaced independently of
-// a motionless bole, which the cantilever fixed on its own. With that gone the
-// damping only made the tree lifeless — visibly stiller than the broadleaf
-// beside it.
+// It was damped once for "moving way too much", and that was the wrong
+// diagnosis: what was too much was the sideways slide of independently displaced
+// tiers, which the cantilever fixed on its own. With that gone the damping only
+// made the tree lifeless, visibly stiller than the broadleaf beside it.
 //
-// Which it structurally would at parity. A broadleaf carries EVERY leaf cluster
-// out at sway ~1, while a column's weight is height-squared, so most of a
-// pine's mass sits well down the curve and only the crown gets full travel. The
-// mean part of a pine therefore moves far less than the mean part of a tree for
-// the same number, and matching them by eye means a pine's number reads higher.
+// Which it structurally would be at parity. A broadleaf carries EVERY leaf
+// cluster out at sway ~1, while a column's weight is height-squared, so most of
+// a pine's mass sits well down the curve and only the crown gets full travel.
+// The mean part of a pine moves far less than the mean part of a tree for the
+// same number — so matched by eye, a pine's number reads higher.
 const MAST_SWAY = 1.95;
 const TIER_LAG = 0.28;      // radians of phase per tier — the lag that curves the
                             // mast as it sways. 1.35 made each tier its own event;

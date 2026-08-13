@@ -28,27 +28,22 @@ import {
 //
 // THEY ALSO ANSWER THE MEADOW'S WIND AND THE READER'S HAND, because a bloom
 // standing dead still in grass that is visibly leaning reads as a plastic
-// flower stuck in a moving field. They answer the wind and the pointer the
-// same way the grass does, and both are
-// the GRASS's models, re-read on the CPU rather than reinvented:
+// flower stuck in a moving field. Both are the GRASS's own models, re-read on
+// the CPU rather than reinvented:
 //
-//   THE WIND is the same drifting gust noise tuftfield.js samples in GLSL —
-//   the noise field slides downwind, so a gust arrives, crosses and passes,
-//   and blooms in the same patch of meadow lean with the blades around them
-//   instead of on a private clock. `wind` / `gustScale` / `gustSpeed` are the
-//   same three numbers the grass takes and the same three the workbench's
-//   sliders read, so a case's pinned weather reaches the flowers too (the
-//   panel writes them through mesh.userData.wind, exactly as it writes the
-//   grass's uniforms). The noise here is util/noise.js rather than the
-//   shader's own hash, so a bloom and the blade beside it are not bit-for-bit
-//   in step — same weather, not the same random stream, which is what you
-//   want anyway.
+//   THE WIND is the same drifting gust noise tuftfield.js samples in GLSL, so
+//   blooms lean with the blades around them instead of on a private clock.
+//   `wind`/`gustScale`/`gustSpeed` are the same three numbers the grass takes
+//   and the workbench's sliders read (written through mesh.userData.wind), so a
+//   case's pinned weather reaches the flowers too. The noise is util/noise.js
+//   rather than the shader's hash, so a bloom and the blade beside it are not
+//   bit-for-bit in step — same weather, not the same random stream, which is
+//   what you want anyway.
 //
-//   THE POINTER is breeze.js, the module the grass fields already share: one
-//   damped spring per field driven by the smoothed drag vector, and a
-//   smoothstep falloff around the stroke. A stationary pointer does nothing —
-//   that is breeze.js's own dead zone, not a rule this file invents — so
-//   "moved over them" means a stroke, the same gesture the grass answers.
+//   THE POINTER is breeze.js, the module the grass fields already share. A
+//   stationary pointer does nothing — that is breeze.js's own dead zone, not a
+//   rule this file invents — so answering the hand means answering a STROKE,
+//   the same gesture the grass answers.
 //
 // EVERY LEAN IS ONE BEND VECTOR. Nod, gust front, wind and pointer all add
 // into a single world-XZ vector; its length is the angle and its perpendicular
