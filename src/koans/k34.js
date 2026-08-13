@@ -3,10 +3,25 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeRain, makeMonk, faceMonk,
-  makeLights, washMaterial, makeFurin,
+  makeLights, washMaterial, makeFurin, tapMeshes,
+  setFoliageWeather, foliageWind,
 } from '../kit/index.js';
 
 const ID = 34;
+
+// THE SQUALL. Touching the house does not just call more rain, it calls
+// WEATHER (Frank: "let's have even more rain, and also increase the wind during
+// the swell"): the meadow lies over, the wood works, the shower leans with
+// them, and the sound comes up. Rain falling plumb while the grass flattens is
+// two weathers on one page, which is why the lean is here at all.
+//
+// It all rides ONE envelope — the rain's own surge level, which already holds
+// for 2.5s and then decays. A second envelope beside it would be a second thing
+// to keep in step, and there is nothing this needs that the first cannot say.
+const SURGE = 1.5;        // what a touch asks for; makeRain caps at exactly this
+const GUST_MULT = 3.4;    // extra grass wind at the top of the surge
+const RAIN_LEAN = 0.46;   // the shower's own tangent there, from 0.18 at rest
+const WIND_HEARD = 0.16;  // the ambience's own level, from the recipe below
 
 // "Mind is not Buddha. Learning is not the path." Two sentences, and Mumon
 // says Nansen was getting old and forgot to be ashamed.
@@ -19,9 +34,12 @@ const ID = 34;
 // thinking about where); what's left overhead now is indifferent to the
 // sentence that just walked out the door.
 //
-// Touch the mat and the shower leans in for a moment. That is the whole of
+// Touch the house and the shower leans in for a moment. That is the whole of
 // what the words do when they leave the paper — they ask, and the sky
-// answers, briefly, then settles back to its own patter.
+// answers, briefly, then settles back to its own patter. (It used to be the
+// reading MAT, which is a low pale rectangle mostly hidden under a seated monk;
+// the house is the biggest thing on the page and the only red one, so it is
+// where the composition already points.)
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
 const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 20.1 };
@@ -102,13 +120,16 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   tubes: 1, seed: 34,
   onStrike: (_, force, pos) => audio && audio.chimeStrike({ tube: -1, force, at: pos }),
   });
-  eaveChime.group.position.set(1.1, 2.3, 1.25);
+  eaveChime.group.position.set(1.1, 2.3, 1.5);
   hut.add(eaveChime.group);
   
   // THE RAIN: the verse's own weather — "When the earth is parched rain
   // will fall" — already falling over the study, indifferent to the
   // sentence that walked out of it.
-  const rain = makeRain({ count: 460, seed: ID, width: 26, depth: 26, height: 13 });
+  // 700 drops rather than 460 — this is the book's rain case and Frank wanted
+  // more of it. It costs nothing in draws (the whole shower is one
+  // LineSegments) and nothing in the budget; only vertices.
+  const rain = makeRain({ count: 700, seed: ID, width: 26, depth: 26, height: 13 });
   scene.add(rain.points);
   
   const world = composeWorld(scene, {
@@ -129,13 +150,21 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   ],
   });
 
-  const hit = new THREE.Mesh(
-  new THREE.CylinderGeometry(1.7, 1.7, 0.9, 8),
-  new THREE.MeshBasicMaterial({ visible: false }));
-  hit.name = 'mat-hit';
-  hit.position.set(-0.1, 0.35, -0.8);
-  scene.add(hit);
-  
+  // THE HOUSE IS THE TARGET, and it needs no proxy: it is the biggest thing
+  // on the page and it is the one thing painted red, so the reader already
+  // knows where to aim (Frank: "let's have it so you click on the house — since
+  // the house is red, you click on that to start the rain surge"). The tap was
+  // on the reading MAT, which is a low pale rectangle mostly hidden under a
+  // seated monk, and asked the reader to find the one thing on the page the
+  // composition does not point at.
+  //
+  // Its own meshes, via the kit's tapMeshes — minus the eave chime hung under
+  // it, which is a child of the hut and has its own pick() probed first below.
+  // Leaving the chime's meshes in this list would be harmless today (the chime
+  // probe returns before this is reached) and a trap the day the order changes.
+  const chimeMeshes = new Set(tapMeshes(eaveChime.group));
+  const hutMeshes = tapMeshes(hut).filter((m) => !chimeMeshes.has(m) && m.material.visible !== false);
+
   // ---- the moment: the words go up -------------------------------------
   let camera = null;
   let clock = 0;
@@ -147,14 +176,32 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   // the eave chime first, so a tap aimed at it never also calls the rain
   const chimeHit = eaveChime.pick(camera, input);
   if (chimeHit) { eaveChime.ring(0.75, chimeHit.tube); return; }
-  if (!input.raycastFirst(camera, [hit])) return;
+  if (!input.raycastFirst(camera, hutMeshes)) return;
   if (clock - lastAt < 0.5) return;
   lastAt = clock;
   // ask, and the sky answers: the shower leans in for a moment
-  rain.surge(1);
+  rain.surge(SURGE);
   disturbed++;
   audio && audio.rainSurge();
   });
+
+  // ---- the weather the surge brings with it ------------------------------
+  // Sampled at the moment of taking over and handed back exactly on the way
+  // out, so the workbench's sliders are only ever borrowed while it is actually
+  // blowing — the same contract case 20's squall and case 29's flag keep with
+  // the same two knobs. The FOLIAGE wind is one module-level uniform shared by
+  // every tree in the book, which is why it is also released in dispose().
+  const grass = world.grass;
+  let blowing = false;
+  let grassBase = 1;
+  let treeBase = 1;
+  const release = () => {
+  blowing = false;
+  grass && grass.setWind(grassBase);
+  setFoliageWeather({ wind: treeBase });
+  rain.setLean(0.16);                    // makeRain's own default, the rest state
+  audio && audio.setWindLevel(WIND_HEARD);
+  };
   
   return {
   scene,
@@ -163,7 +210,25 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
   world.update(dt, simTime);
   rain.update(dt, simTime);
-  eaveChime.setWindLevel(1);   // the kit's own default; see k47's furin
+  // ONE ENVELOPE FOR ALL OF IT: the rain's own surge, normalised, so the
+  // grass, the wood, the shower's lean, the chime and the ear can never
+  // drift apart. Read AFTER rain.update so the level is this frame's.
+  const g = Math.min(1, rain.surgeLevel() / SURGE);
+  if (g > 0.001) {
+  if (!blowing) {
+  blowing = true;
+  grassBase = grass && grass.wind ? grass.wind() : 1;
+  treeBase = foliageWind();
+  }
+  grass && grass.setWind(grassBase * (1 + GUST_MULT * g));
+  setFoliageWeather({ wind: treeBase * (1 + GUST_MULT * g) });
+  rain.setLean(0.16 + (RAIN_LEAN - 0.16) * g);
+  audio && audio.setWindLevel(WIND_HEARD * (1 + 2.2 * g));
+  } else if (blowing) {
+  release();
+  }
+  // the eave chime answers the same weather — a bell hanging in a squall
+  eaveChime.setWindLevel(1 + GUST_MULT * g);
   eaveChime.update(dt, simTime);
   },
   fragment() {
@@ -171,10 +236,15 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   disturbed,
   drops: rain.count(),
   surge: +rain.surgeLevel().toFixed(4),
+  gust: +Math.min(1, rain.surgeLevel() / SURGE).toFixed(4),
+  grassWind: +(world.grass && world.grass.wind ? world.grass.wind() : 0).toFixed(3),
+  rainLean: +rain.lean().toFixed(3),
   chimeStrikes: eaveChime.strikes(),
 };
       },
-      dispose() { rain.dispose(); },
+      // the trees' wind is one uniform shared by the whole book, so a reader
+      // who turns the page mid-squall must not take the weather with them
+      dispose() { if (blowing) release(); rain.dispose(); },
     };
   },
 };

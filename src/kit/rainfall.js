@@ -53,8 +53,13 @@ export function makeRain({
     });
   }
 
-  // fall direction: mostly down, leaning with the slant
-  const dir = new THREE.Vector3(slant, -1, slant * 0.4).normalize();
+  // Fall direction: mostly down, leaning with the slant. Both the streak's
+  // direction and the drops' own drift read `lean` rather than the build-time
+  // `slant`, so a case can put WIND on its rain (case 34's squall) — a shower
+  // that keeps falling plumb while the meadow lies over reads as two different
+  // weathers on one page.
+  let lean = slant;
+  const dir = new THREE.Vector3(lean, -1, lean * 0.4).normalize();
 
   let clock = 0;
   let surge = 0;
@@ -66,8 +71,8 @@ export function makeRain({
       const d = drops[i];
       let y = height - ((clock * d.fall + d.phase * height) % height);
       if (y < 0) y += height;
-      const x = d.x + (height - y) * slant;
-      const z = d.z + (height - y) * slant * 0.4;
+      const x = d.x + (height - y) * lean;
+      const z = d.z + (height - y) * lean * 0.4;
       pos[i * 6] = x; pos[i * 6 + 1] = y; pos[i * 6 + 2] = z;
       pos[i * 6 + 3] = x + dir.x * L;
       pos[i * 6 + 4] = y + dir.y * L;
@@ -85,6 +90,12 @@ export function makeRain({
     extent() { return { width, depth, height }; },
     surgeLevel() { return surge; },
     surge(amount = 1) { surge = Math.min(1.5, surge + amount); surgeHold = 2.5; },
+    // How far the shower is leaning, as the same tangent `slant` takes at
+    // build. A case drives this off whatever envelope its wind is on; the
+    // streaks and the drift both follow, so the rain and the meadow answer one
+    // weather. Set it every frame — it is an angle, not an impulse.
+    setLean(v) { lean = Number.isFinite(v) ? v : slant; dir.set(lean, -1, lean * 0.4).normalize(); },
+    lean: () => lean,
 
     update(dt, simTime) {
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);

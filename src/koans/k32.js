@@ -25,7 +25,7 @@ const ID = 32;
 // the answer. Ask as often as you like; the tenth asking gets exactly what the
 // first did (case 23's rule for a scene that refuses).
 
-const BEAT = .0;         // silence, held, where the answer would have gone
+const BEAT = 0;         // silence, held, where the answer would have gone
 const BOW_IN = 2;       // and then, slowly
 const BOW_HOLD = 2;     // down there a while — a real bow, not a nod
 const BOW_OUT = 3;      // and slower still coming up

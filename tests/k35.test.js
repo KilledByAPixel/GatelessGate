@@ -157,7 +157,14 @@ test('touch either of her and BOTH answer, by the same amount', () => {
   });
   const built = k35.build(ctx);
   built.setCamera({});
-  built.update(1 / 60, 0);
+  let t = 0;
+  // THE CLOCK HAS TO MOVE. The answer is a damped rock now — a function of
+  // seconds since the touch — so a fixture that taps twice at the same simTime
+  // measures the second one at u = 0, where the swing is by construction zero.
+  // It used to be an envelope set to 1 on the tap frame, which a frozen clock
+  // could not tell apart from a working one.
+  const step = () => { built.update(1 / 60, t); t += 1 / 60; };
+  step();
   const souls = collect(built.scene, 'soul');
   const rest = souls.map((s) => [s.rotation.z, s.position.y]);
 
@@ -168,7 +175,8 @@ test('touch either of her and BOTH answer, by the same amount', () => {
     const before = built.fragment().touches;
     ctx._taps.forEach((cb) => cb());
     assert.equal(built.fragment().touches, before + 1, `${target} answers a touch`);
-    built.update(1 / 60, 1 / 60);
+    // into the first quarter of the swing, where she is plainly leaning
+    for (let i = 0; i < 18; i++) step();
 
     // the answer lands on BOTH of them, and identically
     const moved = souls.map((s, i) =>
@@ -176,12 +184,57 @@ test('touch either of her and BOTH answer, by the same amount', () => {
     assert.ok(moved.every((m) => m > 1e-3), `both of her answer ${target}: ${moved}`);
     assert.ok(Math.abs((souls[0].rotation.z) - (souls[1].rotation.z)) < 1e-9,
       'neither of her leans further than the other');
+    for (let i = 0; i < 60 * 12; i++) step();     // let it die before the next
   }
   assert.equal(rung.length, 2, 'and each touch is a sound');
 
-  // it fades: the answer is a breath, not a state the scene stays in
-  for (let i = 0; i < 60 * 4; i++) built.update(1 / 60, i / 60);
-  assert.equal(built.fragment().answer, 0, 'the touch fades all the way out');
+  // it fades: the answer is a breath, not a state the scene stays in. The rock
+  // is an exponential, so it is only ever CLOSE to nothing — rockAt cuts it to
+  // exactly zero past six time constants, which is what keeps a page that has
+  // been open for an hour from carrying a millionth of a lean forever.
+  assert.equal(built.fragment().answer, 0, 'the touch fades all the way out, exactly');
+});
+
+test('she ROCKS: the answer swings both ways and settles, never a tip', () => {
+  // It used to set an envelope to 1 on the frame of the tap and decay it
+  // linearly, so both of her snapped into a lean in one frame and crept back
+  // out of it (Frank: "can we make them rock back and forth a bit instead of
+  // how they tip instantly, it looks bad"). The same fault as case 36's bow and
+  // the birds' and butterflies' alarms: an envelope a touch sets to 1 has no
+  // attack. A damped oscillation has none of that — sin(0) is 0, so it starts
+  // from exactly where she was standing.
+  const ctx = sharedCtx({ accent: k35.accent, audio: { chimeStrike() {} } });
+  const built = k35.build(ctx);
+  built.setCamera({});
+  let t = 0;
+  const step = () => { built.update(1 / 60, t); t += 1 / 60; };
+  for (let i = 0; i < 120; i++) step();
+
+  const [soul] = collect(built.scene, 'soul');
+  const hit = built.scene.getObjectByName('family-hit');
+  ctx.input.raycastFirst = (cam, objs) => (objs.includes(hit) ? { object: hit, distance: 1 } : null);
+  ctx._taps.forEach((cb) => cb());
+
+  let prev = soul.rotation.z;
+  let worstStep = 0;
+  let peak = 0;
+  let trough = 0;
+  for (let i = 0; i < 60 * 6; i++) {
+    step();
+    const a = built.fragment().answer;
+    // measured on the ANGLE SHE IS ACTUALLY AT, in radians — `answer` is the
+    // normalised swing, and at 0.8 Hz its own slope peaks near 0.084 a frame
+    // by construction, which says nothing about whether the picture moves
+    worstStep = Math.max(worstStep, Math.abs(soul.rotation.z - prev));
+    prev = soul.rotation.z;
+    peak = Math.max(peak, a);
+    trough = Math.min(trough, a);
+  }
+  assert.ok(peak > 0.4, `she swings one way (${peak.toFixed(3)})`);
+  assert.ok(trough < -0.2, `and back through the other (${trough.toFixed(3)})`);
+  // 0.36 degrees a frame at the fastest part of the swing
+  assert.ok(worstStep < 0.008, `and no frame of it is a step (worst ${worstStep.toFixed(5)} rad)`);
+  assert.ok(Number.isFinite(soul.rotation.z));
 });
 
 test('both lives are in the picture, even in a narrow reading pane', () => {

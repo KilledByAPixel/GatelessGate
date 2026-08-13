@@ -7,6 +7,48 @@ import {
 } from '../kit/index.js';
 
 const ID = 37;
+
+// HE TURNS ALL THE WAY ROUND. Tug the tail and the buffalo swings clockwise to
+// face away, stops and shakes it, then carries on the same way round until he
+// is standing exactly as he was (Frank: "the buffalo is facing towards us, so
+// let's have it turn around clockwise, then shake its tail, then turn back
+// clockwise, completing a full circle").
+//
+// Which is the koan, and it is better than the swish alone was. His head, horns
+// and body pass through — everything passes through — and then his tail comes
+// round after them and he is exactly where he started, with nothing having
+// happened. A full circle also costs nothing to end: 2*PI is the same heading
+// he began at, so the shape below can simply return 0 once it is over instead
+// of holding a wound-up offset for the life of the page.
+//
+// Clockwise seen from above is DECREASING rotation.y — the right-hand rule
+// about +y turns the other way, and getting this backwards is a bug you can
+// only catch by looking.
+const TURN_IN = 2.4;      // the first half, to face away
+const SHAKE = 1.7;        // stopped, tail going
+const TURN_OUT = 2.4;     // and round the rest of the way
+const TURN_SPAN = TURN_IN + SHAKE + TURN_OUT;
+const TURN_LEAN = 0.05;   // radians of bank into the turn: a heavy animal pivoting,
+                          // not a model on a turntable. The legs do not step —
+                          // makeBuffalo has no walk — so this is what carries the
+                          // weight, and it is why the turn is slow.
+const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+// Turns completed, `u` seconds after the tug: 0 at rest, 0.5 while he stands
+// facing away, 1 at the far end — which is the same heading as 0.
+function turnAt(u) {
+  if (!(u >= 0) || u >= TURN_SPAN) return 0;
+  if (u < TURN_IN) return 0.5 * smooth(u / TURN_IN);
+  if (u < TURN_IN + SHAKE) return 0.5;
+  return 0.5 + 0.5 * smooth((u - TURN_IN - SHAKE) / TURN_OUT);
+}
+// how fast he is turning, as a fraction of full pace — what the bank rides on
+function turnRate(u) {
+  if (!(u >= 0) || u >= TURN_SPAN) return 0;
+  if (u < TURN_IN) { const t = u / TURN_IN; return 6 * t * (1 - t); }
+  if (u < TURN_IN + SHAKE) return 0;
+  const t = (u - TURN_IN - SHAKE) / TURN_OUT;
+  return 6 * t * (1 - t);
+}
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
 const CAM = { distance: 13.8, target: [1.45, 1, -1.5], heading: 29, pitch: 23.5 };
@@ -76,34 +118,67 @@ const CAM = { distance: 13.8, target: [1.45, 1, -1.5], heading: 29, pitch: 23.5 
   grassKeepout: [],
   });
 
-  // ---- the moment: the tail --------------------------------------------
-  // Tug it and it swishes. It never passes. That is the whole koan, and
-  // nothing in the UI says so.
+  // ---- the moment: the tail, and the whole animal ------------------------
+  // Tug it and he goes all the way round (see the note at the top of the
+  // file). It never passes. That is the whole koan, and nothing in the UI
+  // says so.
+  //
+  // THE TAIL IS STILL THE TARGET, which is deliberate: it is the one part of
+  // him painted full ACCENT against his deepened body, so the small thing the
+  // reader is invited to touch is the small thing the case is named for. It
+  // does mean the target swings out of reach for the middle of the gesture —
+  // harmless, since a tug is refused for the whole span anyway.
   let camera = null;
+  let clock = 0;
   let tugs = 0;
+  let tuggedAt = -99;
+  const BASE_Y = buffalo.group.rotation.y;
   const tailMeshes = tapMeshes(buffalo.tail.group);
-  
+  const swishes = [];
+
   input.onTap(() => {
   if (!camera) return;
   const hit = input.raycastFirst(camera, tailMeshes);
-  if (hit) {
-  buffalo.tail.impulse(1.2);
+  if (!hit) return;
+  // let him finish the circle he is already walking
+  if (clock - tuggedAt < TURN_SPAN) return;
+  tuggedAt = clock;
   tugs++;
+  buffalo.tail.impulse(1.2);
   // a heavier brush than a robe: this is a tail, and there is an animal
   // on the other end of it
   audio && audio.cloth({ force: 1.1, at: hit.point });
-  }
+  // and again when he has got round and stopped, which is the shake — three
+  // of them, spaced, so it reads as a tail being used rather than struck
+  swishes.length = 0;
+  for (let i = 0; i < 3; i++) swishes.push(clock + TURN_IN + 0.15 + i * 0.45);
   });
-  
+
   return {
   scene,
   setCamera(c) { camera = c; },
   update(dt, simTime) {
+  clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
   world.update(dt, simTime);
+  const u = clock - tuggedAt;
+  // clockwise from above is NEGATIVE rotation.y, and a full turn lands him
+  // back on BASE_Y exactly — turnAt returns 0 once it is over, which IS
+  // that heading, so nothing has to be unwound
+  buffalo.group.rotation.y = BASE_Y - turnAt(u) * Math.PI * 2;
+  buffalo.group.rotation.z = -turnRate(u) * TURN_LEAN;
+  while (swishes.length && clock >= swishes[0]) {
+  swishes.shift();
+  buffalo.tail.impulse(0.9);
+  audio && audio.cloth({ force: 0.8, at: buffalo.group.position });
+  }
   buffalo.update(dt, simTime);
   },
   fragment() {
-  return { tailEnergy: +buffalo.tail.energy().toFixed(6), tugs };
+  return {
+  tailEnergy: +buffalo.tail.energy().toFixed(6),
+  tugs,
+  turned: +turnAt(clock - tuggedAt).toFixed(4),
+  };
   },
   dispose() {},
 };

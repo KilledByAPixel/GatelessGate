@@ -46,7 +46,30 @@ const KID_SIDE = 0.70;    // a child off either shoulder, across the width-1.4 r
 // right edge on a small window.
 const SIT = { x: 2.25, z: -10.8 };
 const TREE = { x: 4.2, z: -3.5 };
-const ANSWER = 2.4;       // seconds for a touch to fade out of both of them
+// THEY ROCK, they do not tip. A touch used to set an envelope to 1 on that
+// frame and decay it linearly, so both of her snapped into a 0.045-radian lean
+// in a single frame and then crept back out of it (Frank: "can we make them
+// rock back and forth a bit instead of how they tip instantly, it looks bad").
+// The same fault as case 36's bow and as the birds' and butterflies' alarms,
+// found in the same pass: an envelope a touch sets to 1 has no attack.
+//
+// A damped oscillation has no such frame — sin(0) is 0, so it starts from
+// exactly where they were standing, swings one way, comes back through, and
+// settles. Written as a pure function of seconds since the touch, so nothing
+// accumulates and the pose can be applied at build (see breathe() below).
+const ROCK = 0.075;       // radians at the widest part of the swing
+const ROCK_HZ = 0.8;      // a slow rock, not a shiver
+const ROCK_TAU = 1.7;     // and it is down to a tenth of itself in about four
+const ROCK_RISE = 0.10;   // the lift's own attack, so THAT does not step either
+function rockAt(u) {
+  if (!(u >= 0) || u > ROCK_TAU * 6) return 0;
+  return Math.exp(-u / ROCK_TAU) * Math.sin(u * Math.PI * 2 * ROCK_HZ);
+}
+// the swing's envelope without its direction — what the small rise rides on
+function rockEnv(u) {
+  if (!(u >= 0) || u > ROCK_TAU * 6) return 0;
+  return (1 - Math.exp(-u / ROCK_RISE)) * Math.exp(-u / ROCK_TAU);
+}
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
@@ -208,7 +231,7 @@ export default {
     let camera = null;
     let clock = 0;
     let touches = 0;
-    let env = 0;                // 1 on a touch, decaying to 0 over ANSWER
+    let touchedAt = -99;        // when the last touch landed; rockAt does the rest
     const AT = new THREE.Vector3();
 
     // Their rest pose, so the breath below is an offset and not a drift: both
@@ -220,7 +243,7 @@ export default {
       const hit = input.raycastFirst(camera, hits);
       if (!hit) return;
       touches++;
-      env = 1;
+      touchedAt = clock;
       audio && audio.chimeStrike({ tube: 2, force: 0.4, at: hit.object.getWorldPosition(AT) });
     });
 
@@ -230,12 +253,14 @@ export default {
     // frame (Frank, on the previous staging: "a flicker on first frame of
     // monks position").
     function breathe() {
-      const e = env * env * (3 - 2 * env);        // smooth the tail of the decay
+      const u = clock - touchedAt;
+      const rock = rockAt(u);
+      const env = rockEnv(u);
       const b = Math.sin(clock * 0.7);
       for (const s of souls) {
         // identical on both, by construction: neither of her is livelier
-        s.rotation.z = b * 0.010 + e * 0.045;
-        s.position.y = s.userData.baseY + Math.abs(b) * 0.010 + e * 0.025;
+        s.rotation.z = b * 0.010 + rock * ROCK;
+        s.position.y = s.userData.baseY + Math.abs(b) * 0.010 + env * 0.014;
       }
       // the children are not her, so they fidget on their own clocks
       for (const [i, k] of kids.entries()) k.rotation.z = Math.sin(clock * 1.3 + i * 2.1) * 0.028;
@@ -248,13 +273,13 @@ export default {
       update(dt, simTime) {
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
         world.update(dt, simTime);
-        env = Math.max(0, env - Math.max(0, dt || 0) / ANSWER);
         breathe();
       },
       fragment() {
         return {
           touches,
-          answer: +env.toFixed(4),
+          // signed: it swings one way and back through, so this goes negative
+          answer: +rockAt(clock - touchedAt).toFixed(4),
           apart: +souls[0].position.distanceTo(souls[1].position).toFixed(3),
         };
       },

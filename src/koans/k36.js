@@ -12,7 +12,7 @@ const ID = 36;
 // face him with silence. What are you going to do?"
 //
 // THE MEETING ITSELF, held still. The two of them stand on the road facing
-// each other, and the traveller is bowing.
+// each other, and when you reach for the master the traveller bows.
 //
 // An earlier pass had them walking past one another — the meeting missed,
 // both of them carrying on into the fog. Frank pulled it because case 35, one
@@ -20,8 +20,8 @@ const ID = 36;
 // row read as the same scene twice, whatever they mean. Standing is also the
 // better answer to the question. The bow is the one response the koan does
 // not take away from you: it is not talk and it is not silence, and it
-// settles nothing — which is why he can hold it and the master can stand
-// there unmoved and the case is still open.
+// settles nothing — which is why he can offer it, and the master can stand
+// there unmoved, and the case is still open.
 //
 // Both are solid ink. An earlier pass ghosted the master to half-opacity and
 // Frank pulled that too: he is not a spirit (case 35 is the one about souls),
@@ -33,14 +33,62 @@ const TRAV_T = 0.345;     // the traveller nearer the lens, the master up the ro
 const LANE = 0.30;        // a little to his own side, so the pair is not a mirror
 const GEAR_T = 0.50;      // the roadside gear, just past the meeting and beyond it
 
-// The bow. A held one, with breath in it, rather than a gesture that plays
-// and finishes: this is a diorama, and a man who bows and straightens on a
-// loop reads as a machine. `BOW_DEEP` is what a tap adds on top, easing away
-// over a few seconds.
-const BOW_REST = 0.62;    // radians at the waist — a formal standing bow, not a nod
-const BOW_BREATH = 0.035;
-const BOW_DEEP = 0.36;
-const DEEP_TAU = 1.9;     // seconds for a deepened bow to ease back to the held one
+// THE BOW IS THE READER'S, AND NOTHING ELSE ON THIS PAGE MOVES. He stands, and
+// bows only when you reach for the master (Frank: "let's just have him
+// standing, then he only bows when you click on the zen master").
+//
+// Two earlier versions, both worth the record. It was a HELD bow first — the
+// page opened on a man already bent, with breath in it and a deepening a tap
+// added on top — on the argument that a diorama should show the composition
+// rather than play a gesture, and that a man who bows and straightens on a loop
+// reads as a machine. True, but it meant the reader never saw the one thing
+// this scene is (Frank: "they should start standing normal, then bow — right
+// now it is already partially bowed from the start"). The second version had
+// him arrive standing and bow once, on his own, a second after the page opened,
+// and hold it — which fixed the seeing and left the whole gesture happening
+// whether or not anybody was there for it.
+//
+// So it is a touch response now, and the machine objection is answered by the
+// cooldown rather than by holding the pose: one bow per reach, refused until it
+// finishes. Nothing loops, because nothing is on a clock but the reader.
+//
+// The shape is case 32's, which is the shape every bow in this book uses (Frank:
+// "should be like the other bows like the one in 32"): down slowly, held a real
+// moment, slower still coming up. Before that it was `deep = 1` on the tap frame
+// and a linear decay — he snapped to the bottom in a single frame and then took
+// two seconds to come up, so the going-down half, the half that IS the bow,
+// never existed. Same fault the birds and the butterflies shipped and the same
+// family as case 35's lean, all found in one pass: an envelope set to 1 by a
+// touch has no attack.
+// A WHOLE BOW. 0.62 was the held pose's angle and it read as a man half
+// bending (Frank: "just a normal bow, not the half bow thing he does now") —
+// which is what a held pose can get away with and a played gesture cannot: the
+// eye reads the DEPTH of a movement it watched happen, and a 36-degree bend
+// looks like the start of something. 0.9 is 52 degrees at the waist, and well
+// clear of folded double.
+const BOW = .9;         // radians at the waist at the bottom
+// The breath RIDES the bow — it is scaled by how far down he is, so a man
+// standing straight does not sway. At this size it is no longer a breath but a
+// real settle: +-0.2 rad is +-11 degrees, so the bottom of the bow wanders
+// between about 41 and 63 degrees, and WHICH of those a given bow reaches
+// depends on where the sine happens to be when the reader taps. Two bows are
+// therefore not quite the same size — deliberate here (he is a man, not a
+// mechanism), and the reason nothing in this file pins an exact depth.
+const BOW_BREATH = -0.2;
+const BOW_IN = 2.0;       // down, slowly
+const BOW_HOLD = 1.6;     // and held down there
+const BOW_OUT = 2.6;      // slower still coming up
+const BOW_SPAN = BOW_IN + BOW_HOLD + BOW_OUT;
+const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+// How far into the bow he is, `u` seconds after the reach: 0 standing, 1 at the
+// bottom. A pure function of the clock, so nothing accumulates and the pose can
+// be applied at build.
+function bowShape(u) {
+  if (!(u >= 0) || u >= BOW_SPAN) return 0;
+  if (u < BOW_IN) return smooth(u / BOW_IN);
+  if (u < BOW_IN + BOW_HOLD) return 1;
+  return 1 - smooth((u - BOW_IN - BOW_HOLD) / BOW_OUT);
+}
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
@@ -73,10 +121,11 @@ const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch:
   scene.add(road);
   
   // YOU — or the traveller standing in for you — stopped in the road with
-  // his staff planted, bowing. `pose: 'bow'` builds him upright and hinged
-  // at the sash: makeFigure puts a group named 'waist' in the figure and
-  // turning its rotation.x IS the bow, so the case plays the angle rather
-  // than staging a man already bent double. The staff is parented to the
+  // his staff planted. `pose: 'bow'` builds him UPRIGHT and hinged at the
+  // sash: makeFigure puts a group named 'waist' in the figure and turning its
+  // rotation.x IS the bow, so the case plays the angle. He stands at that
+  // hinge's zero and stays standing until the reader reaches for the master,
+  // which is the whole of the interaction. The staff is parented to the
   // figure, not to the waist, so it stays planted while he bows over it.
   // Bare-headed, and the master keeps his hat. Two hatted monks at this
   // bearing were one silhouette twice, and a wide sedge brim seen from
@@ -166,33 +215,40 @@ const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch:
   scene.add(hit);
   
   // ---- the moment: the bow ------------------------------------------------
-  // Nothing here travels. The only thing that moves in this scene is the
-  // angle at one man's waist, and the whole case is in it: he bows, and the
-  // bow is neither of the two things the koan forbids, and it changes
-  // nothing. Touch the master and the traveller bows DEEPER — the one thing
-  // you can do with an unanswerable meeting is offer more of the same — and
-  // it eases back to the held bow within a few seconds, having settled
+  // Nothing here travels. The only thing that moves in this scene is the angle
+  // at one man's waist, and the whole case is in it: he bows, and the bow is
+  // neither of the two things the koan forbids, and it changes nothing. Reach
+  // for the master and the traveller bows — the one thing you can do with an
+  // unanswerable meeting is offer it — and he comes back up having settled
   // nothing. The master never responds; that is not an omission.
   let camera = null;
   let clock = 0;
   let reaches = 0;
-  let deep = 0;            // 0..1, how much of BOW_DEEP is currently added
-  
-  // The angle, as a function of the clock and `deep` and nothing else — so
-  // it can also be applied ONCE at build. A figure whose pose is only set by
-  // the first update() renders its build pose on any first frame too short
-  // to bank a full timestep, which on case 35 showed as a visible flicker.
+  let reachedAt = -99;     // when the last reach landed; bowShape does the rest
+
+  // The angle, as a function of the clock and nothing else — so it can also be
+  // applied ONCE at build. A figure whose pose is only set by the first
+  // update() renders its build pose on any first frame too short to bank a
+  // full timestep, which on case 35 showed as a visible flicker. Here that
+  // build pose is a man standing, which is exactly the frame the page opens on.
   function applyBow() {
   if (!waist) return;
-  waist.rotation.x = BOW_REST + Math.sin(clock * 0.55) * BOW_BREATH + deep * BOW_DEEP;
+  const k = bowShape(clock - reachedAt);
+  // the breath rides the bow, so a man standing straight does not sway
+  waist.rotation.x = k * (BOW + Math.sin(clock * 0.55) * BOW_BREATH);
   }
   applyBow();
-  
+
   input.onTap(() => {
   if (!camera) return;
   if (!input.raycastFirst(camera, [hit])) return;
+  // let the bow he already gave you finish — case 32's own rule, and the
+  // reason a shaped gesture needs one where a decaying number did not: a
+  // second tap partway down would otherwise restart the descent from
+  // wherever he had got to, which is a stumble rather than a bow
+  if (clock - reachedAt < BOW_SPAN) return;
+  reachedAt = clock;
   reaches++;
-  deep = 1;
   audio && audio.chimeStrike({ tube: 3, force: 0.35, at: hit.position });
   });
   
@@ -204,11 +260,15 @@ const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch:
   world.update(dt, simTime);
   horse.update(dt, simTime);   // the tail swishes; the rest of it waits
   bundle.update(dt, simTime);
-  if (deep > 0) deep = Math.max(0, deep - Math.max(0, dt || 0) / DEEP_TAU);
   applyBow();
   },
   fragment() {
-  return { reaches, bow: +(waist ? waist.rotation.x : 0).toFixed(4), deep: +deep.toFixed(3) };
+  return {
+  reaches,
+  bow: +(waist ? waist.rotation.x : 0).toFixed(4),
+  // 0 standing, 1 at the bottom of the bow
+  bowing: +bowShape(clock - reachedAt).toFixed(3),
+  };
   },
   dispose() {},
 };
