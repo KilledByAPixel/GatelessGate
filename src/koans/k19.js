@@ -204,8 +204,8 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   verge.push({ x: -5.6, z: 2.4 }, { x: 6.0, z: -3.4 }, { x: -2.4, z: -7.6 }, { x: 7.2, z: 3.2 });
   
   const flowers = makeWildflowers({
-  count: 130, radius: 19, seed: 19, groundSeed: 21, color: ACCENT,
-  along: verge, spread: 2.3,
+  count: 250, radius: 12, seed: 19, groundSeed: 21, color: ACCENT,
+  along: verge, spread: 2.3, scale:1.2,
   // the only thing blooms are kept out of is the worn track itself and the
   // two pairs of feet — they grow right up to both. The circle chain has to
   // be dense enough to actually OVERLAP along a 40-unit road: at r = 0.8 the

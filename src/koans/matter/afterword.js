@@ -1,7 +1,7 @@
 import * as THREE from '../../../lib/three.module.js';
 import MATTER from '../text/matter.js';
 import { buildHub } from '../../intro.js';
-import { WASH } from '../../palette.js';
+import { ACCENT, WASH } from '../../palette.js';
 import {
   makeBuddha, makeCat, makeWildflowers, groundHeight, washMaterial,
   plantTree,
@@ -206,7 +206,7 @@ export default {
     // 120 at scale 1 over this radius put only 70 in frame at ~3.8px a head and
     // vanished into the fog.
     const flowers = makeWildflowers({
-      count: 260, rMin: 2.5, radius: 20, scale: 1.5, seed: 58, groundSeed: built.groundSeed,
+      count: 160, rMin: 2.5, radius: 15, scale: 1.5, seed: 58, groundSeed: built.groundSeed, color: ACCENT,
       keepout: [
         { x: MAT.x, z: MAT.z, r: 0.85 },
         { x: CAT.x, z: CAT.z, r: 0.5 },
