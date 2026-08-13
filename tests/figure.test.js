@@ -99,7 +99,7 @@ test('the seated figure folds real legs — knees at ±x, lap valley, torso inse
   assert.ok(lap > 0 && lap < knees * 0.52, `the lap turns in hard: ${lap} vs ${knees}`);
   assert.ok(aboveLap > 0 && aboveLap < knees * 0.52, `the torso rises inset: ${aboveLap} vs ${knees}`);
 
-  // THE STRAIGHT BACK ("they should all kinda look like Buddha"): the chest
+  // THE STRAIGHT BACK, the way the Buddha's is: the chest
   // ring near the shoulder keeps at least 85% of the blouse ring's width —
   // a vertical run, not a slump that tapers away — and the crown of the
   // seated figure rises to 0.60·h

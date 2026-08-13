@@ -142,21 +142,19 @@ const asCircle = (k) => (k && k.at ? around(k.at, k.r) : k);
 // The margins are chosen against what the frame can actually be, because the
 // cost of being wrong is a bald wedge that appears when the reader drags:
 //
-//   HALF_VIEW 42 degrees. The shipped 38-degree lens spans 31.5 degrees either
-//   side at 16:9 and 38.7 at 21:9, so 42 covers every window shape anyone will
-//   open the book in, with the pointer parallax and the ambient drift on top.
-//   Swept against the book's own 198 scatter trees: 42 relocates 6% of them,
-//   36 would relocate 10% and 32 would relocate 14% — real trees, but bought
-//   by assuming a frame narrower than an ultrawide monitor actually gives.
+//   HALF_VIEW is deliberately WIDER than the shipped lens at any window shape
+//   anyone will open the book in, with the pointer parallax and the ambient
+//   drift allowed for on top. A tighter margin relocates more trees, but buys
+//   it by assuming a frame narrower than an ultrawide monitor actually gives.
 //
-//   ARC_SAMPLES 13 across the drag range, one every 8.6 degrees. Visibility
-//   over the arc is smooth, and anything wide enough to be worth drawing is
-//   visible across far more than one step.
+//   ARC_SAMPLES spans the drag range. Visibility over the arc is smooth, and
+//   anything wide enough to be worth drawing is visible across far more than
+//   one step.
 //
-//   PAD 1.5 units of canopy, added as a real angle at the distance in hand: a
-//   trunk just outside the frame still shows its leaves. (This was briefly
-//   subtracted in COSINE space, which near 42 degrees is worth about three
-//   times the angle intended and quietly took the cull down to 3%.)
+//   PAD is canopy, added as a real angle at the distance in hand: a trunk just
+//   outside the frame still shows its leaves. (This was briefly subtracted in
+//   COSINE space, which at these angles is worth about three times the angle
+//   intended and quietly cut the cull to a third of its size.)
 const HALF_VIEW = 42;
 const ARC_SAMPLES = 13;
 const PAD = 1.5;

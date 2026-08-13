@@ -119,8 +119,8 @@ export function makeBirds({
   // idea was to slow down, fly backwards a while, then slow and resume: a
   // signed rate on the circuit easing down through zero and back, with the
   // heading left as the circuit tangent so they slid tail-first rather than
-  // turning round. It worked, and he changed his mind on seeing it described
-  // ("let's just have the birds fly faster for a bit"). What it left behind is
+  // turning round. It worked, and was dropped anyway once it was described out
+  // loud: the birds simply fly faster for a bit. What it left behind is
   // `travel` itself: the reversal is the one thing the old `t + hurry` form
   // could not express at any value, so it is the reason the base rate came
   // inside the accumulator, and that is a straightforwardly better shape

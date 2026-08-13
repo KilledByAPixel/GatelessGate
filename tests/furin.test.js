@@ -261,8 +261,8 @@ test('a single is a BELL with the clapper hidden inside it, and the paper hangs 
   // 風鈴 is a small bell with the clapper hidden inside it. What was here had the
   // clapper off to the SIDE, connected to nothing. Widen the body and drop the
   // separate clapper and it becomes what the bronze cylinder already is: the
-  // clapper is just inside and we don't render it. Below the chime there's a
-  // hanging rectangular piece of paper."
+  // clapper is just inside and nothing renders it, with the tanzaku hanging
+  // below the mouth.
   //
   // What was there was a Western tubular chime — a 22:1 wire — carrying a
   // tanzaku bolted to its SIDE, because the single-tube variant began life
@@ -369,8 +369,7 @@ test("the paper turns on its thread, harder for a harder knock, and never winds 
   assert.ok(peak < Math.PI, `thirty simulated minutes of wind wound the paper to ${peak} rad — it is not restoring`);
 
   // a RING has no spin pivot: its tag hangs beside the clapper and keeps the
-  // flutter it always had ("for the other ones, I think we could keep them
-  // the way they are")
+  // flutter it always had — the ring was never the form that needed changing
   assert.equal(makeFurin({ tubes: 5, seed: 8 }).group.getObjectByName('spin-pivot'), undefined,
     'a ring should not have grown a spin pivot');
 });

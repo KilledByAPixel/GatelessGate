@@ -154,9 +154,9 @@ test('a pine is one bending mast: the tiers ride the bole rather than sliding of
     'a tier gets a whisper of flutter, not a cluster\'s worth');
   assert.ok(leaf.some((v) => v === 0), 'the trunk gets none at all');
 
-  // "the wind kinda goes through": one phase per tier, rising, so the bend
-  // arrives at the skirt first and reaches the crown late — that lag IS the
-  // hierarchy this is for.
+  // THE WIND GOES THROUGH IT: one phase per tier, rising, so the bend arrives
+  // at the skirt first and reaches the crown late — that lag IS the hierarchy
+  // this is for.
   const tiers = [];
   for (let i = 0; i < sway.length; i++) {
     if (leaf[i] === 0) continue;

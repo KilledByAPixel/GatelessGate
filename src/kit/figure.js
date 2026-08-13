@@ -205,13 +205,12 @@ export const SIT_PROFILE = [
   // stays inside all of them, so what reads at distance is figure-on-cushion.
   [0.020, 0.035],   // hem centre, closed on the cushion's top
   [0.150, 0.040],   // the hem pooling over the seat
-  [0.158, 0.085],   // the robe over the hips — slimmed in round six ("that round
-                    //   thing that's their whole bottom part... a little smaller")
+  [0.158, 0.085],   // the robe over the hips — slimmed in round six, where the
+                    //   seated rear read as one round mass
   [0.150, 0.150],   // rising over the leg block toward the lap
   [0.140, 0.175],   // THE LAP — a near-horizontal shelf in to the waist
-  // torso rows carry the STANDING profile's widths (round seven: "the upper
-  // torso should be shaped more like the standing one, similar size" — the
-  // seated blouse/chest ran ~6% fatter and read as a heavier man)
+  // torso rows carry the STANDING profile's widths (round seven: the seated
+  // blouse and chest ran ~6% fatter and read as a heavier man)
   [0.112, 0.220],   // OBI — the tie
   [0.134, 0.265],   // the blouse pushed up over the knot
   [0.121, 0.425],   // chest — one long VERTICAL run: a meditator sits straight
@@ -332,7 +331,7 @@ const KNEEL = 0.5;
 const STAND_STANCE = { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.765, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.2, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.92 };
 // Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did:
 // the chest run in SIT_PROFILE was lengthened and steepened so a meditator
-// sits STRAIGHT ("they should all kinda look like Buddha") — the crown now
+// sits STRAIGHT, the way the Buddha does — the crown now
 // tops out at 0.610·h, still comfortably a seated man, and the fold angle
 // eases to -0.44 so the cuffs keep landing in the lap the knees now frame.
 const SIT_STANCE = { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, head: 0.545, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31, foldCross: 1.1 };
@@ -548,9 +547,8 @@ export function makeFigure({
       Math.sin(ang) * st.staffX * s * height);
 
     // A SEATED ELDER SETS HIS STAFF DOWN. Planted upright beside a man on the
-    // ground it read as a pole stuck in the earth next to him — "their staff is
-    // appearing kinda like just sticking up out of the ground next to them, it
-    // makes it look kinda weird. Laid flat it becomes what it is: the thing he
+    // ground it read as a pole stuck in the earth next to him rather than as
+    // something he had set down. Laid flat it becomes what it is: the thing he
     // was carrying, put down within reach. Tipped a full quarter turn about z
     // so the shaft lies along the ground, lifted by its own radius so it RESTS
     // on the plane rather than sinking half into it, and swung a little off the
@@ -559,9 +557,9 @@ export function makeFigure({
     // leans on it.
     if (seated) {
       // rotation.z = π/2 lays the shaft (local +y) down onto local -x; the
-      // y-turn then swings that lying shaft around the compass. π/2 + skew
-      // puts it FORE-AFT beside him (running past his knees, not across his
-      // lap), skewed a little so it reads dropped rather than squared up.
+      // y-turn then swings that lying shaft around the compass. π/2 + skew puts
+      // it FORE-AFT beside him (running past his knees, not across his lap),
+      // skewed a little so it reads dropped rather than squared up.
       const SKEW = 0.18;
       const yaw = Math.PI / 2 + SKEW;
       staff.rotation.z = Math.PI / 2;

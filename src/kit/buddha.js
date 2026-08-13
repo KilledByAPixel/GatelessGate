@@ -6,15 +6,15 @@ import { makeFigure, HEAD_OBLONG } from './figure.js';
 // The Buddha is NOT special: the same biped kit as everyone else, at the same
 // size as everyone else. No bespoke look, no extra height.
 //
-// Two bespoke models died to learn this — round 1 "a fire hydrant / chess
-// bishop", round 2 a fine statue that still read as a different species from
-// every monk sitting near it. This is now a thin naming layer over the same
-// figure kit the whole book speaks: the seated stance (whose lap shelf the
-// old statue's rebuild pioneered — that work lives on in figure.js's
-// SIT_PROFILE and whose knees it pioneered), sleeves folded into the lap,
-// bare-headed. A buddha wears no sedge hat; featureless is the house style
-// for every face in the book. What makes him HIM is two marks on the same
-// shared skull — the topknot and the urna — and nothing below the neck.
+// Two bespoke models died to learn this — round 1 read as a fire hydrant, round
+// 2 as a fine statue that was still plainly a different species from every monk
+// sitting near it. This is now a thin naming layer over the same figure kit the
+// whole book speaks: the seated stance, sleeves folded into the lap,
+// bare-headed. (The old statue's rebuild is not wasted — its lap shelf and
+// knees are what figure.js's SIT_PROFILE grew from.) A buddha wears no sedge
+// hat; featureless is the house style for every face in the book. What makes
+// him HIM is two marks on the same shared skull — the topknot and the urna —
+// and nothing below the neck.
 //
 // THE ONE MARK: the urna — a small dot centred on the forehead. A tiny sphere
 // sunk into the skull (buried join: its centre stays inside the head so only
@@ -28,13 +28,14 @@ import { makeFigure, HEAD_OBLONG } from './figure.js';
 // of trying to solve that with GEOMETRY instead: the dot was buried deeper so
 // its silhouette would carry what its colour no longer could. A mark that has
 // to be read as a lump is not a mark. So a red head takes an ink dot and
-// everything else keeps the vermillion. THE SECOND MARK: the topknot ("we can
-// make Buddha special with, like, a topknot"). A single bun sunk into the crown
-// — the ushnisha's read at the detail floor: one sphere, its centre buried so
-// the crest sits proud of the skull line. It is a silhouette event (the one
-// thing allowed to break the crown), and it wears the figure's own material —
-// hair on an ink man, stone on k9's colossus. Monks keep their hats and bare
-// heads; buddha = bare head + topknot + urna.
+// everything else keeps the vermillion.
+//
+// THE SECOND MARK: the topknot. A single bun sunk into the crown — the
+// ushnisha's read at the detail floor: one sphere, its centre buried so the
+// crest sits proud of the skull line. It is a silhouette event (the one thing
+// allowed to break the crown), and it wears the figure's own material — hair on
+// an ink man, stone on k9's colossus. Monks keep their hats and bare heads;
+// buddha = bare head + topknot + urna.
 const KNOT_R = 0.44;        // fraction of the head's radius — a bun, not a second head
 const KNOT_SINK = 1.1;     // centre at 0.82·r: crest proud by ~0.26·r, enough
                             //   to break the crown line at case distance

@@ -13,8 +13,8 @@ import { mergeSimple } from './scatter.js';
 // whose seal IS the fish can pass an accent colour.
 //
 // THE SHAPE. One continuous body per fish, not butted primitives — the old
-// two-ellipsoid + cone build read as three disconnected lumps ("weird tadpole
-// type things"). The body is lofted from elliptical cross-sections along a
+// two-ellipsoid + cone build read as three disconnected lumps, closer to a
+// tadpole than a fish. The body is lofted from elliptical cross-sections along a
 // single profile: full head and shoulder a quarter of the way back, a long
 // taper to a narrow caudal peduncle, then a wide flat caudal fan whose cap
 // centre is pulled FORWARD so the trailing edge cuts a fork — the notch is

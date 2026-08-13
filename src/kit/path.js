@@ -13,8 +13,7 @@ import { WASH } from '../palette.js';
 // last stretch, the way ink thins when the brush lifts: the road reads as
 // continuing beyond what is drawn. `taper: 0` restores the square end. `via`
 // bends the centerline (a quadratic through one control point) for the roads
-// that would otherwise run straight at a mountain — "it could kinda curve
-// away".
+// that would otherwise run straight at a mountain, letting them curve away.
 export function makePath({
   from = [0, 8], to = [0, -30], width = 1.4, seed = 91, groundSeed = 21,
   wander = 1.6, samples = 26, color = WASH.stone,

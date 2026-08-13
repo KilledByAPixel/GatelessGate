@@ -113,11 +113,12 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     ears: { r: 0.075, h: 0.2, x: 0.073, y: 0.111, z: 0.009, tilt: 0.53 },
     // NO haunch, NO shoulder. The polish pass hung both masses on this barrel
     // to sell a crouch, and seated — the only pose the book ever shows — the
-    // pitched-torso transform below swung them up into "weird things sticking
-    // out of its back. A cat's barrel at bodyR 0.23 is already the roundest in
-    // the kit; it reads as one animal without bolted-on lumps, and the plain
-    // silhouette beats a broken one. no tail here either; this one is jointed
-    // and built below
+    // pitched-torso transform below swung them up into weird lumps sticking out
+    // of its back. A cat's barrel is already the roundest in the kit; it reads
+    // as one animal without bolted-on masses, and the plain silhouette beats a
+    // broken one.
+    //
+    // No tail here either; this one is jointed and built below.
   });
   group.name = 'cat';
 

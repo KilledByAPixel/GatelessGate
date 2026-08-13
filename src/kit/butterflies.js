@@ -142,10 +142,9 @@ export function makeButterflies({
 
   let clock = 0;
   const bursts = [];
-  // EXCITEMENT IS SPEED. What a scare should look like is a flock that gets on
-  // with what it was already doing, faster — "if they are flying, just move a
-  // bit faster than normal... move around more... like they would normally fly,
-  // but just faster in that direction. So the flight is not redirected and
+  // EXCITEMENT IS SPEED. What a scare should look like is a flock getting on
+  // with what it was already doing, faster — flying the way it would normally
+  // fly, just faster in that direction. So the flight is not redirected and
   // nothing is thrown anywhere: the PATH CLOCK simply runs ahead while the
   // excitement lasts, which carries every butterfly further along the wander it
   // was already on, in the direction it was already going.

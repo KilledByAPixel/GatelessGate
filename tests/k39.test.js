@@ -8,11 +8,11 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Case 39's three rulings, pinned:
 //
-//   1. "Make that pond less square-shaped — more organically shaped, kinda
-//      roundish." The water is a seeded blob now; what this file owns is that
-//      every stepping stone still stands IN that water at this seed.
-//   2. "When you push one under, the next one turns red, since that one
-//      disappears — so there's always exactly one red." The selection is the
+//   1. The pond is organic and roundish rather than square. The water is a
+//      seeded blob now; what this file owns is that every stepping stone still
+//      stands IN that water at this seed.
+//   2. Push one under and the next turns red, so there is always exactly one
+//      red on the crossing. The selection is the
 //      pure function `nextRed`; the scene tests hold the invariant through
 //      real taps, the full sinking, and the resurfacing reset.
 //   3. "Make it so you can only push the red stone." A grey stone holds — a
@@ -307,8 +307,7 @@ test('case 39: the fish are unlit, or they vanish under the sheet', () => {
 // ---- the gradient pond ------------------------------------------------------
 // Shallow where the stones are, deeper farther out where the fish are. The
 // stones stand fully on the bottom; the fish sit further back where it is
-// deeper,
-// positioned so they're not overlapping with the stones."
+// deeper, clear of the crossing so the school never overlaps the stones.
 
 function bedYAt(ground, x, z) {
   const p = ground.geometry.attributes.position;

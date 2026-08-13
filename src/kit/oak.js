@@ -35,11 +35,9 @@ import { GRAY_DARK, WASH } from '../palette.js';
 //
 // makeTree cannot be talked into this silhouette — its bole radius, limb spread
 // and crown size are all fixed fractions of `height` with no way in — so the
-// shape is authored here. tree.js is left alone. Fork angles here run wider
-// than tree.js's (a sapling's forks lean 19-39 degrees off their parent; an
-// oak's lean 55-98) and limb radius falls off more slowly generation to
-// generation (0.66-0.80 here vs tree.js's 0.66-0.68), so a cut branch reads
-// thick and old rather than twiggy.
+// shape is authored here and tree.js is left alone. Fork angles here run much
+// wider than a sapling's, and limb radius falls off more slowly generation to
+// generation, so a cut branch reads thick and old rather than twiggy.
 //
 // Trunk and canopy are separate meshes on purpose: case 38 wants the leaves red
 // and the wood on the same grey ramp as every other tree in the book.
