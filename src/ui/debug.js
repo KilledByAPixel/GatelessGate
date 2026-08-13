@@ -3,7 +3,7 @@ import { setGrassPatchiness, setGrassReach, setGrassTaper } from '../kit/grassfi
 import { LAMBERT_LIFT } from '../kit/tuftfield.js';
 import { wash } from '../palette.js';
 import { setFoliageWeather } from '../kit/foliage.js';
-import { aimSun, SUN_DEFAULT } from '../render/lights.js';
+import { aimSun, SUN_DEFAULT, SUN_PITCH_RANGE } from '../render/lights.js';
 import { DRAW_BUDGET, DRAW_WARN } from '../budget.js';
 
 // A workbench: a toolbar button top-right of the stage, and a plain panel that
@@ -101,7 +101,7 @@ const CONTROLS = [
   // typed into the file. A case that names its own aim MOVES THESE on arrival,
   // the same adoption the wind sliders do — see apply().
   { key: 'sunHeading', label: 'Sun heading°', type: 'range', def: SUN_DEFAULT.heading, min: -180, max: 180, step: 1 },
-  { key: 'sunPitch', label: 'Sun height°', type: 'range', def: SUN_DEFAULT.pitch, min: 12, max: 84, step: 1 },
+  { key: 'sunPitch', label: 'Sun height°', type: 'range', def: SUN_DEFAULT.pitch, min: SUN_PITCH_RANGE[0], max: SUN_PITCH_RANGE[1], step: 1 },
   { key: 'ambMul', label: 'Ambient ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
 
   { group: 'Post' },

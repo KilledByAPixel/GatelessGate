@@ -6,6 +6,7 @@ import { loadKoan, isStaged } from '../src/koans/registry.js';
 import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT, PAPER } from '../src/palette.js';
 import { DRAW_BUDGET } from '../src/budget.js';
+import { SUN_PITCH_RANGE } from '../src/render/lights.js';
 import { emitterCount } from '../src/audio/engine.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
 
@@ -380,10 +381,10 @@ test('every staged case names a complete camera of its own', async () => {
 const SUN_OWNED_BY_CASE = [19];
 
 test('every staged case stands its key somewhere a sun could be', async () => {
-  // The band, not the angle: a key raking in almost level throws shadows that
-  // run off the end of the shadow camera, and one nearly overhead loses the
-  // form modelling the whole rig exists for. Between those two a case may aim
-  // anywhere it likes — the point of a per-case aim is that they differ.
+  // The rail is SUN_PITCH_RANGE — the workbench sliders' own range, so a case
+  // may ship any aim that can be dialled. This catches a typo or a missing
+  // block, not a composition: which way the light comes from is the case's
+  // call, and the point of a per-case aim is that they differ.
   const bad = [];
   const aims = [];
   for (const entry of staged) {
@@ -398,7 +399,9 @@ test('every staged case stands its key somewhere a sun could be', async () => {
     if (SUN_OWNED_BY_CASE.includes(entry.id)) continue;
     const aim = sun.userData.aim;
     if (!aim) { bad.push([entry.id, 'no aim recorded — the workbench cannot drive it']); continue; }
-    if (!(aim.pitch >= 28 && aim.pitch <= 70)) bad.push([entry.id, `pitch ${aim.pitch} is outside the band`]);
+    if (!(aim.pitch >= SUN_PITCH_RANGE[0] && aim.pitch <= SUN_PITCH_RANGE[1])) {
+      bad.push([entry.id, `pitch ${aim.pitch} is outside the rail`]);
+    }
     if (!Number.isFinite(aim.heading)) bad.push([entry.id, `heading ${aim.heading}`]);
     aims.push(aim);
   }

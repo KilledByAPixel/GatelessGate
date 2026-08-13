@@ -571,9 +571,12 @@ function stageOnly() { return ambient || mode === 'sit'; }
 // as the drift overrode what had just been framed. A shot is composed from the
 // look now, which has the controls anyway and a whole window to judge in.
 //
-// The Contents keeps them, because MENU_CAM is aimed from there and that
-// screen is not a stage-only view.
-function canDragCamera() { return stageOnly() || (devMode && mode !== 'koan'); }
+// AND THE CONTENTS IS NOT AN EXEMPTION EITHER. It was, for the same reason dev
+// mode was — MENU_CAM had to be aimed from somewhere — and it read as a bug:
+// one screen in the book where the camera swung under the cursor while every
+// other page held its shot. The price is that MENU_CAM is now typed and
+// reloaded like any other framing, which is the same price every case pays.
+function canDragCamera() { return stageOnly(); }
 function applyStageOnly() {
   app.classList.toggle('ambient', stageOnly());
   app.classList.toggle('sitting', mode === 'sit');   // the toolbar steps aside too
@@ -852,10 +855,11 @@ function startIntro() {
 // camera here, and tuning it used to mean finding and matching two literals.
 // The target is NOT written down — it is read off the hub scene, so the shot
 // follows the road wherever this hub's seed bends it. Aim it live with the
-// workbench's Compose panel (dev mode, open the Contents, drag or slide), then
+// workbench's Compose panel (dev mode, open the Contents, and use the SLIDERS
+// — the Contents holds its shot like every other page now), then
 // copy the heading, pitch and distance into HERE — not the whole copied block,
 // whose target: [...] would freeze what gateTarget derives.
-const MENU_CAM = { distance: 13, heading: 28.6, pitch: 15.5 };
+const MENU_CAM = { distance: 13, heading: -25, pitch: 15.5 };
 
 function menuMusic() {
   audio.setMood('in');

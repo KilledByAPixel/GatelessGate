@@ -19,6 +19,14 @@ import { eyePosition } from '../camera.js';
 // before any case could name its own.
 export const SUN_DEFAULT = { heading: 51, pitch: 52 };
 
+// How high the key may stand: the workbench sliders' range, the staging net's
+// rail, and the same numbers, so anything that can be dialled can be shipped.
+// A rail against nonsense, not against taste — the composition inside it is the
+// case's call. Only the low end has a cost worth knowing: shadows lengthen as
+// 1/tan(pitch), and down near the floor a tall caster's shadow runs past the
+// edge of the shadow camera and is cut off mid-ground.
+export const SUN_PITCH_RANGE = [12, 84];
+
 // The key's height above the focus is FIXED and the pitch moves it out rather
 // than down, so a low sun does not sink below the canopy it is meant to be
 // casting from — the shadow camera's near plane clips anything standing above
