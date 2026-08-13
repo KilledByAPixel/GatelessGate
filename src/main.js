@@ -74,7 +74,7 @@ const narration = createNarration();
 // raked rather than lit square on and the road runs into its own shadow. The
 // afterword builds the same hub under the book's default sun — different land,
 // different light, the two hub scenes told apart by more than their seeds.
-const hub = buildHub({ sun: { heading: -66, pitch: 45 } });
+const hub = buildHub({ sun: { heading: 21, pitch: 45 } });
 
 let mode = 'intro';
 let simTime = 0;
