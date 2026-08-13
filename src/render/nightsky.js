@@ -33,8 +33,8 @@ const NIGHT_PAGE = mixHex(INK, PAPER, 0.10);   // ink, barely lifted — not bla
 // constants so the workbench can drag them (the setGrassReach idiom): these are
 // the two numbers the "Night sky" / "Night fog" sliders read, and what is found
 // by dragging is what gets typed back in here.
-let skyDepth = 0.88;
-let fogDepth = 0;
+let skyDepth = 0.6;
+let fogDepth = 0.15;
 export function setNightDepth(sky, fog) {
   if (Number.isFinite(sky)) skyDepth = sky;
   if (Number.isFinite(fog)) fogDepth = fog;
