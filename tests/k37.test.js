@@ -141,3 +141,32 @@ test('case 37: nothing goes non-finite over a long run of tugging', () => {
   }
   assert.ok(Number.isFinite(buffalo.rotation.y) && Number.isFinite(buffalo.rotation.z));
 });
+
+test('case 37: the whole animal is the target, not just his tail', () => {
+  // It WAS the tail alone — the one part of him painted full ACCENT against
+  // his deepened body, so the small thing the reader is invited to touch was
+  // the small thing the case is named for. A lovely argument, and it meant the
+  // page was dead to anybody who did the obvious thing (Frank: "I'm still not
+  // getting anything from thirty seven with the buffalo. Click on the buffalo,
+  // and I don't see it turn around. I don't see it do anything").
+  //
+  // A target chosen because it is thematically right is still wrong if it is
+  // not the thing a hand goes to.
+  const { ctx, root, buffalo, run, tug } = staged();
+  const inTail = (o) => { for (let p = o; p; p = p.parent) if (p.name === 'tail') return true; return false; };
+  const body = [];
+  buffalo.traverse((o) => {
+    if (o.isMesh && o.material && o.material.visible !== false && !inTail(o)) body.push(o);
+  });
+  assert.ok(body.length > 6, `he is made of more than his tail (${body.length} meshes)`);
+
+  // aim at his BODY — a mesh with no tail anywhere above it in the graph
+  ctx.input.raycastFirst = (cam, objs) => {
+    for (const o of objs || []) if (body.includes(o)) return { object: o, point: new THREE.Vector3() };
+    return null;
+  };
+  tug();
+  assert.equal(root.fragment().tugs, 1, 'touching the animal reaches the case');
+  run(3);
+  assert.ok(root.fragment().turned > 0.4, `and he turns (${root.fragment().turned})`);
+});

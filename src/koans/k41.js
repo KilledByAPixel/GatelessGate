@@ -24,7 +24,13 @@ const ID = 41;
 // and it is gone before you can close on it. Every time. There is nothing to
 // find, and the finding of nothing is the whole answer Bodhidharma gives.
 
-const WISP = 1.5;
+const WISP = 2.6;         // seconds from the grasp to gone
+// How far it climbs in that time. Measured against this case's own lens rather
+// than guessed: the camera sits 10.6 out at pitch 24 looking at y 2.1, and a
+// point on the ground under it leaves the top of a 16:9 frame somewhere around
+// y = 7. Eight puts it clear with room for a narrow reading pane, which is
+// taller in world terms and therefore harder to escape, not easier.
+const RISE = 8.0;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
@@ -191,26 +197,47 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
     groundHit.position.set(0.4, 0.02, -2.0);
     scene.add(groundHit);
 
-    const wispMat = washMaterial({ color: WASH.deep, flat: true });
-    wispMat.transparent = true;
-    wispMat.opacity = 0;
-    const wisp = new THREE.Mesh(new THREE.SphereGeometry(0.30, 10, 8), wispMat);
-    wisp.name = 'wisp';
-    wisp.visible = false;
-    scene.add(wisp);
+    // A POOL OF THEM, not one. The case used to refuse a second touch until the
+    // first wisp had most of its life behind it — which on a page whose whole
+    // answer is "reach again, there is still nothing there" is the one refusal
+    // it should not be making (Frank: "can we have it so you can click more
+    // than once, so you can spawn out more than one of those things at a time,
+    // instead of it just not allowing you to do anything?"). Six is past what
+    // anybody taps in one wisp's life; the oldest is reused after that, which
+    // is the water kit's ripple-pool idiom and cannot run out.
+    //
+    // Each carries its OWN material, because each is at its own point in its
+    // own fade — one shared material would put every wisp on the newest one's
+    // opacity. Six extra draws on a page that has room for them.
+    const WISPS = 6;
+    const wisps = [];
+    for (let i = 0; i < WISPS; i++) {
+      const m = washMaterial({ color: WASH.deep, flat: true });
+      m.transparent = true;
+      m.opacity = 0;
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.30, 10, 8), m);
+      mesh.name = 'wisp';
+      mesh.visible = false;
+      scene.add(mesh);
+      wisps.push({ mesh, mat: m, at: -99 });
+    }
 
     let camera = null;
     let clock = 0;
     let grasps = 0;
-    let graspAt = -99;
+    let next = 0;
 
     input.onTap(() => {
       if (!camera) return;
       const hit = input.raycastFirst(camera, [groundHit]);
       if (!hit) return;
-      if (clock - graspAt < WISP * 0.6) return;
-      wisp.position.set(hit.point.x, 0.30, hit.point.z);
-      graspAt = clock;
+      // one per touch, and no cooldown at all: the only guard left is the pool
+      // rotation, and reaching six times inside one wisp's life is a reader
+      // hammering the page rather than reading it — they get the oldest back.
+      const w = wisps[next];
+      next = (next + 1) % WISPS;
+      w.mesh.position.set(hit.point.x, 0.30, hit.point.z);
+      w.at = clock;
       grasps++;
       // barely a sound: what you reached for was never loud enough to have one
       audio && audio.chimeStrike({ tube: 4, force: 0.22, at: hit.point });
@@ -224,20 +251,43 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
         world.update(dt, simTime);
         snow.update(dt, simTime);
 
-        const u = clamp01((clock - graspAt) / WISP);
-        const a = (graspAt < -90 || u >= 1) ? 0 : Math.min(1, u / 0.22, (1 - u) / 0.55);
-        const e = a * a * (3 - 2 * a);
-        wispMat.opacity = 0.34 * e;
-        wisp.visible = e > 0.01;
-        // it rises and spreads as it goes, the way breath does in cold air
-        wisp.scale.setScalar(0.55 + u * 0.9);
-        wisp.position.y = 0.30 + u * 0.5;
+        // IT LEAVES. The wisp used to lift half a unit and spread as it faded,
+        // the way breath does in cold air — which is a lovely thing to watch
+        // and read as a small cloud hanging where you put it. Frank wanted the
+        // going itself: "let's have it, like, float up into the air and just
+        // float up off the top of the screen while it shrinks away and
+        // disappears." Which is also nearer the case — you were asked to bring
+        // your mind and hand it over, and what you reached for went up out of
+        // the picture instead of dispersing politely at chest height.
+        //
+        // Three curves, and the ORDER of them is the whole effect: it goes UP
+        // fast and keeps going (RISE takes it clear of the frame), it SHRINKS
+        // the whole way, and it only fades at the very end — so what you follow
+        // is a thing leaving, not a thing dissolving. Fading it early would put
+        // the vanishing back at chest height, which is what this replaced.
+        // each on its own clock, which is the whole of what the pool buys
+        for (const w of wisps) {
+          const u = clamp01((clock - w.at) / WISP);
+          const gone = w.at < -90 || u >= 1;
+          const held = gone ? 0 : Math.min(1, u / 0.22, (1 - u) / 0.18);
+          const e = held * held * (3 - 2 * held);
+          w.mat.opacity = 0.34 * e;
+          w.mesh.visible = e > 0.01;
+          // accelerating away, rather than easing to a stop at the top: it is
+          // being carried off, and a wisp that decelerates reads as arriving
+          // somewhere
+          w.mesh.scale.setScalar(gone ? 0.55 : 0.55 * (1 - 0.82 * u));
+          w.mesh.position.y = 0.30 + RISE * u * u;
+        }
       },
       fragment() {
         return {
           grasps,
-          held: +wispMat.opacity.toFixed(3),
-          // and it is always zero by the time it matters
+          // the strongest of them, so a single number still means "how much is
+          // there right now" with several of them in the air at once
+          held: +Math.max(...wisps.map((w) => w.mat.opacity)).toFixed(3),
+          // ...and how many are up. Nothing is ever HELD, whatever the count.
+          aloft: wisps.filter((w) => w.mesh.visible).length,
           flakes: snow.count(),
         };
       },

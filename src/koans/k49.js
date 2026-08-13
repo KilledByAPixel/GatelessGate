@@ -27,6 +27,54 @@ const ID = 49;
 // in). That was a fair ending, but this is the intended one.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
+// ---- THE GATE OPENS -------------------------------------------------------
+// Touch the torii and it GROWS: bottom still flush with the ground it stands
+// on, up and out past the edges of the frame until the posts are off both sides
+// and the lintel is over the top — at which point there is no gate on the page
+// at all, only the country it framed. Then it comes back to its own size.
+//
+// Frank's idea, and it is the right one for the last page of the book. This is
+// the gate the title screen opens on and the whole book's one red thing; the
+// afterword past it registers no tap at all. The reader's last act is to make
+// the gateless gate large enough to walk through without noticing, which is the
+// only joke the Mumonkan tells in its own title.
+//
+// SCALED ABOUT ITS OWN ORIGIN, which makeGate puts at the foot of the posts, so
+// growing it keeps it planted rather than lifting it off the road. The chime
+// hung under its lintel is a child and grows with it — deliberate: a bronze
+// tube left hanging at its own size in mid-air while the beam it hangs from
+// leaves the frame would be the one thing that gave the trick away.
+// MEASURED, not guessed: the timber leaves the home frame between 3x and 4x —
+// the posts pass the sides, the tie and the lintel go over the top — and is
+// well clear of a narrow reading pane as well as of 16:9 by 9x. GROW is tuned
+// by eye above that floor. There is a ceiling on how far it is worth taking:
+// the gate stays in its own plane about twelve units out, so however wide it
+// grows it never crosses the near plane, and past the point where it has
+// already gone there is nothing left to see it do.
+//
+// It never clears at EVERY heading, and cannot: an object big enough to stand
+// around the camera has some part of itself in shot from somewhere. That is the
+// look's problem and the look's privilege — this is composed for home.
+const GROW = 12;
+const GROW_IN = 2.6;      // out, slowly
+const GROW_HOLD = 1.8;    // held there, which is the beat where the gate is gone
+const GROW_OUT = 3.4;     // and slower still coming back
+const GROW_SPAN = GROW_IN + GROW_HOLD + GROW_OUT;
+const growEase = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+// 1 at rest, GROW at the widest. A pure function of seconds since the touch, so
+// nothing accumulates and it is exactly its own size again afterwards.
+function growAt(u) {
+  if (!(u >= 0) || u >= GROW_SPAN) return 1;
+  let k;
+  if (u < GROW_IN) k = growEase(u / GROW_IN);
+  else if (u < GROW_IN + GROW_HOLD) k = 1;
+  else k = 1 - growEase((u - GROW_IN - GROW_HOLD) / GROW_OUT);
+  // geometric rather than linear: the last doublings have to take as long as
+  // the first or the whole thing arrives in the first half-second and then
+  // creeps
+  return Math.pow(GROW, k);
+}
+
 const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21.2 };
   export default {
   id: ID,
@@ -160,7 +208,8 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   let rings = 0;
   let lastRing = -99;
   let rippled = 0;
-  
+  let grewAt = -99;
+
   // brushing the water stirs it — mini-ripples by pointer speed (the
   // water's breeze; see stir in src/kit/water.js). Silent: the drip is the tap's.
   input.onHover(() => {
@@ -181,6 +230,9 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   // a small bright strike at the torii, the seal the book closes on —
   // task-12's migration to Frank's tuned presets
   if (clock - lastRing > 0.5) { lastRing = clock; rings++; audio && audio.bell({ preset: 'hand', gain: 0.5, at: gate.position }); }
+  // ...and it OPENS. See GROW at the top of the file. Refused while it is
+  // already growing, so the bell can still be rung on its own.
+  if (clock - grewAt >= GROW_SPAN) grewAt = clock;
   return;
   }
   if (surface) {
@@ -205,11 +257,14 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   birds.update(dt, simTime);
   closingChime.setWindLevel(1);   // a settled wind — see k47's furin
   closingChime.update(dt, simTime);
+  gate.scale.setScalar(growAt(clock - grewAt));
   },
   fragment() {
   return {
   rings, rippled, koi: koi.fishCount(), birds: birds.count(),
   chimeStrikes: closingChime.strikes(),
+  // 1 at rest, GROW at the widest
+  gateScale: +gate.scale.x.toFixed(3),
 };
       },
       dispose() {},

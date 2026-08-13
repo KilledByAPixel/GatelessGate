@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, aimMonk, faceMonk, makeAssembly,
-  makeRack, makeLights, washMaterial,
+  makeRack, makeLights, washMaterial, tapMeshes,
 } from '../kit/index.js';
 
 const ID = 43;
@@ -131,7 +131,22 @@ const CAM = { distance: 10.6, target: [0.7, 0.7, -0.55], heading: 12, pitch: 5.5
   hit.name = 'staff-hit';
   hit.position.y = -STAFF_L / 2;
   hold.add(hit);
-  
+
+  // AND SHUZAN HIMSELF (Frank: "let's have it so you can click on him as well,
+  // not just the staff"). The staff is a 4cm rod held out at arm's length: a
+  // sliver to aim at even with the sleeve of a hit box around it, and the man
+  // holding it is the obvious thing to reach for. It is also the better reading
+  // — he and the staff are one offer, and the case shuts both doors whichever
+  // of them you point at.
+  //
+  // His own meshes rather than a proxy: he is man-sized and standing still.
+  // MINUS the staff's subtree, which is already in the list above and whose
+  // own hit box is deliberately generous — listing a mesh twice is harmless
+  // today and a trap the day the probe order starts meaning something.
+  const staffParts = new Set([hit, staff, grip]);
+  const shuzanMeshes = tapMeshes(shuzan).filter(
+  (m) => !staffParts.has(m) && m.material.visible !== false);
+
   // ---- the moment: it is what it is ------------------------------------
   let camera = null;
   let clock = 0;
@@ -140,7 +155,7 @@ const CAM = { distance: 10.6, target: [0.7, 0.7, -0.55], heading: 12, pitch: 5.5
   
   input.onTap(() => {
   if (!camera) return;
-  if (!input.raycastFirst(camera, [hit, staff, grip])) return;
+  if (!input.raycastFirst(camera, [hit, staff, grip, ...shuzanMeshes])) return;
   shakes.push(clock);
   if (shakes.length > 4) shakes.shift();
   taps++;

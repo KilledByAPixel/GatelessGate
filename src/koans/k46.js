@@ -1,9 +1,12 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, wash } from '../palette.js';
-import { composeWorld, faceMonk, makeMonk, makePole, tapMeshes } from '../kit/index.js';
+import {
+  composeWorld, faceMonk, makeMonk, makePole, tapMeshes,
+  createPendulum, integratePendulum, kickPendulum, pendulumEnergy,
+} from '../kit/index.js';
 import { makeLights } from '../render/lights.js';
-import { noise1 } from '../util/noise.js';
+import { hash1, noise1 } from '../util/noise.js';
 
 const ID = 46;
 
@@ -31,24 +34,66 @@ const W2 = { x: -0.7, z: -5.2 };
 // a whisper of three-quarter shows.
 const SITTER_YAW = Math.PI + 0.4;
 
-// ---- the moment: the lean ------------------------------------------------
-// Tap him and he tips forward a few degrees, holds at the very edge of the
-// step the koan demands, and settles back. Quick to commit, long to let go.
-const LEAN_MAX = 0.12;                       // ~7 degrees — an intention, not a stunt
-const RISE = 0.55, HOLD = 0.7, SETTLE = 1.75;
-const LEAN_SPAN = RISE + HOLD + SETTLE;
-const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
-function leanShape(u) {
-  if (!(u >= 0) || u >= LEAN_SPAN) return 0;
-  if (u < RISE) return smooth(u / RISE);
-  if (u < RISE + HOLD) return 1;
-  return 1 - smooth((u - RISE - HOLD) / SETTLE);
-}
-
-// Tap the pole instead and the whole mast takes a small damped sway — the monk
-// rides it, because he is up there and everything up there moves.
-const SWAY_AMP = 0.011;
-const swayShape = (u) => (u >= 0 ? Math.exp(-u * 1.1) * Math.sin(u * 4.6) : 0);
+// ---- the moment: the pole ------------------------------------------------
+// TAP THE POLE and the whole mast wobbles. That is the only thing on this page
+// that answers, and the man on top rides it because he is up there.
+//
+// The SITTER used to be a target too: tap him and he tipped forward seven
+// degrees, held at the very edge of the step the koan demands, and settled
+// back. It was the more literal reading of the case — "proceed from the top of
+// a hundred-foot pole" — and Frank cut it on sight ("I don't really like how
+// you can click on the guy at the top to make them lean a little bit"). Two
+// targets on a page whose whole subject is one vertical object was one too
+// many, and the small nod he also had is gone with it: at this distance a
+// seven-degree tip on a 1.3-unit figure eight units up is a couple of pixels,
+// which is a thing the code knows about and the reader does not.
+//
+// THE WOBBLE IS TWO INDEPENDENT SWAYS, not one lean scaled onto two axes
+// (Frank: "can we give it, like, kind of a random wobble... sine waves for
+// both axes of the rotation, so we could use different values"). One damped
+// sine per axis, at frequencies that do not divide into each other and with a
+// quarter-turn of phase between them, so the tip of the mast traces an opening
+// spiral rather than swinging in a plane and back. A pole struck by a hand does
+// not pick an axis; it goes round.
+// IT IS A PHYSICAL THING NOW, not a played curve, and this is the third go at
+// it. The first was one envelope scaled onto two axes; the second was two damped
+// sines, `exp(-decay*u) * sin(freq*u)`, restarted from u = 0 on every tap. Both
+// were shapes, and a shape has to start somewhere — so a second tap while the
+// mast was still moving threw away whatever it was doing and began again from
+// nothing (Frank: "if you click multiple times while it's still moving, it
+// starts to pop. So what we kinda wanna do is apply, like, an acceleration").
+//
+// He is describing a pendulum, and the book already has one — the same
+// integrator the fūrin and the bronze cylinders swing on. TWO of them, one per
+// axis, at lengths chosen so their periods do not divide into each other; a
+// touch is a KICK, which by construction changes only the angular VELOCITY and
+// leaves the angle exactly where it was (see kickPendulum's own note). So:
+//
+//   * nothing can snap, at any time, because the rendered angle is never
+//     assigned — it is integrated, and a kick does not touch it;
+//   * a tap mid-wobble ADDS to what is already happening, the way a second
+//     shove on a swinging thing does, instead of replacing it;
+//   * the spiral, the uneven decay and the dying-out all come out of the
+//     physics rather than being described.
+//
+// The lengths give ~4.6 and ~6.1 rad/s (g/length), which are the two frequencies
+// the hand-tuned sines had; the damping terms are twice their old decay rates,
+// since a `-c*omega` drag decays an envelope at c/2.
+const SWAY_G = 9.8;
+const SWAY_X = { length: 0.46, damping: 2.2 };   // slower, longer-lived
+const SWAY_Z = { length: 0.26, damping: 2.9 };   // quicker, shorter
+// rad/s added to a pendulum by one touch. Peak angle is about KICK / omega0,
+// so this lands near 0.09 rad on the slow axis — the same size the sines were.
+const KICK = 0.42;
+// AND EVERY TAP SHOVES IT A DIFFERENT WAY (Frank: "can we randomize how it
+// occurs, so it's not always in the same exact angle each time"). The bearing
+// now picks how the kick is SPLIT between the two axes, which is what a shove
+// from a direction physically is — rather than rotating a figure after the fact.
+//
+// Seeded from the tap count, because there is no Math.random outside src/audio
+// in this book: the same page, tapped the same number of times, wobbles the
+// same way, which is what makes the whole thing replayable.
+const SWAY_TURN = (n) => hash1(n * 3 + 1, 46) * Math.PI * 2;
 // the sitter is nested under the swaying mast group, so his local position is
 // not his world position — reused rather than allocated per tap
 const scratchPos = new THREE.Vector3();
@@ -176,34 +221,39 @@ export default {
     // ---- interaction ------------------------------------------------------
     let camera = null;
     let now = 0;
-    let taps = 0, poleTaps = 0;
-    let leanAt = -1, swayAt = -1;
+    let poleTaps = 0;
+    // the mast's two axes, swinging freely — a touch kicks them, nothing ever
+    // assigns their angles
+    const swayX = createPendulum({ ...SWAY_X, g: SWAY_G });
+    const swayZ = createPendulum({ ...SWAY_Z, g: SWAY_G });
+    const noTorque = () => 0;
     // CODE REVIEW CAUGHT (Task 5C): audio.bell() had no cooldown, so a held
     // pointer stacked strikes without limit. Gated on its own — k49's idiom
-    // (`clock - lastRing > 0.5`) — rather than folded into leanAt, because
-    // the lean is meant to retrigger on every tap (the case's own design:
-    // "he leans toward the ten directions, and stays"); only the BELL needs
-    // the ceiling.
+    // (`clock - lastRing > 0.5`) — kept separate from the kick, because the
+    // wobble is meant to answer every tap; only the BELL needs a ceiling.
     let lastRing = -99;
 
-    const sitterMeshes = tapMeshes(sitter);
-    const poleMeshes = tapMeshes(pole);
+    // THE POLE, and the sitter with it. He is nested under the same mast group,
+    // so a tap that lands on the man still shoves the thing he is sitting on —
+    // which is the honest physics and saves the reader from having to notice
+    // that only part of a single vertical object answers.
+    const poleMeshes = [...tapMeshes(pole), ...tapMeshes(sitter)];
 
     input.onTap(() => {
       if (!camera) return;
-      if (input.raycastFirst(camera, sitterMeshes)) {
-        // the faintest response: he leans toward the ten directions, and stays
-        leanAt = now;
-        taps++;
-        if (now - lastRing >= 0.5) {
-          lastRing = now;
-          // very quiet, at the pole top — not a hung bell, so the smallest
-          // preset — task-12's migration to Frank's tuned presets
-          audio && audio.bell({ preset: 'hand', gain: 0.06, at: sitterPivot.getWorldPosition(scratchPos) });
-        }
-      } else if (input.raycastFirst(camera, poleMeshes)) {
-        swayAt = now;
-        poleTaps++;
+      if (!input.raycastFirst(camera, poleMeshes)) return;
+      poleTaps++;
+      // A SHOVE FROM A BEARING, split between the two axes. kickPendulum only
+      // ever touches omega, so the mast is exactly where it was on the frame
+      // this lands — which is the whole of why repeat taps cannot pop.
+      const turn = SWAY_TURN(poleTaps);
+      kickPendulum(swayX, KICK * Math.cos(turn));
+      kickPendulum(swayZ, KICK * Math.sin(turn));
+      if (now - lastRing >= 0.5) {
+        lastRing = now;
+        // very quiet, at the pole top — not a hung bell, so the smallest
+        // preset — task-12's migration to Frank's tuned presets
+        audio && audio.bell({ preset: 'hand', gain: 0.06, at: sitterPivot.getWorldPosition(scratchPos) });
       }
     });
 
@@ -214,22 +264,28 @@ export default {
         now = Number.isFinite(simTime) ? simTime : now + (dt || 0);
         world.update(dt, simTime);
 
-        // the lean: deterministic envelope on sim time, nothing accumulates
-        sitterPivot.rotation.x = leanAt < 0 ? 0 : LEAN_MAX * leanShape(now - leanAt);
-
-        // the sway: a tapped impulse rides on top of a standing breath of wind
-        // — the mast is never perfectly still, which is most of why it reads
-        // as tall
-        const imp = swayAt < 0 ? 0 : SWAY_AMP * swayShape(now - swayAt);
-        mast.rotation.x = 0.008 * (noise1(now * 0.33, 461) - 0.5) + imp * 0.55;
-        mast.rotation.z = 0.008 * (noise1(now * 0.29 + 13.7, 462) - 0.5) + imp * 0.8;
+        // THE WOBBLE, one damped sine per axis at its own frequency, decay and
+        // phase — so the tip traces a spiral rather than swinging in a plane —
+        // riding on top of a standing breath of wind. The mast is never
+        // perfectly still, which is most of why it reads as tall.
+        // the two pendulums run whether or not anybody has touched anything;
+        // at rest they simply sit at zero and cost two integrations of nothing
+        integratePendulum(swayX, Math.max(0, dt || 0), noTorque);
+        integratePendulum(swayZ, Math.max(0, dt || 0), noTorque);
+        // the standing breath of wind is added ON TOP of the swing rather than
+        // driven into it — the mast is never perfectly still, which is most of
+        // why it reads as tall, and it is weather rather than something the
+        // reader did
+        mast.rotation.x = 0.008 * (noise1(now * 0.33, 461) - 0.5) + swayX.theta;
+        mast.rotation.z = 0.008 * (noise1(now * 0.29 + 13.7, 462) - 0.5) + swayZ.theta;
       },
       fragment() {
         return {
-          taps,
           poleTaps,
-          lean: +sitterPivot.rotation.x.toFixed(4),
-          sway: +Math.abs(swayAt < 0 ? 0 : SWAY_AMP * swayShape(now - swayAt)).toFixed(4),
+          swayX: +swayX.theta.toFixed(4),
+          swayZ: +swayZ.theta.toFixed(4),
+          // how much swing is in it, kicks and all — 0 only when it is still
+          sway: +(pendulumEnergy(swayX) + pendulumEnergy(swayZ)).toFixed(5),
         };
       },
       dispose() {},

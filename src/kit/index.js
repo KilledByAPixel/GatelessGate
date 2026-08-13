@@ -8,6 +8,13 @@ export { makeTuftField } from './tuftfield.js';
 // the trees' half of the weather — a case stills the wood through these two,
 // the way it stills the meadow through world.grass.setWind (see k29)
 export { setFoliageWeather, foliageWind } from './foliage.js';
+// The swinging integrator the chimes are built on, for a case that wants
+// something to be SHOVED rather than to play a curve — case 46's mast. A kick
+// changes velocity and leaves the angle alone, so repeated taps accumulate
+// instead of restarting, which is the one thing a played envelope cannot do.
+export {
+  createPendulum, integratePendulum, kickPendulum, pendulumEnergy,
+} from './pendulum.js';
 export { makeGrassShade, grassShadeData, grassShadeUV } from './grassshade.js';
 export { makeLantern } from './lantern.js';
 export { makePath } from './path.js';

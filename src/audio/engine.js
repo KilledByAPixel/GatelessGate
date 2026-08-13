@@ -445,6 +445,15 @@ export function createAudio(save) {
       if (tlog.length > 8) tlog.shift();
     },
     setWindLevel(v) { windLevel = v; if (wind) wind.setLevel(v * windScale); },
+    // The rain bed's own level, the setWindLevel idiom exactly — for a case
+    // where it is not always raining. Case 48 declares `rain:0` in its recipe
+    // so the bed is built and silent, and drives this off the same envelope the
+    // falling drops are on; a shower that arrives without a sound is a shower
+    // behind glass. No rain layer running means silence stays silence, so a
+    // case that forgets the recipe token gets nothing rather than an error.
+    // setLevel's own setTargetAtTime smoothing turns per-frame calls into a
+    // glide rather than a zipper, the same as the wind's.
+    setRainLevel(v) { if (rain) rain.setLevel(RAIN.bedLevel * Math.max(0, v)); },
     setGust(v, slope = 0) { if (wind) wind.setGust(v, slope); },
     // The surf's breath (the two oceans, cases 20 and 48): the case reads its
     // own sea's height at the waterline and hands it here as 0..1 — the

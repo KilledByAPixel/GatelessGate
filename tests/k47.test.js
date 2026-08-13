@@ -22,10 +22,15 @@ const SEAL = new Set([ACCENT, ACCENT_DEEP, ACCENT_LIGHT]
 const rigCamera = (heading = k47.camera.heading, aspect = 1.78) =>
   sharedRig(k47.camera, { heading, aspect });
 
-// gates sorted by distance along the road: nearest (largest z) first
+// The barriers STANDING ON THE ROAD, nearest (largest z) first.
+//
+// There are FOUR gates now and only three of them are on the road: the fourth
+// waits in the slot behind the reader, undrawn, for the next slide to bring it
+// up. `visible` is the honest filter — it is exactly what the renderer uses —
+// and every compositional check below is about what is in the picture.
 function gatesByDepth(scene) {
   const gates = [];
-  scene.traverse((o) => { if (o.name === 'gate') gates.push(o); });
+  scene.traverse((o) => { if (o.name === 'gate' && o.visible) gates.push(o); });
   gates.sort((a, b) => b.position.z - a.position.z);
   return gates;
 }
@@ -72,7 +77,8 @@ test('module shape matches the koan contract', () => {
   assert.equal(k47.text.case, TEXT[47].case);
   assert.equal(k47.text.comment, TEXT[47].comment);
   assert.equal(k47.text.verse, TEXT[47].verse);
-  assert.deepEqual(k47.ambience, ['wind:0.16', 'furin', 'music']);
+  // the furin token went with the chime it named — see the note in the case
+  assert.deepEqual(k47.ambience, ['wind:0.16', 'music']);
   assert.equal(typeof k47.build, 'function');
   assert.ok(k47.camera && k47.camera.target, 'this case frames itself');
 });
@@ -247,7 +253,8 @@ test('each barrier answers with its own bell, the nearest the biggest', () => {
 
   // a tap that hits nothing changes nothing
   ctx._taps.forEach((cb) => cb(10, 10));
-  assert.deepEqual(root.fragment(), { taps1: 0, taps2: 0, taps3: 0 });
+  const counts = (f) => ({ taps1: f.taps1, taps2: f.taps2, taps3: f.taps3 });
+  assert.deepEqual(counts(root.fragment()), { taps1: 0, taps2: 0, taps3: 0 });
 
   // tap each barrier and check the counter and the preset both route to it.
   // Each tap advances the clock past the per-bell cooldown first (see the
@@ -266,7 +273,7 @@ test('each barrier answers with its own bell, the nearest the biggest', () => {
     expect[i]++;
     assert.equal(bells[bells.length - 1], preset, `barrier ${i + 1} rings preset=${preset}`);
   }
-  assert.deepEqual(root.fragment(), { taps1: expect[0], taps2: expect[1], taps3: expect[2] });
+  assert.deepEqual(counts(root.fragment()), { taps1: expect[0], taps2: expect[1], taps3: expect[2] });
   assert.ok(bells.includes('great') && bells.includes('temple') && bells.includes('hand'), 'three bells, stepped by size');
 
   // and with no audio at all, the counter still counts and nothing throws.
@@ -319,27 +326,135 @@ test('a bell cannot be re-struck inside its cooldown — holding the pointer dow
   assert.equal(bells.length, 3);
 });
 
-test('a furin hangs under the first barrier and its strikes reach the engine', () => {
+test('nothing hangs from a barrier any more', () => {
+  // A single furin under the near gate's lintel was this page's ambient voice.
+  // The near barrier is not a fixed object now — Frank called it before the
+  // slide was built: "we'll probably get rid of the thing hanging, because
+  // that's gonna mess things up." It would have: it would ride one gate up the
+  // road and out into the fog, taking the page's only continuous sound with it
+  // and bringing it back four taps later.
   const struck = [];
   const audio = { bell() {}, chimeStrike: (o) => struck.push(o) };
   const root = k47.build(fakeCtx({ audio }));
+  let hung = 0;
+  root.scene.traverse((o) => { if (o.name === 'furin' || o.userData.hungBy === 'hangChimes') hung++; });
+  assert.equal(hung, 0, 'no chime rides the barriers');
 
-  // it hangs from the FIRST gate — the one you stand before — not floating
-  // in the scene: a child of the gate group, so it inherits sink and heading
-  let furin = null, parentIsGate = false;
-  root.scene.traverse((o) => {
-    if (o.name === 'furin') { furin = o; parentIsGate = o.parent && o.parent.name === 'gate'; }
-  });
-  assert.ok(furin, 'the chime exists');
-  assert.ok(parentIsGate, 'hung from a gate, not loose in the scene');
-
-  // its own weather brings strikes without any tap
+  // and nothing speaks on its own: every sound on this page is the reader's
   for (let i = 0; i * (1 / 60) < 300; i++) root.update(1 / 60, i / 60);
-  assert.ok(struck.length > 3, `the chime never spoke: ${struck.length}`);
-  for (const s of struck) {
-    assert.ok(Number.isInteger(s.tube) && s.tube >= 0 && s.tube < 5);
-    assert.ok(s.force > 0 && s.force <= 1);
+  assert.equal(struck.length, 0, `the page stayed quiet: ${struck.length} strikes`);
+});
+
+// ---- the road turns over ---------------------------------------------------
+// Frank's design, and it is the case: Tosotsu's three barriers are three
+// questions, and the joke the composition could never tell on its own is that
+// passing one does not leave you with two. Touch any gate and the whole road
+// slides one place forward — a fourth comes up out of the space behind the
+// reader, and the one that was furthest walks on until the fog has it.
+test('a tap slides the road one place, and every slot stays filled', () => {
+  const audio = { bell() {} };
+  const ctx = fakeCtx({ audio });
+  const root = k47.build(ctx);
+  root.setCamera(rigCamera());
+  const before = gatesByDepth(root.scene).map((g) => g.position.z);
+  assert.equal(before.length, 3, 'three on the road to begin with');
+  assert.equal(root.fragment().slides, 0);
+  // 0 + 1 + 2 + 3: every slot filled exactly once, which is the invariant the
+  // whole rotation has to preserve
+  assert.equal(root.fragment().slotSum, 6);
+
+  const slab = gatesByDepth(root.scene)[0].children.find((c) => c.name === 'gatehit');
+  ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab) ? { object: slab } : null);
+  let t = 0;
+  const run = (secs) => { for (const end = t + secs; t < end; t += 1 / 60) root.update(1 / 60, t); };
+  run(0.1);
+  ctx._taps.forEach((cb) => cb(10, 10));
+  assert.equal(root.fragment().slides, 1);
+  assert.equal(root.fragment().sliding, 1, 'the road is moving');
+
+  run(3.2);
+  assert.equal(root.fragment().sliding, 0, 'and it arrives');
+  assert.equal(root.fragment().slotSum, 6, 'every slot filled exactly once, still');
+  const after = gatesByDepth(root.scene).map((g) => g.position.z);
+  assert.equal(after.length, 3, 'three on the road afterwards too — never two, never four');
+  // and they are standing where the three barriers stood: the road looks the
+  // same, which is the entire point
+  for (let i = 0; i < 3; i++) {
+    assert.ok(Math.abs(after[i] - before[i]) < 0.05,
+      `slot ${i + 1} is occupied again (${after[i].toFixed(2)} vs ${before[i].toFixed(2)})`);
   }
+});
+
+test('the road can turn over for ever without drifting', () => {
+  // four slides is a full rotation: every gate has been through every slot and
+  // the picture must be bit-for-bit the one it started as
+  const ctx = fakeCtx({ audio: { bell() {} } });
+  const root = k47.build(ctx);
+  root.setCamera(rigCamera());
+  const snap = () => gatesByDepth(root.scene)
+    .map((g) => `${g.position.x.toFixed(4)},${g.position.y.toFixed(4)},${g.position.z.toFixed(4)},${g.scale.x.toFixed(4)}`)
+    .join(' | ');
+  const start = snap();
+
+  let t = 0;
+  const run = (secs) => { for (const end = t + secs; t < end; t += 1 / 60) root.update(1 / 60, t); };
+  run(0.1);
+  for (let n = 0; n < 4; n++) {
+    const slab = gatesByDepth(root.scene)[0].children.find((c) => c.name === 'gatehit');
+    ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab) ? { object: slab } : null);
+    ctx._taps.forEach((cb) => cb(10, 10));
+    run(3.2);
+    assert.equal(gatesByDepth(root.scene).length, 3, `three on the road after slide ${n + 1}`);
+  }
+  assert.equal(root.fragment().slides, 4);
+  assert.equal(snap(), start, 'a full rotation puts the road back exactly where it was');
+});
+
+test('a second tap cannot restart a slide that is already running', () => {
+  const ctx = fakeCtx({ audio: { bell() {} } });
+  const root = k47.build(ctx);
+  root.setCamera(rigCamera());
+  let t = 0;
+  const run = (secs) => { for (const end = t + secs; t < end; t += 1 / 60) root.update(1 / 60, t); };
+  run(0.1);
+  const slab = gatesByDepth(root.scene)[0].children.find((c) => c.name === 'gatehit');
+  ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab) ? { object: slab } : null);
+
+  ctx._taps.forEach((cb) => cb(10, 10));
+  run(1.0);
+  // past the bell's own 0.5s cooldown, so this tap is a real one and is
+  // refused by the SLIDE guard rather than by the bell's
+  ctx._taps.forEach((cb) => cb(10, 10));
+  assert.equal(root.fragment().slides, 1, 'the road finishes the move it is making');
+  run(3.0);
+  ctx._taps.forEach((cb) => cb(10, 10));
+  assert.equal(root.fragment().slides, 2, 'and moves again once it has arrived');
+});
+
+test('the gate waiting behind the reader is not drawn until it starts to move', () => {
+  // The road only begins a few units behind the home camera, so "behind the
+  // reader" is a couple of metres and not a county. Parked visible, that gate
+  // stands in the composition: the walker stops reading as a man between the
+  // first barrier and the second, and the orbit swings a huge near gate through
+  // frame. (Both of those were caught by the tests above when it was drawn.)
+  const ctx = fakeCtx({ audio: { bell() {} } });
+  const root = k47.build(ctx);
+  root.setCamera(rigCamera());
+  const all = [];
+  root.scene.traverse((o) => { if (o.name === 'gate') all.push(o); });
+  assert.equal(all.length, 4, 'four gates exist');
+  assert.equal(all.filter((g) => g.visible).length, 3, 'three of them are drawn');
+
+  const slab = gatesByDepth(root.scene)[0].children.find((c) => c.name === 'gatehit');
+  ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab) ? { object: slab } : null);
+  let t = 0;
+  const run = (secs) => { for (const end = t + secs; t < end; t += 1 / 60) root.update(1 / 60, t); };
+  run(0.1);
+  ctx._taps.forEach((cb) => cb(10, 10));
+  run(0.5);
+  assert.equal(all.filter((g) => g.visible).length, 4, 'all four are drawn while the road moves');
+  run(3.0);
+  assert.equal(all.filter((g) => g.visible).length, 3, 'and one is parked again afterwards');
 });
 
 test('the scene runs without a renderer or audio, and reports a finite fragment', () => {
@@ -349,7 +464,8 @@ test('the scene runs without a renderer or audio, and reports a finite fragment'
   const ctx2 = fakeCtx();                // taps with no camera set must be safe
   const root2 = k47.build(ctx2);
   ctx2._taps.forEach((cb) => cb(10, 10));
-  assert.deepEqual(root2.fragment(), { taps1: 0, taps2: 0, taps3: 0 });
+  const f2 = root2.fragment();
+  assert.deepEqual({ taps1: f2.taps1, taps2: f2.taps2, taps3: f2.taps3 }, { taps1: 0, taps2: 0, taps3: 0 });
   for (let i = 0; i < 120; i++) root.update(1 / 60, i / 60);
   const frag = root.fragment();
   assert.ok(Object.keys(frag).length > 0);
@@ -358,4 +474,56 @@ test('the scene runs without a renderer or audio, and reports a finite fragment'
   }
   root.onExit && root.onExit();
   root.dispose();
+});
+
+test('the far barrier dwindles as it goes, and nothing blinks on the way round', () => {
+  // TWO FAULTS, both at the ends of the slide, both found by eye.
+  //
+  // The far gate arrived at the GONE slot still at 0.82 scale, thirty units
+  // out — just legible against the paper — and then the wrap took it in one
+  // frame (Frank: "it just pops off... let's have it just shrink down as well,
+  // that's gonna make it look like it's going away"). Fog and distance alone
+  // were not enough.
+  //
+  // And the ARRIVING gate blinked out for exactly one frame at the end of the
+  // slide. Its position was right the whole time, which is what made it puzzling
+  // ("it's in the correct position, so I don't know why"): visibility was
+  // written inside the placement loop, which runs BEFORE the slot bookkeeping,
+  // so on the single frame a slide ended the arriving gate was still recorded as
+  // parked and was hidden — then shown again a frame late.
+  const ctx = fakeCtx({ audio: { bell() {} } });
+  const root = k47.build(ctx);
+  root.setCamera(rigCamera());
+  const all = [];
+  root.scene.traverse((o) => { if (o.name === 'gate') all.push(o); });
+
+  let t = 0;
+  const run = (secs) => { for (const end = t + secs; t < end; t += 1 / 60) root.update(1 / 60, t); };
+  run(0.1);
+  const slab = gatesByDepth(root.scene)[0].children.find((c) => c.name === 'gatehit');
+  ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab) ? { object: slab } : null);
+
+  const far = gatesByDepth(root.scene)[2];      // the one about to walk into the fog
+  const startScale = far.scale.x;
+  ctx._taps.forEach((cb) => cb(10, 10));
+
+  let smallest = Infinity;
+  let fewestDrawn = 4;
+  let worstScaleStep = 0;
+  let prev = all.map((g) => g.scale.x);
+  for (let i = 0; i < 60 * 3.4; i++) {
+    run(1 / 60);
+    fewestDrawn = Math.min(fewestDrawn, all.filter((g) => g.visible).length);
+    smallest = Math.min(smallest, far.scale.x);
+    all.forEach((g, k) => { worstScaleStep = Math.max(worstScaleStep, Math.abs(g.scale.x - prev[k])); });
+    prev = all.map((g) => g.scale.x);
+  }
+  assert.ok(smallest < startScale * 0.2, `it dwindles on the way out (${startScale.toFixed(2)} -> ${smallest.toFixed(2)})`);
+  // NEVER fewer than three on the road, on any frame of the slide — that is the
+  // blink, stated as the thing a reader would actually notice
+  assert.equal(fewestDrawn, 3, 'three barriers are drawn on every single frame');
+  // the wrap itself is a jump in scale (a speck at one end, full size behind
+  // the reader at the other) and is allowed to be: it happens on a gate that is
+  // not drawn on either side of it
+  assert.ok(worstScaleStep < 1.1, 'and no DRAWN gate changes size by more than it could be seen to');
 });

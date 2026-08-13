@@ -33,6 +33,11 @@ const STUB_AUDIO = () => {
     ceramic: rec('ceramic'), wood: rec('wood'), cloth: rec('cloth'), breath: rec('breath'),
     startAmbience: rec('start'), stopAmbience: rec('stop'), setWindLevel: rec('wind'),
     duck: rec('duck'),
+    // The bed levels a case drives per frame. These are NOT in `calls` for a
+    // reason — the silent-case test counts anything in there as "the page
+    // answered", and a case that merely holds its own weather steady every
+    // frame has not answered anything.
+    setRainLevel() {}, setWaterSwell() {},
   };
 };
 

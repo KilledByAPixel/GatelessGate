@@ -14,13 +14,67 @@ const ID = 42;
 // and cannot bring her out of samadhi. Then Momyo, a beginner, comes up out of
 // the earth, snaps once, and she wakes.
 //
-// Both gestures are in the scene and they are the SAME gesture. Snap at her
-// from where Manjusri stands and you get a sharp, excellent, useless sound.
-// Touch the ground instead and the beginner comes up through it, and she
-// stirs. Nothing marks which is which beforehand.
+// MANJUSRI IS STILL SNAPPING, a metre from her, forever, to nothing. That is
+// the whole of what the scene says on its own — the wisest of the bodhisattvas,
+// in mid-gesture, being ignored. TOUCH HER and she comes out: she comes round
+// first, then lifts off the boards, hangs there tilting slowly, and settles
+// back down. The snap that works is not his.
+//
+// TWO THINGS WERE CUT TO GET HERE, both worth the record:
+//
+//   1. The waking was a STIR — a six-hundredth of a radian of lean and three
+//      centimetres of lift, the honest size of a person coming round, and far
+//      too small to be the answer to anything (Frank: "maybe she floats up in
+//      the air and, like, hovers for a second"). The floating is not a liberty:
+//      Manjusri carries her to a high heaven and it does nothing, and the case
+//      is not subtle about her being beyond reach.
+//   2. MOMYO, the beginner who came up out of the earth. See the note where he
+//      used to be staged.
 
-const RISE = 2.4;         // seconds for Momyo to come up out of the earth
-const WAKE = 2.0;
+const WAKE = 1.4;         // seconds for her to come round — head lifting, shoulders opening
+// SHE FLOATS. Up, held, and down again — a hover, not a departure: this case
+// ends with her out of samadhi and sitting in the same room, so she comes back
+// to the floor she left. (Case 41's wisp is the one that leaves; it goes up and
+// keeps going, and the difference between the two is the whole difference
+// between something being taken away and someone waking up.)
+const LIFT = 0.62;        // metres off the boards at the top
+const LIFT_IN = 2.2;      // slowly, as if the floor let go rather than she pushed
+const LIFT_HOLD = 2.4;    // "hover and, like, tilt around a little bit" (Frank)
+const LIFT_OUT = 2.6;     // and slower still coming down
+const LIFT_SPAN = LIFT_IN + LIFT_HOLD + LIFT_OUT;
+const CALL_SPAN = WAKE + LIFT_SPAN;
+// AND SHE TILTS WHILE SHE IS UP THERE. Two slow sines at frequencies that do
+// not divide into each other, one per axis, scaled by how high she is — so the
+// tilt exists only while she is off the floor and is exactly zero the moment
+// she is back on it. Not a wobble and not a spin: a body with nothing under it,
+// drifting the way something floating does. (Case 46's mast wobble is the same
+// two-axis idea doing a different job — that one is struck and rings down, this
+// one is continuous for as long as she hangs there.)
+// Four of them, not two, and all at frequencies that do not divide into each
+// other — the pitch and roll she tilts on, a slow turn, and a drift up and down
+// inside the hover (Frank: "once she floats up in the air, can we have her move
+// around just a little bit more... as far as tilting around, so it looks like
+// she's kinda hovering — I think that would help sell the hovering concept").
+// Two axes at five degrees read as a statue with a wobble; what says HOVERING
+// is that no two of the motions ever come back into step, so she never repeats
+// a pose and nothing about her looks driven.
+const TILT = 0.16;        // radians, about nine degrees at the widest
+const TILT_X = 0.55;      // rad/s: the pitch
+const TILT_Z = 0.38;      // ...and a slower roll across it
+const TURN = 0.13;        // and she turns on the spot, slightly
+const TURN_HZ = 0.21;     // slowest of the four — a drift, not a spin
+const BOB = 0.055;        // metres of rise and fall inside the hover itself
+const BOB_HZ = 0.47;
+const TAU = Math.PI * 2;   // the two given in Hz read as Hz
+const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+// 0 on the boards, 1 at the top. A pure function of seconds since she began to
+// rise, so nothing accumulates and she is exactly back where she sat.
+function liftShape(u) {
+  if (!(u >= 0) || u >= LIFT_SPAN) return 0;
+  if (u < LIFT_IN) return smooth(u / LIFT_IN);
+  if (u < LIFT_IN + LIFT_HOLD) return 1;
+  return 1 - smooth((u - LIFT_IN - LIFT_HOLD) / LIFT_OUT);
+}
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
@@ -64,6 +118,9 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   girl.position.copy(GIRL);
   faceMonk(girl, buddha.position);
   scene.add(girl);
+  // the yaw faceMonk just gave her — the hover's turn is added to this, never
+  // written over it, or she would swing round to face north as she lifted off
+  const GIRL_YAW = girl.rotation.y;
   
   // MANJUSRI, standing over her with his hand up, having just snapped it
   const manjusri = makeMonk({ height: 1.72, pose: 'raise' });
@@ -77,14 +134,26 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   // made a monk rise out of the earth — an answer to a question nobody was
   // asking. Frank: "get rid of the water tilting thing here.")
   
-  // MOMYO, still under the floor. He is placed and posed from the start and
-  // simply has not come up yet — the earth hides him.
-  const momyo = makeMonk({ height: 1.5, pose: 'raise' });
-  const MOMYO = new THREE.Vector3(2.25, 0, -0.1);
-  momyo.position.set(MOMYO.x, -1.8, MOMYO.z);
-  faceMonk(momyo, GIRL);
-  scene.add(momyo);
-  
+  // MOMYO IS NOT STAGED. The beginner who comes up out of the earth was here —
+  // posed under the floor from the start, rising through it when you touched
+  // the boards — and Frank could not read him at all: "this other person that
+  // comes up out of the ground, I don't know what that is... I wanna have just
+  // the girl."
+  //
+  // Which is fair, and the reason is in the staging rather than the reading. A
+  // figure surfacing through a floor has no lead-up and no explanation in the
+  // picture: a monk simply is not there, and then is, in a scene otherwise made
+  // of people standing still. Worse, the target for it was the FLOOR — a big
+  // invisible box that also covers the ground in front of the Buddha, so a
+  // reader aiming at the seated Buddha got a stranger out of the earth instead
+  // ("I don't know what's going on when you click on Buddha"). It was the one
+  // page in the book where a tap produced a new person.
+  //
+  // What survives is the half that was always the point. Manjusri cannot move
+  // her; the case's own answer is that she comes out for a beginner and not for
+  // the wisest of the bodhisattvas. Now SHE is the only thing that answers, and
+  // she answers the reader.
+
   const world = composeWorld(scene, {
   view: CAM,
   seed: ID+2,
@@ -94,10 +163,8 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   { x: 0.5, z: -3.3, r: 2.0 },
   { x: GIRL.x, z: GIRL.z, r: 1.4 },
   { at: manjusri, r: 1.2 },
-  { x: MOMYO.x, z: MOMYO.z, r: 1.2 },
   ],
-  // the floor of the assembly hall is swept — and it has to be bare where
-  // Momyo comes through it
+  // the floor of the assembly hall is swept
   grassKeepout: [{ x: 0.8, z: -1.8, r: 2.4 }],
   });
 
@@ -107,19 +174,15 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   girlHit.name = 'girl-hit';
   girlHit.position.set(GIRL.x, 0.6, GIRL.z);
   scene.add(girlHit);
-  
-  // the floor itself, where a beginner might come from
-  const floorHit = new THREE.Mesh(
-  new THREE.BoxGeometry(11, 0.2, 11),
-  new THREE.MeshBasicMaterial({ visible: false }));
-  floorHit.name = 'floor-hit';
-  floorHit.position.set(0.8, 0.02, -0.6);
-  scene.add(floorHit);
-  
-  // ---- the moment: the wrong master and the right beginner --------------
+
+  // (the floor's own big hit box is gone with the beginner it called — it
+  // reached across the ground in front of the Buddha, which is how a tap aimed
+  // at HIM produced a stranger out of the earth)
+
+  // ---- the moment: she comes out ----------------------------------------
   let camera = null;
   let clock = 0;
-  let snaps = 0;
+  let calls = 0;
   let calledAt = -99;
   // the RAISED sleeve, not the hanging one: pose 'raise' swings it to
   // PI - 0.34, while the resting sleeve sits at a mere -0.28, so both are
@@ -130,16 +193,14 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   
   input.onTap(() => {
   if (!camera) return;
-  // her first: a snap aimed at the girl is Manjusri's, and it fails
-  if (input.raycastFirst(camera, [girlHit])) {
-  snaps++;
-  audio && audio.knock({ force: 0.75, at: GIRL });      // an excellent snap
-  return;
-  }
-  if (calledAt > -99) return;                   // he only needs asking once
-  if (!input.raycastFirst(camera, [floorHit])) return;
+  if (!input.raycastFirst(camera, [girlHit])) return;
+  // let her finish the one she is already doing
+  if (clock - calledAt < CALL_SPAN) return;
   calledAt = clock;
-  audio && audio.knock({ force: 0.45, at: MOMYO });
+  calls++;
+  // the snap that works. Manjusri's, from where he is standing, does not —
+  // he goes on making it forever, to nothing, a metre away.
+  audio && audio.knock({ force: 0.55, at: GIRL });
   });
   
   return {
@@ -152,24 +213,41 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   // Manjusri keeps snapping, forever, to no effect
   if (manjusriArm) manjusriArm.rotation.x = 0.22 + Math.sin(clock * 1.6) * 0.06;
   
-  if (calledAt > -99) {
-  const r = clamp01((clock - calledAt) / RISE);
-  const e = r * r * (3 - 2 * r);
-  momyo.position.y = -1.8 + 1.8 * e;
-  
-  // and she stirs: the head lifts, the folded shoulders open
-  const w = clamp01((clock - calledAt - RISE * 0.75) / WAKE);
-  const s = w * w * (3 - 2 * w);
-  girl.rotation.z = -0.06 * s;
-  girl.position.y = GIRL.y + 0.03 * s;
-  }
+  // EVERYTHING RIDES `up`, and that is the whole of the fix. There used to
+  // be a separate waking term on its own clock — a small lean that came in
+  // over WAKE seconds before the lift began — and it snapped, twice over
+  // (Frank: "she, like, snaps her rotation before she starts floating, and
+  // she should start floating right away").
+  //
+  // Both faults were the same missing guard. Before any touch, `calledAt`
+  // is -99, so `clock - calledAt` is enormous: the wake curve read as
+  // FINISHED rather than as not started, and she sat at its full -0.06 lean
+  // for the life of the page. The first touch reset that clock, so the lean
+  // fell to zero in one frame — a snap INTO the rest pose, at the moment
+  // she was asked to move. Then the lift waited out WAKE before starting.
+  //
+  // Scaled by `up` there is nothing to guard: liftShape is exactly zero
+  // before the touch and exactly zero after the gesture, so every term here
+  // is zero when she is sitting, and all of them come in together the
+  // instant she leaves the floor.
+  const up = liftShape(clock - calledAt);
+  const t = clock - calledAt;
+  girl.position.y = GIRL.y + LIFT * up + BOB * up * Math.sin(t * BOB_HZ * TAU);
+  girl.rotation.x = TILT * up * Math.sin(t * TILT_X);
+  // the waking lean is part of the same motion now, not a beat before it
+  girl.rotation.z = up * (-0.06 + TILT * Math.sin(t * TILT_Z + 1.1));
+  // ...and she turns on the spot. Added to the yaw faceMonk gave her rather
+  // than replacing it, or she would swing round to face north the moment she
+  // left the floor.
+  girl.rotation.y = GIRL_YAW + TURN * up * Math.sin(t * TURN_HZ * TAU + 0.6);
   },
   fragment() {
   return {
-  snaps,
-  called: calledAt > -99,
-  risen: +clamp01((momyo.position.y + 1.8) / 1.8).toFixed(3),
-  woken: +Math.abs(girl.rotation.z / 0.06).toFixed(3),
+  calls,
+  woken: +smooth(clamp01((clock - calledAt) / WAKE)).toFixed(3),
+  // 0 on the boards, 1 at the top of the hover
+  afloat: +liftShape(clock - calledAt - WAKE).toFixed(3),
+  tilt: +Math.hypot(girl.rotation.x, girl.rotation.z).toFixed(4),
 };
       },
       dispose() {},

@@ -4,7 +4,8 @@ import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, faceMonk, groundHeight, makeBoat, makeFan, makeFoam,
-  makeLights, makeMonk, makePath, makeSand, makeWater, washMaterial,
+  makeLights, makeMonk, makePath, makeRain, makeSand, makeWater, washMaterial,
+  tapMeshes, setFoliageWeather, foliageWind,
 } from '../kit/index.js';
 
 const ID = 48;
@@ -17,7 +18,7 @@ const ID = 48;
 // water, which is the whole geography of the case in one line — the one
 // road of Nirvana runs into the eastern sea. Kit and constants are case
 // 20's coast, but the sheet is INK, not red: one accent per koan, and
-// k48's belongs to the fan and the stroke.
+// k48's belongs to the fan.
 const SHORE = { dx: 0, dz: -1, dist: 16, width: 4, sea: -0.35, depth: 1.4 };
 // keep scatter, grass and trees off the beach and out of the water — case
 // 20's three-row idiom, moved out to this coast's waterline
@@ -31,25 +32,60 @@ const SEA_KEEP = [
 // raises his walking stick, draws the figure ONE in the air, and says: "Here
 // it is."
 //
-// An open field, the road running out of it in both directions, and the stroke
-// still hanging where he drew it — the only mark of its kind in the book,
-// because it is the only time anyone in the Mumonkan actually makes a picture
-// instead of talking about one. Touch it and he draws it again, left to right,
-// at the speed a brush moves. It never stays drawn for long, which is right:
-// the verse says that before the first step is taken the goal is reached, and
-// a line that stayed up would turn into a signpost.
+// An open field, the road running out of it in both directions, and Kembo with
+// a great red ōgi raised. Ummon's fan is the other half of the case — Ummon
+// answered the same question by raising a fan and saying it jumped to the
+// thirty-third heaven and struck the carp of the eastern sea one blow — so the
+// staging leads with the fan and the sea it strikes. ONE fan only (Frank, round
+// 2: "we only want one person to have a fan; there's a weird fan floating in
+// front of the other figure"); the pupil's hands are empty, which is the right
+// state for the one who is still asking.
 //
-// Ummon's fan is the other half of the case — and the fan is what this staging
-// leads with: Kembo raises a big red ōgi in place of the stick. ONE fan only
-// (Frank, round 2: "we only want one person to have a fan; there's a weird
-// fan floating in front of the other figure") — the pupil's small paper copy
-// is gone and his hands are simply empty, which is the right state for the
-// one who is still asking.
-
-const DRAW = 0.9;
-const HOLD = 3.4;
-// the stroke's hit box is nested under the stroke group, which carries its
-// own hand's-tilt rotation — reused rather than allocated per tap
+// TOUCH THE FAN AND HE WAVES IT, AND IT RAINS. Ummon's fan does not draw a
+// diagram, it hits the weather at the far end of the world — so what a wave of
+// it brings is a shower, out of a clear sky, which passes.
+//
+// THE STROKE IS GONE, and it is worth the record because it was the case's own
+// text. Kembo "draws the figure one in the air", so a red bar hung there and a
+// tap redrew it left to right at the speed of a brush. It never read as a mark
+// being made — Frank, on sight: "the thing that comes out, like a rectangle
+// kinda comes out, appears — let's get rid of that." A horizontal slab in
+// mid-air has no brush behind it and nothing in the picture explains where it
+// came from, which is the difference between a stroke and a floating rectangle.
+// The `stroke` token went out of the ambience recipe with it; nothing in the
+// audio engine ever answered to it (it was only ever counted as an emitter for
+// the drift-density rule), and `rain:0` takes its place — same emitter count,
+// and a bed that is built and silent until the fan asks for it.
+const WAVE = 0.55;        // seconds per stroke of the fan
+const WAVES = 3;          // how many, so it reads as fanning and not as a twitch
+const WAVE_ARC = 0.42;    // radians the raised arm swings through
+const SHOWER_IN = 1.4;    // the sky closing over — it starts as the fan is moving
+const SHOWER_HOLD = 5.0;  // real rain, long enough to stand in
+const SHOWER_OUT = 4.5;   // and a long tail: showers do not switch off
+const SHOWER_SPAN = SHOWER_IN + SHOWER_HOLD + SHOWER_OUT;
+// "The wind will pick up just a LITTLE bit" (Frank), and this is a multiplier
+// ON TOP of the meadow's own wind, not a replacement for it — 0.5 is half again
+// at the peak, where case 34's squall is 3.4 (four and a half times over) and
+// case 20's is 6. Weather that arrives, not weather that hits. It was 1.3 for
+// an hour, which is more than DOUBLE and exactly the mistake the "on top of"
+// reading is there to prevent.
+const GUST_MULT = 0.5;
+const RAIN_LEAN = 0.34;   // the shower's own tangent at the peak, from 0.16
+const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+// 0 dry, 1 raining hardest, `u` seconds after the fan is waved
+function showerShape(u) {
+  if (!(u >= 0) || u >= SHOWER_SPAN) return 0;
+  if (u < SHOWER_IN) return smooth(u / SHOWER_IN);
+  if (u < SHOWER_IN + SHOWER_HOLD) return 1;
+  return 1 - smooth((u - SHOWER_IN - SHOWER_HOLD) / SHOWER_OUT);
+}
+// the fan itself: WAVES strokes of a sine, damped so the last is the smallest,
+// and exactly zero before and after so his arm returns to the pose it was built in
+function waveShape(u) {
+  const span = WAVE * WAVES;
+  if (!(u >= 0) || u >= span) return 0;
+  return Math.sin((u / WAVE) * Math.PI * 2) * (1 - u / span);
+}
 const scratchPos = new THREE.Vector3();
 
 // The framing, named so composeWorld can have it too: `view` lets the
@@ -64,7 +100,13 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   // 'water:0.55' is the surf bed (case 20's), breathing with the swell via
   // setWaterSwell below; the wind goes pine like every coast in the book.
-  ambience: ['wind:0.26:pine', 'water:0.55', 'stroke', 'music'],
+  // 'rain:0' builds the bed SILENT and leaves it running: the case drives its
+  // level off the shower's own envelope (setRainLevel), so a shower that
+  // arrives has a sound and a dry page has none. It takes the exact slot the
+  // inert 'stroke' token held, so emitterCount and the drift-layer density are
+  // unchanged (src/audio/music.js's density rule; k29's note on why the count
+  // matters more than the name).
+  ambience: ['wind:0.26:pine', 'water:0.55', 'rain:0', 'music'],
   mood: 'yo',      // it ends in the open, in daylight, with a line being drawn
   // Lowered a touch when the sea arrived (pitch 19.5 -> 14.9, target down):
   // the case is a field scene no longer — the upper frame belongs to the
@@ -114,20 +156,9 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   }
   scene.add(kembo);
   
-  // THE STROKE — the figure one, hanging in the air off the stick. A flat
-  // slab, drawn by scaling from its left end, which is where a brush starts.
-  const stroke = new THREE.Group();
-  stroke.name = 'stroke';
-  const STROKE_L = 1.35;
-  const barGeo = new THREE.BoxGeometry(STROKE_L, 0.105, 0.035);
-  barGeo.translate(STROKE_L / 2, 0, 0);        // grows from its left end
-  const bar = new THREE.Mesh(barGeo, washMaterial({ color: ACCENT, flat: true }));
-  bar.name = 'stroke-bar';
-  stroke.add(bar);
-  stroke.position.set(0.15, 1.95, -0.2);
-  stroke.rotation.z = 0.04;                     // a hand's tilt, not a ruler's
-  scene.add(stroke);
-  
+  // (The stroke that used to hang here — a red slab in mid-air, redrawn on a
+  // tap — is gone. See the header.)
+
   // the pupil, empty-handed — he asked the question; the fan is the answer,
   // and only the one who answers holds it
   const PH = 1.6;
@@ -243,26 +274,58 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   ],
   });
 
-  const hit = new THREE.Mesh(
-  new THREE.BoxGeometry(STROKE_L * 1.2, 0.6, 0.5),
-  new THREE.MeshBasicMaterial({ visible: false }));
-  hit.name = 'stroke-hit';
-  hit.position.set(STROKE_L / 2, 0, 0);
-  stroke.add(hit);
-  
-  // ---- the moment: here it is ------------------------------------------
+  // THE FAN IS THE TARGET, and it needs no proxy of its own: it is a
+  // half-metre red wedge held up over everything else in the picture, which
+  // makes it both the obvious thing to reach for and an easy one to hit. Kembo
+  // goes in the list too — the fan is in his hand and the two are one offer.
+  const fanMeshes = raisedArm
+  ? tapMeshes(raisedArm).filter((m) => m.material.visible !== false)
+  : [];
+  const kemboMeshes = tapMeshes(kembo).filter((m) => m.material.visible !== false);
+
+  // ---- the moment: he waves it, and it rains ----------------------------
   let camera = null;
   let clock = 0;
-  let drawnAt = 0;          // it is already drawn when you arrive
-  let draws = 0;
-  
+  let wavedAt = -99;
+  let waves = 0;
+  const ARM_REST = raisedArm ? raisedArm.rotation.x : 0;
+
+  // THE SHOWER, built dry. The drops keep their seeded phases at level 0, so a
+  // second shower is the same shower rather than a new one starting from
+  // wherever the clock happened to be. The field is centred on the staging and
+  // stops short of the sea — rain drawn out over open water at this distance is
+  // a haze in the fog and costs vertices for nothing.
+  const rain = makeRain({ count: 520, seed: ID, width: 24, depth: 24, height: 12 });
+  rain.setLevel(0);
+  rain.points.position.set(1.0, 0, 0);
+  scene.add(rain.points);
+
+  // The weather it borrows, and hands back. Sampled when it starts rather than
+  // at build, so the workbench's sliders stay live between showers; released
+  // exactly, and again on dispose, because the FOLIAGE wind is one module-level
+  // uniform shared by every tree in the book.
+  let raining = false;
+  let grassBase = 1;
+  let treeBase = 1;
+  const stopRain = () => {
+  raining = false;
+  rain.setLevel(0);
+  rain.setLean(0.16);
+  world.grass && world.grass.setWind(grassBase);
+  setFoliageWeather({ wind: treeBase });
+  audio && audio.setWindLevel(0.26);
+  audio && audio.setRainLevel && audio.setRainLevel(0);
+  };
+
   input.onTap(() => {
   if (!camera) return;
-  if (!input.raycastFirst(camera, [hit])) return;
-  if (clock - drawnAt < DRAW) return;
-  drawnAt = clock;
-  draws++;
-  audio && audio.chimeStrike({ tube: 2, force: 0.55, at: hit.getWorldPosition(scratchPos) });
+  if (!input.raycastFirst(camera, kemboMeshes.length ? kemboMeshes : fanMeshes)) return;
+  // let the shower he already called blow through
+  if (clock - wavedAt < SHOWER_SPAN) return;
+  wavedAt = clock;
+  waves++;
+  // the fan itself: cloth and air, not a struck thing
+  audio && audio.cloth({ force: 0.9, at: kembo.position });
   });
   
   return {
@@ -281,27 +344,50 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   audio.setWaterSwell(Math.max(0, Math.min(1, 0.5 + h / 0.17)));
   }
   
-  const t = clock - drawnAt;
-  // the brush crosses, the mark stands a while, and the air takes it back
-  const on = clamp01(t / DRAW);
-  const off = clamp01((t - DRAW - HOLD) / 1.6);
-  bar.scale.x = Math.max(0.0001, on * on * (3 - 2 * on));
-  bar.visible = off < 0.999;
-  if (bar.material) {
-  bar.material.transparent = off > 0;
-  bar.material.opacity = 1 - off;
+  const u = clock - wavedAt;
+  // the fan crosses the air three times and settles back into the pose it
+  // was built in — waveShape is exactly zero outside its own span, so his
+  // arm is never left a fraction off where it started
+  if (raisedArm) raisedArm.rotation.x = ARM_REST + waveShape(u) * WAVE_ARC;
+
+  // ...AND THE SKY ANSWERS. One envelope for the whole of it: the drops,
+  // their lean, the meadow, the wood and the bed all read the same number,
+  // so there is nothing here that can drift out of step.
+  const g = showerShape(u);
+  if (g > 0.001) {
+  if (!raining) {
+  raining = true;
+  grassBase = world.grass && world.grass.wind ? world.grass.wind() : 1;
+  treeBase = foliageWind();
   }
+  rain.setLevel(g);
+  rain.setLean(0.16 + (RAIN_LEAN - 0.16) * g);
+  world.grass && world.grass.setWind(grassBase * (1 + GUST_MULT * g));
+  setFoliageWeather({ wind: treeBase * (1 + GUST_MULT * g) });
+  audio && audio.setWindLevel(0.26 * (1 + 0.7 * g));
+  // guarded on the METHOD, not just the engine: setRainLevel is newer than
+  // most of the book's cases and older stubs do not carry it (k20's
+  // setWaterSwell keeps the same guard for the same reason)
+  audio && audio.setRainLevel && audio.setRainLevel(g);
+  } else if (raining) {
+  stopRain();
+  }
+  rain.update(dt, simTime);
   },
   fragment() {
   return {
-  draws,
-  length: +bar.scale.x.toFixed(3),
-  showing: bar.visible,
+  waves,
+  // 0 dry, 1 raining hardest
+  shower: +showerShape(clock - wavedAt).toFixed(3),
+  rainLevel: +rain.level().toFixed(3),
+  grassWind: +(world.grass && world.grass.wind ? world.grass.wind() : 0).toFixed(3),
   shipY: +boat.group.position.y.toFixed(4),
   shipRock: +boat.group.rotation.z.toFixed(4),
 };
       },
-      dispose() {},
+      // the trees' wind is one uniform shared by the whole book, so a reader
+      // who turns the page mid-shower must not take the weather with them
+      dispose() { if (raining) stopRain(); rain.dispose(); },
     };
   },
 };

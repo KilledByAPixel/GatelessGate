@@ -118,27 +118,34 @@ const CAM = { distance: 13.8, target: [1.45, 1, -1.5], heading: 29, pitch: 23.5 
   grassKeepout: [],
   });
 
-  // ---- the moment: the tail, and the whole animal ------------------------
-  // Tug it and he goes all the way round (see the note at the top of the
+  // ---- the moment: the whole animal --------------------------------------
+  // Touch him and he goes all the way round (see the note at the top of the
   // file). It never passes. That is the whole koan, and nothing in the UI
   // says so.
   //
-  // THE TAIL IS STILL THE TARGET, which is deliberate: it is the one part of
-  // him painted full ACCENT against his deepened body, so the small thing the
-  // reader is invited to touch is the small thing the case is named for. It
-  // does mean the target swings out of reach for the middle of the gesture —
-  // harmless, since a tug is refused for the whole span anyway.
+  // THE WHOLE ANIMAL IS THE TARGET. It was the TAIL alone — the one part of him
+  // painted full ACCENT against his deepened body, so the small thing the
+  // reader is invited to touch is the small thing the case is named for. A
+  // lovely argument, and it meant the page was dead to anybody who did the
+  // obvious thing (Frank: "I'm still not getting anything from thirty seven
+  // with the buffalo. Click on the buffalo, and I don't see it turn around. I
+  // don't see it do anything").
+  //
+  // Which is the whole lesson: a target chosen because it is thematically right
+  // is still wrong if it is not the thing a hand goes to. He is a metre and a
+  // half of animal and the tail is a few centimetres of it, swinging, at the
+  // end furthest from the lens. Touch him anywhere.
   let camera = null;
   let clock = 0;
   let tugs = 0;
   let tuggedAt = -99;
   const BASE_Y = buffalo.group.rotation.y;
-  const tailMeshes = tapMeshes(buffalo.tail.group);
+  const buffaloMeshes = tapMeshes(buffalo.group).filter((m) => m.material.visible !== false);
   const swishes = [];
 
   input.onTap(() => {
   if (!camera) return;
-  const hit = input.raycastFirst(camera, tailMeshes);
+  const hit = input.raycastFirst(camera, buffaloMeshes);
   if (!hit) return;
   // let him finish the circle he is already walking
   if (clock - tuggedAt < TURN_SPAN) return;
@@ -151,7 +158,7 @@ const CAM = { distance: 13.8, target: [1.45, 1, -1.5], heading: 29, pitch: 23.5 
   // and again when he has got round and stopped, which is the shake — three
   // of them, spaced, so it reads as a tail being used rather than struck
   swishes.length = 0;
-  for (let i = 0; i < 3; i++) swishes.push(clock + TURN_IN + 0.15 + i * 0.45);
+  for (let i = 0; i < 3; i++) swishes.push(clock + TURN_IN + 0.2 + i * 0.6);
   });
 
   return {
@@ -168,8 +175,9 @@ const CAM = { distance: 13.8, target: [1.45, 1, -1.5], heading: 29, pitch: 23.5 
   buffalo.group.rotation.z = -turnRate(u) * TURN_LEAN;
   while (swishes.length && clock >= swishes[0]) {
   swishes.shift();
-  buffalo.tail.impulse(0.9);
-  audio && audio.cloth({ force: 0.8, at: buffalo.group.position });
+  const impulse = 1;
+  buffalo.tail.impulse(impulse);
+  audio && audio.cloth({ force: impulse, at: buffalo.group.position });
   }
   buffalo.update(dt, simTime);
   },

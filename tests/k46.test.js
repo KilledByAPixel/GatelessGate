@@ -269,96 +269,6 @@ const hitPole = (cam, objects) => {
   return m ? { object: m } : null;
 };
 
-test('tap the monk: he leans forward, holds a moment, and settles back', () => {
-  const ctx = fakeCtx();
-  const built = k46.build(ctx);
-  built.setCamera(new THREE.PerspectiveCamera());
-  const pivot = built.scene.getObjectByName('sitter');
-  assert.ok(ctx._taps.length > 0, 'there has to be something to find');
-
-  let t = 0;
-  const step = (n) => { for (let i = 0; i < n; i++) { built.update(1 / 60, t); t += 1 / 60; } };
-
-  step(60);
-  assert.equal(built.fragment().lean, 0, 'still until touched');
-  assert.equal(built.fragment().taps, 0);
-
-  ctx.input.raycastFirst = hitSitter;
-  ctx._taps.forEach((cb) => cb(400, 300));
-  assert.equal(built.fragment().taps, 1);
-
-  step(45);                                   // 0.75s in: risen and holding
-  const held = built.fragment().lean;
-  assert.ok(held > 0.1, `he commits to the edge: ${held}`);
-  assert.ok(Math.abs(pivot.rotation.x - held) < 1e-6, 'the fragment reports the real pose');
-
-  step(45);                                   // 1.5s: into the settle
-  const s1 = built.fragment().lean;
-  step(30); const s2 = built.fragment().lean; // 2.0s
-  step(30); const s3 = built.fragment().lean; // 2.5s
-  assert.ok(s1 > s2 && s2 > s3, `the settle is a decay: ${s1} ${s2} ${s3}`);
-  assert.ok(s3 > 0, 'and it takes its time');
-
-  step(60);                                   // past the whole envelope
-  assert.equal(built.fragment().lean, 0, 'he does not take the step');
-});
-
-test('a held pointer on the sitter cannot ring the bell without limit', () => {
-  // CODE REVIEW CAUGHT (Task 5C): audio.bell() had no cooldown, so a held
-  // pointer stacked strikes without limit — k49's idiom
-  // (`clock - lastRing > 0.5`) now caps the bell, though the lean itself
-  // still retriggers on every tap by design ("he leans toward the ten
-  // directions, and stays").
-  const rings = [];
-  const audio = { bell: (o) => rings.push(o.f0) };
-  const ctx = fakeCtx();
-  ctx.audio = audio;
-  const built = k46.build(ctx);
-  built.setCamera(new THREE.PerspectiveCamera());
-  ctx.input.raycastFirst = hitSitter;
-
-  let t = 0;
-  const step = (n) => { for (let i = 0; i < n; i++) { built.update(1 / 60, t); t += 1 / 60; } };
-
-  ctx._taps.forEach((cb) => cb(400, 300));   // first strike
-  ctx._taps.forEach((cb) => cb(400, 300));   // immediate repeat, inside the cooldown
-  ctx._taps.forEach((cb) => cb(400, 300));   // and again
-  assert.equal(built.fragment().taps, 3, 'the lean itself still retriggers on every tap');
-  assert.equal(rings.length, 1, 'but only one bell actually rang');
-
-  step(40);                                  // past the 0.5s cooldown (40/60 ~= 0.67s)
-  ctx._taps.forEach((cb) => cb(400, 300));
-  assert.equal(rings.length, 2, 'a tap after the cooldown rings again');
-});
-
-test('tap the pole: a small sway runs through the mast — and through the man on it', () => {
-  const ctx = fakeCtx();
-  const built = k46.build(ctx);
-  built.setCamera(new THREE.PerspectiveCamera());
-  const mast = built.scene.getObjectByName('mast');
-  assert.ok(mast, 'the mast group exists');
-  let p = built.scene.getObjectByName('sitter'), inMast = false;
-  while (p) { if (p === mast) inMast = true; p = p.parent; }
-  assert.ok(inMast, 'the sitter is parented into the mast, so the sway carries him');
-
-  let t = 0;
-  const step = (n) => { for (let i = 0; i < n; i++) { built.update(1 / 60, t); t += 1 / 60; } };
-  step(30);
-  assert.equal(built.fragment().sway, 0, 'no impulse yet');
-  assert.equal(built.fragment().poleTaps, 0);
-
-  ctx.input.raycastFirst = hitPole;
-  ctx._taps.forEach((cb) => cb(400, 300));
-  assert.equal(built.fragment().poleTaps, 1);
-  assert.equal(built.fragment().taps, 0, 'the pole is not the monk');
-
-  step(20);                                   // ~a third of a second: peak swing
-  const peak = built.fragment().sway;
-  assert.ok(peak > 0.002, `the mast answers: ${peak}`);
-  step(160);                                  // three seconds on
-  assert.ok(built.fragment().sway < peak * 0.15, 'and the swing dies away');
-});
-
 test('two identical runs agree exactly — the whole moment is sim-time driven', () => {
   const script = (built, ctx) => {
     const out = [];
@@ -390,4 +300,238 @@ test('runs without audio or renderer and reports a finite fragment', () => {
   }
   built.onExit && built.onExit();
   built.dispose();
+});
+
+// ---- the pole owns the page -----------------------------------------------
+// THE SITTER USED TO BE A TARGET. Tap him and he tipped forward seven degrees,
+// held at the edge of the step the koan demands, and settled back — the more
+// literal reading of "proceed from the top of a hundred-foot pole", and Frank
+// cut it on sight ("I don't really like how you can click on the guy at the top
+// to make them lean a little bit"). Two targets on a page whose whole subject
+// is ONE vertical object was one too many, and at this distance a seven-degree
+// tip on a 1.3-unit figure eight units up is a couple of pixels: a thing the
+// code knew about and the reader did not.
+test('the sitter is no longer a target of his own — the pole is the page', () => {
+  const ctx = fakeCtx();
+  const built = k46.build(ctx);
+  built.setCamera(new THREE.PerspectiveCamera());
+  const pivot = built.scene.getObjectByName('sitter');
+  const before = pivot.rotation.x;
+
+  // A tap that lands on the MAN. The old fixtures split the probe by whether
+  // the shaft was in the offered list, which worked when the case probed the
+  // sitter and the pole as two separate lists; there is one list now, so this
+  // aims at a mesh that genuinely belongs to his subtree.
+  const sitterMeshes = [];
+  pivot.traverse((o) => { if (o.isMesh) sitterMeshes.push(o); });
+  assert.ok(sitterMeshes.length, 'the man is made of something');
+  ctx.input.raycastFirst = (cam, objs) => {
+    for (const o of objs || []) if (sitterMeshes.includes(o)) return { object: o };
+    return null;
+  };
+  ctx._taps.forEach((cb) => cb(400, 300));
+  let t = 0;
+  for (let i = 0; i < 90; i++) { built.update(1 / 60, t); t += 1 / 60; }
+
+  // he no longer has a lean of his own — but the tap is not swallowed either:
+  // he is nested under the mast, so shoving the man shoves the thing he sits on
+  assert.equal(pivot.rotation.x, before, 'no separate lean at the seat');
+  assert.equal(built.fragment().poleTaps, 1, 'the touch reached the mast instead');
+  assert.equal(built.fragment().lean, undefined, 'and the lean is gone from the record');
+});
+
+test('tap the pole: it wobbles on BOTH axes, out of step with each other', () => {
+  // Frank: "can we give it, like, kind of a random wobble... sine waves for
+  // both axes of the rotation, so we could use different values." One damped
+  // sine per axis at frequencies that do not divide into each other, with a
+  // quarter turn of phase between them — so the tip of the mast traces an
+  // opening spiral rather than swinging in a plane and back. A pole struck by a
+  // hand does not pick an axis.
+  const ctx = fakeCtx();
+  const built = k46.build(ctx);
+  built.setCamera(new THREE.PerspectiveCamera());
+  const mast = built.scene.getObjectByName('mast');
+  assert.ok(mast, 'the mast group exists');
+  let p = built.scene.getObjectByName('sitter');
+  let inMast = false;
+  while (p) { if (p === mast) inMast = true; p = p.parent; }
+  assert.ok(inMast, 'the sitter is parented into the mast, so the wobble carries him');
+
+  let t = 0;
+  const step = (n) => { for (let i = 0; i < n; i++) { built.update(1 / 60, t); t += 1 / 60; } };
+  step(30);
+  assert.equal(built.fragment().swayX, 0, 'no impulse yet');
+  assert.equal(built.fragment().swayZ, 0);
+
+  ctx.input.raycastFirst = hitPole;
+  ctx._taps.forEach((cb) => cb(400, 300));
+  assert.equal(built.fragment().poleTaps, 1);
+
+  // walk the whole wobble and watch the two axes
+  let peakX = 0;
+  let peakZ = 0;
+  let sameSign = 0;
+  let frames = 0;
+  const ratios = new Set();
+  for (let i = 0; i < 60 * 3; i++) {
+    step(1);
+    const { swayX, swayZ } = built.fragment();
+    peakX = Math.max(peakX, Math.abs(swayX));
+    peakZ = Math.max(peakZ, Math.abs(swayZ));
+    if (Math.abs(swayX) > 1e-4 && Math.abs(swayZ) > 1e-4) {
+      frames++;
+      if (Math.sign(swayX) === Math.sign(swayZ)) sameSign++;
+      ratios.add((swayZ / swayX).toFixed(1));
+    }
+  }
+  assert.ok(peakX > 0.002 && peakZ > 0.002, `both axes answer (${peakX}, ${peakZ})`);
+  // THE TEST THAT MATTERS: if one envelope were merely scaled onto two axes,
+  // the ratio between them would be a single constant for the whole wobble.
+  assert.ok(ratios.size > 8, `the two are genuinely independent (${ratios.size} distinct ratios)`);
+  assert.ok(sameSign > frames * 0.15 && sameSign < frames * 0.85,
+    `and they cross zero at different times (${sameSign}/${frames} frames in step)`);
+
+  step(180);
+  assert.ok(Math.abs(built.fragment().swayX) < peakX * 0.15, 'and it dies away');
+  assert.ok(Math.abs(built.fragment().swayZ) < peakZ * 0.15);
+});
+
+test('a held pointer on the pole cannot ring the bell without limit', () => {
+  // CODE REVIEW CAUGHT (Task 5C): audio.bell() had no cooldown, so a held
+  // pointer stacked strikes without limit. The wobble still retriggers on every
+  // tap; only the BELL is capped.
+  const rings = [];
+  const ctx = fakeCtx();
+  ctx.audio = { bell: (o) => rings.push(o) };
+  const built = k46.build(ctx);
+  built.setCamera(new THREE.PerspectiveCamera());
+  ctx.input.raycastFirst = hitPole;
+
+  let t = 0;
+  const step = (n) => { for (let i = 0; i < n; i++) { built.update(1 / 60, t); t += 1 / 60; } };
+
+  ctx._taps.forEach((cb) => cb(400, 300));
+  ctx._taps.forEach((cb) => cb(400, 300));
+  ctx._taps.forEach((cb) => cb(400, 300));
+  assert.equal(built.fragment().poleTaps, 3, 'the wobble still retriggers on every tap');
+  assert.equal(rings.length, 1, 'but only one bell actually rang');
+
+  step(40);                                  // past the 0.5s cooldown
+  ctx._taps.forEach((cb) => cb(400, 300));
+  assert.equal(rings.length, 2, 'a tap after the cooldown rings again');
+});
+
+test('every tap shoves it a different way, and the same page shoves it the same way twice', () => {
+  // Frank: "can we randomize how it occurs, so it's not always in the same
+  // exact angle each time — either rotate it or pick a different starting
+  // value." The whole traced figure is turned by a bearing drawn per tap,
+  // rather than the two sines being re-tuned: a rotation keeps the character of
+  // the wobble exactly — same frequencies, same uneven decay, same opening
+  // spiral — and changes only which way the pole was pushed. Re-picking the
+  // sines would make some taps a good wobble and others a flat one.
+  const bearings = (built, ctx) => {
+    // the tap handler ignores everything until there is a camera — without
+    // this every tap is swallowed and every bearing comes back zero
+    built.setCamera(new THREE.PerspectiveCamera());
+    ctx.input.raycastFirst = hitPole;
+    let t = 0;
+    const out = [];
+    for (let n = 0; n < 6; n++) {
+      ctx._taps.forEach((cb) => cb(400, 300));
+      let best = 0;
+      let angle = 0;
+      for (let i = 0; i < 60 * 4; i++) {
+        built.update(1 / 60, t); t += 1 / 60;
+        const { swayX, swayZ } = built.fragment();
+        const r = Math.hypot(swayX, swayZ);
+        if (r > best) { best = r; angle = Math.atan2(swayZ, swayX); }
+      }
+      out.push(+angle.toFixed(3));
+    }
+    return out;
+  };
+
+  const ctxA = fakeCtx();
+  const a = bearings(k46.build(ctxA), ctxA);
+  assert.ok(new Set(a).size >= 5, `six taps, six directions: ${a.join(' ')}`);
+
+  // ...and SEEDED, not random: there is no Math.random outside src/audio in
+  // this book, so the same page tapped the same number of times has to wobble
+  // exactly the same way. It is what makes the whole thing replayable.
+  const ctxB = fakeCtx();
+  const b = bearings(k46.build(ctxB), ctxB);
+  assert.deepEqual(a, b, 'the same page, tapped the same way, does the same thing');
+});
+
+test('a tap never starts the wobble already moving', () => {
+  // The z axis had a quarter turn of phase on it — a decent way to make two
+  // sines trace a circle, and it meant sin() was at its PEAK on the frame of
+  // the tap: the mast jumped to eight hundredths of a radian in one frame
+  // (Frank: "as soon as you click on it, it snaps to the new position... it's
+  // not gonna snap, it's gonna start moving"). Both start at zero now, and the
+  // spiral comes from the two frequencies not dividing into each other.
+  const ctx = fakeCtx();
+  const built = k46.build(ctx);
+  built.setCamera(new THREE.PerspectiveCamera());
+  const mast = built.scene.getObjectByName('mast');
+  let t = 0;
+  const step = () => { built.update(1 / 60, t); t += 1 / 60; };
+  for (let i = 0; i < 120; i++) step();
+
+  ctx.input.raycastFirst = hitPole;
+  const before = [mast.rotation.x, mast.rotation.z];
+  ctx._taps.forEach((cb) => cb(400, 300));
+  step();
+  const jump = Math.hypot(mast.rotation.x - before[0], mast.rotation.z - before[1]);
+  // a struck pole starts moving at a VELOCITY, so one frame of it is not zero —
+  // but it is the frame's worth, not the whole swing
+  assert.ok(jump < 0.02, `nothing snaps on the frame of the tap (${jump.toFixed(4)} rad)`);
+  let peak = 0;
+  for (let i = 0; i < 60 * 3; i++) { step(); peak = Math.max(peak, Math.hypot(mast.rotation.x, mast.rotation.z)); }
+  assert.ok(jump < peak * 0.25, `and the first frame is a fraction of the swing (${jump.toFixed(4)} vs ${peak.toFixed(4)})`);
+});
+
+test('taps ACCUMULATE — hammering it while it moves never pops', () => {
+  // THE THIRD GO AT THIS GESTURE, and the reason it is a pendulum. The first
+  // was one envelope scaled onto two axes; the second was two damped sines
+  // restarted from zero on every tap. Both were SHAPES, and a shape has to
+  // start somewhere — so a second tap while the mast was still moving threw
+  // away whatever it was doing and began again from nothing (Frank: "if you
+  // click multiple times while it's still moving, it starts to pop. So what we
+  // kinda wanna do is apply, like, an acceleration").
+  //
+  // kickPendulum touches only omega, so the rendered ANGLE is untouched at the
+  // instant a tap lands and a second shove adds to the first — the way a second
+  // push on a swinging thing does. Nothing here can snap because nothing here
+  // is ever assigned.
+  const ctx = fakeCtx();
+  const built = k46.build(ctx);
+  built.setCamera(new THREE.PerspectiveCamera());
+  const mast = built.scene.getObjectByName('mast');
+  ctx.input.raycastFirst = hitPole;
+
+  let t = 0;
+  const step = () => { built.update(1 / 60, t); t += 1 / 60; };
+  for (let i = 0; i < 60; i++) step();
+
+  let prev = [mast.rotation.x, mast.rotation.z];
+  let worst = 0;
+  let peak = 0;
+  for (let i = 0; i < 60 * 10; i++) {
+    // a tap roughly every third of a second for four seconds, straight through
+    // the wobble — exactly what Frank did
+    if (i < 60 * 4 && i % 21 === 0) ctx._taps.forEach((cb) => cb(400, 300));
+    step();
+    worst = Math.max(worst, Math.hypot(mast.rotation.x - prev[0], mast.rotation.z - prev[1]));
+    peak = Math.max(peak, Math.hypot(mast.rotation.x, mast.rotation.z));
+    prev = [mast.rotation.x, mast.rotation.z];
+  }
+  assert.ok(built.fragment().poleTaps >= 10, 'it really was hammered');
+  // a single tap's worst frame is about 0.008 rad; twelve of them stacked must
+  // not be worse, which is the whole claim
+  assert.ok(worst < 0.02, `no frame of twelve stacked taps is a jump (${worst.toFixed(5)} rad)`);
+  assert.ok(peak > 0.02, 'and it did actually move');
+  // ...and it still comes to rest on its own
+  for (let i = 0; i < 60 * 12; i++) step();
+  assert.ok(built.fragment().sway < 1e-4, `the swing dies away (${built.fragment().sway})`);
 });

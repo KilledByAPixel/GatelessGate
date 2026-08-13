@@ -134,3 +134,81 @@ test('makeBuffalo is a grounded beast with horns and a live tail', () => {
   b.tail.impulse(1); b.update(1 / 60, 1);
   assert.ok(b.tail.energy() > rest, 'tail responds to impulse');
 });
+
+// ---- the tail leaves the body ----------------------------------------------
+// A strand pinned at ONE node hangs flat against the animal's flank, and a
+// swish then swings it through the body (Frank, on the buffalo: "it kinda flips
+// around, like, rotates around inside its body... at least for the first
+// segment of the tail, try to aim it up, tilt it out so that it's not away from
+// the body, so it's gonna kind of whip outwards").
+//
+// `root` pins the SECOND node as well, at a chosen offset from the first: the
+// root segment becomes a rigid stub held wherever the caller aims it, and the
+// rest of the strand hangs and whips from the end of that stub. No force is
+// fighting gravity to keep it there.
+test('makeTail: an aimed root holds the first segment where it is put', () => {
+  const plain = makeTail({ segments: 7, length: 0.5, seed: 37 });
+  const aimed = makeTail({ segments: 7, length: 0.5, seed: 37, root: [0, -0.72, -0.69] });
+  const first = (t) => {
+    t.group.updateMatrixWorld(true);
+    const seg = t.group.children.find((c) => c.isMesh);
+    return new THREE.Vector3(0, 1, 0).applyQuaternion(seg.quaternion).normalize();
+  };
+  const p = first(plain);
+  assert.ok(p.y < -0.9, `an unaimed tail hangs straight down (${p.y.toFixed(2)})`);
+  const a = first(aimed);
+  assert.ok(Math.abs(a.y - (-0.72)) < 0.02 && Math.abs(a.z - (-0.69)) < 0.02,
+    `and an aimed one points where it was told (${a.x.toFixed(2)}, ${a.y.toFixed(2)}, ${a.z.toFixed(2)})`);
+});
+
+test('makeTail: an aimed tail whips outward and never crosses its own root', () => {
+  // MEASURED, and the numbers chose the whip direction. Over two swishes, how
+  // far forward of its root the strand travels — forward being into the animal:
+  //   no aim, whip forward (the original)   reach z = 0.227, sideways 0.439
+  //   aimed root, whip forward              reach z = 0.125, sideways 0.366
+  //   aimed root, whip BACK                 reach z = 0.157, sideways 0.375
+  //   aimed root, whip FLAT                 reach z = 0.000, sideways 0.423
+  // Flat wins twice: nothing crosses forward at all, and it sweeps wider doing
+  // it, because none of the shove is spent fighting the strand's own hang.
+  const reachOf = (opts) => {
+    const t = makeTail({ segments: 7, length: 0.5, seed: 37, ...opts });
+    const segs = [];
+    t.group.traverse((o) => { if (o.isMesh) segs.push(o); });
+    let clock = 0;
+    const step = () => { t.update(1 / 60, clock); clock += 1 / 60; t.group.updateMatrixWorld(true); };
+    for (let i = 0; i < 60; i++) step();
+    let forward = -Infinity;
+    let sideways = 0;
+    const w = new THREE.Vector3();
+    for (let i = 0; i < 60 * 6; i++) {
+      if (i === 0 || i === 180) t.impulse(1.2);
+      step();
+      for (const m of segs) {
+        m.getWorldPosition(w);
+        forward = Math.max(forward, w.z);
+        sideways = Math.max(sideways, Math.abs(w.x));
+      }
+    }
+    return { forward, sideways };
+  };
+
+  const plain = reachOf({});
+  const aimed = reachOf({ root: [0, -0.72, -0.69] });
+  assert.ok(plain.forward > 0.15, `an unaimed tail swings well forward of its root (${plain.forward.toFixed(3)})`);
+  assert.ok(aimed.forward <= 1e-6, `an aimed one never does (${aimed.forward.toFixed(3)})`);
+  assert.ok(aimed.sideways > 0.3, `and still whips (${aimed.sideways.toFixed(3)})`);
+});
+
+test('makeTail: an unaimed tail is exactly the tail it always was', () => {
+  // `root` defaults to null, and every caller that does not pass one has to be
+  // byte-identical — the option is an addition, not a change
+  const snap = () => {
+    const t = makeTail({ segments: 7, length: 0.5, seed: 37 });
+    let clock = 0;
+    for (let i = 0; i < 120; i++) { t.update(1 / 60, clock); clock += 1 / 60; }
+    t.impulse(1.2);
+    for (let i = 0; i < 60; i++) { t.update(1 / 60, clock); clock += 1 / 60; }
+    return Array.from(t.group.userData.cloth.positions).map((v) => v.toFixed(6)).join(',');
+  };
+  assert.equal(snap(), snap(), 'and deterministic besides');
+});

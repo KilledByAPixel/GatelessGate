@@ -61,6 +61,15 @@ export function makeRain({
   let lean = slant;
   const dir = new THREE.Vector3(lean, -1, lean * 0.4).normalize();
 
+  // HOW HARD IT IS RAINING AT ALL, 0..1, for a case where a shower ARRIVES
+  // rather than being the weather the page opens on (case 48: Kembo waves the
+  // fan and it starts). It scales the whole field's opacity and hides the mesh
+  // outright at zero, which is the cheap way to have no rain: the drops keep
+  // their positions and their seeded phases, so a shower that stops and starts
+  // again is the same shower rather than a new one seeded from wherever the
+  // clock happened to be.
+  let level = 1;
+
   let clock = 0;
   let surge = 0;
   let surgeHold = 0;                     // seconds left before the surge relaxes
@@ -96,12 +105,15 @@ export function makeRain({
     // weather. Set it every frame — it is an angle, not an impulse.
     setLean(v) { lean = Number.isFinite(v) ? v : slant; dir.set(lean, -1, lean * 0.4).normalize(); },
     lean: () => lean,
+    setLevel(v) { level = Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 1; },
+    level: () => level,
 
     update(dt, simTime) {
       clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
       surgeHold = Math.max(0, surgeHold - (dt || 0));
       if (surgeHold <= 0) surge *= Math.exp(-(dt || 0) / 1.2);
-      mat.opacity = opacity * (1 + surge * 0.6);
+      mat.opacity = opacity * level * (1 + surge * 0.6);
+      lines.visible = level > 0.004;
       pose();
     },
     dispose() { geo.dispose(); mat.dispose(); },

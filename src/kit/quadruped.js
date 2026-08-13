@@ -224,8 +224,9 @@ export function makeQuadruped({
   }
 
   if (hump) {
-    const m = new THREE.Mesh(new THREE.SphereGeometry(hump.r * h, 7, 5), mat);
+    const m = new THREE.Mesh(new THREE.SphereGeometry(hump.r * h, 8, 6), mat);
     m.name = 'hump';
+    m.rotateY(Math.PI / 8);   // lie along z
     m.scale.set(1, hump.scaleY ?? 0.7, hump.scaleZ ?? 1.25);
     m.position.set(0, bodyY + hump.up * h, hump.fwd * h);
     g.add(m);
@@ -400,6 +401,14 @@ export function makeQuadruped({
       thickness: tail.thickness * h,
       color: tail.color ?? color,
       seed,
+      // How the tail leaves the rump. Down and BACK by default rather than
+      // straight down: a strand pinned at one node hangs flat against the
+      // flank, and a swish then swings it through the animal (Frank, on the
+      // buffalo: "it kinda rotates around inside its body"). Held a little
+      // clear of the body, the same swish whips outward, which is what a tail
+      // does. `tail.root` overrides it for a beast that carries its own
+      // differently.
+      root: tail.root ?? [0, -0.72, -0.69],
     });
     strand.group.position.set(0, bodyY + tail.up * h, -tail.back * h);
     g.add(strand.group);

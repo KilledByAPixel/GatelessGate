@@ -60,20 +60,21 @@ const GEAR_T = 0.50;      // the roadside gear, just past the meeting and beyond
 // never existed. Same fault the birds and the butterflies shipped and the same
 // family as case 35's lean, all found in one pass: an envelope set to 1 by a
 // touch has no attack.
-// A WHOLE BOW. 0.62 was the held pose's angle and it read as a man half
-// bending (Frank: "just a normal bow, not the half bow thing he does now") —
-// which is what a held pose can get away with and a played gesture cannot: the
-// eye reads the DEPTH of a movement it watched happen, and a 36-degree bend
-// looks like the start of something. 0.9 is 52 degrees at the waist, and well
-// clear of folded double.
+// HOW DEEP, and it is tuned by eye rather than derived — these two numbers have
+// moved three times and will move again, so nothing here or in the tests quotes
+// a figure in degrees. What is worth keeping is why the FIRST value was wrong:
+// 0.62 was the held pose's angle, and a held pose can get away with a shallow
+// bend because the eye reads it as a posture. A movement you watch happen gets
+// read by its depth instead, and the same angle looked like the start of
+// something (Frank: "just a normal bow, not the half bow thing he does now").
 const BOW = .5;         // radians at the waist at the bottom
-// The breath RIDES the bow — it is scaled by how far down he is, so a man
-// standing straight does not sway. At this size it is no longer a breath but a
-// real settle: +-0.2 rad is +-11 degrees, so the bottom of the bow wanders
-// between about 41 and 63 degrees, and WHICH of those a given bow reaches
-// depends on where the sine happens to be when the reader taps. Two bows are
-// therefore not quite the same size — deliberate here (he is a man, not a
-// mechanism), and the reason nothing in this file pins an exact depth.
+// The breath RIDES the bow — scaled by how far down he is, so a man standing
+// straight does not sway. At a fifth of a radian it is no longer a breath but a
+// real settle, and it is UNSYNCHRONISED with the gesture: the bottom of the bow
+// lands anywhere in BOW +- BOW_BREATH depending on where the sine happens to be
+// when the reader taps. Two bows are therefore not quite the same size, which
+// is deliberate — he is a man, not a mechanism — and is the reason a test can
+// only ever check a range here.
 const BOW_BREATH = 0.2;
 const BOW_IN = 2.0;       // down, slowly
 const BOW_HOLD = 1.6;     // and held down there

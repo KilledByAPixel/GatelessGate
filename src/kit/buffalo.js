@@ -26,7 +26,7 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // thinnest leg tops
     legBury: .2,
     legH: 0.46, legR: 0.125, legTaper: 1.05, hipX: 0.15, hipZ: 0.34,
-    hump: { r: 0.40, scaleY: 0.86, scaleZ: 1.00, up: 0.24, fwd: 0.18 },
+    hump: { r: 0.35, scaleY: 0.86, scaleZ: 1.00, up: 0.24, fwd: 0.18 },
     // up + r*scaleY must clear bodyR (0.40) for these to stand PROUD of the
     // barrel line rather than sit flush inside it — the same trap the hump
     // avoided by construction. Haunch runs a touch taller than shoulder so the
@@ -61,7 +61,7 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // 1.10) and fat at the base (0.10, was 0.055): a devil's horn, not a
     // fencepost.
     horns: { r: 0.1, len: 0.5, x: 0.1, up: -0.02, fwd: 0.7, sweep: 0.75, back: 0.25, curve: -0.50 },
-    tail: { kind: 'strand', segments: 7, length: 0.74, thickness: 0.05, up: 0.16, back: 0.7, color: tailColor },
+    tail: { kind: 'strand', segments: 7, length: 0.74, thickness: 0.05, up: 0.0, back: 0.8, color: tailColor },
   });
   group.name = 'buffalo';
 

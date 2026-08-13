@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH, wash } from '../palette.js';
 import {
-  composeWorld, groundHeight, makeFurin, makeGate, makeMonk, makePath,
+  composeWorld, groundHeight, makeGate, makeMonk, makePath,
 } from '../kit/index.js';
 import { makeLights } from '../render/lights.js';
 
@@ -42,23 +42,66 @@ const PATH_OPTS = { from: [1.1, 6.8], to: [-1.6, -42], width: 1.7, seed: 47, gro
 // a big timber frame, and full ACCENT across that much area would glare. The
 // glow is in the material (SEAL_GLOW in render/material.js keys off the accent
 // colours); nothing here sets emissive by hand.
-const GATES = [
-  // ALL THREE gates carry the seal — Frank's call on reviewing the plan, and he
-  // is right that it beats the middle-only design: three red barriers on one
-  // road, and the FOG does the hierarchy the grey was doing — the near gate
-  // full-blooded, the far one a red ghost dissolving into the paper. Same deep
-  // mix as the title screen's gate, so the echo lands.
-  // HUNG LOWER (Frank): at 3.4 the near gate's lintel ran off the top of the
-  // frame, so the barrier you are standing at read as two legs and no beam --
-  // and a torii is its crossbeam. A shade under three metres puts the whole
-  // frame in shot at the home camera and still walks a monk through it.
-  { t: 0.22, width: 3.2, height: 2.9, color: ACCENT_DEEP }, // where is your true nature?
-  { t: 0.42, width: 3.0, height: 2.75, color: ACCENT_DEEP }, // how will you be free of life and death?
-  { t: 0.70, width: 2.8, height: 2.6, color: ACCENT_DEEP }, // where do you go?
-];
+// ---- THE BARRIERS COME TO YOU ---------------------------------------------
+// Touch any gate and the whole road SLIDES ONE PLACE FORWARD: each barrier
+// travels to where the one in front of it stood, a fourth comes up out of the
+// space behind the reader to take the near position, and the one that was
+// furthest walks on up the road until the fog has it. Then that one is quietly
+// back behind you, and it can happen again, for ever.
+//
+// Frank's design, and it is the case. Tosotsu's three barriers are three
+// questions, and the joke the composition could never tell on its own is that
+// passing one does not leave you with two — there are always three ahead. The
+// walker between the first and the second never moves. He does not have to.
+//
+// FIVE SLOTS, FOUR GATES. At rest the occupied ones are BEHIND, near, middle,
+// far; a slide runs every gate to the next slot, and whichever lands on GONE is
+// put straight back to BEHIND — invisible at both ends, so the wrap is free.
+// They travel ALONG THE ROAD rather than in a straight line between two points,
+// sampled from the path every frame, so they follow its wander and its rises
+// the way something moving down a road does.
+//
+// NOTHING FADES. The gate reaching GONE is thirty-odd units out in FogExp2 at
+// 0.030, which is the one free vanish this renderer has — the fog and the ink
+// pass's own distance falloff take it together, with no threshold anywhere for
+// case 27's outline problem to bite on.
+const SLOT_T = [0.02, 0.22, 0.42, 0.70, 0.96];
+// ...and each slot's SIZE. A gate takes on the scale of the slot it is moving
+// into, which is what keeps the near barrier the biggest on screen however many
+// times the road has turned over — the invariant the original three-gate
+// staging got from being built at three fixed widths (3.2 / 3.0 / 2.8, and
+// these are those numbers as fractions of the first).
+// ...and the GONE slot is tiny, which is how the far barrier leaves. Fog and
+// distance alone were not enough: the gate arrived at 0.82 scale thirty units
+// out, still just legible against the paper, and then the wrap took it in one
+// frame (Frank: "when the gate goes off the edge of the screen into the
+// distance, it just pops off... let's have it just shrink down as well, that's
+// gonna make it look like it's going away"). At 0.10 it dwindles the whole way
+// out and is a red speck in the mist by the time it is picked up and carried
+// back behind the reader. No alpha anywhere, so nothing here can meet case 27's
+// outline problem.
+const SLOT_S = [1.07, 1.0, 0.9375, 0.875, 0.10];
+const GONE = SLOT_T.length - 1;   // the last slot: deep enough that the fog has it
+const SLIDE = 2.4;        // seconds for the road to move one place
+const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+const GATE_W = 3.2;       // every gate is built at the near barrier's size and
+const GATE_H = 2.9;       // scaled into its slot from there
+
+// The three visible slots are the three questions, in order: where is your true
+// nature / how will you be free of life and death / where do you go. They used
+// to be three gates built at three sizes (3.2 / 3.0 / 2.8 wide), which SLOT_S
+// now carries as fractions so any gate can stand in any of them.
+//
+// HUNG LOWER (Frank): at 3.4 the near gate's lintel ran off the top of the
+// frame, so the barrier you are standing at read as two legs and no beam — and
+// a torii is its crossbeam. A shade under three metres puts the whole frame in
+// shot at the home camera and still walks a monk through it.
 const MONK_T = 0.28;   // mid-journey: past the first barrier, short of the second
-// One bell size per gate, in the same near-to-far order as GATES — task-12's
-// migration off raw f0 (62 + 18*i) to Frank's tuned presets.
+// One bell per visible SLOT, near to far — the note belongs to the position on
+// the road, not to the piece of timber standing in it, so the near barrier is
+// always the biggest bell however many times the road has turned over.
+// task-12's migration off raw f0 (62 + 18*i) to Frank's tuned presets.
 const GATE_PRESETS = ['great', 'temple', 'hand'];
 
 // The framing, named so composeWorld can have it too: `view` lets the
@@ -73,7 +116,12 @@ const CAM = { distance: 14.5, target: [-0.6, 0.8, -10.85], heading: 6.5, pitch: 
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   // the taps already ring bells; the furin is the ambient voice, and it
   // counts as the emitter that thins the swells
-  ambience: ['wind:' + BASE_WIND, 'furin', 'music'],
+  // THE FURIN TOKEN WENT WITH THE CHIME. It was the emitter that thinned the
+  // drift layer here (src/audio/music.js's density rule); without it the drift
+  // plays a little fuller, which is the right trade on a page that has just
+  // lost its one continuous voice. Wind and the bells are what is left, and the
+  // bells are the reader's.
+  ambience: ['wind:' + BASE_WIND, 'music'],
   
   // Low, nearly level, and close to the road's own axis, so the three gates
   // stack up the frame — each lintel a step higher and a step washier. The
@@ -105,20 +153,42 @@ const CAM = { distance: 14.5, target: [-0.6, 0.8, -10.85], heading: 6.5, pitch: 
   // sinks 6cm more, so a post plants in a rise rather than floating over a
   // dip. (The third gate happens to stand on a rise ~1.2 up — the road
   // climbing into the mist, which the composition gets for free.)
-  const gates = GATES.map((spec) => {
-  const gp = path.sample(spec.t);
-  const half = spec.width / 2;
-  const under = [
+  // Where a gate stands when it is at road position `t`, and at what size. The
+  // y takes the LOWEST ground under its span and sinks 6cm more, so a post
+  // plants in a rise rather than floating over a dip — read every frame now
+  // rather than once at build, because the gates travel.
+  const placeAt = (gate, t, scale) => {
+  const gp = path.sample(Math.max(0, Math.min(1, t)));
+  const half = (GATE_W * scale) / 2;
+  const y = Math.min(
   gp.y,
   groundHeight(gp.x + gp.perp.x * half, gp.z + gp.perp.z * half, { seed: GROUND_SEED }),
   groundHeight(gp.x - gp.perp.x * half, gp.z - gp.perp.z * half, { seed: GROUND_SEED }),
-  ];
-  const y = Math.min(...under) - 0.06;
-  const gate = makeGate({ width: spec.width, height: spec.height, color: spec.color });
+  ) - 0.06;
   gate.position.set(gp.x, y, gp.z);
   gate.rotation.y = gp.heading;
+  gate.scale.setScalar(scale);
+  };
+
+  // FOUR gates, all built at the near barrier's size — the slot they are in
+  // supplies the scale, so any of them can be the near one. They all carry the
+  // seal (Frank's call on reviewing the plan): three red barriers on one road,
+  // and the FOG does the hierarchy the grey was doing — the near gate
+  // full-blooded, the far one a red ghost dissolving into the paper.
+  const gates = [0, 1, 2, 3].map((slot) => {
+  const gate = makeGate({ width: GATE_W, height: GATE_H, color: ACCENT_DEEP });
+  placeAt(gate, SLOT_T[slot], SLOT_S[slot]);
+  // THE ONE IN THE BEHIND SLOT IS NOT DRAWN while it is parked there. The
+  // road only starts a few units behind the home camera, so "behind the
+  // reader" is a couple of metres and not a county: parked visible, that
+  // gate stands in the composition — the walker stops reading as a man
+  // between the first barrier and the second, and the orbit swings a huge
+  // near gate through frame. It is shown the moment it begins to move, by
+  // which point it is still behind the lens at home and arrives from there,
+  // which is the whole of what it is for.
+  gate.visible = slot !== 0;
   scene.add(gate);
-  return { gate, gp, y, spec };
+  return { gate, slot };
   });
   
   // Invisible tap zones, shaped like the FRAME, not the doorway. A single
@@ -130,12 +200,13 @@ const CAM = { distance: 14.5, target: [-0.6, 0.8, -10.85], heading: 6.5, pitch: 
   // falls through to the barrier actually pointed at.
   const hitSlabs = [];
   const slabGate = new Map();
-  for (const [i, { gate, spec }] of gates.entries()) {
+  for (const [i, { gate }] of gates.entries()) {
+  // in the gate's OWN local space, so they scale and travel with it
   const parts = [
-  { w: 0.6, h: spec.height + 0.3, x: -spec.width / 2, y: (spec.height + 0.3) / 2 - 0.05 },
-  { w: 0.6, h: spec.height + 0.3, x: spec.width / 2, y: (spec.height + 0.3) / 2 - 0.05 },
-  { w: spec.width * 1.4 + 0.2, h: 0.7, x: 0, y: spec.height + 0.09 },
-  { w: spec.width * 1.08, h: 0.5, x: 0, y: spec.height * 0.78 },
+  { w: 0.6, h: GATE_H + 0.3, x: -GATE_W / 2, y: (GATE_H + 0.3) / 2 - 0.05 },
+  { w: 0.6, h: GATE_H + 0.3, x: GATE_W / 2, y: (GATE_H + 0.3) / 2 - 0.05 },
+  { w: GATE_W * 1.4 + 0.2, h: 0.7, x: 0, y: GATE_H + 0.09 },
+  { w: GATE_W * 1.08, h: 0.5, x: 0, y: GATE_H * 0.78 },
   ];
   for (const p of parts) {
   const slab = new THREE.Mesh(
@@ -185,54 +256,69 @@ const CAM = { distance: 14.5, target: [-0.6, 0.8, -10.85], heading: 6.5, pitch: 
   ],
   keepout: [
   ...path.keepout(34, 1.3),
-  ...gates.map(({ gp }) => ({ x: gp.x, z: gp.z, r: 2.9 })),
+  // EVERY SLOT, not every gate: the barriers travel now, so the ground has
+  // to be clear of scatter at all five stations rather than at the three a
+  // particular gate happens to be standing on when the page is built
+  ...SLOT_T.map((t) => { const p = path.sample(t); return { x: p.x, z: p.z, r: 2.9 }; }),
   { x: monk.position.x, z: monk.position.z, r: 1.6 },
   ],
   grassKeepout: path.keepout(34, 1.05),
   });
   
-  // a furin under the first barrier's lintel — the near gate is the one you
-  // stand before, so it is the one that carries a voice in the wind
-  const furin = makeFurin({
-  seed: 47,
-  onStrike: (tube, force, pos) => audio && audio.chimeStrike({ tube, force, at: pos }),
-  });
-  furin.group.position.set(1.2, GATES[0].height, 0);
-  gates[0].gate.add(furin.group);
+  // (THE FURIN IS GONE. A single chime hung under the near barrier's lintel
+  // was this page's ambient voice — and the near barrier is not a fixed object
+  // any more. Frank called it before it was built: "we'll probably get rid of
+  // the thing hanging, because that's gonna mess things up." It would have:
+  // it would ride one gate up the road and out into the fog, taking the page's
+  // only continuous sound with it and coming back four taps later. Its token
+  // is out of the ambience recipe with it — see the note there.)
 
-  // ---- the moment: three notes ------------------------------------------
-  // Tap a barrier and it answers with one slow bell tone — the nearest gate
-  // the deepest. Nothing advances, nothing unlocks; each barrier simply has
-  // its own note, and the far one is a longer reach, exactly as it looks.
+  // ---- the moment: the road moves ---------------------------------------
+  // Tap any barrier and it answers with one slow bell tone — the near gate the
+  // deepest — and then the whole road slides one place forward. Nothing
+  // unlocks and nothing is passed; there are simply three ahead of you again.
   let camera = null;
   let clock = 0;
-  const taps = [0, 0, 0];
+  let slides = 0;
+  let slideAt = -99;
+  let settled = true;      // has the slot bookkeeping for the last slide run yet
+  // Counted BY SLOT, not by which piece of timber was touched: "the near
+  // barrier" is a position on the road that different gates occupy in turn, and
+  // it is the position the reader is pointing at. Index 0 is the parked slot,
+  // which is undrawn and cannot be hit.
+  const taps = [0, 0, 0, 0];
   // Per-barrier cooldown, k49's idiom (`clock - lastRing > 0.5`): a bare
   // audio.bell() call here has no size ceiling of its own, and CODE REVIEW
   // CAUGHT that a held pointer or a fast tapper stacked strikes without
   // limit — the shimmer cluster alone took one strike from 22 to 36
   // oscillators. Each barrier gates independently, so tapping barrier 2
   // does not silence barrier 1's own answer.
-  const lastRing = [-99, -99, -99];
+  const lastRing = [-99, -99, -99, -99];
   input.onTap(() => {
   if (!camera) return;
-  // the chime first: its hit drum sits inside the first gate's lintel
-  // slab, and a tap aimed at a wind chime must never answer with the
-  // gate's bell. Same probe order as k29.
-  const chimeHit = furin.pick(camera, input);
-  if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
-  const hit = input.raycastFirst(camera, hitSlabs);
+  // Only the barriers ACTUALLY ON THE ROAD are targets. The parked gate's
+  // slabs travel with it like every other part of it, and offering them would
+  // put an invisible pick volume behind the reader — which the staging net
+  // caught the moment it existed: it taps whatever a case offers first, got
+  // the parked gate, and reported case 47 as answering a touch with silence.
+  const live = hitSlabs.filter((s) => gates[slabGate.get(s)].slot !== 0);
+  const hit = input.raycastFirst(camera, live);
   if (!hit) return;
   const i = slabGate.get(hit.object);
   if (i === undefined) return;
-  if (clock - lastRing[i] < 0.5) return;
-  lastRing[i] = clock;
-  taps[i]++;
-  // GATES shrinks from the near barrier to the far one (width 3.2 -> 3.0
-  // -> 2.8, same order as GATES above) — task-12's migration to Frank's
-  // tuned presets follows the same shrink rather than the raw f0 ramp:
-  // near gate biggest bell, far gate smallest.
-  audio && audio.bell({ preset: GATE_PRESETS[i], at: gates[i].gate.position });
+  const slot = gates[i].slot;
+  if (slot === 0) return;                    // belt and braces
+  if (clock - lastRing[slot] < 0.5) return;
+  lastRing[slot] = clock;
+  taps[slot]++;
+  // The bell belongs to the SLOT too — near barrier the biggest bell, far
+  // gate the smallest, whichever piece of timber is standing there this
+  // time round. GATE_PRESETS is indexed from the NEAR slot, so slot 1 is
+  // its element 0.
+  audio && audio.bell({ preset: GATE_PRESETS[slot - 1], at: gates[i].gate.position });
+  // and the road moves — refused while it is already moving, or a second
+  // tap would restart the slide from wherever the gates had got to
+  if (clock - slideAt >= SLIDE) { slideAt = clock; slides++; }
   });
   
   return {
@@ -241,10 +327,60 @@ const CAM = { distance: 14.5, target: [-0.6, 0.8, -10.85], heading: 6.5, pitch: 
   update(dt, simTime) {
   clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
   world.update(dt, simTime);        // the meadow breathes
-  furin.update(dt, simTime);        // and the near gate's chime rides it
+
+  // THE SLIDE. Every gate walks from its own slot to the next one, along
+  // the road rather than in a straight line between two points — the path
+  // is sampled every frame, so they follow its wander and its rises the
+  // way something travelling a road does.
+  const u = clock - slideAt;
+  const moving = u >= 0 && u < SLIDE;
+  const p = moving ? ease(clamp01(u / SLIDE)) : 1;
+  for (const g of gates) {
+  const from = g.slot;
+  const to = from + 1;
+  const k = moving ? p : 0;
+  placeAt(g.gate,
+  SLOT_T[from] + (SLOT_T[to] - SLOT_T[from]) * k,
+  SLOT_S[from] + (SLOT_S[to] - SLOT_S[from]) * k);
+  }
+  // ...and when it is over, each gate IS in the next slot. Whichever landed
+  // on GONE goes straight back to BEHIND: by then it is a speck thirty units
+  // out in the fog at one end and behind the reader at the other, so the wrap
+  // costs nothing to look at and the road can turn over for ever.
+  if (!moving && slideAt > -99 && !settled) {
+  settled = true;
+  for (const g of gates) {
+  g.slot += 1;
+  if (g.slot >= GONE) g.slot = 0;     // it walked into the fog; put it behind
+  placeAt(g.gate, SLOT_T[g.slot], SLOT_S[g.slot]);
+  }
+  }
+  if (moving) settled = false;
+
+  // VISIBILITY LAST, after the slots have been advanced — which is the whole
+  // of the one-frame blink Frank saw ("a one frame pop where I can see it
+  // swapped out for the new one... it's in the correct position, so I don't
+  // know why"). He was right that the position was fine. Visibility was
+  // written inside the placement loop, which runs BEFORE the slot bookkeeping,
+  // so on the single frame a slide ended the arriving gate was still recorded
+  // as being in the parked slot and was hidden — then shown again on the next
+  // frame, one frame late, out of a scene it had already walked into.
+  //
+  // Nothing about the gate had changed; only the order in which two lines ran.
+  for (const g of gates) g.gate.visible = moving || g.slot !== 0;
   },
   fragment() {
-  return { taps1: taps[0], taps2: taps[1], taps3: taps[2] };
+  // taps1/2/3 are the NEAR, MIDDLE and FAR positions on the road — the same
+  // three things they always named, now that they are slots rather than
+  // objects. Slot 0 is the parked gate and is unreachable.
+  return {
+  taps1: taps[1], taps2: taps[2], taps3: taps[3],
+  slides,
+  sliding: (clock - slideAt >= 0 && clock - slideAt < SLIDE) ? 1 : 0,
+  // one number for where the four of them are standing: 0+1+2+3 whatever
+  // the rotation, which is the invariant — every slot filled exactly once
+  slotSum: gates.reduce((n, g) => n + g.slot, 0),
+  };
   },
   dispose() {},
 };
