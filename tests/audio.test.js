@@ -472,9 +472,9 @@ test('the shimmer is irregularly spaced — a regular series is a comb', () => {
   // table was; it only proved the series ascends. The quantity that is
   // CONSTANT for a geometric series and VARIES for an irregular one is the
   // ratio QUOTIENT between consecutive modes (r[i+1]/r[i]) — a perfect comb
-  // scores exactly 1.0 on that measure regardless of range. See
-  // task-5b-report.md for the non-vacuity proof: a perfectly geometric
-  // SHIMMER_MODES table fails this rewritten test and passes the old one.
+  // scores exactly 1.0 on that measure regardless of range. It is not vacuous:
+  // a perfectly geometric SHIMMER_MODES table fails this rewritten test and
+  // passes the old one.
   const { partials } = bellVoice(1);
   const high = partials.filter((p) => p.freq > partials[10].freq).map((p) => p.freq);
   assert.ok(high.length >= 10, 'no shimmer cluster');
@@ -737,9 +737,8 @@ test('audio.hushVoices() is safe with no AudioContext', () => {
 // copies of a fake Web Audio graph is worse than one shared one.
 
 test('structurally: the sit bell bypasses the hush pair; an ordinary bell does not', () => {
-  // See the brief's own warning: a test that cannot fail is worse than none.
-  // This one can — see task-5c-report.md for the break-it/fix-it proof (route
-  // sitBell() through voicesDry/voicesWet and this assertion trips).
+  // A test that cannot fail is worse than none. This one can: route sitBell()
+  // through voicesDry/voicesWet and this assertion trips.
   const save = { state: () => ({ soundOn: true }), setSound() {} };
   const priorWindow = global.window;
   const hadWindow = Object.prototype.hasOwnProperty.call(global, 'window');
@@ -938,10 +937,9 @@ test('structurally: a punctuation chime bypasses the hush pair; an ordinary chim
 });
 
 test('structurally: cylinderStrike (the large hanging cylinder) routes through the hush pair, unplaced and placed', () => {
-  // task-cylinder-brief.md's own warning, twice-shipped already on this
-  // branch: a voice wired past voicesDry/voicesWet keeps ringing after a
-  // page turn, and a voice that never reaches placed()'s bus is never
-  // spatialised. Same two checks the ordinary-chime and placed-bell tests
+  // The failure this guards has shipped twice already: a voice wired past
+  // voicesDry/voicesWet keeps ringing after a page turn, and a voice that never
+  // reaches placed()'s bus is never spatialised. Same two checks the ordinary-chime and placed-bell tests
   // above run, aimed at the new voice specifically rather than trusting it
   // by resemblance.
   const save = { state: () => ({ soundOn: true }), setSound() {} };

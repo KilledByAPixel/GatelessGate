@@ -5,12 +5,12 @@ import { makeCylinderChime, noteForSize, forceForRelOmega, CYL_SWING, CYL_WIND }
 import { createPendulum, integratePendulum } from '../src/kit/pendulum.js';
 import { gustPhase, gustBuffet } from '../src/audio/synths.js';
 
-// The large hanging cylinder (task-cylinder-brief.md): body and clapper now
-// read the IDENTICAL wind drive — gustPhase plus CYL_WIND.buffet of the fast
-// gustBuffet band — and what rings the bell is their different lengths
-// answering that fast band differently (see cylinder.js's THE MECHANISM, TWICE:
-// the old decorrelated-reads design was level-triggered, and a held gust parked
-// the clapper on the wall and metronomed at the refractory — the hut chimes'
+// The large hanging cylinder: body and clapper now read the IDENTICAL wind
+// drive — gustPhase plus CYL_WIND.buffet of the fast gustBuffet band — and what
+// rings the bell is their different lengths answering that fast band
+// differently (see cylinder.js's THE MECHANISM, TWICE: the old
+// decorrelated-reads design was level-triggered, and a held gust parked the
+// clapper on the wall and metronomed at the refractory — the hut chimes'
 // soft-metronome bug, measured at a 0.52s MEDIAN gap). The resulting strikes
 // are a physical consequence of frequency response, not a scheduled event.
 //
@@ -57,8 +57,8 @@ function reference({ size = 0.8, T0 = 0 } = {}) {
   const windClapTorque = (GRAVITY / L_clap) * CYL_WIND.leanClap * CYL_WIND.swell;
   // damping reads the real, LIVE CYL_SWING object rather than a hardcoded
   // copy — CYL_SWING.cylDamping/clapDamping are exported, mutable tunables
-  // now (task-swing-tune-brief.md, the harness writes into them directly),
-  // so a hardcoded literal here would silently stop matching the real module
+  // now — the harness writes into them directly — so a hardcoded literal here
+  // would silently stop matching the real module
   // the moment the starting value changes again (same reasoning furin.test.js
   // applies to SWING.damping).
   const cyl = createPendulum({ length: L_cyl, g: GRAVITY, damping: CYL_SWING.cylDamping, clock: T0 });
@@ -79,7 +79,7 @@ function reference({ size = 0.8, T0 = 0 } = {}) {
   // but agree to a small tolerance" — not a bug in either module. Deriving
   // `elapsed` here the exact same way cylinder.js does eliminates it
   // entirely rather than just tolerating it: verified 0 diff, all strikes,
-  // both T0=0 and T0=5237.4 (see cylinder-report.md's addendum).
+  // both T0=0 and a large non-zero T0.
   let prevT = T0;
   const strikes = [];
   return {
@@ -145,8 +145,8 @@ test('the clapper and cylinder have different natural periods, related by the go
   // already implies it is nowhere near 2:1 or 1:1 — a separate "not close
   // to 0.5 or 2" assertion would be dead code given this one (code review
   // caught an earlier draft carrying both). Kept as a straight regression
-  // pin on the constant, honestly: measured directly (cylinder-report.md),
-  // this ratio does NOT meaningfully change how often the cylinder rings
+  // pin on the constant, honestly: measured directly, this ratio does NOT
+  // meaningfully change how often the cylinder rings
   // under this design (1:1 and 2:1 both produced comparable strike
   // statistics to 1/phi) — see cylinder.js's PERIOD_RATIO comment for why
   // it is kept anyway.
@@ -320,9 +320,8 @@ test('the refractory period holds: no two strikes land closer together than it, 
       `two tap strikes landed ${tapTimes[i] - tapTimes[i - 1]}s apart, under the 0.5s refractory`);
   }
   // this loop IS the real constraint — every one of potentially ~36 re-taps
-  // (every ~0.083s for 3s) had a chance to fire, and mutation-verified
-  // (cylinder-report.md addendum): setting REFRACTORY=0 makes the per-gap
-  // check above fail directly. A separate "total count is below some bound"
+  // (every ~0.083s for 3s) had a chance to fire, and it is mutation-verified:
+  // setting REFRACTORY=0 makes the per-gap check above fail directly. A separate "total count is below some bound"
   // assertion was tried here first and removed — 6 strikes in a 3s window
   // at a 0.5s refractory is not evidence of anything broken, it is what
   // correct spacing looks like, and the bound was tight enough to fail on
@@ -358,9 +357,9 @@ test('THE WALL: a hard tap never swings the clapper visibly past the cylinder wa
 });
 
 test('a full-force tap swings the CYLINDER BODY a fūrin-comparable amount, and THE WALL still holds at CYL_SWING.tapKick', () => {
-  // CHANGED (task-cylinder-fix-brief.md BUG 1). This test used to be titled
-  // "CYL_SWING.tapKick is a real increase over the shipped-before value" and
-  // pinned tapKick against the PRE-swing-tuning value (2.5 rad/s), because
+  // CHANGED, when a tap moved from the clapper to the body. It used to be
+  // titled "CYL_SWING.tapKick is a real increase over the shipped-before value"
+  // and pinned tapKick against the PRE-swing-tuning value (2.5 rad/s), because
   // tapKick() used to kick the CLAPPER directly, sized against the clapper's
   // own natural frequency. Now that a tap kicks the BODY (cylPend) instead —
   // the actual bug, which was that a tap rang the bell without visibly swinging
@@ -503,7 +502,7 @@ test('a tap rings through the SAME contact mechanism as the wind, not a bypass',
   // would leave swingAmp() at 0 here while clapperAmp() jumped instead.
   assert.ok(f.swingAmp() > 0, 'the tap did not add any energy to the BODY');
 
-  // CHANGED (code review, task-cylinder-fix-brief.md follow-up): this used
+  // CHANGED on review: this used
   // to run a full second and assert EXACTLY one strike, worded "one tap
   // should ring once." That is no longer true of the component and was
   // never reliably true of this window either — the body's own re-strike

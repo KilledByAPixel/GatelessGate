@@ -126,10 +126,10 @@ test('rolling clacks once per slat, quietly, placed in world space', () => {
 
   for (const c of clacks) {
     assert.ok(Number.isFinite(c.force) && c.force > 0, 'a real, positive force');
-    // task-swing-tune-brief.md, PROBLEM 3: CLACK_FORCE=0.12 was the QUIETEST of
-    // all 21 audio.knock() call sites in the book — UNDER k28's 0.22 (the next
-    // quietest), not just close to it — and it was simply inaudible: the
-    // clatter fired correctly and nobody could hear it.
+    // CLACK_FORCE started as the QUIETEST of all 21 audio.knock() call sites in
+    // the book — UNDER k28's 0.22 (the next quietest), not just close to it —
+    // and it was simply inaudible: the clatter fired correctly and nobody could
+    // hear it.
     //
     // THIS ASSERTION USED TO PIN THE BUG: `c.force < 0.22` — the exact
     // inversion of what is wanted, written when the instruction was "err quiet"

@@ -59,13 +59,12 @@ const MIX_NONE = { kd: 0, ks: 0 };
 // 1.1-1.4 spread the five real families span) so these four land in the same
 // ballpark dry:send ratio as the calibrated voices at ref instead of the
 // ~3x-too-dry send raw verbMix produced (see spatial.js's makeSpatialBus
-// comment for that bug). See task-12-report.md's dry/wet-at-ref table for the
-// numbers this produces per voice — CERAMIC.level etc. were tuned by ear
-// against the OLD (uncalibrated, raw-verbMix) send, so if these four now read
-// as too wet at the next audition pass, ks is the number to move, not the
-// levels themselves. Sharing kd 0 with MIX_NONE also means these four share
-// pour's dry-can-exceed-unity-at-point-blank property (see MIX_NONE's own
-// comment) — same bound (1.67x), same reasoning, not a separate concern.
+// comment for that bug). CERAMIC.level etc. were tuned by ear against the OLD
+// (uncalibrated, raw-verbMix) send, so if these four now read as too wet at the
+// next audition pass, ks is the number to move, not the levels themselves.
+// Sharing kd 0 with MIX_NONE also means these four share pour's
+// dry-can-exceed-unity-at-point-blank property (see MIX_NONE's own comment) —
+// same bound (1.67x), same reasoning, not a separate concern.
 const MIX_TOUCH = { kd: 0, ks: 1.2 };
 
 import { parseRecipe, emitterCount, diffAmbience, windFlavorOf, roomFor } from './ambience_diff.js';
@@ -570,7 +569,7 @@ export function createAudio(save) {
       const wet = punctuate ? verb.in : (bus ? null : voicesWet);
       strikeBar(ctx, dry, wet, { f0, gain, verbMix: bus ? 0 : CHIME.verbMix });
     },
-    // The large hanging cylinder (task-cylinder-brief.md) — its own voice,
+    // The large hanging cylinder — its own voice,
     // not chimeStrike with different numbers: see BRONZE's comment in
     // synths.js for why sharing chimeStrike's register/decay would be
     // wrong. `note` is the scale-degree offset src/kit/cylinder.js derives
@@ -672,13 +671,13 @@ export function createAudio(save) {
     // effective peak (0.04125) into the same ballpark as wood's; PROVISIONAL
     // pending an ear at the audition its wiring will make possible.
     //
-    // CODE REVIEW CAUGHT (task-12): these four used to pass their own
-    // verbMix straight through as `character` (this bus's sendLevel), the
-    // exact bug this task exists to kill, just surviving inside its own fix
-    // because these voices have no pre-branch history for calibrateMix() to
-    // round-trip to. They go through it now anyway, with MIX_TOUCH's
-    // judgment-call coefficients (see its own comment above) rather than a
-    // derived pair — the four sat roughly 3x too dry at ref before this.
+    // CODE REVIEW CAUGHT (task-12): these four used to pass their own verbMix
+    // straight through as `character` (this bus's sendLevel), the exact bug
+    // this task exists to kill, just surviving inside its own fix because these
+    // voices have no pre-branch history for calibrateMix() to round-trip to.
+    // They go through it now anyway, with MIX_TOUCH's judgment-call
+    // coefficients (see its own comment above) rather than a derived pair — the
+    // four sat roughly 3x too dry at ref before this.
     ceramic({ force = 1, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
       const { dryLevel, sendLevel } = calibrateMix(CERAMIC.verbMix, MIX_TOUCH.kd, MIX_TOUCH.ks);

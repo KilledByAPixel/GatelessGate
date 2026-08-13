@@ -1081,8 +1081,8 @@ export const BELL_PRESETS = {
 // and the two agreed only because every macro sits at an identity multiplier
 // at its neutral (slider-at-1) position — a future change to this
 // arithmetic would silently not reach the page, the same latent-divergence
-// shape that cost that plan a fix round once already (see task-5b-report.md).
-// One function now, called from both places.
+// shape that cost a fix round once already. One function now, called from both
+// places.
 export function renormalizeSum(src, dressed) {
   const rawSum = src.reduce((s, p) => s + p.amp, 0);
   const dressedSum = dressed.reduce((s, p) => s + p.amp, 0);

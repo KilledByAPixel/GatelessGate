@@ -32,14 +32,13 @@ const smooth = (t) => t * t * (3 - 2 * t);
 // force is fixed and, on purpose, on the QUIET side of the book's knocks:
 // eleven of these across a full roll (the book's one screen, case 26, is built
 // with slats: 11 — see k26.js) are a texture the ear should register as "the
-// screen is moving," not eleven individual events like k13's dinner drum.
-// PROBLEM 3, task-swing-tune-brief.md: the first cut (0.12) undershot that goal
-// into silence — it sat UNDER k28's 0.22, the quietest of the book's other 20
-// audio.knock() call sites (a typical knock runs ~0.9), and it was inaudible:
-// the clatter fired correctly and nobody could hear it. Erring quiet the first
-// time erred past audible. Raised well clear of 0.22 (see CLATTER's own comment
-// for the exact starting number) — still a texture, not a drum roll, but one
-// that is actually there.
+// screen is moving," not eleven individual events like k13's dinner drum. The
+// first cut undershot that goal into silence — it sat UNDER k28's 0.22, the
+// quietest of the book's other 20 audio.knock() call sites (a typical knock
+// runs ~0.9), and it was inaudible: the clatter fired correctly and nobody
+// could hear it. Erring quiet the first time erred past audible. Raised well
+// clear of 0.22 (see CLATTER's own comment for the exact starting number) —
+// still a texture, not a drum roll, but one that is actually there.
 //
 // Exported as a mutable object, not a bare const, so
 // dev/hanging-audition.html can write straight into it (SPATIAL's own

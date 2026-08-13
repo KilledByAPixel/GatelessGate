@@ -16,11 +16,10 @@ export const SPATIAL = {
   // `camera.distance` (src/koans/k*.js, default 11.5 in main.js's buildKoan for
   // the five cases that don't set their own) runs 8.6 to 17 across all 49 cases
   // plus the two matter pages and the hub/menu, with 11.5 both the median AND
-  // the single most common value (10 of 49 cases use it outright — see
-  // task-12-report.md for the full distribution). So every placed sound was
-  // being attenuated by the distance curve for no reason, permanently — case
-  // 16's bell was barely audible. This is that measured value, not a round
-  // guess.
+  // the single most common value (10 of 49 cases use it outright). So every
+  // placed sound was being attenuated by the distance curve for no reason,
+  // permanently — case 16's bell was barely audible. This is that measured
+  // value, not a round guess.
   ref: 11.5,
   rolloff: 1.0,
 

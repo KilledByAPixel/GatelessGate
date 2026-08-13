@@ -431,7 +431,7 @@ export function makeCylinderChime({
   // Forcing them to be the same number was tried first: solving for a cord
   // length that puts a golden-ratio-period clapper deep enough in the tube
   // to look right has no positive solution (L_clap grows only 0.38x as fast
-  // as CONTACT_Y needs to, for any cord length — see cylinder-report.md).
+  // as CONTACT_Y needs to, for any cord length).
   // Two honestly-separate eyeballed numbers, the same spirit as furin.js's
   // own acknowledged COM fraction, beat one number that cannot satisfy both
   // jobs at once.

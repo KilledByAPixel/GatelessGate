@@ -165,9 +165,9 @@ test('the three singles sound three different notes, not the ring index', () => 
 });
 
 test("each single's reported note is derived from its own built size, not a number k29.js chose independently", () => {
-  // PROBLEM 1, task-swing-tune-brief.md: "the case asks for a size, and the
-  // note follows" — the property that distinguishes the fix from just
-  // moving the same three magic numbers into a differently-named constant.
+  // The case asks for a SIZE and the note follows — the property that
+  // distinguishes the fix from just moving the same three magic numbers into a
+  // differently-named constant.
   //
   // CODE REVIEW CAUGHT that an earlier draft of this test, despite its own
   // name, never drove update(), never captured a strike, and never imported
@@ -239,19 +239,17 @@ test("each single's reported note is derived from its own built size, not a numb
 });
 
 test("case 29's chimes stay clear of each other at the LIVE swing cap, counter-phase, worst case", () => {
-  // FOLLOW-UP CAUGHT: the collision-free result in swing-tune-report.md
-  // (RING_X=-0.79, SINGLE_X=[-0.17,0.39,0.80], checked against
-  // SWING.maxOmegaFrac=0.65) was only ever asserted in a k29.js COMMENT.
-  // Nothing re-derived it against the LIVE constant, so raising
-  // SWING.maxOmegaFrac — the likely next move, since the complaint about the
-  // swing has always been that it was too SMALL — would silently reopen the
-  // counter-phase collision this branch already found once, with nothing
-  // anywhere failing to say so. This recomputes the real worst-case
-  // counter-phase gap from the ACTUAL staged scene and the LIVE
-  // SWING.maxOmegaFrac/tapPeak/damping every time the suite runs, so raising
-  // the cap past what case 29's spacing tolerates fails HERE, not silently in
-  // the harness or, worse, not at all until someone sees two chimes passing
-  // through each other.
+  // FOLLOW-UP CAUGHT: the collision-free result, worked out once against a
+  // particular swing cap, was only ever asserted in a k29.js COMMENT. Nothing
+  // re-derived it against the LIVE constant, so raising SWING.maxOmegaFrac —
+  // the likely next move, since the complaint about the swing has always been
+  // that it was too SMALL — would silently reopen the counter-phase collision
+  // this branch already found once, with nothing anywhere failing to say so.
+  // This recomputes the real worst-case counter-phase gap from the ACTUAL
+  // staged scene and the LIVE SWING.maxOmegaFrac/tapPeak/damping every time the
+  // suite runs, so raising the cap past what case 29's spacing tolerates fails
+  // HERE, not silently in the harness or, worse, not at all until someone sees
+  // two chimes passing through each other.
   //
   // theta (the saturated-burst peak) does not depend on which chime's own
   // size measures it: at saturation, pendulumEnergy's omega0^2 term

@@ -394,10 +394,10 @@ test('a single reaches no deeper than the shape it replaced', () => {
 });
 
 test('a bigger single-tube furin sounds a LOWER note, and the length ratio matches the free-free-bar model', () => {
-  // task-swing-tune-brief.md, PROBLEM 1: "the physics is a free-free bar:
-  // f ~ thickness/length^2... an octave down is a tube 1.41x longer, two
-  // octaves is 2x longer." noteForSize is the pure function that formula
-  // lives in (furin.js) — pinned directly here, on its documented contract,
+  // The physics is a free-free bar, f ~ thickness/length^2, so an octave down
+  // is a tube root-2 longer and two octaves a tube twice as long. noteForSize is
+  // the pure function that formula lives in (furin.js) — pinned directly here,
+  // on its documented contract,
   // not on the internal log2 expression, so a mutant that gets the SIGN
   // right but the SCALE wrong (a plausible off-by-a-constant-factor bug)
   // still gets caught by the length-ratio check below.
@@ -503,11 +503,10 @@ test('a knocked chime SWINGS — it crosses centre, it does not just lean back',
   assert.ok(crossings >= 3, `it leans, it does not swing: ${crossings} centre crossings in 5s`);
 
   // and it dies down rather than ringing forever — but SWING.damping was
-  // opened up (task-swing-tune-brief.md, PROBLEM 2: "a much longer settle")
-  // from tau=1.8s to tau=4.5s specifically so it lingers through several
-  // audible swings instead of two, so the old late<early*0.2 bound (tuned
-  // for the SHORT settle) now fails on correct behaviour — measured ratio at
-  // the new damping is ~0.395 (see swing-tune-report.md). 0.5 leaves real
+  // opened up for a much longer settle — tau=1.8s to tau=4.5s — specifically so
+  // it lingers through several audible swings instead of two, so the old
+  // late<early*0.2 bound (tuned for the SHORT settle) now fails on correct
+  // behaviour: the measured ratio at the new damping is ~0.395. 0.5 leaves real
   // margin above that while still catching a damping mutation: doubling
   // SWING.damping's tau (halving the coefficient) measured ~0.79, and
   // near-zero damping measured ~0.997 — both comfortably fail this bound,
@@ -523,8 +522,8 @@ test('a knocked chime SWINGS — it crosses centre, it does not just lean back',
   // (furin.js) gives a peak of ~0.019 rad, which is BELOW 0.02 and so was
   // caught, but only by a margin that was luck rather than coverage (any
   // slightly less broken mutant would have slipped through). SWING.tapPeak
-  // was raised from 0.13 to 0.55 rad (task-swing-tune-brief.md, PROBLEM 2 —
-  // "a much larger tap kick"); measured at the new value, force=1:
+  // was raised from 0.13 to 0.55 rad for a much larger tap kick; measured at
+  // the new value, force=1:
   // early ~0.528 rad. 0.45-0.60 brackets that with headroom on both sides
   // without being so loose it stops meaning anything, and would still catch
   // a future change back toward the old 0.13 (which would land near 0.115).
@@ -532,9 +531,8 @@ test('a knocked chime SWINGS — it crosses centre, it does not just lean back',
 });
 
 test('the swing SETTLES: mechanical energy decays monotonically once a tap stops feeding it', () => {
-  // "Worth pinning... the swing still settles — energy decays monotonically
-  // with no input" (task-swing-tune-brief.md's Tests section). The early/
-  // late ratio test above is a coarse, two-window version of this claim;
+  // The swing still SETTLES: energy decays monotonically with no input. The
+  // early/late ratio test above is a coarse, two-window version of this claim;
   // this pins the tight version directly on pendulumEnergy() (src/kit/
   // pendulum.js), sampled every real frame for 15s after a single tap in
   // still air — semi-implicit Euler with damping and no driving torque
@@ -622,8 +620,8 @@ test("the swing's wind phase stays locked to the absolute clock, even for a chim
   // named constants in furin.js, duplicated here on purpose so this test
   // does not import furin.js's private state, only its documented formulas).
   // damping is the one exception: SWING.damping is a LIVE, exported tunable
-  // now (task-swing-tune-brief.md — the harness writes into it directly), so
-  // a hardcoded copy here would silently stop matching the real module the
+  // now — the harness writes into it directly — so a hardcoded copy here would
+  // silently stop matching the real module the
   // moment the starting value changes again; importing the real SWING object
   // is the public, documented way to read it.
   const L = CORD_FRAC * SIZE + 0.6 * SIZE;

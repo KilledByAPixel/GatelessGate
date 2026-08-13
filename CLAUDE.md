@@ -6,11 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 An interactive sumi-e reading of the Mumonkan (The Gateless Gate) in the browser: all 49 koan cases staged as small low-poly ink-painting dioramas, with text, narration, ambience, and a meditation timer. It is an **interactive book, not a game** — dioramas are ambient scenes; touch responses are optional delights, never gates.
 
-The design doc at `docs/gateless-gate-design-doc.md` is authoritative; its dated revision notes **override** anything they contradict elsewhere in the doc. Milestone plans/specs live in `docs/superpowers/`.
+The design doc at `docs/gateless-gate-design-doc.md` is authoritative; its dated revision notes **override** anything they contradict elsewhere in the doc. Milestone plans/specs live in `docs/superpowers/`. **`docs/` is gitignored**, like `local/` — it is the working record, not part of the published repo, so a fresh clone will not have it and nothing that ships may depend on it.
 
 ## Commands
 
-- Run: `npx -y http-server -p 8105 -c-1 .` then visit http://localhost:8105 — **no build step**; ES modules are served directly and Three.js is vendored in `lib/` (version in `lib/THREE_VERSION.txt`).
+- Run: `npm start` (`npx -y http-server -p 8105 -c-1 .`) then visit http://localhost:8105 — **no build step**; ES modules are served directly and Three.js is vendored in `lib/` (version in `lib/THREE_VERSION.txt`).
 - Test all: `npm test` (runs `node --test` over `tests/`, Node 20+)
 - Test one file: `node --test tests/k29.test.js`
 - Regenerate the whole-book Markdown at the repo root: `npm run book` (`node scripts/build-book.js`) — writes `THE-GATELESS-GATE.md` from the generated text modules, so run `build-text.js` first if the source changed. `tests/book-md.test.js` fails if the committed file is stale.

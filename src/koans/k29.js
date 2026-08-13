@@ -154,16 +154,16 @@ export default {
     // is irrelevant to it, and swinging off vertical only ever SHORTENS a
     // chime's drop — REST is the worst case. SINGLE_CORD below is what sets it.
     const SINGLE_X = [-0.72, 0, 0.72];
-    // SIZES: PROBLEM 1, task-swing-tune-brief.md — "the lower ones are
-    // bigger... probably the length, maybe a little bit of both." Each
-    // single hangs a DIFFERENT size and reports whatever note that size
-    // implies (makeFurin's own noteForSize, kit/furin.js) — the case does
-    // not pick a note independent of geometry, it picks a size and the note
-    // follows, matching audio.bell() and makeCylinderChime everywhere else
-    // in the book. Chosen so the sounding notes land on the spread already
-    // approved by ear, pinned in tests/k29.test.js. The lowest is exactly TWICE
-    // the highest, which is the worked example for a two-octave spread — landed
-    // by solving for size rather than picking round numbers and hoping.
+    // SIZES, and the lower ones are the bigger ones — mostly in length, with a
+    // little diameter following it. Each single hangs a DIFFERENT size and
+    // reports whatever note that size implies (makeFurin's own noteForSize,
+    // kit/furin.js) — the case does not pick a note independent of geometry, it
+    // picks a size and the note follows, matching audio.bell() and
+    // makeCylinderChime everywhere else in the book. Chosen so the sounding
+    // notes land on the spread already approved by ear, pinned in
+    // tests/k29.test.js. The lowest is exactly TWICE the highest, which is the
+    // worked example for a two-octave spread — landed by solving for size
+    // rather than picking round numbers and hoping.
     const SINGLE_SIZES = [0.18, 0.12, 0.09];
     // ABSOLUTE cord lengths, in world units, not fractions of size. Hung side
     // by side, the small ones did not reach low enough, and a size-relative

@@ -4,10 +4,9 @@
   <meta charset="utf-8">
   <title>Hanging Audition — The Gateless Gate</title>
   <!--
-    task-swing-tune-brief.md's main deliverable. Unlike bell-audition.html and
-    spatial-audition.html, this one has to be WATCHED, not just heard — the
-    owner's complaint ("they don't really swing like I'd expect them to with
-    gravity... very slow, like they have a lot of dampening") is about how the
+    The swing harness. Unlike bell-audition.html and spatial-audition.html, this
+    one has to be WATCHED, not just heard — the complaint it exists to answer
+    (hanging things that swing too slowly, as though heavily damped) is about how the
     MOTION LOOKS, so a slider-only page cannot settle it. This page renders the
     real hanging objects with the project's real renderer and materials
     (src/render/material.js — the same washMaterial every case uses, not a
@@ -493,9 +492,9 @@
       return Math.acos(Math.max(-1, Math.min(1, x)));
     }
 
-    // case29's own live minimum-gap readout — task-swing-tune-brief.md
-    // follow-up: "surface the live minimum gap... so he can see the margin
-    // shrink as he drags." Reuses the exact worst-case-per-pair, visible-
+    // case29's own live minimum-gap readout, so the margin can be watched
+    // shrinking as the swing cap is dragged. Reuses the exact
+    // worst-case-per-pair, visible-
     // geometry method tests/k29.test.js's own collision guard uses, on
     // CASE29_LAYOUT's numbers (kept in sync with k29.js by hand — see its
     // own comment). Cheap: a handful of makeFurin() calls with no rendering,
@@ -584,8 +583,8 @@
     liveField(cylWrap, CYL_SWING, 'cylDamping', 'body settle (tau, s)', 0.5, 20, 0.1, (v) => v.toFixed(2) + 's', fromTau, tau);
     liveField(cylWrap, CYL_SWING, 'clapDamping', 'clapper settle (tau, s)', 0.5, 20, 0.1, (v) => v.toFixed(2) + 's', fromTau, tau);
 
-    // CYL_FORCE.kneeLevel/cap — code review, task-cylinder-fix-brief.md
-    // follow-up: these two numbers ARE the ring-down's diminuendo shape
+    // CYL_FORCE.kneeLevel/cap — these two numbers ARE the ring-down's
+    // diminuendo shape
     // (cylinder.js's own FORCE NORMALISATION comment has the measured
     // before/after), and until now they were plain consts a slider on this
     // page couldn't reach — the exact thing needed to judge whether the
