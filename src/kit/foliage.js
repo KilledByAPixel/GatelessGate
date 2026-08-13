@@ -30,10 +30,10 @@ import * as THREE from '../../lib/three.module.js';
 //           whole tree, just with a stiffer base. This is the difference
 //           between "the tree leans" and "the wind is going through it".
 //
-// The gust field is grassfield.js's, sampled the same way in the same units, so
-// a scene's meadow and its trees answer ONE wind rather than two that happen to
-// be blowing. Deterministic: everything is a function of simTime and the baked
-// attributes, no Math.random, no wall clock.
+// The gust field is tuftfield.js's (the meadow's own shader), sampled the same
+// way in the same units, so a scene's meadow and its trees answer ONE wind
+// rather than two that happen to be blowing. Deterministic: everything is a
+// function of simTime and the baked attributes, no Math.random, no wall clock.
 
 // One shared record: every foliage material references these SAME uniform
 // objects, so stepFoliageWind below is a single write that reaches every

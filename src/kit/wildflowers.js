@@ -261,7 +261,7 @@ export function makeWildflowers({
     const pokeDirZ = pokeAmt > 1e-6 ? poke.pz / pokeAmt : 0;
 
     // the whole noise field slides downwind, so gusts arrive and pass — the
-    // same flow grassfield.js's shader builds, in the same units
+    // same flow tuftfield.js's shader builds, in the same units
     const drift = simTime * weather.gustSpeed * weather.gustScale;
 
     let sum = 0;

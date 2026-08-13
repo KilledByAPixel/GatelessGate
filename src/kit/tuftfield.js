@@ -124,7 +124,9 @@ function tuftTexture() {
 // Derived 2026-08-12, not eyeballed, from values read out of the running
 // code (S = 6.7 from makeLights(), N·L = 0.78484 as above, H = the
 // hemisphere's contribution to an up-facing normal = its intensity 0.62 x
-// PAPER's linear luminance ~0.8495, i.e. ~0.52669):
+// PAPER's linear luminance ~0.8495, i.e. ~0.52669). Terms below are shown to
+// 5dp, but each total is the unrounded sum, not the sum of the rounded
+// terms shown (the two can differ by a digit in the last place):
 //   lift = (6.7 + 0.52669 + pi*0.16) / (0.78484*6.7 + 0.52669)
 //        = (6.7 + 0.52669 + 0.50265) / (5.25841 + 0.52669)
 //        = 7.72935 / 5.78510 ≈ 1.3361
