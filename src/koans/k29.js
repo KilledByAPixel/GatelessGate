@@ -56,13 +56,13 @@ export default {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.03);
-    scene.add(makeLights());
+    scene.add(makeLights({ sun: { heading: -58, pitch: 46 } }));
 
     // the road to the temple runs from the foreground into the fog; everything
     // is placed ON it via path.sample so the gate spans the trail and the
     // lanterns flank it. The two monks argue on the road ("the flag moves" /
     // "the wind moves").
-    const path = makePath({ from: [1.4, 9], to: [7.4, -33.6], width: 1.8, seed: 91, groundSeed: 21, wander: 1.3 });
+    const path = makePath({ from: [1.4, 9], to: [7.4, -33.6], width: 1.8, seed: 91, groundSeed: 21, wander: 5.3 });
     scene.add(path);
 
     // the gate straddles the path a little way up the road
@@ -104,7 +104,7 @@ export default {
     // shared grammar, kept off the staging and the path by keepouts
     const world = composeWorld(scene, {
       view: CAM,
-      seed: 29,
+      seed: 31,
       groundSeed: 21,
       keepout: [
         ...path.keepout(26, 1.15),             // the worn trail, masked along its whole run

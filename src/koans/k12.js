@@ -91,7 +91,7 @@ export default {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
-    scene.add(makeLights());
+    scene.add(makeLights({ sun: { heading: 60, pitch: 31 } }));
 
     // THE LEDGE, and the air past it — ON THIS SIDE now, the drop facing the
     // camera rather than away from it. Yawed a half turn, so the void that used

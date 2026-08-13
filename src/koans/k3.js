@@ -173,7 +173,9 @@ const CAM = { distance: 9.6, target: [0.7, 1.25, 0.55], heading: 16, pitch: 15.5
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
-  scene.add(makeLights());
+  // High and even, and nothing lit from below: a sensitive case is
+  // not one to dramatise with light.
+  scene.add(makeLights({ sun: { heading: -22, pitch: 57 } }));
   
   // the approach to the temple, coming up the right-hand side of the yard and
   // running past the hall

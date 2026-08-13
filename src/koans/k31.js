@@ -46,7 +46,7 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: -33, pitch: 48 } }));
   
   // the road, and the branch of it that goes on to Taizan
   const road = makePath({ from: [5.4, 7.6], to: [-4.4, -16], width: 1.6, seed: ID, groundSeed: 21, wander: 0.6 });

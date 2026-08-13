@@ -30,7 +30,7 @@ const _tumble = new THREE.Quaternion();
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11, target: [1.05, 0.3, -3.35], heading: 17, pitch: 29.5 };
+const CAM = { distance: 11, target: [1.05, 1.25, -3.35], heading: 17, pitch: 18 };
   export default {
   id: ID,
   slug: 'buddha-twirls-a-flower',
@@ -64,7 +64,10 @@ const CAM = { distance: 11, target: [1.05, 0.3, -3.35], heading: 17, pitch: 29.5
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
-  scene.add(makeLights());
+  // Contre-jour — the one image in the book that asks for it. The
+  // light is behind the held flower, so the petal is lit through and
+  // the assembly watching it are edges.
+  scene.add(makeLights({ sun: { heading: 65, pitch: 38 } }));
   
   // Vulture Peak: the Buddha raised on a low stone, the assembly below him.
   // The stone came down with the statue (overnight pass 2: he is the same
@@ -122,7 +125,7 @@ const CAM = { distance: 11, target: [1.05, 0.3, -3.35], heading: 17, pitch: 29.5
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: 6,
+  seed: 11,
   groundSeed: 21,
   trees: 4,
   keepout: [

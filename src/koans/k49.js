@@ -97,12 +97,14 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   const { audio, input } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
-  scene.fog = new THREE.FogExp2(PAPER, 0.028);
-  scene.add(makeLights());
+scene.fog = new THREE.FogExp2(PAPER, 0.028);
+  // The last page: the day ending behind the same torii the book
+  // opened on, with the shadows running back toward the reader.
+  scene.add(makeLights({ sun: { heading: 25, pitch: 33 } }));
   
   // the path that has run under the whole book, one last time, straight down
   // into the fog
-  const road = makePath({ from: [0.4, 9], to: [-7.4, -29.2], width: 1.6, seed: ID, groundSeed: 21, wander: 0.7 });
+  const road = makePath({ from: [0.4, 9], to: [-7.4, -29.2], width: 1.6, seed: ID, groundSeed: 21, wander: 2.7 });
   scene.add(road);
   
   // ---- the pond, off to the left ----------------------------------------

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { makeLights } from '../src/render/lights.js';
+import { makeLights, aimSun, SUN_DEFAULT } from '../src/render/lights.js';
 
 test('makeLights: a shadow-casting key, a hemisphere fill, and a tight shadow frustum', () => {
   const g = makeLights({ focus: [1.2, 0, 0.3], radius: 10 });
@@ -35,4 +35,64 @@ test('makeLights: a shadow-casting key, a hemisphere fill, and a tight shadow fr
 
   // shadows can be opted out of (tests, cheap mobile path)
   assert.equal(makeLights({ shadow: false }).children.find((c) => c.isDirectionalLight).castShadow, false);
+});
+
+// ---- WHERE THE KEY STANDS ---------------------------------------------------
+
+const sunOf = (opts) => makeLights(opts).children.find((c) => c.isDirectionalLight);
+const aimOf = (sun) => {
+  const o = sun.position.clone().sub(sun.target.position);
+  return {
+    heading: Math.atan2(o.x, o.z) * 180 / Math.PI,
+    pitch: Math.atan2(o.y, Math.hypot(o.x, o.z)) * 180 / Math.PI,
+    height: o.y,
+  };
+};
+
+test('the default aim is where the book was lit from before cases could aim it', () => {
+  // Every case was lit by one hard-coded offset from its focus; the default
+  // now goes through the same heading/pitch path a case's `sun:` block does,
+  // and this pins that the conversion did not move the thirteen cases that
+  // were kept as they were. Under a degree is well below anything visible in
+  // a shadow direction.
+  const focus = [1.2, 0, 0.3];
+  const before = new THREE.Vector3(5.5, 9, 4.5);          // the offset it used to carry
+  const after = sunOf({ focus }).position.clone().sub(new THREE.Vector3(focus[0], 0, focus[2]));
+  assert.ok(after.angleTo(before) * 180 / Math.PI < 1,
+    `the default key moved ${(after.angleTo(before) * 180 / Math.PI).toFixed(2)}°`);
+});
+
+test('a case gets the aim it names, in the camera block\'s own vocabulary', () => {
+  for (const want of [SUN_DEFAULT, { heading: -106, pitch: 47 }, { heading: 196, pitch: 40 }]) {
+    const got = aimOf(sunOf({ focus: [2, 0, -1], sun: want }));
+    // heading is read back through atan2, so a value past half a turn comes
+    // home wrapped — the same wrap the workbench slider applies
+    const wrapped = ((want.heading + 180) % 360 + 360) % 360 - 180;
+    assert.ok(Math.abs(got.heading - wrapped) < 1e-6, `heading ${got.heading} != ${wrapped}`);
+    assert.ok(Math.abs(got.pitch - want.pitch) < 1e-6, `pitch ${got.pitch} != ${want.pitch}`);
+  }
+});
+
+test('a low sun stands further out, not lower', () => {
+  // The shadow camera's near plane clips anything ABOVE the light, so a key
+  // that dropped toward the horizon as its pitch fell would slide under the
+  // canopy it is meant to be casting from — and a tree that loses its shadow
+  // that way fails silently. Pitch moves the light out; the height is fixed.
+  const heights = [30, 45, 60, 75].map((pitch) => aimOf(sunOf({ sun: { heading: 20, pitch } })).height);
+  for (const h of heights) assert.ok(Math.abs(h - heights[0]) < 1e-9, `height moved with pitch: ${heights}`);
+  const reach = (pitch) => Math.hypot(...(() => {
+    const s = sunOf({ sun: { heading: 20, pitch } });
+    const o = s.position.clone().sub(s.target.position);
+    return [o.x, o.z];
+  })());
+  assert.ok(reach(30) > reach(60), 'a lower sun must stand further out');
+});
+
+test('aimSun re-aims a built light — the workbench and the case share one path', () => {
+  const sun = sunOf({ focus: [3, 0, -2] });
+  aimSun(sun, { heading: -66, pitch: 45 });
+  const got = aimOf(sun);
+  assert.ok(Math.abs(got.heading + 66) < 1e-6 && Math.abs(got.pitch - 45) < 1e-6);
+  // and it leaves the record the workbench adopts from
+  assert.deepEqual(sun.userData.aim, { heading: -66, pitch: 45 });
 });

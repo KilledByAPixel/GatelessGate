@@ -48,7 +48,7 @@ const CAM = { distance: 10, target: [0.8, 0.9, 0.2], heading: 4, pitch: 14 };
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.032);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: 63, pitch: 43 } }));
   
   // THE STICK. Dry, crooked, a hand taller than it needs to be, standing in
   // swept ground. Three tapering segments with a slight kink at each joint,

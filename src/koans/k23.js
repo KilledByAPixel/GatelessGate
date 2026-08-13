@@ -85,7 +85,7 @@ const CAM = { distance: 10.1, target: [0.2, 1.3, -0.9], heading: 31.5, pitch: 16
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: -18, pitch: 36 } }));
   
   // the trail over the mountain, wandering harder than a temple approach —
   // by the time it reaches this stone it has been climbing all day

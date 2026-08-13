@@ -62,9 +62,9 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.034);      // dusk: he is easy to lose
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: 71, pitch: 55 } }));
   
-  const road = makePath({ from: [5.6, 7.4], to: [-4.8, -17], width: 1.6, seed: ID, groundSeed: 21, wander: 0.6 });
+  const road = makePath({ from: [5.6, 7.4], to: [-4.8, -17], width: 2.6, seed: ID, groundSeed: 21, wander: 0.6 });
   scene.add(road);
 
   plantTree(scene, { x: -3.2, z: -2.4, height: 4.4 });
@@ -246,7 +246,7 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
         ...stallKeepout,
         ...meetKeepout,
       ],
-      grassKeepout: [...road.keepout(28, 1.0), ...stallKeepout, ...meetKeepout],
+      grassKeepout: [...road.keepout(28, 1.3), ...stallKeepout, ...meetKeepout],
     });
 
     // ---- THE BAKE ---------------------------------------------------------

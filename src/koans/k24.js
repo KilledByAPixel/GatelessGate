@@ -37,9 +37,11 @@ const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 1
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.026);
-  scene.add(makeLights());
+  // The brightest case in the book is lit like one: high, open, and
+  // square onto the flowers.
+  scene.add(makeLights({ sun: { heading: 47, pitch: 59 } }));
   
-  const path = makePath({ from: [5.0, 8.0], to: [-3.0, -18], width: 1.2, seed: ID, groundSeed: 21, wander: 1.4 });
+  const path = makePath({ from: [5.0, 8.0], to: [-3.0, -18], width: 1.2, seed: ID, groundSeed: 21, wander: 3.4 });
   scene.add(path);
   
   // FUKETSU, sitting in the middle of the answer

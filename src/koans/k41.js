@@ -39,7 +39,7 @@ const WISP_TUBES = [4, 3, 2];
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 24 };
+const CAM = { distance: 10.6, target: [1, 2.1, -3.15], heading: 39.5, pitch: 18 };
   export default {
   id: ID,
   slug: 'bodhidharma-pacifies-the-mind',
@@ -56,7 +56,9 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
   scene.background = new THREE.Color(PAPER);
   // snow light: the air is thick and the world ends close
   scene.fog = new THREE.FogExp2(PAPER, 0.045);
-  scene.add(makeLights());
+  // A winter sun: low, and behind the snow rather than on it, so the
+  // ground carries the light and the figures are dark against it.
+  scene.add(makeLights({ sun: { heading: 89, pitch: 32 } }));
   
   // the cave he sat in, facing its wall for nine years
   const cave = makeCave({ width: 3.0, height: 2.8, depth: 3.2, seed: ID });

@@ -42,12 +42,12 @@ export default {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
-    scene.add(makeLights());
+    scene.add(makeLights({ sun: { heading: 42, pitch: 42 } }));
 
     const path = makePath({ from: [-4.2, 8.0], to: [3.0, -18], width: 1.5, seed: ID, groundSeed: 21, wander: 0.9 });
     scene.add(path);
 
-    const path2 = makePath({ from: [13, 2.0], to: [-15.0, -15], width: 1.5, seed: ID, groundSeed: 21, wander: 0.9 });
+    const path2 = makePath({ from: [13, 2.0], to: [-15.0, -15], width: 1.5, seed: ID, groundSeed: 21, wander: 1.9 });
     scene.add(path2);
 
     // the dining hall he is walking to, too early

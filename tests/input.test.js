@@ -45,6 +45,48 @@ test('onTap fires only for low-drift press/release', () => {
   assert.equal(taps, 1, 'drag is not a tap');
 });
 
+// ---- a tap the reader never made -------------------------------------------
+// Each of these fired one, and case 27 is where it showed: a tap anywhere on
+// that page shrinks the whole diorama, so the reader arrived to find the scene
+// already gone. On the other cases a phantom tap usually hits nothing, which is
+// why this went unnoticed rather than unhit.
+
+test('a press abandoned off the canvas does not arm the next release', () => {
+  const el = fakeEl();
+  const input = makeInput(el);
+  let taps = 0;
+  input.onTap(() => { taps++; });
+  el.h.pointerdown({ clientX: 400, clientY: 300, pointerId: 1 });
+  el.h.pointerleave({});                    // walked off and released elsewhere
+  // ...and much later, a release over the canvas with no press of its own —
+  // pressing a control that sits over the stage and letting go on the picture
+  el.h.pointerup({ clientX: 402, clientY: 301, pointerId: 1 });
+  assert.equal(taps, 0, 'a release with no live press is not a tap');
+});
+
+test('a press does not survive a page turn', () => {
+  const el = fakeEl();
+  const input = makeInput(el);
+  el.h.pointerdown({ clientX: 100, clientY: 100, pointerId: 1 });
+  let taps = 0;
+  input.clear();                            // the page turns (main.js clearInput)
+  input.onTap(() => { taps++; });           // the incoming case registers
+  el.h.pointerup({ clientX: 100, clientY: 100, pointerId: 1 });
+  assert.equal(taps, 0, 'the incoming page did not get the outgoing page’s press');
+});
+
+test('one pointer does not complete another pointer’s press', () => {
+  const el = fakeEl();
+  const input = makeInput(el);
+  let taps = 0;
+  input.onTap(() => { taps++; });
+  el.h.pointerdown({ clientX: 500, clientY: 200, pointerId: 7 });
+  el.h.pointerup({ clientX: 503, clientY: 201, pointerId: 9 });
+  assert.equal(taps, 0, 'a second finger’s release is not the first finger’s tap');
+  el.h.pointerup({ clientX: 503, clientY: 201, pointerId: 7 });
+  assert.equal(taps, 1, 'and the real one still lands');
+});
+
 test('onHover updates NDC pointer', () => {
   const el = fakeEl();
   const input = makeInput(el);

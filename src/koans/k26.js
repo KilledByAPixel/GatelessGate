@@ -42,7 +42,11 @@ const CAM = { distance: 11.3, target: [-0.3, 1.15, 0.1], heading: 26, pitch: 23 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
-  scene.add(makeLights());
+  // THROUGH THE BAY. The camera sits inside the hall and looks out
+  // through the raised blinds (-z), so the key has to stand beyond
+  // them: the light comes in the way the case says it does, and the
+  // assembly are shapes against it.
+  scene.add(makeLights({ sun: { heading: -141, pitch: 36 } }));
   
   const veranda = makeVeranda({ width: 4.8, depth: 4.4, height: 3.3, deck: DECK });
   veranda.position.set(0, 0, FRONT);
@@ -120,7 +124,7 @@ const CAM = { distance: 11.3, target: [-0.3, 1.15, 0.1], heading: 26, pitch: 23 
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  seed: 1207,
   groundSeed: 21,
   trees: 2,
   keepout: [

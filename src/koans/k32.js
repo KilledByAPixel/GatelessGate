@@ -60,7 +60,7 @@ const CAM = { distance: 9, target: [1.45, 1, -0.95], heading: 31.5, pitch: 23 };
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: 106, pitch: 57 } }));
   
   // a low stone seat, and the Buddha on it, saying nothing. Both came down
   // to human scale in overnight pass 2 — he is the same figure kit as the

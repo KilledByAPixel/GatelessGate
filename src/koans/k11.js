@@ -80,13 +80,13 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: -21, pitch: 48 } }));
   
   // the path Joshu came up, twice — a coast road now, running with the
   // shoreline behind the hermit's rise. It used to run to (-3.4, -17),
   // which the bay would drown: a road aimed at the water is a dead end into
   // the ocean (k20's own lesson, k20.js).
-  const path = makePath({ from: [8.0, 1.6], to: [-15, 2.0], width: 1.2, seed: ID, groundSeed: 21, wander: 1.6 });
+  const path = makePath({ from: [8.0, 1.6], to: [-15, 2.0], width: 1, seed: ID, groundSeed: 21, wander: 4.6 });
   scene.add(path);
   
   // the hut he retired to, on its rise — set OFF to the side of the road,
@@ -253,7 +253,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
         ...SEA_KEEP,
       ],
       grassKeepout: [
-        ...path.keepout(24, 0.95),
+        ...path.keepout(24, 0.6),
         { x: hut.position.x+1, z: hut.position.z+1, r: 2. },
         ...SEA_KEEP,
       ],

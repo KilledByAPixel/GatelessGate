@@ -70,7 +70,9 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   const bg = new THREE.Color(NIGHT);
   scene.background = bg;
   scene.fog = new THREE.FogExp2(NIGHT, 0.042);
-  const lights = makeLights();
+  // Low and almost behind, which is the closest a single key gets to
+  // saying it is very dark outside.
+  const lights = makeLights({ sun: { heading: -21, pitch: 28 } });
   scene.add(lights);
   
   const path = makePath({ from: [4.2, 8.0], to: [-2.0, -27], width: 1.3, seed: ID, groundSeed: 21, wander: 2.9 });
@@ -204,7 +206,7 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  seed: 14,
   groundSeed: 21,
   trees: 4,
   keepout: [

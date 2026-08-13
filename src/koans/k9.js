@@ -40,7 +40,10 @@ const CAM = { distance: 17, target: [-0.3, 2.8, -1.6], heading: 31.5, pitch: 14.
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.024);       // thinner: the scale needs depth
-  scene.add(makeLights());
+  // Deliberately shallow, where the rest of the book is not: raking
+  // light is what reads a stratified ground and a worn colossus.
+  // Overhead, the ages in the hillside flatten into one grey bank.
+  scene.add(makeLights({ sun: { heading: 4, pitch: 34 } }));
   
   // Where the monument sits: off to the side and deeper, against the
   // mountain flank, so the frame discovers him instead of presenting him.
@@ -146,7 +149,7 @@ const CAM = { distance: 17, target: [-0.3, 2.8, -1.6], heading: 31.5, pitch: 14.
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  seed: ID+5,
   groundSeed: 21,
   trees: 3,
   treeRing: [13, 22],

@@ -6,6 +6,7 @@ import { loadKoan, isStaged } from '../src/koans/registry.js';
 import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT, PAPER } from '../src/palette.js';
 import { DRAW_BUDGET } from '../src/budget.js';
+import { SUN_PITCH_RANGE } from '../src/render/lights.js';
 import { emitterCount } from '../src/audio/engine.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
 
@@ -373,4 +374,42 @@ test('every staged case names a complete camera of its own', async () => {
     }
   }
   assert.deepEqual(bad, [], `incomplete camera blocks: ${JSON.stringify(bad)}`);
+});
+
+// Case 19 aims its key at its own moon, every frame, and clears the aim record
+// to say so (k19.js). Nothing else in the book owns its light outright.
+const SUN_OWNED_BY_CASE = [19];
+
+test('every staged case stands its key somewhere a sun could be', async () => {
+  // The rail is SUN_PITCH_RANGE — the workbench sliders' own range, so a case
+  // may ship any aim that can be dialled. This catches a typo or a missing
+  // block, not a composition: which way the light comes from is the case's
+  // call, and the point of a per-case aim is that they differ.
+  const bad = [];
+  const aims = [];
+  for (const entry of staged) {
+    const mod = await loadKoan(entry.slug);
+    const root = mod.build(fakeCtx());
+    root.update(1 / 60, 0);
+    const sun = root.scene.getObjectByProperty('isDirectionalLight', true);
+    if (!sun) { bad.push([entry.id, 'no key light at all']); continue; }
+    if (!sun.position.toArray().every(Number.isFinite)) {
+      bad.push([entry.id, `key at ${sun.position.toArray()}`]); continue;
+    }
+    if (SUN_OWNED_BY_CASE.includes(entry.id)) continue;
+    const aim = sun.userData.aim;
+    if (!aim) { bad.push([entry.id, 'no aim recorded — the workbench cannot drive it']); continue; }
+    if (!(aim.pitch >= SUN_PITCH_RANGE[0] && aim.pitch <= SUN_PITCH_RANGE[1])) {
+      bad.push([entry.id, `pitch ${aim.pitch} is outside the rail`]);
+    }
+    if (!Number.isFinite(aim.heading)) bad.push([entry.id, `heading ${aim.heading}`]);
+    aims.push(aim);
+  }
+  assert.deepEqual(bad, [], `keys aimed badly: ${JSON.stringify(bad)}`);
+
+  // ...and they are genuinely spread, rather than one direction with a handful
+  // of exceptions — which is what the book was before the lighting pass, and
+  // what it would silently drift back into one copied block at a time.
+  const quadrants = new Set(aims.map((a) => Math.floor((((a.heading % 360) + 360) % 360) / 90)));
+  assert.equal(quadrants.size, 4, `the key never stands in every quarter: ${[...quadrants]}`);
 });

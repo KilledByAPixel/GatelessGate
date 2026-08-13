@@ -65,7 +65,7 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: 159, pitch: 35 } }));
   
   // The road, back to ordinary dirt — it carried the case's red for a
   // while, but a ground-spanning ribbon never sat right as a seal.
@@ -130,7 +130,7 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  seed: 98,
   groundSeed: 21,
   trees: 4,
   keepout: [

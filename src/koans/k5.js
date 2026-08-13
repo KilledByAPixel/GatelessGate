@@ -49,7 +49,7 @@ const GRIP_ALONG = BRANCH.len - 0.35;   // the teeth set a little in from the ti
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6.5, minPitch: -9.9 };
+const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -35, pitch: -6.5, minPitch: -9.9 };
   export default {
   id: ID,
   slug: 'kyogen-mounts-the-tree',
@@ -212,7 +212,7 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6
   }
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  seed: ID+5,
   groundSeed: 21,
   trees: 9,
   keepout: [

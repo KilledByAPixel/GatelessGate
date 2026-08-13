@@ -30,7 +30,7 @@ export { makeGate } from './gate.js';
 export { makeFlag } from './flag.js';
 export { makeSign } from './sign.js';
 export { washMaterial, setSeal } from '../render/material.js';
-export { makeLights } from '../render/lights.js';
+export { makeLights, SUN_DEFAULT } from '../render/lights.js';
 export { bakeStatic } from './bake.js';
 export { makeDog } from './dog.js';
 export { makeTail } from './tail.js';

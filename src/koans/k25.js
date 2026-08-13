@@ -46,7 +46,7 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   scene.background = new THREE.Color(PAPER);
   // the dream's weather: everything past the hall is already gone
   scene.fog = new THREE.FogExp2(PAPER, 0.060);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: -39, pitch: 53 } }));
   
   // EVERYTHING THAT IS DREAMING — one group, rocked as a whole
   const hall = new THREE.Group();

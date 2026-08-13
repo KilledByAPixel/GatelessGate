@@ -47,8 +47,8 @@ export function setGrassPatchiness(v) { defaultPatchiness = v; }
 // both halves of that are here. Only composeWorld reads them; a builder called
 // directly (the showcase, kit-preview) still gets its own radius and the stock
 // taper, because those are small display fields and not a horizon.
-let defaultReach = 24;      // world units from the origin to the last straggler
-let defaultTaper = 0.45;    // fraction of the reach that is solid before thinning starts
+let defaultReach = 28;      // world units from the origin to the last straggler
+let defaultTaper = 0.3;    // fraction of the reach that is solid before thinning starts
 export function setGrassReach(v) { if (Number.isFinite(v) && v > 0) defaultReach = v; }
 export function setGrassTaper(v) { if (Number.isFinite(v) && v > 0 && v < 1) defaultTaper = v; }
 export function grassReach() { return { radius: defaultReach, taper: defaultTaper }; }

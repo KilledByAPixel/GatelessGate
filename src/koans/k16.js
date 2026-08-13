@@ -29,7 +29,7 @@ const ID = 16;
 // every other case's rather than by moving the book. composeWorld gets the same
 // object as its `view`, so the scatter still refuses spots no reachable heading
 // can see (kit/scenery.js).
-const CAM = { distance: 10, target: [-0.4, 1.35, 0.3], heading: -7.5, pitch: 18 };
+const CAM = { distance: 10, target: [-0.4, 1.35, 0.3], heading: -1, pitch: 18 };
 
 export default {
   id: ID,
@@ -54,12 +54,12 @@ export default {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
-    scene.add(makeLights());
+    scene.add(makeLights({ sun: { heading: 31, pitch: 40 } }));
 
     // The walk crosses the yard front-left to back-right, BETWEEN the hall and
     // the bell, so the court reads as ground people actually cross — and so a
     // monk on it is naturally broadside to the bell when the sound reaches him.
-    const path = makePath({ from: [-8.0, 8.8], to: [12.4, -15.3], width: 1.4, seed: ID, groundSeed: 21, wander: 1.1 });
+    const path = makePath({ from: [-8.0, 8.8], to: [12.4, -15.3], width: 1.4, seed: ID, groundSeed: 21, wander: 3.1 });
     scene.add(path);
 
     // the hall, back-left, its threshold facing the yard
@@ -135,7 +135,7 @@ export default {
 
     const world = composeWorld(scene, {
       view: CAM,
-      seed: ID,
+      seed: ID+1,
       groundSeed: 21,
       trees: 3,
       keepout: [

@@ -115,14 +115,14 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: -70, pitch: 49 } }));
   
   // The one road — and now it has somewhere to go: down the field, across
   // the sand, ending AT the eastern sea. It drapes over the SHORED ground
   // (its own groundFn), or its last stretch would stand on the unshored
   // height and pitch up over the beach dip like a tent.
   const road = makePath({
-  from: [7.0, 6.0], to: [-6.0, -16], width: 1.7, seed: ID, groundSeed: 21, wander: 0.45,
+  from: [7.0, 6.0], to: [-6.0, -16], width: 1.7, seed: ID, groundSeed: 21, wander: 2.45,
   groundFn: (x, z) => groundHeight(x, z, { seed: 21, shore: SHORE }),
   });
   scene.add(road);

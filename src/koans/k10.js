@@ -24,7 +24,7 @@ const RIGHT_AFTER = 4.5;  // and how long all three lie there before standing up
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 17.2 };
+const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 11 };
   export default {
   id: ID,
   slug: 'seizei-alone-and-poor',
@@ -40,7 +40,7 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 17.2 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: -26, pitch: 38 } }));
   
   const path = makePath({ from: [4.0, 8.4], to: [-2.0, -22], width: 1.2, seed: ID, groundSeed: 21, wander: 1.2 });
   scene.add(path);

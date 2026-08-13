@@ -41,11 +41,14 @@ export default {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
-    scene.add(makeLights());
+    scene.add(makeLights({ sun: { heading: 67, pitch: 36 } }));
 
     // a short approach to the threshold, so the ground reads as trodden
     const path = makePath({ from: [2.4, 9], to: [0.2, -20], width: 1.5, seed: 47, groundSeed: 21, wander: 0.9 });
     scene.add(path);
+
+    const path2 = makePath({ from: [-19, -2.4], to: [20, -1.2], width: 1.5, seed: 47, groundSeed: 21, wander: 0.9 });
+    scene.add(path2);
 
     // the monastery threshold he has just entered
     const hut = makeHut({ width: 3.0, height: 2.3, depth: 2.4, chimes: 15});
@@ -130,11 +133,12 @@ export default {
 
     const world = composeWorld(scene, {
       view: CAM,
-      seed: 7,
+      seed: 9,
       groundSeed: 21,
       trees: 4,
       keepout: [
         ...path.keepout(24, 1.0),
+        ...path2.keepout(24, 1.0),
         { at: hut, r: 3.0 },
         { at: basin, r: 1.5 },          // basin + bowl
         { at: joshu, r: 1.1 },
@@ -145,6 +149,7 @@ export default {
       // the monk stands in the grass like anyone would
       grassKeepout: [
         ...path.keepout(24, 0.95),
+        ...path2.keepout(24, 0.95),
         { at: hut, r: 1.9 },
         { at: basin, r: 0.62 },
       ],
