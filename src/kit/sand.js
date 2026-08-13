@@ -54,9 +54,23 @@ export function makeSand({
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geo.setIndex(indices);
   geo.computeVertexNormals();
+  // NO POLYGON OFFSET HERE, unlike the path this band borrows its idiom from.
+  // The +0.025 lift above is what keeps the sand off the terrain; the offset was
+  // belt-and-braces on top, and on the beach it costs more than it buys.
+  //
+  // It was inert for the whole life of the shipped look — the workbench rebuilt
+  // every material as a plain Lambert before it reached the screen and the clone
+  // never copied polygonOffset — so nothing z-fought and nobody knew. Retiring
+  // that rebuild turned it on, and this was the one surface where it showed:
+  // the offset is `factor * the polygon's depth slope`, the path lies flat on
+  // gentle terrain while this band is draped over the shore TAPER and read at a
+  // grazing angle, so the same factor moved the beach's written depth far
+  // further. Polygon offset moves depth WITHOUT moving geometry, the depth-edge
+  // ink pass Sobels that buffer, and the seaward edge runs on under the water
+  // against un-offset ground — so the buffer carried a step the scene did not
+  // and the ink drew a dark line along the waterline (Frank: "right at the
+  // bottom of the sand where it tapers down... it looks a little not so good").
   const mat = washMaterial({ color });
-  mat.polygonOffset = true;
-  mat.polygonOffsetFactor = -1;
   const mesh = new THREE.Mesh(geo, mat);
   mesh.name = 'sand';
   return mesh;

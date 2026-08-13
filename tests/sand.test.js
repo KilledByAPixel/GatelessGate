@@ -55,3 +55,31 @@ test('the upper edge is wavy, not ruler-straight, and seeded', () => {
   assert.deepEqual(edgeLine(20), edgeLine(20));
   assert.notDeepEqual(edgeLine(20), edgeLine(21));
 });
+
+// THE BEACH TAKES NO POLYGON OFFSET, and this is the assertion that keeps it
+// that way. It used to set `polygonOffsetFactor = -1` — the same belt-and-braces
+// the path still carries on top of its own geometric lift.
+//
+// That flag was INERT for the whole life of the shipped look: the workbench
+// rebuilt every material as a plain Lambert on the way to the screen and the
+// clone never copied polygonOffset, so nothing ever z-fought and nobody knew the
+// setting did nothing. Retiring that rebuild turned it on, and the beach was the
+// one surface where it showed.
+//
+// Why the beach and not the path, on identical settings: the offset is
+// `factor * the polygon's depth slope`, and the path lies flat on gentle terrain
+// while the sand is draped over the shore TAPER and read at a grazing angle. Same
+// factor, a far bigger offset. Polygon offset moves WRITTEN DEPTH without moving
+// geometry, the depth-edge ink pass Sobels that buffer, and the sand's seaward
+// edge runs on under the water against un-offset ground — so the buffer carried a
+// step the scene did not, and the ink drew a dark line along the waterline
+// (Frank: "right at the bottom of the sand where it tapers down... it looks a
+// little not so good").
+//
+// The z-fighting it was there to prevent is prevented by the +0.025 lift in the
+// geometry above, which is doing the real work.
+test('the beach writes its own true depth: no polygon offset', () => {
+  const sand = makeSand({ shore: SHORE });
+  assert.equal(sand.material.polygonOffset, false,
+    'a polygon-offset beach hands the depth-edge ink pass a step at the waterline');
+});
