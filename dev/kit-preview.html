@@ -18,7 +18,7 @@
       makeWater, makeHut, makeLattice, makeAssembly, makeLights, washMaterial,
       makeFox, makeCat, makeHorse, makeKoi, makeBird, makeBirds,
       makeHangingMonk,
-      makeTree, makePine, makeOak, makeForest, makeGrassField, makeTuftField, makeWildflowers,
+      makeTree, makePine, makeOak, makeForest, makeTuftField, makeWildflowers,
       makeGate, makeVeranda, makeLantern, makeBell, makeDrum, makeStall,
       makeBasin, makeFurin, makeWheel, makeVase, makeRack, makePole, makeBundle,
       makeFan,
@@ -119,10 +119,14 @@
     // which reads center[0]/center[2]); a 2-element array leaves center[2]
     // undefined and every instance position comes out NaN (invisible)
     place(makeForest({ center: [0, 0, 0], spread: 3.5, count: 22, treeH: 2.2 }), -4, 14, 0, 'forest');
-    // count kept close to the real game's per-area density (radius 20 / count
-    // 52000 in production) rather than the naive scale-down, which packed the
-    // blades ~3x too dense and read as a solid black mass
-    place(makeGrassField({ radius: 3.2, count: 1300 }), 5, 14, 0, 'grassfield');
+    // This slot used to preview makeGrassField, the old 3D-blade renderer;
+    // that builder is gone (see grassfield.js: "the blades were dev-only for
+    // their whole life and were cut"), so this is the same makeTuftField as
+    // the row below at a higher count, kept under the 'grassfield' key
+    // because that is still the field's own object name (tuftfield.js: "the
+    // name stays 'grassfield'... scene.getObjectByName('grassfield') returns
+    // the billboards").
+    place(makeTuftField({ radius: 3.2, count: 1300 }), 5, 14, 0, 'grassfield');
     // the production grass renderer (composeWorld's default) — offset a touch in
     // z from grassfield's own slot so the two patches don't overlap in the wide
     // overview shot; had no workbench view at all before this task (the gap the
