@@ -184,7 +184,8 @@ const STAND_PROFILE = [
 // down. The lap shelf fixed the vertical read — a wide low block, a
 // near-horizontal lap turn, the torso rising visibly INSET — but the block
 // itself was still a solid of revolution, which reads as a figure with no legs.
-// A figure in lotus (see local/refs/buddha.png) is widest at the KNEES, left
+// A figure in lotus (see the reference in the gitignored local/refs) is widest
+// at the KNEES, left
 // and right, with a valley between them where the hands rest; a radially
 // symmetric pool can never say "folded legs". So the lathe here is only the
 // cloth core — the shins and the pooled robe BETWEEN the knees — pulled in to

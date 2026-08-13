@@ -6,7 +6,8 @@ import { makeHorse } from '../src/kit/horse.js';
 // The horse rework (overnight polish 2, item 14): pins the silhouette events
 // that make it a HORSE and not a llama, measured from the meshes themselves so
 // a regression in either horse.js or the shared plan trips them. The reference
-// is local/refs/horse.png; the numbers in comments are counted off it.
+// photo lives in the gitignored local/refs; the numbers in the comments below
+// were counted off it, so they cannot be re-checked from a fresh clone.
 
 function build() {
   const horse = makeHorse({});

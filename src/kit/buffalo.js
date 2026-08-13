@@ -57,8 +57,9 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // read as spikes coming up from its ears. `curve` (quadruped.js) lofts the
     // cone along an arc bending toward local -z, so with a wide `sweep` the
     // pair leaves the SIDES of the skull, stands up-and-out, and hooks back
-    // over the neck like local/refs/buffaloHead.png. Halved in length and
-    // nearly doubled at the base: a devil's horn, not a fencepost.
+    // over the neck, following the reference photo in the gitignored local/refs.
+    // Halved in length and nearly doubled at the base: a devil's horn, not a
+    // fencepost.
     horns: { r: 0.1, len: 0.5, x: 0.1, up: -0.02, fwd: 0.7, sweep: 0.75, back: 0.25, curve: -0.50 },
     tail: { kind: 'strand', segments: 7, length: 0.74, thickness: 0.05, up: 0.0, back: 0.8, color: tailColor },
   });
