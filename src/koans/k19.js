@@ -145,7 +145,7 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   // being skewered by it.
   const path = makePath({
   from: [4.2, 8.5], to: [-12.8, -27.7],
-  width: 1.5, seed: 19, groundSeed: 21, wander: 1.15,
+  width: 1.5, seed: 19, groundSeed: 21, wander: 3,
   });
   scene.add(path);
   

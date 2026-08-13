@@ -39,7 +39,7 @@ const CAM = { distance: 11, target: [-0.5, 1, 0.5], heading: 46, pitch: 21.5 };
   // off the steelyard are the hour the case happens at.
   scene.add(makeLights({ sun: { heading:97, pitch: 29 } }));
   
-  const path = makePath({ from: [-3.6, 8.4], to: [2.4, -18], width: 1.3, seed: ID, groundSeed: 21, wander: 1.1 });
+  const path = makePath({ from: [-3.6, 8.4], to: [2.4, -18], width: 1.3, seed: ID, groundSeed: 21, wander: 6 });
   scene.add(path);
 
   // THE HALL the yard belongs to. Tozan is weighing flax outside a working

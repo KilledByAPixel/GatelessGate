@@ -59,7 +59,7 @@ export default {
     // The walk crosses the yard front-left to back-right, BETWEEN the hall and
     // the bell, so the court reads as ground people actually cross — and so a
     // monk on it is naturally broadside to the bell when the sound reaches him.
-    const path = makePath({ from: [-8.0, 8.8], to: [12.4, -15.3], width: 1.4, seed: ID, groundSeed: 21, wander: 1.1 });
+    const path = makePath({ from: [-8.0, 8.8], to: [12.4, -15.3], width: 1.4, seed: ID, groundSeed: 21, wander: 3.1 });
     scene.add(path);
 
     // the hall, back-left, its threshold facing the yard
