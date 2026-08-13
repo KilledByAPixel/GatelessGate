@@ -64,8 +64,11 @@ export function aimMonk(monk, target) {
 }
 
 // faceMonk = face the BODY. The figure kit's bodies front local +z — the
-// seated fold, the folded hands, the collar step all live on +z (proved
-// empirically in walk.js's walkHeading, the same convention). rotation.y =
+// seated fold, the folded hands, the collar step all live on +z. Proved
+// empirically (shots wip-monk-axis-*): the arm meshes hang at x = ±0.27, so
+// the shoulder line spans x and the robe/hat silhouette is symmetric about
+// x = 0. (The retired walk.js reached the same convention independently, and
+// k17 learned it case-locally before either.) rotation.y =
 // atan2(dx, dz) maps local +z → the world direction (sin y, 0, cos y), so
 // the figure looks AT the target. This is what every non-pointing figure
 // wants; use aimMonk only for a 'point'/'raise' sleeve laid on its object.

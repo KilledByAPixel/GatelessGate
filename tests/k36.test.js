@@ -7,8 +7,9 @@ import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 //
 // The two of them used to WALK past each other, and the tests here pinned that:
 // each figure's rotation.y against the direction he was measured to be moving,
-// which was the fix for a real bug (walkHeading assumed the figure fronts local
-// +x when the body fronts +z, so both travellers went shoulder-first). That
+// which was the fix for a real bug (the walk helper, since retired, assumed the
+// figure fronts local +x when the body fronts +z, so both travellers went
+// shoulder-first). That
 // staging is gone — case 35, one page back, is already two figures walking a
 // road, and two walking scenes in a row read as the same scene twice. The
 // heading convention it proved still lives, tested at its source in the kit.

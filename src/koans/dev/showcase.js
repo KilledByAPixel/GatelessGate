@@ -372,7 +372,7 @@ export default {
   },
 };
 
-// Kept out on purpose, and not by oversight: makeGround/makeMountains/makeIsland/
+// Kept out on purpose, and not by oversight: makeGround/makeMountains/
 // makeCliff/makeCave/makePath/makeSnow/makeRocks/makeBushes are terrain
 // and weather, not models — they have no footprint that sits in a row, and each
 // one would swallow the neighbours it is meant to be compared against. The

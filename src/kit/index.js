@@ -1,5 +1,4 @@
 // The kit facade: one import surface for koan modules (ctx.kit).
-export { makeIsland } from './island.js';
 export { makeGround, groundHeight } from './ground.js';
 export { makeMountains } from './mountains.js';
 export { makeForest } from './forest.js';
@@ -70,5 +69,4 @@ export { makeSnow } from './snowfall.js';
 export { makeRain } from './rainfall.js';
 export { makeKoi } from './koi.js';
 export { makeFan } from './fan.js';
-export { makeWalk, walkPose, walkHeading, pathLength } from './walk.js';
 export { setBreezePointer, clearBreeze, breezeState, breezeFalloff, treeSpringStep } from './breeze.js';

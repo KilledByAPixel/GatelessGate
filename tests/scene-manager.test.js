@@ -2,11 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { disposeRoot } from '../src/scene/manager.js';
-import { makeIsland } from '../src/kit/island.js';
 
 test('disposeRoot frees geometry + own textures', () => {
   const scene = new THREE.Scene();
-  scene.add(makeIsland({ radius: 4, seed: 1 }));
+  // any mesh carrying a geometry and a material of its own — this was the
+  // retired makeIsland, which was only ever standing in for "a kit prop"
+  scene.add(new THREE.Mesh(
+    new THREE.CylinderGeometry(4, 3.7, 0.55, 32),
+    new THREE.MeshBasicMaterial()));
   // a mesh with its own DataTexture map (the role the retired blob shadows
   // used to play here): disposeRoot must free it
   const tex = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1, THREE.RGBAFormat);
