@@ -21,9 +21,9 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     height, color, seed,
     // few segments so flatShading facets it — a smooth capsule reads as a lozenge
     bodyR: 0.40, bodyLen: 0.86, bodyDrop: 0.36,
-    // legTaper 1.05: the shared limb profile wants a thigh to start from —
-    // at the old default 0.82 the heaviest animal in the book had the
-    // thinnest leg tops
+    // legTaper is up: the shared limb profile wants a thigh to start from, and
+    // at the stock default the heaviest animal in the book had the thinnest
+    // leg tops
     legBury: .2,
     legH: 0.46, legR: 0.125, legTaper: 1.05, hipX: 0.15, hipZ: 0.34,
     hump: { r: 0.35, scaleY: 0.86, scaleZ: 1.00, up: 0.24, fwd: 0.18 },

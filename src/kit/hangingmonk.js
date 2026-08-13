@@ -63,11 +63,10 @@ export function makeHangingMonk({ height = 1.6, color = INK_LIT, seed = 5 } = {}
   // the pivot, body further behind still. A later pass added the rotateX below
   // on top of them, pitching the head back on its own centre as well.)
   const headR = 0.095 * h;
-  // sphereHead's default r is 0.095 — the same radius headR names — so this
-  // is figure.js's own head, not a lookalike copy.
+  // sphereHead's own default is the radius headR names above, so this is
+  // figure.js's head rather than a lookalike copy.
   const head = sphereHead({ height: h, mat });
-  // mouth = origin = head centre + (up 0.7 + forward 0.9) · headR
-  // (retuned from 0.55/0.75 in the tweaks round)
+  // mouth = origin = head centre, offset up and forward by fractions of headR
   head.position.set(0, -0.7 * headR, -0.9 * headR);
   head.rotateX(-1.0)
   g.add(head);

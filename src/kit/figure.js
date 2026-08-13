@@ -297,35 +297,33 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // Everything a stance decides, in fractions of height. `sit` and `stand` are
 // the two authored poses; `kneel` is exactly halfway between them, which is
 // what kneeling is — the hem spread of a folded figure carried at most of a
-// standing figure's height.
-// `staffX` is where the elder's staff plants, laterally, in fractions of
-// height — and it is per-stance because the hem is. A standing hem clears the
-// standing plant comfortably; a seated figure's knees reach much further out,
-// so the SAME plant put the staff inside the cloth and it emerged through the
-// robe like a stick stuck in a tent. Case 17 fixed that by hand first, and its
-// number is what the seated stance carries here: past the hem plus the staff's
-// own radius, so it reads as the teacher's staff set down within reach. The
-// standing plant is untouched — every standing elder in the book is framed
-// around it.
-// `staffAng` is the BEARING of the staff plant, radians around +y off the
-// local +x axis (toward +z). It exists because of a systematic staging
-// coincidence the grip audit found: cases aim a standing elder at something
-// up-scene with aimMonk (which turns local +x to the target) and the shipped
-// camera looks over his shoulder at the same target — so a staff planted ON
-// the +x axis sits exactly on the camera→figure→target line and reads as
-// growing out of the wearer's hat (k11/k19/k21/k22/k27/k31/k34/k36/k39).
-// Swinging the standing plant off the facing axis keeps it the same distance
-// out — past the hem, beside the resting sleeve — but breaks the alignment for
-// over-the-shoulder cameras. Seated figures face local +z
-// (the folded sleeves), so their +x plant already IS the side plant and
-// stays at 0. Cases with a bearing-sensitive staging can override with the
-// `staffAng` option (additive; 0 = the old on-axis plant).
-// `foldUpper`/`foldFore` are the folded-arm pitches (radians off plumb,
-// toward local +z) for the two-piece arm — the upper's hang and the
-// forearm's bend at the elbow — and they are per-stance because the hands'
-// destination is: seated hands rest DOWN in the lap (a gentle bend), while
-// standing hands meet at the waist (the forearm swings nearly horizontal).
-// The inward swing (the cuffs crossing to the centre) is the same for all.
+// standing figure's height. `staffX` is where the elder's staff plants,
+// laterally, in fractions of height — and it is per-stance because the hem is.
+// A standing hem clears the standing plant comfortably; a seated figure's knees
+// reach much further out, so the SAME plant put the staff inside the cloth and
+// it emerged through the robe like a stick stuck in a tent. Case 17 fixed that
+// by hand first, and its number is what the seated stance carries here: past
+// the hem plus the staff's own radius, so it reads as the teacher's staff set
+// down within reach. The standing plant is untouched — every standing elder in
+// the book is framed around it. `staffAng` is the BEARING of the staff plant,
+// radians around +y off the local +x axis (toward +z). It exists because of a
+// systematic staging coincidence the grip audit found: cases aim a standing
+// elder at something up-scene with aimMonk (which turns local +x to the target)
+// and the shipped camera looks over his shoulder at the same target — so a
+// staff planted ON the +x axis sits exactly on the camera→figure→target line
+// and reads as growing out of the wearer's hat
+// (k11/k19/k21/k22/k27/k31/k34/k36/k39). Swinging the standing plant off the
+// facing axis keeps it the same distance out — past the hem, beside the resting
+// sleeve — but breaks the alignment for over-the-shoulder cameras. Seated
+// figures face local +z (the folded sleeves), so their +x plant already IS the
+// side plant and stays at 0. Cases with a bearing-sensitive staging can
+// override with the `staffAng` option (additive; 0 = the old on-axis plant).
+// `foldUpper`/`foldFore` are the folded-arm pitches (radians off plumb, toward
+// local +z) for the two-piece arm — the upper's hang and the forearm's bend at
+// the elbow — and they are per-stance because the hands' destination is: seated
+// hands rest DOWN in the lap (a gentle bend), while standing hands meet at the
+// waist (the forearm swings nearly horizontal). The inward swing (the cuffs
+// crossing to the centre) is the same for all.
 const KNEEL = 0.5;
 const STAND_STANCE = { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.765, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.2, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.92 };
 // Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did: the
@@ -334,12 +332,11 @@ const STAND_STANCE = { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, hea
 // comfortably a seated man, and the fold angle eases to -0.44 so the cuffs keep
 // landing in the lap the knees now frame.
 const SIT_STANCE = { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, head: 0.545, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31, foldCross: 1.1 };
-// Kneel is DERIVED, field by field, from whatever stand and sit currently
-// are. It used to repeat their values as literals, and every retune of the
-// endpoints (the sit +0.015 lift, staffAng 0.9 → 0.2) silently un-halved it
-// — four fields had drifted. Latent (no koan kneels; tests do), but the
-// whole claim of this stance is "exactly halfway", so it is now that by
-// construction.
+// Kneel is DERIVED, field by field, from whatever stand and sit currently are.
+// It used to repeat their values as literals, and every retune of the endpoints
+// (the sit +0.015 lift, staffAng 0.9 → 0.2) silently un-halved it — four fields
+// had drifted. Latent (no koan kneels; tests do), but the whole claim of this
+// stance is "exactly halfway", so it is now that by construction.
 const KNEEL_STANCE = { profile: mixProfile(STAND_PROFILE, SIT_PROFILE, KNEEL) };
 for (const k of Object.keys(STAND_STANCE)) {
   if (k !== 'profile') KNEEL_STANCE[k] = mix(STAND_STANCE[k], SIT_STANCE[k], KNEEL);
@@ -433,9 +430,9 @@ export function makeFigure({
   // wanted, and no case ever passed it again. Retired: nobody should be getting
   // rid of arms.
   for (const side of [-1, 1]) {
-    // the gesture arm (point/raise, always the right) stays a single
-    // sleeve; everything else folds when the pose or the stance says so —
-    // a seated pointing teacher still keeps his OTHER hand in his lap
+    // the gesture arm (point/raise, always the right) stays a single sleeve;
+    // everything else folds when the pose or the stance says so — a seated
+    // pointing teacher still keeps his OTHER hand in his lap
     const gesture = (arms === 'point' || arms === 'raise') && side === 1;
     if (!gesture && (arms === 'fold' || seated)) makeFoldedArm(side);
     else makeSleeve(side);
@@ -482,9 +479,9 @@ export function makeFigure({
   // read off the tables above rather than shared, because a seated man is
   // folded and his waist is much nearer the ground. Everything below the split
   // (the lap shelf, the cushion, the knees) stays where it is; the staff is
-  // added further down this function and so never joins the hinge at all,
-  // which is right for both stances — held in the hand it rides the arm, stood
-  // on the ground it stays stood on the ground.
+  // added further down this function and so never joins the hinge at all, which
+  // is right for both stances — held in the hand it rides the arm, stood on the
+  // ground it stays stood on the ground.
   let waist = null;
   if (bow !== false && bow !== 0) {
     const waistY = seated ? 0.220 : 0.452;    // fraction of height: at the obi
@@ -576,10 +573,10 @@ export function makeFigure({
     // at hat-brim height — the brim reaches 0.192·h — so from roughly half
     // of all camera bearings the staff read as growing out of the wearer's
     // hat (k11/k19/k21/k22/k27/k31/k34/k36/k39, the "not in the right
-    // place" audit). At 0.02 rad the shaft clears the brim by ~0.05·h and
-    // still passes within a hand's reach of the resting cuff, so it reads
-    // as the same planted, gripped staff — just beside the monk instead of
-    // through his hat. The plant distances (staffX) are untouched.
+    // place" audit). Leaned back a hair, the shaft clears the brim and still
+    // passes within a hand's reach of the resting cuff, so it reads as the same
+    // planted, gripped staff — just beside the monk instead of through his hat.
+    // The plant distances (staffX) are untouched.
       staff.rotation.z = 0.02;
     }
     g.add(staff);

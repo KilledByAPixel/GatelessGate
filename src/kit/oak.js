@@ -164,9 +164,9 @@ export function makeOak({
       const spread = isHero ? 0.95 + 0.24 * rnd()
         : level === 0 ? 0.88 + 0.24 * rnd() : 0.32 + 0.46 * rnd();
       const child = tip.clone().multiply(RY(azimuth)).multiply(RZ(spread));
-      // Tamed, the hero primary is only a touch longer than its siblings
-      // (1.24 vs 1.18) — its character is the horizontal elbow, not raw
-      // length. At reach 1 it grows the legacy 1.62-1.80 spear again.
+      // Tamed, the hero primary is only a touch longer than its siblings —
+      // its character is the horizontal elbow, not raw length. At reach 1 it
+      // grows the full reaching spear again.
       const scale = isHero ? R(1.24, 1.62) + R(0.10, 0.18) * rnd() : level === 0 ? 1.18 : 0.42;
       const fall = isHero ? 0.80 : level === 0 ? 0.66 : 0.66;
       if (level === 0) addKnuckle(tip, rad * 0.62);

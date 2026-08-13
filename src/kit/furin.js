@@ -591,8 +591,8 @@ export function makeFurin({
     });
   }
 
-  // the cap the tubes hang from — a shade deeper and more sharply tapered
-  // than the first pass (0.1S, barely tapered), so it reads as a small roof
+  // the cap the tubes hang from — deeper and more sharply tapered than the
+  // first pass, which was barely tapered at all, so it reads as a small roof
   // over the ring rather than a washer the tubes happen to hang from. Over a
   // single tube it shrinks to read as the knot the cord ties to, not a roof
   // over a ring that does not exist.
@@ -700,9 +700,9 @@ export function makeFurin({
   // be well inside, high enough that the contact angle stays sane).
   const CONTACT_Y = CORD + (single ? 0.18 * S + 0.65 * singleLen : 0.9 * S);
   // How far the clapper has to travel, in a straight line, before it touches
-  // metal. A ring's tubes stand 0.33*S off the axis with the clapper centred
-  // between them; a single's clapper sits INSIDE the body, so its clearance
-  // is the wall's own radius less its own. The 0.9 is the same allowance
+  // metal. A ring's tubes stand off the axis with the clapper centred between
+  // them; a single's clapper sits INSIDE the body, so its clearance is the
+  // wall's own radius less its own. The allowance below is the same one
   // kit/cylinder.js makes for a body drawn with no modelled wall thickness:
   // measuring against the outer radius slightly OVERSTATES the gap, never
   // understates it, so it can never report a touch that could not happen.

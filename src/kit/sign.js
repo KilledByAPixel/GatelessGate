@@ -50,7 +50,7 @@ export function makeSign({
   const HEAD = 0.11;
   const boardY = height - HEAD - boardH / 2;
   const board = new THREE.BoxGeometry(width, boardH, thickness);
-  // Buried 0.03 into the post's front face rather than butted against it: flush
+  // Buried into the post's front face rather than butted against it: flush
   // faces z-fight and a gap reads as floating (the kit's standing join rule).
   board.translate(0, boardY, postD / 2 + thickness / 2 - 0.03);
 

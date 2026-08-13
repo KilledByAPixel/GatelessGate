@@ -42,9 +42,9 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
   const { group } = makeQuadruped({
     height, color, seed,
     bodyR: 0.25, bodyLen: 0.50, bodyDrop: 0.18,
-    // legs read as sticks at 0.052 — thicker; the limb profile in the shared
+    // the legs read as sticks when thinner; the limb profile in the shared
     // plan (broad thigh, slim cannon, small foot) does the shaping now, and
-    // legTaper 1.0 hands it a full-width thigh to start from
+    // legTaper hands it a full-width thigh to start from
     legBury: .2,
     legH: 0.5, legR: 0.09, legTaper: 1.0, hipX: 0.1, hipZ: 0.30,
     neck: { r: 0.15, len: 0.26 },

@@ -67,7 +67,7 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     // twice the head's radius tall: on a fox the ears are half the head.
     // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): base offsets
     // from the skull's centre — high on top with a touch of forward, inside
-    // the 0.125 radius so the join is buried — leaning 0.44 out.
+    // the skull radius so the join is buried, and leaning out.
     ears: { r: 0.05, h: 0.3, x: 0.051, y: 0.09, z: 0.0, tilt: 0.44 },
     tail: {
       kind: 'stiff', r0: 0.06,

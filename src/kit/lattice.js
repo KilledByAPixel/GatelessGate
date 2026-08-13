@@ -19,7 +19,7 @@ const T = 0.06;   // frame thickness
 // running the panel's full height uninterrupted; the horizontals (0.46T) are
 // the lighter cross-members threaded between them — the way a real kōshi
 // lattice is actually built, heaviest members first, lightest last. The first
-// pass drew both infill directions at the same 0.6T, which read as one flat
+// pass drew both infill directions at the SAME depth, which read as one flat
 // grid with a frame around it rather than a built thing with a hierarchy.
 const V_BAR = T * 0.62;
 const H_BAR = T * 0.46;

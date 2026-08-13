@@ -104,9 +104,9 @@ export function layoutGuides(scene, { target = null } = {}) {
   if (L.treeRing) for (const r of L.treeRing) circle(ring, 0, 0, r, surf);
 
   const mountains = [];
-  // 0.85 of the radius is the line the scatter actually tests against, not the
-  // rock's own edge — the skirt stays plantable on purpose. Drawing the true
-  // radius would put the guide where nothing is enforced.
+  // The guide is drawn at the line the scatter actually tests against, NOT at
+  // the rock's own edge — the skirt stays plantable on purpose, and drawing the
+  // true radius would put the guide where nothing is enforced.
   for (const f of L.footprints || []) circle(mountains, f.x, f.z, f.r * 0.85, surf);
 
   const markers = [];

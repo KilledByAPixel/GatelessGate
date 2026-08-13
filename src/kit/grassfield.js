@@ -235,8 +235,8 @@ export function grassPlacements({
 // tuftfield.js carries only the VARIATION per instance now, so this constant is
 // the tone the meadow actually renders at.
 //
-// 0.62 rather than the 0.69 it had been landing on: a step lighter, which is
-// what the ground occlusion bought. The grass no longer has to carry the sense
+// A step LIGHTER than it had been landing on, which is what the ground
+// occlusion bought. The grass no longer has to carry the sense
 // of mass on its own now that the earth under it is darker where it is thick
 // (grassshade.js), so the blades themselves can come up out of the wash.
 export const GRASS_TONE = wash(0.62);

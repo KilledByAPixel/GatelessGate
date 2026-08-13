@@ -823,8 +823,8 @@ export function ceramicPartials(f0 = CERAMIC.f0, decay = CERAMIC.decay) {
 // fundamental actually sits BELOW bamboo's 220 Hz, so register isn't the tell
 // either. What actually separates the two is each voice's own TRANSIENT (its
 // own knock, tuned separately at its engine.js call site) and LEVEL, plus a
-// shorter decay here (0.26 vs the odoshi's 0.35) — almost no tail at all. A
-// tree trunk is the most inert thing in the book.
+// shorter decay here than the odoshi's — almost no tail at all. A tree trunk
+// is the most inert thing in the book.
 export const WOOD = { f0: 190, level: 0.09, decay: 0.26, verbMix: 0.3, tail: 1 };
 
 export function woodPartials(f0 = WOOD.f0, decay = WOOD.decay) {
