@@ -19,7 +19,7 @@ const ID = 17;
 // third the two of them bow to each other, which settles nothing, and the
 // courtyard goes back to how it was so you can do the whole thing over.
 
-const ANSWER_DELAY = 0.55;      // he is across a courtyard, not beside you
+const ANSWER_DELAY = 0.4;      // he is across a courtyard, not beside you
 // Radians of lean. 0.16 is nine degrees — a nod, and at this staging distance
 // not a visible one (Frank: "could we increase how much they bow? It's still
 // not quite enough"). 0.42 is twenty-four degrees, which is a bow you can see
@@ -183,8 +183,8 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   if (!input.raycastFirst(camera, [hit])) return;
   if (bowAt > -99 && clock - bowAt < BOW_IN + BOW_HOLD + BOW_OUT) return;  // let it finish
   if (pending >= 0) return;                     // one call at a time
+  pending = clock + ANSWER_DELAY - calls*.1;
   calls++;
-  pending = clock + ANSWER_DELAY;
   audio && audio.knock({ force: 0.8, at: CHU_POS });         // "Oshin."
   });
   
