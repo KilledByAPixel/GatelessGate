@@ -29,15 +29,14 @@ const ID = 45;
 // Second — and this is the one worth recording — the case used to stage HIM:
 // the man of the koan, placed at the very margin of the picture with his back
 // turned, walking to a mark unprojected from a fixed spot near the frame's
-// edge so that he was always just-noticed, never the figure you were looking
+// edge, so that he was always just-noticed, never the figure you were looking
 // at, and walked out of shot the moment you reached for him. It read as
 // intended on a still page and nowhere else. In the look, whose drift never
 // stops, the frame slid off him constantly and he re-placed to the opposite
-// margin about once a second — one man teleporting between both edges, which
-// the reader sees as several monks glitching in and out on both sides of the
-// frame. Damping the
-// chase and gating the re-place fixed the strobe and left a man who slides
-// around the edge of every shot for no reason a reader can name.
+// margin about once a second — one man teleporting between both edges, which a
+// reader sees as several monks glitching in and out. Damping the chase and
+// gating the re-place fixed the strobe, and left a man who slides around the
+// edge of every shot for no reason a reader can name.
 //
 // The verdict was the simpler one: he is gone, and the answer to "who is he?"
 // is left to the reader and the two men in the lane. The staging keeps what

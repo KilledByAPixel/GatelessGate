@@ -47,10 +47,9 @@ const smooth = (t) => t * t * (3 - 2 * t);
 // reload; onClack reads CLATTER.force fresh on every clack rather than
 // capturing it once, so a slider reaches a roll already in progress.
 export const CLATTER = {
-  // STARTING POINT, not a final value — the owner sets this by ear through
-  // the harness. 0.35 sits comfortably above k28's 0.22 (about 1.6x) while
-  // staying well under a typical knock's 0.9 (about 0.4x) — audible as a
-  // quiet run of eleven, not a event-sized bang.
+  // STARTING POINT, not a final value — settled by ear through the harness.
+  // It sits comfortably above the book's quietest knock while staying well
+  // under a typical one: audible as a quiet run, not an event-sized bang.
   force: 0.35,
 };
 // guards a stalled or otherwise huge dt from firing a whole roll's worth of

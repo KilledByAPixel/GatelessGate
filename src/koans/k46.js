@@ -38,34 +38,34 @@ const SITTER_YAW = Math.PI + 0.4;
 // TAP THE POLE and the whole mast wobbles. That is the only thing on this page
 // that answers, and the man on top rides it because he is up there.
 //
-// The SITTER used to be a target too: tap him and he tipped forward seven
-// degrees, held at the very edge of the step the koan demands, and settled
-// back. It was the more literal reading of the case — "proceed from the top of
-// a hundred-foot pole" — and it was cut on sight. Two
-// targets on a page whose whole subject is one vertical object was one too
-// many, and the small nod he also had is gone with it: at this distance a
-// seven-degree tip on a 1.3-unit figure eight units up is a couple of pixels,
-// which is a thing the code knows about and the reader does not.
+// The SITTER used to be a target too: tap him and he tipped forward at the very
+// edge of the step the koan demands, and settled back. It was the more literal
+// reading of the case — "proceed from the top of a hundred-foot pole" — and it
+// was cut on sight. Two targets on a page whose whole subject is one vertical
+// object was one too many, and the small nod he also had is gone with it: at
+// this distance a few degrees of tip on a small figure eight units up is a
+// couple of pixels, which is a thing the code knows about and the reader does
+// not.
 //
-// THE WOBBLE IS TWO INDEPENDENT SWAYS, not one lean scaled onto two axes
-// — a separate sine per axis, at values of their own. One damped
-// sine per axis, at frequencies that do not divide into each other and with a
-// quarter-turn of phase between them, so the tip of the mast traces an opening
-// spiral rather than swinging in a plane and back. A pole struck by a hand does
-// not pick an axis; it goes round.
-// IT IS A PHYSICAL THING NOW, not a played curve, and this is the third go at
-// it. The first was one envelope scaled onto two axes; the second was two damped
-// sines, `exp(-decay*u) * sin(freq*u)`, restarted from u = 0 on every tap. Both
-// were shapes, and a shape has to start somewhere — so a second tap while the
-// mast was still moving threw away whatever it was doing and began again from
-// nothing, and tapping repeatedly made it pop. What it wants instead is an
-// ACCELERATION applied to something already in motion.
+// THE WOBBLE IS TWO INDEPENDENT SWAYS, not one lean scaled onto two axes: one
+// per axis, at frequencies that do not divide into each other and a quarter
+// turn of phase apart, so the tip of the mast traces an opening spiral rather
+// than swinging in a plane and back. A pole struck by a hand does not pick an
+// axis; it goes round.
 //
-// Which is a pendulum, and the book already has one — the same
-// integrator the fūrin and the bronze cylinders swing on. TWO of them, one per
-// axis, at lengths chosen so their periods do not divide into each other; a
-// touch is a KICK, which by construction changes only the angular VELOCITY and
-// leaves the angle exactly where it was (see kickPendulum's own note). So:
+// IT IS A PHYSICAL THING, not a played curve, and this was the third go at it.
+// The first was one envelope scaled onto two axes; the second was two damped
+// sines restarted from u = 0 on every tap. Both were SHAPES, and a shape has to
+// start somewhere — so a second tap while the mast was still moving threw away
+// whatever it was doing and began again from nothing, which made repeated taps
+// pop. What it wants instead is an ACCELERATION applied to something already in
+// motion.
+//
+// Which is a pendulum, and the book already has one — the same integrator the
+// fūrin and the bronze cylinders swing on. TWO of them, one per axis, at lengths
+// chosen so their periods do not divide into each other; a touch is a KICK,
+// which by construction changes only the angular VELOCITY and leaves the angle
+// exactly where it was (see kickPendulum's own note). So:
 //
 //   * nothing can snap, at any time, because the rendered angle is never
 //     assigned — it is integrated, and a kick does not touch it;
@@ -74,9 +74,9 @@ const SITTER_YAW = Math.PI + 0.4;
 //   * the spiral, the uneven decay and the dying-out all come out of the
 //     physics rather than being described.
 //
-// The lengths give ~4.6 and ~6.1 rad/s (g/length), which are the two frequencies
-// the hand-tuned sines had; the damping terms are twice their old decay rates,
-// since a `-c*omega` drag decays an envelope at c/2.
+// The lengths were solved to land on the two frequencies the hand-tuned sines
+// had; the damping terms are twice their old decay rates, since a `-c*omega`
+// drag decays an envelope at c/2.
 const SWAY_G = 9.8;
 const SWAY_X = { length: 0.46, damping: 2.2 };   // slower, longer-lived
 const SWAY_Z = { length: 0.26, damping: 2.9 };   // quicker, shorter

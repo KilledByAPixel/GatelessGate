@@ -2,7 +2,6 @@
 export const PAPER = '#F3EDDF';
 export const INK = '#1E1E24';
 export const GRAY_DARK = '#55555E';
-export const GRAY_LIGHT = '#9A9AA3';
 export const ACCENT = '#C73E3A'; // the one warm note — used sparingly, never decoratively
 
 // THE WASH RAMP.

@@ -1030,7 +1030,7 @@ test("BRONZE's register clears the 110Hz risk the bonshō's own history flagged,
 // ---- Task 8: silence when nobody is listening ------------------------------
 //
 // Hidden means silent, everywhere, except during a running sitting — that
-// exemption is the owner's explicit call, not a default. `masterLevel` and
+// exemption is deliberate, not a default. `masterLevel` and
 // `shouldPauseForHide` are the pure rules; pauseForHide/resumeFromHide are the
 // wiring, deliberately NOT built on hushVoices() (see its own comment in
 // engine.js for why a fade/hold/restore CYCLE is the wrong shape for a hold

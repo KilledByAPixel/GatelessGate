@@ -365,9 +365,9 @@ test('a full-force tap swings the CYLINDER BODY a fūrin-comparable amount, and 
   // pinned tapKick against the PRE-swing-tuning value (2.5 rad/s), because
   // tapKick() used to kick the CLAPPER directly, sized against the
   // clapper's own natural frequency. Now that a tap kicks the BODY
-  // (cylPend) instead — the actual bug the owner found in a live audition:
-  // "when I click on it, it also doesn't seem like it swings at all" — that
-  // old comparison is meaningless: 6.0 rad/s against the clapper's
+  // (cylPend) instead — the actual bug, which was that a tap rang the bell
+  // without visibly swinging it at all — that old comparison is meaningless:
+  // 6.0 rad/s against the clapper's
   // ~6.65 rad/s natural frequency and 2.2 rad/s against the body's own,
   // much slower ~4.11 rad/s are unrelated numbers answering unrelated
   // questions, and the raw-value pin failed the moment the target pendulum
@@ -402,9 +402,9 @@ test('a full-force tap swings the CYLINDER BODY a fūrin-comparable amount, and 
   assert.ok(maxRel <= gap + 1e-6,
     `at CYL_SWING.tapKick=${CYL_SWING.tapKick}, the clapper swung ${maxRel} rad relative to the body, past the ${gap} rad gap`);
   // A plausibility BAND, not a tight pin against today's exact number (today:
-  // ~0.51 rad) — it has to survive the owner retuning CYL_SWING.tapKick by
-  // ear through the harness, per that field's own "starting point, not
-  // final" comment. Low end catches "barely moves" (a BUG 1 regression,
+  // ~0.51 rad) — it has to survive CYL_SWING.tapKick being retuned by ear
+  // through the harness, per that field's own "starting point, not final"
+  // comment. Low end catches "barely moves" (a BUG 1 regression,
   // kicking the clapper again produces ~0 here under zero wind); high end
   // catches an implausible windmill (a mash-cap regression, or a raw kick
   // with no cap at all).

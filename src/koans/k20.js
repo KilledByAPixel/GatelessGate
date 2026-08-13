@@ -22,29 +22,27 @@ const ID = 20;
 // biggest object on the page, and this case's own seal — inert. You touch the
 // ocean here, not the man.
 //
-// IT USED TO BE A SHOVE, and the shove is the reason this comment is long.
-// Everything the world grammar built went into one group called `moving`, and
-// a tap translated that group a third of a metre and let it oscillate back —
-// "the world gives along the line you pushed from". Two things were wrong with
-// it. The reader could not tell what had happened at all, and sliding
-// the group DRAGS THE GRASS THROUGH ITS OWN NOISE FIELD: the blades' wind is
-// computed from world position in the vertex shader, so translating the field
-// re-samples every blade against a gust pattern that did not move with it, and
-// the whole meadow boils — it looks like wind, and it is not wind.
+// IT USED TO BE A SHOVE, and the shove is why this note exists. Everything the
+// world grammar built went into one group called `moving`, and a tap translated
+// that group a third of a metre and let it oscillate back — "the world gives
+// along the line you pushed from". Two things were wrong with that. The reader
+// could not tell what had happened at all; and sliding the group DRAGS THE
+// GRASS THROUGH ITS OWN NOISE FIELD, because the blades' wind is computed from
+// world position in the vertex shader, so translating the field re-samples
+// every blade against a gust pattern that did not move with it and the whole
+// meadow boils. It looks like wind, and it is not wind.
 //
-// Which is where the replacement came from — his own read: "that gives me the
-// idea to make it do the wind instead of trying to mess with the world." So
-// the wind is real now, driven through the field's own uWind rather than by
-// moving the field, and `moving` is gone. Nothing in this case translates
+// So the wind is REAL now — driven through the field's own uWind rather than by
+// moving the field — and `moving` is gone. Nothing in this case translates
 // anything. (Dissolving it also handed composeWorld the actual scene, which is
 // where scene.userData.layout has to land for the workbench's layout guides to
-// find it — they had been silently dead on this case the whole time.)
+// find it; they had been silently dead on this case the whole time.)
 //
-// HE IS AN ORDINARY MAN. He was a colossus for a while — nearly three times a
-// man — taken straight from the verse. It did not survive being looked at
-// — at that size you could not tell what you were looking at. Ordinary is also
-// the better reading: a giant who cannot be shoved is
-// physics; an ordinary man the weather cannot touch is the case.
+// HE IS AN ORDINARY MAN. He was a colossus for a while, taken straight from the
+// verse, and it did not survive being looked at — at that size you could not
+// tell what you were seeing. Ordinary is also the better reading: a giant who
+// cannot be shoved is physics; an ordinary man the weather cannot touch is the
+// case.
 
 // The gust: straight up, then a long lay-over and a slow release. GUST_MULT is
 // a multiplier on whatever wind the case (or the workbench slider) is already

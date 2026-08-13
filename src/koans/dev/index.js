@@ -22,5 +22,4 @@ export const DEV_PAGES = [
 
 const BY_SLUG = new Map(DEV_PAGES.map((p) => [p.slug, p]));
 
-export const devPage = (slug) => BY_SLUG.get(slug) || null;
 export const isDevPage = (slug) => BY_SLUG.has(slug);

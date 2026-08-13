@@ -7,29 +7,19 @@
 // far side of the model is lit by the hemisphere alone, which has no
 // direction in it, so there is nothing left to read a shape by.
 //
-// These lights are the SMALL half of the answer to a viewer that was hard to
-// read in 3D, lit as though by a single lamp. The large half, historical now,
-// was that the viewer used to render the toon ramp's 3-step banding long
-// after the book itself had moved off it — the fix (and the material rebuild
-// that carried it, since retired along with the ramp — see render/material.js)
-// lived in a file this one has outlived. Measured over four views of the
-// hanging monk, tones carrying ≥3% of the model, and the 5th–95th percentile
-// spread of its greys:
-//
-//   toon (what the viewer showed):   2 tones, spread 21    <- a cut-out
-//   toon + two extra fill lights:    5 tones, spread 21    <- brighter cut-out
-//   Lambert (what the book ships):  10 tones, spread 82
-//   Lambert + the two fills:        12 tones, spread 67
-//
-// Lights could not have fixed that on their own: two extra lights moved a
-// 2-tone render to a 5-tone one, while the shading fix alone moved it to 10.
+// LIGHTS ALONE WERE NEVER THE FIX, which is worth knowing before reaching for
+// more of them. The viewer used to render the retired toon ramp's 3-step
+// banding long after the book itself had moved to Lambert, and measured over
+// four views of the hanging monk, two extra fills moved a 2-tone render to a
+// 5-tone one while the SHADING fix alone moved it to 10. These lights are the
+// small half of that answer; the large half was the shading, since retired
+// along with the ramp (see render/material.js).
 //
 // So the viewer keeps the book's key exactly as it is — what you judge is
 // still lit by the light that will actually light it — and adds two dim
 // directionals filling the azimuths the key leaves dark. They are SPACED, not
-// opposed: with the key near 51°, these sit near 171° and 291°, so no matter
-// where you orbit to, some light is raking across the form rather than facing
-// it flat on.
+// opposed, so no matter where you orbit to, some light is raking across the
+// form rather than facing it flat on.
 //
 // THEY ARE SLIGHTLY DIFFERENT COLOURS, and that is the point rather than a
 // decoration. Two greys of the same hue landing on adjacent facets read as one
