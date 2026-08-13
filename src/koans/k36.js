@@ -66,7 +66,7 @@ const GEAR_T = 0.50;      // the roadside gear, just past the meeting and beyond
 // eye reads the DEPTH of a movement it watched happen, and a 36-degree bend
 // looks like the start of something. 0.9 is 52 degrees at the waist, and well
 // clear of folded double.
-const BOW = .9;         // radians at the waist at the bottom
+const BOW = .5;         // radians at the waist at the bottom
 // The breath RIDES the bow — it is scaled by how far down he is, so a man
 // standing straight does not sway. At this size it is no longer a breath but a
 // real settle: +-0.2 rad is +-11 degrees, so the bottom of the bow wanders
@@ -74,7 +74,7 @@ const BOW = .9;         // radians at the waist at the bottom
 // depends on where the sine happens to be when the reader taps. Two bows are
 // therefore not quite the same size — deliberate here (he is a man, not a
 // mechanism), and the reason nothing in this file pins an exact depth.
-const BOW_BREATH = -0.2;
+const BOW_BREATH = 0.2;
 const BOW_IN = 2.0;       // down, slowly
 const BOW_HOLD = 1.6;     // and held down there
 const BOW_OUT = 2.6;      // slower still coming up
