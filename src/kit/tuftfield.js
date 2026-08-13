@@ -103,14 +103,46 @@ function tuftTexture() {
 // and rendered at 1.0, and a 0.16 emissive floor sat on top of it to stop the
 // ramp's bottom step taking a shadowed field to near-black. Lambert takes
 // 0.785 directly and needs no floor — so the colour is lifted to land the
-// unshadowed field at the luminance the ramp gave it. Derived 2026-08-12, not
-// eyeballed: (S + H + 0.16) / (0.785·S + H) with S the key's intensity (6.7,
-// read from makeLights()) and H the hemisphere's contribution to an up-facing
-// normal (its intensity 0.62 x PAPER's linear luminance ~0.8495, i.e.
-// ~0.5267) — lift = (6.7 + 0.5267 + 0.16) / (0.78484*6.7 + 0.5267) ≈ 1.2768.
+// unshadowed field at the luminance the ramp gave it.
+//
+// THE PI TRAP. Three.js's BRDF_Lambert (RECIPROCAL_PI * diffuseColor) divides
+// BOTH the direct and indirect diffuse terms by pi — RE_Direct_Lambert and
+// RE_IndirectDiffuse_Lambert each route through it, and RE_Direct_Toon /
+// RE_IndirectDiffuse_Toon do too, so the OLD ramp's diffuse also carried the
+// same /pi. Emissive does not: `totalEmissiveRadiance = emissive` is added to
+// outgoingLight raw, with no BRDF and no pi, whatever the material. A lift
+// derived by comparing "diffuse + 0.16" against "lifted diffuse" without
+// re-introducing that pi on the 0.16 term understates the true old
+// brightness by a factor of pi — the constant shipped at first as 1.2768, ~4%
+// low, for exactly this reason. Matching per-channel luminance therefore
+// needs pi on the emissive term only:
+//   old = RECIPROCAL_PI*(S + H)*color + 0.16*color
+//       = color * [ (S+H)/pi + 0.16 ]
+//   new = RECIPROCAL_PI*(N·L·S + H) * (lift*color)
+//   new == old  =>  lift = (S + H + pi*0.16) / (N·L·S + H)
+//
+// Derived 2026-08-12, not eyeballed, from values read out of the running
+// code (S = 6.7 from makeLights(), N·L = 0.78484 as above, H = the
+// hemisphere's contribution to an up-facing normal = its intensity 0.62 x
+// PAPER's linear luminance ~0.8495, i.e. ~0.52669):
+//   lift = (6.7 + 0.52669 + pi*0.16) / (0.78484*6.7 + 0.52669)
+//        = (6.7 + 0.52669 + 0.50265) / (5.25841 + 0.52669)
+//        = 7.72935 / 5.78510 ≈ 1.3361
+//
+// KNOWN GAP, recorded rather than chased: the old emissive was never
+// modulated by the tuft atlas (map_fragment multiplies diffuseColor, not
+// emissive) or by instanceColor, while this lift multiplies mat.color and so
+// IS carried through both. The atlas is near-white but not pure white, so a
+// map-weighted match would want a slightly different number (roughly 1.358
+// by a rough estimate of the atlas's mean luminance) — NOT applied here,
+// since that rests on an estimate rather than a derivation and the
+// acceptance gate for how the meadow actually reads is Frank's eye, not this
+// arithmetic. This constant is the exact per-channel match for the
+// UNTEXTURED diffuse term; it is not claimed to be the map-weighted one.
+//
 // Exported so setTone() below and the tests share this exact number rather
 // than each carrying their own copy that could drift out of sync.
-export const LAMBERT_LIFT = 1.2768;
+export const LAMBERT_LIFT = 1.3361;
 
 // ---- the field ------------------------------------------------------------
 export function makeTuftField({
@@ -169,7 +201,13 @@ export function makeTuftField({
       uniform float uPokeR;
 
       // A value-noise field that drifts downwind, so gusts arrive and pass
-      // instead of every plant metronoming in place.
+      // instead of every plant metronoming in place. NOT private to this
+      // field: the trees' own wind (foliage.js's FOLIAGE_PARS) duplicates
+      // ggHash/ggNoise verbatim so the trees gust together with the meadow
+      // rather than merely both gusting, and the wildflowers (wildflowers.js)
+      // read this same drifting-gust grammar on the CPU for their own sway.
+      // Change the noise here and the trees and flowers silently fall out of
+      // step with it unless foliage.js and wildflowers.js change too.
       float ggHash(vec2 p) {
         p = fract(p * vec2(123.34, 456.21));
         p += dot(p, p + 45.32);

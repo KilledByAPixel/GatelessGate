@@ -90,8 +90,9 @@ export const FOLIAGE_STIFF = 2.6;
 export const FOLIAGE_LAG = 0.22;
 
 // Injected ahead of the vertex body. Declares the attributes and the gust
-// function; ggHash/ggNoise are grassfield.js's, deliberately identical so the
-// two fields gust together instead of merely both gusting.
+// function; ggHash/ggNoise are tuftfield.js's (the meadow's own shader),
+// deliberately identical so the two fields gust together instead of merely
+// both gusting.
 export const FOLIAGE_PARS = /* glsl */ `
 attribute float aSway;
 attribute float aPhase;

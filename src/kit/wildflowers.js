@@ -32,7 +32,7 @@ import {
 // wind and when the mouse is moved over them like the grass does"). Both are
 // the GRASS's models, re-read on the CPU rather than reinvented:
 //
-//   THE WIND is the same drifting gust noise grassfield.js samples in GLSL —
+//   THE WIND is the same drifting gust noise tuftfield.js samples in GLSL —
 //   the noise field slides downwind, so a gust arrives, crosses and passes,
 //   and blooms in the same patch of meadow lean with the blades around them
 //   instead of on a private clock. `wind` / `gustScale` / `gustSpeed` are the
