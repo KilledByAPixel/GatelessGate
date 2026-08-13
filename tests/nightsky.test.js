@@ -19,9 +19,14 @@ test('day leaves a page exactly as the case painted it', () => {
   assert.equal(skyFor('#F0B79C', false), '#F0B79C');
 });
 
-test('night takes the page dark without taking it to black', () => {
+test('night takes the page down without taking it to black', () => {
+  // HOW FAR is a judgement and belongs to the sliders, so this holds the two
+  // ends rather than a band around whatever the depths happen to be: the sky
+  // must actually move, and it must not arrive at black — the ink pass draws
+  // in INK and needs something to sit on.
+  const day = skyFor(PAPER, false);
   const night = skyFor(PAPER, true);
-  assert.ok(lum(night) < 0.3, `not dark enough to read as night: ${night}`);
+  assert.ok(lum(night) < lum(day) - 0.1, `the sky barely moved: ${day} -> ${night}`);
   assert.ok(lum(night) > 0.08, `so dark the ink has nothing to sit on: ${night}`);
 });
 
@@ -41,30 +46,33 @@ function scene() {
   return s;
 }
 
-test('the fog is left alone by default — the sky is the whole change', () => {
-  // Fog does not light anything, but it reaches everything far away, so
-  // darkening it takes the receding ground and the hills with it and the
-  // picture reads as re-lit when nothing was. The two are separate knobs and
-  // the fog's starts at nothing; the cost is a pale band along the horizon,
-  // which is what raising it buys back.
+test('the fog goes much the shorter way — the sky is the change', () => {
+  // The one relationship that is a design decision rather than a taste: fog
+  // reaches everything far away, so a fog that travelled with the sky would
+  // take the receding ground and the hills down too and read as a re-lighting.
+  // Its share exists to kill the pale band along the horizon, nothing more.
+  assert.ok(DEF.fog < DEF.sky / 2, `the fog is doing too much of the work: ${JSON.stringify(DEF)}`);
   const s = scene();
   applyNightSky(s, true);
-  assert.equal('#' + s.fog.color.getHexString(), PAPER.toLowerCase(), 'the land keeps its own colour');
-  assert.notEqual('#' + s.background.getHexString(), PAPER.toLowerCase(), 'and the sky does not');
+  const sky = '#' + s.background.getHexString();
+  const fog = '#' + s.fog.color.getHexString();
+  assert.notEqual(sky, PAPER.toLowerCase(), 'the sky moved');
+  assert.notEqual(fog, sky, 'and the fog did not follow it all the way');
+  assert.ok(lum(fog) > lum(sky), 'the land stays lighter than the sky above it');
 });
 
-test('the fog knob moves the fog and nothing else', () => {
+test('the fog knob moves the fog and leaves the sky where it was', () => {
   const s = scene();
-  setNightDepth(DEF.sky, 0.4);
   applyNightSky(s, true);
-  const fogAt4 = '#' + s.fog.color.getHexString();
   const sky = '#' + s.background.getHexString();
-  assert.notEqual(fogAt4, PAPER.toLowerCase());
-  assert.notEqual(fogAt4, sky, 'a partial fog does not land on the sky');
+  const fogAtDefault = '#' + s.fog.color.getHexString();
+  setNightDepth(DEF.sky, Math.min(1, DEF.fog + 0.3));
+  applyNightSky(s, true);
+  assert.notEqual('#' + s.fog.color.getHexString(), fogAtDefault, 'the knob does something');
+  assert.equal('#' + s.background.getHexString(), sky, 'and it is not the sky');
   setNightDepth(DEF.sky, DEF.fog);
   applyNightSky(s, true);
-  assert.equal('#' + s.fog.color.getHexString(), PAPER.toLowerCase(), 'and back to nothing');
-  assert.equal('#' + s.background.getHexString(), sky, 'the sky never moved');
+  assert.equal('#' + s.fog.color.getHexString(), fogAtDefault, 'and it comes back');
 });
 
 test('toggling back and forth is exactly reversible', () => {

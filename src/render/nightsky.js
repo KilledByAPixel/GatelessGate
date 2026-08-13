@@ -9,19 +9,20 @@ import { PAPER, INK, mixHex } from '../palette.js';
 // scene goes dark, and nothing else moves. The key and the fill are untouched,
 // so every lit surface keeps exactly the value it had.
 //
-// THE SKY AND THE FOG ARE TWO KNOBS, and the fog starts at nothing. Fog does
-// not light anything — it is what the land dissolves INTO before it can reach a
-// horizon — but it reaches everything far away, so darkening it takes the whole
-// receding ground and the hills down with it, and the picture reads as having
-// been re-lit when nothing was. Sky alone is the smaller, truer change.
+// THE SKY AND THE FOG ARE TWO KNOBS, and the fog goes much the shorter way.
+// Fog does not light anything — it is what the land dissolves INTO before it
+// can reach a horizon — but it reaches everything far away, so taking it down
+// with the sky takes the whole receding ground and the hills with it, and the
+// picture reads as having been re-lit when nothing was. Tying the two together
+// was the first cut and it was too much.
 //
-// The cost of splitting them is a SEAM: the land fades up toward paper while
-// the sky above it is dark, so the horizon draws a pale band the book normally
-// has nothing to draw with. Case 19 splits the same two on purpose (a red sky
-// over land that stays its own colour) and gets away with it, so the split is
-// house precedent rather than a rule broken — but 19's is transient and this
-// one is not, which is why the fog knob exists at all: raise it until the band
-// stops reading, and no further.
+// What the fog's share buys is the SEAM. Left alone entirely, the land fades up
+// toward paper under a dark sky and the horizon draws a pale band the book
+// normally has nothing to draw with; a little fog kills the band without
+// darkening the ground. Case 19 splits the same two on purpose (a red sky over
+// land that keeps its own colour), so the split is house precedent rather than
+// a rule broken. Both depths are a judgement rather than a derivation — the
+// pair below was found by dragging the sliders.
 //
 // A case's own page colour is the base, not a replacement, so the two pages
 // that tint their own sky keep their identity after dark: case 27's red goes to
