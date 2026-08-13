@@ -5,7 +5,7 @@ import { grassShadeData, grassShadeUV, makeGrassShade, SHADE_STRENGTH } from '..
 import { grassPlacements } from '../src/kit/grassfield.js';
 import { composeWorld } from '../src/kit/scenery.js';
 import { makeGround } from '../src/kit/ground.js';
-import { plainMaterial } from '../src/render/toon.js';
+import { plainMaterial } from '../src/render/material.js';
 
 // The meadow is a field of camera-facing cards. It cannot cast a shadow that
 // holds still — a billboard's silhouette is defined against the VIEWER — and it

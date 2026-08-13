@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { hash1 } from '../util/noise.js';
 import { ACCENT, WASH } from '../palette.js';
@@ -10,7 +10,7 @@ import { clamp } from '../util/math.js';
 // the beam, and the bell on a short link under it (case 16's seal).
 //
 // The bell is the accent, so its material glows on its own — see SEAL_GLOW in
-// render/toon.js — and nothing here adds an emissive of its own.
+// render/material.js — and nothing here adds an emissive of its own.
 //
 // strike() sets it swinging: a pendulum rotation about the hanging point that
 // dies back over about four seconds. A bonshō is massive, so the swing is slow
@@ -59,9 +59,9 @@ export function makeBell({ height = 1.1, color = ACCENT, frameColor = WASH.dark,
   g.name = 'bell';
   const H = height;
 
-  const timber = toonMaterial({ color: frameColor });
-  const flat = toonMaterial({ color: frameColor, flat: true });
-  const stone = toonMaterial({ color: WASH.stone, flat: true });
+  const timber = washMaterial({ color: frameColor });
+  const flat = washMaterial({ color: frameColor, flat: true });
+  const stone = washMaterial({ color: WASH.stone, flat: true });
 
   // the stone pad the frame stands on — also what the grass keeps out of
   const padH = 0.065 * H;
@@ -142,7 +142,7 @@ export function makeBell({ height = 1.1, color = ACCENT, frameColor = WASH.dark,
     [0.110, 0.920],
     [0.000, 1.000],                                     // crown
   ].map(([r, y]) => new THREE.Vector2(r * H, y * H));
-  const body = new THREE.Mesh(new THREE.LatheGeometry(P, 12), toonMaterial({ color, flat: true }));
+  const body = new THREE.Mesh(new THREE.LatheGeometry(P, 12), washMaterial({ color, flat: true }));
   body.name = 'body';
   body.position.y = -linkLen - H;       // crown at the link's foot; mouth at 0.33·H
   swing.add(body);

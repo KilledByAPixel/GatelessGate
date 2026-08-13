@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { INK_LIT } from '../palette.js';
 import { makeTail } from './tail.js';
 import { mergeSimple } from './scatter.js';
@@ -56,7 +56,7 @@ export function makeQuadruped({
   seed = 1,
 } = {}) {
   const g = new THREE.Group();
-  const mat = toonMaterial({ color, flat: true });
+  const mat = washMaterial({ color, flat: true });
   const h = height;
   const R = bodyR * h;
   const legLen = legH * h;

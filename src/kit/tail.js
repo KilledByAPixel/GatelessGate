@@ -1,7 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { createCloth, stepCloth, clothEnergy } from '../sim/verlet.js';
 import { noise3 } from '../util/noise.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { INK_LIT } from '../palette.js';
 
 // A hanging tail: the verlet cloth as a 1-column strand, pinned at the root.
@@ -13,7 +13,7 @@ export function makeTail({ segments = 7, length = 1.0, thickness = 0.06, color =
   group.name = 'tail';
   group.userData.cloth = cloth;
 
-  const mat = toonMaterial({ color, flat: true });
+  const mat = washMaterial({ color, flat: true });
   const segs = [];
   // Segments are cut LONGER than their node spacing (still centred between
   // their nodes), so neighbours overlap into each other at every joint and

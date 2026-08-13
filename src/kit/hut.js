@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { INK, WASH, mixHex } from '../palette.js';
 import { hangChimes, attachChimes } from './chimes.js';
@@ -105,8 +105,8 @@ export function makeHut({
   const g = new THREE.Group();
   g.name = 'hut';
   g.userData.hut = { width, height, depth };
-  const mat = toonMaterial({ color });
-  const flat = toonMaterial({ color, flat: true });
+  const mat = washMaterial({ color });
+  const flat = washMaterial({ color, flat: true });
 
   const TW = 0.10;                                   // wall thickness
   const doorW = Math.min(Math.max(width * 0.46, 0.90), 1.70);
@@ -162,7 +162,7 @@ export function makeHut({
   // ---- the doorway itself ------------------------------------------------
   const doorway = new THREE.Mesh(
     box(doorW + 0.03, doorH + 0.03, 0.08, 0, (doorH + 0.03) / 2, depth / 2 - 0.17),
-    toonMaterial({ color: mixHex(color, INK, 0.75), flat: true }));
+    washMaterial({ color: mixHex(color, INK, 0.75), flat: true }));
   doorway.name = 'doorway';
   g.add(doorway);
 

@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, wash } from '../palette.js';
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk, makeAssembly,
-  makeWildflowers, makeLights, toonMaterial,
+  makeWildflowers, makeLights, washMaterial,
 } from '../kit/index.js';
 
 const ID = 32;
@@ -68,7 +68,7 @@ const CAM = { distance: 9, target: [1.45, 1, -0.95], heading: 31.5, pitch: 23 };
   // philosopher facing him, and the silence reads better between equals.
   const seat = new THREE.Mesh(
   new THREE.CylinderGeometry(0.85, 1.0, 0.30, 9),
-  toonMaterial({ color: wash(0.32), flat: true }));
+  washMaterial({ color: wash(0.32), flat: true }));
   seat.name = 'seat';
   seat.position.set(0.6, 0.15, -3.6);
   scene.add(seat);

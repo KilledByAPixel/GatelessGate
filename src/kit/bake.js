@@ -39,16 +39,16 @@ import { mergeSimple } from './scatter.js';
 // chime never rings and nothing in the console says why.
 
 // What makes two meshes the same DRAW. Material equivalence, not object
-// identity: every makeMonk mints its own toonMaterial, so identity would leave
+// identity: every makeMonk mints its own washMaterial, so identity would leave
 // nine monks as nine meshes and the whole point would be lost. The userData
 // flags are in the key because they change how the mesh is treated downstream
 // — keepMaterial whether the workbench's plain-Lambert rebuild does,
 // noShadow/noCastShadow whether debug.js's shadow pass touches it (water.js,
 // foam.js) — and two meshes that disagree about any of them cannot share one. emissive/emissiveIntensity are
-// in the key for the same reason colour is: toon.js's seal glow
-// (`toonMaterial({ glow: false })`) exists precisely so two accent-coloured
+// in the key for the same reason colour is: material.js's seal glow
+// (`washMaterial({ glow: false })`) exists precisely so two accent-coloured
 // materials CAN differ only by glow, and a merge that ignored it would spread
-// one mesh's glow across the other's surface — the case-30 pond bug toon.js's
+// one mesh's glow across the other's surface — the case-30 pond bug material.js's
 // own comment records, again.
 function drawKey(mesh) {
   const m = mesh.material;
@@ -68,17 +68,15 @@ function drawKey(mesh) {
 }
 
 // A material only NEEDS uv if something on it actually samples the surface
-// by texel — `gradientMap` doesn't count, it's the toon ramp and is indexed
-// by N·L, not by uv. Every OTHER `*Map` slot (`map`, `alphaMap`, `normalMap`,
-// `bumpMap`, `emissiveMap`, `roughnessMap`, `aoMap`, `displacementMap`,
-// `specularMap`, …) samples by uv, so the refusal has to be the general rule
-// rather than a list of the two slots this kit happens to use today — a
-// normal-mapped material merged through a narrow list would sample (0,0)
-// everywhere and render flat with nothing failing, the exact failure shape
-// toon.js's plainMaterial comment records happening five separate times.
+// by texel. Every `*Map` slot (`map`, `alphaMap`, `normalMap`, `bumpMap`,
+// `emissiveMap`, `roughnessMap`, `aoMap`, `displacementMap`, `specularMap`,
+// …) samples by uv, so the refusal has to be the general rule rather than a
+// list of the two slots this kit happens to use today — a normal-mapped
+// material merged through a narrow list would sample (0,0) everywhere and
+// render flat with nothing failing, the exact failure shape material.js's
+// plainMaterial comment records happening five separate times.
 function usesUV(m) {
   for (const key in m) {
-    if (key === 'gradientMap') continue;
     if (key.endsWith('Map') && m[key]) return true;
   }
   return false;
@@ -100,8 +98,8 @@ function canMerge(o) {
     // would be silently dropped, which is how a wind attribute becomes a
     // canopy that stops moving with nothing failing. `uv` is the one
     // exception: THREE mints it on every BufferGeometry whether or not
-    // anything reads it, and none of the toon-shaded props this bakes ever
-    // do — so it only disqualifies a mesh when its OWN material samples a
+    // anything reads it, and none of the props this bakes ever do — so it
+    // only disqualifies a mesh when its OWN material samples a
     // texture by it (a tuft's alpha-tested map, say), the case dropping it
     // would actually be seen.
     if (name === 'uv' && !usesUV(o.material)) continue;

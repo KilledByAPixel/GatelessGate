@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { hash1 } from '../util/noise.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { WASH } from '../palette.js';
 
 // The peak layout as a pure fact: where each mountain stands and how far its
@@ -32,7 +32,7 @@ export function makeMountains({
 } = {}) {
   const g = new THREE.Group();
   g.name = 'mountains';
-  const mat = toonMaterial({ color, flat: true });
+  const mat = washMaterial({ color, flat: true });
   const feet = mountainFootprints({ count, distance, arcCenter, arcSpan, seed, hScale });
   for (let i = 0; i < count; i++) {
     const { x: px, z: pz, r, h } = feet[i];

@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeRain, makeMonk, faceMonk,
-  makeLights, toonMaterial, makeFurin,
+  makeLights, washMaterial, makeFurin,
 } from '../kit/index.js';
 
 const ID = 34;
@@ -70,7 +70,7 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   // pile with part-unrolled ribbons — are GONE entirely: three rounds of
   // Frank asking what the cylinders were is the answer to whether they ever
   // read as scrolls.
-  const matMat = toonMaterial({ color: WASH.dry, flat: true });
+  const matMat = washMaterial({ color: WASH.dry, flat: true });
   matMat.polygonOffset = true;
   matMat.polygonOffsetFactor = -2;
   const mat = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.03, 1.9), matMat);

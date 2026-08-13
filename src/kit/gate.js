@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { INK_LIT } from '../palette.js';
 import { mergeSimple } from './scatter.js';
 import { hangChimes, attachChimes } from './chimes.js';
@@ -30,8 +30,8 @@ export function makeGate({
 } = {}) {
   const g = new THREE.Group();
   g.name = 'gate';
-  const mat = toonMaterial({ color });
-  const flatMat = toonMaterial({ color, flat: true });
+  const mat = washMaterial({ color });
+  const flatMat = washMaterial({ color, flat: true });
 
   // POSTS + NEMAKI — a tapered post (already narrower at the top than the
   // base) with a flared collar merged on at the very foot, where a torii's

@@ -4,7 +4,7 @@ import { PAPER, ACCENT, ACCENT_DEEP, WASH, wash } from '../palette.js';
 import {
   composeWorld, groundHeight, makeFurin, makeGate, makeMonk, makePath,
 } from '../kit/index.js';
-import { makeLights } from '../render/toon.js';
+import { makeLights } from '../render/lights.js';
 
 const ID = 47;
 const GROUND_SEED = 21;
@@ -40,7 +40,7 @@ const PATH_OPTS = { from: [1.1, 6.8], to: [-1.6, -42], width: 1.7, seed: 47, gro
 // the note inside GATES): all three carry the deep red, and fog does the
 // hierarchy the grey was doing. The deep mix is the intro gate's — a torii is
 // a big timber frame, and full ACCENT across that much area would glare. The
-// glow is in the material (SEAL_GLOW in render/toon.js keys off the accent
+// glow is in the material (SEAL_GLOW in render/material.js keys off the accent
 // colours); nothing here sets emissive by hand.
 const GATES = [
   // ALL THREE gates carry the seal — Frank's call on reviewing the plan, and he

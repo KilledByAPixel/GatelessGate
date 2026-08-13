@@ -4,7 +4,7 @@ import { PAPER, ACCENT, INK_LIT } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makeMonk, faceMonk, makeButterflies, makeWildflowers,
-  makeLights, toonMaterial,
+  makeLights, washMaterial,
 } from '../kit/index.js';
 
 const ID = 21;
@@ -61,7 +61,7 @@ const CAM = { distance: 10, target: [0.8, 0.9, 0.2], heading: 4, pitch: 14 };
   const stick = new THREE.Group();      // kept the name so the interaction below reads unchanged
   stick.name = 'dung';
   // red — the dung IS the seal of this case now (Frank)
-  const dryMat = toonMaterial({ color: ACCENT, flat: true });
+  const dryMat = washMaterial({ color: ACCENT, flat: true });
   
   // one turd: a spindle lathe laid on its side, hinged so it rests ON the
   // ground rather than through it

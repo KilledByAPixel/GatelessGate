@@ -5,7 +5,8 @@ import {
   composeWorld, faceMonk, makeBundle, makeHut, makeMonk, makePath, plantRock,
   plantTree, tapMeshes,
 } from '../kit/index.js';
-import { toonMaterial, makeLights } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
+import { makeLights } from '../render/lights.js';
 import { hash1 } from '../util/noise.js';
 
 const ID = 23;
@@ -120,7 +121,7 @@ const CAM = { distance: 10.1, target: [0.2, 1.3, -0.9], heading: 31.5, pitch: 16
       spos.setZ(vi, z * k);
     }
     stoneGeo.computeVertexNormals();
-    const stone = new THREE.Mesh(stoneGeo, toonMaterial({ color: WASH.stone, flat: true }));
+    const stone = new THREE.Mesh(stoneGeo, washMaterial({ color: WASH.stone, flat: true }));
     stone.name = 'stone';
     stone.position.set(STONE.x, STONE_H / 2, STONE.z);
     stone.rotation.y = 0.7;

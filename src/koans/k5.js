@@ -6,7 +6,8 @@ import {
   mergeSimple, tapMeshes,
 } from '../kit/index.js';
 import { noise1 } from '../util/noise.js';
-import { makeLights, toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
+import { makeLights } from '../render/lights.js';
 import { smoothstep as SS } from '../util/math.js';
 
 const ID = 5;
@@ -113,7 +114,7 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6
   // drop. Its base is buried in the canopy mass, so it reads as the tree's.
   const branchGeo = new THREE.CylinderGeometry(0.05, 0.115, BRANCH.len, 7);
   branchGeo.translate(0, BRANCH.len / 2, 0);
-  const branch = new THREE.Mesh(branchGeo, toonMaterial({ color: GRAY_DARK, flat: true }));
+  const branch = new THREE.Mesh(branchGeo, washMaterial({ color: GRAY_DARK, flat: true }));
   branch.name = 'branch';
   branch.position.set(...BRANCH.base);
   branch.rotation.z = Math.PI / 2 + BRANCH.tilt;
@@ -140,7 +141,7 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6
   lobe.translate(tipX + dx, tipY + dy, BRANCH.base[2] + dz);
   return lobe;
   })),
-  toonMaterial({ color: WASH.deep, flat: true }));
+  washMaterial({ color: WASH.deep, flat: true }));
   tipLeaves.name = 'tipleaves';
   scene.add(tipLeaves);
   
@@ -183,7 +184,7 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6
   // the same ink every figure is painted in — it is a monk's hat, and one
   // lying on the grass darker than the one still on his head reads as a
   // different object entirely
-  toonMaterial({ color: INK_LIT, flat: true }));
+  washMaterial({ color: INK_LIT, flat: true }));
   hat.name = 'fallenhat';   // the questioner's own 'hat' stays on his head
   hat.position.set(HAT.x, 0.05 * 1.6, HAT.z);
   hat.rotation.y = 0.8;

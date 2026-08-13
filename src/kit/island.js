@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { noise2 } from '../util/noise.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { WASH } from '../palette.js';
 
 // A floating slab of ground with a torn-paper rim.
@@ -23,7 +23,7 @@ export function makeIsland({ radius = 6, thickness = 0.55, seed = 1, segments = 
     }
   }
   geo.computeVertexNormals();
-  const mesh = new THREE.Mesh(geo, toonMaterial({ color }));
+  const mesh = new THREE.Mesh(geo, washMaterial({ color }));
   mesh.name = 'island';
   mesh.position.y = -thickness / 2;
   return mesh;

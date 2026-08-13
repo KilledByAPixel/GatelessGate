@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { WASH } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import { makeBowl } from './bowl.js';
@@ -25,7 +25,7 @@ export function makeBundle({
 } = {}) {
   const g = new THREE.Group();
   g.name = 'bundle';
-  const mat = toonMaterial({ color, flat: true });
+  const mat = washMaterial({ color, flat: true });
 
   // ---- the folded robe --------------------------------------------------
   // Three flattened slabs, widest at the bottom. Radii and heights are
@@ -83,7 +83,7 @@ export function makeBundle({
   // `ropeColor` (defaults to WASH.deep, near-ink) instead of reusing `color`:
   // in case 23 the folds turn ACCENT red, and a red cord on a red robe would
   // vanish — the tie has to contrast with whatever the robe is wearing.
-  const ropeMat = toonMaterial({ color: ropeColor, flat: true });
+  const ropeMat = washMaterial({ color: ropeColor, flat: true });
   const TIES = [
     { seam: 0, r: 0.465, tube: 0.019 },   // between fold 0 and fold 1
     { seam: 1, r: 0.400, tube: 0.016 },   // between fold 1 and fold 2

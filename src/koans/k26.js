@@ -5,7 +5,7 @@ import {
   aimMonk, composeWorld, makeAssembly, makeFan, makeMonk, makeScreen,
   makeVeranda,
 } from '../kit/index.js';
-import { makeLights } from '../render/toon.js';
+import { makeLights } from '../render/lights.js';
 
 const ID = 26;
 

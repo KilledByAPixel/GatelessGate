@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT_DEEP, wash } from '../palette.js';
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk, makeTree, makeFox,
-  makeLights, toonMaterial,
+  makeLights, washMaterial,
 } from '../kit/index.js';
 
 const ID = 9;
@@ -65,7 +65,7 @@ const CAM = { distance: 17, target: [-0.3, 2.8, -1.6], heading: 31.5, pitch: 14.
   for (const [i, b] of BANDS.entries()) {
   const band = new THREE.Mesh(
   new THREE.CylinderGeometry(b.r * 0.93, b.r, b.h, 11),
-  toonMaterial({ color: wash(b.t), flat: true }));
+  washMaterial({ color: wash(b.t), flat: true }));
   band.name = 'stratum';
   band.position.y = y + b.h / 2;
   band.rotation.y = i * 0.19;
@@ -79,7 +79,7 @@ const CAM = { distance: 17, target: [-0.3, 2.8, -1.6], heading: 31.5, pitch: 14.
   if (i === BANDS.length - 2) {
   const seam = new THREE.Mesh(
   new THREE.CylinderGeometry(b.r * 0.90, b.r * 0.93, 0.045, 11),
-  toonMaterial({ color: wash(0.44), flat: true }));
+  washMaterial({ color: wash(0.44), flat: true }));
   seam.name = 'seam';
   seam.position.y = y + 0.0225;
   strata.add(seam);

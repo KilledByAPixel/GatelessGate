@@ -5,7 +5,7 @@ import { hash1 } from '../util/noise.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeVeranda, makeLantern, makeMonk, aimMonk, faceMonk,
-  makeLights, toonMaterial, makeCylinderChime,
+  makeLights, washMaterial, makeCylinderChime,
 } from '../kit/index.js';
 
 const ID = 28;
@@ -89,7 +89,7 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   scene.add(lantern);
   const candle = lantern.getObjectByName('candle');
   
-  const flameMat = toonMaterial({ color: ACCENT, flat: true });
+  const flameMat = washMaterial({ color: ACCENT, flat: true });
   flameMat.transparent = true;
   flameMat.fog = false;                    // a flame is not dimmed by distance
   if (flameMat.emissive) { flameMat.emissive = new THREE.Color(ACCENT); flameMat.emissiveIntensity = 1.0; }

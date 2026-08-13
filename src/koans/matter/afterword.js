@@ -3,7 +3,7 @@ import MATTER from '../text/matter.js';
 import { buildHub } from '../../intro.js';
 import { WASH } from '../../palette.js';
 import {
-  makeBuddha, makeCat, makeWildflowers, groundHeight, toonMaterial,
+  makeBuddha, makeCat, makeWildflowers, groundHeight, washMaterial,
   plantTree,
 } from '../../kit/index.js';
 import { eyePosition } from '../../camera.js';
@@ -139,7 +139,7 @@ export default {
     const y0 = groundHeight(MAT.x, MAT.z, { seed: built.groundSeed });
     const mat = new THREE.Mesh(
       new THREE.CylinderGeometry(MAT_R, MAT_R, MAT_H, 4),
-      toonMaterial({ color: WASH.dark, flat: true }));
+      washMaterial({ color: WASH.dark, flat: true }));
     mat.name = 'mat';
     mat.rotation.y = Math.PI / 4;
     mat.position.set(MAT.x, y0 + MAT_H / 2, MAT.z);

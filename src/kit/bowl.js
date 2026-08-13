@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { WASH } from '../palette.js';
 
 // A rice bowl (case 7): a lathed shell (outside up, over the rim, back down the
@@ -18,7 +18,7 @@ import { WASH } from '../palette.js';
 export function makeBowl({ radius = 0.22, color = WASH.mid } = {}) {
   const g = new THREE.Group();
   g.name = 'bowl';
-  const mat = toonMaterial({ color, side: THREE.DoubleSide });
+  const mat = washMaterial({ color, side: THREE.DoubleSide });
   const R = radius;
   const FOOT_H = 0.035;
   // profile in world units: up the outside, over the rim, back down the inside

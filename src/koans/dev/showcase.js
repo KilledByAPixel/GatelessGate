@@ -1,6 +1,6 @@
 import * as THREE from '../../../lib/three.module.js';
 import { PAPER, INK, ACCENT, ACCENT_DEEP } from '../../palette.js';
-import { makeLights } from '../../render/toon.js';
+import { makeLights } from '../../render/lights.js';
 import {
   makeAssembly, makeBasin, makeBell, makeBird, makeBirds, makeBowl,
   makeBuddha, makeBuffalo, makeBundle, makeCat, makeDog, makeDrum, makeFlag,

@@ -4,7 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import { mergeSimple } from '../src/kit/scatter.js';
 import { makeTree } from '../src/kit/tree.js';
 import { pineGeometry, makePine } from '../src/kit/pine.js';
-import { plainMaterial } from '../src/render/toon.js';
+import { plainMaterial } from '../src/render/material.js';
 import {
   FOLIAGE, FOLIAGE_PARS, FOLIAGE_BODY, FOLIAGE_WIND_SHARE,
   applyFoliageWind, stepFoliageWind, setFoliageWeather,

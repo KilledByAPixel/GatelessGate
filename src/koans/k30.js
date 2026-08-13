@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_PALE, WASH } from '../palette.js';
 import {
   composeWorld, makeBuddha, makeBasin, makeWater, makeKoi, makeMonk, faceMonk, makeLantern,
-  makeLights, toonMaterial,
+  makeLights, washMaterial,
 } from '../kit/index.js';
 
 const ID = 30;
@@ -96,7 +96,7 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   const SEAT_TOP = 0.62;
   const seat = new THREE.Mesh(
   new THREE.CylinderGeometry(1.05, 1.2, SEAT_TOP, 9),
-  toonMaterial({ color: WASH.stone, flat: true }));
+  washMaterial({ color: WASH.stone, flat: true }));
   seat.name = 'seat';
   seat.position.set(BANK.x, SEAT_TOP / 2, BANK.z);
   scene.add(seat);

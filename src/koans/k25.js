@@ -4,7 +4,7 @@ import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, faceMonk, makeAssembly, makeLights, makeMonk,
-  makeScreen, makeVeranda, mergeSimple, toonMaterial,
+  makeScreen, makeVeranda, mergeSimple, washMaterial,
 } from '../kit/index.js';
 
 const ID = 25;
@@ -60,7 +60,7 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   const r = 3.4 + i * 0.9;
   const disc = new THREE.Mesh(
   new THREE.CylinderGeometry(r, r * 0.94, 0.10, 13),
-  toonMaterial({ color: wash(0.09 - i * 0.012), flat: true }));
+  washMaterial({ color: wash(0.09 - i * 0.012), flat: true }));
   disc.name = 'cloud-disc';
   disc.position.set((i % 2 ? 0.5 : -0.4) * i * 0.4, -0.18 - i * 0.12, -1.4 + i * 0.3);
   cloud.add(disc);
@@ -115,7 +115,7 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   for (let i = 0; i < 3; i++) {
   const seat = new THREE.Mesh(
   new THREE.BoxGeometry(1.05, 0.20, 1.05),
-  toonMaterial({ color: i === 2 ? WASH.stone : wash(0.26), flat: true }));
+  washMaterial({ color: i === 2 ? WASH.stone : wash(0.26), flat: true }));
   seat.name = 'seat';
   seat.position.set(-1.9 + i * 1.75, DECK_TOP + 0.10, -2.2);
   hall.add(seat);
@@ -141,7 +141,7 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   // and the one thing in the dream you can act on
   const stand = new THREE.Mesh(
   new THREE.BoxGeometry(0.5, 0.42, 0.4),
-  toonMaterial({ color: WASH.dark, flat: true }));
+  washMaterial({ color: WASH.dark, flat: true }));
   stand.name = 'stand';
   stand.position.set(seats[2].position.x, DECK_TOP + 0.21, seats[2].position.z + 1.15);
   hall.add(stand);
@@ -170,7 +170,7 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   handleGeo.rotateX(Math.PI / 2 + 0.03);   // out along +z, butt settling to the wood
   const mallet = new THREE.Mesh(
   mergeSimple([headGeo, handleGeo]),
-  toonMaterial({ color: ACCENT, flat: true }));
+  washMaterial({ color: ACCENT, flat: true }));
   mallet.name = 'gavel-head';
   gavel.add(mallet);
   hall.add(gavel);

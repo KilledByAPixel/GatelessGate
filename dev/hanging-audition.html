@@ -10,7 +10,7 @@
     gravity... very slow, like they have a lot of dampening") is about how the
     MOTION LOOKS, so a slider-only page cannot settle it. This page renders the
     real hanging objects with the project's real renderer and materials
-    (src/render/toon.js — the same toonMaterial every case uses, not a
+    (src/render/material.js — the same washMaterial every case uses, not a
     stand-in), drives the real audio engine exactly as spatial-audition.html
     does (so a strike heard here is the strike the book plays), and
     click-to-taps through src/input.js the same way a case does.
@@ -178,7 +178,7 @@
   <script type="module">
     import * as THREE from '../lib/three.module.js';
     import { PAPER } from '../src/palette.js';
-    import { makeLights, toonMaterial } from '../src/kit/index.js';
+    import { makeLights, washMaterial } from '../src/kit/index.js';
     import { makeFurin, SWING, CLAP_FORCE, SPIN, SINGLE_BODY_LEN } from '../src/kit/furin.js';
     import { makeCylinderChime, CYL_SWING, CYL_FORCE } from '../src/kit/cylinder.js';
     import { makeScreen, CLATTER } from '../src/kit/screen.js';
@@ -209,7 +209,7 @@
     // a small lintel block so the hang point reads as hanging FROM
     // something, not floating — same visual role gate.js's kasagi plays
     // in the real cases
-    const lintelMat = toonMaterial({ color: '#3a352c', flat: true });
+    const lintelMat = washMaterial({ color: '#3a352c', flat: true });
     const LINTEL_Y = 2.4, LINTEL_H = 0.16;
     const lintel = new THREE.Mesh(new THREE.BoxGeometry(3.4, LINTEL_H, 0.32), lintelMat);
     lintel.position.set(0, LINTEL_Y, 0);
@@ -223,7 +223,7 @@
     // with its size) disappeared into the wood entirely. A thing hangs from
     // the UNDERSIDE of what it is tied to.
     const HANG_Y = LINTEL_Y - LINTEL_H / 2;
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), toonMaterial({ color: '#CFC7B2' }));
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), washMaterial({ color: '#CFC7B2' }));
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 

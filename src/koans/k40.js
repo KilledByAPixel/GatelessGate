@@ -5,7 +5,7 @@ import {
   aimMonk, composeWorld, faceMonk, makeAssembly, makeHut, makeMonk,
   makeVase, tapMeshes,
 } from '../kit/index.js';
-import { makeLights } from '../render/toon.js';
+import { makeLights } from '../render/lights.js';
 
 const ID = 40;
 
@@ -20,7 +20,7 @@ const ID = 40;
 // to do the thing nobody labels. No spilled water. Nothing decided.
 //
 // THE RED SEAL is the vase and only the vase — small and held at full ACCENT,
-// which glows on its own (SEAL_GLOW in render/toon.js; nothing added here).
+// which glows on its own (SEAL_GLOW in render/material.js; nothing added here).
 //
 // The staging borrows k14's orbit lesson: the crowd is strung along a diagonal
 // roughly square to the camera's home line, with the vase forward of everyone

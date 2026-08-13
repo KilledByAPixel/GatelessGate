@@ -4,7 +4,7 @@ import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, faceMonk, groundHeight, makeBoat, makeFan, makeFoam,
-  makeLights, makeMonk, makePath, makeSand, makeWater, toonMaterial,
+  makeLights, makeMonk, makePath, makeSand, makeWater, washMaterial,
 } from '../kit/index.js';
 
 const ID = 48;
@@ -121,7 +121,7 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   const STROKE_L = 1.35;
   const barGeo = new THREE.BoxGeometry(STROKE_L, 0.105, 0.035);
   barGeo.translate(STROKE_L / 2, 0, 0);        // grows from its left end
-  const bar = new THREE.Mesh(barGeo, toonMaterial({ color: ACCENT, flat: true }));
+  const bar = new THREE.Mesh(barGeo, washMaterial({ color: ACCENT, flat: true }));
   bar.name = 'stroke-bar';
   stroke.add(bar);
   stroke.position.set(0.15, 1.95, -0.2);
@@ -139,7 +139,7 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   // a roadside stone, now just scenery
   const rock = new THREE.Mesh(
   new THREE.CylinderGeometry(0.52, 0.62, 0.34, 7),
-  toonMaterial({ color: WASH.stone, flat: true }));
+  washMaterial({ color: WASH.stone, flat: true }));
   rock.name = 'rock';
   rock.position.set(-3.3, 0.17, 1.6);
   rock.rotation.y = 0.6;

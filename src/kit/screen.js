@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { noise2 } from '../util/noise.js';
 import { WASH, INK_LIT } from '../palette.js';
 import { clamp01 } from '../util/math.js';
@@ -111,7 +111,7 @@ export function makeScreen({
   const rollR = railR + rodR * 1.6;     // the bundle once the whole screen is up
   const layerT = (rollR - railR) / n;   // each slat sits one layer further out
 
-  const mat = toonMaterial({ color, flat: true });
+  const mat = washMaterial({ color, flat: true });
 
   // the roller. The screen winds onto this, so it doubles as the top rail.
   const railGeo = new THREE.CylinderGeometry(railR, railR, width * 1.06, 10);
@@ -174,7 +174,7 @@ export function makeScreen({
     const len = cordDrop > 0 ? cordDrop : height * 0.5;
     const cordGeo = new THREE.CylinderGeometry(0.024, 0.024, len, 6);
     cordGeo.translate(0, -len / 2, 0);
-    const cordMat = toonMaterial({ color: cordColor, flat: true });
+    const cordMat = washMaterial({ color: cordColor, flat: true });
     for (const sx of [-1, 1]) {
       const c = new THREE.Mesh(cordGeo, cordMat);
       c.name = 'cord';

@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { WASH } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 
@@ -27,7 +27,7 @@ export function makePole({
 } = {}) {
   const g = new THREE.Group();
   g.name = 'pole';
-  const wood = toonMaterial({ color, flat: true });
+  const wood = washMaterial({ color, flat: true });
 
   // the mast: tapered, base sitting on the ground plane. The first pass
   // (0.62x at the tip) read closer to a fence post stretched tall than a pole
@@ -54,7 +54,7 @@ export function makePole({
   // guy-lines: from a hook high on the mast down to seeded stakes. Deterministic
   // by seed; anchors are exposed so a case can keep scatter off the stakes.
   const anchors = [];
-  const inkline = toonMaterial({ color: WASH.deep, flat: true });
+  const inkline = washMaterial({ color: WASH.deep, flat: true });
   const hookY = height * 0.8;
   const up = new THREE.Vector3(0, 1, 0);
   for (let i = 0; i < guys; i++) {

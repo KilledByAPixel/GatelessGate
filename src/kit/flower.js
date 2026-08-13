@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { hash1 } from '../util/noise.js';
 import { ACCENT, WASH } from '../palette.js';
 
@@ -77,19 +77,19 @@ export function makeFlower({
                                         // curve's own tip, not a fixed (0,H,0)
   const stem = new THREE.Mesh(
     new THREE.TubeGeometry(stemCurve, 10, 0.06 * B, 6, false),
-    toonMaterial({ color: WASH.dark, flat: true }));
+    washMaterial({ color: WASH.dark, flat: true }));
   stem.name = 'stem';
   g.add(stem);
 
   // the seed pod at the heart of the bloom, riding the stem's real tip
   const pod = new THREE.Mesh(
     new THREE.CylinderGeometry(0.1 * B, 0.02 * B, 0.18 * B, 9),
-    toonMaterial({ color: WASH.deep, flat: true }));
+    washMaterial({ color: WASH.deep, flat: true }));
   pod.name = 'pod';
   pod.position.copy(TIP);
   g.add(pod);
 
-  const petalMat = toonMaterial({ color, flat: true, side: THREE.DoubleSide });
+  const petalMat = washMaterial({ color, flat: true, side: THREE.DoubleSide });
   const RINGS = [
     { n: petals, tilt: 1.16, len: 1.00, r: 0.26, phase: 0 },        // outer, opened out
     { n: petals - 2, tilt: 0.60, len: 0.82, r: 0.23, phase: 0.5 },  // inner, still cupped

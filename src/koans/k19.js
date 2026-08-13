@@ -5,7 +5,7 @@ import {
   composeWorld, faceMonk, makeDog, makeMonk, makeMoon, makePath,
   makeWildflowers,
 } from '../kit/index.js';
-import { makeLights } from '../render/toon.js';
+import { makeLights } from '../render/lights.js';
 
 const ID = 19;
 const BASE_WIND = 0.20;

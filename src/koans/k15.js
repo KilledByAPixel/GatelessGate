@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeGate, makeLantern, makeMonk, faceMonk,
-  makeLights, toonMaterial, makeFurin,
+  makeLights, washMaterial, makeFurin,
 } from '../kit/index.js';
 
 const ID = 15;
@@ -98,7 +98,7 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -5, pitch: 13.
   ummon.position.set(0.5, 0, -1.1);
   faceMonk(ummon, tozan.position);
   const stick = ummon.getObjectByName('staff');
-  if (stick) stick.material = toonMaterial({ color: ACCENT, flat: true });
+  if (stick) stick.material = washMaterial({ color: ACCENT, flat: true });
   scene.add(ummon);
   
   const lantern = makeLantern({ height: 1.2 });

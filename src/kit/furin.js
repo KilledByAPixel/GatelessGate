@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { hash1 } from '../util/noise.js';
 import { gustPhase, gustBuffet } from '../audio/synths.js';
 import { PAPER, WASH } from '../palette.js';
@@ -547,8 +547,8 @@ export function makeFurin({
   const g = new THREE.Group();
   g.name = 'furin';
 
-  const wood = toonMaterial({ color: WASH.dark, flat: true });
-  const metal = toonMaterial({ color: WASH.stone });
+  const wood = washMaterial({ color: WASH.dark, flat: true });
+  const metal = washMaterial({ color: WASH.stone });
 
   // everything below the hang point swings as one piece
   const swing = new THREE.Group();
@@ -804,7 +804,7 @@ export function makeFurin({
   const tagH = single ? TANZAKU_LEN * S : 1.0 * S;
   const tagGeo = new THREE.PlaneGeometry(tagW, tagH);
   tagGeo.translate(0, -tagH / 2, 0);
-  const tag = new THREE.Mesh(tagGeo, toonMaterial({ color: PAPER, side: THREE.DoubleSide }));
+  const tag = new THREE.Mesh(tagGeo, washMaterial({ color: PAPER, side: THREE.DoubleSide }));
   tag.name = 'tag';
   tag.userData.tube = null;           // the whole chime, not any one tube
   // A single's paper turns on its own thread (SPIN, above) — so it needs a

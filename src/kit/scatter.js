@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { hash1 } from '../util/noise.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { WASH } from '../palette.js';
 import { groundHeight } from './ground.js';
 
@@ -31,7 +31,7 @@ export function scatterPoints({ count, rMin = 4, rMax = 24, seed = 1, keepout = 
 }
 
 function instanced(geo, color, pts, { yOf, scaleOf, tintSpread = 0.06, sink = 0 }) {
-  const mat = toonMaterial({ color, flat: true });
+  const mat = washMaterial({ color, flat: true });
   const mesh = new THREE.InstancedMesh(geo, mat, pts.length);
   pts.forEach((pt, i) => {
     const sc = scaleOf(pt.u);
@@ -116,7 +116,7 @@ export function makeBushes({ count = 9, seed = 61, groundSeed = 21, keepout = []
 // ONE rock, hand-sized: the same lump-cluster geometry the instanced scatter
 // draws, built as a single mesh so a case can stage a boulder on purpose.
 export function makeBoulder({ size = 1.0, seed = 1, color = WASH.stone } = {}) {
-  const mesh = new THREE.Mesh(rockGeometry(seed), toonMaterial({ color, flat: true }));
+  const mesh = new THREE.Mesh(rockGeometry(seed), washMaterial({ color, flat: true }));
   mesh.name = 'boulder';
   // the scatter's own seeded y-squash, so no two boulders share a silhouette
   mesh.scale.set(size, size * (0.8 + 0.4 * hash1(seed * 7 + 5, 9)), size);

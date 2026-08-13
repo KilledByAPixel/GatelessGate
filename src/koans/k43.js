@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, aimMonk, faceMonk, makeAssembly,
-  makeRack, makeLights, toonMaterial,
+  makeRack, makeLights, washMaterial,
 } from '../kit/index.js';
 
 const ID = 43;
@@ -69,14 +69,14 @@ const CAM = { distance: 10.6, target: [0.7, 0.7, -0.55], heading: 12, pitch: 5.5
   
   const staff = new THREE.Mesh(
   new THREE.CylinderGeometry(0.028, 0.033, STAFF_L, 8),
-  toonMaterial({ color: ACCENT, flat: true }));
+  washMaterial({ color: ACCENT, flat: true }));
   staff.name = 'staff';
   staff.position.y = -STAFF_L / 2;                   // continue the arm's line, out front
   hold.add(staff);
   // a bound grip where his sleeve closes on it
   const grip = new THREE.Mesh(
   new THREE.CylinderGeometry(0.038, 0.038, 0.09, 8),
-  toonMaterial({ color: ACCENT, flat: true }));
+  washMaterial({ color: ACCENT, flat: true }));
   grip.name = 'grip';
   grip.position.y = -0.05;
   hold.add(grip);

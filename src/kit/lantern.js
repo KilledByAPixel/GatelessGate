@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { WASH, PAPER, INK, mixHex } from '../palette.js';
 
@@ -38,10 +38,10 @@ export function makeLantern({ height = 1.15, color = WASH.stone } = {}) {
   const H = height;
   const g = new THREE.Group();
   g.name = 'lantern';
-  const mat = toonMaterial({ color });
-  const flat = toonMaterial({ color, flat: true });
+  const mat = washMaterial({ color });
+  const flat = washMaterial({ color, flat: true });
   // wax — barely off the paper, the palest thing on the lantern
-  const waxMat = toonMaterial({ color: mixHex(PAPER, INK, 0.05) });
+  const waxMat = washMaterial({ color: mixHex(PAPER, INK, 0.05) });
 
   const add = (geo, y, m, name) => {
     const mesh = new THREE.Mesh(geo, m);

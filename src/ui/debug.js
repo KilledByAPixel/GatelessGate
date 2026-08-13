@@ -3,7 +3,7 @@ import { setGrassPatchiness, setGrassReach, setGrassTaper } from '../kit/grassfi
 import { LAMBERT_LIFT } from '../kit/tuftfield.js';
 import { wash } from '../palette.js';
 import { setFoliageWeather } from '../kit/foliage.js';
-import { plainMaterial } from '../render/toon.js';
+import { plainMaterial } from '../render/material.js';
 import { DRAW_BUDGET, DRAW_WARN } from '../budget.js';
 
 // A workbench: a toolbar button top-right of the stage, and a plain panel that
@@ -319,7 +319,7 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
   // ---- application --------------------------------------------------------
   // Authored values are captured the first time a scene is seen, so the sliders
   // act as multipliers over whatever each case intended rather than flat values.
-  // The clone itself is plainMaterial() in render/toon.js — the model viewer
+  // The clone itself is plainMaterial() in render/material.js — the model viewer
   // needs the identical one, and the list of properties it has been caught
   // dropping is long enough that a second copy would repeat it. This is only
   // the cache: one plain material per mesh, built the first time it is asked

@@ -1,7 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { createCloth, stepCloth } from '../sim/verlet.js';
 import { noise3 } from '../util/noise.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { ACCENT_DEEP, INK_LIT } from '../palette.js';
 
 // Case 29's flag. Wind is a controllable [0..1] level (click toggles it, ~2 s ramp);
@@ -16,7 +16,7 @@ export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed 
   const group = new THREE.Group();
   group.name = 'flag';
 
-  const poleMat = toonMaterial({ color: INK_LIT });
+  const poleMat = washMaterial({ color: INK_LIT });
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, poleH, 8), poleMat);
   pole.name = 'pole';
   pole.position.y = poleH / 2;
@@ -30,7 +30,7 @@ export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed 
   const cloth = createCloth(cols, rows, spacing, (c, r) => c === 0);
 
   const geo = new THREE.PlaneGeometry(width, clothH, cols - 1, rows - 1);
-  const mesh = new THREE.Mesh(geo, toonMaterial({ color, side: THREE.DoubleSide }));
+  const mesh = new THREE.Mesh(geo, washMaterial({ color, side: THREE.DoubleSide }));
   // The seal sits IN the wash, not on top of it. Excluding it from fog made it
   // the brightest thing in frame and read as a sticker rather than pigment.
   mesh.name = 'cloth';

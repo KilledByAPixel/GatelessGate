@@ -115,7 +115,7 @@ test('all three barriers carry the seal; the fog does the hierarchy', () => {
   // Frank's call, overriding the middle-only draft: three red gates on one
   // road, with DISTANCE as the differentiator — the near one full-blooded, the
   // far one a red ghost half into the paper. Each takes the deep mix like the
-  // title screen's gate, and each glows on its own (toonMaterial keys off the
+  // title screen's gate, and each glows on its own (washMaterial keys off the
   // accent family; k47 never sets emissive by hand).
   const root = k47.build(fakeCtx());
   const gates = gatesByDepth(root.scene);

@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { ACCENT, WASH } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 
@@ -34,13 +34,13 @@ export function makeWheel({
   const g = new THREE.Group();
   g.name = 'wheel';
 
-  const timber = toonMaterial({ color });
-  const flat = toonMaterial({ color, flat: true });
-  const stone = toonMaterial({ color: WASH.stone, flat: true });
+  const timber = washMaterial({ color });
+  const flat = washMaterial({ color, flat: true });
+  const stone = washMaterial({ color: WASH.stone, flat: true });
   // the wheel is the accent: the case is about what keeps turning when you
   // pull the hub, so the whole turning assembly is red and only the stand
   // holding it up stays neutral ink
-  const wheelMat = toonMaterial({ color: wheelColor, flat: true });
+  const wheelMat = washMaterial({ color: wheelColor, flat: true });
 
   const CY = R * 1.14;              // axle height: the rim hangs just clear of the ground
 

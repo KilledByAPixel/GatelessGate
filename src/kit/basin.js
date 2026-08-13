@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { WASH } from '../palette.js';
 
 // An open stone basin — the thing that actually holds water.
@@ -51,7 +51,7 @@ export function makeBasin({
 
   const mesh = new THREE.Mesh(
     new THREE.LatheGeometry(profile, segments),
-    toonMaterial({ color, flat: true, side: THREE.DoubleSide }));
+    washMaterial({ color, flat: true, side: THREE.DoubleSide }));
   mesh.name = 'basin';
   return mesh;
 }

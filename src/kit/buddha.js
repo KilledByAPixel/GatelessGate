@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { INK, INK_LIT, ACCENT, ACCENT_DEEP, ACCENT_LIGHT, ACCENT_PALE } from '../palette.js';
 import { makeFigure, HEAD_OBLONG } from './figure.js';
 
@@ -85,7 +85,7 @@ export function makeBuddha({
 
   const urna = new THREE.Mesh(
     new THREE.SphereGeometry(URNA_R * r, 8, 6),
-    toonMaterial({ color: markColor || markFor(color), flat: true }));
+    washMaterial({ color: markColor || markFor(color), flat: true }));
   urna.name = 'urna';
   urna.position.set(
     0,

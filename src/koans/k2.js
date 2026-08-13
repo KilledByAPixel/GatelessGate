@@ -5,7 +5,7 @@ import {
   bearing, composeWorld, faceMonk, makeCave, makeFox, makeMonk, makeRain,
   plantTree, plantRock, tapMeshes,
 } from '../kit/index.js';
-import { makeLights } from '../render/toon.js';
+import { makeLights } from '../render/lights.js';
 
 const ID = 2;
 

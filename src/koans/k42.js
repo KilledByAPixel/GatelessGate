@@ -4,7 +4,7 @@ import { PAPER, ACCENT_DEEP, wash } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk,
-  makeLights, toonMaterial,
+  makeLights, washMaterial,
 } from '../kit/index.js';
 
 const ID = 42;
@@ -47,7 +47,7 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   // the raised stone and the distance are what set him back and above
   const seat = new THREE.Mesh(
   new THREE.CylinderGeometry(0.85, 0.95, 0.28, 9),
-  toonMaterial({ color: wash(0.32), flat: true }));
+  washMaterial({ color: wash(0.32), flat: true }));
   seat.name = 'seat';
   seat.position.set(0.5, 0.14, -3.3);
   scene.add(seat);

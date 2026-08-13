@@ -5,7 +5,7 @@ import {
   aimMonk, bearing, composeWorld, faceMonk, makeBell, makeCylinderChime,
   makeDrum, makeHut, makeLantern, makeMonk, makePath, wrapPi,
 } from '../kit/index.js';
-import { makeLights } from '../render/toon.js';
+import { makeLights } from '../render/lights.js';
 
 const ID = 16;
 

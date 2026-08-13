@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeWheel, makeMonk, faceMonk, makeStall, makeHut,
-  makeLights, toonMaterial,
+  makeLights, washMaterial,
 } from '../kit/index.js';
 
 const ID = 8;
@@ -56,7 +56,7 @@ const CAM = { distance: 9, target: [0.7, 1.25, 0.4], heading: 31.5, pitch: 19 };
   
   // the yard it stands in: a trestle with an unfinished rim leaning on it —
   // one wheel finished, one not, which is what a wheelwright's yard is
-  const timber = toonMaterial({ color: WASH.dark, flat: true });
+  const timber = washMaterial({ color: WASH.dark, flat: true });
   const trestle = new THREE.Group();
   trestle.name = 'trestle';
   for (const sx of [-1, 1]) {
@@ -94,7 +94,7 @@ const CAM = { distance: 9, target: [0.7, 1.25, 0.4], heading: 31.5, pitch: 19 };
   
   const blank = new THREE.Mesh(
   new THREE.TorusGeometry(0.78, 0.05, 5, 22),
-  toonMaterial({ color: WASH.mid, flat: true }));
+  washMaterial({ color: WASH.mid, flat: true }));
   blank.name = 'blank';                       // a rim with no spokes in it yet
   blank.position.set(-1.55, 0.80, -0.95);
   blank.rotation.set(-0.34, 0.5, 0.22);       // leaning against the bench

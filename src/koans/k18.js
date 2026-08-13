@@ -4,7 +4,7 @@ import { PAPER, ACCENT, WASH } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
   composeWorld, makePath, makeScale, makeMonk, aimMonk, faceMonk, makeHut,
-  makeLights, toonMaterial,
+  makeLights, washMaterial,
 } from '../kit/index.js';
 
 const ID = 18;
@@ -77,14 +77,14 @@ const CAM = { distance: 11, target: [-0.5, 1, 0.5], heading: 46, pitch: 21.5 };
   // and the only warm thing in the yard: full accent is right at this size.
   const weighed = new THREE.Mesh(
   new THREE.CylinderGeometry(0.15, 0.13, 0.16, 9),
-  toonMaterial({ color: ACCENT, flat: true }));
+  washMaterial({ color: ACCENT, flat: true }));
   weighed.name = 'flax';
   weighed.position.y = 0.10;
   scale.pan.add(weighed);
   
   // the rest of the crop, bundled on the ground where it was carried in
-  const flaxMat = toonMaterial({ color: WASH.dry, flat: true });
-  const bindMat = toonMaterial({ color: WASH.dark, flat: true });
+  const flaxMat = washMaterial({ color: WASH.dry, flat: true });
+  const bindMat = washMaterial({ color: WASH.dark, flat: true });
   for (let i = 0; i < 4; i++) {
   const bundle = new THREE.Group();
   bundle.name = 'bundle';

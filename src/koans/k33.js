@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK_LIT, WASH } from '../palette.js';
 import {
   composeWorld, makeBasin, makeWater, makeKoi, makeMonk, faceMonk, makeLantern,
-  makeLights, toonMaterial,
+  makeLights, washMaterial,
 } from '../kit/index.js';
 import { POND, BANK } from './k30.js';
 
@@ -85,7 +85,7 @@ const CAM = { distance: 14.2, target: [0.95, 0.9, -1.4], heading: 31.5, pitch: 2
   const SEAT_TOP = 0.62;               // keep in step with k30.js
   const seat = new THREE.Mesh(
   new THREE.CylinderGeometry(1.05, 1.2, SEAT_TOP, 9),
-  toonMaterial({ color: WASH.stone, flat: true }));
+  washMaterial({ color: WASH.stone, flat: true }));
   seat.name = 'seat';
   seat.position.set(BANK.x, SEAT_TOP / 2, BANK.z);
   scene.add(seat);
@@ -99,7 +99,7 @@ const CAM = { distance: 14.2, target: [0.95, 0.9, -1.4], heading: 31.5, pitch: 2
   const Z = 1.6;                       // the height case 30's Buddha is built at
   const cushion = new THREE.Mesh(
   new THREE.CylinderGeometry(0.235 * Z, 0.26 * Z, 0.042 * Z, 10),
-  toonMaterial({ color: INK_LIT, flat: true }));
+  washMaterial({ color: INK_LIT, flat: true }));
   cushion.name = 'cushion';
   cushion.position.set(BANK.x, SEAT_TOP + 0.05 + 0.021 * Z, BANK.z);
   scene.add(cushion);

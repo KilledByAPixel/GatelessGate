@@ -4,7 +4,8 @@ import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, faceMonk, makeHut, makeLantern, makeMonk, makePath, tapMeshes,
 } from '../kit/index.js';
-import { makeLights, toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
+import { makeLights } from '../render/lights.js';
 
 const ID = 3;
 
@@ -106,7 +107,7 @@ function makeFinger(length, radius) {
   const geo = new THREE.SphereGeometry(radius, 9, 6);
   geo.scale(1, length / (2 * radius), 1);
   geo.translate(0, length / 2, 0);         // stands on its base, like the lathe did
-  const mesh = new THREE.Mesh(geo, toonMaterial({ color: ACCENT, flat: true }));
+  const mesh = new THREE.Mesh(geo, washMaterial({ color: ACCENT, flat: true }));
   mesh.name = 'finger';
   return mesh;
 }

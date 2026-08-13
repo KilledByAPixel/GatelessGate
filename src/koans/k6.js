@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk, makeFlower, makeAssembly, makeCat,
-  makeLights, toonMaterial, tapMeshes,
+  makeLights, washMaterial, tapMeshes,
 } from '../kit/index.js';
 import { hash1 } from '../util/noise.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
@@ -73,7 +73,7 @@ const CAM = { distance: 11, target: [1.05, 0.3, -3.35], heading: 17, pitch: 29.5
   // 2.35 colossus would read as a stage under a man).
   const seat = new THREE.Mesh(
   new THREE.CylinderGeometry(0.95, 1.1, 0.34, 9),
-  toonMaterial({ color: WASH.stone, flat: true }));
+  washMaterial({ color: WASH.stone, flat: true }));
   seat.name = 'seat';
   const SEAT_Z = -5.0;                  // far enough back that the assembly can sit between
   seat.position.set(1.2, 0.17, SEAT_Z);

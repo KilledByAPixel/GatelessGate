@@ -6,7 +6,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { makeLights, toonMaterial, plainMaterial } from '../src/render/toon.js';
+import { washMaterial, plainMaterial } from '../src/render/material.js';
+import { makeLights } from '../src/render/lights.js';
 import { makeViewerLights, VIEWER_FILLS } from '../src/modelviewer/lights.js';
 import { applyBookShading } from '../src/modelviewer/shading.js';
 
@@ -75,7 +76,7 @@ const mesh = (name, material, userData = {}) => {
 
 test('applyBookShading swaps lit toon materials for the shipped Lambert', () => {
   const g = new THREE.Group();
-  const lit = mesh('robe', toonMaterial({ color: '#494749' }));
+  const lit = mesh('robe', washMaterial({ color: '#494749' }));
   g.add(lit);
   applyBookShading(g);
   assert.equal(lit.material.type, 'MeshLambertMaterial');
@@ -86,7 +87,7 @@ test('applyBookShading leaves alone everything the book marks unlit', () => {
   const g = new THREE.Group();
   // the two guards, each with the thing that taught it
   const moon = mesh('moon', new THREE.MeshBasicMaterial({ color: 0x943433 }), { keepMaterial: true });
-  const grass = mesh('grassfield', toonMaterial({ color: '#6f6d6b' }));
+  const grass = mesh('grassfield', washMaterial({ color: '#6f6d6b' }));
   g.add(moon, grass);
   const before = [moon.material, grass.material];
   applyBookShading(g);
@@ -95,7 +96,7 @@ test('applyBookShading leaves alone everything the book marks unlit', () => {
 
 test('applyBookShading handles a multi-material mesh', () => {
   const g = new THREE.Group();
-  const m = mesh('two-tone', [toonMaterial({ color: '#494749' }), toonMaterial({ color: '#6f6d6b' })]);
+  const m = mesh('two-tone', [washMaterial({ color: '#494749' }), washMaterial({ color: '#6f6d6b' })]);
   g.add(m);
   applyBookShading(g);
   assert.equal(m.material.length, 2);
@@ -109,7 +110,7 @@ test('applyBookShading handles a multi-material mesh', () => {
 // each shipped broken first). It is now shared with the viewer, so a fifth
 // omission would break two tools at once.
 test('plainMaterial carries everything that affects rendering', () => {
-  const src = toonMaterial({ color: '#C73E3A', flat: true, side: THREE.DoubleSide });
+  const src = washMaterial({ color: '#C73E3A', flat: true, side: THREE.DoubleSide });
   src.transparent = true;
   src.opacity = 0.4;
   src.fog = false;
@@ -136,7 +137,7 @@ test('plainMaterial carries everything that affects rendering', () => {
 });
 
 test('plainMaterial defaults a bare material without inventing values', () => {
-  const m = plainMaterial(new THREE.MeshToonMaterial({ color: 0x494749 }));
+  const m = plainMaterial(new THREE.MeshBasicMaterial({ color: 0x494749 }));
   assert.equal(m.flatShading, false);
   assert.equal(m.transparent, false);
   assert.equal(m.opacity, 1);

@@ -8,8 +8,8 @@ import { PAPER, INK, ACCENT, WASH, SNOW, wash, mixHex, hexToRgb } from '../src/p
 const SRC = join(fileURLToPath(new URL('../', import.meta.url)), 'src');
 
 // Files allowed to name a colour literally: the palette itself defines them,
-// toon.js only has a white default, and the text artifact is prose.
-const ALLOWED = ['palette.js', join('render', 'toon.js'), join('koans', 'text', 'mumonkan.js')];
+// material.js only has a white default, and the text artifact is prose.
+const ALLOWED = ['palette.js', join('render', 'material.js'), join('koans', 'text', 'mumonkan.js')];
 
 function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {

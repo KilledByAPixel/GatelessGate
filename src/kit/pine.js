@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { hash1 } from '../util/noise.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { WASH } from '../palette.js';
 import { mergeSimple } from './scatter.js';
 import { applyFoliageWind } from './foliage.js';
@@ -148,7 +148,7 @@ export function pineGeometry({ height = 4, tiers = 5, seed = 3 } = {}) {
 export function makePine({ height = 4, tiers = 5, seed = 3, color = WASH.dark } = {}) {
   const mesh = new THREE.Mesh(
     pineGeometry({ height, tiers, seed }),
-    applyFoliageWind(toonMaterial({ color, flat: true })));
+    applyFoliageWind(washMaterial({ color, flat: true })));
   mesh.name = 'pine';
   mesh.userData.foliageWind = true;   // carries wind attributes — keeps bakeStatic off it
   return mesh;

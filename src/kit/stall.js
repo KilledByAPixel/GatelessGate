@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { WASH, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import { mergeSimple } from './scatter.js';
@@ -69,13 +69,13 @@ export function makeStall({
     const rx = -width / 2 + (width * i) / ribN;
     frame.push(box(0.045, 0.045, depth + 0.10, rx, eaveY - 0.01, 0.02));
   }
-  const frameMesh = new THREE.Mesh(mergeSimple(frame), toonMaterial({ color: wood, flat: true }));
+  const frameMesh = new THREE.Mesh(mergeSimple(frame), washMaterial({ color: wood, flat: true }));
   frameMesh.name = 'stall-frame';
   g.add(frameMesh);
 
   // ---- the awning: a cloth sloping down toward the lane -------------------
   const awn = new THREE.BoxGeometry(width + 0.18, 0.04, depth + 0.12);
-  const awning = new THREE.Mesh(awn, toonMaterial({ color: cloth, flat: true }));
+  const awning = new THREE.Mesh(awn, washMaterial({ color: cloth, flat: true }));
   awning.name = 'stall-awning';
   awning.position.set(0, height * 0.9, 0.02);
   awning.rotation.x = -0.20;                    // front edge dips
@@ -94,7 +94,7 @@ export function makeStall({
       s.translate(lx, counterY + 0.05 + r * 0.8, lz);
       lumps.push(s);
     }
-    const goodsMesh = new THREE.Mesh(mergeSimple(lumps), toonMaterial({ color: WASH.mid, flat: true }));
+    const goodsMesh = new THREE.Mesh(mergeSimple(lumps), washMaterial({ color: WASH.mid, flat: true }));
     goodsMesh.name = 'stall-goods';
     g.add(goodsMesh);
   }

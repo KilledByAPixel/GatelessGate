@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { hash1 } from '../util/noise.js';
 import { WASH } from '../palette.js';
@@ -116,13 +116,13 @@ export function makeTemple({
 
   const walls = new THREE.Mesh(
     mergeSimple(parts.flatMap((p) => p.walls)),
-    toonMaterial({ color: wallColor, flat: true }));
+    washMaterial({ color: wallColor, flat: true }));
   walls.name = 'temple-walls';
   g.add(walls);
 
   const roofs = new THREE.Mesh(
     mergeSimple(parts.flatMap((p) => p.roofs)),
-    toonMaterial({ color: roofColor, flat: true }));
+    washMaterial({ color: roofColor, flat: true }));
   roofs.name = 'temple-roofs';
   g.add(roofs);
 

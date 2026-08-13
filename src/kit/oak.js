@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { hash1 } from '../util/noise.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { GRAY_DARK, WASH } from '../palette.js';
 
@@ -184,9 +184,9 @@ export function makeOak({
     );
   }
 
-  const trunk = new THREE.Mesh(mergeSimple(wood), toonMaterial({ color: trunkColor, flat: true }));
+  const trunk = new THREE.Mesh(mergeSimple(wood), washMaterial({ color: trunkColor, flat: true }));
   trunk.name = 'trunk';
-  const canopy = new THREE.Mesh(mergeSimple(leaves), toonMaterial({ color: canopyColor, flat: true }));
+  const canopy = new THREE.Mesh(mergeSimple(leaves), washMaterial({ color: canopyColor, flat: true }));
   canopy.name = 'canopy';
   g.add(trunk, canopy);
 

@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { INK, WASH, mixHex } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 
@@ -54,7 +54,7 @@ export function makeCave({
 
   // The dark, first, so every lump of rock is drawn over it.
   //
-  // UNLIT, and that is the whole trick. This was a toonMaterial mixed 93% toward
+  // UNLIT, and that is the whole trick. This was a washMaterial mixed 93% toward
   // INK and it still came out a mid grey: a lit material cannot be darker than
   // the light falling on it, and the hemisphere fill lifts everything off black.
   // Mixing further toward INK does nothing, because the mix is the surface
@@ -80,7 +80,7 @@ export function makeCave({
   // something to be darker than
   const apron = new THREE.Mesh(
     new THREE.BoxGeometry(width * 0.88, height * 0.13, depth * 0.70),
-    toonMaterial({ color: mixHex(color, INK, 0.58), flat: true }));
+    washMaterial({ color: mixHex(color, INK, 0.58), flat: true }));
   apron.name = 'apron';
   apron.position.set(0, height * 0.042, depth * 0.06);
   g.add(apron);
@@ -94,7 +94,7 @@ export function makeCave({
     geo.rotateY(hash1(i * 5 + 1, seed) * Math.PI * 2);
     geo.rotateZ((hash1(i * 5 + 2, seed) - 0.5) * 0.55);
     geo.scale(sx, sy, sz);
-    const m = new THREE.Mesh(geo, toonMaterial({
+    const m = new THREE.Mesh(geo, washMaterial({
       color: mixHex(color, INK, tone + (hash1(i * 5 + 3, seed) - 0.5) * 0.10),
       flat: true,
     }));

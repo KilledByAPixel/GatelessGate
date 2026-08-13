@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { hash1 } from '../util/noise.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { applyFoliageWind } from './foliage.js';
 import { GRAY_DARK, WASH } from '../palette.js';
@@ -185,7 +185,7 @@ export function makeTree({
       aSway: norm(woodSway), aPhase: woodPhase,
       aLeaf: zeros(wood.length), aColumn: zeros(wood.length),
     }),
-    applyFoliageWind(toonMaterial({ color: trunkColor, flat: true })));
+    applyFoliageWind(washMaterial({ color: trunkColor, flat: true })));
   trunk.name = 'trunk';
   trunk.userData.foliageWind = true;   // carries wind attributes — keeps bakeStatic off it
   const canopy = new THREE.Mesh(
@@ -193,7 +193,7 @@ export function makeTree({
       aSway: norm(leafSway), aPhase: leafPhase,
       aLeaf: ones(leaves.length), aColumn: zeros(leaves.length),
     }),
-    applyFoliageWind(toonMaterial({ color: canopyColor, flat: true })));
+    applyFoliageWind(washMaterial({ color: canopyColor, flat: true })));
   canopy.name = 'canopy';
   canopy.userData.foliageWind = true;
   g.add(trunk, canopy);

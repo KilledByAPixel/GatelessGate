@@ -4,7 +4,8 @@ import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   aimMonk, composeWorld, faceMonk, makeAssembly, makeCat, makeHut, makeMonk,
 } from '../kit/index.js';
-import { makeLights, toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
+import { makeLights } from '../render/lights.js';
 
 const ID = 14;
 
@@ -75,7 +76,7 @@ const CAM = { distance: 11.5, target: [1.15, 1.2, -1], heading: 34, pitch: 27 };
   // earth. Everyone else stands in grass, because they would.
   const pad = new THREE.Mesh(
   new THREE.CylinderGeometry(PAD_R, PAD_R * 1.02, 0.09, 11),
-  toonMaterial({ color: WASH.stone, flat: true }));
+  washMaterial({ color: WASH.stone, flat: true }));
   pad.name = 'courtyard';
   pad.position.set(C.x, 0.005, C.z);   // sunk a little so it cannot z-fight the ground
   pad.rotation.y = 0.2;
@@ -97,7 +98,7 @@ const CAM = { distance: 11.5, target: [1.15, 1.2, -1], heading: 34, pitch: 27 };
   // this cat is not in any trouble it knows about.
   const stone = new THREE.Mesh(
   new THREE.CylinderGeometry(0.40, 0.46, 0.34, 7),
-  toonMaterial({ color: WASH.stone, flat: true }));
+  washMaterial({ color: WASH.stone, flat: true }));
   stone.name = 'stone';
   stone.position.set(STONE.x, STONE_TOP - 0.17, STONE.z);
   stone.rotation.y = 0.6;

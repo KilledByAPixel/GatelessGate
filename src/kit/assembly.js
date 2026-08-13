@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { hash1 } from '../util/noise.js';
 import { INK_LIT } from '../palette.js';
@@ -36,7 +36,7 @@ export function makeAssembly({ count = 8, radius = 3.0, center = [0, 0], facing 
   hatGeo.translate(0, 0.560 * FIG_H, 0);
   const geo = mergeSimple([bodyGeo, headGeo, hatGeo]);
 
-  const mesh = new THREE.InstancedMesh(geo, toonMaterial({ color, flat: true }), count);
+  const mesh = new THREE.InstancedMesh(geo, washMaterial({ color, flat: true }), count);
   mesh.name = 'assembly';
 
   const m = new THREE.Matrix4();

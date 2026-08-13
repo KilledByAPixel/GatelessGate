@@ -1,7 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 
 function disposeMaterial(mat, disposed, counts) {
-  for (const key of ['map', 'gradientMap', 'alphaMap']) {
+  for (const key of ['map', 'alphaMap']) {
     const tex = mat[key];
     if (tex && !tex.userData?.shared && !disposed.has('t' + tex.id)) {
       disposed.add('t' + tex.id); tex.dispose(); counts.textures++;

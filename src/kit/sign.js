@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { WASH } from '../palette.js';
 
@@ -55,7 +55,7 @@ export function makeSign({
   // faces z-fight and a gap reads as floating (the kit's standing join rule).
   board.translate(0, boardY, postD / 2 + thickness / 2 - 0.03);
 
-  const mesh = new THREE.Mesh(mergeSimple([post, board]), toonMaterial({ color, flat: true }));
+  const mesh = new THREE.Mesh(mergeSimple([post, board]), washMaterial({ color, flat: true }));
   mesh.name = 'board';
   g.add(mesh);
 

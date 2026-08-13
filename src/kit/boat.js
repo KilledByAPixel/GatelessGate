@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { INK_LIT, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 
@@ -79,14 +79,14 @@ export function makeBoat({
   const hullGeo = new THREE.BufferGeometry();
   hullGeo.setAttribute('position', new THREE.Float32BufferAttribute(tri, 3));
   hullGeo.computeVertexNormals();
-  const hull = new THREE.Mesh(hullGeo, toonMaterial({ color, flat: true }));
+  const hull = new THREE.Mesh(hullGeo, washMaterial({ color, flat: true }));
   hull.name = 'hull';
   group.add(hull);
 
   if (mast > 0) {
     const pole = new THREE.Mesh(
       new THREE.CylinderGeometry(0.022, 0.034, mast, 5),
-      toonMaterial({ color, flat: true }));
+      washMaterial({ color, flat: true }));
     pole.name = 'mast';
     pole.position.set(0, F + mast / 2, -L * 0.02);
     group.add(pole);
@@ -110,7 +110,7 @@ export function makeBoat({
     sailGeo.setAttribute('position', new THREE.Float32BufferAttribute(sailTri, 3));
     sailGeo.computeVertexNormals();
     const sail = new THREE.Mesh(sailGeo,
-      toonMaterial({ color: sailColor, flat: true, side: THREE.DoubleSide }));
+      washMaterial({ color: sailColor, flat: true, side: THREE.DoubleSide }));
     sail.name = 'sail';
     sail.rotation.y = 0.10;
     group.add(sail);

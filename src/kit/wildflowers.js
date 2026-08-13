@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { hash1, noise2 } from '../util/noise.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { groundHeight } from './ground.js';
 import { wash, WASH } from '../palette.js';
@@ -166,7 +166,7 @@ export function makeWildflowers({
 
   // the HEADS carry the petal tone; the mesh carrying them stays the handle's `mesh`
   const mesh = new THREE.InstancedMesh(
-    headGeometry(seed), toonMaterial({ color, flat: true }), Math.max(1, pts.length));
+    headGeometry(seed), washMaterial({ color, flat: true }), Math.max(1, pts.length));
   mesh.count = pts.length;
   mesh.name = 'wildflowers';
   mesh.castShadow = false;
@@ -174,7 +174,7 @@ export function makeWildflowers({
   // the STEMS ride as a child of the heads mesh — one scene.add carries both —
   // in the grass tone, one extra draw call for the whole field
   const stems = new THREE.InstancedMesh(
-    stemGeometry(), toonMaterial({ color: stemColor, flat: true }), Math.max(1, pts.length));
+    stemGeometry(), washMaterial({ color: stemColor, flat: true }), Math.max(1, pts.length));
   stems.count = pts.length;
   stems.name = 'wildflower-stems';
   stems.castShadow = false;

@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 
 // One bird, in flight. The flock in birds.js drives a school of these across
@@ -85,7 +85,7 @@ function wingGeometry(s, side) {
 export function makeBird({ size = 0.5, color, seed = 0 } = {}) {
   const g = new THREE.Group();
   g.name = 'bird';
-  const mat = toonMaterial({ color, flat: true });
+  const mat = washMaterial({ color, flat: true });
   mat.side = THREE.DoubleSide;
 
   const body = new THREE.Mesh(bodyGeometry(size), mat);

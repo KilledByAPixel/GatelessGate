@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { noise1 } from '../util/noise.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { groundHeight } from './ground.js';
 import { wash } from '../palette.js';
 
@@ -54,7 +54,7 @@ export function makeSand({
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geo.setIndex(indices);
   geo.computeVertexNormals();
-  const mat = toonMaterial({ color });
+  const mat = washMaterial({ color });
   mat.polygonOffset = true;
   mat.polygonOffsetFactor = -1;
   const mesh = new THREE.Mesh(geo, mat);

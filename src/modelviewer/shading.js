@@ -1,11 +1,12 @@
 // WHAT THE VIEWER RENDERS WITH — the book's shipped shading, which is not the
 // shading the viewer used to show.
 //
-// The kit builds every lit surface as a MeshToonMaterial, and for a long time
-// the viewer rendered exactly that. The book does not: it ships with the toon
-// toggle OFF (debug.js: `toon`, def false) and rebuilds each material as a
-// plain Lambert on the way to the screen. So the viewer was showing a mode no
-// reader ever sees.
+// The kit used to build every lit surface with the toon shader's 3-step ramp
+// (washMaterial is a plain Lambert now — see render/material.js), and for a
+// long time the viewer rendered exactly that. The book never did: it ships
+// with the toon toggle OFF (debug.js: `toon`, def false) and rebuilds each
+// material as a plain Lambert on the way to the screen. So the viewer was
+// showing a mode no reader ever saw.
 //
 // It showed badly, too, which is what surfaced it. The 3-step ramp's top texel
 // covers every normal within about 71° of a light — nearly the whole visible
@@ -22,7 +23,7 @@
 // That is the whole finding: no amount of extra light fixes a 2-tone render,
 // because the ramp — not the rig — was quantising the form away. The fills in
 // lights.js are worth having on top, but they are the small half.
-import { plainMaterial } from '../render/toon.js';
+import { plainMaterial } from '../render/material.js';
 
 // Swap in place, on a freshly built model. The two guards are copied from the
 // workbench's traverse and are not optional:

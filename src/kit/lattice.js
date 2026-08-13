@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { WASH } from '../palette.js';
 
@@ -50,7 +50,7 @@ export function latticeGeometry({ width = 2.2, height = 2.0, bars = 5 } = {}) {
 // Stands from y=0 to height, facing +z. userData carries its dimensions so a
 // caller that cares can measure it without walking children (there are none).
 export function makeLattice({ width = 2.2, height = 2.0, bars = 5, color = WASH.dark } = {}) {
-  const mesh = new THREE.Mesh(latticeGeometry({ width, height, bars }), toonMaterial({ color, flat: true }));
+  const mesh = new THREE.Mesh(latticeGeometry({ width, height, bars }), washMaterial({ color, flat: true }));
   mesh.name = 'lattice';
   mesh.userData.lattice = { width, height, bars };
   return mesh;
@@ -88,7 +88,7 @@ export function makePen({
   g.name = 'pen';
   const half = size / 2;
   const w = size / panelsPerSide;
-  const mat = toonMaterial({ color, flat: true });
+  const mat = washMaterial({ color, flat: true });
 
   // a panel is built in the XY plane facing +z; the x-walls turn onto it
   const sides = [['-z', 0, -half, 0], ['+z', 0, half, 0],

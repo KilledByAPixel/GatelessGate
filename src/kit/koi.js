@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { hash1 } from '../util/noise.js';
 import { WASH } from '../palette.js';
 import { mergeSimple } from './scatter.js';
@@ -161,13 +161,13 @@ export function makeKoi({
   const g = new THREE.Group();
   g.name = 'koi';
   const L = length;
-  // DoubleSide: the fin triangles are zero-thickness planes and toonMaterial
+  // DoubleSide: the fin triangles are zero-thickness planes and washMaterial
   // defaults to FrontSide — a single-sided fin vanishes for half of every lap,
   // whenever the yaw swings its back face toward the camera. Shared by the
   // whole fish so body and fins keep one material identity.
   const mat = unlit
     ? new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide })
-    : toonMaterial({ color, flat: true, side: THREE.DoubleSide });
+    : washMaterial({ color, flat: true, side: THREE.DoubleSide });
 
   // One template geometry; each fish clones it (its vertices flex on its own
   // phase) but they all displace from this single shared base, with the wave

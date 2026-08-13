@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, INK, INK_LIT } from '../palette.js';
 import {
   composeWorld, makeVeranda, makeMonk, aimMonk, makeLantern,
-  makeLights, toonMaterial, makeFurin, makeVase, plantTree
+  makeLights, washMaterial, makeFurin, makeVase, plantTree
 } from '../kit/index.js';
 
 const ID = 4;
@@ -60,14 +60,14 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   const SW = 1.15, SH = 2.0;
   const silk = new THREE.Mesh(
   new THREE.PlaneGeometry(SW, SH),
-  toonMaterial({ color: WASH.mist, flat: true }));
+  washMaterial({ color: WASH.mist, flat: true }));
   silk.name = 'silk';
   scroll.add(silk);
   
   for (const sy of [-1, 1]) {
   const rod = new THREE.Mesh(
   new THREE.CylinderGeometry(0.045, 0.045, SW * 1.12, 7),
-  toonMaterial({ color: WASH.dark, flat: true }));
+  washMaterial({ color: WASH.dark, flat: true }));
   rod.name = 'rod';
   rod.rotation.z = Math.PI / 2;
   rod.position.set(0, sy * SH / 2, -0.01);
@@ -80,7 +80,7 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   // of Bodhidharma on the thing — red instead of black"): the portrait IS
   // this koan's seal, so the little collector's-seal square it used to
   // carry is gone with the same stroke — one red thing, and it is him.
-  const paintMat = toonMaterial({ color: ACCENT, flat: true });
+  const paintMat = washMaterial({ color: ACCENT, flat: true });
   const painted = new THREE.Group();
   painted.name = 'painted';
   painted.position.set(0, 0.1, 0.03);
@@ -127,7 +127,7 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   // pressed flat to 0.32 of its depth and a buried dot comes out the back of
   // the silk.
   const mark = new THREE.Mesh(new THREE.SphereGeometry(0.030, 8, 6),
-    toonMaterial({ color: INK, flat: true }));
+    washMaterial({ color: INK, flat: true }));
   mark.name = 'mark';
   mark.scale.set(1, 1, 0.5);
   mark.position.set(0, 0.41, 0.040);
@@ -136,7 +136,7 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   
   // THE BEARD THAT WILL NOT TAKE. Present from the start and invisible; a
   // tap gathers it and it drains away again.
-  const beardMat = toonMaterial({ color: INK_LIT, flat: true });
+  const beardMat = washMaterial({ color: INK_LIT, flat: true });
   beardMat.transparent = true;
   beardMat.opacity = 0;
   const beard = new THREE.Mesh(new THREE.ConeGeometry(0.115, 0.34, 7), beardMat);

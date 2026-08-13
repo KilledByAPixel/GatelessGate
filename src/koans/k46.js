@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, wash } from '../palette.js';
 import { composeWorld, faceMonk, makeMonk, makePole, tapMeshes } from '../kit/index.js';
-import { makeLights } from '../render/toon.js';
+import { makeLights } from '../render/lights.js';
 import { noise1 } from '../util/noise.js';
 
 const ID = 46;

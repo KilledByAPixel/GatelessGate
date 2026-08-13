@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { INK, PAPER, WASH, wash, mixHex, hexToRgb } from '../palette.js';
 import { hash1, noise1 } from '../util/noise.js';
 import { groundHeight } from './ground.js';
@@ -113,7 +113,7 @@ export function makeCliff({
     }
   }
   const lip = new THREE.Mesh(mergeSimple(lipGeos),
-    toonMaterial({ color: mixHex(color, INK, 0.14), flat: true }));
+    washMaterial({ color: mixHex(color, INK, 0.14), flat: true }));
   lip.name = 'lip';
   g.add(lip);
 
@@ -137,7 +137,7 @@ export function makeCliff({
         row.y * drop + rnd(j + 9) * drop * 0.10);
       if (k === 0) rock.push(c);   // deeper rows share the same plan as row 0
     }
-    const m = new THREE.Mesh(mergeSimple(geos), toonMaterial({ color: row.tone, flat: true }));
+    const m = new THREE.Mesh(mergeSimple(geos), washMaterial({ color: row.tone, flat: true }));
     m.name = k === ROWS.length - 1 ? 'skirt' : 'face';
     g.add(m);
   });

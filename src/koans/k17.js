@@ -4,7 +4,7 @@ import { PAPER, ACCENT, ACCENT_DEEP } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeVeranda, makeMonk, makeLantern, wrapPi, bearing,
-  makeLights, toonMaterial, makeCylinderChime,
+  makeLights, washMaterial, makeCylinderChime,
 } from '../kit/index.js';
 
 const ID = 17;

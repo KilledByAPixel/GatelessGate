@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK_LIT, WASH, wash } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeMonk, faceMonk, wrapPi, bearing,
-  makeLights, toonMaterial, groundHeight,
+  makeLights, washMaterial, groundHeight,
   makeWater, makeSand, makeFoam, makeBoat,
 } from '../kit/index.js';
 
@@ -99,7 +99,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
   const RISE_TOP_Y = 0.22 + RISE.h / 2;          // the plateau's world height
   const rise = new THREE.Mesh(
   new THREE.CylinderGeometry(RISE.rTop, RISE.rBase, RISE.h, RISE.sides),
-  toonMaterial({ color: WASH.ground, flat: true }));
+  washMaterial({ color: WASH.ground, flat: true }));
   rise.name = 'rise';
   rise.position.set(RISE.x, 0.22, RISE.z);
   scene.add(rise);
@@ -152,7 +152,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
     // local y, so this lands on the hand wherever the pose puts it.
     const fist = new THREE.Mesh(
       new THREE.SphereGeometry(0.075, 9, 7),
-      toonMaterial({ color: INK_LIT, flat: true }));
+      washMaterial({ color: INK_LIT, flat: true }));
     fist.name = 'fist';
     fist.position.y = -0.34 * 1.5;
     (raised || monk).add(fist);

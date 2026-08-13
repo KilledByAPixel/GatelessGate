@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK, WASH, mixHex, wash } from '../palette.js';
 import {
   composeWorld, faceMonk, groundHeight, makeFoam, makeLights,
-  makeMonk, makePath, makeSand, makeWater, mergeSimple, toonMaterial, makeLantern
+  makeMonk, makePath, makeSand, makeWater, mergeSimple, washMaterial, makeLantern
 } from '../kit/index.js';
 
 const ID = 20;
@@ -118,7 +118,7 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   faceMonk(colossus, { x: 5.0, z: 5.0 });
   // The staff stays ink: the seal moved to the sea (see the water below).
   // One warm note per page, and this page's is the great ocean itself.
-  // Restore `staff.material = toonMaterial({ color: ACCENT, flat: true })`
+  // Restore `staff.material = washMaterial({ color: ACCENT, flat: true })`
   // if the seal ever comes back to his hand.
   // caught mid-stride: leaned into the step, one sleeve swung forward
   colossus.rotation.z = -0.05;

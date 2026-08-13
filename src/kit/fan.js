@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { hash1 } from '../util/noise.js';
 import { INK_LIT, WASH } from '../palette.js';
 
@@ -52,7 +52,7 @@ export function makeFan({
   }
   geo.computeVertexNormals();
   const leaf = new THREE.Mesh(geo,
-    toonMaterial({ color, flat: true, side: THREE.DoubleSide }));
+    washMaterial({ color, flat: true, side: THREE.DoubleSide }));
   leaf.name = 'fan-leaf';
   leaf.position.y = handleLen;
   group.add(leaf);
@@ -60,7 +60,7 @@ export function makeFan({
   // the grip: hand end at the group origin, pivot end under the leaf
   const handleGeo = new THREE.CylinderGeometry(0.028 * radius * 2, 0.034 * radius * 2, handleLen * 1.15, 6);
   handleGeo.translate(0, handleLen * 1.15 / 2, 0);   // base at the origin, sinks past the pivot
-  const handle = new THREE.Mesh(handleGeo, toonMaterial({ color: handleColor, flat: true }));
+  const handle = new THREE.Mesh(handleGeo, washMaterial({ color: handleColor, flat: true }));
   handle.name = 'fan-handle';
   group.add(handle);
 

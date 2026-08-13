@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { WASH } from '../palette.js';
 import { clamp } from '../util/math.js';
 
@@ -27,9 +27,9 @@ export function makeScale({ height = 1.35, color = WASH.dark, panColor = WASH.st
   const g = new THREE.Group();
   g.name = 'scale';
 
-  const timber = toonMaterial({ color });
-  const flat = toonMaterial({ color, flat: true });
-  const stone = toonMaterial({ color: WASH.stone, flat: true });
+  const timber = washMaterial({ color });
+  const flat = washMaterial({ color, flat: true });
+  const stone = washMaterial({ color: WASH.stone, flat: true });
 
   const padH = 0.05 * H;
   const pad = new THREE.Mesh(new THREE.CylinderGeometry(0.30 * H, 0.36 * H, padH, 8), stone);
@@ -78,7 +78,7 @@ export function makeScale({ height = 1.35, color = WASH.dark, panColor = WASH.st
 
   const pan = new THREE.Mesh(
     new THREE.CylinderGeometry(0.26 * H, 0.20 * H, 0.07 * H, 10),
-    toonMaterial({ color: panColor, flat: true }));
+    washMaterial({ color: panColor, flat: true }));
   pan.name = 'pan';
   pan.position.y = -CORD - 0.035 * H;
   hang.add(pan);
@@ -96,7 +96,7 @@ export function makeScale({ height = 1.35, color = WASH.dark, panColor = WASH.st
   // the counterweight, slid out along the beam to where three pounds balances
   const weight = new THREE.Mesh(
     new THREE.CylinderGeometry(0.075 * H, 0.095 * H, 0.19 * H, 8),
-    toonMaterial({ color, flat: true }));
+    washMaterial({ color, flat: true }));
   weight.name = 'weight';
   weight.position.set(0, -0.35 * H, 0);
   hang2.add(weight);

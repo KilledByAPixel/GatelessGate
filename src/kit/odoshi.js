@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { hash1 } from '../util/noise.js';
 import { WASH } from '../palette.js';
 
@@ -31,9 +31,9 @@ export function makeOdoshi({ size = 1, seed = 7, period = 32, phase = null, onPo
   const g = new THREE.Group();
   g.name = 'odoshi';
 
-  const wood = toonMaterial({ color: WASH.dark, flat: true });
-  const bamboo = toonMaterial({ color: WASH.dry });
-  const stoneM = toonMaterial({ color: WASH.stone, flat: true });
+  const wood = washMaterial({ color: WASH.dark, flat: true });
+  const bamboo = washMaterial({ color: WASH.dry });
+  const stoneM = washMaterial({ color: WASH.stone, flat: true });
 
   // the stand: two posts carrying an axle, flanking wide of the tube's swing
   const PIVOT_Y = 0.52 * S;

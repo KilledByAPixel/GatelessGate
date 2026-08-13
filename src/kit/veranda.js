@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { WASH } from '../palette.js';
 
@@ -31,8 +31,8 @@ export function makeVeranda({
 } = {}) {
   const g = new THREE.Group();
   g.name = 'veranda';
-  const mat = toonMaterial({ color });
-  const flat = toonMaterial({ color, flat: true });
+  const mat = washMaterial({ color });
+  const flat = washMaterial({ color, flat: true });
 
   // ---- the deck: thin merged planks, not one slab ------------------------
   // Real board width, laid crosswise (each plank runs the full opening, the
@@ -50,7 +50,7 @@ export function makeVeranda({
     floorGeos.push(boxGeo(width, boardT, Math.max(0.05, step - GROOVE),
       0, deck - boardT / 2, step * (i + 0.5)));
   }
-  const floor = new THREE.Mesh(mergeSimple(floorGeos), toonMaterial({ color: floorColor, flat: true }));
+  const floor = new THREE.Mesh(mergeSimple(floorGeos), washMaterial({ color: floorColor, flat: true }));
   floor.name = 'floor';
   g.add(floor);
 

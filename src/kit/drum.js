@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { WASH, wash } from '../palette.js';
 import { mergeSimple } from './scatter.js';
 import { clamp } from '../util/math.js';
@@ -37,9 +37,9 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
   const g = new THREE.Group();
   g.name = 'drum';
 
-  const timber = toonMaterial({ color });
-  const flat = toonMaterial({ color, flat: true });
-  const stone = toonMaterial({ color: WASH.stone, flat: true });
+  const timber = washMaterial({ color });
+  const flat = washMaterial({ color, flat: true });
+  const stone = washMaterial({ color: WASH.stone, flat: true });
 
   // Where the barrel's middle sits. Unchanged from the slung version — the
   // stand came DOWN to meet it, the drum did not come down to the stand.
@@ -123,7 +123,7 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
   prof.push(new THREE.Vector2(0, DEPTH / 2));
   const bodyGeo = new THREE.LatheGeometry(prof, 12);
   bodyGeo.rotateZ(Math.PI / 2);
-  const body = new THREE.Mesh(bodyGeo, toonMaterial({ color, flat: true }));
+  const body = new THREE.Mesh(bodyGeo, washMaterial({ color, flat: true }));
   body.name = 'body';
   barrel.add(body);
 
@@ -132,7 +132,7 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
   for (const sx of [-1, 1]) {
     const headGeo = new THREE.CylinderGeometry(0.805 * R, 0.805 * R, 0.06 * R, 12);
     headGeo.rotateZ(Math.PI / 2);
-    const head = new THREE.Mesh(headGeo, toonMaterial({ color: skinColor, flat: true }));
+    const head = new THREE.Mesh(headGeo, washMaterial({ color: skinColor, flat: true }));
     head.name = 'head';
     head.position.x = sx * (DEPTH / 2 + 0.01 * R);
     barrel.add(head);
@@ -151,7 +151,7 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
     t.translate(sx * (DEPTH / 2 + 0.01 * R), 0, 0);
     hoopGeo.push(t);
   }
-  const hoops = new THREE.Mesh(mergeSimple(hoopGeo), toonMaterial({ color, flat: true }));
+  const hoops = new THREE.Mesh(mergeSimple(hoopGeo), washMaterial({ color, flat: true }));
   hoops.name = 'hoop';
   barrel.add(hoops);
 

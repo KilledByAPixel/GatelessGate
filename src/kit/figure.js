@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { INK_LIT } from '../palette.js';
 
@@ -366,7 +366,7 @@ export function makeFigure({
 } = {}) {
   const g = new THREE.Group();
   g.name = 'figure';
-  const mat = matIn || toonMaterial({ color, flat: true });
+  const mat = matIn || washMaterial({ color, flat: true });
   const s = stout;
   const st = STANCES[stance] || STANCES.stand;
   const seated = stance === 'sit';

@@ -15,7 +15,7 @@
     import { PAPER, INK, ACCENT_DEEP } from '../src/palette.js';
     import {
       makeDog, makeBuffalo, makeBuddha, makeMonk, makeFlower, makeBowl,
-      makeWater, makeHut, makeLattice, makeAssembly, makeLights, toonMaterial,
+      makeWater, makeHut, makeLattice, makeAssembly, makeLights, washMaterial,
       makeFox, makeCat, makeHorse, makeKoi, makeBird, makeBirds,
       makeHangingMonk,
       makeTree, makePine, makeOak, makeForest, makeGrassField, makeTuftField, makeWildflowers,
@@ -37,7 +37,7 @@
     // flat ground so every piece is judged against y=0
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(220, 220),
-      toonMaterial({ color: '#CFC7B2' }));
+      washMaterial({ color: '#CFC7B2' }));
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 

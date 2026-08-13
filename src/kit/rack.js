@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { WASH } from '../palette.js';
 import { mergeSimple } from './scatter.js';
 import { clamp01 } from '../util/math.js';
@@ -24,8 +24,8 @@ export function makeRack({ height = 1.25, color = WASH.dark, staffColor = WASH.m
   const g = new THREE.Group();
   g.name = 'rack';
 
-  const timber = toonMaterial({ color });
-  const flat = toonMaterial({ color, flat: true });
+  const timber = washMaterial({ color });
+  const flat = washMaterial({ color, flat: true });
 
   const SPREAD = 0.78 * H;
   for (const sx of [-1, 1]) {
@@ -67,7 +67,7 @@ export function makeRack({ height = 1.25, color = WASH.dark, staffColor = WASH.m
   const STAFF_H = 1.55 * H;
   const staffGeo = new THREE.CylinderGeometry(0.028 * H, 0.034 * H, STAFF_H, 7);
   staffGeo.translate(0, STAFF_H / 2, 0);
-  const staff = new THREE.Mesh(staffGeo, toonMaterial({ color: staffColor, flat: true }));
+  const staff = new THREE.Mesh(staffGeo, washMaterial({ color: staffColor, flat: true }));
   staff.name = 'staff';
   staff.position.set(-0.16 * H, 0, .2*H);
   staff.rotation.z = -0.13;

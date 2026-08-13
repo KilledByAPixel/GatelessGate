@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { hash1, noise1 } from '../util/noise.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { ACCENT } from '../palette.js';
 import { clamp } from '../util/math.js';
 
@@ -91,7 +91,7 @@ export function makeButterflies({
   const g = new THREE.Group();
   g.name = 'butterflies';
 
-  const mat = toonMaterial({ color, flat: true, side: THREE.DoubleSide });
+  const mat = washMaterial({ color, flat: true, side: THREE.DoubleSide });
   const [yLo, yHi] = height;
 
   const flock = [];

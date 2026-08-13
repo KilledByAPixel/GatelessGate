@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { hash1 } from '../util/noise.js';
 import { gustPhase, gustBuffet } from '../audio/synths.js';
 import { WASH } from '../palette.js';
@@ -475,8 +475,8 @@ export function makeCylinderChime({
   const g = new THREE.Group();
   g.name = 'cylinder-chime';
 
-  const wood = toonMaterial({ color: WASH.dark, flat: true });
-  const bronze = toonMaterial({ color, flat: true });
+  const wood = washMaterial({ color: WASH.dark, flat: true });
+  const bronze = washMaterial({ color, flat: true });
 
   const swing = new THREE.Group();   // the whole body, pivoting at the hang point
   swing.name = 'swing';

@@ -4,7 +4,7 @@ import { PAPER, ACCENT, WASH } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeHut, makeMonk, faceMonk, makeVase,
-  makeLights, toonMaterial, plantTree,
+  makeLights, washMaterial, plantTree,
 } from '../kit/index.js';
 
 const ID = 10;
@@ -63,7 +63,7 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 17.2 
   
   // the mat they are sitting on — the whole of Seizei's estate
   const matGeo = new THREE.BoxGeometry(2.5, 0.035, 2.7);
-  const mat = new THREE.Mesh(matGeo, toonMaterial({ color: WASH.dry, flat: true }));
+  const mat = new THREE.Mesh(matGeo, washMaterial({ color: WASH.dry, flat: true }));
   mat.name = 'mat';
   mat.position.set(0.5, 0.018, 0.5);
   mat.rotation.y = 0.24;
@@ -82,7 +82,7 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 17.2 
   faceMonk(sozan, seizei.position);
   
   // THE THREE CUPS, between them. Small, held, already drunk.
-  const cupMat = toonMaterial({ color: ACCENT, flat: true });
+  const cupMat = washMaterial({ color: ACCENT, flat: true });
   const cups = [];
   const CUP_AT = [[0.35, 0.72], [0.72, 0.34], [.92, 0.86]];
   for (const [i, [cx, cz]] of CUP_AT.entries()) {

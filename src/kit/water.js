@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { WASH } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import { clamp01 } from '../util/math.js';
@@ -255,7 +255,7 @@ export function makeWater({
       specular: new THREE.Color(0xffffff).multiplyScalar(specular),
       shininess,
     })
-    : toonMaterial({ color, side: THREE.DoubleSide, glow: false });
+    : washMaterial({ color, side: THREE.DoubleSide, glow: false });
   mat.transparent = true;
   mat.opacity = opacity;
   // when the water is see-through, stop it writing depth — otherwise the fish

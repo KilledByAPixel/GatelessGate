@@ -5,7 +5,7 @@ import { hash1 } from '../util/noise.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeCave, makeSnow, makePine, makeMonk, faceMonk,
-  makeLights, toonMaterial, plantRock,
+  makeLights, washMaterial, plantRock,
 } from '../kit/index.js';
 
 const ID = 41;
@@ -110,7 +110,7 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
   new THREE.CylinderGeometry(0.05, 0.07, 0.5, 8),
   // his own sleeve, so his own ink — at INK it was a darker object than the
   // man it came off
-  toonMaterial({ color: INK_LIT, flat: true }));
+  washMaterial({ color: INK_LIT, flat: true }));
   arm.name = 'severed-arm';
   arm.rotation.z = Math.PI / 2;                 // lying flat
   arm.rotation.y = 0.6;
@@ -122,7 +122,7 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
   // pool at the cut end and a couple of small drops nearby, flat on the snow.
   // Read it as blood if you know the story, or as the painter's seal in white
   // if you don't.
-  const bloodMat = toonMaterial({ color: ACCENT, flat: true });
+  const bloodMat = washMaterial({ color: ACCENT, flat: true });
   const blood = new THREE.Group();
   blood.name = 'blood';
   const drop = (x, z, r, name) => {
@@ -191,7 +191,7 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
     groundHit.position.set(0.4, 0.02, -2.0);
     scene.add(groundHit);
 
-    const wispMat = toonMaterial({ color: WASH.deep, flat: true });
+    const wispMat = washMaterial({ color: WASH.deep, flat: true });
     wispMat.transparent = true;
     wispMat.opacity = 0;
     const wisp = new THREE.Mesh(new THREE.SphereGeometry(0.30, 10, 8), wispMat);

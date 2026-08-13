@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { WASH } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 
@@ -56,7 +56,7 @@ export function makeVase({ height = 0.55, color = WASH.mid, seed = 0 } = {}) {
 
   const body = new THREE.Mesh(
     new THREE.LatheGeometry(prof, 12),
-    toonMaterial({ color, flat: true, side: THREE.DoubleSide }));
+    washMaterial({ color, flat: true, side: THREE.DoubleSide }));
   body.name = 'body';
 
   // the pivot rig: `rock` sits at the base-rim edge currently doing the

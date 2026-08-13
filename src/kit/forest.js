@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { hash1 } from '../util/noise.js';
-import { toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
 import { WASH } from '../palette.js';
 import { pineGeometry } from './pine.js';
 import { groundHeight } from './ground.js';
@@ -147,7 +147,7 @@ export function makeForest({
   // templates' own aSway/aPhase/aLeaf through the merge with a per-tree phase
   // offset — the attributes exist upstream, they just stop here.
   const merged = mergeSimple(parts);
-  const mat = toonMaterial({ color, flat: true });
+  const mat = washMaterial({ color, flat: true });
   const mesh = new THREE.Mesh(merged, mat);
   mesh.name = 'forest';
   mesh.userData.instances = kept;  // self-describing, for the scene nets (positions are LOCAL to this mesh)

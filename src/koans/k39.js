@@ -6,7 +6,7 @@ import { hash1 } from '../util/noise.js';
 import { clamp01, smoothstep as SS } from '../util/math.js';
 import {
   composeWorld, makeWater, makeKoi, makeMonk, aimMonk, faceMonk,
-  makeLights, toonMaterial, setSeal,
+  makeLights, washMaterial, setSeal,
 } from '../kit/index.js';
 
 const ID = 39;
@@ -132,7 +132,7 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
   // swapping a shared red one in. Swapping looked identical in isolation and
   // was wrong in the app: the debug workbench caches a plain-Lambert clone
   // per mesh, and on the shipped default that clone is what actually
-  // renders — so assigning a fresh toonMaterial at runtime dropped a
+  // renders — so assigning a fresh washMaterial at runtime dropped a
   // differently-lit material into a scene of clones, and every stone the
   // repaint touched changed tone at once (Frank: "the other rocks change
   // their colour a little bit... they suddenly turn a more bright colour",
@@ -159,7 +159,7 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
   const H = 0.55;
   const top = new THREE.Mesh(
   new THREE.CylinderGeometry(r, r * 1.18, H, 7),
-  toonMaterial({ color: WASH.stone, flat: true }));
+  washMaterial({ color: WASH.stone, flat: true }));
   top.name = 'stone-top';
   top.position.y = 0.10 - H / 2;
   top.rotation.y = hash1(i * 3 + 2, ID) * Math.PI;

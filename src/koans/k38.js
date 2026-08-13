@@ -5,7 +5,8 @@ import {
   aimMonk, composeWorld, faceMonk, makeMonk, makeOak, makePath, makeTree,
   tapMeshes,
 } from '../kit/index.js';
-import { makeLights, toonMaterial } from '../render/toon.js';
+import { washMaterial } from '../render/material.js';
+import { makeLights } from '../render/lights.js';
 import { hash1 } from '../util/noise.js';
 
 const ID = 38;
@@ -86,7 +87,7 @@ const CAM = { distance: 14.3, target: [1.05, 1.55, -1.6], heading: 156.5, pitch:
   const APRON_R = 2.15;
   const apron = new THREE.Mesh(
   new THREE.CylinderGeometry(APRON_R, APRON_R * 1.05, 0.12, 11),
-  toonMaterial({ color: WASH.stone, flat: true }));
+  washMaterial({ color: WASH.stone, flat: true }));
   apron.name = 'apron';
   apron.position.set(OAK.x, 0.03, OAK.z);
   scene.add(apron);
@@ -143,7 +144,7 @@ const CAM = { distance: 14.3, target: [1.05, 1.55, -1.6], heading: 156.5, pitch:
   const leafGeo = new THREE.ConeGeometry(0.11, 0.32, 4);
   leafGeo.rotateX(Math.PI / 2);    // the blade lies flat, tip toward +z
   leafGeo.scale(1, 0.32, 1);       // and is pressed thin
-  const leafMat = toonMaterial({ color: ACCENT, flat: true, side: THREE.DoubleSide });
+  const leafMat = washMaterial({ color: ACCENT, flat: true, side: THREE.DoubleSide });
   const idle = [];
   const falling = [];
   for (let i = 0; i < LEAF_POOL; i++) {

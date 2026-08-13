@@ -212,7 +212,7 @@ test('the diorama is a hall, a hanging bell, and three monks turned toward it', 
   assert.ok(monks.some((m) => m.children.some((c) => c.name === 'staff')),
     'the elder carries a staff — the one figure whose turn can actually be seen');
 
-  // the seal: the bronze is ACCENT and carries the seal glow toonMaterial adds;
+  // the seal: the bronze is ACCENT and carries the seal glow washMaterial adds;
   // the case must not have fought it or doubled it
   const bellGroup = root.scene.getObjectByName('bell');
   const body = bellGroup.getObjectByName('body');

@@ -4,7 +4,7 @@ import { PAPER, ACCENT, WASH } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeHut, makeMonk, aimMonk, faceMonk, makeLantern,
-  makeScale, makeLights, toonMaterial, makeFurin,
+  makeScale, makeLights, washMaterial, makeFurin,
 } from '../kit/index.js';
 
 const ID = 31;
@@ -70,7 +70,7 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   
   const awning = new THREE.Mesh(
   new THREE.BoxGeometry(2.4, 0.07, 1.3),
-  toonMaterial({ color: WASH.dry, flat: true }));
+  washMaterial({ color: WASH.dry, flat: true }));
   awning.name = 'awning';
   awning.position.set(-1.5, 1.75, -1.7);
   awning.rotation.set(0.16, 0.7, 0);
@@ -78,7 +78,7 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   
   const bench = new THREE.Mesh(
   new THREE.BoxGeometry(1.7, 0.09, 0.42),
-  toonMaterial({ color: WASH.dark, flat: true }));
+  washMaterial({ color: WASH.dark, flat: true }));
   bench.name = 'bench';
   bench.position.set(-1.4, 0.42, -1.5);
   bench.rotation.y = 0.7;
@@ -86,7 +86,7 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   for (const sx of [-1, 1]) {
   const leg = new THREE.Mesh(
   new THREE.BoxGeometry(0.08, 0.42, 0.32),
-  toonMaterial({ color: WASH.dark, flat: true }));
+  washMaterial({ color: WASH.dark, flat: true }));
   leg.name = 'leg';
   leg.position.set(-1.4 + sx * 0.62 * Math.cos(0.7), 0.21, -1.5 - sx * 0.62 * Math.sin(0.7));
   leg.rotation.y = 0.7;
@@ -97,7 +97,7 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   for (const off of [-0.35, 0.3]) {
   const cup = new THREE.Mesh(
   new THREE.CylinderGeometry(0.055, 0.045, 0.075, 8),
-  toonMaterial({ color: ACCENT, flat: true }));
+  washMaterial({ color: ACCENT, flat: true }));
   cup.name = 'cup';
   cup.position.set(-1.4 + off * Math.cos(0.7), 0.50, -1.5 - off * Math.sin(0.7));
   scene.add(cup);
