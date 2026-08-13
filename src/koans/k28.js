@@ -7,6 +7,7 @@ import {
   composeWorld, makePath, makeVeranda, makeLantern, makeMonk, aimMonk, faceMonk,
   makeLights, washMaterial, makeCylinderChime,
 } from '../kit/index.js';
+import { pageBase, skyFor } from '../render/nightsky.js';
 
 const ID = 28;
 
@@ -302,6 +303,13 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   const dark = lit ? 1 - eased : eased;
   const d = dark * dark * (3 - 2 * dark);
   
+  // Both ends of this page's own fade, read live: the reading light can take
+  // the sky dark under us (render/nightsky.js), and this case has TWO page
+  // colours — the hour it happens at and the dark once the candle is out — so
+  // both have to travel or the blow-out would come back up brighter than the
+  // page it started on.
+  nightC.set(pageBase(scene, NIGHT));
+  darkC.set(skyFor(DARK, scene.userData.night));
   bg.copy(nightC).lerp(darkC, d);
   scene.fog.color.copy(bg);
   for (const [l, base] of lightRigs) l.intensity = base * (1 - 0.62 * d);

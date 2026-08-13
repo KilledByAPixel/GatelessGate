@@ -6,6 +6,7 @@ import {
   makeWildflowers, makeSnow,
 } from '../kit/index.js';
 import { makeLights } from '../render/lights.js';
+import { pageBase } from '../render/nightsky.js';
 
 const ID = 19;
 const BASE_WIND = 0.20;
@@ -358,6 +359,10 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   const rise = riseShape(clock - riseAt);
   const s = 1 + (MOON_SWELL - 1) * rise;
   moon.scale.set(s, s, 1);
+  // The page this swell starts FROM, read live rather than from the palette:
+  // the reading light can take the sky dark under us (render/nightsky.js), and
+  // lerping from the constant would put it back on the next frame.
+  skyBase.set(pageBase(scene, PAPER));
   scene.background.copy(skyBase).lerp(skyLit, SKY_TINT * rise);
   scene.fog.color.copy(skyBase).lerp(skyLit, FOG_TINT * rise);
 

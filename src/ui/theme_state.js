@@ -1,7 +1,12 @@
-// The page's two skins. Only the PAGE: the diorama keeps its paper light in
-// both, because the scene is a sumi-e painting and a painting does not have a
-// night mode. This is the reading light over the text, nothing more — which is
-// also why the switch lives beside Sit rather than up in the stage toolbar.
+// The page's two skins — the reading light, which is why the switch lives
+// beside Sit rather than up in the stage toolbar.
+//
+// It used to stop at the text panel: the diorama kept its paper light in both,
+// on the argument that a sumi-e painting does not have a night mode. That now
+// holds for everything in the painting EXCEPT the paper it is painted on. Turn
+// the light down and the sky goes dark with it (render/nightsky.js); the key
+// and the fill do not move, so every lit surface keeps the value it had and
+// only what it stands against changes.
 
 export const THEMES = ['light', 'dark'];
 
