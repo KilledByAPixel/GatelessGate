@@ -6,11 +6,11 @@ import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../src/palette.js';
 
 // A ctx whose raycast can be pointed at one named hit target at a time, so a
 // test can tap the enso or the water deliberately.
-function harness() {
+function harness(audio = null) {
   let tap = null;
   let hitName = null;
   const ctx = {
-    audio: null,
+    audio,
     input: {
       onTap: (cb) => { tap = cb; },
       onHover: () => {},
@@ -97,4 +97,38 @@ test('nothing goes non-finite over a long run', () => {
       assert.ok(Number.isFinite(m.position.x) && Number.isFinite(m.position.y) && Number.isFinite(m.position.z));
     }
   }
+});
+
+test('the gate rings ONLY when it opens, never while it is already open', () => {
+  // The bell used to carry a cooldown of its own — half a second, independent
+  // of the growing — so the torii could be rung over and over while it was
+  // already open, from a hit box that stays behind at the size and place the
+  // gate started (Frank: "you can keep clicking on the position where it was,
+  // and it will keep playing that sound... we only want to play it whenever it
+  // starts its animation to grow"). Two gates on one page, effectively: the one
+  // you could see and the one you could still hear.
+  const bells = [];
+  const { root, tapAt } = harness({ bell: () => bells.push(1), drip() {}, cylinderStrike() {} });
+
+  let t = 0;
+  const run = (secs) => { for (const end = t + secs; t < end; t += 1 / 60) root.update(1 / 60, t); };
+  run(0.2);
+  assert.equal(root.fragment().gateScale, 1, 'shut to begin with');
+
+  tapAt('gate-hit');
+  assert.equal(bells.length, 1, 'the touch that opens it rings');
+  assert.equal(root.fragment().rings, 1);
+
+  // hammer the spot it used to stand in, right through the opening
+  for (let i = 0; i < 20; i++) { run(0.3); tapAt('gate-hit'); }
+  assert.equal(bells.length, 1, 'and nothing rings while it is open');
+  assert.equal(root.fragment().rings, 1);
+  assert.ok(root.fragment().gateScale > 2, 'it really was open the whole time');
+
+  // once it has come back, it answers again
+  run(10);
+  assert.equal(root.fragment().gateScale, 1, 'shut again');
+  tapAt('gate-hit');
+  assert.equal(bells.length, 2, 'and the next opening rings');
+  assert.equal(root.fragment().rings, 2);
 });

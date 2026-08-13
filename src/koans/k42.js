@@ -198,9 +198,13 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   if (clock - calledAt < CALL_SPAN) return;
   calledAt = clock;
   calls++;
-  // the snap that works. Manjusri's, from where he is standing, does not —
-  // he goes on making it forever, to nothing, a metre away.
-  audio && audio.knock({ force: 0.55, at: GIRL });
+  // A BELL, not a knock (Frank). A knock is a hand on wood — the sound of
+  // somebody trying — and it was the right note when this was Manjusri's
+  // useless snap. What answers now is her coming out of samadhi, which is
+  // the one thing in the case that actually happens, and a struck bell is
+  // what the book uses when something turns over. The smallest preset and a
+  // modest gain: she is a small figure and this is not a temple bell.
+  audio && audio.bell({ preset: 'hand', gain: 0.38, at: GIRL });
   });
   
   return {

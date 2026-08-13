@@ -31,6 +31,11 @@ const WISP = 2.6;         // seconds from the grasp to gone
 // y = 7. Eight puts it clear with room for a narrow reading pane, which is
 // taller in world terms and therefore harder to escape, not easier.
 const RISE = 8.0;
+// The three notes a grasp can make. The top of the chime — small tubes, high
+// and short — because the whole point is that what you caught was too slight to
+// have a sound of its own. Neighbours rather than a spread: this is one thing
+// happening again, not three different things.
+const WISP_TUBES = [4, 3, 2];
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
@@ -239,8 +244,19 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
       w.mesh.position.set(hit.point.x, 0.30, hit.point.z);
       w.at = clock;
       grasps++;
-      // barely a sound: what you reached for was never loud enough to have one
-      audio && audio.chimeStrike({ tube: 4, force: 0.22, at: hit.point });
+      // BARELY A SOUND, and not the same one twice — what you reached for was
+      // never loud enough to have a voice of its own, so what you get is one of
+      // three small notes off the top of the chime rather than the same tube
+      // every time (Frank: "kind of a note that plays... kind of a choose
+      // between a couple different possible chime sounds"). With several wisps
+      // in the air at once the single repeated note read as a UI click; three
+      // near-neighbours read as the same small thing happening again.
+      //
+      // Seeded from the count, like everything else in this book that varies:
+      // no Math.random outside src/audio, so the same page grasped the same
+      // number of times sounds the same.
+      const tube = WISP_TUBES[Math.floor(hash1(grasps * 5 + 3, ID) * WISP_TUBES.length) % WISP_TUBES.length];
+      audio && audio.chimeStrike({ tube, force: 0.22, at: hit.point });
     });
 
     return {

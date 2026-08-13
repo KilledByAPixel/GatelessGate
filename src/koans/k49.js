@@ -206,7 +206,6 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   let camera = null;
   let clock = 0;
   let rings = 0;
-  let lastRing = -99;
   let rippled = 0;
   let grewAt = -99;
 
@@ -227,12 +226,23 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   // that box gets a chance to ring the passage-bell instead
   if (closingChime.pick(camera, input)) { closingChime.ring(0.75); return; }
   if (input.raycastFirst(camera, [gateHit])) {
+  // THE BELL IS THE OPENING'S, and only the opening's. It used to have a
+  // cooldown of its own — half a second, independent of the growing — so
+  // the gate could be rung over and over while it was already open, from
+  // a hit box that stays behind at the size and place the gate started
+  // (Frank: "you can keep clicking on the position where it was, and it
+  // will keep playing that sound... we only want to play it whenever it
+  // starts its animation to grow"). Two gates on one page, effectively:
+  // the one you could see and the one you could still hear.
+  //
+  // One guard now, and it is the gesture's: if it is open, the touch does
+  // nothing at all.
+  if (clock - grewAt < GROW_SPAN) return;
+  grewAt = clock;
+  rings++;
   // a small bright strike at the torii, the seal the book closes on —
   // task-12's migration to Frank's tuned presets
-  if (clock - lastRing > 0.5) { lastRing = clock; rings++; audio && audio.bell({ preset: 'hand', gain: 0.5, at: gate.position }); }
-  // ...and it OPENS. See GROW at the top of the file. Refused while it is
-  // already growing, so the bell can still be rung on its own.
-  if (clock - grewAt >= GROW_SPAN) grewAt = clock;
+  audio && audio.bell({ preset: 'hand', gain: 0.5, at: gate.position });
   return;
   }
   if (surface) {
