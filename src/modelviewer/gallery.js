@@ -59,7 +59,9 @@ export function createGallery({ getKit, getRoster, getFills, toast, onChecklistC
     g.traverse((o) => {
       if (o.isMesh) {
         o.geometry && o.geometry.dispose();
-        // materials yes, textures no: toon gradient maps are shared module-wide
+        // materials yes, textures no: the tuft and mist textures are cached and
+        // shared module-wide (tuftfield.js, cliff.js), so disposing one here
+        // would blank every other tuft field or mist bank still using it
         if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose());
       }
     });

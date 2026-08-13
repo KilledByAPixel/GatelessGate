@@ -13,8 +13,8 @@ import { DRAW_BUDGET, DRAW_WARN } from '../budget.js';
 // Everything here is applied to whatever scene is CURRENTLY active and re-applied
 // after every scene swap, so settings survive moving between cases.
 
-// Defaults are the INK & SEAL preset: no toon banding, depth-driven ink, real
-// contact shadows, paper pass at full grain, no quantisation. One red seal
+// Defaults are the INK & SEAL preset: depth-driven ink, real contact
+// shadows, paper pass at full grain, no quantisation. One red seal
 // per koan. The version suffix on KEY below is bumped when a default LOOK
 // changes, since a stored state would otherwise mask it: v3 turned the ink
 // outlines on (the hull, since deleted), v4 dropped ink strength to 0.5,

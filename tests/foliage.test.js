@@ -6,7 +6,7 @@ import { makeTree } from '../src/kit/tree.js';
 import { pineGeometry, makePine } from '../src/kit/pine.js';
 import {
   FOLIAGE, FOLIAGE_PARS, FOLIAGE_BODY, FOLIAGE_WIND_SHARE,
-  stepFoliageWind, setFoliageWeather,
+  applyFoliageWind, stepFoliageWind, setFoliageWeather,
 } from '../src/kit/foliage.js';
 
 // The wind in the trees is baked, not animated: the mesh is merged and there
@@ -184,6 +184,19 @@ test('a broadleaf is not a mast — it keeps the branching model', () => {
 });
 
 // ---- the material plumbing --------------------------------------------------
+
+test('applyFoliageWind hangs both hooks a material needs to animate', () => {
+  // customProgramCacheKey is not optional (see foliage.js's own comment on
+  // applyFoliageWind): without it, three.js keys compiled programs by
+  // material type plus a handful of flags, so a wind-injected Lambert and a
+  // plain Lambert hash to the same program and whichever built second wins —
+  // trees standing dead still, or wearing the grass's bend, depending on
+  // which case loaded first. Both hooks are this function's whole job, so
+  // this is a test of applyFoliageWind itself, not of any rebuild downstream.
+  const m = applyFoliageWind(new THREE.MeshLambertMaterial({ color: 0x333333 }));
+  assert.equal(typeof m.onBeforeCompile, 'function');
+  assert.equal(typeof m.customProgramCacheKey, 'function');
+});
 
 test('a pine and a tree both carry the foliageWind flag bakeStatic reads', () => {
   // bakeStatic's canMerge refuses to merge a foliage-wind mesh, because

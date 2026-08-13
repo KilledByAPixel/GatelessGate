@@ -80,12 +80,14 @@ export const SNOW = mixHex(PAPER, '#FFFFFF', 0.85);
 // quote a level from — the surface takes a continuous value that depends on
 // its normal against the key light, not one of three multipliers. That exact
 // arithmetic is retired along with the ramp and has not been re-derived for
-// Lambert; what is unchanged is the constant itself (still wash(0.80), still
-// judged by rendering case 4 at 1.00, 0.86 and 0.78 and looking — 0.86 read
-// as technically shaded and still too dark) and the shape of the argument:
-// raw INK reads as void once it is lit, so anything the light is meant to
-// model gets this instead. It is still the darkest paint in the book; it is
-// simply paint rather than a hole in the page.
+// Lambert. The eyeball verdict above (case 4 at 1.00, 0.86 and 0.78, 0.86
+// reading as technically shaded and still too dark) was also made under that
+// same retired ramp and has not been re-judged under Lambert either — what is
+// actually unchanged, unre-derived and unre-judged both, is just the
+// constant's value (still wash(0.80)) and the shape of the argument: raw INK
+// reads as void once it is lit, so anything the light is meant to model gets
+// this instead. It is still the darkest paint in the book; it is simply
+// paint rather than a hole in the page.
 //
 // WHAT IS LEFT AT INK: voids. A cave throat, a doorway at night — surfaces that
 // are unlit on purpose, where there is no shading to lose because there is no

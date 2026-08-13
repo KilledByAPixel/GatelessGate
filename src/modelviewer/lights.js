@@ -8,11 +8,21 @@
 // direction in it, so there is nothing left to read a shape by.
 //
 // These lights are the SMALL half of the answer to Frank's "it's kinda hard
-// to see in 3D. I think there's just one light." The large half was that the
-// viewer wasn't rendering the book's shading at all — see shading.js, which
-// has the measurements. Lights could not have fixed that: the numbers there
-// show two extra lights moving a 2-tone render to a 5-tone one, while the
-// shading fix alone moved it to 10.
+// to see in 3D. I think there's just one light." The large half, historical
+// now, was that the viewer used to render the toon ramp's 3-step banding long
+// after the book itself had moved off it — the fix (and the material rebuild
+// that carried it, since retired along with the ramp — see render/material.js)
+// lived in a file this one has outlived. Measured over four views of the
+// hanging monk, tones carrying ≥3% of the model, and the 5th–95th percentile
+// spread of its greys:
+//
+//   toon (what the viewer showed):   2 tones, spread 21    <- a cut-out
+//   toon + two extra fill lights:    5 tones, spread 21    <- brighter cut-out
+//   Lambert (what the book ships):  10 tones, spread 82
+//   Lambert + the two fills:        12 tones, spread 67
+//
+// Lights could not have fixed that on their own: two extra lights moved a
+// 2-tone render to a 5-tone one, while the shading fix alone moved it to 10.
 //
 // So the viewer keeps the book's key exactly as it is — what you judge is
 // still lit by the light that will actually light it — and adds two dim

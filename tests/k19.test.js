@@ -291,9 +291,9 @@ test('the moon is fog-exempt and far out past the mountains', () => {
   assert.ok(Math.abs(r - 60) < 1e-6, `distance is honoured, got ${r}`);
   assert.ok(Math.abs(m.position.y - 9.2) < 1e-6, 'height is honoured');
 
-  // it is unlit: a toon-shaded disc has one normal, so it lands wholly in
-  // whichever ramp band the key light happens to hit and its tone swings with
-  // the staging's lighting rather than with the hour
+  // it is unlit: a lit disc has one normal, so it would take one shade of N·L
+  // against the key light and its tone would swing with the staging's
+  // lighting rather than with the hour
   assert.ok(m.material.isMeshBasicMaterial, 'the moon emits, it is not lit');
 });
 
