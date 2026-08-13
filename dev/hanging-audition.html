@@ -187,8 +187,8 @@
     import { createAudio } from '../src/audio/engine.js';
 
     // ---- renderer, matching kit-preview.html's convention: the project's
-    // real toon materials, no post-processing pipeline (that's the main
-    // app's cinematic tone-mapping, not needed to judge geometry/motion) ---
+    // real washMaterial materials, no post-processing pipeline (that's the
+    // main app's cinematic tone-mapping, not needed to judge geometry/motion) --
     const stage = document.getElementById('stage');
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(2, devicePixelRatio));

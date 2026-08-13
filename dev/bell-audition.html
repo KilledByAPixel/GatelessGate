@@ -10,8 +10,8 @@
     This page is how the third guess gets settled by ear instead of by a third
     round of code review. Every macro control below edits a LIVE COPY of the
     partial table built fresh from bellVoice() on every ring — moving a slider
-    changes the very next strike, no reload, the same way lookdev.html's
-    treatment() swaps a whole material set on the next render.
+    changes the very next strike, no reload, the same live-object-write
+    pattern spatial-audition.html's SPATIAL sliders use.
 
     Task 5B: a high SHIMMER CLUSTER above the eleven named modes, and an A/B
     toggle below to switch it in and out on the same preset — does the
@@ -440,7 +440,7 @@
       else if (e.key === '3') selectPreset('great');
     });
 
-    // console access, same convention as lookdev.html's window.lk
+    // console access, same convention as spatial-audition.html's window.sa
     window.ba = { ring: ringBell, live, selectPreset, buildPartials, bakedAmpMult, setShimmerOn, ctx: () => ctx };
 
     setShimmerOn(true);
