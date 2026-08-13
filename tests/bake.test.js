@@ -193,7 +193,7 @@ test('a foliage-wind mesh survives the bake', () => {
   prop.add(new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat));
   const leafy = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat);
   leafy.name = 'canopy';
-  leafy.userData.foliageWind = true;      // carries wind attributes and a matched shell
+  leafy.userData.foliageWind = true;      // carries per-vertex wind attributes bakeStatic must not merge away
   prop.add(leafy);
   new THREE.Scene().add(prop);
 

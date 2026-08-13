@@ -7,10 +7,11 @@ import { mergeSimple } from './scatter.js';
 // a head, sometimes a hat and a staff; a horse is eleven pieces — and every
 // one of those is a draw call. A crowd therefore costs its scene most of the
 // budget, and the cases that have crowds used to pay for them by cutting
-// bystanders went without arms and three of its five stalls went without
-// keepers, for no reason but this. This module is why neither cut is needed
-// any more — the bystanders have their arms back and the second keeper is
-// restored, because a crowd that bakes down to one mesh can afford them.
+// detail: k45's bystanders went without arms and three of its five stalls
+// went without keepers, for no reason but this. This module is why neither
+// cut is needed any more — the bystanders have their arms back and the
+// second keeper is restored, because a crowd that bakes down to one mesh can
+// afford them.
 //
 // Almost none of it needs to be separate. A figure is POSED at build time and
 // then never moves a part again — only six cases in the book reach inside one

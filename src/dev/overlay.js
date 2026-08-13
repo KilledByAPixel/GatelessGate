@@ -24,10 +24,18 @@ import { groundHeight } from '../kit/ground.js';
 // line-segment coordinates out — and tests hold its shape without a browser.
 // makeLayoutOverlay() is the THREE half around it.
 //
-// Everything it builds is LINES, never meshes, and that is load-bearing in
-// three places: the ink pass outlines meshes, the shadow map is fed by meshes,
-// and the workbench's own apply() traverse swaps materials on meshes. A guide
-// drawn as geometry would have joined all three and started appearing in the
+// Everything it builds is LINES, never meshes, and every guide material sets
+// depthWrite: false besides (see makeLayoutOverlay below) — two different
+// mechanisms, doing two different jobs. Being Lines is what keeps a guide off
+// the shadow map: nothing in the render path ever sets castShadow on anything
+// but a mesh. depthWrite: false is what keeps a guide out of the surviving
+// ink pass (src/render/post.js): that pass is a Sobel over the depth buffer
+// and does not care whether a draw was a line or a mesh — a guide that wrote
+// depth would hand it an edge to find regardless of its geometry type. (A
+// third reason used to live here — a workbench material swap that filled
+// guides in with the toon ramp's plain-Lambert clone — but that swap is gone
+// with the ramp it belonged to.) A guide drawn as filled geometry with depth
+// writes on would show up in the shadow map AND the ink pass, which is the
 // picture it exists to explain.
 
 export const GUIDE_COLORS = {

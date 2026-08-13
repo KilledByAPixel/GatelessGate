@@ -86,10 +86,12 @@ const LABEL_REF = 56;
 // An ink caption, drawn on a canvas and hung as a sprite so it faces the reader
 // from any orbit angle. The canvas is measured to the word rather than fixed, so
 // the sprite is exactly as wide as its text and "ARCHITECTURE" cannot run off
-// the end of its own texture. Sprites are outside the mesh graph: the ink pass
-// never touches them and the scene manager's disposeRoot never sees them, which
-// is why this module frees them by hand. Returns null with no DOM (the Node
-// tests), so nothing in the scene may depend on a label existing.
+// the end of its own texture. Sprites are outside the mesh graph, but not
+// outside the depth-edge ink pass — see depthWrite/depthTest below, which is
+// what actually keeps a caption out of it. Sprites ARE outside the scene
+// manager's disposeRoot, though, which is why this module frees them by hand.
+// Returns null with no DOM (the Node tests), so nothing in the scene may
+// depend on a label existing.
 function makeRowLabel(text) {
   if (typeof document === 'undefined' || !document.createElement) return null;
   const canvas = document.createElement('canvas');

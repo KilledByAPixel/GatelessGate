@@ -65,7 +65,7 @@ test('a tuft costs two triangles, not ten', () => {
 });
 
 test('the field wears the grassfield name and wiring the debug panel expects', () => {
-  // visibility toggle, wind sliders and the material-swap exemption all key off
+  // the visibility toggle and the tone/wind lookups (debug.js) both key off
   // the name; the wind sliders reach in through userData.uniforms
   const f = makeTuftField({ count: 200, seed: 11 });
   assert.equal(f.mesh.name, 'grassfield');
