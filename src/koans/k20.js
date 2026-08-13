@@ -49,8 +49,8 @@ const ID = 20;
 // set to, so this rides the scene's own weather instead of replacing it.
 const GUST_MULT = 6;
 // ...and how much faster the sea runs while it blows. The wind is on the water
-// as well as the meadow now, so the wind visibly drives the waves. 1.6 nearly
-// triples the swell's travel at the peak, which is a squall rather than a
+// as well as the meadow now, so the wind visibly drives the waves — nearly
+// tripling the swell's travel at the peak, which is a squall rather than a
 // change of tide.
 const SEA_RUSH = 1.6;
 // ...and how much HIGHER it runs while it blows. Pace alone read as the film

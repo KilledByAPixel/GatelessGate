@@ -161,11 +161,9 @@ export default {
     // not pick a note independent of geometry, it picks a size and the note
     // follows, matching audio.bell() and makeCylinderChime everywhere else
     // in the book. Chosen so the sounding notes land on the spread already
-    // approved by ear (-1, 5, 9): 0.18 -> -1, 0.12 -> 5, 0.09 -> 9
-    // (pinned in tests/k29.test.js). The lowest (0.18) is exactly 2x the
-    // highest (0.09) — the brief's own worked example for a ~2-octave
-    // spread, landed here by solving for size rather than picking a round
-    // number and hoping.
+    // approved by ear, pinned in tests/k29.test.js. The lowest is exactly TWICE
+    // the highest, which is the worked example for a two-octave spread — landed
+    // by solving for size rather than picking round numbers and hoping.
     const SINGLE_SIZES = [0.18, 0.12, 0.09];
     // ABSOLUTE cord lengths, in world units, not fractions of size. Hung side
     // by side, the small ones did not reach low enough, and a size-relative
@@ -173,13 +171,13 @@ export default {
     // the one that most needs to reach down to join the group is the one pinned
     // tightest to the beam.
     //
-    // Solved so the three BELLS hang on one line — bottoms within 0.001 of
-    // each other, at CORD + (0.18 + SINGLE_BODY_LEN)*size below the lintel —
-    // rather than the paper below them, which is meant to vary. That reads
-    // as one row of chimes at three sizes instead of three chimes at three
-    // heights. Total reach including the tanzaku is CORD + 1.98*size, worst
-    // 0.451 on the biggest, against the nuki's own 0.502 (TIE BEAM CLEARANCE
-    // above; rest is the worst case, since swinging only shortens the drop).
+    // Solved so the three BELLS hang on one line — bottoms within 0.001 of each
+    // other, at CORD + (0.18 + SINGLE_BODY_LEN)*size below the lintel — rather
+    // than the paper below them, which is meant to vary. That reads as one row
+    // of chimes at three sizes instead of three chimes at three heights. Total
+    // reach including the tanzaku is CORD + 1.98*size, worst 0.451 on the
+    // biggest, against the nuki's own 0.502 (TIE BEAM CLEARANCE above; rest is
+    // the worst case, since swinging only shortens the drop).
     const SINGLE_CORD = [0.095, 0.156, 0.187];
     const singles = SINGLE_X.map((x, i) => {
       const single = makeFurin({
@@ -226,8 +224,8 @@ export default {
     //
     // The floor is on the two FIELDS only. The chimes and the audible wind
     // still go all the way to silence with the flag: that is Mumon's argument
-    // staged as sound and it is what the case is for — and at a tenth of a
-    // wind a fūrin would barely speak anyway.
+    // staged as sound and it is what the case is for — and at a tenth of a wind
+    // a fūrin would barely speak anyway.
     const STILL = 0.1;
     const grass = world.grass;
     let held = false;

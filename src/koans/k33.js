@@ -76,8 +76,8 @@ const CAM = { distance: 14.2, target: [0.95, 0.9, -1.4], heading: 31.5, pitch: 2
   koi.group.position.set(POND.x, POND.surface, POND.z);
   scene.add(koi.group);
   
-  // the same seat, with nobody on it — and the same HEIGHT as case 30's,
-  // which was raised to a real dais (SEAT_TOP 0.62, above the basin rim).
+  // the same seat, with nobody on it — and the same HEIGHT as case 30's, which
+  // was raised to a real dais standing above the basin rim.
   // The pair's joke depends on the two scenes being the one scene: if his
   // seat rose and the empty one stayed a paver, the "same spot" would stop
   // being the same spot.

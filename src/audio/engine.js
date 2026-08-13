@@ -454,11 +454,11 @@ export function createAudio(save) {
     setRainLevel(v) { if (rain) rain.setLevel(RAIN.bedLevel * Math.max(0, v)); },
     setGust(v, slope = 0) { if (wind) wind.setGust(v, slope); },
     // The surf's breath (the two oceans, cases 20 and 48): the case reads its
-    // own sea's height at the waterline and hands it here as 0..1 — the
-    // setGust idiom, one line wide.
-    // Modulates the running bed around its recipe level (×0.7 quiet trough to
-    // ×1.3 arriving crest); no water bed running means silence stays silence.
-    // Per-frame calls glide rather than zipper, same as setRainLevel above.
+    // own sea's height at the waterline and hands it here as 0..1 — the setGust
+    // idiom, one line wide. Modulates the running bed around its recipe level
+    // (×0.7 quiet trough to ×1.3 arriving crest); no water bed running means
+    // silence stays silence. Per-frame calls glide rather than zipper, same as
+    // setRainLevel above.
     setWaterSwell(v) {
       if (water) water.setLevel(WATER.bedLevel * waterRecipeLevel * (0.7 + 0.6 * v));
     },

@@ -237,20 +237,20 @@ export function clapForce(relOmega, capOmega) {
 //
 // THE PHYSICS: a free-free bar's fundamental runs f ~ thickness/length^2.
 // Modelled holding thickness CONSTANT — the tube geometry below scales diameter
-// too, but only weakly and on purpose (DIAM_WEAK_EXP), and that cosmetic term is
-// deliberately left OUT: the "note" reported to onStrike is a picked synth
+// too, but only weakly and on purpose (DIAM_WEAK_EXP), and that cosmetic term
+// is deliberately left OUT: the "note" reported to onStrike is a picked synth
 // parameter, not a measurement taken off the mesh, so there is nothing to
 // reconcile by making the model track a decoration. A length ratio r implies a
 // frequency ratio of 1/r^2, and the book's scale is a fixed number of degrees
-// per octave, so the shift is -2*NOTE_PER_OCTAVE*log2(r): the 2 is the square in
-// f~1/L^2, and NOTE_PER_OCTAVE converts an octave of frequency into degrees. It
-// checks out against the intended feel — an octave down is a tube root-2 longer,
-// two octaves a tube twice as long.
+// per octave, so the shift is -2*NOTE_PER_OCTAVE*log2(r): the 2 is the square
+// in f~1/L^2, and NOTE_PER_OCTAVE converts an octave of frequency into degrees.
+// It checks out against the intended feel — an octave down is a tube root-2
+// longer, two octaves a tube twice as long.
 //
-// SIZE_REF is the book's long-standing furin default, so note 0 falls at the size
-// cases have always used and one that never touches size sounds exactly as it
-// always has. SIZE_MIN/MAX bound the exported function the way cylinder.js's own
-// noteForSize bounds itself, so a caller outside the exercised range cannot
+// SIZE_REF is the book's long-standing furin default, so note 0 falls at the
+// size cases have always used and one that never touches size sounds exactly as
+// it always has. SIZE_MIN/MAX bound the exported function the way cylinder.js's
+// own noteForSize bounds itself, so a caller outside the exercised range cannot
 // extrapolate into an implausible octave.
 const SIZE_REF = 0.17;
 const SIZE_MIN = 0.08, SIZE_MAX = 0.34;
@@ -489,15 +489,15 @@ export function makeFurin({
   // claimed could not happen.
   //
   // So the bounded quantity is mechanical ENERGY, not velocity. maxEnergy is
-  // what a single maximally-hard tap from rest reaches, and capping total energy
-  // there on every kick means no amount of mashing, at any rate, can exceed what
-  // one perfect tap already could. Velocity is still what gets adjusted — never
-  // theta, since a kick is a velocity event per kickPendulum's own contract —
-  // just solved from the energy budget rather than a flat ceiling: what is
-  // allowed is whatever is left after the pose's own potential energy at the
-  // CURRENT theta, so a kick landing while already swung out wide is capped
-  // harder than one landing near the bottom. Which is the physical picture:
-  // there is less room left to add.
+  // what a single maximally-hard tap from rest reaches, and capping total
+  // energy there on every kick means no amount of mashing, at any rate, can
+  // exceed what one perfect tap already could. Velocity is still what gets
+  // adjusted — never theta, since a kick is a velocity event per kickPendulum's
+  // own contract — just solved from the energy budget rather than a flat
+  // ceiling: what is allowed is whatever is left after the pose's own potential
+  // energy at the CURRENT theta, so a kick landing while already swung out wide
+  // is capped harder than one landing near the bottom. Which is the physical
+  // picture: there is less room left to add.
   function tapKick(force) {
     // The paper takes the knock too, and its own restoring torque is weak
     // enough that a solid one sends it over the top and spinning (see SPIN).

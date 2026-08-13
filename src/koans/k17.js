@@ -20,10 +20,10 @@ const ID = 17;
 // courtyard goes back to how it was so you can do the whole thing over.
 
 const ANSWER_DELAY = 0.4;      // he is across a courtyard, not beside you
-// Radians of lean. 0.16 is nine degrees — a nod, and at this staging distance
-// not a visible one. 0.42 is twenty-four degrees, which is a bow you can see
-// two figures exchange from across a yard and still well short of the folding
-// bow k32's philosopher makes at 0.62.
+// Radians of lean. The nine degrees this started at is a nod, and at this
+// staging distance not a visible one. Two dozen is a bow you can watch two
+// figures exchange from across a yard, and still well short of the folding bow
+// k32's philosopher makes.
 const BOW = 0.42;
 const BOW_IN = 1.1, BOW_HOLD = 1.9, BOW_OUT = 1.2;
 // THE NOD — a touched thing has to do something, however small. A small forward
@@ -150,12 +150,11 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   { at: lantern, r: 0.9 },
   { x: 0.4, z: -0.6, r: 2.6 },      // the courtyard between them stays open
   ],
-  // Grass is cleared UNDER THE PLATFORM and nowhere else. There used to be a
-  // second circle out at (0.4, -0.6) to keep the courtyard between the two of
-  // them open, and with nothing standing there it read as a bald patch of
-  // ground in the middle of the meadow, cleared between the two of them rather
-  // than under the platform. The veranda's own circle is centred on the veranda
-  // now, not offset forward of it.
+  // Grass is cleared UNDER THE PLATFORM and nowhere else. The courtyard circle
+  // above keeps TREES out of the space between the two figures, which is what
+  // it is for; the grass list used to carry a copy of it, and with nothing
+  // standing there it read as a bald patch in the middle of the meadow. The
+  // veranda's own circle is centred on the veranda, not offset forward of it.
   grassKeepout: [
   { x: veranda.position.x+1., z: veranda.position.z+1.5, r: 2.7 }, // nudge it a bit
   ],
