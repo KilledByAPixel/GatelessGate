@@ -54,7 +54,7 @@ export default {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
-    scene.add(makeLights({ sun: { heading: -62, pitch: 47 } }));
+    scene.add(makeLights({ sun: { heading: 31, pitch: 40 } }));
 
     // The walk crosses the yard front-left to back-right, BETWEEN the hall and
     // the bell, so the court reads as ground people actually cross — and so a

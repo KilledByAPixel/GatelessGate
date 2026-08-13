@@ -141,7 +141,7 @@ export default {
     // to go lower, but not much: the shadow of a pole this tall reaches the
     // edge of the shadow camera somewhere around half this pitch, and past
     // that it is cut off mid-meadow.
-    scene.add(makeLights({ sun: { heading: -46, pitch: 43 } }));
+    scene.add(makeLights({ sun: { heading: -1, pitch: 43 } }));
 
     // The mast group pivots at the ground, so a sway is a rotation of the whole
     // standing thing — pole, cap and sitter together, the way a real pole moves.

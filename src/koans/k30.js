@@ -54,7 +54,7 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   // weather, so this is the highest sun in the book and the pond
   // takes it nearly flat. Case 33 is the same pond under the
   // opposite light.
-  scene.add(makeLights({ sun: { heading: 61, pitch: 66 } }));
+  scene.add(makeLights({ sun: { heading: 75, pitch: 55 } }));
   
   // the pond: an OPEN stone basin and a still sheet inside it. It used to be a
   // solid cylinder, whose top cap sealed the water and the fish underneath it —

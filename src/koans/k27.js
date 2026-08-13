@@ -99,7 +99,7 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 31.5, pitch: 2
   const SKY = mixHex(PAPER, ACCENT, 0.42);
   scene.background = new THREE.Color(SKY);
   scene.fog = new THREE.FogExp2(SKY, 0.028);
-  scene.add(makeLights());
+  scene.add(makeLights({ sun: { heading: 75, pitch: 40 } }));
   
   const path = makePath({ from: [4.6, 8.2], to: [2.1, -18.9], width: 1.4, seed: ID, groundSeed: 21, wander: 0.9 });
   scene.add(path);

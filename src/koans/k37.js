@@ -68,7 +68,7 @@ const CAM = { distance: 13.8, target: [1.45, 1, -1.5], heading: 29, pitch: 23.5 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
-  scene.add(makeLights({ sun: { heading: -72, pitch: 40 } }));
+  scene.add(makeLights({ sun: { heading: 56, pitch: 47 } }));
   
   // The enclosure. Three walls of lattice — and the fourth side is not missing
   // but a DOUBLE DOOR: one leaf standing shut, the other pushed ajar, the way a

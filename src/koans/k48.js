@@ -115,7 +115,7 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
-  scene.add(makeLights({ sun: { heading: -106, pitch: 47 } }));
+  scene.add(makeLights({ sun: { heading: -70, pitch: 49 } }));
   
   // The one road — and now it has somewhere to go: down the field, across
   // the sand, ending AT the eastern sea. It drapes over the SHORED ground
