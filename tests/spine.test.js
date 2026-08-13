@@ -86,10 +86,10 @@ test('every case entry keeps its own number', () => {
 
 test('backing off the front of the book returns to the Contents', () => {
   // THE BUG, pinned. From the preface, opened out of the Contents, you could
-  // page forward but never back — in the look and in the text alike.
-  // Both sets of arrows and the left arrow key all bottomed out in
-  // neighborSlug's own null, so the first page of the book was somewhere you
-  // could enter and then not leave the way you came in.
+  // page forward but never back — in the look and in the text alike. Both sets
+  // of arrows and the left arrow key all bottomed out in neighborSlug's own
+  // null, so the first page of the book was somewhere you could enter and then
+  // not leave the way you came in.
   //
   // The Contents is not IN the reading order — it is not a page of the book —
   // which is why this is a rule layered on top of the walk rather than an

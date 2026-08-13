@@ -17,11 +17,11 @@ const ID = 15;
 // interaction is the beating: touch the gate and three strikes sound, spaced
 // out, on nothing at all. The stick is the only vermillion thing in the scene.
 //
-// THE STICK MOVES NOW — a planted staff tipping forward and back once per
-// blow, reversing the original staging note that it never would. What
-// is kept from that note is the important half: the blows still land on
-// NOTHING — the staff tips at the empty air between the two of them, no
-// strike reaches anybody, and the knocks stay deliberately unplaced.
+// THE STICK MOVES NOW — a planted staff tipping forward and back once per blow,
+// reversing the original staging note that it never would. What is kept from
+// that note is the important half: the blows still land on NOTHING — the staff
+// tips at the empty air between the two of them, no strike reaches anybody, and
+// the knocks stay deliberately unplaced.
 
 const BLOWS = 3;
 const BLOW_GAP = 0.5;
@@ -29,9 +29,9 @@ const BLOW_GAP = 0.5;
 // just told him he has earned a beating — and held, not animated: the movement
 // in this case is the three blows, and they land on nothing.
 const BOW = 0.55;
-// ...held, EXCEPT when the reader touches him. The
-// held bow deepens by DIP and comes back up: the one figure the reader can
-// reach answers by bowing further, which is the most Tozan gesture there is.
+// ...held, EXCEPT when the reader touches him. The held bow deepens by DIP and
+// comes back up: the one figure the reader can reach answers by bowing further,
+// which is the most Tozan gesture there is.
 const DIP = 0.22;            // radians past the held BOW, at the same waist
 const DIP_SPAN = 2.4;        // seconds down and up, and the retap floor
 
@@ -49,15 +49,15 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -5, pitch: 13.
   // gate at evening is exactly where a real fūrin would hang, and this case
   // already gives the gate a voice ('gate').
   //
-  // THE HISTORY IS WORTH KEEPING, because this has now gone in both
-  // directions. It started as a FIVE-TUBE cluster; code review called that
-  // "the busiest new voice in the book, on a case whose whole point is three
-  // blows that never land" — right, and it came down to a single tube, then
-  // back up to THREE SINGLES, one per blow. That is not a reversal of the
-  // review, it is the distinction the review was actually about. A ring is a
-  // CHORD — one clapper, five tubes, a chatter that reads as an ANSWER to
-  // the beating. Three separate chimes are three separate single tones, and
-  // they rhyme with the three blows rather than competing with them.
+  // THE HISTORY IS WORTH KEEPING, because this has now gone in both directions.
+  // It started as a FIVE-TUBE cluster; code review called that "the busiest new
+  // voice in the book, on a case whose whole point is three blows that never
+  // land" — right, and it came down to a single tube, then back up to THREE
+  // SINGLES, one per blow. That is not a reversal of the review, it is the
+  // distinction the review was actually about. A ring is a CHORD — one clapper,
+  // five tubes, a chatter that reads as an ANSWER to the beating. Three
+  // separate chimes are three separate single tones, and they rhyme with the
+  // three blows rather than competing with them.
   //
   // MEASURED, so the trade is on the record rather than assumed: the ring
   // this case rejected sounded 1567 times an hour, one note every 2.3s.
@@ -90,10 +90,10 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -5, pitch: 13.
   gate.rotation.y = 0.26;
   scene.add(gate);
   
-  // TOZAN, in the gateway, bowing — he came back the next day to ask why.
-  // He used to bow by rotation.z on the whole figure, which is a ROLL: he
-  // listed sideways like a man on a slope, not a man bowing — the same fault
-  // k32's philosopher had. pose 'bow' hinges him at the sash instead, and a number
+  // TOZAN, in the gateway, bowing — he came back the next day to ask why. He
+  // used to bow by rotation.z on the whole figure, which is a ROLL: he listed
+  // sideways like a man on a slope, not a man bowing — the same fault k32's
+  // philosopher had. pose 'bow' hinges him at the sash instead, and a number
   // sets how far: bodies front local +z, so the waist's turn about x carries
   // the chest forward, along whatever way faceMonk has already turned him.
   const tozan = makeMonk({ height: 1.58, pose: 'bow', bow: BOW });

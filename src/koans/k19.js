@@ -21,8 +21,8 @@ const BASE_WIND = 0.20;
 // disc opts out of the depth-edge Sobel), which is free while the material is
 // opaque and alpha is ignored, and catastrophic the moment `transparent = true`
 // makes the blender read it. The moon went pale instead of red, visibly and at
-// once. NEVER set transparent on a
-// material whose shader writes alpha for a non-alpha purpose.
+// once. NEVER set transparent on a material whose shader writes alpha for a
+// non-alpha purpose.
 //
 // So nothing here fades. The sun is placed on the moon's own bearing, so every
 // shadow in the meadow points away from it and the moon is visibly the thing
@@ -52,10 +52,10 @@ const SKY_TINT = 0.90;    // how far the background goes toward the moon's own r
 const FOG_TINT = 0.38;    // ...and how far the land's fog follows it. See above.
 
 // AND IT SNOWS. The verse is the whole of this page — "in spring, hundreds of
-// flowers; in autumn, a harvest moon; in summer, a refreshing breeze; in winter,
-// snow will accompany you" — and the diorama had three of those four. The
-// flowers are the verge, the moon is the ridge, the breeze is in the wind and
-// the sound. Winter was the missing line, and touching the moon is where it
+// flowers; in autumn, a harvest moon; in summer, a refreshing breeze; in
+// winter, snow will accompany you" — and the diorama had three of those four.
+// The flowers are the verge, the moon is the ridge, the breeze is in the wind
+// and the sound. Winter was the missing line, and touching the moon is where it
 // goes: the sky reddens, the disc comes on, and it begins to snow — the verse
 // names winter too.
 //
@@ -105,11 +105,11 @@ const BREEZE_TAU = 1.7;   // how long a crossing breath stays in the sound
 // meadow itself stays on the grey wash, as always.
 //
 // The blooms went out for a while and butterflies took the line instead; they
-// are back and the butterflies have gone to case 12. Spring
-// is the FIRST line of the verse and autumn the second, so having them in the
-// same picture is the point — flowers on the ground, the moon over the ridge.
-// The framing, named so composeWorld can have it too: `view` lets the
-// scatter refuse spots no reachable heading can see (kit/scenery.js).
+// are back and the butterflies have gone to case 12. Spring is the FIRST line
+// of the verse and autumn the second, so having them in the same picture is the
+// point — flowers on the ground, the moon over the ridge. The framing, named so
+// composeWorld can have it too: `view` lets the scatter refuse spots no
+// reachable heading can see (kit/scenery.js).
 const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6 };
   export default {
   id: ID,
@@ -273,9 +273,9 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   // travelling outward and adds its envelope straight onto each bloom's lean.
   // Stacked on the wind and the nod already in that sum, it drove the bend past
   // anything a stem does — the blooms folded flat and read as being pulled
-  // under, as though sucked into the ground. The breath is now carried by
-  // the wind level alone, which the blooms and the grass answer together
-  // through the weather they already share.
+  // under, as though sucked into the ground. The breath is now carried by the
+  // wind level alone, which the blooms and the grass answer together through
+  // the weather they already share.
   let camera = null;
   let clock = 0;
   let riseAt = -99;
@@ -288,8 +288,8 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   // right shoulder — the book's default, and on this page it meant the shadows
   // lay across the meadow from a direction with nothing in it while a moon
   // stood plainly in the sky doing no work at all — the light visibly did not
-  // come from it. The bearing below is the moon's own; only the
-  // elevation is chosen, for the reason at SUN_ELEV.
+  // come from it. The bearing below is the moon's own; only the elevation is
+  // chosen, for the reason at SUN_ELEV.
   const sun = scene.getObjectByProperty('isDirectionalLight', true);
   const sunTargetAt = sun ? sun.target.position.clone() : new THREE.Vector3();
 

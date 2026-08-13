@@ -15,14 +15,13 @@ const ID = 23;
 //
 // The staging used to keep the patriarch out of the frame entirely — "an
 // absence", the road he left by running empty over the pass — on the theory
-// that playing his half with a figure would turn the koan into a standoff.
-// That was reversed: the case text has the two of them in
-// dialogue — E-myo caught up, could not lift the robe, and ASKED, and the
-// patriarch answered "do not think good, do not think not-good". So the
-// scene is that exchange: the patriarch stands a couple of paces beyond the
-// stone, facing E-myo across it, and the treasure lies between them. E-myo
-// keeps his mid-reach tremor — it reads as the asking now — and the tap
-// still plays the pull that fails.
+// that playing his half with a figure would turn the koan into a standoff. That
+// was reversed: the case text has the two of them in dialogue — E-myo caught
+// up, could not lift the robe, and ASKED, and the patriarch answered "do not
+// think good, do not think not-good". So the scene is that exchange: the
+// patriarch stands a couple of paces beyond the stone, facing E-myo across it,
+// and the treasure lies between them. E-myo keeps his mid-reach tremor — it
+// reads as the asking now — and the tap still plays the pull that fails.
 //
 // So: high country. A mountain trail wanders through from the near foreground
 // and runs out toward the ranges. A flat-topped stone waits a step off its
@@ -129,10 +128,10 @@ const CAM = { distance: 10.1, target: [0.2, 1.3, -0.9], heading: 31.5, pitch: 16
 
     // the treasure: the robe takes the seal whole — small, held, and the thing
     // the case turns on — and the bowl stays its own quiet grey (case 7's bowl
-    // was red; two red bowls two cases apart would read as a repeat)
-    // Robe AND bowl both red. The pair together is the treasure
-    // of succession; a grey bowl on a red robe read as the robe mattering more,
-    // and the koan hands down both or neither.
+    // was red; two red bowls two cases apart would read as a repeat) Robe AND
+    // bowl both red. The pair together is the treasure of succession; a grey
+    // bowl on a red robe read as the robe mattering more, and the koan hands
+    // down both or neither.
     const bundle = makeBundle({ width: 0.46, color: ACCENT, bowlColor: ACCENT, seed: ID });
     bundle.group.position.set(STONE.x, STONE_H, STONE.z);
     bundle.group.rotation.y = 0.35;

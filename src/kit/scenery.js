@@ -43,8 +43,8 @@ const SPECIES = { tree: makeTree, pine: makePine, oak: makeOak };
 // of the origin, so every tree hand-placed near the middle of a scene got away
 // with y = 0 for years; out past that the terrain rolls a unit either way and a
 // tree at 0 floats or sinks — the fog-line stands sat buried. This samples the
-// same surface the scatter does, and
-// takes `groundFn` for a case whose ground is more than the terrain function.
+// same surface the scatter does, and takes `groundFn` for a case whose ground
+// is more than the terrain function.
 //
 export function plantTree(scene, {
   x = 0, z = 0,
@@ -109,9 +109,9 @@ export function plantRock(scene, {
 //
 // The alternative was writing them twice: `monk.position.set(3.6, 0, 3.4)` and
 // then `{ x: 3.6, z: 3.4, r: 1.2 }` a few lines later, two sets of numbers for
-// one fact. They drift the moment anyone
-// nudges a figure, and nothing fails — the scatter just quietly stops respecting
-// something, or clears a bald patch of grass where nothing stands any more.
+// one fact. They drift the moment anyone nudges a figure, and nothing fails —
+// the scatter just quietly stops respecting something, or clears a bald patch
+// of grass where nothing stands any more.
 //
 // Still takes plain `{x, z, r}` for the circles that are not objects: a path's
 // own keepout(), a swathe of open water, the air over a gorge.
@@ -131,9 +131,8 @@ const asCircle = (k) => (k && k.at ? around(k.at, k.r) : k);
 // are outside the frame at the home framing and 18% are outside it at EVERY
 // heading the orbit can reach. Those last ones are pure waste — nothing should
 // spawn where the camera can never point — and because the placement loop
-// RETRIES on a
-// rejection, refusing them does not thin the wood, it moves those trees to
-// where they show. Same budget, more scene.
+// RETRIES on a rejection, refusing them does not thin the wood, it moves those
+// trees to where they show. Same budget, more scene.
 //
 // The test is horizontal only, and deliberately: a tree is tall, the pitch
 // drifts, the reader drags, and the vertical edges of the frame are the ones a
@@ -212,11 +211,11 @@ export function composeWorld(scene, {
   groundFn = null,
   trees = 5,
   treeRing = [7, 20],
-  // The scatter's species, so a case controls what grows in it:
-  // 'tree' (the broadleaf, bit-identical to before this
-  // option existed), 'pine', or 'mixed' — a seeded half-and-half. The wind
-  // FLAVOR in a case's ambience ('wind:0.2:pine') is a separate, audio-only
-  // choice; matching the two is the case's own job.
+  // The scatter's species, so a case controls what grows in it: 'tree' (the
+  // broadleaf, bit-identical to before this option existed), 'pine', or 'mixed'
+  // — a seeded half-and-half. The wind FLAVOR in a case's ambience
+  // ('wind:0.2:pine') is a separate, audio-only choice; matching the two is the
+  // case's own job.
   treeKind = 'mixed',
   // The case's own framing, so the scatter can refuse spots the reader can
   // never look at (seenFrom, above). Pass the same object the module's
@@ -290,11 +289,11 @@ export function composeWorld(scene, {
     ...(shore ? { shore } : {}),
   });
   scene.add(ground);
-  // The mountains' base circles, computed ONCE from the same seeds the
-  // meshes use: forests and scatter trees refuse to stand inside them
-  // — otherwise trees stand inside the mountain. 0.85·r is where a
-  // trunk starts piercing visible rock; the very skirt stays plantable
-  // and reads as brush at fog distance.
+  // The mountains' base circles, computed ONCE from the same seeds the meshes
+  // use: forests and scatter trees refuse to stand inside them — otherwise
+  // trees stand inside the mountain. 0.85·r is where a trunk starts piercing
+  // visible rock; the very skirt stays plantable and reads as brush at fog
+  // distance.
   const footprints = mountains.flatMap((m, i) =>
     mountainFootprints({ seed: seed * 31 + i * 7, ...m }));
 
@@ -347,10 +346,9 @@ export function composeWorld(scene, {
     const t = pine
       ? makePine({ seed: seed * 100 + placed, height: 3.2 + hash1(tries * 5 + 4, seed) * 1.8 })
       : makeTree({ seed: seed * 100 + placed, height: 2.6 + hash1(tries * 5 + 4, seed) * 1.6 });
-    // ON the terrain, not at sea level: the ring reaches r = 20 and the
-    // ground out there rolls a good unit either way — trees planted at y 0
-    // floated on the dips and buried on the rises. Slight sink so no trunk
-    // hovers on a
+    // ON the terrain, not at sea level: the ring reaches r = 20 and the ground
+    // out there rolls a good unit either way — trees planted at y 0 floated on
+    // the dips and buried on the rises. Slight sink so no trunk hovers on a
     // slope edge. groundFn first, same as the grass: a case with reshaped
     // terrain owns the surface.
     const ty = (groundFn ? groundFn(x, z) : groundHeight(x, z, { seed: groundSeed })) - 0.06;
@@ -364,10 +362,10 @@ export function composeWorld(scene, {
   // The trees deliberately do NOT answer the pointer's breeze. v1 tilted each
   // scattered tree on a damped spring, and it was pulled: the trees were
   // knocked around far too much — a whole-group tilt pivots at the trunk's
-  // base, and no gentle
-  // amplitude makes that read as a canopy. The grass is the instrument now;
-  // if trees ever join back in it has to be canopy-only deformation, not a
-  // base pivot (treeSpringStep in breeze.js is kept, uncalled, for that day).
+  // base, and no gentle amplitude makes that read as a canopy. The grass is the
+  // instrument now; if trees ever join back in it has to be canopy-only
+  // deformation, not a base pivot (treeSpringStep in breeze.js is kept,
+  // uncalled, for that day).
 
   scene.add(makeRocks({ count: rocks, seed: seed * 51, groundSeed, keepout }));
   scene.add(makeBushes({ count: bushes, seed: seed * 61, groundSeed, keepout }));
@@ -375,8 +373,8 @@ export function composeWorld(scene, {
   // the meadow: one instanced field, wind animated in the vertex shader. The
   // caller must drive world.update(dt, simTime) or the wind stands still.
   // `grass` is a blade budget; a tuft card shows several blades. The divisor
-  // was 3 at first, and about twice the coverage reads better; at two
-  // triangles each even this is a fraction of the blade field's geometry.
+  // was 3 at first, and about twice the coverage reads better; at two triangles
+  // each even this is a fraction of the blade field's geometry.
   //
   // THE REACH, and why the budget moves with it. Both fields place at even area
   // density, so a fixed count spread over a bigger disc is a thinner meadow —

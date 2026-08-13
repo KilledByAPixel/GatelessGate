@@ -69,8 +69,8 @@ export function makeTree({
 
   // a joint ball where two segments meet at an angle: cylinders touching
   // edge-to-edge open a wedge of daylight at every node, and a knot there both
-  // closes it and reads as
-  // the burl a real fork grows. Merged into the trunk mesh — zero draws.
+  // closes it and reads as the burl a real fork grows. Merged into the trunk
+  // mesh — zero draws.
   function pushKnot(m, r, run = 0, phase = 0) {
     const knot = new THREE.DodecahedronGeometry(r, 0);
     knot.applyMatrix4(m);

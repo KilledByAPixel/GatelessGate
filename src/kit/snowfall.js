@@ -4,12 +4,13 @@ import { SNOW } from '../palette.js';
 
 // Snow, for the night Eka stood outside Bodhidharma's cave (case 41).
 //
-// These flecks were PAPER coloured on the theory that snow in an ink painting is
-// the paper showing through — invisible against the sky, present against ink.
-// That works for snow LYING on the ground and not for snow in the air: the same
-// case covers its earth in wash(0.06), so falling flake and snowed-under ground
-// were the same tone and the weather simply vanished into it. Falling snow
-// is the one thing in the book brighter than the page — see SNOW in palette.js.
+// These flecks were PAPER coloured on the theory that snow in an ink painting
+// is the paper showing through — invisible against the sky, present against
+// ink. That works for snow LYING on the ground and not for snow in the air: the
+// same case covers its earth in wash(0.06), so falling flake and snowed-under
+// ground were the same tone and the weather simply vanished into it. Falling
+// snow is the one thing in the book brighter than the page — see SNOW in
+// palette.js.
 //
 // One THREE.Points, no meshes. Each flake's fall is a closed form over
 // simTime — a wrapping descent with its own drift — so the same simTime
@@ -17,9 +18,9 @@ import { SNOW } from '../palette.js';
 
 // ROUND FLAKES. A PointsMaterial with no map draws every point as a hard
 // SQUARE, so the weather was three hundred little tiles tumbling past the cave
-// mouth. The fix is a texture, and this book downloads nothing — so it
-// is generated: one 32x32 white disc with a feathered alpha edge, solid to 0.62
-// of its radius and gone by the rim.
+// mouth. The fix is a texture, and this book downloads nothing — so it is
+// generated: one 32x32 white disc with a feathered alpha edge, solid to 0.62 of
+// its radius and gone by the rim.
 //
 // Built once and shared by every snowfall, which is why dispose() leaves it
 // alone: the material and geometry belong to a scene, this belongs to the book.

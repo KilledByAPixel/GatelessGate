@@ -30,10 +30,10 @@ import { clamp } from '../util/math.js';
 // than captured at construction, so a slider reaches a bell that is already
 // standing in the scene, not just the next one built.
 //
-// This bell was the last hanging thing in the kit still holding its numbers
-// as private consts, which is exactly why there was nowhere to tune it from:
-// the harness had a section for the fūrin and one for the bronze cylinder and
-// none for the bonshō.
+// This bell was the last hanging thing in the kit still holding its numbers as
+// private consts, which is exactly why there was nowhere to tune it from: the
+// harness had a section for the fūrin and one for the bronze cylinder and none
+// for the bonshō.
 //
 //   throw  — radians of tilt a single strike lands. Started at 0.055 (3.2
 //            degrees), which read as a still object with a sound attached on

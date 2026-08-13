@@ -64,16 +64,15 @@ export const SNOW = mixHex(PAPER, '#FFFFFF', 0.85);
 //
 // Anything lit is painted in this, not in INK. This constant was tuned while
 // the book still shaded through a 3-step toon ramp, and the reasoning that
-// justified it then was quantitative: a fixed multiply by 0.31 / 0.63 / 1.0
-// put an INK robe's three bands at levels 9, 19 and 30 out of 255 — a
-// ten-level spread that no screen shows and no eye reads — and every monk
-// came out as a flat black cut-out while the rest of the scene had visible
-// form — far darker than anything around them, with no shading left to read —
-// the same
-// quietly true of every torii, pole and cord painted the same way. Lifted a
-// fifth of the way back toward the paper, the same ramp landed on 22 / 46 /
-// 73 — three times the separation, and enough that the crown of a hat, its
-// brim and the shoulder under it read as three different tones.
+// justified it then was quantitative: a fixed multiply by 0.31 / 0.63 / 1.0 put
+// an INK robe's three bands at levels 9, 19 and 30 out of 255 — a ten-level
+// spread that no screen shows and no eye reads — and every monk came out as a
+// flat black cut-out while the rest of the scene had visible form — far darker
+// than anything around them, with no shading left to read — the same quietly
+// true of every torii, pole and cord painted the same way. Lifted a fifth of
+// the way back toward the paper, the same ramp landed on 22 / 46 / 73 — three
+// times the separation, and enough that the crown of a hat, its brim and the
+// shoulder under it read as three different tones.
 //
 // The book now shades through plain Lambert, which has no fixed bands to
 // quote a level from — the surface takes a continuous value that depends on

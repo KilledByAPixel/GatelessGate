@@ -98,8 +98,8 @@ test('three single-tube chimes hang under the gate, on three different cords, re
   const chimes = gate.children.filter((c) => c.name === 'furin');
   assert.equal(chimes.length, 3, 'three chimes, all children of the gate — the five-tube ring is gone');
 
-  // every one of them is a SINGLE tube: the ring that was removed carried
-  // five, so counting tube meshes is what would catch it coming back
+  // every one of them is a SINGLE tube: the ring that was removed carried five,
+  // so counting tube meshes is what would catch it coming back
   for (const c of chimes) {
     let tubes = 0;
     c.traverse((o) => { if (o.name === 'tube') tubes++; });
@@ -117,14 +117,14 @@ test('three single-tube chimes hang under the gate, on three different cords, re
   assert.equal(new Set(cords.map((v) => v.toFixed(4))).size, 3,
     `the three should hang on three different cords, got ${cords}`);
 
-  // ...AND THE BOTTOMS LINE UP, which is the point of the cords differing.
-  // The small ones did not hang low enough. With cord measured
-  // in units of SIZE — the previous implementation, and the one a future
-  // edit would most plausibly slip back to — the smallest chime gets the
-  // shortest string and sits highest of the three, which is backwards. Here
-  // the bottoms are within a fifth of the biggest chime's own tube length
-  // of each other. Mutation-checked: reverting to `cord: [0.42, 0.52, 0.60]`
-  // spreads them by 0.13 and fails this.
+  // ...AND THE BOTTOMS LINE UP, which is the point of the cords differing. The
+  // small ones did not hang low enough. With cord measured in units of SIZE —
+  // the previous implementation, and the one a future edit would most plausibly
+  // slip back to — the smallest chime gets the shortest string and sits highest
+  // of the three, which is backwards. Here the bottoms are within a fifth of
+  // the biggest chime's own tube length of each other. Mutation-checked:
+  // reverting to `cord: [0.42, 0.52, 0.60]` spreads them by 0.13 and fails
+  // this.
   const bottoms = chimes.map((c) => {
     const box = new THREE.Box3();
     c.traverse((o) => { if (o.isMesh && o.name === 'tube') box.union(new THREE.Box3().setFromObject(o)); });
@@ -244,14 +244,14 @@ test("case 29's chimes stay clear of each other at the LIVE swing cap, counter-p
   // SWING.maxOmegaFrac=0.65) was only ever asserted in a k29.js COMMENT.
   // Nothing re-derived it against the LIVE constant, so raising
   // SWING.maxOmegaFrac — the likely next move, since the complaint about the
-  // swing has always been that it was too SMALL — would silently
-  // reopen the counter-phase collision this branch already found once,
-  // with nothing anywhere failing to say so. This recomputes the real
-  // worst-case counter-phase gap from the ACTUAL staged scene and the
-  // LIVE SWING.maxOmegaFrac/tapPeak/damping every time the suite runs, so
-  // raising the cap past what case 29's spacing tolerates fails HERE,
-  // not silently in the harness or, worse, not at all until someone sees two
-  // chimes passing through each other.
+  // swing has always been that it was too SMALL — would silently reopen the
+  // counter-phase collision this branch already found once, with nothing
+  // anywhere failing to say so. This recomputes the real worst-case
+  // counter-phase gap from the ACTUAL staged scene and the LIVE
+  // SWING.maxOmegaFrac/tapPeak/damping every time the suite runs, so raising
+  // the cap past what case 29's spacing tolerates fails HERE, not silently in
+  // the harness or, worse, not at all until someone sees two chimes passing
+  // through each other.
   //
   // theta (the saturated-burst peak) does not depend on which chime's own
   // size measures it: at saturation, pendulumEnergy's omega0^2 term

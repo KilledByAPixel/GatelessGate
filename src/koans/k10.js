@@ -103,9 +103,9 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 17.2 
   
   const world = composeWorld(scene, {
   view: CAM,
-  // not ID: the scatter was re-rolled to sit around the planted tree above,
-  // and 4 is the roll that landed. groundSeed stays 21 — the
-  // terrain is shared, only the things standing on it moved.
+  // not ID: the scatter was re-rolled to sit around the planted tree above, and
+  // 4 is the roll that landed. groundSeed stays 21 — the terrain is shared,
+  // only the things standing on it moved.
   seed: 4,
   groundSeed: 21,
   trees: 4,

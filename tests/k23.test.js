@@ -205,9 +205,9 @@ test('build stages the meeting: E-myo reaching, the patriarch across the stone',
 });
 
 test('robe AND bowl both wear the seal — the pair is the treasure', () => {
-  // Overriding the draft's grey bowl: the koan hands down the
-  // robe and bowl of succession TOGETHER, and colouring only one read as the
-  // other mattering less. The whole bundle is the one red thing on the page.
+  // Overriding the draft's grey bowl: the koan hands down the robe and bowl of
+  // succession TOGETHER, and colouring only one read as the other mattering
+  // less. The whole bundle is the one red thing on the page.
   const built = k23.build(fakeCtx());
   const bundle = built.scene.getObjectByName('bundle');
 

@@ -132,9 +132,9 @@ test('a pine is one bending mast: the tiers ride the bole rather than sliding of
 
   // THE FIX THIS TEST GUARDS. Displacing each tier by its own amount while the
   // bole stood still slid the cones off the trunk, reading as lopsided and
-  // sliding off to one side. Every part of a pine
-  // now shares one cantilever, and the tiers may only differ from it by a
-  // sliver, so they cannot leave the trunk's curve again.
+  // sliding off to one side. Every part of a pine now shares one cantilever,
+  // and the tiers may only differ from it by a sliver, so they cannot leave the
+  // trunk's curve again.
   assert.ok(column.every((v) => Math.abs(v - 1 / H) < 1e-9),
     'every part of the mast carries the same 1/height normaliser');
   const lo = Math.min(...sway), hi = Math.max(...sway);

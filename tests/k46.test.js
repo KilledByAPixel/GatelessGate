@@ -125,9 +125,9 @@ test('one ink sitter seated exactly on the red pole\'s cap, two grey watchers fa
   assert.ok(Math.abs(seatY - capTop) <= 0.02,
     `and topY is honest — the cap's real upper face is ${capTop}`);
 
-  // The red seal is the POLE ALONE — the sitter went back to ink. Every accent mesh must
-  // belong to the pole; the guy lines stay grey so the red reads as one
-  // unbroken line, and the man on the cap is a dark mark on top of it.
+  // The red seal is the POLE ALONE — the sitter went back to ink. Every accent
+  // mesh must belong to the pole; the guy lines stay grey so the red reads as
+  // one unbroken line, and the man on the cap is a dark mark on top of it.
   const accentMeshes = [];
   scene.traverse((o) => {
     if (o.isMesh && o.material && o.material.color
@@ -340,11 +340,10 @@ test('the sitter is no longer a target of his own — the pole is the page', () 
 
 test('tap the pole: it wobbles on BOTH axes, out of step with each other', () => {
   // A separate sine per axis, at values of their own, for a wobble that is not
-  // one lean scaled onto two axes. One damped
-  // sine per axis at frequencies that do not divide into each other, with a
-  // quarter turn of phase between them — so the tip of the mast traces an
-  // opening spiral rather than swinging in a plane and back. A pole struck by a
-  // hand does not pick an axis.
+  // one lean scaled onto two axes. One damped sine per axis at frequencies that
+  // do not divide into each other, with a quarter turn of phase between them —
+  // so the tip of the mast traces an opening spiral rather than swinging in a
+  // plane and back. A pole struck by a hand does not pick an axis.
   const ctx = fakeCtx();
   const built = k46.build(ctx);
   built.setCamera(new THREE.PerspectiveCamera());
@@ -463,10 +462,10 @@ test('every tap shoves it a different way, and the same page shoves it the same 
 test('a tap never starts the wobble already moving', () => {
   // The z axis had a quarter turn of phase on it — a decent way to make two
   // sines trace a circle, and it meant sin() was at its PEAK on the frame of
-  // the tap: the mast jumped to eight hundredths of a radian in one frame
-  // — it SNAPPED to a new position on the tap instead of starting to move.
-  // Both start at zero now, and the
-  // spiral comes from the two frequencies not dividing into each other.
+  // the tap: the mast jumped to eight hundredths of a radian in one frame — it
+  // SNAPPED to a new position on the tap instead of starting to move. Both
+  // start at zero now, and the spiral comes from the two frequencies not
+  // dividing into each other.
   const ctx = fakeCtx();
   const built = k46.build(ctx);
   built.setCamera(new THREE.PerspectiveCamera());

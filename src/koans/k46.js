@@ -19,12 +19,12 @@ const ID = 46;
 // three scatter trees, two small watchers, an empty field.
 //
 // The POLE is the red seal — one red line rising out of the meadow — and the
-// man on top is INK, the same figure grammar as every monk in the book
-// — the pole is red, the man is not. Two red things were
-// one too many: with the sitter red as well, mast and man fused into a single
-// red lollipop and the figure stopped reading as a figure. A dark seated mark
-// against clear paper at the top of the one red vertical is the stronger
-// image — the camera keeps the sky behind him for exactly this.
+// man on top is INK, the same figure grammar as every monk in the book — the
+// pole is red, the man is not. Two red things were one too many: with the
+// sitter red as well, mast and man fused into a single red lollipop and the
+// figure stopped reading as a figure. A dark seated mark against clear paper at
+// the top of the one red vertical is the stronger image — the camera keeps the
+// sky behind him for exactly this.
 const POLE = { x: 0.35, z: -0.9, height: 8 };
 const W1 = { x: -2.5, z: -2.9 };    // the two below, looking up
 const W2 = { x: -0.7, z: -5.2 };
@@ -62,10 +62,10 @@ const SITTER_YAW = Math.PI + 0.4;
 // motion.
 //
 // Which is a pendulum, and the book already has one — the same integrator the
-// fūrin and the bronze cylinders swing on. TWO of them, one per axis, at lengths
-// chosen so their periods do not divide into each other; a touch is a KICK,
-// which by construction changes only the angular VELOCITY and leaves the angle
-// exactly where it was (see kickPendulum's own note). So:
+// fūrin and the bronze cylinders swing on. TWO of them, one per axis, at
+// lengths chosen so their periods do not divide into each other; a touch is a
+// KICK, which by construction changes only the angular VELOCITY and leaves the
+// angle exactly where it was (see kickPendulum's own note). So:
 //
 //   * nothing can snap, at any time, because the rendered angle is never
 //     assigned — it is integrated, and a kick does not touch it;
@@ -84,9 +84,9 @@ const SWAY_Z = { length: 0.26, damping: 2.9 };   // quicker, shorter
 // so this lands near 0.09 rad on the slow axis — the same size the sines were.
 const KICK = 0.42;
 // AND EVERY TAP SHOVES IT A DIFFERENT WAY, rather than always at the same
-// angle. The bearing
-// now picks how the kick is SPLIT between the two axes, which is what a shove
-// from a direction physically is — rather than rotating a figure after the fact.
+// angle. The bearing now picks how the kick is SPLIT between the two axes,
+// which is what a shove from a direction physically is — rather than rotating a
+// figure after the fact.
 //
 // Seeded from the tap count, because there is no Math.random outside src/audio
 // in this book: the same page, tapped the same number of times, wobbles the

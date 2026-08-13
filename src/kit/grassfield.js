@@ -15,9 +15,8 @@ import { hash1, fbm2 } from '../util/noise.js';
 // workbench's "Grass tufts" switch drove. The switch shipped defaulting to
 // tufts and stayed there, so the blades were dev-only for their whole life and
 // were cut, since nothing shipped ever used them. Two field implementations,
-// one of them
-// unreachable, is also two places every retune had to be made and one of them
-// silently didn't matter.
+// one of them unreachable, is also two places every retune had to be made and
+// one of them silently didn't matter.
 //
 // What survived is everything the billboards still stand on:
 //

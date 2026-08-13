@@ -39,10 +39,10 @@ test('makeOak takes trunk and canopy colours independently — case 38 needs red
 
 test('the crown carries the wind — attributes baked, material injected, geometry unmoved', () => {
   // The oak was the last foliage in the book with no wind, standing visibly
-  // still while every other tree moved, and this class of breakage is SILENT — a canopy missing its
-  // attributes just stands still with nothing to read. The trunk is asserted
-  // inert on purpose: an old oak's wood carrying canopy-scale motion is the
-  // whole-tree bowing the wind system exists to avoid.
+  // still while every other tree moved, and this class of breakage is SILENT —
+  // a canopy missing its attributes just stands still with nothing to read. The
+  // trunk is asserted inert on purpose: an old oak's wood carrying canopy-scale
+  // motion is the whole-tree bowing the wind system exists to avoid.
   const oak = makeOak({ height: 5.8, seed: 20 });
   const canopy = oak.children.find((c) => c.name === 'canopy');
   const trunk = oak.children.find((c) => c.name === 'trunk');
@@ -126,9 +126,9 @@ test('the hero limb is tamed by default; `reach` restores it and moves nothing e
     const tame = makeOak({ height: H, seed });
     const long = makeOak({ height: H, seed, reach: 1 });
     // tamed: every clump, the hero limb's tip included, finishes at the crown
-    // fringe (shell lobes centre out to ~0.44H and are up to ~0.19H fat) —
-    // no clump on a spear past it — untamed it reads as one odd extra-long
-    // branch sticking out of the crown.
+    // fringe (shell lobes centre out to ~0.44H and are up to ~0.19H fat) — no
+    // clump on a spear past it — untamed it reads as one odd extra-long branch
+    // sticking out of the crown.
     assert.ok(rMax(tame) < H * 0.68,
       `seed ${seed}: tamed limb still spears out to ${(rMax(tame) / H).toFixed(2)}H`);
     // asked for, the reach is real — the legacy hanging bough comes back

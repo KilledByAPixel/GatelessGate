@@ -98,15 +98,14 @@ test('hang point: every mesh hangs below the origin', () => {
 });
 
 test('grabbing the WHOLE ring rings a cluster — several tubes, one side', () => {
-  // THE TWO COMPLAINTS THIS SITS BETWEEN, because they sound contradictory
-  // and are not. FIRST: touching one thing made a whole bunch of sounds —
-  // ring() fired tube k AND an arbitrary k+1, with no way to touch a specific
-  // tube at all, and the answer was per-tube picking (the test below this one).
-  // THEN, once that shipped: a tap only ever made ONE sound, on a five-tube
-  // ring where several notes at once is the whole point. The distinction is
-  // WHAT WAS TOUCHED: naming a tube rings
-  // that tube alone; closing your hand on the whole chime brushes the side
-  // it came from and several speak.
+  // THE TWO COMPLAINTS THIS SITS BETWEEN, because they sound contradictory and
+  // are not. FIRST: touching one thing made a whole bunch of sounds — ring()
+  // fired tube k AND an arbitrary k+1, with no way to touch a specific tube at
+  // all, and the answer was per-tube picking (the test below this one). THEN,
+  // once that shipped: a tap only ever made ONE sound, on a five-tube ring
+  // where several notes at once is the whole point. The distinction is WHAT WAS
+  // TOUCHED: naming a tube rings that tube alone; closing your hand on the
+  // whole chime brushes the side it came from and several speak.
   //
   // Asserted as "more than one, fewer than all," not an exact count: the
   // cluster is whichever tubes lie on the contact side (CLUSTER_DOT), so
@@ -125,9 +124,8 @@ test('grabbing the WHOLE ring rings a cluster — several tubes, one side', () =
 });
 
 test('a tap keeps ringing as it settles, and the ring-down fades out', () => {
-  // A knocked-about single should get knocked more than once. The clapper is
-  // a second
-  // pendulum now, so the swing a tap kicks off keeps meeting the tubes —
+  // A knocked-about single should get knocked more than once. The clapper is a
+  // second pendulum now, so the swing a tap kicks off keeps meeting the tubes —
   // and each meeting is softer than the last, because the force tracks the
   // closing velocity and the swing is decaying.
   //
@@ -194,10 +192,9 @@ test('the wind never rings the clapper — the ambient pacing belongs to the wea
 });
 
 test('a tap rings ONE tube — the one you touched', () => {
-  // Hitting one tube used to cause a whole bunch of sounds: ring() fired tube
-  // k AND k+1, and the only pick
-  // target was a drum around the whole ring, so there was no way to touch a
-  // single tube even if it had wanted to.
+  // Hitting one tube used to cause a whole bunch of sounds: ring() fired tube k
+  // AND k+1, and the only pick target was a drum around the whole ring, so
+  // there was no way to touch a single tube even if it had wanted to.
   const hits = [];
   const f = makeFurin({ seed: 4, phase: 0, onStrike: (i, force) => hits.push({ i, force }) });
   f.setWindLevel(0);
@@ -260,12 +257,12 @@ test('a single-tube chime is one tube on a cord, with no ring', () => {
 });
 
 test('a single is a BELL with the clapper hidden inside it, and the paper hangs below', () => {
-  // THE SHAPE, replacing two tests that measured the thing this is not.
-  // A real 風鈴 is a small bell with the clapper hidden inside it. What was
-  // here had the clapper off to the SIDE, connected to nothing. Widen the
-  // body and drop the separate clapper and it becomes what the bronze
-  // cylinder already is: the clapper is just inside and we don't
-  // render it. Below the chime there's a hanging rectangular piece of paper."
+  // THE SHAPE, replacing two tests that measured the thing this is not. A real
+  // 風鈴 is a small bell with the clapper hidden inside it. What was here had the
+  // clapper off to the SIDE, connected to nothing. Widen the body and drop the
+  // separate clapper and it becomes what the bronze cylinder already is: the
+  // clapper is just inside and we don't render it. Below the chime there's a
+  // hanging rectangular piece of paper."
   //
   // What was there was a Western tubular chime — a 22:1 wire — carrying a
   // tanzaku bolted to its SIDE, because the single-tube variant began life
@@ -327,10 +324,10 @@ test("the paper turns on its thread, harder for a harder knock, and never winds 
     let peak = 0;
     // 60s, not the 25s this used to run. The strip was deliberately loosened
     // (SPIN.damping tau 3.0s -> 6.5s, for a strip that turns with very little
-    // resistance) and settling time scales with
-    // tau — at 25s it is still 0.07 rad short of its rest angle, which is the
-    // strip still moving, not the strip parked. Same claim, measured after
-    // the same number of time constants.
+    // resistance) and settling time scales with tau — at 25s it is still 0.07
+    // rad short of its rest angle, which is the strip still moving, not the
+    // strip parked. Same claim, measured after the same number of time
+    // constants.
     for (let k = 0; k < 60 * 60; k++) { t += 1 / 60; f.update(1 / 60, t); peak = Math.max(peak, Math.abs(pivot.rotation.y)); }
     return { peak, rest: pivot.rotation.y };
   };
@@ -486,15 +483,14 @@ test('a knocked chime SWINGS — it crosses centre, it does not just lean back',
   // an exponential decay with no oscillating term, so the chime leaned toward
   // the tap and eased back without ever passing through the middle. That was
   // replaced by a real superposed-impulse pendulum term (poseTerm), which DID
-  // cross centre — but the WIND lean was still read straight off the gust
-  // curve every frame with no inertia at all — the chime read as being HELD
-  // in position rather than swinging. This test
-  // predates that second fix and still exercises the tap in isolation (wind
-  // off), so its assertions carry over unchanged onto the new model — a real
-  // driven pendulum (src/kit/pendulum.js) with taps as velocity kicks
-  // (ring()/tapKick) rather than a decaying-sine term superposed on a
-  // kinematic lean, which read as a strange damping that never let it swing
-  // back and forth at all.
+  // cross centre — but the WIND lean was still read straight off the gust curve
+  // every frame with no inertia at all — the chime read as being HELD in
+  // position rather than swinging. This test predates that second fix and still
+  // exercises the tap in isolation (wind off), so its assertions carry over
+  // unchanged onto the new model — a real driven pendulum (src/kit/pendulum.js)
+  // with taps as velocity kicks (ring()/tapKick) rather than a decaying-sine
+  // term superposed on a kinematic lean, which read as a strange damping that
+  // never let it swing back and forth at all.
   const f = makeFurin({ seed: 3, phase: 0, onStrike: () => {} });
   f.setWindLevel(0);
   const swing = f.group.getObjectByName('swing');

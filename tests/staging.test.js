@@ -169,15 +169,15 @@ for (const entry of staged) {
 }
 
 // Cases that answer a touch with nothing ON PURPOSE — a different thing from
-// the seven that were once here because no voice existed for them yet. The
-// list is EMPTY now, and the emptying is the record worth keeping: the cat
-// (14) and the hanging man (5) were the last two, the book's two hardest
-// pages, and both came off in the interaction audit: a touched thing has to
-// answer. What each answers with keeps the reasoning that put it here — the cat gets
-// cloth, a brush of fur, and Kyogen a small chime, the least literal voice in
-// the palette; neither is an impact, and nothing stages the harm the ink
-// metaphor exists to avoid. Both stay on NO_DRIFT above; only the one-shots
-// moved. The machinery stays for any future case that needs the silence.
+// the seven that were once here because no voice existed for them yet. The list
+// is EMPTY now, and the emptying is the record worth keeping: the cat (14) and
+// the hanging man (5) were the last two, the book's two hardest pages, and both
+// came off in the interaction audit: a touched thing has to answer. What each
+// answers with keeps the reasoning that put it here — the cat gets cloth, a
+// brush of fur, and Kyogen a small chime, the least literal voice in the
+// palette; neither is an impact, and nothing stages the harm the ink metaphor
+// exists to avoid. Both stay on NO_DRIFT above; only the one-shots moved. The
+// machinery stays for any future case that needs the silence.
 const SILENT_BY_HISTORY = [];
 
 test('every staged interaction reaches the audio engine', async () => {
@@ -209,9 +209,9 @@ test('every staged interaction reaches the audio engine', async () => {
 test('any case silent by editorial choice makes no sound at all', async () => {
   // SILENT_BY_HISTORY only SUPPRESSES a failure in the test above — it never
   // asserts anything of its own, so a case could sit on that list without
-  // actually staying silent and nothing would catch it. This proves the
-  // silence rather than merely excusing it. (The list is empty as of the
-  // 2026-08 interaction audit — see its comment — so this currently proves a vacuous
+  // actually staying silent and nothing would catch it. This proves the silence
+  // rather than merely excusing it. (The list is empty as of the 2026-08
+  // interaction audit — see its comment — so this currently proves a vacuous
   // truth, and stays for the next case that claims the silence.)
   for (const id of SILENT_BY_HISTORY) {
     const entry = staged.find((e) => e.id === id);
@@ -275,20 +275,19 @@ const OVER_BUDGET_BY_HISTORY = {};
 
 // Accents that are deliberately not a compact thing in the middle distance:
 // 24's is the BIRDS (the meadow's blooms went to the kit's pale default when
-// petals went whitish by default) — a flock circling at altitude that
-// crosses the frame rather than sitting in it, so its world positions at t=0
-// prove nothing; 27's is the moon, sixty units out beyond the mountains — and
-// measured while this exemption was being re-checked, it projects to screen
-// y = 1.40 at the home framing and is off the edge at ALL 36 headings the orbit
-// can reach, because that case pitches 22.4 degrees DOWN where case 19 (whose
-// moon is its subject) pitches 8.6. Left as it is: case 27 does not need its
-// moon in frame, and the camera is aimed deliberately here.
-// 22's is the PATH, a ground-spanning
-// ribbon whose mesh origin is not a meaningful point to project (the road is
-// inherently in frame — it is the ground you are looking at). 36 used to be
-// here while its master opened far off in the fog; he now opens a stride
-// past the traveller, so the ordinary check covers him again — and 34 while
-// its path carried the red; the seal moved to the hut, the home the case
+// petals went whitish by default) — a flock circling at altitude that crosses
+// the frame rather than sitting in it, so its world positions at t=0 prove
+// nothing; 27's is the moon, sixty units out beyond the mountains — and
+// measured while this exemption was being re-checked, it projects to screen y =
+// 1.40 at the home framing and is off the edge at ALL 36 headings the orbit can
+// reach, because that case pitches 22.4 degrees DOWN where case 19 (whose moon
+// is its subject) pitches 8.6. Left as it is: case 27 does not need its moon in
+// frame, and the camera is aimed deliberately here. 22's is the PATH, a
+// ground-spanning ribbon whose mesh origin is not a meaningful point to project
+// (the road is inherently in frame — it is the ground you are looking at). 36
+// used to be here while its master opened far off in the fog; he now opens a
+// stride past the traveller, so the ordinary check covers him again — and 34
+// while its path carried the red; the seal moved to the hut, the home the case
 // names, so the ordinary check covers it too.
 const ACCENT_NOT_IN_FRAME = [22, 24, 27];
 

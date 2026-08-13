@@ -8,13 +8,13 @@ import { applyFoliageWind } from './foliage.js';
 // THE pine: a straight trunk carrying a stack of hexagonal cone tiers that
 // taper to a true point.
 //
-// This model has been two other things. First a stack of concentric cones on
-// a stub (too mechanical), then a sumi-e experiment — an elbowed trunk with
-// flat cloud-pads kicked off to alternating sides — more interesting, and
+// This model has been two other things. First a stack of concentric cones on a
+// stub (too mechanical), then a sumi-e experiment — an elbowed trunk with flat
+// cloud-pads kicked off to alternating sides — more interesting, and
 // unmistakably wrong. What a pine wants is to be a pine: straight up, pointy
 // top. So: the classic silhouette, kept honest by SMALL seeded irregularities
-// (tier radius, spin, a slight off-centre set) instead of by crooking the
-// whole tree. A stand of them varies without any one of them looking bent.
+// (tier radius, spin, a slight off-centre set) instead of by crooking the whole
+// tree. A stand of them varies without any one of them looking bent.
 //
 //   1. a STRAIGHT vertical trunk — root flare, one tapered bole;
 //   2. TIERS: six-sided cones, each smaller than the one below, overlapping
@@ -28,28 +28,29 @@ import { applyFoliageWind } from './foliage.js';
 //
 // THE WIND GOES THROUGH IT — as a BEND, tier riding tier, each bent a little
 // more than the one below. The first attempt displaced each tier on its own and
-// was wrong in two ways at once: the top tiers moved far too much, and the whole
-// tree read as lopsided, sliding off to one side. Both are the same mistake. A
-// tier translated sideways while the bole underneath it stands still does not
-// read as a tree bending, it reads as cones sliding off a pole — and the lateral
-// flutter the leaf clusters use, put on a solid cone the size of a tier, is pure
-// sideways slide.
+// was wrong in two ways at once: the top tiers moved far too much, and the
+// whole tree read as lopsided, sliding off to one side. Both are the same
+// mistake. A tier translated sideways while the bole underneath it stands still
+// does not read as a tree bending, it reads as cones sliding off a pole — and
+// the lateral flutter the leaf clusters use, put on a solid cone the size of a
+// tier, is pure sideways slide.
 //
 // So the pine is a CANTILEVER: the whole tree, trunk included, bends about its
-// own foot on a height-squared curve (aColumn in kit/foliage.js), which pins the
-// base without pinning the tree. The tiers ride that at very nearly the bole's
-// own weight, and what is left of "each one moves on its own" is deliberately
-// small, because the ride IS the effect and any tier that argues with it goes
-// back to sliding.
+// own foot on a height-squared curve (aColumn in kit/foliage.js), which pins
+// the base without pinning the tree. The tiers ride that at very nearly the
+// bole's own weight, and what is left of "each one moves on its own" is
+// deliberately small, because the ride IS the effect and any tier that argues
+// with it goes back to sliding.
 
 // How far the mast leans relative to a broadleaf's outermost foliage. THE DIAL
 // FOR HOW MUCH A PINE BENDS — TIER_LAG is the separate one for whether that
 // bend reads as a hierarchy.
 //
 // It was damped once for "moving way too much", and that was the wrong
-// diagnosis: what was too much was the sideways slide of independently displaced
-// tiers, which the cantilever fixed on its own. With that gone the damping only
-// made the tree lifeless, visibly stiller than the broadleaf beside it.
+// diagnosis: what was too much was the sideways slide of independently
+// displaced tiers, which the cantilever fixed on its own. With that gone the
+// damping only made the tree lifeless, visibly stiller than the broadleaf
+// beside it.
 //
 // Which it structurally would be at parity. A broadleaf carries EVERY leaf
 // cluster out at sway ~1, while a column's weight is height-squared, so most of
@@ -58,9 +59,10 @@ import { applyFoliageWind } from './foliage.js';
 // same number — so matched by eye, a pine's number reads higher.
 const MAST_SWAY = 1.95;
 const TIER_LAG = 0.28;      // radians of phase per tier — the lag that curves the
-                            // mast as it sways. 1.35 made each tier its own event;
-                            // a quarter-radian reads as one bend arriving late at
-                            // the top, which is the hierarchy this is for.
+                            // mast as it sways. 1.35 made each tier its own
+                            // event; a quarter-radian reads as one bend
+                            // arriving late at the top, which is the hierarchy
+                            // this is for.
 const TIER_FLEX = 0.16;     // how much more than the bole a tier flexes at its own
                             // height. Small on purpose: this is the whole margin
                             // by which a tier may leave the trunk's curve.

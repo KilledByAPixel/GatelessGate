@@ -173,9 +173,9 @@ export function makeVeranda({
   // above already says z = 0 is "what a case builds against (a hung screen, a
   // scroll)" — but a case still had to work out the other three numbers by
   // reading this file, and case 25 got all of them wrong: its screen stood 1.3
-  // units BEHIND the post line, out past the back of the deck over open
-  // ground, at 3.0 wide in a 5.4 bay and 2.3 tall in a 2.86 one — visibly
-  // mismatched with the back wall, and set too far behind it.
+  // units BEHIND the post line, out past the back of the deck over open ground,
+  // at 3.0 wide in a 5.4 bay and 2.3 tall in a 2.86 one — visibly mismatched
+  // with the back wall, and set too far behind it.
   //
   //   width   post to post, corner to corner
   //   height  deck boards up to the underside of the beam

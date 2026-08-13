@@ -47,13 +47,13 @@ export function windMix(params, flavor, gust) {
 }
 
 // The rustle drive: driven by how fast the gust is CHANGING (gustSlope), not
-// how strong it is — steady wind through a tree settles; the swish is the
-// gust arriving. Born as a grains-per-second trigger rate; the grains are
-// gone (they clicked, then sandpapered — see the rustle band's comment in
-// makeWind) and the same 0..max curve now shapes a continuous band's gain.
-// Tuned on wind-audition to far less slope emphasis than the design first
-// guessed: the leaves want to be mostly PRESENT, swelling gently, rather than
-// stabbing in with each gust front.
+// how strong it is — steady wind through a tree settles; the swish is the gust
+// arriving. Born as a grains-per-second trigger rate; the grains are gone (they
+// clicked, then sandpapered — see the rustle band's comment in makeWind) and
+// the same 0..max curve now shapes a continuous band's gain. Tuned on
+// wind-audition to far less slope emphasis than the design first guessed: the
+// leaves want to be mostly PRESENT, swelling gently, rather than stabbing in
+// with each gust front.
 export const RUSTLE = { base: .9, slopeGain: 2.7, max: 14.17, level: 0.03 };
 export function rustleRate(grain, level, slope) {
   if (grain <= 0 || level <= 0) return 0;
@@ -233,11 +233,11 @@ export function bellTail(voice) {
   return Math.max(...voice.partials.map((p) => p.decay)) + 0.5;
 }
 
-// A chime tube is a free-free bar, whose mode series is famously inharmonic:
-// 1 : 2.756 : 5.404 : 8.933. That series is WHY a wind chime sounds like a
-// wind chime and not a bell — the first voice here used bell-ish ratios at
-// 2.3 kHz, bone dry, and read as an alarm. Upper modes die
-// much faster than the fundamental.
+// A chime tube is a free-free bar, whose mode series is famously inharmonic: 1
+// : 2.756 : 5.404 : 8.933. That series is WHY a wind chime sounds like a wind
+// chime and not a bell — the first voice here used bell-ish ratios at 2.3 kHz,
+// bone dry, and read as an alarm. Upper modes die much faster than the
+// fundamental.
 export function barPartials(f0, decay = 5) {
   return [
     [1.000, 1.00], [2.756, 0.32], [5.404, 0.11], [8.933, 0.04],
@@ -247,13 +247,13 @@ export function barPartials(f0, decay = 5) {
 // The shipped chime — the audition numbers for the "Garden" preset.
 export const CHIME = { degree: 8, tubes: 5, decay: 5, level: 0.03, bright: 0.35, verbMix: 0.7 };
 
-// The large hanging cylinder — the same series as CHIME (barPartials below:
-// the free-free bar's 1:2.756:5.404:8.933 is what makes either of these read
-// as struck metal rather than a bell), but its own voice rather than an
-// overload of CHIME/chimeStrike, whose `tube` index maps into the fūrin's own
-// register and whose decay is sized for a small tube. Reusing it here would
-// either pull the fūrin's pitches down with it or leave this cylinder ringing
-// at fūrin length.
+// The large hanging cylinder — the same series as CHIME (barPartials below: the
+// free-free bar's 1:2.756:5.404:8.933 is what makes either of these read as
+// struck metal rather than a bell), but its own voice rather than an overload
+// of CHIME/chimeStrike, whose `tube` index maps into the fūrin's own register
+// and whose decay is sized for a small tube. Reusing it here would either pull
+// the fūrin's pitches down with it or leave this cylinder ringing at fūrin
+// length.
 //
 // `degree` sits a full register below CHIME's cluster, so the two chime
 // families never land on the same pitch — but NOT as low as a first draft put
@@ -261,11 +261,11 @@ export const CHIME = { degree: 8, tubes: 5, decay: 5, level: 0.03, bright: 0.35,
 // puts amp 1.0 on the FUNDAMENTAL, so dropping the degree far enough puts the
 // loudest partial below what most laptop and every phone speaker reproduces.
 // The bonshō took three audition passes to escape a version of this, and there
-// it was only a missing treble ceiling; here it would have been the
-// fundamental itself. BELL_REF_HZ is this book's own low-end anchor and even
-// that is called nearly inaudible in bellVoice's own comment above — a bar the
-// bell clears only by leaning its amplitude on the 2x mode instead of the
-// fundamental, a trick this series does not have available.
+// it was only a missing treble ceiling; here it would have been the fundamental
+// itself. BELL_REF_HZ is this book's own low-end anchor and even that is called
+// nearly inaudible in bellVoice's own comment above — a bar the bell clears
+// only by leaning its amplitude on the 2x mode instead of the fundamental, a
+// trick this series does not have available.
 //
 // `decay` is several times CHIME's — a waist-high mass of bronze keeps ringing
 // after a wind-chime tube has already died. `bright` is pulled well down from
@@ -281,19 +281,19 @@ export const CHIME = { degree: 8, tubes: 5, decay: 5, level: 0.03, bright: 0.35,
 // as `gain` with no further scale factor, the same as chimeStrike() does with
 // CHIME.level, so the two ARE directly comparable as effective peak (see
 // engine.js's own CERAMIC/WOOD comparison for the convention) — but this voice
-// is deliberately duller than CHIME (more upper-partial content is
-// perceptually louder for the same peak amplitude) and rings nearly twice as
-// long (the same energy spread thinner over time). Two reasons a matched peak
-// reads as quieter rather than the same. Raised so a big, heavy mass of bronze
-// reads at least as present as the bonshō bell without landing on the odoshi
-// knock's percussive peak. A STARTING POINT, not final —
-// dev/hanging-audition.html has its own live slider for it, the same
-// settle-it-by-ear contract CYL_SWING's own tunables carry.
+// is deliberately duller than CHIME (more upper-partial content is perceptually
+// louder for the same peak amplitude) and rings nearly twice as long (the same
+// energy spread thinner over time). Two reasons a matched peak reads as quieter
+// rather than the same. Raised so a big, heavy mass of bronze reads at least as
+// present as the bonshō bell without landing on the odoshi knock's percussive
+// peak. A STARTING POINT, not final — dev/hanging-audition.html has its own
+// live slider for it, the same settle-it-by-ear contract CYL_SWING's own
+// tunables carry.
 //
 // JUDGE IT AFTER cylinder.js's force law, not before: that comparison is
 // per-STRIKE, at force 1, but one tap is heard as a dozen-plus strikes in a
-// ring-down, and the force each of those reports changed materially in the
-// same pass that raised this level. See cylinder.js's own FORCE NORMALISATION
+// ring-down, and the force each of those reports changed materially in the same
+// pass that raised this level. See cylinder.js's own FORCE NORMALISATION
 // comment — a full-force tap's ring-down used to pin nearly every strike at
 // exactly 1 and now tapers instead, while typical sub-knee contacts, wind
 // included, report meaningfully quieter (a documented trade-off, not a bug).
@@ -346,11 +346,11 @@ export function strikeDrip(ctx, dry, verbIn, { f0, gain = WATER.level, sweep = W
   nsrc.start(t);
 }
 
-// The shishi-odoshi's knock — struck bamboo on stone: hollow, woody, dry.
-// Few, loosely-stretched partials (the knock lands on the tube's body, so the
-// series is loose), everything gone fast; the character is mostly the
-// TRANSIENT — wood on stone — with the tube's low "aw" underneath.
-// The audition numbers for the "Garden clock" preset.
+// The shishi-odoshi's knock — struck bamboo on stone: hollow, woody, dry. Few,
+// loosely-stretched partials (the knock lands on the tube's body, so the series
+// is loose), everything gone fast; the character is mostly the TRANSIENT — wood
+// on stone — with the tube's low "aw" underneath. The audition numbers for the
+// "Garden clock" preset.
 export const ODOSHI = { f0: 220, level: 0.11, decay: 0.35, verbMix: 0.5, pourLevel: 0.03, period: 32 };
 
 export function bambooPartials(f0 = ODOSHI.f0, decay = ODOSHI.decay) {
@@ -362,11 +362,11 @@ export function bambooPartials(f0 = ODOSHI.f0, decay = ODOSHI.decay) {
 // The dinner drum (case 13) — a struck membrane, the timbral opposite of the
 // bell it faces across the yard: all transient and thump, no ring. Until now
 // the case borrowed the shishi-odoshi's bamboo knock. Ratios are the ideal
-// circular membrane's first six modes; a real barrel drum is rougher, which
-// the ±2% perturbations stand in for. Amplitude leads on the SECOND mode for
-// the same reason BELL_MODES leads on its 2x strike note: f0 itself is below
-// what laptop speakers reproduce. All numbers PROVISIONAL pending an
-// audition on dev/drum-audition.html.
+// circular membrane's first six modes; a real barrel drum is rougher, which the
+// ±2% perturbations stand in for. Amplitude leads on the SECOND mode for the
+// same reason BELL_MODES leads on its 2x strike note: f0 itself is below what
+// laptop speakers reproduce. All numbers PROVISIONAL pending an audition on
+// dev/drum-audition.html.
 export const DRUM = { f0: 95, level: 0.14, decay: 0.6, verbMix: 0.55, tail: 2 };
 
 export function drumPartials(f0 = DRUM.f0, decay = DRUM.decay) {
@@ -401,23 +401,22 @@ export function pourBurst(ctx, dest, { level = ODOSHI.pourLevel, dur = 1.3 } = {
 }
 
 // The water bed — the spec arrived at over three auditions was "like the wind
-// but a little more staticky", so it IS the wind's architecture: a LONG
-// seeded noise loop (14s — short loops are audibly periodic), wide gentle
-// filters, and only SLOW swells (the gust idiom). Whiter noise and a higher
-// band make the static. Nothing modulates fast, nothing sweeps, nothing
-// resonates — the three lessons of the wah, in order of discovery: a swept
-// resonance is a wah pedal, a 2 Hz tremolo is a wah rhythm, and a short-cycle
-// RNG is a comb filter wearing a noise costume. Dry, like the wind — beds
-// stay out of the room.
+// but a little more staticky", so it IS the wind's architecture: a LONG seeded
+// noise loop (14s — short loops are audibly periodic), wide gentle filters, and
+// only SLOW swells (the gust idiom). Whiter noise and a higher band make the
+// static. Nothing modulates fast, nothing sweeps, nothing resonates — the three
+// lessons of the wah, in order of discovery: a swept resonance is a wah pedal,
+// a 2 Hz tremolo is a wah rhythm, and a short-cycle RNG is a comb filter
+// wearing a noise costume. Dry, like the wind — beds stay out of the room.
 //
 // The bed found its scene: case 20's ocean, the coast where the great sea
 // itself lurches when the immovable man is pushed, calls this now. Every scene
 // that used to carry the water layer (7, 30, 33, 39, 49) is STILL water — a
-// basin or a pond — and this continuous staticky wash read as surf or a
-// running stream under them, the wrong sound for the picture. Those five koan
-// recipes had their water tokens removed rather than this function deleted, on
-// the bet that what would justify switching it back on was a scene with
-// genuinely MOVING water. Cases 20 and 48, the two oceans, are those scenes.
+// basin or a pond — and this continuous staticky wash read as surf or a running
+// stream under them, the wrong sound for the picture. Those five koan recipes
+// had their water tokens removed rather than this function deleted, on the bet
+// that what would justify switching it back on was a scene with genuinely
+// MOVING water. Cases 20 and 48, the two oceans, are those scenes.
 // Tap-triggered drips (audio.drip(), case tap handlers) are a separate code
 // path through strikeDrip below and were never coupled to this bed; they still
 // ring on touch everywhere they did before.
@@ -467,18 +466,18 @@ export function makeWaterBed(ctx, dest) {
 }
 
 // Rain. Built twice, and the second build reversed the first's theory. v1
-// reasoned from the water bed's history (makeWaterBed, above — a filtered
-// noise wash that read as surf and finally BECAME case 20's surf) that rain
-// must be the opposite: sparse DISCRETE Poisson drop ticks, "patter, not
-// wash". That was overruled by ear twice — sparse ticks, even densified, read
-// as dripping taps rather than as rain. What actually separates rain from surf
-// is not discreteness, it is STEADINESS: surf breathes on slow wave-period
-// swells, rain holds one level. So the bed is a steady hiss with a dense
-// droplet grain riding it (see rainBedSamples), makeRainBed keeps its slow
-// wobble near zero, and the surf lesson lives there instead. All numbers
-// PROVISIONAL pending an ear on case 34 (see CERAMIC's own comment for the
-// convention). No `degree`: the plinks stopped being melodic in the same
-// revision — a raindrop lands off the scale.
+// reasoned from the water bed's history (makeWaterBed, above — a filtered noise
+// wash that read as surf and finally BECAME case 20's surf) that rain must be
+// the opposite: sparse DISCRETE Poisson drop ticks, "patter, not wash". That
+// was overruled by ear twice — sparse ticks, even densified, read as dripping
+// taps rather than as rain. What actually separates rain from surf is not
+// discreteness, it is STEADINESS: surf breathes on slow wave-period swells,
+// rain holds one level. So the bed is a steady hiss with a dense droplet grain
+// riding it (see rainBedSamples), makeRainBed keeps its slow wobble near zero,
+// and the surf lesson lives there instead. All numbers PROVISIONAL pending an
+// ear on case 34 (see CERAMIC's own comment for the convention). No `degree`:
+// the plinks stopped being melodic in the same revision — a raindrop lands off
+// the scale.
 export const RAIN = { bedLevel: 0.016, bedTone: 3800, dropGap: 4.5, dropLevel: 0.016 };
 
 // Pure: the loop's samples. A steady shower — one-pole-lowpassed hiss (the
@@ -596,18 +595,18 @@ export const GUST_B = 0.071;
 //
 // ONE EPOCH, NOT TWO PHASES — and this distinction is the whole correctness
 // argument, not a stylistic preference. The first fix gave each sine its own
-// offset, which is NOT a time shift unless the offsets happen to satisfy
-// phiA/A == phiB/B: independent phases change the RELATIVE phase of the two
-// components and therefore the beat structure itself. It sailed through by eye
-// and audio.test.js caught it immediately — crest gaps opened well past the
-// design limit that keeps the wind from ever going dead for a minute. Shifting
-// the whole curve by a single epoch is a pure translation, so every long-run
+// offset, which is NOT a time shift unless the offsets happen to satisfy phiA/A
+// == phiB/B: independent phases change the RELATIVE phase of the two components
+// and therefore the beat structure itself. It sailed through by eye and
+// audio.test.js caught it immediately — crest gaps opened well past the design
+// limit that keeps the wind from ever going dead for a minute. Shifting the
+// whole curve by a single epoch is a pure translation, so every long-run
 // property the tests pin — crest spacing, bounds, irregularity — is
 // mathematically identical to what it was. Only where the book opens on the
 // curve moves, which was the bug.
 //
-// Chosen by sweep for an opening that reads as a breeze coming up rather than
-// a door opening onto a gale.
+// Chosen by sweep for an opening that reads as a breeze coming up rather than a
+// door opening onto a gale.
 const GUST_EPOCH = 125;
 export const gustPhase = (t) =>
   (Math.sin(2 * Math.PI * GUST_A * (t + GUST_EPOCH))
@@ -619,13 +618,13 @@ export const gustPhase = (t) =>
 // gustPhase above is WEATHER: 0.043 and 0.071 Hz, a breeze rising and falling
 // over twenty seconds. That is the right signal for how loud the wind is and
 // for pacing strikes, and it is the only signal the fūrin's and the bell's
-// pendulums were ever given. But a pendulum driven fifteen to twenty-five
-// times below its own natural frequency cannot swing — it can only lean,
-// tracking the drive quasi-statically. Measured on the default fūrin: in wind
-// alone it reversed direction once every few seconds, against a fraction of a
-// second after a tap, and that is exactly how it read — swinging slowly and
-// oddly until clicked, then normally. The tap was the only thing in the whole
-// system putting energy anywhere near resonance.
+// pendulums were ever given. But a pendulum driven fifteen to twenty-five times
+// below its own natural frequency cannot swing — it can only lean, tracking the
+// drive quasi-statically. Measured on the default fūrin: in wind alone it
+// reversed direction once every few seconds, against a fraction of a second
+// after a tap, and that is exactly how it read — swinging slowly and oddly
+// until clicked, then normally. The tap was the only thing in the whole system
+// putting energy anywhere near resonance.
 //
 // So: a second, faster wind signal, in the band those pendulums actually live
 // in. Two seeded value-noise octaves with features around 1.1s and 0.4s,
@@ -1007,15 +1006,15 @@ export const BELL = { degree: 0, level: 0.4563, size: 1, verbMix: 0.7 };
 // `transientGain` param, which is how the two are kept apart.
 export const TRANSIENT_SCALE = 0.5255;
 
-// Non-overlapping macro bands over a struck voice's partials, by MODE INDEX
-// — never by an absolute Hz threshold, which is exactly what made the old
+// Non-overlapping macro bands over a struck voice's partials, by MODE INDEX —
+// never by an absolute Hz threshold, which is exactly what made the old
 // `brightness`/`clang` sliders (freq > 700, top four) impossible to reason
-// about: the same slider covered a different set of modes at every size.
-// `ring` only stretches the NAMED modes' decay — the sustained tone you
-// actually hear ring on — not the shimmer, whose entire design goal is to be
-// gone well inside a second (see SHIMMER_MODES' comment); letting `ring` scale
-// it too would stretch `great`'s shimmer past a second, undoing that goal on
-// the very first preset to use it.
+// about: the same slider covered a different set of modes at every size. `ring`
+// only stretches the NAMED modes' decay — the sustained tone you actually hear
+// ring on — not the shimmer, whose entire design goal is to be gone well inside
+// a second (see SHIMMER_MODES' comment); letting `ring` scale it too would
+// stretch `great`'s shimmer past a second, undoing that goal on the very first
+// preset to use it.
 //
 // This stays as an AUDITION control — the four bands are a good way to
 // explore a bell by ear — but a SHIPPED preset no longer stores band values
@@ -1045,8 +1044,8 @@ export function bellMacroPartials(voice, { hum = 1, body = 1, clang = 1, shimmer
 // largest absolute ERROR on the LOUDEST partial by construction, because
 // evening out RELATIVE error is what the objective rewards. On one preset that
 // landed the STRIKE NOTE — the pitch a bell is literally named by — at more
-// than twice its tuned amplitude. Not a rounding drift; a different bell.
-// Exact per-mode storage has no fitting error to place anywhere.
+// than twice its tuned amplitude. Not a rounding drift; a different bell. Exact
+// per-mode storage has no fitting error to place anywhere.
 //
 // `shimmer` has no old-macro history to reproduce — the cluster did not exist
 // when these three presets were tuned — so it stays a single scalar rather than
@@ -1096,14 +1095,14 @@ export function renormalizeSum(src, dressed) {
 // shimmer mode, `ring` stretching only the named modes' decay (see
 // bellMacroPartials' comment for why).
 //
-// Then RENORMALIZED back to what the same, undressed voice would have summed
-// to (`rawSum`) — a per-voice ratio, not a hardcoded constant, so it keeps
-// working as the Nyquist trim removes a different number of shimmer modes at
-// every size. `BELL.level` is calibrated against that undressed sum, but the
-// presets' per-mode multipliers push a dressed voice's sum well past it, to
-// roughly twice the reference BELL.level was calibrated to hold — a real clip
-// risk, latent when it was caught because nothing called this path, live now
-// that seven cases reach it through their presets.
+// Then RENORMALIZED back to what the same, undressed voice would have summed to
+// (`rawSum`) — a per-voice ratio, not a hardcoded constant, so it keeps working
+// as the Nyquist trim removes a different number of shimmer modes at every
+// size. `BELL.level` is calibrated against that undressed sum, but the presets'
+// per-mode multipliers push a dressed voice's sum well past it, to roughly
+// twice the reference BELL.level was calibrated to hold — a real clip risk,
+// latent when it was caught because nothing called this path, live now that
+// seven cases reach it through their presets.
 //
 // Renormalizing here means BELL.level's calibration is valid for every preset
 // AND the bare `size`/`f0` forms, always, without a second constant to keep in
@@ -1253,10 +1252,10 @@ export function strikeBar(ctx, dry, verbIn, { f0, gain = 1, decay = CHIME.decay,
 
 // The drift layer's voice: THE FAR BELL. The original "swelled" voice — a
 // sourceless synthesized tone — was the one sound in the book with no physical
-// referent, and it was rejected by ear twice, as harsh lone notes.
-// Everything that works here is a physical event: wind, struck tubes, struck
-// bronze, falling water. So the background layer is now rebuilt from the voice
-// that already works — the chime's own bar, pitched low, at a fraction of the
+// referent, and it was rejected by ear twice, as harsh lone notes. Everything
+// that works here is a physical event: wind, struck tubes, struck bronze,
+// falling water. So the background layer is now rebuilt from the voice that
+// already works — the chime's own bar, pitched low, at a fraction of the
 // chime's loudness, almost entirely room: someone far away touched a chime.
 //
 // gain calibrated to the WET path, which at verbMix 0.97 is the voice: the

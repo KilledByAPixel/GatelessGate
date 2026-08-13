@@ -23,12 +23,12 @@ export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 15 }
   g.name = 'lights';
 
   // The key sat at 9.5 for one commit, and the verdict split it: the RED was
-  // right at that light, but the ground blew out to nearly white with no shading
-  // left and the distance washed out. Keep the red, bring everything else back
-  // down — and those two cannot share one number, so they don't. The red's
-  // extra brightness moved into the materials themselves as SEAL_GLOW
-  // (material.js), where the sun can't take it away, and the key came back to the scene light
-  // he approved, nudged up as asked.
+  // right at that light, but the ground blew out to nearly white with no
+  // shading left and the distance washed out. Keep the red, bring everything
+  // else back down — and those two cannot share one number, so they don't. The
+  // red's extra brightness moved into the materials themselves as SEAL_GLOW
+  // (material.js), where the sun can't take it away, and the key came back to
+  // the scene light he approved, nudged up as asked.
   //
   // Measured on case 29 (blown-white % of frame / peak red chroma):
   //   sun 6.5 no glow: 3.5% / 140     <- "before", scene right, red weak

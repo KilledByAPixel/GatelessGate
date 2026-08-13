@@ -51,9 +51,9 @@ test('lantern stacks its stones above y=0', () => {
 
 test('lantern firebox is a truly open chamber — no interior box, candle inside', () => {
   // Fix round 3: round 2's dark BackSide interior box read as smoked-glass
-  // panes over the firebox, hiding the flame, so it is
-  // deleted outright. Open now means OPEN — a level ray through a face sails
-  // clean out the far side and lands on nothing at all.
+  // panes over the firebox, hiding the flame, so it is deleted outright. Open
+  // now means OPEN — a level ray through a face sails clean out the far side
+  // and lands on nothing at all.
   const l = makeLantern({});
   const firebox = l.children.find((c) => c.name === 'firebox');
   const candle = l.children.find((c) => c.name === 'candle');
@@ -90,13 +90,13 @@ test('lantern firebox is a truly open chamber — no interior box, candle inside
 
 test('case 28\'s flame is visible from the case\'s own home camera', () => {
   // Fix round 1 measured band overlap; round 2 asserts the thing that actually
-  // matters — an unobstructed SIGHT-LINE. The home camera pose comes
-  // from the rig's own eyePosition rather than a reproduced copy of its trig
-  // (the disclosed reproduce-the-formula tradeoff the roof-rim test below still
+  // matters — an unobstructed SIGHT-LINE. The home camera pose comes from the
+  // rig's own eyePosition rather than a reproduced copy of its trig (the
+  // disclosed reproduce-the-formula tradeoff the roof-rim test below still
   // carries), and a ray from there to the flame must reach it before any
   // lantern stone, roof or veranda timber. Derived from k28's own build() and
-  // camera block, so
-  // either file drifting out from under the other is caught here, not by eye.
+  // camera block, so either file drifting out from under the other is caught
+  // here, not by eye.
   const built = k28.build({ audio: null, input: { onTap: () => {} } });
   const flame = built.scene.getObjectByName('flame');
   assert.ok(flame, 'k28 builds a flame mesh');
@@ -123,12 +123,12 @@ test('case 28\'s flame is visible from the case\'s own home camera', () => {
 });
 
 test('lantern roof rim kicks up above the low point just behind it', () => {
-  // Mutation-provable: flip the sign of LIP in the builder and this goes
-  // false. The rim radius is READ BACK off the geometry rather than restated
-  // here — it used to be a copy of the builder's 0.21·H constant, and the
-  // moment the roof was retuned (0.25·H, and the dip flattened to zero) the
-  // buckets stopped matching any vertex and the test failed for the wrong
-  // reason. What is being pinned is the SHAPE, not the numbers.
+  // Mutation-provable: flip the sign of LIP in the builder and this goes false.
+  // The rim radius is READ BACK off the geometry rather than restated here — it
+  // used to be a copy of the builder's 0.21·H constant, and the moment the roof
+  // was retuned (0.25·H, and the dip flattened to zero) the buckets stopped
+  // matching any vertex and the test failed for the wrong reason. What is being
+  // pinned is the SHAPE, not the numbers.
   const H = 1.15;
   const l = makeLantern({ height: H });
   const roof = l.children.find((c) => c.name === 'roof');
@@ -191,14 +191,14 @@ test('path.sample gives centerline point, heading, and across-path vector', () =
 });
 
 test('path.keepout tapers with the stroke and never uncovers the ribbon', () => {
-  // Two failure modes, both shipped once, hold this test's two halves:
-  // the chain at constant radius left a full-width bald strip around the
-  // hair-thin tip — the keepout not tapering with the road — and radii
-  // scaled in place came apart between beads, letting grass grow on top of the
-  // road through the taper. Tapering correctly means smaller
-  // circles AND proportionally tighter spacing — so the check that matters
-  // is COVERAGE: everywhere along the stroke, the ribbon's own edge is
-  // inside some circle, while the verge still narrows to a hair at the tip.
+  // Two failure modes, both shipped once, hold this test's two halves: the
+  // chain at constant radius left a full-width bald strip around the hair-thin
+  // tip — the keepout not tapering with the road — and radii scaled in place
+  // came apart between beads, letting grass grow on top of the road through the
+  // taper. Tapering correctly means smaller circles AND proportionally tighter
+  // spacing — so the check that matters is COVERAGE: everywhere along the
+  // stroke, the ribbon's own edge is inside some circle, while the verge still
+  // narrows to a hair at the tip.
   const WIDTH = 1.6, R = 1.2, TAPER = 0.45;
   const p = makePath({ from: [0, 8], to: [0, -30], width: WIDTH, seed: 91, groundSeed: 21, taper: TAPER });
   const ring = p.keepout(24, R);

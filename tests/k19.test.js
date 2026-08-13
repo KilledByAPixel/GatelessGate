@@ -13,9 +13,10 @@ import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 // Case 19 has no object at its centre, so its two red seals are weather: the
 // harvest moon and the wildflowers along the verge — spring and autumn, the
 // verse's first two lines, in the same picture. (Butterflies held the near seal
-// for a round; the blooms are back and the butterflies moved to case 12.) Both are easy to get subtly wrong in ways nothing else in the suite
-// would catch — a moon that the fog quietly erases, or that a pale invisible
-// slope stands in front of; blooms that grow in the middle of the road.
+// for a round; the blooms are back and the butterflies moved to case 12.) Both
+// are easy to get subtly wrong in ways nothing else in the suite would catch —
+// a moon that the fog quietly erases, or that a pale invisible slope stands in
+// front of; blooms that grow in the middle of the road.
 
 // place a camera exactly where the case's own `camera` block puts it
 const rigCamera = (heading = k19.camera.heading, aspect = 1.78) =>
@@ -155,9 +156,8 @@ test('the blooms carry the red, the stalks do not, and none of them grows in the
 // envelope added straight onto each bloom's lean and, stacked on the wind
 // already in that sum, folded the blooms flat — they read as being pulled
 // under, as though sucked into the ground. The breath is carried by the wind
-// level alone now, so
-// what this pins is the wind swelling and settling exactly, and the field
-// never being driven past its own resting sway.
+// level alone now, so what this pins is the wind swelling and settling exactly,
+// and the field never being driven past its own resting sway.
 test('touching the meadow lifts the wind; touching the moon shifts the light', () => {
   const ctx = fakeCtx();
   const root = k19.build(ctx);
@@ -242,9 +242,9 @@ test('touching the meadow lifts the wind; touching the moon shifts the light', (
   // ONLY THE SKY. The background goes all the way to the moon's red; the fog —
   // which is what the LAND dissolves into — comes barely a third as far, so the
   // far meadow and the mountains stay their own colour: the SKY reddens, never
-  // the whole page.
-  // measured as the SHIFT off paper, not the absolute warmth — paper is already
-  // a warm off-white, so its own redness swamps a ratio taken raw
+  // the whole page. measured as the SHIFT off paper, not the absolute warmth —
+  // paper is already a warm off-white, so its own redness swamps a ratio taken
+  // raw
   const base = new THREE.Color(PAPER);
   const shift = (c) => (c.r - c.b) - (base.r - base.b);
   assert.ok(shift(root.scene.background) > 0.1, 'the sky went red');
@@ -382,9 +382,9 @@ test('wildflowers place exactly the count asked for, in two instanced draws (pal
   assert.equal(f.points.length, 60);
 
   // BY DEFAULT NOTHING IS RED: petals whitish, in the ground's own colour
-  // family, and stalks in the grass's. Heads sit just off the paper, stems
-  // wear the grass tone, and
-  // neither may trip the seal-glow emissive that accent-family colours get.
+  // family, and stalks in the grass's. Heads sit just off the paper, stems wear
+  // the grass tone, and neither may trip the seal-glow emissive that
+  // accent-family colours get.
   assert.equal(f.mesh.material.color.getHexString(), new THREE.Color(wash(0.10)).getHexString(),
     'default petals are whitish, in the ground family');
   assert.equal(f.mesh.material.emissive.getHexString(), '000000', 'pale petals must not glow');

@@ -11,9 +11,9 @@ const ID = 30;
 // "What is Buddha?" — "This mind is Buddha."
 //
 // A still pond with the figure seated on the far bank. There used to be a
-// painted reflection of him lying flat on the water; it read as exactly what
-// it was, a flat 2D thing lying on the pond, and it is gone — the pond
-// answers with koi and ripples, not with a second Buddha.
+// painted reflection of him lying flat on the water; it read as exactly what it
+// was, a flat 2D thing lying on the pond, and it is gone — the pond answers
+// with koi and ripples, not with a second Buddha.
 //
 // Case 33 is this scene with the far bank empty. They are meant to be read as
 // a pair, so they share a seed, a camera and a pond.
@@ -52,9 +52,9 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
   scene.add(makeLights());
   
-  // the pond: an OPEN stone basin and a still sheet inside it. It used to be
-  // a solid cylinder, whose top cap sealed the water and the fish underneath
-  // it — the pond read as a stone platform rather than as water.
+  // the pond: an OPEN stone basin and a still sheet inside it. It used to be a
+  // solid cylinder, whose top cap sealed the water and the fish underneath it —
+  // the pond read as a stone platform rather than as water.
   const lip = makeBasin({
   inner: POND.inner, outer: POND.outer, rim: POND.rim, floor: POND.floor,
   color: WASH.stone, segments: 20,
@@ -65,8 +65,8 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   
   // round, to match the stone basin it sits inside — and RED. Only the SHEET
   // takes the accent, not the fish and not the stone: the basin stays stone and
-  // the koi stay ink, so the red is the water answering, not the pond
-  // dressing up. The urna keeps its dot: the red is knowingly doubled here.
+  // the koi stay ink, so the red is the water answering, not the pond dressing
+  // up. The urna keeps its dot: the red is knowingly doubled here.
   const water = makeWater({
   shape: 'round', size: POND.size, color: ACCENT_PALE, seed: ID, strike: 0.135, opacity: 0.5,
   });
@@ -86,10 +86,10 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   koi.group.position.set(POND.x, POND.surface, POND.z);
   scene.add(koi.group);
   
-  // THE BUDDHA, on the far bank. The stone is a real DAIS now, not a paver:
-  // its top (SEAT_TOP) stands above the basin's rim (POND.rim = 0.55), so
-  // from the shipped lens he sits clearly over the water line instead of
-  // peeking out from behind the stone lip.
+  // THE BUDDHA, on the far bank. The stone is a real DAIS now, not a paver: its
+  // top (SEAT_TOP) stands above the basin's rim (POND.rim = 0.55), so from the
+  // shipped lens he sits clearly over the water line instead of peeking out
+  // from behind the stone lip.
   const SEAT_TOP = 0.62;
   const seat = new THREE.Mesh(
   new THREE.CylinderGeometry(1.05, 1.2, SEAT_TOP, 9),
@@ -98,12 +98,12 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   seat.position.set(BANK.x, SEAT_TOP / 2, BANK.z);
   scene.add(seat);
   
-  // The mat that used to lie on the stone is GONE: the seated figure brings
-  // its own zabuton now, so an art-directed one under him was a second slab
-  // saying the same thing, where the default cushion alone says it. Case 33
-  // still builds one, because THERE the cushion
-  // has to exist with nobody on it; it is sized to this zabuton exactly, so
-  // the pair still reads as one seat occupied and the same seat empty.
+  // The mat that used to lie on the stone is GONE: the seated figure brings its
+  // own zabuton now, so an art-directed one under him was a second slab saying
+  // the same thing, where the default cushion alone says it. Case 33 still
+  // builds one, because THERE the cushion has to exist with nobody on it; it is
+  // sized to this zabuton exactly, so the pair still reads as one seat occupied
+  // and the same seat empty.
   
   // ordinary monk scale (overnight pass 2), seated on the top of the mat:
   // everything on the dais derives from SEAT_TOP so raising the stone

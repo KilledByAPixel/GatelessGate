@@ -3,10 +3,10 @@ import { INK_LIT } from '../palette.js';
 import { makeQuadruped } from './quadruped.js';
 import { mergeSimple } from './scatter.js';
 
-// A horse (case 45): THE NECK IS THE WEDGE. Rebuilt against local/refs/horse.png
-// after the first model read as a llama — the old neck stood nearly vertical
-// with the head perched a full extra withers-height in the air. What says HORSE
-// in silhouette, counted off the reference:
+// A horse (case 45): THE NECK IS THE WEDGE. Rebuilt against
+// local/refs/horse.png after the first model read as a llama — the old neck
+// stood nearly vertical with the head perched a full extra withers-height in
+// the air. What says HORSE in silhouette, counted off the reference:
 //
 //   1. THE NECK WEDGE — a tapered slab leaning forward from deep chest to poll,
 //      broad where it leaves the body, narrow at the head. The shared plan aims

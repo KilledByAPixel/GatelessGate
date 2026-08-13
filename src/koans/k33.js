@@ -61,12 +61,11 @@ const CAM = { distance: 14.2, target: [0.95, 0.9, -1.4], heading: 31.5, pitch: 2
   
   // the same pond, so the same koi: seed 30 gives case 33 the identical fish
   // moving in the identical water — only the far bank differs. THE SEAL IS
-  // THEIRS — the koi carry the red here: in case 30
-  // the red is the water itself, answering; here the answer is
-  // taken out, and the only warm thing left alive in the picture is under
-  // the water. Full ACCENT, not the deep mix — four small fish seen through
-  // a half-opaque surface are a held thing, not a mass, and the water
-  // already takes the glare off them.
+  // THEIRS — the koi carry the red here: in case 30 the red is the water
+  // itself, answering; here the answer is taken out, and the only warm thing
+  // left alive in the picture is under the water. Full ACCENT, not the deep mix
+  // — four small fish seen through a half-opaque surface are a held thing, not
+  // a mass, and the water already takes the glare off them.
   const koi = makeKoi({
   count: 4, seed: 30, radius: POND.size * 0.32, color: ACCENT,
   // sized to the water they are actually in: the tail fin stands taller

@@ -6,12 +6,12 @@ import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
 import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 
-// Case 9 is staged as a DISCOVERY, not a product shot: the
-// colossus sits off at the left third against the mountain flank, and an
-// ordinary full-grown tree stands at his base so the eye has something to
-// measure him with. These tests pin that composition — if the statue drifts
-// back to the camera axis, or the scale tree wanders away from him or grows
-// out of ordinary world scale, the case has lost its point.
+// Case 9 is staged as a DISCOVERY, not a product shot: the colossus sits off at
+// the left third against the mountain flank, and an ordinary full-grown tree
+// stands at his base so the eye has something to measure him with. These tests
+// pin that composition — if the statue drifts back to the camera axis, or the
+// scale tree wanders away from him or grows out of ordinary world scale, the
+// case has lost its point.
 
 // the shipped camera, at a square-ish book aspect (the reading pane's canvas
 // is narrower than the 1.78 test rig, which halves apparent x offsets)
@@ -135,9 +135,9 @@ test('the tap still tolls the deepest bell, from the new position', () => {
 });
 
 test('the toll rocks the colossus a tiny bit, and it settles to exactly still', () => {
-  // A touch wants feedback you can SEE as well as hear. Tiny is load-bearing: the peak lean is
-  // held to a band — enough to see at the case's 17-unit staging distance,
-  // never enough to read as a wobble toy.
+  // A touch wants feedback you can SEE as well as hear. Tiny is load-bearing:
+  // the peak lean is held to a band — enough to see at the case's 17-unit
+  // staging distance, never enough to read as a wobble toy.
   const taps = [];
   const ctx = {
     audio: { bell: () => {} },

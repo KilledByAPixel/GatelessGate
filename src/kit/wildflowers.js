@@ -81,13 +81,13 @@ const POKE_LEAN = 0.55;
 // One bloom, in TWO geometries: a hair-thin stem and a small faceted head
 // sitting on top of it. They are separate because head and stalk never share a
 // tone — "by default the petals should be whitish, kind of the same colour
-// family as the ground, and the stalk the same kind of colour as the grass"
-// — and when a case DOES put its accent on the heads (pass `color`),
-// the seal-glow emissive on accent materials (material.js) could not be split
+// family as the ground, and the stalk the same kind of colour as the grass" —
+// and when a case DOES put its accent on the heads (pass `color`), the
+// seal-glow emissive on accent materials (material.js) could not be split
 // per-vertex inside one mesh anyway. The two instanced meshes share every
-// instance matrix, so they stay one bloom in motion.
-// The stem's base is at the local origin, so an instance plants exactly on
-// the terrain and leans from its own foot.
+// instance matrix, so they stay one bloom in motion. The stem's base is at the
+// local origin, so an instance plants exactly on the terrain and leans from its
+// own foot.
 function stemGeometry() {
   const stem = new THREE.ConeGeometry(0.008, 0.185, 3, 1, true);  // open: no base cap
   stem.translate(0, 0.0925, 0);

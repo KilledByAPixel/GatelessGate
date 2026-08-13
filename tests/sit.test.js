@@ -36,10 +36,9 @@ test('seconds are always two digits, minutes never padded', () => {
   }
 });
 
-// The old timer's bell read as a low thud where a hand bell wants a clean
-// ting. It was
-// bellPartials at 70 Hz, a bonshō an octave below anything you could call a
-// ding. The sit bell is its own voice now, four octaves up.
+// The old timer's bell read as a low thud where a hand bell wants a clean ting.
+// It was bellPartials at 70 Hz, a bonshō an octave below anything you could
+// call a ding. The sit bell is its own voice now, four octaves up.
 test('the sit bell is a ting, not a thud', () => {
   const p = sitBellPartials(1174);
   assert.ok(p[0].freq > 900, `the fundamental is ${p[0].freq} Hz — still a bong`);

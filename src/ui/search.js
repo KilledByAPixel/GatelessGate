@@ -152,14 +152,14 @@ export function searchCases(query) {
       score,
     });
   }
-  // IN BOOK ORDER, always. Results used to come back ranked by `score` —
-  // title hits first, then case text, then commentary — which is the right
-  // answer for a search engine and the wrong one for a book. Results here
-  // should always run in number order, and the reason is the rendering: this
-  // list is drawn exactly like the Contents, numeral in the left
-  // column and all, so a reader scans it as the Contents with rows removed.
-  // Numbers that jump around in a list shaped like a table of contents read as
-  // a fault in the list rather than as a ranking.
+  // IN BOOK ORDER, always. Results used to come back ranked by `score` — title
+  // hits first, then case text, then commentary — which is the right answer for
+  // a search engine and the wrong one for a book. Results here should always
+  // run in number order, and the reason is the rendering: this list is drawn
+  // exactly like the Contents, numeral in the left column and all, so a reader
+  // scans it as the Contents with rows removed. Numbers that jump around in a
+  // list shaped like a table of contents read as a fault in the list rather
+  // than as a ranking.
   //
   // The score is still computed and still returned. It decides nothing about
   // order now, but it is what `where` and the snippet choice are derived from,

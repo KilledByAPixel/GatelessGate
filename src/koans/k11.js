@@ -20,8 +20,8 @@ const ID = 11;
 // the fist changes. The case is entirely in the man who is looking at it, which
 // is Mumon's question: where is the fault?
 //
-// THE SEAL IS THE SHIP, not the fist. The fist held the red first, on
-// the reasoning that the one identical thing should be the one warm thing — but
+// THE SEAL IS THE SHIP, not the fist. The fist held the red first, on the
+// reasoning that the one identical thing should be the one warm thing — but
 // that put the accent on the object the case says is NOT where the fault lies.
 // The ship is Joshu's actual sentence: "ships cannot remain where the water is
 // too shallow." It stands off beyond the shallows doing the one thing it cannot
@@ -29,14 +29,14 @@ const ID = 11;
 // in colour, and it leaves the fist ink — identical to every other ink thing,
 // which is exactly what the fist is supposed to be.
 //
-// THE COAST stages the verdict itself, as an ocean scene.
-// The hermit's rise now stands above a shallow bay: a long bar of nearly
-// transparent ink over pale sand, the sea only gathering weight far out where
-// the fog takes it — water too shallow for ships, made literal. And one ship
-// IS here: a small junk standing off beyond the shallows, riding the swell,
-// because Joshu's line is what it cannot do — come in and remain. The sea
-// stays ink; the red sea belongs to case 20, where the ocean is the seal.
-// Here the seal is the ship ON that sea.
+// THE COAST stages the verdict itself, as an ocean scene. The hermit's rise now
+// stands above a shallow bay: a long bar of nearly transparent ink over pale
+// sand, the sea only gathering weight far out where the fog takes it — water
+// too shallow for ships, made literal. And one ship IS here: a small junk
+// standing off beyond the shallows, riding the swell, because Joshu's line is
+// what it cannot do — come in and remain. The sea stays ink; the red sea
+// belongs to case 20, where the ocean is the seal. Here the seal is the ship ON
+// that sea.
 
 const TURN_RATE = 2.4;
 const BOW = 0.20;
@@ -89,11 +89,11 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
   const path = makePath({ from: [8.0, 1.6], to: [-15, 2.0], width: 1.2, seed: ID, groundSeed: 21, wander: 1.6 });
   scene.add(path);
   
-  // the hut he retired to, on its rise — set OFF to the side of the road
-  // — the hill was blocking the main path. It used to sit at x -0.4,
-  // where the path's closest approach was 2.2 units from its center, well
-  // inside the 3.6 base — the road ran straight into the slope and vanished.
-  // At -2.8 the centerline clears the base by ~0.9 at its nearest sample).
+  // the hut he retired to, on its rise — set OFF to the side of the road — the
+  // hill was blocking the main path. It used to sit at x -0.4, where the path's
+  // closest approach was 2.2 units from its center, well inside the 3.6 base —
+  // the road ran straight into the slope and vanished. At -2.8 the centerline
+  // clears the base by ~0.9 at its nearest sample).
   const RISE = { x: -2.8, z: -2.6, rTop: 3.0, rBase: 3.6, h: 0.45, sides: 10 };
   const RISE_TOP_Y = 0.22 + RISE.h / 2;          // the plateau's world height
   const rise = new THREE.Mesh(
@@ -308,8 +308,8 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
       visits++;
       // BOTH verdicts chime now — the odd-tap knock alone read as a door
       // somewhere rather than as the ship answering. Two notes, so the two
-      // verdicts stay two sounds:
-      // the dismissal higher and lighter, the approval its settled tube 1.
+      // verdicts stay two sounds: the dismissal higher and lighter, the
+      // approval its settled tube 1.
       if (visits % 2 === 0) {
         bowAt = clock;
         audio && audio.chimeStrike({ tube: 1, force: 0.55, at: tap.point });   // well given, well taken

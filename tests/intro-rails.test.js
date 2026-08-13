@@ -39,9 +39,9 @@ test('the look never collapses onto the eye, right to the end', () => {
 });
 
 // The regression: the dolly did not go all the way through the gate. It ended
-// at z -3 and the gate stands at z -6. Pinned against the
-// hub's OWN gate position rather than a copy of it, so moving the gate along
-// the path can never silently leave the camera stopping short again.
+// at z -3 and the gate stands at z -6. Pinned against the hub's OWN gate
+// position rather than a copy of it, so moving the gate along the path can
+// never silently leave the camera stopping short again.
 //
 // 2026-08-05 retune ("tweak intro"): the seventh knot that used to carry the
 // camera OUT the far side (z -9) is gone, and the gate knot's y came up

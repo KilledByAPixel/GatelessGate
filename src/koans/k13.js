@@ -18,12 +18,12 @@ const scratchPos = new THREE.Vector3();
 // Tokusan out in the middle holding a bowl he has no business holding yet.
 //
 // Both instruments answer a touch. Neither of them is the right one to sound —
-// that is the case. Nothing tells you so.
-// The framing. This case used to take the book's default shot implicitly, by
-// naming no `camera:` at all. These are DEFAULT_HOME's own numbers, written
-// out so the shot is tuned here like every other case's rather than by moving
-// the book. composeWorld gets the same object as its `view`, so the
-// scatter still refuses spots no reachable heading can see (kit/scenery.js).
+// that is the case. Nothing tells you so. The framing. This case used to take
+// the book's default shot implicitly, by naming no `camera:` at all. These are
+// DEFAULT_HOME's own numbers, written out so the shot is tuned here like every
+// other case's rather than by moving the book. composeWorld gets the same
+// object as its `view`, so the scatter still refuses spots no reachable heading
+// can see (kit/scenery.js).
 const CAM = { distance: 11, target: [-1.4, 1.35, -1.2], heading: 31.5, pitch: 16.5 };
 
 export default {
@@ -72,8 +72,8 @@ export default {
 
     // TOKUSAN, mid-yard, holding the bowl. The bowl is the seal: it is the one
     // thing in the scene that is out of time. No staff — both hands are on the
-    // bowl, and the elder's staff was colliding with it: a man carrying
-    // his bowls to dinner is not also carrying a stick.
+    // bowl, and the elder's staff was colliding with it: a man carrying his
+    // bowls to dinner is not also carrying a stick.
     const tokusan = makeMonk({ height: 1.64, pose: 'fold' });
     tokusan.position.set(-2.8, 0, -0.5);
     const bowl = makeBowl({ radius: 0.16, color: ACCENT });

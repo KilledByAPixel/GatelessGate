@@ -42,8 +42,8 @@ const RELIGHT = 5.0;
 // The recipe's own wind level, hoisted (k47's idiom) because the blow-out now
 // drives it live: the candle is blown out BY the wind, so while the page is
 // dark the bed swells above its resting level and settles back as the wick
-// catches. k19/k20's setWindLevel idiom — an absolute level per frame,
-// which the next page's ambience transition ramps away from on its own.
+// catches. k19/k20's setWindLevel idiom — an absolute level per frame, which
+// the next page's ambience transition ramps away from on its own.
 const BASE_WIND = 0.12;
 const WIND_SWELL = 0.7;      // fraction above BASE_WIND at full dark
 
@@ -111,8 +111,8 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   flameMat.fog = false;                    // a flame is not dimmed by distance
   if (flameMat.emissive) { flameMat.emissive = new THREE.Color(ACCENT); flameMat.emissiveIntensity = 1.0; }
   // a soft teardrop, not a cone — a lathe whose belly swells just above the
-  // wick and
-  // whose tip is pulled up and rounded off, the shape a still flame holds
+  // wick and whose tip is pulled up and rounded off, the shape a still flame
+  // holds
   const flameProfile = [
   [0, 0], [0.050, 0.028], [0.072, 0.072], [0.060, 0.122],
   [0.032, 0.164], [0.010, 0.196], [0, 0.21],
@@ -124,12 +124,12 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   flame.position.set(-.8, 1.0, -1.7);     // base at 0.68 — the kit candle's tip
   scene.add(flame);
   
-  // THE GLOW — the bright red light in the box. A radial
-  // falloff built as a DataTexture (canvas-free, so build() still runs under
-  // plain Node in the tests), on an additive sprite behind the flame: over
-  // the night tone it reads as light spilling from the chamber, and being
-  // depth-tested it is clipped by the pillars and roof exactly the way real
-  // spill would be. No PointLight — the book washes, it does not cast.
+  // THE GLOW — the bright red light in the box. A radial falloff built as a
+  // DataTexture (canvas-free, so build() still runs under plain Node in the
+  // tests), on an additive sprite behind the flame: over the night tone it
+  // reads as light spilling from the chamber, and being depth-tested it is
+  // clipped by the pillars and roof exactly the way real spill would be. No
+  // PointLight — the book washes, it does not cast.
   const GLOW_TEX_SIZE = 32;
   const glowPx = new Uint8Array(GLOW_TEX_SIZE * GLOW_TEX_SIZE * 4);
   const [gr, gg, gb] = hexToRgb(mixHex(ACCENT, PAPER, 0.30));
@@ -220,11 +220,10 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   });
 
   // THE WHOLE LANTERN IS THE TARGET — anywhere on it should work, with real
-  // leeway. The old
-  // cylinder was half the size AND stranded at x 0.5 — the lantern moved to
-  // -0.8 in a retune and its hit volume stayed behind, so the only working
-  // taps were dead-on hits on the flame and candle meshes: exactly the
-  // "little spot" he was fighting. Sized to take in the lantern body, its
+  // leeway. The old cylinder was half the size AND stranded at x 0.5 — the
+  // lantern moved to -0.8 in a retune and its hit volume stayed behind, so the
+  // only working taps were dead-on hits on the flame and candle meshes: exactly
+  // the "little spot" he was fighting. Sized to take in the lantern body, its
   // roof and the flame above it, and placed ON the lantern this time.
   const hit = new THREE.Mesh(
   new THREE.CylinderGeometry(0.75, 0.75, 2.0, 7),
@@ -267,10 +266,9 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   // listed too so a dead-on tap works even if the cylinder ever moves
   if (!input.raycastFirst(camera, [hit, flame, candle])) return;
   blows++;
-  // out is a breath — audibly one, now: the little knock this shipped with
-  // read as a latch, not a puff. The swish voice used elsewhere is what a
-  // candle going out actually sounds like.
-  // Lit again is the smallest bell in the set.
+  // out is a breath — audibly one, now: the little knock this shipped with read
+  // as a latch, not a puff. The swish voice used elsewhere is what a candle
+  // going out actually sounds like. Lit again is the smallest bell in the set.
   if (lit) {
   lit = false;
   changedAt = clock;

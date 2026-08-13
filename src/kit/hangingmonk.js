@@ -57,12 +57,11 @@ export function makeHangingMonk({ height = 1.6, color = INK_LIT, seed = 5 } = {}
   // upper-front surface — so the head hangs BELOW AND BEHIND the origin,
   // reaching up-and-forward to it, and when the case sets the origin against
   // the branch the front of his face presses INTO the wood, which is what the
-  // physics asks for: a man hanging by his teeth tips back, chin
-  // up, crown away — he dangles from his jaw, he doesn't stand under it.
-  // (The head is a featureless sphere, so the tilt is drawn mostly by
-  // OFFSETS — head behind the pivot, body further behind still. A later pass
-  // added the rotateX below on top of them, pitching the head back on its
-  // own centre as well.)
+  // physics asks for: a man hanging by his teeth tips back, chin up, crown away
+  // — he dangles from his jaw, he doesn't stand under it. (The head is a
+  // featureless sphere, so the tilt is drawn mostly by OFFSETS — head behind
+  // the pivot, body further behind still. A later pass added the rotateX below
+  // on top of them, pitching the head back on its own centre as well.)
   const headR = 0.095 * h;
   // sphereHead's default r is 0.095 — the same radius headR names — so this
   // is figure.js's own head, not a lookalike copy.
@@ -75,10 +74,10 @@ export function makeHangingMonk({ height = 1.6, color = INK_LIT, seed = 5 } = {}
 
   // A NECK, bridging the collar to the head. Featureless solids left a visible
   // gap between the hanging robe and the sphere, so the head read as floating a
-  // little clear of the body. A short tapered column filling that
-  // span — thin under the skull, swelling into the collar — reads as fully
-  // connected without moving either piece. It leans back a touch to follow the
-  // head, which hangs behind the pivot.
+  // little clear of the body. A short tapered column filling that span — thin
+  // under the skull, swelling into the collar — reads as fully connected
+  // without moving either piece. It leans back a touch to follow the head,
+  // which hangs behind the pivot.
   const collar = new THREE.Vector3(0, -0.232 * h + LIFT, -0.060 * h);   // the lifted collar
   const nape = new THREE.Vector3(0, -0.140 * h, -0.072 * h);            // just into the skull
   // neckBetween is this file's own solve, promoted to figure.js — same two

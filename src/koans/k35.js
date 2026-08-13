@@ -26,9 +26,9 @@ const ID = 35;
 // What survives from that version: neither of her is the brighter one, both
 // carry the same red, and touching either one is answered by BOTH.
 //
-// Above it all, the moon from Mumon's verse — "The moon above the clouds is
-// the same moon, the mountains and rivers below are all different". It was
-// the seal at first; now it hangs plain (see the moon below) and the two souls
+// Above it all, the moon from Mumon's verse — "The moon above the clouds is the
+// same moon, the mountains and rivers below are all different". It was the seal
+// at first; now it hangs plain (see the moon below) and the two souls
 // themselves carry the red.
 
 const ROAD_T = 0.29;      // how far along the road the family stands
@@ -47,8 +47,9 @@ const TREE = { x: 4.2, z: -3.5 };
 // THEY ROCK, they do not tip. A touch used to set an envelope to 1 on that
 // frame and decay it linearly, so both of her snapped into a 0.045-radian lean
 // in a single frame and then crept back out of it — tipping instantly instead
-// of rocking. The same fault as case 36's bow and as the birds' and butterflies' alarms,
-// found in the same pass: an envelope a touch sets to 1 has no attack.
+// of rocking. The same fault as case 36's bow and as the birds' and
+// butterflies' alarms, found in the same pass: an envelope a touch sets to 1
+// has no attack.
 //
 // A damped oscillation has no such frame — sin(0) is 0, so it starts from
 // exactly where they were standing, swings one way, comes back through, and

@@ -48,13 +48,12 @@ const CALL_SPAN = WAKE + LIFT_SPAN;
 // she is back on it. Not a wobble and not a spin: a body with nothing under it,
 // drifting the way something floating does. (Case 46's mast wobble is the same
 // two-axis idea doing a different job — that one is struck and rings down, this
-// one is continuous for as long as she hangs there.)
-// Four of them, not two, and all at frequencies that do not divide into each
-// other — the pitch and roll she tilts on, a slow turn, and a drift up and down
-// inside the hover. Two axes at five degrees read as a statue with a wobble;
-// what says HOVERING
-// is that no two of the motions ever come back into step, so she never repeats
-// a pose and nothing about her looks driven.
+// one is continuous for as long as she hangs there.) Four of them, not two, and
+// all at frequencies that do not divide into each other — the pitch and roll
+// she tilts on, a slow turn, and a drift up and down inside the hover. Two axes
+// at five degrees read as a statue with a wobble; what says HOVERING is that no
+// two of the motions ever come back into step, so she never repeats a pose and
+// nothing about her looks driven.
 const TILT = 0.16;        // radians, about nine degrees at the widest
 const TILT_X = 0.55;      // rad/s: the pitch
 const TILT_Z = 0.38;      // ...and a slower roll across it
@@ -146,9 +145,8 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   
   // (A shishi-odoshi stood at the garden's edge for a while — k7's, silent,
   // keeping a different yard's time. It's gone: its tip landed inside the
-  // floor's own big hit box, so touching the one moving prop in the scene
-  // made a monk rise out of the earth — an answer to a question nobody was
-  // asking.)
+  // floor's own big hit box, so touching the one moving prop in the scene made
+  // a monk rise out of the earth — an answer to a question nobody was asking.)
   
   // MOMYO IS NOT STAGED. The beginner who comes up out of the earth was here —
   // posed under the floor from the start, rising through it when you touched
@@ -213,11 +211,11 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   if (clock - calledAt < CALL_SPAN) return;
   calledAt = clock;
   calls++;
-  // A BELL, not a knock. A knock is a hand on wood — the sound of
-  // somebody trying — and it was the right note when this was Manjusri's
-  // useless snap. What answers now is her coming out of samadhi, which is
-  // the one thing in the case that actually happens, and a struck bell is
-  // what the book uses when something turns over.
+  // A BELL, not a knock. A knock is a hand on wood — the sound of somebody
+  // trying — and it was the right note when this was Manjusri's useless snap.
+  // What answers now is her coming out of samadhi, which is the one thing in
+  // the case that actually happens, and a struck bell is what the book uses
+  // when something turns over.
   audio && audio.bell({ preset: 'hand', size: BELL_SIZE, gain: 0.38, at: GIRL });
   });
   
@@ -231,11 +229,10 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   // Manjusri keeps snapping, forever, to no effect
   if (manjusriArm) manjusriArm.rotation.x = 0.22 + Math.sin(clock * 1.6) * 0.06;
   
-  // EVERYTHING RIDES `up`, and that is the whole of the fix. There used to
-  // be a separate waking term on its own clock — a small lean that came in
-  // over WAKE seconds before the lift began — and it snapped, twice over
-  // — her rotation snapped before she began to float, when she should simply
-  // start floating.
+  // EVERYTHING RIDES `up`, and that is the whole of the fix. There used to be a
+  // separate waking term on its own clock — a small lean that came in over WAKE
+  // seconds before the lift began — and it snapped, twice over — her rotation
+  // snapped before she began to float, when she should simply start floating.
   //
   // Both faults were the same missing guard. Before any touch, `calledAt`
   // is -99, so `clock - calledAt` is enormous: the wake curve read as

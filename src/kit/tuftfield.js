@@ -3,10 +3,10 @@ import { hash1 } from '../util/noise.js';
 import { grassPlacements, GRASS_TONE, RIM_SHRINK, GRASS_BASE_TAPER } from './grassfield.js';
 import { breezeState, makePokeSpring, pokeSpringStep, GRASS_POKE_RADIUS } from './breeze.js';
 
-// Tuft grass: instead of one chunky geometric spear per grass plant,
-// each instance is a single camera-facing QUAD carrying a baked texture of a
-// whole tuft — a dozen fine blades. Two triangles where a blade was ten, so the
-// same budget buys several times the apparent grass, and it grows the way grass
+// Tuft grass: instead of one chunky geometric spear per grass plant, each
+// instance is a single camera-facing QUAD carrying a baked texture of a whole
+// tuft — a dozen fine blades. Two triangles where a blade was ten, so the same
+// budget buys several times the apparent grass, and it grows the way grass
 // actually grows: in clumps, not in isolated spikes. Still ONE draw call.
 //
 // Wind is a SHEAR, not a bend: the quad's base stays pinned to the ground and
@@ -236,10 +236,10 @@ export function makeTuftField({
       #endif
       `)
       // Cylindrical billboard + shear, built in view space. The quad ignores
-      // its instance rotation entirely: it stands on its root, faces the
-      // camera around the world-up axis, and the wind slides its TOP while the
-      // base stays put — a shear quadratic in height, so the pivot reads at
-      // the ground and not halfway up.
+      // its instance rotation entirely: it stands on its root, faces the camera
+      // around the world-up axis, and the wind slides its TOP while the base
+      // stays put — a shear quadratic in height, so the pivot reads at the
+      // ground and not halfway up.
       .replace('#include <project_vertex>', `
       vec4 mvPosition;
       {
@@ -256,10 +256,11 @@ export function makeTuftField({
         float lean = (ggHash(iw.xz * 2.113 + 31.7) - 0.5) * 0.30;   // resting tilt
 
         // SIGNED sway, centred on upright: the rest position is vertical and
-        // the field leans BOTH ways from it. The one-sided version mapped the noise
-        // to 0..max downwind, so every tuft pumped between vertical and its
-        // extreme and the field never rocked back. The drifting noise patch now
-        // swings the shear through zero; the wind slider scales its amplitude.
+        // the field leans BOTH ways from it. The one-sided version mapped the
+        // noise to 0..max downwind, so every tuft pumped between vertical and
+        // its extreme and the field never rocked back. The drifting noise patch
+        // now swings the shear through zero; the wind slider scales its
+        // amplitude.
         float swing = gust * 2.0 - 1.0;
         vec2 swayW = uWindDir * (uWind * 0.26 * swing * stiff);
 
@@ -281,10 +282,10 @@ export function makeTuftField({
 
         // ...projected onto the CARD'S OWN axis. This was the "stretchy" glitch
         // that looked like bad billboard math, and nearly was: the sway was
-        // applied as a world vector, so whenever the orbit swung across the wind
-        // the card sheared in DEPTH — toward the camera — which a flat imposter
-        // renders as smearing. A billboard may only ever shear along its own
-        // right axis; that is what "left and right" means on a card.
+        // applied as a world vector, so whenever the orbit swung across the
+        // wind the card sheared in DEPTH — toward the camera — which a flat
+        // imposter renders as smearing. A billboard may only ever shear along
+        // its own right axis; that is what "left and right" means on a card.
         float sw = dot((viewMatrix * vec4(swayW.x, 0.0, swayW.y, 0.0)).xyz, rightV) + lean;
 
         // tip micro-flutter: a second, faster, smaller ripple with a seeded

@@ -77,10 +77,10 @@ test('all four chimes come up, at a spread of sizes', () => {
 
 test('the four hang at the SAME apparent size, whatever family they come from', () => {
   // THE BUG THIS FILE EXISTS TO STOP COMING BACK. A fūrin is 2.1x its `size`
-  // tall and a bronze cylinder 0.98x, so one shared band of `size` numbers
-  // hung the cylinders at half the scale of everything beside them. Both are
-  // sized from a world height now, so a reader cannot
-  // tell which builder made which by how big it is.
+  // tall and a bronze cylinder 0.98x, so one shared band of `size` numbers hung
+  // the cylinders at half the scale of everything beside them. Both are sized
+  // from a world height now, so a reader cannot tell which builder made which
+  // by how big it is.
   const byKind = {};
   for (let s = 1; s <= 60; s++) {
     for (const c of chimesOf(makeHut({ chimes: s }))) (byKind[kindOf(c)] ||= []).push(heightOf(c));
@@ -170,9 +170,9 @@ const swing = (g, secs = 20) => { for (let i = 0; i < 60 * secs; i++) g.updateCh
 
 test('a hung chime makes sound without being asked to', () => {
   // `chimes: 7` is the whole instruction — a hung chime sounds by default.
-  // main.js hands the kit the app's one engine at startup and the
-  // chime finds it at strike time — no second word at the call site, and no
-  // silent chime because somebody forgot one.
+  // main.js hands the kit the app's one engine at startup and the chime finds
+  // it at strike time — no second word at the call site, and no silent chime
+  // because somebody forgot one.
   const struck = [];
   setChimeAudio({ chimeStrike: (o) => struck.push(o) });
   try {

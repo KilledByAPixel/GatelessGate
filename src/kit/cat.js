@@ -73,8 +73,8 @@ const STIR_DUR = 4.6;       // seconds for one unhurried stretch-and-settle
 // HOW BIG A STIR IS. Every one of these was roughly doubled: the cat is 0.32
 // tall, it sits well back in both the cases that use it, and a stir of a tenth
 // of a radian in the tail with a 0.26 turn of a skull a few pixels across is
-// motion you can only find by looking for it. It is still a
-// cat noticing you and going back to ignoring you; it is just legible now.
+// motion you can only find by looking for it. It is still a cat noticing you
+// and going back to ignoring you; it is just legible now.
 const TAIL_CURL = 0.30;     // extra bend per joint at the peak of a stir
 const TAIL_SWEEP = 0.22;    // and the sideways sweep that goes with it
 const EAR_SWIVEL = 0.85;
@@ -114,10 +114,10 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     // NO haunch, NO shoulder. The polish pass hung both masses on this barrel
     // to sell a crouch, and seated — the only pose the book ever shows — the
     // pitched-torso transform below swung them up into "weird things sticking
-    // out of its back. A cat's barrel at bodyR 0.23 is already the
-    // roundest in the kit; it reads as one animal without bolted-on lumps,
-    // and the plain silhouette beats a broken one.
-    // no tail here either; this one is jointed and built below
+    // out of its back. A cat's barrel at bodyR 0.23 is already the roundest in
+    // the kit; it reads as one animal without bolted-on lumps, and the plain
+    // silhouette beats a broken one. no tail here either; this one is jointed
+    // and built below
   });
   group.name = 'cat';
 
@@ -233,10 +233,9 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
 
     const a = i / TAIL_SEGS, b = (i + 1) / TAIL_SEGS;
     // Cut 30% longer than the joint spacing (still centred on it), so each
-    // segment overlaps its neighbour and a curled joint never opens
-    // daylight. Replaced a merged joint ball — even trimmed flush it beaded
-    // the tail; overlap covers the same gap without touching the
-    // silhouette.
+    // segment overlaps its neighbour and a curled joint never opens daylight.
+    // Replaced a merged joint ball — even trimmed flush it beaded the tail;
+    // overlap covers the same gap without touching the silhouette.
     const seg = new THREE.Mesh(new THREE.CylinderGeometry(
       (TAIL_R0 + (TAIL_R1 - TAIL_R0) * b) * h,
       (TAIL_R0 + (TAIL_R1 - TAIL_R0) * a) * h,

@@ -95,17 +95,16 @@ export default {
 
     // THE LEDGE, and the air past it — ON THIS SIDE now, the drop facing the
     // camera rather than away from it. Yawed a half turn, so the void that used
-    // to face away into
-    // the middle distance now falls toward the camera: the reader looks ACROSS
-    // the gorge at a man calling into it, with the drop in the near foreground
-    // and the meadow running away behind him. `origin` and `yaw` mirror the
-    // group's own placement, which is how makeCliff samples the rolling ground
-    // under its lumps.
-    // The gorge is SEEN here, the way case 5's is. A paper fill used to hang
-    // under the crags hiding everything past the fog line, and on a ledge this
-    // shallow it read as a slab laid over the drop rather than as depth
-    // rather than as depth. Shallower than case 5's is fine — this one is a ledge, not a chasm —
-    // the carve below runs the face down and climbs it back out as a rim.
+    // to face away into the middle distance now falls toward the camera: the
+    // reader looks ACROSS the gorge at a man calling into it, with the drop in
+    // the near foreground and the meadow running away behind him. `origin` and
+    // `yaw` mirror the group's own placement, which is how makeCliff samples
+    // the rolling ground under its lumps. The gorge is SEEN here, the way case
+    // 5's is. A paper fill used to hang under the crags hiding everything past
+    // the fog line, and on a ledge this shallow it read as a slab laid over the
+    // drop rather than as depth rather than as depth. Shallower than case 5's
+    // is fine — this one is a ledge, not a chasm — the carve below runs the
+    // face down and climbs it back out as a rim.
     const cliff = makeCliff({
       width: 13, drop: 6.5, depth: 2.6, seed: ID,
       origin: [CLIFF.x, CLIFF.z], yaw: CLIFF.yaw,
@@ -125,9 +124,9 @@ export default {
     // ZUIGAN, alone, near the edge. `elder` gives him the kit's own staff, held
     // the ordinary way and in his own ink — the free-standing vermillion shaft
     // that used to be planted beside him is gone. Nothing about the man is the
-    // seal any more.
-    // `bow: true` hinges him at the sash without changing his arms — the call
-    // below leans him from the waist, not by rolling the whole figure.
+    // seal any more. `bow: true` hinges him at the sash without changing his
+    // arms — the call below leans him from the waist, not by rolling the whole
+    // figure.
     const zuigan = makeMonk({ height: 1.64, elder: true, bow: true });
     const zuiganWaist = zuigan.getObjectByName('waist');
     zuigan.position.set(ZUIGAN.x, 0, ZUIGAN.z);
@@ -149,10 +148,10 @@ export default {
     scene.add(butterflies.group);
 
     // The pine that used to stand on the lip at (-2.9, -0.4) is GONE — a
-    // different species growing right beside the one figure, and it never
-    // read as well as the ordinary trees. The rock
-    // outcrop dresses that end of the ledge on its own now, and the world's
-    // own trees keep the middle distance from going bare.
+    // different species growing right beside the one figure, and it never read
+    // as well as the ordinary trees. The rock outcrop dresses that end of the
+    // ledge on its own now, and the world's own trees keep the middle distance
+    // from going bare.
     const world = composeWorld(scene, {
       view: CAM,
       seed: ID,
@@ -255,8 +254,8 @@ export default {
         // He leans into the call and settles back — FROM THE WAIST, WITH AN
         // ATTACK. It was rotation.z on the whole figure (a sideways list, the
         // roll fault k15/k17/k32 all had) set to full on the tap frame — "an
-        // envelope set to 1 by a touch has no attack", the same family as
-        // k36's bow snap, and it read exactly as abrupt as it was. Now: forward at
+        // envelope set to 1 by a touch has no attack", the same family as k36's
+        // bow snap, and it read exactly as abrupt as it was. Now: forward at
         // the sash, rising over ~0.18s, easing back as the echo returns.
         const u = clock - calledAt;
         let lean = 0;

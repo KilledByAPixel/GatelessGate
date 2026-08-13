@@ -198,10 +198,9 @@ test('she ROCKS: the answer swings both ways and settles, never a tip', () => {
   // It used to set an envelope to 1 on the frame of the tap and decay it
   // linearly, so both of her snapped into a lean in one frame and crept back
   // out of it — tipping instantly instead of rocking back and forth. The same
-  // fault as case 36's bow and
-  // the birds' and butterflies' alarms: an envelope a touch sets to 1 has no
-  // attack. A damped oscillation has none of that — sin(0) is 0, so it starts
-  // from exactly where she was standing.
+  // fault as case 36's bow and the birds' and butterflies' alarms: an envelope
+  // a touch sets to 1 has no attack. A damped oscillation has none of that —
+  // sin(0) is 0, so it starts from exactly where she was standing.
   const ctx = sharedCtx({ accent: k35.accent, audio: { chimeStrike() {} } });
   const built = k35.build(ctx);
   built.setCamera({});

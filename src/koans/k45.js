@@ -144,16 +144,15 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
   //
   // THEY STAND. Two figures used to stroll the lane on a triangle wave, and
   // they were cut: no other case walks a figure along a path, and legs that do
-  // not stride read as a
-  // glide. Every person in this street is still now; the life comes from how
-  // many of them there are and how they are turned, which is how the rest of
-  // the book does it.
-  // WHICH WAY THE PAIR FACES IS MEASURED, not eyeballed. World distance and
-  // SCREEN separation are different currencies (the case-7 lesson): squared up
-  // along the road they stand 1.7 units apart and read as ONE man with a
-  // shadow — 0.09 of half-frame from this camera. Swung 62° off the road they
-  // read at 0.23, more than double, and 62° is also how two people who stop to
-  // talk actually stand: turned out of the flow, not blocking it.
+  // not stride read as a glide. Every person in this street is still now; the
+  // life comes from how many of them there are and how they are turned, which
+  // is how the rest of the book does it. WHICH WAY THE PAIR FACES IS MEASURED,
+  // not eyeballed. World distance and SCREEN separation are different
+  // currencies (the case-7 lesson): squared up along the road they stand 1.7
+  // units apart and read as ONE man with a shadow — 0.09 of half-frame from
+  // this camera. Swung 62° off the road they read at 0.23, more than double,
+  // and 62° is also how two people who stop to talk actually stand: turned out
+  // of the flow, not blocking it.
   const MEET_T = 0.36;
   const MEET_ANG = (62 * Math.PI) / 180;
   const GAP = 0.45;                     // a pace apart — close enough to be a meeting
@@ -183,12 +182,12 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
   const meetKeepout = [{ at: elder, r: 0.7 }, { at: younger, r: 0.7 }];
   
   // A few more people standing about the street between the stalls — it is a
-  // busy street. They come from the same builder as every other figure
-  // — mostly hatless, so they read as a crowd of dark robed shapes rather
-  // than a row of identical monks. They used to lose their SLEEVES as well:
-  // two fewer meshes apiece was what let a crowd fit the draw budget at all.
-  // The bake below made that saving irrelevant — arms or no arms, these five
-  // are one mesh — so they have their arms back.
+  // busy street. They come from the same builder as every other figure — mostly
+  // hatless, so they read as a crowd of dark robed shapes rather than a row of
+  // identical monks. They used to lose their SLEEVES as well: two fewer meshes
+  // apiece was what let a crowd fit the draw budget at all. The bake below made
+  // that saving irrelevant — arms or no arms, these five are one mesh — so they
+  // have their arms back.
   const bystander = (x, z, facing, h = 1.56, hat = false) => {
   const f = makeMonk({ height: h, hat: hat });
   f.position.set(x, 0, z);

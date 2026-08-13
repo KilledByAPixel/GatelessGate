@@ -11,11 +11,11 @@ import { WASH } from '../palette.js';
 //
 // NOTHING USES THIS YET, on purpose. It was built for cases 15 (which names a
 // temple) and 17 (whose Chu is the emperor's teacher, a rank with an
-// establishment behind it), placed in both, and then pulled: seen in the
-// scenes it did not earn its place — "let's get rid of the temples, it was a
-// nice try" — but the piece itself is kept for a case that wants one later
-// in case one is wanted again. It is complete and was working;
-// what was wrong was the picture, not the component.
+// establishment behind it), placed in both, and then pulled: seen in the scenes
+// it did not earn its place — "let's get rid of the temples, it was a nice try"
+// — but the piece itself is kept for a case that wants one later in case one is
+// wanted again. It is complete and was working; what was wrong was the picture,
+// not the component.
 //
 // If you place one, read the SCALE note at the bottom of this file first. The
 // mistake is easy to repeat and hard to see coming.

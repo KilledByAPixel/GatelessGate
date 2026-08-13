@@ -20,11 +20,11 @@ const ID = 3;
 //
 // ONE red seal — Gutei's finger — and the boy raises an EMPTY hand beside it.
 // The case ends with the boy's finger cut off, and at that instant he was
-// enlightened. So the two figures make the same gesture, one
-// with a finger and one without: the master holds up the finger, and the boy,
-// who has lost his, holds up the hand it is gone from. The absence is the
-// point, and it is gentle — no wound, no blade, just a raised hand with
-// nothing on it where the master has his one red mark.)
+// enlightened. So the two figures make the same gesture, one with a finger and
+// one without: the master holds up the finger, and the boy, who has lost his,
+// holds up the hand it is gone from. The absence is the point, and it is gentle
+// — no wound, no blade, just a raised hand with nothing on it where the master
+// has his one red mark.)
 
 // Both figures present their raised sleeve along this bearing. Aiming them at
 // each other was the obvious first staging and it was wrong: the case is not a
@@ -43,9 +43,9 @@ const LANTERN = { x: 4.0, z: -3.40 };
 // WEST of the road. The hall stood at (3.4, -6.2) for a long time, and the
 // path's seeded curve runs through x ≈ 3.16 at that depth — 0.24 from the
 // hall's own centre, so the approach to the temple ran straight through the
-// temple. The road's east verge is out
-// of frame at the home lens, so the hall crosses to the west side, where the
-// path (x ≈ 3.0–3.2 down its whole run) clears its footprint by a full verge.
+// temple. The road's east verge is out of frame at the home lens, so the hall
+// crosses to the west side, where the path (x ≈ 3.0–3.2 down its whole run)
+// clears its footprint by a full verge.
 const HALL = { x: -0.30, z: -4.60 };
 
 // ---------------------------------------------------------------------------
@@ -283,11 +283,11 @@ const CAM = { distance: 9.6, target: [0.7, 1.25, 0.55], heading: 16, pitch: 15.5
   
   const strike = (f) => {
   f.since = now;
-  // the same gesture, twice, in two voices: the master's answer carries
-  // the room the way his authority does (temple), the boy's imitation is
-  // smaller and brighter (hand) — task-12's bell-preset migration, which
-  // trades the raw f0 pair (62 / a fifth above) for two of the tuned bell
-  // presets rather than two arbitrary pitches.
+  // the same gesture, twice, in two voices: the master's answer carries the
+  // room the way his authority does (temple), the boy's imitation is smaller
+  // and brighter (hand) — task-12's bell-preset migration, which trades the raw
+  // f0 pair (62 / a fifth above) for two of the tuned bell presets rather than
+  // two arbitrary pitches.
   audio && audio.bell({
   preset: f === master ? 'temple' : 'hand', gain: f === master ? 0.14 : 0.11,
   at: f.monk.position,

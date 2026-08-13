@@ -34,10 +34,10 @@ const BASE_WIND = 0.25;
 const AMBIENCE = ['wind:' + BASE_WIND, 'furin', 'furin', 'music'];
 
 // The framing. This case used to take the book's default shot implicitly, by
-// naming no `camera:` at all. These are DEFAULT_HOME's own numbers, written
-// out so the shot is tuned here like every other case's rather than by moving
-// the book. composeWorld gets the same object as its `view`, so the
-// scatter still refuses spots no reachable heading can see (kit/scenery.js).
+// naming no `camera:` at all. These are DEFAULT_HOME's own numbers, written out
+// so the shot is tuned here like every other case's rather than by moving the
+// book. composeWorld gets the same object as its `view`, so the scatter still
+// refuses spots no reachable heading can see (kit/scenery.js).
 const CAM = { distance: 11.5, target: [2.75, 1.35, 0.55], heading: 36.5, pitch: 17.2 };
 
 export default {
@@ -122,8 +122,8 @@ export default {
     // five-tube ring hung here too for a while; a cluster and three single
     // notes under one beam was two ideas competing.
     //
-    // ANYTHING HUNG ON A GATE: CHECK THE POST RADIUS AT THE HANG HEIGHT, not
-    // at the foot. The ring used to hang exactly on the right post's own axis,
+    // ANYTHING HUNG ON A GATE: CHECK THE POST RADIUS AT THE HANG HEIGHT, not at
+    // the foot. The ring used to hang exactly on the right post's own axis,
     // where the taper still left the post wider than the chime for its whole
     // vertical extent — it had been invisible, not merely close, since the day
     // the case was staged.
@@ -134,10 +134,10 @@ export default {
     //
     // MAX-AMPLITUDE CHECK. A fūrin's cord, cap, tubes and tag are ONE rigid
     // body pivoting at the hang point, so a bigger swing can never make one
-    // collide with ITSELF; the risk is external — the whole assembly
-    // displacing sideways into a NEIGHBOUR. (The clapper swings independently
-    // inside that assembly, but a real collision bounds it to the tubes' own
-    // clearance, so it never widens the silhouette this measures.)
+    // collide with ITSELF; the risk is external — the whole assembly displacing
+    // sideways into a NEIGHBOUR. (The clapper swings independently inside that
+    // assembly, but a real collision bounds it to the tubes' own clearance, so
+    // it never widens the silhouette this measures.)
     //
     // THE WORST CASE IS COUNTER-PHASE, and a check that swings every chime the
     // SAME way measures nearly the BEST one — adjacent chimes displace together
@@ -169,10 +169,9 @@ export default {
     const SINGLE_SIZES = [0.18, 0.12, 0.09];
     // ABSOLUTE cord lengths, in world units, not fractions of size. Hung side
     // by side, the small ones did not reach low enough, and a size-relative
-    // cord is exactly
-    // why: it gives the SMALLEST chime the SHORTEST string, so the one that
-    // most needs to reach down to join the group is the one pinned tightest
-    // to the beam.
+    // cord is exactly why: it gives the SMALLEST chime the SHORTEST string, so
+    // the one that most needs to reach down to join the group is the one pinned
+    // tightest to the beam.
     //
     // Solved so the three BELLS hang on one line — bottoms within 0.001 of
     // each other, at CORD + (0.18 + SINGLE_BODY_LEN)*size below the lintel —
@@ -223,8 +222,7 @@ export default {
     // IT DOES NOT GO TO ZERO. A dead-still meadow and dead-still trees read as
     // the picture having crashed rather than as the wind having dropped — the
     // page simply looks frozen. A tenth still reads plainly as stopped next to
-    // the flag's own
-    // full lean, and the page stays alive.
+    // the flag's own full lean, and the page stays alive.
     //
     // The floor is on the two FIELDS only. The chimes and the audible wind
     // still go all the way to silence with the flag: that is Mumon's argument
@@ -284,9 +282,9 @@ export default {
       if (hit) {
         const on = flag.toggleWind();
         audio && audio.setWindLevel(on ? baseWind : 0);
-        // the toggle itself was silent — the wind's own bed ramps too slowly
-        // to read as an acknowledgment, and the toggle needs feedback either
-        // way it goes. One breath, at the cloth, both directions.
+        // the toggle itself was silent — the wind's own bed ramps too slowly to
+        // read as an acknowledgment, and the toggle needs feedback either way
+        // it goes. One breath, at the cloth, both directions.
         audio && audio.breath({ force: 0.7, at: hit.point });
       }
     });

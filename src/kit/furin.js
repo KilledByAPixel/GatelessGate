@@ -10,25 +10,24 @@ import { clamp } from '../util/math.js';
 // tag. The VISUAL sway follows the real gust — it is the wind that visibly
 // moves it — but the strikes are paced by the chime's own much slower weather
 // (chimeActivity). Tying strikes to the audible gust made the soundscape
-// breathe in lockstep, too quiet then constant; untied, the brain fills in
-// the causality on its own. The wind still GATES it: a stilled scene is a
-// silent chime.
+// breathe in lockstep, too quiet then constant; untied, the brain fills in the
+// causality on its own. The wind still GATES it: a stilled scene is a silent
+// chime.
 //
-// Deterministic. The strike weather is a closed form over simTime; the swing
-// is a real pendulum with state (src/kit/pendulum.js) that integrates on a
-// fixed substep and carries its own remainder, so the pose depends only on
-// elapsed sim time and the sequence of taps, never on how update() gets
-// called across frames. This is kit, not audio — the no-Math.random rule
-// applies in full. The only audio import is gustPhase, a pure function (the
-// sanctioned exception).
+// Deterministic. The strike weather is a closed form over simTime; the swing is
+// a real pendulum with state (src/kit/pendulum.js) that integrates on a fixed
+// substep and carries its own remainder, so the pose depends only on elapsed
+// sim time and the sequence of taps, never on how update() gets called across
+// frames. This is kit, not audio — the no-Math.random rule applies in full. The
+// only audio import is gustPhase, a pure function (the sanctioned exception).
 //
 // The group's origin is the HANG POINT: all geometry below y=0, so a case
 // positions it by where it hangs FROM.
 
 // The chime's own weather: short flurries with regular breaks, active about a
-// quarter of the time. Rates chosen NOT to track the gust envelope — waves
-// near the gust's own period produced a long flurry followed by a long hole,
-// which read as a bug.
+// quarter of the time. Rates chosen NOT to track the gust envelope — waves near
+// the gust's own period produced a long flurry followed by a long hole, which
+// read as a bug.
 //
 // ONE EPOCH, NOT TWO PHASES. Both sines are zero AND rising at t = 0, so with
 // no offset they add coherently on the way up and every session opened
@@ -36,10 +35,10 @@ import { clamp } from '../util/math.js';
 // global and never resets per case — arriving at a case any other way arrives
 // at ordinary weather. Shifting the whole curve is a pure time translation, so
 // the flurry/break/duty statistics are mathematically unchanged; giving each
-// sine its OWN offset would rewrite the beat structure instead. gustPhase's
-// own comment in src/audio/synths.js records that mistake being made and
-// caught. The epoch is chosen by sweep so the opening thirty seconds carry the
-// long-run duty.
+// sine its OWN offset would rewrite the beat structure instead. gustPhase's own
+// comment in src/audio/synths.js records that mistake being made and caught.
+// The epoch is chosen by sweep so the opening thirty seconds carry the long-run
+// duty.
 const ACT_A = 0.031, ACT_B = 0.047;
 const ACT_EPOCH = 31.65;
 export function chimeActivity(t) {
@@ -58,8 +57,8 @@ const REFRACTORY = 0.45;   // a tube cannot restrike faster than this
 // This replaced a model where the wind curve was read STRAIGHT INTO the
 // rotation every frame — no inertia, no restoring force, nothing that could
 // ever swing, only ever be positioned. A real pendulum fixes that: wind is a
-// TORQUE the gravity term has to fight, so a steady wind settles the chime at
-// a lean it arrives at by swinging past it first, and a tap is a velocity kick
+// TORQUE the gravity term has to fight, so a steady wind settles the chime at a
+// lean it arrives at by swinging past it first, and a tap is a velocity kick
 // rather than a superposed decaying-sine term — see ring()/hoverAt() below.
 
 // "Book gravity": src/sim/verlet.js's cloth already uses this number as its own
@@ -129,10 +128,10 @@ export const BUFFET = { level: 0.38 };
 
 // THE CLAPPER, as a second pendulum. Until now it was a decoration: a disc
 // parented into `body`, rigid with the tubes, unable to approach them at any
-// angle. Every sound came from one of two places — the ambient weather loop,
-// or ring() firing exactly one tube per tap. So a tap was one tone, always,
-// on a five-tube ring where several notes at once is the whole point, and the
-// swing it kicked off was silent.
+// angle. Every sound came from one of two places — the ambient weather loop, or
+// ring() firing exactly one tube per tap. So a tap was one tone, always, on a
+// five-tube ring where several notes at once is the whole point, and the swing
+// it kicked off was silent.
 //
 // Now the clapper hangs on its own pendulum and the tubes are what stop it.
 // A tap kicks the BODY only (a knock is a shove on the thing you touched);
@@ -162,10 +161,10 @@ export const BUFFET = { level: 0.38 };
 //      a single tube's relative angle reaches twice its own gap: still zero
 //      audible contacts.
 //
-// Cases only ever pass 0..1, so in the book the first mechanism is never
-// even tested. The second is what makes it safe for a dev harness (whose
-// wind slider runs past 1) or a future case to push further without quietly
-// doubling the chime's own pacing.
+// Cases only ever pass 0..1, so in the book the first mechanism is never even
+// tested. The second is what makes it safe for a dev harness (whose wind slider
+// runs past 1) or a future case to push further without quietly doubling the
+// chime's own pacing.
 //
 // Same "two independent pendulums, not a real double pendulum" simplification
 // cylinder.js commits to, and for the same reason (a true double pendulum is
@@ -178,32 +177,30 @@ const CLAP_RESTITUTION = 0.35;   // most of a contact's energy goes into the rin
 // against a tube. Sized well under the swing's own half-period so it never
 // suppresses a genuine separate contact — it only stops one touch stuttering.
 const CONTACT_REFRACTORY = 0.16;
-// Which tubes a contact rings. The clapper touches the side of the ring it
-// has swung toward; `dot` is each tube's own direction against the contact
-// direction, so 1 is dead-on and 0 is side-on. This threshold rings the
-// touched tube plus its two neighbours on a five-ring, or the touched tube
-// alone on the opposite phase — a cluster that varies rather than a fixed
-// chord, which is what a real chime does as the clapper wanders round the
-// ring.
+// Which tubes a contact rings. The clapper touches the side of the ring it has
+// swung toward; `dot` is each tube's own direction against the contact
+// direction, so 1 is dead-on and 0 is side-on. This threshold rings the touched
+// tube plus its two neighbours on a five-ring, or the touched tube alone on the
+// opposite phase — a cluster that varies rather than a fixed chord, which is
+// what a real chime does as the clapper wanders round the ring.
 const CLUSTER_DOT = 0.1;
 
-// A contact's force from the relative angular velocity at the moment of
-// contact — a hard meeting rings loudly, a graze barely sounds. Unlike the
-// bronze cylinder's own force law (kit/cylinder.js's forceForRelOmega, which
-// has to serve wind contacts AND tap contacts on one curve, two regimes far
-// apart), this one only ever sees taps: the invariant above means wind never
-// produces a clapper contact at all. One regime, so one plain power curve.
+// A contact's force from the relative angular velocity at the moment of contact
+// — a hard meeting rings loudly, a graze barely sounds. Unlike the bronze
+// cylinder's own force law (kit/cylinder.js's forceForRelOmega, which has to
+// serve wind contacts AND tap contacts on one curve, two regimes far apart),
+// this one only ever sees taps: the invariant above means wind never produces a
+// clapper contact at all. One regime, so one plain power curve.
 //
-// THE REFERENCE IS PER-INSTANCE, NOT A CONSTANT. A fixed cap in rad/s is
-// wrong here for the same reason a fixed note would be: a small chime hangs
-// on a short pendulum, so its natural frequency — and therefore every
-// velocity it can ever reach — is higher. With one fixed cap, a small single
-// pinned at full force for its first contacts while the default ring stayed
-// in range — the exact saturation the cylinder's own force law had to be
-// rewritten to escape. `capFrac` instead scales the reference by the
-// instance's OWN full-force tap velocity (SWING.tapPeak * omega0), so every
-// chime in the book, at every size, reports ~1 for a hard knock and fades
-// from there.
+// THE REFERENCE IS PER-INSTANCE, NOT A CONSTANT. A fixed cap in rad/s is wrong
+// here for the same reason a fixed note would be: a small chime hangs on a
+// short pendulum, so its natural frequency — and therefore every velocity it
+// can ever reach — is higher. With one fixed cap, a small single pinned at full
+// force for its first contacts while the default ring stayed in range — the
+// exact saturation the cylinder's own force law had to be rewritten to escape.
+// `capFrac` instead scales the reference by the instance's OWN full-force tap
+// velocity (SWING.tapPeak * omega0), so every chime in the book, at every size,
+// reports ~1 for a hard knock and fades from there.
 //
 // `gamma` below 1 keeps the tail of a long ring-down audible rather than
 // letting it vanish while the tubes are still visibly moving.
@@ -273,12 +270,12 @@ export function noteForSize(size) {
   return steps === 0 ? 0 : steps;   // -0 guard, same reasoning as cylinder.js's noteForSize
 }
 
-// The weak diameter term. The ring's own tube radius (in the loop below)
-// scales fully with S; a SINGLE tube's radius instead scales at
-// S^DIAM_WEAK_EXP — noticeably thicker on the biggest single than the
-// smallest, never as dramatically as the length difference between them, so a
-// set reads as matched rather than as one tube stretched. Picked by eye
-// against the length exponent (1, i.e. length scales directly with S).
+// The weak diameter term. The ring's own tube radius (in the loop below) scales
+// fully with S; a SINGLE tube's radius instead scales at S^DIAM_WEAK_EXP —
+// noticeably thicker on the biggest single than the smallest, never as
+// dramatically as the length difference between them, so a set reads as matched
+// rather than as one tube stretched. Picked by eye against the length exponent
+// (1, i.e. length scales directly with S).
 const DIAM_WEAK_EXP = 0.35;
 
 // THE SINGLE-TUBE FŪRIN'S REAL SHAPE. A 風鈴 is a small BELL with the clapper
@@ -330,10 +327,10 @@ const TANZAKU_WIDE = 1.5;        // x the body radius
 // CLAP_L in makeFurin for why this is not simply the contact depth.
 //
 // SWEPT, on a full-force tap in still air: at zero the clapper rides the body
-// and a tap makes one sound, and the knock count climbs steeply from there to
-// a rattle at the top of the range. This puts a single in the same register as
-// the five-tube ring — a handful of knocks over a few seconds — which holds
-// the standing constraint that it is just supposed to be an ambient thing.
+// and a tap makes one sound, and the knock count climbs steeply from there to a
+// rattle at the top of the range. This puts a single in the same register as
+// the five-tube ring — a handful of knocks over a few seconds — which holds the
+// standing constraint that it is just supposed to be an ambient thing.
 const CLAP_REACH = 0.15;
 
 // THE TANZAKU'S SPIN. A paper strip on a single thread twists rather than
@@ -350,17 +347,16 @@ const CLAP_REACH = 0.15;
 // read as paper rather than a propeller.
 //
 // `kick` CANNOT BE DERIVED, and the arithmetic that looks like it can is a
-// trap: 2*sqrt(stiffness) is the velocity that clears the top of the swing,
-// but that is the UNDAMPED threshold, and the strip spends a while climbing,
-// over which `damping` takes better than half its energy. Set from that
-// formula with apparent margin, it never got over at all. Swept instead, for
-// the spread that makes tap force legible rather than every tap looking the
-// same: a light touch turns an eighth of a turn, a solid knock carries it
-// round.
+// trap: 2*sqrt(stiffness) is the velocity that clears the top of the swing, but
+// that is the UNDAMPED threshold, and the strip spends a while climbing, over
+// which `damping` takes better than half its energy. Set from that formula with
+// apparent margin, it never got over at all. Swept instead, for the spread that
+// makes tap force legible rather than every tap looking the same: a light touch
+// turns an eighth of a turn, a solid knock carries it round.
 //
-// `damping` is deliberately weak — a paper strip on a thread has very little
-// to damp it, and a shorter tau bled off a twist before it could come back.
-// The thread now gives the twist back several times before it settles.
+// `damping` is deliberately weak — a paper strip on a thread has very little to
+// damp it, and a shorter tau bled off a twist before it could come back. The
+// thread now gives the twist back several times before it settles.
 //
 // `wind` reads the fast buffet band as well as the slow breeze. The breeze
 // alone crept the strip a quarter of the way round over twenty seconds and
@@ -378,14 +374,14 @@ const CLAP_REACH = 0.15;
 // "never winds up" test in tests/furin.test.js exists to catch.
 //
 // It has been violated twice. Once by a gain chosen for feel alone, which
-// measured 41 turns of sweep — a pinwheel, not a poem-strip. Once more,
-// subtly, by values that broke the inequality only when the slow gust and the
-// fast buffet crested together: that survived until gustPhase gained an epoch,
-// which reshuffled which coincidences occur, and it wound to seven turns on
-// the first run. The values below hold the inequality with margin, so an
-// equilibrium always exists and the peak lean is comfortably short of
-// over-the-top. Anything raising `wind` or `buffet` has to check the
-// inequality or the strip becomes a windmill.
+// measured 41 turns of sweep — a pinwheel, not a poem-strip. Once more, subtly,
+// by values that broke the inequality only when the slow gust and the fast
+// buffet crested together: that survived until gustPhase gained an epoch, which
+// reshuffled which coincidences occur, and it wound to seven turns on the first
+// run. The values below hold the inequality with margin, so an equilibrium
+// always exists and the peak lean is comfortably short of over-the-top.
+// Anything raising `wind` or `buffet` has to check the inequality or the strip
+// becomes a windmill.
 //
 // A TAP still can send it round, and should — `kick` is not bound by any of
 // this. Only the wind is. The paper's looseness is `damping`, not the gain.
@@ -631,11 +627,11 @@ export function makeFurin({
 
   // THE CLAPPER. A ring's is a visible disc hanging at the centre with every
   // tube 0.33S clear of it — that reads correctly and stays. A single's is
-  // INSIDE the body and has no mesh at all: nobody can see into an opaque
-  // bell, so drawing one spends a draw call on something invisible that (as
-  // kit/cylinder.js found the same way) occasionally pokes through a wall.
-  // The version before this hung the disc out to the side to avoid being
-  // impaled on the one tube, and read as connected to nothing.
+  // INSIDE the body and has no mesh at all: nobody can see into an opaque bell,
+  // so drawing one spends a draw call on something invisible that (as
+  // kit/cylinder.js found the same way) occasionally pokes through a wall. The
+  // version before this hung the disc out to the side to avoid being impaled on
+  // the one tube, and read as connected to nothing.
   const clapperR = single ? SINGLE_CLAP_FRAC * singleTubeR : 0.16 * S;
   // The clapper's pivot, parented under the body rather than fixed in it —
   // see THE CLAPPER at the top of this file. Parenting it here, at the cap,
@@ -809,12 +805,12 @@ export function makeFurin({
     }
   }
 
-  // One contact, several tubes: the clapper touches the side of the ring it
-  // has swung toward, and everything on that side speaks. `dirX`/`dirZ` is
-  // the contact direction in the ring's own plane; each tube's force falls
-  // off with how square-on it was struck. Several notes at once is the whole
-  // point of a multi-tube ring — and the cluster VARIES, because the contact
-  // direction wanders with the swing rather than being a fixed chord.
+  // One contact, several tubes: the clapper touches the side of the ring it has
+  // swung toward, and everything on that side speaks. `dirX`/`dirZ` is the
+  // contact direction in the ring's own plane; each tube's force falls off with
+  // how square-on it was struck. Several notes at once is the whole point of a
+  // multi-tube ring — and the cluster VARIES, because the contact direction
+  // wanders with the swing rather than being a fixed chord.
   function fireCluster(dirX, dirZ, force) {
     if (!tubeDirs) { fire(0, force); return; }
     let best = -Infinity, bestI = 0, any = false;
@@ -1114,11 +1110,11 @@ export function makeFurin({
       // The whole chime grabbed at once. This used to pick ONE tube by the
       // clock, so a tap on a five-tube ring made a single sound — but a hand
       // closing on a ring brushes everything on the side it came from, so it
-      // rings a cluster. -x, because that is the side the clapper is
-      // about to arrive from too: tapKick() kicks zPend positive, the body
-      // leads toward +x, and the clapper is left behind on the other side.
-      // The hand and the physics agree, and the ring-down carries on from
-      // the same place the first sound came from.
+      // rings a cluster. -x, because that is the side the clapper is about to
+      // arrive from too: tapKick() kicks zPend positive, the body leads toward
+      // +x, and the clapper is left behind on the other side. The hand and the
+      // physics agree, and the ring-down carries on from the same place the
+      // first sound came from.
       fireCluster(-1, 0, force);
     },
     // the pointer passing over: a nudge, not a knock — the same kick at a

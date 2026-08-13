@@ -41,15 +41,15 @@ test('square water stays inside its box', () => {
   }
 });
 
-// THE BUG (case 39): a ripple started near the bank used to keep growing
-// out over the grass. The rim is pinned now, so no edge vertex can ever leave
-// its rest height however hard the water is hit right beside it.
-// The disc is cut from a uniform grid, so an INTERIOR vertex can land
-// arbitrarily close to the circle — "radius ≈ R" no longer identifies a rim
-// vertex, and such a vertex is legitimately allowed to move by a vanishing
-// amount. The wall itself is exactly zero (asserted analytically below via
-// heightAt); what the mesh has to guarantee is that nothing visible happens
-// out there. 1e-9 world units is roughly a nanometre of pond.
+// THE BUG (case 39): a ripple started near the bank used to keep growing out
+// over the grass. The rim is pinned now, so no edge vertex can ever leave its
+// rest height however hard the water is hit right beside it. The disc is cut
+// from a uniform grid, so an INTERIOR vertex can land arbitrarily close to the
+// circle — "radius ≈ R" no longer identifies a rim vertex, and such a vertex is
+// legitimately allowed to move by a vanishing amount. The wall itself is
+// exactly zero (asserted analytically below via heightAt); what the mesh has to
+// guarantee is that nothing visible happens out there. 1e-9 world units is
+// roughly a nanometre of pond.
 test('a ripple at the very edge never lifts the rim — round', () => {
   const R = 3.2;
   const w = makeWater({ shape: 'round', size: R * 2, seed: 30 });
@@ -86,9 +86,9 @@ test('a ripple at the very edge never lifts the rim — square', () => {
 });
 
 // The blob (case 39's pond, organic and roundish rather than square): a seeded
-// wobbled outline. Its contract is the round
-// surface's contract — honest bound, pinned rim — plus an outline that
-// actually varies, or it would just be a circle with extra steps.
+// wobbled outline. Its contract is the round surface's contract — honest bound,
+// pinned rim — plus an outline that actually varies, or it would just be a
+// circle with extra steps.
 test('blob water stays inside its stated circle — the wobble only pulls inward', () => {
   const R = 6.25;
   const w = makeWater({ shape: 'blob', size: R * 2, seed: 39 });
@@ -288,9 +288,9 @@ test('ripples still ride on top of the drift, and the rim pinning still holds fo
 });
 
 // A real sea is never one sine — a single component renders as parallel bars
-// running one way — so drift accepts an array of crossing
-// components. The contract: an object and a one-element array are the SAME
-// surface, and a multi-component sea stays inside the sum of its amplitudes.
+// running one way — so drift accepts an array of crossing components. The
+// contract: an object and a one-element array are the SAME surface, and a
+// multi-component sea stays inside the sum of its amplitudes.
 test('drift: an object and a one-element array produce the identical surface', () => {
   const surface = (drift) => {
     const w = makeWater({ shape: 'square', size: 40, swell: 0, seed: 20, drift });

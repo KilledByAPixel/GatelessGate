@@ -53,10 +53,10 @@ function lookDown(scene, x, z) {
 }
 
 // WHERE to look is read off the water itself, not written down beside it. Case
-// 7's basin used to be a pair of literals here, and when the basin moved a
-// unit across the garden the ray went on staring at the old spot and reported
-// that the vessel was full of footpath. A test that has to be edited every time
-// a prop moves is a test that will one day be edited wrongly.
+// 7's basin used to be a pair of literals here, and when the basin moved a unit
+// across the garden the ray went on staring at the old spot and reported that
+// the vessel was full of footpath. A test that has to be edited every time a
+// prop moves is a test that will one day be edited wrongly.
 const over = (root, name) => {
   let found = null;
   root.scene.traverse((o) => { if (!found && o.name === name) found = o; });
@@ -96,9 +96,10 @@ for (const [label, mod] of [
 
 // The pair's reds: in case 33 the koi wear the case's one red; in case 30 the
 // red is the urna AND — knowingly doubling it — the pond sheet itself, the
-// surface of the water and not the fish or the sides. The mat is dark in BOTH scenes — same mat, same spot,
-// occupied in 30 and bare in 33 — so the check is written against both:
-// same pond, different carriers, and the mat never competes with either.
+// surface of the water and not the fish or the sides. The mat is dark in BOTH
+// scenes — same mat, same spot, occupied in 30 and bare in 33 — so the check is
+// written against both: same pond, different carriers, and the mat never
+// competes with either.
 test('case 33: the koi carry the red and the mat has gone to ink', () => {
   const root = staged(k33);
   const red = new THREE.Color(ACCENT).getHexString();

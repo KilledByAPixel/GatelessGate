@@ -28,9 +28,9 @@ const ID = 27;
 // with a fourth for undo — a switchboard where Nansen said one sentence. The
 // ink drained, and they blinked off. The colour wash was then done exactly
 // (`color` to black while `emissive` goes to the sky renders a lit surface as
-// flat sky under any light) — a true vanish where the sky is what is behind
-// it, except this hall stands against the meadow, so it became a hall-shaped
-// patch of sky laid over the trees.
+// flat sky under any light) — a true vanish where the sky is what is behind it,
+// except this hall stands against the meadow, so it became a hall-shaped patch
+// of sky laid over the trees.
 //
 // THE INK PASS CANNOT FADE, and that is the common cause. It is a Sobel over
 // the depth buffer, so a thing wears a full-strength outline for exactly as
@@ -92,10 +92,10 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 31.5, pitch: 2
   build(ctx) {
   const { audio, input } = ctx;
   const scene = new THREE.Scene();
-  // EXPERIMENT: a red sky for the erasing case. The one scene where
-  // you take the world apart until only the page is left gets a page that is
-  // already tinted — so the paper you are left with is a warm red rather than
-  // white. The paper post pass multiplies, so this composites fine.
+  // EXPERIMENT: a red sky for the erasing case. The one scene where you take
+  // the world apart until only the page is left gets a page that is already
+  // tinted — so the paper you are left with is a warm red rather than white.
+  // The paper post pass multiplies, so this composites fine.
   const SKY = mixHex(PAPER, ACCENT, 0.42);
   scene.background = new THREE.Color(SKY);
   scene.fog = new THREE.FogExp2(SKY, 0.028);
@@ -128,11 +128,11 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 31.5, pitch: 2
   const oakRoot = oak.group || oak;
   const TREE = { x: 2.3, z: -4.6 };      // moved clear of the path; it used to stand in the road
   oakRoot.position.set(TREE.x, 0, TREE.z);
-  // Turn the hero limb AWAY from the home lens. Seed 27 grows its long low bough at local
-  // bearing 2.50 rad, which the home camera (heading 31.5) saw end-on: a bare
-  // foreshortened limb with a knuckle, jutting at the hall like an arm. At
-  // this yaw the bough reaches directly behind the crown, so from the whole
-  // reachable arc the tree reads as one heavy mass over its trunk.
+  // Turn the hero limb AWAY from the home lens. Seed 27 grows its long low
+  // bough at local bearing 2.50 rad, which the home camera (heading 31.5) saw
+  // end-on: a bare foreshortened limb with a knuckle, jutting at the hall like
+  // an arm. At this yaw the bough reaches directly behind the crown, so from
+  // the whole reachable arc the tree reads as one heavy mass over its trunk.
   oakRoot.rotation.y = 3.62;
   treeGroup.add(oakRoot);
   scene.add(treeGroup);
@@ -194,9 +194,9 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 31.5, pitch: 2
   add(lantern, 1);              // the other built thing on the page
   add(oakRoot, 2);
   // ...AND EVERY OTHER TREE ON THE PAGE — the hall, the trees and the people
-  // all go together. composeWorld hands back the
-  // midground wood it planted; the far forests are not in it and stay put,
-  // being a mass in the fog rather than things anyone could point at.
+  // all go together. composeWorld hands back the midground wood it planted; the
+  // far forests are not in it and stay put, being a mass in the fog rather than
+  // things anyone could point at.
   for (const t of world.trees) add(t, 2);
 
   // ---- and the scatter, which is not props at all -------------------------

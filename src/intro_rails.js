@@ -26,9 +26,9 @@ export function samplePath(points, u) {
 // The dolly down the road and THROUGH the gate. It used to stop at z -3, and
 // the gate stands at z -6 — so the book opened by walking up to its own door
 // and halting three metres short of it, never passing through. The
-// fourth-from-last knot IS the gate's centre line, x and
-// all, so the camera passes between the posts rather than near them, and the
-// last two carry it out the far side.
+// fourth-from-last knot IS the gate's centre line, x and all, so the camera
+// passes between the posts rather than near them, and the last two carry it out
+// the far side.
 //
 // The knots also shorten as they approach it — 4.4, 4.4, 4.4, 3.8, 3.0, 3.0
 // units — because samplePath is uniform in PARAMETER, not in arc length: equal

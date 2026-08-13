@@ -80,14 +80,14 @@ test('every output stays in range across a full sweep', () => {
       const s = spatialFor({ x, y: 1.4, z }, AT_ORIGIN);
       assert.ok(s.pan >= -1 && s.pan <= 1, `pan out of range at ${x},${z}: ${s.pan}`);
       // Gain is no longer bounded by 1 — being NEARER than the reference
-      // distance is now louder than the reference, which is the whole point
-      // of SPATIAL.nearClamp — the near and far ends used to sound much the
-      // same, because the old max(ref,d) pinned every distance inside `ref` to
-      // exactly 1. What must still hold is that it
-      // is BOUNDED: the clamp is the only thing standing between a sound
-      // approaching the camera and a divide-by-zero into the master bus.
-      // Derived from the live constants, so moving nearClamp moves the
-      // ceiling with it, but removing the clamp fails here.
+      // distance is now louder than the reference, which is the whole point of
+      // SPATIAL.nearClamp — the near and far ends used to sound much the same,
+      // because the old max(ref,d) pinned every distance inside `ref` to
+      // exactly 1. What must still hold is that it is BOUNDED: the clamp is the
+      // only thing standing between a sound approaching the camera and a
+      // divide-by-zero into the master bus. Derived from the live constants, so
+      // moving nearClamp moves the ceiling with it, but removing the clamp
+      // fails here.
       const ceiling = Math.pow(SPATIAL.ref / SPATIAL.nearClamp, SPATIAL.rolloff);
       assert.ok(s.gain >= 0 && s.gain <= ceiling, `gain out of range at ${x},${z}: ${s.gain} (ceiling ${ceiling})`);
       assert.ok(s.wet >= 0 && s.wet <= 1, `wet out of range at ${x},${z}: ${s.wet}`);
@@ -99,10 +99,10 @@ test('every output stays in range across a full sweep', () => {
 
 test('nearer is louder, across the whole range the book is viewed from', () => {
   // THE BUG, heard in dev/spatial-audition.html: across the book's whole range
-  // of distances the near and far ends sounded about the same. `gain` was
-  // `(ref / max(ref, d))^rolloff`, so every distance nearer than the
-  // reference produced EXACTLY 1 — the near half of the range was one flat
-  // level, and the far half only moved 5dB.
+  // of distances the near and far ends sounded about the same. `gain` was `(ref
+  // / max(ref, d))^rolloff`, so every distance nearer than the reference
+  // produced EXACTLY 1 — the near half of the range was one flat level, and the
+  // far half only moved 5dB.
   //
   // MUTATION-VERIFIED: restore `Math.max(tune.ref, d)` and the strict
   // monotonicity below fails immediately at the first pair inside `ref`

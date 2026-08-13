@@ -70,14 +70,13 @@ const CAM = { distance: 13.8, target: [1.45, 1, -1.5], heading: 29, pitch: 23.5 
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
   scene.add(makeLights());
   
-  // The enclosure. Three walls of lattice — and the fourth side is not
-  // missing but a DOUBLE DOOR: one leaf standing shut, the other pushed
-  // ajar, the way a gate stands after somebody slipped through and did not
-  // look back. Both leaves standing wide read as too open, so one is shut.
-  // A wall that was never built says nothing;
-  // a door left ajar says the pen has never once held him. The shut leaf
-  // is the far corner, the ajar one the near — it opens across the
-  // buffalo's own facing line, toward the lens.
+  // The enclosure. Three walls of lattice — and the fourth side is not missing
+  // but a DOUBLE DOOR: one leaf standing shut, the other pushed ajar, the way a
+  // gate stands after somebody slipped through and did not look back. Both
+  // leaves standing wide read as too open, so one is shut. A wall that was
+  // never built says nothing; a door left ajar says the pen has never once held
+  // him. The shut leaf is the far corner, the ajar one the near — it opens
+  // across the buffalo's own facing line, toward the lens.
   const PEN = { x: 1.0, z: -2.3, size: 5.4 };   // room to stand, not a crate
   const pen = makePen({ size: PEN.size, height: 1.9, open: '+x', panelsPerSide: 2, doors: [0, 0.62] });
   pen.position.set(PEN.x, 0, PEN.z);

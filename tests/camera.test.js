@@ -368,11 +368,11 @@ test('the free cam reports and accepts a pose', () => {
 
 test('re-asserting an already-on free cam never reseeds the heading', () => {
   // The reload-restore bug's last layer — position survived, orientation did
-  // not: the workbench's apply() re-fires
-  // onFreeCam(true) on every scene swap, and set(true) on an already-flying
-  // cam re-read yaw/pitch from the camera's CURRENT direction — which right
-  // after a page build is the new rig's lookAt, not the flier's heading.
-  // set() is transitions-only now; a re-assertion must change nothing.
+  // not: the workbench's apply() re-fires onFreeCam(true) on every scene swap,
+  // and set(true) on an already-flying cam re-read yaw/pitch from the camera's
+  // CURRENT direction — which right after a page build is the new rig's lookAt,
+  // not the flier's heading. set() is transitions-only now; a re-assertion must
+  // change nothing.
   globalThis.addEventListener = globalThis.addEventListener || (() => {});
   const cam = new THREE.PerspectiveCamera();
   const free = makeFreeCam(cam, fakeEl());

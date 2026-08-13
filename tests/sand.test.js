@@ -66,14 +66,15 @@ test('the upper edge is wavy, not ruler-straight, and seeded', () => {
 // setting did nothing. Retiring that rebuild turned it on, and the beach was the
 // one surface where it showed.
 //
-// Why the beach and not the path, on identical settings: the offset is
-// `factor * the polygon's depth slope`, and the path lies flat on gentle terrain
-// while the sand is draped over the shore TAPER and read at a grazing angle. Same
-// factor, a far bigger offset. Polygon offset moves WRITTEN DEPTH without moving
-// geometry, the depth-edge ink pass Sobels that buffer, and the sand's seaward
-// edge runs on under the water against un-offset ground — so the buffer carried a
-// step the scene did not, and the ink drew a dark line along the waterline
-// — a dark line right at the bottom of the sand where it tapers into the water.
+// Why the beach and not the path, on identical settings: the offset is `factor
+// * the polygon's depth slope`, and the path lies flat on gentle terrain while
+// the sand is draped over the shore TAPER and read at a grazing angle. Same
+// factor, a far bigger offset. Polygon offset moves WRITTEN DEPTH without
+// moving geometry, the depth-edge ink pass Sobels that buffer, and the sand's
+// seaward edge runs on under the water against un-offset ground — so the buffer
+// carried a step the scene did not, and the ink drew a dark line along the
+// waterline — a dark line right at the bottom of the sand where it tapers into
+// the water.
 //
 // The z-fighting it was there to prevent is prevented by the +0.025 lift in the
 // geometry above, which is doing the real work.

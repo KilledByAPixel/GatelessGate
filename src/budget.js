@@ -21,6 +21,6 @@ export const DRAW_BUDGET = 150;
 // frame can afford. What changed is that the same 150 now buys twice the scene,
 // and that headroom is meant to be SPENT on detail rather than banked — adding
 // more is the whole reason it was won. So the warning sits where a case has
-// roughly doubled its current
-// weight — heavy enough to be worth a look, with room left to keep going.
+// roughly doubled its current weight — heavy enough to be worth a look, with
+// room left to keep going.
 export const DRAW_WARN = 100;

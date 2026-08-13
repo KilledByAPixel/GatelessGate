@@ -118,12 +118,12 @@ let readTimer = null;     // the pause between sections of a read-all
 // different promise made by a different, labelled switch, and the reader
 // throws it on purpose.
 //
-// TWO GAPS, not one. The pause AFTER a page finishes is the few seconds above
-// — long enough that the last verse lands before the ink starts to dissolve.
-// The pause after ARRIVING somewhere is much shorter and
-// exists for a different reason: the page turn fires its reveal without
-// awaiting it (showKoan), and the title card goes up with it, so the voice
-// wants to come in just behind the picture rather than on top of it.
+// TWO GAPS, not one. The pause AFTER a page finishes is the few seconds above —
+// long enough that the last verse lands before the ink starts to dissolve. The
+// pause after ARRIVING somewhere is much shorter and exists for a different
+// reason: the page turn fires its reveal without awaiting it (showKoan), and
+// the title card goes up with it, so the voice wants to come in just behind the
+// picture rather than on top of it.
 const AUTO_TURN_MS = 4000;
 const AUTO_SPEAK_MS = 1200;
 let autoMode = false;
@@ -355,10 +355,10 @@ if (document.fullscreenEnabled === false) fsBtn.remove();
 const app = document.getElementById('gg-app');
 let ambient = false;
 // AN EYE — an actual eye, the kind on a face. It was ◉, a circle with a dot,
-// which reads as a target or a record button and never as
-// looking. Unicode's only real eye is an emoji that renders in colour on half
-// the platforms this ships to, so this one glyph is inline SVG: an almond lid
-// and a pupil, in currentColor, so it inverts with the button like the others.
+// which reads as a target or a record button and never as looking. Unicode's
+// only real eye is an emoji that renders in colour on half the platforms this
+// ships to, so this one glyph is inline SVG: an almond lid and a pupil, in
+// currentColor, so it inverts with the button like the others.
 const EYE = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" '
   + 'fill="none" stroke="currentColor" stroke-width="1.7" '
   + 'stroke-linecap="round" stroke-linejoin="round">'
@@ -372,10 +372,10 @@ function setAmbient(on) {
   applyStageOnly();
   // Nothing else happens. Entering the look does NOT announce the page — no
   // title card, just the look — because the card belongs to the reading now,
-  // and toggleReadAll puts it up. And a
-  // reading already running is left strictly alone in both directions: it
-  // belongs to the reader, not to the panel, and neither hiding nor restoring
-  // the text is an instruction about it.
+  // and toggleReadAll puts it up. And a reading already running is left
+  // strictly alone in both directions: it belongs to the reader, not to the
+  // panel, and neither hiding nor restoring the text is an instruction about
+  // it.
   if (!ambient) pageCard.hide();
   // Auto mode's switch lives in the look bar, and the look bar only exists in
   // the look — so leaving takes the mode with it. Otherwise the book would
@@ -392,10 +392,10 @@ function setAmbient(on) {
 //
 // It went through the corner the long way round — under the right-hand tools,
 // then stacked, then back to a row — before landing on its own toolbar here,
-// with the way out as its first button. That is the part that makes it a
-// mode rather than a trapdoor: without these the look was a place you could
-// only leave by pressing the same eye you came in by, and to turn a page you
-// had to bring the text back, turn it, and hide it again.
+// with the way out as its first button. That is the part that makes it a mode
+// rather than a trapdoor: without these the look was a place you could only
+// leave by pressing the same eye you came in by, and to turn a page you had to
+// bring the text back, turn it, and hide it again.
 const lookBar = document.createElement('div');
 lookBar.className = 'gg-look-bar';
 const lookBtn = (cls, label, title, onClick) => {
@@ -553,10 +553,10 @@ syncLookRead();
 // leaving a sit while the look is on must not pull the panel back over it.
 function stageOnly() { return ambient || mode === 'sit'; }
 
-// WHO GETS TO AIM THE CAMERA — and it is the reverse of what it was.
-// Reading a page, you get the framing the case was composed for, breathing with
-// the cursor and nothing more: no dragging it off the shot, no wheel. Step into
-// the look, where the diorama has the whole window and there is nothing to read,
+// WHO GETS TO AIM THE CAMERA — and it is the reverse of what it was. Reading a
+// page, you get the framing the case was composed for, breathing with the
+// cursor and nothing more: no dragging it off the shot, no wheel. Step into the
+// look, where the diorama has the whole window and there is nothing to read,
 // and the controls are yours. The drift still runs there, and gives way for
 // good the first time you take hold (camera.js, `taken`).
 //
@@ -633,10 +633,10 @@ const compose = makeCompose({ getRig: () => rig });
 // CHIMES HUNG BY THE KIT, driven and tappable for every page at once.
 //
 // makeHut({ chimes: 7 }) hangs a fūrin; something still has to move it, or it
-// is a dead ornament nobody can ring — solid-looking, silent, and not
-// obviously broken. Leaving that to each case is the friction the seed exists
-// to remove, so it lives here beside the ambience main.js already owns on
-// every case's behalf.
+// is a dead ornament nobody can ring — solid-looking, silent, and not obviously
+// broken. Leaving that to each case is the friction the seed exists to remove,
+// so it lives here beside the ambience main.js already owns on every case's
+// behalf.
 //
 // Swept ONCE per scene and cached on the scene itself: the list dies with the
 // scene, so there is no registry to leak and nothing to unregister at a page
@@ -668,11 +668,10 @@ const hubGateTap = () => {
 // empties the whole callback list, which is right for the page being left and
 // wrong for main.js's own handlers — and main's were registered once at
 // startup, so the first page turn silently dropped them for the rest of the
-// session. That is why hung chimes swung correctly and could not be clicked
-// at all: the pick was right, the raycast was right, and nothing was calling
-// either. The unit
-// test that "proved" the tap worked had handed it a stub input that hit
-// whatever it was offered, so it never touched this at all.
+// session. That is why hung chimes swung correctly and could not be clicked at
+// all: the pick was right, the raycast was right, and nothing was calling
+// either. The unit test that "proved" the tap worked had handed it a stub input
+// that hit whatever it was offered, so it never touched this at all.
 //
 // One way to clear the taps, and it puts main's back. Never input.clear()
 // directly — tests/main-input.test.js holds this file to that.
@@ -719,13 +718,12 @@ const debug = makeDebug({
   // layout change inside the page.
   onPanel: () => applyStageSize(),
   // TRANSITIONS ONLY. This handler fires from the workbench's apply(), which
-  // re-asserts the whole state at mount and on every scene swap — so a bare
-  // `if (!on) forgetPose()` deleted the saved pose AT BOOT, before the
-  // restore block ever read it: free cam booted false, apply() said "off",
-  // and the key was gone. That is why a reload never came back flying.
-  // Entering saves at once (mode + spot); leaving
-  // ON PURPOSE — a real on→off transition — forgets; a re-assertion of
-  // "still off" touches nothing.
+  // re-asserts the whole state at mount and on every scene swap — so a bare `if
+  // (!on) forgetPose()` deleted the saved pose AT BOOT, before the restore
+  // block ever read it: free cam booted false, apply() said "off", and the key
+  // was gone. That is why a reload never came back flying. Entering saves at
+  // once (mode + spot); leaving ON PURPOSE — a real on→off transition —
+  // forgets; a re-assertion of "still off" touches nothing.
   onFreeCam: (on) => {
     const was = freeCam.enabled();
     freeCam.set(on);
@@ -793,14 +791,14 @@ function applyLens(fov = (debug && debug.state.lens) || LENS_BASE) {
 function makeRig(opts) {
   if (rig && rig.dispose) rig.dispose();
   rigBaseDistance = opts.distance;
-  // A FLYING CAM SURVIVES THE RIG SWAP. makeCameraRig snaps the camera to
-  // the case's home at construction (its update(0) — deliberate, see its own
+  // A FLYING CAM SURVIVES THE RIG SWAP. makeCameraRig snaps the camera to the
+  // case's home at construction (its update(0) — deliberate, see its own
   // comment), and the free cam only ever applies key DELTAS to position, so
-  // that snap silently stomped a flying camera on every page build. That is
-  // why the reload restore "worked" for the heading but not the spot: boot
-  // restored the pose, then the async page build snapped it away. A flying
-  // camera has to stay where it is put: capture the pose before the rig
-  // writes, put it back after.
+  // that snap silently stomped a flying camera on every page build. That is why
+  // the reload restore "worked" for the heading but not the spot: boot restored
+  // the pose, then the async page build snapped it away. A flying camera has to
+  // stay where it is put: capture the pose before the rig writes, put it back
+  // after.
   const flying = freeCam.enabled() ? freeCam.pose() : null;
   const r = makeCameraRig(camera, renderer.domElement, opts);
   if (flying) freeCam.setPose(flying);
@@ -984,10 +982,10 @@ function buildKoan(mod, slug) {
   // `mode` still said 'menu' — so arriving at a case from the Contents in dev
   // mode handed it the Contents' answer and left the page draggable.
   if (rig) rig.setDrag(canDragCamera());
-  // A PAGE TURNED UNDER THE LOOK, so say which page it is now. This cannot
-  // fire on merely opening the look — buildKoan only runs
-  // when the page actually changes — which is the whole distinction: the card
-  // answers a page turn or a reading starting, never a change of view.
+  // A PAGE TURNED UNDER THE LOOK, so say which page it is now. This cannot fire
+  // on merely opening the look — buildKoan only runs when the page actually
+  // changes — which is the whole distinction: the card answers a page turn or a
+  // reading starting, never a change of view.
   if (ambient && koanCard) pageCard.show(koanCard);
   syncLookRead();
   // The page has settled. If auto mode is on, this is what starts it reading —
@@ -1288,8 +1286,8 @@ addEventListener('keydown', (e) => {
 });
 // On the WINDOW, not the canvas: during the intro the title text sits in a DOM
 // panel over the canvas, so a click on that side never reached a canvas-only
-// listener and the intro wouldn't skip. At window level a click
-// anywhere skips — and unlocks the sound — wherever it lands.
+// listener and the intro wouldn't skip. At window level a click anywhere skips
+// — and unlocks the sound — wherever it lands.
 addEventListener('pointerdown', () => {
   audio.unlock();                 // first tap starts the sound; the mute button turns it off
   if (mode === 'intro') skipIntro();
@@ -1459,19 +1457,18 @@ const booted = router.initial();
 if (booted && booted.view === 'case' && devOpen(booted.slug)) {
   router.set(booted, { replace: true });   // canonicalise `#029` -> `#29` without a history entry
   dissolve.set(0);
-  // If the case fails to load (flaky connection, bad deploy, a chunk that
-  // fell out of the cache) there is no fallback below this line — a rejected
-  // promise here would strand the reader on inked-over paper with nothing
-  // wired to rescue them, which is the worst possible first impression of a
-  // shared link. Land exactly where the ordinary boot (the `else` branch)
-  // would have put them.
-  // IN DEV MODE THERE IS NO CATCH, deliberately. A broken case should fail the
-  // way any other JavaScript does — straight to the debugger, where anyone
-  // working on it is already standing with "pause on uncaught exceptions". The
-  // rescue below is worse than useless there: it swallows the throw and then
-  // navigates away from the page being worked on, so the reload lands on the
-  // hub and the error is gone. Nothing is caught, logged or drawn; the URL is
-  // left naming the case, so a reload retries it.
+  // If the case fails to load (flaky connection, bad deploy, a chunk that fell
+  // out of the cache) there is no fallback below this line — a rejected promise
+  // here would strand the reader on inked-over paper with nothing wired to
+  // rescue them, which is the worst possible first impression of a shared link.
+  // Land exactly where the ordinary boot (the `else` branch) would have put
+  // them. IN DEV MODE THERE IS NO CATCH, deliberately. A broken case should
+  // fail the way any other JavaScript does — straight to the debugger, where
+  // anyone working on it is already standing with "pause on uncaught
+  // exceptions". The rescue below is worse than useless there: it swallows the
+  // throw and then navigates away from the page being worked on, so the reload
+  // lands on the hub and the error is gone. Nothing is caught, logged or drawn;
+  // the URL is left naming the case, so a reload retries it.
   if (devMode) enter(booted.slug);
   else {
     enter(booted.slug).catch(() => {

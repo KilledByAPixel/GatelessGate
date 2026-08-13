@@ -124,11 +124,11 @@ test('the ship stands off in deep water and rides the swell', () => {
 });
 
 test('a tap rocks the ship on top of the swell, and the sea takes it back', () => {
-  // The verdict plays out on shore, in Joshu — so the boat itself
-  // needed feedback. Measured as a DIFFERENCE against an untapped twin build
-  // (same seeds, same simTime, so the swell underneath is identical): the tap
-  // adds a legible roll, and once the envelope closes the two hulls agree to
-  // the last bit — the extra motion leaves no residue behind.
+  // The verdict plays out on shore, in Joshu — so the boat itself needed
+  // feedback. Measured as a DIFFERENCE against an untapped twin build (same
+  // seeds, same simTime, so the swell underneath is identical): the tap adds a
+  // legible roll, and once the envelope closes the two hulls agree to the last
+  // bit — the extra motion leaves no residue behind.
   const build = () => {
     const ctx = fakeCtx();
     const root = k11.build(ctx);

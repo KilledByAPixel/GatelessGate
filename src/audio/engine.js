@@ -47,23 +47,22 @@ const MIX_ODOSHI = { kd: 0.8, ks: 1.1 };    // knock's inline mix, below
 // with), so it is left as-is rather than papered over with a special case.
 const MIX_NONE = { kd: 0, ks: 0 };
 
-// The four touch voices (ceramic/wood/cloth/breath) were born on this
-// branch, so unlike the five families above there is no pre-branch absolute
-// dry/send to round-trip to — CERAMIC/WOOD/CLOTH/BREATH.verbMix never drove
-// anything but this same spatial bus, at every point in this branch's
-// history. kd 0 IS derived, not chosen: strike()/noiseSwell() write into a
-// single `dest` with no wet split of their own (see ceramic/wood/cloth/
-// breath's own comments below), so their unplaced fallback — voicesDry
-// alone — was always undiscounted, exactly pour's situation. ks 1.2 is the
-// judgment call: not fitted to anything, just picked (from the bell
-// family's own ks, the middle of the 1.1-1.4 spread the five real families
-// span) so these four land in the same ballpark
-// dry:send ratio as the calibrated voices at ref instead of the ~3x-too-dry
-// send raw verbMix produced (see spatial.js's makeSpatialBus comment for
-// that bug). See task-12-report.md's dry/wet-at-ref table for the numbers
-// this produces per voice — CERAMIC.level etc. were tuned by ear against
-// the OLD (uncalibrated, raw-verbMix) send, so if these four now read as
-// too wet at the next audition pass, ks is the number to move, not the
+// The four touch voices (ceramic/wood/cloth/breath) were born on this branch,
+// so unlike the five families above there is no pre-branch absolute dry/send to
+// round-trip to — CERAMIC/WOOD/CLOTH/BREATH.verbMix never drove anything but
+// this same spatial bus, at every point in this branch's history. kd 0 IS
+// derived, not chosen: strike()/noiseSwell() write into a single `dest` with no
+// wet split of their own (see ceramic/wood/cloth/ breath's own comments below),
+// so their unplaced fallback — voicesDry alone — was always undiscounted,
+// exactly pour's situation. ks 1.2 is the judgment call: not fitted to
+// anything, just picked (from the bell family's own ks, the middle of the
+// 1.1-1.4 spread the five real families span) so these four land in the same
+// ballpark dry:send ratio as the calibrated voices at ref instead of the
+// ~3x-too-dry send raw verbMix produced (see spatial.js's makeSpatialBus
+// comment for that bug). See task-12-report.md's dry/wet-at-ref table for the
+// numbers this produces per voice — CERAMIC.level etc. were tuned by ear
+// against the OLD (uncalibrated, raw-verbMix) send, so if these four now read
+// as too wet at the next audition pass, ks is the number to move, not the
 // levels themselves. Sharing kd 0 with MIX_NONE also means these four share
 // pour's dry-can-exceed-unity-at-point-blank property (see MIX_NONE's own
 // comment) — same bound (1.67x), same reasoning, not a separate concern.
@@ -225,13 +224,12 @@ export function createAudio(save) {
     return bus;
   }
 
-  // UNCALLED since the ocean took the water bed: drip effects belong to a
-  // still pool, not to surf. The ambient drip loop was written for
-  // still-water beds, and every
-  // still-water case has since dropped the water token, so the only ears this
-  // ever reached were the surf's. Kept, like makeWaterBed was through its own
-  // quiet years, for the day a pool or a cave recipe names 'water' again —
-  // rewire it per-recipe then, not globally. Tap drips (audio.drip →
+  // UNCALLED since the ocean took the water bed: drip effects belong to a still
+  // pool, not to surf. The ambient drip loop was written for still-water beds,
+  // and every still-water case has since dropped the water token, so the only
+  // ears this ever reached were the surf's. Kept, like makeWaterBed was through
+  // its own quiet years, for the day a pool or a cave recipe names 'water'
+  // again — rewire it per-recipe then, not globally. Tap drips (audio.drip →
   // strikeDrip) are a separate path and still ring everywhere they did.
   // eslint-disable-next-line no-unused-vars
   function scheduleDrip() {
@@ -246,8 +244,8 @@ export function createAudio(save) {
   // finding surfaces. Same high register as the basin drips, quieter.
   function rainDropNow() {
     // Unpitched on purpose — melodic plinks do not read as raindrops:
-    // log-uniform frequency off the scale entirely, and a
-    // near-flat sweep — the pool "bloip" glide is WATER's voice, not rain's.
+    // log-uniform frequency off the scale entirely, and a near-flat sweep — the
+    // pool "bloip" glide is WATER's voice, not rain's.
     const f0 = 650 * Math.pow(2.3, Math.random());
     strikeDrip(ctx, voicesDry, voicesWet, {
       f0, gain: RAIN.dropLevel * (0.6 + Math.random() * 0.8), sweep: 1.12, verbMix: WATER.verbMix,
@@ -468,13 +466,13 @@ export function createAudio(save) {
     setWindScale(s) { windScale = s; if (wind) wind.setLevel(windLevel * windScale); },
     windScale() { return windScale; },
     stopAmbience() {
-      // Through stopLayer, not a hard stop: this used to call each bed's
-      // stop() directly, which disconnects mid-waveform — a bed at level
-      // 0.2-0.3 cut at an arbitrary sample can click under the page turn.
-      // stopLayer fades to true zero on the bed's own curve first (3s), and
-      // it already drops the engine's reference at once, so a quick re-entry
-      // starts a fresh bed while the old one dies underneath. The fade is
-      // deliberate: the hard cut it replaced was audible.
+      // Through stopLayer, not a hard stop: this used to call each bed's stop()
+      // directly, which disconnects mid-waveform — a bed at level 0.2-0.3 cut
+      // at an arbitrary sample can click under the page turn. stopLayer fades
+      // to true zero on the bed's own curve first (3s), and it already drops
+      // the engine's reference at once, so a quick re-entry starts a fresh bed
+      // while the old one dies underneath. The fade is deliberate: the hard cut
+      // it replaced was audible.
       for (const layer of ['wind', 'water', 'rain', 'music']) stopLayer(layer);
       playing = [];
       if (verb) verb.setRoom('open');   // leaving for the menu resets the air
@@ -498,31 +496,29 @@ export function createAudio(save) {
         },
       };
     },
-    // Strikes into a suspended context are DROPPED, not queued — same reason
-    // as the scheduler's guard in music.js: a frozen currentTime stacks every
+    // Strikes into a suspended context are DROPPED, not queued — same reason as
+    // the scheduler's guard in music.js: a frozen currentTime stacks every
     // one-shot onto the same instant, and unlocking sound later fires them all
     // as one cluster. A missed strike in a scene that was silent anyway costs
-    // nothing.
-    // `size` is one way to ask for a bell; `f0` survives as an override for
-    // the dev harnesses and API compatibility — the case call sites that once
-    // pinned exact pitches with it have all migrated. `preset` is the third
-    // form, and the one every case site uses now: one of BELL_PRESETS's tuned
-    // bells (hand / temple / great), voice AND macro dressing AND mallet
-    // balance together.
-    // The spatial bus's release is `bellTail(v)`, not a constant — a flat
-    // number cannot cover every size at once, since decay itself scales with
-    // size (see bellTail's comment in synths.js).
-    // `gain` here is a plain velocity now — strikeBell applies BELL.level to
-    // the partials and TRANSIENT_SCALE to the mallet itself, so this call
-    // site never has to know either constant exists.
-    // `size` MAY BE PASSED ALONGSIDE A PRESET, and then it is the body size the
-    // preset's voice is built at — f0 falls as the bell grows and every mode's
-    // decay scales with it, so a bigger number is deeper AND longer in one
-    // move. The preset's tuned per-mode amplitudes are untouched, which is the
-    // point: those three arrays were tuned in dev/bell-audition.html and are
-    // not something to edit by hand from a case. Case 9's colossus is the
-    // first caller — `great` is already the deepest of the three and its bell
-    // still wanted to be bigger than any bell in a temple.
+    // nothing. `size` is one way to ask for a bell; `f0` survives as an
+    // override for the dev harnesses and API compatibility — the case call
+    // sites that once pinned exact pitches with it have all migrated. `preset`
+    // is the third form, and the one every case site uses now: one of
+    // BELL_PRESETS's tuned bells (hand / temple / great), voice AND macro
+    // dressing AND mallet balance together. The spatial bus's release is
+    // `bellTail(v)`, not a constant — a flat number cannot cover every size at
+    // once, since decay itself scales with size (see bellTail's comment in
+    // synths.js). `gain` here is a plain velocity now — strikeBell applies
+    // BELL.level to the partials and TRANSIENT_SCALE to the mallet itself, so
+    // this call site never has to know either constant exists. `size` MAY BE
+    // PASSED ALONGSIDE A PRESET, and then it is the body size the preset's
+    // voice is built at — f0 falls as the bell grows and every mode's decay
+    // scales with it, so a bigger number is deeper AND longer in one move. The
+    // preset's tuned per-mode amplitudes are untouched, which is the point:
+    // those three arrays were tuned in dev/bell-audition.html and are not
+    // something to edit by hand from a case. Case 9's colossus is the first
+    // caller — `great` is already the deepest of the three and its bell still
+    // wanted to be bigger than any bell in a temple.
     bell({ size = null, f0 = null, preset = null, gain = 1, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
       let v, verbMix = BELL.verbMix, beam, ping, pingFreq;
@@ -552,10 +548,10 @@ export function createAudio(save) {
     // tube index -> scale degree -> Hz. The engine owns the mapping so the kit
     // never needs to know what a hertz is.
     //
-    // `punctuate` marks a strike as belonging to the READING, not the
-    // ambience: while narration ducks the bed, punctuation compensates so it
-    // lands at intended loudness — the section chimes were inaudible under
-    // the duck without it. Ambient strikes stay ducked with everything else.
+    // `punctuate` marks a strike as belonging to the READING, not the ambience:
+    // while narration ducks the bed, punctuation compensates so it lands at
+    // intended loudness — the section chimes were inaudible under the duck
+    // without it. Ambient strikes stay ducked with everything else.
     chimeStrike({ tube = 0, force = 1, punctuate = false, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
       const comp = punctuate && ducked ? MASTER / DUCKED : 1;

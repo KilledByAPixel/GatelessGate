@@ -1,6 +1,6 @@
 // Diagnostic: reproduce the grass placement rules and print a coverage map.
-// Written to chase a huge square of grass being clipped out around k29's staging.
-// Nothing here draws — it just asks which of the three rejection rules
+// Written to chase a huge square of grass being clipped out around k29's
+// staging. Nothing here draws — it just asks which of the three rejection rules
 // (rim thinning / patchiness / keepout) is throwing blades away, and where.
 import { hash1 } from '../src/util/noise.js';
 import { patchDensity } from '../src/kit/grassfield.js';

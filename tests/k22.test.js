@@ -6,8 +6,8 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Case 22: Kashyapa's flagpole. The sign turns when you touch it — and for a
 // while it did not appear to, for a reason that had nothing to do with the
-// rotation and everything to do with what a raycast will agree to hit.
-// THE CLOTH WAS UNTAPPABLE WHEREVER IT FLEW. three.js's Mesh.raycast tests the
+// rotation and everything to do with what a raycast will agree to hit. THE
+// CLOTH WAS UNTAPPABLE WHEREVER IT FLEW. three.js's Mesh.raycast tests the
 // geometry's bounding SPHERE before it looks at a single triangle, and this
 // banner is simulated: the sphere was computed once from the flat undisplaced
 // plane and never again, so every frame the cloth streamed somewhere the stale
@@ -37,8 +37,8 @@ test('the banner can be touched where it actually is, not where it was built', (
 // the wind stops, which is the case. The SIGN is the red board standing beside
 // it, and touching that turns it half a round; touch it again and it goes on
 // round the same way, half a turn per tap. The turn was briefly wired to the
-// flag's pole, which was the wrong
-// object entirely — the banner already had a job and the sign had none.
+// flag's pole, which was the wrong object entirely — the banner already had a
+// job and the sign had none.
 test('the sign rests square, then sweeps 180 degrees per tap, always the same way', () => {
   const ctx = fakeCtx();
   ctx.audio = { chimeStrike() {}, knock() {} };

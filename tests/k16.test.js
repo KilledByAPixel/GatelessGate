@@ -113,12 +113,12 @@ test('strike() sets a subtle swing that decays back near zero', () => {
   assert.equal(swing.rotation.x, 0);
 
   b.strike();
-  // measured against the strike's OWN energy rather than absolutes derived
-  // from A0. The bell's throw was doubled once already — it simply was not
-  // enough — and every hardcoded number here moved with
-  // it; stated as fractions, these say what they mean and survive the next
-  // retune. What is actually being claimed: a strike lands real energy, the
-  // bell visibly swings, it never exceeds its own clamp, and it dies away.
+  // measured against the strike's OWN energy rather than absolutes derived from
+  // A0. The bell's throw was doubled once already — it simply was not enough —
+  // and every hardcoded number here moved with it; stated as fractions, these
+  // say what they mean and survive the next retune. What is actually being
+  // claimed: a strike lands real energy, the bell visibly swings, it never
+  // exceeds its own clamp, and it dies away.
   const struck = b.swinging();
   assert.ok(struck > 0.03, `energy lands with the strike: ${struck}`);
 

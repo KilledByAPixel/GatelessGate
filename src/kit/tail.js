@@ -61,11 +61,10 @@ export function makeTail({
   const mat = washMaterial({ color, flat: true });
   const segs = [];
   // Segments are cut LONGER than their node spacing (still centred between
-  // their nodes), so neighbours overlap into each other at every joint and
-  // a bend never opens daylight. This replaced a merged joint ball — even
-  // trimmed flush it beaded the tail with visible balls at the joints; plain
-  // overlap covers the same gap while adding
-  // nothing to the silhouette.
+  // their nodes), so neighbours overlap into each other at every joint and a
+  // bend never opens daylight. This replaced a merged joint ball — even trimmed
+  // flush it beaded the tail with visible balls at the joints; plain overlap
+  // covers the same gap while adding nothing to the silhouette.
   const OVERLAP = 1.35;
   for (let i = 0; i < segments - 1; i++) {
     const r0 = thickness * (1 - i / segments);

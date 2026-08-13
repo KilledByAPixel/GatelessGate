@@ -54,21 +54,21 @@ export function makeCave({
 
   // The dark, first, so every lump of rock is drawn over it.
   //
-  // UNLIT, and that is the whole trick. This was a washMaterial mixed 93% toward
-  // INK and it still came out a mid grey: a lit material cannot be darker than
-  // the light falling on it, and the hemisphere fill lifts everything off black.
-  // Mixing further toward INK does nothing, because the mix is the surface
-  // colour and the lighting happens afterwards. A cave mouth is not a dark
-  // surface, it is an ABSENCE of light, so the honest material is one the lights
-  // never touch. MeshBasicMaterial at flat INK is the darkest thing the book
-  // owns, and it stays that way at every hour and every angle.
+  // UNLIT, and that is the whole trick. This was a washMaterial mixed 93%
+  // toward INK and it still came out a mid grey: a lit material cannot be
+  // darker than the light falling on it, and the hemisphere fill lifts
+  // everything off black. Mixing further toward INK does nothing, because the
+  // mix is the surface colour and the lighting happens afterwards. A cave mouth
+  // is not a dark surface, it is an ABSENCE of light, so the honest material is
+  // one the lights never touch. MeshBasicMaterial at flat INK is the darkest
+  // thing the book owns, and it stays that way at every hour and every angle.
   // DEEPER, and set FURTHER BACK. The box used to reach depth*1.35 with its
   // front face only depth*0.25 behind the mouth, which put the dark almost in
   // the opening: there was nowhere inside to BE, so a figure meant to be
-  // sitting in the cave either vanished into the box or perched on its lip
-  // — the mouth read as a wall with no depth behind it. Longer, and its face
-  // pushed
-  // back to depth*0.62 behind the origin, so the mouth opens onto a room.
+  // sitting in the cave either vanished into the box or perched on its lip —
+  // the mouth read as a wall with no depth behind it. Longer, and its face
+  // pushed back to depth*0.62 behind the origin, so the mouth opens onto a
+  // room.
   const throat = new THREE.Mesh(
     new THREE.BoxGeometry(width * 0.85, height * 0.75, depth * 1.9),
     new THREE.MeshBasicMaterial({ color: INK }));

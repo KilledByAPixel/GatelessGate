@@ -49,14 +49,14 @@ const ID = 20;
 // set to, so this rides the scene's own weather instead of replacing it.
 const GUST_MULT = 6;
 // ...and how much faster the sea runs while it blows. The wind is on the water
-// as well as the meadow now, so the wind visibly drives the waves.
-// 1.6 nearly triples the swell's travel at the peak, which
-// is a squall rather than a change of tide.
+// as well as the meadow now, so the wind visibly drives the waves. 1.6 nearly
+// triples the swell's travel at the peak, which is a squall rather than a
+// change of tide.
 const SEA_RUSH = 1.6;
 // ...and how much HIGHER it runs while it blows. Pace alone read as the film
 // being sped up rather than as weather: the waves have to get BIGGER, not just
-// arrive sooner. +0.9 at the peak takes the drift's three crossing swells from a
-// combined 0.084 to 0.16 — a squall's chop rather than a change of tide — and
+// arrive sooner. +0.9 at the peak takes the drift's three crossing swells from
+// a combined 0.084 to 0.16 — a squall's chop rather than a change of tide — and
 // the foam rides water.heightAt, so the wave-ends climb the beach with it for
 // nothing. It is a scale on the amplitude, not on the clock, which is why this
 // one is allowed to be a plain multiplier (see setSwellGain in kit/water.js).
@@ -115,9 +115,9 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
   scene.add(makeLights());
   
-  // a coast road, running parallel with the shoreline — the reader looks
-  // across it to the sea, and it dead-ends into nothing — a road aimed at the
-  // water is a dead end into the ocean
+  // a coast road, running parallel with the shoreline — the reader looks across
+  // it to the sea, and it dead-ends into nothing — a road aimed at the water is
+  // a dead end into the ocean
   const path = makePath({ from: [-25, -.9], to: [15, 3.8], width: 1.8, seed: ID, groundSeed: 21, wander: 2.7 });
   scene.add(path);
   
@@ -170,18 +170,16 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   // monk-dark INK_LIT for a day; the red began as a where-is-it marker and
   // got promoted.)
   //
-  // Segments 64: the default cap (30) gave 3-unit cells across 90 units,
-  // and a single shoreward sine on that grid rendered as parallel bars
-  // running one way rather than as a sea.
-  // A finer grid plus three crossing swells — one main set rolling in, two
-  // gentler obliques at ±~20° with their own wavelengths and periods — is
-  // what breaks the crests into a sea.
-  // The red deepens seaward: nearly clear over the sand so the shallows show
-  // it, full red by ~12 out (it was ~20 at first, which held the colour off too
-  // long), and the fog still owns
-  // the far fade to paper beyond that. In the sheet's local coords the
-  // seaward distance past the waterline is s = 43 - z (the group sits at
-  // world z = -51, the waterline at world z = -8).
+  // Segments 64: the default cap (30) gave 3-unit cells across 90 units, and a
+  // single shoreward sine on that grid rendered as parallel bars running one
+  // way rather than as a sea. A finer grid plus three crossing swells — one
+  // main set rolling in, two gentler obliques at ±~20° with their own
+  // wavelengths and periods — is what breaks the crests into a sea. The red
+  // deepens seaward: nearly clear over the sand so the shallows show it, full
+  // red by ~12 out (it was ~20 at first, which held the colour off too long),
+  // and the fog still owns the far fade to paper beyond that. In the sheet's
+  // local coords the seaward distance past the waterline is s = 43 - z (the
+  // group sits at world z = -51, the waterline at world z = -8).
   const water = makeWater({
   shape: 'square', size: 150, color: ACCENT, seed: ID,
   opacity: 1, segments: 64,
@@ -209,16 +207,16 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   scene.add(sand);
   
   // THE WAVE-ENDS — the foam that was the point of the ocean from the first
-  // sketch. Same period as the water's main swell, staggered per
-  // strip, so the arrivals overlap and no two land together. It rides the
-  // sheet's OWN surface via surfaceAt (the koi idiom), because the sheet
-  // writes depth and its crests would swallow tails pinned to flat sea
-  // level. renderOrder puts the foam after the sheet among transparents.
-  // (It wore a pink blush for an hour. Pink does not work here.)
+  // sketch. Same period as the water's main swell, staggered per strip, so the
+  // arrivals overlap and no two land together. It rides the sheet's OWN surface
+  // via surfaceAt (the koi idiom), because the sheet writes depth and its
+  // crests would swallow tails pinned to flat sea level. renderOrder puts the
+  // foam after the sheet among transparents. (It wore a pink blush for an hour.
+  // Pink does not work here.)
   const foam = makeFoam({
   shore: SHORE, seed: ID, groundSeed: 21,
-  // white again — the pink blush did not work; against the
-  // now-transparent shallows, plain snow foam is the contrast
+  // white again — the pink blush did not work; against the now-transparent
+  // shallows, plain snow foam is the contrast
   surfaceAt: (x, z, t) => SHORE.sea + water.heightAt(x, z + (SHORE.dist + 43), t),
   });
   foam.mesh.renderOrder = 1;
@@ -281,9 +279,9 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
 
   // THE SEA IS WHAT YOU TOUCH. It was the man — which put the one thing in the
   // picture that never reacts in charge of the only thing that does, and left
-  // the ocean, the biggest object on the page and the case's own seal, inert
-  // — so the ocean is what answers, not the man. Touch
-  // the water and the weather comes; he still does not move, which is the case.
+  // the ocean, the biggest object on the page and the case's own seal, inert —
+  // so the ocean is what answers, not the man. Touch the water and the weather
+  // comes; he still does not move, which is the case.
   input.onTap(() => {
   if (!camera) return;
   if (!surface || !input.raycastFirst(camera, [surface])) return;

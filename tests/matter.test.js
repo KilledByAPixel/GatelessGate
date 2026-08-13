@@ -177,11 +177,11 @@ test('a scene can be built without its gate, path, monk or lanterns', () => {
   assert.equal(typeof bare.dispose, 'function');
 });
 
-// THE PREFACE'S OWN SCENE, not the hub with a prop removed.
-// It used to be the hub with the gate removed; it is a bespoke diorama now —
-// the road the reader arrives on FORKS ("thousands of roads enter it"), a
-// bonshō and a flag stand either side of the split, and no gate exists
-// anywhere in it. These are the invariants that staging hangs on.
+// THE PREFACE'S OWN SCENE, not the hub with a prop removed. It used to be the
+// hub with the gate removed; it is a bespoke diorama now — the road the reader
+// arrives on FORKS ("thousands of roads enter it"), a bonshō and a flag stand
+// either side of the split, and no gate exists anywhere in it. These are the
+// invariants that staging hangs on.
 test('the preface is the fork: three road ribbons, and no gate anywhere', async () => {
   const mod = await loadKoan(PREFACE_SLUG);
   const built = mod.build();
@@ -236,11 +236,10 @@ test('the preface carries the bell and the flag, and both answer a touch', async
 });
 
 // The preface used to read as identical to the Contents. It answered that by
-// leaving the hub
-// machinery entirely — it is a different KIND of scene now, which this file
-// pins above. The Contents and the afterword still both render buildHub, so
-// the old convergence risk — one shared seed constant quietly making them the
-// same picture — remains real between THOSE two.
+// leaving the hub machinery entirely — it is a different KIND of scene now,
+// which this file pins above. The Contents and the afterword still both render
+// buildHub, so the old convergence risk — one shared seed constant quietly
+// making them the same picture — remains real between THOSE two.
 test('the two hub scenes are two different pictures, not one with pieces removed', async () => {
   const xz = (built) => built.trees.map((t) => `${t.position.x.toFixed(3)},${t.position.z.toFixed(3)}`);
   const contents = buildHub();
@@ -295,9 +294,10 @@ test('the afterword seats its meditator UNDER a tree, whatever the seed does', a
 });
 
 test('the cat stayed behind too, sitting beside him and looking the same way', async () => {
-  // The cat sits nearby in the afterword. Derived off the meditator the same way he is derived off his tree, so it
-  // follows him if the seed moves him — the failure this page has already had
-  // once, when a written-down coordinate outlived the scatter that produced it.
+  // The cat sits nearby in the afterword. Derived off the meditator the same
+  // way he is derived off his tree, so it follows him if the seed moves him —
+  // the failure this page has already had once, when a written-down coordinate
+  // outlived the scatter that produced it.
   const built = (await loadKoan(AFTERWORD_SLUG)).build();
   const buddha = built.scene.getObjectByName('buddha');
   const cat = built.scene.getObjectByName('cat');
@@ -409,9 +409,9 @@ test('the afterword\'s own build() clears the whole stage', async () => {
 });
 
 test('the preface monk rings the bell — the red figure acts through the bonshō', async () => {
-  // Touching the red figure rings the bell. Same
-  // strike and the same 0.5s floor as tapping the bonshō itself, spatialised
-  // at the bell — the bell is what sounds, whoever asked it to.
+  // Touching the red figure rings the bell. Same strike and the same 0.5s floor
+  // as tapping the bonshō itself, spatialised at the bell — the bell is what
+  // sounds, whoever asked it to.
   const taps = [];
   const bells = [];
   const ctx = {

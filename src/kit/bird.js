@@ -7,10 +7,10 @@ import { mergeSimple } from './scatter.js';
 //
 // Kept deliberately simple. An earlier pass gave it a spindle body, a head, a
 // beak, a tail and little legs, and it read as fiddly and wrong — the head too
-// big, the legs pointless on a bird that only flies, the wings too sharp.
-// The flat two-stroke chevron it replaced was almost better. So this
-// is barely more than that chevron: a small flattened body, a head with a
-// beak, a short tail, and two broad blunt wings. No legs.
+// big, the legs pointless on a bird that only flies, the wings too sharp. The
+// flat two-stroke chevron it replaced was almost better. So this is barely more
+// than that chevron: a small flattened body, a head with a beak, a short tail,
+// and two broad blunt wings. No legs.
 //
 // Three meshes — one merged body and two wings. The body is baked into one
 // mesh; only the wings move.
@@ -67,8 +67,8 @@ function wingGeometry(s, side) {
   const g = new THREE.BufferGeometry();
   const t = side;
   const v = new Float32Array([
-    // inner edge, at the body
-    // the span reaches further from the body without getting wider
+    // inner edge, at the body the span reaches further from the body without
+    // getting wider
     0, 0, 0.16 * s,          // root front
     0, 0, -0.20 * s,         // root back
     0.80 * s * t, 0, -0.12 * s,   // outer back

@@ -118,11 +118,11 @@ test('three barriers straddle one road, in order, stepping down with depth', () 
 });
 
 test('all three barriers carry the seal; the fog does the hierarchy', () => {
-  // Overriding the middle-only draft: three red gates on one
-  // road, with DISTANCE as the differentiator — the near one full-blooded, the
-  // far one a red ghost half into the paper. Each takes the deep mix like the
-  // title screen's gate, and each glows on its own (washMaterial keys off the
-  // accent family; k47 never sets emissive by hand).
+  // Overriding the middle-only draft: three red gates on one road, with
+  // DISTANCE as the differentiator — the near one full-blooded, the far one a
+  // red ghost half into the paper. Each takes the deep mix like the title
+  // screen's gate, and each glows on its own (washMaterial keys off the accent
+  // family; k47 never sets emissive by hand).
   const root = k47.build(fakeCtx());
   const gates = gatesByDepth(root.scene);
   const deepHex = new THREE.Color(ACCENT_DEEP).getHexString();
@@ -478,10 +478,10 @@ test('the scene runs without a renderer or audio, and reports a finite fragment'
 test('the far barrier dwindles as it goes, and nothing blinks on the way round', () => {
   // TWO FAULTS, both at the ends of the slide, both found by eye.
   //
-  // The far gate arrived at the GONE slot still at 0.82 scale, thirty units
-  // out — just legible against the paper — and then the wrap took it in one
-  // frame, popping out of existence rather than receding. Fog and distance
-  // alone were not enough.
+  // The far gate arrived at the GONE slot still at 0.82 scale, thirty units out
+  // — just legible against the paper — and then the wrap took it in one frame,
+  // popping out of existence rather than receding. Fog and distance alone were
+  // not enough.
   //
   // And the ARRIVING gate blinked out for exactly one frame at the end of the
   // slide. Its position was right the whole time, which is what made it puzzling

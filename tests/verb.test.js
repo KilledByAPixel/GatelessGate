@@ -4,9 +4,9 @@ import { reverbIR, mulberry32, ROOMS } from '../src/audio/verb.js';
 
 test('the noise source never collapses into a cycle', () => {
   // Regression: the previous LCG's multiply overflowed 2^53, and the degraded
-  // sequence fell into ONE shared 10,466-sample cycle for every seed — at
-  // 48 kHz, a pattern repeating 4.6x/sec. It was audible as a wah in every
-  // noise bed, and the room carried it as flutter-echo.
+  // sequence fell into ONE shared 10,466-sample cycle for every seed — at 48
+  // kHz, a pattern repeating 4.6x/sec. It was audible as a wah in every noise
+  // bed, and the room carried it as flutter-echo.
   const rand = mulberry32(777);
   const seen = new Set();
   for (let i = 0; i < 200000; i++) {
@@ -56,9 +56,9 @@ test('reverbIR channels decorrelate and the tail darkens', () => {
 });
 
 test('the room is outdoor air, not a stone cistern', () => {
-  // The book is a garden. A 5-second tail at 75% wet made every drip sound
-  // like a cistern — an outdoor scene that sounded like a cave. Short and
-  // dark is what outdoors sounds like.
+  // The book is a garden. A 5-second tail at 75% wet made every drip sound like
+  // a cistern — an outdoor scene that sounded like a cave. Short and dark is
+  // what outdoors sounds like.
   const ir = reverbIR(48000, 1.8, 1013);
   assert.equal(ir.length, Math.round(1.8 * 48000));
 

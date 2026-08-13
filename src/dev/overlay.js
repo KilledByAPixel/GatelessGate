@@ -6,8 +6,8 @@ import { groundHeight } from '../kit/ground.js';
 // Most of what decides where things end up in a diorama is never rendered: a
 // keepout is a circle nothing is drawn at, a mountain footprint is a radius the
 // scatter refuses to enter, the tree ring is two numbers. Editing a scene meant
-// nudging a prop, reloading, and reading the result off where the grass went
-// — so this draws the keepouts and the spawn positions instead.
+// nudging a prop, reloading, and reading the result off where the grass went —
+// so this draws the keepouts and the spawn positions instead.
 //
 // The workbench's "Layout guides" switch turns these on for whatever page is on
 // screen:
@@ -27,12 +27,12 @@ import { groundHeight } from '../kit/ground.js';
 // depthWrite: false besides (see makeLayoutOverlay below) — two different
 // mechanisms, doing two different jobs. Being Lines is what keeps a guide off
 // the shadow map: nothing in the render path ever sets castShadow on anything
-// but a mesh. depthWrite: false is what keeps a guide out of the surviving
-// ink pass (src/render/post.js): that pass is a Sobel over the depth buffer
-// and does not care whether a draw was a line or a mesh — a guide that wrote
-// depth would hand it an edge to find regardless of its geometry type. A guide
-// drawn as filled geometry with depth writes on would show up in the shadow map
-// AND the ink pass — muddying the very picture it exists to explain.
+// but a mesh. depthWrite: false is what keeps a guide out of the surviving ink
+// pass (src/render/post.js): that pass is a Sobel over the depth buffer and
+// does not care whether a draw was a line or a mesh — a guide that wrote depth
+// would hand it an edge to find regardless of its geometry type. A guide drawn
+// as filled geometry with depth writes on would show up in the shadow map AND
+// the ink pass — muddying the very picture it exists to explain.
 
 export const GUIDE_COLORS = {
   keepout: 0xd8402c,

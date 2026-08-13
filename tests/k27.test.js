@@ -41,8 +41,8 @@ function staged() {
   let t = 0;
   const run = (secs) => { for (const end = t + secs; t < end; t += 1 / 60) root.update(1 / 60, t); };
   // Step until something is true, rather than for a hardcoded number of
-  // seconds. DRAIN, STAGGER, EMPTY and BACK are tuning knobs moved by eye
-  // — they have already been retuned twice — and a test that bakes in "2.6
+  // seconds. DRAIN, STAGGER, EMPTY and BACK are tuning knobs moved by eye —
+  // they have already been retuned twice — and a test that bakes in "2.6
   // seconds gets you to the bottom" fails on the next pass over the numbers
   // without anything being wrong. These tests are about what happens, not when.
   const until = (pred, what, limit = 30) => {
@@ -187,9 +187,8 @@ test('case 27: they shrink to a tenth, hold there, and come back to full size', 
 
 // THE ANTI-POP TEST, and the one this case exists to satisfy. The complaint
 // about all three earlier versions was abruptness: things turned red and popped
-// away in an instant, and the alpha never worked properly. A
-// thing may take as long as it likes to go; what it may not do is change by a
-// lot on one frame.
+// away in an instant, and the alpha never worked properly. A thing may take as
+// long as it likes to go; what it may not do is change by a lot on one frame.
 test('case 27: no frame of the going or the coming back is a jump', () => {
   const { root, run, touch } = staged();
   const all = [];

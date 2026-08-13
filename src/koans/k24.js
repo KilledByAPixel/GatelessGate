@@ -101,12 +101,12 @@ const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 1
   scene.add(flowers.mesh);
   
   // AND THE BIRDS — the seal of this case. "The birds sing among innumerable
-  // kinds of fragrant flowers": the birds are what the whole answer is, so
-  // they carry the accent. Small marks against the sky, so full accent reads
-  // as seals rather than glare.
-  // LOWER, and at MIXED altitudes. At height 6 with the stock 2.6 spread
-  // they all cruised in one narrow band near the top of the frame, which
-  // read as a row rather than a flock, and half-left the top of the frame.
+  // kinds of fragrant flowers": the birds are what the whole answer is, so they
+  // carry the accent. Small marks against the sky, so full accent reads as
+  // seals rather than glare. LOWER, and at MIXED altitudes. At height 6 with
+  // the stock 2.6 spread they all cruised in one narrow band near the top of
+  // the frame, which read as a row rather than a flock, and half-left the top
+  // of the frame.
   const BIRD_CENTER = [0.5, -1.0];
   const birds = makeBirds({
   count: 9, seed: ID, center: BIRD_CENTER, color: ACCENT,
@@ -119,8 +119,8 @@ const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 1
   hurry: 3.6,
   // ...and the WINGS are scaled far less — the same split the butterflies got:
   // move faster, flap less frantically. It is what makes this read as birds
-  // putting their heads down rather
-  // than as the film being sped up: 2.6x the ground on 1.3x the wingbeat.
+  // putting their heads down rather than as the film being sped up: 2.6x the
+  // ground on 1.3x the wingbeat.
   hurryBeat: 1.7,
   });
   scene.add(birds.group);
@@ -157,17 +157,17 @@ const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 1
   
   input.onTap(() => {
   if (!camera) return;
-  // THE BIRDS ARE THE TARGET. It was Fuketsu, which put the tap on
-  // the man who by the terms of the case does not answer, and left the thing
-  // his answer is actually made of inert. They carry their own pick proxies,
-  // because a bird is a half-metre mark four metres up.
+  // THE BIRDS ARE THE TARGET. It was Fuketsu, which put the tap on the man who
+  // by the terms of the case does not answer, and left the thing his answer is
+  // actually made of inert. They carry their own pick proxies, because a bird
+  // is a half-metre mark four metres up.
   if (!birds.pick(camera, input)) return;
   if (clock - lastAsk < 0.8) return;
   lastAsk = clock;
   asked++;
-  // they quicken, climb, and beat harder, and it decays away on its own over
-  // a couple of seconds. (Flying BACKWARDS was built and then cut — see the
-  // note in kit/birds.js, which kept the one thing that came out of it.)
+  // they quicken, climb, and beat harder, and it decays away on its own over a
+  // couple of seconds. (Flying BACKWARDS was built and then cut — see the note
+  // in kit/birds.js, which kept the one thing that came out of it.)
   birds.scatter();
   // he says nothing, and he is not silent either: a breath crosses the
   // meadow under them, and three notes go up out of the grass, spaced like

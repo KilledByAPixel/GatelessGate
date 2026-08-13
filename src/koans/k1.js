@@ -34,11 +34,11 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   const path = makePath({ from: [1.2, 9], to: [1.2, -34], width: 1.7, seed: 13, groundSeed: 21, wander: 3.1 });
   scene.add(path);
   
-  // Joshu's hermitage, back off the road behind him — the place the monk
-  // walked here to reach (the opening page was two figures and a dog in an
-  // empty meadow, which read as too bare). The
-  // path samples at z≈-4.5 put the road at x≈0.5, so the hut at -3.8 keeps
-  // a clear verge between its threshold and the traffic.
+  // Joshu's hermitage, back off the road behind him — the place the monk walked
+  // here to reach (the opening page was two figures and a dog in an empty
+  // meadow, which read as too bare). The path samples at z≈-4.5 put the road at
+  // x≈0.5, so the hut at -3.8 keeps a clear verge between its threshold and the
+  // traffic.
   const HUT = { x: -3.8, z: -4.5 };
   const hut = makeHut({ width: 3.0, height: 2.3, depth: 2.4, chimes:4});
   hut.position.set(HUT.x, 0, HUT.z);
@@ -120,8 +120,8 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   // impact, which is why this case was silent for so long.
   audio && audio.breath({ force: 0.8, dur: MU_DUR * 0.8, at: hit.point });
   // ...and one small chime AT the touch. The breath is four seconds of slow
-  // onset under the ambience — as an acknowledgment it arrives too late to
-  // read as one. The chime is the instant half; the breath stays the case.
+  // onset under the ambience — as an acknowledgment it arrives too late to read
+  // as one. The chime is the instant half; the breath stays the case.
   audio && audio.chimeStrike({ tube: 2, force: 0.45, at: hit.point });
   });
   

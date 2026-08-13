@@ -39,12 +39,11 @@ export function neighborSlug(order, slug, dir) {
 // WHERE A PAGE-TURN ACTUALLY GOES, which is not quite the spine walk.
 //
 // The Contents is not a page of the book, so it is not in `order` — but it IS
-// where the reader came from, and backing off the FRONT of the book has to
-// land somewhere. It didn't: from the preface you could page forward but never
-// back, in the look and in the text alike. Both arrows and the left arrow key
-// all bottomed out in neighborSlug's own null, so the
-// first page of the book was a place you could enter and not leave the way
-// you came.
+// where the reader came from, and backing off the FRONT of the book has to land
+// somewhere. It didn't: from the preface you could page forward but never back,
+// in the look and in the text alike. Both arrows and the left arrow key all
+// bottomed out in neighborSlug's own null, so the first page of the book was a
+// place you could enter and not leave the way you came.
 //
 // Backing off the front now returns to the Contents — "it will do the exact
 // same thing as clicking go back to contents, because it's just going back."
@@ -75,10 +74,10 @@ export function pageTarget(order, slug, dir) {
 // one page read lost their place with no way to say so. Nothing wrapped after
 // that, and nothing wanted to.
 //
-// Auto mode wants to: left running, it goes continuously round from the back
-// to the front again. That is the opposite case from the one that was removed —
-// a labelled switch the reader throws on purpose, where the endless circle IS
-// the thing being asked for, not a side effect of a button that said something
+// Auto mode wants to: left running, it goes continuously round from the back to
+// the front again. That is the opposite case from the one that was removed — a
+// labelled switch the reader throws on purpose, where the endless circle IS the
+// thing being asked for, not a side effect of a button that said something
 // else.
 //
 // So the wrap is back, and it is deliberately NOT what neighborSlug or

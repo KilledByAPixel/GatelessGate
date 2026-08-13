@@ -27,14 +27,13 @@ import {
 //   this page only hangs them.
 //
 // THE MONK IS THE RED THING. The gate used to carry this page's warm mark and
-// the gate is
-// gone; now it is the figure standing at the choosing — which is the right
-// reading for a preface: the one red thing on the book's first page is the
-// person about to walk it. ACCENT_DEEP, not full ACCENT — the house rule
-// for a person-sized mass (k42's girl is the precedent). The bell and flag
-// stay ink: case 16 owns the red bonshō and case 29 the red flag, and one
-// warm mark per page is the book's law.
-// Staged by eye from here — the numbers below are a first placement.
+// the gate is gone; now it is the figure standing at the choosing — which is
+// the right reading for a preface: the one red thing on the book's first page
+// is the person about to walk it. ACCENT_DEEP, not full ACCENT — the house rule
+// for a person-sized mass (k42's girl is the precedent). The bell and flag stay
+// ink: case 16 owns the red bonshō and case 29 the red flag, and one warm mark
+// per page is the book's law. Staged by eye from here — the numbers below are a
+// first placement.
 const page = MATTER.preface;
 const SEEDS = { seed: 23, groundSeed: 41, pathSeed: 61 };
 
@@ -201,8 +200,8 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   if (input.raycastFirst(camera, bell.pickTargets())) { ring(); return; }
   // THE MONK RINGS THE BELL. The one red thing on the book's first page is the
   // person about to walk it, so touching him acts THROUGH him — the bonshō
-  // across the road sounds, same strike, same 0.5s floor, spatialised at
-  // the bell rather than the man, because the bell is what sounds.
+  // across the road sounds, same strike, same 0.5s floor, spatialised at the
+  // bell rather than the man, because the bell is what sounds.
   if (input.raycastFirst(camera, monkTargets)) { ring(); return; }
   const hit = input.raycastFirst(camera, [flag.mesh]);
   if (hit) {

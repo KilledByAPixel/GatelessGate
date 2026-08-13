@@ -68,19 +68,19 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   hall.add(cloud);
   
   // The hall hovers HOVER above the terrain — it is a dream — but the rule for
-  // floating platforms holds even here: a deck standing on daylight
-  // reads as a bug, so the veranda's own under-frame (`legs`) carries it to
-  // the ground and the dream floats on carpentry instead of air.
+  // floating platforms holds even here: a deck standing on daylight reads as a
+  // bug, so the veranda's own under-frame (`legs`) carries it to the ground and
+  // the dream floats on carpentry instead of air.
   const HOVER = 0.32;
   const veranda = makeVeranda({ width: 5.4, depth: 4.4, height: 3.4, legs: HOVER });
   veranda.position.set(0.2, HOVER, -4.0);
   hall.add(veranda);
   
-  // Everyone in the hall stands ON the boards. The deck's top surface is
-  // HOVER + the deck thickness (0.34, the veranda default) — the seats and
-  // monks used to be placed for a far thinner deck and sat 0.14 INSIDE the
-  // boards, which swallowed every seated robe's base and made the figures
-  // read as squat blobs.
+  // Everyone in the hall stands ON the boards. The deck's top surface is HOVER
+  // + the deck thickness (0.34, the veranda default) — the seats and monks used
+  // to be placed for a far thinner deck and sat 0.14 INSIDE the boards, which
+  // swallowed every seated robe's base and made the figures read as squat
+  // blobs.
   const DECK_TOP = HOVER + 0.34;
   
   // A bamboo screen (k26's, in plain ink — there it is the red thing
@@ -146,19 +146,18 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   stand.position.set(seats[2].position.x, DECK_TOP + 0.21, seats[2].position.z + 1.15);
   hall.add(stand);
   
-  // The gavel is an actual MALLET now — a hammer, not a block: a fat head
-  // lying across the stand and
-  // a slim tapered handle out of its side, resting at a hand-laid angle
-  // with its butt overhanging the block's edge. One accent material, so
-  // the two parts merge into a single mesh and the strike bounce still
-  // moves the whole tool through the group.
+  // The gavel is an actual MALLET now — a hammer, not a block: a fat head lying
+  // across the stand and a slim tapered handle out of its side, resting at a
+  // hand-laid angle with its butt overhanging the block's edge. One accent
+  // material, so the two parts merge into a single mesh and the strike bounce
+  // still moves the whole tool through the group.
   const gavel = new THREE.Group();
   gavel.name = 'gavel';
   gavel.position.copy(stand.position);
   gavel.position.y += 0.24;
-  // The handle (local +z) faces KYOZAN at the third seat, not the audience —
-  // it is his hand that takes it up. Derived from where he actually
-  // stands, plus a few degrees off square so it still reads hand-laid.
+  // The handle (local +z) faces KYOZAN at the third seat, not the audience — it
+  // is his hand that takes it up. Derived from where he actually stands, plus a
+  // few degrees off square so it still reads hand-laid.
   gavel.rotation.y = Math.atan2(
   kyozan.position.x - stand.position.x,
   kyozan.position.z - stand.position.z) + 0.15;
@@ -174,12 +173,12 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   gavel.add(mallet);
   hall.add(gavel);
   
-  // The audience, on the ground where the floor stops. The whole staging
-  // area sits inside groundHeight's flat radius, so the terrain under the
-  // arc is level at y = 0 — the crowd sits AT zero, not floated 0.34 up on
-  // an imaginary extension of the deck, which left them floating. The dream's
-  // rocking still carries them, but its
-  // amplitude is millimetres; it never lifts a hem visibly off the grass.
+  // The audience, on the ground where the floor stops. The whole staging area
+  // sits inside groundHeight's flat radius, so the terrain under the arc is
+  // level at y = 0 — the crowd sits AT zero, not floated 0.34 up on an
+  // imaginary extension of the deck, which left them floating. The dream's
+  // rocking still carries them, but its amplitude is millimetres; it never
+  // lifts a hem visibly off the grass.
   const assembly = makeAssembly({
   count: 8, radius: 4.6, center: [-.7, -2.5], facing: [0.2, -3.0], spread: 1.3, seed: ID,
   });
@@ -189,10 +188,9 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   // The tuft meadow derives each blade's variant, mirror, stiffness and lean
   // from its live world XZ through a chaotic hash, which only holds still while
   // a tuft never moves. Rocking the grass (it used to ride on `hall`) re-rolled
-  // every one of those hashes each frame and the meadow visibly re-randomised
-  // — the meadow appeared to regenerate every frame. So the dream floats and
-  // rocks;
-  // the ground it floats above stays put.
+  // every one of those hashes each frame and the meadow visibly re-randomised —
+  // the meadow appeared to regenerate every frame. So the dream floats and
+  // rocks; the ground it floats above stays put.
   const world = composeWorld(scene, {
   view: CAM,
   seed: ID,

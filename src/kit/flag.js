@@ -51,8 +51,8 @@ export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed 
     // banner streams somewhere the stale sphere does not cover. A tap aimed at
     // the flying half of the flag was rejected before the triangles were ever
     // considered — which is why case 22 read as doing nothing at all some of
-    // the time, so case 22 appeared to do nothing at all. 384 vertices
-    // a frame is nothing; being able to touch the thing is not.
+    // the time, so case 22 appeared to do nothing at all. 384 vertices a frame
+    // is nothing; being able to touch the thing is not.
     geo.computeBoundingSphere();
   };
   copyPositions();

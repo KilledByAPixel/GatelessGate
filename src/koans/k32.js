@@ -13,11 +13,11 @@ const ID = 32;
 //
 // This WAS the book's second temporal case: 20 seconds of touching nothing and
 // the philosopher bowed, and any tap reset the count. It was cut, and measuring
-// it said the same thing louder — the wait began the moment the page loaded, so reading the
-// case text outlasted it and he bowed unprompted on essentially every visit.
-// The one thing a tap could do was PREVENT the only event in the scene, which
-// meant the interaction was invisible by construction: what the reader saw was
-// a scripted bow, and touching the page made it not happen.
+// it said the same thing louder — the wait began the moment the page loaded, so
+// reading the case text outlasted it and he bowed unprompted on essentially
+// every visit. The one thing a tap could do was PREVENT the only event in the
+// scene, which meant the interaction was invisible by construction: what the
+// reader saw was a scripted bow, and touching the page made it not happen.
 //
 // Now you ask, and the Buddha does nothing, and the philosopher bows anyway.
 // The BEAT below is the whole case — the pause where an answer doesn't come is
@@ -107,18 +107,17 @@ const CAM = { distance: 9, target: [1.45, 1, -0.95], heading: 31.5, pitch: 23 };
   { at: philosopher, r: 1.2 },
   { at: ananda, r: 1.2 },
   { x: -0.6, z: 2.6, r: 3.0 },
-  // clear the sightline: the home camera sits out around (6, 7), and a
-  // scatter tree landed square between it and the Buddha, blocking everything.
-  // Keep the foreground between lens and seat open.
+  // clear the sightline: the home camera sits out around (6, 7), and a scatter
+  // tree landed square between it and the Buddha, blocking everything. Keep the
+  // foreground between lens and seat open.
   { x: 3.6, z: 3.0, r: 4.6 },
   ],
   grassKeepout: [{ x: .9, z: -1.8, r: 3 }],
   });
   
   // White wildflowers through the meadow — the kit's default whitish bloom,
-  // deliberately NOT
-  // the accent: nothing in this case gets to speak, flowers included. They
-  // nod; that is all the motion the stillness allows.
+  // deliberately NOT the accent: nothing in this case gets to speak, flowers
+  // included. They nod; that is all the motion the stillness allows.
   const flowers = makeWildflowers({
   count: 120, radius: 16, rMin: 3.0, seed: ID, groundSeed: 21,
   keepout: [
@@ -144,13 +143,13 @@ const CAM = { distance: 9, target: [1.45, 1, -0.95], heading: 31.5, pitch: 23 };
   // this at the Buddha would make the gesture a target-hunt, and the case is
   // not one: the question is put to the scene and the scene declines it.
   //
-  // But a tap that lands ON the philosopher acknowledges at the touch
-  // — a small chime, immediate, where the bottom-of-the-bow chime stays where
-  // it is, marking the thanking. A CHIME, not cloth: the first cut used a robe
-  // rustle, and a sweeping swish is not what this wants. A higher tube than
-  // the bow's 0, so the two reads stay
-  // two sounds. The ack plays even while a bow is in flight; the asking
-  // itself still waits for the bow he already gave you to finish.
+  // But a tap that lands ON the philosopher acknowledges at the touch — a small
+  // chime, immediate, where the bottom-of-the-bow chime stays where it is,
+  // marking the thanking. A CHIME, not cloth: the first cut used a robe rustle,
+  // and a sweeping swish is not what this wants. A higher tube than the bow's
+  // 0, so the two reads stay two sounds. The ack plays even while a bow is in
+  // flight; the asking itself still waits for the bow he already gave you to
+  // finish.
   input.onTap(() => {
   if (camera) {
   const hit = input.raycastFirst(camera, philTargets);
@@ -174,11 +173,10 @@ const CAM = { distance: 9, target: [1.45, 1, -0.95], heading: 31.5, pitch: 23 };
   flowers.update(dt, simTime);
 
   const lean = bowShape(clock - askedAt);
-  // FORWARD, at the waist. This was rotation.z on the whole figure, so
-  // he listed sideways like a felled post, bowing about the wrong axis rather
-  // than forward at the waist. Bodies front local +z and a positive turn about
-  // x carries
-  // the chest that way, so this is a bow from the sash up.
+  // FORWARD, at the waist. This was rotation.z on the whole figure, so he
+  // listed sideways like a felled post, bowing about the wrong axis rather than
+  // forward at the waist. Bodies front local +z and a positive turn about x
+  // carries the chest that way, so this is a bow from the sash up.
   philWaist.rotation.x = BOW * lean;
   // the one sound in the case, at the bottom of the bow and not at the
   // tap: what is being marked is the thanking, not the asking

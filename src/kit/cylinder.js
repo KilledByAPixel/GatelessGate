@@ -69,14 +69,14 @@ const GRAVITY = 9.8;   // "book gravity" — see furin.js's own comment; reused,
 // pendulums, quasi-static response to a slow shared gust) the period ratio
 // measurably does NOT change how often the cylinder rings: 1:1, 2:1 and 1/phi
 // all produced the same strike count in direct comparison. With no
-// back-reaction between cylPend and clapPend, "locking in phase" is not a
-// thing two independent oscillators driven by different signals can even do.
+// back-reaction between cylPend and clapPend, "locking in phase" is not a thing
+// two independent oscillators driven by different signals can even do.
 //
 // Kept at 1/phi anyway, because it is not entirely inert: even though a tap
-// shoves the BODY rather than the clapper (see tapKick() below), THE WALL
-// still hands the clapper a velocity on every contact, and L_clap's natural
-// frequency governs how briskly it swings back off the wall afterward and how
-// much independent transient wobble it shows on top of the quasi-static wind
+// shoves the BODY rather than the clapper (see tapKick() below), THE WALL still
+// hands the clapper a velocity on every contact, and L_clap's natural frequency
+// governs how briskly it swings back off the wall afterward and how much
+// independent transient wobble it shows on top of the quasi-static wind
 // tracking. 1/phi remains the closed-form choice for "shorter, not a neat
 // fraction" if that secondary effect ever does matter more.
 const PHI = (1 + Math.sqrt(5)) / 2;
@@ -86,9 +86,8 @@ const PERIOD_RATIO = 1 / PHI;
 // SWING uses (SPATIAL's, from src/audio/spatial.js — the binding stays const,
 // its fields don't), so dev/hanging-audition.html can write straight into it
 // and hear the very next tap change, no reload. update() re-reads
-// cylDamping/clapDamping every frame and tapKick() re-reads tapKick every
-// call, so a slider reaches an already-hanging cylinder, not just the next one
-// built.
+// cylDamping/clapDamping every frame and tapKick() re-reads tapKick every call,
+// so a slider reaches an already-hanging cylinder, not just the next one built.
 //
 // Starting points settled by ear through the harness, not derived values.
 // Damping tau = 2/c (see furin.js's own SWING comment for the e-folding
@@ -111,15 +110,15 @@ const PERIOD_RATIO = 1 / PHI;
 // settles (genuinely separate contacts: an edge-triggered rewrite of the
 // contact check gave nearly the same count, so this is not one level-check
 // re-firing). That RATE is the body's own half-period whatever the kick, so
-// amplitude only changes how LONG the ring-down keeps crossing GAP_ANGLE,
-// never how DENSE the strikes are. A draft that answered "the re-strikes don't
-// get quieter" by shrinking the swing therefore bought a shorter loop, not a
-// quieter one; the actual defect was that a force law calibrated for
-// wind-scale contact velocities — two orders of magnitude below a tap's —
-// saturated at any tap-scale hit and could not tell a decaying settle from the
-// original blow. A real bell's re-strikes diminuendo, so the fix belongs in
-// the force law (see FORCE NORMALISATION below), not in shrinking the swing
-// until the flaw is out of earshot.
+// amplitude only changes how LONG the ring-down keeps crossing GAP_ANGLE, never
+// how DENSE the strikes are. A draft that answered "the re-strikes don't get
+// quieter" by shrinking the swing therefore bought a shorter loop, not a
+// quieter one; the actual defect was that a force law calibrated for wind-scale
+// contact velocities — two orders of magnitude below a tap's — saturated at any
+// tap-scale hit and could not tell a decaying settle from the original blow. A
+// real bell's re-strikes diminuendo, so the fix belongs in the force law (see
+// FORCE NORMALISATION below), not in shrinking the swing until the flaw is out
+// of earshot.
 //
 // cylDamping is what decides how MANY re-strikes there are, and it is set to
 // keep a visibly long swing while the ring-down still reads as settling rather
@@ -139,42 +138,42 @@ export const CYL_SWING = {
 // coefficient formula ((g/L)*lean) needs a bigger lean to move a comparably
 // light mass enough to matter. Their DIFFERENCE is deliberately held under
 // GAP_ANGLE so a steady gust can never park the clapper on the wall; it still
-// matters as the bias that spends the contact margin at high gust, which is
-// why wind strikes cluster where the ear expects them.
+// matters as the bias that spends the contact margin at high gust, which is why
+// wind strikes cluster where the ear expects them.
 //
 // `swell` SCALES THE WHOLE SYSTEM rather than any one part of it: both leans,
-// the contact gap, and the tap kick, all by the same factor. This is what
-// lets the heaviest objects in the book swing visibly — they used to lean a
-// few degrees, which you had to look for — without ringing any harder or more
-// often. The ringing is decided by the relative angle measured AGAINST the
-// gap, and every one of those quantities is linear in the swell, so the bell
-// swings far wider and rings at exactly the same moments with exactly the same
-// force. Not "retuned to sound similar": the same system, drawn larger.
+// the contact gap, and the tap kick, all by the same factor. This is what lets
+// the heaviest objects in the book swing visibly — they used to lean a few
+// degrees, which you had to look for — without ringing any harder or more
+// often. The ringing is decided by the relative angle measured AGAINST the gap,
+// and every one of those quantities is linear in the swell, so the bell swings
+// far wider and rings at exactly the same moments with exactly the same force.
+// Not "retuned to sound similar": the same system, drawn larger.
 //
 // The gap can move because NOBODY CAN SEE THE CLAPPER. It has no mesh at all
 // (see the NO CLAPPER MESH note in makeCylinderChime) — pure physics inside an
-// opaque bronze body, so its clearance is a free parameter in a way the
-// fūrin's visible ring clapper is not. That is the one fact this rests on.
+// opaque bronze body, so its clearance is a free parameter in a way the fūrin's
+// visible ring clapper is not. That is the one fact this rests on.
 //
 // Two wrong turns are worth recording, because both look right on paper. The
 // first scaled the leans alone and left the gap: the relative angle grew past
 // the clearance, the clapper simply rested on the wall, and the bell rang at
 // the refractory limit — three times the strike count, a rattle. The second
 // tried to hold the ring rate by re-correlating the two gust readings, and
-// moved the count by less than 5%, because once the relative angle is
-// saturated the decorrelation is no longer what gates anything. Holding the
-// DIFFERENCE of the two leans constant failed for the same reason: the dynamic
-// part of the relative angle scales with the drive, not just with the gap
-// between equilibria.
+// moved the count by less than 5%, because once the relative angle is saturated
+// the decorrelation is no longer what gates anything. Holding the DIFFERENCE of
+// the two leans constant failed for the same reason: the dynamic part of the
+// relative angle scales with the drive, not just with the gap between
+// equilibria.
 //
 // `buffet`: how much of gustBuffet — the fast, mean-zero band furin.js already
 // reads, with features at the pendulums' own periods — rides on the slow gust.
 // This is what makes the bronze visibly SWING in wind instead of
 // quasi-statically leaning, and its transients are now the only thing that can
 // ring the bell from wind. Swept across seeds, sizes and wind levels, then
-// settled by ear in dev/hanging-audition.html like every other number here.
-// It sits above the fūrin's own level deliberately: shorter pendulums track
-// the band too stiffly, so the small hung cylinders need more of it or they go
+// settled by ear in dev/hanging-audition.html like every other number here. It
+// sits above the fūrin's own level deliberately: shorter pendulums track the
+// band too stiffly, so the small hung cylinders need more of it or they go
 // nearly mute.
 //
 // Live and mutable, the same pattern CYL_SWING and CYL_FORCE already use, so
@@ -246,26 +245,26 @@ const MAX_CYL_OMEGA_MULT = 1.3;
 // force should scale with the relative angular VELOCITY at contact" was always
 // right; what kept going wrong is the SHAPE, because wind and a tap are two
 // regimes over a hundred times apart in contact velocity, and one naive curve
-// always ends up serving only one of them. (The force law never feeds back
-// into the pendulums, so one recorded relOmega sequence can be replayed
-// through every candidate law — the comparisons below are exact, not two runs
-// that might have drifted apart.)
+// always ends up serving only one of them. (The force law never feeds back into
+// the pendulums, so one recorded relOmega sequence can be replayed through
+// every candidate law — the comparisons below are exact, not two runs that
+// might have drifted apart.)
 //
 // A single wind-tuned linear reference pinned nearly every strike of a tap's
-// ring-down at exactly 1: a machine hammering. A knee high up the range did
-// not fix it either, and the reason is the useful one — the knee level is the
+// ring-down at exactly 1: a machine hammering. A knee high up the range did not
+// fix it either, and the reason is the useful one — the knee level is the
 // ceiling on wind AND the floor on the whole tap ring-down at once, so a high
-// knee leaves taps only the top sliver of the range to fade through, and a
-// 34:1 velocity decay could not express more than about 3dB no matter what the
+// knee leaves taps only the top sliver of the range to fade through, and a 34:1
+// velocity decay could not express more than about 3dB no matter what the
 // pendulums did. THE KNEE HAD TO COME DOWN, not the segment above it get
 // steeper. Low, the same decay spans nearly 10dB and falls monotonically apart
 // from the physics' own one-strike rebound.
 //
 // Wind is then held where it already sounded right by compressing BELOW the
 // knee instead of running linearly to it: `kneeLevel * (w/REF)^windGamma` with
-// windGamma < 1 is concave, so a typical light gust contact lands near the
-// knee rather than near zero. Median wind force comes out slightly LOUDER than
-// the old law's, not quieter, which is why BRONZE.level needs no compensating
+// windGamma < 1 is concave, so a typical light gust contact lands near the knee
+// rather than near zero. Median wind force comes out slightly LOUDER than the
+// old law's, not quieter, which is why BRONZE.level needs no compensating
 // change. What wind loses is its own internal dynamic range: gusts read more
 // uniform now. That is the honest cost, and the right side to pay it on — a
 // chime answering the wind wants to be a steady texture, and a chime answering
@@ -439,26 +438,25 @@ export function makeCylinderChime({
   const CONTACT_Y = (CORD + CAP_H) + 0.65 * BODY_LEN;   // 65% down the tube, well inside it
   const CLAP_R = 0.06 * S;   // physics-only now (GAP_LINEAR, below) — see the deletion note
 
-  // NO CLAPPER MESH. Unlike furin's clapper, visible in the open ring among
-  // the tubes, this one sits INSIDE a solid, opaque bronze cylinder — and now
-  // that THE WALL, below, keeps its swing bounded to GAP_ANGLE of the body's
-  // own rotation, it can never swing clear of the body's silhouette either. So
-  // the book was spending a draw rendering something nobody could ever see,
-  // whose only visible effect was occasionally poking through the wall (a
-  // rendering artifact of a solid disc swinging inside a low-poly, unlined
-  // tube, not a physics bug — THE WALL already keeps the underlying angle
-  // bounded). Excluding it from the hull outline saved only the hull's own
-  // draw call; deleting the mesh outright removes both.
+  // NO CLAPPER MESH. Unlike furin's clapper, visible in the open ring among the
+  // tubes, this one sits INSIDE a solid, opaque bronze cylinder — and now that
+  // THE WALL, below, keeps its swing bounded to GAP_ANGLE of the body's own
+  // rotation, it can never swing clear of the body's silhouette either. So the
+  // book was spending a draw rendering something nobody could ever see, whose
+  // only visible effect was occasionally poking through the wall (a rendering
+  // artifact of a solid disc swinging inside a low-poly, unlined tube, not a
+  // physics bug — THE WALL already keeps the underlying angle bounded).
+  // Excluding it from the hull outline saved only the hull's own draw call;
+  // deleting the mesh outright removes both.
   //
   // clapPend (below) is untouched — the clapper pendulum is what decides when
   // the thing rings. clapperPivot survives too, as a bookkeeping node only: it
-  // has no
-  // geometry of its own now (an empty THREE.Group costs nothing in the
-  // draw-call count — tests/staging.test.js's own rule only counts meshes),
-  // but update() still writes clapPend.theta into its rotation.z every
-  // frame, which is what lets tests (and the harness) read the clapper's
-  // pose via getObjectByName('clapper-pivot') without reaching into this
-  // closure's private state — the same Node-testable-introspection contract
+  // has no geometry of its own now (an empty THREE.Group costs nothing in the
+  // draw-call count — tests/staging.test.js's own rule only counts meshes), but
+  // update() still writes clapPend.theta into its rotation.z every frame, which
+  // is what lets tests (and the harness) read the clapper's pose via
+  // getObjectByName('clapper-pivot') without reaching into this closure's
+  // private state — the same Node-testable-introspection contract
   // periods()/gapAngle() already give the physics.
   const clapperPivot = new THREE.Group();
   clapperPivot.name = 'clapper-pivot';
@@ -621,9 +619,9 @@ export function makeCylinderChime({
         // thresholds (FORCE_OMEGA_REF, CYL_FORCE.cap) are absolute rad/s and
         // were calibrated by ear against the unscaled bell. Dividing here
         // rather than scaling those two keeps forceForRelOmega a pure function
-        // with the meaning it was tuned to have — and without it a swelled
-        // bell pins every contact at 1.0 and the ring-down stops diminuendo,
-        // which is the half of this the swell exists not to disturb.
+        // with the meaning it was tuned to have — and without it a swelled bell
+        // pins every contact at 1.0 and the ring-down stops diminuendo, which
+        // is the half of this the swell exists not to disturb.
         fire(forceForRelOmega((cylPend.omega - clapPend.omega) / CYL_WIND.swell));
       }
 

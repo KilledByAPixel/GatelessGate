@@ -29,10 +29,9 @@ export function foamCycle(t, { period = 6, phase = 0, run = 1.8 } = {}) {
 
 // The foam, from the ocean's original sketch: the white ends of the waves,
 // overlapping and fading out as they land on the beach. A handful of strips of
-// shoreline, each running the same
-// cycle at its own seeded phase and reach, so arrivals overlap the way real
-// wave-ends do. ONE merged mesh, rebuilt per frame — a few hundred vertices,
-// cheaper than the water sheet's own displace.
+// shoreline, each running the same cycle at its own seeded phase and reach, so
+// arrivals overlap the way real wave-ends do. ONE merged mesh, rebuilt per
+// frame — a few hundred vertices, cheaper than the water sheet's own displace.
 //
 // SNOW, unlit: foam is the brightest thing on the page, brighter than the
 // paper (the snowfall argument — a flat unlit fill has to carry its

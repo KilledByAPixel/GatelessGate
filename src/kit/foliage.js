@@ -4,9 +4,9 @@ import * as THREE from '../../lib/three.module.js';
 //
 // The old version was pulled because it moved the angle of the WHOLE TREE,
 // which never looked right; individual foliage rustling is the design instead.
-// The v1 breeze
-// leaned each tree about its base pivot, which is a tree bowing, and a bowing
-// tree reads as a tree being pushed over rather than as wind moving through it.
+// The v1 breeze leaned each tree about its base pivot, which is a tree bowing,
+// and a bowing tree reads as a tree being pushed over rather than as wind
+// moving through it.
 //
 // WHY A SHADER AND NOT A HIERARCHY. A tree in this kit is TWO meshes — every
 // limb merged into one, every leaf cluster into another (tree.js) — because
@@ -53,17 +53,17 @@ export const FOLIAGE = {
 // gust — THE MASTER DIAL, both species, everything. This is a brush-and-ink
 // book and the trees are midground furniture, so the read wanted is "alive",
 // not "storm"; 0.10 turned out to be under-alive on the first live pass and
-// this is the second raise on it. The ceiling
-// is not a matter of taste: past about 0.25 the branching profile starts to
-// carry visible motion down into the bole, and a moving bole is the whole-tree
-// bowing that this system was built to get rid of.
+// this is the second raise on it. The ceiling is not a matter of taste: past
+// about 0.25 the branching profile starts to carry visible motion down into the
+// bole, and a moving bole is the whole-tree bowing that this system was built
+// to get rid of.
 export const FOLIAGE_REACH = 0.15;
 // The leaves' own flutter, on top of the branch motion and quicker than it —
 // the "leaves and stuff would move around" half of the brief. Rides aLeaf (1 on
 // a broadleaf's canopy, 0 on wood, a fraction on a pine's tiers), so a limb
 // never buzzes. THIS IS THE BROADLEAF LEAF DIAL: turn it up and the round
-// trees' clusters shiver harder without touching the branches under them or
-// the pines. Raised after the first live pass, which read as under-moved.
+// trees' clusters shiver harder without touching the branches under them or the
+// pines. Raised after the first live pass, which read as under-moved.
 export const FOLIAGE_FLUTTER = 0.35;
 
 // How stiff a branching plant is along its own length — the exponent on aSway
@@ -167,8 +167,8 @@ vec3 ggFoliageOffset(vec3 pos, vec2 world) {
   // every tree leaned permanently downwind and merely pulsed, while the meadow
   // beside it rocked symmetrically through upright. Half of every cycle they
   // were leaning opposite ways — the trees swaying against the grass rather
-  // than with it. Same field, same mapping, same instant: now they lean together and
-  // come back together, because it is one wind and not two.
+  // than with it. Same field, same mapping, same instant: now they lean
+  // together and come back together, because it is one wind and not two.
   float swing = gust * 2.0 - 1.0;
   vec3 off = vec3(uFoliageDir.x, 0.0, uFoliageDir.y)
            * (uFoliageWind * ${FOLIAGE_REACH.toFixed(4)} * w * swing);

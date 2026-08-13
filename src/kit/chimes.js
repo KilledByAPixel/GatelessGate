@@ -29,8 +29,8 @@ import { hash1 } from '../util/noise.js';
 // It is here because THE TWO FAMILIES SCALE COMPLETELY DIFFERENTLY: a fūrin is
 // 2.1x its size tall, a cylinder 0.98x. Sizing them from one shared band of
 // `size` numbers is how the cylinders ended up at half the apparent scale of
-// everything hanging beside them. So the band below is
-// in WORLD HEIGHT and each kind divides by its own reach to get there.
+// everything hanging beside them. So the band below is in WORLD HEIGHT and each
+// kind divides by its own reach to get there.
 //
 // `strike` is each family's own way into the audio engine — a fūrin reports a
 // tube index and rings chimeStrike, the cylinder reports a note and rings
@@ -53,13 +53,12 @@ const MIN_CORD = 0.05;      // below this the cap is tied to the beam, not hung 
 const CORD_VARY = 0.06;     // ...and a little either way, so a pair is not a matched set
 
 // THE ENGINE, ONCE, so a hung chime makes sound without being asked — chimes
-// should sound by default. Every other kit piece takes its
-// wiring from the case — makeFurin has onStrike, so does the cylinder chime —
-// and that is right for anything the case is composing deliberately. This
-// builder is the opposite: its whole point is that `chimes: 7` is the entire
-// instruction, and a second word you have to remember or get silence is not
-// that. There is exactly one audio engine in the app; main.js hands it over
-// at startup.
+// should sound by default. Every other kit piece takes its wiring from the case
+// — makeFurin has onStrike, so does the cylinder chime — and that is right for
+// anything the case is composing deliberately. This builder is the opposite:
+// its whole point is that `chimes: 7` is the entire instruction, and a second
+// word you have to remember or get silence is not that. There is exactly one
+// audio engine in the app; main.js hands it over at startup.
 //
 // Resolved AT STRIKE TIME, not at build: a scene built before startup finished
 // would otherwise capture a null and stay mute for its whole life. An explicit
@@ -127,9 +126,9 @@ export function hangChimes(parent, {
     const want = DROP[0] + rnd(k + 2) * (DROP[1] - DROP[0]);
     const drop = Math.min(want, maxDrop);
     // Absolute, never size-relative — case 29's lesson, learned watching three
-    // sizes hang in a row with the small ones not reaching low enough.
-    // A cord measured in units of size gives the smallest chime the shortest
-    // string, so the one that most needs to reach down is pinned tightest.
+    // sizes hang in a row with the small ones not reaching low enough. A cord
+    // measured in units of size gives the smallest chime the shortest string,
+    // so the one that most needs to reach down is pinned tightest.
     const cordLength = Math.min(MIN_CORD + rnd(k + 3) * CORD_VARY, drop * 0.35);
     const size = Math.max(0.03, (drop - cordLength) / spec.reach);
 

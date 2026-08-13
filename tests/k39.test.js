@@ -29,9 +29,9 @@ test('nextRed: sinking a stone that is not red moves nothing', () => {
 });
 
 test('nextRed: sinking the red hands it to the NEAREST survivor, not across the pond', () => {
-  // Handing the red across the pond is wrong: the CLOSEST survivor takes it,
-  // so they keep coming from the same side.
-  // red on the far stone, everything else standing: its own neighbour takes it
+  // Handing the red across the pond is wrong: the CLOSEST survivor takes it, so
+  // they keep coming from the same side. red on the far stone, everything else
+  // standing: its own neighbour takes it
   assert.equal(nextRed(6, 6, [false, false, false, false, false, false, true]), 5);
   // mid-line, with the near-side neighbour gone: the far-side one is nearest
   assert.equal(nextRed(1, 1, [false, true, true, false, false, false, false]), 0);
@@ -140,8 +140,8 @@ test('case 39: exactly one red stone, starting at the far end of the line', () =
 });
 
 test('case 39: a grey stone holds — it knocks, and nothing sinks', () => {
-  // Only the red stone can be pushed under. Someone else's phrase is
-  // perfectly load-bearing.
+  // Only the red stone can be pushed under. Someone else's phrase is perfectly
+  // load-bearing.
   const { root, tops, tap } = staged();
   root.update(1 / 60, 1);
   tap(2);
@@ -174,8 +174,8 @@ test('case 39: only the red sinks, so the crossing dismantles from the far end i
   const { root, tops, tap } = staged();
   let t = 1;
   // THE HANDOVER WAITS FOR THE SINK. The red stays on the stone you touched
-  // until it has actually gone under — nothing turns red early — so
-  // every tap here is followed by a step past SINK (1.1s) before reading.
+  // until it has actually gone under — nothing turns red early — so every tap
+  // here is followed by a step past SINK (1.1s) before reading.
   const sink = (i) => { tap(i); t += 1.6; root.update(1 / 60, t); };
 
   tap(6);                                // the red one, touched...

@@ -84,14 +84,14 @@ export const DEFAULT_HOME = {
 // means the drift cannot push the camera through a tree or under the ground in
 // any of the forty-nine scenes, with nothing to check by hand. The amounts are
 // deliberately modest — half the drag range in heading, six degrees of pitch, a
-// couple of units of breath in distance. A bit more movement than sitting still,
-// not a fairground ride.
-// IT STARTS AT HOME. noise1(0, seed) is not 0.5 — it is wherever that seed's
-// curve happens to begin — so without the envelope below the drift's very first
-// frame was already 16.5 DEGREES off the case's heading. Entering the look
-// therefore threw the goal sideways and the damping swung the camera after it,
-// which is the twist it kept showing: entering the look swung the camera into
-// a slightly different rotation than the one the case was composed at.
+// couple of units of breath in distance. A bit more movement than sitting
+// still, not a fairground ride. IT STARTS AT HOME. noise1(0, seed) is not 0.5 —
+// it is wherever that seed's curve happens to begin — so without the envelope
+// below the drift's very first frame was already 16.5 DEGREES off the case's
+// heading. Entering the look therefore threw the goal sideways and the damping
+// swung the camera after it, which is the twist it kept showing: entering the
+// look swung the camera into a slightly different rotation than the one the
+// case was composed at.
 //
 // The fix is an amplitude ramp rather than a re-centred curve: at t = 0 every
 // offset is multiplied by zero, so the goal IS home and the shot the case was
@@ -260,7 +260,8 @@ export function makeCameraRig(camera, el, {
   // Leaving restores `home`. The drift had walked the goal away from the case's
   // framing, wander switching off simply froze it there, and the reader dropped
   // back onto their page looking at a shot nobody composed, in a slightly
-  // different place than they left. The damping eases it back rather than cutting.
+  // different place than they left. The damping eases it back rather than
+  // cutting.
   //
   // Entering rewinds the clock and un-latches, so every visit to the look opens
   // on the composed shot and breathes out from there (wanderGoal ramps from
@@ -343,12 +344,12 @@ export function cameraBlock({ distance, heading, pitch }, target) {
   if (pitch < b.minPitch) extra.push(`minPitch: ${r1(Math.max(-87, pitch - 3.4))}`);
   if (pitch > b.maxPitch) extra.push(`maxPitch: ${r1(Math.min(87, pitch + 3.4))}`);
   // THE BRACES ARE NOT INCLUDED, and that is the point: what gets pasted should
-  // be the contents of the literal, nothing to trim off either end.
-  // Every case now hoists `const CAM = { ... };` above its module object, so
-  // what a composer wants is the INSIDE of that literal — select between the
-  // braces, paste, done. The old output was `camera: { ... },`, which matched
-  // the inline shape no case is written in any more and had to be unwrapped by
-  // hand every single time.
+  // be the contents of the literal, nothing to trim off either end. Every case
+  // now hoists `const CAM = { ... };` above its module object, so what a
+  // composer wants is the INSIDE of that literal — select between the braces,
+  // paste, done. The old output was `camera: { ... },`, which matched the
+  // inline shape no case is written in any more and had to be unwrapped by hand
+  // every single time.
   return parts.concat(extra).join(', ');
 }
 
@@ -413,12 +414,12 @@ export function makeFreeCam(camera, el) {
   return {
     enabled: () => on,
     set(enabled) {
-      // TRANSITIONS ONLY — a re-assertion of the current state must be a
-      // no-op. The workbench's apply() re-fires onFreeCam on every scene
-      // swap, and set(true) on an already-flying cam re-seeded yaw/pitch
-      // from the camera's CURRENT direction — which, right after a page
-      // build, is the new rig's lookAt, not the flier's heading. Position
-      // survived, orientation was silently replaced.
+      // TRANSITIONS ONLY — a re-assertion of the current state must be a no-op.
+      // The workbench's apply() re-fires onFreeCam on every scene swap, and
+      // set(true) on an already-flying cam re-seeded yaw/pitch from the
+      // camera's CURRENT direction — which, right after a page build, is the
+      // new rig's lookAt, not the flier's heading. Position survived,
+      // orientation was silently replaced.
       if (!!enabled === on) return;
       on = !!enabled;
       keys.clear();

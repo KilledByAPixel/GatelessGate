@@ -9,11 +9,10 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 // every time, as many at once as you like.
 test('a grasp is not the same note twice running', () => {
   // A choice between a few near notes rather than one repeated tube. With
-  // several wisps in the air at once the
-  // single repeated tube read as a UI click; three near-neighbours off the top
-  // of the chime read as the same small thing happening again. Seeded from the
-  // count, like everything else in this book that varies — there is no
-  // Math.random outside src/audio.
+  // several wisps in the air at once the single repeated tube read as a UI
+  // click; three near-neighbours off the top of the chime read as the same
+  // small thing happening again. Seeded from the count, like everything else in
+  // this book that varies — there is no Math.random outside src/audio.
   const struck = [];
   const ctx = fakeCtx({ audio: { chimeStrike: (o) => struck.push(o) } });
   const root = k41.build(ctx);

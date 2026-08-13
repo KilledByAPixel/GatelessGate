@@ -72,12 +72,12 @@ test('the three notes actually reach the audio engine, one per chime', () => {
 });
 
 test("case 15's chimes stay clear of each other at the LIVE swing cap, counter-phase", () => {
-  // Same guard case 29 carries, and for the same reason: the spacing was
-  // chosen against a particular SWING.maxOmegaFrac, and raising that cap is
-  // exactly what someone would do next: the swing has been asked to get BIGGER
-  // twice now, never smaller. Recomputed from the real staged scene and
-  // the live constant, so raising it past what this gate's lintel tolerates
-  // fails here rather than silently pushing two chimes through each other.
+  // Same guard case 29 carries, and for the same reason: the spacing was chosen
+  // against a particular SWING.maxOmegaFrac, and raising that cap is exactly
+  // what someone would do next: the swing has been asked to get BIGGER twice
+  // now, never smaller. Recomputed from the real staged scene and the live
+  // constant, so raising it past what this gate's lintel tolerates fails here
+  // rather than silently pushing two chimes through each other.
   //
   // theta at the energy cap's saturation point has no L in it (pendulumEnergy's
   // omega0^2 cancels), so one probe stands in for all three sizes at once.
@@ -210,9 +210,9 @@ test('a tap rings one chime and never also starts a beating', () => {
 });
 
 test('the staff comes down with each blow, and is still between beatings', () => {
-  // The interaction audit reversed the original never-moves staging note —
-  // the staff tips about its planted base once per knock, at empty air, and
-  // rests at exactly its built pose otherwise.
+  // The interaction audit reversed the original never-moves staging note — the
+  // staff tips about its planted base once per knock, at empty air, and rests
+  // at exactly its built pose otherwise.
   let onTap = null;
   const s = stubs();
   s.input.onTap = (fn) => { onTap = fn; };

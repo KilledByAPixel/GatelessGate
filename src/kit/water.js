@@ -100,17 +100,16 @@ function squareGrid(size, n) {
   return { pos, idx, edge };
 }
 
-// A disc cut out of the SAME uniform grid: drop the cells that
-// fall outside the circle and pull the vertices that overhang it back onto the
-// rim.
+// A disc cut out of the SAME uniform grid: drop the cells that fall outside the
+// circle and pull the vertices that overhang it back onto the rim.
 //
 // This started as a polar grid — rings and spokes — which has an exact rim for
 // free but crowds vertices at the hub, thins them toward the edge, and runs
 // every spoke into one shared centre vertex. The result reads as a bias at the
-// centre of the pond, visible at a glance. A cut square grid has
-// uniform density everywhere and no singularity; the price is a few irregular
-// triangles around the rim, and those are exactly the ones pinned flat, so
-// nobody ever sees them move.
+// centre of the pond, visible at a glance. A cut square grid has uniform
+// density everywhere and no singularity; the price is a few irregular triangles
+// around the rim, and those are exactly the ones pinned flat, so nobody ever
+// sees them move.
 //
 // `radiusAt` (optional) makes the wall a function of angle instead of a
 // constant — that one generalization is the whole of the 'blob' shape. When it
@@ -194,25 +193,24 @@ export function makeWater({
   specular = 0.55,         // the white glint; 0 drops back to plain Lambert
   shininess = 64,
   // The free-ocean term (case 20): slow waves traveling toward (dx, dz) at
-  // wavelength/period units/sec. One component object, or an ARRAY of them —
-  // a real sea is never one sine: a single component renders as parallel
-  // bars running one way rather than as waves, and it takes two or three
-  // crossing swells at slightly
-  // different headings to break the crests into water. DELIBERATELY
-  // UNMASKED — it ignores the rim pinning, because an ocean has no rim to
-  // protect: the near edge is buried under the sand ribbon and the far
+  // wavelength/period units/sec. One component object, or an ARRAY of them — a
+  // real sea is never one sine: a single component renders as parallel bars
+  // running one way rather than as waves, and it takes two or three crossing
+  // swells at slightly different headings to break the crests into water.
+  // DELIBERATELY UNMASKED — it ignores the rim pinning, because an ocean has no
+  // rim to protect: the near edge is buried under the sand ribbon and the far
   // edges die in the fog. A contained surface (basin, pond) must leave this
   // off, and off is the default, so every existing caller is byte-identical.
-  // Each (dx, dz) must be a unit vector — anything else silently scales
-  // that component's speed away from the wavelength/period you dialled in.
+  // Each (dx, dz) must be a unit vector — anything else silently scales that
+  // component's speed away from the wavelength/period you dialled in.
   drift = null,
-  // Per-vertex opacity, (x, z) => 0..1 in the surface's LOCAL plan coords —
-  // how an ocean is transparent over the sand and deepens seaward — clearer at
-  // the shoreline, fuller in colour with distance. The fog still owns the far
-  // fade to paper; this shapes the band before it.
-  // Evaluated ONCE at build; the ramp is geography, not animation. When set,
-  // the material's own `opacity` still multiplies on top. Off by default —
-  // every existing surface is byte-identical.
+  // Per-vertex opacity, (x, z) => 0..1 in the surface's LOCAL plan coords — how
+  // an ocean is transparent over the sand and deepens seaward — clearer at the
+  // shoreline, fuller in colour with distance. The fog still owns the far fade
+  // to paper; this shapes the band before it. Evaluated ONCE at build; the ramp
+  // is geography, not animation. When set, the material's own `opacity` still
+  // multiplies on top. Off by default — every existing surface is
+  // byte-identical.
   alphaRamp = null,
 } = {}) {
   const round = shape === 'round';
@@ -241,9 +239,9 @@ export function makeWater({
   // plain Lambert, which has no specular at all, so a pond lit from the side
   // was a flat coloured disc — and on a RED pond that reads as paint rather
   // than water. Water wants a high white specular, whatever colour the sheet
-  // itself is painted. Phong for
-  // this one mesh: the diffuse keeps the case's colour, the highlight stays
-  // white, and it travels with the camera the way a real sheet does.
+  // itself is painted. Phong for this one mesh: the diffuse keeps the case's
+  // colour, the highlight stays white, and it travels with the camera the way a
+  // real sheet does.
   //
   // Never a seal either, whatever colour it is painted: an emissive lift is
   // the same from every angle, so it would flatten the shading and take the
@@ -276,10 +274,10 @@ export function makeWater({
   const surface = new THREE.Mesh(geo, mat);
   surface.name = 'surface';
   // Water never joins the shadow map, either side of it. An ocean-sized sheet
-  // outruns the sun's little shadow camera (far = 42), and where the far
-  // plane slices the sheet the lookup paints a phantom wedge — a triangle of
-  // shadow mid-sea, cast by nothing. A glinting transparency has
-  // no business catching monk shadows anyway.
+  // outruns the sun's little shadow camera (far = 42), and where the far plane
+  // slices the sheet the lookup paints a phantom wedge — a triangle of shadow
+  // mid-sea, cast by nothing. A glinting transparency has no business catching
+  // monk shadows anyway.
   surface.userData.noShadow = true;
   group.add(surface);
 
@@ -296,14 +294,13 @@ export function makeWater({
     mask[i] = smooth(clamp01(edge[i] / band));
   }
 
-  // Idle swell: two crossed wavelets with seeded phases — the wind's
-  // breathing. A flat 0.012 was invisible on the ponds, which should never look
-  // perfectly still, so like STRIKE it now
-  // grows with the container and stops: readable on a pond, proportionate in
-  // case 7's basin, capped on open water. Kept well under a tap's crest so a
-  // strike still owns the surface ("pretty subtle, so you can still see when
-  // you click"). The oceans pass swell: 0.5 to hold the amplitude their
-  // shorelines were tuned around.
+  // Idle swell: two crossed wavelets with seeded phases — the wind's breathing.
+  // A flat 0.012 was invisible on the ponds, which should never look perfectly
+  // still, so like STRIKE it now grows with the container and stops: readable
+  // on a pond, proportionate in case 7's basin, capped on open water. Kept well
+  // under a tap's crest so a strike still owns the surface ("pretty subtle, so
+  // you can still see when you click"). The oceans pass swell: 0.5 to hold the
+  // amplitude their shorelines were tuned around.
   const IA = Math.min(0.025, 0.0175 * half) * swell;
   const p1 = hash1(1, seed) * Math.PI * 2;
   const p2 = hash1(2, seed) * Math.PI * 2;
@@ -335,9 +332,9 @@ export function makeWater({
   // The old cap here — "a ripple can never outlive its crossing" — was the
   // no-bounce assumption in constant form, and at the shipped SPEED it was
   // killing a pond ripple at ~1.5s while TAU promised 3.5. Reflections repeal
-  // it: a ring re-crosses as often as its amplitude lasts, so the only stop
-  // is the decay itself. Past three TAU the crest is under 5% of its strike
-  // and the env cutoff has long since dropped it from the sum.
+  // it: a ring re-crosses as often as its amplitude lasts, so the only stop is
+  // the decay itself. Past three TAU the crest is under 5% of its strike and
+  // the env cutoff has long since dropped it from the sum.
   const LIFE = TAU * 3;
 
   // How big a strike reads at this scale. A fixed amplitude was wrong at both
@@ -370,8 +367,7 @@ export function makeWater({
 
   // AND HOW BIG THE SEA IS RUNNING. rush is pace; this is height — under a
   // squall the waves have to get BIGGER, not just arrive sooner. A wind that
-  // only changed their pace read as a film speeding up rather than as
-  // weather.
+  // only changed their pace read as a film speeding up rather than as weather.
   //
   // Unlike rush this may be a plain multiplier and not an integrated offset,
   // and the difference is the whole reason the bug that caught the birds, the
@@ -386,12 +382,12 @@ export function makeWater({
   // top) and swellAt (which deliberately does not).
   function idleAt(x, z, t) {
     // no swell means no idle term at all, rather than one multiplied by zero —
-    // dead-still water stays exactly flat, and skips two sines per vertex
-    // 3/5 rad/s — ~2s periods, a brisk shimmer. Tuned by eye alongside k1/k2:
-    // the first pass went slow (0.55/0.42, ~11-15s periods)
-    // chasing "low frequency", and at pond-sized wavelengths that read as
-    // nothing at all until the amplitude made it a seesaw. Short wavelets
-    // moving briskly at small amplitude is what actually reads as wind.
+    // dead-still water stays exactly flat, and skips two sines per vertex 3/5
+    // rad/s — ~2s periods, a brisk shimmer. Tuned by eye alongside k1/k2: the
+    // first pass went slow (0.55/0.42, ~11-15s periods) chasing "low
+    // frequency", and at pond-sized wavelengths that read as nothing at all
+    // until the amplitude made it a seesaw. Short wavelets moving briskly at
+    // small amplitude is what actually reads as wind.
     return IA === 0 ? 0
       : IA * swellGain * (Math.sin(x * k1 + t * 3 + p1) + Math.sin(z * k2 + t * 5 + p2));
   }
@@ -482,8 +478,8 @@ export function makeWater({
 
   // The surface WITHOUT the taps: idle swell + drift, edge-masked, no ripple
   // term. This is what the koi ride — a tap above the school must not toss the
-  // fish — so anything that should feel the water breathe but ignore
-  // the reader's finger samples this instead of heightAt.
+  // fish — so anything that should feel the water breathe but ignore the
+  // reader's finger samples this instead of heightAt.
   function swellAt(x, z, t = waveClock()) {
     const m = maskAt(x, z);
     return (m > 0 ? idleAt(x, z, t) * m : 0) + driftAt(x, z, t);

@@ -63,24 +63,23 @@ function maxAxisInBand(mesh, y0, y1, axis) {
 
 test('the seated figure folds real legs — knees at ±x, lap valley, torso inset', () => {
   // Two rounds of feedback live here. Round one: the figure read as wearing a
-  // fat dress rather than sitting at all — fixed by the lap shelf
-  // (wide low block, hard lap turn, torso inset). Round two: it still had no
-  // LEGS, and lotus is a silhouette with knees in it —
-  // a radially symmetric block can never read as folded legs, so the body
-  // is now a lathe core with two KNEE ellipsoids merged in at ±x, wider
-  // than the base is deep. All of it is read back off the one merged
-  // geometry so neither event can quietly regress.
+  // fat dress rather than sitting at all — fixed by the lap shelf (wide low
+  // block, hard lap turn, torso inset). Round two: it still had no LEGS, and
+  // lotus is a silhouette with knees in it — a radially symmetric block can
+  // never read as folded legs, so the body is now a lathe core with two KNEE
+  // ellipsoids merged in at ±x, wider than the base is deep. All of it is read
+  // back off the one merged geometry so neither event can quietly regress.
   const H = 1.6;
   const g = makeFigure({ stance: 'sit' });
   const body = g.children.find((c) => c.name === 'body');
 
-  // THE KNEES: the widest thing the figure owns, low, and LEFT/RIGHT —
-  // the base must be clearly wider (±x, where the folded legs point) than
-  // it is deep (±z), which is exactly what no solid of revolution can do
-  // (Round three yawed the knee masses forward; round five made the base an
-  // honest CUSHION — a flat zabuton at y=0 with cheeks and shins resting on
-  // it. The leg claims are measured ABOVE the cushion
-  // band so they read the body, not the furniture.)
+  // THE KNEES: the widest thing the figure owns, low, and LEFT/RIGHT — the base
+  // must be clearly wider (±x, where the folded legs point) than it is deep
+  // (±z), which is exactly what no solid of revolution can do (Round three
+  // yawed the knee masses forward; round five made the base an honest CUSHION —
+  // a flat zabuton at y=0 with cheeks and shins resting on it. The leg claims
+  // are measured ABOVE the cushion band so they read the body, not the
+  // furniture.)
   const cushion = maxRadiusInBand(body, 0, 0.044 * H);
   assert.ok(cushion > 0.23 * H, `a real zabuton, wider than the robe: ${cushion}`);
   const knees = maxRadiusInBand(body, 0.05 * H, 0.16 * H);
@@ -122,13 +121,13 @@ test('the seated figure folds real legs — knees at ±x, lap valley, torso inse
 });
 
 test('a seated elder SETS HIS STAFF DOWN; the standing plant is untouched', () => {
-  // Planted upright beside a man on the ground, the staff read as a pole
-  // stuck in the earth next to him rather than as something he set down.
-  // Seated, it now LIES on the ground within reach: the shaft
-  // horizontal, resting on the plane rather than sunk into it, and every
-  // point of it clear of the CUSHION it lies beside (radius 0.26·h, scaled
-  // by stout) — at ground level the zabuton is what it could foul, the way
-  // the upright plant had to clear the hem.
+  // Planted upright beside a man on the ground, the staff read as a pole stuck
+  // in the earth next to him rather than as something he set down. Seated, it
+  // now LIES on the ground within reach: the shaft horizontal, resting on the
+  // plane rather than sunk into it, and every point of it clear of the CUSHION
+  // it lies beside (radius 0.26·h, scaled by stout) — at ground level the
+  // zabuton is what it could foul, the way the upright plant had to clear the
+  // hem.
   const seatReach = (stout) => 0.26 * stout;
   const STAFF_R = 0.018;
   for (const [height, stout] of [[1.6, 1], [1.72, 1], [1.56, 1.04], [1.62, 1.08]]) {
@@ -188,10 +187,10 @@ test('monk keeps its contract: poses, arms always, point/raise angles distinct',
     assert.ok(makeMonk({ pose }).getObjectByName('head'), pose);
   // EVERY figure has arms, in every pose. This used to assert the opposite for
   // `arms: false` — the cheap-crowd opt-out — which bakeStatic made pointless
-  // and which was retired: nobody should be getting rid of arms.
-  // Passing the dead option must not resurrect it as a way to lose them.
-  // Counted by TRAVERSAL, not by direct children: the bow re-parents
-  // everything above the sash into a 'waist' group, arms included.
+  // and which was retired: nobody should be getting rid of arms. Passing the
+  // dead option must not resurrect it as a way to lose them. Counted by
+  // TRAVERSAL, not by direct children: the bow re-parents everything above the
+  // sash into a 'waist' group, arms included.
   const armCount = (m) => {
     let n = 0;
     m.traverse((c) => { if (c.name === 'arm') n++; });
@@ -209,8 +208,8 @@ test('monk keeps its contract: poses, arms always, point/raise angles distinct',
 test('the bow is a HINGE AT THE WAIST, forward, with the hem left standing', () => {
   // Case 32's philosopher bowed about the WRONG AXIS — listing sideways rather
   // than folding forward at the waist, which is what a bow is and why it earns
-  // its own pose. So `bow` gives the figure a group named
-  // 'waist' holding everything above the sash, and turning it IS the bow.
+  // its own pose. So `bow` gives the figure a group named 'waist' holding
+  // everything above the sash, and turning it IS the bow.
   const H = 1.66;
   const upright = makeFigure({ height: H, arms: 'fold', hat: false, bow: true });
   const waist = upright.getObjectByName('waist');

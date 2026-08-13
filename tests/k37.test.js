@@ -9,9 +9,8 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 //
 // Tug the tail and he swings CLOCKWISE to face away, stops and shakes it, then
 // carries on the same way round until he is standing exactly as he was — one
-// full circle, always clockwise.
-// Everything passes through, his tail comes round after it, and nothing has
-// happened — which is the koan.
+// full circle, always clockwise. Everything passes through, his tail comes
+// round after it, and nothing has happened — which is the koan.
 
 function staged() {
   const heard = [];
@@ -142,11 +141,11 @@ test('case 37: nothing goes non-finite over a long run of tugging', () => {
 });
 
 test('case 37: the whole animal is the target, not just his tail', () => {
-  // It WAS the tail alone — the one part of him painted full ACCENT against
-  // his deepened body, so the small thing the reader is invited to touch was
-  // the small thing the case is named for. A lovely argument, and it meant the
-  // page was dead to anybody who did the obvious thing: clicking the buffalo
-  // itself produced nothing at all.
+  // It WAS the tail alone — the one part of him painted full ACCENT against his
+  // deepened body, so the small thing the reader is invited to touch was the
+  // small thing the case is named for. A lovely argument, and it meant the page
+  // was dead to anybody who did the obvious thing: clicking the buffalo itself
+  // produced nothing at all.
   //
   // A target chosen because it is thematically right is still wrong if it is
   // not the thing a hand goes to.

@@ -130,8 +130,8 @@ test('the grass reaches him: no bald ring around the one figure in the scene', (
     `only ${near.length} blades within three units of him — the clearing is back`);
 
   // AND THE MIDDLE OF THE PICTURE. A ray down the centre column of the shipped
-  // lens lands on plain ground from (-3, -5) out to (-12, -16); that whole strip
-  // used to be masked bare, and it is the part the reader is looking at.
+  // lens lands on plain ground from (-3, -5) out to (-12, -16); that whole
+  // strip used to be masked bare, and it is the part the reader is looking at.
   const mid = pts.filter((p) => p.x > -13 && p.x < -2 && p.z > -17 && p.z < -4);
   assert.ok(mid.length > 500,
     `only ${mid.length} blades where the camera is actually pointed`);
@@ -178,11 +178,11 @@ test('the butterflies are the seal, and they play where the lens is pointed', ()
   assert.ok(sumZ / (each.length * 6) < -1.5, 'the flight is out over the open ground, not at his feet');
 });
 
-// A landed butterfly should STOP IN PLACE, on top of the grass it came down
-// on, rather than sliding along the ground.
-// The wander is a function of time, so a perched butterfly kept drifting with
-// its wings shut. Stopping the PATH's clock for the perch is what fixes it, and
-// this is the pin: while a butterfly is down, it does not move at all.
+// A landed butterfly should STOP IN PLACE, on top of the grass it came down on,
+// rather than sliding along the ground. The wander is a function of time, so a
+// perched butterfly kept drifting with its wings shut. Stopping the PATH's
+// clock for the perch is what fixes it, and this is the pin: while a butterfly
+// is down, it does not move at all.
 test('a landed butterfly is landed — it holds its spot, then leaves it', () => {
   const root = staged();
   const each = [];
@@ -268,9 +268,9 @@ test('calling startles them, and the fragment stays finite', () => {
 
 test('the ledge is seen, not papered over', () => {
   // Same call as case 5's, made for the same reason and reported separately:
-  // the kit used to fill the drop with unlit near-paper so nothing past the
-  // fog line was landscape, and on a ledge this shallow it read as a slab laid
-  // over the gorge rather than as depth. The carve below IS the picture here.
+  // the kit used to fill the drop with unlit near-paper so nothing past the fog
+  // line was landscape, and on a ledge this shallow it read as a slab laid over
+  // the gorge rather than as depth. The carve below IS the picture here.
   const root = staged();
   assert.equal(root.scene.getObjectByName('fogfill'), undefined,
     'nothing lays paper over the drop this case carved');

@@ -9,12 +9,12 @@ import { composeWorld } from '../src/kit/scenery.js';
 import { groundHeight } from '../src/kit/ground.js';
 import { setBreezePointer, clearBreeze } from '../src/kit/breeze.js';
 
-// These guard a bug that shipped: the meadow cut a huge SQUARE
-// out of itself around the staging. One octave of bilinear value noise on an
-// integer lattice, thresholded to zero, leaves holes whose edges follow
-// lattice-aligned iso-contours — and at the frequency it ran, one cell was wider
-// than the visible field, so a single hash decided whether the middle of the
-// shot had grass at all.
+// These guard a bug that shipped: the meadow cut a huge SQUARE out of itself
+// around the staging. One octave of bilinear value noise on an integer lattice,
+// thresholded to zero, leaves holes whose edges follow lattice-aligned
+// iso-contours — and at the frequency it ran, one cell was wider than the
+// visible field, so a single hash decided whether the middle of the shot had
+// grass at all.
 //
 // Measured against the old code, the FLOOR assertion below is the one that
 // catches it. The stand-size and isotropy assertions do not: value noise's
@@ -198,9 +198,9 @@ test('the field actually places the plants it is asked for', () => {
 });
 
 // THE RIM. The meadow should reach further AND taper off rather than stopping
-// abruptly. The field always thinned toward its edge; what it never did
-// was SHRINK, so the last plants standing on the boundary were full-height and
-// drew the circle the thinning was meant to hide.
+// abruptly. The field always thinned toward its edge; what it never did was
+// SHRINK, so the last plants standing on the boundary were full-height and drew
+// the circle the thinning was meant to hide.
 test('the meadow thins AND shrinks toward its edge, and is empty at the rim', () => {
   const radius = 24, taper = 0.45;
   const spots = grassPlacements({ count: 20000, radius, taper, seed: 2349 });

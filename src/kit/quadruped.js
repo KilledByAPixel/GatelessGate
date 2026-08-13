@@ -72,11 +72,10 @@ export function makeQuadruped({
   const hx = hipX * h;
   const belly = bodyY - Math.sqrt(Math.max(0, R * R - hx * hx));
   // How deep the tops ride inside the barrel is a DIAL (legBury), not a
-  // constant: the belly formula above is exact only at the barrel's
-  // cylindrical mid-span, so a species whose hips sit near the capsule's
-  // rounding caps — or whose barrel is pitched — shows a sliver of air at
-  // the join. Cranking legBury is the one-number fix for pushing the legs
-  // further inside the body.
+  // constant: the belly formula above is exact only at the barrel's cylindrical
+  // mid-span, so a species whose hips sit near the capsule's rounding caps — or
+  // whose barrel is pitched — shows a sliver of air at the join. Cranking
+  // legBury is the one-number fix for pushing the legs further inside the body.
   const legTop = belly + legBury * h;
   const knee = (legs && legs.knee) || 0;
 
@@ -134,14 +133,14 @@ export function makeQuadruped({
     return geo;
   };
 
-  // A LIMB, NOT A DOWEL — across every animal the legs read as plain sticks.
-  // A real leg spends its width unevenly: broad where the
-  // thigh leaves the body, a pinch at the knee line, a slim cannon bone, and
-  // a small flare back out at the foot. Four rings say all of that in one
-  // mesh — same count as the old cylinder, so no species pays a draw for it.
-  // `legTaper` keeps its job as the TOP's knob (the horse runs it at 1.2 for
-  // a broad forearm over a wire cannon); the foot stays anchored on legR so
-  // front and hind feet always match.
+  // A LIMB, NOT A DOWEL — across every animal the legs read as plain sticks. A
+  // real leg spends its width unevenly: broad where the thigh leaves the body,
+  // a pinch at the knee line, a slim cannon bone, and a small flare back out at
+  // the foot. Four rings say all of that in one mesh — same count as the old
+  // cylinder, so no species pays a draw for it. `legTaper` keeps its job as the
+  // TOP's knob (the horse runs it at 1.2 for a broad forearm over a wire
+  // cannon); the foot stays anchored on legR so front and hind feet always
+  // match.
   const limb = (rTop, rFoot, len, seg) => loft([
     { p: [0, 0, 0], r: rTop * 1.18 },
     { p: [0, -0.45 * len, 0], r: rFoot * 0.85 },
@@ -177,14 +176,13 @@ export function makeQuadruped({
 
       // THE KNEE BALL. Two lofts meeting at an angle touch edge-to-edge and
       // open a wedge of daylight on the OUTSIDE of the bend ("there's like a
-      // gap where the two cylinders are touching"). A ball of the
-      // joint's own radius, centred exactly on the hinge point, keeps the
-      // joint covered at any bend — and it is MERGED into the thigh's
-      // geometry rather than added as a child, so it costs no mesh and no
-      // draw call — free, which is what mattered back when k45's horse
-      // budget was frozen at the line; k45 now bakes its horse to one mesh
-      // regardless, but the merge still costs nothing for any quadruped
-      // that uses this plan.
+      // gap where the two cylinders are touching"). A ball of the joint's own
+      // radius, centred exactly on the hinge point, keeps the joint covered at
+      // any bend — and it is MERGED into the thigh's geometry rather than added
+      // as a child, so it costs no mesh and no draw call — free, which is what
+      // mattered back when k45's horse budget was frozen at the line; k45 now
+      // bakes its horse to one mesh regardless, but the merge still costs
+      // nothing for any quadruped that uses this plan.
       const kneeBall = new THREE.SphereGeometry(rKnee * 1.05, 7, 5);
       kneeBall.translate(0, -thighLen, 0);
       const thigh = new THREE.Mesh(
@@ -320,13 +318,13 @@ export function makeQuadruped({
   //   tilt   lean off vertical, OUTWARD (the pair spreads)
   //
   // The base ring is a flared loft, so push {x,y,z} INSIDE the skull to bury
-  // the join — how close the ear sits to the head is a DIAL here, not a
-  // hidden constant. This replaces the aim-ray scheme, which normalized
-  // {x, up, fwd} into a direction and snapped the base onto the surface at a
-  // fixed sink: the magnitudes did nothing (the dog's x: 0.005 still landed
-  // 45° out on the crown, because only the RATIO survived), and the
-  // ear-to-head distance was untunable: no amount of work in the model viewer
-  // could move it, because the knob did not exist.
+  // the join — how close the ear sits to the head is a DIAL here, not a hidden
+  // constant. This replaces the aim-ray scheme, which normalized {x, up, fwd}
+  // into a direction and snapped the base onto the surface at a fixed sink: the
+  // magnitudes did nothing (the dog's x: 0.005 still landed 45° out on the
+  // crown, because only the RATIO survived), and the ear-to-head distance was
+  // untunable: no amount of work in the model viewer could move it, because the
+  // knob did not exist.
   if (ears) {
     if (ears.up !== undefined || ears.fwd !== undefined) {
       throw new Error('ears take direct head-relative offsets { r, h, x, y, z, tilt } now — '
@@ -361,14 +359,14 @@ export function makeQuadruped({
   }
 
   // A HORN IS AN ARC, NOT A SPIKE — a buffalo's are round and curved, like a
-  // devil's horn. `horns.curve` (additive;
-  // absent keeps the legacy straight cone) lofts the rings along a quadratic
-  // arc instead: the horn leaves its base along local +y, then bends toward
-  // local -z — up, then hooking back — with the radius shrinking to a point.
-  // `curve` is how far the tip is displaced off the straight line, as a
-  // fraction of len; the arc trades some vertical reach for it (0.85·len), the
-  // way a bent finger stands shorter than a straight one. Base still hinges at
-  // the origin, so placement and the sweep/back channels work unchanged.
+  // devil's horn. `horns.curve` (additive; absent keeps the legacy straight
+  // cone) lofts the rings along a quadratic arc instead: the horn leaves its
+  // base along local +y, then bends toward local -z — up, then hooking back —
+  // with the radius shrinking to a point. `curve` is how far the tip is
+  // displaced off the straight line, as a fraction of len; the arc trades some
+  // vertical reach for it (0.85·len), the way a bent finger stands shorter than
+  // a straight one. Base still hinges at the origin, so placement and the
+  // sweep/back channels work unchanged.
   if (horns) for (const sx of [-1, 1]) {
     let geo;
     if (horns.curve) {
@@ -404,10 +402,9 @@ export function makeQuadruped({
       // How the tail leaves the rump. Down and BACK by default rather than
       // straight down: a strand pinned at one node hangs flat against the
       // flank, and a swish then swings it through the animal — the buffalo's
-      // rotated around inside its own barrel. Held a little
-      // clear of the body, the same swish whips outward, which is what a tail
-      // does. `tail.root` overrides it for a beast that carries its own
-      // differently.
+      // rotated around inside its own barrel. Held a little clear of the body,
+      // the same swish whips outward, which is what a tail does. `tail.root`
+      // overrides it for a beast that carries its own differently.
       root: tail.root ?? [0, -0.72, -0.69],
     });
     strand.group.position.set(0, bodyY + tail.up * h, -tail.back * h);

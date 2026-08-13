@@ -3,9 +3,9 @@
 // Paging used to drop any click that landed while a transition was still
 // running (an `entering` guard returned early), so fast paging felt laggy and
 // unresponsive — you had to wait out each ink dissolve before the next click
-// took. This queue instead remembers the latest destination: a request
-// that arrives mid-hop becomes the new target, and when the current hop
-// finishes the queue goes straight there, skipping any cases it overtook.
+// took. This queue instead remembers the latest destination: a request that
+// arrives mid-hop becomes the new target, and when the current hop finishes the
+// queue goes straight there, skipping any cases it overtook.
 //
 // It is deliberately free of DOM and Three.js so it can be unit-tested. The
 // host supplies three functions:

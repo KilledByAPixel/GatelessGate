@@ -139,10 +139,10 @@ test('the staging keeps the two figures apart and inside the meadow', () => {
       `figure inside the staging box: ${m.position.x}, ${m.position.z}`);
   }
   // Both sleeves are presented broadly the same way — the boy is copying, not
-  // arguing. This was an exact-equality pin until a hand-tweak turned
-  // the boy a half radian toward Gutei's finger ("slight turn to face
-  // Gutei's finger" — k3.js); the band still fails an about-face or a
-  // profile, which is what "a copy, not a confrontation" actually needs.
+  // arguing. This was an exact-equality pin until a hand-tweak turned the boy a
+  // half radian toward Gutei's finger ("slight turn to face Gutei's finger" —
+  // k3.js); the band still fails an about-face or a profile, which is what "a
+  // copy, not a confrontation" actually needs.
   assert.ok(Math.abs(a.rotation.y - b.rotation.y) < 0.8, 'master and boy face broadly the same way');
 });
 

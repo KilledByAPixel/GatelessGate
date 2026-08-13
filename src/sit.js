@@ -12,13 +12,13 @@ export function clockText(secondsLeft) {
 
 // Browser sit mode. `audio` is createAudio(); onComplete()/onExit() are callbacks.
 //
-// Three phases, and the third one is the point: 'off', 'sitting' while
-// the clock runs, and 'done' once it has. Sitting used to throw you back into
-// the text the instant the timer expired, which is the one moment a sitting
-// should NOT be interrupted. Now the bell rings and nothing else happens: the
-// scene is still there, the clock reads 0:00, and the reader leaves when they
-// are ready. So onComplete only records the sit; onExit is what ends it, and it
-// fires on the tap whether that tap came early or an hour after the bell.
+// Three phases, and the third one is the point: 'off', 'sitting' while the
+// clock runs, and 'done' once it has. Sitting used to throw you back into the
+// text the instant the timer expired, which is the one moment a sitting should
+// NOT be interrupted. Now the bell rings and nothing else happens: the scene is
+// still there, the clock reads 0:00, and the reader leaves when they are ready.
+// So onComplete only records the sit; onExit is what ends it, and it fires on
+// the tap whether that tap came early or an hour after the bell.
 export function makeSit({ audio, onComplete, onExit } = {}) {
   const el = document.createElement('div');
   el.className = 'gg-sit hidden';

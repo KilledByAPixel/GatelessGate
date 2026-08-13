@@ -105,8 +105,8 @@ test('the gate rings ONLY when it opens, never while it is already open', () => 
   // already open, from a hit box that stays behind at the size and place the
   // gate started — you could keep clicking where it used to be and keep
   // triggering the sound, when it should only fire as the gate starts to grow.
-  // Two gates on one page, effectively: the one
-  // you could see and the one you could still hear.
+  // Two gates on one page, effectively: the one you could see and the one you
+  // could still hear.
   const bells = [];
   const { root, tapAt } = harness({ bell: () => bells.push(1), drip() {}, cylinderStrike() {} });
 

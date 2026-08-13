@@ -113,8 +113,8 @@ test('horns and ears point away from the skull, not across it', () => {
   const head = new THREE.Box3().setFromObject(b.group.getObjectByName('head'));
   // Was * 1.8, sized against the old 0.36-wide box skull. A retune (524f3ad)
   // rebuilt the head as a 0.6-wide sphere with the horns kept, and the ratio
-  // fell to ~1.36 on purpose. The claim that survives is
-  // the direction: the sweep still clearly outreaches the skull.
+  // fell to ~1.36 on purpose. The claim that survives is the direction: the
+  // sweep still clearly outreaches the skull.
   assert.ok(spread.max.x - spread.min.x > (head.max.x - head.min.x) * 1.2,
     'the sweep reads wider than the skull at a distance');
 });

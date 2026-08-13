@@ -8,10 +8,10 @@ import {
 
 const ID = 7;
 // The framing. This case used to take the book's default shot implicitly, by
-// naming no `camera:` at all. These are DEFAULT_HOME's own numbers, written
-// out so the shot is tuned here like every other case's rather than by moving
-// the book. composeWorld gets the same object as its `view`, so the
-// scatter still refuses spots no reachable heading can see (kit/scenery.js).
+// naming no `camera:` at all. These are DEFAULT_HOME's own numbers, written out
+// so the shot is tuned here like every other case's rather than by moving the
+// book. composeWorld gets the same object as its `view`, so the scatter still
+// refuses spots no reachable heading can see (kit/scenery.js).
 const CAM = { distance: 10.7, target: [1.2, 1.35, 0.55], heading: 47, pitch: 14 };
 
 export default {
@@ -24,11 +24,11 @@ export default {
   // Used to declare water:0 — drips with no bed (a basin at rest is nearly
   // silent) — but that also scheduled random ambient drips, which are not
   // wanted (see makeWaterBed's comment in synths.js: the bed and its drip
-  // schedule are switched off everywhere, not just here).
-  // A tap on the water still answers with one (audio.drip(), below) — that
-  // response was never on this token, only the ambient schedule was; the
-  // bowl answers as ceramic now, not as somebody else's water. The
-  // shishi-odoshi is the yard's one declared emitter.
+  // schedule are switched off everywhere, not just here). A tap on the water
+  // still answers with one (audio.drip(), below) — that response was never on
+  // this token, only the ambient schedule was; the bowl answers as ceramic now,
+  // not as somebody else's water. The shishi-odoshi is the yard's one declared
+  // emitter.
   ambience: ['wind:0.14', 'odoshi', 'music'],
   // the first bright case: washing a bowl is domestic, morning work — yo, not
   // hirajoshi
@@ -88,11 +88,11 @@ export default {
     joshu.position.set(1.55, 0, 1.75);
     scene.add(joshu);
 
-    // The monk who has just entered the monastery, up the path from Joshu and
-    // a little past him. 1.87 units apart, which is only
-    // 0.13 of half-frame between them on screen — they read as two because
-    // they stand at different DEPTHS, one nearer and larger, not because they
-    // are spread across the frame.
+    // The monk who has just entered the monastery, up the path from Joshu and a
+    // little past him. 1.87 units apart, which is only 0.13 of half-frame
+    // between them on screen — they read as two because they stand at different
+    // DEPTHS, one nearer and larger, not because they are spread across the
+    // frame.
     //
     // Worth knowing before moving either of them: at this camera's distance a
     // body is about 0.06 of half-frame wide, so world distance and screen
@@ -109,11 +109,10 @@ export default {
     faceMonk(monk, joshu.position);
 
     // The shishi-odoshi, set back from the basin with its mouth turned toward
-    // it. The distance is load-bearing: the tube reaches 0.7 when it tips,
-    // and at the first placement (0.98 from the basin's axis) the mouth dipped
-    // straight through the basin's wall. At 1.77
-    // the tipped mouth clears the stone by half a unit. Its knock is the
-    // yard's clock; a tap tips it early.
+    // it. The distance is load-bearing: the tube reaches 0.7 when it tips, and
+    // at the first placement (0.98 from the basin's axis) the mouth dipped
+    // straight through the basin's wall. At 1.77 the tipped mouth clears the
+    // stone by half a unit. Its knock is the yard's clock; a tap tips it early.
     const odoshi = makeOdoshi({
       seed: 7,
       onPour: () => audio && audio.pour({ at: odoshi.group.position }),
@@ -124,10 +123,10 @@ export default {
     scene.add(odoshi.group);
 
     // (The monastery cat used to sit on the path here, eyeing the breakfast
-    // bowl. It went when the second figure arrived: two monks and a
-    // cat in a yard this size is a crowd, and the cat sat exactly where the
-    // conversation now stands. It is still k14's cat and still turns up in
-    // the afterword; it just does not live in this case any more.)
+    // bowl. It went when the second figure arrived: two monks and a cat in a
+    // yard this size is a crowd, and the cat sat exactly where the conversation
+    // now stands. It is still k14's cat and still turns up in the afterword; it
+    // just does not live in this case any more.)
 
     const world = composeWorld(scene, {
       view: CAM,
@@ -177,9 +176,9 @@ export default {
       // the deer-scarer first: a tap tips it without waiting out the fill
       if (input.raycastFirst(camera, odoshi.pickTargets())) { odoshi.tip(); return; }
       // The bowl is ITS OWN thing now — it used to answer with a ripple in the
-      // basin two steps away, a cause with somebody else's effect. Touched,
-      // it rocks on its foot and clinks like the empty thing it is — the
-      // ceramic touch voice, k40's vase being the precedent for fired clay.
+      // basin two steps away, a cause with somebody else's effect. Touched, it
+      // rocks on its foot and clinks like the empty thing it is — the ceramic
+      // touch voice, k40's vase being the precedent for fired clay.
       if (input.raycastFirst(camera, bowlMeshes)) {
         rocks.push(clock);
         if (rocks.length > 4) rocks.shift();

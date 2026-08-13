@@ -8,16 +8,16 @@ import { AUDIO_BASE, narrationSrc, playableQueue } from './narration_state.js';
 // Voice, pace and accent are decided at bake time (scripts/lib/narration-voice.js),
 // so there is nothing to choose at runtime.
 //
-// Ducking the ambience is deliberately NOT done here: a read-aloud pauses between
-// sections, and ducking per file would pump the wind up and down on every seam. The
-// caller owns the reading session, so the caller owns the duck.
+// Ducking the ambience is deliberately NOT done here: a read-aloud pauses
+// between sections, and ducking per file would pump the wind up and down on
+// every seam. The caller owns the reading session, so the caller owns the duck.
 // The reading sits a little under the bake. Every unit was normalised at bake
 // time to a level that is right on its own, but the voice plays against a
-// ducked ambience bed rather than against silence, and next to that bed it
-// came out louder than the room. This is the one
-// runtime volume the narration has — playback is an <audio> element outside
-// the Web Audio graph, so audio.duck() cannot reach it — which is why the trim
-// lives here rather than on a gain node with the rest of the mix.
+// ducked ambience bed rather than against silence, and next to that bed it came
+// out louder than the room. This is the one runtime volume the narration has —
+// playback is an <audio> element outside the Web Audio graph, so audio.duck()
+// cannot reach it — which is why the trim lives here rather than on a gain node
+// with the rest of the mix.
 export const NARRATION_VOLUME = 0.6;
 
 export function createNarration({ base = AUDIO_BASE } = {}) {

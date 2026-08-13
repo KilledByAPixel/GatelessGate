@@ -15,11 +15,11 @@
 // small half of that answer; the large half was the shading, since retired
 // along with the ramp (see render/material.js).
 //
-// So the viewer keeps the book's key exactly as it is — what you judge is
-// still lit by the light that will actually light it — and adds two dim
-// directionals filling the azimuths the key leaves dark. They are SPACED, not
-// opposed, so no matter where you orbit to, some light is raking across the
-// form rather than facing it flat on.
+// So the viewer keeps the book's key exactly as it is — what you judge is still
+// lit by the light that will actually light it — and adds two dim directionals
+// filling the azimuths the key leaves dark. They are SPACED, not opposed, so no
+// matter where you orbit to, some light is raking across the form rather than
+// facing it flat on.
 //
 // THEY ARE SLIGHTLY DIFFERENT COLOURS, and that is the point rather than a
 // decoration. Two greys of the same hue landing on adjacent facets read as one

@@ -69,11 +69,10 @@ function rockGeometry(seed = 1) {
 }
 
 // A shrub is 2-3 lobes grown together, not a five-lobe cluster that averages
-// out toward a smoothed sphere at the size a bush actually reads. A shrub
-// wants its lobes legible as lobes. Lobe
-// count is itself seeded (2 or 3), and each lobe is bigger than the old
-// five-lobe version's so the whole clump keeps a similar footprint with
-// fewer, chunkier masses.
+// out toward a smoothed sphere at the size a bush actually reads. A shrub wants
+// its lobes legible as lobes. Lobe count is itself seeded (2 or 3), and each
+// lobe is bigger than the old five-lobe version's so the whole clump keeps a
+// similar footprint with fewer, chunkier masses.
 function bushGeometry(seed = 1) {
   const parts = [];
   const N = hash1(seed * 13 + 1, seed) < 0.5 ? 2 : 3;
@@ -123,11 +122,11 @@ export function makeBoulder({ size = 1.0, seed = 1, color = WASH.stone } = {}) {
   return mesh;
 }
 
-// (makeGrass — the old clump-scatter tufts — lived here until the cleanup
-// pass found nothing using it: the meadow is makeTuftField's job now, with
-// the grass field's own placement pass, and only this file's own test kept
-// it green. Deleted outright rather than kept-on-purpose like makeTemple; the
-// tuft construction it pioneered survives in tuftfield.js.)
+// (makeGrass — the old clump-scatter tufts — lived here until the cleanup pass
+// found nothing using it: the meadow is makeTuftField's job now, with the grass
+// field's own placement pass, and only this file's own test kept it green.
+// Deleted outright rather than kept-on-purpose like makeTemple; the tuft
+// construction it pioneered survives in tuftfield.js.)
 
 // Minimal non-indexed geometry merge (position + normal only) — enough for
 // lit props without pulling in the BufferGeometryUtils addon.

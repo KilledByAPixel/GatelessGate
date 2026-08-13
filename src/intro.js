@@ -9,8 +9,8 @@ import { introPath } from './intro_rails.js';
 // THE GATE EATS ITSELF. Tap the Contents' gate and it shrinks away to nothing
 // while a second gate — huge at first, and so off camera — comes down to land
 // exactly where the first one stood, and the loop can run for ever. k47's
-// endless road turned inward: passing
-// through the gateless gate leaves you before the gateless gate.
+// endless road turned inward: passing through the gateless gate leaves you
+// before the gateless gate.
 //
 // BIG is the incoming gate's starting scale. At 12 the posts stand ~18 units
 // either side of the road and the lintel ~41 up — all three timbers outside
@@ -69,10 +69,10 @@ export function buildHub({
   // 14, so its foreground starts ~12 units camera-side of the gate. At the
   // default shadow fit (focus [1.2,0,0.3], r 10) every near tree's canopy sat
   // outside the frustum and its shadow truncated mid-ground, cutting off the
-  // shadow of the nearest tree in frame. Centered
-  // between the gate and the camera side and widened just enough that every
-  // caster whose shadow can land in frame fits; 2048/30 ≈ 68 texels/unit,
-  // still contact-shadow territory, not the 56-unit mush lights.js warns about.
+  // shadow of the nearest tree in frame. Centered between the gate and the
+  // camera side and widened just enough that every caster whose shadow can land
+  // in frame fits; 2048/30 ≈ 68 texels/unit, still contact-shadow territory,
+  // not the 56-unit mush lights.js warns about.
   scene.add(makeLights({ focus: [4.5, 0, 0], radius: 15 }));
 
   // The path is ALWAYS built: it is the placement maths for the gate, the
@@ -230,9 +230,9 @@ export function buildHub({
 }
 
 // Set by eye, twice: the longer road at 9 read as too long, so it is back to
-// the original 7 — over a road that
-// is now a third longer and goes all the way through the gate. Same length of
-// time, more ground covered, so the walk is brisker than it used to be.
+// the original 7 — over a road that is now a third longer and goes all the way
+// through the gate. Same length of time, more ground covered, so the walk is
+// brisker than it used to be.
 const INTRO_SECONDS = 7;
 
 // Returns the title-screen panel view + the dolly driver.
@@ -240,9 +240,9 @@ const INTRO_SECONDS = 7;
 export function makeIntro(camera, { onDone, onSound } = {}) {
   let u = 0, done = false;
 
-  // No "Sound?" prompt any more: the title just names the book. Sound
-  // is on by default and the mute button in the toolbar is always there, so
-  // there is nothing to ask. The credit/link line can grow here later.
+  // No "Sound?" prompt any more: the title just names the book. Sound is on by
+  // default and the mute button in the toolbar is always there, so there is
+  // nothing to ask. The credit/link line can grow here later.
   const el = document.createElement('div');
   el.className = 'gg-view gg-title-view';
   el.innerHTML = '<h1>The Gateless Gate</h1>'

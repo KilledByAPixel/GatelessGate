@@ -6,8 +6,8 @@ import { clamp } from '../util/math.js';
 
 // A flock crossing the sky. Each bird flies a wide, slowly drifting circuit at
 // altitude — so it actually travels across the scene rather than circling one
-// spot or hovering in place. They never land; this is birds seen from
-// below, the way they are in the two cases that use them.
+// spot or hovering in place. They never land; this is birds seen from below,
+// the way they are in the two cases that use them.
 //
 // The circuit is INTEGRATED — `travel` below is how far round the flock has
 // actually flown, advanced by dt every tick — while the slow wander of each
@@ -33,15 +33,14 @@ export function makeBirds({
   rate = 0.5,                      // angular speed of the circuit, rad/s-ish
   // HOW MUCH FASTER A SCATTER MAKES THEM FLY, as extra circuit-seconds per
   // second at full alarm: 0 is a flock that climbs and beats harder without
-  // going anywhere quicker, 1 doubles the circuit at the peak. This is THE
-  // knob for making the birds go faster when you click them (case 24), and it
-  // is per-flock rather than a module constant because case 49's birds
-  // are scenery in a scene about a temple bell and have no reason to inherit
-  // case 24's answer. `hurryBeat` is the same for the WINGS, kept separate on
-  // purpose — moving faster and flapping harder are separately askable, and a
-  // flock that speeds up without beating
-  // proportionally harder is the whole difference between hurrying and
-  // panicking.
+  // going anywhere quicker, 1 doubles the circuit at the peak. This is THE knob
+  // for making the birds go faster when you click them (case 24), and it is
+  // per-flock rather than a module constant because case 49's birds are scenery
+  // in a scene about a temple bell and have no reason to inherit case 24's
+  // answer. `hurryBeat` is the same for the WINGS, kept separate on purpose —
+  // moving faster and flapping harder are separately askable, and a flock that
+  // speeds up without beating proportionally harder is the whole difference
+  // between hurrying and panicking.
   hurry = 0.9,
   hurryBeat = 0.7,
 } = {}) {
@@ -98,8 +97,8 @@ export function makeBirds({
   // scatter lands, so the angle jumped by t * angRate * 0.9 on that one frame:
   // a minute into a page that is twenty-seven radians, four whole laps in a
   // single step. Then, as E decayed back down, the same term SHRANK, and the
-  // birds flew round their circuits backwards — very fast on the click, then
-  // in reverse.
+  // birds flew round their circuits backwards — very fast on the click, then in
+  // reverse.
   //
   // An accumulated angle moves at whatever rate is asked for on the frame it is
   // asked, so the circuit stays continuous through both the arrival and the
@@ -117,15 +116,15 @@ export function makeBirds({
   let beats = 0;
 
   // FLYING BACKWARDS was built here and then cut, and is worth one note. The
-  // idea was to slow down, fly backwards a while, then slow and resume: a signed
-  // rate on the circuit easing down through zero and back, with the heading left as
-  // the circuit tangent so they slid tail-first rather than turning round. It
-  // worked, and he changed his mind on seeing it described ("let's just have the
-  // birds fly faster for a bit"). What it left behind is `travel` itself: the
-  // reversal is the one thing the old `t + hurry` form could not express at any
-  // value, so it is the reason the base rate came inside the accumulator, and
-  // that is a straightforwardly better shape whether or not anything ever flies
-  // astern again.
+  // idea was to slow down, fly backwards a while, then slow and resume: a
+  // signed rate on the circuit easing down through zero and back, with the
+  // heading left as the circuit tangent so they slid tail-first rather than
+  // turning round. It worked, and he changed his mind on seeing it described
+  // ("let's just have the birds fly faster for a bit"). What it left behind is
+  // `travel` itself: the reversal is the one thing the old `t + hurry` form
+  // could not express at any value, so it is the reason the base rate came
+  // inside the accumulator, and that is a straightforwardly better shape
+  // whether or not anything ever flies astern again.
 
 // AN ALARM HAS AN ATTACK. This was a bare decaying exponential, and exp(-0) is
 // 1 — so on the frame a burst landed the energy went from 0 to 1 in one step,

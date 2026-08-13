@@ -24,18 +24,17 @@ import { makeFigure, HEAD_OBLONG } from './figure.js';
 // IT CONTRASTS WITH THE HEAD, which is the whole job of a mark. It used to be
 // ACCENT unconditionally — right for an ink statue and useless on a red one,
 // where a red dot on a red skull leaves nothing but a bump, and the mark on a
-// red figure simply went missing. The comment on
-// URNA_SINK below is the record of trying to solve that with GEOMETRY instead:
-// the dot was buried deeper so its silhouette would carry what its colour no
-// longer could. A mark that has to be read as a lump is not a mark. So a red
-// head takes an ink dot and everything else keeps the vermillion.
-// THE SECOND MARK: the topknot ("we can make Buddha special with, like, a
-// topknot"). A single bun sunk into the crown — the ushnisha's read at the
-// detail floor: one sphere, its centre buried so the crest sits proud of the
-// skull line. It is a silhouette event (the one thing allowed to break the
-// crown), and it wears the figure's own material — hair on an ink man,
-// stone on k9's colossus. Monks keep their hats and bare heads; buddha =
-// bare head + topknot + urna.
+// red figure simply went missing. The comment on URNA_SINK below is the record
+// of trying to solve that with GEOMETRY instead: the dot was buried deeper so
+// its silhouette would carry what its colour no longer could. A mark that has
+// to be read as a lump is not a mark. So a red head takes an ink dot and
+// everything else keeps the vermillion. THE SECOND MARK: the topknot ("we can
+// make Buddha special with, like, a topknot"). A single bun sunk into the crown
+// — the ushnisha's read at the detail floor: one sphere, its centre buried so
+// the crest sits proud of the skull line. It is a silhouette event (the one
+// thing allowed to break the crown), and it wears the figure's own material —
+// hair on an ink man, stone on k9's colossus. Monks keep their hats and bare
+// heads; buddha = bare head + topknot + urna.
 const KNOT_R = 0.44;        // fraction of the head's radius — a bun, not a second head
 const KNOT_SINK = 1.1;     // centre at 0.82·r: crest proud by ~0.26·r, enough
                             //   to break the crown line at case distance

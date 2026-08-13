@@ -127,14 +127,14 @@ export function makeKoi({
   // moving the group would shear the two apart) — the ORBITS move instead.
   // k39 uses this to keep the fish on the deep side of its gradient pond.
   center = [0, 0],
-  // Optional: a height sampler in the water's own frame, (x, z, t?) => y.
-  // Given one, the fish ride it — which ties the school to the water instead
-  // of leaving it swimming in a separate layer. The pond cases pass the
-  // water's swellAt (idle swell + drift, NO ripple term): a tap above the
-  // school must not toss the fish, so the reader's ripples pass
-  // over them and only the water's own breathing moves them. heightAt still
-  // works here for a surface that SHOULD carry everything — the ocean boats
-  // ride the full field for exactly that reason.
+  // Optional: a height sampler in the water's own frame, (x, z, t?) => y. Given
+  // one, the fish ride it — which ties the school to the water instead of
+  // leaving it swimming in a separate layer. The pond cases pass the water's
+  // swellAt (idle swell + drift, NO ripple term): a tap above the school must
+  // not toss the fish, so the reader's ripples pass over them and only the
+  // water's own breathing moves them. heightAt still works here for a surface
+  // that SHOULD carry everything — the ocean boats ride the full field for
+  // exactly that reason.
   surfaceAt = null,
   // How much of the surface's motion the fish take. 1 is right for a shallow
   // pond, where the water moves nearly as one column and a fish a hand's depth
