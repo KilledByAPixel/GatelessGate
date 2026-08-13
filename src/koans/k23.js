@@ -202,7 +202,7 @@ const CAM = { distance: 10.1, target: [0.2, 1.3, -0.9], heading: 31.5, pitch: 16
     // A trail shelter off the east verge (Frank's add, 2026-08-11) — the kind
     // of hut a pass keeps for weather, threshold turned back toward the road.
     // Numbers are placement starts, his to tune.
-    const hut = makeHut({ width: 2.4, height: 2.1, depth: 2.0, chimes: ID });
+    const hut = makeHut({ width: 2.4, height: 2.1, depth: 2.0, chimes: 44 });
     hut.position.set(-3.8, 0, -4.8);
     hut.rotateY(0.65);
     scene.add(hut);
