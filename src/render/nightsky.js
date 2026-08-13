@@ -5,30 +5,49 @@ import { PAPER, INK, mixHex } from '../palette.js';
 // The reading-light switch used to be the page's business and nothing else —
 // the diorama stayed paper-light in both skins, on the argument that a sumi-e
 // painting does not have a night mode. This is that argument overruled for one
-// specific thing: the SKY. Turn the reading light down and the paper the scene
-// is painted on goes dark with it, and nothing else moves. The key and the fill
-// are untouched, so every lit surface keeps exactly the value it had — what
-// changes is what they are lit against.
+// specific thing: the SKY. Turn the reading light down and the paper behind the
+// scene goes dark, and nothing else moves. The key and the fill are untouched,
+// so every lit surface keeps exactly the value it had.
 //
-// FOG FOLLOWS THE SKY, all the way. It is not a separate choice: fog is what
-// the land dissolves INTO before it can reach a horizon, so a dark sky over
-// paper-coloured fog draws the horizon line the whole book exists to avoid —
-// the mountains would fade up into a pale band with night above it. (Case 19
-// splits the two deliberately, and that is the exception that shows why: its
-// split is what keeps a red sky from turning the whole valley red, and it only
-// works because it is transient.)
+// THE SKY AND THE FOG ARE TWO KNOBS, and the fog starts at nothing. Fog does
+// not light anything — it is what the land dissolves INTO before it can reach a
+// horizon — but it reaches everything far away, so darkening it takes the whole
+// receding ground and the hills down with it, and the picture reads as having
+// been re-lit when nothing was. Sky alone is the smaller, truer change.
+//
+// The cost of splitting them is a SEAM: the land fades up toward paper while
+// the sky above it is dark, so the horizon draws a pale band the book normally
+// has nothing to draw with. Case 19 splits the same two on purpose (a red sky
+// over land that stays its own colour) and gets away with it, so the split is
+// house precedent rather than a rule broken — but 19's is transient and this
+// one is not, which is why the fog knob exists at all: raise it until the band
+// stops reading, and no further.
 //
 // A case's own page colour is the base, not a replacement, so the two pages
 // that tint their own sky keep their identity after dark: case 27's red goes to
 // a dark red and case 28's dusk goes deeper into night rather than both landing
 // on one flat colour.
 const NIGHT_PAGE = mixHex(INK, PAPER, 0.10);   // ink, barely lifted — not black
-const NIGHT_DEPTH = 0.88;                      // how far a page travels toward it
 
-// The pure half: what a page colour becomes. Palette hex strings in and out,
+// How far the sky and the fog each travel toward it. Module state rather than
+// constants so the workbench can drag them (the setGrassReach idiom): these are
+// the two numbers the "Night sky" / "Night fog" sliders read, and what is found
+// by dragging is what gets typed back in here.
+let skyDepth = 0.88;
+let fogDepth = 0;
+export function setNightDepth(sky, fog) {
+  if (Number.isFinite(sky)) skyDepth = sky;
+  if (Number.isFinite(fog)) fogDepth = fog;
+}
+export function nightDepth() { return { sky: skyDepth, fog: fogDepth }; }
+
+// The pure halves: what a page colour becomes. Palette hex strings in and out,
 // the same vocabulary mixHex speaks, so the mixing is testable without a scene.
 export function skyFor(base, night) {
-  return night ? mixHex(base, NIGHT_PAGE, NIGHT_DEPTH) : base;
+  return night ? mixHex(base, NIGHT_PAGE, skyDepth) : base;
+}
+export function fogFor(base, night) {
+  return night ? mixHex(base, NIGHT_PAGE, fogDepth) : base;
 }
 
 // The THREE half. The case's OWN colours are captured once and kept, because
@@ -42,17 +61,24 @@ export function applyNightSky(scene, night) {
     u.dayFog = scene.fog ? '#' + scene.fog.color.getHexString() : u.dayBg;
   }
   scene.background.set(skyFor(u.dayBg, night));
-  if (scene.fog) scene.fog.color.set(skyFor(u.dayFog, night));
+  if (scene.fog) scene.fog.color.set(fogFor(u.dayFog, night));
   // What a case that animates its own sky must lerp FROM — cases 19 and 28
-  // both do, and reading the constant they were written against would undo
-  // this on their next frame.
+  // both do, and reading the constants they were written against would undo
+  // this on their next frame. Kept as a PAIR, because the two no longer agree:
+  // a case that lerped its fog from the sky's base would darken the fog this
+  // module had deliberately left alone.
   u.pageBg = skyFor(u.dayBg, night);
+  u.pageFog = fogFor(u.dayFog, night);
   u.night = !!night;   // for a case that has a SECOND page colour to darken too
 }
 
-// For those two cases: the page colour as it actually stands, which is the
-// case's own until the reading light goes down.
+// For those two cases: the page as it actually stands, which is the case's own
+// until the reading light goes down.
 export function pageBase(scene, fallback = PAPER) {
   const hex = scene && scene.userData ? scene.userData.pageBg : undefined;
+  return hex === undefined ? fallback : hex;
+}
+export function fogBase(scene, fallback = PAPER) {
+  const hex = scene && scene.userData ? scene.userData.pageFog : undefined;
   return hex === undefined ? fallback : hex;
 }

@@ -29,7 +29,7 @@ import { makePageCard, pageCardLabel } from './ui/page_card.js';
 import { makeSit } from './sit.js';
 import { makeThemeButton } from './ui/theme.js';
 import { readTheme, nextTheme } from './ui/theme_state.js';
-import { applyNightSky, skyFor } from './render/nightsky.js';
+import { applyNightSky, fogFor } from './render/nightsky.js';
 import { PAPER } from './palette.js';
 import { makeRouter } from './router.js';
 import { readingOrder, pageTarget, loopNextSlug } from './spine.js';
@@ -165,7 +165,10 @@ function applySky() {
   const night = theme === 'dark';
   const active = scenes.active();
   if (active) applyNightSky(active.scene, night);
-  dissolve.setPaper(skyFor(PAPER, night));
+  // The curtain follows the FOG, not the sky: a dissolve is the page going to
+  // ink and back, and the fog colour is what the page dissolves into. With the
+  // fog left alone (the default) the curtain stays paper, exactly as it was.
+  dissolve.setPaper(fogFor(PAPER, night));
 }
 function applyTheme() {
   panel.classList.toggle('dark', theme === 'dark');
@@ -735,6 +738,9 @@ const debug = makeDebug({
   onSound: () => setSoundLabel(),
   onLens: (fov) => applyLens(fov),
   onLayout: (on) => setLayout(on),
+  // the workbench moved how far the page goes after dark; re-apply through
+  // the one path that owns the sky
+  onNightDepth: () => applySky(),
   // Opening the workbench narrows the stage, and no resize event fires for a
   // layout change inside the page.
   onPanel: () => applyStageSize(),

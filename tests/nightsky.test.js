@@ -1,8 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { skyFor, applyNightSky, pageBase } from '../src/render/nightsky.js';
+import { skyFor, fogFor, applyNightSky, pageBase, fogBase, setNightDepth, nightDepth } from '../src/render/nightsky.js';
 import { PAPER, mixHex } from '../src/palette.js';
+
+// The shipped depths, so the knob test can put them back without naming them
+// twice — a restore to a literal would silently go stale the moment either
+// default is retuned, and leak that into every test after it.
+const DEF = nightDepth();
 
 const lum = (hex) => {
   const n = parseInt(hex.slice(1), 16);
@@ -36,12 +41,30 @@ function scene() {
   return s;
 }
 
-test('the fog goes with the sky, or the horizon comes back', () => {
-  // Fog is what the land dissolves INTO before it can reach a horizon. A dark
-  // sky over paper fog draws the exact line the whole book avoids.
+test('the fog is left alone by default — the sky is the whole change', () => {
+  // Fog does not light anything, but it reaches everything far away, so
+  // darkening it takes the receding ground and the hills with it and the
+  // picture reads as re-lit when nothing was. The two are separate knobs and
+  // the fog's starts at nothing; the cost is a pale band along the horizon,
+  // which is what raising it buys back.
   const s = scene();
   applyNightSky(s, true);
-  assert.equal(s.background.getHexString(), s.fog.color.getHexString());
+  assert.equal('#' + s.fog.color.getHexString(), PAPER.toLowerCase(), 'the land keeps its own colour');
+  assert.notEqual('#' + s.background.getHexString(), PAPER.toLowerCase(), 'and the sky does not');
+});
+
+test('the fog knob moves the fog and nothing else', () => {
+  const s = scene();
+  setNightDepth(DEF.sky, 0.4);
+  applyNightSky(s, true);
+  const fogAt4 = '#' + s.fog.color.getHexString();
+  const sky = '#' + s.background.getHexString();
+  assert.notEqual(fogAt4, PAPER.toLowerCase());
+  assert.notEqual(fogAt4, sky, 'a partial fog does not land on the sky');
+  setNightDepth(DEF.sky, DEF.fog);
+  applyNightSky(s, true);
+  assert.equal('#' + s.fog.color.getHexString(), PAPER.toLowerCase(), 'and back to nothing');
+  assert.equal('#' + s.background.getHexString(), sky, 'the sky never moved');
 });
 
 test('toggling back and forth is exactly reversible', () => {
@@ -61,5 +84,6 @@ test('pageBase reports what a self-animating case must lerp from', () => {
   assert.equal(pageBase(s, PAPER), PAPER, 'before any apply, the fallback');
   applyNightSky(s, true);
   assert.equal(pageBase(s, PAPER), skyFor(PAPER, true));
+  assert.equal(fogBase(s, PAPER), fogFor(PAPER, true), 'the fog base is its own, not the sky’s');
   assert.equal(s.userData.night, true);
 });

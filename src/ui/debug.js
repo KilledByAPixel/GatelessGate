@@ -4,6 +4,7 @@ import { LAMBERT_LIFT } from '../kit/tuftfield.js';
 import { wash } from '../palette.js';
 import { setFoliageWeather } from '../kit/foliage.js';
 import { aimSun, SUN_DEFAULT, SUN_PITCH_RANGE } from '../render/lights.js';
+import { setNightDepth, nightDepth } from '../render/nightsky.js';
 import { DRAW_BUDGET, DRAW_WARN } from '../budget.js';
 
 // A workbench: a toolbar button top-right of the stage, and a plain panel that
@@ -61,6 +62,8 @@ export function devModeOn() {
   try { return localStorage.getItem(DEV_KEY) === '1'; } catch { return false; }
 }
 
+const NIGHT_DEPTH = nightDepth();
+
 const CONTROLS = [
   { group: 'Scene' },
   { key: 'grass', label: 'Grass field', type: 'bool', def: true },
@@ -103,6 +106,12 @@ const CONTROLS = [
   { key: 'sunHeading', label: 'Sun heading°', type: 'range', def: SUN_DEFAULT.heading, min: -180, max: 180, step: 1 },
   { key: 'sunPitch', label: 'Sun height°', type: 'range', def: SUN_DEFAULT.pitch, min: SUN_PITCH_RANGE[0], max: SUN_PITCH_RANGE[1], step: 1 },
   { key: 'ambMul', label: 'Ambient ×', type: 'range', def: 1, min: 0, max: 3, step: 0.05 },
+  // THE PAGE AFTER DARK, and only visible with the reading light down. Two
+  // knobs because they are two different changes: the sky is the small one,
+  // the fog reaches everything far away and takes the receding ground with it.
+  // Whatever these land on gets typed back into render/nightsky.js.
+  { key: 'nightSky', label: 'Night sky', type: 'range', def: NIGHT_DEPTH.sky, min: 0, max: 1, step: 0.02 },
+  { key: 'nightFog', label: 'Night fog', type: 'range', def: NIGHT_DEPTH.fog, min: 0, max: 1, step: 0.02 },
 
   { group: 'Post' },
   { key: 'pQuant', label: 'Quantise', type: 'bool', def: false },
@@ -142,7 +151,7 @@ function load(persist) {
   } catch { return defaults(); }
 }
 
-export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens, onFreeCam, onDevMode, onShot, onLayout, onPanel, compose = null }) {
+export function makeDebug({ renderer, getScene, audio, grainEls = [], post = null, onSound, onLens, onFreeCam, onDevMode, onShot, onLayout, onPanel, onNightDepth, compose = null }) {
   const composeEl = compose && compose.el;
   let persist = loadPersist();
   const state = load(persist);
@@ -332,6 +341,12 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
 
   function apply() {
     const scene = getScene && getScene();
+    // The page's two depths, pushed before anything reads a page colour. main
+    // owns WHETHER it is night (the reading light); this owns only how far the
+    // two go, so dragging a slider re-applies through main rather than writing
+    // the scene here — one path to the sky, the aimSun idiom.
+    setNightDepth(state.nightSky, state.nightFog);
+    onNightDepth && onNightDepth();
     if (scene) {
       if (scene.fog && scene.userData._fog0 === undefined) scene.userData._fog0 = scene.fog.density;
 
