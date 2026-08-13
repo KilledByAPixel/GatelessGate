@@ -107,11 +107,9 @@ let readingAll = false;   // whether the current read is "read all" or a single 
 let readTimer = null;     // the pause between sections of a read-all
 
 // ---- AUTO MODE ----
-// Frank: "an automatic mode... it will read the scene, and then after a few
-// seconds it will go to the next scene doing the regular transition, and then
-// start reading that scene. And when it gets to the end of the book, after it
-// reads the afterword, it would circle back around and start again at the
-// preface. So you could just leave it on, and it would go continuously."
+// Reads a page, waits a few seconds, turns with the regular transition, and
+// reads on — and at the end of the afterword it circles back to the preface,
+// so it can simply be left running.
 //
 // This is the book reading itself, and it is deliberately the ONE thing that
 // does. A read-aloud still ends at the end of its page (see speakAll) — that
@@ -120,9 +118,9 @@ let readTimer = null;     // the pause between sections of a read-all
 // different promise made by a different, labelled switch, and the reader
 // throws it on purpose.
 //
-// TWO GAPS, not one. The pause AFTER a page finishes is the "few seconds"
-// Frank asked for — long enough that the last verse lands before the ink
-// starts to dissolve. The pause after ARRIVING somewhere is much shorter and
+// TWO GAPS, not one. The pause AFTER a page finishes is the few seconds above
+// — long enough that the last verse lands before the ink starts to dissolve.
+// The pause after ARRIVING somewhere is much shorter and
 // exists for a different reason: the page turn fires its reveal without
 // awaiting it (showKoan), and the title card goes up with it, so the voice
 // wants to come in just behind the picture rather than on top of it.
@@ -349,15 +347,15 @@ if (document.fullscreenEnabled === false) fsBtn.remove();
 // they are already fullscreen, the whole window IS the whole screen.
 //
 // It used to BE a reading: the eye started the book aloud and turned its own
-// pages, on through the afterword and round to the preface again. Frank pulled
-// those apart — looking and being read to are two different wants, and one of
+// pages, on through the afterword and round to the preface again. Those were
+// pulled apart — looking and being read to are two different wants, and one of
 // them should not conscript the other. So the eye now changes only how you are
 // looking. If you want a voice there is a button for it under the toolbar, and
 // it reads THIS page and stops, exactly like the one on the panel does.
 const app = document.getElementById('gg-app');
 let ambient = false;
-// AN EYE — "an i as in an actual eye, on someone's face" (Frank). It was ◉, a
-// circle with a dot, which reads as a target or a record button and never as
+// AN EYE — an actual eye, the kind on a face. It was ◉, a circle with a dot,
+// which reads as a target or a record button and never as
 // looking. Unicode's only real eye is an emoji that renders in colour on half
 // the platforms this ships to, so this one glyph is inline SVG: an almond lid
 // and a pupil, in currentColor, so it inverts with the button like the others.
@@ -372,9 +370,9 @@ function setAmbient(on) {
   ambientBtn.classList.toggle('active', ambient);
   ambientBtn.title = ambient ? 'Back to the text' : 'Look at the scene';
   applyStageOnly();
-  // Nothing else happens. Entering the look does NOT announce the page (Frank:
-  // "when you first go in, there's no title; it just goes into look mode") —
-  // the card belongs to the reading now, and toggleReadAll puts it up. And a
+  // Nothing else happens. Entering the look does NOT announce the page — no
+  // title card, just the look — because the card belongs to the reading now,
+  // and toggleReadAll puts it up. And a
   // reading already running is left strictly alone in both directions: it
   // belongs to the reader, not to the panel, and neither hiding nor restoring
   // the text is an instruction about it.
@@ -393,8 +391,8 @@ function setAmbient(on) {
 // long row of unrelated buttons.
 //
 // It went through the corner the long way round — under the right-hand tools,
-// then stacked, then back to a row — before Frank asked for its own toolbar
-// here, with the way out as its first button. That is the part that makes it a
+// then stacked, then back to a row — before landing on its own toolbar here,
+// with the way out as its first button. That is the part that makes it a
 // mode rather than a trapdoor: without these the look was a place you could
 // only leave by pressing the same eye you came in by, and to turn a page you
 // had to bring the text back, turn it, and hide it again.
@@ -426,8 +424,8 @@ const setLookLabel = (btn, glyph, word, title) => {
   btn.title = title;
   btn.setAttribute('aria-label', title);
 };
-// ↺, an arrow circling back on itself (Frank's "arrow kind of circling back"):
-// it undoes the view rather than going anywhere, which is not what ‹ means.
+// ↺, an arrow circling back on itself: it undoes the view rather than going
+// anywhere, which is not what ‹ means.
 lookBtn('gg-look-exit', '↺', 'Back to the text', () => setAmbient(false));
 // Same walk as the panel's arrows and the keyboard's: it stops at both ends of
 // the book rather than wrapping, so the ends stay the ends. From the Contents
@@ -437,9 +435,8 @@ const lookPrev = lookBtn('gg-look-page', '‹', 'Previous page',
   () => goPage(lookNeighbor(-1)));
 const lookNext = lookBtn('gg-look-page', '›', 'Next page',
   () => goPage(lookNeighbor(+1)));
-// Reads this page through and stops (Frank: "it'll just read that whole page
-// and then stop when it gets to the end; don't go to the next page
-// automatically").
+// Reads this page through and stops at the end of it — never turns over on its
+// own. Auto mode is the one deliberate exception, and it says so on its label.
 const lookRead = lookBtn('gg-look-read', '', 'Read this page aloud', () => toggleReadAll());
 // AUTO MODE's switch. Last in the row because it is the only thing here that
 // keeps acting after you stop touching it — the other three do one thing and
@@ -527,10 +524,9 @@ function autoAdvance() {
 }
 
 // The whole bar stays PUT and stays VISIBLE, on the Contents as much as on a
-// page — Frank: "that way at least it's consistent; you could click right, and
-// they would stay in the same place, and read aloud would become available."
-// Buttons that cannot do anything grey out rather than disappearing, so nothing
-// ever moves under the reader's cursor.
+// page, so the buttons are always in the same place and paging right simply
+// makes read-aloud available. Buttons that cannot do anything grey out rather
+// than disappearing, so nothing ever moves under the reader's cursor.
 function syncLookRead() {
   lookBar.classList.toggle('on', ambient && mode !== 'sit');
   setLookLabel(lookRead, readingAll ? '■' : '▶', readingAll ? 'Stop' : 'Read aloud',
@@ -557,18 +553,18 @@ syncLookRead();
 // leaving a sit while the look is on must not pull the panel back over it.
 function stageOnly() { return ambient || mode === 'sit'; }
 
-// WHO GETS TO AIM THE CAMERA — and it is the reverse of what it was (Frank).
+// WHO GETS TO AIM THE CAMERA — and it is the reverse of what it was.
 // Reading a page, you get the framing the case was composed for, breathing with
 // the cursor and nothing more: no dragging it off the shot, no wheel. Step into
 // the look, where the diorama has the whole window and there is nothing to read,
-// and the controls are yours. The drift still runs there and yields for a few
-// gives way for good the first time you take hold (camera.js, `taken`).
+// and the controls are yours. The drift still runs there, and gives way for
+// good the first time you take hold (camera.js, `taken`).
 //
 // DEV MODE IS NOT AN EXEMPTION ON A CASE. It was, briefly, so that Compose
-// could be aimed by dragging — and the result was that the one person who
-// needed to see the new behaviour never did: Frank reads the book in dev mode,
-// so every page still dragged, and entering the look then swung the camera as
-// the drift overrode whatever he had just done. A shot is composed from the
+// could be aimed by dragging — and the result was that the people who most
+// needed to see the new behaviour never did, because the book is read in dev
+// mode: every page still dragged, and entering the look then swung the camera
+// as the drift overrode what had just been framed. A shot is composed from the
 // look now, which has the controls anyway and a whole window to judge in.
 //
 // The Contents keeps them, because MENU_CAM is aimed from there and that
@@ -614,11 +610,10 @@ function savePose() {
 function forgetPose() {
   try { localStorage.removeItem(FREECAM_KEY); } catch { /* ignore */ }
 }
-// Every frame while flying (Frank: "just like every frame, just save the
-// camera orientation... only if it's in free cam mode"). It was once a
-// second, which left the stored pose up to a second stale on a reload whose
-// hide events didn't fire; a ~90-byte localStorage write per frame is
-// nothing, and this is a dev-only mode.
+// Every frame while flying, and only in free cam. It was once a second, which
+// left the stored pose up to a second stale on a reload whose hide events
+// didn't fire; a ~90-byte localStorage write per frame is nothing, and this is
+// a dev-only mode.
 function keepPose() {
   if (freeCam.enabled()) savePose();
 }
@@ -638,10 +633,10 @@ const compose = makeCompose({ getRig: () => rig });
 // CHIMES HUNG BY THE KIT, driven and tappable for every page at once.
 //
 // makeHut({ chimes: 7 }) hangs a fūrin; something still has to move it, or it
-// is a dead ornament nobody can ring (Frank: "they're not moving or anything,
-// they're not making sound... these are kind of like solid"). Leaving that to
-// each case is the friction the seed exists to remove, so it lives here beside
-// the ambience main.js already owns on every case's behalf.
+// is a dead ornament nobody can ring — solid-looking, silent, and not
+// obviously broken. Leaving that to each case is the friction the seed exists
+// to remove, so it lives here beside the ambience main.js already owns on
+// every case's behalf.
 //
 // Swept ONCE per scene and cached on the scene itself: the list dies with the
 // scene, so there is no registry to leak and nothing to unregister at a page
@@ -674,8 +669,8 @@ const hubGateTap = () => {
 // wrong for main.js's own handlers — and main's were registered once at
 // startup, so the first page turn silently dropped them for the rest of the
 // session. That is why hung chimes swung correctly and could not be clicked
-// (Frank: "i still cant click on the chimes connected to the huts"): the pick
-// was right, the raycast was right, and nothing was calling either. The unit
+// at all: the pick was right, the raycast was right, and nothing was calling
+// either. The unit
 // test that "proved" the tap worked had handed it a stub input that hit
 // whatever it was offered, so it never touched this at all.
 //
@@ -727,9 +722,8 @@ const debug = makeDebug({
   // re-asserts the whole state at mount and on every scene swap — so a bare
   // `if (!on) forgetPose()` deleted the saved pose AT BOOT, before the
   // restore block ever read it: free cam booted false, apply() said "off",
-  // and the key was gone. That is why reload never came back flying (Frank:
-  // "when I hit reload, it is no longer in free cam"). Entering saves at
-  // once (mode + spot, his model: "save when you enter free cam"); leaving
+  // and the key was gone. That is why a reload never came back flying.
+  // Entering saves at once (mode + spot); leaving
   // ON PURPOSE — a real on→off transition — forgets; a re-assertion of
   // "still off" touches nothing.
   onFreeCam: (on) => {
@@ -804,9 +798,9 @@ function makeRig(opts) {
   // comment), and the free cam only ever applies key DELTAS to position, so
   // that snap silently stomped a flying camera on every page build. That is
   // why the reload restore "worked" for the heading but not the spot: boot
-  // restored the pose, then the async page build snapped it away (Frank: "I
-  // want the camera to stay in the same spot... if the free cam is
-  // activated"). Capture the pose before the rig writes, put it back after.
+  // restored the pose, then the async page build snapped it away. A flying
+  // camera has to stay where it is put: capture the pose before the rig
+  // writes, put it back after.
   const flying = freeCam.enabled() ? freeCam.pose() : null;
   const r = makeCameraRig(camera, renderer.domElement, opts);
   if (flying) freeCam.setPose(flying);
@@ -909,7 +903,7 @@ function buildKoan(mod, slug) {
   const built = mod.build({
     // (a `quality: 'high'` rode along here for the whole project — the design
     // doc's shed-extras-on-weak-devices hook — and nothing ever consumed it;
-    // removed on Frank's call rather than left looking load-bearing)
+    // removed rather than left looking load-bearing)
     scene: null, kit: null, audio, input, accent: mod.accent, hub,
   });
   built.setCamera && built.setCamera(camera);
@@ -990,9 +984,8 @@ function buildKoan(mod, slug) {
   // `mode` still said 'menu' — so arriving at a case from the Contents in dev
   // mode handed it the Contents' answer and left the page draggable.
   if (rig) rig.setDrag(canDragCamera());
-  // A PAGE TURNED UNDER THE LOOK, so say which page it is now (Frank: "we would
-  // display the title when you click next or previous, because it's going to a
-  // new one"). This cannot fire on merely opening the look — buildKoan only runs
+  // A PAGE TURNED UNDER THE LOOK, so say which page it is now. This cannot
+  // fire on merely opening the look — buildKoan only runs
   // when the page actually changes — which is the whole distinction: the card
   // answers a page turn or a reading starting, never a change of view.
   if (ambient && koanCard) pageCard.show(koanCard);
@@ -1295,7 +1288,7 @@ addEventListener('keydown', (e) => {
 });
 // On the WINDOW, not the canvas: during the intro the title text sits in a DOM
 // panel over the canvas, so a click on that side never reached a canvas-only
-// listener and the intro wouldn't skip (Frank). At window level a click
+// listener and the intro wouldn't skip. At window level a click
 // anywhere skips — and unlocks the sound — wherever it lands.
 addEventListener('pointerdown', () => {
   audio.unlock();                 // first tap starts the sound; the mute button turns it off
@@ -1328,7 +1321,7 @@ document.addEventListener('visibilitychange', () => {
 // the y=0 ground plane and hand the point to the shared breeze state, which
 // the grass fields read back. One unproject, no allocation — the two vectors
 // are reused. Koan pages AND the contents: the hub's meadow idles behind the
-// menu and must answer the pointer exactly like a case's (Frank, breeze v2).
+// menu and must answer the pointer exactly like a case's.
 // The intro, sitting and the free cam still clear it — WASD flying especially
 // must not read as a gale through the meadow.
 const breezeVec = new THREE.Vector3();
@@ -1473,8 +1466,8 @@ if (booted && booted.view === 'case' && devOpen(booted.slug)) {
   // shared link. Land exactly where the ordinary boot (the `else` branch)
   // would have put them.
   // IN DEV MODE THERE IS NO CATCH, deliberately. A broken case should fail the
-  // way any other JavaScript does — straight to the debugger, which is where
-  // Frank is already standing with "pause on uncaught exceptions" ticked. The
+  // way any other JavaScript does — straight to the debugger, where anyone
+  // working on it is already standing with "pause on uncaught exceptions". The
   // rescue below is worse than useless there: it swallows the throw and then
   // navigates away from the page being worked on, so the reload lands on the
   // hub and the error is gone. Nothing is caught, logged or drawn; the URL is

@@ -16,19 +16,18 @@ export const SPATIAL = {
   // 11.5 both the median AND the single most common value (10 of 49 cases
   // use it outright — see task-12-report.md for the full distribution). So
   // every placed sound was being attenuated by the distance curve for no
-  // reason, permanently: Frank heard it on case 16's bell as "I could barely
-  // hear it." 11.5 is that measured value, not a round guess.
+  // reason, permanently — case 16's bell was barely audible. This is that
+  // measured value, not a round guess.
   ref: 11.5,
   rolloff: 1.0,
 
   // THE NEAR END. `gain` used to be `(ref / max(ref, d))^rolloff` — that
   // max() pins gain to exactly 1 for EVERY distance nearer than the
   // reference, so the whole near half of the book's range was one flat
-  // level. Frank, auditioning it: "there's not that much of a difference at
-  // all between the distance between four and twenty two. The minimum and
-  // the maximum sound about the same to me." He is describing the flat
-  // stretch precisely — 4 and 11.5 were bit-identical, and 11.5 to 22 was
-  // only 5dB at the old 0.9 rolloff.
+  // level, and it audibly was: across the book's whole range of distances the
+  // near and far ends sounded much the same. Everything inside the reference
+  // was bit-identical, and the outer half spanned only a few dB at the old
+  // rolloff.
   //
   // The clamp moves in to nearClamp instead, so approaching gets LOUDER the
   // way it should, and rolloff goes to a true 1.0 (inverse-distance, the

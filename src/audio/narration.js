@@ -14,7 +14,7 @@ import { AUDIO_BASE, narrationSrc, playableQueue } from './narration_state.js';
 // The reading sits a little under the bake. Every unit was normalised at bake
 // time to a level that is right on its own, but the voice plays against a
 // ducked ambience bed rather than against silence, and next to that bed it
-// came out louder than the room (Frank: "it's pretty loud"). This is the one
+// came out louder than the room. This is the one
 // runtime volume the narration has — playback is an <audio> element outside
 // the Web Audio graph, so audio.duck() cannot reach it — which is why the trim
 // lives here rather than on a gain node with the rest of the mix.

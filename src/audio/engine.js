@@ -63,7 +63,7 @@ const MIX_NONE = { kd: 0, ks: 0 };
 // that bug). See task-12-report.md's dry/wet-at-ref table for the numbers
 // this produces per voice — CERAMIC.level etc. were tuned by ear against
 // the OLD (uncalibrated, raw-verbMix) send, so if these four now read as
-// too wet at Frank's next audition pass, ks is the number to move, not the
+// too wet at the next audition pass, ks is the number to move, not the
 // levels themselves. Sharing kd 0 with MIX_NONE also means these four share
 // pour's dry-can-exceed-unity-at-point-blank property (see MIX_NONE's own
 // comment) — same bound (1.67x), same reasoning, not a separate concern.
@@ -225,9 +225,9 @@ export function createAudio(save) {
     return bus;
   }
 
-  // UNCALLED since the ocean took the water bed (Frank, case 20: "those drip
-  // effects don't really go with the ocean — they're more of a still water
-  // pool"). The ambient drip loop was written for still-water beds, and every
+  // UNCALLED since the ocean took the water bed: drip effects belong to a
+  // still pool, not to surf. The ambient drip loop was written for
+  // still-water beds, and every
   // still-water case has since dropped the water token, so the only ears this
   // ever reached were the surf's. Kept, like makeWaterBed was through its own
   // quiet years, for the day a pool or a cave recipe names 'water' again —
@@ -245,8 +245,8 @@ export function createAudio(save) {
   // The audible rain: sparse pitched plinks over the baked patter — rain
   // finding surfaces. Same high register as the basin drips, quieter.
   function rainDropNow() {
-    // Unpitched on purpose (Frank: the melodic plinks "don't sound like a
-    // rain drop"): log-uniform frequency off the scale entirely, and a
+    // Unpitched on purpose — melodic plinks do not read as raindrops:
+    // log-uniform frequency off the scale entirely, and a
     // near-flat sweep — the pool "bloip" glide is WATER's voice, not rain's.
     const f0 = 650 * Math.pow(2.3, Math.random());
     strikeDrip(ctx, voicesDry, voicesWet, {
@@ -473,8 +473,8 @@ export function createAudio(save) {
       // 0.2-0.3 cut at an arbitrary sample can click under the page turn.
       // stopLayer fades to true zero on the bed's own curve first (3s), and
       // it already drops the engine's reference at once, so a quick re-entry
-      // starts a fresh bed while the old one dies underneath (Frank: "let's
-      // definitely use the three second fade instead of the hard cut").
+      // starts a fresh bed while the old one dies underneath. The fade is
+      // deliberate: the hard cut it replaced was audible.
       for (const layer of ['wind', 'water', 'rain', 'music']) stopLayer(layer);
       playing = [];
       if (verb) verb.setRoom('open');   // leaving for the menu resets the air
@@ -519,8 +519,8 @@ export function createAudio(save) {
     // preset's voice is built at — f0 falls as the bell grows and every mode's
     // decay scales with it, so a bigger number is deeper AND longer in one
     // move. The preset's tuned per-mode amplitudes are untouched, which is the
-    // point: Frank tuned those three arrays in dev/bell-audition.html and they
-    // are not something to edit by hand from a case. Case 9's colossus is the
+    // point: those three arrays were tuned in dev/bell-audition.html and are
+    // not something to edit by hand from a case. Case 9's colossus is the
     // first caller — `great` is already the deepest of the three and its bell
     // still wanted to be bigger than any bell in a temple.
     bell({ size = null, f0 = null, preset = null, gain = 1, at = null } = {}) {
@@ -554,8 +554,8 @@ export function createAudio(save) {
     //
     // `punctuate` marks a strike as belonging to the READING, not the
     // ambience: while narration ducks the bed, punctuation compensates so it
-    // lands at intended loudness — Frank could not hear the section chimes at
-    // all under the duck. Ambient strikes stay ducked with everything else.
+    // lands at intended loudness — the section chimes were inaudible under
+    // the duck without it. Ambient strikes stay ducked with everything else.
     chimeStrike({ tube = 0, force = 1, punctuate = false, at = null } = {}) {
       if (!ensureCtx() || ctx.state !== 'running') return;
       const comp = punctuate && ducked ? MASTER / DUCKED : 1;
@@ -649,7 +649,7 @@ export function createAudio(save) {
         partials: drumPartials(jitterHz(DRUM.f0)),
         gain: DRUM.level * force,
         // a drum is a THUMP like the knock, not a bell — same scale reasoning.
-        // PROVISIONAL pending Frank's ear on dev/drum-audition.html, same as
+        // PROVISIONAL pending an audition on dev/drum-audition.html, same as
         // every number below it (see CERAMIC's own comment for the precedent).
         scale: STRIKE_SCALE * 7,
         transient: [
@@ -675,7 +675,7 @@ export function createAudio(save) {
     // odoshi's knock (0.109) — a tipped pot would have been all but inaudible,
     // plausibly under the wind bed. `scale: STRIKE_SCALE * 5` brings its
     // effective peak (0.04125) into the same ballpark as wood's; PROVISIONAL
-    // pending Frank's ear at the audition the next task's wiring gives it.
+    // pending an ear at the audition its wiring will make possible.
     //
     // CODE REVIEW CAUGHT (task-12): these four used to pass their own
     // verbMix straight through as `character` (this bus's sendLevel), the
