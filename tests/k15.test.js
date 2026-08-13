@@ -209,6 +209,40 @@ test('a tap rings one chime and never also starts a beating', () => {
   assert.equal(knocks.length, 3, `the beating should be three blows, got ${knocks.length}`);
 });
 
+test('the staff comes down with each blow, and is still between beatings', () => {
+  // Frank's audit ("you can see it... he could be holding it and then bring
+  // it down or something") reversed the original never-moves staging note —
+  // the staff tips about its planted base once per knock, at empty air, and
+  // rests at exactly its built pose otherwise.
+  let onTap = null;
+  const s = stubs();
+  s.input.onTap = (fn) => { onTap = fn; };
+  const k = k15.build(s);
+  k.setCamera(new THREE.PerspectiveCamera());
+  const staff = k.scene.getObjectByName('staff');
+  assert.ok(staff, 'Ummon holds the stick');
+
+  k.update(1 / 60, 0);
+  assert.equal(staff.rotation.x, 0, 'at rest before any beating');
+
+  const gateHit = k.scene.getObjectByName('gate-hit');
+  s.input.raycastFirst = (cam, targets) => (targets.includes(gateHit) ? { object: gateHit } : null);
+  onTap();
+
+  // three dips, one per blow: count the frames-with-motion transitions
+  let peaks = 0, moving = false, peak = 0;
+  for (let t = 0; t < 3.0; t += 1 / 60) {
+    k.update(1 / 60, t);
+    const tip = staff.rotation.x;
+    peak = Math.max(peak, tip);
+    if (tip > 0.02 && !moving) { moving = true; peaks++; }
+    if (tip <= 0.02) moving = false;
+  }
+  assert.equal(peaks, 3, `one dip per blow, got ${peaks}`);
+  assert.ok(peak > 0.1, `the dip is legible, peak ${peak.toFixed(3)}`);
+  assert.equal(staff.rotation.x, 0, 'and it rests again when the beating is over');
+});
+
 test('touching Tozan deepens his bow, and never starts a beating', () => {
   // Frank's audit: "could we have Tozan do some kind of animation in fifteen
   // when you click on them? even if you just bow." The held BOW dips by DIP

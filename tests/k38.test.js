@@ -37,6 +37,42 @@ test('makeOak takes trunk and canopy colours independently — case 38 needs red
   assert.notEqual(trunk.material.color.getHexString(), canopy.material.color.getHexString());
 });
 
+test('the crown carries the wind — attributes baked, material injected, geometry unmoved', () => {
+  // The oak was the last foliage in the book with no wind (Frank's audit:
+  // "the red tree doesn't have any movement in its foliage... like the other
+  // trees"), and this class of breakage is SILENT — a canopy missing its
+  // attributes just stands still with nothing to read. The trunk is asserted
+  // inert on purpose: an old oak's wood carrying canopy-scale motion is the
+  // whole-tree bowing the wind system exists to avoid.
+  const oak = makeOak({ height: 5.8, seed: 20 });
+  const canopy = oak.children.find((c) => c.name === 'canopy');
+  const trunk = oak.children.find((c) => c.name === 'trunk');
+  for (const a of ['aSway', 'aPhase', 'aLeaf', 'aColumn']) {
+    assert.ok(canopy.geometry.attributes[a], `canopy missing ${a}`);
+  }
+  assert.equal(canopy.material.customProgramCacheKey(), 'gg-foliage',
+    'the canopy material must compile the foliage shader');
+  assert.equal(canopy.userData.foliageWind, true, 'and be marked so bakeStatic refuses it');
+  assert.ok(!trunk.geometry.attributes.aSway, 'the wood stays inert — leaves shiver, the oak stands');
+
+  // sway spreads: the fringe moves, the lobes against the bole barely do
+  const sway = canopy.geometry.attributes.aSway;
+  let min = Infinity, max = -Infinity;
+  for (let i = 0; i < sway.count; i++) { min = Math.min(min, sway.getX(i)); max = Math.max(max, sway.getX(i)); }
+  assert.ok(max > 0.99 && max <= 1 + 1e-6, `the furthest lobe carries full weight, got ${max}`);
+  // the crown is a SHELL, so the spread is real but not wide: what matters is
+  // that the weights vary at all (uniform sway = the whole crown sliding as
+  // one mass), not that any lobe sits near zero — none does, on a shell
+  assert.ok(min < max - 0.1, `lobe weights should vary, got ${min}..${max}`);
+
+  // and the wind machinery moved NOTHING: same seed, same silhouette as a
+  // build from before the attributes existed — the phases draw from their
+  // own stream (tree.js's lesson), so k5's scanned crown clearance holds
+  const again = makeOak({ height: 5.8, seed: 20 });
+  const box = (o) => new THREE.Box3().setFromObject(o);
+  assert.deepEqual(box(oak), box(again), 'deterministic');
+});
+
 test('an oak is broader and heavier than the scatter trees it has to stand out from', () => {
   const oak = makeOak({ height: 5.8, seed: 20 });
   const tree = makeTree({});                       // the default kit tree, height 3.2

@@ -230,7 +230,7 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   if (!input.raycastFirst(camera, [hit])) return;
   struckAt = clock;
   strikes++;
-  audio && audio.knock({ force: 0.7, at: gavel.getWorldPosition(scratchPos) });
+  audio && audio.knock({ force: 1, at: gavel.getWorldPosition(scratchPos) });
   });
   
   return {

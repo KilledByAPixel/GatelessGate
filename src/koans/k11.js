@@ -308,11 +308,15 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
       if (!tap) return;
       rockedAt = clock;
       visits++;
+      // BOTH verdicts chime now (Frank's audit: "add a chime when you click
+      // on the boat" — the odd-tap knock read as a door somewhere, not the
+      // ship answering). Two notes, so the two verdicts stay two sounds:
+      // the dismissal higher and lighter, the approval its settled tube 1.
       if (visits % 2 === 0) {
         bowAt = clock;
         audio && audio.chimeStrike({ tube: 1, force: 0.55, at: tap.point });   // well given, well taken
       } else {
-        audio && audio.knock({ force: 0.4, at: tap.point });                   // and he walks off
+        audio && audio.chimeStrike({ tube: 4, force: 0.5, at: tap.point });    // and he walks off
       }
     });
 

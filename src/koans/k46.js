@@ -251,9 +251,11 @@ export default {
       kickPendulum(swayZ, KICK * Math.sin(turn));
       if (now - lastRing >= 0.5) {
         lastRing = now;
-        // very quiet, at the pole top — not a hung bell, so the smallest
-        // preset — task-12's migration to Frank's tuned presets
-        audio && audio.bell({ preset: 'hand', gain: 0.06, at: sitterPivot.getWorldPosition(scratchPos) });
+        // quiet, at the pole top — not a hung bell, so the smallest preset
+        // (task-12's migration to Frank's tuned presets). gain 0.06 -> 0.14
+        // on the audit: "there's a sound, it's hard to hear" — still the
+        // faintest bell in the book, just no longer below the ambience.
+        audio && audio.bell({ preset: 'hand', gain: 0.14, at: sitterPivot.getWorldPosition(scratchPos) });
       }
     });
 

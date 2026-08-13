@@ -10,7 +10,7 @@ import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 
 const fakeCtx = () => sharedCtx({
   accent: k29.accent,
-  audio: { setWindLevel() {}, startAmbience() {}, stopAmbience() {}, chimeStrike() {} },
+  audio: { setWindLevel() {}, startAmbience() {}, stopAmbience() {}, chimeStrike() {}, breath() {} },
 });
 
 test('module shape matches the koan contract', () => {
@@ -59,7 +59,7 @@ test('update advances the cloth; tap toggles the wind off', () => {
 test('the chime hangs under the gate and answers the flag', async () => {
   const struck = [];
   const audio = {
-    startAmbience() {}, stopAmbience() {}, setWindLevel() {},
+    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, breath() {},
     chimeStrike: (o) => struck.push(o),
   };
   const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
@@ -90,7 +90,7 @@ test('the chime hangs under the gate and answers the flag', async () => {
 
 test('three single-tube chimes hang under the gate, on three different cords, reaching the same line', () => {
   const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
-  const audio = { startAmbience() {}, stopAmbience() {}, setWindLevel() {}, chimeStrike() {} };
+  const audio = { startAmbience() {}, stopAmbience() {}, setWindLevel() {}, chimeStrike() {}, breath() {} };
   const k = k29.build({ audio, input });
 
   const gate = k.scene.getObjectByName('gate');
@@ -138,7 +138,7 @@ test('three single-tube chimes hang under the gate, on three different cords, re
 test('the three singles sound three different notes, not the ring index', () => {
   const struck = [];
   const audio = {
-    startAmbience() {}, stopAmbience() {}, setWindLevel() {},
+    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, breath() {},
     chimeStrike: (o) => struck.push(o),
   };
   const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
@@ -183,7 +183,7 @@ test("each single's reported note is derived from its own built size, not a numb
   // never retyped from k29.js.
   const struck = [];
   const audio = {
-    startAmbience() {}, stopAmbience() {}, setWindLevel() {},
+    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, breath() {},
     chimeStrike: (o) => struck.push({ tube: o.tube, x: o.at.x }),
   };
   const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
@@ -273,7 +273,7 @@ test("case 29's chimes stay clear of each other at the LIVE swing cap, counter-p
 
   // the REAL staged scene, not a reproduction with guessed parameters
   const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
-  const audio = { startAmbience() {}, stopAmbience() {}, setWindLevel() {}, chimeStrike() {} };
+  const audio = { startAmbience() {}, stopAmbience() {}, setWindLevel() {}, chimeStrike() {}, breath() {} };
   const k = k29.build({ audio, input });
   const gate = k.scene.getObjectByName('gate');
   const chimes = gate.children.filter((c) => c.name === 'furin');
@@ -345,7 +345,7 @@ test('k29.js carries no note table of its own — the single-tube notes come fro
 test('stilling the wind stills the singles too, not just the ring', () => {
   const struck = [];
   const audio = {
-    startAmbience() {}, stopAmbience() {}, setWindLevel() {},
+    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, breath() {},
     chimeStrike: (o) => struck.push(o),
   };
   const taps = [];
@@ -378,7 +378,7 @@ test('stilling the wind stills the singles too, not just the ring', () => {
 test('a tap rings exactly one chime, even with several hanging, and never also toggles the wind', () => {
   const struck = [];
   const audio = {
-    startAmbience() {}, stopAmbience() {}, setWindLevel() {},
+    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, breath() {},
     chimeStrike: (o) => struck.push(o),
   };
   const taps = [];

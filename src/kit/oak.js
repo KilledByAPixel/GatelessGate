@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { hash1 } from '../util/noise.js';
 import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
+import { applyFoliageWind } from './foliage.js';
 import { GRAY_DARK, WASH } from '../palette.js';
 
 // THE oak — the one Joshu points at when he is asked why Bodhidharma came
@@ -62,8 +63,24 @@ export function makeOak({
   const wood = [];
   const leaves = [];
   const anchors = [];
+  // Per-lobe wind attributes, one entry per pushed leaf geometry, in push
+  // order — mergeSimple spreads them across each lobe's vertices. The canopy
+  // was the last foliage in the book with none (Frank's audit: "the red tree
+  // doesn't have any movement in its foliage... like the other trees"). The
+  // WOOD stays inert on purpose: an old oak's limbs are heavy, and the
+  // branching profile in kit/foliage.js would carry canopy-scale motion down
+  // limbs thick enough to make the whole tree bow — the exact read the wind
+  // system was built to avoid. Leaves shiver; the oak stands.
+  const leafSway = [], leafPhase = [];
+  let maxLobeRun = 1e-6;
   let draw = 0;
   const rnd = () => hash1(draw++, seed);   // one deterministic stream for the whole tree
+  // The phases draw from their OWN seeded stream (tree.js's third-stream
+  // lesson, learned when phase jitter on `rnd` silently rebuilt every tree in
+  // the book): wind is decoration, and it must not be able to move a branch —
+  // or shift k5's scanned crown-clearance by one draw.
+  let phaseDraw = 0;
+  const phaseRnd = () => hash1(phaseDraw++, seed * 7919 + 31);
   // hero-limb constants, lerped tamed -> legacy by `reach`. Every branch of
   // this lerp consumes rnd() identically, so reach moves ONLY the hero limb.
   const R = (tame, legacy) => tame + (legacy - tame) * reach;
@@ -83,6 +100,14 @@ export function makeOak({
     blob.scale(1.08, 0.80, 1.08);   // squashed: crowns spread wider than they are tall
     blob.translate(x, y, z);
     leaves.push(blob);
+    // The lobe's wind weight is its distance from the foot — the oak has no
+    // per-branch run to accumulate (the crown is authored on a shell, not
+    // grown), and distance-out is what run was measuring anyway: the fringe
+    // moves most, the lobes buried against the bole barely stir. Normalised
+    // against the furthest lobe once the crown is complete, tree.js's rule.
+    leafSway.push(Math.hypot(x, y, z));
+    leafPhase.push(phaseRnd() * 4);
+    maxLobeRun = Math.max(maxLobeRun, Math.hypot(x, y, z));
     anchors.push(new THREE.Vector3(x, y - r * 0.62, z));
   }
 
@@ -186,8 +211,20 @@ export function makeOak({
 
   const trunk = new THREE.Mesh(mergeSimple(wood), washMaterial({ color: trunkColor, flat: true }));
   trunk.name = 'trunk';
-  const canopy = new THREE.Mesh(mergeSimple(leaves), washMaterial({ color: canopyColor, flat: true }));
+  // aColumn 0: a broadleaf is not a mast (see the two profiles in
+  // kit/foliage.js). aLeaf 1 on every lobe — the flutter is the whole point
+  // here; the branch-lean share is small at these sway weights, so the crown
+  // shivers where it stands rather than sliding off the wood beneath it.
+  const canopy = new THREE.Mesh(
+    mergeSimple(leaves, {
+      aSway: leafSway.map((v) => Math.min(1, v / maxLobeRun)),
+      aPhase: leafPhase,
+      aLeaf: new Array(leaves.length).fill(1),
+      aColumn: new Array(leaves.length).fill(0),
+    }),
+    applyFoliageWind(washMaterial({ color: canopyColor, flat: true })));
   canopy.name = 'canopy';
+  canopy.userData.foliageWind = true;   // carries wind attributes — keeps bakeStatic off it
   g.add(trunk, canopy);
 
   // Where a leaf can let go: the underside of each clump, in the oak's LOCAL

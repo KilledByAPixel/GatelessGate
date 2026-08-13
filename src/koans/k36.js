@@ -143,9 +143,11 @@ const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch:
   
   // THE MASTER, standing in the road in front of him, solid and RED — he is
   // the seal: the one you cannot face or not-face, the thing the whole case
-  // is about. Nothing of him moves. Every other figure in this book that
-  // stands still is still because the scene is quiet; he is still because
-  // the bow does not reach him.
+  // is about. He held perfectly still for a long time ("the bow does not
+  // reach him") until Frank's audit asked for "a little bit of a shake when
+  // you click on them" — so the REACH reaches him now: a small tremor, gone
+  // in under a second, and then he is the unmoved man in the road again.
+  // The bow still gets no answer; being touched is not being bowed to.
   const master = makeMonk({ height: 1.68, color: ACCENT });
   master.name = 'master';
   const THERE = road.sample(MASTER_T);
@@ -226,6 +228,11 @@ const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch:
   let clock = 0;
   let reaches = 0;
   let reachedAt = -99;     // when the last reach landed; bowShape does the rest
+  let shookAt = -99;       // the master's own tremor — see his header
+  // quick, small, and done: a decaying wobble about his roll axis, k9's
+  // rock idiom at a hand's scale. Ungated by the bow's span (k17's nod
+  // rule): even a reach the bow refuses still visibly lands on him.
+  const SHAKE = { amp: 0.035, hz: 7.5, tau: 0.16, span: 0.8 };
 
   // The angle, as a function of the clock and nothing else — so it can also be
   // applied ONCE at build. A figure whose pose is only set by the first
@@ -243,6 +250,9 @@ const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch:
   input.onTap(() => {
   if (!camera) return;
   if (!input.raycastFirst(camera, [hit])) return;
+  // the tremor is ungated — every reach lands on him, even one the bow
+  // logic below refuses (its own span keeps a held pointer from buzzing)
+  if (clock - shookAt >= SHAKE.span) shookAt = clock;
   // let the bow he already gave you finish — case 32's own rule, and the
   // reason a shaped gesture needs one where a decaying number did not: a
   // second tap partway down would otherwise restart the descent from
@@ -262,6 +272,11 @@ const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch:
   horse.update(dt, simTime);   // the tail swishes; the rest of it waits
   bundle.update(dt, simTime);
   applyBow();
+  // the master's tremor: elapsed-since-reach only, settling to exactly 0
+  const su = clock - shookAt;
+  master.rotation.z = (su >= 0 && su < SHAKE.span)
+  ? SHAKE.amp * Math.sin(su * SHAKE.hz * Math.PI * 2) * Math.exp(-su / SHAKE.tau)
+  : 0;
   },
   fragment() {
   return {
@@ -269,6 +284,7 @@ const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch:
   bow: +(waist ? waist.rotation.x : 0).toFixed(4),
   // 0 standing, 1 at the bottom of the bow
   bowing: +bowShape(clock - reachedAt).toFixed(3),
+  shake: +master.rotation.z.toFixed(5),
   };
   },
   dispose() {},

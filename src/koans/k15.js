@@ -15,8 +15,14 @@ const ID = 15;
 //
 // So the diorama is the gate at evening with Tozan bowing in it, and the
 // interaction is the beating: touch the gate and three strikes sound, spaced
-// out, on nothing at all. The stick in Ummon's hand never moves. It is the
-// only vermillion thing in the scene, and it stays exactly where it is.
+// out, on nothing at all. The stick is the only vermillion thing in the scene.
+//
+// THE STICK MOVES NOW — a planted staff tipping forward and back once per
+// blow, Frank's audit ("he could be holding it and then bring it down or
+// something") reversing the original staging note that it never would. What
+// is kept from that note is the important half: the blows still land on
+// NOTHING — the staff tips at the empty air between the two of them, no
+// strike reaches anybody, and the knocks stay deliberately unplaced.
 
 const BLOWS = 3;
 const BLOW_GAP = 0.5;
@@ -189,6 +195,13 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -5, pitch: 13.
   let beatings = 0;
   let dippedAt = -99;
   let dips = 0;
+  let blewAt = -99;            // when the last blow landed — drives the staff
+  // The staff plants at Ummon's side with its base at the ground (figure.js),
+  // so a turn about x tips it about that base, top swinging toward his local
+  // +z — the way he faces, which faceMonk aimed at Tozan. It rises ahead of
+  // each knock and comes down ON it: the knock is the landing.
+  const STAFF_TIP = 0.16;      // radians at the base, forward
+  const STAFF_SPAN = 0.45;     // seconds up and down again — inside BLOW_GAP
 
   input.onTap(() => {
   if (!camera) return;
@@ -229,11 +242,24 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -5, pitch: 13.
   }
   if (startedAt > -99 && struck < BLOWS && clock - startedAt >= struck * BLOW_GAP) {
   struck++;
-  // wood on wood, out of the empty air. The stick has not moved — the
-  // case's whole point is that these three blows land on NOTHING, so
-  // giving them a position would put a source exactly where the text
-  // insists there isn't one. Left unplaced on purpose.
+  blewAt = clock;
+  // wood on wood, out of the empty air. The case's whole point is that
+  // these three blows land on NOTHING, so giving them a position would
+  // put a source exactly where the text insists there isn't one. Left
+  // unplaced on purpose — the staff tips at empty air (below), and the
+  // sound stays sourceless.
   audio && audio.knock({ force: 0.85 });
+  }
+  // the staff comes down with each blow and lifts back: tip about its own
+  // planted base, quick down on the knock, easier return
+  if (stick) {
+  const bu = clock - blewAt;
+  let tip = 0;
+  if (bu >= 0 && bu < STAFF_SPAN) {
+  tip = Math.min(1, bu / 0.12, (STAFF_SPAN - bu) / 0.28);
+  tip = tip * tip * (3 - 2 * tip);
+  }
+  stick.rotation.x = STAFF_TIP * tip;
   }
   // the deepened bow: down quickly, up slowly, from the held BOW — the
   // waist is reassigned every frame so idle is exactly the built pose

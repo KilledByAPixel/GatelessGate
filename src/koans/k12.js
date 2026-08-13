@@ -128,7 +128,10 @@ export default {
     // that used to be planted beside him is gone (Frank: "get rid of the red
     // staff; maybe he could be holding a staff, a normal pose, but it won't be
     // red"). Nothing about the man is the seal any more.
-    const zuigan = makeMonk({ height: 1.64, elder: true });
+    // `bow: true` hinges him at the sash without changing his arms — the call
+    // below leans him from the waist, not by rolling the whole figure.
+    const zuigan = makeMonk({ height: 1.64, elder: true, bow: true });
+    const zuiganWaist = zuigan.getObjectByName('waist');
     zuigan.position.set(ZUIGAN.x, 0, ZUIGAN.z);
     zuigan.rotation.y = .2;
     scene.add(zuigan);
@@ -217,6 +220,7 @@ export default {
     let calls = 0;
     let answers = 0;
     let pending = -1;
+    let calledAt = -99;        // when the last call left him — drives the lean
 
     input.onTap(() => {
       if (!camera) return;
@@ -225,6 +229,7 @@ export default {
       line = (line % LINES) + 1;
       calls++;
       pending = clock + ECHO;
+      calledAt = clock;
       butterflies.flit();               // a man shouting on a clifftop startles them
       // each line of the daily exercise is pitched a little lower than the last
       audio && audio.knock({ force: 0.9 - (line - 1) * 0.12, at: hit.position });
@@ -249,13 +254,27 @@ export default {
           if (line >= LINES) line = 0;      // and tomorrow he does it again
         }
 
-        // he leans into the call and settles back
-        const since = calls ? clock - (pending >= 0 ? pending - ECHO : clock) : 99;
-        const lean = pending >= 0 ? Math.max(0, 1 - since / ECHO) : 0;
-        zuigan.rotation.z = -0.07 * lean;
+        // He leans into the call and settles back — FROM THE WAIST, WITH AN
+        // ATTACK. It was rotation.z on the whole figure (a sideways list, the
+        // roll fault k15/k17/k32 all had) set to full on the tap frame — "an
+        // envelope set to 1 by a touch has no attack", the same family as
+        // k36's bow snap, and it read exactly as abrupt as it was (Frank:
+        // "it's kind of just abrupt when you click on them"). Now: forward at
+        // the sash, rising over ~0.18s, easing back as the echo returns.
+        const u = clock - calledAt;
+        let lean = 0;
+        if (u >= 0 && u < 1.0) {
+          lean = Math.min(1, u / 0.18, (1.0 - u) / 0.5);
+          lean = lean * lean * (3 - 2 * lean);
+        }
+        zuiganWaist.rotation.x = 0.12 * lean;
       },
       fragment() {
-        return { calls, answers, line, flutter: +butterflies.energy().toFixed(4) };
+        return {
+          calls, answers, line,
+          lean: +zuiganWaist.rotation.x.toFixed(4),
+          flutter: +butterflies.energy().toFixed(4),
+        };
       },
       dispose() {},
     };

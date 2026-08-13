@@ -313,6 +313,11 @@ export default {
       if (hit) {
         const on = flag.toggleWind();
         audio && audio.setWindLevel(on ? baseWind : 0);
+        // the toggle itself was silent — the wind's own bed ramps too slowly
+        // to read as an acknowledgment (Frank's audit: "whether you're
+        // starting it or stopping it, we'll have it play the swish sound so
+        // you get some feedback"). One breath, at the cloth, both ways.
+        audio && audio.breath({ force: 0.7, at: hit.point });
       }
     });
 

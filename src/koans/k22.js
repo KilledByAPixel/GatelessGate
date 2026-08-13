@@ -193,8 +193,8 @@ const CAM = { distance: 10.6, target: [0.4, 1.9, -0.2], heading: 33, pitch: 12.5
   turns++;
   turnFrom = signYaw;
   turnAt = clock;
-  // a board swinging round on its post — wood, not a bell
-  audio && audio.knock({ force: 0.45, at: sign.getWorldPosition(scratchPos) });
+  // a board swinging round on its post — wood, not a bell.
+  audio && audio.knock({ force: 1.5, at: sign.getWorldPosition(scratchPos) });
   return;
   }
   if (!input.raycastFirst(camera, [flag.mesh])) return;
