@@ -6,10 +6,10 @@ import { cameraBlock } from '../camera.js';
 // straight between the ones already in the file.
 //
 // It speaks heading and pitch in degrees — and so, now, does the rig and every
-// koan's `camera:` block (Frank: "it's in azimuth and polar instead of heading
-// and pitch, and I would expect that pitch zero would be horizontal", then
-// later: rename them "so that lines up with our heading and pitch exactly").
-// This panel used to convert at its own edge; there is nothing left to convert.
+// koan's `camera:` block. It used to be azimuth and polar in radians, where
+// pitch zero was not horizontal and the panel and the file named the same shot
+// with different numbers. This panel used to convert at its own edge; there is
+// nothing left to convert.
 //
 // Two things make it a composing tool rather than six number boxes:
 //

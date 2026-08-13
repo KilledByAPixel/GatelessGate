@@ -7,8 +7,7 @@ import { groundHeight } from '../src/kit/ground.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
 import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 
-// Zuigan on his ledge, calling himself. Two things this file guards, both of
-// them Frank's round-12 notes:
+// Zuigan on his ledge, calling himself. Two things this file guards:
 //
 //   * THE EMPTY MIDDLE. The cliff's void keepout was stripping grass off more
 //     than half the near field to keep it from growing "over the drop" — but
@@ -93,7 +92,7 @@ test('the man carries no red: his staff is his own, and ink', () => {
   const staff = zuigan.getObjectByName('staff');
   assert.ok(staff, 'he holds a staff — the kit\'s, not a shaft planted beside him');
   assert.notEqual('#' + staff.material.color.getHexString(), ACCENT.toLowerCase(),
-    'the staff gave up the red (Frank) — the butterflies carry it now');
+    'the staff gave up the red — the butterflies carry it now');
   // and nothing else on him took it either
   zuigan.traverse((o) => {
     if (!o.isMesh) return;
@@ -131,8 +130,8 @@ test('the grass reaches him: no bald ring around the one figure in the scene', (
     `only ${near.length} blades within three units of him — the clearing is back`);
 
   // AND THE MIDDLE OF THE PICTURE. A ray down the centre column of the shipped
-  // lens lands on plain ground from (-3, -5) out to (-12, -16); that whole strip
-  // used to be masked bare, and it is the part Frank was looking at.
+  // lens lands on plain ground from (-3, -5) out to (-12, -16); that whole
+  // strip used to be masked bare, and it is the part the reader is looking at.
   const mid = pts.filter((p) => p.x > -13 && p.x < -2 && p.z > -17 && p.z < -4);
   assert.ok(mid.length > 500,
     `only ${mid.length} blades where the camera is actually pointed`);
@@ -179,11 +178,11 @@ test('the butterflies are the seal, and they play where the lens is pointed', ()
   assert.ok(sumZ / (each.length * 6) < -1.5, 'the flight is out over the open ground, not at his feet');
 });
 
-// Frank: "when they land they should actually stop in place — like they've
-// landed on top of one of the grass. They still kinda slide along the ground."
-// The wander is a function of time, so a perched butterfly kept drifting with
-// its wings shut. Stopping the PATH's clock for the perch is what fixes it, and
-// this is the pin: while a butterfly is down, it does not move at all.
+// A landed butterfly should STOP IN PLACE, on top of the grass it came down on,
+// rather than sliding along the ground. The wander is a function of time, so a
+// perched butterfly kept drifting with its wings shut. Stopping the PATH's
+// clock for the perch is what fixes it, and this is the pin: while a butterfly
+// is down, it does not move at all.
 test('a landed butterfly is landed — it holds its spot, then leaves it', () => {
   const root = staged();
   const each = [];
@@ -202,8 +201,8 @@ test('a landed butterfly is landed — it holds its spot, then leaves it', () =>
   // "count as landed" from a height threshold — the last frame of a descent
   // sits a fraction of a micron above perch height, and any tolerance either
   // swallows it or trips on it — find the stretches where the butterfly does
-  // not move AT ALL, and check those are real. That is the property Frank
-  // asked for, stated directly.
+  // not move AT ALL, and check those are real. That is the property itself,
+  // stated directly.
   let landed = 0;
   for (const path of track) {
     let run = 0, best = 0, bestEnd = -1;
@@ -217,8 +216,8 @@ test('a landed butterfly is landed — it holds its spot, then leaves it', () =>
     assert.ok(best < path.length - 60, 'it landed and never took off again');
     // and it was ON the grass while it sat there, not stalled in mid-air. Grass
     // TIP height, not the dirt: grassfield's blade is 0.34, and a butterfly at
-    // 0.16 settled halfway down inside the field (Frank: "put them a little bit
-    // above the ground — like they've landed on a grass puff").
+    // 0.16 settled halfway down inside the field, in the dirt between blades
+    // rather than on top of a grass puff.
     const p = path[bestEnd];
     const gh = groundHeight(p.x, p.z, { seed: 21 });
     const sit = p.y - gh;
@@ -269,10 +268,9 @@ test('calling startles them, and the fragment stays finite', () => {
 
 test('the ledge is seen, not papered over', () => {
   // Same call as case 5's, made for the same reason and reported separately:
-  // the kit used to fill the drop with unlit near-paper so nothing past the
-  // fog line was landscape, and on a ledge this shallow it read as a slab laid
-  // over the gorge rather than as depth (Frank: "it also looks bad in k12...
-  // it's just a cliff, you know?"). The carve below IS the picture here.
+  // the kit used to fill the drop with unlit near-paper so nothing past the fog
+  // line was landscape, and on a ledge this shallow it read as a slab laid over
+  // the gorge rather than as depth. The carve below IS the picture here.
   const root = staged();
   assert.equal(root.scene.getObjectByName('fogfill'), undefined,
     'nothing lays paper over the drop this case carved');

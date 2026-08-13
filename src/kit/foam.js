@@ -27,12 +27,11 @@ export function foamCycle(t, { period = 6, phase = 0, run = 1.8 } = {}) {
   return { advance: run * sweep, opacity: clamp01(opacity) };
 }
 
-// The foam: Frank's original sketch for the ocean — "the ends of the wave
-// where they're kinda white... they kinda overlap and fade out as they land
-// on the beach." A handful of strips of shoreline, each running the same
-// cycle at its own seeded phase and reach, so arrivals overlap the way real
-// wave-ends do. ONE merged mesh, rebuilt per frame — a few hundred vertices,
-// cheaper than the water sheet's own displace.
+// The foam, from the ocean's original sketch: the white ends of the waves,
+// overlapping and fading out as they land on the beach. A handful of strips of
+// shoreline, each running the same cycle at its own seeded phase and reach, so
+// arrivals overlap the way real wave-ends do. ONE merged mesh, rebuilt per
+// frame — a few hundred vertices, cheaper than the water sheet's own displace.
 //
 // SNOW, unlit: foam is the brightest thing on the page, brighter than the
 // paper (the snowfall argument — a flat unlit fill has to carry its
@@ -120,8 +119,8 @@ export function makeFoam({
         // THE SIGN IS THE WHOLE GAME: s is positive SEAWARD, and run-up goes
         // the other way. The front runs to NEGATIVE s (up the sand) as the
         // cycle advances; the tail trails seaward behind it. This was flipped
-        // once and the foam swept out to sea, sank under the sheet, and Frank
-        // saw no foam at all.
+        // once and the foam swept out to sea, sank under the sheet, and
+        // vanished entirely.
         const front = wob - advance * tongue;
         for (let j = 0; j <= across; j++) {
           const fj = j / across;                        // 0 front .. 1 tail

@@ -65,9 +65,9 @@ export function makeCliff({
   yaw = 0,
   groundSeed = 21,
   // Where the fog fill's surface lies. The default hides everything below a
-  // shallow shelf — most of "the drop" is mist. A case that wants the fall
-  // to read DEEP passes this lower and more of the face shows before the
-  // paper takes over (k5, Frank: "can we make the cliff deeper?").
+  // shallow shelf — most of "the drop" is mist. A case that wants the fall to
+  // read DEEP passes this lower and more of the face shows before the paper
+  // takes over — k5 wants a deep one.
   fogTop = -1.15,
 } = {}) {
   const g = new THREE.Group();
@@ -155,14 +155,13 @@ export function makeCliff({
   //
   // It answered "the floor is visible" with "then let nothing be visible",
   // which was the right trade while these drops were shallow shelves and the
-  // floor showing through was an artifact. Both cases that use this builder
-  // now carve real gorges — meandering lips, tapered side walls, a far wall
+  // floor showing through was an artifact. Both cases that use this builder now
+  // carve real gorges — meandering lips, tapered side walls, a far wall
   // climbing back out — and what the fill was hiding had become scenery. It
-  // read as a lid laid across the chasm, which is how Frank found it at all:
-  // "it looks like there might be another piece of geo on top of the cliff
-  // bottom." Off in case 5 first, then case 12 ("it also looks bad in k12...
-  // it's just a cliff, you know?"), and with no third caller it is gone
-  // rather than left as a flag nothing sets.
+  // read as a lid laid across the chasm — a stray slab of geometry sitting on
+  // the cliff bottom, which is how it was spotted at all. Switched off in case
+  // 5 first, then case 12, and with no third caller it is gone rather than left
+  // as a flag nothing sets.
   //
   // If a future cliff wants a bottomless drop again, the shape to build is
   // not a box: a box has a ruler-straight top face and that face IS the lid.

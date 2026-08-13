@@ -85,12 +85,11 @@ test('every case entry keeps its own number', () => {
 });
 
 test('backing off the front of the book returns to the Contents', () => {
-  // THE BUG, pinned. Frank, having opened the preface from the Contents: "I
-  // can go right and it goes to the preface, but then I can't go back left
-  // again... it's not just in the look at the scene, it's also in the text
-  // itself." Both sets of arrows and the left arrow key all bottomed out in
-  // neighborSlug's own null, so the first page of the book was somewhere you
-  // could enter and then not leave the way you came in.
+  // THE BUG, pinned. From the preface, opened out of the Contents, you could
+  // page forward but never back — in the look and in the text alike. Both sets
+  // of arrows and the left arrow key all bottomed out in neighborSlug's own
+  // null, so the first page of the book was somewhere you could enter and then
+  // not leave the way you came in.
   //
   // The Contents is not IN the reading order — it is not a page of the book —
   // which is why this is a rule layered on top of the walk rather than an
@@ -140,10 +139,8 @@ test('a slug that is not in the book pages nowhere, in either direction', () => 
 });
 
 test('auto mode circles: the afterword comes round to the preface', () => {
-  // Frank: "when it gets to the end of the book, after it reads the afterword,
-  // it would circle back around and start again at the preface. So you could
-  // just leave it on, and it would go continuously around from the back, all
-  // around to the front again."
+  // At the end of the afterword auto mode circles back to the preface, so it
+  // can simply be left running, continuously, from the back round to the front.
   assert.equal(loopNextSlug(ORDER, AFTERWORD_SLUG), PREFACE_SLUG);
 });
 

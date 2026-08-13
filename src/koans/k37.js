@@ -10,9 +10,7 @@ const ID = 37;
 
 // HE TURNS ALL THE WAY ROUND. Tug the tail and the buffalo swings clockwise to
 // face away, stops and shakes it, then carries on the same way round until he
-// is standing exactly as he was (Frank: "the buffalo is facing towards us, so
-// let's have it turn around clockwise, then shake its tail, then turn back
-// clockwise, completing a full circle").
+// is standing exactly as he was — one full circle, always the same way round.
 //
 // Which is the koan, and it is better than the swish alone was. His head, horns
 // and body pass through — everything passes through — and then his tail comes
@@ -72,15 +70,13 @@ const CAM = { distance: 13.8, target: [1.45, 1, -1.5], heading: 29, pitch: 23.5 
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
   scene.add(makeLights());
   
-  // The enclosure. Three walls of lattice — and the fourth side is not
-  // missing but a DOUBLE DOOR: one leaf standing shut, the other pushed
-  // ajar, the way a gate stands after somebody slipped through and did not
-  // look back (Frank, in two passes: first "the 2 panels rotating open
-  // like double doors pushed open", then "only one half... partially open
-  // — it's too open right now"). A wall that was never built says nothing;
-  // a door left ajar says the pen has never once held him. The shut leaf
-  // is the far corner, the ajar one the near — it opens across the
-  // buffalo's own facing line, toward the lens.
+  // The enclosure. Three walls of lattice — and the fourth side is not missing
+  // but a DOUBLE DOOR: one leaf standing shut, the other pushed ajar, the way a
+  // gate stands after somebody slipped through and did not look back. Both
+  // leaves standing wide read as too open, so one is shut. A wall that was
+  // never built says nothing; a door left ajar says the pen has never once held
+  // him. The shut leaf is the far corner, the ajar one the near — it opens
+  // across the buffalo's own facing line, toward the lens.
   const PEN = { x: 1.0, z: -2.3, size: 5.4 };   // room to stand, not a crate
   const pen = makePen({ size: PEN.size, height: 1.9, open: '+x', panelsPerSide: 2, doors: [0, 0.62] });
   pen.position.set(PEN.x, 0, PEN.z);
@@ -127,9 +123,7 @@ const CAM = { distance: 13.8, target: [1.45, 1, -1.5], heading: 29, pitch: 23.5 
   // painted full ACCENT against his deepened body, so the small thing the
   // reader is invited to touch is the small thing the case is named for. A
   // lovely argument, and it meant the page was dead to anybody who did the
-  // obvious thing (Frank: "I'm still not getting anything from thirty seven
-  // with the buffalo. Click on the buffalo, and I don't see it turn around. I
-  // don't see it do anything").
+  // obvious thing: clicking the buffalo itself did nothing at all.
   //
   // Which is the whole lesson: a target chosen because it is thematically right
   // is still wrong if it is not the thing a hand goes to. He is a metre and a

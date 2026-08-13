@@ -98,16 +98,14 @@ test('hang point: every mesh hangs below the origin', () => {
 });
 
 test('grabbing the WHOLE ring rings a cluster — several tubes, one side', () => {
-  // THE TWO COMPLAINTS THIS SITS BETWEEN, because they sound contradictory
-  // and are not. Frank, originally: "hitting this one thing causes a whole
-  // bunch of sounds" — that was ring() firing tube k AND an arbitrary k+1
-  // with no way to touch a specific tube at all, and the answer was per-tube
-  // picking (the test below this one). Frank, after that shipped: "when I
-  // click on it, I only ever hear one sound. I never hear more than one
-  // sound on the five tube ring... that's kind of the whole point of those
-  // multi ones." The distinction is WHAT WAS TOUCHED: naming a tube rings
-  // that tube alone; closing your hand on the whole chime brushes the side
-  // it came from and several speak.
+  // THE TWO COMPLAINTS THIS SITS BETWEEN, because they sound contradictory and
+  // are not. FIRST: touching one thing made a whole bunch of sounds — ring()
+  // fired tube k AND an arbitrary k+1, with no way to touch a specific tube at
+  // all, and the answer was per-tube picking (the test below this one). THEN,
+  // once that shipped: a tap only ever made ONE sound, on a five-tube ring
+  // where several notes at once is the whole point. The distinction is WHAT WAS
+  // TOUCHED: naming a tube rings that tube alone; closing your hand on the
+  // whole chime brushes the side it came from and several speak.
   //
   // Asserted as "more than one, fewer than all," not an exact count: the
   // cluster is whichever tubes lie on the contact side (CLUSTER_DOT), so
@@ -126,9 +124,8 @@ test('grabbing the WHOLE ring rings a cluster — several tubes, one side', () =
 });
 
 test('a tap keeps ringing as it settles, and the ring-down fades out', () => {
-  // Frank, on the singles: "I would expect it would maybe get knocked more
-  // than once while it's getting knocked around." The clapper is a second
-  // pendulum now, so the swing a tap kicks off keeps meeting the tubes —
+  // A knocked-about single should get knocked more than once. The clapper is a
+  // second pendulum now, so the swing a tap kicks off keeps meeting the tubes —
   // and each meeting is softer than the last, because the force tracks the
   // closing velocity and the swing is decaying.
   //
@@ -159,9 +156,9 @@ test('a tap keeps ringing as it settles, and the ring-down fades out', () => {
 
 test('the wind never rings the clapper — the ambient pacing belongs to the weather', () => {
   // THE INVARIANT the clapper's torque is designed around (kit/furin.js, THE
-  // CLAPPER). Frank auditioned and approved the chime's strike weather; the
-  // clapper is a TAP mechanism and must not start contributing wind strikes
-  // behind its back.
+  // CLAPPER). The chime's strike weather is settled and approved; the clapper
+  // is a TAP mechanism and must not start contributing wind strikes behind its
+  // back.
   //
   // WHAT ACTUALLY HOLDS IT, measured rather than assumed — because the first
   // draft of this comment claimed a guarantee stronger than the one the code
@@ -195,10 +192,9 @@ test('the wind never rings the clapper — the ambient pacing belongs to the wea
 });
 
 test('a tap rings ONE tube — the one you touched', () => {
-  // Frank: "just hitting, like, one of them, hitting this one thing causes a
-  // whole bunch of sounds." ring() fired tube k AND k+1, and the only pick
-  // target was a drum around the whole ring, so there was no way to touch a
-  // single tube even if it had wanted to.
+  // Hitting one tube used to cause a whole bunch of sounds: ring() fired tube k
+  // AND k+1, and the only pick target was a drum around the whole ring, so
+  // there was no way to touch a single tube even if it had wanted to.
   const hits = [];
   const f = makeFurin({ seed: 4, phase: 0, onStrike: (i, force) => hits.push({ i, force }) });
   f.setWindLevel(0);
@@ -261,12 +257,12 @@ test('a single-tube chime is one tube on a cord, with no ring', () => {
 });
 
 test('a single is a BELL with the clapper hidden inside it, and the paper hangs below', () => {
-  // THE SHAPE, replacing two tests that measured the thing this is not.
-  // Frank, having gone and looked real ones up: "the clapper is kind of next
-  // to the chime, but it's not actually connected to anything... widen the
-  // chime's radius a bit and get rid of the separate clapper, and it'd be
-  // like the bronze cylinder where the clapper is just inside and we don't
-  // render it. Below the chime there's a hanging rectangular piece of paper."
+  // THE SHAPE, replacing two tests that measured the thing this is not. A real
+  // 風鈴 is a small bell with the clapper hidden inside it. What was here had the
+  // clapper off to the SIDE, connected to nothing. Widen the body and drop the
+  // separate clapper and it becomes what the bronze cylinder already is: the
+  // clapper is just inside and nothing renders it, with the tanzaku hanging
+  // below the mouth.
   //
   // What was there was a Western tubular chime — a 22:1 wire — carrying a
   // tanzaku bolted to its SIDE, because the single-tube variant began life
@@ -316,8 +312,8 @@ test('a single is a BELL with the clapper hidden inside it, and the paper hangs 
 });
 
 test("the paper turns on its thread, harder for a harder knock, and never winds up", () => {
-  // Frank: "that could also rotate around the vertical axis as a swing, so
-  // it kind of starts spinning, and it has a kind of a spin parameter."
+  // The paper strip turns about the vertical axis too, and past a hard enough
+  // knock it goes right over and spins.
   const turns = (force) => {
     const f = makeFurin({ tubes: 1, size: 0.17, seed: 8 });
     const pivot = f.group.getObjectByName('spin-pivot');
@@ -327,11 +323,11 @@ test("the paper turns on its thread, harder for a harder knock, and never winds 
     f.ring(force);
     let peak = 0;
     // 60s, not the 25s this used to run. The strip was deliberately loosened
-    // (SPIN.damping tau 3.0s -> 6.5s, Frank: "the paper part should spin
-    // around a bit more with low resistance") and settling time scales with
-    // tau — at 25s it is still 0.07 rad short of its rest angle, which is the
-    // strip still moving, not the strip parked. Same claim, measured after
-    // the same number of time constants.
+    // (SPIN.damping tau 3.0s -> 6.5s, for a strip that turns with very little
+    // resistance) and settling time scales with tau — at 25s it is still 0.07
+    // rad short of its rest angle, which is the strip still moving, not the
+    // strip parked. Same claim, measured after the same number of time
+    // constants.
     for (let k = 0; k < 60 * 60; k++) { t += 1 / 60; f.update(1 / 60, t); peak = Math.max(peak, Math.abs(pivot.rotation.y)); }
     return { peak, rest: pivot.rotation.y };
   };
@@ -373,8 +369,7 @@ test("the paper turns on its thread, harder for a harder knock, and never winds 
   assert.ok(peak < Math.PI, `thirty simulated minutes of wind wound the paper to ${peak} rad — it is not restoring`);
 
   // a RING has no spin pivot: its tag hangs beside the clapper and keeps the
-  // flutter it always had ("for the other ones, I think we could keep them
-  // the way they are")
+  // flutter it always had — the ring was never the form that needed changing
   assert.equal(makeFurin({ tubes: 5, seed: 8 }).group.getObjectByName('spin-pivot'), undefined,
     'a ring should not have grown a spin pivot');
 });
@@ -399,10 +394,10 @@ test('a single reaches no deeper than the shape it replaced', () => {
 });
 
 test('a bigger single-tube furin sounds a LOWER note, and the length ratio matches the free-free-bar model', () => {
-  // task-swing-tune-brief.md, PROBLEM 1: "the physics is a free-free bar:
-  // f ~ thickness/length^2... an octave down is a tube 1.41x longer, two
-  // octaves is 2x longer." noteForSize is the pure function that formula
-  // lives in (furin.js) — pinned directly here, on its documented contract,
+  // The physics is a free-free bar, f ~ thickness/length^2, so an octave down
+  // is a tube root-2 longer and two octaves a tube twice as long. noteForSize is
+  // the pure function that formula lives in (furin.js) — pinned directly here,
+  // on its documented contract,
   // not on the internal log2 expression, so a mutant that gets the SIGN
   // right but the SCALE wrong (a plausible off-by-a-constant-factor bug)
   // still gets caught by the length-ratio check below.
@@ -487,15 +482,14 @@ test('a knocked chime SWINGS — it crosses centre, it does not just lean back',
   // an exponential decay with no oscillating term, so the chime leaned toward
   // the tap and eased back without ever passing through the middle. That was
   // replaced by a real superposed-impulse pendulum term (poseTerm), which DID
-  // cross centre — but the WIND lean was still read straight off the gust
-  // curve every frame with no inertia at all, which is what Frank was
-  // actually pointing at: "it kinda gets held in position weirdly." This test
-  // predates that second fix and still exercises the tap in isolation (wind
-  // off), so its assertions carry over unchanged onto the new model — a real
-  // driven pendulum (src/kit/pendulum.js) with taps as velocity kicks
-  // (ring()/tapKick) rather than a decaying-sine term superposed on a
-  // kinematic lean. Frank: "it has, like, a weird dampening on its rotation.
-  // It doesn't swing back and forth, like, I would expect it to."
+  // cross centre — but the WIND lean was still read straight off the gust curve
+  // every frame with no inertia at all — the chime read as being HELD in
+  // position rather than swinging. This test predates that second fix and still
+  // exercises the tap in isolation (wind off), so its assertions carry over
+  // unchanged onto the new model — a real driven pendulum (src/kit/pendulum.js)
+  // with taps as velocity kicks (ring()/tapKick) rather than a decaying-sine
+  // term superposed on a kinematic lean, which read as a strange damping that
+  // never let it swing back and forth at all.
   const f = makeFurin({ seed: 3, phase: 0, onStrike: () => {} });
   f.setWindLevel(0);
   const swing = f.group.getObjectByName('swing');
@@ -509,11 +503,10 @@ test('a knocked chime SWINGS — it crosses centre, it does not just lean back',
   assert.ok(crossings >= 3, `it leans, it does not swing: ${crossings} centre crossings in 5s`);
 
   // and it dies down rather than ringing forever — but SWING.damping was
-  // opened up (task-swing-tune-brief.md, PROBLEM 2: "a much longer settle")
-  // from tau=1.8s to tau=4.5s specifically so it lingers through several
-  // audible swings instead of two, so the old late<early*0.2 bound (tuned
-  // for the SHORT settle) now fails on correct behaviour — measured ratio at
-  // the new damping is ~0.395 (see swing-tune-report.md). 0.5 leaves real
+  // opened up for a much longer settle — tau=1.8s to tau=4.5s — specifically so
+  // it lingers through several audible swings instead of two, so the old
+  // late<early*0.2 bound (tuned for the SHORT settle) now fails on correct
+  // behaviour: the measured ratio at the new damping is ~0.395. 0.5 leaves real
   // margin above that while still catching a damping mutation: doubling
   // SWING.damping's tau (halving the coefficient) measured ~0.79, and
   // near-zero damping measured ~0.997 — both comfortably fail this bound,
@@ -529,8 +522,8 @@ test('a knocked chime SWINGS — it crosses centre, it does not just lean back',
   // (furin.js) gives a peak of ~0.019 rad, which is BELOW 0.02 and so was
   // caught, but only by a margin that was luck rather than coverage (any
   // slightly less broken mutant would have slipped through). SWING.tapPeak
-  // was raised from 0.13 to 0.55 rad (task-swing-tune-brief.md, PROBLEM 2 —
-  // "a much larger tap kick"); measured at the new value, force=1:
+  // was raised from 0.13 to 0.55 rad for a much larger tap kick; measured at
+  // the new value, force=1:
   // early ~0.528 rad. 0.45-0.60 brackets that with headroom on both sides
   // without being so loose it stops meaning anything, and would still catch
   // a future change back toward the old 0.13 (which would land near 0.115).
@@ -538,9 +531,8 @@ test('a knocked chime SWINGS — it crosses centre, it does not just lean back',
 });
 
 test('the swing SETTLES: mechanical energy decays monotonically once a tap stops feeding it', () => {
-  // "Worth pinning... the swing still settles — energy decays monotonically
-  // with no input" (task-swing-tune-brief.md's Tests section). The early/
-  // late ratio test above is a coarse, two-window version of this claim;
+  // The swing still SETTLES: energy decays monotonically with no input. The
+  // early/late ratio test above is a coarse, two-window version of this claim;
   // this pins the tight version directly on pendulumEnergy() (src/kit/
   // pendulum.js), sampled every real frame for 15s after a single tap in
   // still air — semi-implicit Euler with damping and no driving torque
@@ -628,8 +620,8 @@ test("the swing's wind phase stays locked to the absolute clock, even for a chim
   // named constants in furin.js, duplicated here on purpose so this test
   // does not import furin.js's private state, only its documented formulas).
   // damping is the one exception: SWING.damping is a LIVE, exported tunable
-  // now (task-swing-tune-brief.md — the harness writes into it directly), so
-  // a hardcoded copy here would silently stop matching the real module the
+  // now — the harness writes into it directly — so a hardcoded copy here would
+  // silently stop matching the real module the
   // moment the starting value changes again; importing the real SWING object
   // is the public, documented way to read it.
   const L = CORD_FRAC * SIZE + 0.6 * SIZE;
@@ -825,8 +817,7 @@ test('SUSTAINED rapid mashing — real elapsed time between kicks, not an instan
 });
 
 test('it hangs by a STRING, and swings from the knot at the top of it', () => {
-  // Frank: "the furin should have a string attached to the top of it, and
-  // rotate around the string attach point — that is the rotation point."
+  // A furin hangs by a string, and the point it is tied at IS its pivot.
   const S = 0.2;
   const f = makeFurin({ size: S, seed: 5 });
   const cord = f.group.getObjectByName('cord');
@@ -860,10 +851,9 @@ test('it hangs by a STRING, and swings from the knot at the top of it', () => {
 // THE OPENING. simTime is global and never resets per case, so a fresh load is
 // the one moment the book reads these curves at t = 0. Both were sums of two
 // sines with no offset — zero AND rising at the origin, adding coherently —
-// so every session opened on weather it almost never sees otherwise. Frank:
-// "the chimes are a lot louder initially, and then they kinda quiet down...
-// I'm not getting the right vibe of what the actual scene is supposed to be
-// like until it settles."
+// so every session opened on weather it almost never sees otherwise — the
+// chimes came in much louder at first and quieted down once it settled, so the
+// scene never opened as itself.
 // ---------------------------------------------------------------------------
 
 test('a chime does not open a session mid-flurry', () => {

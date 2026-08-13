@@ -13,15 +13,15 @@ import { mergeSimple } from './scatter.js';
 // whose seal IS the fish can pass an accent colour.
 //
 // THE SHAPE. One continuous body per fish, not butted primitives — the old
-// two-ellipsoid + cone build read as three disconnected lumps ("weird tadpole
-// type things"). The body is lofted from elliptical cross-sections along a
-// single profile: full head and shoulder a quarter of the way back, a long
+// two-ellipsoid + cone build read as three disconnected lumps, closer to a
+// tadpole than a fish. The body is lofted from elliptical cross-sections along
+// a single profile: full head and shoulder a quarter of the way back, a long
 // taper to a narrow caudal peduncle, then a wide flat caudal fan whose cap
-// centre is pulled FORWARD so the trailing edge cuts a fork — the notch is
-// what says "tail fin" from the top-down pond cameras. Three flat fin hints
-// are merged into the same geometry (one draw call per fish): a dorsal
-// triangle on the spine and a pair of swept-back pectorals at the shoulder,
-// the pair being the mark that reads strongest from directly above.
+// centre is pulled FORWARD so the trailing edge cuts a fork — the notch is what
+// says "tail fin" from the top-down pond cameras. Three flat fin hints are
+// merged into the same geometry (one draw call per fish): a dorsal triangle on
+// the spine and a pair of swept-back pectorals at the shoulder, the pair being
+// the mark that reads strongest from directly above.
 //
 // THE SWIM. A fish is a travelling wave, not a rigid pellet wagging: each
 // update, every vertex is displaced sideways by amp(s) * sin(phase - s*WAVE),
@@ -127,14 +127,14 @@ export function makeKoi({
   // moving the group would shear the two apart) — the ORBITS move instead.
   // k39 uses this to keep the fish on the deep side of its gradient pond.
   center = [0, 0],
-  // Optional: a height sampler in the water's own frame, (x, z, t?) => y.
-  // Given one, the fish ride it — which ties the school to the water instead
-  // of leaving it swimming in a separate layer. The pond cases pass the
-  // water's swellAt (idle swell + drift, NO ripple term): Frank ruled that a
-  // tap above the school must not toss the fish, so the reader's ripples pass
-  // over them and only the water's own breathing moves them. heightAt still
-  // works here for a surface that SHOULD carry everything — the ocean boats
-  // ride the full field for exactly that reason.
+  // Optional: a height sampler in the water's own frame, (x, z, t?) => y. Given
+  // one, the fish ride it — which ties the school to the water instead of
+  // leaving it swimming in a separate layer. The pond cases pass the water's
+  // swellAt (idle swell + drift, NO ripple term): a tap above the school must
+  // not toss the fish, so the reader's ripples pass over them and only the
+  // water's own breathing moves them. heightAt still works here for a surface
+  // that SHOULD carry everything — the ocean boats ride the full field for
+  // exactly that reason.
   surfaceAt = null,
   // How much of the surface's motion the fish take. 1 is right for a shallow
   // pond, where the water moves nearly as one column and a fish a hand's depth

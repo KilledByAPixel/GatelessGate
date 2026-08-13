@@ -140,8 +140,8 @@ test('build stages the meeting: E-myo reaching, the patriarch across the stone',
     assert.equal(typeof built[fn], 'function', `root.${fn} missing`);
   }
 
-  // TWO men now — Frank's call (2026-08-11), reversing the old absence
-  // staging: the case text has them in dialogue, so the scene does too.
+  // TWO men now, reversing the old absence staging: the case text has them in
+  // dialogue, so the scene does too.
   const monks = [];
   built.scene.traverse((o) => { if (o.name === 'monk') monks.push(o); });
   assert.equal(monks.length, 2, 'E-myo and the patriarch, talking across the stone');
@@ -205,9 +205,9 @@ test('build stages the meeting: E-myo reaching, the patriarch across the stone',
 });
 
 test('robe AND bowl both wear the seal — the pair is the treasure', () => {
-  // Frank's call, overriding the draft's grey bowl: the koan hands down the
-  // robe and bowl of succession TOGETHER, and colouring only one read as the
-  // other mattering less. The whole bundle is the one red thing on the page.
+  // Overriding the draft's grey bowl: the koan hands down the robe and bowl of
+  // succession TOGETHER, and colouring only one read as the other mattering
+  // less. The whole bundle is the one red thing on the page.
   const built = k23.build(fakeCtx());
   const bundle = built.scene.getObjectByName('bundle');
 

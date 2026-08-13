@@ -9,8 +9,7 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 // a poor place to spend a page's one warm note: at the home lens they are two
 // red specks in the middle distance, and the person actually giving the answer
 // — the whole of what this case argues about — was painted the same ink as
-// everybody else on the road (Frank: "let's have the old woman be red instead
-// of the little cups there").
+// everybody else on the road. The seal moved from the cups to her.
 
 const accent = new THREE.Color(ACCENT).getHex();
 

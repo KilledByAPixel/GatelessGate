@@ -30,14 +30,13 @@ const smooth = (t) => t * t * (3 - 2 * t);
 // behaviour lives in the component, not in the case that hangs it.
 //
 // force is fixed and, on purpose, on the QUIET side of the book's knocks:
-// eleven of these across a full roll (the book's one screen, case 26, is
-// built with slats: 11 — see k26.js) are a texture the ear should register
-// as "the screen is moving," not eleven individual events like k13's dinner
-// drum. PROBLEM 3, task-swing-tune-brief.md: the first cut (0.12) undershot
-// that goal into silence — it sat UNDER k28's 0.22, the quietest of the
-// book's other 20 audio.knock() call sites (a typical knock runs ~0.9), and
-// Frank heard nothing: "the clatter fires correctly... but Frank hears
-// nothing." Erring quiet the first time erred past audible. Raised well
+// eleven of these across a full roll (the book's one screen, case 26, is built
+// with slats: 11 — see k26.js) are a texture the ear should register as "the
+// screen is moving," not eleven individual events like k13's dinner drum. The
+// first cut undershot that goal into silence — it sat UNDER k28's 0.22, the
+// quietest of the book's other 20 audio.knock() call sites (a typical knock
+// runs ~0.9), and it was inaudible: the clatter fired correctly and nobody
+// could hear it. Erring quiet the first time erred past audible. Raised well
 // clear of 0.22 (see CLATTER's own comment for the exact starting number) —
 // still a texture, not a drum roll, but one that is actually there.
 //
@@ -47,10 +46,9 @@ const smooth = (t) => t * t * (3 - 2 * t);
 // reload; onClack reads CLATTER.force fresh on every clack rather than
 // capturing it once, so a slider reaches a roll already in progress.
 export const CLATTER = {
-  // STARTING POINT, not a final value — the owner sets this by ear through
-  // the harness. 0.35 sits comfortably above k28's 0.22 (about 1.6x) while
-  // staying well under a typical knock's 0.9 (about 0.4x) — audible as a
-  // quiet run of eleven, not a event-sized bang.
+  // STARTING POINT, not a final value — settled by ear through the harness. It
+  // sits comfortably above the book's quietest knock while staying well under a
+  // typical one: audible as a quiet run, not an event-sized bang.
   force: 0.35,
 };
 // guards a stalled or otherwise huge dt from firing a whole roll's worth of
@@ -80,12 +78,11 @@ export function makeScreen({
   // A FIXED SCREEN INSTEAD OF A HANGING ONE. A sudare is a blind: a roller with
   // material winding onto it and two pull cords. That needs a lintel to hang
   // from, and case 25's dream hall has no wall behind the deck — so it read as
-  // slats and cords floating in the air with nothing holding them up (Frank:
-  // "the screen behind them is not attached right; let's just make it composed
-  // of horizontal slats"). Fixed swaps the roller for a plain head rail and
-  // adds two stiles down the ends, so the same slats are visibly HELD by
-  // something. It does not roll: roll/unroll/toggle become no-ops and there is
-  // no clatter, because nothing moves.
+  // slats and cords floating in the air with nothing holding them up. Fixed
+  // swaps the roller for a plain head rail and adds two stiles down the ends,
+  // so the same slats are visibly HELD by something. It does not roll:
+  // roll/unroll/toggle become no-ops and there is no clatter, because nothing
+  // moves.
   fixed = false,
   // Fixed screens get end stiles by default, because slats alone read as rods
   // floating in a row. A screen filling a post-and-beam bay does NOT want them:

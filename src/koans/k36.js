@@ -14,18 +14,18 @@ const ID = 36;
 // THE MEETING ITSELF, held still. The two of them stand on the road facing
 // each other, and when you reach for the master the traveller bows.
 //
-// An earlier pass had them walking past one another — the meeting missed,
-// both of them carrying on into the fog. Frank pulled it because case 35, one
-// page back, is already two figures walking a road: two walking scenes in a
-// row read as the same scene twice, whatever they mean. Standing is also the
-// better answer to the question. The bow is the one response the koan does
-// not take away from you: it is not talk and it is not silence, and it
-// settles nothing — which is why he can offer it, and the master can stand
-// there unmoved, and the case is still open.
+// An earlier pass had them walking past one another — the meeting missed, both
+// of them carrying on into the fog. It was pulled because case 35, one page
+// back, is already two figures walking a road: two walking scenes in a row read
+// as the same scene twice, whatever they mean. Standing is also the better
+// answer to the question. The bow is the one response the koan does not take
+// away from you: it is not talk and it is not silence, and it settles nothing —
+// which is why he can offer it, and the master can stand there unmoved, and the
+// case is still open.
 //
 // Both are solid ink. An earlier pass ghosted the master to half-opacity and
-// Frank pulled that too: he is not a spirit (case 35 is the one about souls),
-// he is a man standing in the road in front of you.
+// that was pulled too: he is not a spirit (case 35 is the one about souls), he
+// is a man standing in the road in front of you.
 
 const MASTER_T = 0.42;    // where each of them stands along the road
 const TRAV_T = 0.345;     // the traveller nearer the lens, the master up the road
@@ -34,39 +34,37 @@ const LANE = 0.30;        // a little to his own side, so the pair is not a mirr
 const GEAR_T = 0.50;      // the roadside gear, just past the meeting and beyond it
 
 // THE BOW IS THE READER'S, AND NOTHING ELSE ON THIS PAGE MOVES. He stands, and
-// bows only when you reach for the master (Frank: "let's just have him
-// standing, then he only bows when you click on the zen master").
+// bows only when you reach for the master.
 //
 // Two earlier versions, both worth the record. It was a HELD bow first — the
 // page opened on a man already bent, with breath in it and a deepening a tap
 // added on top — on the argument that a diorama should show the composition
 // rather than play a gesture, and that a man who bows and straightens on a loop
 // reads as a machine. True, but it meant the reader never saw the one thing
-// this scene is (Frank: "they should start standing normal, then bow — right
-// now it is already partially bowed from the start"). The second version had
-// him arrive standing and bow once, on his own, a second after the page opened,
-// and hold it — which fixed the seeing and left the whole gesture happening
-// whether or not anybody was there for it.
+// this scene is: he was already partly bent when the page opened, so the bow
+// itself never happened in front of anyone. The second version had him arrive
+// standing and bow once, on his own, a second after the page opened, and hold
+// it — which fixed the seeing and left the whole gesture happening whether or
+// not anybody was there for it.
 //
 // So it is a touch response now, and the machine objection is answered by the
 // cooldown rather than by holding the pose: one bow per reach, refused until it
 // finishes. Nothing loops, because nothing is on a clock but the reader.
 //
-// The shape is case 32's, which is the shape every bow in this book uses (Frank:
-// "should be like the other bows like the one in 32"): down slowly, held a real
-// moment, slower still coming up. Before that it was `deep = 1` on the tap frame
-// and a linear decay — he snapped to the bottom in a single frame and then took
-// two seconds to come up, so the going-down half, the half that IS the bow,
-// never existed. Same fault the birds and the butterflies shipped and the same
-// family as case 35's lean, all found in one pass: an envelope set to 1 by a
-// touch has no attack.
-// HOW DEEP, and it is tuned by eye rather than derived — these two numbers have
-// moved three times and will move again, so nothing here or in the tests quotes
-// a figure in degrees. What is worth keeping is why the FIRST value was wrong:
-// 0.62 was the held pose's angle, and a held pose can get away with a shallow
-// bend because the eye reads it as a posture. A movement you watch happen gets
-// read by its depth instead, and the same angle looked like the start of
-// something (Frank: "just a normal bow, not the half bow thing he does now").
+// The shape is case 32's, which is the shape every bow in this book uses: down
+// slowly, held a real moment, slower still coming up. Before that it was `deep
+// = 1` on the tap frame and a linear decay — he snapped to the bottom in a
+// single frame and then took two seconds to come up, so the going-down half,
+// the half that IS the bow, never existed. Same fault the birds and the
+// butterflies shipped and the same family as case 35's lean, all found in one
+// pass: an envelope set to 1 by a touch has no attack. HOW DEEP, and it is
+// tuned by eye rather than derived — these two numbers have moved three times
+// and will move again, so nothing here or in the tests quotes a figure in
+// degrees. What is worth keeping is why the FIRST value was wrong: 0.62 was the
+// held pose's angle, and a held pose can get away with a shallow bend because
+// the eye reads it as a posture. A movement you watch happen gets read by its
+// depth instead, and the same angle looked like the start of something — a half
+// bow rather than a bow.
 const BOW = .5;         // radians at the waist at the bottom
 // The breath RIDES the bow — scaled by how far down he is, so a man standing
 // straight does not sway. At a fifth of a radian it is no longer a breath but a
@@ -138,16 +136,15 @@ const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch:
   traveller.position.set(HERE.x + HERE.perp.x * LANE, 0, HERE.z + HERE.perp.z * LANE);
   scene.add(traveller);
   const waist = traveller.getObjectByName('waist');
-  // the traveller's staff stays plain ink (Frank: the master is the seal,
-  // not the staff)
+  // the traveller's staff stays plain ink: the master is the seal, not the staff
   
-  // THE MASTER, standing in the road in front of him, solid and RED — he is
-  // the seal: the one you cannot face or not-face, the thing the whole case
-  // is about. He held perfectly still for a long time ("the bow does not
-  // reach him") until Frank's audit asked for "a little bit of a shake when
-  // you click on them" — so the REACH reaches him now: a small tremor, gone
-  // in under a second, and then he is the unmoved man in the road again.
-  // The bow still gets no answer; being touched is not being bowed to.
+  // THE MASTER, standing in the road in front of him, solid and RED — he is the
+  // seal: the one you cannot face or not-face, the thing the whole case is
+  // about. He held perfectly still for a long time ("the bow does not reach
+  // him") until a touched thing had to answer — so the REACH reaches him now: a
+  // small tremor, gone in under a second, and then he is the unmoved man in the
+  // road again. The bow still gets no answer; being touched is not being bowed
+  // to.
   const master = makeMonk({ height: 1.68, color: ACCENT });
   master.name = 'master';
   const THERE = road.sample(MASTER_T);

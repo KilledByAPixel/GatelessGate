@@ -7,7 +7,7 @@ import { ACCENT } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Case 11 — Joshu examines a monk in meditation. Two staging complaints from
-// Frank's pass live here so they cannot come back:
+// Three faults from one pass live here so they cannot come back:
 //   1. the hall's hill sat ON the main path — the road ran into the slope and
 //      vanished under it;
 //   2. the meadow was planted at terrain height, so blades knifed up through
@@ -124,11 +124,11 @@ test('the ship stands off in deep water and rides the swell', () => {
 });
 
 test('a tap rocks the ship on top of the swell, and the sea takes it back', () => {
-  // Frank's audit: the verdict plays out on shore, in Joshu — the boat itself
-  // needed feedback. Measured as a DIFFERENCE against an untapped twin build
-  // (same seeds, same simTime, so the swell underneath is identical): the tap
-  // adds a legible roll, and once the envelope closes the two hulls agree to
-  // the last bit — the extra motion leaves no residue behind.
+  // The verdict plays out on shore, in Joshu — so the boat itself needed
+  // feedback. Measured as a DIFFERENCE against an untapped twin build (same
+  // seeds, same simTime, so the swell underneath is identical): the tap adds a
+  // legible roll, and once the envelope closes the two hulls agree to the last
+  // bit — the extra motion leaves no residue behind.
   const build = () => {
     const ctx = fakeCtx();
     const root = k11.build(ctx);

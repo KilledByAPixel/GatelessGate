@@ -34,10 +34,10 @@ const BASE_WIND = 0.25;
 const AMBIENCE = ['wind:' + BASE_WIND, 'furin', 'furin', 'music'];
 
 // The framing. This case used to take the book's default shot implicitly, by
-// naming no `camera:` at all. These are DEFAULT_HOME's own numbers, written
-// out so the shot is tuned here like every other case's rather than by moving
-// the book (Frank). composeWorld gets the same object as its `view`, so the
-// scatter still refuses spots no reachable heading can see (kit/scenery.js).
+// naming no `camera:` at all. These are DEFAULT_HOME's own numbers, written out
+// so the shot is tuned here like every other case's rather than by moving the
+// book. composeWorld gets the same object as its `view`, so the scatter still
+// refuses spots no reachable heading can see (kit/scenery.js).
 const CAM = { distance: 11.5, target: [2.75, 1.35, 0.55], heading: 36.5, pitch: 17.2 };
 
 export default {
@@ -116,98 +116,68 @@ export default {
       grassKeepout: path.keepout(26, 1.05),
     });
 
-    // THREE single-tube fūrin under the gate's lintel, one size each —
-    // Frank asked for "single wind chimes that can hang that could get
-    // knocked individually ... a single tone. Much of them hanging": three
-    // separate voices answering the same wind in their own time is the
-    // koan's own argument (not the wind, not the flag) staged as sound.
+    // THREE single-tube fūrin under the gate's lintel, one size each — three
+    // separate voices answering the same wind in their own time, which is the
+    // koan's own argument (not the wind, not the flag) staged as sound. A
+    // five-tube ring hung here too for a while; a cluster and three single
+    // notes under one beam was two ideas competing.
     //
-    // THE RING IS GONE, on Frank's own call after seeing it staged: "for
-    // case twenty nine, let's get rid of the five-tube ring that's placed.
-    // So it's just gonna have three, the three different sizes. That's what
-    // it's gonna have." A five-note cluster and three single notes under one
-    // beam was two ideas competing; three singles at three sizes is the one
-    // idea, and the sizes are visible from the road. (Its removal also
-    // returns 6 draws and the whole left end of the lintel, which is why
-    // every position below could be respread.)
+    // ANYTHING HUNG ON A GATE: CHECK THE POST RADIUS AT THE HANG HEIGHT, not at
+    // the foot. The ring used to hang exactly on the right post's own axis,
+    // where the taper still left the post wider than the chime for its whole
+    // vertical extent — it had been invisible, not merely close, since the day
+    // the case was staged.
     //
-    // BURIED CHIME, FOUND DURING AN EARLIER REVIEW and worth keeping on the
-    // record: the ring used to hang at local (1.2, 2.6, 0) — exactly on the
-    // right post's own axis (post x = +-width/2 = +-1.2, z = 0, same as the
-    // chime), and the post's radius there (~0.0913, tapered from
-    // POST_BOTTOM_R 0.12 to POST_TOP_R 0.09, src/kit/gate.js) exceeded the
-    // ring's own widest point for its whole vertical extent. It had been
-    // invisible, not merely close, since the day the case was staged. The
-    // lesson generalises to anything hung on a gate: check the post radius
-    // at the hang height, not at the foot.
+    // POSITIONS are measured off src/kit/gate.js rather than typed: only the
+    // kasagi's flat CENTRE span is flush underside with no gap to the wood, and
+    // past that its wings tilt up over the posts. All three hang on that span.
     //
-    // POSITIONS, measured off src/kit/gate.js at this case's default width
-    // (2.4) and height (2.6): the kasagi's overall footprint is
-    // width*1.4 = 3.36, but only its flat CENTRE span is flush with
-    // y = height+0.09 - KASAGI_H/2 = 2.6 — that span is
-    // width*1.4 - 2*(width*1.4*0.24) = 1.7472 wide, so |x| < 0.8736 is flush
-    // underside with no gap to the wood. Past that the kasagi's wing tilts
-    // upward, and the posts stand at +-width/2 = +-1.2 under that wing. All
-    // three hang on the flat span, evenly spread across it now that the ring
-    // no longer takes its left end.
+    // MAX-AMPLITUDE CHECK. A fūrin's cord, cap, tubes and tag are ONE rigid
+    // body pivoting at the hang point, so a bigger swing can never make one
+    // collide with ITSELF; the risk is external — the whole assembly displacing
+    // sideways into a NEIGHBOUR. (The clapper swings independently inside that
+    // assembly, but a real collision bounds it to the tubes' own clearance, so
+    // it never widens the silhouette this measures.)
     //
-    // MAX-AMPLITUDE CHECK (task-swing-tune-brief.md: "a bigger fūrin swing
-    // must not push tubes through the cap or through each other"). A fūrin's
-    // cord, cap, tubes and tag are ONE rigid body pivoting at the hang
-    // point, so a bigger swing can never make one collide with ITSELF; the
-    // risk is external — the whole assembly displacing sideways into a
-    // NEIGHBOUR. (The clapper does now swing independently inside that
-    // assembly — see THE CLAPPER in kit/furin.js — but it is bounded to the
-    // tubes' own clearance by a real collision, so it never widens the
-    // silhouette this check measures.)
+    // THE WORST CASE IS COUNTER-PHASE, and a check that swings every chime the
+    // SAME way measures nearly the BEST one — adjacent chimes displace together
+    // and the gap barely changes. Counter-phase needs no contrivance to reach:
+    // two ordinary taps half a period apart, or one tap against a wind lean. A
+    // real, measured collision hid behind the easier check once.
+    // tests/k29.test.js does it properly — real module, VISIBLE meshes only
+    // (oversized pick drums may overlap; a forgiving tap zone is not a visual
+    // bug), every pair's own worst-case sign combination, against the LIVE
+    // SWING.maxOmegaFrac rather than a copied number — so raising the swing cap
+    // fails the test instead of silently pushing two chimes through each other.
     //
-    // A CODE REVIEW ONCE CAUGHT A REAL, MEASURED COLLISION here by noticing
-    // that the check swung every chime the SAME direction — nearly the BEST
-    // case, since adjacent chimes then displace together and the gap barely
-    // changes. The worst case is COUNTER-phase (adjacent chimes swung toward
-    // EACH OTHER), which needs no special engineering to reach: two ordinary
-    // taps landing about half a period apart, or one tap against an existing
-    // wind lean. tests/k29.test.js checks it that way — real module, VISIBLE
-    // meshes only (the invisible oversized pick drums are allowed to
-    // overlap; a forgiving tap zone is not a visual bug), every pair's own
-    // worst-case sign combination — against the LIVE SWING.maxOmegaFrac
-    // rather than a copied number, so raising the swing cap fails the test
-    // rather than silently pushing two chimes through each other.
-    //
-    // TIE BEAM CLEARANCE: the nuki (src/kit/gate.js's cross-tie) sits at
-    // y = height*0.78 = 2.028, top face at 2.098, spanning the same x range
-    // as every chime here. Swinging away from vertical only ever SHORTENS a
-    // chime's drop (cos(theta) < 1), so REST is the worst case for this
-    // clearance, and X is irrelevant to it (the nuki spans the whole width).
-    // SINGLE_CORD below is what sets it — see its own comment.
+    // TIE BEAM CLEARANCE: the nuki spans the same x range as every chime, so x
+    // is irrelevant to it, and swinging off vertical only ever SHORTENS a
+    // chime's drop — REST is the worst case. SINGLE_CORD below is what sets it.
     const SINGLE_X = [-0.72, 0, 0.72];
-    // SIZES: PROBLEM 1, task-swing-tune-brief.md — "the lower ones are
-    // bigger... probably the length, maybe a little bit of both." Each
-    // single hangs a DIFFERENT size and reports whatever note that size
-    // implies (makeFurin's own noteForSize, kit/furin.js) — the case does
-    // not pick a note independent of geometry, it picks a size and the note
-    // follows, matching audio.bell() and makeCylinderChime everywhere else
-    // in the book. Chosen so the sounding notes land on the spread already
-    // approved by ear (-1, 5, 9): 0.18 -> -1, 0.12 -> 5, 0.09 -> 9
-    // (pinned in tests/k29.test.js). The lowest (0.18) is exactly 2x the
-    // highest (0.09) — the brief's own worked example for a ~2-octave
-    // spread, landed here by solving for size rather than picking a round
-    // number and hoping.
+    // SIZES, and the lower ones are the bigger ones — mostly in length, with a
+    // little diameter following it. Each single hangs a DIFFERENT size and
+    // reports whatever note that size implies (makeFurin's own noteForSize,
+    // kit/furin.js) — the case does not pick a note independent of geometry, it
+    // picks a size and the note follows, matching audio.bell() and
+    // makeCylinderChime everywhere else in the book. Chosen so the sounding
+    // notes land on the spread already approved by ear, pinned in
+    // tests/k29.test.js. The lowest is exactly TWICE the highest, which is the
+    // worked example for a two-octave spread — landed by solving for size
+    // rather than picking round numbers and hoping.
     const SINGLE_SIZES = [0.18, 0.12, 0.09];
-    // ABSOLUTE cord lengths, in world units, not fractions of size — Frank,
-    // watching three sizes hang side by side: "the small ones are not
-    // hanging low enough." They weren't, and a size-relative cord is exactly
-    // why: it gives the SMALLEST chime the SHORTEST string, so the one that
-    // most needs to reach down to join the group is the one pinned tightest
-    // to the beam.
+    // ABSOLUTE cord lengths, in world units, not fractions of size. Hung side
+    // by side, the small ones did not reach low enough, and a size-relative
+    // cord is exactly why: it gives the SMALLEST chime the SHORTEST string, so
+    // the one that most needs to reach down to join the group is the one pinned
+    // tightest to the beam.
     //
-    // Solved so the three BELLS hang on one line — bottoms within 0.001 of
-    // each other, at CORD + (0.18 + SINGLE_BODY_LEN)*size below the lintel —
-    // rather than the paper below them, which is meant to vary. That reads
-    // as one row of chimes at three sizes instead of three chimes at three
-    // heights. Total reach including the tanzaku is CORD + 1.98*size, worst
-    // 0.451 on the biggest, against the nuki's own 0.502 (TIE BEAM CLEARANCE
-    // above; rest is the worst case, since swinging only shortens the drop).
+    // Solved so the three BELLS hang on one line — bottoms within 0.001 of each
+    // other, at CORD + (0.18 + SINGLE_BODY_LEN)*size below the lintel — rather
+    // than the paper below them, which is meant to vary. That reads as one row
+    // of chimes at three sizes instead of three chimes at three heights. Total
+    // reach including the tanzaku is CORD + 1.98*size, worst 0.451 on the
+    // biggest, against the nuki's own 0.502 (TIE BEAM CLEARANCE above; rest is
+    // the worst case, since swinging only shortens the drop).
     const SINGLE_CORD = [0.095, 0.156, 0.187];
     const singles = SINGLE_X.map((x, i) => {
       const single = makeFurin({
@@ -229,9 +199,8 @@ export default {
     // ---- THE WHOLE SCENE'S WIND, not just the flag's ---------------------
     // Stopping the flag used to stop the flag, the chimes and the sound, and
     // leave the meadow laying over and the trees working away behind it
-    // (Frank: "let's make it so the wind actually stops when you click on it
-    // and the flag stops — the wind is still moving on the grass and on the
-    // trees"). On a page whose entire argument is what the wind is and is not,
+    // — the wind went on visibly moving the grass and the trees. On a page
+    // whose entire argument is what the wind is and is not,
     // a still flag over a moving meadow is the case refuting itself.
     //
     // Both fields are held only WHILE the flag is not at full wind, and handed
@@ -249,16 +218,14 @@ export default {
     // but a case should not need the workbench to clean up after it.)
     //
     // IT DOES NOT GO TO ZERO. A dead-still meadow and dead-still trees read as
-    // the picture having crashed rather than as the wind having dropped (Frank:
-    // "it looks almost like it's frozen... let's just set the wind down to,
-    // like, a tenth of what it normally is or something like that instead of
-    // zero"). A tenth still reads plainly as stopped next to the flag's own
-    // full lean, and the page stays alive.
+    // the picture having crashed rather than as the wind having dropped — the
+    // page simply looks frozen. A tenth still reads plainly as stopped next to
+    // the flag's own full lean, and the page stays alive.
     //
     // The floor is on the two FIELDS only. The chimes and the audible wind
     // still go all the way to silence with the flag: that is Mumon's argument
-    // staged as sound and it is what the case is for — and at a tenth of a
-    // wind a fūrin would barely speak anyway.
+    // staged as sound and it is what the case is for — and at a tenth of a wind
+    // a fūrin would barely speak anyway.
     const STILL = 0.1;
     const grass = world.grass;
     let held = false;
@@ -313,10 +280,9 @@ export default {
       if (hit) {
         const on = flag.toggleWind();
         audio && audio.setWindLevel(on ? baseWind : 0);
-        // the toggle itself was silent — the wind's own bed ramps too slowly
-        // to read as an acknowledgment (Frank's audit: "whether you're
-        // starting it or stopping it, we'll have it play the swish sound so
-        // you get some feedback"). One breath, at the cloth, both ways.
+        // the toggle itself was silent — the wind's own bed ramps too slowly to
+        // read as an acknowledgment, and the toggle needs feedback either way
+        // it goes. One breath, at the cloth, both directions.
         audio && audio.breath({ force: 0.7, at: hit.point });
       }
     });

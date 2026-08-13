@@ -17,14 +17,13 @@ const ID = 39;
 //
 // So the crossing is made of borrowed words: stepping stones laid across dark
 // water, each one a phrase. Only ONE of them ever gives way — the vermillion
-// one, the phrase currently carrying the point (Frank: "make it so you can
-// only push the red stone"). Touch a grey stone and it holds, with a solid
-// little knock: everyone else's words are perfectly load-bearing. Touch the
-// red one and it goes under, and the red moves to the next surviving stone —
-// so the crossing can only ever be dismantled point by point, from the far
-// end in, until the water lies flat and black with nothing to walk on. Then,
-// after a while, the stones surface again for the next person who wants to
-// quote something.
+// one, the phrase currently carrying the point. Only the red stone can be
+// pushed under. Touch a grey stone and it holds, with a solid little knock:
+// everyone else's words are perfectly load-bearing. Touch the red one and it
+// goes under, and the red moves to the next surviving stone — so the crossing
+// can only ever be dismantled point by point, from the far end in, until the
+// water lies flat and black with nothing to walk on. Then, after a while, the
+// stones surface again for the next person who wants to quote something.
 //
 // (Any stone used to sink. The red starts as the far one — the end of the
 // line nobody in this case ever reaches — and there is always exactly one:
@@ -43,13 +42,12 @@ const FIRST_RED = STONES - 1;   // the crossing starts with the FAR stone red
 //
 // Nearest, not "next in build order wrapping round": the stones run in a line
 // from the near shore out, so wrapping sent the red from the far end all the
-// way back to the first stone — the length of the crossing away (Frank: "the
-// next red one that appears is on the opposite direction, all the way on the
-// other side, and that's wrong — we want the closest one to turn red next,
-// and then they keep coming from the same side"). Walking outward from the
-// red one by index IS walking outward by distance here, and the near-shore
-// tie-break is what keeps the red marching steadily down the line it started
-// on instead of hopping across the water.
+// way back to the first stone — the length of the crossing away, when what it
+// should do is hand the red to the NEAREST surviving stone, so they keep coming
+// from the same side. Walking outward from the red one by index IS walking
+// outward by distance here, and the near-shore tie-break is what keeps the red
+// marching steadily down the line it started on instead of hopping across the
+// water.
 //
 // When the last survivor goes down there is nobody left to take it: -1, and
 // the red vanishes with the crossing until the stones surface again.
@@ -74,10 +72,9 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
   // Used to carry the loudest water bed in the book (water:0.55, the deepest
-  // crossing). Frank: "the moving water sound was not good... it sounds like
-  // we're at a beach or something" — there is no ocean or beach in any scene
-  // here, so it's off (see makeWaterBed's comment in synths.js). A tap on a
-  // stone or the water itself still rings a drip.
+  // crossing), but that wash read as surf, and there is no ocean or beach in
+  // this scene, so it's off (see makeWaterBed's comment in synths.js). A tap on
+  // a stone or the water itself still rings a drip.
   ambience: ['wind:0.14', 'music'],
   camera: CAM,
   
@@ -91,32 +88,28 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
   // dark water, wide enough that the crossing matters.
   //
   // IT SITS IN A HOLE NOW. The sheet used to be lifted to 0.18 — above the
-  // meadow — because there was no basin under it and a ripple trough reached
-  // y = 0 and punched through the earth. That bought clearance and cost the
-  // picture: a pond hovering a hand's width over the field it is supposed to
-  // be in (Frank: "we've got the water lifted up above the ground to fix the
-  // z-fighting... we could deform the ground where the water is, so it rapidly
-  // slopes down and is deep enough that there's no z-fighting, and we can
-  // maybe even put fish there").
+  // meadow — because there was no basin under it and a ripple trough reached y
+  // = 0 and punched through the earth. That bought clearance and cost the
+  // picture: a pond hovering a hand's width over the field it is supposed to be
+  // in. Deform the GROUND instead: slope it rapidly down where the water is,
+  // deep enough that nothing z-fights, and deep enough to put fish in.
   //
   // So the ground is carved instead, and the sheet drops to just UNDER the
   // bank — the lip overhangs it by a few centimetres, which is what the edge
   // of a pond looks like. The carve is below, after composeWorld has built the
   // ground it cuts.
   const WY = -0.05;
-  // The bed is a GRADIENT now, not a bowl (Frank: "the water more shallow
-  // where the stones are... it could get deeper farther away where the fish
-  // are"): ~SHALLOW under the stepping-stone line so the stones stand on
-  // the bottom, sliding down to DEEP on the back half where the koi swim.
+  // The bed is a GRADIENT now, not a bowl: ~SHALLOW under the stepping-stone
+  // line so the stones stand on the bottom, sliding down to DEEP on the back
+  // half where the koi swim.
   const SHALLOW = 0.35;
   const DEEP = 1.3;
   const BANK = 1.5;       // how fast the bank falls — "rapidly slopes down"
-  // open water — a BLOB now, not a square (Frank: "make that pond less
-  // square-shaped, more organically shaped, kinda roundish"): a seeded
+  // open water — a BLOB now, not a square, organic and roundish: a seeded
   // wobbled outline from the kit, sized up so every stone still stands well
   // inside the shore at this seed (pinned by tests/k39.test.js). The rim is
-  // pinned as before, so a stone dropped near the bank still cannot throw
-  // its ring out over the grass.
+  // pinned as before, so a stone dropped near the bank still cannot throw its
+  // ring out over the grass.
   const water = makeWater({ shape: 'blob', size: 12.5, color: wash(0.72), seed: ID, strike: 0.085 });
   water.group.position.set(0.4, WY, -1.6);
   scene.add(water.group);
@@ -143,13 +136,11 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
   const pivot = new THREE.Group();
   pivot.name = 'stone';
   pivot.position.set(x, WY + 0.05, z);
-  // The stone goes to the BOTTOM now (Frank: "the stones can be a bit
-  // taller, so they're fully touching the bottom of the pond") — the bed
-  // under the crossing is only SHALLOW (~0.35) deep since the gradient
+  // The stone goes to the BOTTOM now, standing on it rather than floating — the
+  // bed under the crossing is only SHALLOW (~0.35) deep since the gradient
   // carve, so a 0.55 body reaches it with margin. This is NOT the old
-  // shafts-through-deep-water failure (pale stilts under a metre of dark
-  // sheet, "a row of mushrooms"): these are squat stones in genuinely
-  // shallow water.
+  // shafts-through-deep-water failure (pale stilts under a metre of dark sheet,
+  // "a row of mushrooms"): these are squat stones in genuinely shallow water.
   // The top face stays exactly where the old 0.20 cap put it.
   const H = 0.55;
   const top = new THREE.Mesh(
@@ -236,17 +227,16 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
     groundMesh.geometry.computeVertexNormals();
 
     // ---- AND FISH, now that there is water to put them in ----------------
-    // The whole point of digging it (Frank). They ride water.swellAt — the
-    // idle breathing, NOT the reader's ripples — because Frank ruled a stone
-    // going under (or a tap) must not toss the fish; the rings pass over the
+    // The whole point of digging it. They ride water.swellAt — the idle
+    // breathing, NOT the reader's ripples — because a stone going under (or a
+    // tap) must not toss the fish; the rings pass over the
     // school. Held well below the sheet — there is more than a metre of water
     // beneath them, so nothing can surface unasked.
     const koi = makeKoi({
       count: 4, seed: ID, length: 0.8, color: wash(0.16), unlit: true,
       radius: 2.0, depth: 0.34, surfaceAt: water.swellAt,
-      // the deep side of the gradient, clear of the crossing (Frank: "the
-      // fish are kind of further back in the pool where it can be a bit
-      // deeper... positioned so they're not overlapping with the stones")
+      // the deep side of the gradient, back in the pool and clear of the
+      // crossing, so the school never overlaps the stones
       center: [1.4, -2.0],
     });
     koi.group.position.set(0.4, WY, -1.6);
@@ -277,9 +267,8 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
         const s = stones[i];
         if (s.sunkAt > -99) continue;
         if (!input.raycastFirst(camera, [s.hit])) continue;
-        // ONLY THE RED GIVES WAY (Frank: "make it so you can only push the
-        // red stone"). A grey stone is someone else's phrase and it holds —
-        // a solid knock, no ripple, nothing moves.
+        // ONLY THE RED GIVES WAY. A grey stone is someone else's phrase and it
+        // holds — a solid knock, no ripple, nothing moves.
         if (i !== red) {
           audio && audio.knock({ force: 0.35, at: s.pivot.position });
           return;
@@ -292,17 +281,15 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
         // The red does NOT move yet. It waits until this stone has actually
         // gone under (see update, below): handing it over on the tap lit the
         // next stone while the tapped one was still standing there in plain
-        // sight wearing nothing (Frank: "the next one turns red a bit too
-        // early — it shouldn't turn red until that one has gone under").
+        // sight wearing nothing. Nothing turns red until the last one is under.
         if (sunk === stones.length) allDownAt = clock;
         return;
       }
 
-      // THE WATER IS TOUCHABLE TOO. Every other pond in the book rings when
-      // you touch it, and this one — the widest sheet of open water in the
-      // whole case list — simply did not: the tap handler only ever looked at
-      // the stones, so a miss did nothing at all (Frank: "I can't seem to
-      // touch the water there, it's not letting me create ripples").
+      // THE WATER IS TOUCHABLE TOO. Every other pond in the book rings when you
+      // touch it, and this one — the widest sheet of open water in the whole
+      // case list — simply did not: the tap handler only ever looked at the
+      // stones, so a miss did nothing at all and the water took no ripples.
       if (!surface) return;
       const hit = input.raycastFirst(camera, [surface]);
       if (!hit) return;
@@ -327,9 +314,9 @@ const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.
           // the crossing resets whole: the red returns to the far stone
           red = FIRST_RED;
           paint();
-          // and coming back up MOVES THE WATER (Frank) — seven stones
-          // surfacing at once is the biggest thing that happens in this
-          // scene, and it used to happen in dead silence on a flat sheet
+          // and coming back up MOVES THE WATER — seven stones surfacing at once
+          // is the biggest thing that happens in this scene, and it used to
+          // happen in dead silence on a flat sheet
           for (const s of stones) {
             water.ripple(s.pivot.position.x - 0.4, s.pivot.position.z + 1.6);
           }

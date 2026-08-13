@@ -118,11 +118,11 @@ test('three barriers straddle one road, in order, stepping down with depth', () 
 });
 
 test('all three barriers carry the seal; the fog does the hierarchy', () => {
-  // Frank's call, overriding the middle-only draft: three red gates on one
-  // road, with DISTANCE as the differentiator — the near one full-blooded, the
-  // far one a red ghost half into the paper. Each takes the deep mix like the
-  // title screen's gate, and each glows on its own (washMaterial keys off the
-  // accent family; k47 never sets emissive by hand).
+  // Overriding the middle-only draft: three red gates on one road, with
+  // DISTANCE as the differentiator — the near one full-blooded, the far one a
+  // red ghost half into the paper. Each takes the deep mix like the title
+  // screen's gate, and each glows on its own (washMaterial keys off the accent
+  // family; k47 never sets emissive by hand).
   const root = k47.build(fakeCtx());
   const gates = gatesByDepth(root.scene);
   const deepHex = new THREE.Color(ACCENT_DEEP).getHexString();
@@ -328,9 +328,8 @@ test('a bell cannot be re-struck inside its cooldown — holding the pointer dow
 
 test('nothing hangs from a barrier any more', () => {
   // A single furin under the near gate's lintel was this page's ambient voice.
-  // The near barrier is not a fixed object now — Frank called it before the
-  // slide was built: "we'll probably get rid of the thing hanging, because
-  // that's gonna mess things up." It would have: it would ride one gate up the
+  // The near barrier is not a fixed object now, and a chime hung on it was
+  // ruled out before the slide was built. It would have ridden one gate up the
   // road and out into the fog, taking the page's only continuous sound with it
   // and bringing it back four taps later.
   const struck = [];
@@ -346,7 +345,7 @@ test('nothing hangs from a barrier any more', () => {
 });
 
 // ---- the road turns over ---------------------------------------------------
-// Frank's design, and it is the case: Tosotsu's three barriers are three
+// The staging IS the case: Tosotsu's three barriers are three
 // questions, and the joke the composition could never tell on its own is that
 // passing one does not leave you with two. Touch any gate and the whole road
 // slides one place forward — a fourth comes up out of the space behind the
@@ -479,11 +478,10 @@ test('the scene runs without a renderer or audio, and reports a finite fragment'
 test('the far barrier dwindles as it goes, and nothing blinks on the way round', () => {
   // TWO FAULTS, both at the ends of the slide, both found by eye.
   //
-  // The far gate arrived at the GONE slot still at 0.82 scale, thirty units
-  // out — just legible against the paper — and then the wrap took it in one
-  // frame (Frank: "it just pops off... let's have it just shrink down as well,
-  // that's gonna make it look like it's going away"). Fog and distance alone
-  // were not enough.
+  // The far gate arrived at the GONE slot still at 0.82 scale, thirty units out
+  // — just legible against the paper — and then the wrap took it in one frame,
+  // popping out of existence rather than receding. Fog and distance alone were
+  // not enough.
   //
   // And the ARRIVING gate blinked out for exactly one frame at the end of the
   // slide. Its position was right the whole time, which is what made it puzzling

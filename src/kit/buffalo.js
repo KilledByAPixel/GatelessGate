@@ -21,9 +21,9 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     height, color, seed,
     // few segments so flatShading facets it — a smooth capsule reads as a lozenge
     bodyR: 0.40, bodyLen: 0.86, bodyDrop: 0.36,
-    // legTaper 1.05: the shared limb profile wants a thigh to start from —
-    // at the old default 0.82 the heaviest animal in the book had the
-    // thinnest leg tops
+    // legTaper is up: the shared limb profile wants a thigh to start from, and
+    // at the stock default the heaviest animal in the book had the thinnest leg
+    // tops
     legBury: .2,
     legH: 0.46, legR: 0.125, legTaper: 1.05, hipX: 0.15, hipZ: 0.34,
     hump: { r: 0.35, scaleY: 0.86, scaleZ: 1.00, up: 0.24, fwd: 0.18 },
@@ -52,14 +52,13 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // and the base drifted half a height clear of the skull, reading as
     // sprouting from the hump — if the head moves, move the horns with it.
     //
-    // THE HORN IS SMALL, THICK AND CURVED — "round, curved, like a devil's
-    // horn almost, small curved pointy horn" (Frank; the long straight cones
-    // read as "spikes coming up from its ears"). `curve` (quadruped.js) lofts
-    // the cone along an arc bending toward local -z, so with a wide `sweep`
-    // the pair leaves the SIDES of the skull, stands up-and-out, and hooks
-    // back over the neck like local/refs/buffaloHead.png. Short (0.5, was
-    // 1.10) and fat at the base (0.10, was 0.055): a devil's horn, not a
-    // fencepost.
+    // THE HORN IS SMALL, THICK AND CURVED — "round, curved, like a devil's horn
+    // almost, small curved pointy horn" — the long straight cones it replaced
+    // read as spikes coming up from its ears. `curve` (quadruped.js) lofts the
+    // cone along an arc bending toward local -z, so with a wide `sweep` the
+    // pair leaves the SIDES of the skull, stands up-and-out, and hooks back
+    // over the neck like local/refs/buffaloHead.png. Halved in length and
+    // nearly doubled at the base: a devil's horn, not a fencepost.
     horns: { r: 0.1, len: 0.5, x: 0.1, up: -0.02, fwd: 0.7, sweep: 0.75, back: 0.25, curve: -0.50 },
     tail: { kind: 'strand', segments: 7, length: 0.74, thickness: 0.05, up: 0.0, back: 0.8, color: tailColor },
   });

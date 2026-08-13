@@ -6,8 +6,8 @@ import { SECTIONS } from './about_state.js';
 // gg-section) rather than inventing a credits screen. It is the one page in
 // the book with no case number and no seal.
 //
-// Called "About" rather than "Colophon" (Frank): the printer's word is the
-// precise one and precisely why it reads as jargon.
+// Called "About" rather than "Colophon": the printer's word is the precise one,
+// and precisely why it reads as jargon.
 //
 // Glue only — every word lives in about_state.js, where the tests can hold
 // its claims against the files that make them true.

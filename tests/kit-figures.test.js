@@ -19,13 +19,12 @@ function maxRadiusInBand(mesh, y0, y1) {
   return r;
 }
 
-// The Buddha is NOT special below the neck (Frank, overnight pass 2): the
-// same seated figure kit as every monk, ordinary human size, bare-headed.
-// What makes him him is TWO marks on the shared skull — the topknot (Frank,
-// polish round 2: "we can make Buddha special with, like, a topknot") and
-// the urna. These tests pin exactly that: same robe as everyone
-// (byte-for-byte), no hat, no bespoke anatomy, a bun that is a silhouette
-// event on the crown, and a dot that is a buried join on the forehead.
+// The Buddha is NOT special below the neck: the same seated figure kit as every
+// monk, ordinary human size, bare-headed. What makes him him is TWO marks on
+// the shared skull — the topknot and the urna. These tests pin exactly that:
+// same robe as everyone (byte-for-byte), no hat, no bespoke anatomy, a bun that
+// is a silhouette event on the crown, and a dot that is a buried join on the
+// forehead.
 test('makeBuddha is the same seated figure as every monk — no hat, ordinary size', () => {
   const H = 1.6;
   const b = makeBuddha({ height: H });
@@ -72,10 +71,10 @@ test('the topknot: one bun on the crown, proud of the skull line, in the figure\
 
   // On the crown, centred, join still covered, crest proud. Measured against
   // the head's ACTUAL shell — sphereHead bakes HEAD_OBLONG into the geometry,
-  // so the crown stands at r·1.10, not r — and Frank's own retune (KNOT_SINK
-  // 0.82 -> 1.1) seats the bun higher on that crown. What must hold either
-  // way: the bun's underside stays inside the skull (no floating hat) and its
-  // top breaks the crown line (it is the silhouette event).
+  // so the crown stands at r·1.10, not r — and a later retune (KNOT_SINK 0.82
+  // -> 1.1) seats the bun higher on that crown. What must hold either way: the
+  // bun's underside stays inside the skull (no floating hat) and its top breaks
+  // the crown line (it is the silhouette event).
   const crown = rHead * HEAD_OBLONG[1];
   assert.equal(knot.position.x, 0, 'centred');
   assert.equal(knot.position.z, 0, 'on the crown, not the brow');
@@ -116,17 +115,16 @@ test('the urna: one small accent dot, sunk into the forehead', () => {
   assert.equal(urna.position.x, 0, 'centred');
   assert.ok(urna.position.z > 0, 'on the face side');
   // above the equator but well below the crown (which stands at r·HEAD_OBLONG
-  // y) — Frank raised URNA_ELEV 0.5 -> 0.8, so this reads high on the brow now
+  // y) — URNA_ELEV went 0.5 -> 0.8, so this reads high on the brow now
   assert.ok(urna.position.y > 0 && urna.position.y < rHead * HEAD_OBLONG[1] * 0.85,
     `mid-forehead, not the scalp: ${urna.position.y}`);
 });
 
 test('the mark contrasts with the head it sits on', () => {
   // A red dot on a red skull is a bump, not a mark. This was solved with
-  // GEOMETRY for a while — the urna buried deeper so its silhouette could
-  // carry what its colour no longer did — which is why k9's colossus had a
-  // forehead lump and no visible dot (Frank: "we still need to add the black
-  // dot to the head of the red figures").
+  // GEOMETRY for a while — the urna buried deeper so its silhouette could carry
+  // what its colour no longer did — which is why k9's colossus had a forehead
+  // lump and no visible dot at all.
   const inkStatue = makeBuddha({ height: 1.6 });
   const redStatue = makeBuddha({ height: 10.2, color: ACCENT_DEEP });
   const urnaOf = (b) => b.children.find((c) => c.name === 'head').children.find((c) => c.name === 'urna');

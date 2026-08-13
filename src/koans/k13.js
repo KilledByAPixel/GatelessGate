@@ -18,12 +18,12 @@ const scratchPos = new THREE.Vector3();
 // Tokusan out in the middle holding a bowl he has no business holding yet.
 //
 // Both instruments answer a touch. Neither of them is the right one to sound —
-// that is the case. Nothing tells you so.
-// The framing. This case used to take the book's default shot implicitly, by
-// naming no `camera:` at all. These are DEFAULT_HOME's own numbers, written
-// out so the shot is tuned here like every other case's rather than by moving
-// the book (Frank). composeWorld gets the same object as its `view`, so the
-// scatter still refuses spots no reachable heading can see (kit/scenery.js).
+// that is the case. Nothing tells you so. The framing. This case used to take
+// the book's default shot implicitly, by naming no `camera:` at all. These are
+// DEFAULT_HOME's own numbers, written out so the shot is tuned here like every
+// other case's rather than by moving the book. composeWorld gets the same
+// object as its `view`, so the scatter still refuses spots no reachable heading
+// can see (kit/scenery.js).
 const CAM = { distance: 11, target: [-1.4, 1.35, -1.2], heading: 31.5, pitch: 16.5 };
 
 export default {
@@ -57,8 +57,8 @@ export default {
     scene.add(hall);
 
     // the bell on one side of the yard — dark bronze, NOT the seal: the bowl
-    // Tokusan carries is the one red thing here (Frank's note: the bell was
-    // competing with it). It still swings and rings when struck.
+    // Tokusan carries is the one red thing here, and the bell was competing
+    // with it. It still swings and rings when struck.
     const bell = makeBell({ height: 0.95, seed: ID, color: WASH.mid });
     bell.group.position.set(1.9, 0, -0.4);
     bell.group.rotation.y = 0.7;
@@ -72,8 +72,8 @@ export default {
 
     // TOKUSAN, mid-yard, holding the bowl. The bowl is the seal: it is the one
     // thing in the scene that is out of time. No staff — both hands are on the
-    // bowl, and the elder's staff was colliding with it (Frank): a man carrying
-    // his bowls to dinner is not also carrying a stick.
+    // bowl, and the elder's staff was colliding with it: a man carrying his
+    // bowls to dinner is not also carrying a stick.
     const tokusan = makeMonk({ height: 1.64, pose: 'fold' });
     tokusan.position.set(-2.8, 0, -0.5);
     const bowl = makeBowl({ radius: 0.16, color: ACCENT });
@@ -119,17 +119,15 @@ export default {
 
     // ---- the moment: two instruments, neither of them the answer ----------
     // AND THE BOWL, which is the third thing and the only red one. It was the
-    // seal of the case and the one object here you could not touch (Frank:
-    // "what could we do for clicking on the bowl for thirteen — the bowl,
-    // because the bowl is the thing that's red"). Touched, it answers as the
+    // seal of the case and the one object here you could not touch. Touched, it
+    // answers as the
     // empty piece of fired clay it is, and Tokusan turns back the way he came
     // — which is what he actually did: the bell had not rung, the drum had not
     // sounded, and he went back to his room. He settles again afterwards,
     // because the case is not resolved by his going and he will be back.
     // Radians off Seppo, at the peak. NEGATIVE: turning the other way swung him
     // to show the reader his back, and the whole point of the beat is watching
-    // him decide to go (Frank: "let's make him turn in the opposite direction,
-    // so he's turning towards the viewer").
+    // him decide to go, so he turns toward the reader rather than away.
     const BOWL_TURN = -Math.PI / 2;   // a square quarter-turn: he shows the reader his side
     const TURN_OUT = 0.55, TURN_HOLD = 0.9, TURN_BACK = 1.9;
     const TURN_SPAN = TURN_OUT + TURN_HOLD + TURN_BACK;
@@ -178,7 +176,7 @@ export default {
         lastRing = clock;
         bell.strike();
         rings++;
-        // the monastery bell — task-12's migration to Frank's tuned presets
+        // the monastery bell — task-12's migration to the tuned presets
         audio && audio.bell({ preset: 'temple', at: bell.group.position });
       }
     });

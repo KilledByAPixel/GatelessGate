@@ -119,8 +119,8 @@ export function makeFreeze(renderer, post, width, height) {
     // of the new scene would jump the picture. Instead we bake exactly what is
     // on screen — old still ⊕ live scene at the current tear — into the spare
     // target and hand THAT to the next dissolve, so the tear simply continues
-    // from where it was into the newly built world (Frank: "save off the
-    // current transition as the new frame and keep going").
+    // from where it was into the newly built world — the transition in flight
+    // becomes the new still, and carries on.
     capture(scene, camera) {
       if (!scene) return false;
       const wasHeld = held;

@@ -93,20 +93,18 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
     scene.add(makeLights());
 
-    // THE LEDGE, and the air past it — ON THIS SIDE now (Frank: "it could look
-    // cool if that was a ledge, but the cliff should be on the opposite side —
-    // toward us"). Yawed a half turn, so the void that used to face away into
-    // the middle distance now falls toward the camera: the reader looks ACROSS
-    // the gorge at a man calling into it, with the drop in the near foreground
-    // and the meadow running away behind him. `origin` and `yaw` mirror the
-    // group's own placement, which is how makeCliff samples the rolling ground
-    // under its lumps.
-    // The gorge is SEEN here, the way case 5's is. A paper fill used to hang
-    // under the crags hiding everything past the fog line, and on a ledge this
-    // shallow it read as a slab laid over the drop rather than as depth
-    // (Frank: "it also looks bad in k12... it's just a cliff, you know?").
-    // Shallower than case 5's is fine — this one is a ledge, not a chasm —
-    // the carve below runs the face down and climbs it back out as a rim.
+    // THE LEDGE, and the air past it — ON THIS SIDE now, the drop facing the
+    // camera rather than away from it. Yawed a half turn, so the void that used
+    // to face away into the middle distance now falls toward the camera: the
+    // reader looks ACROSS the gorge at a man calling into it, with the drop in
+    // the near foreground and the meadow running away behind him. `origin` and
+    // `yaw` mirror the group's own placement, which is how makeCliff samples
+    // the rolling ground under its lumps. The gorge is SEEN here, the way case
+    // 5's is. A paper fill used to hang under the crags hiding everything past
+    // the fog line, and on a ledge this shallow it read as a slab laid over the
+    // drop rather than as depth rather than as depth. Shallower than case 5's
+    // is fine — this one is a ledge, not a chasm — the carve below runs the
+    // face down and climbs it back out as a rim.
     const cliff = makeCliff({
       width: 13, drop: 6.5, depth: 2.6, seed: ID,
       origin: [CLIFF.x, CLIFF.z], yaw: CLIFF.yaw,
@@ -125,11 +123,10 @@ export default {
 
     // ZUIGAN, alone, near the edge. `elder` gives him the kit's own staff, held
     // the ordinary way and in his own ink — the free-standing vermillion shaft
-    // that used to be planted beside him is gone (Frank: "get rid of the red
-    // staff; maybe he could be holding a staff, a normal pose, but it won't be
-    // red"). Nothing about the man is the seal any more.
-    // `bow: true` hinges him at the sash without changing his arms — the call
-    // below leans him from the waist, not by rolling the whole figure.
+    // that used to be planted beside him is gone. Nothing about the man is the
+    // seal any more. `bow: true` hinges him at the sash without changing his
+    // arms — the call below leans him from the waist, not by rolling the whole
+    // figure.
     const zuigan = makeMonk({ height: 1.64, elder: true, bow: true });
     const zuiganWaist = zuigan.getObjectByName('waist');
     zuigan.position.set(ZUIGAN.x, 0, ZUIGAN.z);
@@ -151,10 +148,10 @@ export default {
     scene.add(butterflies.group);
 
     // The pine that used to stand on the lip at (-2.9, -0.4) is GONE — a
-    // different species growing right beside the one figure, and it never
-    // read as well as the ordinary trees (Frank: "get rid of it"). The rock
-    // outcrop dresses that end of the ledge on its own now, and the world's
-    // own trees keep the middle distance from going bare.
+    // different species growing right beside the one figure, and it never read
+    // as well as the ordinary trees. The rock outcrop dresses that end of the
+    // ledge on its own now, and the world's own trees keep the middle distance
+    // from going bare.
     const world = composeWorld(scene, {
       view: CAM,
       seed: ID,
@@ -184,8 +181,8 @@ export default {
     // Case 5's trick, mirrored. makeCliff draws a face and hangs mist, but it
     // cannot move the ground the scene stands on, and with drop 6.5 all of that
     // hung BELOW y = 0 — under the plain, invisible. There was no ledge here at
-    // all, only rocks on a field (Frank could not tell which way the man was
-    // facing, which is the tell). So the case carves its own ground: every
+    // all, only rocks on a field — you could not tell which way the man was
+    // facing, which is the tell. So the case carves its own ground: every
     // vertex past the lip sinks on a steep smoothstep — the face — runs a floor,
     // and climbs back out over the last two units of GORGE as the near rim the
     // camera stands on, with the mist lying in the gap between. A bay window
@@ -257,9 +254,8 @@ export default {
         // He leans into the call and settles back — FROM THE WAIST, WITH AN
         // ATTACK. It was rotation.z on the whole figure (a sideways list, the
         // roll fault k15/k17/k32 all had) set to full on the tap frame — "an
-        // envelope set to 1 by a touch has no attack", the same family as
-        // k36's bow snap, and it read exactly as abrupt as it was (Frank:
-        // "it's kind of just abrupt when you click on them"). Now: forward at
+        // envelope set to 1 by a touch has no attack", the same family as k36's
+        // bow snap, and it read exactly as abrupt as it was. Now: forward at
         // the sash, rising over ~0.18s, easing back as the echo returns.
         const u = clock - calledAt;
         let lean = 0;

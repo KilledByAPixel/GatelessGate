@@ -65,9 +65,9 @@ test('locking mid-grab releases the grab', () => {
   assert.equal(rig.goal.heading, heading, 'the grab must not survive the lock');
 });
 
-// The bug Frank saw twice over: "it's almost like the initial camera is wrong",
-// and "I exit out of look at the scene and the camera is in a slightly different
-// location than it was." One cause — noise1(0, seed) is not 0.5, so the drift's
+// The bug, seen twice over: entering the look started the camera in a slightly
+// wrong rotation, and leaving it put the camera back in a slightly different
+// place than it was. One cause — noise1(0, seed) is not 0.5, so the drift's
 // first frame was 16.5 degrees off the case's heading. Entering threw the goal
 // sideways; leaving froze it wherever the drift had walked to.
 test('entering the look does not move the camera off the case\'s framing', () => {
@@ -367,12 +367,12 @@ test('the free cam reports and accepts a pose', () => {
 });
 
 test('re-asserting an already-on free cam never reseeds the heading', () => {
-  // The reload-restore bug's last layer (Frank: "the position is the same,
-  // but the orientation is not"): the workbench's apply() re-fires
-  // onFreeCam(true) on every scene swap, and set(true) on an already-flying
-  // cam re-read yaw/pitch from the camera's CURRENT direction — which right
-  // after a page build is the new rig's lookAt, not the flier's heading.
-  // set() is transitions-only now; a re-assertion must change nothing.
+  // The reload-restore bug's last layer — position survived, orientation did
+  // not: the workbench's apply() re-fires onFreeCam(true) on every scene swap,
+  // and set(true) on an already-flying cam re-read yaw/pitch from the camera's
+  // CURRENT direction — which right after a page build is the new rig's lookAt,
+  // not the flier's heading. set() is transitions-only now; a re-assertion must
+  // change nothing.
   globalThis.addEventListener = globalThis.addEventListener || (() => {});
   const cam = new THREE.PerspectiveCamera();
   const free = makeFreeCam(cam, fakeEl());

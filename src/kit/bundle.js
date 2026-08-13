@@ -22,11 +22,10 @@ const MAX_TILT = 0.028;   // radians (~1.6 degrees) — the whole concession
 
 // AND THEN IT HOPS. The lean alone was the whole answer for a long while and it
 // was too small to find: a degree and a half on a stack a third of a unit tall,
-// at case-23 staging distance, is motion you have to be told about. Frank asked
-// for the bigger read — "have it bounce up off the platform, bounce up in the
-// air and then land again" — which is the same refusal said louder. Reach for
-// it and it is not there; it comes back down exactly where it was, so the
-// tenth attempt still gets what the first did.
+// at case-23 staging distance, is motion you have to be told about. So it
+// bounces up off the platform and lands again — the same refusal, said louder.
+// Reach for it and it is not there; it comes back down exactly where it was, so
+// the tenth attempt still gets what the first did.
 //
 // A real arc, not a sine: up fast, slow at the top, down fast, because that is
 // what the eye knows a thrown thing does. HOP_DUR is short — this is a hop, not

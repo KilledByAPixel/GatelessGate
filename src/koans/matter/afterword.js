@@ -19,16 +19,16 @@ import { eyePosition } from '../../camera.js';
 // no gate, no path, no lanterns, no one walking. Ground, mountains, forest, a
 // meadow gone to wildflowers, and the fog. What was cleared is the traffic, not
 // the life: an empty road through dead ground is a bleaker last picture than
-// this book earns. Except: two stayed behind. A Buddha on a small mat under the tree the opening camera
-// looks past (Frank, overnight pass 2), off to the side of the frame, facing
-// the spot where the gate stood in the intro — meditating on the door everyone
-// else left by. The camera is not on him; he is found, not shown.
+// this book earns. Except: two stayed behind. A Buddha on a small mat under the
+// tree the opening camera looks past, off to the side of the frame, facing the
+// spot where the gate stood in the intro — meditating on the door everyone else
+// left by. The camera is not on him; he is found, not shown.
 //
-// And the cat (Frank: "for the afterword lets add the cat to the scene sitting
-// nearby"), a step off the mat, facing the same empty spot he is. It is the one
-// creature in the book that turns up wherever it likes — the sermon in case 6,
-// the washing-up in case 7, its own case 14 — so of course it is still here
-// after the last page, and of course nobody is left to argue over it.
+// And the cat, sitting nearby — a step off the mat, facing the same empty spot
+// he is. It is the one creature in the book that turns up wherever it likes —
+// the sermon in case 6, the washing-up in case 7, its own case 14 — so of
+// course it is still here after the last page, and of course nobody is left to
+// argue over it.
 const page = MATTER.afterword;
 
 // Its own three seeds, for the same reason the preface has its own: the book
@@ -37,12 +37,12 @@ const page = MATTER.afterword;
 // a book looks like.
 const SEEDS = { seed: 35, groundSeed: 58, pathSeed: 17 };
 
-// HIS TREE IS HIS OWN (Frank: "let's just have it so Buddha sits under his own
-// custom tree that we set up and place"). It used to be picked out of the hub's
-// scatter at build time, which was itself a fix for something worse — a
-// coordinate copied out of one particular seed's scatter, "(3.04, −11.7)", so
-// that the day the hub's seed changed the tree moved and the meditator did not:
-// he sat in open grass, under nothing, and no test or screenshot said a word.
+// HIS TREE IS HIS OWN, set up and placed by this page. It used to be picked out
+// of the hub's scatter at build time, which was itself a fix for something
+// worse — a coordinate copied out of one particular seed's scatter, "(3.04,
+// −11.7)", so that the day the hub's seed changed the tree moved and the
+// meditator did not: he sat in open grass, under nothing, and no test or
+// screenshot said a word.
 //
 // Planting our own removes that hazard rather than reopening it, PROVIDED the
 // tree is not written down as a raw coordinate either. It is placed in the
@@ -193,8 +193,8 @@ export default {
       o.instanceMatrix.needsUpdate = true;
     });
 
-    // WILDFLOWERS through the valley (Frank). The stage is cleared of people and
-    // built things, not of life — an empty road with the meadow gone over is a
+    // WILDFLOWERS through the valley. The stage is cleared of people and built
+    // things, not of life — an empty road with the meadow gone over is a
     // different, bleaker ending than the one this page wants. They keep the
     // kit's default whitish bloom: this page has `accent: undefined` and no
     // seal, and a red head would invent one on the last picture in the book.

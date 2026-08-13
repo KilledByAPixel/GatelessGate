@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { buildHub } from '../src/intro.js';
 
-// THE CONTENTS' GATE RECURSION (Frank: tap the gate and it "shrinks down to
-// zero size" while an identical gate, spawned far too big to be on camera,
-// comes down to land exactly where it stood — "a recursive kind of loop").
-// What is worth pinning is the loop's bookkeeping, not its look: mid-flight
-// there are two gates (one going, one coming), at rest there is exactly one,
-// at scale 1, on the original spot — however many times it has turned over.
+// THE CONTENTS' GATE RECURSION: tap the gate and it shrinks away to nothing
+// while an identical gate, spawned far too big to be on camera, comes down to
+// land exactly where it stood — a loop that can run for ever. What is worth
+// pinning is the loop's bookkeeping, not its look: mid-flight there are two
+// gates (one going, one coming), at rest there is exactly one, at scale 1, on
+// the original spot — however many times it has turned over.
 
 const hitAll = {
   raycastFirst: (cam, objs) => (objs && objs.length

@@ -6,15 +6,14 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 
 // Case 28 is the only page in the book that goes dark, and the dark is now a
 // HELD BREATH rather than a state the page settles into: the candle relights
-// itself about five seconds after it is blown out (Frank: "the candle will come
-// back on after a couple seconds, maybe, like, five seconds or so"). Which also
-// means a reader who taps once and reads on gets the whole event — the dark
-// arriving and the dark leaving — without having to know to tap again.
+// itself a few seconds after it is blown out. Which also means a reader who
+// taps once and reads on gets the whole event — the dark arriving and the dark
+// leaving — without having to know to tap again.
 
 function staged() {
   const ctx = fakeCtx({
-    // breath is the blow-out's swish and setWindLevel the bed it swells —
-    // both landed in Frank's audit round alongside the widened hit cylinder
+    // breath is the blow-out's swish and setWindLevel the bed it swells — both
+    // landed in the interaction audit alongside the widened hit cylinder
     audio: { knock() {}, chimeStrike() {}, cylinderStrike() {}, breath() {}, setWindLevel() {} },
   });
   const root = k28.build(ctx);

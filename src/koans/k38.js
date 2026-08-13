@@ -75,9 +75,9 @@ const CAM = { distance: 14.3, target: [1.05, 1.55, -1.6], heading: 156.5, pitch:
   const oak = makeOak({ height: OAK.height, seed: 20, canopyColor: ACCENT_DEEP });
   oak.position.set(OAK.x, 0, OAK.z);
   
-  // (Grey butterflies played about the crown for a while. Gone — Frank:
-  // "get rid of the butterflies." The oak and its falling leaves carry all
-  // the motion this garden needs; the flock read as decoration.)
+  // (Grey butterflies played about the crown for a while. Gone: the oak and its
+  // falling leaves carry all the motion this garden needs; the flock read as
+  // decoration.)
   oak.rotation.y = 0.4;
   scene.add(oak);
   oak.updateMatrixWorld(true);

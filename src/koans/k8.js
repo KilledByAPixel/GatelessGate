@@ -44,11 +44,11 @@ const CAM = { distance: 9, target: [0.7, 1.25, 0.4], heading: 31.5, pitch: 19 };
   // THE WHEEL, on its stand, turning. Its face is squared to the home camera
   // so the spokes read as spokes rather than as an edge-on line.
   //
-  // EIGHT SPOKES, for the eightfold path (Frank). The case's own text says
-  // fifty, which no wheel in a low-poly diorama was ever going to carry — at
-  // this radius twelve already read as a grey blur where the hub should be,
-  // and eight both counts as something and lets the nave the koan turns on
-  // actually be seen between them.
+  // EIGHT SPOKES, for the eightfold path. The case's own text says fifty, which
+  // no wheel in a low-poly diorama was ever going to carry — at this radius
+  // twelve already read as a grey blur where the hub should be, and eight both
+  // counts as something and lets the nave the koan turns on actually be seen
+  // between them.
   const wheel = makeWheel({ radius: 1.05, spokes: 8, wheelColor: ACCENT });
   wheel.group.position.set(1.3, 0, 0.4);
   wheel.group.rotation.y = 0.55;
@@ -82,10 +82,9 @@ const CAM = { distance: 9, target: [0.7, 1.25, 0.4], heading: 31.5, pitch: 19 };
   trestle.rotation.y = -0.4;
   scene.add(trestle);
   
-  // Keichu's own house, behind the working yard (Frank: "add a hut") —
-  // a wheelwright lives where he works. Left-rear so the road (x≈0.4 at
-  // this depth, measured off the seeded curve) keeps a clear verge, its
-  // threshold opening onto the yard it feeds.
+  // Keichu's own house, behind the working yard — a wheelwright lives where he
+  // works. Left-rear so the road (x≈0.4 at this depth, measured off the seeded
+  // curve) keeps a clear verge, its threshold opening onto the yard it feeds.
   const HUT = { x: -4.2, z: -4.2 };
   const hut = makeHut({ width: 3.0, height: 2.3, depth: 2.4, chimes: 16 });
   hut.position.set(HUT.x, 0, HUT.z);

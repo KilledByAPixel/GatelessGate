@@ -103,10 +103,10 @@ test('the gate rings ONLY when it opens, never while it is already open', () => 
   // The bell used to carry a cooldown of its own — half a second, independent
   // of the growing — so the torii could be rung over and over while it was
   // already open, from a hit box that stays behind at the size and place the
-  // gate started (Frank: "you can keep clicking on the position where it was,
-  // and it will keep playing that sound... we only want to play it whenever it
-  // starts its animation to grow"). Two gates on one page, effectively: the one
-  // you could see and the one you could still hear.
+  // gate started — you could keep clicking where it used to be and keep
+  // triggering the sound, when it should only fire as the gate starts to grow.
+  // Two gates on one page, effectively: the one you could see and the one you
+  // could still hear.
   const bells = [];
   const { root, tapAt } = harness({ bell: () => bells.push(1), drip() {}, cylinderStrike() {} });
 

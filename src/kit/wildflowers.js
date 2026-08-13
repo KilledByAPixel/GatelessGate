@@ -28,27 +28,22 @@ import {
 //
 // THEY ALSO ANSWER THE MEADOW'S WIND AND THE READER'S HAND, because a bloom
 // standing dead still in grass that is visibly leaning reads as a plastic
-// flower stuck in a moving field (Frank: "make the flowers also move with the
-// wind and when the mouse is moved over them like the grass does"). Both are
-// the GRASS's models, re-read on the CPU rather than reinvented:
+// flower stuck in a moving field. Both are the GRASS's own models, re-read on
+// the CPU rather than reinvented:
 //
-//   THE WIND is the same drifting gust noise tuftfield.js samples in GLSL —
-//   the noise field slides downwind, so a gust arrives, crosses and passes,
-//   and blooms in the same patch of meadow lean with the blades around them
-//   instead of on a private clock. `wind` / `gustScale` / `gustSpeed` are the
-//   same three numbers the grass takes and the same three the workbench's
-//   sliders read, so a case's pinned weather reaches the flowers too (the
-//   panel writes them through mesh.userData.wind, exactly as it writes the
-//   grass's uniforms). The noise here is util/noise.js rather than the
-//   shader's own hash, so a bloom and the blade beside it are not bit-for-bit
-//   in step — same weather, not the same random stream, which is what you
-//   want anyway.
+//   THE WIND is the same drifting gust noise tuftfield.js samples in GLSL, so
+//   blooms lean with the blades around them instead of on a private clock.
+//   `wind`/`gustScale`/`gustSpeed` are the same three numbers the grass takes
+//   and the workbench's sliders read (written through mesh.userData.wind), so a
+//   case's pinned weather reaches the flowers too. The noise is util/noise.js
+//   rather than the shader's hash, so a bloom and the blade beside it are not
+//   bit-for-bit in step — same weather, not the same random stream, which is
+//   what you want anyway.
 //
-//   THE POINTER is breeze.js, the module the grass fields already share: one
-//   damped spring per field driven by the smoothed drag vector, and a
-//   smoothstep falloff around the stroke. A stationary pointer does nothing —
-//   that is breeze.js's own dead zone, not a rule this file invents — so
-//   "moved over them" means a stroke, the same gesture the grass answers.
+//   THE POINTER is breeze.js, the module the grass fields already share. A
+//   stationary pointer does nothing — that is breeze.js's own dead zone, not a
+//   rule this file invents — so answering the hand means answering a STROKE,
+//   the same gesture the grass answers.
 //
 // EVERY LEAN IS ONE BEND VECTOR. Nod, gust front, wind and pointer all add
 // into a single world-XZ vector; its length is the angle and its perpendicular
@@ -86,13 +81,13 @@ const POKE_LEAN = 0.55;
 // One bloom, in TWO geometries: a hair-thin stem and a small faceted head
 // sitting on top of it. They are separate because head and stalk never share a
 // tone — "by default the petals should be whitish, kind of the same colour
-// family as the ground, and the stalk the same kind of colour as the grass"
-// (Frank) — and when a case DOES put its accent on the heads (pass `color`),
-// the seal-glow emissive on accent materials (material.js) could not be split
+// family as the ground, and the stalk the same kind of colour as the grass" —
+// and when a case DOES put its accent on the heads (pass `color`), the
+// seal-glow emissive on accent materials (material.js) could not be split
 // per-vertex inside one mesh anyway. The two instanced meshes share every
-// instance matrix, so they stay one bloom in motion.
-// The stem's base is at the local origin, so an instance plants exactly on
-// the terrain and leans from its own foot.
+// instance matrix, so they stay one bloom in motion. The stem's base is at the
+// local origin, so an instance plants exactly on the terrain and leans from its
+// own foot.
 function stemGeometry() {
   const stem = new THREE.ConeGeometry(0.008, 0.185, 3, 1, true);  // open: no base cap
   stem.translate(0, 0.0925, 0);

@@ -19,8 +19,8 @@ export const DRAW_BUDGET = 150;
 // 150 stays as the ceiling because it is a HARDWARE number: the GPU does not
 // care whether a draw was a hull or a monk, and 150 draws is still what the
 // frame can afford. What changed is that the same 150 now buys twice the scene,
-// and that headroom is meant to be SPENT on detail rather than banked (Frank:
-// "what I wanna do is add more stuff now... that's the whole reason we did
-// that"). So the warning sits where a case has roughly doubled its current
-// weight — heavy enough to be worth a look, with room left to keep going.
+// and that headroom is meant to be SPENT on detail rather than banked — adding
+// more is the whole reason it was won. So the warning sits where a case has
+// roughly doubled its current weight — heavy enough to be worth a look, with
+// room left to keep going.
 export const DRAW_WARN = 100;

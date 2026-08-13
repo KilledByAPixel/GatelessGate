@@ -351,13 +351,13 @@ test('emitterCount counts sound sources, not beds', () => {
 });
 
 test('the bell has treble — it can actually ding', () => {
-  // THE BUG Frank heard: "almost like a dull thud and then a bit of reverb,
-  // rather than a ding and then a bit of a continued ring." The old table
-  // stopped at 5.43x the fundamental, so case 16's bell (f0 98) had NOTHING
-  // above 532 Hz. The ear peaks at 2-5 kHz and a struck-metal ding lives at
-  // 1-4 kHz. It was not that the bell rang badly; there was no bell up there
-  // to ring. Frank ranked case 26 (f0 150) over 16 (f0 98) over 9 (f0 49) —
-  // exactly the order of their treble ceilings.
+  // THE BUG: a dull thud and a bit of reverb, rather than a ding and a
+  // continued ring. The old table stopped at 5.43x the fundamental, so case
+  // 16's bell (f0 98) had NOTHING above 532 Hz. The ear peaks at 2-5 kHz and a
+  // struck-metal ding lives at 1-4 kHz. It was not that the bell rang badly;
+  // there was no bell up there to ring. Ranked by ear the three bell cases came
+  // out 26 (f0 150) over 16 (f0 98) over 9 (f0 49) — exactly the order of their
+  // treble ceilings.
   const { partials } = bellVoice(1);
   const top = Math.max(...partials.map((p) => p.freq));
   assert.ok(top > 1200, `still no treble: the voice tops out at ${Math.round(top)} Hz`);
@@ -445,13 +445,13 @@ test('bellTail tracks the voice actually struck, not a guess sized to one pitch'
 });
 
 test('the shimmer cluster gives even a great bell some treble', () => {
-  // Frank pinned `brightness` at its maximum on all three presets — he was
-  // asking for treble the model could not make. The named series stops at
-  // 15.1x, so the ceiling falls with the pitch: the `great` bell at 46.6 Hz
-  // had NOTHING above 704 Hz, which is why he hauled its clang to 2.59 and
-  // its brightness to the stop. A real bell's modal density RISES with
-  // frequency; the shimmer cluster is that, and it is what fills the gaps a
-  // sparse sine stack leaves in the 1-6 kHz band.
+  // `brightness` ended up pinned at its maximum on all three presets, asking
+  // for treble the model could not make. The named series stops at 15.1x, so
+  // the ceiling falls with the pitch: the `great` bell at 46.6 Hz had NOTHING
+  // above 704 Hz, which is why its clang went to 2.59 and its brightness to the
+  // stop. A real bell's modal density RISES with frequency; the shimmer cluster
+  // is that, and it is what fills the gaps a sparse sine stack leaves in the
+  // 1-6 kHz band.
   const great = bellVoice(2.36);
   const top = Math.max(...great.partials.map((p) => p.freq));
   assert.ok(top > 2500, `a great bell still has no treble: tops out at ${Math.round(top)} Hz`);
@@ -472,9 +472,9 @@ test('the shimmer is irregularly spaced — a regular series is a comb', () => {
   // table was; it only proved the series ascends. The quantity that is
   // CONSTANT for a geometric series and VARIES for an irregular one is the
   // ratio QUOTIENT between consecutive modes (r[i+1]/r[i]) — a perfect comb
-  // scores exactly 1.0 on that measure regardless of range. See
-  // task-5b-report.md for the non-vacuity proof: a perfectly geometric
-  // SHIMMER_MODES table fails this rewritten test and passes the old one.
+  // scores exactly 1.0 on that measure regardless of range. It is not vacuous:
+  // a perfectly geometric SHIMMER_MODES table fails this rewritten test and
+  // passes the old one.
   const { partials } = bellVoice(1);
   const high = partials.filter((p) => p.freq > partials[10].freq).map((p) => p.freq);
   assert.ok(high.length >= 10, 'no shimmer cluster');
@@ -507,10 +507,10 @@ test('shimmer modes are single oscillators, not wasted pairs', () => {
   for (const p of partials.slice(0, 11)) assert.ok(p.detune > 0);
 });
 
-test("the three presets are Frank's bells: bigger is lower, longer, clangier", () => {
-  // The family he arrived at by ear, which is real bell physics: a bigger bell
-  // is lower AND rings longer AND clangs harder AND pings LOWER AND sits in
-  // more room. If a change breaks this ordering it has broken his tuning.
+test('the three presets are one family: bigger is lower, longer, clangier', () => {
+  // The family arrived at by ear, which is real bell physics: a bigger bell is
+  // lower AND rings longer AND clangs harder AND pings LOWER AND sits in more
+  // room. If a change breaks this ordering it has broken the tuning.
   const { hand, temple, great } = BELL_PRESETS;
   assert.ok(hand.size < temple.size && temple.size < great.size);
   assert.ok(hand.ring < temple.ring && temple.ring <= great.ring);
@@ -523,15 +523,15 @@ test("the three presets are Frank's bells: bigger is lower, longer, clangier", (
 // ---- fix round: the faithfulness deliverable itself was uncovered — a
 // wrong-but-plausible refit passed every test above. These pin it down.
 
-test("preset ampMult is EXACT, not fit — zero residual against Frank's original macros", () => {
+test('preset ampMult is EXACT, not fit — zero residual against the original macros', () => {
   // CODE REVIEW CAUGHT: BELL_PRESETS used to store a lossy amplitude-weighted
   // FIT onto four bands (worst case: hand idx1, the strike note, at +140%).
-  // ampMult must now reproduce EXACTLY what Frank's ORIGINAL, overlapping
-  // macros (task-5b-brief.md's top table: brightness on freq > 700 Hz, hum
-  // on mode 0 alone, clang on the top FOUR modes by INDEX) produced per
-  // named mode — recomputed here from that formula, independently of
-  // whatever synths.js currently ships, so a future refit that reintroduces
-  // error trips this rather than a green suite hiding it again.
+  // ampMult must now reproduce EXACTLY what the ORIGINAL, overlapping macros
+  // (brightness on freq > 700 Hz, hum on mode 0 alone, clang on the top FOUR
+  // modes by INDEX) produced per named mode — recomputed here from that
+  // formula, independently of whatever synths.js currently ships, so a future
+  // refit that reintroduces error trips this rather than a green suite hiding
+  // it again.
   const ORIGINAL = {
     hand:   { size: 0.38, brightness: 3, hum: 1.12, clang: 0.98 },
     temple: { size: 0.78, brightness: 3, hum: 1.00, clang: 1.52 },
@@ -550,7 +550,7 @@ test("preset ampMult is EXACT, not fit — zero residual against Frank's origina
     assert.equal(actual.length, NAMED_MODE_COUNT, `${name}: ampMult is not one entry per named mode`);
     for (let i = 0; i < NAMED_MODE_COUNT; i++) {
       assert.ok(Math.abs(actual[i] - expected[i]) < 1e-9,
-        `${name} mode ${i}: shipped ${actual[i]}, Frank's original macros produced ${expected[i]} — this is drift, not a rounding difference`);
+        `${name} mode ${i}: shipped ${actual[i]}, the original macros produced ${expected[i]} — this is drift, not a rounding difference`);
     }
   }
 });
@@ -592,11 +592,11 @@ test('shimmer modes above ~16kHz are dropped, not aliased', () => {
 
 test('applyBellPreset renormalizes so a dressed preset never sums louder than its own bare voice', () => {
   // CODE REVIEW CAUGHT: BELL.level is calibrated against the UNDRESSED
-  // partial-table sum (see BELL's own comment). Frank's per-mode multipliers
-  // push a dressed sum well past that with no cap otherwise — measured:
-  // hand ~2.24x, temple ~1.85x, great ~1.39x — a real clip risk on a path no
-  // case calls yet. applyBellPreset must claw the sum back to parity, per
-  // voice, exactly, for every preset.
+  // partial-table sum (see BELL's own comment). The per-mode multipliers push a
+  // dressed sum well past that with no cap otherwise — measured: hand ~2.24x,
+  // temple ~1.85x, great ~1.39x — a real clip risk on a path no case calls yet.
+  // applyBellPreset must claw the sum back to parity, per voice, exactly, for
+  // every preset.
   for (const [name, preset] of Object.entries(BELL_PRESETS)) {
     const voice = bellVoice(preset.size);
     const rawSum = voice.partials.reduce((s, p) => s + p.amp, 0);
@@ -609,9 +609,9 @@ test('applyBellPreset renormalizes so a dressed preset never sums louder than it
 
 test('applyBellPreset renormalization preserves every ratio between two modes exactly', () => {
   // A single scalar over the whole voice corrects the OVERALL level; it must
-  // not touch the SHAPE Frank tuned between any two of his own modes — the
-  // ratio of dressed amps must equal the ratio of (base amp * ampMult) for
-  // every pair, unchanged by whatever the normalizer turns out to be.
+  // not touch the SHAPE tuned between any two modes — the ratio of dressed amps
+  // must equal the ratio of (base amp * ampMult) for every pair, unchanged by
+  // whatever the normalizer turns out to be.
   const preset = BELL_PRESETS.hand;
   const voice = bellVoice(preset.size);
   const dressed = applyBellPreset(voice, preset);
@@ -737,9 +737,8 @@ test('audio.hushVoices() is safe with no AudioContext', () => {
 // copies of a fake Web Audio graph is worse than one shared one.
 
 test('structurally: the sit bell bypasses the hush pair; an ordinary bell does not', () => {
-  // See the brief's own warning: a test that cannot fail is worse than none.
-  // This one can — see task-5c-report.md for the break-it/fix-it proof (route
-  // sitBell() through voicesDry/voicesWet and this assertion trips).
+  // A test that cannot fail is worse than none. This one can: route sitBell()
+  // through voicesDry/voicesWet and this assertion trips.
   const save = { state: () => ({ soundOn: true }), setSound() {} };
   const priorWindow = global.window;
   const hadWindow = Object.prototype.hasOwnProperty.call(global, 'window');
@@ -938,10 +937,9 @@ test('structurally: a punctuation chime bypasses the hush pair; an ordinary chim
 });
 
 test('structurally: cylinderStrike (the large hanging cylinder) routes through the hush pair, unplaced and placed', () => {
-  // task-cylinder-brief.md's own warning, twice-shipped already on this
-  // branch: a voice wired past voicesDry/voicesWet keeps ringing after a
-  // page turn, and a voice that never reaches placed()'s bus is never
-  // spatialised. Same two checks the ordinary-chime and placed-bell tests
+  // The failure this guards has shipped twice already: a voice wired past
+  // voicesDry/voicesWet keeps ringing after a page turn, and a voice that never
+  // reaches placed()'s bus is never spatialised. Same two checks the ordinary-chime and placed-bell tests
   // above run, aimed at the new voice specifically rather than trusting it
   // by resemblance.
   const save = { state: () => ({ soundOn: true }), setSound() {} };
@@ -1030,7 +1028,7 @@ test("BRONZE's register clears the 110Hz risk the bonshō's own history flagged,
 // ---- Task 8: silence when nobody is listening ------------------------------
 //
 // Hidden means silent, everywhere, except during a running sitting — that
-// exemption is the owner's explicit call, not a default. `masterLevel` and
+// exemption is deliberate, not a default. `masterLevel` and
 // `shouldPauseForHide` are the pure rules; pauseForHide/resumeFromHide are the
 // wiring, deliberately NOT built on hushVoices() (see its own comment in
 // engine.js for why a fade/hold/restore CYCLE is the wrong shape for a hold
@@ -1324,9 +1322,9 @@ test('jitterHz stays within ±STRIKE_JITTER_CENTS and is centred', () => {
 
 test('the rain bed is a steady shower: continuous, level, bounded, loopable', () => {
   // Revision note: this test's first life pinned the OPPOSITE (crest > 6,
-  // "patter, not wash") — the theory that discrete drops distinguish rain
-  // from surf. Frank's ear overruled it: sparse ticks read as dripping taps.
-  // What distinguishes rain from surf is steadiness (see RAIN's comment in
+  // "patter, not wash") — the theory that discrete drops distinguish rain from
+  // surf. That was overruled by ear: sparse ticks read as dripping taps. What
+  // distinguishes rain from surf is steadiness (see RAIN's comment in
   // synths.js), so that is what gets pinned now, from both sides.
   const SR = 44100;
   const s = rainBedSamples(SR, 4, 9911);

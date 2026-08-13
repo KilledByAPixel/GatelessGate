@@ -24,8 +24,7 @@ const ID = 42;
 //
 //   1. The waking was a STIR — a six-hundredth of a radian of lean and three
 //      centimetres of lift, the honest size of a person coming round, and far
-//      too small to be the answer to anything (Frank: "maybe she floats up in
-//      the air and, like, hovers for a second"). The floating is not a liberty:
+//      too small to be the answer to anything. The floating is not a liberty:
 //      Manjusri carries her to a high heaven and it does nothing, and the case
 //      is not subtle about her being beyond reach.
 //   2. MOMYO, the beginner who came up out of the earth. See the note where he
@@ -39,7 +38,7 @@ const WAKE = 1.4;         // seconds for her to come round — head lifting, sho
 // between something being taken away and someone waking up.)
 const LIFT = 0.62;        // metres off the boards at the top
 const LIFT_IN = 2.2;      // slowly, as if the floor let go rather than she pushed
-const LIFT_HOLD = 2.4;    // "hover and, like, tilt around a little bit" (Frank)
+const LIFT_HOLD = 2.4;    // hovering, tilting a little, before she comes down
 const LIFT_OUT = 2.6;     // and slower still coming down
 const LIFT_SPAN = LIFT_IN + LIFT_HOLD + LIFT_OUT;
 const CALL_SPAN = WAKE + LIFT_SPAN;
@@ -49,15 +48,12 @@ const CALL_SPAN = WAKE + LIFT_SPAN;
 // she is back on it. Not a wobble and not a spin: a body with nothing under it,
 // drifting the way something floating does. (Case 46's mast wobble is the same
 // two-axis idea doing a different job — that one is struck and rings down, this
-// one is continuous for as long as she hangs there.)
-// Four of them, not two, and all at frequencies that do not divide into each
-// other — the pitch and roll she tilts on, a slow turn, and a drift up and down
-// inside the hover (Frank: "once she floats up in the air, can we have her move
-// around just a little bit more... as far as tilting around, so it looks like
-// she's kinda hovering — I think that would help sell the hovering concept").
-// Two axes at five degrees read as a statue with a wobble; what says HOVERING
-// is that no two of the motions ever come back into step, so she never repeats
-// a pose and nothing about her looks driven.
+// one is continuous for as long as she hangs there.) Four of them, not two, and
+// all at frequencies that do not divide into each other — the pitch and roll
+// she tilts on, a slow turn, and a drift up and down inside the hover. Two axes
+// at five degrees read as a statue with a wobble; what says HOVERING is that no
+// two of the motions ever come back into step, so she never repeats a pose and
+// nothing about her looks driven.
 const TILT = 0.16;        // radians, about nine degrees at the widest
 const TILT_X = 0.55;      // rad/s: the pitch
 const TILT_Z = 0.38;      // ...and a slower roll across it
@@ -149,15 +145,13 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   
   // (A shishi-odoshi stood at the garden's edge for a while — k7's, silent,
   // keeping a different yard's time. It's gone: its tip landed inside the
-  // floor's own big hit box, so touching the one moving prop in the scene
-  // made a monk rise out of the earth — an answer to a question nobody was
-  // asking. Frank: "get rid of the water tilting thing here.")
+  // floor's own big hit box, so touching the one moving prop in the scene made
+  // a monk rise out of the earth — an answer to a question nobody was asking.)
   
   // MOMYO IS NOT STAGED. The beginner who comes up out of the earth was here —
   // posed under the floor from the start, rising through it when you touched
-  // the boards — and Frank could not read him at all: "this other person that
-  // comes up out of the ground, I don't know what that is... I wanna have just
-  // the girl."
+  // the boards — and he did not read as anything at all: a second person coming
+  // up out of the ground, unexplained, in a scene that wants only the girl.
   //
   // Which is fair, and the reason is in the staging rather than the reading. A
   // figure surfacing through a floor has no lead-up and no explanation in the
@@ -217,11 +211,11 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   if (clock - calledAt < CALL_SPAN) return;
   calledAt = clock;
   calls++;
-  // A BELL, not a knock (Frank). A knock is a hand on wood — the sound of
-  // somebody trying — and it was the right note when this was Manjusri's
-  // useless snap. What answers now is her coming out of samadhi, which is
-  // the one thing in the case that actually happens, and a struck bell is
-  // what the book uses when something turns over.
+  // A BELL, not a knock. A knock is a hand on wood — the sound of somebody
+  // trying — and it was the right note when this was Manjusri's useless snap.
+  // What answers now is her coming out of samadhi, which is the one thing in
+  // the case that actually happens, and a struck bell is what the book uses
+  // when something turns over.
   audio && audio.bell({ preset: 'hand', size: BELL_SIZE, gain: 0.38, at: GIRL });
   });
   
@@ -235,11 +229,10 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   // Manjusri keeps snapping, forever, to no effect
   if (manjusriArm) manjusriArm.rotation.x = 0.22 + Math.sin(clock * 1.6) * 0.06;
   
-  // EVERYTHING RIDES `up`, and that is the whole of the fix. There used to
-  // be a separate waking term on its own clock — a small lean that came in
-  // over WAKE seconds before the lift began — and it snapped, twice over
-  // (Frank: "she, like, snaps her rotation before she starts floating, and
-  // she should start floating right away").
+  // EVERYTHING RIDES `up`, and that is the whole of the fix. There used to be a
+  // separate waking term on its own clock — a small lean that came in over WAKE
+  // seconds before the lift began — and it snapped, twice over — her rotation
+  // snapped before she began to float, when she should simply start floating.
   //
   // Both faults were the same missing guard. Before any touch, `calledAt`
   // is -99, so `clock - calledAt` is enormous: the wake curve read as

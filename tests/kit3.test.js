@@ -126,12 +126,11 @@ test('the drum is grounded, named, and takes a tap', () => {
   assert.ok(d.pickTargets().length > 0);
 });
 
-// Frank: "it should be sitting on a saddle, on a seat — the drum itself above
-// the thing it's settled on, and the thing it's on a lot shorter." It used to
-// hang from a beam that stood over it, so the two things this pins are that
-// nothing rises past the barrel any more, and that the timber actually REACHES
-// the belly (the barrel is lathed, so the legs meet a narrower radius than its
-// widest, and a stand cut to the wrong one leaves the drum floating).
+// A drum SITS on a saddle, above a short seat that stops where the drum begins.
+// It used to hang from a beam that stood over it, so the two things this pins
+// are that nothing rises past the barrel any more, and that the timber actually
+// REACHES the belly (the barrel is lathed, so the legs meet a narrower radius
+// than its widest, and a stand cut to the wrong one leaves the drum floating).
 test('the drum SITS on its stand: nothing above it, and the saddle touches', () => {
   const d = makeDrum();
   d.update(1 / 60, 0);
@@ -262,9 +261,9 @@ test('the same simTime is the same weather', () => {
 });
 
 test('case 8 turns eight spokes, for the eightfold path', async () => {
-  // Frank's, and it is a reading as much as a look: the case's own text says
-  // fifty, which nothing at this radius could carry — twelve read as a grey
-  // blur right where the nave the koan turns on is supposed to be.
+  // A reading as much as a look: the case's own text says fifty, which nothing
+  // at this radius could carry — twelve read as a grey blur right where the
+  // nave the koan turns on is supposed to be.
   const k8 = (await import('../src/koans/k8.js')).default;
   const root = k8.build(fakeCtx({ accent: k8.accent }));
   const wheel = root.scene.getObjectByName('wheel');

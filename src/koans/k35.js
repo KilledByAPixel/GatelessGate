@@ -14,9 +14,7 @@ const ID = 35;
 // one of her with a child at either hand — the years away, the marriage, the
 // family, all of it real. A little off the road, on the home side, the other
 // one sits under a tree — the years that never left the house, equally real.
-// Neither is a ghost. That is the whole staging (Frank: "1 red person
-// standing on the road with 2 children at either side, the other red person
-// meditating under a tree nearby, also they will not be transparent anymore").
+// Neither is a ghost, and neither is transparent. That is the whole staging.
 //
 // It replaced two translucent walkers who paced apart and back together along
 // the road. The ghosting was the old answer to "which is the true one" — make
@@ -28,10 +26,10 @@ const ID = 35;
 // What survives from that version: neither of her is the brighter one, both
 // carry the same red, and touching either one is answered by BOTH.
 //
-// Above it all, the moon from Mumon's verse — "The moon above the clouds is
-// the same moon, the mountains and rivers below are all different". It was
-// the seal at first; now it hangs plain (Frank's call, recorded at the moon
-// below) and the two souls themselves carry the red.
+// Above it all, the moon from Mumon's verse — "The moon above the clouds is the
+// same moon, the mountains and rivers below are all different". It was the seal
+// at first; now it hangs plain (see the moon below) and the two souls
+// themselves carry the red.
 
 const ROAD_T = 0.29;      // how far along the road the family stands
 const KID_SIDE = 0.70;    // a child off either shoulder, across the width-1.4 road
@@ -48,10 +46,10 @@ const SIT = { x: 2.25, z: -10.8 };
 const TREE = { x: 4.2, z: -3.5 };
 // THEY ROCK, they do not tip. A touch used to set an envelope to 1 on that
 // frame and decay it linearly, so both of her snapped into a 0.045-radian lean
-// in a single frame and then crept back out of it (Frank: "can we make them
-// rock back and forth a bit instead of how they tip instantly, it looks bad").
-// The same fault as case 36's bow and as the birds' and butterflies' alarms,
-// found in the same pass: an envelope a touch sets to 1 has no attack.
+// in a single frame and then crept back out of it — tipping instantly instead
+// of rocking. The same fault as case 36's bow and as the birds' and
+// butterflies' alarms, found in the same pass: an envelope a touch sets to 1
+// has no attack.
 //
 // A damped oscillation has no such frame — sin(0) is 0, so it starts from
 // exactly where they were standing, swings one way, comes back through, and
@@ -121,8 +119,8 @@ export default {
     town.rotation.y = 0.5;
     //scene.add(town);
 
-    // THE MOON, standing beyond everything — plain now, not the seal (Frank):
-    // the two souls carry the red, so the moon is just a pale disc.
+    // THE MOON, standing beyond everything — plain now, not the seal: the two
+    // souls carry the red, so the moon is just a pale disc.
     const moon = makeMoon({ radius: 2.9, color: wash(0.30), distance: 62 });
     scene.add(moon);
 
@@ -250,8 +248,7 @@ export default {
     // Breathing, and the answer. Pulled out of update() for the reason the old
     // placeSouls() was: the frame loop only ticks on a whole banked 1/60s, so
     // anything only update() ever applies is missing from the first rendered
-    // frame (Frank, on the previous staging: "a flicker on first frame of
-    // monks position").
+    // frame, which showed as a flicker in the figures' position on arrival.
     function breathe() {
       const u = clock - touchedAt;
       const rock = rockAt(u);

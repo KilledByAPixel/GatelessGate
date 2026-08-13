@@ -16,21 +16,21 @@ const ID = 21;
 // figures, and nothing else: no lantern, no path, no hut, the trees kept out at
 // the fog line. The emptiness is the staging.
 //
-// Wildflowers through the meadow (Frank), on the same terms as the grass: they
-// come up to within a couple of units of the pile and run out to the treeline,
-// leaving the dung itself on clean dirt. The swept yard is bare of PROPS — no
-// lantern, no rocks, no bushes — and that is what carries the emptiness; a
-// meadow with no flowers in it was never what the sweeping meant.
+// Wildflowers through the meadow, on the same terms as the grass: they come up
+// to within a couple of units of the pile and run out to the treeline, leaving
+// the dung itself on clean dirt. The swept yard is bare of PROPS — no lantern,
+// no rocks, no bushes — and that is what carries the emptiness; a meadow with
+// no flowers in it was never what the sweeping meant.
 //
 // They keep the kit's default whitish bloom: red heads would put a second seal
 // on the page and take the joke off the dung, which is the one thing here
 // allowed to be vermillion.
 //
-// The dung itself is the one warm mark on the page (Frank): a red pile in the
-// dirt, which is the whole joke — the painter has given his one seal of colour
-// to a piece of dung, exactly the joke Mumon makes in the commentary.
-// The framing, named so composeWorld can have it too: `view` lets the
-// scatter refuse spots no reachable heading can see (kit/scenery.js).
+// The dung itself is the one warm mark on the page: a red pile in the dirt,
+// which is the whole joke — the painter has given his one seal of colour to a
+// piece of dung, exactly the joke Mumon makes in the commentary. The framing,
+// named so composeWorld can have it too: `view` lets the scatter refuse spots
+// no reachable heading can see (kit/scenery.js).
 const CAM = { distance: 10, target: [0.8, 0.9, 0.2], heading: 4, pitch: 14 };
   export default {
   id: ID,
@@ -52,15 +52,15 @@ const CAM = { distance: 10, target: [0.8, 0.9, 0.2], heading: 4, pitch: 14 };
   
   // THE STICK. Dry, crooked, a hand taller than it needs to be, standing in
   // swept ground. Three tapering segments with a slight kink at each joint,
-  // because a perfectly straight stick reads as a post.
-  // THE DUNG. Kanshiketsu — a little pile of it, which is the whole answer to
-  // "what is Buddha". A few tapered lumps heaped together, lying on the
-  // ground and modelled in the round: pointed at both ends, fat in the
-  // middle, tilted every which way. Bigger than a person would expect, since
-  // it is the centrepiece of the scene (Frank's note: not a flat cube).
+  // because a perfectly straight stick reads as a post. THE DUNG. Kanshiketsu —
+  // a little pile of it, which is the whole answer to "what is Buddha". A few
+  // tapered lumps heaped together, lying on the ground and modelled in the
+  // round: pointed at both ends, fat in the middle, tilted every which way.
+  // Bigger than a person would expect, since it is the centrepiece of the scene
+  // — and never a flat cube.
   const stick = new THREE.Group();      // kept the name so the interaction below reads unchanged
   stick.name = 'dung';
-  // red — the dung IS the seal of this case now (Frank)
+  // red — the dung IS the seal of this case now
   const dryMat = washMaterial({ color: ACCENT, flat: true });
   
   // one turd: a spindle lathe laid on its side, hinged so it rests ON the
@@ -99,16 +99,14 @@ const CAM = { distance: 10, target: [0.8, 0.9, 0.2], heading: 4, pitch: 14 };
 
     // (There used to be a separate vermillion seal disc pressed in the dirt
     // here. With four sides it read as a stray red square on the ground that
-    // nobody could place — Frank — so it is gone; the red dung is the seal.)
+    // nobody could place, so it is gone; the red dung is the seal.)
 
-    // THE FLIES (Frank: "like butterflies but smaller and black instead of
-    // red") — the butterfly kit, tiny, ink-dark, in a tight low orbit over
-    // the pile. Same closed-form flight; the quick wander rate is what makes
-    // the same math read as flies rather than butterflies. They never land
-    // and they are HALF the first attempt's size (Frank: "don't have them
-    // land... they need to be, like, half the size") — a settled fly with
-    // slowly breathing wings read as a butterfly resting, which is exactly
-    // the wrong creature over dung.
+    // THE FLIES — butterflies, but smaller and ink-dark instead of red: the
+    // same kit, tiny, in a tight low orbit over the pile. Same closed-form
+    // flight; the quick wander rate is what makes the same math read as flies
+    // rather than butterflies. They never land and they are HALF the first
+    // attempt's size — a settled fly with slowly breathing wings read as a
+    // butterfly resting, which is exactly the wrong creature over dung.
     const flies = makeButterflies({
       count: 6, seed: ID, color: INK_LIT, size: 0.065, land: false,
       center: [0.8, 0.2], radius: 0.85, height: [0.25, 0.95],

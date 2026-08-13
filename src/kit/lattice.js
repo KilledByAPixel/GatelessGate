@@ -19,7 +19,7 @@ const T = 0.06;   // frame thickness
 // running the panel's full height uninterrupted; the horizontals (0.46T) are
 // the lighter cross-members threaded between them — the way a real kōshi
 // lattice is actually built, heaviest members first, lightest last. The first
-// pass drew both infill directions at the same 0.6T, which read as one flat
+// pass drew both infill directions at the SAME depth, which read as one flat
 // grid with a frame around it rather than a built thing with a hierarchy.
 const V_BAR = T * 0.62;
 const H_BAR = T * 0.46;
@@ -71,15 +71,15 @@ export function makeLattice({ width = 2.2, height = 2.0, bars = 5, color = WASH.
 // `open` names the missing wall: '+z' is nearest the camera, '+x' is to its right.
 //
 // `doors` hangs two lattice leaves on the open side's corner posts, each half
-// the side wide, swung OUTWARD — the side reads as double doors somebody
-// pushed open and left, rather than a wall that was never built (Frank, case
-// 37: "on the open side it has the 2 panels rotating open like double doors
-// pushed open"). A number swings both leaves by that angle (radians); a
-// two-element array gives each leaf its own — [first corner, second corner]
-// in the build's own [-1, +1] order along the side — and 0 for a leaf means
-// it stands CLOSED in the wall plane, a real shut door, not a missing one
-// (Frank's second pass: "only one half... partially open — it's too open
-// right now"). `doors: 0` or omitted keeps the plain missing side.
+// the side wide, swung OUTWARD — the side reads as double doors somebody pushed
+// open and left, rather than a wall that was never built — case 37's two panels
+// swing open like doors somebody went through. A number swings both leaves by
+// that angle (radians); a two-element array gives each leaf its own — [first
+// corner, second corner] in the build's own [-1, +1] order along the side — and
+// 0 for a leaf means it stands CLOSED in the wall plane, a real shut door, not
+// a missing one — a pen standing wide open reads as unbuilt, so one leaf shut
+// and one ajar is usually what a scene wants. `doors: 0` or omitted keeps the
+// plain missing side.
 export function makePen({
   size = 5.4, height = 1.9, open = '+x', panelsPerSide = 2, bars = 4, color = WASH.dark,
   doors = 0,

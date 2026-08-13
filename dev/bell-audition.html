@@ -5,8 +5,8 @@
   <title>Bell Audition — The Gateless Gate</title>
   <!--
     Task 5A's deliverable: the bonshō is additive synthesis, not a sample, and
-    two guesses at its voice have already missed (Frank: "a dull thud and then
-    a bit of reverb, rather than a ding and then a bit of a continued ring").
+    two guesses at its voice have already missed — a dull thud and a bit of
+    reverb, rather than a ding and a continued ring.
     This page is how the third guess gets settled by ear instead of by a third
     round of code review. Every macro control below edits a LIVE COPY of the
     partial table built fresh from bellVoice() on every ring — moving a slider
@@ -199,8 +199,8 @@
     // then switching to "temple" threw the hand edits away — there was
     // never anywhere for three DIFFERENTLY tuned bells to live at once, and
     // "print preset" dumped whatever was left in that one shared object,
-    // which is why Frank pasted the same snapshot three times believing
-    // they were three presets. Each named preset is now its own object,
+    // which is why the same snapshot got pasted three times in the belief
+    // that it was three presets. Each named preset is now its own object,
     // seeded from the SHIPPED BELL_PRESETS (`ampMult`/`shimmer` are its
     // exact baseline) plus four macro multipliers that start at 1 (neutral
     // — baseline, untouched) and are mutated in place by whichever sliders
@@ -239,14 +239,13 @@
     // +7.0 dB hot relative to the mallet compared to what the shipped bell
     // actually plays (a DIFFERENT amount per preset: hand +7.00 dB, temple
     // +5.33 dB, great +2.84 dB, since each preset's ampMult array dresses
-    // the voice by a different total factor). Frank tunes beam/ping BY EAR
+    // the voice by a different total factor). beam/ping are tuned BY EAR
     // against whatever balance this page plays, and if that balance is not
     // the shipped one, every future tuning session produces numbers that
     // mean something else in the game. Renormalizing here, identically to
     // applyBellPreset, means the NEUTRAL case (sliders at 1, shimmer on) is
-    // bit-for-bit the same partial table the shipped preset strikes — see
-    // task-5b-report.md's fix-round section for the six ratios, before and
-    // after. Pushing a macro slider hard can still clip here (the whole
+    // bit-for-bit the same partial table the shipped preset strikes.
+    // Pushing a macro slider hard can still clip here (the whole
     // point of an audition page is to let you go too far and hear it), but
     // the REFERENCE point — what "1" on every slider sounds like — now
     // matches the game exactly.
@@ -354,7 +353,7 @@
     }
 
     // ---- presets: hand/temple/great seed from the SHIPPED BELL_PRESETS —
-    // the same three bells Frank tuned. Switching presets does NOT reset a
+    // the same three tuned bells. Switching presets does NOT reset a
     // preset's live macro edits; it only changes which one the panel and
     // the spacebar are pointed at.
     function selectPreset(name) {

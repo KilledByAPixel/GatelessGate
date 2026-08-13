@@ -23,24 +23,21 @@ import { GRAY_DARK, WASH } from '../palette.js';
 // WIDER than the tree is tall. It has to read as "that one" from across the
 // meadow before anyone reads a word of the case.
 //
-// The hero limb is MODERATED by default (overnight pass 2, Frank: "that
-// weird extra branch... an extra long branch for some reason"): it finishes
-// at the crown's fringe as a shoulder in the mass, not a spear past it.
-// `reach: 1` restores the full reaching limb for a scene that stages
-// something on it — the workbench and showcase hang the case-5 monk from
-// canopyPoints[0] (the sorted-outward anchor list, so the fringe anchor is
-// always first whichever lobe is outermost). The option only stretches the
-// hero limb's own segments: the deterministic stream is consumed in the same
-// order at any reach, so every other limb and every crown lobe of a given
-// seed stays exactly where it was.
+// The hero limb is MODERATED by default — unmoderated it read as one odd
+// extra-long branch sticking out of the crown. It finishes at the crown's
+// fringe as a shoulder in the mass, not a spear past it. `reach: 1` restores
+// the full reaching limb for a scene that stages something on it — the
+// workbench and showcase hang the case-5 monk from canopyPoints[0] (the
+// sorted-outward anchor list, so the fringe anchor is always first whichever
+// lobe is outermost). The option only stretches the hero limb's own segments:
+// the deterministic stream is consumed in the same order at any reach, so every
+// other limb and every crown lobe of a given seed stays exactly where it was.
 //
 // makeTree cannot be talked into this silhouette — its bole radius, limb spread
 // and crown size are all fixed fractions of `height` with no way in — so the
-// shape is authored here. tree.js is left alone. Fork angles here run wider
-// than tree.js's (a sapling's forks lean 19-39 degrees off their parent; an
-// oak's lean 55-98) and limb radius falls off more slowly generation to
-// generation (0.66-0.80 here vs tree.js's 0.66-0.68), so a cut branch reads
-// thick and old rather than twiggy.
+// shape is authored here and tree.js is left alone. Fork angles here run much
+// wider than a sapling's, and limb radius falls off more slowly generation to
+// generation, so a cut branch reads thick and old rather than twiggy.
 //
 // Trunk and canopy are separate meshes on purpose: case 38 wants the leaves red
 // and the wood on the same grey ramp as every other tree in the book.
@@ -63,14 +60,13 @@ export function makeOak({
   const wood = [];
   const leaves = [];
   const anchors = [];
-  // Per-lobe wind attributes, one entry per pushed leaf geometry, in push
-  // order — mergeSimple spreads them across each lobe's vertices. The canopy
-  // was the last foliage in the book with none (Frank's audit: "the red tree
-  // doesn't have any movement in its foliage... like the other trees"). The
-  // WOOD stays inert on purpose: an old oak's limbs are heavy, and the
-  // branching profile in kit/foliage.js would carry canopy-scale motion down
-  // limbs thick enough to make the whole tree bow — the exact read the wind
-  // system was built to avoid. Leaves shiver; the oak stands.
+  // Per-lobe wind attributes, one entry per pushed leaf geometry, in push order
+  // — mergeSimple spreads them across each lobe's vertices. The canopy was the
+  // last foliage in the book with none, and stood visibly still while every
+  // other tree moved. The WOOD stays inert on purpose: an old oak's limbs are
+  // heavy, and the branching profile in kit/foliage.js would carry canopy-scale
+  // motion down limbs thick enough to make the whole tree bow — the exact read
+  // the wind system was built to avoid. Leaves shiver; the oak stands.
   const leafSway = [], leafPhase = [];
   let maxLobeRun = 1e-6;
   let draw = 0;
@@ -168,9 +164,9 @@ export function makeOak({
       const spread = isHero ? 0.95 + 0.24 * rnd()
         : level === 0 ? 0.88 + 0.24 * rnd() : 0.32 + 0.46 * rnd();
       const child = tip.clone().multiply(RY(azimuth)).multiply(RZ(spread));
-      // Tamed, the hero primary is only a touch longer than its siblings
-      // (1.24 vs 1.18) — its character is the horizontal elbow, not raw
-      // length. At reach 1 it grows the legacy 1.62-1.80 spear again.
+      // Tamed, the hero primary is only a touch longer than its siblings — its
+      // character is the horizontal elbow, not raw length. At reach 1 it grows
+      // the full reaching spear again.
       const scale = isHero ? R(1.24, 1.62) + R(0.10, 0.18) * rnd() : level === 0 ? 1.18 : 0.42;
       const fall = isHero ? 0.80 : level === 0 ? 0.66 : 0.66;
       if (level === 0) addKnuckle(tip, rad * 0.62);
@@ -178,11 +174,11 @@ export function makeOak({
     }
   }
 
-  // the root flare: an oak is fattest where it meets the ground. It used to
-  // be a squashed dodecahedron ball resting at the foot, which read as
-  // "kinda like a rock at its base" (Frank) — a boulder beside the trunk,
-  // not the trunk itself. A short tapered collar instead: same width at the
-  // ground, but it runs INTO the bole so the flare is the trunk widening.
+  // the root flare: an oak is fattest where it meets the ground. It used to be
+  // a squashed dodecahedron ball resting at the foot, which read as a rock at
+  // its base — a boulder beside the trunk, not the trunk itself. A short
+  // tapered collar instead: same width at the ground, but it runs INTO the bole
+  // so the flare is the trunk widening.
   const flare = new THREE.CylinderGeometry(BOLE_R * 1.02, BOLE_R * 1.5, 0.07 * H, 6);
   flare.translate(0, 0.035 * H, 0);
   wood.push(flare);

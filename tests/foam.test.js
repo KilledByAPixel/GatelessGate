@@ -85,11 +85,11 @@ test('makeFoam: strips live on the beach, hug the sand, and ride the sea past th
   assert.ok(checked > 50, 'there is actually foam to check');
 });
 
-// THE SIGN BUG, PINNED: s is positive seaward, so run-up means the front
-// edge goes NEGATIVE. The first cut had it flipped — every wave-end swept
-// out to sea, sank under the water sheet, and no foam was ever visible
-// (Frank: "I don't see any foam at all"). The blind symmetric bound above
-// let it through; this does not.
+// THE SIGN BUG, PINNED: s is positive seaward, so run-up means the front edge
+// goes NEGATIVE. The first cut had it flipped — every wave-end swept out to
+// sea, sank under the water sheet, and no foam was ever visible (flipped once,
+// the foam swept out to sea and vanished entirely). The blind symmetric bound
+// above let it through; this does not.
 test('makeFoam: the wave-ends actually run UP the sand — landward of the waterline at full sweep', async () => {
   const { makeFoam } = await import('../src/kit/foam.js');
   const foam = makeFoam({ shore: SHORE, seed: 20 });

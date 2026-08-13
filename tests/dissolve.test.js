@@ -57,9 +57,8 @@ test('interrupting an active tween settles the superseded promise', async () => 
 });
 
 // ---- a different stain every time -------------------------------------------
-// Frank: "can we randomize the noise seed for that effect when we transition,
-// every time we transition to a new scene... so if you press the button rapidly
-// it's not doing the exact same effect, the exact same noise."
+// The noise seed moves on every transition, so paging quickly never runs the
+// identical ink twice.
 //
 // The field is a fixed function of position, so a fixed domain meant every
 // transition in the book spread ink through the paper in identically the same

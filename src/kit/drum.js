@@ -9,13 +9,12 @@ import { clamp } from '../util/math.js';
 // been beaten yet.
 //
 // It used to hang: two posts rising past the barrel to a beam overhead, with
-// the drum slung under it by a pair of cords. Frank: "it should be sitting on
-// kind of a saddle, on a seat — instead of hanging from the middle of it. The
-// drum itself should be above the thing it's settled on, and the thing it's on
-// should be a lot shorter — the bottom of where the drum currently is." So the
-// barrel stays exactly where it was and everything ABOVE it is gone: two short
-// hewn legs carry saddle caps that meet the belly, the belly bulges between
-// them, and nothing in the piece is taller than the drum any more.
+// the drum slung under it by a pair of cords. A drum wants to SIT on a saddle,
+// above a short seat that stops where the drum begins — not to hang from its
+// own middle. So the barrel stays exactly where it was and everything ABOVE it
+// is gone: two short hewn legs carry saddle caps that meet the belly, the belly
+// bulges between them, and nothing in the piece is taller than the drum any
+// more.
 //
 // The drum's axis runs along local ±X, so the near skin faces local +X: aim
 // that at the camera. Origin on the ground under the frame.

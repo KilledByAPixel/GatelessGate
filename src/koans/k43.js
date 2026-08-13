@@ -49,10 +49,10 @@ const CAM = { distance: 10.6, target: [0.7, 0.7, -0.55], heading: 12, pitch: 5.5
   shuzan.position.set(-1.5, 0, -1.2);
   
   // He raises his right arm straight out along his FACING and holds the staff
-  // continuing that line, so the long part points AWAY from him, out in front
-  // (Frank: it read as held off to the side). The arm swings about z until it
-  // is level and pointing along +x — which aimMonk then turns toward the
-  // monks — and the staff is parented to the arm so it extends past the hand.
+  // continuing that line, so the long part points AWAY from him, out in front —
+  // it used to read as held off to the side. The arm swings about z until it is
+  // level and pointing along +x — which aimMonk then turns toward the monks —
+  // and the staff is parented to the arm so it extends past the hand.
   const SLEEVE_L = 0.34 * SH;
   const rightArm = shuzan.children
   .filter((c) => c.name === 'arm')
@@ -132,12 +132,11 @@ const CAM = { distance: 10.6, target: [0.7, 0.7, -0.55], heading: 12, pitch: 5.5
   hit.position.y = -STAFF_L / 2;
   hold.add(hit);
 
-  // AND SHUZAN HIMSELF (Frank: "let's have it so you can click on him as well,
-  // not just the staff"). The staff is a 4cm rod held out at arm's length: a
-  // sliver to aim at even with the sleeve of a hit box around it, and the man
-  // holding it is the obvious thing to reach for. It is also the better reading
-  // — he and the staff are one offer, and the case shuts both doors whichever
-  // of them you point at.
+  // AND SHUZAN HIMSELF, not just the staff. The staff is a 4cm rod held out at
+  // arm's length: a sliver to aim at even with the sleeve of a hit box around
+  // it, and the man holding it is the obvious thing to reach for. It is also
+  // the better reading — he and the staff are one offer, and the case shuts
+  // both doors whichever of them you point at.
   //
   // His own meshes rather than a proxy: he is man-sized and standing still.
   // MINUS the staff's subtree, which is already in the list above and whose

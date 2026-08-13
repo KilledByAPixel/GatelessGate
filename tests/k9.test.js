@@ -6,12 +6,12 @@ import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
 import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 
-// Case 9 is staged as a DISCOVERY, not a product shot (Frank's note): the
-// colossus sits off at the left third against the mountain flank, and an
-// ordinary full-grown tree stands at his base so the eye has something to
-// measure him with. These tests pin that composition — if the statue drifts
-// back to the camera axis, or the scale tree wanders away from him or grows
-// out of ordinary world scale, the case has lost its point.
+// Case 9 is staged as a DISCOVERY, not a product shot: the colossus sits off at
+// the left third against the mountain flank, and an ordinary full-grown tree
+// stands at his base so the eye has something to measure him with. These tests
+// pin that composition — if the statue drifts back to the camera axis, or the
+// scale tree wanders away from him or grows out of ordinary world scale, the
+// case has lost its point.
 
 // the shipped camera, at a square-ish book aspect (the reading pane's canvas
 // is narrower than the 1.78 test rig, which halves apparent x offsets)
@@ -108,8 +108,8 @@ test('everything anchored to the statue moved with it', () => {
   // FACE, not aim: the body fronts local +z, so the bearing is atan2(dx, dz).
   // This pinned aimMonk's atan2(-dz, dx) — which turns the POINTING SLEEVE —
   // and so pinned the monk standing a quarter turn off the colossus he is
-  // asking about (Frank: "this aimMonk function is wrong... it's applying
-  // basically everywhere"). See faceMonk in src/kit/monk.js.
+  // asking about — aimMonk was wrong, and wrong nearly everywhere it was used.
+  // See faceMonk in src/kit/monk.js.
   const asking = monks[0];
   const want = Math.atan2(bp.x - asking.position.x, bp.z - asking.position.z);
   assert.ok(Math.abs(asking.rotation.y - want) < 1e-6, 'the asking monk no longer faces the statue');
@@ -130,15 +130,14 @@ test('the tap still tolls the deepest bell, from the new position', () => {
     ? { object: hit, point: new THREE.Vector3(), distance: 1 } : null);
   taps.forEach((cb) => cb());
   assert.equal(rung.length, 1, 'the bell did not sound');
-  assert.equal(rung[0].preset, 'great', 'the colossus rings Frank\'s great preset — see task-12');
+  assert.equal(rung[0].preset, 'great', 'the colossus rings the great preset — see task-12');
   assert.equal(root.fragment().tolls, 1);
 });
 
 test('the toll rocks the colossus a tiny bit, and it settles to exactly still', () => {
-  // Frank's audit: "let's have it just rock just a tiny bit... so there's
-  // feedback in addition to the sound." Tiny is load-bearing: the peak lean is
-  // held to a band — enough to see at the case's 17-unit staging distance,
-  // never enough to read as a wobble toy.
+  // A touch wants feedback you can SEE as well as hear. Tiny is load-bearing:
+  // the peak lean is held to a band — enough to see at the case's 17-unit
+  // staging distance, never enough to read as a wobble toy.
   const taps = [];
   const ctx = {
     audio: { bell: () => {} },

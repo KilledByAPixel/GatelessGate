@@ -5,15 +5,14 @@ import { makeCylinderChime, noteForSize, forceForRelOmega, CYL_SWING, CYL_WIND }
 import { createPendulum, integratePendulum } from '../src/kit/pendulum.js';
 import { gustPhase, gustBuffet } from '../src/audio/synths.js';
 
-// The large hanging cylinder (task-cylinder-brief.md): body and clapper now
-// read the IDENTICAL wind drive — gustPhase plus CYL_WIND.buffet of the fast
-// gustBuffet band — and what rings the bell is their different lengths
-// answering that fast band differently (see cylinder.js's THE MECHANISM,
-// TWICE: the old decorrelated-reads design was level-triggered, and a held
-// gust parked the clapper on the wall and metronomed at the refractory —
-// Frank's 2026-08-11 hut-chime complaint, measured at a 0.52s MEDIAN gap).
-// The resulting strikes are a physical consequence of frequency response,
-// not a scheduled event.
+// The large hanging cylinder: body and clapper now read the IDENTICAL wind
+// drive — gustPhase plus CYL_WIND.buffet of the fast gustBuffet band — and what
+// rings the bell is their different lengths answering that fast band
+// differently (see cylinder.js's THE MECHANISM, TWICE: the old
+// decorrelated-reads design was level-triggered, and a held gust parked the
+// clapper on the wall and metronomed at the refractory — the hut chimes'
+// soft-metronome bug, measured at a 0.52s MEDIAN gap). The resulting strikes
+// are a physical consequence of frequency response, not a scheduled event.
 //
 // Several tests below reconstruct the physics INDEPENDENTLY from documented
 // formulas (same technique as tests/furin.test.js's "swing's wind phase
@@ -58,8 +57,8 @@ function reference({ size = 0.8, T0 = 0 } = {}) {
   const windClapTorque = (GRAVITY / L_clap) * CYL_WIND.leanClap * CYL_WIND.swell;
   // damping reads the real, LIVE CYL_SWING object rather than a hardcoded
   // copy — CYL_SWING.cylDamping/clapDamping are exported, mutable tunables
-  // now (task-swing-tune-brief.md, the harness writes into them directly),
-  // so a hardcoded literal here would silently stop matching the real module
+  // now — the harness writes into them directly — so a hardcoded literal here
+  // would silently stop matching the real module
   // the moment the starting value changes again (same reasoning furin.test.js
   // applies to SWING.damping).
   const cyl = createPendulum({ length: L_cyl, g: GRAVITY, damping: CYL_SWING.cylDamping, clock: T0 });
@@ -80,7 +79,7 @@ function reference({ size = 0.8, T0 = 0 } = {}) {
   // but agree to a small tolerance" — not a bug in either module. Deriving
   // `elapsed` here the exact same way cylinder.js does eliminates it
   // entirely rather than just tolerating it: verified 0 diff, all strikes,
-  // both T0=0 and T0=5237.4 (see cylinder-report.md's addendum).
+  // both T0=0 and a large non-zero T0.
   let prevT = T0;
   const strikes = [];
   return {
@@ -146,8 +145,8 @@ test('the clapper and cylinder have different natural periods, related by the go
   // already implies it is nowhere near 2:1 or 1:1 — a separate "not close
   // to 0.5 or 2" assertion would be dead code given this one (code review
   // caught an earlier draft carrying both). Kept as a straight regression
-  // pin on the constant, honestly: measured directly (cylinder-report.md),
-  // this ratio does NOT meaningfully change how often the cylinder rings
+  // pin on the constant, honestly: measured directly, this ratio does NOT
+  // meaningfully change how often the cylinder rings
   // under this design (1:1 and 2:1 both produced comparable strike
   // statistics to 1/phi) — see cylinder.js's PERIOD_RATIO comment for why
   // it is kept anyway.
@@ -226,15 +225,14 @@ test('a steady wind produces strikes that are IRREGULARLY spaced, not a metronom
   assert.ok(max > min * 3, `spread too narrow to read as irregular: min ${min}, max ${max}`);
 });
 
-// THE REGRESSION THIS REDESIGN EXISTS FOR (Frank, 2026-08-11, the hut
-// chimes): under the old decorrelated-reads mechanism a high gust held the
-// two equilibria apart past the contact gap, the clapper rested on the wall,
-// and REFRACTORY metered a soft metronome — measured at wind 1: 1200-1430
-// strikes/hour with a MEDIAN gap of 0.52s (the refractory window itself),
-// runs of 13 back-to-back dings, and a body reversing direction only every
-// ~7s ("it doesn't really swing with the wind... held in place until I
-// actually click"). Pins all three symptoms dead, at a hung size and the
-// floor size.
+// THE REGRESSION THIS REDESIGN EXISTS FOR (the hut chimes' soft metronome):
+// under the old decorrelated-reads mechanism a high gust held the two
+// equilibria apart past the contact gap, the clapper rested on the wall, and
+// REFRACTORY metered a soft metronome — measured at wind 1: 1200-1430
+// strikes/hour with a MEDIAN gap of 0.52s (the refractory window itself), runs
+// of 13 back-to-back dings, and a body reversing direction only every ~7s ("it
+// doesn't really swing with the wind... held in place until I actually click").
+// Pins all three symptoms dead, at a hung size and the floor size.
 test('a held gust cannot metronome the bell, and the body visibly swings in wind', () => {
   for (const size of [0.33, 0.8]) {
     const f = makeCylinderChime({ size, seed: 2, phase: 0 });
@@ -322,9 +320,8 @@ test('the refractory period holds: no two strikes land closer together than it, 
       `two tap strikes landed ${tapTimes[i] - tapTimes[i - 1]}s apart, under the 0.5s refractory`);
   }
   // this loop IS the real constraint — every one of potentially ~36 re-taps
-  // (every ~0.083s for 3s) had a chance to fire, and mutation-verified
-  // (cylinder-report.md addendum): setting REFRACTORY=0 makes the per-gap
-  // check above fail directly. A separate "total count is below some bound"
+  // (every ~0.083s for 3s) had a chance to fire, and it is mutation-verified:
+  // setting REFRACTORY=0 makes the per-gap check above fail directly. A separate "total count is below some bound"
   // assertion was tried here first and removed — 6 strikes in a 3s window
   // at a 0.5s refractory is not evidence of anything broken, it is what
   // correct spacing looks like, and the bound was tight enough to fail on
@@ -360,27 +357,25 @@ test('THE WALL: a hard tap never swings the clapper visibly past the cylinder wa
 });
 
 test('a full-force tap swings the CYLINDER BODY a fūrin-comparable amount, and THE WALL still holds at CYL_SWING.tapKick', () => {
-  // CHANGED (task-cylinder-fix-brief.md BUG 1). This test used to be titled
-  // "CYL_SWING.tapKick is a real increase over the shipped-before value" and
-  // pinned tapKick against the PRE-swing-tuning value (2.5 rad/s), because
-  // tapKick() used to kick the CLAPPER directly, sized against the
-  // clapper's own natural frequency. Now that a tap kicks the BODY
-  // (cylPend) instead — the actual bug the owner found in a live audition:
-  // "when I click on it, it also doesn't seem like it swings at all" — that
-  // old comparison is meaningless: 6.0 rad/s against the clapper's
-  // ~6.65 rad/s natural frequency and 2.2 rad/s against the body's own,
-  // much slower ~4.11 rad/s are unrelated numbers answering unrelated
+  // CHANGED, when a tap moved from the clapper to the body. It used to be
+  // titled "CYL_SWING.tapKick is a real increase over the shipped-before value"
+  // and pinned tapKick against the PRE-swing-tuning value (2.5 rad/s), because
+  // tapKick() used to kick the CLAPPER directly, sized against the clapper's
+  // own natural frequency. Now that a tap kicks the BODY (cylPend) instead —
+  // the actual bug, which was that a tap rang the bell without visibly swinging
+  // it at all — that old comparison is meaningless: 6.0 rad/s against the
+  // clapper's ~6.65 rad/s natural frequency and 2.2 rad/s against the body's
+  // own, much slower ~4.11 rad/s are unrelated numbers answering unrelated
   // questions, and the raw-value pin failed the moment the target pendulum
-  // changed. What still matters, and is pinned here instead: a full-force
-  // tap measurably moves the BODY (not just the clapper — this is the
-  // actual regression guard for BUG 1, nothing before this fix caught a
-  // reversion to kicking the clapper), the resulting swing lands in a
-  // fūrin-comparable range (a first draft of this fix shrank the swing
-  // instead of fixing the force law that actually needed it — see
-  // CYL_SWING.tapKick's own "A FIRST DRAFT..." comment for why that was the
-  // wrong diagnosis, caught in review), and THE WALL still holds the
-  // clapper inside GAP_ANGLE at whatever CYL_SWING.tapKick currently is, not
-  // just "whatever the module shipped with."
+  // changed. What still matters, and is pinned here instead: a full-force tap
+  // measurably moves the BODY (not just the clapper — this is the actual
+  // regression guard for BUG 1, nothing before this fix caught a reversion to
+  // kicking the clapper), the resulting swing lands in a fūrin-comparable range
+  // (a first draft of this fix shrank the swing instead of fixing the force law
+  // that actually needed it — see CYL_SWING.tapKick's own "A FIRST DRAFT..."
+  // comment for why that was the wrong diagnosis, caught in review), and THE
+  // WALL still holds the clapper inside GAP_ANGLE at whatever CYL_SWING.tapKick
+  // currently is, not just "whatever the module shipped with."
   const f = makeCylinderChime({ seed: 13, phase: 0 });
   f.setWindLevel(0);
   const swing = f.group.getObjectByName('swing');
@@ -402,12 +397,12 @@ test('a full-force tap swings the CYLINDER BODY a fūrin-comparable amount, and 
   assert.ok(maxRel <= gap + 1e-6,
     `at CYL_SWING.tapKick=${CYL_SWING.tapKick}, the clapper swung ${maxRel} rad relative to the body, past the ${gap} rad gap`);
   // A plausibility BAND, not a tight pin against today's exact number (today:
-  // ~0.51 rad) — it has to survive the owner retuning CYL_SWING.tapKick by
-  // ear through the harness, per that field's own "starting point, not
-  // final" comment. Low end catches "barely moves" (a BUG 1 regression,
-  // kicking the clapper again produces ~0 here under zero wind); high end
-  // catches an implausible windmill (a mash-cap regression, or a raw kick
-  // with no cap at all).
+  // ~0.51 rad) — it has to survive CYL_SWING.tapKick being retuned by ear
+  // through the harness, per that field's own "starting point, not final"
+  // comment. Low end catches "barely moves" (a BUG 1 regression, kicking the
+  // clapper again produces ~0 here under zero wind); high end catches an
+  // implausible windmill (a mash-cap regression, or a raw kick with no cap at
+  // all).
   assert.ok(maxSwing > 0.15,
     `a full-force tap swung the body only ${maxSwing} rad — reads as barely moving, the exact bug this fix addresses`);
   assert.ok(maxSwing < 1.2,
@@ -415,27 +410,26 @@ test('a full-force tap swings the CYLINDER BODY a fūrin-comparable amount, and 
 });
 
 test('a decaying tap ring-down reports DECREASING force, not a column of 1.00s', () => {
-  // THE ACTUAL BUG code review caught: BUG 1's first fix draft shrank the
-  // swing to hide a problem that was never the swing's size — every
-  // re-strike in a decaying ring-down reported force~1 because
-  // FORCE_OMEGA_REF (wind-scale) saturates almost immediately at any
-  // tap-scale contact velocity, so a listener would hear a machine hammering
-  // at full volume for several seconds, not a bell settling. This drives a
-  // real tap at full amplitude in still air and asserts the reported force
-  // sequence is not just "eventually quiet" (the old law already managed
-  // that on its very last strike) but VISIBLY DECREASING across most of the
-  // ring-down: strictly fewer than half the strikes may sit within 0.02 of
-  // 1.0 (a wrong-but-plausible "fixed the peak, still saturates everywhere
-  // else" implementation would fail this), and the sequence's own late
-  // values must run meaningfully quieter than its early ones.
-  // AT A REFERENCE KICK, not the shipped one. This test guards the FORCE
+  // THE ACTUAL BUG code review caught: BUG 1's first fix draft shrank the swing
+  // to hide a problem that was never the swing's size — every re-strike in a
+  // decaying ring-down reported force~1 because FORCE_OMEGA_REF (wind-scale)
+  // saturates almost immediately at any tap-scale contact velocity, so a
+  // listener would hear a machine hammering at full volume for several seconds,
+  // not a bell settling. This drives a real tap at full amplitude in still air
+  // and asserts the reported force sequence is not just "eventually quiet" (the
+  // old law already managed that on its very last strike) but VISIBLY
+  // DECREASING across most of the ring-down: strictly fewer than half the
+  // strikes may sit within 0.02 of 1.0 (a wrong-but-plausible "fixed the peak,
+  // still saturates everywhere else" implementation would fail this), and the
+  // sequence's own late values must run meaningfully quieter than its early
+  // ones. AT A REFERENCE KICK, not the shipped one. This test guards the FORCE
   // LAW, and the law's decay only shows across a long ring-down — several
-  // natural periods of re-strikes. Frank's ear-tuned tapKick (1.0 rad/s as
-  // of his harness pass) swings barely past GAP_ANGLE, giving half a dozen
-  // mid-scale, phase-noisy contacts: too short a sequence to judge a
-  // diminuendo, and not what this test is about. CYL_SWING is live-mutable
-  // by design (the harness writes it), so the test borrows that: pin the
-  // kick at the 2.2 the law was calibrated against, restore after.
+  // natural periods of re-strikes. The shipped ear-tuned tapKick (1.0 rad/s)
+  // swings barely past GAP_ANGLE, giving half a dozen mid-scale, phase-noisy
+  // contacts: too short a sequence to judge a diminuendo, and not what this
+  // test is about. CYL_SWING is live-mutable by design (the harness writes it),
+  // so the test borrows that: pin the kick at the 2.2 the law was calibrated
+  // against, restore after.
   const kick0 = CYL_SWING.tapKick;
   CYL_SWING.tapKick = 2.2;
   const forces = [];
@@ -463,10 +457,10 @@ test('a decaying tap ring-down reports DECREASING force, not a column of 1.00s',
   // properties instead.
   //
   // FIRST: the last strike is meaningfully quieter than the loudest. The
-  // threshold here was 0.75 — only -2.5dB — and that is exactly how a law
-  // whose whole upper segment spanned 0.7 to 1.0 passed this test while
-  // Frank heard "every time it knocks, it doesn't sound less loud." -7dB is
-  // the difference between a fade and a technicality.
+  // threshold here was 0.75 — only -2.5dB — and that is exactly how a law whose
+  // whole upper segment spanned 0.7 to 1.0 passed this test while every knock
+  // still sounded exactly as loud as the last. -7dB is the difference between a
+  // fade and a technicality.
   const max = Math.max(...forces);
   const last = forces[forces.length - 1];
   assert.ok(last < max * 0.45,
@@ -508,7 +502,7 @@ test('a tap rings through the SAME contact mechanism as the wind, not a bypass',
   // would leave swingAmp() at 0 here while clapperAmp() jumped instead.
   assert.ok(f.swingAmp() > 0, 'the tap did not add any energy to the BODY');
 
-  // CHANGED (code review, task-cylinder-fix-brief.md follow-up): this used
+  // CHANGED on review: this used
   // to run a full second and assert EXACTLY one strike, worded "one tap
   // should ring once." That is no longer true of the component and was
   // never reliably true of this window either — the body's own re-strike

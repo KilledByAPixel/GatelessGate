@@ -42,9 +42,9 @@ const SPECIES = { tree: makeTree, pine: makePine, oak: makeOak };
 // The y is the whole reason this exists. groundHeight is flat within nine units
 // of the origin, so every tree hand-placed near the middle of a scene got away
 // with y = 0 for years; out past that the terrain rolls a unit either way and a
-// tree at 0 floats or sinks (Frank, of the fog-line stands: "they're sunk below
-// the ground back there"). This samples the same surface the scatter does, and
-// takes `groundFn` for a case whose ground is more than the terrain function.
+// tree at 0 floats or sinks — the fog-line stands sat buried. This samples the
+// same surface the scatter does, and takes `groundFn` for a case whose ground
+// is more than the terrain function.
 //
 export function plantTree(scene, {
   x = 0, z = 0,
@@ -109,11 +109,9 @@ export function plantRock(scene, {
 //
 // The alternative was writing them twice: `monk.position.set(3.6, 0, 3.4)` and
 // then `{ x: 3.6, z: 3.4, r: 1.2 }` a few lines later, two sets of numbers for
-// one fact (Frank: "we do want the grass keepout to be based on the object
-// position, but the position is not passed in, so you have to maintain two
-// different sets of numbers, and it's not ideal"). They drift the moment anyone
-// nudges a figure, and nothing fails — the scatter just quietly stops respecting
-// something, or clears a bald patch of grass where nothing stands any more.
+// one fact. They drift the moment anyone nudges a figure, and nothing fails —
+// the scatter just quietly stops respecting something, or clears a bald patch
+// of grass where nothing stands any more.
 //
 // Still takes plain `{x, z, r}` for the circles that are not objects: a path's
 // own keepout(), a swathe of open water, the air over a gorge.
@@ -131,11 +129,10 @@ const asCircle = (k) => (k && k.at ? around(k.at, k.r) : k);
 //
 // Half the midground trees in the book stand where the lens never points: 51%
 // are outside the frame at the home framing and 18% are outside it at EVERY
-// heading the orbit can reach. Those last ones are pure waste (Frank: "don't
-// let trees spawn behind the default camera, that ends up being a waste since
-// you can never see them") — and because the placement loop RETRIES on a
-// rejection, refusing them does not thin the wood, it moves those trees to
-// where they show. Same budget, more scene.
+// heading the orbit can reach. Those last ones are pure waste — nothing should
+// spawn where the camera can never point — and because the placement loop
+// RETRIES on a rejection, refusing them does not thin the wood, it moves those
+// trees to where they show. Same budget, more scene.
 //
 // The test is horizontal only, and deliberately: a tree is tall, the pitch
 // drifts, the reader drags, and the vertical edges of the frame are the ones a
@@ -145,21 +142,19 @@ const asCircle = (k) => (k && k.at ? around(k.at, k.r) : k);
 // The margins are chosen against what the frame can actually be, because the
 // cost of being wrong is a bald wedge that appears when the reader drags:
 //
-//   HALF_VIEW 42 degrees. The shipped 38-degree lens spans 31.5 degrees either
-//   side at 16:9 and 38.7 at 21:9, so 42 covers every window shape anyone will
-//   open the book in, with the pointer parallax and the ambient drift on top.
-//   Swept against the book's own 198 scatter trees: 42 relocates 6% of them,
-//   36 would relocate 10% and 32 would relocate 14% — real trees, but bought
-//   by assuming a frame narrower than an ultrawide monitor actually gives.
+//   HALF_VIEW is deliberately WIDER than the shipped lens at any window shape
+//   anyone will open the book in, with the pointer parallax and the ambient
+//   drift allowed for on top. A tighter margin relocates more trees, but buys
+//   it by assuming a frame narrower than an ultrawide monitor actually gives.
 //
-//   ARC_SAMPLES 13 across the drag range, one every 8.6 degrees. Visibility
-//   over the arc is smooth, and anything wide enough to be worth drawing is
-//   visible across far more than one step.
+//   ARC_SAMPLES spans the drag range. Visibility over the arc is smooth, and
+//   anything wide enough to be worth drawing is visible across far more than
+//   one step.
 //
-//   PAD 1.5 units of canopy, added as a real angle at the distance in hand: a
-//   trunk just outside the frame still shows its leaves. (This was briefly
-//   subtracted in COSINE space, which near 42 degrees is worth about three
-//   times the angle intended and quietly took the cull down to 3%.)
+//   PAD is canopy, added as a real angle at the distance in hand: a trunk just
+//   outside the frame still shows its leaves. (This was briefly subtracted in
+//   COSINE space, which at these angles is worth about three times the angle
+//   intended and quietly cut the cull to a third of its size.)
 const HALF_VIEW = 42;
 const ARC_SAMPLES = 13;
 const PAD = 1.5;
@@ -214,11 +209,11 @@ export function composeWorld(scene, {
   groundFn = null,
   trees = 5,
   treeRing = [7, 20],
-  // The scatter's species (Frank: "I control what type of trees are in a
-  // scene"): 'tree' (the broadleaf, bit-identical to before this
-  // option existed), 'pine', or 'mixed' — a seeded half-and-half. The wind
-  // FLAVOR in a case's ambience ('wind:0.2:pine') is a separate, audio-only
-  // choice; matching the two is the case's own job.
+  // The scatter's species, so a case controls what grows in it: 'tree' (the
+  // broadleaf, bit-identical to before this option existed), 'pine', or 'mixed'
+  // — a seeded half-and-half. The wind FLAVOR in a case's ambience
+  // ('wind:0.2:pine') is a separate, audio-only choice; matching the two is the
+  // case's own job.
   treeKind = 'mixed',
   // The case's own framing, so the scatter can refuse spots the reader can
   // never look at (seenFrom, above). Pass the same object the module's
@@ -292,11 +287,11 @@ export function composeWorld(scene, {
     ...(shore ? { shore } : {}),
   });
   scene.add(ground);
-  // The mountains' base circles, computed ONCE from the same seeds the
-  // meshes use: forests and scatter trees refuse to stand inside them
-  // (Frank: "trees that are inside the mountain"). 0.85·r is where a
-  // trunk starts piercing visible rock; the very skirt stays plantable
-  // and reads as brush at fog distance.
+  // The mountains' base circles, computed ONCE from the same seeds the meshes
+  // use: forests and scatter trees refuse to stand inside them — otherwise
+  // trees stand inside the mountain. 0.85·r is where a trunk starts piercing
+  // visible rock; the very skirt stays plantable and reads as brush at fog
+  // distance.
   const footprints = mountains.flatMap((m, i) =>
     mountainFootprints({ seed: seed * 31 + i * 7, ...m }));
 
@@ -349,10 +344,9 @@ export function composeWorld(scene, {
     const t = pine
       ? makePine({ seed: seed * 100 + placed, height: 3.2 + hash1(tries * 5 + 4, seed) * 1.8 })
       : makeTree({ seed: seed * 100 + placed, height: 2.6 + hash1(tries * 5 + 4, seed) * 1.6 });
-    // ON the terrain, not at sea level: the ring reaches r = 20 and the
-    // ground out there rolls a good unit either way — trees planted at y 0
-    // floated on the dips and buried on the rises (Frank: "they're sunk
-    // below the ground back there"). Slight sink so no trunk hovers on a
+    // ON the terrain, not at sea level: the ring reaches r = 20 and the ground
+    // out there rolls a good unit either way — trees planted at y 0 floated on
+    // the dips and buried on the rises. Slight sink so no trunk hovers on a
     // slope edge. groundFn first, same as the grass: a case with reshaped
     // terrain owns the surface.
     const ty = (groundFn ? groundFn(x, z) : groundHeight(x, z, { seed: groundSeed })) - 0.06;
@@ -364,12 +358,12 @@ export function composeWorld(scene, {
   }
 
   // The trees deliberately do NOT answer the pointer's breeze. v1 tilted each
-  // scattered tree on a damped spring and Frank pulled it: "the trees are
-  // getting knocked around way too much... we don't wanna go by the base of
-  // the tree" — a whole-group tilt pivots at the trunk's base, and no gentle
-  // amplitude makes that read as a canopy. The grass is the instrument now;
-  // if trees ever join back in it has to be canopy-only deformation, not a
-  // base pivot (treeSpringStep in breeze.js is kept, uncalled, for that day).
+  // scattered tree on a damped spring, and it was pulled: the trees were
+  // knocked around far too much — a whole-group tilt pivots at the trunk's
+  // base, and no gentle amplitude makes that read as a canopy. The grass is the
+  // instrument now; if trees ever join back in it has to be canopy-only
+  // deformation, not a base pivot (treeSpringStep in breeze.js is kept,
+  // uncalled, for that day).
 
   scene.add(makeRocks({ count: rocks, seed: seed * 51, groundSeed, keepout }));
   scene.add(makeBushes({ count: bushes, seed: seed * 61, groundSeed, keepout }));
@@ -377,8 +371,8 @@ export function composeWorld(scene, {
   // the meadow: one instanced field, wind animated in the vertex shader. The
   // caller must drive world.update(dt, simTime) or the wind stands still.
   // `grass` is a blade budget; a tuft card shows several blades. The divisor
-  // was 3 at first; Frank asked for about twice the coverage, and at two
-  // triangles each even this is a fraction of the blade field's geometry.
+  // was 3 at first, and about twice the coverage reads better; at two triangles
+  // each even this is a fraction of the blade field's geometry.
   //
   // THE REACH, and why the budget moves with it. Both fields place at even area
   // density, so a fixed count spread over a bigger disc is a thinner meadow —
@@ -389,9 +383,10 @@ export function composeWorld(scene, {
   const radius = grassRadius === null ? reach : grassRadius;
   const rimTaper = grassTaper === null ? taper : grassTaper;
   const budget = grass * grassArea(radius, rimTaper) / GRASS_BASE_AREA;
-  // /1.5: a card carries a whole tuft, so it takes fewer of them to cover the
-  // same ground than it took blades — the budget above is still expressed in
-  // blade-equivalents so a case's grass count means what it always meant.
+  // A card carries a whole tuft, so it takes FEWER of them to cover the same
+  // ground than it took blades — hence the divisor. The budget above is still
+  // expressed in blade-equivalents, so a case's grass count means what it
+  // always meant.
   const field = makeTuftField({
     count: Math.round(budget / 1.5), radius, taper: rimTaper, seed: seed * 81, groundSeed,
     keepout: grassKeepout || keepout, groundFn,

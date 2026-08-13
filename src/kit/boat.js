@@ -56,14 +56,13 @@ export function makeBoat({
   // listed the other way round, so computeVertexNormals gave the whole shell
   // inward normals. Front-face culling then threw away the near side and drew
   // the far side's interior, lit from inside — which is why the hull's
-  // underside read as a solid patch in the wrong value (Frank: "the bottom of
-  // it seems like it might be flipped, inverted, rendered the inverse
-  // colouring"), and why the inverted-hull outline pass (the hull, since
-  // deleted) had nothing sensible to grow. The vertex lists below stay in the
-  // order they were composed in — bow to keel to gunwale, which is how the
-  // shape reads on paper — and the helper
-  // emits them reversed, so the geometry is right without the prose going
-  // backwards. tests/boat.test.js holds every face to it.
+  // underside read as a solid patch in the wrong value — inverted, as though
+  // the shading had been flipped — and why the inverted-hull outline pass (the
+  // hull, since deleted) had nothing sensible to grow. The vertex lists below
+  // stay in the order they were composed in — bow to keel to gunwale, which is
+  // how the shape reads on paper — and the helper emits them reversed, so the
+  // geometry is right without the prose going backwards. tests/boat.test.js
+  // holds every face to it.
   const face = (a, b, c) => tri.push(...a, ...c, ...b);
   // port side, then starboard mirrored
   face(bowTip, keelF, midP);

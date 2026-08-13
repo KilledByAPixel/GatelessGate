@@ -1,9 +1,10 @@
-// The model viewer's own light rig — half of "it's kinda hard to see in 3D".
-// It is not the book's look, and it's one toggle away from it, so what these
-// tests hold is that the deviation stays deliberate and bounded: the book's
-// key is still in the rig, and the fills stay dim relative to it. The other
-// half — shading — needs no test of its own any more: the kit's materials
-// are what render, with nothing between builder and screen left to verify.
+// The model viewer's own light rig — half the answer to a viewer that was hard
+// to read in 3D. It is not the book's look, and it's one toggle away from it,
+// so what these tests hold is that the deviation stays deliberate and bounded:
+// the book's key is still in the rig, and the fills stay dim relative to it.
+// The other half — shading — needs no test of its own any more: the kit's
+// materials are what render, with nothing between builder and screen left to
+// verify.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { makeLights } from '../src/render/lights.js';

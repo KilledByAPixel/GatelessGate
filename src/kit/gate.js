@@ -40,12 +40,11 @@ export function makeGate({
   const NEMAKI_H = 0.14, NEMAKI_TOP_R = 0.15, NEMAKI_BOTTOM_R = 0.165;
   // THE BURIED TOP. The posts stand at ±width/2, and the kasagi's flat centre
   // span only reaches ±0.364·width — so the posts always sit under the tilted
-  // WINGS, whose undersides lift off y = height as they sweep up. A post cut
-  // to exactly `height` therefore leaves a sliver of daylight between its top
-  // and the lintel (≈0.06–0.08 across the widths in use; Frank's redo-round
-  // note). Run the post up INTO the kasagi instead: 0.12 extra always lands
-  // inside the lintel's own box (max gap ~0.08, box depth 0.18), so the join
-  // is buried and nothing pokes out the top.
+  // WINGS, whose undersides lift off y = height as they sweep up. A post cut to
+  // exactly `height` therefore leaves a sliver of daylight between its top and
+  // the lintel. Run the post up INTO the kasagi instead: the extra always lands
+  // inside the lintel's own box across every width in use, so the join is
+  // buried and nothing pokes out the top.
   const POST_BURY = 0.12;
   for (const sx of [-1, 1]) {
     const postGeo = new THREE.CylinderGeometry(POST_TOP_R, POST_BOTTOM_R, height + POST_BURY, 10);
@@ -59,9 +58,8 @@ export function makeGate({
   }
 
   // KASAGI — flat centre span, two tilted end wings pivoting flush off its
-  // corners. Overall horizontal footprint matches the old flat lintel
-  // (width * 1.4) so k47's tap slab, sized off that same formula, still
-  // covers it.
+  // corners. Overall horizontal footprint matches the old flat lintel, so k47's
+  // tap slab — sized off the same formula — still covers it.
   const KASAGI_LEN = width * 1.4, KASAGI_H = 0.18, KASAGI_D = 0.34;
   const WING_LEN = KASAGI_LEN * 0.24, WING_TILT = 0.18;
   const CENTER_LEN = KASAGI_LEN - 2 * WING_LEN;

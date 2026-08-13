@@ -9,11 +9,11 @@ import {
 
 const ID = 34;
 
-// THE SQUALL. Touching the house does not just call more rain, it calls
-// WEATHER (Frank: "let's have even more rain, and also increase the wind during
-// the swell"): the meadow lies over, the wood works, the shower leans with
-// them, and the sound comes up. Rain falling plumb while the grass flattens is
-// two weathers on one page, which is why the lean is here at all.
+// THE SQUALL. Touching the house does not just call more rain, it calls WEATHER
+// — more rain AND more wind together: the meadow lies over, the wood works, the
+// shower leans with them, and the sound comes up. Rain falling plumb while the
+// grass flattens is two weathers on one page, which is why the lean is here at
+// all.
 //
 // It all rides ONE envelope — the rain's own surge level, which already holds
 // for 2.5s and then decays. A second envelope beside it would be a second thing
@@ -26,13 +26,12 @@ const WIND_HEARD = 0.16;  // the ambience's own level, from the recipe below
 // "Mind is not Buddha. Learning is not the path." Two sentences, and Mumon
 // says Nansen was getting old and forgot to be ashamed.
 //
-// The scene is the study the second sentence walks out of — the RED house
-// the old man has turned his back on — a reading mat before its door with a
-// monk still seated on it, and Nansen standing apart from all of it.
-// Overhead, rain — the verse's own weather: "When the earth is parched rain
-// will fall." The birds that used to cross this sky moved on (Frank is
-// thinking about where); what's left overhead now is indifferent to the
-// sentence that just walked out the door.
+// The scene is the study the second sentence walks out of — the RED house the
+// old man has turned his back on — a reading mat before its door with a monk
+// still seated on it, and Nansen standing apart from all of it. Overhead, rain
+// — the verse's own weather: "When the earth is parched rain will fall." The
+// birds that used to cross this sky moved on; what's left overhead now is
+// indifferent to the sentence that just walked out the door.
 //
 // Touch the house and the shower leans in for a moment. That is the whole of
 // what the words do when they leave the paper — they ask, and the sky
@@ -73,20 +72,19 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   const path = makePath({ from: [4.6, 8.2], to: [5.1, -20], width: 1.3, seed: ID, groundSeed: 21, wander: 0.8 });
   scene.add(path);
   
-  // THE STUDY is the seal now (Frank: "make the little house red, because
-  // it mentions his home") — the one red thing is the home the sentences
-  // walk out of. A building is a big mass, so it takes the DEEP mix, per
-  // the palette's own rule: same hue, less glare.
+  // THE STUDY is the seal now — the case names his home, and the one red thing
+  // is the home the sentences walk out of. A building is a big mass, so it
+  // takes the DEEP mix, per the palette's own rule: same hue, less glare.
   const hut = makeHut({ width: 3.0, height: 2.3, depth: 2.4, color: ACCENT_DEEP });
   hut.position.set(-1.0, 0, -3.6);
   hut.rotation.y = 0.46;
   scene.add(hut);
   
   // THE MAT. Lifted just clear of the ground and drawn in front of it
-  // (polygonOffset) so it never z-fights the terrain or the path. The
-  // scrolls that used to cover it — 22 loose cylinders, then a cord-wood
-  // pile with part-unrolled ribbons — are GONE entirely: three rounds of
-  // Frank asking what the cylinders were is the answer to whether they ever
+  // (polygonOffset) so it never z-fights the terrain or the path. The scrolls
+  // that used to cover it — 22 loose cylinders, then a cord-wood pile with
+  // part-unrolled ribbons — are GONE entirely: three rounds of being asked
+  // three times over what the cylinders were is the answer to whether they ever
   // read as scrolls.
   const matMat = washMaterial({ color: WASH.dry, flat: true });
   matMat.polygonOffset = true;
@@ -97,10 +95,9 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   mat.rotation.y = 0.5;
   scene.add(mat);
   
-  // ...and a student on it (Frank: "let's put a monk sitting down on that
-  // mat, just kinda sitting there"). He faces the shut study — the one who
-  // stayed with the books while Nansen walked off. Seated on the mat's top
-  // face; the sit pose brings its own zabuton.
+  // ...and a student on it, just sitting there. He faces the shut study — the
+  // one who stayed with the books while Nansen walked off. Seated on the mat's
+  // top face; the sit pose brings its own zabuton.
   const student = makeMonk({ height: 1.6, pose: 'sit' });
   student.position.set(0.3, 0.05, -0.7);
   faceMonk(student, hut.position);
@@ -123,11 +120,10 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   eaveChime.group.position.set(1.1, 2.3, 1.5);
   hut.add(eaveChime.group);
   
-  // THE RAIN: the verse's own weather — "When the earth is parched rain
-  // will fall" — already falling over the study, indifferent to the
-  // sentence that walked out of it.
-  // 700 drops rather than 460 — this is the book's rain case and Frank wanted
-  // more of it. It costs nothing in draws (the whole shower is one
+  // THE RAIN: the verse's own weather — "When the earth is parched rain will
+  // fall" — already falling over the study, indifferent to the sentence that
+  // walked out of it. 700 drops rather than 460 — this is the book's rain case
+  // and it wants more of it. It costs nothing in draws (the whole shower is one
   // LineSegments) and nothing in the budget; only vertices.
   const rain = makeRain({ count: 700, seed: ID, width: 26, depth: 26, height: 13 });
   scene.add(rain.points);
@@ -150,13 +146,12 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   ],
   });
 
-  // THE HOUSE IS THE TARGET, and it needs no proxy: it is the biggest thing
-  // on the page and it is the one thing painted red, so the reader already
-  // knows where to aim (Frank: "let's have it so you click on the house — since
-  // the house is red, you click on that to start the rain surge"). The tap was
-  // on the reading MAT, which is a low pale rectangle mostly hidden under a
-  // seated monk, and asked the reader to find the one thing on the page the
-  // composition does not point at.
+  // THE HOUSE IS THE TARGET, and it needs no proxy: it is the biggest thing on
+  // the page and it is the one thing painted red, so the reader already knows
+  // where to aim: the house is the red thing, so the house is what you touch.
+  // The tap was on the reading MAT, which is a low pale rectangle mostly hidden
+  // under a seated monk, and asked the reader to find the one thing on the page
+  // the composition does not point at.
   //
   // Its own meshes, via the kit's tapMeshes — minus the eave chime hung under
   // it, which is a child of the hut and has its own pick() probed first below.

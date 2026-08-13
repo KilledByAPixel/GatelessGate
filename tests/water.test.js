@@ -41,15 +41,15 @@ test('square water stays inside its box', () => {
   }
 });
 
-// THE BUG (Frank, case 39): a ripple started near the bank used to keep growing
-// out over the grass. The rim is pinned now, so no edge vertex can ever leave
-// its rest height however hard the water is hit right beside it.
-// The disc is cut from a uniform grid, so an INTERIOR vertex can land
-// arbitrarily close to the circle — "radius ≈ R" no longer identifies a rim
-// vertex, and such a vertex is legitimately allowed to move by a vanishing
-// amount. The wall itself is exactly zero (asserted analytically below via
-// heightAt); what the mesh has to guarantee is that nothing visible happens
-// out there. 1e-9 world units is roughly a nanometre of pond.
+// THE BUG (case 39): a ripple started near the bank used to keep growing out
+// over the grass. The rim is pinned now, so no edge vertex can ever leave its
+// rest height however hard the water is hit right beside it. The disc is cut
+// from a uniform grid, so an INTERIOR vertex can land arbitrarily close to the
+// circle — "radius ≈ R" no longer identifies a rim vertex, and such a vertex is
+// legitimately allowed to move by a vanishing amount. The wall itself is
+// exactly zero (asserted analytically below via heightAt); what the mesh has to
+// guarantee is that nothing visible happens out there. 1e-9 world units is
+// roughly a nanometre of pond.
 test('a ripple at the very edge never lifts the rim — round', () => {
   const R = 3.2;
   const w = makeWater({ shape: 'round', size: R * 2, seed: 30 });
@@ -85,10 +85,10 @@ test('a ripple at the very edge never lifts the rim — square', () => {
   assert.equal(Math.max(...rim), 0);
 });
 
-// The blob (Frank, case 39: "less square-shaped, more organically shaped,
-// kinda roundish"): a seeded wobbled outline. Its contract is the round
-// surface's contract — honest bound, pinned rim — plus an outline that
-// actually varies, or it would just be a circle with extra steps.
+// The blob (case 39's pond, organic and roundish rather than square): a seeded
+// wobbled outline. Its contract is the round surface's contract — honest bound,
+// pinned rim — plus an outline that actually varies, or it would just be a
+// circle with extra steps.
 test('blob water stays inside its stated circle — the wobble only pulls inward', () => {
   const R = 6.25;
   const w = makeWater({ shape: 'blob', size: R * 2, seed: 39 });
@@ -287,10 +287,10 @@ test('ripples still ride on top of the drift, and the rim pinning still holds fo
   assert.ok(moved, 'the strike vanished under the drift');
 });
 
-// A real sea is never one sine (Frank: "the waves are mostly horizontal...
-// they don't look like normal waves") — drift accepts an array of crossing
-// components. The contract: an object and a one-element array are the SAME
-// surface, and a multi-component sea stays inside the sum of its amplitudes.
+// A real sea is never one sine — a single component renders as parallel bars
+// running one way — so drift accepts an array of crossing components. The
+// contract: an object and a one-element array are the SAME surface, and a
+// multi-component sea stays inside the sum of its amplitudes.
 test('drift: an object and a one-element array produce the identical surface', () => {
   const surface = (drift) => {
     const w = makeWater({ shape: 'square', size: 40, swell: 0, seed: 20, drift });
@@ -351,13 +351,13 @@ test('alphaRamp on: RGBA vertex alpha follows the callback, clamped to 0..1', ()
 
 test('water never joins the shadow map: the surface is flagged noShadow', () => {
   // the ocean-sized sheet outruns the sun's shadow camera; the far-plane cut
-  // painted a phantom triangle of shadow on the open sea (case 20, Frank)
+  // painted a phantom triangle of shadow on the open sea (case 20)
   const w = makeWater({ shape: 'square', size: 90 });
   assert.equal(surfaceOf(w).userData.noShadow, true);
 });
 
 // ---- swellAt (the koi's sampler) -------------------------------------------
-// Frank: a tap above the school must not toss the fish. swellAt is the surface
+// A tap above the school must not toss the fish. swellAt is the surface
 // MINUS the ripple term — idle swell and drift only, still edge-masked — so a
 // koi rides the living water but ignores the reader's finger.
 
@@ -415,9 +415,9 @@ test('a ripple comes back: the pond is alive again after the ring has crossed it
 });
 
 // ---- the idle swell --------------------------------------------------------
-// The wind's breathing (Frank: "a little bit of ambient motion... produced by
-// the wind, so it's not perfectly still... pretty subtle, so you can still
-// see when you click"). Alive enough to read on a still pond, low and slow,
+// The wind's breathing — a little ambient motion, so the water is never
+// perfectly still, but subtle enough that a click still reads.
+// Alive enough to show on a still pond, low and slow,
 // and always well under a tap so a strike still owns the surface.
 
 test('the idle swell is alive but subtle on a pond', () => {
@@ -434,9 +434,9 @@ test('the idle swell is alive but subtle on a pond', () => {
 
 // ---- the stir (hover mini-ripples) -----------------------------------------
 // Moving the pointer across the water stirs it — mini-ripples along the
-// stroke, amplitude from pointer speed, always smaller than a tap (Frank:
-// "a little motion, less than clicking... it will go by mouse velocity,
-// similar to how the grass works"). Same contract as the grass breeze:
+// stroke, amplitude from pointer speed, always smaller than a tap: a little
+// motion, less than a click's, scaled by pointer velocity the way the grass
+// does. Same contract as the grass breeze:
 // a dead zone so a resting hand does nothing, the first fed point only
 // anchors, and everything derives from the fed points and the sim clock.
 
@@ -589,8 +589,7 @@ test('default density resolves the ripple wavelength', () => {
 
 // ---- the wind's other half: how BIG the sea runs --------------------------
 // setRush is pace, setSwellGain is height. The case-20 squall drives both off
-// one envelope (Frank: "can we also try increasing the amplitude of the ocean
-// waves too? So it looks like they're actually getting bigger") — pace alone
+// one envelope, because the waves have to get BIGGER under a squall — pace alone
 // read as the film being sped up rather than as weather.
 test('setSwellGain scales the swell, and hands it back exactly', () => {
   const w = makeWater({

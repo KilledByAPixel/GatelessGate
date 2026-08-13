@@ -123,12 +123,12 @@ test('unquoted searching finds the case a word came from', () => {
 });
 
 test('results come back in book order, always', () => {
-  // Frank, reading a result list: "they should always show a number order."
-  // The list is rendered exactly like the Contents — numeral in the left
-  // column — so a reader scans it as the Contents with rows removed, and
-  // numbers that jump around read as a fault rather than as a ranking.
-  // Relevance ordering (title hits first) is deliberately gone; `score` is
-  // still computed, and still picks `where` and the snippet.
+  // Results always run in number order. The list is rendered exactly like the
+  // Contents — numeral in the left column — so a reader scans it as the
+  // Contents with rows removed, and numbers that jump around read as a fault
+  // rather than as a ranking. Relevance ordering (title hits first) is
+  // deliberately gone; `score` is still computed, and still picks `where` and
+  // the snippet.
   for (const q of ['man', 'sit', 'mu', 'joshu', 'monk', 'the']) {
     const got = ids(q);
     assert.ok(got.length > 1, `${q} needs several hits to be worth ordering: ${got.length}`);

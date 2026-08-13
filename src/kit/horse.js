@@ -3,53 +3,37 @@ import { INK_LIT } from '../palette.js';
 import { makeQuadruped } from './quadruped.js';
 import { mergeSimple } from './scatter.js';
 
-// A horse (case 45): THE NECK IS THE WEDGE. Rebuilt against local/refs/horse.png
-// after the first model read as a llama — the old neck stood nearly vertical
-// (29 degrees off plumb) with the head perched 1.4 withers-heights in the air.
-// What says HORSE in silhouette, counted off the reference:
+// A horse (case 45): THE NECK IS THE WEDGE. Rebuilt against
+// local/refs/horse.png after the first model read as a llama — the old neck
+// stood nearly vertical with the head perched a full extra withers-height in
+// the air. What says HORSE in silhouette, counted off the reference:
 //
-//   1. THE NECK WEDGE — a tapered slab leaning ~45 degrees forward from deep
-//      chest to poll, broad where it leaves the body, narrow at the head. The
-//      shared plan aims the neck from chest anchor to head centre, so the LEAN
-//      is not tuned by eye: head.up/fwd are DERIVED below from the anchor the
-//      plan uses (cy = bodyY + 0.04, cz = 0.4 * bodyLen) plus a stated rise
-//      and NECK_LEAN. The plan's fixed 0.85x taper is nowhere near a wedge,
-//      so the neck's GEOMETRY is re-cut locally (0.06/0.15 top/base radius —
-//      thickened from 0.043/0.10 in the later models-tweaks round);
-//      transform, name and material stay the plan's.
-//   2. A SMALL HEAD, carried forward off the top of that line, poll around
-//      1.17x withers (was 1.4x — llama). ONE PIECE now: the box skull +
-//      cylinder muzzle pair read as parts ("if there was a way to nail the
-//      vertices together to create a smoother shaped head" — Frank), so the
+//   1. THE NECK WEDGE — a tapered slab leaning forward from deep chest to poll,
+//      broad where it leaves the body, narrow at the head. The shared plan aims
+//      the neck from chest anchor to head centre, so the LEAN is not tuned by
+//      eye: head.up/fwd are DERIVED below from the anchor the plan uses, plus a
+//      stated rise and NECK_LEAN. The plan's own taper is nowhere near a wedge,
+//      so the neck's GEOMETRY is re-cut locally; transform, name and material
+//      stay the plan's.
+//   2. A SMALL HEAD, carried forward off the top of that line. ONE PIECE: the
+//      box skull and cylinder muzzle read as two parts bolted together, so the
 //      head is a single koi-style ring loft from poll to nostril, tapering
-//      continuously, tilted down the neck line by the same head.tilt. The
-//      snout mesh is GONE (11 meshes now, was 12 — back when k45's scene was
-//      frozen at 148/150 draws, every mesh this horse shed mattered; k45 now
-//      bakes its whole horse to a single mesh with `bakeStatic`, but the
-//      horse is shared by other cases too, and an unbaked one still spends
-//      what it spends).
-//   3. DEEP CHEST, RISING BELLY — the barrel is pitched nose-down a few
-//      degrees (body.rotation.x past PI/2), so the underline climbs toward
-//      the hind legs while the broad neck base fills the withers. Costs zero
-//      meshes; the leg-top bury (0.06h) swallows the tilt at both axles.
-//   4. SLIM LEGS with the hind fold at a LOW hock — legs.knee at last. The
-//      old header left the knee off for budget; this pass PAYS for it by
-//      merging the two front posts into one mesh and the two ears into one
-//      (mergeSimple, transforms baked — nothing here animates them), so the
-//      count holds at 12 meshes — under the inverted-hull outline system
-//      this was written against (the hull, since deleted), 24 draws, the
-//      number k45's frozen 148 used to leave no room to spend on (k45 has
-//      since baked its horse down to one mesh, so the ledger below is what
-//      an unbaked horse still costs any other case that stages it — one
-//      draw per mesh, now that the hull is gone).
-//   5. TAIL OFF THE CROUP — the strand root moves up onto the rump's top-rear
-//      (up 0.135, back 0.41 — solved at 0.185/0.44 first, then re-eyeballed
-//      in the models-tweaks round; the join stays buried, not floating),
-//      instead of a stub at rear-centre height.
+//      continuously, tilted down the neck line by head.tilt.
+//   3. DEEP CHEST, RISING BELLY — the barrel is pitched nose-down a few degrees
+//      (body.rotation.x past PI/2), so the underline climbs toward the hind
+//      legs while the broad neck base fills the withers. Costs zero meshes; the
+//      leg-top bury swallows the tilt at both axles.
+//   4. SLIM LEGS with the hind fold at a LOW hock. The knee was left off for
+//      budget once, and is paid for by merging the two front posts into one
+//      mesh and the two ears into one (mergeSimple, transforms baked — nothing
+//      here animates them).
+//   5. TAIL OFF THE CROUP — the strand root sits high on the rump's top-rear
+//      with its join buried, rather than as a stub at rear-centre height.
 //
-// Mesh ledger (11, was 12 — the snout merged into the head loft):
-//   body, front-leg pair (merged), 2 thighs, 2 shins, neck, head,
-//   ear pair (merged), 2 tail strand segments.
+// Mesh ledger: body, front-leg pair (merged), 2 thighs, 2 shins, neck, head,
+// ear pair (merged), 2 tail strand segments. k45 bakes its own horse down to a
+// single mesh with `bakeStatic`, but the horse is shared, and an unbaked one
+// still spends what it spends.
 const NECK_LEAN = Math.PI / 4;   // off vertical, chest anchor -> head centre
 const NECK_RISE = 0.28;          // the vertical run of that line, x height
 const BODY_PITCH = 0.06;         // rad nose-down: deep chest, belly climbs aft
@@ -110,7 +94,7 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
 
   // ---- ONE head: poll to nostril in a single loft -------------------------
   // The box skull + cylinder muzzle read as two parts bolted together; this
-  // nails the vertices into one continuous form (Frank's ask). Rings of
+  // nails the vertices into one continuous form. Rings of
   // [z, halfW, halfH, yOff] in units of height, head-local: +z out the nose,
   // the mesh transform still carrying head.tilt down the neck line. Full at
   // the cheek, one unbroken taper to a blunt nostril — same koi-style loft,

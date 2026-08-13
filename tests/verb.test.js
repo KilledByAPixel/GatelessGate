@@ -4,9 +4,9 @@ import { reverbIR, mulberry32, ROOMS } from '../src/audio/verb.js';
 
 test('the noise source never collapses into a cycle', () => {
   // Regression: the previous LCG's multiply overflowed 2^53, and the degraded
-  // sequence fell into ONE shared 10,466-sample cycle for every seed — at
-  // 48 kHz, a pattern repeating 4.6x/sec. Frank heard it as "wah wah wah" in
-  // every noise bed, and the room carried it as flutter-echo.
+  // sequence fell into ONE shared 10,466-sample cycle for every seed — at 48
+  // kHz, a pattern repeating 4.6x/sec. It was audible as a wah in every noise
+  // bed, and the room carried it as flutter-echo.
   const rand = mulberry32(777);
   const seen = new Set();
   for (let i = 0; i < 200000; i++) {
@@ -56,15 +56,14 @@ test('reverbIR channels decorrelate and the tail darkens', () => {
 });
 
 test('the room is outdoor air, not a stone cistern', () => {
-  // The book is a garden. A 5-second tail at 75% wet made every drip sound
-  // like a cistern (Frank: "it sounds almost like I'm in a cave"). Short and
-  // dark is what outdoors sounds like.
+  // The book is a garden. A 5-second tail at 75% wet made every drip sound like
+  // a cistern — an outdoor scene that sounded like a cave. Short and dark is
+  // what outdoors sounds like.
   const ir = reverbIR(48000, 1.8, 1013);
   assert.equal(ir.length, Math.round(1.8 * 48000));
 
-  // Darker at the HEAD than the old room was — the previous curve opened at
-  // 4.2 kHz, which is a tiled bathroom. Zero-crossing rate over the first
-  // 10 ms stands in for brightness.
+  // Darker at the HEAD than the old room was — the previous curve opened high
+  // enough to read as a tiled bathroom.
   const zc = (arr) => { let c = 0; for (let i = 1; i < arr.length; i++) if ((arr[i] >= 0) !== (arr[i - 1] >= 0)) c++; return c; };
   // Zero-crossing rate over the first 10 ms as a brightness proxy. This is
   // NOT "fc crossings a second" — that estimate assumed something closer to

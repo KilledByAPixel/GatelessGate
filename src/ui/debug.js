@@ -13,18 +13,17 @@ import { DRAW_BUDGET, DRAW_WARN } from '../budget.js';
 // Everything here is applied to whatever scene is CURRENTLY active and re-applied
 // after every scene swap, so settings survive moving between cases.
 
-// Defaults are the INK & SEAL preset: depth-driven ink, real contact
-// shadows, paper pass at full grain, no quantisation. One red seal
-// per koan. The version suffix on KEY below is bumped when a default LOOK
-// changes, since a stored state would otherwise mask it: v3 turned the ink
-// outlines on (the hull, since deleted), v4 dropped ink strength to 0.5,
-// v5 turned the hull off by default (ink width 0), v6 is Frank's live tune
-// of the weather: more wind in the grass, a broader and slower-drifting
-// gust, patchier placement, and a hairline of hull ink back on (all Frank).
-// v7 is the weather retuned again once the TREES started answering these same
-// three numbers (kit/foliage.js): grass wind 1.5 -> 3.0 and the gust patch
-// 0.01 -> 0.08, a much tighter patch so a gust crosses as weather rather than
-// lifting the whole meadow and every tree in it at once.
+// Defaults are the INK & SEAL preset: depth-driven ink, real contact shadows,
+// paper pass at full grain, no quantisation. One red seal per koan. The version
+// suffix on KEY below is bumped when a default LOOK changes, since a stored
+// state would otherwise mask it: v3 turned the ink outlines on (the hull, since
+// deleted), v4 dropped ink strength to 0.5, v5 turned the hull off by default
+// (ink width 0), v6 was a live tune of the weather: more wind in the grass, a
+// broader and slower-drifting gust, patchier placement, and a hairline of hull
+// ink back on. v7 is the weather retuned again once the TREES started answering
+// these same three numbers (kit/foliage.js): grass wind 1.5 -> 3.0 and the gust
+// patch 0.01 -> 0.08, a much tighter patch so a gust crosses as weather rather
+// than lifting the whole meadow and every tree in it at once.
 const KEY = 'gateless-gate-debug-v7';
 // Persistence is opt-in. By default the workbench opens on the shipped defaults
 // every reload, so a quick test can never quietly leave the look changed the next
@@ -48,8 +47,8 @@ const DEV_KEY = 'gateless-gate-dev';
 // look setting, so it is remembered unconditionally and "reset all" (which only
 // walks CONTROLS) never touches it.
 //
-// DEVELOPER MODE GATES THE RESTORE, not the remembering (Frank). The flag is
-// written whenever the panel is toggled, but a reload only reopens the panel if
+// DEVELOPER MODE GATES THE RESTORE, not the remembering. The flag is written
+// whenever the panel is toggled, but a reload only reopens the panel if
 // developer mode is also on — so a reader who once opened the workbench out of
 // curiosity gets the book back on the next visit, while the one machine that
 // has developer mode ticked keeps its workbench where it left it.
@@ -470,8 +469,8 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
       // `grain` is the master switch for paper of any kind; `pPaper` only picks
       // which one draws it. Without this the two silently covered for each
       // other — turning the paper PASS off just handed the same texture to the
-      // DOM overlay, so the button looked broken (Frank) and there was no way
-      // to get a clean look at the scene without finding and clearing both.
+      // DOM overlay, so the button looked broken and there was no way to get a
+      // clean look at the scene without finding and clearing both.
       post.set('paper', state.pPaper && state.grain);
       post.param('quantize', 'uSteps', state.quantSteps);
       post.param('quantize', 'uAmount', state.quantAmt);

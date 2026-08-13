@@ -113,12 +113,12 @@ test('strike() sets a subtle swing that decays back near zero', () => {
   assert.equal(swing.rotation.x, 0);
 
   b.strike();
-  // measured against the strike's OWN energy rather than absolutes derived
-  // from A0. The bell's throw was doubled once already (Frank: "it's just not
-  // enough — about twice as much") and every hardcoded number here moved with
-  // it; stated as fractions, these say what they mean and survive the next
-  // retune. What is actually being claimed: a strike lands real energy, the
-  // bell visibly swings, it never exceeds its own clamp, and it dies away.
+  // measured against the strike's OWN energy rather than absolutes derived from
+  // A0. The bell's throw was doubled once already — it simply was not enough —
+  // and every hardcoded number here moved with it; stated as fractions, these
+  // say what they mean and survive the next retune. What is actually being
+  // claimed: a strike lands real energy, the bell visibly swings, it never
+  // exceeds its own clamp, and it dies away.
   const struck = b.swinging();
   assert.ok(struck > 0.03, `energy lands with the strike: ${struck}`);
 
@@ -228,9 +228,9 @@ test('the diorama is a hall, a hanging bell, and three monks turned toward it', 
   }
   assert.equal(frag.strikes, 0, 'nothing has been struck yet');
   // He is staged with his BACK to it. This pinned 0.42 — caught half round —
-  // until Frank turned him the whole way away (k16.js: "hacked to face away at
+  // until he was turned the whole way away (k16.js: "hacked to face away at
   // first"), which makes the summons a bigger movement and the strike worth
-  // watching. His staging is the authority; the number followed it. What the
+  // watching. The staging is the authority; the number followed it. What the
   // assertion is actually for is unchanged and is the pair with the strike test
   // below: he must NOT already be facing the bell at build, or the one piece of
   // motion this case has is over before the reader touches anything.
@@ -335,7 +335,7 @@ test('tapping the bell swings it, rings the temple preset, and the elder finishe
   let frag = root.fragment();
   assert.equal(frag.strikes, 1, 'the strike lands');
   assert.equal(rings.length, 1, 'and it is AUDIBLE — one ring per strike');
-  assert.equal(rings[0].preset, 'temple', 'the bonshō rings Frank\'s temple preset — see task-12');
+  assert.equal(rings[0].preset, 'temple', 'the bonshō rings the temple preset — see task-12');
 
   for (let i = 1; i <= 120; i++) root.update(1 / 60, i / 60);
   frag = root.fragment();

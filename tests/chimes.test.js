@@ -77,11 +77,10 @@ test('all four chimes come up, at a spread of sizes', () => {
 
 test('the four hang at the SAME apparent size, whatever family they come from', () => {
   // THE BUG THIS FILE EXISTS TO STOP COMING BACK. A fūrin is 2.1x its `size`
-  // tall and a bronze cylinder 0.98x, so one shared band of `size` numbers
-  // hung the cylinders at half the scale of everything beside them (Frank: "the
-  // cylinder ones are too small... maybe we're usually using small ones for
-  // some reason"). Both are sized from a world height now, so a reader cannot
-  // tell which builder made which by how big it is.
+  // tall and a bronze cylinder 0.98x, so one shared band of `size` numbers hung
+  // the cylinders at half the scale of everything beside them. Both are sized
+  // from a world height now, so a reader cannot tell which builder made which
+  // by how big it is.
   const byKind = {};
   for (let s = 1; s <= 60; s++) {
     for (const c of chimesOf(makeHut({ chimes: s }))) (byKind[kindOf(c)] ||= []).push(heightOf(c));
@@ -100,7 +99,7 @@ test('the four hang at the SAME apparent size, whatever family they come from', 
 });
 
 test('one or two, on an even coin', () => {
-  // Frank: "fifty percent of the time it should just be one chime."
+  // Half the time it should be a single chime.
   let ones = 0, n = 400;
   for (let s = 1; s <= n; s++) if (chimesOf(makeHut({ chimes: s })).length === 1) ones++;
   const pct = (100 * ones) / n;
@@ -170,10 +169,10 @@ test('two chimes never swing in lockstep, and go one either side', () => {
 const swing = (g, secs = 20) => { for (let i = 0; i < 60 * secs; i++) g.updateChimes(1 / 60, i / 60); };
 
 test('a hung chime makes sound without being asked to', () => {
-  // `chimes: 7` is the whole instruction (Frank: "chimes should make sound by
-  // default"). main.js hands the kit the app's one engine at startup and the
-  // chime finds it at strike time — no second word at the call site, and no
-  // silent chime because somebody forgot one.
+  // `chimes: 7` is the whole instruction — a hung chime sounds by default.
+  // main.js hands the kit the app's one engine at startup and the chime finds
+  // it at strike time — no second word at the call site, and no silent chime
+  // because somebody forgot one.
   const struck = [];
   setChimeAudio({ chimeStrike: (o) => struck.push(o) });
   try {
@@ -242,8 +241,8 @@ test('FURIN_REACH bounds BOTH forms, not just the single it was derived from', (
 
 // ---- the two things that make it a chime rather than an ornament -----------
 // Both of these were missing from the first cut: the thing hung correctly, in
-// the right place, at the right size, and then sat there (Frank: "they're not
-// moving or anything, they're not making sound... you can't click on them").
+// the right place, at the right size, and then sat there: not moving, not
+// sounding, not clickable.
 
 test('a hung chime is found by a sweep of the scene it ends up in', () => {
   // How main.js reaches them at all. It has a scene and nothing else — the

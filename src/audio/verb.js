@@ -1,18 +1,17 @@
 // The room. Every pitched voice in the book sounds inside this one reverb:
-// seeded noise shaped by an exponential decay, convolved — the technique from
-// Frank's music_tool and loopsong projects, where it is the difference between
-// an instrument and an alarm. Two refinements for this palette: the noise is
-// lowpassed before enveloping (a dark tail, not hiss), and the filter closes
-// further along the tail, the way real rooms swallow highs first.
-// Deterministic: same seeds, same room, every run.
+// seeded noise shaped by an exponential decay, convolved — the technique that
+// makes the difference between an instrument and an alarm. Two refinements for
+// this palette: the noise is lowpassed before enveloping (a dark tail, not
+// hiss), and the filter closes further along the tail, the way real rooms
+// swallow highs first. Deterministic: same seeds, same room, every run.
 
-// The seeded noise source for every generated buffer in the audio layer.
-// NOT the classic integer LCG: in JS floats its multiply overflows 2^53 and
-// the degraded sequence collapses into ONE shared 10,466-sample cycle — which
-// at 48 kHz is a pattern repeating 4.6 times a second. Frank heard the bug
-// verbatim ("wah wah wah") in every noise bed, and the reverb tail carried it
-// as a 4.6 Hz flutter-echo. Mulberry32 is 32-bit-safe (Math.imul) with a full
-// 2^32 period. Returns [0, 1).
+// The seeded noise source for every generated buffer in the audio layer. NOT
+// the classic integer LCG: in JS floats its multiply overflows 2^53 and the
+// degraded sequence collapses into ONE shared 10,466-sample cycle — which at 48
+// kHz is a pattern repeating 4.6 times a second. It was audible as a wah in
+// every noise bed, and the reverb tail carried it as a 4.6 Hz flutter-echo.
+// Mulberry32 is 32-bit-safe (Math.imul) with a full 2^32 period. Returns [0,
+// 1).
 export function mulberry32(seed) {
   let s = seed >>> 0;
   return () => {
@@ -46,12 +45,11 @@ export function reverbIR(sampleRate, seconds, seed, fcScale = 1) {
   return out;
 }
 
-// The two rooms. `open` is the book's one outdoor air, unchanged — 1.8
-// seconds, not five (see makeVerb's own comment below for why). `snow` is
-// case 41's: fresh snow is an open-cell absorber, so the tail is half the
-// length and the head is darker — the hush of a snowfield is a ROOM
-// property, not a volume property. PROVISIONAL pending Frank's ear on the
-// case.
+// The two rooms. `open` is the book's one outdoor air, unchanged — 1.8 seconds,
+// not five (see makeVerb's own comment below for why). `snow` is case 41's:
+// fresh snow is an open-cell absorber, so the tail is half the length and the
+// head is darker — the hush of a snowfield is a ROOM property, not a volume
+// property. PROVISIONAL pending an ear on the case.
 export const ROOMS = {
   open: { seconds: 1.8, fcScale: 1 },
   snow: { seconds: 0.9, fcScale: 0.45 },

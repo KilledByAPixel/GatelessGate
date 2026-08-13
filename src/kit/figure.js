@@ -56,15 +56,15 @@ const CUFF_FLARE = 1.14;
 // `r0` is the shoulder, `r1` the wrist; everything between is expressed in
 // terms of those two so a caller retuning either still gets the same shape.
 // `flare` overrides the cuff lip: 1 = a flush mouth — what an ELBOW wants,
-// since the flare is a sleeve-mouth thing and a joint wearing one reads as
-// a second wrist (Frank, on the folded arms).
+// since the flare is a sleeve-mouth thing and a joint wearing one reads as a
+// second wrist, which is what the folded arms showed.
 export function sleeve({ height = 1.6, len = 0.34 * 1.6, r0 = 0.035, r1 = 0.065, flare = CUFF_FLARE, mat }) {
   const a = r0 * height;              // shoulder
   const b = r1 * height;              // wrist
   // flare <= 1 means the mouth is a JOINT (an elbow), not a cuff: the whole
   // lip-nip-belly shaping goes with it — even a flush lip kept the roll and
-  // read as "still kind of a weird flare on their elbow" (Frank). A joint
-  // sleeve is a plain taper, nothing else.
+  // read as a weird flare on the elbow. A joint sleeve is a plain taper,
+  // nothing else.
   const rows = flare > 1 ? [
     [0, -len],                        // the mouth of the cuff, closed
     [b * flare, -len],                // THE CUFF LIP — the widest cloth on the arm
@@ -82,12 +82,11 @@ export function sleeve({ height = 1.6, len = 0.34 * 1.6, r0 = 0.035, r1 = 0.065,
     [0, 0],
   ];
   const profile = rows.map(([r, y]) => new THREE.Vector2(r, y));
-  // THE SHOULDER BALL. The sleeve hinges at its origin, and any rotation
-  // tips its top ring away from the robe — a wedge of daylight at every
-  // posed arm ("the joints show there's a gap where the arm attaches" —
-  // Frank). A ball centred exactly on the hinge is rotation-invariant, so
-  // the join stays covered at ANY arm pose; merged into the sleeve's own
-  // geometry, it costs no mesh.
+  // THE SHOULDER BALL. The sleeve hinges at its origin, and any rotation tips
+  // its top ring away from the robe — a wedge of daylight at every posed arm, a
+  // visible gap where the arm attaches. A ball centred exactly on the hinge is
+  // rotation-invariant, so the join stays covered at ANY arm pose; merged into
+  // the sleeve's own geometry, it costs no mesh.
   const ball = new THREE.SphereGeometry(a * 1.22, 7, 6);   // 1.35 read as bulky pauldrons on the seated figure
   const arm = new THREE.Mesh(
     mergeSimple([new THREE.LatheGeometry(profile, 7), ball]), mat);
@@ -95,11 +94,11 @@ export function sleeve({ height = 1.6, len = 0.34 * 1.6, r0 = 0.035, r1 = 0.065,
   return arm;
 }
 
-// A head: slightly OBLONG, not a ball — narrowed a touch and stretched tall
-// ("slightly less spherical, slightly more oblong, shaped like a head is" —
-// Frank). Baked into the GEOMETRY, not mesh.scale: buddha.js parents its
-// topknot and urna to this mesh, and a scaled mesh would distort them.
-// Exported so those marks can place themselves against the true skull shell.
+// A head: slightly OBLONG, not a ball — narrowed a touch and stretched tall —
+// less spherical, more oblong, shaped the way a head is. Baked into the
+// GEOMETRY, not mesh.scale: buddha.js parents its topknot and urna to this
+// mesh, and a scaled mesh would distort them. Exported so those marks can place
+// themselves against the true skull shell.
 export const HEAD_OBLONG = [0.8, 1.10, 1.0];
 export function sphereHead({ height = 1.6, r = 0.09, mat }) {
   const geo = new THREE.SphereGeometry(r * height, 14, 10);
@@ -180,41 +179,38 @@ const STAND_PROFILE = [
 // hero monks wear, so a background figure at fog distance is the same person,
 // simplified — not a different species of pawn.
 //
-// THE LAP SHELF, then THE KNEES. The first seated profile tapered
-// continuously from hem to collar and Frank read it exactly right: "like
-// they're wearing a fat dress — like they're not sitting at all." The lap
-// shelf fixed the vertical read — a wide low block, a near-horizontal lap
-// turn, the torso rising visibly INSET — but the block itself was still a
-// solid of revolution, and Frank read THAT exactly right too: "they need,
-// like, legs." A figure in lotus (see local/refs/buddha.png) is widest at
-// the KNEES, left and right, with a valley between them where the hands
-// rest; a radially symmetric pool can never say "folded legs". So the lathe
-// here is only the cloth core — the shins and the pooled robe BETWEEN the
-// knees — pulled in to 0.25·h, and the knees are two ellipsoids at ±x merged
-// into the same geometry by `seatedBodyGeometry` below (one mesh; the same
-// move buddha.js's round-2 statue made before it was folded into this kit).
-// Same ten indices, same roles as STAND_PROFILE, so `kneel`'s halfway blend
-// stays honest — the "long run up the skirt" is here the run up the shins,
-// and the "skirt gathering" is the lap turn itself.
+// THE LAP SHELF, then THE KNEES. The first seated profile tapered continuously
+// from hem to collar and read as a fat dress rather than as anyone sitting
+// down. The lap shelf fixed the vertical read — a wide low block, a
+// near-horizontal lap turn, the torso rising visibly INSET — but the block
+// itself was still a solid of revolution, which reads as a figure with no legs.
+// A figure in lotus (see local/refs/buddha.png) is widest at the KNEES, left
+// and right, with a valley between them where the hands rest; a radially
+// symmetric pool can never say "folded legs". So the lathe here is only the
+// cloth core — the shins and the pooled robe BETWEEN the knees — pulled in to
+// 0.25·h, and the knees are two ellipsoids at ±x merged into the same geometry
+// by `seatedBodyGeometry` below (one mesh; the same move buddha.js's round-2
+// statue made before it was folded into this kit). Same ten indices, same roles
+// as STAND_PROFILE, so `kneel`'s halfway blend stays honest — the "long run up
+// the skirt" is here the run up the shins, and the "skirt gathering" is the lap
+// turn itself.
 export const SIT_PROFILE = [
-  // Round five made the base HONEST (Frank: "it IS a cushion — okay, cushion
-  // is good, but make it flat, about a quarter the height, and give them
-  // butt cheeks and a leg shape so it looks like they're sitting ON it").
-  // The lathe here is now only the ROBE — a slim cloth core whose hem pools
-  // on the cushion's top, not on the ground. Everything the robe drapes
-  // over is its own ellipsoid, merged in by seatedBodyGeometry below: a
-  // flat zabuton at y=0, two cheeks resting on it at the rear, the crossed
-  // shins as a wide bar in front, and the two knee crests. The lathe stays
-  // inside all of them, so what reads at distance is figure-on-cushion.
+  // Round five made the base HONEST: it IS a cushion, so it is flat, about a
+  // quarter the old height, with a leg shape above it so the figure reads as
+  // sitting ON something. The lathe here is now only the ROBE — a slim cloth
+  // core whose hem pools on the cushion's top, not on the ground. Everything
+  // the robe drapes over is its own ellipsoid, merged in by seatedBodyGeometry
+  // below: a flat zabuton at y=0, two cheeks resting on it at the rear, the
+  // crossed shins as a wide bar in front, and the two knee crests. The lathe
+  // stays inside all of them, so what reads at distance is figure-on-cushion.
   [0.020, 0.035],   // hem centre, closed on the cushion's top
   [0.150, 0.040],   // the hem pooling over the seat
-  [0.158, 0.085],   // the robe over the hips — slimmed in round six ("that round
-                    //   thing that's their whole bottom part... a little smaller")
+  [0.158, 0.085],   // the robe over the hips — slimmed in round six, where the
+                    //   seated rear read as one round mass
   [0.150, 0.150],   // rising over the leg block toward the lap
   [0.140, 0.175],   // THE LAP — a near-horizontal shelf in to the waist
-  // torso rows carry the STANDING profile's widths (round seven: "the upper
-  // torso should be shaped more like the standing one, similar size" — the
-  // seated blouse/chest ran ~6% fatter and read as a heavier man)
+  // torso rows carry the STANDING profile's widths (round seven: the seated
+  // blouse and chest ran ~6% fatter and read as a heavier man)
   [0.112, 0.220],   // OBI — the tie
   [0.134, 0.265],   // the blouse pushed up over the knot
   [0.121, 0.425],   // chest — one long VERTICAL run: a meditator sits straight
@@ -222,8 +218,8 @@ export const SIT_PROFILE = [
   [0.058, 0.478],   // the neck opening
 ];
 
-// THE SEAT, in fractions of height. Frank's reading, round five: the base
-// IS a cushion, so build it as one — and put a body on it.
+// THE SEAT, in fractions of height. The base IS a cushion, so it is built as
+// one — and there is a body on it.
 //   CUSHION — a flat zabuton: a quarter the height of the old pooled base,
 //     wider than everything above it, so a rim of it shows all round and
 //     the figure reads as sitting ON something rather than melting into it.
@@ -231,30 +227,28 @@ export const SIT_PROFILE = [
 //   KNEES — the two crests at ±x, long axis yawed forward-out the way a
 //     folded thigh lies; still the widest thing the figure owns.
 // (Round six cut the CHEEK lobes: with the hip ring slimmed they added
-// nothing but width where Frank wanted less — the robe's own rear reads.)
+// nothing but width where less was wanted — the robe's own rear reads.)
 const CUSHION = { r: 0.26, rTop: 0.235, hh: 0.042 };
 const SHINS = { r: 0.09, scale: [2.3, 0.62, 1.0], y: 0.075, z: 0.10 };
 const KNEE = { r: 0.09, scale: [1.5, 0.75, 1.1], x: 0.18, y: 0.095, z: 0.095, yaw: 0.5 };
 
-// The whole seated body — robe lathe + cushion + cheeks + shins + knees —
-// as ONE geometry (one mesh, no extra draws anywhere it is used).
-// Exported because the assembly's instanced crowd must be the same person:
-// it feeds this straight into its InstancedMesh (still one draw call).
-// `width` is the radial squeeze (`stout`, or the crowd's SLIM): it thins the
-// lathe and the cushion around the axis and carries the mass centres inward,
-// but the flesh masses keep their own size — at fog distance the knees and
-// the cushion rim are the events that must survive.
-// `cushion: false` drops the zabuton — for a case that already lays its own
-// mat under the figure (k10/k17/k30/k34). Two slabs of nearly the same size
-// stacked read as one thing doubled, not as a cushion on a mat: Frank found
-// exactly that in case 17 ("an extra thin rectangular shaped thing below this
-// guy"). The body's other masses are unchanged, so he still sits on his own
-// legs at the same height either way.
-// `profile` defaults to the whole seated body. The waist hinge passes the rows
-// BELOW the sash instead, so the lower half it builds is still a real seated
-// body — cushion, shins and knees included — rather than a bare robe lathe. All
-// three of those masses live under the sash, so truncating the profile does not
-// lose any of them.
+// The whole seated body — robe lathe + cushion + cheeks + shins + knees — as
+// ONE geometry (one mesh, no extra draws anywhere it is used). Exported because
+// the assembly's instanced crowd must be the same person: it feeds this
+// straight into its InstancedMesh (still one draw call). `width` is the radial
+// squeeze (`stout`, or the crowd's SLIM): it thins the lathe and the cushion
+// around the axis and carries the mass centres inward, but the flesh masses
+// keep their own size — at fog distance the knees and the cushion rim are the
+// events that must survive. `cushion: false` drops the zabuton — for a case
+// that already lays its own mat under the figure (k10/k17/k30/k34). Two slabs
+// of nearly the same size stacked read as one thing doubled, not as a cushion
+// on a mat — case 17 showed exactly that, an extra thin slab under the figure.
+// The body's other masses are unchanged, so he still sits on his own legs at
+// the same height either way. `profile` defaults to the whole seated body. The
+// waist hinge passes the rows BELOW the sash instead, so the lower half it
+// builds is still a real seated body — cushion, shins and knees included —
+// rather than a bare robe lathe. All three of those masses live under the sash,
+// so truncating the profile does not lose any of them.
 export function seatedBodyGeometry({
   height, width = 1, segments = 10, cushion: withCushion = true, profile = SIT_PROFILE,
 } = {}) {
@@ -303,50 +297,46 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // Everything a stance decides, in fractions of height. `sit` and `stand` are
 // the two authored poses; `kneel` is exactly halfway between them, which is
 // what kneeling is — the hem spread of a folded figure carried at most of a
-// standing figure's height.
-// `staffX` is where the elder's staff plants, laterally, in fractions of
-// height — and it is per-stance because the hem is. A standing hem reaches
-// 0.212h and the staff at 0.26h stands clear of it; a seated figure's knees
-// reach 0.3375h, so the same 0.26h planted the staff INSIDE the cloth and it emerged
-// through the robe like a stick stuck in a tent (k17's report — fixed there
-// by hand first, at 0.58/1.6h = 0.3625h, which is the number promoted here:
-// past the hem plus the staff's own radius, so it reads as the teacher's
-// staff set down beside him, within reach). Standing keeps 0.26 exactly —
-// every standing elder in the book is framed around it.
-// `staffAng` is the BEARING of the staff plant, radians around +y off the
-// local +x axis (toward +z). It exists because of a systematic staging
-// coincidence the grip audit found: cases aim a standing elder at something
-// up-scene with aimMonk (which turns local +x to the target) and the shipped
-// camera looks over his shoulder at the same target — so a staff planted ON
-// the +x axis sits exactly on the camera→figure→target line and reads as
-// growing out of the wearer's hat (k11/k19/k21/k22/k27/k31/k34/k36/k39).
-// Swinging the standing plant off the facing axis (0.2 rad ≈ 11° shipped —
-// it began near 50° and was eased back in a later tweaks round) keeps it
-// the same distance out — past the hem, beside the resting sleeve — but
-// breaks the alignment for over-the-shoulder cameras. Seated figures face local +z
-// (the folded sleeves), so their +x plant already IS the side plant and
-// stays at 0. Cases with a bearing-sensitive staging can override with the
-// `staffAng` option (additive; 0 = the old on-axis plant).
-// `foldUpper`/`foldFore` are the folded-arm pitches (radians off plumb,
-// toward local +z) for the two-piece arm — the upper's hang and the
-// forearm's bend at the elbow — and they are per-stance because the hands'
-// destination is: seated hands rest DOWN in the lap (a gentle bend), while
-// standing hands meet at the waist (the forearm swings nearly horizontal).
-// The inward swing (the cuffs crossing to the centre) is the same for all.
+// standing figure's height. `staffX` is where the elder's staff plants,
+// laterally, in fractions of height — and it is per-stance because the hem is.
+// A standing hem clears the standing plant comfortably; a seated figure's knees
+// reach much further out, so the SAME plant put the staff inside the cloth and
+// it emerged through the robe like a stick stuck in a tent. Case 17 fixed that
+// by hand first, and its number is what the seated stance carries here: past
+// the hem plus the staff's own radius, so it reads as the teacher's staff set
+// down within reach. The standing plant is untouched — every standing elder in
+// the book is framed around it. `staffAng` is the BEARING of the staff plant,
+// radians around +y off the local +x axis (toward +z). It exists because of a
+// systematic staging coincidence the grip audit found: cases aim a standing
+// elder at something up-scene with aimMonk (which turns local +x to the target)
+// and the shipped camera looks over his shoulder at the same target — so a
+// staff planted ON the +x axis sits exactly on the camera→figure→target line
+// and reads as growing out of the wearer's hat
+// (k11/k19/k21/k22/k27/k31/k34/k36/k39). Swinging the standing plant off the
+// facing axis keeps it the same distance out — past the hem, beside the resting
+// sleeve — but breaks the alignment for over-the-shoulder cameras. Seated
+// figures face local +z (the folded sleeves), so their +x plant already IS the
+// side plant and stays at 0. Cases with a bearing-sensitive staging can
+// override with the `staffAng` option (additive; 0 = the old on-axis plant).
+// `foldUpper`/`foldFore` are the folded-arm pitches (radians off plumb, toward
+// local +z) for the two-piece arm — the upper's hang and the forearm's bend at
+// the elbow — and they are per-stance because the hands' destination is: seated
+// hands rest DOWN in the lap (a gentle bend), while standing hands meet at the
+// waist (the forearm swings nearly horizontal). The inward swing (the cuffs
+// crossing to the centre) is the same for all.
 const KNEEL = 0.5;
 const STAND_STANCE = { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.765, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.2, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.92 };
-// Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did:
-// the chest run in SIT_PROFILE was lengthened and steepened so a meditator
-// sits STRAIGHT ("they should all kinda look like Buddha") — the crown now
-// tops out at 0.610·h, still comfortably a seated man, and the fold angle
-// eases to -0.44 so the cuffs keep landing in the lap the knees now frame.
+// Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did: the
+// chest run in SIT_PROFILE was lengthened and steepened so a meditator sits
+// STRAIGHT, the way the Buddha does — the crown now tops out at 0.610·h, still
+// comfortably a seated man, and the fold angle eases to -0.44 so the cuffs keep
+// landing in the lap the knees now frame.
 const SIT_STANCE = { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, head: 0.545, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31, foldCross: 1.1 };
-// Kneel is DERIVED, field by field, from whatever stand and sit currently
-// are. It used to repeat their values as literals, and every retune of the
-// endpoints (the sit +0.015 lift, staffAng 0.9 → 0.2) silently un-halved it
-// — four fields had drifted. Latent (no koan kneels; tests do), but the
-// whole claim of this stance is "exactly halfway", so it is now that by
-// construction.
+// Kneel is DERIVED, field by field, from whatever stand and sit currently are.
+// It used to repeat their values as literals, and every retune of the endpoints
+// (the sit +0.015 lift, staffAng 0.9 → 0.2) silently un-halved it — four fields
+// had drifted. Latent (no koan kneels; tests do), but the whole claim of this
+// stance is "exactly halfway", so it is now that by construction.
 const KNEEL_STANCE = { profile: mixProfile(STAND_PROFILE, SIT_PROFILE, KNEEL) };
 for (const k of Object.keys(STAND_STANCE)) {
   if (k !== 'profile') KNEEL_STANCE[k] = mix(STAND_STANCE[k], SIT_STANCE[k], KNEEL);
@@ -408,14 +398,14 @@ export function makeFigure({
     return arm;
   };
 
-  // FOLDED ARMS HAVE ELBOWS. One straight sleeve pitched into the lap read
-  // as "very stiff arms... like they don't have any forearms at all"
-  // (Frank). A folded arm is two sleeves: a short UPPER hanging from the
-  // shoulder (its slimmer cuff is the elbow), and a FOREARM hinged there,
-  // swung inward and forward so the two cuff mouths meet at the lap centre —
-  // hands tucked into the opposite sleeves, no hand detail needed. The
-  // forearm is a sleeve() too, so its merged shoulder ball covers the elbow
-  // joint at any bend, the same way the upper's covers the shoulder.
+  // FOLDED ARMS HAVE ELBOWS. One straight sleeve pitched into the lap read as
+  // very stiff arms with no forearms at all. A folded arm is two sleeves: a
+  // short UPPER hanging from the shoulder (its slimmer cuff is the elbow), and
+  // a FOREARM hinged there, swung inward and forward so the two cuff mouths
+  // meet at the lap centre — hands tucked into the opposite sleeves, no hand
+  // detail needed. The forearm is a sleeve() too, so its merged shoulder ball
+  // covers the elbow joint at any bend, the same way the upper's covers the
+  // shoulder.
   const makeFoldedArm = (side) => {
     const upperLen = sleeveL * 0.55;
     // the upper's mouth is an ELBOW, not a wrist: flush, no cuff lip
@@ -437,12 +427,12 @@ export function makeFigure({
   // figure could skip its sleeves for two fewer meshes apiece, which was once
   // what let a crowd fit the draw budget at all. `bakeStatic` merges a still
   // crowd down to one mesh, so arms became free exactly where the option was
-  // wanted, and no case ever passed it again. Retired on Frank's call: "we
-  // don't want anyone to get rid of arms anyway."
+  // wanted, and no case ever passed it again. Retired: nobody should be getting
+  // rid of arms.
   for (const side of [-1, 1]) {
-    // the gesture arm (point/raise, always the right) stays a single
-    // sleeve; everything else folds when the pose or the stance says so —
-    // a seated pointing teacher still keeps his OTHER hand in his lap
+    // the gesture arm (point/raise, always the right) stays a single sleeve;
+    // everything else folds when the pose or the stance says so — a seated
+    // pointing teacher still keeps his OTHER hand in his lap
     const gesture = (arms === 'point' || arms === 'raise') && side === 1;
     if (!gesture && (arms === 'fold' || seated)) makeFoldedArm(side);
     else makeSleeve(side);
@@ -465,8 +455,8 @@ export function makeFigure({
   // A bow is BENT AT THE WAIST, not tipped over at the feet. Cases used to do
   // it by rotating the whole figure, which leans a rigid post — and case 32
   // leaned it about the wrong axis besides, so its philosopher listed sideways
-  // (Frank: "he's bowing along the wrong axis... he should be bowing forward,
-  // and ideally bent at the waist... it could be a separate pose").
+  // — bowing about the wrong axis instead of forward at the waist, which is
+  // what a bow actually is and why it deserves its own pose.
   //
   // `bow` opts a figure into a HINGE: everything above the sash — the torso
   // rings of the robe, the head, the hat, the arms — is re-parented into a
@@ -475,25 +465,23 @@ export function makeFigure({
   // any angle. A case bows by turning that one group about x (bodies front
   // local +z, so a positive angle carries the chest forward), which means the
   // bow can ANIMATE — case 32's happens slowly, after twenty seconds of not
-  // being touched. Costs one extra mesh, and only for figures that ask.
-  // SEATED FIGURES HINGE TOO, and for a while they did not — this block was
-  // guarded `&& !seated`, so a case that wanted a seated man to bow had no
-  // choice but to rotate the whole figure about its feet. Case 17's Chu did
-  // exactly that, and once his bow was deepened from nine degrees to
-  // twenty-four it became obvious what "rotate a seated man about the ground"
-  // means: his knees and the staff lying beside him swung underneath the
-  // terrain (Frank: "his legs and stuff go slightly under the ground, and his
-  // walking stick next to him goes under the ground — we need to just bend him
-  // at the waist").
+  // being touched. Costs one extra mesh, and only for figures that ask. SEATED
+  // FIGURES HINGE TOO, and for a while they did not — this block was guarded
+  // `&& !seated`, so a case that wanted a seated man to bow had no choice but
+  // to rotate the whole figure about its feet. Case 17's Chu did exactly that,
+  // and once his bow was deepened from nine degrees to twenty-four it became
+  // obvious what "rotate a seated man about the ground" means: his knees and
+  // the staff lying beside him swung underneath the terrain, along with the
+  // staff lying beside him. Bend him at the waist instead.
   //
   // The sash sits in a different place on the two profiles, so the split does
   // too: STAND_PROFILE's obi is at 0.452 of height, SIT_PROFILE's at 0.220 —
   // read off the tables above rather than shared, because a seated man is
   // folded and his waist is much nearer the ground. Everything below the split
   // (the lap shelf, the cushion, the knees) stays where it is; the staff is
-  // added further down this function and so never joins the hinge at all,
-  // which is right for both stances — held in the hand it rides the arm, stood
-  // on the ground it stays stood on the ground.
+  // added further down this function and so never joins the hinge at all, which
+  // is right for both stances — held in the hand it rides the arm, stood on the
+  // ground it stays stood on the ground.
   let waist = null;
   if (bow !== false && bow !== 0) {
     const waistY = seated ? 0.220 : 0.452;    // fraction of height: at the obi
@@ -511,8 +499,8 @@ export function makeFigure({
     // exactly. A SEATED one is not: seatedBodyGeometry merges the lathe with a
     // cushion, a shin mass and two knees, and replacing it with a bare lathe
     // deleted all three — the teacher in case 17 lost his legs the moment
-    // seated figures were allowed to hinge (Frank, at once: "the teacher has no
-    // legs now"). Ask the seated builder for the lower half instead.
+    // seated figures were allowed to hinge, and it showed at once. Ask the
+    // seated builder for the lower half instead.
     if (seated) {
       const half = new THREE.Mesh(
         seatedBodyGeometry({ height, width: s, cushion, profile: lower }), mat);
@@ -555,20 +543,19 @@ export function makeFigure({
       Math.sin(ang) * st.staffX * s * height);
 
     // A SEATED ELDER SETS HIS STAFF DOWN. Planted upright beside a man on the
-    // ground it read as a pole stuck in the earth next to him — "their staff
-    // is appearing kinda like just sticking up out of the ground next to
-    // them, it makes it look kinda weird" (Frank). Laid flat it becomes what
-    // it is: the thing he was carrying, put down within reach. Tipped a full
-    // quarter turn about z so the shaft lies along the ground, lifted by its
-    // own radius so it RESTS on the plane rather than sinking half into it,
-    // and swung a little off the figure's facing axis so it reads as dropped
-    // rather than squared up like a ruler. Standing/kneeling plants are
-    // untouched — a man on his feet still leans on it.
+    // ground it read as a pole stuck in the earth next to him rather than as
+    // something he had set down. Laid flat it becomes what it is: the thing he
+    // was carrying, put down within reach. Tipped a full quarter turn about z
+    // so the shaft lies along the ground, lifted by its own radius so it RESTS
+    // on the plane rather than sinking half into it, and swung a little off the
+    // figure's facing axis so it reads as dropped rather than squared up like a
+    // ruler. Standing/kneeling plants are untouched — a man on his feet still
+    // leans on it.
     if (seated) {
       // rotation.z = π/2 lays the shaft (local +y) down onto local -x; the
-      // y-turn then swings that lying shaft around the compass. π/2 + skew
-      // puts it FORE-AFT beside him (running past his knees, not across his
-      // lap), skewed a little so it reads dropped rather than squared up.
+      // y-turn then swings that lying shaft around the compass. π/2 + skew puts
+      // it FORE-AFT beside him (running past his knees, not across his lap),
+      // skewed a little so it reads dropped rather than squared up.
       const SKEW = 0.18;
       const yaw = Math.PI / 2 + SKEW;
       staff.rotation.z = Math.PI / 2;
@@ -581,15 +568,15 @@ export function makeFigure({
       // way the upright plant stayed clear of the hem
       staff.position.z -= dz * staffLen * 0.5;
     } else {
-    // NEAR-VERTICAL, not leaned in. The old 0.08 rad lean tipped the top
-    // toward the figure, which put the shaft at ~0.194·h off the axis right
-    // at hat-brim height — the brim reaches 0.192·h — so from roughly half
-    // of all camera bearings the staff read as growing out of the wearer's
-    // hat (k11/k19/k21/k22/k27/k31/k34/k36/k39, the "not in the right
-    // place" audit). At 0.02 rad the shaft clears the brim by ~0.05·h and
-    // still passes within a hand's reach of the resting cuff, so it reads
-    // as the same planted, gripped staff — just beside the monk instead of
-    // through his hat. The plant distances (staffX) are untouched.
+    // NEAR-VERTICAL, not leaned in. The old 0.08 rad lean tipped the top toward
+    // the figure, which put the shaft at ~0.194·h off the axis right at
+    // hat-brim height — the brim reaches 0.192·h — so from roughly half of all
+    // camera bearings the staff read as growing out of the wearer's hat
+    // (k11/k19/k21/k22/k27/k31/k34/k36/k39, the "not in the right place"
+    // audit). Leaned back a hair, the shaft clears the brim and still passes
+    // within a hand's reach of the resting cuff, so it reads as the same
+    // planted, gripped staff — just beside the monk instead of through his hat.
+    // The plant distances (staffX) are untouched.
       staff.rotation.z = 0.02;
     }
     g.add(staff);

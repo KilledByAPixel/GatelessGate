@@ -57,8 +57,7 @@ test('the two of them stand still, facing each other', () => {
 });
 
 // THE BOW IS THE READER'S, and nothing else on this page moves. He stands, and
-// bows only when you reach for the master (Frank: "let's just have him standing,
-// then he only bows when you click on the zen master").
+// bows only when you reach for the master.
 //
 // Two earlier versions, both worth the record. It was a HELD bow first — the
 // page opened on a man already bent — on the argument that a diorama should

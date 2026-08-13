@@ -17,11 +17,11 @@ const ID = 5;
 // into a mist-filled gorge, and rises again as a fogged far wall. One grey oak
 // leans its stout limb out over the drop. From the limb, by his teeth, hangs
 // the man — tipped back off his own bite, arms at his sides, feet together, as
-// composed as it is possible to be while hanging from a tree by your teeth.
-// His sedge hat sits upright on the grass at the edge where it landed. And
-// under the tree, on the ground, stands the one who came to ask (Frank, round
-// 12): hands in his sleeves, looking up at a man who cannot open his mouth.
-// Nobody answers anything.
+// composed as it is possible to be while hanging from a tree by your teeth. His
+// sedge hat sits upright on the grass at the edge where it landed. And under
+// the tree, on the ground, stands the one who came to ask: hands in his
+// sleeves, looking up at a man who cannot open his mouth. Nobody answers
+// anything.
 const CLIFF = { x: -3.4, z: -2.0, yaw: Math.PI / 2 };   // void faces -x
 // seed 13 at this yaw, from a scan of eighty: widest gap between the crown's
 // worst lobe and the hanging man (1.55 — he can take his fullest swing and
@@ -75,13 +75,13 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6
   scene.add(makeLights());
   
   // ---- the precipice ---------------------------------------------------
-  // drop 7 and the fog pushed down to -2.8 (Frank: "can we make the cliff
-  // deeper?"): the kit's default hid everything below a shallow shelf in
+  // drop 7 and the fog pushed down to -2.8, for a cliff that reads deep: the
+  // kit's default hid everything below a shallow shelf in
   // mist, so most of "the drop" was implied. Now two courses of crags and
   // a tall band of bare carved earth show before the paper takes over.
   // fogTop -2.8 is where the MIST sits, not a lid over the drop: this case is
-  // meant to be looked into (Frank: "it looks better without it, where it just
-  // looks like a normal terrain deformation"). See cliff.js's own note on the
+  // meant to be looked into, and it reads better as a plain terrain
+  // deformation. See cliff.js's own note on the
   // paper fill that used to hang here.
   const cliff = makeCliff({
   width: 11, drop: 7, depth: 2.2, seed: ID, fogTop: -2.8,
@@ -120,13 +120,13 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6
   branch.rotation.z = Math.PI / 2 + BRANCH.tilt;
   scene.add(branch);
   
-  // Foliage at the very end of the limb (Frank: "otherwise it's kinda like
-  // a stick hanging out"). Three lobes in the oak's own canopy grammar —
-  // squashed dodecahedra, same deep wash — merged into one mesh, clustered
-  // just PAST the grip so the branch finishes in leaves instead of a point.
-  // All of them sit at or above the branch line and beyond his bite, so his
-  // fullest swing still never brushes a leaf (the clearance the oak's crown
-  // is held to, kept here by construction).
+  // Foliage at the very end of the limb, so it does not read as a bare stick
+  // hanging out. Three lobes in the oak's own canopy grammar — squashed
+  // dodecahedra, same deep wash — merged into one mesh, clustered just PAST the
+  // grip so the branch finishes in leaves instead of a point. All of them sit
+  // at or above the branch line and beyond his bite, so his fullest swing still
+  // never brushes a leaf (the clearance the oak's crown is held to, kept here
+  // by construction).
   const [tipX, tipY] = branchAt(BRANCH.len);
   const TIP_LOBES = [
   // [dx past the tip, dy off the branch line, dz, radius]
@@ -150,11 +150,10 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6
   // the scene carries any accent at all.
   const [gx, gy] = branchAt(GRIP_ALONG);
   const gripR = 0.115 + (0.05 - 0.115) * (GRIP_ALONG / BRANCH.len);
-  // The bite point sits at the branch's SIDE, barely below its axis — not
-  // under its belly. The mouth is the figure's origin, so from here the front
-  // of his face presses into the wood and the crown tips back behind it: a
-  // man hanging from his jaw. (Frank: "his head... biting into the branch,
-  // tilted back a little like he's dangling.")
+  // The bite point sits at the branch's SIDE, barely below its axis — not under
+  // its belly. The mouth is the figure's origin, so from here the front of his
+  // face presses into the wood and the crown tips back behind it: a man hanging
+  // from his jaw — biting into the branch, tilted back, dangling.
   const grip = [gx, gy - gripR * 0.2, BRANCH.base[2] + gripR * 0.55];
   const dangler = makeHangingMonk({ height: 1.6, color: ACCENT_DEEP, seed: ID });
   dangler.group.position.set(grip[0], grip[1], grip[2]);
@@ -162,9 +161,9 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6
   scene.add(dangler.group);
   
   // ---- the questioner --------------------------------------------------
-  // Back, at Frank's word: "there's supposed to be someone under the tree,
-  // another person standing under the tree looking at them, talking to
-  // them." He is the case — a man arrives beneath the tree and asks why
+  // Back, because the case needs him: someone stands under the tree looking up
+  // and talking to the man in it. He is the case — a man arrives beneath the
+  // tree and asks why
   // Bodhidharma came from the West, and the answer would cost the hanging
   // man his teeth. So: ON the safe ground under the crown, at the lip, ink
   // like everything else (the one red hangs over the drop and stays there),
@@ -234,9 +233,9 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6
   });
   
   // ---- the cut: the precipice is REAL ----------------------------------
-  // Frank's verdict on the painted version was flat: "there is no precipice."
-  // He wanted a cliff face with the tree at its edge and the man over the
-  // drop — so the ground itself now falls away. The case owns its scene, so
+  // The painted version had no precipice in it, and what this wants is a cliff
+  // face with the tree at its edge and the man out over the drop — so the
+  // ground itself now falls away. The case owns its scene, so
   // it can carve its own ground mesh without touching the shared kit: every
   // vertex west of the lip sinks on a steep smoothstep (the cliff face), runs
   // a gorge floor, and eases back up on the far side — the far wall, already
@@ -244,16 +243,16 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6
   // along z confines the cut to the dressed run of lip stones, so beyond them
   // the meadow wraps around instead of tearing on an unrocked edge.
   //
-  // EVERY EDGE OF THE CUT WOBBLES NOW (Frank: "it looks weird where the
-  // cliff ends in straight lines on the sides and back, could it taper").
-  // The first carve ran on three ruler lines — the lip at constant x, the
-  // bay ends at constant z, the far recovery at constant depth — and the
-  // gorge read as a rectangular pit. Each boundary is offset by its own
-  // low-frequency seeded noise: the lip meanders WEST only (never east —
-  // the asker stands 0.1 east of the carve start, so an eastward wobble
-  // would sink the ground under his feet), the side walls swing ±1.5 as
-  // they run out, the far wall comes and goes by ±2. The transitions are
-  // also wider, so the side walls taper down instead of shearing.
+  // EVERY EDGE OF THE CUT WOBBLES NOW — it used to end in straight ruled lines
+  // at the sides and back, which read as a cut rather than as ground. The first
+  // carve ran on three ruler lines — the lip at constant x, the bay ends at
+  // constant z, the far recovery at constant depth — and the gorge read as a
+  // rectangular pit. Each boundary is offset by its own low-frequency seeded
+  // noise: the lip meanders WEST only (never east — the asker stands 0.1 east
+  // of the carve start, so an eastward wobble would sink the ground under his
+  // feet), the side walls swing ±1.5 as they run out, the far wall comes and
+  // goes by ±2. The transitions are also wider, so the side walls taper down
+  // instead of shearing.
   const groundMesh = scene.getObjectByName('ground');
   const LIP_X = CLIFF.x - 0.35;
   const DROP = 7;                             // matches the cliff's own drop
@@ -291,12 +290,11 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6
   if (hit) {
   dangler.sway(1);
   sways++;
-  // THE SILENCE ENDED HERE TOO (Frank's audit: "add a chime when you
-  // click on Kyogen in the tree"). This case held out longest — it was on
-  // tests/staging.test.js's SILENT_BY_HISTORY to the last — and what
-  // broke the silence is deliberately the LEAST literal voice available:
-  // a small chime, nothing that could read as the branch, his teeth, or
-  // the drop. Soft, high, placed at the touch.
+  // THE SILENCE ENDED HERE TOO. This case held out longest — it was on
+  // tests/staging.test.js's SILENT_BY_HISTORY to the last — and what broke the
+  // silence is deliberately the LEAST literal voice available: a small chime,
+  // nothing that could read as the branch, his teeth, or the drop. Soft, high,
+  // placed at the touch.
   audio && audio.chimeStrike({ tube: 4, force: 0.4, at: hit.point });
   }
   });

@@ -11,7 +11,7 @@
    Scoped to the panel ON PURPOSE, not to :root. This is the reading light over
    the text and nothing else — the diorama beside it is a painting on paper and
    stays lit that way, and so do the toolbar and the timer that sit over it
-   (Frank: "it really only applies to the text area"). Everything inside the
+   — dark mode applies to the text area and nothing else. Everything inside the
    panel inherits these; nothing outside it can see them. */
 #gg-panel.dark {
   color-scheme: dark;   /* the page's own scrollbar, which is not ours to draw */
@@ -266,9 +266,8 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
    It used to be an absolute sheet over the stage at 94% opacity, which put the
    controls on top of the very picture they aim: the diorama went on being
    centred in the full stage, behind the panel, so composing a shot meant
-   judging a centre you could not see (Frank: "it's hard for me to adjust the
-   camera... have it make the viewport smaller the same as when the text is on
-   the left"). It is a flex column beside the stage now — the mirror of the text
+   judging a centre you could not see. It is a flex column beside the stage now
+   — the mirror of the text
    panel — so the viewport narrows, the picture recentres in what is left, and
    what you frame is what the reader gets.
 
@@ -366,7 +365,7 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 /* ---- narrower still: the look's toolbar in short form ----
    Both corners are pinned and only the middle is empty, so the look's bar and
    the stage tools run into each other well before anything else about the
-   layout complains — Frank, on a tall phone: "the buttons are overlapping".
+   layout complains: on a tall phone the buttons overlap.
    The long form wants around 560px of window; below that the read button drops
    to its glyph and auto mode goes entirely, which is the whole of what has to
    give: those two carry the only words in either corner.

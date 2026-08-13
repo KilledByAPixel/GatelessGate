@@ -131,10 +131,10 @@ test('a pine is one bending mast: the tiers ride the bole rather than sliding of
   const column = vals(geo, 'aColumn');
 
   // THE FIX THIS TEST GUARDS. Displacing each tier by its own amount while the
-  // bole stood still slid the cones off the trunk — Frank: "it feels kinda
-  // lopsided... it's moving way too much off the side". Every part of a pine
-  // now shares one cantilever, and the tiers may only differ from it by a
-  // sliver, so they cannot leave the trunk's curve again.
+  // bole stood still slid the cones off the trunk, reading as lopsided and
+  // sliding off to one side. Every part of a pine now shares one cantilever,
+  // and the tiers may only differ from it by a sliver, so they cannot leave the
+  // trunk's curve again.
   assert.ok(column.every((v) => Math.abs(v - 1 / H) < 1e-9),
     'every part of the mast carries the same 1/height normaliser');
   const lo = Math.min(...sway), hi = Math.max(...sway);
@@ -154,9 +154,9 @@ test('a pine is one bending mast: the tiers ride the bole rather than sliding of
     'a tier gets a whisper of flutter, not a cluster\'s worth');
   assert.ok(leaf.some((v) => v === 0), 'the trunk gets none at all');
 
-  // "the wind kinda goes through": one phase per tier, rising, so the bend
-  // arrives at the skirt first and reaches the crown late — that lag IS the
-  // hierarchy Frank asked for.
+  // THE WIND GOES THROUGH IT: one phase per tier, rising, so the bend arrives
+  // at the skirt first and reaches the crown late — that lag IS the hierarchy
+  // this is for.
   const tiers = [];
   for (let i = 0; i < sway.length; i++) {
     if (leaf[i] === 0) continue;

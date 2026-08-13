@@ -82,11 +82,10 @@ function isDescendant(root, node) {
   return false;
 }
 
-// The street is STAGED, not animated (Frank, 2026-08-10: "no people walking,
-// they are just standing" — no other case walks a figure along a path, and
-// legs that do not stride read as a glide). Two strollers used to run a
-// triangle wave up and down the lane; this is the assertion that they stay
-// gone, and that nothing replaced them.
+// The street is STAGED, not animated: everyone stands. No other case walks a
+// figure along a path, and legs that do not stride read as a glide. Two
+// strollers used to run a triangle wave up and down the lane; this is the
+// assertion that they stay gone, and that nothing replaced them.
 test('the whole street stands still', () => {
   const { root } = staged();
   assert.ok(census(root.scene, 'monk') >= 10,
@@ -171,11 +170,11 @@ test('the horse shies from a hand, sounds, and settles back exactly', () => {
 });
 
 // The man of the koan used to be staged HERE: at the margin of the picture,
-// with his back turned, walking away whenever you reached for him. He worked
-// on a still page and nowhere else — in the look, whose drift never stops, he
-// re-placed between the two margins about once a second, which reads as
-// several monks glitching in and out (Frank, 2026-08-10). He was cut. This is
-// the assertion that nothing in the street is driven by the camera again.
+// with his back turned, walking away whenever you reached for him. He worked on
+// a still page and nowhere else — in the look, whose drift never stops, he
+// re-placed between the two margins about once a second, which reads as several
+// monks glitching in and out. He was cut. This is the assertion that nothing in
+// the street is driven by the camera again.
 test('no figure is steered by the camera — swing it and the street is unchanged', () => {
   const { root, cam } = staged();
   const figures = movables(root.scene).map((o) => ({ o, at: o.position.clone(), ry: o.rotation.y }));

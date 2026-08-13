@@ -2,7 +2,6 @@
 export const PAPER = '#F3EDDF';
 export const INK = '#1E1E24';
 export const GRAY_DARK = '#55555E';
-export const GRAY_LIGHT = '#9A9AA3';
 export const ACCENT = '#C73E3A'; // the one warm note — used sparingly, never decoratively
 
 // THE WASH RAMP.
@@ -43,8 +42,8 @@ export const ACCENT_LIGHT = mixHex(ACCENT, PAPER, 0.22);
 
 // And further still, for an accent spread over a WHOLE SURFACE rather than an
 // object. Case 30's pond went full ACCENT (read as blood), then ACCENT_DEEP
-// (dried blood), then ACCENT_LIGHT (still "such a dark red"); Frank asked for
-// "somewhere between where it is now and white... slightly more pinkish". At
+// (dried blood), then ACCENT_LIGHT, and all three still read as a dark red.
+// What the water wanted was most of the way to white, and pinker with it. At
 // nearly half paper the hue survives — it is unmistakably the book's red — but
 // it reads as water with red in it rather than a pool of pigment.
 export const ACCENT_PALE = mixHex(ACCENT, PAPER, 0.46);
@@ -63,31 +62,27 @@ export const SNOW = mixHex(PAPER, '#FFFFFF', 0.85);
 
 // THE DARKEST THING THE LIGHT IS ALLOWED TO TOUCH.
 //
-// Anything lit is painted in this, not in INK. This constant was tuned while
-// the book still shaded through a 3-step toon ramp, and the reasoning that
-// justified it then was quantitative: a fixed multiply by 0.31 / 0.63 / 1.0
-// put an INK robe's three bands at levels 9, 19 and 30 out of 255 — a
-// ten-level spread that no screen shows and no eye reads — and every monk
-// came out as a flat black cut-out while the rest of the scene had visible
-// form (Frank: "they're a lot darker black than everything else... make them
-// slightly less dark so we could see some of their shadows"), the same
-// quietly true of every torii, pole and cord painted the same way. Lifted a
-// fifth of the way back toward the paper, the same ramp landed on 22 / 46 /
-// 73 — three times the separation, and enough that the crown of a hat, its
-// brim and the shoulder under it read as three different tones.
+// Anything lit is painted in this, not in INK.
 //
-// The book now shades through plain Lambert, which has no fixed bands to
-// quote a level from — the surface takes a continuous value that depends on
-// its normal against the key light, not one of three multipliers. That exact
-// arithmetic is retired along with the ramp and has not been re-derived for
-// Lambert. The eyeball verdict above (case 4 at 1.00, 0.86 and 0.78, 0.86
-// reading as technically shaded and still too dark) was also made under that
-// same retired ramp and has not been re-judged under Lambert either — what is
-// actually unchanged, unre-derived and unre-judged both, is just the
-// constant's value (still wash(0.80)) and the shape of the argument: raw INK
-// reads as void once it is lit, so anything the light is meant to model gets
-// this instead. It is still the darkest paint in the book; it is simply
-// paint rather than a hole in the page.
+// The argument, which has not changed: a surface painted at INK and then lit
+// renders at roughly its own value times the irradiance, which is far too dark
+// to read as anything but a hole in the page. Every monk came out a flat black
+// cut-out while the scene around them had visible form, and the same was
+// quietly true of every torii, pole and cord painted the same way. Lifted a
+// fifth of the way back toward the paper, a hat's crown, its brim and the
+// shoulder under it read as three different tones.
+//
+// THE ARITHMETIC BEHIND THE NUMBER IS RETIRED, and this is the caveat to carry.
+// The constant was tuned while the book shaded through a 3-step toon ramp, and
+// the case for it was quantitative in a way that only made sense there — fixed
+// band multipliers, levels counted out of 255. Plain Lambert has no fixed bands
+// to quote a level from: a surface takes a continuous value from its normal
+// against the key. Neither that derivation nor the eyeball verdict that went
+// with it has been redone for Lambert. What survives is the VALUE and the shape
+// of the argument, not the sums that first justified it.
+//
+// It is still the darkest paint in the book; it is simply paint rather than a
+// hole in the page.
 //
 // WHAT IS LEFT AT INK: voids. A cave throat, a doorway at night — surfaces that
 // are unlit on purpose, where there is no shading to lose because there is no

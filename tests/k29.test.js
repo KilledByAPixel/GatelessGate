@@ -98,8 +98,8 @@ test('three single-tube chimes hang under the gate, on three different cords, re
   const chimes = gate.children.filter((c) => c.name === 'furin');
   assert.equal(chimes.length, 3, 'three chimes, all children of the gate — the five-tube ring is gone');
 
-  // every one of them is a SINGLE tube: the ring Frank asked to be removed
-  // carried five, so counting tube meshes is what would catch it coming back
+  // every one of them is a SINGLE tube: the ring that was removed carried five,
+  // so counting tube meshes is what would catch it coming back
   for (const c of chimes) {
     let tubes = 0;
     c.traverse((o) => { if (o.name === 'tube') tubes++; });
@@ -117,14 +117,14 @@ test('three single-tube chimes hang under the gate, on three different cords, re
   assert.equal(new Set(cords.map((v) => v.toFixed(4))).size, 3,
     `the three should hang on three different cords, got ${cords}`);
 
-  // ...AND THE BOTTOMS LINE UP, which is the point of the cords differing.
-  // Frank: "the small ones are not hanging low enough." With cord measured
-  // in units of SIZE — the previous implementation, and the one a future
-  // edit would most plausibly slip back to — the smallest chime gets the
-  // shortest string and sits highest of the three, which is backwards. Here
-  // the bottoms are within a fifth of the biggest chime's own tube length
-  // of each other. Mutation-checked: reverting to `cord: [0.42, 0.52, 0.60]`
-  // spreads them by 0.13 and fails this.
+  // ...AND THE BOTTOMS LINE UP, which is the point of the cords differing. The
+  // small ones did not hang low enough. With cord measured in units of SIZE —
+  // the previous implementation, and the one a future edit would most plausibly
+  // slip back to — the smallest chime gets the shortest string and sits highest
+  // of the three, which is backwards. Here the bottoms are within a fifth of
+  // the biggest chime's own tube length of each other. Mutation-checked:
+  // reverting to `cord: [0.42, 0.52, 0.60]` spreads them by 0.13 and fails
+  // this.
   const bottoms = chimes.map((c) => {
     const box = new THREE.Box3();
     c.traverse((o) => { if (o.isMesh && o.name === 'tube') box.union(new THREE.Box3().setFromObject(o)); });
@@ -165,9 +165,9 @@ test('the three singles sound three different notes, not the ring index', () => 
 });
 
 test("each single's reported note is derived from its own built size, not a number k29.js chose independently", () => {
-  // PROBLEM 1, task-swing-tune-brief.md: "the case asks for a size, and the
-  // note follows" — the property that distinguishes the fix from just
-  // moving the same three magic numbers into a differently-named constant.
+  // The case asks for a SIZE and the note follows — the property that
+  // distinguishes the fix from just moving the same three magic numbers into a
+  // differently-named constant.
   //
   // CODE REVIEW CAUGHT that an earlier draft of this test, despite its own
   // name, never drove update(), never captured a strike, and never imported
@@ -239,18 +239,16 @@ test("each single's reported note is derived from its own built size, not a numb
 });
 
 test("case 29's chimes stay clear of each other at the LIVE swing cap, counter-phase, worst case", () => {
-  // FOLLOW-UP CAUGHT: the collision-free result in swing-tune-report.md
-  // (RING_X=-0.79, SINGLE_X=[-0.17,0.39,0.80], checked against
-  // SWING.maxOmegaFrac=0.65) was only ever asserted in a k29.js COMMENT.
-  // Nothing re-derived it against the LIVE constant, so raising
-  // SWING.maxOmegaFrac — which is exactly what Frank is likely to do; he
-  // complained the swing was too SMALL, not too big — would silently
-  // reopen the counter-phase collision this branch already found once,
-  // with nothing anywhere failing to say so. This recomputes the real
-  // worst-case counter-phase gap from the ACTUAL staged scene and the
-  // LIVE SWING.maxOmegaFrac/tapPeak/damping every time the suite runs, so
-  // raising the cap past what case 29's spacing tolerates fails HERE,
-  // not silently in the harness or, worse, not at all until Frank notices
+  // FOLLOW-UP CAUGHT: the collision-free result, worked out once against a
+  // particular swing cap, was only ever asserted in a k29.js COMMENT. Nothing
+  // re-derived it against the LIVE constant, so raising SWING.maxOmegaFrac —
+  // the likely next move, since the complaint about the swing has always been
+  // that it was too SMALL — would silently reopen the counter-phase collision
+  // this branch already found once, with nothing anywhere failing to say so.
+  // This recomputes the real worst-case counter-phase gap from the ACTUAL
+  // staged scene and the LIVE SWING.maxOmegaFrac/tapPeak/damping every time the
+  // suite runs, so raising the cap past what case 29's spacing tolerates fails
+  // HERE, not silently in the harness or, worse, not at all until someone sees
   // two chimes passing through each other.
   //
   // theta (the saturated-burst peak) does not depend on which chime's own
@@ -420,9 +418,8 @@ test('a tap rings exactly one chime, even with several hanging, and never also t
 
 // ---- the wind is the whole page -------------------------------------------
 // Stopping the flag used to stop the flag, the chimes and the sound, and leave
-// the meadow laying over and the wood working away behind it (Frank: "let's
-// make it so the wind actually stops when you click on it and the flag stops —
-// the wind is still moving on the grass and on the trees"). On a page whose
+// the meadow laying over and the wood working away behind it — the wind
+// visibly went on blowing through the grass and the trees. On a page whose
 // entire argument is what the wind is and is not, a still flag over a moving
 // meadow is the case refuting itself.
 test('stilling the flag stills the meadow and the wood too', () => {
@@ -449,8 +446,8 @@ test('stilling the flag stills the meadow and the wood too', () => {
   const off = k.fragment();
   assert.equal(off.windOn, false);
   // A TENTH, NOT ZERO. Dead-still reads as the picture having crashed rather
-  // than as the wind having dropped (Frank: "it looks almost like it's
-  // frozen"), so the fields keep a floor the flag itself does not.
+  // than as the wind having dropped — the page simply looks frozen — so the
+  // fields keep a floor the flag itself does not.
   assert.ok(off.grassWind < on.grassWind * 0.2, `the grass drops with the flag (${off.grassWind})`);
   assert.ok(off.grassWind > on.grassWind * 0.05, `but does not freeze (${off.grassWind})`);
   assert.ok(off.treeWind < 0.2 && off.treeWind > 0.05, `and the wood does the same (${off.treeWind})`);

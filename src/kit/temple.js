@@ -11,28 +11,23 @@ import { WASH } from '../palette.js';
 //
 // NOTHING USES THIS YET, on purpose. It was built for cases 15 (which names a
 // temple) and 17 (whose Chu is the emperor's teacher, a rank with an
-// establishment behind it), placed in both, and then pulled: seen in the
-// scenes it did not earn its place — "let's get rid of the temples, it was a
-// nice try" — but the piece itself is kept for a case that wants one later
-// (Frank: "we might wanna use them again"). It is complete and was working;
-// what was wrong was the picture, not the component.
+// establishment behind it), placed in both, and then pulled: seen in the scenes
+// it did not earn its place. The piece itself is kept in case a later case
+// wants one. It is complete and was working; what was wrong was the picture,
+// not the component.
 //
 // If you place one, read the SCALE note at the bottom of this file first. The
 // mistake is easy to repeat and hard to see coming.
 //
-// Frank: "we could reuse the hut and maybe put in the distance larger with a
-// couple other smaller huts next to it... and that could be kind of a bit in
-// the distance, so we don't need so much detail there."
-//
-// It reuses the hut's LANGUAGE, not the hut. Under the inverted-hull outline
-// (the hull, since deleted), makeHut's five meshes cost five hull outlines on
-// top — ten draws each, thirty for three of them — against case 15's
-// twenty-five draws of headroom, so three real huts would not have fitted.
-// That arithmetic is history now, but every part of a real hut that cost
-// anything back then (the framed door, the rafter ends poking through the
-// fascia, the threshold stone) is invisible past about fifteen units anyway.
-// So: the same silhouette — long low body, wide hipped roof carried well past
-// the wall — built as two merged geometries, two draws for the whole compound.
+// IT REUSES THE HUT'S LANGUAGE, NOT THE HUT — the same shapes at a larger
+// scale, set well back where distance excuses the lack of detail. Under the
+// inverted-hull outline (the hull, since deleted) three real huts would not
+// have fitted in the draw budget at all. That arithmetic is history, but the
+// reason survives it: every part of a real hut that cost anything back then —
+// the framed door, the rafter ends through the fascia, the threshold stone — is
+// invisible past about fifteen units anyway. So the same silhouette, long low
+// body and wide hipped roof carried well past the wall, built as two merged
+// geometries: two draws for the whole compound.
 //
 // What survives at fog distance is the ROOFLINE, so that is what the detail
 // goes into: each roof is a squat four-sided pyramid, deliberately oversailing

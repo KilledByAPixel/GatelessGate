@@ -77,10 +77,10 @@ test('tree: recursive branch skeleton + canopy, connected and deterministic by s
 });
 
 test('pine: a straight tiered pine with a pointy top, grounded and deterministic', () => {
-  // The elbowed cloud-pad pine is GONE — Frank: "it looks really weird...
-  // more straight up, pointy top like a pine tree has." What this pins now
-  // is the opposite of what it used to: the tree stands straight, tapers
-  // hard, and finishes on an apex.
+  // The elbowed cloud-pad pine is GONE: it read as weird, and what a pine wants
+  // is to be a pine — straight up, pointy top. What this pins now is the
+  // opposite of what it used to: the tree stands straight, tapers hard, and
+  // finishes on an apex.
   const p = makePine({ height: 4, tiers: 5, seed: 3 });
   assert.equal(p.name, 'pine');
   const box = new THREE.Box3().setFromObject(p);

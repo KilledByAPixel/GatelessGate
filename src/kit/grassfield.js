@@ -14,10 +14,9 @@ import { hash1, fbm2 } from '../util/noise.js';
 // `composeWorld` chose between the two off a `grassStyle` flag that the
 // workbench's "Grass tufts" switch drove. The switch shipped defaulting to
 // tufts and stayed there, so the blades were dev-only for their whole life and
-// were cut (Frank, this round: "we don't actually use those anywhere... let's
-// remove those old 3D grass things"). Two field implementations, one of them
-// unreachable, is also two places every retune had to be made and one of them
-// silently didn't matter.
+// were cut, since nothing shipped ever used them. Two field implementations,
+// one of them unreachable, is also two places every retune had to be made and
+// one of them silently didn't matter.
 //
 // What survived is everything the billboards still stand on:
 //
@@ -44,9 +43,8 @@ export function setGrassPatchiness(v) { defaultPatchiness = v; }
 // Same deal as patchiness — baked at build time, so the workbench's two sliders
 // set these and the change lands on the next page.
 //
-// Frank: "can we do something with the grass to make it taper off a little bit
-// more instead of stopping so abruptly... and it could go a little bit further."
-// Both halves of that are here. Only composeWorld reads them; a builder called
+// The meadow should reach further AND taper off rather than stopping abruptly;
+// both halves of that are here. Only composeWorld reads them; a builder called
 // directly (the showcase, kit-preview) still gets its own radius and the stock
 // taper, because those are small display fields and not a horizon.
 let defaultReach = 24;      // world units from the origin to the last straggler
@@ -237,8 +235,8 @@ export function grassPlacements({
 // tuftfield.js carries only the VARIATION per instance now, so this constant is
 // the tone the meadow actually renders at.
 //
-// 0.62 rather than the 0.69 it had been landing on: a step lighter, which is
-// what the ground occlusion bought. The grass no longer has to carry the sense
-// of mass on its own now that the earth under it is darker where it is thick
-// (grassshade.js), so the blades themselves can come up out of the wash.
+// A step LIGHTER than it had been landing on, which is what the ground
+// occlusion bought. The grass no longer has to carry the sense of mass on its
+// own now that the earth under it is darker where it is thick (grassshade.js),
+// so the blades themselves can come up out of the wash.
 export const GRASS_TONE = wash(0.62);

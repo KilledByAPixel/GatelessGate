@@ -11,10 +11,9 @@ export function makeTail({
   // WHERE THE TAIL LEAVES THE BODY, as a direction for its first segment.
   //
   // A strand pinned at one node and left to gravity hangs straight down the
-  // animal's own flank, and a swish then swings it THROUGH the body — Frank, on
-  // the buffalo: "it kinda flips around, like, rotates around inside its body...
-  // at least for the first segment of the tail, try to aim it up, tilt it out
-  // so that it's not away from the body, so it's gonna kind of whip outwards."
+  // animal's own flank, and a swish then swings it THROUGH the body — the
+  // buffalo's rotated around inside its own barrel. Aim the first segment up
+  // and out instead, so the tail whips clear of the flank.
   //
   // Pinning the SECOND node as well, at a chosen offset from the first, is the
   // whole of the fix: the root segment becomes a rigid stub held wherever the
@@ -62,11 +61,10 @@ export function makeTail({
   const mat = washMaterial({ color, flat: true });
   const segs = [];
   // Segments are cut LONGER than their node spacing (still centred between
-  // their nodes), so neighbours overlap into each other at every joint and
-  // a bend never opens daylight. This replaced a merged joint ball — even
-  // trimmed flush it beaded the tail ("weird balls appearing in the
-  // joints" — Frank); plain overlap covers the same gap while adding
-  // nothing to the silhouette.
+  // their nodes), so neighbours overlap into each other at every joint and a
+  // bend never opens daylight. This replaced a merged joint ball — even trimmed
+  // flush it beaded the tail with visible balls at the joints; plain overlap
+  // covers the same gap while adding nothing to the silhouette.
   const OVERLAP = 1.35;
   for (let i = 0; i < segments - 1; i++) {
     const r0 = thickness * (1 - i / segments);

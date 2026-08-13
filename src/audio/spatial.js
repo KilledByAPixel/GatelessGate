@@ -5,30 +5,30 @@
 // Pure and Node-tested; the node graph that applies these numbers is in the
 // same file below, browser-only, per the codebase's split. Nothing here imports
 // THREE — positions cross the boundary as plain {x, y, z}, which is also why
-// engine.js can stay THREE-free.
+// engine.js can stay THREE-free. (util/math.js is fine: it is pure scalar
+// arithmetic and imports nothing itself.)
+
+import { clamp } from '../util/math.js';
 
 export const SPATIAL = {
-  // Distance at which gain is unity, and how fast it falls past that.
-  // Was 2.5 — a distance nothing in the book is ever viewed from. Every
-  // case's `camera.distance` (src/koans/k*.js, default 11.5 in main.js's
-  // buildKoan for the five cases that don't set their own) runs 8.6 to 17
-  // across all 49 cases plus the two matter pages and the hub/menu, with
-  // 11.5 both the median AND the single most common value (10 of 49 cases
-  // use it outright — see task-12-report.md for the full distribution). So
-  // every placed sound was being attenuated by the distance curve for no
-  // reason, permanently: Frank heard it on case 16's bell as "I could barely
-  // hear it." 11.5 is that measured value, not a round guess.
+  // Distance at which gain is unity, and how fast it falls past that. Was 2.5 —
+  // a distance nothing in the book is ever viewed from. Every case's
+  // `camera.distance` (src/koans/k*.js, default 11.5 in main.js's buildKoan for
+  // the five cases that don't set their own) runs 8.6 to 17 across all 49 cases
+  // plus the two matter pages and the hub/menu, with 11.5 both the median AND
+  // the single most common value (10 of 49 cases use it outright). So every
+  // placed sound was being attenuated by the distance curve for no reason,
+  // permanently — case 16's bell was barely audible. This is that measured
+  // value, not a round guess.
   ref: 11.5,
   rolloff: 1.0,
 
-  // THE NEAR END. `gain` used to be `(ref / max(ref, d))^rolloff` — that
-  // max() pins gain to exactly 1 for EVERY distance nearer than the
-  // reference, so the whole near half of the book's range was one flat
-  // level. Frank, auditioning it: "there's not that much of a difference at
-  // all between the distance between four and twenty two. The minimum and
-  // the maximum sound about the same to me." He is describing the flat
-  // stretch precisely — 4 and 11.5 were bit-identical, and 11.5 to 22 was
-  // only 5dB at the old 0.9 rolloff.
+  // THE NEAR END. `gain` used to be `(ref / max(ref, d))^rolloff` — that max()
+  // pins gain to exactly 1 for EVERY distance nearer than the reference, so the
+  // whole near half of the book's range was one flat level, and it audibly was:
+  // across the book's whole range of distances the near and far ends sounded
+  // much the same. Everything inside the reference was bit-identical, and the
+  // outer half spanned only a few dB at the old rolloff.
   //
   // The clamp moves in to nearClamp instead, so approaching gets LOUDER the
   // way it should, and rolloff goes to a true 1.0 (inverse-distance, the
@@ -64,8 +64,6 @@ export const SPATIAL = {
   backGain: 0.85,
   backTone: 0.55,
 };
-
-const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 
 export function spatialFor(source, listener, tune = SPATIAL) {
   const p = listener.pos;

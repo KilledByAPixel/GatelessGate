@@ -3,10 +3,10 @@ import { hash1 } from '../util/noise.js';
 import { grassPlacements, GRASS_TONE, RIM_SHRINK, GRASS_BASE_TAPER } from './grassfield.js';
 import { breezeState, makePokeSpring, pokeSpringStep, GRASS_POKE_RADIUS } from './breeze.js';
 
-// Frank's tuft grass: instead of one chunky geometric spear per grass plant,
-// each instance is a single camera-facing QUAD carrying a baked texture of a
-// whole tuft — a dozen fine blades. Two triangles where a blade was ten, so the
-// same budget buys several times the apparent grass, and it grows the way grass
+// Tuft grass: instead of one chunky geometric spear per grass plant, each
+// instance is a single camera-facing QUAD carrying a baked texture of a whole
+// tuft — a dozen fine blades. Two triangles where a blade was ten, so the same
+// budget buys several times the apparent grass, and it grows the way grass
 // actually grows: in clumps, not in isolated spikes. Still ONE draw call.
 //
 // Wind is a SHEAR, not a bend: the quad's base stays pinned to the ground and
@@ -98,49 +98,40 @@ function tuftTexture() {
 }
 
 // THE LIFT. Every tuft takes the world-up normal (see the beginnormal_vertex
-// override below), so the whole field is a single N·L = 0.785 against the
-// key. Under the 3-step toon ramp that value landed on the ramp's TOP step
-// and rendered at 1.0, and a 0.16 emissive floor sat on top of it to stop the
-// ramp's bottom step taking a shadowed field to near-black. Lambert takes
-// 0.785 directly and needs no floor — so the colour is lifted to land the
-// unshadowed field at the luminance the ramp gave it.
+// override below), so the whole field is a single fixed N·L against the key.
+// Under the old 3-step toon ramp that value landed on the ramp's TOP step and
+// rendered at 1.0, with an emissive floor on top of it to stop the ramp's
+// bottom step taking a shadowed field to near-black. Lambert takes N·L directly
+// and needs no floor — so the colour is lifted to land the unshadowed field at
+// the luminance the ramp gave it.
 //
-// THE PI TRAP. Three.js's BRDF_Lambert (RECIPROCAL_PI * diffuseColor) divides
-// BOTH the direct and indirect diffuse terms by pi — RE_Direct_Lambert and
-// RE_IndirectDiffuse_Lambert each route through it, and RE_Direct_Toon /
-// RE_IndirectDiffuse_Toon do too, so the OLD ramp's diffuse also carried the
-// same /pi. Emissive does not: `totalEmissiveRadiance = emissive` is added to
+// THE PI TRAP, which is why this is DERIVED rather than eyeballed. Three.js's
+// BRDF_Lambert (RECIPROCAL_PI * diffuseColor) divides BOTH the direct and
+// indirect diffuse terms by pi, and the old toon path routed through the same
+// factor. Emissive does not: `totalEmissiveRadiance = emissive` is added to
 // outgoingLight raw, with no BRDF and no pi, whatever the material. A lift
-// derived by comparing "diffuse + 0.16" against "lifted diffuse" without
-// re-introducing that pi on the 0.16 term understates the true old
-// brightness by a factor of pi — the constant shipped at first as 1.2768, ~4%
-// low, for exactly this reason. Matching per-channel luminance therefore
-// needs pi on the emissive term only:
-//   old = RECIPROCAL_PI*(S + H)*color + 0.16*color
-//       = color * [ (S+H)/pi + 0.16 ]
-//   new = RECIPROCAL_PI*(N·L·S + H) * (lift*color)
-//   new == old  =>  lift = (S + H + pi*0.16) / (N·L·S + H)
+// derived by comparing "diffuse + floor" against "lifted diffuse" without
+// re-introducing that pi on the FLOOR term understates the true old brightness
+// by a factor of pi — this constant shipped ~4% low the first time for exactly
+// that reason. Matching per-channel luminance needs pi on the emissive term
+// only:
 //
-// Derived 2026-08-12, not eyeballed, from values read out of the running
-// code (S = 6.7 from makeLights(), N·L = 0.78484 as above, H = the
-// hemisphere's contribution to an up-facing normal = its intensity 0.62 x
-// PAPER's linear luminance ~0.8495, i.e. ~0.52669). Terms below are shown to
-// 5dp, but each total is the unrounded sum, not the sum of the rounded
-// terms shown (the two can differ by a digit in the last place):
-//   lift = (6.7 + 0.52669 + pi*0.16) / (0.78484*6.7 + 0.52669)
-//        = (6.7 + 0.52669 + 0.50265) / (5.25841 + 0.52669)
-//        = 7.72935 / 5.78510 ≈ 1.3361
+//   old  = RECIPROCAL_PI*(S + H)*color + floor*color = color * [(S+H)/pi + floor]
+//   new  = RECIPROCAL_PI*(N·L*S + H) * (lift*color)
+//   lift = (S + H + pi*floor) / (N·L*S + H)
 //
-// KNOWN GAP, recorded rather than chased: the old emissive was never
-// modulated by the tuft atlas (map_fragment multiplies diffuseColor, not
-// emissive) or by instanceColor, while this lift multiplies mat.color and so
-// IS carried through both. The atlas is near-white but not pure white, so a
-// map-weighted match would want a slightly different number (roughly 1.358
-// by a rough estimate of the atlas's mean luminance) — NOT applied here,
-// since that rests on an estimate rather than a derivation and the
-// acceptance gate for how the meadow actually reads is Frank's eye, not this
-// arithmetic. This constant is the exact per-channel match for the
-// UNTEXTURED diffuse term; it is not claimed to be the map-weighted one.
+// evaluated against values read out of the running code — S from makeLights(),
+// N·L from the world-up normal, H the hemisphere's own contribution to an
+// up-facing normal — rather than restated here, where they would go stale.
+//
+// KNOWN GAP, recorded rather than chased: the old emissive was never modulated
+// by the tuft atlas (map_fragment multiplies diffuseColor, not emissive) or by
+// instanceColor, while this lift multiplies mat.color and so IS carried through
+// both. The atlas is near-white but not pure white, so a map-weighted match
+// would want a slightly different number — NOT applied, since that rests on an
+// estimate rather than a derivation, and the acceptance gate for how the meadow
+// reads is the eye. This is the exact per-channel match for the UNTEXTURED
+// diffuse term; it is not claimed to be the map-weighted one.
 //
 // Exported so setTone() below and the tests share this exact number rather
 // than each carrying their own copy that could drift out of sync.
@@ -149,11 +140,10 @@ export const LAMBERT_LIFT = 1.3361;
 // ---- the field ------------------------------------------------------------
 export function makeTuftField({
   count = 12000, radius = 20, taper = GRASS_BASE_TAPER, inner = 0, seed = 5, groundSeed = 21,
-  // width came down 0.52 -> 0.46 with the density doubling: Frank read the wide
-  // cards as "a bit thick", and narrower cards at twice the count give more
-  // plants AND more ground showing between them. Then back up to 0.8 in
-  // Frank's later tweak-tufts round — the retune widened the cards again
-  // without revisiting this note.
+  // Width came DOWN when the density doubled — the wide cards read as thick,
+  // and narrower cards at twice the count give more plants AND more ground
+  // showing between them — then back UP again in a later retune. Judge it in a
+  // case, not from this note.
   color = GRASS_TONE, width = 0.8, height = 0.44, wind = 1,
   windDir = [1, 0.35], gustScale = 0.055, gustSpeed = 2.4,
   keepout = [],
@@ -246,10 +236,10 @@ export function makeTuftField({
       #endif
       `)
       // Cylindrical billboard + shear, built in view space. The quad ignores
-      // its instance rotation entirely: it stands on its root, faces the
-      // camera around the world-up axis, and the wind slides its TOP while the
-      // base stays put — Frank's shear, quadratic in height so the pivot reads
-      // at the ground and not halfway up.
+      // its instance rotation entirely: it stands on its root, faces the camera
+      // around the world-up axis, and the wind slides its TOP while the base
+      // stays put — a shear quadratic in height, so the pivot reads at the
+      // ground and not halfway up.
       .replace('#include <project_vertex>', `
       vec4 mvPosition;
       {
@@ -265,12 +255,12 @@ export function makeTuftField({
         float stiff = 0.65 + 0.7 * ggHash(iw.xz * 1.618 + 4.2);
         float lean = (ggHash(iw.xz * 2.113 + 31.7) - 0.5) * 0.30;   // resting tilt
 
-        // SIGNED sway, centred on upright — Frank's spec after watching the
-        // first pass: "default should be center... stretch left and right also
-        // ... we'll do a negative also." The one-sided version mapped the noise
-        // to 0..max downwind, so every tuft pumped between vertical and its
-        // extreme and the field never rocked back. The drifting noise patch now
-        // swings the shear through zero; the wind slider scales its amplitude.
+        // SIGNED sway, centred on upright: the rest position is vertical and
+        // the field leans BOTH ways from it. The one-sided version mapped the
+        // noise to 0..max downwind, so every tuft pumped between vertical and
+        // its extreme and the field never rocked back. The drifting noise patch
+        // now swings the shear through zero; the wind slider scales its
+        // amplitude.
         float swing = gust * 2.0 - 1.0;
         vec2 swayW = uWindDir * (uWind * 0.26 * swing * stiff);
 
@@ -291,11 +281,11 @@ export function makeTuftField({
         swayW += pokeW;
 
         // ...projected onto the CARD'S OWN axis. This was the "stretchy" glitch
-        // Frank suspected was bad billboard math, and he was close: the sway was
-        // applied as a world vector, so whenever the orbit swung across the wind
-        // the card sheared in DEPTH — toward the camera — which a flat imposter
-        // renders as smearing. A billboard may only ever shear along its own
-        // right axis; that is what "left and right" means on a card.
+        // that looked like bad billboard math, and nearly was: the sway was
+        // applied as a world vector, so whenever the orbit swung across the
+        // wind the card sheared in DEPTH — toward the camera — which a flat
+        // imposter renders as smearing. A billboard may only ever shear along
+        // its own right axis; that is what "left and right" means on a card.
         float sw = dot((viewMatrix * vec4(swayW.x, 0.0, swayW.y, 0.0)).xyz, rightV) + lean;
 
         // tip micro-flutter: a second, faster, smaller ripple with a seeded

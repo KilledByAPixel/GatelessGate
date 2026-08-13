@@ -11,16 +11,15 @@ import { WASH, PAPER, INK, mixHex } from '../palette.js';
 // separate meshes at a fixed world height, so nothing here may rename the
 // group or drift its rough silhouette/scale out from under it.
 //
-// THE FIREBOX IS TRULY OPEN NOW (Frank, round 2: "I feel like there's
-// something like a glass effect on the lantern walls — make it just an open
-// lantern so we can see the flame better"). Round 1 opened the chamber into
-// a sill band, four corner pillars, and a header band, but lined the cavity
-// with a dark BackSide interior box so nothing showed through — and that
-// lining read as smoked-glass panes from the case camera. It is deleted
-// entirely: through any face you now see the candle, the flame, and clean
-// out the far side between the pillars, the way a real hibukuro takes its
-// hi-guchi. The flame reads against whatever the scene puts behind it, which
-// in case 28 is the night itself — darker than any painted void was.
+// THE FIREBOX IS TRULY OPEN NOW. The half-open version read as glass in the
+// lantern walls and hid the flame. Round 1 opened the chamber into a sill band,
+// four corner pillars, and a header band, but lined the cavity with a dark
+// BackSide interior box so nothing showed through — and that lining read as
+// smoked-glass panes from the case camera. It is deleted entirely: through any
+// face you now see the candle, the flame, and clean out the far side between
+// the pillars, the way a real hibukuro takes its hi-guchi. The flame reads
+// against whatever the scene puts behind it, which in case 28 is the night
+// itself — darker than any painted void was.
 //
 // The visible chamber holds a CANDLE — a stub of pale wax on the sill floor,
 // sized so its tip meets the flame k28 hangs at world y=0.78 on its

@@ -19,51 +19,44 @@ const ID = 20;
 //
 // The tap used to be on HIM, which put the one thing in the picture that never
 // reacts in charge of the only thing that does, and left the ocean — the
-// biggest object on the page, and this case's own seal — inert (Frank: "we're
-// gonna have you click the ocean instead of the guy").
+// biggest object on the page, and this case's own seal — inert. You touch the
+// ocean here, not the man.
 //
-// IT USED TO BE A SHOVE, and the shove is the reason this comment is long.
-// Everything the world grammar built went into one group called `moving`, and
-// a tap translated that group a third of a metre and let it oscillate back —
-// "the world gives along the line you pushed from". Two things were wrong with
-// it. The reader could not tell what had happened (Frank: "I don't know what
-// that means, the world it gives along the line you pushed from"), and sliding
-// the group DRAGS THE GRASS THROUGH ITS OWN NOISE FIELD: the blades' wind is
-// computed from world position in the vertex shader, so translating the field
-// re-samples every blade against a gust pattern that did not move with it, and
-// the whole meadow boils (Frank: "it's basically causing the procedural
-// generation of the grass to get all messed up... that's why it looks like
-// it's wind, but it's actually not wind").
+// IT USED TO BE A SHOVE, and the shove is why this note exists. Everything the
+// world grammar built went into one group called `moving`, and a tap translated
+// that group a third of a metre and let it oscillate back — "the world gives
+// along the line you pushed from". Two things were wrong with that. The reader
+// could not tell what had happened at all; and sliding the group DRAGS THE
+// GRASS THROUGH ITS OWN NOISE FIELD, because the blades' wind is computed from
+// world position in the vertex shader, so translating the field re-samples
+// every blade against a gust pattern that did not move with it and the whole
+// meadow boils. It looks like wind, and it is not wind.
 //
-// Which is where the replacement came from — his own read: "that gives me the
-// idea to make it do the wind instead of trying to mess with the world." So
-// the wind is real now, driven through the field's own uWind rather than by
-// moving the field, and `moving` is gone. Nothing in this case translates
+// So the wind is REAL now — driven through the field's own uWind rather than by
+// moving the field — and `moving` is gone. Nothing in this case translates
 // anything. (Dissolving it also handed composeWorld the actual scene, which is
 // where scene.userData.layout has to land for the workbench's layout guides to
-// find it — they had been silently dead on this case the whole time.)
+// find it; they had been silently dead on this case the whole time.)
 //
-// HE IS AN ORDINARY MAN. He was a colossus for a while — nearly three times a
-// man — taken straight from the verse. It did not survive being looked at
-// (Frank: "is the guy really big there? I can't really tell what's going
-// on"); ordinary is also the better reading — a giant who cannot be shoved is
-// physics; an ordinary man the weather cannot touch is the case.
+// HE IS AN ORDINARY MAN. He was a colossus for a while, taken straight from the
+// verse, and it did not survive being looked at — at that size you could not
+// tell what you were seeing. Ordinary is also the better reading: a giant who
+// cannot be shoved is physics; an ordinary man the weather cannot touch is the
+// case.
 
 // The gust: straight up, then a long lay-over and a slow release. GUST_MULT is
 // a multiplier on whatever wind the case (or the workbench slider) is already
 // set to, so this rides the scene's own weather instead of replacing it.
 const GUST_MULT = 6;
 // ...and how much faster the sea runs while it blows. The wind is on the water
-// as well as the meadow now (Frank: "I also wanna make the ocean waves move
-// more quickly when that wind is happening, so it looks like the wind is
-// blowing the waves"). 1.6 nearly triples the swell's travel at the peak, which
-// is a squall rather than a change of tide.
+// as well as the meadow now, so the wind visibly drives the waves — nearly
+// tripling the swell's travel at the peak, which is a squall rather than a
+// change of tide.
 const SEA_RUSH = 1.6;
 // ...and how much HIGHER it runs while it blows. Pace alone read as the film
-// being sped up rather than as weather (Frank: "can we also try increasing the
-// amplitude of the ocean waves too? So it looks like they're actually getting
-// bigger"). +0.9 at the peak takes the drift's three crossing swells from a
-// combined 0.084 to 0.16 — a squall's chop rather than a change of tide — and
+// being sped up rather than as weather: the waves have to get BIGGER, not just
+// arrive sooner. +0.9 at the peak takes the drift's three crossing swells from
+// a combined 0.084 to 0.16 — a squall's chop rather than a change of tide — and
 // the foam rides water.heightAt, so the wave-ends climb the beach with it for
 // nothing. It is a scale on the amplitude, not on the clock, which is why this
 // one is allowed to be a plain multiplier (see setSwellGain in kit/water.js).
@@ -122,9 +115,9 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
   scene.add(makeLights());
   
-  // a coast road, running parallel with the shoreline — the reader looks
-  // across it to the sea, and it dead-ends into nothing (Frank: a road
-  // aimed at the water "is going to be a dead end into the ocean")
+  // a coast road, running parallel with the shoreline — the reader looks across
+  // it to the sea, and it dead-ends into nothing — a road aimed at the water is
+  // a dead end into the ocean
   const path = makePath({ from: [-25, -.9], to: [15, 3.8], width: 1.8, seed: ID, groundSeed: 21, wander: 2.7 });
   scene.add(path);
   
@@ -168,29 +161,25 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   // a second set of waves over them — one sea getting rough, not two seas.
   // THE RED SEA IS THE SEAL. The verse turns on the great ocean — "if the
   // feet of enlightenment moved, the great ocean would overflow" — so the
-  // ocean takes the case's accent, not the staff (Frank: "it might even be
-  // cool for the ocean to be red instead of his stick... let's make the
-  // ocean red in that one"). Full ACCENT, which is what Frank approved on
-  // sight; if it ever reads as pigment rather than water at this size, the
+  // ocean takes the case's accent, not the staff. Full ACCENT, which is what
+  // read right on sight; if it ever reads as pigment rather than water at this
+  // size, the
   // case-30 lesson says ACCENT_PALE is the step to take. The white Phong
   // glints stay — they are what says water. (For the record: this sheet was
   // WASH.stone once and the fog ate it whole at grazing distance, then
   // monk-dark INK_LIT for a day; the red began as a where-is-it marker and
   // got promoted.)
   //
-  // Segments 64: the default cap (30) gave 3-unit cells across 90 units,
-  // and a single shoreward sine on that grid rendered as parallel bars
-  // (Frank: "the waves are mostly horizontal... there's no tessellation").
-  // A finer grid plus three crossing swells — one main set rolling in, two
-  // gentler obliques at ±~20° with their own wavelengths and periods — is
-  // what breaks the crests into a sea.
-  // The red deepens seaward (Frank: "more transparent when it's at the
-  // shoreline... more red as it gets deeper"): nearly clear over the sand
-  // so the shallows show it, full red by ~12 out (it was ~20 at first;
-  // Frank wanted the red arriving sooner), and the fog still owns
-  // the far fade to paper beyond that. In the sheet's local coords the
-  // seaward distance past the waterline is s = 43 - z (the group sits at
-  // world z = -51, the waterline at world z = -8).
+  // Segments 64: the default cap (30) gave 3-unit cells across 90 units, and a
+  // single shoreward sine on that grid rendered as parallel bars running one
+  // way rather than as a sea. A finer grid plus three crossing swells — one
+  // main set rolling in, two gentler obliques at ±~20° with their own
+  // wavelengths and periods — is what breaks the crests into a sea. The red
+  // deepens seaward: nearly clear over the sand so the shallows show it, full
+  // red by ~12 out (it was ~20 at first, which held the colour off too long),
+  // and the fog still owns the far fade to paper beyond that. In the sheet's
+  // local coords the seaward distance past the waterline is s = 43 - z (the
+  // group sits at world z = -51, the waterline at world z = -8).
   const water = makeWater({
   shape: 'square', size: 150, color: ACCENT, seed: ID,
   opacity: 1, segments: 64,
@@ -199,7 +188,7 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   swell: 0.5,
   alphaRamp: (x, z) => {
   const s = 43 - z;
-  const t = Math.max(0, Math.min(1, s / 12));   // full red by ~12 out — Frank wants it arriving sooner
+  const t = Math.max(0, Math.min(1, s / 12));   // full red by ~12 out; further and the colour arrives too late
   return 0.15 + 0.8 * t * t * (3 - 2 * t);
   },
   drift: [
@@ -217,17 +206,17 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   const sand = makeSand({ shore: SHORE, seed: ID, groundSeed: 21, color: wash(0.30) });
   scene.add(sand);
   
-  // THE WAVE-ENDS — the foam that was the point of the ocean from Frank's
-  // first sketch. Same period as the water's main swell, staggered per
-  // strip, so the arrivals overlap and no two land together. It rides the
-  // sheet's OWN surface via surfaceAt (the koi idiom), because the sheet
-  // writes depth and its crests would swallow tails pinned to flat sea
-  // level. renderOrder puts the foam after the sheet among transparents.
-  // (It wore a pink blush for an hour; Frank: "pink is not working.")
+  // THE WAVE-ENDS — the foam that was the point of the ocean from the first
+  // sketch. Same period as the water's main swell, staggered per strip, so the
+  // arrivals overlap and no two land together. It rides the sheet's OWN surface
+  // via surfaceAt (the koi idiom), because the sheet writes depth and its
+  // crests would swallow tails pinned to flat sea level. renderOrder puts the
+  // foam after the sheet among transparents. (It wore a pink blush for an hour.
+  // Pink does not work here.)
   const foam = makeFoam({
   shore: SHORE, seed: ID, groundSeed: 21,
-  // white again — the pink blush "is not working" (Frank); against the
-  // now-transparent shallows, plain snow foam is the contrast
+  // white again — the pink blush did not work; against the now-transparent
+  // shallows, plain snow foam is the contrast
   surfaceAt: (x, z, t) => SHORE.sea + water.heightAt(x, z + (SHORE.dist + 43), t),
   });
   foam.mesh.renderOrder = 1;
@@ -290,9 +279,9 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
 
   // THE SEA IS WHAT YOU TOUCH. It was the man — which put the one thing in the
   // picture that never reacts in charge of the only thing that does, and left
-  // the ocean, the biggest object on the page and the case's own seal, inert
-  // (Frank: "we're gonna have you click the ocean instead of the guy"). Touch
-  // the water and the weather comes; he still does not move, which is the case.
+  // the ocean, the biggest object on the page and the case's own seal, inert —
+  // so the ocean is what answers, not the man. Touch the water and the weather
+  // comes; he still does not move, which is the case.
   input.onTap(() => {
   if (!camera) return;
   if (!surface || !input.raycastFirst(camera, [surface])) return;

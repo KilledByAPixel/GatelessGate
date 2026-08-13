@@ -5,8 +5,7 @@ import { WASH } from '../palette.js';
 
 // A signboard on a post. Deliberately the plainest object in the kit: a
 // rectangular board on a rectangular post, nothing written on it, nothing
-// hanging off it (Frank: "no writing or special object, just like a rectangular
-// sign with a rectangular post").
+// hanging off it: a rectangular sign on a rectangular post, and nothing else.
 //
 // THE WHOLE SILHOUETTE IS TWO RECTANGLES — an upright bar with a wider slab
 // near the top. That reading is what makes it a sign rather than a marker or a
@@ -51,7 +50,7 @@ export function makeSign({
   const HEAD = 0.11;
   const boardY = height - HEAD - boardH / 2;
   const board = new THREE.BoxGeometry(width, boardH, thickness);
-  // Buried 0.03 into the post's front face rather than butted against it: flush
+  // Buried into the post's front face rather than butted against it: flush
   // faces z-fight and a gap reads as floating (the kit's standing join rule).
   board.translate(0, boardY, postD / 2 + thickness / 2 - 0.03);
 

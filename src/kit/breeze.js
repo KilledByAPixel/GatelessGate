@@ -12,8 +12,7 @@
 // same steps always stirs the same blades the same way. A scene whose pointer
 // never moves is bit-identical to one built before this file existed.
 //
-// The trees deliberately sit this one out (Frank, v2 review: "we don't wanna go
-// by the base of the tree") — grass is the whole instrument now.
+// The trees deliberately sit this one out — grass is the whole instrument now.
 
 // ---- tuning ----------------------------------------------------------------
 // Pointer speed (world units/second on the ground plane) that maps to full

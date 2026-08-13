@@ -10,14 +10,14 @@ import { seatedBodyGeometry, HAT_PROFILE } from './figure.js';
 // (Buddha, Kasyapa) are placed separately by the scene.
 //
 // The per-instance geometry is built from figure.js's OWN seated-robe and
-// sedge-hat profiles, not from a stand-in: a cone-and-ball pawn was tried
-// first and Frank called it what it was ("a triangle with a little tiny
-// circle head"). The obi pinch, the collar step and the hat brim are all
-// silhouette events, so they survive fog distance for free — a crowd member
-// is the hero monk's shape with the sleeves dropped. It builds that geometry
-// itself, and it is now the ONLY thing in the kit that drops them: figure.js
-// used to take `arms: null` for the same economy, but bakeStatic made arms
-// free on a still crowd and the option was retired unused.
+// sedge-hat profiles, not from a stand-in: a cone-and-ball pawn was tried first
+// and read as exactly what it was: a triangle with a tiny circle head. The obi
+// pinch, the collar step and the hat brim are all silhouette events, so they
+// survive fog distance for free — a crowd member is the hero monk's shape with
+// the sleeves dropped. It builds that geometry itself, and it is now the ONLY
+// thing in the kit that drops them: figure.js used to take `arms: null` for the
+// same economy, but bakeStatic made arms free on a still crowd and the option
+// was retired unused.
 const FIG_H = 1.5;    // the height each crowd figure is authored at (world units)
 const SLIM = 0.8;     // radial squeeze — figure.js's `stout`, run below 1: a
                       //   full-width seated figure is ~1.0 wide at this height
@@ -59,14 +59,14 @@ export function makeAssembly({ count = 8, radius = 3.0, center = [0, 0], facing 
     );
     mesh.setMatrixAt(i, m);
     // A MULTIPLIER, NOT A COLOUR. setColorAt feeds instanceColor, which the
-    // shader MULTIPLIES into the material's diffuse — so writing the crowd's own
-    // colour here painted every figure at that colour SQUARED. At the old INK
-    // that was (30/255)² ≈ level 3: pure black, which is why the seated crowds
-    // stayed flat cut-outs after every other figure in the book had been lifted
-    // off ink (Frank: "the small monks sitting on the ground still look a lot
-    // darker than the other ones"). Around 1.0 it does what it was always meant
-    // to: a tenth of a stop of variation between neighbours, so a row of them is
-    // not one stamped-out silhouette repeated.
+    // shader MULTIPLIES into the material's diffuse — so writing the crowd's
+    // own colour here painted every figure at that colour SQUARED. At the old
+    // INK that was (30/255)² ≈ level 3: pure black, which is why the seated
+    // crowds stayed flat cut-outs after every other figure in the book had been
+    // lifted off ink — the seated crowds stayed noticeably darker than every
+    // other figure. Around 1.0 it does what it was always meant to: a tenth of
+    // a stop of variation between neighbours, so a row of them is not one
+    // stamped-out silhouette repeated.
     const k = 1 + (hash1(i * 2 + 3, seed) - 0.5) * 0.2;
     col.setScalar(k);
     mesh.setColorAt(i, col);
