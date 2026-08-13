@@ -25,8 +25,8 @@ export function samplePath(points, u) {
 
 // The dolly down the road and THROUGH the gate. It used to stop at z -3, and
 // the gate stands at z -6 — so the book opened by walking up to its own door
-// and halting three metres short of it (Frank: "it doesn't go quite through the
-// gate all the way"). The fourth-from-last knot IS the gate's centre line, x and
+// and halting three metres short of it, never passing through. The
+// fourth-from-last knot IS the gate's centre line, x and
 // all, so the camera passes between the posts rather than near them, and the
 // last two carry it out the far side.
 //

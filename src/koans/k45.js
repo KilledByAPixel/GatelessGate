@@ -24,8 +24,7 @@ const ID = 45;
 //
 // First, two figures strolled the lane on a triangle wave over simTime. No
 // other case in the book walks a figure along a path, and legs that do not
-// stride read as a glide, so Frank cut them (2026-08-10): "no people walking,
-// they are just standing."
+// stride read as a glide, so they were cut. Everyone here stands.
 //
 // Second — and this is the one worth recording — the case used to stage HIM:
 // the man of the koan, placed at the very margin of the picture with his back
@@ -35,8 +34,8 @@ const ID = 45;
 // intended on a still page and nowhere else. In the look, whose drift never
 // stops, the frame slid off him constantly and he re-placed to the opposite
 // margin about once a second — one man teleporting between both edges, which
-// the reader sees as several monks glitching in and out (Frank: "2 monks
-// moving around in a glitchy way on the left and right side"). Damping the
+// the reader sees as several monks glitching in and out on both sides of the
+// frame. Damping the
 // chase and gating the re-place fixed the strobe and left a man who slides
 // around the edge of every shot for no reason a reader can name.
 //
@@ -145,8 +144,8 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
   // around them. They are the recognition itself — the whole of Mumon's image.
   //
   // THEY STAND. Two figures used to stroll the lane on a triangle wave, and
-  // Frank cut them (2026-08-10): "none of the other ones have that" — no other
-  // case walks a figure along a path, and legs that do not stride read as a
+  // they were cut: no other case walks a figure along a path, and legs that do
+  // not stride read as a
   // glide. Every person in this street is still now; the life comes from how
   // many of them there are and how they are turned, which is how the rest of
   // the book does it.
@@ -184,8 +183,8 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
   // guarding bare lane (the moved-prop lesson)
   const meetKeepout = [{ at: elder, r: 0.7 }, { at: younger, r: 0.7 }];
   
-  // A few more people standing about the street between the stalls (Frank: it
-  // is a busy street). They come from the same builder as every other figure
+  // A few more people standing about the street between the stalls — it is a
+  // busy street. They come from the same builder as every other figure
   // — mostly hatless, so they read as a crowd of dark robed shapes rather
   // than a row of identical monks. They used to lose their SLEEVES as well:
   // two fewer meshes apiece was what let a crowd fit the draw budget at all.
@@ -225,8 +224,8 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
     const horse = makeHorse({ height: 1.5, color: ACCENT_DEEP, seed: ID });
     // beside the t-0.30 stall, not in front of it — pulled back along the lane
     // so it does not block the counter, and standing a clear step off the road
-    // rather than at its very edge (Frank: it was a little too close, so it
-    // moved back — tethered on the grass, not loitering in the traffic)
+    // rather than at its very edge — tethered on the grass, not loitering in
+    // the traffic
     const hp = road.sample(0.35);
     const side = stalls[2].sidesign;
     const horseX = hp.x + hp.perp.x * 1.95 * side;

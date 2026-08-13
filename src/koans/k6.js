@@ -19,7 +19,7 @@ const _tumble = new THREE.Quaternion();
 
 // NO SMILE. Kasyapa used to grow one while a petal was in the air — a bare
 // paper arc on his head, the one face rendered anywhere in this book, faded in
-// over 1.4s and left there. Frank cut it (this round). It was the design doc's
+// over 1.4s and left there. It was cut. It was the design doc's
 // original hook for this case and it does not survive contact with the shipped
 // figures: a lone arc on a featureless ink head reads as a mark ON him rather
 // than an expression, at a staging distance where his whole skull is a few
@@ -45,8 +45,8 @@ const CAM = { distance: 11, target: [1.05, 0.3, -3.35], heading: 17, pitch: 29.5
   // THIS scene is bare grass in front of the crowd: everything that matters —
   // the raised stone at z -5, the lotus at -4, Kasyapa apart at +x — sat eleven
   // degrees off the middle of the frame with the subject shoved into a corner
-  // (Frank: "the camera is not centred very well, it's way off to the side; it
-  // should be centred more like where the flower is"). So the pivot IS the
+  // — badly centred, with the subject off to one side rather than on the
+  // flower. So the pivot IS the
   // flower. The heading comes in from the stock 31.5 for the same reason — a squarer look
   // down the scene's own axis — and the distance goes out to hold the assembly
   // back off the lens, since pulling the target four units deeper pulls the
@@ -88,8 +88,8 @@ const CAM = { distance: 11, target: [1.05, 0.3, -3.35], heading: 17, pitch: 29.5
   // The lotus, STANDING ON THE GROUND before the raised stone — the one
   // thing in the case that actually happens. It used to be "held" at his
   // waist, which from the shipped lens meant a red mass punched through his
-  // torso (Frank: "way too big, going through his body — it has to be DOWN,
-  // in front of him"). So it is down: planted in the open ground between
+  // torso. It has to be DOWN, in front of him. So it is: planted in the open
+  // ground between
   // the stone and the assembly, on his centre line, where the sight line to
   // him passes well over it. Still deliberately big — at this staging
   // distance a real-scale lotus is a red dot — big is fine; intersecting
@@ -116,8 +116,7 @@ const CAM = { distance: 11, target: [1.05, 0.3, -3.35], heading: 17, pitch: 29.5
   
   // The monastery cat (k14's, on its gentlest day), sitting at the
   // assembly's flank with its eyes on the Buddha like everyone else —
-  // present for the sermon, unbothered by whether it understands. Frank:
-  // "add cat sitting with monks watching buddha."
+  // present for the sermon, unbothered by whether it understands.
   const cat = makeCat({ height: 0.32, seed: 6, pose: 'sit' });
   const CAT = { x: -1.5, z: -1.0 };
   cat.group.position.set(CAT.x, 0, CAT.z);
@@ -196,8 +195,8 @@ const CAM = { distance: 11, target: [1.05, 0.3, -3.35], heading: 17, pitch: 29.5
   if (hit && releasePetal()) {
   // A petal genuinely makes no sound. The most that is honest is a
   // suggestion of one — still the quietest voice in the book, just no
-  // longer its quietest setting (0.35: Frank's audit, "it's not very
-  // loud, it could be a little bit louder"). It must not fire once the
+  // longer its quietest possible setting, which was under the threshold of
+  // being heard at all. It must not fire once the
   // flower is bare: releasePetal() returns false with nothing left to
   // drop, and this case is the one place an uncaused sound was
   // explicitly ruled out.
@@ -206,7 +205,7 @@ const CAM = { distance: 11, target: [1.05, 0.3, -3.35], heading: 17, pitch: 29.5
   });
   
   // NOTHING FALLS ON ITS OWN HERE. A petal used to release every 26s unprompted;
-  // Frank cut it — the case is Kashyapa's smile, which is an ANSWER to something
+  // it was cut — the case is Kashyapa's smile, which is an ANSWER to something
   // offered, and a flower shedding on a timer answers nobody. Case 38's oak keeps
   // its unprompted leaf: a tree in the wind genuinely does that, and the falling
   // is the whole subject there rather than the response.

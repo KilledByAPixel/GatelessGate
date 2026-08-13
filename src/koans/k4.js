@@ -77,8 +77,8 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   
   // The painted Bodhidharma: a robe and a cowled head, standing a hair
   // proud of the silk. Famously bearded everywhere else; not here. Painted
-  // in the case's red, not ink (Frank: "make the whole image — the painting
-  // of Bodhidharma on the thing — red instead of black"): the portrait IS
+  // in the case's red, not ink — the whole painted image, not a detail of it:
+  // the portrait IS
   // this koan's seal, so the little collector's-seal square it used to
   // carry is gone with the same stroke — one red thing, and it is him.
   const paintMat = washMaterial({ color: ACCENT, flat: true });
@@ -100,8 +100,8 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   // separate open hood shell over it, and since every part of the portrait
   // is the same red paint the only thing the second piece contributed was
   // its artifacts — the shell's rim cutting a hard seam across the crown,
-  // and its open underside showing backfaces from below (Frank: "why is
-  // its head weird?"). A hooded head in flat red IS a single silhouette,
+  // and its open underside showing backfaces from below. A hooded head in flat
+  // red IS a single silhouette,
   // so it is modelled as one: an egg standing slightly tall, pressed flat
   // like the rest of the paint.
   const face = new THREE.Mesh(new THREE.SphereGeometry(0.155, 12, 10), paintMat);
@@ -110,7 +110,7 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   face.scale.set(1, 1.14, 0.32);
   painted.add(face);
 
-  // THE ONE DARK MARK ON HIM — BUILT, AND CURRENTLY NOT ADDED (Frank).
+  // THE ONE DARK MARK ON HIM — BUILT, AND CURRENTLY NOT ADDED.
   //
   // The argument for it was that a head which is one unbroken red egg has no
   // face and no front, and reads as a shape rather than a man looking at you
@@ -139,9 +139,8 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   // tap gathers it and it drains away again.
   // THE BEARD IS RED, and it is the only red left while it is up: the portrait
   // drains to ink underneath it over the same envelope, so what you get is a
-  // black figure wearing the one bright mark on the page (Frank: "the figure is
-  // gonna turn black like it does now, but the beard will appear and be red, so
-  // it will stand out"). Which is also the case, drawn: the thing that is not
+  // black figure wearing the one bright mark on the page. Which is also the
+  // case, drawn: the thing that is not
   // there is the only thing you can see.
   const beardMat = washMaterial({ color: ACCENT, flat: true });
   beardMat.transparent = true;
@@ -206,24 +205,22 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   // ---- the moment: the ink will not take -------------------------------
   // THE WHOLE PORTRAIT DRAINS, not just a beard. The refusal used to be a
   // 0.34-unit cone of INK_LIT fading to 0.85 opacity under the painted chin,
-  // on a scroll a few units across — Frank, looking straight at it: "it doesn't
-  // seem like the ink is doing anything or draining away." It was a real
+  // on a scroll a few units across — invisible in practice, even looking
+  // straight at it. It was a real
   // effect that nothing at reading distance could resolve.
   //
   // So the event became the one thing on the scroll that IS big enough to read:
   // its colour. The portrait is the case's accent, the only red on the page.
   // Touch it and the red runs out of it — the whole figure goes to ink, holds
-  // there, and washes back to red (Frank's own idea: "if we could have the ink
-  // drain away so it's black, and then turn back to red again after a few
-  // seconds"). The beard still tries to come in while the colour is out, which
+  // there, and washes back to red. The beard still tries to come in while the
+  // colour is out, which
   // is what the draining was FOR, and it is gone by the time the red returns.
   // Nothing is achieved. He is still beardless.
   //
   // WRITE THE MATERIAL THAT IS ON THE MESH, NOT A REFERENCE CAPTURED AT BUILD
   // TIME. This is why the beard never appeared and why the first cut of the
-  // drain did not either (Frank, twice: "it doesn't seem like the ink is
-  // doing anything"; "I'm not seeing anything of four when I click on the red
-  // portrait").
+  // drain did not either: touching the portrait visibly did nothing, twice
+  // over.
   //
   // The bug, now historical: the debug workbench used to rebuild every lit
   // mesh's material as a plain Lambert on the shipped default, stashing the
@@ -253,8 +250,8 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   // emissive of its own colour at SEAL_GLOW — that is what makes the reds in
   // this book carry — and emissive light does not care what the diffuse colour
   // says. So draining the diffuse alone left the portrait lit red from inside: it
-  // went dark-ish and stayed warm, and never read as ink (Frank: "the figure
-  // doesn't go quite fully black, it's still kind of reddish"). Both halves
+  // went dark-ish and stayed warm, never fully black and never reading as ink.
+  // Both halves
   // move together now, and the target is raw INK rather than INK_LIT because
   // this is the one moment the case wants an actual hole in the page.
   const GLOW = SEAL_GLOW;

@@ -11,8 +11,8 @@ import {
 // the nav queue, the ink transitions, the scroll — and differs only in having
 // no number, which is what turns off the seal.
 //
-// ITS OWN SCENE NOW, not the hub with the gate removed (Frank: "let's create
-// a separate preface scene"). The picture is the verse itself:
+// ITS OWN SCENE NOW, not the hub with the gate removed. The picture is the
+// verse itself:
 //
 //   THE FORK. "The great path has no gate, thousands of roads enter it" — so
 //   the road the reader arrives on SPLITS, a Y opening in the middle distance,
@@ -21,20 +21,20 @@ import {
 //   old staging, kept.
 //
 //   THE BELL AND THE FLAG, either side of the split — the first page of the
-//   book, so it carries something to touch right away (Frank: "people have
-//   something right away"): the bonshō rings like case 16's, the flag ruffles
+//   book, so it carries something to touch right away: the bonshō rings like
+//   case 16's, the flag ruffles
 //   under the pointer like case 29's. Both behaviors live in their kit pieces;
 //   this page only hangs them.
 //
-// THE MONK IS THE RED THING (Frank: "let's make the monk red on the
-// preface"). The gate used to carry this page's warm mark and the gate is
+// THE MONK IS THE RED THING. The gate used to carry this page's warm mark and
+// the gate is
 // gone; now it is the figure standing at the choosing — which is the right
 // reading for a preface: the one red thing on the book's first page is the
 // person about to walk it. ACCENT_DEEP, not full ACCENT — the house rule
 // for a person-sized mass (k42's girl is the precedent). The bell and flag
 // stay ink: case 16 owns the red bonshō and case 29 the red flag, and one
 // warm mark per page is the book's law.
-// Frank stages by eye from here — the numbers below are a first placement.
+// Staged by eye from here — the numbers below are a first placement.
 const page = MATTER.preface;
 const SEEDS = { seed: 23, groundSeed: 41, pathSeed: 61 };
 
@@ -82,7 +82,7 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   
   // ---- the thousand roads, drawn as three ribbons ----------------------
   // the road the reader arrives on, swinging through a real curve on its
-  // way to the split (Frank: "a little bit more of a curve")
+  // way to the split
   const approach = makePath({
   from: [2.0, 9.5], via: [-2.0, 3.0], to: [FORK.x-.4, FORK.z+.5],
   width: 1.8, wander: 1.0, taper: 0,
@@ -199,8 +199,7 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   input && input.onTap(() => {
   if (!camera) return;
   if (input.raycastFirst(camera, bell.pickTargets())) { ring(); return; }
-  // THE MONK RINGS THE BELL (Frank's audit: "when you click on the red guy,
-  // it rings the bell"). The one red thing on the book's first page is the
+  // THE MONK RINGS THE BELL. The one red thing on the book's first page is the
   // person about to walk it, so touching him acts THROUGH him — the bonshō
   // across the road sounds, same strike, same 0.5s floor, spatialised at
   // the bell rather than the man, because the bell is what sounds.

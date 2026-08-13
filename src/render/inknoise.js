@@ -41,8 +41,8 @@ vec2 inkDomain(vec2 uv, float aspect, vec2 seed) {
 // A FRESH STAIN EVERY TIME. The field is a fixed function of position, so with a
 // fixed domain every transition in the book spread ink through the paper in
 // exactly the same blotches — which nobody notices once and everybody notices
-// when they page quickly (Frank: "if you press the button rapidly, it's not
-// doing the exact same effect, the exact same noise"). Sliding the domain far
+// when they page quickly, because every transition ran the identical noise.
+// Sliding the domain far
 // enough lands the same fbm on unrelated ground and costs one uniform.
 //
 // A COUNTER, NOT Math.random. The determinism rule is the whole reason this book

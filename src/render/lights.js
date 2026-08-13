@@ -10,9 +10,9 @@ import { PAPER, WASH } from '../palette.js';
 //    is sized to hold ~100 texels/unit — the density that reads as contact
 //    shadow (a 2k map over a 56-unit frustum is ~36 texels/unit and looks
 //    like stair-stepped garbage; that derivation set the original ±10/2048
-//    pair). The frustum went ±10 → ±15 on Frank's ask ("a lot of trees and
-//    stuff are outside the range of the shadows — fifty percent bigger"),
-//    and the map went 2048 → 3072 with it, so the coverage grew without the
+//    pair). The frustum went ±10 → ±15 to bring in the trees that were falling
+//    outside the shadowed range, and the map went 2048 → 3072 with it, so the
+//    coverage grew without the
 //    texel density moving: 3072 over 30 units ≈ 102/unit, same as before.
 // 2. The fill is a hemisphere, not a flat ambient. A uniform ambient lifts every
 //    surface equally, which erases form — the single biggest reason the scene
@@ -22,10 +22,10 @@ export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 15 }
   const g = new THREE.Group();
   g.name = 'lights';
 
-  // The key sat at 9.5 for one commit, and Frank's verdict split it: the RED was
-  // right at that light, the GROUND was "basically white — you don't need any
-  // shading," and the distance washed out. He wanted the red kept and everything
-  // else back down. Those two can't share one number — so they don't. The red's
+  // The key sat at 9.5 for one commit, and the verdict split it: the RED was
+  // right at that light, but the ground blew out to nearly white with no shading
+  // left and the distance washed out. Keep the red, bring everything else back
+  // down — and those two cannot share one number, so they don't. The red's
   // extra brightness moved into the materials themselves as SEAL_GLOW
   // (material.js), where the sun can't take it away, and the key came back to the scene light
   // he approved, nudged up as asked.

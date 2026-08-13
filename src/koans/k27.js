@@ -28,18 +28,15 @@ const ID = 27;
 //
 //   1. THEY SANK into the ground, on three separate hit boxes with a fourth for
 //      undo. A switchboard with a trapdoor animation, and three targets make a
-//      checklist where Nansen said one sentence (Frank: "I don't actually like
-//      that one at all").
+//      checklist where Nansen said one sentence.
 //   2. THE INK DRAINED — colour to the sky, then an opacity down. It blinked
-//      (Frank: "they just kind of blink off after they turn the colour").
+//      — they turned colour and then simply blinked off.
 //   3. THE COLOUR WASH DONE EXACTLY: `color` to black while `emissive` goes to
 //      the sky renders a lit surface as flat sky under any light, which is a
 //      true vanish where the sky is what is behind it — and this hall stands
 //      against the meadow, so it became a hall-shaped patch of sky laid over
-//      the trees. A staggered per-mesh alpha after it was still no good (Frank:
-//      "the way they're changing colour now looks really bad, probably because
-//      they're trying to fade them out — and the alpha still doesn't really
-//      work properly").
+//      the trees. A staggered per-mesh alpha after it was no better: the colour
+//      change read badly and the alpha never worked properly.
 //
 // THE INK PASS CANNOT FADE, and that is the common cause. It is a Sobel over
 // the depth buffer, so a thing wears a full-strength outline for exactly as
@@ -58,8 +55,8 @@ const ID = 27;
 //
 // THE MOON IS THE EXCEPTION, and it earns it: sixty units out, a moon that got
 // smaller would read as the moon leaving rather than as the picture doing
-// anything. It keeps the colour fade, which is the one that worked (Frank: "the
-// moon already fades out perfectly fine") — it can, because it is UNLIT and
+// anything. It keeps the colour fade, which is the one that worked — it can,
+// because it is UNLIT and
 // unfogged, so a disc painted exactly the sky colour is an exact vanish with no
 // blending involved. What it must never take is `transparent = true`: makeMoon
 // forces `gl_FragColor.a = 0.0` as an ink-mask marker, free while the material
@@ -80,8 +77,8 @@ const OFFSET = 0.42;      // seeded spread WITHIN a kind, so a wood is not a swi
 // The four kinds, in the order they shrink: the two men, the hall, the trees,
 // and back in reverse. The moon is not one of them — it is sixty units out and
 // a moon that got smaller would read as the moon leaving rather than as the
-// picture doing anything, so it keeps the colour fade it already had (Frank:
-// "the moon already fades out perfectly fine, so you could just leave that").
+// picture doing anything, so it keeps the colour fade it already had, which
+// worked.
 const COUNT = 4;
 const GONE_AT = (COUNT - 1) * STAGGER + DRAIN;
 const RETURN_AT = GONE_AT + EMPTY;
@@ -112,7 +109,7 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 31.5, pitch: 2
   build(ctx) {
   const { audio, input } = ctx;
   const scene = new THREE.Scene();
-  // EXPERIMENT (Frank): a red sky for the erasing case. The one scene where
+  // EXPERIMENT: a red sky for the erasing case. The one scene where
   // you take the world apart until only the page is left gets a page that is
   // already tinted — so the paper you are left with is a warm red rather than
   // white. The paper post pass multiplies, so this composites fine.
@@ -146,10 +143,9 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 31.5, pitch: 2
   treeGroup.name = 'the-tree';
   const oak = makeOak({ height: 5.2, seed: ID });
   const oakRoot = oak.group || oak;
-  const TREE = { x: 2.3, z: -4.6 };      // moved clear of the path (Frank: it stood in the road)
+  const TREE = { x: 2.3, z: -4.6 };      // moved clear of the path; it used to stand in the road
   oakRoot.position.set(TREE.x, 0, TREE.z);
-  // Turn the hero limb AWAY from the home lens (Frank: "what's going on with
-  // the weird tree branch?"). Seed 27 grows its long low bough at local
+  // Turn the hero limb AWAY from the home lens. Seed 27 grows its long low bough at local
   // bearing 2.50 rad, which the home camera (heading 31.5) saw end-on: a bare
   // foreshortened limb with a knuckle, jutting at the hall like an arm. At
   // this yaw the bough reaches directly behind the crown, so from the whole
@@ -214,15 +210,15 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 31.5, pitch: 2
   add(hall, 1);
   add(lantern, 1);              // the other built thing on the page
   add(oakRoot, 2);
-  // ...AND EVERY OTHER TREE ON THE PAGE (Frank: "the temple, the trees, all of
-  // the trees, and the people all shrink down"). composeWorld hands back the
+  // ...AND EVERY OTHER TREE ON THE PAGE — the hall, the trees and the people
+  // all go together. composeWorld hands back the
   // midground wood it planted; the far forests are not in it and stay put,
   // being a mass in the fog rather than things anyone could point at.
   for (const t of world.trees) add(t, 2);
 
   // ---- and the scatter, which is not props at all -------------------------
-  // The rocks and the bushes (Frank: "can we also do the rocks too, and the
-  // lantern?") are ONE InstancedMesh each — twelve rocks and nine bushes drawn
+  // The rocks and the bushes are ONE InstancedMesh each — twelve rocks and
+  // nine bushes drawn
   // in a single call, with a matrix per instance. Scaling the mesh would scale
   // about the SCENE origin and walk the whole scatter into the middle of the
   // meadow, so each instance's own matrix is recomposed instead: same position,
@@ -264,7 +260,7 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 31.5, pitch: 2
   // THE MOON DOES NOT SHRINK. It is sixty units out, so a smaller moon would
   // read as the moon leaving rather than as the picture doing anything — and it
   // is the one thing here that already went away cleanly, by colour alone
-  // (Frank: "the moon already fades out perfectly fine"). It can do that because
+  // and cleanly. It can do that because
   // it is UNLIT and unfogged, so a disc painted exactly the sky colour is an
   // exact vanish with no blending involved. What it must never take is a
   // `transparent = true`: makeMoon's shader forces `gl_FragColor.a = 0.0` as an

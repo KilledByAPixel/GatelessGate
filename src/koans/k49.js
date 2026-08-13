@@ -33,7 +33,7 @@ const ID = 49;
 // and the lintel is over the top — at which point there is no gate on the page
 // at all, only the country it framed. Then it comes back to its own size.
 //
-// Frank's idea, and it is the right one for the last page of the book. This is
+// It is the right gesture for the last page of the book. This is
 // the gate the title screen opens on and the whole book's one red thing; the
 // afterword past it registers no tap at all. The reader's last act is to make
 // the gateless gate large enough to walk through without noticing, which is the
@@ -230,9 +230,9 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   // cooldown of its own — half a second, independent of the growing — so
   // the gate could be rung over and over while it was already open, from
   // a hit box that stays behind at the size and place the gate started
-  // (Frank: "you can keep clicking on the position where it was, and it
-  // will keep playing that sound... we only want to play it whenever it
-  // starts its animation to grow"). Two gates on one page, effectively:
+  // — you could keep clicking where the gate used to be and keep triggering
+  // the sound, when it should only fire as the gate starts to grow.
+  // Two gates on one page, effectively:
   // the one you could see and the one you could still hear.
   //
   // One guard now, and it is the gesture's: if it is open, the touch does
@@ -241,7 +241,7 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   grewAt = clock;
   rings++;
   // a small bright strike at the torii, the seal the book closes on —
-  // task-12's migration to Frank's tuned presets
+  // task-12's migration to the tuned presets
   audio && audio.bell({ preset: 'hand', gain: 0.5, at: gate.position });
   return;
   }

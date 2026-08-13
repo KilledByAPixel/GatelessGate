@@ -6,10 +6,10 @@ import {
 } from './kit/index.js';
 import { introPath } from './intro_rails.js';
 
-// THE GATE EATS ITSELF (Frank: tap the Contents' gate and it "shrinks down to
-// zero size", while a second gate — "so big initially that it's not gonna be
-// visible on camera" — comes down to land exactly where the first one stood,
-// and the loop can run for ever). k47's endless road turned inward: passing
+// THE GATE EATS ITSELF. Tap the Contents' gate and it shrinks away to nothing
+// while a second gate — huge at first, and so off camera — comes down to land
+// exactly where the first one stood, and the loop can run for ever. k47's
+// endless road turned inward: passing
 // through the gateless gate leaves you before the gateless gate.
 //
 // BIG is the incoming gate's starting scale. At 12 the posts stand ~18 units
@@ -38,8 +38,8 @@ const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 //
 // THE THREE SEEDS are the other half of that. Taking the gate out was not
 // enough to tell the three scenes apart — same hills, same trees, same bend in
-// the road, so the preface read as the Contents with a prop missing (Frank:
-// "right now it looks exactly the same"). Each of them now rolls its own
+// the road, so the preface read as the Contents with a prop missing rather than
+// as its own place. Each of them now rolls its own
 // ground, scatters its own trees and bends its own road, and they stay the
 // same PLACE in the way three drawings of one valley do:
 //   seed        — trees, rocks, bushes, grass, mountains, forest
@@ -68,8 +68,8 @@ export function buildHub({
   // The hub frames deeper than a case: the rig orbits gateTarget at distance
   // 14, so its foreground starts ~12 units camera-side of the gate. At the
   // default shadow fit (focus [1.2,0,0.3], r 10) every near tree's canopy sat
-  // outside the frustum and its shadow truncated mid-ground — Frank: "the
-  // shadow of the tree right in front of the camera is cut off." Centered
+  // outside the frustum and its shadow truncated mid-ground, cutting off the
+  // shadow of the nearest tree in frame. Centered
   // between the gate and the camera side and widened just enough that every
   // caster whose shadow can land in frame fits; 2048/30 ≈ 68 texels/unit,
   // still contact-shadow territory, not the 56-unit mush lights.js warns about.
@@ -229,8 +229,8 @@ export function buildHub({
   };
 }
 
-// Frank set this by eye, twice: 9 for the longer road read as too long ("cut
-// off another two seconds"), so it is back to the original 7 — over a road that
+// Set by eye, twice: the longer road at 9 read as too long, so it is back to
+// the original 7 — over a road that
 // is now a third longer and goes all the way through the gate. Same length of
 // time, more ground covered, so the walk is brisker than it used to be.
 const INTRO_SECONDS = 7;
@@ -240,7 +240,7 @@ const INTRO_SECONDS = 7;
 export function makeIntro(camera, { onDone, onSound } = {}) {
   let u = 0, done = false;
 
-  // No "Sound?" prompt any more (Frank): the title just names the book. Sound
+  // No "Sound?" prompt any more: the title just names the book. Sound
   // is on by default and the mute button in the toolbar is always there, so
   // there is nothing to ask. The credit/link line can grow here later.
   const el = document.createElement('div');

@@ -67,8 +67,8 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   }
   hall.add(cloud);
   
-  // The hall hovers HOVER above the terrain — it is a dream — but Frank's
-  // rule for floating platforms holds even here: a deck standing on daylight
+  // The hall hovers HOVER above the terrain — it is a dream — but the rule for
+  // floating platforms holds even here: a deck standing on daylight
   // reads as a bug, so the veranda's own under-frame (`legs`) carries it to
   // the ground and the dream floats on carpentry instead of air.
   const HOVER = 0.32;
@@ -80,7 +80,7 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   // HOVER + the deck thickness (0.34, the veranda default) — the seats and
   // monks used to be placed for a far thinner deck and sat 0.14 INSIDE the
   // boards, which swallowed every seated robe's base and made the figures
-  // read as squat blobs (Frank's "really squat and fat weirdly").
+  // read as squat blobs.
   const DECK_TOP = HOVER + 0.34;
   
   // A bamboo screen (k26's, in plain ink — there it is the red thing
@@ -90,7 +90,7 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   //
   // FIXED, not hanging. k26's screen is a sudare on a roller with pull cords,
   // which needs a lintel over it; this is an open deck, so the roller and its
-  // cords hung in daylight holding nothing up (Frank: "not attached right").
+  // cords hung in daylight holding nothing up.
   //
   // AND IT FILLS THE BAY EXACTLY, read off the veranda rather than typed. The
   // first pass put it 1.3 units behind the post line, past the back edge of
@@ -146,8 +146,8 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   stand.position.set(seats[2].position.x, DECK_TOP + 0.21, seats[2].position.z + 1.15);
   hall.add(stand);
   
-  // The gavel is an actual MALLET now (Frank: "it should have, like, a
-  // stick — like a hammer kind of"): a fat head lying across the block and
+  // The gavel is an actual MALLET now — a hammer, not a block: a fat head
+  // lying across the stand and
   // a slim tapered handle out of its side, resting at a hand-laid angle
   // with its butt overhanging the block's edge. One accent material, so
   // the two parts merge into a single mesh and the strike bounce still
@@ -157,8 +157,7 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   gavel.position.copy(stand.position);
   gavel.position.y += 0.24;
   // The handle (local +z) faces KYOZAN at the third seat, not the audience —
-  // it is his hand that takes it up (Frank: "rotate it about 180 degrees so
-  // the handle faces toward the monk"). Derived from where he actually
+  // it is his hand that takes it up. Derived from where he actually
   // stands, plus a few degrees off square so it still reads hand-laid.
   gavel.rotation.y = Math.atan2(
   kyozan.position.x - stand.position.x,
@@ -178,8 +177,8 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   // The audience, on the ground where the floor stops. The whole staging
   // area sits inside groundHeight's flat radius, so the terrain under the
   // arc is level at y = 0 — the crowd sits AT zero, not floated 0.34 up on
-  // an imaginary extension of the deck (Frank: "they're also floating above
-  // the ground there"). The dream's rocking still carries them, but its
+  // an imaginary extension of the deck, which left them floating. The dream's
+  // rocking still carries them, but its
   // amplitude is millimetres; it never lifts a hem visibly off the grass.
   const assembly = makeAssembly({
   count: 8, radius: 4.6, center: [-.7, -2.5], facing: [0.2, -3.0], spread: 1.3, seed: ID,
@@ -191,7 +190,8 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   // from its live world XZ through a chaotic hash, which only holds still while
   // a tuft never moves. Rocking the grass (it used to ride on `hall`) re-rolled
   // every one of those hashes each frame and the meadow visibly re-randomised
-  // (Frank's "regenerated every frame" glitch). So the dream floats and rocks;
+  // — the meadow appeared to regenerate every frame. So the dream floats and
+  // rocks;
   // the ground it floats above stays put.
   const world = composeWorld(scene, {
   view: CAM,
@@ -216,7 +216,7 @@ const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.
   // The dream rocks very slightly, and ONLY on its own — striking the gavel
   // never touches the world. An earlier cut grew the wobble on every click,
   // which read as the camera being knocked out of place the more you tapped
-  // (Frank's bug). The strike is a sound and a small LOCAL bounce of the
+  // the more you tapped. The strike is a sound and a small LOCAL bounce of the
   // gavel now; the world is left alone.
   const BASE = 0.006;        // the faint rocking that never stops, unchanging
   const GAVEL_Y = stand.position.y + 0.24;

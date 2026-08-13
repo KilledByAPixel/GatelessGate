@@ -20,7 +20,7 @@ const ID = 46;
 //
 // The POLE is the red seal — one red line rising out of the meadow — and the
 // man on top is INK, the same figure grammar as every monk in the book
-// (Frank: "just the pole red, not the guy at the top"). Two red things were
+// — the pole is red, the man is not. Two red things were
 // one too many: with the sitter red as well, mast and man fused into a single
 // red lollipop and the figure stopped reading as a figure. A dark seated mark
 // against clear paper at the top of the one red vertical is the stronger
@@ -41,16 +41,14 @@ const SITTER_YAW = Math.PI + 0.4;
 // The SITTER used to be a target too: tap him and he tipped forward seven
 // degrees, held at the very edge of the step the koan demands, and settled
 // back. It was the more literal reading of the case — "proceed from the top of
-// a hundred-foot pole" — and Frank cut it on sight ("I don't really like how
-// you can click on the guy at the top to make them lean a little bit"). Two
+// a hundred-foot pole" — and it was cut on sight. Two
 // targets on a page whose whole subject is one vertical object was one too
 // many, and the small nod he also had is gone with it: at this distance a
 // seven-degree tip on a 1.3-unit figure eight units up is a couple of pixels,
 // which is a thing the code knows about and the reader does not.
 //
 // THE WOBBLE IS TWO INDEPENDENT SWAYS, not one lean scaled onto two axes
-// (Frank: "can we give it, like, kind of a random wobble... sine waves for
-// both axes of the rotation, so we could use different values"). One damped
+// — a separate sine per axis, at values of their own. One damped
 // sine per axis, at frequencies that do not divide into each other and with a
 // quarter-turn of phase between them, so the tip of the mast traces an opening
 // spiral rather than swinging in a plane and back. A pole struck by a hand does
@@ -60,10 +58,10 @@ const SITTER_YAW = Math.PI + 0.4;
 // sines, `exp(-decay*u) * sin(freq*u)`, restarted from u = 0 on every tap. Both
 // were shapes, and a shape has to start somewhere — so a second tap while the
 // mast was still moving threw away whatever it was doing and began again from
-// nothing (Frank: "if you click multiple times while it's still moving, it
-// starts to pop. So what we kinda wanna do is apply, like, an acceleration").
+// nothing, and tapping repeatedly made it pop. What it wants instead is an
+// ACCELERATION applied to something already in motion.
 //
-// He is describing a pendulum, and the book already has one — the same
+// Which is a pendulum, and the book already has one — the same
 // integrator the fūrin and the bronze cylinders swing on. TWO of them, one per
 // axis, at lengths chosen so their periods do not divide into each other; a
 // touch is a KICK, which by construction changes only the angular VELOCITY and
@@ -85,8 +83,8 @@ const SWAY_Z = { length: 0.26, damping: 2.9 };   // quicker, shorter
 // rad/s added to a pendulum by one touch. Peak angle is about KICK / omega0,
 // so this lands near 0.09 rad on the slow axis — the same size the sines were.
 const KICK = 0.42;
-// AND EVERY TAP SHOVES IT A DIFFERENT WAY (Frank: "can we randomize how it
-// occurs, so it's not always in the same exact angle each time"). The bearing
+// AND EVERY TAP SHOVES IT A DIFFERENT WAY, rather than always at the same
+// angle. The bearing
 // now picks how the kick is SPLIT between the two axes, which is what a shove
 // from a direction physically is — rather than rotating a figure after the fact.
 //
@@ -252,9 +250,9 @@ export default {
       if (now - lastRing >= 0.5) {
         lastRing = now;
         // quiet, at the pole top — not a hung bell, so the smallest preset
-        // (task-12's migration to Frank's tuned presets). gain 0.06 -> 0.14
-        // on the audit: "there's a sound, it's hard to hear" — still the
-        // faintest bell in the book, just no longer below the ambience.
+        // (task-12's migration to the tuned presets). Raised on the audit,
+        // where it was audible but only just — still the faintest bell in the
+        // book, now no longer under the ambience.
         audio && audio.bell({ preset: 'hand', gain: 0.14, at: sitterPivot.getWorldPosition(scratchPos) });
       }
     });

@@ -43,7 +43,7 @@ const CAM = { distance: 11.0, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 1
   accent: ACCENT,
   tier: 1,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  // 'rain' (Frank's pick, scene-pass spec §5): five hundred lives turned on
+  // 'rain': five hundred lives turned on
   // whether cause and effect can be evaded, and rain is the book's plainest
   // image of it — falling on the freed fox, the cave, and the men alike,
   // refusing nobody and exempting nobody. Passive on purpose: unlike case
@@ -126,7 +126,7 @@ const CAM = { distance: 11.0, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 1
   seed: ID,
   treeKind: 'pine',
   groundSeed: 21,
-  trees: 5,        // a wooded mountainside, not a lawn (Frank: "more trees")
+  trees: 5,        // a wooded mountainside, not a lawn
   keepout: [
   ...cave.footprint(0.8),                       // the whole rock mass
   { x: 0, z:40, r: 50 }, // behind camera
@@ -153,8 +153,7 @@ const CAM = { distance: 11.0, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 1
   if (hit) {
   fox.notice();
   audio && audio.breath({ force: 0.6, at: hit.point });
-  // ...and a small chime at the touch (Frank's audit: "add a chime when
-  // you click on the fox") — the breath alone starts too slowly to read
+  // ...and a small chime at the touch — the breath alone starts too slowly to read
   // as an acknowledgment, k1's own lesson. A high tube for a small animal.
   audio && audio.chimeStrike({ tube: 4, force: 0.45, at: hit.point });
   }

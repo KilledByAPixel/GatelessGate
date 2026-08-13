@@ -21,15 +21,13 @@ const ID = 17;
 
 const ANSWER_DELAY = 0.4;      // he is across a courtyard, not beside you
 // Radians of lean. 0.16 is nine degrees — a nod, and at this staging distance
-// not a visible one (Frank: "could we increase how much they bow? It's still
-// not quite enough"). 0.42 is twenty-four degrees, which is a bow you can see
+// not a visible one. 0.42 is twenty-four degrees, which is a bow you can see
 // two figures exchange from across a yard and still well short of the folding
 // bow k32's philosopher makes at 0.62.
 const BOW = 0.42;
 const BOW_IN = 1.1, BOW_HOLD = 1.9, BOW_OUT = 1.2;
-// THE NOD (Frank's audit: "a slight bit of movement on the teacher when you
-// click on him — just like a tiny bit of motion. It helps when the thing you
-// click on does something"). A small forward dip at the sash, on the TAP —
+// THE NOD — a touched thing has to do something, however small.
+// A small forward dip at the sash, on the TAP —
 // the same instant-acknowledgment rule as Oshin's turn below: the call is his
 // gesture, so his body carries it the moment it is made, not when the answer
 // arrives. Added on top of whatever the mutual bow is doing, so a call made
@@ -80,7 +78,7 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   // CHU, seated on the boards — HE is the seal. There was nothing else in the
   // courtyard that wanted to be red (it is two people and a call), so the
   // teacher on the platform takes the accent; deepened, since a whole figure
-  // at full accent glares (Frank's call).
+  // at full accent glares.
   const chu = makeMonk({ height: 1.6, pose: 'sit', elder: true, color: ACCENT_DEEP, bow: true });
   const chuWaist = chu.getObjectByName('waist');
   const CHU_POS = new THREE.Vector3(-1.9, 0.34, -2.7);
@@ -89,7 +87,7 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   // A SEATED figure's visible front is local +z — the folded sleeves point
   // that way — so aimMonk (which turns local +x) left him reading a quarter
   // turn off, gazing past the yard instead of at the man he is calling
-  // (Frank: "why is the guy looking over to the side?"). Turn his lap toward
+  // — he read as looking off to one side. Turn his lap toward
   // Oshin directly, and bow about x (order YXZ: pitch inside the yaw) so the
   // lean goes the way he faces.
   chu.rotation.order = 'YXZ';
@@ -102,10 +100,8 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   
   // The reed mat that used to lie under him is GONE: the seated figure
   // brings its own zabuton now, and the two were nearly the same size, so
-  // stacked they read as one thing doubled (Frank: "an extra thin
-  // rectangular shaped thing below this guy... I don't know why there needs
-  // to be the art-directed cushion any more — just the regular default
-  // cushion would probably be fine").
+  // stacked they read as one thing doubled: an extra thin slab under the
+  // figure, where the default cushion alone says it better.
   
   // OSHIN, across the yard, turned to his own work — the whole point is that
   // he is not already looking
@@ -158,9 +154,8 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   // Grass is cleared UNDER THE PLATFORM and nowhere else. There used to be
   // a second circle out at (0.4, -0.6) to keep the courtyard between the
   // two of them open, and with nothing standing there it read as a bald
-  // patch of ground in the middle of the meadow (Frank: "the grass is
-  // emptied out in a weird circle... it's kind of between them, but it
-  // should be just where the platform is"). The veranda's own circle is
+  // patch of ground in the middle of the meadow, cleared between the two of
+  // them rather than under the platform. The veranda's own circle is
   // centred on the veranda now, not offset forward of it.
   grassKeepout: [
   { x: veranda.position.x+1., z: veranda.position.z+1.5, r: 2.7 }, // nudge it a bit
@@ -224,10 +219,9 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   //
   // ON THE CALL, NOT ON THE ANSWER. This used to advance on `answered`, so
   // nothing moved until ANSWER_DELAY had elapsed and the reply had sounded —
-  // a tap, a wait, and only then a turn. Frank: "I click on them, and it's a
-  // bit too much of a delay, because he's waiting for the sound. But really,
-  // as a user, I wanna see him turn as soon as I click on the guy, not after
-  // the sound happens." The turn is the acknowledgement and it belongs to the
+  // a tap, a wait, and only then a turn, which reads as lag. A reader wants to
+  // see him turn the instant they touch him, not after the sound has
+  // happened. The turn is the acknowledgement and it belongs to the
   // tap; the answer still lands a beat later, on its own clock, and the bow
   // still waits for the third of them to actually arrive.
   const bowU = bowAt > -99 ? (clock - bowAt) : -1;
@@ -251,9 +245,9 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   // AND HE BENDS AT THE WAIST TOO. This was `chu.rotation.x`, which pitches
   // the whole seated figure about its own origin down at deck level — so his
   // knees and the staff lying beside him swung under the boards. Invisible at
-  // the old nine-degree bow, plain at twenty-four (Frank: "his legs and stuff
-  // go slightly under the ground, and his walking stick next to him goes under
-  // the ground"). makeFigure hinges seated bodies now, so this is the same
+  // the old nine-degree bow, plain at twenty-four: his legs and the staff
+  // beside him sank through the boards. makeFigure hinges seated bodies now,
+  // so this is the same
   // gesture his student makes, from the same joint.
   // ...plus the tap's own nod, riding on top of the ceremony's lean (its
   // header above): quick down, slower up, gone in under a second

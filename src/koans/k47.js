@@ -36,8 +36,8 @@ const PATH_OPTS = { from: [1.1, 6.8], to: [-1.6, -42], width: 1.7, seed: 47, gro
 //
 // The seal plan changed once: at first only the middle gate — the barrier the
 // walker is approaching NOW — took ACCENT_DEEP, with the near barrier near-ink
-// and the far one a lighter wash. Frank's call on review superseded that (see
-// the note inside GATES): all three carry the deep red, and fog does the
+// and the far one a lighter wash. That was superseded on review (see the note
+// inside GATES): all three carry the deep red, and fog does the
 // hierarchy the grey was doing. The deep mix is the intro gate's — a torii is
 // a big timber frame, and full ACCENT across that much area would glare. The
 // glow is in the material (SEAL_GLOW in render/material.js keys off the accent
@@ -49,7 +49,7 @@ const PATH_OPTS = { from: [1.1, 6.8], to: [-1.6, -42], width: 1.7, seed: 47, gro
 // furthest walks on up the road until the fog has it. Then that one is quietly
 // back behind you, and it can happen again, for ever.
 //
-// Frank's design, and it is the case. Tosotsu's three barriers are three
+// That staging IS the case. Tosotsu's three barriers are three
 // questions, and the joke the composition could never tell on its own is that
 // passing one does not leave you with two — there are always three ahead. The
 // walker between the first and the second never moves. He does not have to.
@@ -74,9 +74,8 @@ const SLOT_T = [0.02, 0.22, 0.42, 0.70, 0.96];
 // ...and the GONE slot is tiny, which is how the far barrier leaves. Fog and
 // distance alone were not enough: the gate arrived at 0.82 scale thirty units
 // out, still just legible against the paper, and then the wrap took it in one
-// frame (Frank: "when the gate goes off the edge of the screen into the
-// distance, it just pops off... let's have it just shrink down as well, that's
-// gonna make it look like it's going away"). At 0.10 it dwindles the whole way
+// frame, popping out of existence rather than receding. At 0.10 it dwindles
+// the whole way
 // out and is a red speck in the mist by the time it is picked up and carried
 // back behind the reader. No alpha anywhere, so nothing here can meet case 27's
 // outline problem.
@@ -93,7 +92,7 @@ const GATE_H = 2.9;       // scaled into its slot from there
 // to be three gates built at three sizes (3.2 / 3.0 / 2.8 wide), which SLOT_S
 // now carries as fractions so any gate can stand in any of them.
 //
-// HUNG LOWER (Frank): at 3.4 the near gate's lintel ran off the top of the
+// HUNG LOWER: at 3.4 the near gate's lintel ran off the top of the
 // frame, so the barrier you are standing at read as two legs and no beam — and
 // a torii is its crossbeam. A shade under three metres puts the whole frame in
 // shot at the home camera and still walks a monk through it.
@@ -101,7 +100,7 @@ const MONK_T = 0.28;   // mid-journey: past the first barrier, short of the seco
 // One bell per visible SLOT, near to far — the note belongs to the position on
 // the road, not to the piece of timber standing in it, so the near barrier is
 // always the biggest bell however many times the road has turned over.
-// task-12's migration off raw f0 (62 + 18*i) to Frank's tuned presets.
+// task-12's migration off raw f0 (62 + 18*i) to the tuned presets.
 const GATE_PRESETS = ['great', 'temple', 'hand'];
 
 // The framing, named so composeWorld can have it too: `view` lets the
@@ -172,7 +171,7 @@ const CAM = { distance: 14.5, target: [-0.6, 0.8, -10.85], heading: 6.5, pitch: 
 
   // FOUR gates, all built at the near barrier's size — the slot they are in
   // supplies the scale, so any of them can be the near one. They all carry the
-  // seal (Frank's call on reviewing the plan): three red barriers on one road,
+  // seal: three red barriers on one road,
   // and the FOG does the hierarchy the grey was doing — the near gate
   // full-blooded, the far one a red ghost dissolving into the paper.
   const gates = [0, 1, 2, 3].map((slot) => {
@@ -243,8 +242,8 @@ const CAM = { distance: 14.5, target: [-0.6, 0.8, -10.85], heading: 6.5, pitch: 
   bushes: 5,
   // The default mountain rings are built for dioramas that stay near the
   // origin; this road runs 40+ units deep, straight into them — gate 3
-  // stood INSIDE a peak (Frank's free-cam find; five separate collisions
-  // by the numbers). These bands flank the corridor instead: verified
+  // stood INSIDE a peak — five separate collisions by the numbers, found by
+  // flying the free cam. These bands flank the corridor instead: verified
   // against every gate and a 26-point road sample — worst gate clearance
   // 8.3, worst road clearance 4.0. The road now climbs into a mountain
   // GAP, which is better composition than a wall anyway.
@@ -267,8 +266,8 @@ const CAM = { distance: 14.5, target: [-0.6, 0.8, -10.85], heading: 6.5, pitch: 
   
   // (THE FURIN IS GONE. A single chime hung under the near barrier's lintel
   // was this page's ambient voice — and the near barrier is not a fixed object
-  // any more. Frank called it before it was built: "we'll probably get rid of
-  // the thing hanging, because that's gonna mess things up." It would have:
+  // any more, so a chime hung on it was ruled out before it was built. It
+  // would have:
   // it would ride one gate up the road and out into the fog, taking the page's
   // only continuous sound with it and coming back four taps later. Its token
   // is out of the ambience recipe with it — see the note there.)
@@ -358,9 +357,8 @@ const CAM = { distance: 14.5, target: [-0.6, 0.8, -10.85], heading: 6.5, pitch: 
   if (moving) settled = false;
 
   // VISIBILITY LAST, after the slots have been advanced — which is the whole
-  // of the one-frame blink Frank saw ("a one frame pop where I can see it
-  // swapped out for the new one... it's in the correct position, so I don't
-  // know why"). He was right that the position was fine. Visibility was
+  // of a one-frame pop, where a gate was visibly swapped out for the new one
+  // despite being in the correct position. The position WAS fine. Visibility was
   // written inside the placement loop, which runs BEFORE the slot bookkeeping,
   // so on the single frame a slide ended the arriving gate was still recorded
   // as being in the parked slot and was hidden — then shown again on the next

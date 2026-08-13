@@ -36,7 +36,7 @@ const AMBIENCE = ['wind:' + BASE_WIND, 'furin', 'furin', 'music'];
 // The framing. This case used to take the book's default shot implicitly, by
 // naming no `camera:` at all. These are DEFAULT_HOME's own numbers, written
 // out so the shot is tuned here like every other case's rather than by moving
-// the book (Frank). composeWorld gets the same object as its `view`, so the
+// the book. composeWorld gets the same object as its `view`, so the
 // scatter still refuses spots no reachable heading can see (kit/scenery.js).
 const CAM = { distance: 11.5, target: [2.75, 1.35, 0.55], heading: 36.5, pitch: 17.2 };
 
@@ -117,15 +117,12 @@ export default {
     });
 
     // THREE single-tube fūrin under the gate's lintel, one size each —
-    // Frank asked for "single wind chimes that can hang that could get
-    // knocked individually ... a single tone. Much of them hanging": three
+    // single chimes, each with one tone, each knocked on its own: three
     // separate voices answering the same wind in their own time is the
     // koan's own argument (not the wind, not the flag) staged as sound.
     //
-    // THE RING IS GONE, on Frank's own call after seeing it staged: "for
-    // case twenty nine, let's get rid of the five-tube ring that's placed.
-    // So it's just gonna have three, the three different sizes. That's what
-    // it's gonna have." A five-note cluster and three single notes under one
+    // THE RING IS GONE, once it was staged: three singles at three sizes, and
+    // nothing else. A five-note cluster and three single notes under one
     // beam was two ideas competing; three singles at three sizes is the one
     // idea, and the sizes are visible from the road. (Its removal also
     // returns 6 draws and the whole left end of the lintel, which is why
@@ -194,9 +191,9 @@ export default {
     // spread, landed here by solving for size rather than picking a round
     // number and hoping.
     const SINGLE_SIZES = [0.18, 0.12, 0.09];
-    // ABSOLUTE cord lengths, in world units, not fractions of size — Frank,
-    // watching three sizes hang side by side: "the small ones are not
-    // hanging low enough." They weren't, and a size-relative cord is exactly
+    // ABSOLUTE cord lengths, in world units, not fractions of size. Hung side
+    // by side, the small ones did not reach low enough, and a size-relative
+    // cord is exactly
     // why: it gives the SMALLEST chime the SHORTEST string, so the one that
     // most needs to reach down to join the group is the one pinned tightest
     // to the beam.
@@ -229,9 +226,8 @@ export default {
     // ---- THE WHOLE SCENE'S WIND, not just the flag's ---------------------
     // Stopping the flag used to stop the flag, the chimes and the sound, and
     // leave the meadow laying over and the trees working away behind it
-    // (Frank: "let's make it so the wind actually stops when you click on it
-    // and the flag stops — the wind is still moving on the grass and on the
-    // trees"). On a page whose entire argument is what the wind is and is not,
+    // — the wind went on visibly moving the grass and the trees. On a page
+    // whose entire argument is what the wind is and is not,
     // a still flag over a moving meadow is the case refuting itself.
     //
     // Both fields are held only WHILE the flag is not at full wind, and handed
@@ -249,10 +245,9 @@ export default {
     // but a case should not need the workbench to clean up after it.)
     //
     // IT DOES NOT GO TO ZERO. A dead-still meadow and dead-still trees read as
-    // the picture having crashed rather than as the wind having dropped (Frank:
-    // "it looks almost like it's frozen... let's just set the wind down to,
-    // like, a tenth of what it normally is or something like that instead of
-    // zero"). A tenth still reads plainly as stopped next to the flag's own
+    // the picture having crashed rather than as the wind having dropped — the
+    // page simply looks frozen. A tenth still reads plainly as stopped next to
+    // the flag's own
     // full lean, and the page stays alive.
     //
     // The floor is on the two FIELDS only. The chimes and the audible wind
@@ -314,9 +309,8 @@ export default {
         const on = flag.toggleWind();
         audio && audio.setWindLevel(on ? baseWind : 0);
         // the toggle itself was silent — the wind's own bed ramps too slowly
-        // to read as an acknowledgment (Frank's audit: "whether you're
-        // starting it or stopping it, we'll have it play the swish sound so
-        // you get some feedback"). One breath, at the cloth, both ways.
+        // to read as an acknowledgment, and the toggle needs feedback either
+        // way it goes. One breath, at the cloth, both directions.
         audio && audio.breath({ force: 0.7, at: hit.point });
       }
     });

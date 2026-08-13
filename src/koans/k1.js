@@ -36,7 +36,7 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   
   // Joshu's hermitage, back off the road behind him — the place the monk
   // walked here to reach (the opening page was two figures and a dog in an
-  // empty meadow; Frank: "scene is boring, add more, maybe a hut"). The
+  // empty meadow, which read as too bare). The
   // path samples at z≈-4.5 put the road at x≈0.5, so the hut at -3.8 keeps
   // a clear verge between its threshold and the traffic.
   const HUT = { x: -3.8, z: -4.5 };
@@ -119,8 +119,7 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   // whole gesture. There was no voice in the palette that was not an
   // impact, which is why this case was silent for so long.
   audio && audio.breath({ force: 0.8, dur: MU_DUR * 0.8, at: hit.point });
-  // ...and one small chime AT the touch (Frank's audit: "a sound like a
-  // chime when you click on the dog"). The breath is four seconds of slow
+  // ...and one small chime AT the touch. The breath is four seconds of slow
   // onset under the ambience — as an acknowledgment it arrives too late to
   // read as one. The chime is the instant half; the breath stays the case.
   audio && audio.chimeStrike({ tube: 2, force: 0.45, at: hit.point });

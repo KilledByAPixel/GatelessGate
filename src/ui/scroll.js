@@ -20,7 +20,7 @@ export function makeScroll({
   back.onclick = () => onBack && onBack();
 
   // page one case at a time, without going back to the table of contents —
-  // the Mumonkan read cover to cover (Frank). Disabled at the two ends.
+  // the Mumonkan read cover to cover. Disabled at the two ends.
   const nav = document.createElement('span');
   nav.className = 'gg-page-nav';
   const prev = document.createElement('button');

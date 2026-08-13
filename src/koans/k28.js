@@ -22,8 +22,7 @@ const ID = 28;
 // time and could not be seen while the little light was burning.
 //
 // Blow it out again and it relights; nothing here is a one-way door. AND IT
-// RELIGHTS ITSELF (Frank: "the candle will come back on after a couple seconds,
-// maybe, like, five seconds or so") — the dark is a held breath, not a state
+// RELIGHTS ITSELF after a few seconds — the dark is a held breath, not a state
 // the page settles into. It also means a reader who taps once and reads on gets
 // the whole event, arrival and departure, without having to know to tap again.
 //
@@ -43,8 +42,7 @@ const RELIGHT = 5.0;
 // The recipe's own wind level, hoisted (k47's idiom) because the blow-out now
 // drives it live: the candle is blown out BY the wind, so while the page is
 // dark the bed swells above its resting level and settles back as the wick
-// catches (Frank's audit: "increase the wind a little bit when you blow out
-// the candle"). k19/k20's setWindLevel idiom — an absolute level per frame,
+// catches. k19/k20's setWindLevel idiom — an absolute level per frame,
 // which the next page's ambience transition ramps away from on its own.
 const BASE_WIND = 0.12;
 const WIND_SWELL = 0.7;      // fraction above BASE_WIND at full dark
@@ -112,8 +110,8 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   flameMat.transparent = true;
   flameMat.fog = false;                    // a flame is not dimmed by distance
   if (flameMat.emissive) { flameMat.emissive = new THREE.Color(ACCENT); flameMat.emissiveIntensity = 1.0; }
-  // a soft teardrop, not a cone (Frank, round 2: "the flame is like a weird
-  // triangle or cone") — a lathe whose belly swells just above the wick and
+  // a soft teardrop, not a cone — a lathe whose belly swells just above the
+  // wick and
   // whose tip is pulled up and rounded off, the shape a still flame holds
   const flameProfile = [
   [0, 0], [0.050, 0.028], [0.072, 0.072], [0.060, 0.122],
@@ -126,7 +124,7 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   flame.position.set(-.8, 1.0, -1.7);     // base at 0.68 — the kit candle's tip
   scene.add(flame);
   
-  // THE GLOW — the bright red light Frank asked to see in the box. A radial
+  // THE GLOW — the bright red light in the box. A radial
   // falloff built as a DataTexture (canvas-free, so build() still runs under
   // plain Node in the tests), on an additive sprite behind the flame: over
   // the night tone it reads as light spilling from the chamber, and being
@@ -221,8 +219,8 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   ],
   });
 
-  // THE WHOLE LANTERN IS THE TARGET (Frank's audit: "you should be able to
-  // click like anywhere on the lantern... a little more leeway"). The old
+  // THE WHOLE LANTERN IS THE TARGET — anywhere on it should work, with real
+  // leeway. The old
   // cylinder was half the size AND stranded at x 0.5 — the lantern moved to
   // -0.8 in a retune and its hit volume stayed behind, so the only working
   // taps were dead-on hits on the flame and candle meshes: exactly the
@@ -270,8 +268,8 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   if (!input.raycastFirst(camera, [hit, flame, candle])) return;
   blows++;
   // out is a breath — audibly one, now: the little knock this shipped with
-  // read as a latch, not a puff (Frank's audit: "that swish kind of sound
-  // that we play on some other areas... it's kinda like getting blown out").
+  // read as a latch, not a puff. The swish voice used elsewhere is what a
+  // candle going out actually sounds like.
   // Lit again is the smallest bell in the set.
   if (lit) {
   lit = false;

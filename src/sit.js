@@ -12,7 +12,7 @@ export function clockText(secondsLeft) {
 
 // Browser sit mode. `audio` is createAudio(); onComplete()/onExit() are callbacks.
 //
-// Three phases, and the third one is the point (Frank): 'off', 'sitting' while
+// Three phases, and the third one is the point: 'off', 'sitting' while
 // the clock runs, and 'done' once it has. Sitting used to throw you back into
 // the text the instant the timer expired, which is the one moment a sitting
 // should NOT be interrupted. Now the bell rings and nothing else happens: the

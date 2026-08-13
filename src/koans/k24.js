@@ -106,23 +106,20 @@ const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 1
   // as seals rather than glare.
   // LOWER, and at MIXED altitudes. At height 6 with the stock 2.6 spread
   // they all cruised in one narrow band near the top of the frame, which
-  // read as a row rather than a flock and half-left the picture (Frank:
-  // "all the birds are kind of the exact same height... a little bit
-  // lower, because they're kind of almost off the top of the camera").
+  // read as a row rather than a flock, and half-left the top of the frame.
   const BIRD_CENTER = [0.5, -1.0];
   const birds = makeBirds({
   count: 9, seed: ID, center: BIRD_CENTER, color: ACCENT,
   height: 4.4, heightVary: 4.4, spread: 5.6,
   // HOW MUCH FASTER A TOUCH MAKES THEM FLY — extra circuit-seconds per second
   // at the peak of the alarm. This page is the one the flock is the answer on,
-  // so it runs well past the kit's 0.9 default (Frank, tuning it by eye: "I
-  // want to speed them up a little more"). Measured over the three seconds
+  // so it runs well past the kit's 0.9 default. Measured over the three seconds
   // after a touch, against the same flock never touched: 0.9 covers 1.4x the
   // ground, 1.6 covers 1.7x, and this covers 2.6x.
   hurry: 3.6,
-  // ...and the WINGS are scaled far less. Frank asked for that split by name
-  // during the butterflies' round — "move faster, but flap wings less fast" —
-  // and it is what makes this read as birds putting their heads down rather
+  // ...and the WINGS are scaled far less — the same split the butterflies got:
+  // move faster, flap less frantically. It is what makes this read as birds
+  // putting their heads down rather
   // than as the film being sped up: 2.6x the ground on 1.3x the wingbeat.
   hurryBeat: 1.7,
   });
@@ -160,8 +157,7 @@ const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 1
   
   input.onTap(() => {
   if (!camera) return;
-  // THE BIRDS ARE THE TARGET (Frank: "let's just have the birds fly faster
-  // for a bit, and you click on them"). It was Fuketsu, which put the tap on
+  // THE BIRDS ARE THE TARGET. It was Fuketsu, which put the tap on
   // the man who by the terms of the case does not answer, and left the thing
   // his answer is actually made of inert. They carry their own pick proxies,
   // because a bird is a half-metre mark four metres up.
@@ -170,9 +166,8 @@ const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 1
   lastAsk = clock;
   asked++;
   // they quicken, climb, and beat harder, and it decays away on its own over
-  // a couple of seconds. (Flying BACKWARDS was built and then cut on Frank's
-  // own second thoughts — see the note in kit/birds.js, which kept the one
-  // thing that came out of it.)
+  // a couple of seconds. (Flying BACKWARDS was built and then cut — see the
+  // note in kit/birds.js, which kept the one thing that came out of it.)
   birds.scatter();
   // he says nothing, and he is not silent either: a breath crosses the
   // meadow under them, and three notes go up out of the grass, spaced like

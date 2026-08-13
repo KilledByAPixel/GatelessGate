@@ -10,8 +10,8 @@ import {
 
 const ID = 48;
 
-// THE EASTERN SEA (Frank's pick, scene-pass spec §5: "there is already a
-// good spot for it and it mentions sea in the text"). Ummon's half of the
+// THE EASTERN SEA — the text names it, and the scene already had the room.
+// Ummon's half of the
 // case strikes the carp of the eastern sea one blow — so the sea is IN the
 // koan, and it lies where the scene always had its open side: past the far
 // end of the one road. The road tapers out across the sand and ends at the
@@ -36,9 +36,9 @@ const SEA_KEEP = [
 // a great red ōgi raised. Ummon's fan is the other half of the case — Ummon
 // answered the same question by raising a fan and saying it jumped to the
 // thirty-third heaven and struck the carp of the eastern sea one blow — so the
-// staging leads with the fan and the sea it strikes. ONE fan only (Frank, round
-// 2: "we only want one person to have a fan; there's a weird fan floating in
-// front of the other figure"); the pupil's hands are empty, which is the right
+// staging leads with the fan and the sea it strikes. ONE fan only — a second
+// read as floating in front of the other figure; the pupil's hands are empty,
+// which is the right
 // state for the one who is still asking.
 //
 // TOUCH THE FAN AND HE WAVES IT, AND IT RAINS. Ummon's fan does not draw a
@@ -48,8 +48,7 @@ const SEA_KEEP = [
 // THE STROKE IS GONE, and it is worth the record because it was the case's own
 // text. Kembo "draws the figure one in the air", so a red bar hung there and a
 // tap redrew it left to right at the speed of a brush. It never read as a mark
-// being made — Frank, on sight: "the thing that comes out, like a rectangle
-// kinda comes out, appears — let's get rid of that." A horizontal slab in
+// being made: what came out read as a rectangle appearing. A horizontal slab in
 // mid-air has no brush behind it and nothing in the picture explains where it
 // came from, which is the difference between a stroke and a floating rectangle.
 // The `stroke` token went out of the ambience recipe with it; nothing in the
@@ -63,7 +62,7 @@ const SHOWER_IN = 1.4;    // the sky closing over — it starts as the fan is mo
 const SHOWER_HOLD = 5.0;  // real rain, long enough to stand in
 const SHOWER_OUT = 4.5;   // and a long tail: showers do not switch off
 const SHOWER_SPAN = SHOWER_IN + SHOWER_HOLD + SHOWER_OUT;
-// "The wind will pick up just a LITTLE bit" (Frank), and this is a multiplier
+// The wind picks up just a LITTLE bit, and this is a multiplier
 // ON TOP of the meadow's own wind, not a replacement for it — 0.5 is half again
 // at the peak, where case 34's squall is 3.4 (four and a half times over) and
 // case 20's is 6. Weather that arrives, not weather that hits. It was 1.3 for
@@ -131,7 +130,7 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   scene.add(road);
   
   // KEMBO, raising a great folding fan in the air — "Here it is." He held a
-  // walking stick here for a while, but Frank traded it for a big ōgi: an
+  // walking stick here for a while, traded for a big ōgi: an
   // open paper wedge held up in the raised hand, face turned to the reader,
   // red like the stroke it draws. (It also folds the case's two halves into
   // one picture — Ummon's answer to the same question WAS a fan.)

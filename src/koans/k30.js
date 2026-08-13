@@ -11,8 +11,8 @@ const ID = 30;
 // "What is Buddha?" — "This mind is Buddha."
 //
 // A still pond with the figure seated on the far bank. There used to be a
-// painted reflection of him lying flat on the water; Frank read it exactly
-// right ("that weird 2D thing in the water") and it is gone — the pond
+// painted reflection of him lying flat on the water; it read as exactly what
+// it was, a flat 2D thing lying on the pond, and it is gone — the pond
 // answers with koi and ripples, not with a second Buddha.
 //
 // Case 33 is this scene with the far bank empty. They are meant to be read as
@@ -38,9 +38,8 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   accent: ACCENT,
   tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  // Used to carry a water bed (water:0.35); Frank on case 39's version of the
-  // same sound: "it sounds like we're at a beach or something" — this is
-  // still water too, so the wash is gone (see makeWaterBed's comment in
+  // Used to carry a water bed (water:0.35), but that continuous wash read as
+  // surf, and this is still water, so it is gone (see makeWaterBed's comment in
   // synths.js). A tap on the pond still rings a drip.
   ambience: ['wind:0.12', 'music'],
   mood: 'yo',      // "Under blue sky, in bright sunlight"
@@ -55,7 +54,7 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   
   // the pond: an OPEN stone basin and a still sheet inside it. It used to be
   // a solid cylinder, whose top cap sealed the water and the fish underneath
-  // it — the pond was a stone disc (Frank: "it looks like a platform").
+  // it — the pond read as a stone platform rather than as water.
   const lip = makeBasin({
   inner: POND.inner, outer: POND.outer, rim: POND.rim, floor: POND.floor,
   color: WASH.stone, segments: 20,
@@ -64,11 +63,10 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   lip.position.set(POND.x, 0, POND.z);
   scene.add(lip);
   
-  // round, to match the stone basin it sits inside — and RED (Frank: "make
-  // the pond water red — the surface of the water itself, not the fish, not
-  // the sides"). Only the sheet takes the accent: the basin stays stone and
+  // round, to match the stone basin it sits inside — and RED. Only the SHEET
+  // takes the accent, not the fish and not the stone: the basin stays stone and
   // the koi stay ink, so the red is the water answering, not the pond
-  // dressing up. The urna keeps its dot; Frank knowingly doubles the red here.
+  // dressing up. The urna keeps its dot: the red is knowingly doubled here.
   const water = makeWater({
   shape: 'round', size: POND.size, color: ACCENT_PALE, seed: ID, strike: 0.135, opacity: 0.5,
   });
@@ -91,8 +89,7 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   // THE BUDDHA, on the far bank. The stone is a real DAIS now, not a paver:
   // its top (SEAT_TOP) stands above the basin's rim (POND.rim = 0.55), so
   // from the shipped lens he sits clearly over the water line instead of
-  // peeking out from behind the stone lip (Frank: "lift him up a bit — the
-  // little platform can be higher, slightly above the rest of the pool").
+  // peeking out from behind the stone lip.
   const SEAT_TOP = 0.62;
   const seat = new THREE.Mesh(
   new THREE.CylinderGeometry(1.05, 1.2, SEAT_TOP, 9),
@@ -103,9 +100,8 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   
   // The mat that used to lie on the stone is GONE: the seated figure brings
   // its own zabuton now, so an art-directed one under him was a second slab
-  // saying the same thing (Frank: "I don't know why there needs to be the
-  // art-directed cushion any more — just the regular default cushion would
-  // probably be fine"). Case 33 still builds one, because THERE the cushion
+  // saying the same thing, where the default cushion alone says it. Case 33
+  // still builds one, because THERE the cushion
   // has to exist with nobody on it; it is sized to this zabuton exactly, so
   // the pair still reads as one seat occupied and the same seat empty.
   

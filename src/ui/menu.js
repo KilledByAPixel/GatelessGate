@@ -16,7 +16,7 @@ export function makeMenu({
   // switch belongs at the end rather than over its title — which was true of
   // the page and wrong about the reader: the colophon is below the search box
   // and all fifty-one rows, so reaching it meant scrolling the whole contents,
-  // and Frank asked for a light switch that is already there.
+  // and the light switch should simply be where the eye already is.
   const head = document.createElement('div');
   head.className = 'gg-menu-head';
   const h1 = document.createElement('h1');

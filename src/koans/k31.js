@@ -98,8 +98,7 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   // distance is a poor place to spend the one warm note on a page: at the
   // home lens they read as two red specks and the woman giving the answer —
   // who IS the case — was painted the same ink as everybody else. The seal
-  // moved to her (Frank: "let's have the old woman be red instead of the
-  // little cups there"). Stall timber, now, like the bench they stand on.
+  // moved to her. Stall timber, now, like the bench they stand on.
   for (const off of [-0.35, 0.3]) {
   const cup = new THREE.Mesh(
   new THREE.CylinderGeometry(0.055, 0.045, 0.075, 8),
@@ -191,8 +190,7 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   askedAt = clock;
   asked++;
   // the same four words, at the same volume, for everybody — a CHIME now,
-  // not the knock it shipped with (Frank's audit: "can we have a chime when
-  // you click on this person that's red"): a knock is a door's voice, and
+  // not the knock it shipped with: a knock is a door's voice, and
   // there is no door in the exchange. Identical every asking, of course.
   audio && audio.chimeStrike({ tube: 2, force: 0.55, at: WOMAN });
   });

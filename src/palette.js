@@ -43,8 +43,8 @@ export const ACCENT_LIGHT = mixHex(ACCENT, PAPER, 0.22);
 
 // And further still, for an accent spread over a WHOLE SURFACE rather than an
 // object. Case 30's pond went full ACCENT (read as blood), then ACCENT_DEEP
-// (dried blood), then ACCENT_LIGHT (still "such a dark red"); Frank asked for
-// "somewhere between where it is now and white... slightly more pinkish". At
+// (dried blood), then ACCENT_LIGHT, and all three still read as a dark red.
+// What the water wanted was most of the way to white, and pinker with it. At
 // nearly half paper the hue survives — it is unmistakably the book's red — but
 // it reads as water with red in it rather than a pool of pigment.
 export const ACCENT_PALE = mixHex(ACCENT, PAPER, 0.46);
@@ -69,8 +69,8 @@ export const SNOW = mixHex(PAPER, '#FFFFFF', 0.85);
 // put an INK robe's three bands at levels 9, 19 and 30 out of 255 — a
 // ten-level spread that no screen shows and no eye reads — and every monk
 // came out as a flat black cut-out while the rest of the scene had visible
-// form (Frank: "they're a lot darker black than everything else... make them
-// slightly less dark so we could see some of their shadows"), the same
+// form — far darker than anything around them, with no shading left to read —
+// the same
 // quietly true of every torii, pole and cord painted the same way. Lifted a
 // fifth of the way back toward the paper, the same ramp landed on 22 / 46 /
 // 73 — three times the separation, and enough that the crown of a hat, its

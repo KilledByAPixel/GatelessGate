@@ -146,8 +146,7 @@ const CAM = { distance: 10.6, target: [0.4, 1.9, -0.2], heading: 33, pitch: 12.5
   // a sign that has stopped flying is a hall with no teacher named on it, which
   // is the case. The SIGN is the red board standing beside it, and touching
   // that turns it half a round to face the other way; touch it again and it
-  // goes on round the same way (Frank: "when you click again it rotates again,
-  // 180 each time").
+  // goes on round the same way, half a turn each time.
   //
   // Same direction matters. Alternating would read as undoing the last tap;
   // going on round reads as a sign being turned to face away from you, and then

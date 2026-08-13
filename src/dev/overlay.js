@@ -7,8 +7,7 @@ import { groundHeight } from '../kit/ground.js';
 // keepout is a circle nothing is drawn at, a mountain footprint is a radius the
 // scatter refuses to enter, the tree ring is two numbers. Editing a scene meant
 // nudging a prop, reloading, and reading the result off where the grass went
-// (Frank: "a way to visualize the keepouts and where things are spawned, so I
-// can edit the scenes a bit better").
+// — so this draws the keepouts and the spawn positions instead.
 //
 // The workbench's "Layout guides" switch turns these on for whatever page is on
 // screen:

@@ -7,9 +7,9 @@
 // far side of the model is lit by the hemisphere alone, which has no
 // direction in it, so there is nothing left to read a shape by.
 //
-// These lights are the SMALL half of the answer to Frank's "it's kinda hard
-// to see in 3D. I think there's just one light." The large half, historical
-// now, was that the viewer used to render the toon ramp's 3-step banding long
+// These lights are the SMALL half of the answer to a viewer that was hard to
+// read in 3D, lit as though by a single lamp. The large half, historical now,
+// was that the viewer used to render the toon ramp's 3-step banding long
 // after the book itself had moved off it — the fix (and the material rebuild
 // that carried it, since retired along with the ramp — see render/material.js)
 // lived in a file this one has outlived. Measured over four views of the

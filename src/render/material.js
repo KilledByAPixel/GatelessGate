@@ -1,7 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../palette.js';
 
-// THE SEAL GLOWS. Frank wants the red held at the brightness it reached under a
+// THE SEAL GLOWS. The red is held at the brightness it reached under a
 // blown-out key (sun 9.5) while the rest of the scene comes back down — which
 // means the accent's brightness cannot ride on the sun at all. So every material
 // in the accent family gets an emissive term of its own colour: light the lights
@@ -13,7 +13,7 @@ import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../palette.js';
 // by passing an accent constant, so this is one rule in one place instead of an
 // option threaded through eleven koan files. The glow value is measured, not
 // guessed — tuned in-browser until peak red chroma under the calmer sun matched
-// what Frank approved under the hard one.
+// what it looked like under the hard one.
 const SEAL = new Set([ACCENT, ACCENT_DEEP, ACCENT_LIGHT]
   .map((c) => new THREE.Color(c).getHexString()));
 export const SEAL_GLOW = 0.5;
@@ -24,9 +24,8 @@ export const SEAL_GLOW = 0.5;
 // lit SURFACE it does the opposite of its job: emissive light is the same from
 // every angle, so it swamps Lambert's own angle-dependent shading and flattens
 // the surface to one tone. Case 30's pond is where that showed — red water
-// came out as a flat luminous disc and its ripples became invisible (Frank: "I
-// barely see it do anything... for the red one the specular should still be
-// white").
+// came out as a flat luminous disc and its ripples became invisible. Even on a
+// red surface the specular has to stay white.
 // Put the seal's glow on (or take it off) an EXISTING material, so a scene can
 // move its red from one object to another without swapping material objects
 // around. Mutating in place is simply cheaper — no new material object, no
@@ -38,8 +37,7 @@ export const SEAL_GLOW = 0.5;
 // clone per mesh, and on the shipped default that clone was what actually
 // rendered, so a case that assigned a fresh washMaterial at runtime dodged
 // the cache entirely and every clone-rendered neighbour it touched changed
-// tone at once (Frank, on case 39's stones: "the other rocks change their
-// colour a little bit... they suddenly turn a more bright colour"). That
+// tone at once — case 39's other stones would visibly brighten together. That
 // clone system is gone — what the swap breaks now is just the properties it
 // forgets, which is quieter but the same advice: don't swap, mutate.
 export function setSeal(material, on, color = ACCENT) {

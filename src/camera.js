@@ -13,8 +13,8 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 // file used to say so out loud: every koan's `camera:` block named an `azimuth`
 // and a `polar` in radians, where polar is measured DOWN FROM STRAIGHT ABOVE so
 // level is 1.5708 and a SMALLER number means the lens is HIGHER. Nobody composes
-// a shot that way (Frank: "I would expect that pitch zero would be horizontal"),
-// so the Compose panel spoke heading and pitch in degrees and converted at the
+// a shot that way — pitch zero should mean horizontal — so the Compose panel
+// spoke heading and pitch in degrees and converted at the
 // edge — which left the panel and the file naming the same shot with different
 // numbers, and a composer reading 17.2 off the panel to type 1.27 into the file.
 //
@@ -91,9 +91,8 @@ export const DEFAULT_HOME = {
 // curve happens to begin — so without the envelope below the drift's very first
 // frame was already 16.5 DEGREES off the case's heading. Entering the look
 // therefore threw the goal sideways and the damping swung the camera after it,
-// which is the twist Frank kept seeing: "it's almost like the initial camera is
-// wrong... when I first go into look at the scene the camera goes into a
-// slightly different rotation."
+// which is the twist it kept showing: entering the look swung the camera into
+// a slightly different rotation than the one the case was composed at.
 //
 // The fix is an amplitude ramp rather than a re-centred curve: at t = 0 every
 // offset is multiplied by zero, so the goal IS home and the shot the case was
@@ -124,9 +123,8 @@ export const RIG_BOUNDS = { minDist: 7, maxDist: 16, minPitch: 7, maxPitch: 38.5
 // (There was a HANDS_OFF constant here: seconds of stillness before the drift
 // took the camera back off a reader who had moved it. It is gone. Handing the
 // lens back after a pause meant the shot you had just framed slid away to the
-// case's default while you were looking at it — Frank: "the camera automatically
-// snaps to the default view if you don't touch it for a bit. I don't want it to
-// do that." The drift now stops for good the first time you take hold; see
+// case's default while you were looking at it, just for not having touched it
+// for a while. The drift now stops for good the first time you take hold; see
 // `taken` in makeCameraRig.)
 
 export function makeCameraRig(camera, el, {
@@ -262,9 +260,8 @@ export function makeCameraRig(camera, el, {
   //
   // Leaving restores `home`. The drift had walked the goal away from the case's
   // framing, wander switching off simply froze it there, and the reader dropped
-  // back onto their page looking at a shot nobody composed — Frank: "I exit out
-  // of look at the scene, and the camera is in a slightly different location
-  // than it was." The damping eases it back rather than cutting.
+  // back onto their page looking at a shot nobody composed, in a slightly
+  // different place than they left. The damping eases it back rather than cutting.
   //
   // Entering rewinds the clock and un-latches, so every visit to the look opens
   // on the composed shot and breathes out from there (wanderGoal ramps from
@@ -346,8 +343,8 @@ export function cameraBlock({ distance, heading, pitch }, target) {
   if (distance > b.maxDist) extra.push(`maxDist: ${r3(distance + 1)}`);
   if (pitch < b.minPitch) extra.push(`minPitch: ${r1(Math.max(-87, pitch - 3.4))}`);
   if (pitch > b.maxPitch) extra.push(`maxPitch: ${r1(Math.min(87, pitch + 3.4))}`);
-  // THE BRACES ARE NOT INCLUDED, and that is the point (Frank: "can we have it
-  // just be the stuff in the curly brackets so I could paste it in easier").
+  // THE BRACES ARE NOT INCLUDED, and that is the point: what gets pasted should
+  // be the contents of the literal, nothing to trim off either end.
   // Every case now hoists `const CAM = { ... };` above its module object, so
   // what a composer wants is the INSIDE of that literal — select between the
   // braces, paste, done. The old output was `camera: { ... },`, which matched
@@ -422,8 +419,7 @@ export function makeFreeCam(camera, el) {
       // swap, and set(true) on an already-flying cam re-seeded yaw/pitch
       // from the camera's CURRENT direction — which, right after a page
       // build, is the new rig's lookAt, not the flier's heading. Position
-      // survived, orientation was silently replaced (Frank: "the position
-      // is the same, but the orientation is not").
+      // survived, orientation was silently replaced.
       if (!!enabled === on) return;
       on = !!enabled;
       keys.clear();

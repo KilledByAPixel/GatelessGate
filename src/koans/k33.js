@@ -61,7 +61,7 @@ const CAM = { distance: 14.2, target: [0.95, 0.9, -1.4], heading: 31.5, pitch: 2
   
   // the same pond, so the same koi: seed 30 gives case 33 the identical fish
   // moving in the identical water — only the far bank differs. THE SEAL IS
-  // THEIRS (Frank, overnight pass 2: the koi carry the red here): in case 30
+  // THEIRS — the koi carry the red here: in case 30
   // the red is the water itself, answering; here the answer is
   // taken out, and the only warm thing left alive in the picture is under
   // the water. Full ACCENT, not the deep mix — four small fish seen through

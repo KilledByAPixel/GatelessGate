@@ -20,7 +20,7 @@ const ID = 11;
 // the fist changes. The case is entirely in the man who is looking at it, which
 // is Mumon's question: where is the fault?
 //
-// THE SEAL IS THE SHIP, not the fist (Frank). The fist held the red first, on
+// THE SEAL IS THE SHIP, not the fist. The fist held the red first, on
 // the reasoning that the one identical thing should be the one warm thing — but
 // that put the accent on the object the case says is NOT where the fault lies.
 // The ship is Joshu's actual sentence: "ships cannot remain where the water is
@@ -29,12 +29,11 @@ const ID = 11;
 // in colour, and it leaves the fist ink — identical to every other ink thing,
 // which is exactly what the fist is supposed to be.
 //
-// THE COAST stages the verdict itself (Frank: "lets make 11 an ocean scene").
+// THE COAST stages the verdict itself, as an ocean scene.
 // The hermit's rise now stands above a shallow bay: a long bar of nearly
 // transparent ink over pale sand, the sea only gathering weight far out where
 // the fog takes it — water too shallow for ships, made literal. And one ship
-// IS here (Frank: "a ship in the ocean a bit in the distance floating on the
-// waves"): a small junk standing off beyond the shallows, riding the swell,
+// IS here: a small junk standing off beyond the shallows, riding the swell,
 // because Joshu's line is what it cannot do — come in and remain. The sea
 // stays ink; the red sea belongs to case 20, where the ocean is the seal.
 // Here the seal is the ship ON that sea.
@@ -91,7 +90,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
   scene.add(path);
   
   // the hut he retired to, on its rise — set OFF to the side of the road
-  // (Frank: the hill was blocking the main path; it used to sit at x -0.4,
+  // — the hill was blocking the main path. It used to sit at x -0.4,
   // where the path's closest approach was 2.2 units from its center, well
   // inside the 3.6 base — the road ran straight into the slope and vanished.
   // At -2.8 the centerline clears the base by ~0.9 at its nearest sample).
@@ -165,7 +164,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
     // hands back a group named 'waist' carrying the torso, head and sleeves,
     // and turning THAT forward is the bow. He used to bow by rolling the whole
     // figure on z, which lists a body sideways rather than bending it — the
-    // fault Frank caught in cases 32 and 15.
+    // fault cases 32 and 15 both had.
     const joshu = makeMonk({ height: 1.64, elder: true, bow: true });
     const joshuWaist = joshu.getObjectByName('waist');
     joshu.position.copy(JOSHU);
@@ -271,8 +270,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
       },
     });
 
-    // THE SHIP IS WHAT YOU TOUCH (Frank: "let's have it so 11, you actually
-    // click on the boat — you will click on the bow"). It used to be the
+    // THE SHIP IS WHAT YOU TOUCH — the bow, specifically. It used to be the
     // meditating monk's raised fist, a 0.34-radius cylinder at chest height:
     // the koan's own gesture, and the smallest, most easily-missed thing on the
     // page. The ship is the red mark in the picture, and the red mark is what a
@@ -291,8 +289,8 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
     boat.group.add(hit);
 
     // ---- the moment: the same verdict, twice -----------------------------
-    // THE TAP ROCKS THE HULL (Frank's audit: the verdict plays out on shore,
-    // in Joshu — the thing actually touched needed feedback of its own). A
+    // THE TAP ROCKS THE HULL. The verdict plays out on shore, in Joshu, so the
+    // thing actually touched needed feedback of its own. A
     // decaying roll on top of the swell's, at the tap and gone in a few
     // seconds. Elapsed-since-tap only, never absolute time.
     const ROCK = { amp: 0.10, hz: 1.1, tau: 1.2, span: 4.0 };
@@ -308,9 +306,9 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
       if (!tap) return;
       rockedAt = clock;
       visits++;
-      // BOTH verdicts chime now (Frank's audit: "add a chime when you click
-      // on the boat" — the odd-tap knock read as a door somewhere, not the
-      // ship answering). Two notes, so the two verdicts stay two sounds:
+      // BOTH verdicts chime now — the odd-tap knock alone read as a door
+      // somewhere rather than as the ship answering. Two notes, so the two
+      // verdicts stay two sounds:
       // the dismissal higher and lighter, the approval its settled tube 1.
       if (visits % 2 === 0) {
         bowAt = clock;

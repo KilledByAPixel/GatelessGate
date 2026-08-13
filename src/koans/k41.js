@@ -69,17 +69,15 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
   // He used to sit at z -5.6, which is BEHIND the cave's throat: makeCave
   // fills the opening with an unlit pure-INK box (the honest way to paint an
   // absence of light — see cave.js), so an ink monk placed inside it was
-  // ink-on-ink and simply gone. Frank: "we're supposed to be able to see
-  // Buddha inside the cave, but we can't see anything — it's just a
-  // completely solid thing." Two fixes, both needed: sit him ON the
+  // ink-on-ink and simply gone — the cave read as a completely solid thing with
+  // nobody in it. Two fixes, both needed: sit him ON the
   // threshold apron, just forward of the throat's face, so the black is
   // BEHIND him rather than around him; and lift his tone off ink so his
   // back reads as a shape against it. He is still inside the mouth, still
   // facing the wall, still the smallest thing in the frame.
   //
   // That lift used to be an EXPLICIT one — WASH.mid, a mid grey — and it made
-  // him the one visibly pale person in the book (Frank: "the Buddha is not the
-  // right colour, he's like a lighter grey"). It is unnecessary now: every
+  // him the one visibly pale person in the book. It is unnecessary now: every
   // figure sits a step off ink, and the cave's throat is still an unlit box at
   // INK itself, so his lit bands stand at 46 and 73 against its flat 30. Only
   // his shadow side merges into the black behind him, which is what an ink
@@ -89,8 +87,7 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
   // between the brow overhead and the black behind. That room only exists
   // because the cave is deeper now and its dark set further back: at 0.35
   // he is well under the brow and genuinely inside, rather than perched on
-  // the lip (Frank: "he'd be further into the cave... it feels like there's
-  // just a wall there, there's not any kind of depth to the cave").
+  // the lip, with the cave reading as a wall rather than as depth.
   const CAVE = { x: -0.4, z: -5.2, yaw: 0.18 };
   const IN = 0.5;                       // along the cave's own axis, from its origin
   const bodhidharma = makeMonk({ height: 1.56, pose: 'sit', hat: false });
@@ -102,7 +99,7 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
   scene.add(bodhidharma);
   
   // EKA, outside in the snow — and MISSING ONE ARM. The text is what it is;
-  // the diorama shows it the gentlest way it can (Frank's staging): one
+  // the diorama shows it the gentlest way it can: one
   // sleeve simply gone from his side, and the arm itself lying in the snow a
   // little way off, with a small red mark where it left him. No wound on the
   // body, no gore — an absence and one seal, which is all the case needs.
@@ -128,8 +125,8 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
   arm.position.set(0.95, 0.07, -3.05);
   scene.add(arm);
   
-  // THE BLOOD — the one bit of colour, right where the arm lies (Frank: it
-  // was off to the side; it should be at the arm). Not much of it: one larger
+  // THE BLOOD — the one bit of colour, right where the arm lies rather than off
+  // to the side. Not much of it: one larger
   // pool at the cut end and a couple of small drops nearby, flat on the snow.
   // Read it as blood if you know the story, or as the painter's seal in white
   // if you don't.
@@ -152,7 +149,7 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
     // The pine. It used to stand at (3.6, -3.4) in wash(0.55) — hard against
     // the right frame edge, stone-pale, cropped to a stack of faceted pads
     // that read as boulders piled beside the cave, with its lowest bough
-    // hovering over the snow like a floating mound (Frank flagged both). Moved
+    // hovering over the snow like a floating mound. Moved
     // to the open snow on the LEFT, where the whole silhouette fits the frame,
     // and dropped to the book's standard pine ink (WASH.dark) so it separates
     // from the rock instead of matching it. A tree again.
@@ -205,9 +202,8 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
     // A POOL OF THEM, not one. The case used to refuse a second touch until the
     // first wisp had most of its life behind it — which on a page whose whole
     // answer is "reach again, there is still nothing there" is the one refusal
-    // it should not be making (Frank: "can we have it so you can click more
-    // than once, so you can spawn out more than one of those things at a time,
-    // instead of it just not allowing you to do anything?"). Six is past what
+    // it should not be making — several can be in the air at once rather than
+    // a second tap doing nothing. Six is past what
     // anybody taps in one wisp's life; the oldest is reused after that, which
     // is the water kit's ripple-pool idiom and cannot run out.
     //
@@ -247,8 +243,7 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
       // BARELY A SOUND, and not the same one twice — what you reached for was
       // never loud enough to have a voice of its own, so what you get is one of
       // three small notes off the top of the chime rather than the same tube
-      // every time (Frank: "kind of a note that plays... kind of a choose
-      // between a couple different possible chime sounds"). With several wisps
+      // every time — a choice between a few near notes. With several wisps
       // in the air at once the single repeated note read as a UI click; three
       // near-neighbours read as the same small thing happening again.
       //
@@ -269,10 +264,9 @@ const CAM = { distance: 10.6, target: [0.3, 2.1, -3.15], heading: 39.5, pitch: 2
 
         // IT LEAVES. The wisp used to lift half a unit and spread as it faded,
         // the way breath does in cold air — which is a lovely thing to watch
-        // and read as a small cloud hanging where you put it. Frank wanted the
-        // going itself: "let's have it, like, float up into the air and just
-        // float up off the top of the screen while it shrinks away and
-        // disappears." Which is also nearer the case — you were asked to bring
+        // and read as a small cloud hanging where you put it. What this wants is
+        // the GOING itself: up into the air, shrinking away off the top of the
+        // screen. Which is also nearer the case — you were asked to bring
         // your mind and hand it over, and what you reached for went up out of
         // the picture instead of dispersing politely at chest height.
         //

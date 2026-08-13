@@ -27,7 +27,7 @@ const ID = 16;
 // The framing. This case used to take the book's default shot implicitly, by
 // naming no `camera:` at all. These are DEFAULT_HOME's own numbers, written
 // out so the shot is tuned here like every other case's rather than by moving
-// the book (Frank). composeWorld gets the same object as its `view`, so the
+// the book. composeWorld gets the same object as its `view`, so the
 // scatter still refuses spots no reachable heading can see (kit/scenery.js).
 const CAM = { distance: 10, target: [-0.4, 1.35, 0.3], heading: -7.5, pitch: 18 };
 
@@ -187,7 +187,7 @@ export default {
       bell.strike();
       strikes++;
       turning = true;
-      // the book's canonical bonshō — task-12's migration to Frank's tuned
+      // the book's canonical bonshō — task-12's migration to the tuned
       // presets; this IS the case the temple preset is named for
       audio && audio.bell({ preset: 'temple', at: bell.group.position });
     });

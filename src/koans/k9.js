@@ -74,8 +74,7 @@ const CAM = { distance: 17, target: [-0.3, 2.8, -1.6], heading: 31.5, pitch: 14.
   
   // THE PRESENT: a seam between the last two ages, thinner than any of
   // them — a slightly darker band, not the seal. The accent belongs to the
-  // Buddha here (Frank's call: the figure is what the case is about, not
-  // the ground).
+  // Buddha here: the figure is what the case is about, not the ground.
   if (i === BANDS.length - 2) {
   const seam = new THREE.Mesh(
   new THREE.CylinderGeometry(b.r * 0.90, b.r * 0.93, 0.045, 11),
@@ -135,7 +134,7 @@ const CAM = { distance: 17, target: [-0.3, 2.8, -1.6], heading: 31.5, pitch: 14.
   // the scale contrast is the reason it's here. Kitsune keep shrines in
   // the old stories; nobody minds it.
   //
-  // OFF TO THE SIDE (Frank). It used to sit at (-0.9, 2.75), which from the
+  // OFF TO THE SIDE. It used to sit at (-0.9, 2.75), which from the
   // home lens is the same screen column the colossus occupies — a red-brown
   // smudge parked in front of the one thing the case is about. Now it sits
   // at the frame's right edge, past the two monks, watching from the side
@@ -192,8 +191,8 @@ const CAM = { distance: 17, target: [-0.3, 2.8, -1.6], heading: 31.5, pitch: 14.
   scene.add(hit);
   
   // ---- the moment: the oldest sound in the book -------------------------
-  // THE ROCK (Frank's audit: "let's have it just rock just a tiny bit ... so
-  // there's feedback in addition to the sound"). A colossus nudged: slow,
+  // THE ROCK — a touch wants feedback you can see as well as hear.
+  // A colossus nudged: slow,
   // small, and settled again inside a few swings. The lean pivots at the
   // group origin — seat height, his hips — so the crown carries the sway.
   // Driven off elapsed-since-toll, never absolute time (the envelope bug
@@ -212,17 +211,16 @@ const CAM = { distance: 17, target: [-0.3, 2.8, -1.6], heading: 31.5, pitch: 14.
   tolls++;
   // The colossus's own bell: bigger and deeper than k16's temple bonshō,
   // which is what "an octave under" was reaching for with a raw f0 —
-  // task-12's migration to Frank's tuned presets picks `great` outright.
+  // task-12's migration to the tuned presets picks `great` outright.
   //
   // And then bigger still. `great` at its own 2.36 was not enough for a
-  // Buddha of this size (Frank: "it could be a deeper, more, like, longer
-  // sound of a bell, because it is a giant"), so the preset's tuned voice is
-  // cast at a larger BODY instead: f0 drops about six semitones and every
-  // mode's decay grows with it, which is one number doing both halves of
-  // what he asked for. The amplitudes are still exactly his.
+  // Buddha of this size — a giant's bell wants to be deeper AND longer — so
+  // the preset's tuned voice is cast at a larger BODY instead: f0 drops about
+  // six semitones and every mode's decay grows with it, one number doing both
+  // halves at once. The tuned amplitudes are untouched.
   // ...and struck harder than anything else in the book. A big bell is not
-  // just a low one (Frank: "can we make this one a little bit louder — it's
-  // still kind of hard to hear"), and the size increase alone made it deeper
+  // just a low one, and it was still hard to hear: the size increase alone
+  // made it deeper
   // without making it arrive: casting the voice bigger spreads the same
   // energy over more, longer-decaying modes, so the onset actually got
   // quieter. gain is a plain strike velocity here, so this is how hard the
