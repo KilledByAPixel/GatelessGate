@@ -1,5 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { setGrassPatchiness, setGrassReach, setGrassTaper } from '../kit/grassfield.js';
+import { LAMBERT_LIFT } from '../kit/tuftfield.js';
 import { wash } from '../palette.js';
 import { setFoliageWeather } from '../kit/foliage.js';
 import { plainMaterial } from '../render/toon.js';
@@ -398,14 +399,23 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
       const field = scene.getObjectByName('grassfield');
       // THE TONE, LIVE. Draggable rather than a re-enter knob because the
       // meadow's colour is the material's alone now (tuftfield.js), so there is
-      // nothing per-instance to rebuild. Written to whatever material is on the
-      // mesh at this moment — the toon swap above has already run, and writing
-      // to the authored material instead would land on an object that is not
-      // being drawn, which is exactly how case 4's ink spent its life invisible.
+      // nothing per-instance to rebuild. Looked up fresh from the scene rather
+      // than kept from build time, because a page turn builds a brand new mesh
+      // and material — writing to a reference held from an earlier scene would
+      // land on an object that is not being drawn, which is exactly how case
+      // 4's ink spent its life invisible.
+      //
+      // The slider's raw wash() value is NOT the material's colour: tuftfield.js
+      // lifts every tuft's authored colour by LAMBERT_LIFT before it reaches the
+      // material, because Lambert takes the field's single N·L directly (no
+      // ramp, no emissive floor) and needs the lift to land the unshadowed field
+      // at the same luminance the old ramp gave it. Writing the raw tone here
+      // without the same lift would silently erase it on every page build, the
+      // moment after tuftfield.js applied it. No emissive write any more either
+      // — Lambert grass carries no emissive floor to restore.
       if (field && field.material) {
         const tone = wash(state.grassTone);
-        field.material.color.set(tone);
-        if (field.material.emissive) field.material.emissive.set(tone);
+        field.material.color.set(tone).multiplyScalar(LAMBERT_LIFT);
       }
       if (field && field.userData.uniforms) {
         const u = field.userData.uniforms;
