@@ -133,3 +133,37 @@ test('the tap still tolls the deepest bell, from the new position', () => {
   assert.equal(rung[0].preset, 'great', 'the colossus rings Frank\'s great preset — see task-12');
   assert.equal(root.fragment().tolls, 1);
 });
+
+test('the toll rocks the colossus a tiny bit, and it settles to exactly still', () => {
+  // Frank's audit: "let's have it just rock just a tiny bit... so there's
+  // feedback in addition to the sound." Tiny is load-bearing: the peak lean is
+  // held to a band — enough to see at the case's 17-unit staging distance,
+  // never enough to read as a wobble toy.
+  const taps = [];
+  const ctx = {
+    audio: { bell: () => {} },
+    input: { onTap: (cb) => taps.push(cb), onHover: () => {}, raycastFirst: () => null },
+  };
+  const root = k9.build(ctx);
+  const hit = root.scene.getObjectByName('buddha-hit');
+  const buddha = root.scene.getObjectByName('buddha');
+  root.setCamera(shippedCamera());
+  root.update(1 / 60, 10);
+  assert.equal(buddha.rotation.z, 0, 'still before the toll');
+
+  ctx.input.raycastFirst = (cam, objs) => (objs.includes(hit)
+    ? { object: hit, point: new THREE.Vector3(), distance: 1 } : null);
+  taps.forEach((cb) => cb());
+
+  let peak = 0;
+  for (let t = 10; t < 13.2; t += 1 / 60) {
+    root.update(1 / 60, t);
+    peak = Math.max(peak, Math.abs(buddha.rotation.z));
+    assert.equal(root.fragment().rock, +buddha.rotation.z.toFixed(5), 'the fragment reports the lean');
+  }
+  assert.ok(peak > 0.005, `the statue never visibly moved (peak ${peak.toFixed(4)})`);
+  assert.ok(peak < 0.05, `"just a tiny bit" — peak ${peak.toFixed(4)} is not tiny`);
+
+  root.update(1 / 60, 13.5);
+  assert.equal(buddha.rotation.z, 0, 'the rock window closes on exactly zero, not a residue');
+});

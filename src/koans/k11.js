@@ -291,15 +291,22 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
     boat.group.add(hit);
 
     // ---- the moment: the same verdict, twice -----------------------------
+    // THE TAP ROCKS THE HULL (Frank's audit: the verdict plays out on shore,
+    // in Joshu — the thing actually touched needed feedback of its own). A
+    // decaying roll on top of the swell's, at the tap and gone in a few
+    // seconds. Elapsed-since-tap only, never absolute time.
+    const ROCK = { amp: 0.10, hz: 1.1, tau: 1.2, span: 4.0 };
     let camera = null;
     let clock = 0;
     let visits = 0;             // odd = dismissed, even = approved
     let bowAt = -99;
+    let rockedAt = -99;
 
     input.onTap(() => {
       if (!camera) return;
       const tap = input.raycastFirst(camera, [hit]);
       if (!tap) return;
+      rockedAt = clock;
       visits++;
       if (visits % 2 === 0) {
         bowAt = clock;
@@ -318,6 +325,14 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
         water.update(dt, simTime);
         foam.update(dt, simTime);
         boat.update(dt, simTime);
+        // added AFTER boat.update on purpose: the kit owns rotation from the
+        // swell and reassigns it every frame, so the tap's roll rides on top
+        // rather than fighting it
+        const r = clock - rockedAt;
+        if (r >= 0 && r < ROCK.span) {
+          boat.group.rotation.z +=
+            ROCK.amp * Math.sin(r * ROCK.hz * Math.PI * 2) * Math.exp(-r / ROCK.tau);
+        }
         // the lapping breathes with the sea it belongs to (k20's idiom):
         // the TRUE surface at the waterline, handed to the bed as 0..1
         if (audio && audio.setWaterSwell) {

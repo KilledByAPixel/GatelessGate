@@ -144,7 +144,7 @@ export default {
     const road = path.sample(ROAD_T);
     const souls = [];
 
-    const walker = makeMonk({ height: 1.5, hat: false, color: ACCENT });
+    const walker = makeMonk({ height: 1.5, hat: true, color: ACCENT });
     walker.name = 'soul';
     walker.position.set(road.x, groundHeight(road.x, road.z, { seed: 21 }), road.z);
     // turned back up the road toward the house, which is the direction the

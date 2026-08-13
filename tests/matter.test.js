@@ -408,3 +408,43 @@ test('the afterword\'s own build() clears the whole stage', async () => {
     assert.equal(countNamed(built.scene, name), 0, `${name} should be gone from the afterword`);
   }
 });
+
+test('the preface monk rings the bell — the red figure acts through the bonshō', async () => {
+  // Frank's audit: "when you click on the red guy, it rings the bell." Same
+  // strike and the same 0.5s floor as tapping the bonshō itself, spatialised
+  // at the bell — the bell is what sounds, whoever asked it to.
+  const taps = [];
+  const bells = [];
+  const ctx = {
+    audio: { bell: (o) => bells.push(o), cloth: () => {} },
+    input: {
+      onTap: (cb) => taps.push(cb), onHover: () => {},
+      raycastFirst: () => null, pointer: () => ({ x: 0, y: 0 }),
+    },
+  };
+  const mod = await loadKoan(PREFACE_SLUG);
+  const built = mod.build(ctx);
+  built.setCamera({});
+  built.update(1 / 60, 1);
+
+  const monk = built.scene.children.find((c) => c.name === 'monk');
+  assert.ok(monk, 'the one red figure');
+  const monkMeshes = [];
+  monk.traverse((o) => { if (o.isMesh) monkMeshes.push(o); });
+  ctx.input.raycastFirst = (cam, objs) => {
+    const m = objs.find && objs.find((o) => monkMeshes.includes(o));
+    return m ? { object: m, point: { clone: () => ({ x: 0, y: 0, z: 0 }) }, distance: 1 } : null;
+  };
+
+  taps.forEach((cb) => cb());
+  assert.equal(bells.length, 1, 'touching the monk rings the bonshō');
+  assert.equal(bells[0].preset, 'temple', 'the same temple voice the bell answers with');
+  assert.equal(built.fragment().strikes, 1, 'counted as a strike like any other');
+
+  taps.forEach((cb) => cb());
+  assert.equal(bells.length, 1, 'the held-pointer floor holds for him too');
+
+  built.update(1 / 60, 2);
+  taps.forEach((cb) => cb());
+  assert.equal(bells.length, 2, 'and past the floor he rings it again');
+});

@@ -27,6 +27,15 @@ const ANSWER_DELAY = 0.4;      // he is across a courtyard, not beside you
 // bow k32's philosopher makes at 0.62.
 const BOW = 0.42;
 const BOW_IN = 1.1, BOW_HOLD = 1.9, BOW_OUT = 1.2;
+// THE NOD (Frank's audit: "a slight bit of movement on the teacher when you
+// click on him — just like a tiny bit of motion. It helps when the thing you
+// click on does something"). A small forward dip at the sash, on the TAP —
+// the same instant-acknowledgment rule as Oshin's turn below: the call is his
+// gesture, so his body carries it the moment it is made, not when the answer
+// arrives. Added on top of whatever the mutual bow is doing, so a call made
+// mid-ceremony can never snap his waist to a smaller angle.
+const NOD = 0.11;               // radians past wherever his waist already is
+const NOD_SPAN = 0.9;           // seconds down and back
 
 // wrapPi/bearing are the kit's now (faceMonk's convention, which chu's
 // hand-rolled turn below already used). The local bearing was once aimMonk's
@@ -172,7 +181,8 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   let pending = -1;          // sim time an answer is due
   let answered = 0;
   let bowAt = -99;
-  
+  let nodAt = -99;
+
   input.onTap(() => {
   if (!camera) return;
   // the pair of cylinders first: probed and returned on before the big
@@ -181,6 +191,10 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   if (c.pick(camera, input)) { c.ring(0.75); return; }
   }
   if (!input.raycastFirst(camera, [hit])) return;
+  // the nod is UNGATED on purpose: even a tap the call logic refuses (bow in
+  // progress, answer pending) still lands on him, and the body acknowledging
+  // the touch is the whole of what the audit asked for
+  nodAt = clock;
   if (bowAt > -99 && clock - bowAt < BOW_IN + BOW_HOLD + BOW_OUT) return;  // let it finish
   if (pending >= 0) return;                     // one call at a time
   pending = clock + ANSWER_DELAY - calls*.1;
@@ -241,7 +255,15 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   // go slightly under the ground, and his walking stick next to him goes under
   // the ground"). makeFigure hinges seated bodies now, so this is the same
   // gesture his student makes, from the same joint.
-  if (chuWaist) chuWaist.rotation.x = BOW * 0.7 * lean;
+  // ...plus the tap's own nod, riding on top of the ceremony's lean (its
+  // header above): quick down, slower up, gone in under a second
+  const nu = clock - nodAt;
+  let nod = 0;
+  if (nu >= 0 && nu < NOD_SPAN) {
+  nod = Math.min(1, nu / 0.25, (NOD_SPAN - nu) / 0.45);
+  nod = nod * nod * (3 - 2 * nod);
+  }
+  if (chuWaist) chuWaist.rotation.x = BOW * 0.7 * lean + NOD * nod;
   if (done) { bowAt = -99; calls = 0; answered = 0; }
   },
   fragment() {

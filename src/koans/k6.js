@@ -195,11 +195,13 @@ const CAM = { distance: 11, target: [1.05, 0.3, -3.35], heading: 17, pitch: 29.5
   if (!hit && input.raycastFirst(camera, cat.meshes())) { cat.stir(); return; }
   if (hit && releasePetal()) {
   // A petal genuinely makes no sound. The most that is honest is a
-  // suggestion of one, and this is the quietest call in the book — and
-  // it must not fire once the flower is bare: releasePetal() returns
-  // false with nothing left to drop, and this case is the one place an
-  // uncaused sound was explicitly ruled out.
-  audio && audio.breath({ force: 0.35, at: hit.point });
+  // suggestion of one — still the quietest voice in the book, just no
+  // longer its quietest setting (0.35: Frank's audit, "it's not very
+  // loud, it could be a little bit louder"). It must not fire once the
+  // flower is bare: releasePetal() returns false with nothing left to
+  // drop, and this case is the one place an uncaused sound was
+  // explicitly ruled out.
+  audio && audio.breath({ force: 0.6, at: hit.point });
   }
   });
   

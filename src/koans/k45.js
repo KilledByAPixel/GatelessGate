@@ -211,7 +211,7 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
       // Spread down the far end of the lane and across the near verge, so they
       // deepen the street rather than crowding the meeting in the middle.
       bystander(road.sample(0.83).x - 1.6, road.sample(0.83).z + 0.4, 1.9, 1.58, true),
-      bystander(road.sample(0.19).x - 1.8, road.sample(0.19).z - 0.4, 2.7, 1.47),
+      bystander(road.sample(0.17).x - 1.3, road.sample(0.17).z - 0.4, 2.7, 1.47),
       bystander(road.sample(0.58).x + 2.2, road.sample(0.58).z + 0.6, -1.3, 1.64),
     ];
     for (const c of crowd) scene.add(c);

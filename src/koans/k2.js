@@ -153,6 +153,10 @@ const CAM = { distance: 11.0, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 1
   if (hit) {
   fox.notice();
   audio && audio.breath({ force: 0.6, at: hit.point });
+  // ...and a small chime at the touch (Frank's audit: "add a chime when
+  // you click on the fox") — the breath alone starts too slowly to read
+  // as an acknowledgment, k1's own lesson. A high tube for a small animal.
+  audio && audio.chimeStrike({ tube: 4, force: 0.45, at: hit.point });
   }
   });
   

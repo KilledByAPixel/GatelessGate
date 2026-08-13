@@ -658,6 +658,17 @@ function hungChimes() {
 
 const chimeTap = () => { if (camera) ringChimeAt(hungChimes(), camera, input); };
 
+// THE CONTENTS' GATE RECURSION (buildHub's tapGate — the gate shrinks away
+// while an identical one arrives from far too big; see intro.js). Menu mode
+// only: the same hub idles behind the title card, but a tap there belongs to
+// the intro's own skip. The scene owns what the touch means; main owns the
+// input and the bell, the clearInput idiom's split of labour.
+const hubGateTap = () => {
+  if (mode !== 'menu' || !camera || scenes.active() !== hub || !hub.tapGate) return;
+  const hit = hub.tapGate(camera, input);
+  if (hit) audio.bell({ preset: 'temple', at: hit.point });
+};
+
 // CLEARING THE TAPS IS THE OUTGOING CASE'S BUSINESS, NOT MAIN'S. input.clear()
 // empties the whole callback list, which is right for the page being left and
 // wrong for main.js's own handlers — and main's were registered once at
@@ -673,6 +684,7 @@ const chimeTap = () => { if (camera) ringChimeAt(hungChimes(), camera, input); }
 function clearInput() {
   input.clear();
   input.onTap(chimeTap);
+  input.onTap(hubGateTap);
 }
 clearInput();
 

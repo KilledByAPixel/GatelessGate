@@ -170,7 +170,13 @@ const CAM = { distance: 11.5, target: [1.15, 1.2, -1], heading: 34, pitch: 27 };
   
   input.onTap(() => {
   if (!camera) return;
-  if (input.raycastFirst(camera, targets)) cat.stir();
+  const hit = input.raycastFirst(camera, targets);
+  if (!hit) return;
+  cat.stir();
+  // the stretch was silent (Frank's audit: "a sound feedback queue when you
+  // click on the cat"). cloth is the palette's fur — a brush, not an impact;
+  // nothing sharper belongs anywhere near this cat.
+  audio && audio.cloth({ force: 0.5, at: hit.point });
   });
   
   return {

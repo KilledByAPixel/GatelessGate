@@ -13,7 +13,9 @@ import { fakeCtx } from './helpers/fake-ctx.js';
 
 function staged() {
   const ctx = fakeCtx({
-    audio: { knock() {}, chimeStrike() {}, cylinderStrike() {} },
+    // breath is the blow-out's swish and setWindLevel the bed it swells —
+    // both landed in Frank's audit round alongside the widened hit cylinder
+    audio: { knock() {}, chimeStrike() {}, cylinderStrike() {}, breath() {}, setWindLevel() {} },
   });
   const root = k28.build(ctx);
   root.setCamera(new THREE.PerspectiveCamera());

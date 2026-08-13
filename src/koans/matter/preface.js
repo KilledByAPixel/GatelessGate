@@ -3,7 +3,7 @@ import MATTER from '../text/matter.js';
 import { PAPER, WASH, wash, ACCENT_DEEP } from '../../palette.js';
 import {
   composeWorld, faceMonk, groundHeight, makeBell, makeFlag,
-  makeLantern, makeLights, makeMonk, makePath, plantTree,
+  makeLantern, makeLights, makeMonk, makePath, plantTree, tapMeshes,
 } from '../../kit/index.js';
 
 // Mumon's own preface, which is where the four lines the book is named after
@@ -187,16 +187,24 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   flag.hoverAt(local.x, local.y);
   }
   });
-  input && input.onTap(() => {
-  if (!camera) return;
-  if (input.raycastFirst(camera, bell.pickTargets())) {
+  // one ring, whoever asks for it — the bonshō directly, or the monk (below)
+  const ring = () => {
   if (clock - lastRing < 0.5) return;
   lastRing = clock;
   bell.strike();
   strikes++;
   audio && audio.bell({ preset: 'temple', at: bell.group.position });
-  return;
-  }
+  };
+  const monkTargets = tapMeshes(monk);
+  input && input.onTap(() => {
+  if (!camera) return;
+  if (input.raycastFirst(camera, bell.pickTargets())) { ring(); return; }
+  // THE MONK RINGS THE BELL (Frank's audit: "when you click on the red guy,
+  // it rings the bell"). The one red thing on the book's first page is the
+  // person about to walk it, so touching him acts THROUGH him — the bonshō
+  // across the road sounds, same strike, same 0.5s floor, spatialised at
+  // the bell rather than the man, because the bell is what sounds.
+  if (input.raycastFirst(camera, monkTargets)) { ring(); return; }
   const hit = input.raycastFirst(camera, [flag.mesh]);
   if (hit) {
   const local = flag.mesh.worldToLocal(hit.point.clone());
@@ -204,7 +212,6 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   ruffles++;
   audio && audio.cloth({ force: 0.8, at: hit.point });
   }
-  // the monk keeps his own counsel; the roads are for walking, not tapping
   });
   
   return {

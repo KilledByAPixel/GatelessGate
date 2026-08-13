@@ -190,8 +190,11 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   if (clock - askedAt < POINT) return;
   askedAt = clock;
   asked++;
-  // the same four words, at the same volume, for everybody
-  audio && audio.knock({ force: 0.5, at: WOMAN });
+  // the same four words, at the same volume, for everybody — a CHIME now,
+  // not the knock it shipped with (Frank's audit: "can we have a chime when
+  // you click on this person that's red"): a knock is a door's voice, and
+  // there is no door in the exchange. Identical every asking, of course.
+  audio && audio.chimeStrike({ tube: 2, force: 0.55, at: WOMAN });
   });
   
   return {

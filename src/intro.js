@@ -2,9 +2,27 @@ import * as THREE from '../lib/three.module.js';
 import { PAPER, ACCENT_DEEP, wash } from './palette.js';
 import {
   composeWorld, makePath, makeLantern, makeGate, makeMonk,
-  makeLights, makeCylinderChime,
+  makeLights, makeCylinderChime, tapMeshes,
 } from './kit/index.js';
 import { introPath } from './intro_rails.js';
+
+// THE GATE EATS ITSELF (Frank: tap the Contents' gate and it "shrinks down to
+// zero size", while a second gate — "so big initially that it's not gonna be
+// visible on camera" — comes down to land exactly where the first one stood,
+// and the loop can run for ever). k47's endless road turned inward: passing
+// through the gateless gate leaves you before the gateless gate.
+//
+// BIG is the incoming gate's starting scale. At 12 the posts stand ~18 units
+// either side of the road and the lintel ~41 up — all three timbers outside
+// the menu frame (distance 13), so the arrival reads as the frame closing down
+// around the world rather than an object popping in. Tweak by eye from here.
+// The incoming gate travels in LOG space — a linear shrink from 12 spends most
+// of its seconds looking huge; even steps in log(scale) is what reads as one
+// steady approach. The outgoing gate just closes linearly to nothing: it is
+// gone in the same breath, and 1e-3 (not 0) keeps its matrices invertible on
+// the frame it vanishes.
+const LOOP = { big: 12, span: 2.6 };
+const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 
 // The idling stage scene behind the title and the table of contents — a small
 // world gathering elements from the koans: a path through the freestanding
@@ -74,11 +92,25 @@ export function buildHub({
   // it. A torii is a big timber frame rather than a held object, so it takes the
   // deep mix; full accent across those posts would glare.
   let gate = null;
+  let gateB = null;
   if (withGate) {
     gate = makeGate({ width: 3.0, height: 3.4, color: ACCENT_DEEP });
     gate.position.set(gp.x, 0, gp.z);
     gate.rotation.y = gp.heading;
     scene.add(gate);
+    // the recursion's other half: an identical gate parked hidden on the same
+    // spot, waiting to be the enormous incoming one (see LOOP above). Two
+    // gates swapping roles for ever, k47's four-gates-five-slots idiom at its
+    // smallest possible size.
+    gateB = makeGate({ width: 3.0, height: 3.4, color: ACCENT_DEEP });
+    // its own name: tests/matter.test.js counts exactly ONE 'gate' in the hub,
+    // and that stays true — this object is the echo, whichever of the two
+    // happens to be standing in the composition after an even number of loops
+    gateB.name = 'gate-echo';
+    gateB.position.set(gp.x, 0, gp.z);
+    gateB.rotation.y = gp.heading;
+    gateB.visible = false;
+    scene.add(gateB);
   }
 
   let lanternA = null, lanternB = null;
@@ -129,9 +161,36 @@ export function buildHub({
     mountains,
   });
 
+  // ---- the recursion ------------------------------------------------------
+  // `out` is the gate on the road (shrinking to nothing once tapped), `in` the
+  // one arriving from far too big. They swap at settle, so whichever object is
+  // standing in the composition is always at scale 1 and tappable.
+  let outGate = gate, inGate = gateB;
+  const gateTargets = new Map();
+  if (gate) { gateTargets.set(gate, tapMeshes(gate)); gateTargets.set(gateB, tapMeshes(gateB)); }
+  let clock = 0;
+  let loopAt = -99;
+  let loops = 0;
+  let settled = true;
+
   // the meadow breathes, so the idling scene is never static
   return {
     scene,
+    // Probe a tap against the CURRENT gate; returns the hit (or null). The
+    // caller owns input and audio (main.js's clearInput idiom), this scene
+    // owns what the touch means. Refused mid-loop: a second tap restarting
+    // the shrink from half-way is exactly the janky class the audit cut.
+    tapGate(camera, input) {
+      if (!gate || clock - loopAt < LOOP.span) return null;
+      const hit = input.raycastFirst(camera, gateTargets.get(outGate));
+      if (!hit) return null;
+      loopAt = clock;
+      loops++;
+      settled = false;
+      inGate.visible = true;
+      return hit;
+    },
+    loops: () => loops,
     // where the menu camera should centre: the gate is the subject of this
     // scene, and the old hardcoded target sat four units in front of it, so the
     // orbit swung around empty road while the gate drifted off-axis. The matter
@@ -145,7 +204,27 @@ export function buildHub({
     // the trees and the seed means that pairing is DERIVED, and survives.
     trees: world.trees,
     groundSeed,
-    update: (dt, t) => { world.update(dt, t); },
+    update: (dt, t) => {
+      clock = Number.isFinite(t) ? t : clock + (dt || 0);
+      world.update(dt, t);
+      if (!gate || loopAt <= -99) return;
+      const u = clock - loopAt;
+      if (u < LOOP.span) {
+        const p = ease(u / LOOP.span);
+        // out: closes linearly to (almost) nothing. in: descends in log space
+        // from BIG to exactly 1 — see LOOP's header for why the spaces differ.
+        outGate.scale.setScalar(Math.max(1e-3, 1 - p));
+        inGate.scale.setScalar(Math.exp(Math.log(LOOP.big) * (1 - p)));
+      } else if (!settled) {
+        // the swap, once, after the flight: the arrived gate IS the gate now,
+        // the vanished one parks hidden at scale 1 to be the next arrival
+        settled = true;
+        outGate.visible = false;
+        outGate.scale.setScalar(1);
+        inGate.scale.setScalar(1);
+        const was = outGate; outGate = inGate; inGate = was;
+      }
+    },
     dispose() {},
   };
 }

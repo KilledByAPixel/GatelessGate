@@ -287,9 +287,17 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -48, pitch: -6
   
   input.onTap(() => {
   if (!camera) return;
-  if (input.raycastFirst(camera, danglerMeshes)) {
+  const hit = input.raycastFirst(camera, danglerMeshes);
+  if (hit) {
   dangler.sway(1);
   sways++;
+  // THE SILENCE ENDED HERE TOO (Frank's audit: "add a chime when you
+  // click on Kyogen in the tree"). This case held out longest — it was on
+  // tests/staging.test.js's SILENT_BY_HISTORY to the last — and what
+  // broke the silence is deliberately the LEAST literal voice available:
+  // a small chime, nothing that could read as the branch, his teeth, or
+  // the drop. Soft, high, placed at the touch.
+  audio && audio.chimeStrike({ tube: 4, force: 0.4, at: hit.point });
   }
   });
   

@@ -46,11 +46,13 @@ function rigCamera(mod, heading = null) {
     { far: 200, ...(heading === null ? {} : { heading }) });
 }
 
-// THE THREE SILENT CASES. Not an oversight — an editorial choice, pinned in
-// each case's own test: the man hanging by his teeth over the drop (5), the
-// cat (14), and the top of the hundred-foot pole (46) get wind and nothing
-// else. "Silence is right here." Everything else in the book carries the
-// drift, and this list is how a NEW case that forgot it still gets caught.
+// THE THREE DRIFTLESS CASES. Not an oversight — an editorial choice, pinned
+// in each case's own test: the man hanging by his teeth over the drop (5),
+// the cat (14), and the top of the hundred-foot pole (46) get wind and no
+// music drift. "Silence is right here." (Their TOUCHES answer now — see
+// SILENT_BY_HISTORY below — but the ambient bed stays bare.) Everything else
+// in the book carries the drift, and this list is how a NEW case that forgot
+// it still gets caught.
 const NO_DRIFT = [5, 14, 46];
 
 // The book is ink on warm paper, with two deliberate exceptions: case 28 goes
@@ -166,14 +168,18 @@ for (const entry of staged) {
   });
 }
 
-// The two cases that answer a touch with nothing ON PURPOSE, which is a
-// different thing from the seven that used to be on this list because no voice
-// existed for them yet. The man hanging by his teeth over the drop (5) and the
-// cat (14) are the book's two hardest pages, staged through ink metaphor and
-// never through literal harm — and a sound effect on either would be the exact
-// wrong note. They are also two of the three cases with no drift at all
-// (NO_DRIFT, above): "silence is right here."
-const SILENT_BY_HISTORY = [5, 14];
+// Cases that answer a touch with nothing ON PURPOSE — a different thing from
+// the seven that were once here because no voice existed for them yet. The
+// list is EMPTY now, and the emptying is the record worth keeping: the cat
+// (14) and the hanging man (5) were the last two, the book's two hardest
+// pages, and both came off on Frank's audit ("a sound feedback cue when you
+// click on the cat"; "add a chime when you click on Kyogen in the tree").
+// What each answers with keeps the reasoning that put it here — the cat gets
+// cloth, a brush of fur, and Kyogen a small chime, the least literal voice in
+// the palette; neither is an impact, and nothing stages the harm the ink
+// metaphor exists to avoid. Both stay on NO_DRIFT above; only the one-shots
+// moved. The machinery stays for any future case that needs the silence.
+const SILENT_BY_HISTORY = [];
 
 test('every staged interaction reaches the audio engine', async () => {
   // A diorama that answers a touch with nothing is a bug we would otherwise
@@ -201,12 +207,13 @@ test('every staged interaction reaches the audio engine', async () => {
   assert.deepEqual(silent, [], `these cases answer a touch with nothing: ${silent}`);
 });
 
-test('the two cases silent by editorial choice make no sound at all', async () => {
+test('any case silent by editorial choice makes no sound at all', async () => {
   // SILENT_BY_HISTORY only SUPPRESSES a failure in the test above — it never
   // asserts anything of its own, so a case could sit on that list without
-  // actually staying silent and nothing would catch it. Cases 5 and 14 are
-  // the book's two hardest pages, handled through ink metaphor rather than a
-  // sound effect; this proves the silence rather than merely excusing it.
+  // actually staying silent and nothing would catch it. This proves the
+  // silence rather than merely excusing it. (The list is empty as of Frank's
+  // 2026-08 audit — see its comment — so this currently proves a vacuous
+  // truth, and stays for the next case that claims the silence.)
   for (const id of SILENT_BY_HISTORY) {
     const entry = staged.find((e) => e.id === id);
     assert.ok(entry, `case ${id} is not staged`);

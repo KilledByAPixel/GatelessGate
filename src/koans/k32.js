@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, wash } from '../palette.js';
 import {
   composeWorld, makeBuddha, makeMonk, faceMonk, makeAssembly,
-  makeWildflowers, makeLights, washMaterial,
+  makeWildflowers, makeLights, washMaterial, tapMeshes,
 } from '../kit/index.js';
 
 const ID = 32;
@@ -133,15 +133,34 @@ const CAM = { distance: 9, target: [1.45, 1, -0.95], heading: 31.5, pitch: 23 };
 
   // ---- the moment: ask, and be answered with nothing --------------------
   let clock = 0;
+  let camera = null;
   let askedAt = -99;
   let asked = 0;
   let bows = 0;
+  let touchedAt = -99;
   let sounded = true;      // the pending chime is already spent before the first asking
+  const philTargets = tapMeshes(philosopher);
 
   // ANY tap asks — there is nothing here to hit, which is the point. Aiming
   // this at the Buddha would make the gesture a target-hunt, and the case is
   // not one: the question is put to the scene and the scene declines it.
+  //
+  // But a tap that lands ON the philosopher acknowledges at the touch
+  // (Frank's audit: "a sound cue when you click on the philosopher") — a
+  // small chime, immediate, where the bottom-of-the-bow chime stays where it
+  // is, marking the thanking. A CHIME, not cloth: the first cut used a robe
+  // rustle and Frank heard it as "a sweeping kind of swish sound — we want
+  // it to be a chime." A higher tube than the bow's 0, so the two reads stay
+  // two sounds. The ack plays even while a bow is in flight; the asking
+  // itself still waits for the bow he already gave you to finish.
   input.onTap(() => {
+  if (camera) {
+  const hit = input.raycastFirst(camera, philTargets);
+  if (hit && clock - touchedAt >= 0.5) {
+  touchedAt = clock;
+  audio && audio.chimeStrike({ tube: 4, force: 0.5, at: hit.point });
+  }
+  }
   if (clock - askedAt < BOW_SPAN) return;      // let the bow he already gave you finish
   askedAt = clock;
   asked++;
@@ -150,8 +169,7 @@ const CAM = { distance: 9, target: [1.45, 1, -0.95], heading: 31.5, pitch: 23 };
 
   return {
   scene,
-  // the module contract wants the hook, but nothing here aims a ray
-  setCamera() {},
+  setCamera(c) { camera = c; },
   update(dt, simTime) {
   clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
   world.update(dt, simTime);

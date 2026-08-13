@@ -208,3 +208,53 @@ test('a tap rings one chime and never also starts a beating', () => {
   assert.equal(k.fragment().beatings, 1, 'tapping the gate itself should still start the beating');
   assert.equal(knocks.length, 3, `the beating should be three blows, got ${knocks.length}`);
 });
+
+test('touching Tozan deepens his bow, and never starts a beating', () => {
+  // Frank's audit: "could we have Tozan do some kind of animation in fifteen
+  // when you click on them? even if you just bow." The held BOW dips by DIP
+  // and comes back up; the probe sits before the gate's forgiving hit-box, so
+  // touching the man is never read as starting the blows.
+  let onTap = null;
+  const s = stubs();
+  s.input.onTap = (fn) => { onTap = fn; };
+  const cloths = [];
+  s.audio.cloth = (o) => cloths.push(o);
+  const knocks = [];
+  s.audio.knock = () => knocks.push(1);
+
+  const k = k15.build(s);
+  k.setCamera(new THREE.PerspectiveCamera());
+  const monks = [];
+  k.scene.traverse((o) => { if (o.name === 'monk') monks.push(o); });
+  const tozan = monks.find((m) => Math.abs(m.position.x - 2.5) < 1e-6);
+  assert.ok(tozan, 'Tozan stands at the gateway');
+  const waist = tozan.getObjectByName('waist');
+  const tozanMeshes = [];
+  tozan.traverse((o) => { if (o.isMesh) tozanMeshes.push(o); });
+  s.input.raycastFirst = (cam, targets) => {
+    const t = targets.find && targets.find((o) => tozanMeshes.includes(o));
+    return t ? { object: t, point: new THREE.Vector3(), distance: 1 } : null;
+  };
+
+  k.update(1 / 60, 0);
+  const held = waist.rotation.x;
+  assert.ok(Math.abs(held - 0.55) < 1e-6, `he idles at the held BOW, got ${held}`);
+
+  onTap();
+  let peak = 0;
+  for (let t = 0; t < 1.2; t += 1 / 60) {
+    k.update(1 / 60, t);
+    peak = Math.max(peak, waist.rotation.x);
+  }
+  assert.ok(peak > held + 0.15, `the bow never visibly deepened (peak ${peak.toFixed(3)})`);
+
+  // a second tap mid-dip is absorbed, k49's cooldown idiom
+  onTap();
+  assert.equal(k.fragment().dips, 1, 'one dip at a time');
+  assert.equal(cloths.length, 1, 'and one rustle');
+
+  for (let t = 1.2; t < 3.0; t += 1 / 60) k.update(1 / 60, t);
+  assert.ok(Math.abs(waist.rotation.x - held) < 1e-6, 'and he returns to exactly the held bow');
+  assert.equal(k.fragment().beatings, 0, 'touching the man is not the gate');
+  assert.equal(knocks.length, 0, 'no blow sounds for it');
+});

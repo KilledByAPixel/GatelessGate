@@ -119,6 +119,11 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   // whole gesture. There was no voice in the palette that was not an
   // impact, which is why this case was silent for so long.
   audio && audio.breath({ force: 0.8, dur: MU_DUR * 0.8, at: hit.point });
+  // ...and one small chime AT the touch (Frank's audit: "a sound like a
+  // chime when you click on the dog"). The breath is four seconds of slow
+  // onset under the ambience — as an acknowledgment it arrives too late to
+  // read as one. The chime is the instant half; the breath stays the case.
+  audio && audio.chimeStrike({ tube: 2, force: 0.45, at: hit.point });
   });
   
   return {

@@ -122,3 +122,45 @@ test('the ship stands off in deep water and rides the swell', () => {
     `only the ship wears the accent, got [${reds}]`);
   assert.equal(root.fragment().visits, 0);
 });
+
+test('a tap rocks the ship on top of the swell, and the sea takes it back', () => {
+  // Frank's audit: the verdict plays out on shore, in Joshu — the boat itself
+  // needed feedback. Measured as a DIFFERENCE against an untapped twin build
+  // (same seeds, same simTime, so the swell underneath is identical): the tap
+  // adds a legible roll, and once the envelope closes the two hulls agree to
+  // the last bit — the extra motion leaves no residue behind.
+  const build = () => {
+    const ctx = fakeCtx();
+    const root = k11.build(ctx);
+    root.setCamera({});
+    return { ctx, root };
+  };
+  const calm = build();
+  const tapped = build();
+  const boatOf = (r) => r.scene.getObjectByName('boat');
+  for (let i = 0; i <= 120; i++) {
+    calm.root.update(1 / 60, i / 60);
+    tapped.root.update(1 / 60, i / 60);
+  }
+
+  const hit = tapped.root.scene.getObjectByName('boat-hit');
+  tapped.ctx.input.raycastFirst = (cam, objs) => (objs.includes(hit)
+    ? { object: hit, point: new THREE.Vector3(), distance: 1 } : null);
+  tapped.ctx._taps.forEach((cb) => cb());
+
+  let peak = 0;
+  for (let t = 2; t < 4; t += 1 / 60) {
+    calm.root.update(1 / 60, t);
+    tapped.root.update(1 / 60, t);
+    peak = Math.max(peak, Math.abs(boatOf(tapped.root).rotation.z - boatOf(calm.root).rotation.z));
+  }
+  assert.ok(peak > 0.04, `the tap added no legible roll (peak ${peak.toFixed(4)})`);
+  assert.ok(peak < 0.2, `"rock a little" — peak ${peak.toFixed(4)} is a capsize`);
+
+  for (let t = 4; t < 6.5; t += 1 / 60) {
+    calm.root.update(1 / 60, t);
+    tapped.root.update(1 / 60, t);
+  }
+  const drift = Math.abs(boatOf(tapped.root).rotation.z - boatOf(calm.root).rotation.z);
+  assert.ok(drift < 1e-9, `the roll must die away completely, still ${drift} apart`);
+});

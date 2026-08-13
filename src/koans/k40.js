@@ -33,7 +33,7 @@ const HALL = { x: -1.0, z: -6.2 };    // the new monastery's stand-in, far back
 const HYAKUJO = { x: 0.45, z: 1.55 };   // beside the vase, not behind it —
                                           // the red must sit against paper and
                                           // grass, never against a black robe
-const ISAN = { x: 1.9, z: -0.2 };    // of the crowd, one step out of it
+const ISAN = { x: 1.9, z: 0 };    // of the crowd, one step out of it
 const CROWD = { x: 4.15, z: -1.1 };   // where the arc's centroid should land
 const ARC_R = 1.9;
 const ARC_PULL = ARC_R * 0.81;        // mean(cos) over the 0.7π arc — see k14
@@ -103,7 +103,7 @@ const CAM = { distance: 10.8, target: [2.05, 1, -0.5], heading: 57.5, pitch: 20 
   // One monk of the crowd on his feet, a step forward of the others, leaning
   // a few degrees toward the vase. Not labelled, not accented: the
   // composition says who he is — the only one already moving.
-  const isan = makeMonk({ height: 1.58 });
+  const isan = makeMonk({ height: 1.58, hat: false });
   isan.position.set(ISAN.x, 0, ISAN.z);
   faceMonk(isan, { x: VASE.x, z: VASE.z });
   isan.rotation.z = -0.07;   // applied before the yaw: a lean toward what he faces

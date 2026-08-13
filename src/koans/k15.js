@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeGate, makeLantern, makeMonk, faceMonk,
-  makeLights, washMaterial, makeFurin,
+  makeLights, washMaterial, makeFurin, tapMeshes,
 } from '../kit/index.js';
 
 const ID = 15;
@@ -24,6 +24,12 @@ const BLOW_GAP = 0.5;
 // just told him he has earned a beating — and held, not animated: the movement
 // in this case is the three blows, and they land on nothing.
 const BOW = 0.55;
+// ...held, EXCEPT when the reader touches him (Frank's audit: "could we have
+// Tozan do some kind of animation in fifteen — even if you just bow"). The
+// held bow deepens by DIP and comes back up: the one figure the reader can
+// reach answers by bowing further, which is the most Tozan gesture there is.
+const DIP = 0.22;            // radians past the held BOW, at the same waist
+const DIP_SPAN = 2.4;        // seconds down and up, and the retap floor
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
@@ -72,7 +78,7 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -5, pitch: 13.
   scene.fog = new THREE.FogExp2(PAPER, 0.040);
   scene.add(makeLights());
   
-  const path = makePath({ from: [3.2, 8.6], to: [-1.4, -18], width: 1.5, seed: ID, groundSeed: 21, wander: 0.7 });
+  const path = makePath({ from: [3.2, 8.6], to: [-4.4, -25], width: 1.5, seed: ID, groundSeed: 21, wander: 2.7 });
   scene.add(path);
   
   // UMMON'S GATE, straddling the road
@@ -92,6 +98,8 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -5, pitch: 13.
   tozan.position.set(2.5, 0, 0.9);
   faceMonk(tozan, { x: -1.4, z: -1.8 });
   scene.add(tozan);
+  const tozanWaist = tozan.getObjectByName('waist');
+  const tozanTargets = tapMeshes(tozan);
   
   // UMMON, beyond the gate, holding the stick he is not going to use
   const ummon = makeMonk({ height: 1.68, elder: true });
@@ -179,7 +187,9 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -5, pitch: 13.
   let struck = 0;              // blows delivered in the current beating
   let startedAt = -99;
   let beatings = 0;
-  
+  let dippedAt = -99;
+  let dips = 0;
+
   input.onTap(() => {
   if (!camera) return;
   // the chimes first: their own hit drums sit inside the gate's big
@@ -189,6 +199,16 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -5, pitch: 13.
   for (const c of chimes) {
   const chimeHit = c.pick(camera, input);
   if (chimeHit) { c.ring(0.75, chimeHit.tube); return; }
+  }
+  // then Tozan himself, before the gate's box gets him: touch the man and
+  // he bows deeper — a robe rustle, not a knock; nothing strikes him
+  if (input.raycastFirst(camera, tozanTargets)) {
+  if (clock - dippedAt >= DIP_SPAN) {
+  dippedAt = clock;
+  dips++;
+  audio && audio.cloth({ force: 0.4, at: tozan.position });
+  }
+  return;
   }
   if (!input.raycastFirst(camera, [hit])) return;
   if (startedAt > -99 && struck < BLOWS) return;      // let the three finish
@@ -215,6 +235,15 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -5, pitch: 13.
   // insists there isn't one. Left unplaced on purpose.
   audio && audio.knock({ force: 0.85 });
   }
+  // the deepened bow: down quickly, up slowly, from the held BOW — the
+  // waist is reassigned every frame so idle is exactly the built pose
+  const du = clock - dippedAt;
+  let lean = 0;
+  if (du >= 0 && du < DIP_SPAN) {
+  lean = Math.min(1, du / 0.5, (DIP_SPAN - du) / 1.1);
+  lean = lean * lean * (3 - 2 * lean);
+  }
+  tozanWaist.rotation.x = BOW + DIP * lean;
   },
   fragment() {
   // summed, not per-chime — a debug-panel fragment is finite numbers and
@@ -222,6 +251,7 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -5, pitch: 13.
   return {
   beatings, struck, forgiven: struck >= BLOWS,
   chimeStrikes: chimes.reduce((n, c) => n + c.strikes(), 0),
+  dips, lean: +tozanWaist.rotation.x.toFixed(4),
 };
       },
       dispose() {},

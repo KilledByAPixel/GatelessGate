@@ -41,3 +41,13 @@ test('the tap handler main.js keeps is the one that rings a hung chime', () => {
   assert.match(main, /import \{[^}]*ringChimeAt[^}]*\} from '\.\/kit\/chimes\.js'/);
   assert.match(main, /const chimeTap = \(\) =>[\s\S]{0,120}ringChimeAt\(/);
 });
+
+test('the Contents gate recursion handler survives page turns the same way', () => {
+  // hubGateTap is registered once and put back by clearInput() beside
+  // chimeTap — the identical invisible-failure class: drop it and the menu's
+  // gate simply stops answering, with nothing to read anywhere.
+  assert.match(main, /const hubGateTap = /);
+  const wrapper = main.match(/function clearInput\(\)\s*\{[\s\S]*?\n\}/);
+  assert.match(wrapper[0], /input\.onTap\(hubGateTap\)/, 'clearInput() must put it back');
+  assert.match(main, /hub\.tapGate\(camera, input\)/, 'and it drives the hub\'s own probe');
+});

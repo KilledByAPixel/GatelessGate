@@ -192,6 +192,13 @@ const CAM = { distance: 17, target: [-0.3, 2.8, -1.6], heading: 31.5, pitch: 14.
   scene.add(hit);
   
   // ---- the moment: the oldest sound in the book -------------------------
+  // THE ROCK (Frank's audit: "let's have it just rock just a tiny bit ... so
+  // there's feedback in addition to the sound"). A colossus nudged: slow,
+  // small, and settled again inside a few swings. The lean pivots at the
+  // group origin — seat height, his hips — so the crown carries the sway.
+  // Driven off elapsed-since-toll, never absolute time (the envelope bug
+  // class the audit keeps finding).
+  const ROCK = { amp: 0.02, hz: 0.9, tau: 0.9, span: 3.0 };
   let camera = null;
   let clock = 0;
   let tolls = 0;
@@ -230,9 +237,17 @@ const CAM = { distance: 17, target: [-0.3, 2.8, -1.6], heading: 31.5, pitch: 14.
   clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
   world.update(dt, simTime);
   fox.update(dt, simTime);
+  const u = clock - lastToll;
+  buddha.rotation.z = (u >= 0 && u < ROCK.span)
+  ? ROCK.amp * Math.sin(u * ROCK.hz * Math.PI * 2) * Math.exp(-u / ROCK.tau)
+  : 0;
   },
   fragment() {
-  return { tolls, since: +Math.min(999, clock - lastToll).toFixed(1) };
+  return {
+  tolls,
+  since: +Math.min(999, clock - lastToll).toFixed(1),
+  rock: +buddha.rotation.z.toFixed(5),
+  };
   },
   dispose() {},
 };

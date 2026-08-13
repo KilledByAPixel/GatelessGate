@@ -324,3 +324,27 @@ test('tapping the cat stirs it — and that is the whole of it', () => {
   for (let i = 0; i < 400; i++) built.update(1 / 60, (60 + i) / 60);
   assert.equal(built.fragment().stirring, false, 'and then it is over');
 });
+
+test('touching the cat answers with fur now, and with nothing sharper', () => {
+  // Frank's audit reversed the case's pinned silence for the CAT ONLY ("a
+  // sound feedback queue when you click on the cat" — see SILENT_BY_HISTORY
+  // in tests/staging.test.js, where case 14 came off the list). The voice is
+  // cloth — a brush of fur — and held soft: anything that reads as an impact
+  // is the exact wrong note anywhere near this cat.
+  let onTap = null;
+  const cloths = [];
+  const ctx = {
+    audio: { cloth: (o) => cloths.push(o) },
+    input: { onTap: (fn) => { onTap = fn; }, onHover() {}, raycastFirst: () => null },
+  };
+  const root = k14.build(ctx);
+  root.setCamera(new THREE.PerspectiveCamera());
+  root.update(1 / 60, 0);
+  ctx.input.raycastFirst = (cam, objs) => (objs && objs.length
+    ? { object: objs[0], point: new THREE.Vector3(1.6, 0.4, 0), distance: 1 } : null);
+  onTap();
+  assert.equal(cloths.length, 1, 'the touch must make a sound now');
+  assert.ok(cloths[0].force <= 0.6, `a brush, not an impact — force ${cloths[0].force}`);
+  assert.ok(cloths[0].at, 'placed at the touch, so the spatial bus carries it');
+  assert.equal(root.fragment().stirs, 1, 'and the cat still stirs');
+});

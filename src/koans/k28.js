@@ -40,6 +40,14 @@ const FADE = 1.5;                            // seconds to fall dark, and to com
 // cancels it: a reader who lights it by hand is not overruled two seconds
 // later, and one who blows it out again gets a fresh five.
 const RELIGHT = 5.0;
+// The recipe's own wind level, hoisted (k47's idiom) because the blow-out now
+// drives it live: the candle is blown out BY the wind, so while the page is
+// dark the bed swells above its resting level and settles back as the wick
+// catches (Frank's audit: "increase the wind a little bit when you blow out
+// the candle"). k19/k20's setWindLevel idiom — an absolute level per frame,
+// which the next page's ambience transition ramps away from on its own.
+const BASE_WIND = 0.12;
+const WIND_SWELL = 0.7;      // fraction above BASE_WIND at full dark
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
@@ -55,7 +63,7 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   // late as it is, a hall someone actually lives in still carries this one
   // small everyday sound; a lone deep voice, occasional and quiet, suits the
   // night's hush far better than a chattering cluster would.
-  ambience: ['wind:0.12', 'flame', 'cylinder', 'music'],
+  ambience: ['wind:' + BASE_WIND, 'flame', 'cylinder', 'music'],
   camera: CAM,
   
   build(ctx) {
@@ -213,11 +221,18 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   ],
   });
 
+  // THE WHOLE LANTERN IS THE TARGET (Frank's audit: "you should be able to
+  // click like anywhere on the lantern... a little more leeway"). The old
+  // cylinder was half the size AND stranded at x 0.5 — the lantern moved to
+  // -0.8 in a retune and its hit volume stayed behind, so the only working
+  // taps were dead-on hits on the flame and candle meshes: exactly the
+  // "little spot" he was fighting. Sized to take in the lantern body, its
+  // roof and the flame above it, and placed ON the lantern this time.
   const hit = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.5, 0.5, 1.6, 7),
+  new THREE.CylinderGeometry(0.75, 0.75, 2.0, 7),
   new THREE.MeshBasicMaterial({ visible: false }));
   hit.name = 'flame-hit';
-  hit.position.set(0.5, 0.8, -1.7);
+  hit.position.set(-0.8, 0.9, -1.7);
   scene.add(hit);
   
   // ---- the moment: blow it out ------------------------------------------
@@ -254,12 +269,15 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   // listed too so a dead-on tap works even if the cylinder ever moves
   if (!input.raycastFirst(camera, [hit, flame, candle])) return;
   blows++;
-  // out is a breath; lit again is the smallest bell in the set
+  // out is a breath — audibly one, now: the little knock this shipped with
+  // read as a latch, not a puff (Frank's audit: "that swish kind of sound
+  // that we play on some other areas... it's kinda like getting blown out").
+  // Lit again is the smallest bell in the set.
   if (lit) {
   lit = false;
   changedAt = clock;
   relightAt = clock + RELIGHT;    // it will come back on its own
-  audio && audio.knock({ force: 0.22, at: flame.position });
+  audio && audio.breath({ force: 0.7, at: flame.position });
   } else {
   light();                        // ...unless the reader beats the clock to it
   }
@@ -290,6 +308,9 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   scene.fog.color.copy(bg);
   for (const [l, base] of lightRigs) l.intensity = base * (1 - 0.62 * d);
   starMat.opacity = 0.92 * d;
+  // the wind that blew it out: the bed swells with the dark and settles
+  // with the relight, riding the same eased curve as everything else
+  audio && audio.setWindLevel(BASE_WIND * (1 + WIND_SWELL * d));
   
   // the flame itself: it flickers while it burns, and is simply not
   // there once it is out
