@@ -50,6 +50,18 @@ export function makeLights({ shadow = true, focus = [1.2, 0, 0.3], radius = 15 }
     c.left = -radius; c.right = radius; c.top = radius; c.bottom = -radius;
     c.near = 0.5; c.far = 48;   // the wider frustum's far corners need the extra depth
     c.updateProjectionMatrix();
+    // These two are the acne/halo trade, and this pair is where it settled
+    // AFTER a retuning attempt (2026-08) that tried to shrink the white gap
+    // where a caster meets the ground. What that round established: positive
+    // bias does close the gap (it tips borderline pixels into shadow) but
+    // broke scenes outright; smaller magnitudes here still showed artifacts by
+    // eye. The theory said small bias was safe because the ground and grass
+    // never cast (debug.js) — but everything else does, mountains and roofs
+    // included, and those broad soft-sloped casters still self-shadow through
+    // the map. So the contact halo is the price of clean surfaces at this
+    // texel density (~100/unit); the road to a tighter contact is MORE density
+    // (a smaller per-case `radius`, which this function already takes), not
+    // smaller bias.
     sun.shadow.bias = -0.0004;
     sun.shadow.normalBias = 0.025;
   }
