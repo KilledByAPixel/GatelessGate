@@ -62,7 +62,7 @@ export default {
     // is placed ON it via path.sample so the gate spans the trail and the
     // lanterns flank it. The two monks argue on the road ("the flag moves" /
     // "the wind moves").
-    const path = makePath({ from: [1.4, 9], to: [7.4, -33.6], width: 1.8, seed: 91, groundSeed: 21, wander: 1.3 });
+    const path = makePath({ from: [1.4, 9], to: [7.4, -33.6], width: 1.8, seed: 91, groundSeed: 21, wander: 5.3 });
     scene.add(path);
 
     // the gate straddles the path a little way up the road

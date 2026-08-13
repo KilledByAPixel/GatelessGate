@@ -38,7 +38,7 @@ const CAM = { distance: 9, target: [0.7, 1.25, 0.4], heading: 31.5, pitch: 19 };
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
   scene.add(makeLights({ sun: { heading: 51, pitch: 48 } }));
   
-  const path = makePath({ from: [-3.0, 8.5], to: [3.6, -18], width: 1.3, seed: ID, groundSeed: 21, wander: 1.0 });
+  const path = makePath({ from: [-3.0, 8.5], to: [3.6, -18], width: 1.3, seed: ID, groundSeed: 21, wander: 2.0 });
   scene.add(path);
   
   // THE WHEEL, on its stand, turning. Its face is squared to the home camera

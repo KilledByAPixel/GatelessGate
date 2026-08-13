@@ -91,7 +91,7 @@ function bowShape(u) {
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch: 20.5 };
+const CAM = { distance: 8.6, target: [0.3, 1.5, -1.95], heading: -20.5, pitch: 16.5 };
   export default {
   id: ID,
   slug: 'meeting-a-zen-master-on-the-road',
@@ -116,8 +116,11 @@ const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch:
   scene.add(makeLights({ sun: { heading: 55, pitch: 39 } }));
   
   // one road, running away into the fog in both directions
-  const road = makePath({ from: [6.0, 7.0], to: [-5.5, -17], width: 1.6, seed: ID, groundSeed: 21, wander: 0.5 });
+  const road = makePath({ from: [6.0, 7.0], to: [-5.5, -17], width: 1.6, seed: ID, groundSeed: 21, wander: 3.5 });
   scene.add(road);
+
+  //const road2 = makePath({ from: [7.5, 7.0], to: [-4.0, -17], width: .5, seed: ID, groundSeed: 21, wander: 3.5 });
+  //scene.add(road2);
   
   // YOU — or the traveller standing in for you — stopped in the road with
   // his staff planted. `pose: 'bow'` builds him UPRIGHT and hinged at the
@@ -189,7 +192,7 @@ const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch:
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: 99,
+  seed: 100,
   groundSeed: 21,
   trees: 4,
   keepout: [
@@ -204,7 +207,7 @@ const CAM = { distance: 8.6, target: [1.38, 1.35, -2.18], heading: -19.5, pitch:
   { at: horse.group, r: 1.7 },
   { at: bundle.group, r: 0.55 },
   ],
-  grassKeepout: road.keepout(28, 1.0),
+  grassKeepout: [...road.keepout(28, 1)],
   });
 
   const hit = new THREE.Mesh(

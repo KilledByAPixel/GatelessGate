@@ -55,7 +55,7 @@ const CAM = { distance: 14.3, target: [1.05, 1.55, -1.6], heading: 156.5, pitch:
   // A garden walk, not a road. It comes out of the foreground, runs between
   // the two men and passes under the edge of the oak on its way into the fog —
   // so the tree is beside the path you are already on, which is the point.
-  const path = makePath({ from: [3.6, 8], to: [-3.0, -20], width: 1.5, seed: 38, groundSeed: 21, wander: 1.1 });
+  const path = makePath({ from: [3.6, 8], to: [-3.0, -20], width: 1.3, seed: 38, groundSeed: 21, wander: 1.1 });
   scene.add(path);
   
   // ---- the oak ---------------------------------------------------------
@@ -134,7 +134,7 @@ const CAM = { distance: 14.3, target: [1.05, 1.55, -1.6], heading: 156.5, pitch:
   // only the walk and the swept earth actually cover ground; both men stand
   // in the grass, and the grass grows right up under the oak
   grassKeepout: [
-  ...path.keepout(26, 1.0),
+  ...path.keepout(26, .8),
   { x: OAK.x, z: OAK.z, r: APRON_R * 0.98 },
   ],
   });

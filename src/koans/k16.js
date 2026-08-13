@@ -29,7 +29,7 @@ const ID = 16;
 // every other case's rather than by moving the book. composeWorld gets the same
 // object as its `view`, so the scatter still refuses spots no reachable heading
 // can see (kit/scenery.js).
-const CAM = { distance: 10, target: [-0.4, 1.35, 0.3], heading: -7.5, pitch: 18 };
+const CAM = { distance: 10, target: [-0.4, 1.35, 0.3], heading: -1, pitch: 18 };
 
 export default {
   id: ID,
