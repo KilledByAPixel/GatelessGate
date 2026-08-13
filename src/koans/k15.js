@@ -19,7 +19,7 @@ const ID = 15;
 // only vermillion thing in the scene, and it stays exactly where it is.
 
 const BLOWS = 3;
-const BLOW_GAP = 0.62;
+const BLOW_GAP = 0.5;
 // Radians at the waist. Deeper than a nod — he is bowing to the master who has
 // just told him he has earned a beating — and held, not animated: the movement
 // in this case is the three blows, and they land on nothing.
