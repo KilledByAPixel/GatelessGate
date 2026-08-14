@@ -714,7 +714,7 @@ const drumTap = () => { if (camera) beatDrumAt(standingDrums(), camera, input); 
 const hubGateTap = () => {
   if (mode !== 'menu' || !camera || scenes.active() !== hub || !hub.tapGate) return;
   const hit = hub.tapGate(camera, input);
-  if (hit) audio.bell({ preset: 'temple', at: hit.point });
+  if (hit) audio.bell({ preset: 'temple', at: hit.point, size:3 });
 };
 
 // CLEARING THE TAPS IS THE OUTGOING CASE'S BUSINESS, NOT MAIN'S. input.clear()

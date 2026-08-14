@@ -128,7 +128,7 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   // the page's one red thing (see the header)
   const mp = approach.sample(0.72);
   const monk = makeMonk({ height: 1.6, color: ACCENT_DEEP });
-  monk.position.set(mp.x + mp.perp.x * 0.55, 0, mp.z + mp.perp.z * 0.55);
+  monk.position.set(mp.x, 0, mp.z);
   faceMonk(monk, { x: FORK.x, z: FORK.z });
   scene.add(monk);
 
