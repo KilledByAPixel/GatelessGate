@@ -8,7 +8,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const debugSrc = readFileSync(join(ROOT, 'src/ui/debug.js'), 'utf8');
 const mainSrc = readFileSync(join(ROOT, 'src/main.js'), 'utf8');
 
-// DEVELOPER MODE IS INVISIBLE WHEN OFF, and Pause is the only door.
+// DEVELOPER MODE IS INVISIBLE WHEN OFF, and Home is the only door.
 //
 // Both halves fail SILENTLY in opposite directions, which is why they are
 // pinned in source the way main-input.test.js pins its own wiring: a gear that
@@ -46,18 +46,17 @@ test('one function owns the developer-mode flag', () => {
   }
 });
 
-test('Pause is bound to it, and not while someone is typing', () => {
-  const branch = mainSrc.match(/if \(!typing && e\.key === 'Pause'\) \{[\s\S]*?\n  \}/);
-  assert.ok(branch, 'Pause must toggle developer mode — it is the only way in');
+test('Home is bound to it, and not while someone is typing', () => {
+  const branch = mainSrc.match(/if \(!typing && e\.key === 'Home'\) \{[\s\S]*?\n  \}/);
+  assert.ok(branch, 'Home must toggle developer mode — it is the only way in');
   assert.match(branch[0], /debug\.devMode\(\)/, 'and it must go through the one function');
 
-  // The Contents has a search box, and the guard is kept even though Pause is
-  // not a caret key: what is being pinned is that the branch sits AFTER the
-  // guard exists, so the next key bound here inherits it rather than having to
-  // rediscover why it matters.
+  // The Contents has a search box. A reader typing "Home" into it — or hitting
+  // Home to jump to the start of the line, which is what that key is FOR in a
+  // text field — must not be handed a workbench.
   const typingLine = mainSrc.indexOf('const typing = t &&');
-  assert.ok(typingLine > 0 && mainSrc.indexOf("e.key === 'Pause'") > typingLine,
-    'the Pause branch must come after `typing` is worked out');
+  assert.ok(typingLine > 0 && mainSrc.indexOf("e.key === 'Home'") > typingLine,
+    'the Home branch must come after `typing` is worked out');
 });
 
 test('the panel is only restored on reload when developer mode is on', () => {

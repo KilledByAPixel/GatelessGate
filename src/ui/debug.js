@@ -44,7 +44,7 @@ const PERSIST_KEY = 'gateless-gate-debug-persist';
 //
 // OFF BY DEFAULT, AND INVISIBLE WHEN OFF. There is no gear in a reader's
 // toolbar to wonder about; with this off the app is the book and nothing else.
-// PAUSE is the door, in and out (main.js) — a key nothing else uses and nobody
+// HOME is the door, in and out (main.js) — a key nothing else uses and nobody
 // presses by accident, which is what lets the entrance be invisible.
 const DEV_KEY = 'gateless-gate-dev';
 
@@ -340,9 +340,9 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
   // The GEAR ITSELF is gated on this now. A workbench button sitting in a
   // reader's toolbar is an invitation to a room the book is not, and the
   // question "what is this?" is the whole cost — so by default there is no
-  // button, no panel, and nothing to find. Pause is the way in (main.js), which
+  // button, no panel, and nothing to find. Home is the way in (main.js), which
   // is also why the checkbox below cannot lock anybody out: switching it off
-  // takes the gear away, and Pause brings it back.
+  // takes the gear away, and Home brings it back.
   //
   // Turning it ON opens the panel as well. Someone who has just asked for
   // developer mode wants the workbench, not a new button to go and press.
@@ -594,7 +594,7 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     // The panel belongs to the stage; the button belongs in the shared toolbar
     // beside sound and fullscreen, so the three read as one row rather than the
     // workbench floating on its own.
-    // Developer mode, from outside: main.js binds Pause to this. With no
+    // Developer mode, from outside: main.js binds Home to this. With no
     // argument it flips, and it hands back where it landed so the caller can
     // say so. The gear, the panel, the Compose panel and the stored flag all
     // move together — setDevMode is the only thing that touches them.
