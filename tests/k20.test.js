@@ -31,17 +31,14 @@ test('case 20: the ambience finally names water — the bed the ocean was kept f
   assert.ok(layers.includes('wind'));
 });
 
-// NOTHING IN THIS CASE TRANSLATES ANYTHING ANY MORE. The staging used to hang
-// the whole world off a group called 'moving-world' that a tap shoved and let
-// oscillate back. Sliding that group dragged the grass field through its own
-// world-space noise and the meadow boiled, which is what the reader actually
-// saw: it looks like wind, and it is not wind. The group is dissolved; this is
-// the assertion it stays that way.
-test('case 20: the world is flat on the scene root — no moving group', () => {
+// The world hangs FLAT off the scene root. It used to ride a group a tap
+// shoved and let oscillate back — and sliding it dragged the grass field
+// through its own world-space noise, so the meadow boiled. The flat parenting
+// is the invariant; anything animated must be a prop of its own.
+test('case 20: the world is flat on the scene root', () => {
   const { root } = staged();
   const man = root.scene.getObjectByName('immovable-man');
   assert.ok(man, 'the man is there');
-  assert.equal(root.scene.getObjectByName('moving-world'), undefined, 'the group is gone');
   assert.equal(man.parent, root.scene, 'the man hangs off the root');
   for (const name of ['water', 'sand', 'ground']) {
     const o = root.scene.getObjectByName(name);

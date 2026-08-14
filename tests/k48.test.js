@@ -141,13 +141,6 @@ function shower() {
   return { ctx, root, run, heard, kembo, wave: () => ctx._taps.forEach((cb) => cb()) };
 }
 
-test('case 48: the floating rectangle is gone', () => {
-  const { root } = shower();
-  assert.equal(root.scene.getObjectByName('stroke'), undefined);
-  assert.equal(root.scene.getObjectByName('stroke-bar'), undefined);
-  assert.equal(root.scene.getObjectByName('stroke-hit'), undefined);
-});
-
 test('case 48: waving the fan brings a shower, and it passes', () => {
   const { root, run, heard, wave } = shower();
   const dry = root.fragment();

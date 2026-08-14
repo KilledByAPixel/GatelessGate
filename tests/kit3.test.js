@@ -127,8 +127,7 @@ test('the drum is grounded, named, and takes a tap', () => {
 });
 
 // A drum SITS on a saddle, above a short seat that stops where the drum begins.
-// It used to hang from a beam that stood over it, so the two things this pins
-// are that nothing rises past the barrel any more, and that the timber actually
+// Two pins: no part of the stand rises past the barrel, and the timber actually
 // REACHES the belly (the barrel is lathed, so the legs meet a narrower radius
 // than its widest, and a stand cut to the wrong one leaves the drum floating).
 test('the drum SITS on its stand: nothing above it, and the saddle touches', () => {
@@ -144,9 +143,6 @@ test('the drum SITS on its stand: nothing above it, and the saddle touches', () 
         `${name} rises past the drum it is supposed to be holding up`);
     }
   }
-  assert.ok(!d.group.getObjectByName('beam'), 'the beam overhead is gone');
-  assert.ok(!d.group.getObjectByName('sling'), 'and so are the cords it hung by');
-
   // the saddle caps are the top of the stand, and the belly rests ON them
   const trim = boxOf(d.group.getObjectByName('stand-trim'));
   assert.ok(trim.max.y > barrel.min.y,

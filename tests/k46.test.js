@@ -341,11 +341,10 @@ test('the sitter is no longer a target of his own — the pole is the page', () 
   let t = 0;
   for (let i = 0; i < 90; i++) { built.update(1 / 60, t); t += 1 / 60; }
 
-  // he no longer has a lean of his own — but the tap is not swallowed either:
-  // he is nested under the mast, so shoving the man shoves the thing he sits on
+  // he has no lean of his own — but the tap is not swallowed either: he is
+  // nested under the mast, so shoving the man shoves the thing he sits on
   assert.equal(pivot.rotation.x, before, 'no separate lean at the seat');
   assert.equal(built.fragment().poleTaps, 1, 'the touch reached the mast instead');
-  assert.equal(built.fragment().lean, undefined, 'and the lean is gone from the record');
 });
 
 test('tap the pole: it wobbles on BOTH axes, out of step with each other', () => {

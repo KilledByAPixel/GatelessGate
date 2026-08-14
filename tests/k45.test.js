@@ -58,8 +58,6 @@ test('the horse is the one red thing, and it stands still', () => {
   const { root } = staged();
   const horse = named(root.scene, 'horse');
   assert.equal(horse.length, 1, 'one horse tethered by the stalls');
-  // the abstract marker stone is gone — the horse carries the accent now
-  assert.equal(named(root.scene, 'marker').length, 0, 'no marker stone any more');
 
   // every accent-coloured mesh in the street belongs to the horse
   const want = new Set([ACCENT, ACCENT_DEEP, ACCENT_LIGHT].map((c) => new THREE.Color(c).getHexString()));

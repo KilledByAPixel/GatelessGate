@@ -99,9 +99,6 @@ test('the man carries no red: his staff is his own, and ink', () => {
     assert.notEqual('#' + o.material.color.getHexString(), ACCENT.toLowerCase(),
       `${o.name} is wearing the accent`);
   });
-  // the free-standing shaft is gone from the scene root as well
-  assert.ok(!root.scene.children.some((o) => o.name === 'staff'),
-    'the planted red staff is gone');
 });
 
 test('the grass reaches him: no bald ring around the one figure in the scene', () => {

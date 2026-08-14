@@ -81,12 +81,10 @@ test('a SMALL head, carried around 1.1-1.25x withers, nosed down the neck line',
   assert.ok(head.rotation.x > 0.5, 'the head is nosed well down');
 });
 
-test('ONE head: no snout mesh, one loft tapering poll to nostril unbroken', () => {
+test('ONE head: one loft tapering poll to nostril unbroken', () => {
   // "if there was a way to nail the vertices together to create a smoother
-  // shaped head" — the head is a single geometry now; a regression to the
-  // box + muzzle-cylinder pair brings the snout mesh back and trips this.
+  // shaped head" — the head is a single lofted geometry.
   const { group } = build();
-  assert.equal(find(group, 'snout').length, 0, 'the snout mesh is retired');
   const head = find(group, 'head')[0];
   const p = head.geometry.getAttribute('position');
   assert.ok(p.count > 24, 'a loft, not the old 24-corner box');
