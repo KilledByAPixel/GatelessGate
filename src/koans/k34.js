@@ -94,9 +94,9 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   const matMat = washMaterial({ color: WASH.dry, flat: true });
   matMat.polygonOffset = true;
   matMat.polygonOffsetFactor = -2;
-  const mat = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.03, 1.9), matMat);
+  const mat = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.02, 1.9), matMat);
   mat.name = 'mat';
-  mat.position.set(.5, 0.035, -0.7);
+  mat.position.set(.5, 0.02, -0.7);
   mat.rotation.y = 0.5;
   scene.add(mat);
   

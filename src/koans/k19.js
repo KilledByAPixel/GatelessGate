@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_LIGHT, wash } from '../palette.js';
 import {
-  composeWorld, faceMonk, makeDog, makeMonk, makeMoon, makePath,
+  composeWorld, faceMonk, frontShadow, makeDog, makeMonk, makeMoon, makePath,
   makeWildflowers, makeSnow,
 } from '../kit/index.js';
 import { makeLights } from '../render/lights.js';
@@ -173,6 +173,10 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   const dp = path.sample(0.155);
   dog.position.set(dp.x + dp.perp.x * 0.18, 0, dp.z + dp.perp.z * 0.18);
   faceMonk(dog, joshu.position);
+  // under this case's own low moon the grazing light drew the peter-pan gap
+  // at the dog's feet wider than any sun does; the quadruped is closed
+  // geometry throughout, so the contact fix is safe on it
+  frontShadow(dog);
   scene.add(dog);
   
   // The harvest moon: beyond the mountains and low, just clear of the ridge.

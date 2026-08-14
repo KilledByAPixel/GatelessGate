@@ -3,8 +3,8 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK_LIT } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
-  composeWorld, makeMonk, faceMonk, makeButterflies, makeWildflowers,
-  makeLights, washMaterial,
+  composeWorld, frontShadow, makeMonk, faceMonk, makeButterflies,
+  makeWildflowers, makeLights, washMaterial,
 } from '../kit/index.js';
 
 const ID = 21;
@@ -95,6 +95,10 @@ const CAM = { distance: 10, target: [0.8, 0.9, 0.2], heading: 4, pitch: 14 };
       stick.add(lump);
     }
     stick.position.set(0.8, 0, 0.2);
+    // the pile is the centrepiece and it lies right ON the dirt, so its
+    // contact gap reads; the lumps' lathes close at both tips, so the fix
+    // is safe on them
+    frontShadow(stick);
     scene.add(stick);
 
     // (There used to be a separate vermillion seal disc pressed in the dirt
