@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeRain, makeMonk, faceMonk,
-  makeLights, washMaterial, makeFurin, tapMeshes,
+  makeLights, washMaterial, makeFurin, tapMeshes, makeDrum,
   setFoliageWeather, foliageWind,
 } from '../kit/index.js';
 
@@ -79,7 +79,12 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   hut.position.set(-1.0, 0, -3.6);
   hut.rotation.y = 0.46;
   scene.add(hut);
-  
+
+    const drum = makeDrum({ radius: 0.5, seed: ID });
+    drum.group.position.set(2.0, 0, -3.6);
+    drum.group.rotation.y = -.7;
+    scene.add(drum.group);
+    
   // THE MAT. Lifted just clear of the ground and drawn in front of it
   // (polygonOffset) so it never z-fights the terrain or the path. The scrolls
   // that used to cover it — 22 loose cylinders, then a cord-wood pile with

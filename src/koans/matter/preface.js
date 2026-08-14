@@ -43,7 +43,7 @@ const SEEDS = { seed: 23, groundSeed: 41, pathSeed: 61 };
 // haze instead of into a mountain, which is the right picture for "thousands
 // of roads enter it."
 const MOUNTAINS = [
-  { count: 7, distance: 70, arcCenter: .2, arcSpan: 4.4, color: wash(0.12) },
+  { count: 7, distance: 70, arcCenter: .2, arcSpan: 4.4, color: wash(0.12), hScale: 0.55 },
   { count: 3, distance: 48, arcCenter: -.2, arcSpan: 3.6, color: wash(0.21), hScale: 0.55 },
 ];
 

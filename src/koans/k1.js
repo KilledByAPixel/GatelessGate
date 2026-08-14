@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT } from '../palette.js';
+import { PAPER, ACCENT, wash } from '../palette.js';
 import {
   composeWorld, makePath, makeMonk, faceMonk, makeDog, makeHut, makeLantern,
   makeLights, tapMeshes, plantTree,
@@ -97,6 +97,15 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   { x: HUT.x, z: HUT.z, r: 1.9 },
   { x: LANTERN.x, z: LANTERN.z, r: 0.4 },
   ],
+  
+  forests: [
+    { center: [-19, 0, -27], spread: 13, count: 55 },
+    { center: [16, 0, -31], spread: 14, count: 40, color: wash(0.55) },
+  ],
+  mountains: [
+    { count: 8, distance: 52, arcSpan: 3.6, color: wash(0.16), hScale: 0.65 },   // farthest band
+    { count: 5, distance: 33, arcSpan: 2.4, color: wash(0.28), hScale: 0.65 },
+  ]
   });
 
   // ---- the moment: Mu -------------------------------------------------

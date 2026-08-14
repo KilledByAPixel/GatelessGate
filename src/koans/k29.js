@@ -114,6 +114,11 @@ export default {
       // grass grows around the monks' feet and up to the gate posts; only the
       // trodden road actually clears it
       grassKeepout: path.keepout(26, 1.05),
+  
+      mountains : [
+        { count: 8, distance: 52, arcSpan: 1.6, arcCenter:6, hScale: 0.3},   // farthest band
+        { count: 5, distance: 73, arcSpan: 1.4, hScale: .5, arcCenter:6 },
+      ],
     });
 
     // THREE single-tube fūrin under the gate's lintel, one size each — three

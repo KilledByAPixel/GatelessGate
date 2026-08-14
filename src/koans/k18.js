@@ -18,7 +18,7 @@ const ID = 18;
 // settles, and it says three pounds. It was always going to say three pounds.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11, target: [-0.5, 1, 0.5], heading: 46, pitch: 21.5 };
+const CAM = { distance: 11, target: [-0.5, 1.1, 0.5], heading: 46, pitch: 18 };
   export default {
   id: ID,
   slug: 'tozan-s-three-pounds',

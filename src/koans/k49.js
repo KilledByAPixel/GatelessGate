@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
-  composeWorld, makePath, makeBasin, makeWater, makeKoi, makeBirds, makeMonk, faceMonk,
+  composeWorld, makePath, makeBasin, makeWater, makeKoi, makeBirds, makeMonk, faceMonk, makeLantern,
   makeGate, makeLights, makeCylinderChime,
 } from '../kit/index.js';
 
@@ -106,6 +106,10 @@ scene.fog = new THREE.FogExp2(PAPER, 0.028);
   // into the fog
   const road = makePath({ from: [0.4, 9], to: [-7.4, -29.2], width: 1.6, seed: ID, groundSeed: 21, wander: 2.7 });
   scene.add(road);
+  
+  const lantern = makeLantern({ height: 1.1 });
+  lantern.position.set(-2.8, 0, -2);
+  scene.add(lantern);
   
   // ---- the pond, off to the left ----------------------------------------
   const POND = { x: 2.1, z: -1.6, size: 4.2, inner: 2.15, outer: 2.55, rim: 0.42, floor: 0.02, surface: 0.3 };

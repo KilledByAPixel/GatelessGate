@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, WASH, INK, INK_LIT } from '../palette.js';
+import { PAPER, ACCENT, WASH, INK, wash, INK_LIT } from '../palette.js';
 import { SEAL_GLOW } from '../render/material.js';
 import {
   composeWorld, makeVeranda, makeMonk, aimMonk, makeLantern,
@@ -20,7 +20,7 @@ const VERANDA_H = 3.2;   // shared with the chime hang point below
 // silk. You cannot add what the picture is refusing to be.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 };
+const CAM = { distance: 9, target: [0.5, 1.7, -1.4], heading: 29, pitch: 12.5 };
   export default {
   id: ID,
   slug: 'a-beardless-foreigner',
@@ -191,6 +191,16 @@ const CAM = { distance: 9, target: [0.7, 1.7, -1.4], heading: 24.1, pitch: 15.5 
   { at: lantern, r: 0.9 },
   ],
   grassKeepout: [{ x: 0.2, z: -2.6, r: 3.2 }],
+  
+  
+  forests: [
+    { center: [-19, 0, -27], spread: 13, count: 55 },
+    { center: [16, 0, -31], spread: 14, count: 40, color: wash(0.55) },
+  ],
+  mountains: [
+    { count: 8, distance: 62, arcSpan: 3.6, color: wash(0.16), hScale: 0.65 },   // farthest band
+    { count: 5, distance: 43, arcSpan: 2.4, color: wash(0.28), hScale: 0.65 },
+  ]
   });
 
   const hit = new THREE.Mesh(

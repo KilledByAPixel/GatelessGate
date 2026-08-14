@@ -48,7 +48,7 @@ const WIND_SWELL = 0.7;      // fraction above BASE_WIND at full dark
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
+const CAM = { distance: 9.6, target: [0.3, 1.25, -1.2], heading: 34, pitch: 13 };
   export default {
   id: ID,
   slug: 'blow-out-the-candle',
@@ -192,6 +192,10 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   grassKeepout: [
   ...path.keepout(24, 0.95),
   { x: -1.8, z: -2.5, r: 2.9 },
+  ],
+  mountains : [
+    { count: 8, distance: 62, arcSpan: 1.6, arcCenter:5, hScale: 0.65},   // farthest band
+    { count: 5, distance: 73, arcSpan: 1.9, hScale: .5, arcCenter:5 },
   ],
   });
 

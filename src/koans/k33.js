@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK_LIT, WASH } from '../palette.js';
 import {
   composeWorld, makeBasin, makeWater, makeKoi, makeMonk, faceMonk, makeLantern,
-  makeLights, washMaterial,
+  makeLights, washMaterial, plantRock
 } from '../kit/index.js';
 import { POND, BANK } from './k30.js';
 
@@ -22,7 +22,7 @@ const ID = 33;
 // is not a new place — it is the first place with the answer taken out.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 14.2, target: [0.95, 0.9, -1.4], heading: 31.5, pitch: 23 };
+const CAM = { distance: 14.2, target: [0.95, 1.15, -1.4], heading: 27.5, pitch: 21.5 };
   export default {
   id: ID,
   slug: 'this-mind-is-not-buddha',
@@ -46,6 +46,9 @@ const CAM = { distance: 14.2, target: [0.95, 0.9, -1.4], heading: 31.5, pitch: 2
   // dropped. The water glares and the figure on the bank goes to
   // silhouette.
   scene.add(makeLights({ sun: { heading: -118, pitch: 36 } }));
+
+  plantRock(scene, { x: -11.2, z: -9.0, size: 5.0, sink:0});
+  plantRock(scene, { x: -8.3, z: -6.5, size: 3.0, sink:0});
   
   // the same open stone basin, from the same shared dimensions
   const lip = makeBasin({
@@ -120,7 +123,7 @@ const CAM = { distance: 14.2, target: [0.95, 0.9, -1.4], heading: 31.5, pitch: 2
   view: CAM,
   seed: 33,
   groundSeed: 21,
-  trees: 4,
+  trees: 9,
   keepout: [
   { x: POND.x, z: POND.z, r: POND.size * 0.62 },
   { x: BANK.x, z: BANK.z, r: 1.8 },
@@ -129,6 +132,14 @@ const CAM = { distance: 14.2, target: [0.95, 0.9, -1.4], heading: 31.5, pitch: 2
   grassKeepout: [
   { x: POND.x, z: POND.z, r: POND.size * 0.60 },
   { x: BANK.x, z: BANK.z, r: 1.2 },
+  ],
+  forests: [
+    { center: [-19, 0, -27], spread: 13, count: 55 },
+    { center: [16, 0, -31], spread: 14, count: 40 },
+  ],
+  mountains: [
+    { count: 8, distance: 50, arcCenter:-.5, arcSpan: 1.6, hScale: 0.3 },
+    { count: 9, distance: 33, arcCenter:-.5, arcSpan: 1.4, hScale: 0.35 },
   ],
   });
 

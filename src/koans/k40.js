@@ -124,6 +124,10 @@ const CAM = { distance: 10.8, target: [2.05, 1, -0.5], heading: 57.5, pitch: 20 
   { x: ISAN.x, z: ISAN.z, r: 1.1 },
   { x: CROWD.x, z: CROWD.z, r: 3.0 },
   ],
+  forests :[
+    { center: [-23, 0, -27], spread: 23, count: 55 },
+    { center: [16, 0, -31], spread: 24, count: 40 },
+  ],
   // The examination yard is SWEPT. "Figures stand in grass" is the house
   // default and it is wrong here: Hyakujo has gathered the whole monastery
   // to watch a test, and that happens on the trodden ground before the

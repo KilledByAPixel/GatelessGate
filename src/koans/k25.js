@@ -29,7 +29,7 @@ const scratchPos = new THREE.Vector3();
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11, target: [0.2, 1.3, -0.95], heading: 31.5, pitch: 28.5 };
+const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5 };
   export default {
   id: ID,
   slug: 'preaching-from-the-third-seat',

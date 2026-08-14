@@ -119,9 +119,17 @@ const CAM = { distance: 14.3, target: [1.05, 1.55, -1.6], heading: 156.5, pitch:
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  seed: 209,
   groundSeed: 21,
-  trees: 5,
+  trees: 7,
+    forests :[
+      { center: [-13, 0, 27], spread: 23, count: 55 },
+      { center: [16, 0, 31], spread: 24, count: 40 },
+    ],
+    mountains : [
+      { count: 8, distance: 52, arcSpan: 3.6, arcCenter:3,hScale: 0.65},   // farthest band
+      { count: 5, distance: 73, arcSpan: 2.4, hScale: 1, arcCenter:2.5 },
+    ],
   keepout: [
   ...path.keepout(26, 1.1),
   // generous — a full crown's width past the crown. Nothing grows inside
@@ -129,7 +137,8 @@ const CAM = { distance: 14.3, target: [1.05, 1.55, -1.6], heading: 156.5, pitch:
   { x: OAK.x, z: OAK.z, r: OAK.radius + 2.4 },
   ...GREY.map(([x, z]) => ({ x, z, r: 2.1 })),
   { x: joshu.position.x, z: joshu.position.z, r: 1.3 },
-  { x: monk.position.x, z: monk.position.z, r: 1.3 },
+  { x: monk.position.x, z: monk.position.z, r: 1.3 },,
+  { x: 9.0, z: -9.0, r: 9.5 }
   ],
   // only the walk and the swept earth actually cover ground; both men stand
   // in the grass, and the grass grows right up under the oak

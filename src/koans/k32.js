@@ -44,7 +44,7 @@ function bowShape(u) {
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9, target: [1.45, 1, -0.95], heading: 31.5, pitch: 23 };
+const CAM = { distance: 10, target: [1.15, 1.45, -1.6], heading: 36.5, pitch: 16 };
   export default {
   id: ID,
   slug: 'a-philosopher-asks-buddha',
@@ -113,6 +113,14 @@ const CAM = { distance: 9, target: [1.45, 1, -0.95], heading: 31.5, pitch: 23 };
   { x: 3.6, z: 3.0, r: 4.6 },
   ],
   grassKeepout: [{ x: .9, z: -1.8, r: 3 }],
+  forests: [
+    { center: [-19, 0, -27], spread: 13, count: 55 },
+    { center: [16, 0, -31], spread: 14, count: 40, color: wash(0.55) },
+  ],
+  mountains: [
+    { count: 8, distance: 56, arcSpan: .6, arcCenter:5.5, color: wash(0.2), hScale: 0.4 },
+    { count: 8, distance: 66, arcSpan: .6, arcCenter:6, color: wash(0.16), hScale: 0.35 },
+  ],
   });
   
   // White wildflowers through the meadow — the kit's default whitish bloom,

@@ -91,7 +91,7 @@ function bowShape(u) {
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 8.6, target: [0.3, 1.5, -1.95], heading: -20.5, pitch: 16.5 };
+const CAM = { distance: 8.6, target: [1.38, 1.15, -2.18], heading: -19.5, pitch: 13.5 };
   export default {
   id: ID,
   slug: 'meeting-a-zen-master-on-the-road',
@@ -113,14 +113,11 @@ const CAM = { distance: 8.6, target: [0.3, 1.5, -1.95], heading: -20.5, pitch: 1
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.032);
-  scene.add(makeLights({ sun: { heading: 55, pitch: 39 } }));
+  scene.add(makeLights());
   
   // one road, running away into the fog in both directions
-  const road = makePath({ from: [6.0, 7.0], to: [-5.5, -17], width: 1.6, seed: ID, groundSeed: 21, wander: 3.5 });
+  const road = makePath({ from: [6.0, 7.0], to: [-5.5, -17], width: 1.6, seed: ID, groundSeed: 21, wander: 1.5 });
   scene.add(road);
-
-  //const road2 = makePath({ from: [7.5, 7.0], to: [-4.0, -17], width: .5, seed: ID, groundSeed: 21, wander: 3.5 });
-  //scene.add(road2);
   
   // YOU — or the traveller standing in for you — stopped in the road with
   // his staff planted. `pose: 'bow'` builds him UPRIGHT and hinged at the
@@ -182,7 +179,7 @@ const CAM = { distance: 8.6, target: [0.3, 1.5, -1.95], heading: -20.5, pitch: 1
   const PP = road.sample(GEAR_T);
   const horse = makeHorse({ height: 1.5, seed: 36 });
   horse.group.position.set(PP.x + PP.perp.x * 2.4, 0, PP.z + PP.perp.z * 2.4);
-  horse.group.rotation.y = PP.heading + 2.8;   // hip to the road, head away
+  horse.group.rotation.y = PP.heading + 2.6;   // hip to the road, head away
   scene.add(horse.group);
   
   const bundle = makeBundle({ seed: 36 });
@@ -192,7 +189,7 @@ const CAM = { distance: 8.6, target: [0.3, 1.5, -1.95], heading: -20.5, pitch: 1
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: 100,
+  seed: ID,
   groundSeed: 21,
   trees: 4,
   keepout: [
@@ -207,7 +204,16 @@ const CAM = { distance: 8.6, target: [0.3, 1.5, -1.95], heading: -20.5, pitch: 1
   { at: horse.group, r: 1.7 },
   { at: bundle.group, r: 0.55 },
   ],
-  grassKeepout: [...road.keepout(28, 1)],
+  grassKeepout: road.keepout(28, 1.0),
+  
+    forests: [
+      { center: [-19, 0, -27], spread: 13, count: 55 },
+      { center: [16, 0, -31], spread: 14, count: 40 },
+    ],
+    mountains: [
+      { count: 8, distance: 72, arcSpan: 3.6, hScale: 0.75},   // farthest band
+      { count: 5, distance: 33, arcCenter:6, arcSpan: 1.4, hScale: 0.65 },
+    ]
   });
 
   const hit = new THREE.Mesh(

@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
-  composeWorld, makePath, makeGate, makeLantern, makeMonk, faceMonk,
+  composeWorld, makePath, makeGate, makeLantern, makeMonk, faceMonk, plantRock,
   makeLights, washMaterial, makeFurin, tapMeshes,
 } from '../kit/index.js';
 
@@ -37,7 +37,7 @@ const DIP_SPAN = 2.4;        // seconds down and up, and the retap floor
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -5, pitch: 13.5 };
+const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -4, pitch: 13.5 };
   export default {
   id: ID,
   slug: 'tozan-s-three-blows',
@@ -89,6 +89,9 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -5, pitch: 13.
   gate.position.set(1.5, 0, -2.2);
   gate.rotation.y = 0.26;
   scene.add(gate);
+
+  plantRock(scene, { x: -2.1, z: -4.9, size: 2.7, sink: 0  });
+  plantRock(scene, { x: 4.6, z: -2.9, size: 1.3, sink: 0  });
   
   // TOZAN, in the gateway, bowing — he came back the next day to ask why. He
   // used to bow by rotation.z on the whole figure, which is a ROLL: he listed

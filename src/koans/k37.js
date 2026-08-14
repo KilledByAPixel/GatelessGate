@@ -49,7 +49,7 @@ function turnRate(u) {
 }
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 13.8, target: [1.45, 1, -1.5], heading: 29, pitch: 23.5 };
+const CAM = { distance: 13.8, target: [1.45, 1.3, -1.5], heading: 29, pitch: 21 };
   export default {
   id: ID,
   slug: 'a-buffalo-passes-through-the-gate',

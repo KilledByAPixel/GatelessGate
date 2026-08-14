@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT } from '../palette.js';
+import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import {
   composeWorld, faceMonk, makeHut, makeLantern, makeMonk, makePath, tapMeshes,
 } from '../kit/index.js';
@@ -38,7 +38,7 @@ const GUTEI = { x: -1.35, z: 1.05 };
 const SPAN = 2.95;                                             // a few steps away
 const BOY = { x: GUTEI.x + RIGHT.x * SPAN, z: GUTEI.z + RIGHT.z * SPAN };
 const VISITOR = { x: 2.70, z: -1.40 };                         // he asked the boy
-const RESIDENT = { x: -2.80, z: 0.60 };                        // he asked the master
+const RESIDENT = { x: -2.20, z: 0.60 };                        // he asked the master
 const LANTERN = { x: 4.0, z: -3.40 };
 // WEST of the road. The hall stood at (3.4, -6.2) for a long time, and the
 // path's seeded curve runs through x ≈ 3.16 at that depth — 0.24 from the
@@ -150,7 +150,7 @@ function envelope(u) {
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.6, target: [0.7, 1.25, 0.55], heading: 16, pitch: 15.5 };
+const CAM = { distance: 9.6, target: [0.8, 1.85, 0.55], heading: 17, pitch: 15.5 };
   export default {
   id: ID,
   slug: 'gutei-s-finger',
@@ -227,10 +227,18 @@ const CAM = { distance: 9.6, target: [0.7, 1.25, 0.55], heading: 16, pitch: 15.5
   
   // seated, deliberately: a low silhouette cannot crowd a raised finger
   const resident = makeMonk({ height: 1.55, pose: 'sit' });
-  resident.position.set(RESIDENT.x, 0, RESIDENT.z);
+  resident.position.set(RESIDENT.x, .05, RESIDENT.z);
   faceMonk(resident, gutei.position);
   scene.add(resident);
-  
+
+  // the mat they are standing on
+  const matGeo = new THREE.BoxGeometry(4.5, 0.035, 4);
+  const mat = new THREE.Mesh(matGeo, washMaterial({ color: WASH.dry, flat: true }));
+  mat.name = 'mat';
+  mat.position.set(-.5, 0.018, 0.5);
+  mat.rotation.y = 0.01;
+  scene.add(mat);
+
   const world = composeWorld(scene, {
   view: CAM,
   seed: ID,
@@ -249,6 +257,15 @@ const CAM = { distance: 9.6, target: [0.7, 1.25, 0.55], heading: 16, pitch: 15.5
   // the lens sits out here; a tree between it and the gesture would cost
   // the whole case
   { x: 4.6, z: 5.0, r: 5.2 },
+  ],
+  
+  forests :[
+    { center: [-20, 0, -32], spread: 23, count: 55 },
+    { center: [16, 0, -41], spread: 24, count: 40 }
+  ],
+  mountains: [
+    { count: 10, distance: 52, arcCenter:0, arcSpan: 1.6, color: wash(0.16), hScale: 0.44 },   // farthest band
+    { count: 5, distance: 43, arcSpan: 2.4, color: wash(0.28), hScale: 0.7 },
   ],
   // Stingy on purpose. Only the trodden path, the hall's footprint and the
   // lantern's base actually cover ground — everyone here is standing in the

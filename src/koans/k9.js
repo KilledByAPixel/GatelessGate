@@ -20,7 +20,7 @@ const ID = 9;
 // happens; nothing else has happened for ten cycles.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 17, target: [-0.3, 2.8, -1.6], heading: 31.5, pitch: 14.4 };
+const CAM = { distance: 17, target: [-0.3, 3.05, -1.6], heading: 31.5, pitch: 10.5, maxDist: 18 };
   export default {
   id: ID,
   slug: 'a-buddha-before-history',

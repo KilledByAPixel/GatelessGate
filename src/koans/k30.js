@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_PALE, WASH } from '../palette.js';
 import {
-  composeWorld, makeBuddha, makeBasin, makeWater, makeKoi, makeMonk, faceMonk, makeLantern,
+  composeWorld, makeBuddha, makeBasin, makeWater, makeKoi, makeMonk, faceMonk, makeLantern, plantRock,
   makeLights, washMaterial,
 } from '../kit/index.js';
 
@@ -55,6 +55,9 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   // takes it nearly flat. Case 33 is the same pond under the
   // opposite light.
   scene.add(makeLights({ sun: { heading: 75, pitch: 55 } }));
+
+  plantRock(scene, { x: -11.2, z: -9.0, size: 5.0, sink:0});
+  plantRock(scene, { x: -8.3, z: -6.5, size: 3.0, sink:0});
   
   // the pond: an OPEN stone basin and a still sheet inside it. It used to be a
   // solid cylinder, whose top cap sealed the water and the fish underneath it —
@@ -130,7 +133,7 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   view: CAM,
   seed: 33, // same as case 33 so the pond and its koi are identical
   groundSeed: 21,
-  trees: 4,
+  trees: 9,
   keepout: [
   { x: POND.x, z: POND.z, r: POND.size * 0.62 },
   { x: BANK.x, z: BANK.z, r: 1.8 },
@@ -139,6 +142,14 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   grassKeepout: [
   { x: POND.x, z: POND.z, r: POND.size * 0.60 },
   { x: BANK.x, z: BANK.z, r: 1.2 },
+  ],
+  forests: [
+    { center: [-19, 0, -27], spread: 13, count: 55 },
+    { center: [16, 0, -31], spread: 14, count: 40 },
+  ],
+  mountains: [
+    { count: 8, distance: 50, arcCenter:-.5, arcSpan: 1.6, hScale: 0.3 },
+    { count: 9, distance: 33, arcCenter:-.5, arcSpan: 1.4, hScale: 0.35 },
   ],
   });
 

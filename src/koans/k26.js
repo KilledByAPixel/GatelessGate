@@ -18,7 +18,7 @@ const SCREEN_H = 2.45;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.3, target: [-0.3, 1.15, 0.1], heading: 26, pitch: 23 };
+const CAM = { distance: 11.3, target: [0.1, 1.45, 0.1], heading: -32.5, pitch: 15 };
   export default {
   id: ID,
   slug: 'two-monks-roll-up-the-screen',
@@ -117,7 +117,7 @@ const CAM = { distance: 11.3, target: [-0.3, 1.15, 0.1], heading: 26, pitch: 23 
   // the rest of the assembly, waiting for a lecture that has not started:
   // set to one side so the teacher is not lost behind a crowd of cones
   const assembly = makeAssembly({
-  count: 5, radius: 0.95, center: [-1.35, 1.5], facing: [0, FRONT], spread: 0.4, seed: ID,
+  count: 5, radius: 1.5, center: [.15, .8], facing: [0, FRONT], spread: 0.4, seed: ID,
   });
   assembly.position.y = DECK;
   scene.add(assembly);
@@ -138,14 +138,13 @@ const CAM = { distance: 11.3, target: [-0.3, 1.15, 0.1], heading: 26, pitch: 23 
   // only the floor covers ground. The monks stand in boards, not in grass,
   // and everything outside the hall keeps its meadow.
   grassKeepout: veranda.footprint(),
-  // The default bands are scattered across a wide arc and leave the country
-  // straight ahead empty — so the bay opened onto nothing but grass. This
-  // hall faces a mountain: a third band, narrow and centred on the corridor
-  // the eye travels, so the thing the screen was hiding is actually there.
-  mountains: [
-  { count: 8, distance: 52, arcSpan: 3.6, color: wash(0.16) },
-  { count: 5, distance: 33, arcSpan: 2.4, color: wash(0.28), hScale: 0.65 },
-  { count: 4, distance: 27, arcCenter: -0.06, arcSpan: 0.9, color: wash(0.32), hScale: 0.62 },
+  forests :[
+    { center: [-7, 0, -47], spread: 23, count: 55 },
+    { center: [26, 0, -29], spread: 14, count: 40 },
+  ],
+  mountains : [
+    { count: 8, distance: 52, arcSpan: 3.6, arcCenter:1, hScale: 0.65},   // farthest band
+    { count: 5, distance: 73, arcSpan: 2.4, hScale: .5, arcCenter:.5 },
   ],
   });
 

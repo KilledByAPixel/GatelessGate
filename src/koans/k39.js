@@ -63,7 +63,7 @@ export function nextRed(red, tapped, sunk) {
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 12.2, target: [0.95, 0.2, -0.4], heading: 21, pitch: 28.5 };
+const CAM = { distance: 12.2, target: [0.95, 0.9, -0.4], heading: 21, pitch: 19};
   export default {
   id: ID,
   slug: 'ummon-s-sidetrack',

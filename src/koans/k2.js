@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT } from '../palette.js';
+import { PAPER, ACCENT, wash } from '../palette.js';
 import {
   bearing, composeWorld, faceMonk, makeCave, makeFox, makeMonk, makeRain,
   plantTree, plantRock, tapMeshes,
@@ -30,12 +30,12 @@ const ID = 2;
 // it off the screen entirely at the right-hand end of the orbit.
 const CAVE = { x: -1.37, z: -2.88, yaw: 0.44 };
 const FOX = { x: -0.67, z: -1.39, yaw: 1.40 };
-const HYAKUJO = { x: 1.60, z: -2.75 };
-const MONKS = [{ x: 2.74, z: -3.48 }, { x: 2.45, z: -2.61 }];
+const HYAKUJO = { x: 1.60, z: -1.75 };
+const MONKS = [{ x: 3.1, z: -2.48 }, { x: 2.7, z: -1.5 }];
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = {distance: 11, target: [0.5, 1.35, -2.25], heading: 44.5, pitch: 16 };
+const CAM = {distance: 11, target: [0.6, 1.5, -2.25], heading: 46, pitch: 16.5 };
   export default {
   id: ID,
   slug: 'hyakujo-s-fox',
@@ -137,6 +137,16 @@ const CAM = {distance: 11, target: [0.5, 1.35, -2.25], heading: 44.5, pitch: 16 
   // only the cave's own stone floor actually covers ground. The fox is
   // sitting in the grass like any animal, and so are the monks.
   grassKeepout: cave.floor(0.15),
+    
+  forests: [
+    { center: [-19, 0, -22], spread: 13, count: 55 },
+    { center: [-30, 0, -15], spread: 14, count: 40, color: wash(0.55) },
+  ],
+  mountains: [
+    { count: 8, distance: 52, arcSpan: 3.6, color: wash(0.16), hScale: 0.8 },   // farthest band
+    { count: 9, distance: 33, arcSpan: 2.4, color: wash(0.28), hScale: 0.5 },
+  ]
+
   });
 
   // ---- the moment: the fox notices you ---------------------------------

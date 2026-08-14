@@ -209,17 +209,16 @@ export default {
       // edges where it frames the drop instead of muddying it. (k19 precedent:
       // shape the ridge around the seal.)
       mountains: [
-        { count: 5, distance: 54, arcCenter: 1.05, arcSpan: 1.6, color: wash(0.15) },
-        { count: 4, distance: 56, arcCenter: -1.8, arcSpan: 1.5, color: wash(0.13) },
-        { count: 3, distance: 36, arcCenter: 1.25, arcSpan: 1.0, color: wash(0.26), hScale: 0.6 },
-        { count: 2, distance: 34, arcCenter: -1.65, arcSpan: 0.8, color: wash(0.28), hScale: 0.55 },
+        { count: 5, distance: 34, arcCenter: .05, arcSpan: 1.6, color: wash(0.15), hScale: 0.35 },
+        { count: 4, distance: 86, arcCenter: -.8, arcSpan: 1.5, color: wash(0.13), hScale: 0.5  },
+        { count: 3, distance: 76, arcCenter: .25, arcSpan: 1.0, color: wash(0.26), hScale: 0.6 },
       ],
       // and the forests obey the same rule: the stock left-hand wood stands at
       // bearing ~-0.61 — dead on the home sight line through the sitter, its
       // fogged crowns clipping the space just under him. Both woods step aside.
       forests: [
-        { center: [-30, 0, -10], spread: 11, count: 50 },
-        { center: [15, 0, -32], spread: 13, count: 40, color: wash(0.55) },
+        { center: [-35, 0, -30], spread: 20, count: 50 },
+        { center: [-15, 0, -32], spread: 20, count: 40, color: wash(0.55) },
       ],
     });
 

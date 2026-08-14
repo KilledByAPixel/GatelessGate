@@ -241,8 +241,9 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   // the coast at the reader's back: both mountain bands re-aimed behind
   // and beside the staging — nothing stands in the sea
   mountains: [
-  { count: 7, distance: 52, arcCenter: Math.PI, arcSpan: 3.6, color: wash(0.16) },
-  { count: 4, distance: 33, arcCenter: -2.2, arcSpan: 1.3, color: wash(0.28), hScale: 0.65 },
+  { count: 7, distance: 77, arcCenter: -.3, arcSpan: .5, color: wash(0.2), hScale: 0.5 },
+  { count: 7, distance: 70, arcCenter: -.1, arcSpan: .5, color: wash(0.3), hScale: 0.5 },
+  { count: 7, distance: 80, arcCenter: -.5, arcSpan: .5, color: wash(0.1), hScale: 0.45 },
   ],
   forests: [
   { center: [-22, 0, 8], spread: 12, count: 45 },
