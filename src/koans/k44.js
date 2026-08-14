@@ -18,7 +18,7 @@ const ID = 44;
 // The behaviour lives in the kit piece, so the paradox travels with it.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.2, target: [0.1, 1.15, 0.6], heading: 36.5, pitch: 18.4 };
+const CAM = { distance: 9.2, target: [0.1, 1.15, 0.6], heading: 36.5, pitch: 14 };
   export default {
   id: ID,
   slug: 'basho-s-staff',
