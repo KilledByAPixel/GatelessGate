@@ -2,6 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import k15 from '../src/koans/k15.js';
+import { hitOnly } from './helpers/fake-ctx.js';
+import { stubAudio } from './helpers/stub-audio.js';
 import { noteForSize, makeFurin, SWING, SINGLE_BODY_LEN } from '../src/kit/furin.js';
 
 // Case 15 is Tozan's three blows, and it now hangs three fūrin under Ummon's
@@ -11,7 +13,7 @@ import { noteForSize, makeFurin, SWING, SINGLE_BODY_LEN } from '../src/kit/furin
 // other.
 
 const stubs = () => ({
-  audio: { startAmbience() {}, stopAmbience() {}, setWindLevel() {}, chimeStrike() {}, knock() {} },
+  audio: stubAudio(),
   input: { onHover() {}, onTap() {}, raycastFirst: () => null },
 });
 
@@ -202,7 +204,7 @@ test('a tap rings one chime and never also starts a beating', () => {
 
   // ...and the gate itself DOES still start one, or the check above would
   // pass just as well on a handler that had stopped working entirely
-  s.input.raycastFirst = (cam, targets) => (targets.includes(gateHit) ? { object: gateHit } : null);
+  s.input.raycastFirst = hitOnly(gateHit);
   onTap();
   for (let i = 0; i < 60 * 4; i++) k.update(1 / 60, (240 + i) / 60);
   assert.equal(k.fragment().beatings, 1, 'tapping the gate itself should still start the beating');
@@ -225,7 +227,7 @@ test('the staff comes down with each blow, and is still between beatings', () =>
   assert.equal(staff.rotation.x, 0, 'at rest before any beating');
 
   const gateHit = k.scene.getObjectByName('gate-hit');
-  s.input.raycastFirst = (cam, targets) => (targets.includes(gateHit) ? { object: gateHit } : null);
+  s.input.raycastFirst = hitOnly(gateHit);
   onTap();
 
   // three dips, one per blow: count the frames-with-motion transitions
@@ -263,10 +265,7 @@ test('touching Tozan deepens his bow, and never starts a beating', () => {
   const waist = tozan.getObjectByName('waist');
   const tozanMeshes = [];
   tozan.traverse((o) => { if (o.isMesh) tozanMeshes.push(o); });
-  s.input.raycastFirst = (cam, targets) => {
-    const t = targets.find && targets.find((o) => tozanMeshes.includes(o));
-    return t ? { object: t, point: new THREE.Vector3(), distance: 1 } : null;
-  };
+  s.input.raycastFirst = hitOnly(tozanMeshes);
 
   k.update(1 / 60, 0);
   const held = waist.rotation.x;

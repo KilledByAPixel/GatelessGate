@@ -5,6 +5,7 @@ import k16 from '../src/koans/k16.js';
 import { makeBell } from '../src/kit/bell.js';
 import { ACCENT } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
+import { stubAudio } from './helpers/stub-audio.js';
 import { rigCamera as sharedRig, DEFAULT_HOME } from './helpers/rig-camera.js';
 
 // Case 16 is the daily summons: the bell sounds and the monastery turns toward
@@ -246,10 +247,7 @@ test('a held pointer cannot ring the bell without limit, though a genuine re-str
   // the fix intact — a real re-strike sits seconds after the first, far
   // outside the 0.5s cooldown, as the second half of this test shows.
   const rings = [];
-  const audio = {
-    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, cylinderStrike() {},
-    bell: (o) => rings.push(o.f0),
-  };
+  const audio = { ...stubAudio(), bell: (o) => rings.push(o.f0) };
   const ctx = fakeCtx();
   ctx.audio = audio;
   const root = k16.build(ctx);
@@ -310,10 +308,7 @@ test('the bell sits in frame at the home angle', () => {
 
 test('tapping the bell swings it, rings the temple preset, and the elder finishes his turn', () => {
   const rings = [];
-  const audio = {
-    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, cylinderStrike() {},
-    bell: (o) => rings.push(o),
-  };
+  const audio = { ...stubAudio(), bell: (o) => rings.push(o) };
   const ctx = fakeCtx();
   ctx.audio = audio;
   const root = k16.build(ctx);

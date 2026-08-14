@@ -5,7 +5,8 @@ import k47 from '../src/koans/k47.js';
 import { bySlug } from '../src/koans/index.js';
 import TEXT from '../src/koans/text/mumonkan.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT, PAPER } from '../src/palette.js';
-import { fakeCtx } from './helpers/fake-ctx.js';
+import { fakeCtx, hitOnly } from './helpers/fake-ctx.js';
+import { stubAudio } from './helpers/stub-audio.js';
 import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 
 // Case 47 is almost pure composition — one road, three barriers across it, a
@@ -268,7 +269,7 @@ test('each barrier answers with its own bell, the nearest the biggest', () => {
   for (const [i, preset] of [[1, 'temple'], [2, 'hand'], [0, 'great'], [1, 'temple']]) {
     clock += 0.6;
     root.update(0, clock);
-    ctx.input.raycastFirst = (cam, objs) => (objs.includes(slabOf(i)) ? { object: slabOf(i) } : null);
+    ctx.input.raycastFirst = hitOnly(slabOf(i));
     ctx._taps.forEach((cb) => cb(10, 10));
     expect[i]++;
     assert.equal(bells[bells.length - 1], preset, `barrier ${i + 1} rings preset=${preset}`);
@@ -284,7 +285,7 @@ test('each barrier answers with its own bell, the nearest the biggest', () => {
   qroot.setCamera(rigCamera());
   const qgates = gatesByDepth(qroot.scene);
   const qhit = qgates[2].children.find((c) => c.name === 'gatehit');
-  quiet.input.raycastFirst = (cam, objs) => (objs.includes(qhit) ? { object: qhit } : null);
+  quiet.input.raycastFirst = hitOnly(qhit);
   quiet._taps.forEach((cb) => cb(10, 10));
   assert.equal(qroot.fragment().taps3, 1);
 });
@@ -295,7 +296,7 @@ test('a bell cannot be re-struck inside its cooldown — holding the pointer dow
   // fast tapper could stack strikes without limit. k49's idiom
   // (`clock - lastRing > 0.5`) fixes it here per barrier.
   const bells = [];
-  const audio = { bell: (o) => bells.push(o.f0), startAmbience() {}, stopAmbience() {}, setWindLevel() {} };
+  const audio = { ...stubAudio(), bell: (o) => bells.push(o.f0) };
   const ctx = fakeCtx({ audio });
   const root = k47.build(ctx);
   root.setCamera(rigCamera());
@@ -304,7 +305,7 @@ test('a bell cannot be re-struck inside its cooldown — holding the pointer dow
   const slab1 = gates[1].children.find((c) => c.name === 'gatehit');
 
   root.update(0, 0);
-  ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab0) ? { object: slab0 } : null);
+  ctx.input.raycastFirst = hitOnly(slab0);
   ctx._taps.forEach((cb) => cb(10, 10));    // first strike on barrier 1
   ctx._taps.forEach((cb) => cb(10, 10));    // immediate repeat, inside the 0.5s cooldown
   ctx._taps.forEach((cb) => cb(10, 10));    // and again
@@ -313,14 +314,14 @@ test('a bell cannot be re-struck inside its cooldown — holding the pointer dow
 
   // a different barrier is a DIFFERENT bell — its own cooldown, not blocked
   // by barrier 1's
-  ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab1) ? { object: slab1 } : null);
+  ctx.input.raycastFirst = hitOnly(slab1);
   ctx._taps.forEach((cb) => cb(10, 10));
   assert.equal(root.fragment().taps2, 1, 'a different barrier rings on its own cooldown');
   assert.equal(bells.length, 2);
 
   // past the cooldown, barrier 1 answers again
   root.update(0.6, 0.6);
-  ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab0) ? { object: slab0 } : null);
+  ctx.input.raycastFirst = hitOnly(slab0);
   ctx._taps.forEach((cb) => cb(10, 10));
   assert.equal(root.fragment().taps1, 2, 'a tap after the cooldown rings again');
   assert.equal(bells.length, 3);
@@ -333,7 +334,7 @@ test('nothing hangs from a barrier any more', () => {
   // road and out into the fog, taking the page's only continuous sound with it
   // and bringing it back four taps later.
   const struck = [];
-  const audio = { bell() {}, chimeStrike: (o) => struck.push(o) };
+  const audio = { ...stubAudio(), chimeStrike: (o) => struck.push(o) };
   const root = k47.build(fakeCtx({ audio }));
   let hung = 0;
   root.scene.traverse((o) => { if (o.name === 'furin' || o.userData.hungBy === 'hangChimes') hung++; });
@@ -363,7 +364,7 @@ test('a tap slides the road one place, and every slot stays filled', () => {
   assert.equal(root.fragment().slotSum, 6);
 
   const slab = gatesByDepth(root.scene)[0].children.find((c) => c.name === 'gatehit');
-  ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab) ? { object: slab } : null);
+  ctx.input.raycastFirst = hitOnly(slab);
   let t = 0;
   const run = (secs) => { for (const end = t + secs; t < end; t += 1 / 60) root.update(1 / 60, t); };
   run(0.1);
@@ -387,7 +388,7 @@ test('a tap slides the road one place, and every slot stays filled', () => {
 test('the road can turn over for ever without drifting', () => {
   // four slides is a full rotation: every gate has been through every slot and
   // the picture must be bit-for-bit the one it started as
-  const ctx = fakeCtx({ audio: { bell() {} } });
+  const ctx = fakeCtx({ audio: stubAudio() });
   const root = k47.build(ctx);
   root.setCamera(rigCamera());
   const snap = () => gatesByDepth(root.scene)
@@ -400,7 +401,7 @@ test('the road can turn over for ever without drifting', () => {
   run(0.1);
   for (let n = 0; n < 4; n++) {
     const slab = gatesByDepth(root.scene)[0].children.find((c) => c.name === 'gatehit');
-    ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab) ? { object: slab } : null);
+    ctx.input.raycastFirst = hitOnly(slab);
     ctx._taps.forEach((cb) => cb(10, 10));
     run(3.2);
     assert.equal(gatesByDepth(root.scene).length, 3, `three on the road after slide ${n + 1}`);
@@ -410,14 +411,14 @@ test('the road can turn over for ever without drifting', () => {
 });
 
 test('a second tap cannot restart a slide that is already running', () => {
-  const ctx = fakeCtx({ audio: { bell() {} } });
+  const ctx = fakeCtx({ audio: stubAudio() });
   const root = k47.build(ctx);
   root.setCamera(rigCamera());
   let t = 0;
   const run = (secs) => { for (const end = t + secs; t < end; t += 1 / 60) root.update(1 / 60, t); };
   run(0.1);
   const slab = gatesByDepth(root.scene)[0].children.find((c) => c.name === 'gatehit');
-  ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab) ? { object: slab } : null);
+  ctx.input.raycastFirst = hitOnly(slab);
 
   ctx._taps.forEach((cb) => cb(10, 10));
   run(1.0);
@@ -436,7 +437,7 @@ test('the gate waiting behind the reader is not drawn until it starts to move', 
   // stands in the composition: the walker stops reading as a man between the
   // first barrier and the second, and the orbit swings a huge near gate through
   // frame. (Both of those were caught by the tests above when it was drawn.)
-  const ctx = fakeCtx({ audio: { bell() {} } });
+  const ctx = fakeCtx({ audio: stubAudio() });
   const root = k47.build(ctx);
   root.setCamera(rigCamera());
   const all = [];
@@ -445,7 +446,7 @@ test('the gate waiting behind the reader is not drawn until it starts to move', 
   assert.equal(all.filter((g) => g.visible).length, 3, 'three of them are drawn');
 
   const slab = gatesByDepth(root.scene)[0].children.find((c) => c.name === 'gatehit');
-  ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab) ? { object: slab } : null);
+  ctx.input.raycastFirst = hitOnly(slab);
   let t = 0;
   const run = (secs) => { for (const end = t + secs; t < end; t += 1 / 60) root.update(1 / 60, t); };
   run(0.1);
@@ -489,7 +490,7 @@ test('the far barrier dwindles as it goes, and nothing blinks on the way round',
   // written inside the placement loop, which runs BEFORE the slot bookkeeping,
   // so on the single frame a slide ended the arriving gate was still recorded as
   // parked and was hidden — then shown again a frame late.
-  const ctx = fakeCtx({ audio: { bell() {} } });
+  const ctx = fakeCtx({ audio: stubAudio() });
   const root = k47.build(ctx);
   root.setCamera(rigCamera());
   const all = [];
@@ -499,7 +500,7 @@ test('the far barrier dwindles as it goes, and nothing blinks on the way round',
   const run = (secs) => { for (const end = t + secs; t < end; t += 1 / 60) root.update(1 / 60, t); };
   run(0.1);
   const slab = gatesByDepth(root.scene)[0].children.find((c) => c.name === 'gatehit');
-  ctx.input.raycastFirst = (cam, objs) => (objs.includes(slab) ? { object: slab } : null);
+  ctx.input.raycastFirst = hitOnly(slab);
 
   const far = gatesByDepth(root.scene)[2];      // the one about to walk into the fog
   const startScale = far.scale.x;

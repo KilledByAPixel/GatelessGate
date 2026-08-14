@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { loadKoan } from '../src/koans/registry.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
+import { stubAudio } from './helpers/stub-audio.js';
 
 // The ten cases this pass hung a fūrin or a bronze cylinder in (chime-
 // staging task): each one's own case file explains WHY that particular
@@ -29,20 +30,6 @@ const CASES = [
   { slug: 'basho-s-staff', kind: 'chime' },                      // k44
   { slug: 'amban-s-addition', kind: 'cylinder' },                // k49
 ];
-
-function stubAudio() {
-  const calls = [];
-  return {
-    calls,
-    chimeStrike: (o) => calls.push(['chime', o]),
-    cylinderStrike: (o) => calls.push(['cylinder', o]),
-    bell: () => calls.push(['bell']), knock: () => calls.push(['knock']),
-    drip: () => calls.push(['drip']), pour: () => calls.push(['pour']),
-    ceramic: () => calls.push(['ceramic']), wood: () => calls.push(['wood']),
-    cloth: () => calls.push(['cloth']), breath: () => calls.push(['breath']),
-    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, duck() {},
-  };
-}
 
 // every mesh belonging to EACH chime object found in the scene, grouped by
 // instance and collected by object identity rather than by name —
