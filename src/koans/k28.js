@@ -191,7 +191,7 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   ],
   grassKeepout: [
   ...path.keepout(24, 0.95),
-  { x: -1.8, z: -2.8, r: 2.9 },
+  { x: -1.8, z: -2.5, r: 2.9 },
   ],
   });
 
