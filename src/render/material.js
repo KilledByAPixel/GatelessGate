@@ -51,6 +51,28 @@ export function setSeal(material, on, color = ACCENT) {
   return material;
 }
 
+// FRONT faces into the shadow map — the contact-gap fix, opt-in per prop.
+//
+// The renderer's default records a mesh's BACK surface into the shadow map
+// (the anti-acne default), so a prop's shadow is cast by its far side —
+// shifted toward the sun by the prop's own thickness — and where the prop
+// meets the ground that shift shows as a white line between the base and the
+// shadow it stands in. Peter-panning. Near-face depth closes the gap; the
+// acne it risks is on the prop's own lit side, which the sun's normalBias
+// (lights.js) absorbs. Shadow pass only — the visible render is untouched.
+//
+// Opt-in, not the default, because the back-face default is what keeps the
+// big receivers (ground, mountains, roofs) acne-free — apply this to the
+// props whose ground contact the reader actually looks at. And an open mesh
+// becomes a LIGHT PIPE under front-face depth: a lathe or tube with an open
+// end lets the sun straight through the hollow and lights a hole in its own
+// shadow (the figure's neck opening did exactly this — see the CAP points in
+// kit/figure.js). Close the geometry before opting it in.
+export function frontShadow(obj) {
+  obj.traverse((o) => { if (o.isMesh) o.material.shadowSide = THREE.FrontSide; });
+  return obj;
+}
+
 export function washMaterial({ color = '#ffffff', flat = false, side = THREE.FrontSide, glow = true } = {}) {
   const m = new THREE.MeshLambertMaterial({ color, side });
   m.flatShading = flat;

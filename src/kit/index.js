@@ -29,7 +29,7 @@ export { makePine, pineGeometry } from './pine.js';
 export { makeGate } from './gate.js';
 export { makeFlag } from './flag.js';
 export { makeSign } from './sign.js';
-export { washMaterial, setSeal } from '../render/material.js';
+export { washMaterial, setSeal, frontShadow } from '../render/material.js';
 export { makeLights, SUN_DEFAULT } from '../render/lights.js';
 export { makeStars } from './stars.js';
 export { bakeStatic } from './bake.js';

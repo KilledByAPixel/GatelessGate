@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
-  composeWorld, faceMonk, makeAssembly, makeLights, makeMonk,
+  composeWorld, faceMonk, frontShadow, makeAssembly, makeLights, makeMonk,
   makeScreen, makeVeranda, mergeSimple, washMaterial,
 } from '../kit/index.js';
 
@@ -118,6 +118,9 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   washMaterial({ color: i === 2 ? WASH.stone : wash(0.26), flat: true }));
   seat.name = 'seat';
   seat.position.set(-1.9 + i * 1.75, DECK_TOP + 0.10, -2.2);
+  // closed boxes standing where the eye checks the contact — the seats drew
+  // the white peter-pan line along their base on the boards
+  frontShadow(seat);
   hall.add(seat);
   seats.push(seat);
   }
@@ -144,6 +147,7 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   washMaterial({ color: WASH.dark, flat: true }));
   stand.name = 'stand';
   stand.position.set(seats[2].position.x, DECK_TOP + 0.21, seats[2].position.z + 1.15);
+  frontShadow(stand);   // same box-on-boards contact as the seats
   hall.add(stand);
   
   // The gavel is an actual MALLET now — a hammer, not a block: a fat head lying

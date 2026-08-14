@@ -1,5 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
-import { washMaterial } from '../render/material.js';
+import { washMaterial, frontShadow } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { INK_LIT } from '../palette.js';
 
@@ -159,8 +159,8 @@ export function neckBetween(a, b, { r0 = 0.056, r1 = 0.070, mat, pad = 0.03 } = 
 // chest) doing most of the height, is what lets the two events read AS events.
 // If you add a point here, take one out.
 //
-// The two profiles are index-aligned — same ten points, same roles — so
-// `kneel` can be an honest halfway blend of them.
+// The two profiles are index-aligned — same points, same roles, index for
+// index — so `kneel` can be an honest halfway blend of them.
 const STAND_PROFILE = [
   [0.020, 0.000],   // hem centre, closed on the ground
   [0.212, 0.000],   // hem edge — the widest cloth he owns
@@ -173,6 +173,13 @@ const STAND_PROFILE = [
                     //   it turned the torso into a drum sitting on a cone
   [0.097, 0.674],   // COLLAR — a step, not a taper
   [0.058, 0.692],   // the neck opening
+  [0.000, 0.692],   // CAP — closes the neck to the axis. Not a tone band (it
+                    //   faces straight up, hidden under the head), so it sits
+                    //   outside the ring budget above. It exists for the
+                    //   shadow map: the figure casts front-face depth, and an
+                    //   open lathe is a light pipe — sun slipped through the
+                    //   head/collar annulus and lit a hole in the shadow of
+                    //   every hatless figure.
 ];
 // Exported (with the hat profile below) for `assembly.js`: the instanced
 // crowd builds its per-instance geometry from the same seated silhouette the
@@ -217,6 +224,8 @@ export const SIT_PROFILE = [
   [0.121, 0.425],   // chest — one long VERTICAL run: a meditator sits straight
   [0.097, 0.458],   // COLLAR
   [0.058, 0.478],   // the neck opening
+  [0.000, 0.478],   // CAP — see STAND_PROFILE's cap; same hole, same fix, and
+                    //   the pair must stay index-aligned for the kneel blend
 ];
 
 // THE SEAT, in fractions of height. The base IS a cushion, so it is built as
@@ -582,5 +591,12 @@ export function makeFigure({
     }
     g.add(staff);
   }
+
+  // The contact-gap fix (see frontShadow's own comment in render/material.js):
+  // figures are the props whose ground contact the reader looks at hardest,
+  // so every one opts in. The CAP points in the robe profiles above are this
+  // line's precondition — an open neck under front-face depth was a light
+  // pipe through the body.
+  frontShadow(g);
   return g;
 }
