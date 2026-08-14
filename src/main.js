@@ -1319,6 +1319,17 @@ addEventListener('keydown', (e) => {
   }
   const t = e.target;
   const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+  // HOME IS THE DOOR TO THE WORKBENCH, in and out, and the only one. The gear
+  // used to sit in the reader's toolbar where the book is not a workbench and
+  // "what is this?" is the whole cost; there is no button now until this is
+  // pressed. Deliberately a key nothing else in the book uses and nobody hits
+  // by accident, and it works from any mode — including the Contents, which is
+  // where a developer arriving cold actually is. The flag is remembered, so a
+  // reload comes back in developer mode (debug.js's DEV_KEY).
+  if (!typing && e.key === 'Home') {
+    debug.devMode();
+    return;
+  }
   // dev-mode hotkeys: F toggles the free cam — the same switch as the
   // workbench checkbox (debug.toggle keeps panel, save and effect in step).
   // Dev mode only: a reader mashing keys must never wander the camera off.

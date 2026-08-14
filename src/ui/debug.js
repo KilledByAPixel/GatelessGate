@@ -34,14 +34,18 @@ const KEY = 'gateless-gate-debug-v7';
 // way to switch persistence on and have it survive a reload.
 const PERSIST_KEY = 'gateless-gate-debug-persist';
 
-// Developer mode: whether the contents grows a "Developer" section with the
-// tools in it (the showcase, and whatever follows it). Its own key, remembered
-// unconditionally — exactly like PERSIST_KEY above and for the same reason: a
-// flag that only survives when some OTHER flag is on is a flag nobody can turn
-// on. It is NOT one of the CONTROLS, because those are look settings that get
-// wiped by "reset all" and re-applied to every scene; this one changes what the
-// app offers, not what it renders. Off by default: with it off the app is
-// identical to what it was before this existed.
+// Developer mode: whether the app offers its tools at all — the gear in the
+// toolbar, this whole panel, the Compose panel, and the Contents' "Developer"
+// section. Its own key, remembered unconditionally — exactly like PERSIST_KEY
+// above and for the same reason: a flag that only survives when some OTHER
+// flag is on is a flag nobody can turn on. It is NOT one of the CONTROLS,
+// because those are look settings that get wiped by "reset all" and re-applied
+// to every scene; this one changes what the app offers, not what it renders.
+//
+// OFF BY DEFAULT, AND INVISIBLE WHEN OFF. There is no gear in a reader's
+// toolbar to wonder about; with this off the app is the book and nothing else.
+// HOME is the door, in and out (main.js) — a key nothing else uses and nobody
+// presses by accident, which is what lets the entrance be invisible.
 const DEV_KEY = 'gateless-gate-dev';
 
 // Whether the panel itself was left OPEN. Its own key for the same reason
@@ -165,6 +169,9 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
   button.className = 'gg-debug-toggle';
   button.textContent = '⚙';
   button.title = 'Debug panel';
+  // Hidden unless developer mode is on — see setDevMode. Set here rather than
+  // in mount() so the gear is never in the DOM visible for a frame first.
+  button.style.display = devModeOn() ? '' : 'none';
 
   const panel = document.createElement('div');
   panel.className = 'gg-debug';
@@ -302,11 +309,7 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
   const devInput = document.createElement('input');
   devInput.type = 'checkbox';
   devInput.checked = devModeOn();
-  devInput.onchange = () => {
-    try { localStorage.setItem(DEV_KEY, devInput.checked ? '1' : '0'); } catch { /* private mode */ }
-    syncCompose();
-    onDevMode && onDevMode(devInput.checked);
-  };
+  devInput.onchange = () => setDevMode(devInput.checked);
   devRow.appendChild(devName);
   devRow.appendChild(devInput);
   panel.appendChild(devRow);
@@ -328,6 +331,31 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
   }
 
   button.onclick = () => setPanel(!panel.classList.contains('open'));
+
+  // THE ONE WAY IN AND OUT OF DEVELOPER MODE, for the same reason setPanel is
+  // the one way the panel opens: the stored flag, the checkbox, the Compose
+  // panel, the gear in the toolbar and whatever main does about it all move
+  // together or they drift.
+  //
+  // The GEAR ITSELF is gated on this now. A workbench button sitting in a
+  // reader's toolbar is an invitation to a room the book is not, and the
+  // question "what is this?" is the whole cost — so by default there is no
+  // button, no panel, and nothing to find. Home is the way in (main.js), which
+  // is also why the checkbox below cannot lock anybody out: switching it off
+  // takes the gear away, and Home brings it back.
+  //
+  // Turning it ON opens the panel as well. Someone who has just asked for
+  // developer mode wants the workbench, not a new button to go and press.
+  function setDevMode(on) {
+    const next = !!on;
+    try { localStorage.setItem(DEV_KEY, next ? '1' : '0'); } catch { /* private mode */ }
+    devInput.checked = next;
+    syncCompose();
+    button.style.display = next ? '' : 'none';
+    setPanel(next);
+    onDevMode && onDevMode(next);
+    return next;
+  }
 
   // ---- application --------------------------------------------------------
   // Authored values are captured the first time a scene is seen, so the sliders
@@ -566,6 +594,11 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     // The panel belongs to the stage; the button belongs in the shared toolbar
     // beside sound and fullscreen, so the three read as one row rather than the
     // workbench floating on its own.
+    // Developer mode, from outside: main.js binds Home to this. With no
+    // argument it flips, and it hands back where it landed so the caller can
+    // say so. The gear, the panel, the Compose panel and the stored flag all
+    // move together — setDevMode is the only thing that touches them.
+    devMode(on) { return setDevMode(on === undefined ? !devModeOn() : on); },
     mount(host, buttonHost = host) {
       buttonHost.appendChild(button);
       host.appendChild(panel);
