@@ -35,7 +35,7 @@ const MONKS = [{ x: 2.74, z: -3.48 }, { x: 2.45, z: -2.61 }];
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.0, target: [0.1, 1.35, -2.2], heading: 31.5, pitch: 15.5 };
+const CAM = {distance: 11, target: [0.5, 1.35, -2.25], heading: 44.5, pitch: 16 };
   export default {
   id: ID,
   slug: 'hyakujo-s-fox',

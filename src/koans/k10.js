@@ -65,13 +65,13 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 11 };
   const matGeo = new THREE.BoxGeometry(2.5, 0.035, 2.7);
   const mat = new THREE.Mesh(matGeo, washMaterial({ color: WASH.dry, flat: true }));
   mat.name = 'mat';
-  mat.position.set(0.5, 0.018, 0.5);
+  mat.position.set(0.6, 0.018, 0.5);
   mat.rotation.y = 0.24;
   scene.add(mat);
   
   // SEIZEI, sitting on it with nothing
   const seizei = makeMonk({ height: 1.5, pose: 'sit' });
-  seizei.position.set(1.75, 0.035, 1.0);
+  seizei.position.set(1.6, 0.035, 1.0);
   scene.add(seizei);
   
   // SOZAN, sitting across from him, who has been counting
@@ -84,7 +84,7 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 11 };
   // THE THREE CUPS, between them. Small, held, already drunk.
   const cupMat = washMaterial({ color: ACCENT, flat: true });
   const cups = [];
-  const CUP_AT = [[0.35, 0.72], [0.72, 0.34], [.92, 0.86]];
+  const CUP_AT = [[0.35, 0.72], [0.62, 0.34], [.76, 0.86]];
   for (const [i, [cx, cz]] of CUP_AT.entries()) {
   const pivot = new THREE.Group();       // tips about its own foot
   pivot.name = 'cup';
