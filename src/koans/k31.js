@@ -127,7 +127,7 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   
   // and the traveller currently receiving it
   const traveller = makeMonk({ height: 1.6, elder: true });
-  traveller.position.set(2.4, 0, 1.5);
+  traveller.position.set(3.4, 0, 2.);
   faceMonk(traveller, WOMAN);
   scene.add(traveller);
   
