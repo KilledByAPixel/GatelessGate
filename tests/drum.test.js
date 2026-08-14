@@ -71,6 +71,42 @@ test('no engine is silence, not a throw', () => {
   assert.equal(d.beats(), 1);
 });
 
+test('a struck drum rocks, and settles', () => {
+  // The other half of "it just works", and the half that was missed first: the
+  // rock and the skin bulge only advance inside update(), so a drum nobody
+  // drives is struck in silence and never moves. main.js drives every drum it
+  // sweeps, the same way it drives every hung chime.
+  setDrumAudio({ drum() {} });
+  const d = makeDrum({ seed: 13 });
+  let t = 0;
+  const drive = (n) => { for (let i = 0; i < n; i++) { t += 1 / 60; d.update(1 / 60, t); } };
+  drive(6);
+  assert.equal(d.angle(), 0, 'at rest before anything touches it');
+
+  beatDrumAt([d], new THREE.PerspectiveCamera(), { raycastFirst: () => ({}) });
+  let peak = 0;
+  for (let i = 0; i < 40; i++) { drive(1); peak = Math.max(peak, Math.abs(d.angle())); }
+  assert.ok(peak > 0.01, `struck and never moved: peak ${peak}`);
+
+  drive(300);
+  assert.ok(Math.abs(d.angle()) < 1e-3, `never settles: ${d.angle()}`);
+  setDrumAudio(null);
+});
+
+test('driving a drum twice at one simTime is not double motion', () => {
+  // main drives every drum, and a case may still drive its own — case 13 does.
+  // Both at once has to be the same as either alone, or the two would compound.
+  const a = makeDrum({ seed: 5 });
+  const b = makeDrum({ seed: 5 });
+  a.strike(); b.strike();
+  for (let i = 1; i <= 30; i++) {
+    const t = i / 60;
+    a.update(1 / 60, t);
+    b.update(1 / 60, t); b.update(1 / 60, t);   // the case's call AND main's
+  }
+  assert.equal(a.angle(), b.angle(), 'a second call at the same simTime moved it');
+});
+
 test('every drum in the book answers a touch aimed at it', async () => {
   // The rule, held across the whole book: find each staged case's drums, aim a
   // real ray at the barrel from the case's own home framing, and require the

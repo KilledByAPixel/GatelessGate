@@ -1413,6 +1413,12 @@ function tick() {
   // wheeled-out case and never parallax. Free while it is not in the scene.
   if (stars.points.parent) stars.follow(camera);
   for (const c of hungChimes()) c.update(STEP, simTime);
+  // ...and every drum, for the same reason a hung chime is driven here: the
+  // rock and the skin bulge only advance inside update(), so a drum nobody
+  // calls is struck silently and never moves. Case 13 drove its own and case
+  // 16 did not, which is exactly the split this removes. Idempotent at a given
+  // simTime, so a case that still drives its own is not fighting this.
+  for (const d of standingDrums()) d.update(STEP, simTime);
   if (mode === 'sit') sit.update(STEP);
   dissolve.update(STEP);
   freeze.update(STEP);

@@ -42,6 +42,14 @@ const A0 = 0.055;        // radians of rock at a full strike
 // resolved AT STRIKE TIME rather than at build, so a scene built before startup
 // finished does not capture a null and stay mute for its whole life. An
 // explicit engine still wins, which is how tests capture strikes on a stub.
+//
+// AND MAIN DRIVES IT, which is the other half and the half that was missed
+// first: the rock and the skin bulge only advance inside update(), so a drum
+// nobody calls is struck in silence and never moves. It was the case's job, so
+// the case that struck its own drum animated and the case that did not had a
+// drum that answered with a sound and no motion. A case MAY still call
+// update() — it is idempotent at a given simTime, the same guarantee
+// attachChimes documents — but it no longer has to.
 let sharedAudio = null;
 export function setDrumAudio(engine) { sharedAudio = engine || null; }
 
