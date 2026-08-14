@@ -30,6 +30,25 @@ test('stars are sky, not scenery', () => {
   assert.equal(points.frustumCulled, false);
 });
 
+test('a star is round — a bare point is a square', () => {
+  // PointsMaterial draws a quad, and at three pixels across a quad is
+  // unmistakably a square. The disc is an alpha map shared by the whole field,
+  // so roundness costs one small texture and no extra draws.
+  const s = makeStars({ seed: 4 });
+  const tex = s.material.alphaMap;
+  assert.ok(tex, 'no alpha map — the points render as squares');
+  const { data, width, height } = tex.image;
+  const alphaAt = (x, y) => data[(y * width + x) * 4 + 3];
+  assert.equal(alphaAt(width >> 1, height >> 1), 255, 'the centre is solid');
+  assert.equal(alphaAt(0, 0), 0, 'the corner is empty — this is what makes it a disc');
+  assert.equal(alphaAt(width - 1, height - 1), 0);
+  // and the rim ramps rather than cutting, which is what antialiases it at
+  // the size these are actually drawn
+  const mid = alphaAt(width >> 1, Math.round(height * 0.92));
+  const inner = alphaAt(width >> 1, Math.round(height * 0.72));
+  assert.ok(mid < inner && inner < 255, `the falloff is a hard cut: ${inner} -> ${mid}`);
+});
+
 test('the shell is behind the moon and inside the far plane', () => {
   // Case 19's moon stands at 60 and the app's camera far plane is 100. The
   // shell has to sit between them or it is either in front of the moon or

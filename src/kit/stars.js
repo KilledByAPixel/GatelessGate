@@ -29,6 +29,37 @@ import { hash1 } from '../util/noise.js';
 //
 // Brightness varies per star through a colour attribute rather than several
 // materials, so a sky with depth in it is still one draw.
+//
+// A POINT IS A SQUARE unless something says otherwise, and at three pixels a
+// square is unmistakably a square. The disc is an alpha map, ONE texture shared
+// by the whole field, built as a DataTexture rather than off a canvas so the
+// kit still builds under plain Node in the tests (the idiom case 28's lantern
+// glow established). The falloff is soft rather than a hard cut: at this size a
+// hard-edged circle is a jagged one, and the ramp is what antialiases it.
+
+// A small solid core with a soft rim — a star is a point of light, not a dot of
+// paint, and the ramp is doing the antialiasing at three pixels across.
+const DISC_SIZE = 32;
+const DISC_CORE = 0.32;   // fraction of the radius that stays fully opaque
+function starDisc() {
+  const px = new Uint8Array(DISC_SIZE * DISC_SIZE * 4);
+  for (let i = 0; i < DISC_SIZE * DISC_SIZE; i++) {
+    const x = ((i % DISC_SIZE) + 0.5) / DISC_SIZE - 0.5;
+    const y = (Math.floor(i / DISC_SIZE) + 0.5) / DISC_SIZE - 0.5;
+    const r = Math.hypot(x, y) * 2;                   // 0 centre, 1 at the rim
+    const a = r >= 1 ? 0
+      : r <= DISC_CORE ? 1
+        : Math.pow(1 - (r - DISC_CORE) / (1 - DISC_CORE), 1.8);
+    px[i * 4] = 255; px[i * 4 + 1] = 255; px[i * 4 + 2] = 255;
+    px[i * 4 + 3] = Math.round(255 * a);
+  }
+  const tex = new THREE.DataTexture(px, DISC_SIZE, DISC_SIZE);
+  // White through and through — the colour comes from the vertex attribute, so
+  // this carries shape and nothing else.
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.needsUpdate = true;
+  return tex;
+}
 export function makeStars({
   count = 700,
   radius = 80,
@@ -70,10 +101,13 @@ export function makeStars({
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
 
+  const disc = starDisc();
   const material = new THREE.PointsMaterial({
     size,
     sizeAttenuation: true,
     vertexColors: true,
+    map: disc,
+    alphaMap: disc,
     fog: false,
     transparent: true,
     opacity: 1,
@@ -90,6 +124,6 @@ export function makeStars({
     // Call with the live camera each frame. See the note above on why position
     // and not the whole transform.
     follow(camera) { if (camera) points.position.copy(camera.position); },
-    dispose() { geo.dispose(); material.dispose(); },
+    dispose() { geo.dispose(); material.dispose(); disc.dispose(); },
   };
 }
