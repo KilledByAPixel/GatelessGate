@@ -42,11 +42,19 @@ test('a star is round — a bare point is a square', () => {
   assert.equal(alphaAt(width >> 1, height >> 1), 255, 'the centre is solid');
   assert.equal(alphaAt(0, 0), 0, 'the corner is empty — this is what makes it a disc');
   assert.equal(alphaAt(width - 1, height - 1), 0);
-  // and the rim ramps rather than cutting, which is what antialiases it at
-  // the size these are actually drawn
-  const mid = alphaAt(width >> 1, Math.round(height * 0.92));
-  const inner = alphaAt(width >> 1, Math.round(height * 0.72));
-  assert.ok(mid < inner && inner < 255, `the falloff is a hard cut: ${inner} -> ${mid}`);
+  // And the rim RAMPS rather than cutting, which is what antialiases it at the
+  // size these are actually drawn. Read as "somewhere along the radius there
+  // are partial values", not at a fixed radius — how much of the disc is solid
+  // core is a taste knob, and a test that samples a chosen radius is really
+  // testing where that knob happens to be sitting.
+  const radial = [];
+  for (let y = height >> 1; y < height; y++) radial.push(alphaAt(width >> 1, y));
+  const partial = radial.filter((a) => a > 0 && a < 255);
+  assert.ok(partial.length >= 3, `the falloff is a hard cut: ${radial.join(',')}`);
+  // ...and it only ever falls, from solid at the centre to nothing at the rim
+  for (let i = 1; i < radial.length; i++) {
+    assert.ok(radial[i] <= radial[i - 1], `alpha rises toward the rim at ${i}: ${radial.join(',')}`);
+  }
 });
 
 test('the shell is behind the moon and inside the far plane', () => {

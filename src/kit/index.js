@@ -69,7 +69,7 @@ export { makeOdoshi } from './odoshi.js';
 // the third chapter: the objects the remaining cases turn on
 export { makeWheel } from './wheel.js';
 export { makeScale } from './scale.js';
-export { makeDrum } from './drum.js';
+export { makeDrum, collectDrums, beatDrumAt, setDrumAudio } from './drum.js';
 export { makeRack } from './rack.js';
 export { makeBirds } from './birds.js';
 export { makeBird } from './bird.js';

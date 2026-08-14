@@ -10,6 +10,7 @@ import { makeDebug, devModeOn } from './ui/debug.js';
 import { makeCompose } from './ui/compose.js';
 import { makeLayoutOverlay } from './dev/overlay.js';
 import { setChimeAudio, collectChimes, ringChimeAt } from './kit/chimes.js';
+import { setDrumAudio, collectDrums, beatDrumAt } from './kit/drum.js';
 import { makeStars } from './kit/index.js';
 import { makeInput } from './input.js';
 import { setBreezePointer, clearBreeze } from './kit/breeze.js';
@@ -67,6 +68,7 @@ const audio = createAudio(save);
 // One engine, handed to the kit's chime hanger so `makeHut({ chimes: 7 })` is
 // the whole instruction and the thing it hangs can be heard (src/kit/chimes.js).
 setChimeAudio(audio);
+setDrumAudio(audio);
 const narration = createNarration();
 
 // The hub is built now but NOT made active here: a deep link needs the scene
@@ -689,7 +691,20 @@ function hungChimes() {
   return scene.userData.hungChimes;
 }
 
+// ...and every drum standing in one, the same sweep and the same lifetime.
+function standingDrums() {
+  const active = scenes.active();
+  const scene = active && active.scene;
+  if (!scene) return [];
+  if (!scene.userData.drums) scene.userData.drums = collectDrums(scene);
+  return scene.userData.drums;
+}
+
 const chimeTap = () => { if (camera) ringChimeAt(hungChimes(), camera, input); };
+// A drum is a thing you hit, wherever it stands — the behaviour is the kit
+// piece’s, not the page’s (kit/drum.js). It was per-case, and one of the two
+// drums in the book was a barrel of scenery that swallowed every touch.
+const drumTap = () => { if (camera) beatDrumAt(standingDrums(), camera, input); };
 
 // THE CONTENTS' GATE RECURSION (buildHub's tapGate — the gate shrinks away
 // while an identical one arrives from far too big; see intro.js). Menu mode
@@ -716,6 +731,7 @@ const hubGateTap = () => {
 function clearInput() {
   input.clear();
   input.onTap(chimeTap);
+  input.onTap(drumTap);
   input.onTap(hubGateTap);
 }
 clearInput();

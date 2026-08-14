@@ -145,11 +145,11 @@ export default {
 
     let camera = null;
     let clock = 0;
-    let rings = 0, beats = 0;
-    // CODE REVIEW CAUGHT (Task 5C): the bell had no tap cooldown, so a held
-    // pointer could stack audio.bell() calls without limit — k49's idiom
-    // (`clock - lastRing > 0.5`). The drum is the membrane voice
-    // (audio.drum), still uncooldowned on purpose.
+    let rings = 0;
+    // The bell had no tap cooldown, so a held pointer could stack audio.bell()
+    // calls without limit — k49's idiom. The drum has none on purpose and
+    // still does not (kit/drum.js): it is the one voice you are meant to be
+    // able to beat as fast as you can hit it.
     let lastRing = -99;
 
     input.onTap(() => {
@@ -165,12 +165,12 @@ export default {
         audio && audio.ceramic({ force: 0.55, at: bowl.getWorldPosition(scratchPos) });
         return;
       }
-      if (input.raycastFirst(camera, drum.pickTargets())) {
-        drum.strike();
-        beats++;
-        audio && audio.drum({ force: 1, at: drum.group.position });     // the dinner drum, beaten at last
-        return;
-      }
+      // The drum is not handled here any more. It answers wherever it stands,
+      // from the kit (kit/drum.js) through main's own tap, the way a hung chime
+      // does — so the second drum in the book stopped being scenery. Nothing
+      // was lost by it: the bowl and the drum sit a third of the frame apart
+      // and neither one's ray reaches the other, so the bowl-first rule above
+      // still holds even though main's handler runs before this one.
       if (input.raycastFirst(camera, bell.pickTargets())) {
         if (clock - lastRing < 0.5) return;
         lastRing = clock;
@@ -195,7 +195,7 @@ export default {
       fragment() {
         return {
           rings,
-          beats,
+          beats: drum.beats(),
           turns,
           turned: +turnShape(clock - turnAt).toFixed(4),
           swing: +bell.swinging().toFixed(4),

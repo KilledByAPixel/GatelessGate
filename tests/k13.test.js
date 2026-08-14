@@ -4,6 +4,8 @@ import * as THREE from '../lib/three.module.js';
 import k13 from '../src/koans/k13.js';
 import { ACCENT } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
+import { rigCamera } from './helpers/rig-camera.js';
+import { collectDrums, beatDrumAt, setDrumAudio } from '../src/kit/drum.js';
 
 // WHICH BRANCH A TAP LANDS IN, chosen by what the handler is actually offered
 // rather than by counting calls. The tap probes the bowl first (it is small, and
@@ -24,7 +26,9 @@ function hitOnly(ctx, name) {
 // Case 13 had no dedicated test file before Task 5C. Adding one narrowly, to
 // pin the bell's tap cooldown found in review — the bell had none at all, so
 // a held pointer could stack audio.bell() calls without limit. The drum has
-// its own membrane voice (audio.drum) now, still uncooldowned on purpose.
+// its own membrane voice (audio.drum), still uncooldowned on purpose — and is
+// struck from the kit now rather than from this case, so its tests go through
+// beatDrumAt.
 
 test('module shape matches the koan contract', () => {
   assert.equal(k13.id, 13);
@@ -59,18 +63,50 @@ test('a held pointer on the bell cannot ring it without limit; the drum is untou
   assert.equal(rings.length, 2);
 });
 
-test('the drum has no cooldown and answers every tap — its own voice now', () => {
+test('the drum has no cooldown and answers every tap', () => {
+  // THE DRUM IS NOT THIS CASE'S TAP ANY MORE. It answers wherever it stands,
+  // from the kit through main's own handler (kit/drum.js), which is why this
+  // goes through beatDrumAt rather than the case's callbacks — and why
+  // tests/drum.test.js holds the rule for the whole book. What stays here is
+  // this page's own claim: no cooldown, every tap counted, on this scene.
   const beats = [];
-  const audio = { bell() {}, drum: (o) => beats.push(o) };
+  setDrumAudio({ drum: (o) => beats.push(o) });
   const ctx = fakeCtx();
-  ctx.audio = audio;
   const root = k13.build(ctx);
   root.setCamera(new THREE.PerspectiveCamera());
-  hitOnly(ctx, 'drum');
-
   root.update(0, 0);
-  ctx._taps.forEach((cb) => cb());
-  ctx._taps.forEach((cb) => cb());
+
+  const drums = collectDrums(root.scene);
+  assert.equal(drums.length, 1, 'the sweep finds this page’s drum');
+  const hit = { raycastFirst: () => ({}) };
+  beatDrumAt(drums, new THREE.PerspectiveCamera(), hit);
+  beatDrumAt(drums, new THREE.PerspectiveCamera(), hit);
   assert.equal(root.fragment().beats, 2, 'the drum still answers every tap');
   assert.equal(beats.length, 2);
+  setDrumAudio(null);
+});
+
+test('the bowl still wins a tap aimed at it, with the drum handled elsewhere', () => {
+  // The bowl is small and held in front of a figure standing between two big
+  // forgiving pick volumes, and main's drum handler now runs BEFORE this
+  // case's. That is only safe because the two do not overlap on screen — this
+  // pins it, since a re-staging that slid the drum behind the bowl would take
+  // the bowl's tap away with nothing failing.
+  const ctx = fakeCtx();
+  const root = k13.build(ctx);
+  const cam = rigCamera(k13.camera || {}, { far: 200 });
+  root.setCamera(cam);
+  root.update(1 / 60, 0);
+  root.scene.updateMatrixWorld(true);
+
+  const find = (n) => { let f = null; root.scene.traverse((o) => { if (!f && o.name === n) f = o; }); return f; };
+  const centre = (o) => new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3());
+  const drumMeshes = [];
+  find('drum').traverse((o) => { if (o.isMesh) drumMeshes.push(o); });
+
+  const ray = new THREE.Raycaster();
+  const at = centre(find('held-bowl')).project(cam);
+  ray.setFromCamera(new THREE.Vector2(at.x, at.y), cam);
+  assert.equal(ray.intersectObjects(drumMeshes, false).length, 0,
+    'a ray aimed at the bowl reaches the drum — main’s handler would take the tap first');
 });

@@ -107,13 +107,18 @@ export default {
     // and the monk just out of the hall door, robes on, facing the sound
     const front = { x: Math.sin(hall.rotation.y), z: Math.cos(hall.rotation.y) };
 
-    // The temple pair: where a bell hangs, a drum stands (k13's, off duty).
-    // By the hall's front corner, facing the bell across the yard — and
-    // SILENT here on purpose: this case is about answering THE BELL, and a
-    // second voice in the yard would blur the one sound the koan turns on.
+    // The temple pair: where a bell hangs, a drum stands (k13's). By the
+    // hall's front corner, facing the bell across the yard.
+    //
+    // It stood SILENT here for a while, on the argument that this case is
+    // about answering THE BELL and a second voice in the yard would blur it.
+    // What that actually produced was a drum you could see, walk up to and
+    // touch, which did nothing — and an inviting object that swallows a touch
+    // costs the page more than a second voice ever did. It answers now, from
+    // the kit, without this case wiring anything (kit/drum.js).
     const drum = makeDrum({ radius: 0.5, seed: 16 });
     drum.group.position.set(-3.5, 0, -2.0);
-    drum.group.rotation.y = 2.1;
+    drum.group.rotation.y = 1.1;
     scene.add(drum.group);
     const hallMonk = makeMonk({ height: 1.62, stout: 1.04 });
     hallMonk.position.set(hall.position.x + front.x * 1.9, 0, hall.position.z + front.z * 1.9);

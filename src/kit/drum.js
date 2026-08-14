@@ -27,6 +27,51 @@ const PERIOD = 0.42;     // the barrel's rock — light, quick, over in a moment
 const OMEGA = (2 * Math.PI) / PERIOD;
 const TAU = 0.30;
 const A0 = 0.055;        // radians of rock at a full strike
+// A DRUM ANSWERS WHEREVER IT STANDS, and the case does not have to ask for it.
+//
+// The behaviour belongs to the piece, not to the page it is standing on: a
+// drum is a thing you hit, the same way a hung chime is a thing that rings, and
+// nobody should have to remember to wire that up per case. It was wired per
+// case, and the result was exactly what you would expect — one of the two drums
+// in the book answered and the other was a barrel of scenery that swallowed
+// every touch aimed at it.
+//
+// So this is the chimes' idiom (kit/chimes.js), piece for piece: the group
+// carries a marker, main.js sweeps a scene once for them, and one central tap
+// strikes whichever the ray reaches. Same reason for the shared engine too —
+// resolved AT STRIKE TIME rather than at build, so a scene built before startup
+// finished does not capture a null and stay mute for its whole life. An
+// explicit engine still wins, which is how tests capture strikes on a stub.
+let sharedAudio = null;
+export function setDrumAudio(engine) { sharedAudio = engine || null; }
+
+// Every drum standing in a scene. Same sweep, same lifetime as collectChimes:
+// the list dies with the scene, so there is no registry to leak.
+export function collectDrums(root) {
+  const out = [];
+  if (!root) return out;
+  root.traverse((o) => { if (o.userData.drum) out.push(o.userData.drum); });
+  return out;
+}
+
+// The tap. Returns true when one was struck, so a caller knows the touch was
+// spent. No cooldown, deliberately — a drum is the one voice in the book you
+// are meant to be able to beat as fast as you can hit it, and the strike is a
+// superposed decay that stacks without snapping.
+const scratchPos = new THREE.Vector3();
+export function beatDrumAt(drums, camera, input) {
+  for (const d of drums) {
+    if (!input.raycastFirst(camera, d.pickTargets())) continue;
+    d.strike();
+    const engine = sharedAudio;
+    // .position on a nested group is a LOCAL position — finite, plausible and
+    // wrong. The world spot, every time.
+    engine && engine.drum && engine.drum({ force: 1, at: d.group.getWorldPosition(scratchPos) });
+    return true;
+  }
+  return false;
+}
+
 const SKIN0 = 0.18;      // skin bulge, as a fraction of its own depth
 const SKIN_TAU = 0.11;   // the head stops moving well before the frame does
 const MAX = 0.13;
@@ -180,15 +225,21 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
     heads[0].scale.x = 1 - bulge * 0.45;
   }
 
-  return {
+  let beats = 0;
+  const api = {
     group: g,
     pickTargets() { return [hit, body]; },
 
     strike() {
       struck.push(clock);
       if (struck.length > 6) struck.shift();
+      beats++;
       pose();
     },
+    // How many times it has been hit. On the drum rather than counted by the
+    // case, now that the case is not the one striking it — case 13's fragment
+    // reports this and its test reads it.
+    beats() { return beats; },
     // energy still in the head, 0 at rest
     ringing() {
       let e = 0;
@@ -203,4 +254,9 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
       pose();
     },
   };
+  // What the sweep finds. On the GROUP because a scene is the only thing
+  // main.js has a handle on, and everything that makes a drum a drum —
+  // pickTargets(), strike(), update() — lives on the object, not the Object3D.
+  g.userData.drum = api;
+  return api;
 }
