@@ -171,11 +171,7 @@ function applySky() {
   const night = theme === 'dark';
   const active = scenes.active();
   if (active) applyNightSky(active.scene, night);
-  // Case 28 hangs its own (kit/stars.js, at zero opacity until the candle goes
-  // out) and revealing them IS that case — so the reading light does not put a
-  // sky full of them up there ahead of the moment.
-  const own = active && active.scene.getObjectByName('stars');
-  const wanted = night && active && !own;
+  const wanted = night && !!active;
   // Off the OLD scene before it is disposed: buildKoan disposes the outgoing
   // root after this runs, and a shared field still parented to it would have
   // its one buffer disposed out from under every page after.

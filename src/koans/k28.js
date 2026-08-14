@@ -1,11 +1,10 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, INK, mixHex, hexToRgb } from '../palette.js';
-import { hash1 } from '../util/noise.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeVeranda, makeLantern, makeMonk, aimMonk, faceMonk,
-  makeLights, washMaterial, makeCylinderChime, makeStars,
+  makeLights, washMaterial, makeCylinderChime,
 } from '../kit/index.js';
 import { pageBase, skyFor } from '../render/nightsky.js';
 
@@ -19,8 +18,8 @@ const ID = 28;
 // This is the only case in the book that goes dark, and everything about it is
 // built for that one second: it is staged at night to begin with, so the paper
 // is already dim, and the light is a single lantern flame. Blow it out and the
-// page goes to ink, and then the stars come up — which were there the whole
-// time and could not be seen while the little light was burning.
+// page goes to ink. (It used to reveal a field of stars at the same moment;
+// the sky belongs to the reading light now — see the note where they stood.)
 //
 // Blow it out again and it relights; nothing here is a one-way door. AND IT
 // RELIGHTS ITSELF after a few seconds — the dark is a held breath, not a state
@@ -35,10 +34,9 @@ const DARK = mixHex(PAPER, INK, 0.93);      // and with the candle out
 const FADE = 1.5;                            // seconds to fall dark, and to come back
 // Seconds from the breath to the wick catching again, measured from the tap and
 // not from the moment it is fully dark — so of these five the page spends the
-// first 1.5 going out, about 3.5 in full dark under the stars, and then FADE
-// more coming back with the stars still up for most of it. A tap of any kind
-// cancels it: a reader who lights it by hand is not overruled two seconds
-// later, and one who blows it out again gets a fresh five.
+// first 1.5 going out, about 3.5 in full dark, and then FADE more coming back.
+// A tap of any kind cancels it: a reader who lights it by hand is not overruled
+// two seconds later, and one who blows it out again gets a fresh five.
 const RELIGHT = 5.0;
 // The recipe's own wind level, hoisted (k47's idiom) because the blow-out now
 // drives it live: the candle is blown out BY the wind, so while the page is
@@ -160,22 +158,14 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   glow.scale.set(0.7, 0.7, 1);
   scene.add(glow);
   
-  // ---- THE STARS --------------------------------------------------------
-  // Present from the first frame, at zero opacity. They are not created when
-  // the candle goes out; they are revealed, which is the entire point of the
-  // case and the reason they are built here rather than in the handler.
-  //
-  // The field itself is the kit's (kit/stars.js) — the reading light hangs the
-  // same one over every page after dark, and it skips this case precisely
-  // because these are here. Not camera-following like that one: this shell is
-  // the sky of a specific veranda on a specific night, and the reader is
-  // standing under it rather than looking out of it.
-  // spread and lift are this case's own, not the kit's: they are what the
-  // field was when it lived here, and the reveal was composed against them.
-  const stars = makeStars({ count: 220, radius: 70, seed: ID, size: 0.55, spread: 0.72, lift: 6 });
-  stars.setOpacity(0);
-  scene.add(stars.points);
-  
+  // NO STARS OF ITS OWN. This page used to hang a field of its own and reveal
+  // it as the candle went out — they were there the whole time, unseeable
+  // while the little light burned. It reads better without: the sky is the
+  // reading light's now, the same one over every page after dark
+  // (render/nightsky.js, kit/stars.js), and this case is left doing the one
+  // thing it is actually about. The blow-out still takes the page to ink and
+  // still swells the wind; it simply no longer runs a second event underneath.
+
   // One bronze cylinder hung in the veranda's own corner bay — the far end
   // from Ryutan and Tokusan, so it never competes with the candle for
   // attention, and hugging the end post (x=-1.95, clear of it by 0.25)
@@ -228,6 +218,7 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   let camera = null;
   let clock = 0;
   let lit = true;
+  let darkness = 0;
   let changedAt = -99;
   let blows = 0;
   let relights = 0;        // times it came back on its own, unasked
@@ -285,6 +276,10 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   const eased = k * k * (3 - 2 * k);
   const dark = lit ? 1 - eased : eased;
   const d = dark * dark * (3 - 2 * dark);
+  // kept for the fragment, which reports the same value the page colour, the
+  // key and the wind all ride — it used to read this back out of the star
+  // field’s opacity, and there is no longer a field to read it from
+  darkness = d;
   
   // Both ends of this page's own fade, read live: the reading light can take
   // the sky dark under us (render/nightsky.js), and this case has TWO page
@@ -296,7 +291,6 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   bg.copy(nightC).lerp(darkC, d);
   scene.fog.color.copy(bg);
   for (const [l, base] of lightRigs) l.intensity = base * (1 - 0.62 * d);
-  stars.setOpacity(0.92 * d);
   // the wind that blew it out: the bed swells with the dark and settles
   // with the relight, riding the same eased curve as everything else
   audio && audio.setWindLevel(BASE_WIND * (1 + WIND_SWELL * d));
@@ -320,7 +314,7 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   blows,
   lit,
   relights,
-  dark: +(stars.material.opacity / 0.92).toFixed(3),
+  dark: +darkness.toFixed(3),   // 0 is the candle burning, 1 is fully out
   chimeStrikes: nightChime.strikes(),
 };
       },
