@@ -92,10 +92,21 @@ export const DEFAULT_HOME = {
 // argument: those are the angles and distances a reader can already reach by
 // dragging, art-directed per case long before this existed. Staying inside them
 // means the drift cannot push the camera through a tree or under the ground in
-// any of the forty-nine scenes, with nothing to check by hand. The amounts are
-// deliberately modest — half the drag range in heading, six degrees of pitch, a
-// couple of units of breath in distance. A bit more movement than sitting
-// still, not a fairground ride. IT STARTS AT HOME. noise1(0, seed) is not 0.5 —
+// any of the forty-nine scenes, with nothing to check by hand.
+//
+// BUT THE BOUNDS ARE A CLAMP, NOT THE AMPLITUDE. The heading channel used to
+// swing half the drag range, which is a quarter turn on the stock envelope, and
+// that is what it looked like: every page turn in the look opened with the
+// camera visibly rotating off the shot the case was composed for and then back.
+// The two are different things — the drag range is a PERMISSION (how far a
+// reader may aim), the drift is how much the scene breathes on its own — and
+// tying one to the other also meant a case that allowed a wide orbit got a wild
+// drift for it. The three amplitudes below are now of a size with each other,
+// which is what "a bit more movement than sitting still, not a fairground ride"
+// was always supposed to mean. The bounds still clamp, so a case with a NARROW
+// orbit keeps its drift inside it.
+//
+// IT STARTS AT HOME. noise1(0, seed) is not 0.5 —
 // it is wherever that seed's curve happens to begin — so without the envelope
 // below the drift's very first frame was already 16.5 DEGREES off the case's
 // heading. Entering the look therefore threw the goal sideways and the damping
@@ -109,15 +120,17 @@ export const DEFAULT_HOME = {
 // Slow relative to the 37/53/41-second channels, so it reads as the scene
 // waking rather than as a separate move.
 export const WANDER_RAMP = 6;
+// How far each channel breathes, at full ramp: degrees, degrees, world units.
+export const WANDER_SWING = { heading: 6, pitch: 5.7, distance: 2 };
 export function wanderGoal(t, home, bounds) {
   const u = clamp(t / WANDER_RAMP, 0, 1);
   const ease = u * u * (3 - 2 * u);
   const swing = (period, seed) => (noise1(t / period, seed) * 2 - 1) * ease;   // -1..1, faded in
   return {
-    heading: clamp(home.heading + swing(37, 11) * bounds.headingRange * 0.5,
+    heading: clamp(home.heading + swing(37, 11) * WANDER_SWING.heading,
       home.heading - bounds.headingRange, home.heading + bounds.headingRange),
-    pitch: clamp(home.pitch + swing(53, 23) * 5.7, bounds.minPitch, bounds.maxPitch),
-    distance: clamp(home.distance + swing(41, 37) * 2, bounds.minDist, bounds.maxDist),
+    pitch: clamp(home.pitch + swing(53, 23) * WANDER_SWING.pitch, bounds.minPitch, bounds.maxPitch),
+    distance: clamp(home.distance + swing(41, 37) * WANDER_SWING.distance, bounds.minDist, bounds.maxDist),
   };
 }
 

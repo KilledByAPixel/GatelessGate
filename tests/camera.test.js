@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import {
-  makeCameraRig, wanderGoal, makeFreeCam, packFreeCam, unpackFreeCam,
+  makeCameraRig, wanderGoal, WANDER_SWING, makeFreeCam, packFreeCam, unpackFreeCam,
   eyePosition, cameraBlock,
 } from '../src/camera.js';
 
@@ -219,9 +219,31 @@ test('the ambient drift actually drifts, on all three axes', () => {
     for (const k of Object.keys(seen)) seen[k].push(g[k]);
   }
   const spread = (xs) => Math.max(...xs) - Math.min(...xs);
-  assert.ok(spread(seen.heading) > 11, `heading barely moves: ${spread(seen.heading)}`);
+  assert.ok(spread(seen.heading) > 6, `heading barely moves: ${spread(seen.heading)}`);
   assert.ok(spread(seen.pitch) > 2.9, `pitch barely moves: ${spread(seen.pitch)}`);
   assert.ok(spread(seen.distance) > 1, `distance barely moves: ${spread(seen.distance)}`);
+});
+
+test('the drift breathes; it does not swing off the composed shot', () => {
+  // THE BOUNDS ARE A CLAMP, NOT THE AMPLITUDE. The heading channel used to
+  // swing half the drag range — a quarter turn on the stock envelope — so every
+  // page turn in the look opened with the camera visibly rotating away from the
+  // shot the case was composed for. The drag range is a permission; the drift
+  // is how much the scene breathes. Tying them together also gave a case that
+  // allowed a WIDE orbit a wilder drift, which is backwards.
+  const wide = { ...BOUNDS, headingRange: 120 };
+  let worst = 0;
+  for (let t = 0; t < 3000; t += 0.25) {
+    worst = Math.max(worst, Math.abs(wanderGoal(t, HOME, wide).heading - HOME.heading));
+  }
+  assert.ok(worst <= WANDER_SWING.heading + 1e-9,
+    `the drift swings ${worst.toFixed(1)}° off the shot on a wide-orbit case`);
+
+  // ...and the three channels stay of a size with each other, which is what
+  // keeps any one of them from reading as a move rather than a breath.
+  const amps = Object.values(WANDER_SWING);
+  assert.ok(Math.max(...amps) / Math.min(...amps) < 4,
+    `one channel dwarfs the others: ${JSON.stringify(WANDER_SWING)}`);
 });
 
 test('the drift stays near the case home framing, not out at the limits', () => {
