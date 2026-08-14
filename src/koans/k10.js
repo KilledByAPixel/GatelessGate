@@ -36,7 +36,7 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 11 };
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -143,6 +143,7 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 11 };
   for (const c of cups) {
   if (c.tippedAt > -99) continue;
   if (!input.raycastFirst(camera, [c.hit])) continue;
+  touched && touched();
   c.tippedAt = clock;
   tipped++;
   // ceramic, and lighter than you expected — but still a sound the tap

@@ -64,7 +64,7 @@ const CAM = { distance: 13.8, target: [1.45, 1.3, -1.5], heading: 29, pitch: 21 
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -143,6 +143,7 @@ const CAM = { distance: 13.8, target: [1.45, 1.3, -1.5], heading: 29, pitch: 21 
   if (!hit) return;
   // let him finish the circle he is already walking
   if (clock - tuggedAt < TURN_SPAN) return;
+  touched && touched();
   tuggedAt = clock;
   tugs++;
   buffalo.tail.impulse(1.2);

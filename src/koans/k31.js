@@ -42,7 +42,7 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -184,9 +184,10 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   if (!camera) return;
   // the eave chime first, so a tap aimed at it never starts an asking
   const chimeHit = furin.pick(camera, input);
-  if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
+  if (chimeHit) { touched && touched(); furin.ring(0.75, chimeHit.tube); return; }
   if (!input.raycastFirst(camera, [hit])) return;
   if (clock - askedAt < POINT) return;
+  touched && touched();
   askedAt = clock;
   asked++;
   // the same four words, at the same volume, for everybody — a CHIME now, not

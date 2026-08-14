@@ -153,6 +153,41 @@ test('case 39: a grey stone holds — it knocks, and nothing sinks', () => {
   assert.equal(redTops(tops), 1);
 });
 
+// THE MARK IN THE CONTENTS FOLLOWS THE SAME RULING. Everything touchable in
+// this scene answers — the grey stones knock, the water rings — but ctx.touched
+// is reported for the red going under and nothing else: on this page the other
+// answers are the borrowed phrases that hold, and marking the row for one of
+// them would credit the reader with the gesture the case is about refusing.
+//
+// This is also what tests/staging.test.js's TOUCH_BEYOND_A_BLIND_TAP exemption
+// stands on. That net taps whatever a case offers FIRST, which here is always
+// stone 0 and is grey at every seed, so the net cannot reach the red and had to
+// stop requiring a report from this case. The requirement moves here, where a
+// tap can be aimed.
+test('case 39: only the red stone is a find — a grey one holds and reports nothing', () => {
+  const { ctx, tops, tap } = staged();
+  const red = tops.findIndex((t) => t.material.color.getHexString() === RED);
+  assert.ok(red >= 0, 'a red stone to aim at');
+  const grey = red === 0 ? 1 : 0;
+  tap(grey);
+  assert.equal(ctx._touched, 0, 'a stone that holds under your foot is not a find');
+  tap(red);
+  assert.equal(ctx._touched, 1, 'pushing the red under is');
+});
+
+test('case 39: the water rings without being a find', () => {
+  const { root, ctx } = staged();
+  let surface = null;
+  root.scene.traverse((o) => { if (o.name === 'surface' && !surface) surface = o; });
+  assert.ok(surface, 'the water has a surface');
+  // misses every stone, hits the sheet — the fall-through at the end of the
+  // case's tap handler
+  ctx.input.raycastFirst = (cam, objs) => (objs && objs[0] === surface
+    ? { object: surface, point: new THREE.Vector3(), distance: 1 } : null);
+  ctx._taps.forEach((cb) => cb());
+  assert.equal(ctx._touched, 0, 'the pond answers, but the find is the red stone');
+});
+
 test('case 39: the grey knock actually reaches the audio engine', () => {
   const calls = [];
   const ctx = fakeCtx();

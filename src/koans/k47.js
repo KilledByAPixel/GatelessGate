@@ -133,7 +133,7 @@ const CAM = { distance: 14.5, target: [-0.6, 0.8, -10.85], heading: 6.5, pitch: 
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -306,6 +306,7 @@ const CAM = { distance: 14.5, target: [-0.6, 0.8, -10.85], heading: 6.5, pitch: 
   const slot = gates[i].slot;
   if (slot === 0) return;                    // belt and braces
   if (clock - lastRing[slot] < 0.5) return;
+  touched && touched();
   lastRing[slot] = clock;
   taps[slot]++;
   // The bell belongs to the SLOT too — near barrier the biggest bell, far

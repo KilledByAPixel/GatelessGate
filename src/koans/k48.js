@@ -111,7 +111,7 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
@@ -316,6 +316,7 @@ const CAM = { distance: 10.1, target: [1.85, 1.3, -0.4], heading: 23.5, pitch: 1
   if (!input.raycastFirst(camera, kemboMeshes.length ? kemboMeshes : fanMeshes)) return;
   // let the shower he already called blow through
   if (clock - wavedAt < SHOWER_SPAN) return;
+  touched && touched();
   wavedAt = clock;
   waves++;
   // the fan itself: cloth and air, not a struck thing

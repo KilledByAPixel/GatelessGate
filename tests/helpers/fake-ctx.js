@@ -6,6 +6,12 @@ import * as THREE from '../../lib/three.module.js';
 // pass a stub to capture calls. Extra fields (accent, ...) ride through.
 export function fakeCtx({ audio = null, ...extra } = {}) {
   const taps = [], hovers = [];
+  // `_touched` counts the case reporting that its touch landed — main.js hands
+  // the real one to save.markTouched, which is what puts the red mark on the
+  // row in the Contents. Counted rather than flagged so a test can also assert
+  // that a touch the case REFUSED (a throttle, a gesture already running)
+  // reported nothing.
+  const state = { touched: 0 };
   return {
     audio,
     input: {
@@ -14,6 +20,8 @@ export function fakeCtx({ audio = null, ...extra } = {}) {
       raycastFirst: () => null,
       pointer: () => ({ x: 0, y: 0 }),
     },
+    touched: () => { state.touched += 1; },
+    get _touched() { return state.touched; },
     _taps: taps, _hovers: hovers,
     ...extra,
   };

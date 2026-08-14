@@ -56,7 +56,7 @@ const CAM = { distance: 10, target: [1.15, 1.45, -1.6], heading: 36.5, pitch: 16
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
@@ -162,11 +162,15 @@ const CAM = { distance: 10, target: [1.15, 1.45, -1.6], heading: 36.5, pitch: 16
   if (camera) {
   const hit = input.raycastFirst(camera, philTargets);
   if (hit && clock - touchedAt >= 0.5) {
+  touched && touched();
   touchedAt = clock;
   audio && audio.chimeStrike({ tube: 4, force: 0.5, at: hit.point });
   }
   }
   if (clock - askedAt < BOW_SPAN) return;      // let the bow he already gave you finish
+  // the bow answers a tap ANYWHERE — this case's own idiom, so the reported
+  // touch is ungated by a hit the same way the bow is
+  touched && touched();
   askedAt = clock;
   asked++;
   sounded = false;

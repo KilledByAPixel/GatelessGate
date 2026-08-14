@@ -1,5 +1,6 @@
 import { ACCENT } from '../palette.js';
 import { pageShape, narrationQueue } from './scroll_state.js';
+import { makeSitButton } from './sit_button.js';
 
 // The koan text panel (left column). Solid, always shown — no close/tuck control.
 // A quiet toolbar carries "Contents" (back) and "Sit"; the case seal appears once.
@@ -41,26 +42,15 @@ export function makeScroll({
 
   const spacer = document.createElement('span');
   spacer.className = 'spacer';
-  const sitWrap = document.createElement('span');
-  sitWrap.className = 'gg-sit-wrap';
-  const sit = document.createElement('button');
-  sit.className = 'gg-btn';
-  sit.textContent = 'Sit';
-  const pop = document.createElement('span');
-  pop.className = 'gg-sit-pop';
-  for (const m of [2, 5, 10, 20]) {
-    const b = document.createElement('button');
-    b.textContent = m + 'm';
-    b.onclick = () => { pop.classList.remove('open'); onSit && onSit(m); };
-    pop.appendChild(b);
-  }
-  sit.onclick = () => pop.classList.toggle('open');
-  sitWrap.append(sit, pop);
+  // The widget itself lives in ui/sit_button.js — the Contents offers a sitting
+  // too now, and two hand-built popovers with four durations each is the
+  // duplication that quietly goes out of step.
+  const sitBtn = makeSitButton({ onSit });
   // The reading light goes beside Sit, on the text's own toolbar rather than the
   // stage's: it is a setting for the page, and the stage is not affected by it.
   bar.append(back, nav, spacer);
   if (themeEl) bar.appendChild(themeEl);
-  bar.appendChild(sitWrap);
+  bar.appendChild(sitBtn.el);
   el.appendChild(bar);
 
   const head = document.createElement('div');

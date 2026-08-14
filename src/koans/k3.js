@@ -169,7 +169,7 @@ const CAM = { distance: 9.6, target: [0.8, 1.85, 0.55], heading: 17, pitch: 15.5
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -321,6 +321,7 @@ const CAM = { distance: 9.6, target: [0.8, 1.85, 0.55], heading: 17, pitch: 15.5
       const onBoy = onGutei ? null : input.raycastFirst(camera, boyMeshes);
       if (!onGutei && !onBoy) return;
       if (now - lastTap < 0.5) return;
+      touched && touched();
       lastTap = now;
       taps++;
       strike(onGutei ? master : pupil);

@@ -105,7 +105,7 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
@@ -217,6 +217,7 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   if (!input.raycastFirst(camera, [girlHit])) return;
   // let her finish the one she is already doing
   if (clock - calledAt < CALL_SPAN) return;
+  touched && touched();
   calledAt = clock;
   calls++;
   // A BELL, not a knock. A knock is a hand on wood — the sound of somebody

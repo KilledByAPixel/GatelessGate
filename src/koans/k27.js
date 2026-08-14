@@ -90,7 +90,7 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 30, pitch: 15,
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   // EXPERIMENT: a red sky for the erasing case. The one scene where you take
   // the world apart until only the page is left gets a page that is already
@@ -285,6 +285,7 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 30, pitch: 15,
   // let the sentence finish — CYCLE plus the widest seeded lead, so the last
   // straggling part is back before another touch can start it over
   if (clock - touchedAt < CYCLE + OFFSET / 2) return;
+  touched && touched();
   touchedAt = clock;
   touches++;
   // three notes as the three things go, lower and softer each time, and one

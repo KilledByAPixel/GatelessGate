@@ -51,7 +51,7 @@ const CAM = { distance: 10.6, target: [1, 2.1, -3.15], heading: 39.5, pitch: 10.
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   // snow light: the air is thick and the world ends close
@@ -233,6 +233,7 @@ const CAM = { distance: 10.6, target: [1, 2.1, -3.15], heading: 39.5, pitch: 10.
       if (!camera) return;
       const hit = input.raycastFirst(camera, [groundHit]);
       if (!hit) return;
+      touched && touched();
       // one per touch, and no cooldown at all: the only guard left is the pool
       // rotation, and reaching six times inside one wisp's life is a reader
       // hammering the page rather than reading it — they get the oldest back.

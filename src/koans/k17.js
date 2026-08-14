@@ -63,7 +63,7 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -181,9 +181,12 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   // the pair of cylinders first: probed and returned on before the big
   // call-hit box below ever gets a chance to start a call
   for (const c of chimes) {
-  if (c.pick(camera, input)) { c.ring(0.75); return; }
+  if (c.pick(camera, input)) { touched && touched(); c.ring(0.75); return; }
   }
   if (!input.raycastFirst(camera, [hit])) return;
+  // reported here, with the nod below and for the same reason: the touch has
+  // landed on him whether or not the call logic takes it
+  touched && touched();
   // the nod is UNGATED on purpose: even a tap the call logic refuses (bow in
   // progress, answer pending) still lands on him, and the body acknowledging
   // the touch is the whole of what the audit asked for

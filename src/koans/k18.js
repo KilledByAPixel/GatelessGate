@@ -31,7 +31,7 @@ const CAM = { distance: 11, target: [-0.5, 1.1, 0.5], heading: 46, pitch: 18 };
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -148,6 +148,7 @@ const CAM = { distance: 11, target: [-0.5, 1.1, 0.5], heading: 46, pitch: 18 };
   input.onTap(() => {
   if (!camera) return;
   if (!input.raycastFirst(camera, scale.pickTargets())) return;
+  touched && touched();
   // alternate which way it is pushed, so repeated taps rock it rather than
   // pumping it one way
   scale.disturb(nudges % 2 ? -1 : 1);

@@ -60,7 +60,7 @@ const CAM = { distance: 11, target: [1.05, 1.25, -3.35], heading: 17, pitch: 18 
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
@@ -201,8 +201,9 @@ const CAM = { distance: 11, target: [1.05, 1.25, -3.35], heading: 17, pitch: 18 
   // (Probing the cat first also silenced the staging net's hit-everything
   // tap: a silent stir must never be the FIRST thing a tap can reach.)
   const hit = input.raycastFirst(camera, flowerMeshes);
-  if (!hit && input.raycastFirst(camera, cat.meshes())) { cat.stir(); return; }
+  if (!hit && input.raycastFirst(camera, cat.meshes())) { touched && touched(); cat.stir(); return; }
   if (hit && releasePetal()) {
+  touched && touched();
   // A petal genuinely makes no sound. The most that is honest is a suggestion
   // of one — still the quietest voice in the book, just no longer its quietest
   // possible setting, which was under the threshold of being heard at all. It

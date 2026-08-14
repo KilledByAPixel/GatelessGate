@@ -79,7 +79,7 @@ const CAM = { distance: 12.2, target: [0.95, 0.9, -0.4], heading: 21, pitch: 20}
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -273,6 +273,12 @@ const CAM = { distance: 12.2, target: [0.95, 0.9, -0.4], heading: 21, pitch: 20}
           audio && audio.knock({ force: 0.35, at: s.pivot.position });
           return;
         }
+        // ...AND ONLY THE RED IS A FIND. Every other touchable thing in this
+        // scene answers — the grey stones knock, the water rings — but on this
+        // page they are the borrowed phrases that hold, so reporting them would
+        // put the mark in the Contents for the one gesture the case is about
+        // refusing. It is earned by pushing the red under and nothing else.
+        touched && touched();
         s.sunkAt = clock;
         sunk++;
         // it goes under where you were about to put your weight
@@ -293,6 +299,8 @@ const CAM = { distance: 12.2, target: [0.95, 0.9, -0.4], heading: 21, pitch: 20}
       if (!surface) return;
       const hit = input.raycastFirst(camera, [surface]);
       if (!hit) return;
+      // no touched() here either — see the red stone above; the water rings,
+      // but the find on this page is the red going under
       const local = water.group.worldToLocal(hit.point.clone());
       water.ripple(local.x, local.z);
       audio && audio.drip({ loud: false, at: hit.point });

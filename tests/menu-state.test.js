@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildRows, continueTarget, devEntries } from '../src/ui/menu_state.js';
+import {
+  buildRows, continueTarget, devEntries, markState, hasAnyMark,
+} from '../src/ui/menu_state.js';
+import { SIT_MINUTES } from '../src/ui/sit_button_state.js';
 import { SHOWCASE_SLUG } from '../src/koans/dev/index.js';
 
 const CASES = [
@@ -23,6 +26,78 @@ test('buildRows reflects staging and progress', () => {
   assert.equal(a.staged, false);
   assert.equal(a.read, false);
   assert.equal(rows.length, CASES.length, 'every case appears');
+});
+
+// The third mark. A page can be touched without being sat, and the row carries
+// all three independently — which of them the cell DRAWS is menu.js's call.
+test('buildRows carries the touch, separately from read and sat', () => {
+  const rows = buildRows(CASES, { read: { a: true, wind: true }, touched: { wind: true }, sat: {} }, reg);
+  const wind = rows.find((r) => r.slug === 'wind');
+  const a = rows.find((r) => r.slug === 'a');
+  assert.equal(wind.touched, true);
+  assert.equal(a.touched, false, 'read but never touched');
+  assert.equal(wind.sat, false);
+});
+
+// Every save written before this existed has no `touched` key at all.
+test('a progress object with no touched map yields no touches', () => {
+  const rows = buildRows(CASES, { read: { wind: true }, sat: {} }, reg);
+  assert.equal(rows.find((r) => r.slug === 'wind').touched, false);
+});
+
+// ---- the mark in the margin ----------------------------------------------
+
+test('one mark per row, rarest wins: sat over touched over read', () => {
+  assert.equal(markState({ read: true, touched: true, sat: true }), 'stamp');
+  assert.equal(markState({ read: true, touched: true, sat: false }), 'touched');
+  assert.equal(markState({ read: true, touched: false, sat: false }), 'dot');
+  assert.equal(markState({ read: false, touched: false, sat: false }), '');
+});
+
+// The marks are not a ladder — a page can be touched or sat without having
+// been read (a deep link, a headless mark), and the cell must still show the
+// deepest one rather than nothing.
+test('a mark shows even when the ones "before" it are missing', () => {
+  assert.equal(markState({ read: false, touched: true, sat: false }), 'touched');
+  assert.equal(markState({ read: false, touched: false, sat: true }), 'stamp');
+});
+
+// '' is what tells menu.js to draw a plain span instead of a button: an empty
+// cell has nothing to clear, and a focusable control that does nothing is
+// worse than no affordance at all.
+test('an unmarked row reports the empty state, not a falsy near-miss', () => {
+  assert.strictEqual(markState({}), '');
+});
+
+// ---- is there anything to clear? -----------------------------------------
+// What decides whether "Clear progress" is in the back matter at all.
+
+test('an unopened book offers nothing to clear', () => {
+  assert.equal(hasAnyMark({}), false);
+  assert.equal(hasAnyMark({ read: {}, touched: {}, sat: {} }), false);
+  assert.equal(hasAnyMark(), false);
+});
+
+test('any one mark of any kind is something to clear', () => {
+  assert.equal(hasAnyMark({ read: { a: true } }), true);
+  assert.equal(hasAnyMark({ touched: { a: true } }), true, 'touched but never read still counts');
+  assert.equal(hasAnyMark({ sat: { a: true } }), true);
+});
+
+// clearMark leaves the key behind as `false` in no path today, but a stored
+// save is JSON the reader could have edited, and a book that offers to clear
+// nothing is worse than one that quietly does not.
+test('a falsy mark is not a mark', () => {
+  assert.equal(hasAnyMark({ read: { a: false }, touched: { b: false } }), false);
+});
+
+// The Contents and the page toolbar build the same widget; this is what makes
+// "the same four durations" checkable without a browser.
+test('the sit offers four ascending durations', () => {
+  assert.ok(SIT_MINUTES.length >= 2);
+  for (const m of SIT_MINUTES) assert.ok(Number.isFinite(m) && m > 0, `${m} is not a duration`);
+  const sorted = [...SIT_MINUTES].sort((a, b) => a - b);
+  assert.deepEqual(SIT_MINUTES, sorted, 'the popover reads top to bottom');
 });
 
 test('continueTarget prefers lastSlug, then first read, else null', () => {

@@ -90,7 +90,7 @@ export default {
   camera: CAM,
 
   build(ctx) {
-    const { audio, input } = ctx;
+    const { audio, input, touched } = ctx;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -240,6 +240,7 @@ export default {
       if (!camera) return;
       const hit = input.raycastFirst(camera, hits);
       if (!hit) return;
+      touched && touched();
       touches++;
       touchedAt = clock;
       audio && audio.chimeStrike({ tube: 2, force: 0.5, at: hit.object.getWorldPosition(AT) });

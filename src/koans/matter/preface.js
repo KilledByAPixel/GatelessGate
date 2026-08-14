@@ -73,7 +73,7 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   camera: CAM,
   
   build(ctx = {}) {
-  const { audio = null, input = null } = ctx;
+  const { audio = null, input = null, touched = null } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -197,14 +197,15 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   const monkTargets = tapMeshes(monk);
   input && input.onTap(() => {
   if (!camera) return;
-  if (input.raycastFirst(camera, bell.pickTargets())) { ring(); return; }
+  if (input.raycastFirst(camera, bell.pickTargets())) { touched && touched(); ring(); return; }
   // THE MONK RINGS THE BELL. The one red thing on the book's first page is the
   // person about to walk it, so touching him acts THROUGH him — the bonshō
   // across the road sounds, same strike, same 0.5s floor, spatialised at the
   // bell rather than the man, because the bell is what sounds.
-  if (input.raycastFirst(camera, monkTargets)) { ring(); return; }
+  if (input.raycastFirst(camera, monkTargets)) { touched && touched(); ring(); return; }
   const hit = input.raycastFirst(camera, [flag.mesh]);
   if (hit) {
+  touched && touched();
   const local = flag.mesh.worldToLocal(hit.point.clone());
   flag.hoverAt(local.x, local.y);
   ruffles++;

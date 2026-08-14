@@ -50,7 +50,7 @@ export default {
   camera: CAM,
 
   build(ctx) {
-    const { audio, input } = ctx;
+    const { audio, input, touched } = ctx;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -185,9 +185,10 @@ export default {
       // targets, but probing it first (and returning) keeps the two voices
       // from ever being ambiguous about which tap rang which one
       const chimeHit = eaveChime.pick(camera, input);
-      if (chimeHit) { eaveChime.ring(0.75); return; }
+      if (chimeHit) { touched && touched(); eaveChime.ring(0.75); return; }
       if (!input.raycastFirst(camera, bell.pickTargets())) return;
       if (clock - lastRing < 0.5) return;
+      touched && touched();
       lastRing = clock;
       bell.strike();
       strikes++;

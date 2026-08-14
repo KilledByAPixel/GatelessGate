@@ -134,7 +134,7 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -329,6 +329,7 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   input.onTap(() => {
   if (!camera) return;
   if (input.raycastFirst(camera, [moon])) {
+  touched && touched();
   // the snow outlasts the swell, so THAT is what gates a second touch
   if (clock - riseAt >= SNOW_SPAN) riseAt = clock;
   breeze = 1;
@@ -341,6 +342,7 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   }
   const hit = input.raycastFirst(camera, meadow);
   if (hit) {
+  touched && touched();
   breeze = 1;
   touches++;
   }

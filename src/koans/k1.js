@@ -25,7 +25,7 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, FOG_BASE);
@@ -123,6 +123,7 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   if (!camera || muPhase >= 0) return;
   const hit = input.raycastFirst(camera, hitTargets);
   if (!hit) return;
+  touched && touched();
   muPhase = 0;
   // Not a strike — nothing here is touched. The world thins away and
   // comes back, and the sound is that shape: one long breath over the

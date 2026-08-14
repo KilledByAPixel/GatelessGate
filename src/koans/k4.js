@@ -36,7 +36,7 @@ const CAM = { distance: 9, target: [0.5, 1.7, -1.4], heading: 29, pitch: 12.5 };
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -279,9 +279,10 @@ const CAM = { distance: 9, target: [0.5, 1.7, -1.4], heading: 29, pitch: 12.5 };
   // the chime first, so a tap aimed at it never falls through to the
   // scroll's own refusal — same probe-then-return order as case 29
   const chimeHit = furin.pick(camera, input);
-  if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
+  if (chimeHit) { touched && touched(); furin.ring(0.75, chimeHit.tube); return; }
   if (!input.raycastFirst(camera, [hit])) return;
   if (clock - strokeAt < STROKE) return;      // one refusal at a time
+  touched && touched();
   strokeAt = clock;
   attempts++;
   audio && audio.chimeStrike({ tube: 2, force: 0.5, at: scroll.position });

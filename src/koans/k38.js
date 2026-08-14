@@ -44,7 +44,7 @@ const CAM = { distance: 14.3, target: [1.05, 1.55, -1.6], heading: 156.5, pitch:
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   // a touch thinner than the house 0.030: the oak sits sixteen units out and
@@ -239,6 +239,7 @@ const CAM = { distance: 14.3, target: [1.05, 1.55, -1.6], heading: 156.5, pitch:
       if (!camera) return;
       const hit = input.raycastFirst(camera, oakMeshes);
       if (!hit) return;
+      touched && touched();
       taps++;
       for (let i = 0; i < PER_TAP; i++) release(hit.point);
       // the trunk you touched, and the leaves letting go of it

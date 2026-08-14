@@ -58,7 +58,7 @@ const CAM = { distance: 11.5, target: [1.05, 1.45, -1.75], heading: 35, pitch: 1
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -180,6 +180,7 @@ const CAM = { distance: 11.5, target: [1.05, 1.45, -1.75], heading: 35, pitch: 1
   if (!camera) return;
   const hit = input.raycastFirst(camera, targets);
   if (!hit) return;
+  touched && touched();
   cat.stir();
   // the stretch was silent, and a touch wants an answer. cloth is the palette's
   // fur — a brush, not an impact; nothing sharper belongs anywhere near this

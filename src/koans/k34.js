@@ -61,7 +61,7 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
@@ -175,9 +175,10 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   if (!camera) return;
   // the eave chime first, so a tap aimed at it never also calls the rain
   const chimeHit = eaveChime.pick(camera, input);
-  if (chimeHit) { eaveChime.ring(0.75, chimeHit.tube); return; }
+  if (chimeHit) { touched && touched(); eaveChime.ring(0.75, chimeHit.tube); return; }
   if (!input.raycastFirst(camera, hutMeshes)) return;
   if (clock - lastAt < 0.5) return;
+  touched && touched();
   lastAt = clock;
   // ask, and the sky answers: the shower leans in for a moment
   rain.surge(SURGE);

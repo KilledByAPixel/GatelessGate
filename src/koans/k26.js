@@ -38,7 +38,7 @@ const CAM = { distance: 11.3, target: [0.1, 1.45, 0.1], heading: -32.5, pitch: 1
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -164,6 +164,7 @@ const CAM = { distance: 11.3, target: [0.1, 1.45, 0.1], heading: -32.5, pitch: 1
   input.onTap(() => {
   if (!camera) return;
   if (!input.raycastFirst(camera, screen.pickTargets())) return;
+  touched && touched();
   screen.toggle();
   pulls++;
   });

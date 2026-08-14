@@ -37,7 +37,7 @@ const CAM = { distance: 14.2, target: [0.95, 1.15, -1.4], heading: 27.5, pitch: 
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
@@ -168,6 +168,9 @@ const CAM = { distance: 14.2, target: [0.95, 1.15, -1.4], heading: 27.5, pitch: 
   if (!camera || !surface) return;
   const hit = input.raycastFirst(camera, [surface]);
   if (!hit) return;
+  // the TAP, not the hover above: brushing the water with the cursor is not
+  // the reader finding anything
+  touched && touched();
   const local = water.group.worldToLocal(hit.point.clone());
   water.ripple(local.x, local.z);
   audio && audio.drip({ loud: true, at: hit.point });

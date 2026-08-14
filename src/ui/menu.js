@@ -1,12 +1,14 @@
-import { buildRows, continueTarget, devEntries } from './menu_state.js';
+import { buildRows, continueTarget, devEntries, markState, hasAnyMark } from './menu_state.js';
 import { searchCases } from './search.js';
+import { makeSitButton } from './sit_button.js';
 import MATTER from '../koans/text/matter.js';
 import { readingEntries } from '../spine.js';
 
 // The table of contents — a left-panel view over the idling stage scene.
 // Reads as a book's contents, not a level select.
 export function makeMenu({
-  cases, progress, isStaged, onSelect, onAbout, devMode = false, onDev, themeEl = null,
+  cases, progress, isStaged, onSelect, onAbout, onClear, onClearAll, onSit,
+  devMode = false, onDev, themeEl = null,
 } = {}) {
   const el = document.createElement('div');
   el.className = 'gg-view gg-menu hidden';
@@ -23,6 +25,13 @@ export function makeMenu({
   h1.textContent = 'The Gateless Gate';
   head.appendChild(h1);
   if (themeEl) head.appendChild(themeEl);
+  // SIT FROM THE CONTENTS TOO, beside the reading light and built from the same
+  // widget every page's toolbar uses (ui/sit_button.js). It was the one control
+  // on every page of the book that the Contents did not offer, which made it
+  // read as belonging to a case — and a sitting belongs to the reader. What you
+  // sit in front of here is the hub landscape the Contents already idles over.
+  const sitBtn = onSit ? makeSitButton({ onSit }) : null;
+  if (sitBtn) head.appendChild(sitBtn.el);
   const lede = document.createElement('p');
   lede.className = 'lede';
   lede.textContent = 'An interactive edition of the Mumonkan';
@@ -64,13 +73,45 @@ export function makeMenu({
   about.textContent = 'About';
   about.title = 'The translation, the lineage, and the credits';
   about.onclick = () => onAbout && onAbout();
+  // CLEAR PROGRESS, beside About. It asks TWICE, in place: the first click
+  // arms it and the label becomes the question, the second does it. A browser
+  // confirm() would be the only piece of operating system on a page that is
+  // otherwise a book, and one click is too few for something that takes the
+  // marks off all fifty-one rows with no undo.
+  //
+  // It disarms three ways — any other click in the panel (the listener at the
+  // bottom of this block), every render, and arriving at the Contents (open())
+  // — so an armed button cannot outlive the reader's attention and go off on a
+  // click they meant for something else. The third is not redundant: the panel
+  // listener cannot see a click that landed on the STAGE.
+  const clearAll = document.createElement('button');
+  clearAll.className = 'gg-about-link gg-clear-all';
+  let armed = false;
+  function paintClearAll() {
+    clearAll.textContent = armed ? 'Clear progress?' : 'Clear progress';
+    clearAll.classList.toggle('armed', armed);
+    clearAll.title = armed
+      ? 'Click again to take every mark off every page'
+      : 'Take every mark off every page — the reading light and the sound stay as they are';
+  }
+  clearAll.onclick = (e) => {
+    // ...or the panel-wide disarm below would undo this very click
+    e.stopPropagation();
+    if (!armed) { armed = true; paintClearAll(); return; }
+    armed = false;
+    paintClearAll();
+    onClearAll && onClearAll();
+  };
+  paintClearAll();
   // The reading light was here; it is up in the title row now (see above), so
-  // this line carries About alone. NOT both — one page with two switches for
-  // the same thing is worse than one with the switch in the wrong place.
+  // this line carries About and the clear. NOT the light — one page with two
+  // switches for the same thing is worse than one with the switch in the wrong
+  // place.
   const colophon = document.createElement('div');
   colophon.className = 'gg-colophon';
-  colophon.appendChild(about);
+  colophon.append(about, clearAll);
   backMatter.appendChild(colophon);
+  el.addEventListener('click', () => { if (armed) { armed = false; paintClearAll(); } });
 
   // The Developer section, after About — the tools, not the book. Rebuilt from
   // scratch on every render and EMPTY unless developer mode is on: with the
@@ -109,6 +150,37 @@ export function makeMenu({
   find.onkeydown = (e) => { if (e.key === 'Escape') clearQuery(); };
   findClear.onclick = () => { clearQuery(); find.focus(); };
 
+  // THE MARK IN THE MARGIN — one cell, three states, and the reader can take
+  // it off. WHICH state is markState's (menu_state.js, where it is testable);
+  // this draws it.
+  //
+  // Read and touched are a drawn circle rather than a glyph ('·' at font-size
+  // 22 and line-height 0, which is what this was, is a typographic mid-dot
+  // barely visible against the ruled list); the sit keeps its ◉, which is a
+  // ring and reads as a different KIND of mark, not a bigger one.
+  //
+  // It is a button whenever there is anything to clear, and a plain span
+  // otherwise — an empty cell has no action, and a focusable one that does
+  // nothing is worse than no affordance. Either way the cell keeps its width,
+  // so the rows stay ruled straight down the page.
+  function markCell(row) {
+    const state = markState(row);
+    if (!state) {
+      const blank = document.createElement('span');
+      blank.className = 'mark';
+      return blank;
+    }
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mark ' + state;
+    // the sit is the one mark that is a glyph; the other two are drawn in CSS
+    b.textContent = state === 'stamp' ? '◉' : '';
+    b.title = 'Clear the mark on this page';
+    b.setAttribute('aria-label', `Clear the mark on ${row.title}`);
+    b.onclick = () => onClear && onClear(row.slug);
+    return b;
+  }
+
   let lastProg = progress;
   // The contents are the reading spine: the preface, the forty-nine, the
   // afterword. Search still runs over the cases alone, which is why `cases`
@@ -128,6 +200,7 @@ export function makeMenu({
     found.textContent = `${results.length} of 49`;
     const read = prog.read || {};
     const sat = prog.sat || {};
+    const touched = prog.touched || {};
     for (const r of results) {
       const c = cases.find((x) => x.id === r.id);
       if (!c) continue;
@@ -144,9 +217,11 @@ export function makeMenu({
         ttl.appendChild(q);
       }
       ttl.onclick = () => onSelect && onSelect(c.slug);
-      const mark = document.createElement('span');
-      mark.className = 'mark ' + (sat[c.slug] ? 'stamp' : read[c.slug] ? 'dot' : '');
-      mark.textContent = sat[c.slug] ? '◉' : '';
+      // the same cell the contents draws — a search hit is still that page's row
+      const mark = markCell({
+        slug: c.slug, title: c.title,
+        read: !!read[c.slug], sat: !!sat[c.slug], touched: !!touched[c.slug],
+      });
       li.append(num, ttl, mark);
       list.appendChild(li);
     }
@@ -158,6 +233,12 @@ export function makeMenu({
     cont.style.display = query ? 'none' : '';
     findClear.style.display = query ? '' : 'none';
     backMatter.style.display = query ? 'none' : '';
+    // An unopened book has nothing to clear, so it is not offered one — and a
+    // render is also where an armed button goes back to rest, so a click that
+    // changed the page cannot leave a loaded question sitting in the colophon.
+    armed = false;
+    paintClearAll();
+    clearAll.style.display = onClearAll && hasAnyMark(prog) ? '' : 'none';
     renderDev();
     if (renderResults(prog)) return;
     list.innerHTML = '';
@@ -170,10 +251,7 @@ export function makeMenu({
       num.textContent = r.id === null ? '' : String(r.id);
       const ttl = document.createElement('span'); ttl.className = 'ttl'; ttl.textContent = r.title;
       ttl.onclick = () => onSelect && onSelect(r.slug);
-      const mark = document.createElement('span');
-      mark.className = 'mark ' + (r.sat ? 'stamp' : r.read ? 'dot' : '');
-      mark.textContent = r.sat ? '◉' : '';
-      li.append(num, ttl, mark);
+      li.append(num, ttl, markCell(r));
       list.appendChild(li);
     }
     cont.innerHTML = '';
@@ -191,7 +269,11 @@ export function makeMenu({
   let open = false;
   return {
     el,
-    open() { open = true; el.classList.remove('hidden'); },
+    // Disarmed on the way in as well as on every render: the panel-wide click
+    // listener cannot see a click that landed on the STAGE, so an armed clear
+    // could otherwise wait through a whole detour and go off on a single click
+    // when the reader came back. Arriving at the Contents is a fresh page.
+    open() { open = true; armed = false; paintClearAll(); el.classList.remove('hidden'); },
     close() { open = false; el.classList.add('hidden'); },
     isOpen() { return open; },
     // The workbench owns the flag; the menu is told about it. Re-renders in

@@ -52,7 +52,7 @@ export default {
   camera: CAM,
 
   build(ctx) {
-    const { audio, input } = ctx;
+    const { audio, input, touched } = ctx;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.03);
@@ -279,10 +279,11 @@ export default {
       // mutation-verifies this second consequence by deleting the return).
       for (const single of singles) {
         const singleHit = single.pick(camera, input);
-        if (singleHit) { single.ring(0.75, singleHit.tube); return; }
+        if (singleHit) { touched && touched(); single.ring(0.75, singleHit.tube); return; }
       }
       const hit = input.raycastFirst(camera, [flag.mesh]);
       if (hit) {
+        touched && touched();
         const on = flag.toggleWind();
         audio && audio.setWindLevel(on ? baseWind : 0);
         // the toggle itself was silent — the wind's own bed ramps too slowly to

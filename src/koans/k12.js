@@ -113,7 +113,7 @@ export default {
   camera: CAM,
 
   build(ctx) {
-    const { audio, input } = ctx;
+    const { audio, input, touched } = ctx;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -236,6 +236,7 @@ export default {
       if (!camera) return;
       if (!input.raycastFirst(camera, [hit])) return;
       if (pending >= 0) return;
+      touched && touched();
       line = (line % LINES) + 1;
       calls++;
       pending = clock + ECHO;

@@ -36,7 +36,7 @@ const CAM = { distance: 17, target: [-0.8, 3.05, -1.6], heading: 31.5, pitch: 10
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.024);       // thinner: the scale needs depth
@@ -210,6 +210,7 @@ const CAM = { distance: 17, target: [-0.8, 3.05, -1.6], heading: 31.5, pitch: 10
   if (!camera) return;
   if (!input.raycastFirst(camera, [hit])) return;
   if (clock - lastToll < 2.0) return;      // it does not hurry for anyone
+  touched && touched();
   lastToll = clock;
   tolls++;
   // The colossus's own bell: bigger and deeper than k16's temple bonshō, which

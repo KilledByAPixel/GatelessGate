@@ -62,6 +62,10 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 .gg-menu-head { display: flex; align-items: baseline; gap: 12px; }
 .gg-menu-head h1 { flex: 1; }
 .gg-menu-head .gg-theme { flex: none; }
+/* Sit sits beside the reading light in the title row, the same pair the page's
+   own toolbar carries. `flex: none` so the button keeps its size against the
+   title's flex: 1, and the popover hangs from it exactly as it does on a page. */
+.gg-menu-head .gg-sit-wrap { flex: none; }
 .gg-menu h1 { font-weight: normal; letter-spacing: 0.04em; font-size: 30px; margin: 0 0 4px; }
 .gg-menu .lede { color: var(--gray); font-style: italic; margin: 0 0 18px; }
 .gg-menu ol { list-style: none; padding: 0; margin: 12px 0 0; }
@@ -74,9 +78,47 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 .gg-menu li .ttl { cursor: pointer; }
 .gg-menu li .ttl:hover { color: var(--accent); }
 .gg-menu li.unstaged .ttl { color: rgba(var(--ink-rgb),0.62); }
-.gg-menu li .mark { width: 18px; text-align: center; flex: none; }
-.gg-menu li .dot::before { content: '·'; color: var(--gray); font-size: 22px; line-height: 0; }
+/* THE MARK IN THE MARGIN. Every cell keeps its width whether or not it carries
+   a mark, so the rows stay ruled straight down the page. A marked cell is a
+   BUTTON — clicking it takes the mark off — and the reset here is what keeps a
+   button from looking like one on a book page. */
+.gg-menu li .mark {
+  width: 18px; flex: none; box-sizing: content-box;
+  padding: 0; border: 0; background: none; font: inherit; color: inherit;
+  display: flex; align-items: center; justify-content: center; align-self: center;
+  min-height: 18px;
+}
+/* The hit area is much bigger than the mark, and costs no layout: the padding
+   is pulled straight back out again by an equal negative margin, so the column
+   stays the width set above while a finger gets something to aim at. A 7px
+   circle is not a tap target. */
+.gg-menu li button.mark {
+  cursor: pointer; -webkit-appearance: none; appearance: none;
+  padding: 7px 9px; margin: -7px -9px;
+}
+/* Read and touched are a DRAWN circle, not a glyph. This was '·' at font-size
+   22 with line-height 0 — a typographic mid-dot, near-invisible against the
+   ruled list, which is the whole reason nobody could see their own progress. */
+.gg-menu li .dot::before, .gg-menu li .touched::before {
+  content: ''; display: block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--ink); transition: opacity 0.15s;
+}
+/* The page answered you: the seal's own hue, the one red thing on a monochrome
+   page — the same promise the diorama's accent makes. */
+.gg-menu li .touched::before { background: var(--accent); }
+/* The sit keeps its ◉ — a ring, so it reads as a different KIND of mark rather
+   than a bigger one, and it wins the cell over both dots. */
 .gg-menu li .stamp { color: var(--accent); }
+/* What "you can take this off" looks like: the mark fades under the cursor
+   rather than growing a hit box. Nothing else on this page has a frame — and
+   the `background: none` is load-bearing, not a repeat of the reset above: the
+   panel-wide `.gg-view button:hover` tint would otherwise draw a grey square
+   around the one control on this page that must not look like a control. */
+.gg-menu li button.mark:hover, .gg-menu li button.mark:focus-visible { background: none; }
+.gg-menu li button.mark:hover::before,
+.gg-menu li button.mark:focus-visible::before { opacity: 0.3; }
+.gg-menu li button.mark.stamp:hover,
+.gg-menu li button.mark.stamp:focus-visible { opacity: 0.3; }
 .gg-continue { margin: 4px 0 10px; }
 
 /* Search. A ruled line to write on, not a widget — the panel is a book page and
@@ -129,6 +171,11 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
   font-family: Georgia, serif; font-size: 15px; font-style: italic; color: var(--gray);
 }
 .gg-about-link:hover { color: var(--accent); background: none; }
+/* Clear progress, at the far end of the colophon from About. It asks twice —
+   `armed` is the question showing — and the armed state is the one moment this
+   quiet italic link is allowed to be the red on the page, because that is the
+   click that cannot be undone. */
+.gg-clear-all.armed { color: var(--accent); font-style: italic; }
 
 /* Developer mode's own section, under the back matter. Never rendered at all
    unless the workbench's "Developer mode" box is ticked, so nothing here is

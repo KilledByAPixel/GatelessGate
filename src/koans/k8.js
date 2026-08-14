@@ -32,7 +32,7 @@ const CAM = { distance: 9, target: [0.7, 1.25, 0.4], heading: 31.5, pitch: 19 };
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -140,6 +140,7 @@ const CAM = { distance: 9, target: [0.7, 1.25, 0.4], heading: 31.5, pitch: 19 };
   input.onTap(() => {
   if (!camera) return;
   if (!input.raycastFirst(camera, wheel.pickTargets())) return;
+  touched && touched();
   const whole = wheel.toggle();
   pulls++;
   // wood coming apart, and wood gathering itself back

@@ -45,7 +45,7 @@ const CAM = { distance: 10.6, target: [0.4, 1.9, -0.2], heading: 33, pitch: 12.5
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -184,11 +184,12 @@ const CAM = { distance: 10.6, target: [0.4, 1.9, -0.2], heading: 33, pitch: 12.5
   // the gate chime first: probed and returned on before the flag-mesh
   // check below, so ringing the chime never also toggles the wind
   const chimeHit = furin.pick(camera, input);
-  if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
+  if (chimeHit) { touched && touched(); furin.ring(0.75, chimeHit.tube); return; }
   // THE SIGN, probed before the banner. It is a solid board and the banner is a
   // big flapping sheet behind it, so a tap meant for the board must never be
   // eaten by cloth that happens to be streaming across it that frame.
   if (input.raycastFirst(camera, signTargets)) {
+  touched && touched();
   turns++;
   turnFrom = signYaw;
   turnAt = clock;
@@ -197,6 +198,7 @@ const CAM = { distance: 10.6, target: [0.4, 1.9, -0.2], heading: 33, pitch: 12.5
   return;
   }
   if (!input.raycastFirst(camera, [flag.mesh])) return;
+  touched && touched();
   const on = flag.toggleWind();
   stills++;
   // flag.group.position is the pole's GROUND base (y = 0); the sound

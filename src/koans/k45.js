@@ -58,6 +58,9 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
   camera: CAM,
   
   build(ctx) {
+  // ctx.touched is read through ctx here, not destructured like everywhere
+  // else in the book: this case already has a `touched` of its own — the tap
+  // COUNT it publishes as a fragment key, which tests/k45.test.js reads.
   const { audio, input } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
@@ -297,6 +300,7 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
     input.onTap(() => {
       if (!camera) return;
       if (!input.raycastFirst(camera, [hit])) return;
+      ctx.touched && ctx.touched();
       touched++;
       shyAt = clock;
       // a chime, not a knock — the market row around it already answers in

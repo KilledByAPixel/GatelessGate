@@ -76,7 +76,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -304,6 +304,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
       if (!camera) return;
       const tap = input.raycastFirst(camera, [hit]);
       if (!tap) return;
+      touched && touched();
       rockedAt = clock;
       visits++;
       // BOTH verdicts chime now — the odd-tap knock alone read as a door

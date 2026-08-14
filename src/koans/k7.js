@@ -37,7 +37,7 @@ export default {
   camera: CAM,
 
   build(ctx) {
-    const { audio, input } = ctx;
+    const { audio, input, touched } = ctx;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -179,12 +179,13 @@ export default {
     input.onTap(() => {
       if (!camera) return;
       // the deer-scarer first: a tap tips it without waiting out the fill
-      if (input.raycastFirst(camera, odoshi.pickTargets())) { odoshi.tip(); return; }
+      if (input.raycastFirst(camera, odoshi.pickTargets())) { touched && touched(); odoshi.tip(); return; }
       // The bowl is ITS OWN thing now — it used to answer with a ripple in the
       // basin two steps away, a cause with somebody else's effect. Touched, it
       // rocks on its foot and clinks like the empty thing it is — the ceramic
       // touch voice, k40's vase being the precedent for fired clay.
       if (input.raycastFirst(camera, bowlMeshes)) {
+        touched && touched();
         rocks.push(clock);
         if (rocks.length > 4) rocks.shift();
         rocked++;
@@ -194,6 +195,7 @@ export default {
       // touching the water rings it where you touched
       const onWater = surface ? input.raycastFirst(camera, [surface]) : null;
       if (onWater) {
+        touched && touched();
         const local = water.group.worldToLocal(onWater.point.clone());
         water.ripple(local.x, local.z);
         audio && audio.drip({ loud: true, at: onWater.point });   // the touch you see is the drop you hear

@@ -56,7 +56,7 @@ const CAM = { distance: 10.8, target: [2.05, 1, -0.5], heading: 57.5, pitch: 20 
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -155,6 +155,7 @@ const CAM = { distance: 10.8, target: [2.05, 1, -0.5], heading: 57.5, pitch: 20 
   if (!camera) return;
   const hit = input.raycastFirst(camera, vaseMeshes);
   if (hit) {
+  touched && touched();
   vase.nudge();
   // stoneware, tipped and righting itself — the seal of this koan is the
   // only thing in the scene that could make a noise

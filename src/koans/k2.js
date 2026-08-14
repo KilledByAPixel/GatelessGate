@@ -60,7 +60,7 @@ const CAM = {distance: 11, target: [-0.6, 1.5, -2.25], heading: 27.5, pitch: 16.
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -159,6 +159,7 @@ const CAM = {distance: 11, target: [-0.6, 1.5, -2.25], heading: 27.5, pitch: 16.
   if (!camera) return;
   const hit = input.raycastFirst(camera, foxMeshes);
   if (hit) {
+  touched && touched();
   fox.notice();
   audio && audio.breath({ force: 0.6, at: hit.point });
   // ...and a small chime at the touch — the breath alone starts too slowly to

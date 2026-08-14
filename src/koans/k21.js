@@ -44,7 +44,7 @@ const CAM = { distance: 10, target: [0.8, 0.9, 0.2], heading: 4, pitch: 14 };
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.032);
@@ -184,6 +184,7 @@ const CAM = { distance: 10, target: [0.8, 0.9, 0.2], heading: 4, pitch: 14 };
     input.onTap(() => {
       if (!camera) return;
       if (!input.raycastFirst(camera, [hit])) return;
+      touched && touched();
       knocks.push(clock);
       if (knocks.length > 4) knocks.shift();
       taps++;

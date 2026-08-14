@@ -46,7 +46,7 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   // the dream's weather: everything past the hall is already gone
@@ -231,6 +231,7 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   input.onTap(() => {
   if (!camera) return;
   if (!input.raycastFirst(camera, [hit])) return;
+  touched && touched();
   struckAt = clock;
   strikes++;
   audio && audio.knock({ force: 1, at: gavel.getWorldPosition(scratchPos) });

@@ -109,7 +109,7 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.028);
@@ -291,6 +291,7 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   if (!camera) return;
   if (!surface || !input.raycastFirst(camera, [surface])) return;
   if (clock - gustAt < GUST_IN + GUST_HOLD) return;   // let a squall land before the next
+  touched && touched();
   gustAt = clock;
   gusts++;
   // the sound of it arriving. Not an impact — nothing here is struck, and a

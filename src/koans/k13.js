@@ -38,7 +38,7 @@ export default {
   camera: CAM,
 
   build(ctx) {
-    const { audio, input } = ctx;
+    const { audio, input, touched } = ctx;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -159,6 +159,7 @@ export default {
       // one of the big forgiving pick volumes either side of him
       if (input.raycastFirst(camera, bowlMeshes)) {
         if (clock - turnAt < TURN_SPAN) return;      // let him finish going back
+        touched && touched();
         turnAt = clock;
         turns++;
         // fired clay, empty — k7's bowl and k40's vase are the precedent
@@ -173,6 +174,7 @@ export default {
       // still holds even though main's handler runs before this one.
       if (input.raycastFirst(camera, bell.pickTargets())) {
         if (clock - lastRing < 0.5) return;
+        touched && touched();
         lastRing = clock;
         bell.strike();
         rings++;

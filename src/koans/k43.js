@@ -33,7 +33,7 @@ const CAM = { distance: 10.6, target: [0.7, 0.7, -0.55], heading: 12, pitch: 5.5
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -157,6 +157,7 @@ const CAM = { distance: 10.6, target: [0.7, 0.7, -0.55], heading: 12, pitch: 5.5
   input.onTap(() => {
   if (!camera) return;
   if (!input.raycastFirst(camera, [hit, staff, grip, ...shuzanMeshes])) return;
+  touched && touched();
   shakes.push(clock);
   if (shakes.length > 4) shakes.shift();
   taps++;

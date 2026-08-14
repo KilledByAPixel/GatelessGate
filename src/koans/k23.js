@@ -81,7 +81,7 @@ const CAM = { distance: 10.1, target: [0.2, 1.3, -0.9], heading: 31.5, pitch: 16
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -273,6 +273,7 @@ const CAM = { distance: 10.1, target: [0.2, 1.3, -0.9], heading: 31.5, pitch: 16
       if (!camera) return;
       const hit = input.raycastFirst(camera, grabMeshes);
       if (!hit) return;
+      touched && touched();
       taps++;
       bundle.budge(APPROACH + Math.PI);   // it leans toward the pull, and declines
       audio && audio.cloth({ force: 0.9, at: hit.point });

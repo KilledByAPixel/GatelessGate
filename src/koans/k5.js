@@ -68,7 +68,7 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -35, pitch: -6
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -279,6 +279,7 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -35, pitch: -6
   if (!camera) return;
   const hit = input.raycastFirst(camera, danglerMeshes);
   if (hit) {
+  touched && touched();
   dangler.sway(1);
   sways++;
   // THE SILENCE ENDED HERE TOO. This case held out longest — it was on

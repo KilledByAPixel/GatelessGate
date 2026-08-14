@@ -33,7 +33,7 @@ const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 1
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.026);
@@ -165,6 +165,7 @@ const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 1
   // is a half-metre mark four metres up.
   if (!birds.pick(camera, input)) return;
   if (clock - lastAsk < 0.8) return;
+  touched && touched();
   lastAsk = clock;
   asked++;
   // they quicken, climb, and beat harder, and it decays away on its own over a

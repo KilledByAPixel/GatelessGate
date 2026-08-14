@@ -109,7 +109,7 @@ const CAM = { distance: 8.6, target: [1.38, 1.45, -2.18], heading: -19.5, pitch:
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.032);
@@ -258,6 +258,9 @@ const CAM = { distance: 8.6, target: [1.38, 1.45, -2.18], heading: -19.5, pitch:
   input.onTap(() => {
   if (!camera) return;
   if (!input.raycastFirst(camera, [hit])) return;
+  // reported with the tremor below, not with the bow: the reach has landed on
+  // him whether or not the bow logic takes it
+  touched && touched();
   // the tremor is ungated — every reach lands on him, even one the bow
   // logic below refuses (its own span keeps a held pointer from buzzing)
   if (clock - shookAt >= SHAKE.span) shookAt = clock;

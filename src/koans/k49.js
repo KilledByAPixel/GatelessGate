@@ -94,7 +94,7 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
 scene.fog = new THREE.FogExp2(PAPER, 0.028);
@@ -230,7 +230,7 @@ scene.fog = new THREE.FogExp2(PAPER, 0.028);
   // the closing chime first: it hangs inside the gate's own big
   // forgiving hit-box, so it has to be probed and returned on before
   // that box gets a chance to ring the passage-bell instead
-  if (closingChime.pick(camera, input)) { closingChime.ring(0.75); return; }
+  if (closingChime.pick(camera, input)) { touched && touched(); closingChime.ring(0.75); return; }
   if (input.raycastFirst(camera, [gateHit])) {
   // ONE RING, AS THE GATE STARTS TO GROW — "the opening" here is this
   // page's own gesture, nothing to do with the title screen (the torii is
@@ -240,6 +240,7 @@ scene.fog = new THREE.FogExp2(PAPER, 0.028);
   // gate itself grows past clickable: unguarded, the empty spot kept
   // ringing mid-open — a gate you could see and another you could hear.
   if (clock - grewAt < GROW_SPAN) return;
+  touched && touched();
   grewAt = clock;
   rings++;
   // the voice of the threshold: bell({ preset, size, gain }) — preset
@@ -251,6 +252,7 @@ scene.fog = new THREE.FogExp2(PAPER, 0.028);
   if (surface) {
   const hit = input.raycastFirst(camera, [surface]);
   if (hit) {
+  touched && touched();
   const local = water.group.worldToLocal(hit.point.clone());
   water.ripple(local.x, local.z);
   audio && audio.drip({ loud: true, at: hit.point });

@@ -132,7 +132,7 @@ export default {
   camera: CAM,
 
   build(ctx) {
-    const { audio, input } = ctx;
+    const { audio, input, touched } = ctx;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -246,6 +246,7 @@ export default {
     input.onTap(() => {
       if (!camera) return;
       if (!input.raycastFirst(camera, poleMeshes)) return;
+      touched && touched();
       poleTaps++;
       // A SHOVE FROM A BEARING, split between the two axes. kickPendulum only
       // ever touches omega, so the mast is exactly where it was on the frame

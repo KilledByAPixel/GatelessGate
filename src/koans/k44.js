@@ -34,7 +34,7 @@ const CAM = { distance: 9.2, target: [0.1, 1.15, 0.6], heading: 36.5, pitch: 14 
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
@@ -114,8 +114,9 @@ const CAM = { distance: 9.2, target: [0.1, 1.15, 0.6], heading: 36.5, pitch: 14 
   if (!camera) return;
   // the eave cluster first, so a tap aimed at it never also swaps the staff
   const chimeHit = furin.pick(camera, input);
-  if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
+  if (chimeHit) { touched && touched(); furin.ring(0.75, chimeHit.tube); return; }
   if (!input.raycastFirst(camera, rack.pickTargets())) return;
+  touched && touched();
   const given = rack.toggle();
   swaps++;
   // wood set down, or wood lifted away

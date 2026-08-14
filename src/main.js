@@ -208,6 +208,16 @@ const menu = makeMenu({
   cases: CASES, progress: save.state(), isStaged,
   onSelect: (slug) => enter(slug),
   onAbout: () => showView(about.el),
+  // The reader taking a mark off. Re-rendered from the save rather than by the
+  // menu editing its own row, so the panel can never show a mark the stored
+  // progress no longer has.
+  onClear: (slug) => { save.clearMark(slug); menu.refresh(save.state()); },
+  // ...and the whole book at once, from the back matter. The menu asks twice
+  // before it calls this, so there is no confirmation to do here.
+  onClearAll: () => { save.clearAll(); menu.refresh(save.state()); },
+  // A sitting from the Contents, in front of the hub the panel already idles
+  // over. startSit owns what that means; the Contents only offers it.
+  onSit: (m) => startSit(m),
   devMode,
   onDev: (slug) => enter(slug),
   themeEl: themeButton(),
@@ -244,7 +254,15 @@ const sit = makeSit({
     // for judging the timer, not for the reader's progress. Without this, a
     // completed sit on the showcase would persist sat['showcase'] into save
     // state — a tool leaking into the book the same way an unmarked read would.
-    if (koanSlug && !isDevPage(koanSlug)) { save.markSat(koanSlug); menu.refresh(save.state()); }
+    // ...and the sitting has to have been started ON a page, now that the
+    // Contents offers one too. exit() does clear koanSlug on the way out, so
+    // the null check alone happens to hold today — but that is knowing it
+    // second-hand, through another function remembering to clear a variable.
+    // sitFrom says it directly (see startSit), and is what keeps a sitting in
+    // front of the hub from stamping ◉ on whatever case was last open.
+    if (sitFrom === 'koan' && koanSlug && !isDevPage(koanSlug)) {
+      save.markSat(koanSlug); menu.refresh(save.state());
+    }
     // 'sitting' was the one phase that held the visibilitychange pause off; the
     // timer just reached 'done' and there is no fresh visibilitychange event to
     // re-check it — that is the gap this closes. But pausing on THIS tick would
@@ -965,6 +983,13 @@ function buildKoan(mod, slug) {
     // doc's shed-extras-on-weak-devices hook — and nothing ever consumed it;
     // removed rather than left looking load-bearing)
     scene: null, kit: null, audio, input, accent: mod.accent, hub,
+    // THE PAGE ANSWERED A TOUCH. A case calls this where its tap handler
+    // commits to answering — the one thing only the case knows, since main
+    // sees a tap on the canvas and cannot tell a found bell from empty grass.
+    // Same `!mod.dev` guard markRead carries: a tool is not a page of the book
+    // and must never appear in the reader's progress. Idempotent, so a case
+    // may call it on every touch without counting them.
+    touched: () => { if (!mod.dev) save.markTouched(slug); },
   });
   built.setCamera && built.setCamera(camera);
   const prev = scenes.active();
@@ -1121,7 +1146,10 @@ async function exit() {
   nav.cancel();      // a queued page must not fire after we've asked for Contents
   pageCard.hide();   // no page open, so nothing for the card to name
   router.set({ view: 'contents' });   // both paths below land on Contents
-  if (mode !== 'koan') { menu.open(); showView(menu.el); return; }
+  // Refresh on BOTH ways back to the Contents, not just the one below: this
+  // arm is taken from the about page and the title screen, and a mark earned
+  // on the page you left has to be on the row when you get there.
+  if (mode !== 'koan') { menu.refresh(save.state()); menu.open(); showView(menu.el); return; }
   stopReading();
   clearInput();
   koan && koan.onExit && koan.onExit();
@@ -1285,8 +1313,19 @@ function speakAll(id, order) {
   if (order.length) step(); else stopReading();
 }
 
+// WHERE THE SITTING BEGAN — 'koan' or 'menu' — so it can be given back. `mode`
+// is 'sit' for the duration and cannot answer it, and the sitting has to know:
+// it decides which view returns when the reader taps out, and whether the sit
+// is recorded against a page at all (the sit's onComplete).
+let sitFrom = 'koan';
+
 function startSit(minutes = 10) {
-  if (mode !== 'koan') return;
+  // The Contents offers a sitting too now: what you sit in front of there is
+  // the hub landscape it already idles over. Nothing else may start one — the
+  // intro and a sitting already in progress both have their own claim on the
+  // screen.
+  if (mode !== 'koan' && mode !== 'menu') return;
+  sitFrom = mode;
   mode = 'sit';
   // Sitting stops a reading outright rather than pausing it: the timer is the
   // one part of this book that asks for silence, and a voice resuming partway
@@ -1302,9 +1341,16 @@ function startSit(minutes = 10) {
   applyStageOnly();
   sit.start(minutes);
 }
+// The sitting ended. Back to whichever view opened it — a sitting begun from
+// the Contents must not drop the reader into whatever case they last read,
+// which is what a hard `mode = 'koan'` did before the Contents could sit.
 function resumeKoan() {
-  mode = 'koan';
+  mode = sitFrom;
   applyStageOnly();   // the page comes back — unless the look is holding it out
+  // ...and from the Contents the panel is the Contents. showView is needed
+  // because applyStageOnly only decides whether the panel is THERE, not which
+  // view is in it, and the sit overlay covered it either way.
+  if (mode === 'menu') { menu.refresh(save.state()); menu.open(); showView(menu.el); }
 }
 
 // ---- input / keys ----
@@ -1481,7 +1527,10 @@ window.gate = {
       fps: Math.round(fps), dissolveT: +dissolve.t.toFixed(4),
       freeze: { active: freeze.active, progress: +freeze.progress.toFixed(4) },
       camera: rig ? rig.state() : null,
-      progress: { read: { ...save.state().read }, sat: { ...save.state().sat } },
+      progress: {
+        read: { ...save.state().read }, sat: { ...save.state().sat },
+        touched: { ...save.state().touched },
+      },
       // `look` is the view; `all` is whether this page is being read aloud;
       // `auto` is whether the book is reading ITSELF, page after page. All
       // three are independent — auto implies the look today only because the
@@ -1513,6 +1562,8 @@ window.gate = {
   theme(t) { if (t !== undefined && readTheme(t) !== theme) toggleTheme(); return theme; },
   markRead(slug) { save.markRead(slug); menu.refresh(save.state()); },
   markSat(slug) { save.markSat(slug); menu.refresh(save.state()); },
+  markTouched(slug) { save.markTouched(slug); menu.refresh(save.state()); },
+  clearMark(slug) { save.clearMark(slug); menu.refresh(save.state()); },
   setSound(on) { audio.setSound(on); setSoundLabel(); },
   look(on) { setAmbient(on === undefined ? !ambient : on); return ambient; },
   // Awaits the manifest before it can start, so it hands back the promise —

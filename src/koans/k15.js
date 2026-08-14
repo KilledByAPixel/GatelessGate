@@ -74,7 +74,7 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -4, pitch: 13.
   camera: CAM,
   
   build(ctx) {
-  const { audio, input } = ctx;
+  const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   // evening: the fog closes in earlier than anywhere else in the book
@@ -210,12 +210,13 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -4, pitch: 13.
   // the FIRST hit also stops one tap ringing two of them.
   for (const c of chimes) {
   const chimeHit = c.pick(camera, input);
-  if (chimeHit) { c.ring(0.75, chimeHit.tube); return; }
+  if (chimeHit) { touched && touched(); c.ring(0.75, chimeHit.tube); return; }
   }
   // then Tozan himself, before the gate's box gets him: touch the man and
   // he bows deeper — a robe rustle, not a knock; nothing strikes him
   if (input.raycastFirst(camera, tozanTargets)) {
   if (clock - dippedAt >= DIP_SPAN) {
+  touched && touched();
   dippedAt = clock;
   dips++;
   audio && audio.cloth({ force: 0.6, at: tozan.position });
@@ -224,6 +225,7 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -4, pitch: 13.
   }
   if (!input.raycastFirst(camera, [hit])) return;
   if (startedAt > -99 && struck < BLOWS) return;      // let the three finish
+  touched && touched();
   startedAt = clock;
   struck = 0;
   beatings++;

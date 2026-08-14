@@ -96,11 +96,16 @@ for (const [label, mod] of [
 
 // The pair's reds: in case 33 the koi wear the case's one red; in case 30 the
 // red is the urna AND — knowingly doubling it — the pond sheet itself, the
-// surface of the water and not the fish or the sides. The mat is dark in BOTH
-// scenes — same mat, same spot, occupied in 30 and bare in 33 — so the check is
-// written against both: same pond, different carriers, and the mat never
-// competes with either.
-test('case 33: the koi carry the red and the mat has gone to ink', () => {
+// surface of the water and not the fish or the sides. Same pond, different
+// carriers, and each case's own check is that the other's red has not leaked
+// into it.
+//
+// WHAT IS ON THE SEAT IS NOT PINNED HERE ANY MORE. This used to assert case
+// 33's cushion was present and dark, on the pairing "same seat, one with a man
+// on it and one without" — 33's seat carries a cat now and the cushion is not
+// built into the scene. Whatever sits there is a composition call, so the
+// check that remains is the one that is actually a rule: one accent per koan.
+test('case 33: the koi carry the red, and case 30\'s red water stays out of it', () => {
   const root = staged(k33);
   const red = new THREE.Color(ACCENT).getHexString();
   const bodies = [];
@@ -109,11 +114,6 @@ test('case 33: the koi carry the red and the mat has gone to ink', () => {
   for (const b of bodies) {
     assert.equal(b.material.color.getHexString(), red, 'every fish wears the accent');
   }
-  let cushion = null;
-  root.scene.traverse((o) => { if (o.name === 'cushion' && !cushion) cushion = o; });
-  assert.ok(cushion, 'the bare mat is still on the seat');
-  assert.notEqual(cushion.material.color.getHexString(), red,
-    'the mat gave the red up — one accent per koan');
   // case 30's red water must NOT leak into 33: this pond builds its own sheet,
   // and here the red belongs to the koi alone
   const surface = surfaceMesh(root.scene);
