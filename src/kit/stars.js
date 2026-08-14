@@ -83,7 +83,7 @@ export function makeStars({
   // band, and what makes a sky read as a sky is that it runs down until the
   // LAND cuts it off. The ones below are occluded by the ground and cost only
   // their share of the buffer.
-  spread = 1.15,
+  spread = 1.3,
   // The shell's centre above the ground. Zero for a field that follows the
   // lens, where the centre IS the eye and phi maps straight to elevation; a
   // static shell (case 28's) lifts its centre instead so the horizon sits
