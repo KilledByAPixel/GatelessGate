@@ -5,7 +5,7 @@ import { hash1 } from '../util/noise.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makePath, makeVeranda, makeLantern, makeMonk, aimMonk, faceMonk,
-  makeLights, washMaterial, makeCylinderChime,
+  makeLights, washMaterial, makeCylinderChime, makeStars,
 } from '../kit/index.js';
 import { pageBase, skyFor } from '../render/nightsky.js';
 
@@ -164,34 +164,15 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   // Present from the first frame, at zero opacity. They are not created when
   // the candle goes out; they are revealed, which is the entire point of the
   // case and the reason they are built here rather than in the handler.
-  const starGeo = new THREE.BufferGeometry();
-  const N = 220;
-  const sp = new Float32Array(N * 3);
-  for (let i = 0; i < N; i++) {
-  // an even shell overhead, biased above the horizon
-  const u = hash1(i * 3 + 1, ID);
-  const v = hash1(i * 3 + 2, ID);
-  const theta = u * Math.PI * 2;
-  const phi = Math.acos(1 - v * 0.72);            // 0 = straight up
-  const R = 70;
-  sp[i * 3] = R * Math.sin(phi) * Math.cos(theta);
-  sp[i * 3 + 1] = R * Math.cos(phi) + 6;
-  sp[i * 3 + 2] = R * Math.sin(phi) * Math.sin(theta);
-  }
-  starGeo.setAttribute('position', new THREE.BufferAttribute(sp, 3));
-  const starMat = new THREE.PointsMaterial({
-  color: new THREE.Color(PAPER),
-  size: 0.55,
-  sizeAttenuation: true,
-  fog: false,
-  transparent: true,
-  opacity: 0,
-  depthWrite: false,
-  });
-  const stars = new THREE.Points(starGeo, starMat);
-  stars.name = 'stars';
-  stars.frustumCulled = false;
-  scene.add(stars);
+  //
+  // The field itself is the kit's (kit/stars.js) — the reading light hangs the
+  // same one over every page after dark, and it skips this case precisely
+  // because these are here. Not camera-following like that one: this shell is
+  // the sky of a specific veranda on a specific night, and the reader is
+  // standing under it rather than looking out of it.
+  const stars = makeStars({ count: 220, radius: 70, seed: ID, size: 0.55 });
+  stars.setOpacity(0);
+  scene.add(stars.points);
   
   // One bronze cylinder hung in the veranda's own corner bay — the far end
   // from Ryutan and Tokusan, so it never competes with the candle for
@@ -313,7 +294,7 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   bg.copy(nightC).lerp(darkC, d);
   scene.fog.color.copy(bg);
   for (const [l, base] of lightRigs) l.intensity = base * (1 - 0.62 * d);
-  starMat.opacity = 0.92 * d;
+  stars.setOpacity(0.92 * d);
   // the wind that blew it out: the bed swells with the dark and settles
   // with the relight, riding the same eased curve as everything else
   audio && audio.setWindLevel(BASE_WIND * (1 + WIND_SWELL * d));
@@ -337,7 +318,7 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   blows,
   lit,
   relights,
-  dark: +(starMat.opacity / 0.92).toFixed(3),
+  dark: +(stars.material.opacity / 0.92).toFixed(3),
   chimeStrikes: nightChime.strikes(),
 };
       },

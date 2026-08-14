@@ -10,6 +10,7 @@ import { makeDebug, devModeOn } from './ui/debug.js';
 import { makeCompose } from './ui/compose.js';
 import { makeLayoutOverlay } from './dev/overlay.js';
 import { setChimeAudio, collectChimes, ringChimeAt } from './kit/chimes.js';
+import { makeStars } from './kit/index.js';
 import { makeInput } from './input.js';
 import { setBreezePointer, clearBreeze } from './kit/breeze.js';
 import { stepFoliageWind } from './kit/foliage.js';
@@ -161,10 +162,27 @@ let themeBtns = [];
 // only that — the key and the fill are untouched, so every lit surface keeps
 // the value it had (render/nightsky.js). Applied here AND on every scene swap,
 // since a page built while the light is down has to arrive already dark.
+// ONE STAR FIELD FOR THE WHOLE BOOK, moved from page to page rather than built
+// per scene: it is the sky, and the sky does not belong to a case. Built once
+// and kept, so a page turn costs a reparent instead of a thousand-point buffer.
+const stars = makeStars({ count: 900, seed: 7 });
+
 function applySky() {
   const night = theme === 'dark';
   const active = scenes.active();
   if (active) applyNightSky(active.scene, night);
+  // Case 28 hangs its own (kit/stars.js, at zero opacity until the candle goes
+  // out) and revealing them IS that case — so the reading light does not put a
+  // sky full of them up there ahead of the moment.
+  const own = active && active.scene.getObjectByName('stars');
+  const wanted = night && active && !own;
+  // Off the OLD scene before it is disposed: buildKoan disposes the outgoing
+  // root after this runs, and a shared field still parented to it would have
+  // its one buffer disposed out from under every page after.
+  if (stars.points.parent && (!wanted || stars.points.parent !== active.scene)) {
+    stars.points.removeFromParent();
+  }
+  if (wanted) active.scene.add(stars.points);
   // The curtain follows the FOG, not the sky: a dissolve is the page going to
   // ink and back, and the fog colour is what the page dissolves into. With the
   // fog left alone (the default) the curtain stays paper, exactly as it was.
@@ -1379,6 +1397,9 @@ function tick() {
   else if (rig) rig.update(STEP);
   const active = scenes.active();
   if (active && active.update) active.update(STEP, simTime);
+  // The shell rides the lens, so stars never clip on the far side of a
+  // wheeled-out case and never parallax. Free while it is not in the scene.
+  if (stars.points.parent) stars.follow(camera);
   for (const c of hungChimes()) c.update(STEP, simTime);
   if (mode === 'sit') sit.update(STEP);
   dissolve.update(STEP);
