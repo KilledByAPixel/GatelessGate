@@ -170,6 +170,36 @@ test('a new rig has already placed the camera, before any update', () => {
   assert.equal(rig.state().distance, 11.5);
 });
 
+test('a new rig is born knowing the pointer — no snap on the first move', () => {
+  // The page-turn glitch: every rig opened with its parallax neutral and only
+  // learned the pointer from its own first pointermove, so a new case arrived
+  // composed for a centred cursor and the reader's first twitch swung the
+  // camera over to the real position (Frank: "it should already know where
+  // the mouse is"). The pointer outlives the rig now — a fresh rig opens on
+  // the exact pose the settled one held, and the first move to the same spot
+  // changes nothing at all.
+  const el = fakeEl();
+  const first = makeCameraRig(new THREE.PerspectiveCamera(), el, {});
+  el.handlers.pointermove({ clientX: 700, clientY: 100 });   // cursor resting off-centre
+  for (let i = 0; i < 600; i++) first.update(1 / 60);
+  const settled = first.state();
+
+  // the page turns: a fresh rig, fresh canvas, no events fired on it yet
+  const el2 = fakeEl();
+  const next = makeCameraRig(new THREE.PerspectiveCamera(), el2, {});
+  const born = next.state();
+  assert.ok(Math.abs(born.heading - settled.heading) < 0.05,
+    `born ${born.heading.toFixed(3)} vs settled ${settled.heading.toFixed(3)} — the new page forgot the pointer`);
+  assert.ok(Math.abs(born.pitch - settled.pitch) < 0.05,
+    `pitch born ${born.pitch.toFixed(3)} vs settled ${settled.pitch.toFixed(3)}`);
+
+  // and the first move — cursor exactly where it was resting — is a no-op
+  el2.handlers.pointermove({ clientX: 700, clientY: 100 });
+  for (let i = 0; i < 60; i++) next.update(1 / 60);
+  assert.ok(Math.abs(next.state().heading - born.heading) < 0.05,
+    'the first mousemove must not swing the shot');
+});
+
 test('update converges toward goal and positions the camera', () => {
   const el = fakeEl();
   const cam = new THREE.PerspectiveCamera();

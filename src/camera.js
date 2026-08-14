@@ -149,6 +149,17 @@ export const RIG_BOUNDS = { minDist: 7, maxDist: 16, minPitch: 7, maxPitch: 38.5
 // for a while. The drift now stops for good the first time you take hold; see
 // `taken` in makeCameraRig.)
 
+// THE POINTER OUTLIVES THE RIG. Every page turn builds a fresh rig, and each
+// rig used to open with its own mouse at (0,0) — parallax neutral — learning
+// the real pointer only from its first pointermove. So a new case arrived
+// composed for a centred cursor, and the reader's first twitch handed it the
+// true position and the camera eased over to it: a visible snap on every page
+// turn for anyone whose pointer was resting off-centre, which is everyone
+// (Frank: "as soon as I move the mouse, it, like, snaps to knowing where the
+// mouse is... it should already know"). One module-level record, written by
+// whichever rig is live, read by the next one at birth.
+const lastPointer = { x: 0, y: 0 };
+
 export function makeCameraRig(camera, el, {
   target = [0, 1.1, 0],
   distance = 11,
@@ -170,12 +181,20 @@ export function makeCameraRig(camera, el, {
   target = [target[0], target[1], target[2]];
   const home = { heading, pitch, distance };
   const goal = { heading, pitch, distance };
-  const cur = { heading, pitch, distance };
+  // born knowing the pointer (lastPointer above): mouse starts at wherever the
+  // cursor already rests, and cur starts at the goal PLUS that parallax — the
+  // exact steady-state pose, so the arrival frame and the first mousemove
+  // both change nothing
+  const mouse = { x: lastPointer.x, y: lastPointer.y };
+  const cur = {
+    heading: heading + mouse.x * parallax,
+    pitch: pitch + mouse.y * parallax,
+    distance,
+  };
   // The one copy of the envelope. The drag, the wheel and the drift all read
   // it here rather than closing over the arguments separately, so opening it
   // (Compose does) moves every clamp at once instead of three quarters of them.
   const bounds = { headingRange, minPitch, maxPitch, minDist, maxDist };
-  const mouse = { x: 0, y: 0 };
   let dragging = false, px = 0, py = 0;
   let wander = false, wanderTime = 0;
   // WHO IS ALLOWED TO AIM THE CAMERA. Cursor parallax (below) is always on —
@@ -205,6 +224,8 @@ export function makeCameraRig(camera, el, {
     const w = el.clientWidth || 1, h = el.clientHeight || 1;
     mouse.x = clamp((e.clientX / w) * 2 - 1, -1, 1);
     mouse.y = clamp((e.clientY / h) * 2 - 1, -1, 1);
+    lastPointer.x = mouse.x;                 // for the NEXT rig — see above
+    lastPointer.y = mouse.y;
     if (dragging) {
       // 0.29 deg/px — the 0.005 rad/px this dragged at before the vocabulary
       // changed. Pitch takes the drag with the opposite sign to the polar it
@@ -261,8 +282,9 @@ export function makeCameraRig(camera, el, {
   // than that renders with the rig built but never applied. Behind a held still
   // nobody sees it; on a cold arrival, where there is no still, it showed as one
   // frame of the diorama viewed from the world origin. cur already starts at the
-  // goal, and dt=0 makes the damping term zero, so this is exactly the pose the
-  // first tick would have produced — just a frame earlier.
+  // goal plus the resting pointer's parallax, and dt=0 makes the damping term
+  // zero, so this is exactly the pose the first tick would have produced —
+  // just a frame earlier.
   update(0);
 
   const state = () => ({ heading: cur.heading, pitch: cur.pitch, distance: cur.distance });
