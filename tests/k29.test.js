@@ -7,10 +7,11 @@ import { clothEnergy } from '../src/sim/verlet.js';
 import { noteForSize, makeFurin, SWING, SINGLE_BODY_LEN } from '../src/kit/furin.js';
 import { setFoliageWeather, foliageWind } from '../src/kit/foliage.js';
 import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
+import { stubAudio } from './helpers/stub-audio.js';
 
 const fakeCtx = () => sharedCtx({
   accent: k29.accent,
-  audio: { setWindLevel() {}, startAmbience() {}, stopAmbience() {}, chimeStrike() {}, breath() {} },
+  audio: stubAudio(),
 });
 
 test('module shape matches the koan contract', () => {
@@ -58,10 +59,7 @@ test('update advances the cloth; tap toggles the wind off', () => {
 
 test('the chime hangs under the gate and answers the flag', async () => {
   const struck = [];
-  const audio = {
-    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, breath() {},
-    chimeStrike: (o) => struck.push(o),
-  };
+  const audio = { ...stubAudio(), chimeStrike: (o) => struck.push(o) };
   const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
   const k = k29.build({ audio, input });
 
@@ -90,7 +88,7 @@ test('the chime hangs under the gate and answers the flag', async () => {
 
 test('three single-tube chimes hang under the gate, on three different cords, reaching the same line', () => {
   const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
-  const audio = { startAmbience() {}, stopAmbience() {}, setWindLevel() {}, chimeStrike() {}, breath() {} };
+  const audio = stubAudio();
   const k = k29.build({ audio, input });
 
   const gate = k.scene.getObjectByName('gate');
@@ -135,57 +133,37 @@ test('three single-tube chimes hang under the gate, on three different cords, re
     `the three should reach roughly the same line; their bottoms spread ${spread.toFixed(4)} (${bottoms})`);
 });
 
-test('the three singles sound three different notes, not the ring index', () => {
-  const struck = [];
-  const audio = {
-    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, breath() {},
-    chimeStrike: (o) => struck.push(o),
-  };
-  const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
-  const k = k29.build({ audio, input });
-
-  // long enough for every chime's own slow weather (each single carries its
-  // own phase offset) to strike at least once
-  for (let i = 0; i < 60 * 400; i++) k.update(1 / 60, i / 60);
-
-  const tubes = new Set(struck.map((s) => s.tube));
-  // THE GOTCHA: a tubes:1 chime always reports its own tube index as 0 — if
-  // k29.js forwarded that raw index instead of the note kit/furin.js derives
-  // from each single's OWN size, every single would show up indistinguishable
-  // from the ring's own tube-0 strikes, and 5 and 9 would never appear.
-  // -1/5/9 are not hardcoded in k29.js any more — they fall out of
+test('the three singles sound three different notes, each derived from its own built size', () => {
+  // TWO CLAIMS, ONE DRIVE. These were two tests, each building the identical
+  // scene and each driving it for the same 400 simulated seconds — and this
+  // case's update() is the most expensive in the book (verlet cloth + meadow
+  // + three chimes, ~2ms a frame), so the pair cost two minutes of suite for
+  // one minute of information. The second test's drive length even carried a
+  // comment saying it was copied from the first. One build and one drive now
+  // feed both claims; the 400s stands, because every single's own slow
+  // weather (each carries its own phase offset) has to strike at least once.
+  //
+  // CLAIM ONE — the literal notes. A tubes:1 chime always reports its own
+  // tube index as 0: if k29.js forwarded that raw index instead of the note
+  // kit/furin.js derives from each single's OWN size, every single would be
+  // indistinguishable from the ring's tube-0 strikes, and 5 and 9 would
+  // never appear. -1/5/9 are not hardcoded in k29.js — they fall out of
   // SINGLE_SIZES (0.18/0.12/0.09) via noteForSize, chosen specifically to
   // reproduce this previously-approved spread (see k29.js's own comment).
-  // Checking for the actual literal values that reached the STUB (not
-  // re-deriving them from the sizes here) also catches the copy-paste
-  // version of the bug, where all three singles were wired to the same size.
-  for (const note of [-1, 5, 9]) {
-    assert.ok(tubes.has(note), `single note ${note} never reached the audio stub (saw: ${[...tubes]})`);
-  }
-});
-
-test("each single's reported note is derived from its own built size, not a number k29.js chose independently", () => {
-  // The case asks for a SIZE and the note follows — the property that
-  // distinguishes the fix from just moving the same three magic numbers into a
-  // differently-named constant.
+  // Checking the literal values that reached the STUB also catches the
+  // copy-paste bug where all three singles were wired to the same size.
   //
-  // CODE REVIEW CAUGHT that an earlier draft of this test, despite its own
-  // name, never drove update(), never captured a strike, and never imported
-  // noteForSize — it only checked that three built tube lengths were
-  // distinct and near a 2x ratio, a real property but not the one the name
-  // promises. Fixed: drive the real case, capture what actually reaches the
-  // audio stub (copying x/y/z out of the shared WORLD scratch vector
-  // SYNCHRONOUSLY, in the callback — see furin.js's own onStrike comment;
-  // storing the object/vector by reference would read back whatever the
-  // NEXT strike overwrote it with), and require each captured note to equal
-  // noteForSize(measuredSize), where measuredSize is read off the real
-  // built tube geometry (length / furin.js's own exported SINGLE_BODY_LEN),
-  // never retyped from k29.js.
+  // CLAIM TWO — the derivation. The case asks for a SIZE and the note
+  // follows: each captured strike must equal noteForSize(measuredSize),
+  // where measuredSize is read off the real built tube geometry (length /
+  // furin.js's own exported SINGLE_BODY_LEN), never retyped from k29.js.
+  // CODE REVIEW CAUGHT an earlier draft that, despite its name, never drove
+  // update() or captured a strike — it only compared built tube lengths.
+  // The at.x is copied out of the shared WORLD scratch vector SYNCHRONOUSLY,
+  // in the callback (furin.js's own onStrike note): stored by reference it
+  // would read back whatever the NEXT strike overwrote it with.
   const struck = [];
-  const audio = {
-    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, breath() {},
-    chimeStrike: (o) => struck.push({ tube: o.tube, x: o.at.x }),
-  };
+  const audio = { ...stubAudio(), chimeStrike: (o) => struck.push({ tube: o.tube, x: o.at.x }) };
   const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
   const k = k29.build({ audio, input });
 
@@ -217,15 +195,18 @@ test("each single's reported note is derived from its own built size, not a numb
   assert.equal(new Set(known.map((k) => k.expectedNote)).size, 3,
     `the three measured sizes should imply three different notes, got ${known.map((k) => k.expectedNote)}`);
 
-  // long enough for every chime's own slow weather to strike at least once
-  // (matches the existing "three different notes" test's own drive length)
   for (let i = 0; i < 60 * 400; i++) k.update(1 / 60, i / 60);
+
+  // claim one: all three literal notes reached the stub
+  const tubes = new Set(struck.map((s) => s.tube));
+  for (const note of [-1, 5, 9]) {
+    assert.ok(tubes.has(note), `single note ${note} never reached the audio stub (saw: ${[...tubes]})`);
+  }
+
+  // claim two: every single-tube strike carries noteForSize of the single
+  // nearest it (world x) — not a value copied from this test's expectations
   const singleStrikes = struck.filter((s) => !Number.isInteger(s.tube) || s.tube < 0 || s.tube > 4);
   assert.ok(singleStrikes.length > 3, `too few single-tube strikes to judge: ${singleStrikes.length}`);
-
-  // match each single-tube strike to the single nearest it (world x), and
-  // require the reported note to equal noteForSize of THAT single's own
-  // measured size — not a value copied from this test's own expectations
   for (const s of singleStrikes) {
     let nearest = known[0], best = Infinity;
     for (const kObj of known) {
@@ -271,7 +252,7 @@ test("case 29's chimes stay clear of each other at the LIVE swing cap, counter-p
 
   // the REAL staged scene, not a reproduction with guessed parameters
   const input = { onHover() {}, onTap() {}, raycastFirst: () => null };
-  const audio = { startAmbience() {}, stopAmbience() {}, setWindLevel() {}, chimeStrike() {}, breath() {} };
+  const audio = stubAudio();
   const k = k29.build({ audio, input });
   const gate = k.scene.getObjectByName('gate');
   const chimes = gate.children.filter((c) => c.name === 'furin');
@@ -333,7 +314,8 @@ test('k29.js carries no note table of its own — the single-tube notes come fro
   // a genuine equivalent mutant, not a loophole in the arithmetic above. No
   // behavioural check of what reaches the stub can tell "derived" apart from
   // "hardcoded to the same numbers" when the numbers already agree. Same
-  // technique tests/walk.test.js already uses for "no Math.random" — read
+  // technique the suite already uses for "no Math.random" (dissolve.test.js,
+  // palette.test.js — the walk test that pioneered it is gone) — read
   // the source text and require the removed mechanism stays removed.
   const src = readFileSync(new URL('../src/koans/k29.js', import.meta.url), 'utf8');
   assert.ok(!/SINGLE_NOTES/.test(src),
@@ -342,10 +324,7 @@ test('k29.js carries no note table of its own — the single-tube notes come fro
 
 test('stilling the wind stills the singles too, not just the ring', () => {
   const struck = [];
-  const audio = {
-    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, breath() {},
-    chimeStrike: (o) => struck.push(o),
-  };
+  const audio = { ...stubAudio(), chimeStrike: (o) => struck.push(o) };
   const taps = [];
   const input = { onHover() {}, onTap: (cb) => taps.push(cb), raycastFirst: () => null };
   const k = k29.build({ audio, input });
@@ -375,10 +354,7 @@ test('stilling the wind stills the singles too, not just the ring', () => {
 
 test('a tap rings exactly one chime, even with several hanging, and never also toggles the wind', () => {
   const struck = [];
-  const audio = {
-    startAmbience() {}, stopAmbience() {}, setWindLevel() {}, breath() {},
-    chimeStrike: (o) => struck.push(o),
-  };
+  const audio = { ...stubAudio(), chimeStrike: (o) => struck.push(o) };
   const taps = [];
   const input = { onHover() {}, onTap: (cb) => taps.push(cb), raycastFirst: () => null };
   const k = k29.build({ audio, input });
