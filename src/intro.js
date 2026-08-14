@@ -21,7 +21,7 @@ import { introPath } from './intro_rails.js';
 // steady approach. The outgoing gate just closes linearly to nothing: it is
 // gone in the same breath, and 1e-3 (not 0) keeps its matrices invertible on
 // the frame it vanishes.
-const LOOP = { big: 12, span: 2.6 };
+const LOOP = { big: 15, span: 2.6 };
 const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 
 // The idling stage scene behind the title and the table of contents — a small
