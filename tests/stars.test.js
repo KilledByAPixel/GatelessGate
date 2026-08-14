@@ -47,6 +47,23 @@ test('the shell is behind the moon and inside the far plane', () => {
   assert.ok(max < 100, `a star stands past the far plane: ${max.toFixed(1)}`);
 });
 
+test('the sky runs down past the horizon, not to a band above it', () => {
+  // The shell follows the lens, so with the centre on the eye a star's phi IS
+  // its elevation. A field that stops short leaves the lowest stars hanging in
+  // a band with empty sky beneath them; what reads as a sky is one the LAND
+  // cuts off. Below-horizon stars are occluded by the ground and cost only
+  // their share of the buffer.
+  const s = makeStars({ count: 600, seed: 9 });
+  const pos = s.points.geometry.getAttribute('position');
+  const v = new THREE.Vector3();
+  let lowest = 90;
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    lowest = Math.min(lowest, Math.atan2(v.y, Math.hypot(v.x, v.z)) * 180 / Math.PI);
+  }
+  assert.ok(lowest < 0, `the field stops ${lowest.toFixed(1)}° above the lens horizon`);
+});
+
 test('the field is seeded — same seed, same sky', () => {
   // The determinism rule: no Math.random outside src/audio, so two builds of
   // the same seed are identical and two seeds are not.

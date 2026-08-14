@@ -35,12 +35,18 @@ export function makeStars({
   seed = 1,
   size = 0.6,
   color = PAPER,
-  // How far down the shell reaches, as a fraction of the full sphere: 1 is
-  // stars all the way under your feet, and the ground would hide the lower
-  // half anyway. Less than that keeps the buffer spent on sky that is
-  // actually in frame.
-  spread = 0.72,
-  lift = 6,          // the shell's centre above the ground, so the horizon sits low
+  // HOW FAR DOWN THE SHELL REACHES, in cos(phi): 1 stops level with the
+  // centre, 2 is a whole sphere. Past 1 by a little on purpose — a field that
+  // stops exactly at the horizon leaves the lowest stars visibly hanging in a
+  // band, and what makes a sky read as a sky is that it runs down until the
+  // LAND cuts it off. The ones below are occluded by the ground and cost only
+  // their share of the buffer.
+  spread = 1.15,
+  // The shell's centre above the ground. Zero for a field that follows the
+  // lens, where the centre IS the eye and phi maps straight to elevation; a
+  // static shell (case 28's) lifts its centre instead so the horizon sits
+  // below the veranda the reader is standing on.
+  lift = 0,
 } = {}) {
   const geo = new THREE.BufferGeometry();
   const pos = new Float32Array(count * 3);

@@ -170,7 +170,9 @@ const CAM = { distance: 9.6, target: [0.3, 1.2, -1.2], heading: 34, pitch: 23 };
   // because these are here. Not camera-following like that one: this shell is
   // the sky of a specific veranda on a specific night, and the reader is
   // standing under it rather than looking out of it.
-  const stars = makeStars({ count: 220, radius: 70, seed: ID, size: 0.55 });
+  // spread and lift are this case's own, not the kit's: they are what the
+  // field was when it lived here, and the reveal was composed against them.
+  const stars = makeStars({ count: 220, radius: 70, seed: ID, size: 0.55, spread: 0.72, lift: 6 });
   stars.setOpacity(0);
   scene.add(stars.points);
   
