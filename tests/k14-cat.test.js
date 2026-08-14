@@ -235,15 +235,8 @@ function stubCtx() {
   };
 }
 
-test('case 14 matches the koan module contract', () => {
-  assert.equal(k14.id, 14);
-  assert.equal(k14.slug, 'nansen-cuts-the-cat-in-two');
-  assert.ok(k14.title && k14.accent);
-  for (const key of ['case', 'comment', 'verse']) {
-    assert.ok(typeof k14.text[key] === 'string' && k14.text[key].length > 0, `text.${key}`);
-  }
-  assert.equal(typeof k14.build, 'function');
-});
+// (the module contract is the staging net's job — tests/staging.test.js
+// holds every staged case to a stricter version of the block that stood here)
 
 test('case 14 builds the courtyard, runs, and reports a finite fragment', () => {
   const ctx = stubCtx();

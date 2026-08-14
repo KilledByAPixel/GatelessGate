@@ -6,11 +6,8 @@ import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 
 const fakeCtx = () => sharedCtx({ audio: { knock() {}, startAmbience() {}, stopAmbience() {}, duck() {} } });
 
-test('module shape matches the koan contract', () => {
-  assert.equal(k25.id, 25);
-  assert.equal(k25.slug, 'preaching-from-the-third-seat');
-  assert.equal(typeof k25.build, 'function');
-});
+// (the module contract is the staging net's job — tests/staging.test.js
+// holds every staged case to a stricter version of the block that stood here)
 
 // THE FLOATING-HALL / SUNKEN-MONK BUG.
 //

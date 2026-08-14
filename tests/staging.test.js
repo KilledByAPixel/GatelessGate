@@ -209,6 +209,10 @@ for (const entry of staged) {
     }
 
     // ---- taps are safe before a camera arrives, and with no audio --------
+    // ...and there IS a tap: every staged page offers something to find.
+    // (This claim used to live in chapter.test.js, over seventeen hardcoded
+    // cases; here it covers the book and costs no extra build.)
+    assert.ok(ctx._taps.length > 0, 'the case wires no tap handler at all');
     assert.doesNotThrow(() => ctx._taps.forEach((cb) => cb()), 'a tap before setCamera threw');
     root.setCamera(rigCamera(mod));
     root.update(1 / 60, 4);

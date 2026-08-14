@@ -68,7 +68,6 @@ test('the crown carries the wind — attributes baked, material injected, geomet
   // build from before the attributes existed — the phases draw from their
   // own stream (tree.js's lesson), so k5's scanned crown clearance holds
   const again = makeOak({ height: 5.8, seed: 20 });
-  const box = (o) => new THREE.Box3().setFromObject(o);
   assert.deepEqual(box(oak), box(again), 'deterministic');
 });
 
@@ -146,16 +145,11 @@ test('the hero limb is tamed by default; `reach` restores it and moves nothing e
 
 // ---- the case ------------------------------------------------------------
 
-test('module shape matches the koan contract', () => {
-  assert.equal(k38.id, 38);
-  assert.equal(k38.slug, 'an-oak-tree-in-the-garden');
-  assert.equal(k38.accent, ACCENT);
-  assert.ok(k38.tier === 1 || k38.tier === 2);
+// The module contract itself is the staging net's job (tests/staging.test.js);
+// what is this case's alone is the prose pin — the title must actually name
+// the tree the whole page is about.
+test('the title names the oak', () => {
   assert.ok(/oak/i.test(k38.title), `title comes from the text artifact: ${k38.title}`);
-  for (const f of ['case', 'comment', 'verse']) {
-    assert.ok(k38.text[f] && k38.text[f].trim().length > 0, `text.${f} empty`);
-  }
-  assert.equal(typeof k38.build, 'function');
 });
 
 test('build stages one great red oak, two men, and ordinary grey trees', () => {

@@ -14,15 +14,8 @@ const fakeCtx = () => sharedCtx({
   audio: stubAudio(),
 });
 
-test('module shape matches the koan contract', () => {
-  assert.equal(k29.id, 29);
-  assert.equal(k29.slug, 'not-the-wind-not-the-flag');
-  assert.equal(k29.tier, 2);
-  for (const f of ['case', 'comment', 'verse']) {
-    assert.ok(k29.text[f] && k29.text[f].trim().length > 0, `text.${f} empty`);
-  }
-  assert.equal(typeof k29.build, 'function');
-});
+// (the module contract is the staging net's job — tests/staging.test.js
+// holds every staged case to a stricter version of the block that stood here)
 
 test('build returns a root with a two-monk diorama and lifecycle', () => {
   const root = k29.build(fakeCtx());

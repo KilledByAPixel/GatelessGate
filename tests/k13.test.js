@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import k13 from '../src/koans/k13.js';
-import { ACCENT } from '../src/palette.js';
+
 import { fakeCtx } from './helpers/fake-ctx.js';
 import { rigCamera } from './helpers/rig-camera.js';
 import { collectDrums, beatDrumAt, setDrumAudio } from '../src/kit/drum.js';
@@ -30,12 +30,11 @@ function hitOnly(ctx, name) {
 // struck from the kit now rather than from this case, so its tests go through
 // beatDrumAt.
 
-test('module shape matches the koan contract', () => {
-  assert.equal(k13.id, 13);
-  assert.equal(k13.slug, 'tokusan-holds-his-bowl');
-  assert.equal(k13.accent, ACCENT);
+// The module contract itself is the staging net's job (tests/staging.test.js
+// holds every staged case to it); what is THIS case's alone is the recipe —
+// the bell and drum tokens are what the whole moment hangs off.
+test('the ambience recipe carries the bell and the drum', () => {
   assert.deepEqual(k13.ambience, ['wind:0.14', 'bell', 'drum', 'music']);
-  assert.equal(typeof k13.build, 'function');
 });
 
 test('a held pointer on the bell cannot ring it without limit; the drum is untouched', () => {
