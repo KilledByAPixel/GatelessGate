@@ -35,13 +35,13 @@ const U = { x: 0.853, z: -0.522 };   // east <-> west
 const V = { x: 0.522, z: 0.853 };    // and square to that
 const at = (a, b = 0) => ({ x: C.x + U.x * a + V.x * b, z: C.z + U.z * a + V.z * b });
 
-const PAD_R = 2.10;                  // the swept ground, the only thing that clears grass
+const PAD_R = 1.9;                  // the swept ground, the only thing that clears grass
 const STONE = { x: 1.6, z: 0.0 };    // the cat's perch, forward of Nansen toward the lens
 const STONE_TOP = 0.30;
 
-const EAST = at(3.3), WEST = at(-3.3);          // where each hall's monks stand back to
-const EAST_ONE = at(2.1, 1.1), WEST_ONE = at(-2.1, -1.1);   // the two who were arguing
-const EAST_HALL = { x: 4.4, z: -6.2 }, WEST_HALL = { x: -3.4, z: -2.8 };
+const EAST = at(3.3), WEST = at(-3.3, .5);          // where each hall's monks stand back to
+const EAST_ONE = at(2., 1.5), WEST_ONE = at(-1.3, -1.7);   // the two who were arguing
+const EAST_HALL = { x: 4.4, z: -6.2 }, WEST_HALL = { x: -3.7, z: -3.5 };
 
 // makeAssembly fans its figures onto the +z side of the centre it is given, so
 // the centre has to be pushed BACK by this much for the crowd to land where the
@@ -51,7 +51,7 @@ const ARC_PULL = ARC_R * 0.81;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.5, target: [1.05, 1.45, -1.75], heading: 44.5, pitch: 18.5 };
+const CAM = { distance: 11.5, target: [1.05, 1.45, -1.75], heading: 35, pitch: 18.5 };
   export default {
   id: ID,
   slug: 'nansen-cuts-the-cat-in-two',
@@ -77,7 +77,7 @@ const CAM = { distance: 11.5, target: [1.05, 1.45, -1.75], heading: 44.5, pitch:
   // Swept ground, and the only footprint in the case that genuinely covers
   // earth. Everyone else stands in grass, because they would.
   const pad = new THREE.Mesh(
-  new THREE.CylinderGeometry(PAD_R, PAD_R * 1.02, 0.09, 11),
+  new THREE.CylinderGeometry(PAD_R, PAD_R * 1.02, 0.09, 8),
   washMaterial({ color: WASH.stone, flat: true }));
   pad.name = 'courtyard';
   pad.position.set(C.x, 0.005, C.z);   // sunk a little so it cannot z-fight the ground
@@ -124,13 +124,32 @@ const CAM = { distance: 11.5, target: [1.05, 1.45, -1.75], heading: 44.5, pitch:
   // out in front of it — the two who had been doing the arguing. Every one of
   // them is turned toward the cat. Nobody is turned toward Nansen, because
   // nobody has anything to say to him.
-  for (const [g, seed] of [[EAST, ID * 3], [WEST, ID * 5]]) {
+ /* for (const [g, seed] of [[EAST, ID * 3], [WEST, ID * 5]]) {
   scene.add(makeAssembly({
-  count: 5, radius: ARC_R, spread: 0.9, seed,
+  count: 5, radius: ARC_R, spread: 0.1, seed,
   center: [g.x, g.z - ARC_PULL],
   facing: [STONE.x, STONE.z],
   }));
-  }
+  }*/
+
+
+  scene.add(makeAssembly({
+    count: 5, radius: 2.2, spread: 1, seed: ID * 3,
+    center: [C.x-.1, C.z+.5],
+    facing: [STONE.x, STONE.z],
+    arcCenter:-.9,
+    arcSpan:1.7
+  }));
+
+  scene.add(makeAssembly({
+    count: 5, radius: 2.2, spread: 1.1, seed: ID * 3+5,
+    center: [C.x+.1, C.z-.5],
+    facing: [STONE.x, STONE.z],
+    arcCenter:-3.9,
+    arcSpan:1.7
+  }));
+
+
   
   for (const [p, stout] of [[EAST_ONE, 1.0], [WEST_ONE, 1.1]]) {
   const m = makeMonk({ height: 1.6, stout });

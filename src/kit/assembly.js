@@ -27,7 +27,7 @@ const SLIM = 0.8;     // radial squeeze — figure.js's `stout`, run below 1: a
                       //   axis — but the KNEES keep their size (see figure.js:
                       //   the crowd spends its width on the one event fog
                       //   can't erase)
-export function makeAssembly({ count = 8, radius = 3.0, center = [0, 0], facing = [0, 0], spread = 1.4, color = INK_LIT, seed = 6 } = {}) {
+export function makeAssembly({ count = 8, radius = 3.0, center = [0, 0], facing = [0, 0], spread = 1.4, color = INK_LIT, seed = 6, arcSpan = Math.PI * 0.7, arcCenter = 0 } = {}) {
   // the seated body comes from figure.js WITH its knees merged in — a crowd
   // member folds the same legs the hero monks do, at crowd polycount
   const bodyGeo = seatedBodyGeometry({ height: FIG_H, width: SLIM, segments: 8 });
@@ -43,10 +43,10 @@ export function makeAssembly({ count = 8, radius = 3.0, center = [0, 0], facing 
 
   const m = new THREE.Matrix4();
   const col = new THREE.Color();
-  const arc = Math.PI * 0.7;
+  const arc = arcSpan;
   for (let i = 0; i < count; i++) {
     const t = count === 1 ? 0.5 : i / (count - 1);
-    const ang = -arc / 2 + t * arc;
+    const ang = arcCenter-arc / 2 + t * arc;
     const rr = radius + (hash1(i * 2 + 1, seed) - 0.5) * spread;
     const x = center[0] + Math.sin(ang) * rr;
     const z = center[1] + Math.cos(ang) * rr;
