@@ -119,42 +119,14 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
     scene.add(makeLights({ sun: { heading: 60, pitch: 31 } }));
 
-    // THE LEDGE, and the air past it — ON THIS SIDE now, the drop facing the
-    // camera rather than away from it. Yawed a half turn, so the void that used
-    // to face away into the middle distance now falls toward the camera: the
-    // reader looks ACROSS the gorge at a man calling into it, with the drop in
-    // the near foreground and the meadow running away behind him. `origin` and
-    // `yaw` mirror the group's own placement, which is how makeCliff samples
-    // the rolling ground under its lumps. The gorge is SEEN here, the way case
-    // 5's is. A paper fill used to hang under the crags hiding everything past
-    // the fog line, and on a ledge this shallow it read as a slab laid over the
-    // drop rather than as depth rather than as depth. Shallower than case 5's
-    // is fine — this one is a ledge, not a chasm — the carve below runs the
-    // face down and climbs it back out as a rim.
-    // THE BRINK IS LAID OUT FROM THE HOLE, not typed in beside it. One lip run
-    // is SECTION wide; enough of them go down, overlapping, to cover the whole
-    // span the carve reaches — so `GORGE.half` is the only thing to turn and
-    // the stone can never fall short of the cut. Each takes its own seed, or
-    // the sections repeat and the run reads as a tiled fence.
-    //
-    // `origin` must match where the section actually STANDS: makeCliff samples
-    // the rolling ground under its lumps through it, so a section placed at one
-    // x and origin'd at another beds its rocks into the wrong hillside.
-    const SECTION = 13;
-    const OVERLAP = 3;
-    const steps = Math.max(1, Math.ceil((2 * GORGE_SPAN) / (SECTION - OVERLAP)));
-    const cliffs = [];
-    for (let i = 0; i <= steps; i++) {
-      const x = CLIFF.x - GORGE_SPAN + (2 * GORGE_SPAN) * (i / steps);
-      const c = makeCliff({
-        width: SECTION, drop: DROP, depth: 2.6, seed: ID + i * 17,
-        origin: [x, CLIFF.z], yaw: CLIFF.yaw,
-      });
-      c.position.set(x, 0, CLIFF.z);
-      c.rotation.y = CLIFF.yaw;
-      scene.add(c);
-      cliffs.push(c);
-    }
+    // the cliff
+    const cliff = makeCliff({
+    width: 30, drop: 4, depth: 1, seed: ID, fogTop: -5,
+    origin: [CLIFF.x, CLIFF.z], yaw: CLIFF.yaw, groundSeed: 21,
+    });
+    cliff.position.set(CLIFF.x, 0, CLIFF.z);
+    cliff.rotation.y = CLIFF.yaw;
+    scene.add(cliff);
 
     // ZUIGAN, alone, near the edge. `elder` gives him the kit's own staff, held
     // the ordinary way and in his own ink — the free-standing vermillion shaft

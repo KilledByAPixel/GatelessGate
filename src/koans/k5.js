@@ -22,7 +22,7 @@ const ID = 5;
 // the tree, on the ground, stands the one who came to ask: hands in his
 // sleeves, looking up at a man who cannot open his mouth. Nobody answers
 // anything.
-const CLIFF = { x: -3.4, z: -2.0, yaw: Math.PI / 2 };   // void faces -x
+const CLIFF = { x: -3.4, z: -1.0, yaw: Math.PI / 2+.05 };   // void faces -x
 // seed 13 at this yaw, from a scan of eighty: widest gap between the crown's
 // worst lobe and the hanging man (1.55 — he can take his fullest swing and
 // still not brush a leaf), branch joint buried 0.28 into foliage, and the
@@ -84,21 +84,12 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -35, pitch: -6
   // deformation. See cliff.js's own note on the
   // paper fill that used to hang here.
   const cliff = makeCliff({
-  width: 11, drop: 7, depth: 2.2, seed: ID, fogTop: -2.8,
+  width: 25, drop: 4, depth: 2.2, seed: ID, fogTop: -5,
   origin: [CLIFF.x, CLIFF.z], yaw: CLIFF.yaw, groundSeed: 21,
   });
-  cliff.position.set(CLIFF.x, 0, CLIFF.z+5);
+  cliff.position.set(CLIFF.x, 0, CLIFF.z);
   cliff.rotation.y = CLIFF.yaw;
   scene.add(cliff);
-  
- const cliff2 = makeCliff({
-  width: 11, drop: 7, depth: 2.2, seed: ID, fogTop: -2.8,
-  origin: [CLIFF.x, CLIFF.z], yaw: CLIFF.yaw, groundSeed: 21,
-  });
-  cliff2.position.set(CLIFF.x, 0, CLIFF.z-5);
-  cliff2.rotation.y = CLIFF.yaw;
-  scene.add(cliff2);
-
 
   // ---- the tree at its lip ---------------------------------------------
   // Grey through and through: k38's oak owns the red canopy, and this case's
