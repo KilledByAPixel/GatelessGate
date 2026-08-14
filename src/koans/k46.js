@@ -98,8 +98,14 @@ const scratchPos = new THREE.Vector3();
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
+// minPitch/maxPitch/maxDist are LOAD-BEARING here — the one case that opens
+// the rig's stock pitch window (see the camera note below: sink to eye level,
+// climb above the cap). A scenery retune once rewrote this object and dropped
+// the three of them, which clamps the page back to the stock envelope with
+// nothing visibly failing; the contract test pins them now.
 const CAM = {
-  distance: 14.5, target: [0.35, 5.5, -0.9], heading: 31.5, pitch: 24
+  distance: 14.5, target: [0.35, 5.5, -0.9], heading: 31.5, pitch: 24,
+  minPitch: 12.7, maxPitch: 58.5, maxDist: 20,
 };
 export default {
   id: ID,
