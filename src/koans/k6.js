@@ -209,7 +209,7 @@ const CAM = { distance: 11, target: [1.05, 1.25, -3.35], heading: 17, pitch: 18 
   // must not fire once the flower is bare: releasePetal() returns false with
   // nothing left to drop, and this case is the one place an uncaused sound was
   // explicitly ruled out.
-  audio && audio.breath({ force: 0.6, at: hit.point });
+  audio && audio.breath({ force: 1, at: hit.point });
   }
   });
   

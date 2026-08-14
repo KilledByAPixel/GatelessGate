@@ -232,21 +232,19 @@ scene.fog = new THREE.FogExp2(PAPER, 0.028);
   // that box gets a chance to ring the passage-bell instead
   if (closingChime.pick(camera, input)) { closingChime.ring(0.75); return; }
   if (input.raycastFirst(camera, [gateHit])) {
-  // THE BELL IS THE OPENING'S, and only the opening's. It used to have a
-  // cooldown of its own — half a second, independent of the growing — so the
-  // gate could be rung over and over while it was already open, from a hit box
-  // that stays behind at the size and place the gate started — you could keep
-  // clicking where the gate used to be and keep triggering the sound, when it
-  // should only fire as the gate starts to grow. Two gates on one page,
-  // effectively: the one you could see and the one you could still hear.
-  //
-  // One guard now, and it is the gesture's: if it is open, the touch does
-  // nothing at all.
+  // ONE RING, AS THE GATE STARTS TO GROW — "the opening" here is this
+  // page's own gesture, nothing to do with the title screen (the torii is
+  // built fresh above; only its design is shared). The guard is the
+  // gesture's clock rather than a cooldown of the bell's own, because the
+  // hit box stays behind at the size and place the gate started while the
+  // gate itself grows past clickable: unguarded, the empty spot kept
+  // ringing mid-open — a gate you could see and another you could hear.
   if (clock - grewAt < GROW_SPAN) return;
   grewAt = clock;
   rings++;
-  // a small bright strike at the torii, the seal the book closes on — task-12's
-  // migration to the tuned presets
+  // the voice of the threshold: bell({ preset, size, gain }) — preset
+  // 'hand' | 'temple' | 'great' picks the bonsho, size overrides its
+  // depth, gain the loudness
   audio && audio.bell({ preset: 'hand', gain: 0.5, at: gate.position });
   return;
   }

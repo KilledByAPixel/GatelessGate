@@ -268,7 +268,7 @@ const CAM = { distance: 8.6, target: [1.38, 1.45, -2.18], heading: -19.5, pitch:
   if (clock - reachedAt < BOW_SPAN) return;
   reachedAt = clock;
   reaches++;
-  audio && audio.chimeStrike({ tube: 3, force: 0.35, at: hit.position });
+  audio && audio.chimeStrike({ tube: 3, force: 0.5, at: hit.position });
   });
   
   return {

@@ -75,7 +75,7 @@ const MAT_R = 0.55, MAT_H = 0.05;
 const OFF = 1.1;
 // Named, because build() has to solve the rig's own equation to know where the
 // reader is standing before it can put anything to one side of them.
-const CAM = { distance: 14.8, target: [-0.705, 1.9, -6], heading: 27.5, pitch: 15.5 };
+const CAM = { distance: 12.7, target: [-0.6, 1.9, -6.4], heading: 19.5, pitch: 15.5 };
 
 export default {
   id: null,

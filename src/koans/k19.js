@@ -333,6 +333,10 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   if (clock - riseAt >= SNOW_SPAN) riseAt = clock;
   breeze = 1;
   touches++;
+  // UNPOSITIONED on purpose: the moon stands 60 out, and a strike placed
+  // there arrives through the far end of the spatial bus as a whisper —
+  // the one ack in the book that must not be spatialised at its object
+  audio && audio.chimeStrike({ tube: 1, force: 0.5 });
   return;
   }
   const hit = input.raycastFirst(camera, meadow);

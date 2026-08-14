@@ -242,7 +242,7 @@ export default {
       if (!hit) return;
       touches++;
       touchedAt = clock;
-      audio && audio.chimeStrike({ tube: 2, force: 0.4, at: hit.object.getWorldPosition(AT) });
+      audio && audio.chimeStrike({ tube: 2, force: 0.5, at: hit.object.getWorldPosition(AT) });
     });
 
     // Breathing, and the answer. Pulled out of update() for the reason the old

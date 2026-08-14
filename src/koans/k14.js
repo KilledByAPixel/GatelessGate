@@ -184,7 +184,10 @@ const CAM = { distance: 11.5, target: [1.05, 1.45, -1.75], heading: 35, pitch: 1
   // the stretch was silent, and a touch wants an answer. cloth is the palette's
   // fur — a brush, not an impact; nothing sharper belongs anywhere near this
   // cat.
-  audio && audio.cloth({ force: 0.5, at: hit.point });
+  // cloth is the softest voice in the palette, so the seal's own ack runs
+  // at the top of what still reads as a brush (the cat test holds the
+  // ceiling: fur, never an impact) rather than the palette-typical middle
+  audio && audio.cloth({ force: 0.6, at: hit.point });
   });
   
   return {

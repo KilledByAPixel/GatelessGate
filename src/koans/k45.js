@@ -299,7 +299,9 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
       if (!input.raycastFirst(camera, [hit])) return;
       touched++;
       shyAt = clock;
-      audio && audio.knock({ force: 0.5, at: horse.group.position });
+      // a chime, not a knock — the market row around it already answers in
+      // knocks, and the seal's own ack should not be the fourth in a row
+      audio && audio.chimeStrike({ tube: 1, force: 0.5, at: horse.group.position });
     });
 
     return {

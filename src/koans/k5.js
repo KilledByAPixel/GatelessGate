@@ -286,7 +286,7 @@ const CAM = { distance: 10.5, target: [-3.8, 2.3, -1.6], heading: -35, pitch: -6
   // silence is deliberately the LEAST literal voice available: a small chime,
   // nothing that could read as the branch, his teeth, or the drop. Soft, high,
   // placed at the touch.
-  audio && audio.chimeStrike({ tube: 4, force: 0.4, at: hit.point });
+  audio && audio.chimeStrike({ tube: 4, force: 0.5, at: hit.point });
   }
   });
   

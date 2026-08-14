@@ -284,7 +284,7 @@ const CAM = { distance: 9, target: [0.5, 1.7, -1.4], heading: 29, pitch: 12.5 };
   if (clock - strokeAt < STROKE) return;      // one refusal at a time
   strokeAt = clock;
   attempts++;
-  audio && audio.chimeStrike({ tube: 2, force: 0.4, at: scroll.position });
+  audio && audio.chimeStrike({ tube: 2, force: 0.5, at: scroll.position });
   });
   
   return {

@@ -218,7 +218,7 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -4, pitch: 13.
   if (clock - dippedAt >= DIP_SPAN) {
   dippedAt = clock;
   dips++;
-  audio && audio.cloth({ force: 0.4, at: tozan.position });
+  audio && audio.cloth({ force: 0.6, at: tozan.position });
   }
   return;
   }

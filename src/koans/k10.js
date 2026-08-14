@@ -145,8 +145,9 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 11 };
   if (!input.raycastFirst(camera, [c.hit])) continue;
   c.tippedAt = clock;
   tipped++;
-  // ceramic, and lighter than you expected
-  audio && audio.knock({ force: 0.28, at: c.pivot.position });
+  // ceramic, and lighter than you expected — but still a sound the tap
+  // plainly caused; the first pass sat under the ambience
+  audio && audio.knock({ force: 0.45, at: c.pivot.position });
   if (tipped === cups.length) allDownAt = clock;
   return;
   }

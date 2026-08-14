@@ -152,7 +152,7 @@ const CAM = { distance: 11, target: [-0.5, 1.1, 0.5], heading: 46, pitch: 18 };
   // pumping it one way
   scale.disturb(nudges % 2 ? -1 : 1);
   nudges++;
-  audio && audio.knock({ force: 0.4, at: scale.group.position });
+  audio && audio.knock({ force: 0.55, at: scale.group.position });
   });
   
   return {
