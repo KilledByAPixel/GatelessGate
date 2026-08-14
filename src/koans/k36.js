@@ -31,7 +31,7 @@ const MASTER_T = 0.42;    // where each of them stands along the road
 const TRAV_T = 0.345;     // the traveller nearer the lens, the master up the road
                           // — about two metres apart, a bowing distance
 const LANE = 0.30;        // a little to his own side, so the pair is not a mirror
-const GEAR_T = 0.50;      // the roadside gear, just past the meeting and beyond it
+const GEAR_T = 0.45;      // the roadside gear, just past the meeting and beyond it
 
 // THE BOW IS THE READER'S, AND NOTHING ELSE ON THIS PAGE MOVES. He stands, and
 // bows only when you reach for the master.
