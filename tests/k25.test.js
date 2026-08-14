@@ -57,49 +57,9 @@ test('the hall stands on legs, the crowd on the ground, the monks on the boards'
   }
 });
 
-// THE DREAM-ROCK / GRASS-SHIMMER BUG.
-//
-// The tuft field derives each tuft's atlas variant, mirror, stiffness and
-// resting lean from its LIVE world XZ through a chaotic hash — correct only
-// while a tuft's world position never moves. k25 rocks the whole `hall`, and
-// composeWorld had attached the ground+grass to `hall`, so every tuft's world
-// position changed every frame and its hashed attributes re-rolled: the meadow
-// visibly re-randomised per frame, as though the meadow were regenerated on
-// every one. The dream furniture may rock; the surrounding world may NOT,
-// because the world carries the grass.
-test('the meadow does not move when the dream rocks', () => {
-  const built = k25.build(fakeCtx());
-  const scene = built.scene;
-
-  const grass = scene.getObjectByName('grassfield');
-  assert.ok(grass, 'grass field present');
-  const dream = scene.getObjectByName('dream');
-  assert.ok(dream, 'dream group present');
-
-  const grassAt = (t) => {
-    built.update(1 / 60, t);
-    scene.updateMatrixWorld(true);
-    return grass.matrixWorld.elements.slice();
-  };
-  const dreamAt = (t) => {
-    built.update(1 / 60, t);
-    scene.updateMatrixWorld(true);
-    return dream.matrixWorld.elements.slice();
-  };
-
-  const g0 = grassAt(0);
-  const g1 = grassAt(2.0);
-  const maxGrassDrift = g0.reduce((m, v, i) => Math.max(m, Math.abs(v - g1[i])), 0);
-  assert.ok(maxGrassDrift < 1e-9,
-    `grass world transform must be static across time, drifted ${maxGrassDrift}`);
-
-  // and the rock must still be alive — otherwise this passes by killing the dream
-  const d0 = dreamAt(0);
-  const d1 = dreamAt(2.0);
-  const maxDreamDrift = d0.reduce((m, v, i) => Math.max(m, Math.abs(v - d1[i])), 0);
-  assert.ok(maxDreamDrift > 1e-5,
-    'the dream hall must still rock');
-});
+// (A test here once held the hall's rock and the meadow's stillness in
+// tension — cut with the rock itself; the grass-hash lesson lives in the
+// case's own comments.)
 
 test("the back screen fills the hall's own bay, in the plane of its posts", () => {
   // Three numbers were guessed at and all three were wrong: the screen stood

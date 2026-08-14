@@ -15,16 +15,21 @@ const ID = 25;
 // whether he preached or not.
 //
 // It is the only case in the book that is not happening. So this is the only
-// diorama built on dream rules: the fog closes to nearly nothing, the ground
-// is a pale suggestion under a floor that is standing in cloud, and the whole
-// hall breathes very slightly out of true — a rocking too slow to catch in the
-// act but never quite still.
+// diorama built on dream rules: the fog closes to nearly nothing, and the
+// ground is a pale suggestion under a floor that is standing in cloud.
 //
-// The gavel works. Striking it deepens the wobble, which is what happens when
-// you assert something inside a dream.
+// The hall used to rock as well — a constant drift "too slow to catch in the
+// act" — and that phrase is why it went: motion below the threshold of intent
+// never read as the dream breathing. Where it DID show was the one place it
+// was never composed for: the shadow map, where the sway came out as shadow
+// edges crawling under still-looking furniture, and looked like a lighting
+// bug against 48 pages of perfectly stationary shadows. The float, the cloud
+// and the fog carry the dream; the hall stands still.
+//
+// The gavel works: a sound and a small local bounce, nothing more.
 
-// the gavel hangs off the dream's own rocking group (`hall`), so its local
-// position is not its world position — reused rather than allocated per tap
+// the gavel hangs off the dream group (`hall`), so its local position is not
+// its world position — reused rather than allocated per tap
 const scratchPos = new THREE.Vector3();
 
 // The framing, named so composeWorld can have it too: `view` lets the
@@ -180,9 +185,7 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   // The audience, on the ground where the floor stops. The whole staging area
   // sits inside groundHeight's flat radius, so the terrain under the arc is
   // level at y = 0 — the crowd sits AT zero, not floated 0.34 up on an
-  // imaginary extension of the deck, which left them floating. The dream's
-  // rocking still carries them, but its amplitude is millimetres; it never
-  // lifts a hem visibly off the grass.
+  // imaginary extension of the deck, which left them floating.
   const assembly = makeAssembly({
   count: 8, radius: 4.6, center: [-.7, -2.5], facing: [0.2, -3.0], spread: 1.3, seed: ID,
   });
@@ -191,10 +194,10 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   // The surrounding world hangs off the SCENE, not the dream — deliberately.
   // The tuft meadow derives each blade's variant, mirror, stiffness and lean
   // from its live world XZ through a chaotic hash, which only holds still while
-  // a tuft never moves. Rocking the grass (it used to ride on `hall`) re-rolled
-  // every one of those hashes each frame and the meadow visibly re-randomised —
-  // the meadow appeared to regenerate every frame. So the dream floats and
-  // rocks; the ground it floats above stays put.
+  // a tuft never moves. When the hall still rocked and the grass rode on it,
+  // every hash re-rolled each frame and the meadow visibly re-randomised. The
+  // split outlives the rock (cut — see the header): the world belongs to the
+  // scene, the dream's furniture to `hall`, whatever `hall` does.
   const world = composeWorld(scene, {
   view: CAM,
   seed: ID,
@@ -215,12 +218,10 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   hall.add(hit);
   
   // ---- the moment: strike the gavel, inside a dream ---------------------
-  // The dream rocks very slightly, and ONLY on its own — striking the gavel
-  // never touches the world. An earlier cut grew the wobble on every click,
-  // which read as the camera being knocked out of place the more you tapped
-  // the more you tapped. The strike is a sound and a small LOCAL bounce of the
-  // gavel now; the world is left alone.
-  const BASE = 0.006;        // the faint rocking that never stops, unchanging
+  // Striking the gavel never touches the world. An earlier cut grew a hall
+  // wobble on every click, which read as the camera being knocked out of
+  // place the more you tapped. The strike is a sound and a small LOCAL bounce
+  // of the gavel; the world is left alone.
   const GAVEL_Y = stand.position.y + 0.24;
   let camera = null;
   let clock = 0;
@@ -242,11 +243,6 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
   world.update(dt, simTime);
   
-  // constant, click-independent dream drift — nothing here reads `strikes`
-  hall.rotation.z = Math.sin(clock * 0.31) * BASE;
-  hall.rotation.x = Math.sin(clock * 0.23 + 1.1) * BASE * 0.8;
-  hall.position.y = Math.sin(clock * 0.19 + 2.2) * BASE * 3.0;
-  
   // the gavel gives a small LOCAL bounce when struck — it moves, the
   // world does not
   const t = clock - struckAt;
@@ -256,7 +252,6 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   fragment() {
   return {
   strikes,
-  rock: +hall.rotation.z.toFixed(5),
   bounce: +(gavel.position.y - GAVEL_Y).toFixed(5),
 };
       },
