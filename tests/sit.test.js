@@ -1,7 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { sitOutcome, clockText } from '../src/sit.js';
-import { sitBellPartials, bellPartials, SIT_BELL } from '../src/audio/synths.js';
+import { BELL_PRESETS, SIT_BELL, bellVoice, applyBellPreset, BELL } from '../src/audio/synths.js';
+
+// makeSit is browser glue — it builds DOM in its constructor, so there is no
+// seam to drive it from Node. The rule below is worth pinning anyway (it has
+// already been changed once in each direction), so it is pinned in the source.
+const SIT_SRC = readFileSync(new URL('../src/sit.js', import.meta.url), 'utf8');
 
 test('sitOutcome: complete only when elapsed reaches duration', () => {
   assert.equal(sitOutcome(120, 120), 'complete');
@@ -36,32 +42,56 @@ test('seconds are always two digits, minutes never padded', () => {
   }
 });
 
-// The old timer's bell read as a low thud where a hand bell wants a clean ting.
-// It was bellPartials at 70 Hz, a bonshō an octave below anything you could
-// call a ding. The sit bell is its own voice now, four octaves up.
-test('the sit bell is a ting, not a thud', () => {
-  const p = sitBellPartials(1174);
-  assert.ok(p[0].freq > 900, `the fundamental is ${p[0].freq} Hz — still a bong`);
-  assert.ok(p[0].freq > bellPartials(70)[0].freq * 8, 'no brighter than the old temple bell');
-  // near-harmonic with a slight stretch: that stretch is what makes it a small
-  // struck bell rather than an organ pipe
-  const ratios = p.map((x) => x.freq / p[0].freq);
-  assert.equal(ratios[0], 1);
-  for (let i = 1; i < ratios.length; i++) {
-    assert.ok(ratios[i] > ratios[i - 1], 'modes must ascend');
-    assert.ok(ratios[i] > i + 0.9 - 0.2 && ratios[i] < i + 1.6, `mode ${i} at ${ratios[i]} is not bell-like`);
-  }
-  // it has to RING: a long fundamental under fast-dying upper modes is the whole
-  // difference between a bell hanging in the room and a click
-  assert.ok(p[0].decay >= 8, `fundamental decays in ${p[0].decay}s`);
-  for (let i = 1; i < p.length; i++) assert.ok(p[i].decay < p[i - 1].decay, 'upper modes must die first');
-  for (let i = 1; i < p.length; i++) assert.ok(p[i].amp < p[i - 1].amp, 'upper modes must be quieter');
+// The timer used to ring a bespoke voice nobody else in the book used, struck up
+// where the ear is most sensitive — which is what made it read as harsh rather
+// than as a bell. It now names one of the auditioned presets, so retuning it is
+// a word rather than a table of modes.
+test('the sit bell is one of the book\'s own bells', () => {
+  assert.ok(BELL_PRESETS[SIT_BELL.preset], `no such preset: ${SIT_BELL.preset}`);
+  // null takes the preset's own body size; a number overrides it, and bellVoice
+  // clamps well before either end of that range.
+  assert.ok(SIT_BELL.size === null || (SIT_BELL.size > 0.15 && SIT_BELL.size < 4));
 });
 
-// Degree 15 is the root four octaves up: five-note scales both, so it is the
-// same note in `in` and `yo` and the timer never changes pitch with the case.
-test('the sit bell sits on the root, so it is mood-blind', () => {
-  assert.equal(SIT_BELL.degree % 5, 0, 'not a root degree — the bell would retune per case');
-  assert.ok(SIT_BELL.level > 0 && SIT_BELL.level <= 1);
-  assert.ok(SIT_BELL.verbMix > 0.5, 'a dry bell reads as a thud at any pitch');
+test('the sit bell is a ting, not a clang and not a bong', () => {
+  const p = BELL_PRESETS[SIT_BELL.preset];
+  const voice = bellVoice(SIT_BELL.size === null ? p.size : SIT_BELL.size);
+  // A hand bell's register: above the temple bell it is not, below the sting the
+  // old voice sat at. The band is wide on purpose — it is there to catch a
+  // preset swapped to `great` by accident, not to pin a taste decision.
+  assert.ok(voice.f0 > 180 && voice.f0 < 700, `the timer rings at ${voice.f0.toFixed(0)} Hz`);
+  const partials = applyBellPreset(voice, p);
+  // it has to RING: a struck bell hangs in the room, a click does not
+  assert.ok(partials[0].decay > 2, `the hum dies in ${partials[0].decay.toFixed(2)}s`);
+  assert.ok(partials.every((x) => Number.isFinite(x.freq) && Number.isFinite(x.amp)));
+});
+
+// Every way a sitting ends is marked by the bell: the timer running out, and
+// the reader tapping out early. Leaving on silence made ending early read as
+// walking out — and it also meant the reader could go a whole sitting without
+// hearing the sound the timer closes with.
+test('both endings ring, and a finished sitting rings exactly once', () => {
+  const leave = SIT_SRC.slice(SIT_SRC.indexOf('function leave()'));
+  const body = leave.slice(0, leave.indexOf('\n  }'));
+  assert.match(body, /audio\.sitBell\(\)/, 'tapping out ends a sitting in silence');
+  // ...but only out of 'sitting'. From 'done' the closing bell has already rung
+  // and the tap is just leaving the scene; ringing there is two bells for one
+  // ending, a few seconds apart.
+  assert.match(body, /phase === 'sitting'/, 'the exit bell is not gated on the phase');
+  assert.ok(body.indexOf('phase === \'sitting\'') < body.indexOf('sitBell()'),
+    'the gate must come before the strike');
+});
+
+test('the reader\'s bell is quieter than a bell in a scene', () => {
+  // Nothing in the diorama strikes this one, so it arrives at a fraction of a
+  // case bell's velocity — gain here is the plain velocity strikeBell()
+  // multiplies by BELL.level.
+  assert.ok(SIT_BELL.gain > 0 && SIT_BELL.gain < 1, `gain ${SIT_BELL.gain}`);
+  assert.ok(BELL.level > 0);
+  // ...and it is nearly pure room. A dry bell reads as a thud at any pitch, and
+  // this one is allowed further into the room than any bell a case owns.
+  assert.ok(SIT_BELL.verbMix > 0.5, 'a dry sit bell reads as a thud');
+  for (const [name, preset] of Object.entries(BELL_PRESETS)) {
+    assert.ok(SIT_BELL.verbMix >= preset.verbMix, `the ${name} preset is wetter than the reader's bell`);
+  }
 });

@@ -221,11 +221,15 @@ panel.appendChild(menu.el);
 const about = makeAbout({ onBack: () => { menu.refresh(save.state()); showView(menu.el); } });
 panel.appendChild(about.el);
 
-// sitBellPartials' fundamental decays over 9s (synths.js calls it "ten
-// seconds"); the room send stretches it a touch further. This is how long a
-// pause forced by the 'sitting'->'done' transition (below) waits before it is
-// allowed to actually fade `master` — arming it any sooner cuts the closing
-// bell, the one sound the sitting exemption exists to protect, down to the
+// Longer than the sit bell's hum and the room tail behind it, with room to
+// spare — it is deliberately generous rather than derived, because overshooting
+// costs nothing here (a hidden page stays quiet either way) and undershooting
+// costs the one sound this whole exemption exists to protect. Set against the
+// bespoke voice the timer used to ring and left alone when SIT_BELL moved to a
+// preset, which rings SHORTER; re-check it only if the sit bell ever gets a
+// bigger body than a hand bell's. This is how long a pause forced by the
+// 'sitting'->'done' transition (below) waits before it is allowed to actually
+// fade `master` — arming it any sooner cuts the closing bell down to the
 // ~300ms of pauseForHide's own fade-then-suspend window.
 const SIT_BELL_TAIL_MS = 10000;
 

@@ -60,10 +60,16 @@ export function makeSit({ audio, onComplete, onExit } = {}) {
     onComplete && onComplete();
   }
 
-  // The reader tapped out. No bell: the bell marks a sitting completed, and one
-  // rung for cutting it short would be a consolation prize.
+  // The reader tapped out. The bell rings here too: it marks the sitting ENDING,
+  // not the sitting succeeding, and one of the three ways a sitting ends is that
+  // you stop. Leaving on silence made ending early feel like walking out.
+  //
+  // Only from 'sitting', though — from 'done' the closing bell has already rung
+  // and the reader is simply leaving the scene it left them in. Ringing again
+  // there would be two bells a few seconds apart for one ending.
   function leave() {
     if (phase === 'off') return;
+    if (phase === 'sitting') audio && audio.sitBell();
     phase = 'off';
     el.classList.add('hidden');
     releaseWake();

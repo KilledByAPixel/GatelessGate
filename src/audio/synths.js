@@ -801,13 +801,12 @@ export function makeWind(ctx, dest) {
 
 // Glazed stoneware. CODE REVIEW CAUGHT: the comment this replaced claimed a
 // distinct "near-harmonic with a slight stretch" shape, but this table's
-// ratios (1/2.04/3.11/4.35) are a near-twin of the sit bell's own
-// (sitBellPartials: 1/2.02/3.01/4.21) — a small near-harmonic shell rings the
-// same family of modes whether it's bronze or fired clay, so the ratio series
-// is not what makes this read as a pot. What does: the DECAY (dead inside a
-// second and a half, against the inkin's ten-second hum) and its own
-// TRANSIENT (a tick, not a bright mallet strike). A tipped vase is a tick and
-// a small hollow ring, not an instrument.
+// ratios (1/2.04/3.11/4.35) are a near-twin of a small bell's own — a small
+// near-harmonic shell rings the same family of modes whether it's bronze or
+// fired clay, so the ratio series is not what makes this read as a pot. What
+// does: the DECAY (dead inside a second and a half, against a hand bell's
+// several-second hum) and its own TRANSIENT (a tick, not a bright mallet
+// strike). A tipped vase is a tick and a small hollow ring, not an instrument.
 export const CERAMIC = { f0: 520, level: 0.075, decay: 1.1, verbMix: 0.45, tail: 2 };
 
 export function ceramicPartials(f0 = CERAMIC.f0, decay = CERAMIC.decay) {
@@ -1149,43 +1148,32 @@ export function strikeBell(ctx, dry, verbIn, { partials, gain = 1, verbMix = BEL
 
 // ---- the sit bell ----
 // The inkin: the small hand bell that opens and closes a sitting. It is NOT the
-// book's temple bell. The timer used to ring bellPartials at 70 Hz straight into
-// master, which read as a low thud rather than the clean ting a hand bell wants
-// to be. Three things make that difference and all three are here: a small
-// bell's pitch (degree 15 is the root four octaves up,
-// the same note in either mood), a hard bright tick for the mallet, and a heavy
-// send to the room. A dry bell reads as a thud at ANY pitch.
+// book's temple bell — but it IS one of the book's bells now, which it was not
+// before. It used to be a bespoke five-mode voice of its own, struck near
+// 1.2 kHz, and up there it read as harsh rather than clean: the ear's most
+// sensitive octave, a hard bright mallet tick on top of it, and no body under
+// it at all. `hand` is the same small bell auditioned for the cases, an octave
+// and a half lower, with the mallet balance (beam/ping/pingFreq) that was
+// approved by ear on the audition page — so the reader's bell is now tuned by
+// the same instrument as everything else in the book, and retuning it means
+// naming a different preset here rather than hand-editing modes.
 //
-// Raised from 0.80 against the shorter room (verb.js went 5s -> 1.8s). The sit
-// bell belongs to the READER, not to any diorama — it is never spatialized and
-// it is the one sound in the book allowed to be pure room.
-export const SIT_BELL = { degree: 15, level: 0.45, verbMix: 0.92 };
-
-// A small bell's modes are near-harmonic with a slight stretch — that stretch is
-// the shimmer. Long on the fundamental (a struck inkin rings for ten seconds),
-// and the upper modes die away quickly, which is what leaves a clean pitch
-// hanging in the room instead of a clang.
-export function sitBellPartials(f0 = 1174) {
-  return [
-    [1.0, 1.0, 9], [2.02, 0.5, 5], [3.01, 0.26, 3], [4.21, 0.14, 1.8], [5.43, 0.07, 1.1],
-  ].map(([r, a, d]) => ({ freq: f0 * r, amp: a, decay: d }));
-}
-
-export function strikeSitBell(ctx, dry, verbIn, { f0 = 1174, gain = SIT_BELL.level, verbMix = SIT_BELL.verbMix } = {}) {
-  const out = ctx.createGain();
-  out.gain.value = 1;
-  const dryG = ctx.createGain(); dryG.gain.value = 1 - verbMix * 0.7;
-  out.connect(dryG); dryG.connect(dry);
-  if (verbIn) {
-    const sendG = ctx.createGain(); sendG.gain.value = verbMix * 1.2;
-    out.connect(sendG); sendG.connect(verbIn);
-  }
-  strike(ctx, out, {
-    partials: sitBellPartials(f0),
-    gain,
-    transient: { dur: 0.02, freq: f0 * 2.6, q: 1.0, amp: 0.35 },
-  });
-}
+// `size` null takes the preset's own body size; a number overrides it, and
+// bigger is deeper AND longer together (see bellVoice). `gain` is the plain
+// velocity strikeBell() multiplies by BELL.level — set so the bell arrives at
+// roughly the amplitude the old voice did, which is well under a case bell
+// because nothing in the scene struck it.
+//
+// The mood no longer pitches it, and nothing is lost: the old degree 15 was the
+// root four octaves up, the same note in both scales, so the timer never
+// changed pitch with the case anyway. Presets are addressed by size, not pitch.
+//
+// verbMix carries over unchanged from the bespoke voice — it is about the ROOM,
+// not the bell, and the room did not change. The sit bell belongs to the
+// READER, not to any diorama: it is never spatialized and it is the one sound
+// in the book allowed to be nearly pure room. (A dry bell reads as a thud at
+// ANY pitch, which is why this sits so far above every preset's own mix.)
+export const SIT_BELL = { preset: 'hand', size: null, gain: 0.5, verbMix: 0.92 };
 
 // Identical repeats are the giveaway that a strike is synthesized: a real
 // clapper never lands twice the same. ±6 cents is far under "out of tune"

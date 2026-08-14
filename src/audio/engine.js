@@ -1,6 +1,6 @@
 import {
   makeWind, strikeBell, strikeBar, CHIME, BRONZE, strikeDrip, makeWaterBed, WATER,
-  strike, bambooPartials, ODOSHI, pourBurst, strikeSitBell, SIT_BELL, STRIKE_SCALE, BELL,
+  strike, bambooPartials, ODOSHI, pourBurst, SIT_BELL, STRIKE_SCALE, BELL,
   bellVoice, bellPartials, bellTail, applyBellPreset, BELL_PRESETS,
   CERAMIC, WOOD, CLOTH, BREATH, ceramicPartials, woodPartials, noiseSwell,
   DRUM, drumPartials, RAIN, makeRainBed, jitterHz,
@@ -15,7 +15,7 @@ import { spatialFor, makeSpatialBus, calibrateMix } from './spatial.js';
 // synths.js (see calibrateMix()'s own comment in spatial.js for why these
 // are not interchangeable). Every placed() call below picks the family that
 // matches the voice it is about to strike.
-const MIX_BELL = { kd: 0.7, ks: 1.2 };      // strikeBell / strikeSitBell
+const MIX_BELL = { kd: 0.7, ks: 1.2 };      // strikeBell
 const MIX_WATER = { kd: 0.85, ks: 1.4 };    // strikeDrip
 const MIX_CHIME = { kd: 0.85, ks: 1.4 };    // strikeBar
 // Same numbers as MIX_CHIME on purpose, not a coincidence needing its own
@@ -534,14 +534,25 @@ export function createAudio(save) {
       strikeBell(ctx, bus ? bus.in : voicesDry, bus ? null : voicesWet,
         { partials: v.partials, gain, verbMix: bus ? 0 : verbMix, beam, ping, pingFreq });
     },
-    // The timer's bell, opening and closing a sitting. Its own voice rather than
-    // an option on bell(): every other bell in the book belongs to a case and is
-    // struck by something you can see, and this one belongs to the reader.
-    // Pitched to the mood like everything else — degree 15 is the root four
-    // octaves up, so it is the same note in both scales.
+    // The timer's bell — it opens a sitting, closes one that ran its course, and
+    // marks one ended early. Same VOICE as a case bell now (SIT_BELL names which
+    // preset), but deliberately NOT routed through bell() above: every other
+    // bell in the book belongs to a case and is struck by something you can see,
+    // and this one belongs to the reader. So it takes no `at:` and never goes
+    // near a spatial bus, and it writes straight to master/verb.in rather than
+    // the hush pair — hushVoices() closes the scene's voices at a page turn, and
+    // the sitting bell is not the scene's. SIT_BELL.verbMix overrides the
+    // preset's own for the same reason.
     sitBell() {
       if (!ensureCtx() || ctx.state !== 'running') return;
-      strikeSitBell(ctx, master, verb.in, { f0: hz(SIT_BELL.degree, mood) });
+      const p = BELL_PRESETS[SIT_BELL.preset];
+      const voice = bellVoice(SIT_BELL.size === null ? p.size : SIT_BELL.size);
+      strikeBell(ctx, master, verb.in, {
+        partials: applyBellPreset(voice, p),
+        gain: SIT_BELL.gain,
+        verbMix: SIT_BELL.verbMix,
+        beam: p.beam, ping: p.ping, pingFreq: p.pingFreq,
+      });
     },
     // tube index -> scale degree -> Hz. The engine owns the mapping so the kit
     // never needs to know what a hertz is.
