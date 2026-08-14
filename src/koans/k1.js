@@ -82,6 +82,7 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   view: CAM,
   seed: 1,
   groundSeed: 21,
+  trees: 1,
   keepout: [
   ...path.keepout(26, 1.1),
   { x: mp.x, z: mp.z, r: 2.6 },

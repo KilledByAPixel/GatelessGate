@@ -122,7 +122,7 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   new THREE.BoxGeometry(1.05, 0.20, 1.05),
   washMaterial({ color: i === 2 ? WASH.stone : wash(0.26), flat: true }));
   seat.name = 'seat';
-  seat.position.set(-1.9 + i * 1.75, DECK_TOP + 0.10, -2.2);
+  seat.position.set(-1.5 + i * 1.75, DECK_TOP + 0.10, -2.2);
   // closed boxes standing where the eye checks the contact — the seats drew
   // the white peter-pan line along their base on the boards
   frontShadow(seat);
@@ -132,17 +132,17 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   const SEAT_TOP = DECK_TOP + 0.20;
   
   const kyozan = makeMonk({ height: 1.62, pose: 'raise' });
-  kyozan.position.set(seats[2].position.x, SEAT_TOP, seats[2].position.z);
-  faceMonk(kyozan, { x: 1.0, z: 4.0 });
+  kyozan.position.set(seats[1].position.x, SEAT_TOP, seats[1].position.z);
   hall.add(kyozan);
   
   // the two who are already seated — book-normal height, not the 1.42 they
   // were first authored at (the shortest ordinary sitters in the book)
-  for (let i = 0; i < 2; i++) {
-  const sitter = makeMonk({ height: 1.54, pose: 'sit' });
-  sitter.position.set(seats[i].position.x, SEAT_TOP, seats[i].position.z);
-  faceMonk(sitter, { x: 0.6, z: 4.0 });
-  hall.add(sitter);
+  for (let j = 0; j < 2; j++) {
+    let i = j === 0 ? 0 : 2;   // the first and third seats
+    const sitter = makeMonk({ height: 1.54, pose: 'sit' });
+    sitter.position.set(seats[i].position.x, SEAT_TOP, seats[i].position.z);
+    faceMonk(sitter, { x: 0.6, z: 4.0 });
+    hall.add(sitter);
   }
   
   // THE GAVEL and its block, on a stand before the third seat — the seal,
@@ -151,7 +151,7 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   new THREE.BoxGeometry(0.5, 0.42, 0.4),
   washMaterial({ color: WASH.dark, flat: true }));
   stand.name = 'stand';
-  stand.position.set(seats[2].position.x, DECK_TOP + 0.21, seats[2].position.z + 1.15);
+  stand.position.set(seats[1].position.x, DECK_TOP + 0.21, seats[1].position.z + 1.15);
   frontShadow(stand);   // same box-on-boards contact as the seats
   hall.add(stand);
   

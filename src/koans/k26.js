@@ -103,8 +103,8 @@ const CAM = { distance: 11.3, target: [0.1, 1.45, 0.1], heading: -32.5, pitch: 1
   const fan = makeFan({ radius: 0.5, color: wash(0.42), seed: 26 });
   fan.rotation.x = -Math.PI / 2;
   fan.rotation.z = 0.7;
-  fan.position.set(1.85, DECK + 0.015, -0.35);
-  scene.add(fan);
+  fan.position.set(-1.65, DECK + 0.015, 2.65);
+  //scene.add(fan); // remove fan for now
   
   // Hogen, seated a little back on the centre line, facing the bay. A seated
   // monk's front is local +z (the sleeves fold that way), so he is turned by

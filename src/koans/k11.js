@@ -158,7 +158,7 @@ const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 1
 
     // JOSHU, down on the path, who will make up his mind about it — beside
     // the coast road (it passes z ≈ 4 at his x now), a step toward the rise
-    const JOSHU = new THREE.Vector3(2.0, 0, 1.9);
+    const JOSHU = new THREE.Vector3(2.0, .07, 1.9);
     faceMonk(monk, JOSHU);
     // `bow: true` hinges him at the sash without changing his arms: makeFigure
     // hands back a group named 'waist' carrying the torso, head and sleeves,

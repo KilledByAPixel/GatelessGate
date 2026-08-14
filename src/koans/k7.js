@@ -47,7 +47,7 @@ export default {
     const path = makePath({ from: [2.4, 9], to: [0.2, -20], width: 1.5, seed: 47, groundSeed: 21, wander: 0.9 });
     scene.add(path);
 
-    const path2 = makePath({ from: [-19, -2.4], to: [20, -1.2], width: 1.5, seed: 47, groundSeed: 21, wander: 0.9 });
+    const path2 = makePath({ from: [-25, -2.4], to: [20, -1.2], width: 1.5, seed: 47, groundSeed: 21, wander: 2 });
     scene.add(path2);
 
     // the monastery threshold he has just entered

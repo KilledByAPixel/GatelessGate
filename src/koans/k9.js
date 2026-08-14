@@ -20,7 +20,7 @@ const ID = 9;
 // happens; nothing else has happened for ten cycles.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 17, target: [-0.3, 3.05, -1.6], heading: 31.5, pitch: 10.5, maxDist: 18 };
+const CAM = { distance: 17, target: [-0.8, 3.05, -1.6], heading: 31.5, pitch: 10.5, maxDist: 18 };
   export default {
   id: ID,
   slug: 'a-buddha-before-history',
@@ -102,7 +102,7 @@ const CAM = { distance: 17, target: [-0.3, 3.05, -1.6], heading: 31.5, pitch: 10
   // (0.98 of its 6.2 param), and the figure kit's seated crown sits at
   // 0.595·H, so 10.2 keeps the monument the size the whole case — camera,
   // strata, the smallness of the two monks — was staged around.
-  const SEAT_Y = y - 0.9;      // deeper: the wider pooled hem is the buried part
+  const SEAT_Y = y - 0.6;      // deeper: the wider pooled hem is the buried part
   const buddha = makeBuddha({ height: 10.5, color: ACCENT_DEEP });
   buddha.position.set(CX, SEAT_Y, CZ);
   buddha.rotation.y = 0.30;    // gaze out across the frame, over the monks
@@ -143,7 +143,7 @@ const CAM = { distance: 17, target: [-0.3, 3.05, -1.6], heading: 31.5, pitch: 10
   // right edge, past the two monks, watching from the side the way an animal
   // actually attends a place.
   const fox = makeFox({ height: 0.45, seed: 9 });
-  fox.group.position.set(-1.9, 0, 3.6);
+  fox.group.position.set(-1.6, 0, 3.6);
   faceMonk(fox.group, buddha.position);
   scene.add(fox.group);
   
@@ -163,7 +163,7 @@ const CAM = { distance: 17, target: [-0.3, 3.05, -1.6], heading: 31.5, pitch: 10
   { x: -22.7, z: -15.3, r: 19 },
   ],
   grassKeepout: [
-  { x: CX, z: CZ, r: 8.8 },
+  { x: CX, z: CZ, r: 9 },
   // a clearing for the fox — 0.45 of animal disappears in full meadow
   { x: 5.9, z: 3.1, r: 0.9 },
   ],

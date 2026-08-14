@@ -51,7 +51,7 @@ const CAM = { distance: 9, target: [0.7, 1.25, 0.4], heading: 31.5, pitch: 19 };
   // between them.
   const wheel = makeWheel({ radius: 1.05, spokes: 8, wheelColor: ACCENT });
   wheel.group.position.set(1.3, 0, 0.4);
-  wheel.group.rotation.y = 0.55;
+  wheel.group.rotation.y = 0.6;
   scene.add(wheel.group);
   
   // the yard it stands in: a trestle with an unfinished rim leaning on it —

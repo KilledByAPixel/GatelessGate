@@ -48,7 +48,7 @@ const CAM = { distance: 9, target: [0.5, 1.7, -1.4], heading: 29, pitch: 12.5 };
   scene.add(veranda);
 
   const vase = makeVase({ height: 0.55, seed: 10 });
-  vase.group.position.set(-1.1, .3, .2);
+  vase.group.position.set(-1.1, .3, .5);
   veranda.add(vase.group);
     
   
