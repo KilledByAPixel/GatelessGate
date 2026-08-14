@@ -248,7 +248,12 @@ test('both lives are in the picture, even in a narrow reading pane', () => {
       const b = new THREE.Box3().setFromObject(s);
       for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) {
         const v = new THREE.Vector3(x, y, z).project(cam);
-        assert.ok(Math.abs(v.x) < 0.85 && Math.abs(v.y) < 0.85,
+        // 0.93, not the old 0.85: the staging retune Frank approved by eye
+        // ("35 has good framing now") puts her lowest box corner at y -0.88,
+        // and a Box3 corner overshoots the ink anyway — the extreme corner of
+        // a swaying figure's box is usually empty air. The real line is the
+        // frame edge at 1.0; this keeps a visible margin inside it.
+        assert.ok(Math.abs(v.x) < 0.93 && Math.abs(v.y) < 0.93,
           `at aspect ${aspect} a corner of her projects to ${v.x.toFixed(2)}, ${v.y.toFixed(2)}`);
       }
     }

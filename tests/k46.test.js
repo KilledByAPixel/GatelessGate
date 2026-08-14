@@ -246,8 +246,18 @@ test('clear paper behind the sitter at the home heading — no ridge, no tree', 
       const beyond = ray.intersectObjects(scene.children, true)
         .filter((h) => h.distance > dist + 0.6);
       for (const h of beyond) {
+        // The DISTANT backdrop is allowed now — Frank restaged this page and
+        // approved the read by eye ("I added some small mountains to 46 but
+        // they are small in the distance"): pale bands at 34+ out, and a wood
+        // whose crowns cross the line ~41 from the lens. At 28+ units FogExp2
+        // 0.030 has taken more than half of anything, so washed country under
+        // the red is a backdrop, not the ghost this test was written against.
+        // What still fails is the NEAR field: a ridge, tree or crown inside
+        // 28 units reads at close to full ink, exactly the "red sits on a
+        // ghost" the original complaint named.
+        if (h.distance > 28) continue;
         assert.ok(!['mountain', 'tree', 'forest'].includes(h.object.name),
-          `at pitch ${pitch} the red sits on "${h.object.name}" instead of paper`);
+          `at pitch ${pitch} the red sits on "${h.object.name}" ${h.distance.toFixed(0)} out instead of paper`);
       }
     }
   }
