@@ -6,7 +6,7 @@ import {
   makeLights, washMaterial, tapMeshes,
 } from '../kit/index.js';
 import { hash1 } from '../util/noise.js';
-import { PAPER, ACCENT, WASH } from '../palette.js';
+import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 
 const ID = 6;
 
@@ -145,6 +145,16 @@ const CAM = { distance: 11, target: [1.05, 1.25, -3.35], heading: 17, pitch: 18 
   // (k7 learned this the hard way)
   { x: CAT.x, z: CAT.z, r: 0.7 },
   ],
+  forests: [
+    { center: [-19, 0, -27], spread: 27, count: 55 },
+    { center: [16, 0, -21], spread: 17, count: 40, color: wash(0.55) },
+  ],
+  mountains: [
+    { count: 8, distance: 52, arcSpan: 3.6, color: wash(0.16), hScale: 0.65 },   // farthest band
+    { count: 9, distance: 33, arcSpan: 2.4, color: wash(0.28), hScale: 0.55 },
+  ],
+
+
   });
 
   // ---- the moment: the flower, and the petal --------------------------

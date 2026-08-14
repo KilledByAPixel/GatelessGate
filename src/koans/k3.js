@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH, wash } from '../palette.js';
 import {
-  composeWorld, faceMonk, makeHut, makeLantern, makeMonk, makePath, tapMeshes,
+  composeWorld, faceMonk, makeHut, plantTree, makeLantern, makeMonk, makePath, tapMeshes,
 } from '../kit/index.js';
 import { washMaterial } from '../render/material.js';
 import { makeLights } from '../render/lights.js';
@@ -190,6 +190,8 @@ const CAM = { distance: 9.6, target: [0.8, 1.85, 0.55], heading: 17, pitch: 15.5
   const lantern = makeLantern({ height: 1.1 });
   lantern.position.set(LANTERN.x, 0, LANTERN.z);
   scene.add(lantern);
+
+  plantTree(scene, { x: -3.7, z: -4.7, height: 5.4});
   
   // Gutei: bigger, stouter, hatted, with an elder's staff. Everything about
   // him should say master before you have looked at what he is doing.

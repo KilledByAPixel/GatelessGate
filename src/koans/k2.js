@@ -113,7 +113,7 @@ const CAM = {distance: 11, target: [0.6, 1.5, -2.25], heading: 46, pitch: 16.5 }
   const rain = makeRain({ count: 420, seed: ID, width: 24, depth: 24, height: 13 });
   scene.add(rain.points);
 
-  plantTree(scene, { x: 2.2, z: -5.7, height: 4.7 });
+  plantTree(scene, { x: 2.2, z: -5.7, height: 4.7, kind: 'pine' });
   plantTree(scene, { x: -4.7, z: -.7, height: 4.4, kind: 'pine' });
 
   // the cave's own rubble — a mountainside sheds rock, and the mouth earns it

@@ -4,6 +4,7 @@ import { PAPER, ACCENT } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeRack, makeLantern, makeMonk, faceMonk,
   makeLights, makeFurin,
+  plantTree,
 } from '../kit/index.js';
 
 const ID = 44;
@@ -41,6 +42,8 @@ const CAM = { distance: 9.2, target: [0.1, 1.15, 0.6], heading: 36.5, pitch: 18.
   
   const path = makePath({ from: [3.4, 8.6], to: [-7.3, -20.1], width: 1.4, seed: ID, groundSeed: 21, wander: 4.0 });
   scene.add(path);
+  
+  plantTree(scene, { kind:'pine', x: 1.0, z: -3.7, height: 3.7 });
   
   // the hall the rack stands outside of — a staff rack belongs by a door
   const hall = makeHut({ width: 3.2, height: 2.4, depth: 2.5 });

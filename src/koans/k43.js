@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
-  composeWorld, makePath, makeMonk, aimMonk, faceMonk, makeAssembly,
+  composeWorld, makePath, makeMonk, aimMonk, faceMonk, makeAssembly, plantTree,
   makeRack, makeLights, washMaterial, tapMeshes,
 } from '../kit/index.js';
 
@@ -109,6 +109,8 @@ const CAM = { distance: 10.6, target: [0.7, 0.7, -0.55], heading: 12, pitch: 5.5
   });
   scene.add(assembly);
   
+  plantTree(scene, { x: 3.0, z: -3.7, height: 4.7 });
+
   const world = composeWorld(scene, {
   view: CAM,
   seed: 105,

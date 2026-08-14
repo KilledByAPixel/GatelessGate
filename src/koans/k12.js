@@ -86,7 +86,7 @@ function voidStrip(lipZ, pad = 0) {
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
 const CAM = {
-distance: 15, target: [0.8, 1.35, 0.35], heading: 23.5, pitch: 18
+distance: 15, target: [0.8, 1.9, 0.35], heading: 23.5, pitch: 18
 };
 export default {
   id: ID,

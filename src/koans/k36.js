@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
-  composeWorld, makePath, makeMonk, faceMonk, makePine,
+  composeWorld, makePath, makeMonk, faceMonk, makePine, plantTree,
   makeHorse, makeBundle,
   makeLights, } from '../kit/index.js';
 
@@ -91,7 +91,7 @@ function bowShape(u) {
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 8.6, target: [1.38, 1.15, -2.18], heading: -19.5, pitch: 13.5 };
+const CAM = { distance: 8.6, target: [1.38, 1.45, -2.18], heading: -19.5, pitch: 13 };
   export default {
   id: ID,
   slug: 'meeting-a-zen-master-on-the-road',
@@ -187,6 +187,8 @@ const CAM = { distance: 8.6, target: [1.38, 1.15, -2.18], heading: -19.5, pitch:
   bundle.group.rotation.y = 0.9;
   scene.add(bundle.group);
   
+  plantTree(scene, { kind: 'pine', x: 4.2, z: -3.7, height: 4.7 });
+
   const world = composeWorld(scene, {
   view: CAM,
   seed: ID,
