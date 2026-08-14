@@ -71,7 +71,7 @@ function rockEnv(u) {
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 7.5, target: [1.45, 1.5, -4.1], heading: -18, pitch: 8 };
+const CAM = { distance: 7.5, target: [1.45, 1.3, -4.1], heading: -17, pitch: 7.5 };
 
 export default {
   id: ID,
