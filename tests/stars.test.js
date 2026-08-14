@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeStars } from '../src/kit/stars.js';
+import { CAMERA_FAR } from '../src/camera.js';
 
 test('a whole sky is one draw call', () => {
   // The entire reason the field can be this size. One Points, one geometry,
@@ -21,8 +22,9 @@ test('stars are sky, not scenery', () => {
   assert.equal(material.fog, false);
   // The ink pass is a Sobel over depth, so anything that WRITES depth grows an
   // outline — an outlined star is a hole punched in the sky. Depth TESTING
-  // stays on, so the land occludes what is below the horizon and a moon at
-  // sixty units passes in front of a shell at eighty.
+  // stays on, which is what makes the land occlude the stars below the horizon
+  // and the moon pass in front — and is also why the shell's radius has to
+  // clear everything the book draws (see below).
   assert.equal(material.depthWrite, false);
   assert.equal(material.depthTest, true);
   // The bounding sphere is centred on the shell, so a camera inside it culls
@@ -57,10 +59,12 @@ test('a star is round — a bare point is a square', () => {
   }
 });
 
-test('the shell is behind the moon and inside the far plane', () => {
-  // Case 19's moon stands at 60 and the app's camera far plane is 100. The
-  // shell has to sit between them or it is either in front of the moon or
-  // clipped away.
+test('the shell stands further off than anything the book draws', () => {
+  // The shell rides the eye, so its radius IS its distance from the eye, and
+  // anything drawn beyond it sits BEHIND the sky — which is how mountains came
+  // out in front of the night at radius 80. The book's far ridges run to about
+  // 82 from the lens and case 19's moon to 60; past CAMERA_FAR the stars are
+  // clipped themselves. The window is narrow and this is what holds it.
   const s = makeStars({ seed: 5 });
   const pos = s.points.geometry.getAttribute('position');
   const v = new THREE.Vector3();
@@ -70,8 +74,8 @@ test('the shell is behind the moon and inside the far plane', () => {
     const d = v.length();
     min = Math.min(min, d); max = Math.max(max, d);
   }
-  assert.ok(min > 60, `a star stands in front of the moon: ${min.toFixed(1)}`);
-  assert.ok(max < 100, `a star stands past the far plane: ${max.toFixed(1)}`);
+  assert.ok(min > 85, `terrain can stand in front of the sky: ${min.toFixed(1)}`);
+  assert.ok(max < CAMERA_FAR, `a star stands past the far plane: ${max.toFixed(1)}`);
 });
 
 test('the sky runs down past the horizon, not to a band above it', () => {

@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { PAPER } from '../palette.js';
 import { hash1 } from '../util/noise.js';
+import { CAMERA_FAR } from '../camera.js';
 
 // A SKY FULL OF STARS, IN ONE DRAW.
 //
@@ -22,10 +23,20 @@ import { hash1 } from '../util/noise.js';
 //
 // THE SHELL FOLLOWS THE LENS (`follow` below) rather than standing still in
 // the world. Two things fall out of that, both wanted: stars never clip on the
-// far side when a case is wheeled out (the app's far plane is 100 and a fixed
-// shell would put its far half beyond that), and they have no parallax, which
-// is what being infinitely far away looks like. Position only — carrying the
-// camera's ROTATION would pin them to the screen like a decal.
+// far side when a case is wheeled out (a fixed shell would put its far half
+// past the far plane), and they have no parallax, which is what being
+// infinitely far away looks like. Position only — carrying the camera's
+// ROTATION would pin them to the screen like a decal.
+//
+// AND IT STANDS JUST INSIDE THE FAR PLANE, which is the whole of how the radius
+// is chosen. Because the shell rides the eye, its radius IS its distance from
+// the eye — so anything drawn further off than that sits BEHIND the sky and the
+// stars paint over it. At eighty they did exactly that: the book's far ridges
+// run out to around eighty-two from the lens, and mountains came out in front
+// of the night. There is nowhere further to go than CAMERA_FAR, because past it
+// the stars themselves are clipped; the few units of margin are all the room
+// there is. `size` is a WORLD size at the shell, so it moves with the radius to
+// hold the same apparent size — change one and change the other.
 //
 // Brightness varies per star through a colour attribute rather than several
 // materials, so a sky with depth in it is still one draw.
@@ -62,9 +73,9 @@ function starDisc() {
 }
 export function makeStars({
   count = 700,
-  radius = 80,
+  radius = CAMERA_FAR - 4,
   seed = 1,
-  size = .8,
+  size = 0.96,
   color = PAPER,
   // HOW FAR DOWN THE SHELL REACHES, in cos(phi): 1 stops level with the
   // centre, 2 is a whole sphere. Past 1 by a little on purpose — a field that

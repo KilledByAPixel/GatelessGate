@@ -37,22 +37,48 @@ const DROP = 6.5;
 // He stands on the lip, a stride back from the brink, looking out over it.
 const ZUIGAN = { x: 0.9, z: 0.35 };
 
-// How far out the chasm runs before the ground climbs back. NARROW on purpose,
-// and it is the number the whole shot turns on: a gorge between the reader and
-// the subject is only a gorge if the camera stands on the FAR rim of it. At the
-// case's own distance the lens sits around z = 8, so the ground has to be back
-// up by then — otherwise the camera hangs over the middle of the hole, the drop
-// falls away directly beneath the frame, and the picture is exactly what it was
-// before: a man on some rocks with nothing under them.
-const GORGE = 8.0;
+// THE GORGE, in five numbers and nothing else.
+//
+// The carve at the bottom of build() is a product of smoothsteps and reads as
+// maths rather than as a shape, so: past the lip the ground falls over `face`
+// units to DROP, runs flat, and climbs back out over the last `rim` units
+// before `reach` — that far rim being the ground the camera itself stands on.
+// Across the frame it is at full depth out to |x| = `half` and closed again by
+// `half + taper`, so the meadow wraps round the ends instead of the cut ending
+// on a straight wall.
+//
+// WIDER IS ONE NUMBER: `half`. The rock at the brink follows it — the lip
+// sections are laid out to cover whatever span this asks for, so widening the
+// hole can never leave an unrocked edge for the turf to tear on.
+//
+// `reach` is the one with a ceiling, and it is what this staging turns on: a
+// gorge between the reader and the subject is only a gorge if the camera stands
+// on the FAR rim of it. The lens sits around z = 13 here, so the ground must be
+// back up before then. Push reach past it and the camera hangs over the middle
+// of the hole with the drop directly beneath the frame — which is the picture
+// this whole arrangement exists to avoid: a man on some rocks with nothing
+// under them.
+const GORGE = {
+  reach: 10.0,
+  half: 13.0,
+  taper: 6.0,
+  face: 1.4,
+  rim: 2.0,
+};
+// How far either side of centre the cut reaches at all.
+const GORGE_SPAN = GORGE.half + GORGE.taper;
 
-// Grass keeps off the air over the chasm, and off nothing else. Circles, because
-// that is what composeWorld takes — a chain dense enough to blanket the gap with
-// no seam for a blade to grow through and stand on nothing.
-function voidStrip(lipZ) {
+// Nothing is planted on the air. Circles, because that is what composeWorld
+// takes — a chain dense enough to blanket the gap with no seam for a blade to
+// grow through and stand on nothing. One definition for both keepouts: the
+// grass takes it as it is, and the props take it with more padding, because a
+// tree leaning over the brink is worse than a blade doing it.
+function voidStrip(lipZ, pad = 0) {
   const out = [];
-  for (let z = lipZ + 1.6; z < lipZ + GORGE + 1; z += 3.0) {
-    for (let x = -20; x <= 20; x += 3.0) out.push({ x, z, r: 2.3 });
+  for (let z = lipZ + 1.6; z < lipZ + GORGE.reach + 1; z += 3.0) {
+    for (let x = -GORGE_SPAN - 3; x <= GORGE_SPAN + 3; x += 3.0) {
+      out.push({ x: CLIFF.x + x, z, r: 2.3 + pad });
+    }
   }
   return out;
 }
@@ -105,21 +131,30 @@ export default {
     // drop rather than as depth rather than as depth. Shallower than case 5's
     // is fine — this one is a ledge, not a chasm — the carve below runs the
     // face down and climbs it back out as a rim.
-    const cliff = makeCliff({
-      width: 13, drop: 6.5, depth: 2.6, seed: ID,
-      origin: [CLIFF.x, CLIFF.z], yaw: CLIFF.yaw,
-    });
-    cliff.position.set(CLIFF.x+5, 0, CLIFF.z);
-    cliff.rotation.y = CLIFF.yaw;
-    scene.add(cliff);
-
-    const cliff2 = makeCliff({
-      width: 13, drop: 6.5, depth: 2.6, seed: ID,
-      origin: [CLIFF.x-5, CLIFF.z], yaw: CLIFF.yaw,
-    });
-    cliff2.position.set(CLIFF.x-5, 0, CLIFF.z);
-    cliff2.rotation.y = CLIFF.yaw;
-    scene.add(cliff2);
+    // THE BRINK IS LAID OUT FROM THE HOLE, not typed in beside it. One lip run
+    // is SECTION wide; enough of them go down, overlapping, to cover the whole
+    // span the carve reaches — so `GORGE.half` is the only thing to turn and
+    // the stone can never fall short of the cut. Each takes its own seed, or
+    // the sections repeat and the run reads as a tiled fence.
+    //
+    // `origin` must match where the section actually STANDS: makeCliff samples
+    // the rolling ground under its lumps through it, so a section placed at one
+    // x and origin'd at another beds its rocks into the wrong hillside.
+    const SECTION = 13;
+    const OVERLAP = 3;
+    const steps = Math.max(1, Math.ceil((2 * GORGE_SPAN) / (SECTION - OVERLAP)));
+    const cliffs = [];
+    for (let i = 0; i <= steps; i++) {
+      const x = CLIFF.x - GORGE_SPAN + (2 * GORGE_SPAN) * (i / steps);
+      const c = makeCliff({
+        width: SECTION, drop: DROP, depth: 2.6, seed: ID + i * 17,
+        origin: [x, CLIFF.z], yaw: CLIFF.yaw,
+      });
+      c.position.set(x, 0, CLIFF.z);
+      c.rotation.y = CLIFF.yaw;
+      scene.add(c);
+      cliffs.push(c);
+    }
 
     // ZUIGAN, alone, near the edge. `elder` gives him the kit's own staff, held
     // the ordinary way and in his own ink — the free-standing vermillion shaft
@@ -161,10 +196,14 @@ export default {
         { count: 8, distance: 252, arcSpan: 3.6 },
         { count: 5, distance: 35, arcSpan: 2.4},
       ],
+      // The same strip the grass gets, with more padding: a tree leaning over
+      // the brink is worse than a blade doing it. Not the sections' own
+      // footprints any more — with the run laid out from the gorge's width
+      // there are five of them, and every lump of every one would be a circle
+      // the placement loop retests for every candidate it tries.
       keepout: [
         { x: 0, z: 20, r: 1.4 },
-        ...cliff.footprint(1.0),
-        ...cliff.voidFootprint(0.5),
+        ...voidStrip(LIP_Z, 0.6),
         { x: ZUIGAN.x, z: ZUIGAN.z, r: 1.4 },
       ],
       // The mask is worth having again now that there is something to mask. It
@@ -195,9 +234,11 @@ export default {
       const d = gpos.getZ(i) - LIP_Z;             // how far out over the air
       if (d <= 0) continue;
       const wx = gpos.getX(i);
-      const bay = SS(-9.5, -5.0, wx) * (1 - SS(5.0, 9.5, wx));
+      const ax = wx - CLIFF.x;                    // the gorge is centred on the lip run
+      const bay = SS(-GORGE_SPAN, -GORGE.half, ax) * (1 - SS(GORGE.half, GORGE_SPAN, ax));
       if (bay <= 0) continue;
-      const sink = DROP * SS(0, 1.4, d) * (1 - SS(GORGE - 2.0, GORGE, d)) * bay;
+      const sink = DROP * SS(0, GORGE.face, d)
+        * (1 - SS(GORGE.reach - GORGE.rim, GORGE.reach, d)) * bay;
       if (sink > 0) gpos.setY(i, gpos.getY(i) - sink);
     }
     gpos.needsUpdate = true;

@@ -1,6 +1,6 @@
 import * as THREE from '../lib/three.module.js';
 import { listenerFrom } from './camera_listener.js';
-import { makeCameraRig, makeFreeCam, DEFAULT_HOME, FREECAM_KEY, packFreeCam, unpackFreeCam } from './camera.js';
+import { makeCameraRig, makeFreeCam, DEFAULT_HOME, FREECAM_KEY, packFreeCam, unpackFreeCam, CAMERA_FAR } from './camera.js';
 import { makeDissolve } from './render/dissolve.js';
 import { installGrain } from './render/grain.js';
 import { makePost } from './render/post.js';
@@ -54,7 +54,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 stage.appendChild(renderer.domElement);
 const grain = installGrain(document, { mount: stage });
 
-const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, CAMERA_FAR);
 { const { w, h } = stageSize(); camera.aspect = w / h; camera.updateProjectionMatrix(); }
 const dissolve = makeDissolve();
 dissolve.setAspect(camera.aspect);

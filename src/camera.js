@@ -59,6 +59,16 @@ export function eyePosition({ heading, pitch, distance }, target) {
 // fix everywhere else in this file's neighbourhood.
 export const DEFAULT_HOME_DISTANCE = 11.5;
 
+// THE FAR PLANE, named because two things have to agree about it. main.js
+// builds the app's camera with it, and the night sky's star shell stands just
+// inside it (kit/stars.js): the shell follows the lens, so its radius IS its
+// distance from the eye, and every star has to be further off than anything
+// the book actually draws or the terrain reads as being behind the sky. The
+// furthest drawn geometry in the book sits around 82 from the lens, so there
+// is room between that and this — but not much, which is the whole reason
+// these two are one number instead of two.
+export const CAMERA_FAR = 100;
+
 // AND THE WHOLE OF THAT FRAMING, for the three places that need all of it
 // rather than just the distance: main.js builds every case's rig from it, the
 // tests' probe camera stands at it, and the four cases with no `camera:` of
