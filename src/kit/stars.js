@@ -40,7 +40,7 @@ import { hash1 } from '../util/noise.js';
 // A small solid core with a soft rim — a star is a point of light, not a dot of
 // paint, and the ramp is doing the antialiasing at three pixels across.
 const DISC_SIZE = 32;
-const DISC_CORE = 0.32;   // fraction of the radius that stays fully opaque
+const DISC_CORE = 0.5;   // fraction of the radius that stays fully opaque
 function starDisc() {
   const px = new Uint8Array(DISC_SIZE * DISC_SIZE * 4);
   for (let i = 0; i < DISC_SIZE * DISC_SIZE; i++) {
@@ -64,7 +64,7 @@ export function makeStars({
   count = 700,
   radius = 80,
   seed = 1,
-  size = 0.6,
+  size = .8,
   color = PAPER,
   // HOW FAR DOWN THE SHELL REACHES, in cos(phi): 1 stops level with the
   // centre, 2 is a whole sphere. Past 1 by a little on purpose — a field that
