@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path';
 
 import {
   SECTIONS, SITE, SOURCE_URL, REPO_URL, BOOK_MD, THREE_VERSION, TTS_MODEL,
+  REPO_CALLOUT,
 } from '../src/ui/about_state.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -76,6 +77,19 @@ test('every link is safe, and the expected links are present', () => {
   assert.ok(hrefs.includes(REPO_URL), 'the repository is linked');
   assert.ok(hrefs.includes(SOURCE_URL), 'the transcription source is linked');
   assert.ok(hrefs.includes(BOOK_MD), 'the whole-text page is linked');
+});
+
+test('the repository is called out under the head, not only buried in prose', () => {
+  // Frank's ask: the GitHub link matters to this version and was four sections
+  // deep. The callout is state (so it is checkable here) and the view renders
+  // it — both halves pinned, since either could quietly drop the other.
+  assert.equal(REPO_CALLOUT.href, REPO_URL, 'the callout points at the canonical repository');
+  assert.match(REPO_CALLOUT.text, /github\.com\/KilledByAPixel\/GatelessGate/,
+    'the visible text is the address itself — a reader can read it without clicking');
+  assert.ok(REPO_CALLOUT.lead && REPO_CALLOUT.lead.trim(), 'the lead-in names why it is there');
+  const view = read('src/ui/about.js');
+  assert.match(view, /REPO_CALLOUT/, 'about.js renders the callout');
+  assert.match(view, /gg-about-repo/, 'with its own set-apart line');
 });
 
 test('an in-book link points at a file that is actually there', () => {

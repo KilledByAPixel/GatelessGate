@@ -33,6 +33,19 @@ export const THREE_VERSION = 'r185';
 // reading was re-baked in Gemini and this page went on crediting OpenAI.
 export const TTS_MODEL = 'gemini-3.1-flash-tts-preview';
 
+// The repository, called out on its own line under the About head rather than
+// left buried mid-paragraph (Frank: "put the github link a bit more
+// prominently since it is kind of important for this version") — an
+// open-source book should say so where the reader's eye lands first, not
+// four sections down. Rendered by about.js right below the heading; the
+// in-paragraph mention in 'This edition' stays, the way print repeats what
+// matters.
+export const REPO_CALLOUT = {
+  lead: 'Free and open source: ',
+  text: 'github.com/KilledByAPixel/GatelessGate',
+  href: REPO_URL,
+};
+
 // A part is either a string or a [text, href] pair for the few places a link
 // earns its keep.
 export const SECTIONS = [
