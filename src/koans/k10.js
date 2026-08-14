@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
-  composeWorld, makePath, makeHut, makeMonk, faceMonk, makeVase,
+  composeWorld, makePath, makeHut, makeMonk, faceMonk, makeVase, frontShadow,
   makeLights, washMaterial, plantTree,
 } from '../kit/index.js';
 
@@ -88,7 +88,7 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 11 };
   for (const [i, [cx, cz]] of CUP_AT.entries()) {
   const pivot = new THREE.Group();       // tips about its own foot
   pivot.name = 'cup';
-  pivot.position.set(cx, 0.035, cz);
+  pivot.position.set(cx, 0.045, cz);
   pivot.rotation.y = i * 1.1;
   const profile = [
   [0.001, 0.000], [0.035, 0.000], [0.032, 0.012], [0.052, 0.055],
@@ -171,7 +171,7 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 11 };
   const u = c.tippedAt > -99 ? clamp01((clock - c.tippedAt) / TIP) : 0;
   const e = u * u * (3 - 2 * u);
   c.pivot.rotation.z = -.8*(Math.PI / 2) * e;
-  c.pivot.position.y = .04 + u*.03;
+  c.pivot.position.y = .045 + u*.03;
   }
   },
   fragment() {
