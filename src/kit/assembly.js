@@ -9,6 +9,12 @@ import { seatedBodyGeometry, HAT_PROFILE } from './figure.js';
 // monk repeated in a shallow arc, each facing a focal point. Hero figures
 // (Buddha, Kasyapa) are placed separately by the scene.
 //
+// The arc is the caller's: `arcSpan` is the angle it subtends and `arcCenter`
+// the bearing its middle sits at from `center` (same convention as the facing
+// maths — 0 is +z, positive swings toward +x), so two crowds can ring one
+// spot from opposite sides. The defaults are the original fixed fan every
+// older case was staged against.
+//
 // The per-instance geometry is built from figure.js's OWN seated-robe and
 // sedge-hat profiles, not from a stand-in: a cone-and-ball pawn was tried first
 // and read as exactly what it was: a triangle with a tiny circle head. The obi
@@ -43,13 +49,14 @@ export function makeAssembly({ count = 8, radius = 3.0, center = [0, 0], facing 
 
   const m = new THREE.Matrix4();
   const col = new THREE.Color();
-  const arc = arcSpan;
+  const plan = [];   // plan-view [x, z] per instance, for the footprint below
   for (let i = 0; i < count; i++) {
     const t = count === 1 ? 0.5 : i / (count - 1);
-    const ang = arcCenter-arc / 2 + t * arc;
+    const ang = arcCenter - arcSpan / 2 + t * arcSpan;
     const rr = radius + (hash1(i * 2 + 1, seed) - 0.5) * spread;
     const x = center[0] + Math.sin(ang) * rr;
     const z = center[1] + Math.cos(ang) * rr;
+    plan.push([x, z]);
     const yaw = Math.atan2(facing[0] - x, facing[1] - z);
     const sc = 0.9 + 0.2 * hash1(i * 2 + 7, seed);
     m.compose(
@@ -73,5 +80,18 @@ export function makeAssembly({ count = 8, radius = 3.0, center = [0, 0], facing 
   }
   mesh.instanceMatrix.needsUpdate = true;
   if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+
+  // THE FOOTPRINT, published for keepouts. The kit's rule is keepouts by live
+  // reference, but an instanced crowd cannot be an `{ at: object }` target:
+  // the mesh sits at the origin and the placement lives in world-space
+  // instance matrices, so a keepout aimed at the mesh guards empty grass at
+  // (0,0). This is the honest equivalent — the smallest circle around where
+  // the figures actually sit (plus a seated figure's own reach), recomputed
+  // from the same numbers that placed them, so a retuned arc moves its
+  // keepout with it. Callers add their own breathing room.
+  const cx = plan.reduce((s, p) => s + p[0], 0) / plan.length;
+  const cz = plan.reduce((s, p) => s + p[1], 0) / plan.length;
+  const reach = Math.max(...plan.map(([x, z]) => Math.hypot(x - cx, z - cz)));
+  mesh.userData.footprint = { x: cx, z: cz, r: reach + 0.4 };
   return mesh;
 }
