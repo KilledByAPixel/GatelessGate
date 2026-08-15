@@ -181,7 +181,7 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   // the pair of cylinders first: probed and returned on before the big
   // call-hit box below ever gets a chance to start a call
   for (const c of chimes) {
-  if (c.pick(camera, input)) { touched && touched(); c.ring(0.75); return; }
+  if (c.pick(camera, input)) { c.ring(0.75); return; }
   }
   if (!input.raycastFirst(camera, [hit])) return;
   // reported here, with the nod below and for the same reason: the touch has

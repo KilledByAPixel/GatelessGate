@@ -279,7 +279,7 @@ export default {
       // mutation-verifies this second consequence by deleting the return).
       for (const single of singles) {
         const singleHit = single.pick(camera, input);
-        if (singleHit) { touched && touched(); single.ring(0.75, singleHit.tube); return; }
+        if (singleHit) { single.ring(0.75, singleHit.tube); return; }
       }
       const hit = input.raycastFirst(camera, [flag.mesh]);
       if (hit) {

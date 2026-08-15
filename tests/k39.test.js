@@ -159,11 +159,10 @@ test('case 39: a grey stone holds — it knocks, and nothing sinks', () => {
 // answers are the borrowed phrases that hold, and marking the row for one of
 // them would credit the reader with the gesture the case is about refusing.
 //
-// This is also what tests/staging.test.js's TOUCH_BEYOND_A_BLIND_TAP exemption
-// stands on. That net taps whatever a case offers FIRST, which here is always
-// stone 0 and is grey at every seed, so the net cannot reach the red and had to
-// stop requiring a report from this case. The requirement moves here, where a
-// tap can be aimed.
+// The staging net proves there is SOME way to earn this page's mark (it sweeps
+// a case's probes in turn, so it reaches the red stone six probes in). Only a
+// test that can aim can prove the rest of the crossing does NOT earn it, which
+// is the half that carries the editorial ruling, so it lives here.
 test('case 39: only the red stone is a find — a grey one holds and reports nothing', () => {
   const { ctx, tops, tap } = staged();
   const red = tops.findIndex((t) => t.material.color.getHexString() === RED);

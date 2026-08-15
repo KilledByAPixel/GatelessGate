@@ -54,3 +54,19 @@ export const hitAll = (point = [0, 0, 0]) => (cam, objs) => (objs && objs.length
 // misses everything — fake-ctx's default, named so a test that switches a
 // ctx back to missing says so legibly
 export const missAll = () => null;
+
+// HITS THE Nth PROBE OF A TAP AND NOTHING ELSE. hitAll can only ever reach a
+// case's FIRST probe, because every handler returns on its first hit — which is
+// fine for "does anything answer at all" and useless for a page whose find is
+// not the thing it probes first. And that is most of them on purpose: a hung
+// chime is probed ahead of the case's own subject precisely so a tap aimed at
+// the chime is never swallowed by a bigger hit box behind it.
+//
+// So this counts raycastFirst calls within one tap and hits only on the k-th,
+// letting a sweep ask "is there ANY probe that earns the mark" without knowing
+// which one it should be. Build a fresh one per tap — the counter is the state.
+export const hitNth = (k, point = [0, 0, 0]) => {
+  let i = 0;
+  return (cam, objs) => ((i++ === k && objs && objs.length)
+    ? { object: objs[0], point: new THREE.Vector3(...point), distance: 1 } : null);
+};

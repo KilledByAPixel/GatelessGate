@@ -210,7 +210,7 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -4, pitch: 13.
   // the FIRST hit also stops one tap ringing two of them.
   for (const c of chimes) {
   const chimeHit = c.pick(camera, input);
-  if (chimeHit) { touched && touched(); c.ring(0.75, chimeHit.tube); return; }
+  if (chimeHit) { c.ring(0.75, chimeHit.tube); return; }
   }
   // then Tozan himself, before the gate's box gets him: touch the man and
   // he bows deeper — a robe rustle, not a knock; nothing strikes him
@@ -225,7 +225,8 @@ const CAM = { distance: 10.1, target: [1.25, 1.3, -0.8], heading: -4, pitch: 13.
   }
   if (!input.raycastFirst(camera, [hit])) return;
   if (startedAt > -99 && struck < BLOWS) return;      // let the three finish
-  touched && touched();
+  // no touched() — the man is this page's find (above), and the beating is
+  // what the gate does to whoever stands under it
   startedAt = clock;
   struck = 0;
   beatings++;

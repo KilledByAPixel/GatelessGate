@@ -4,7 +4,7 @@ import { buildHub } from '../../intro.js';
 import { ACCENT, WASH } from '../../palette.js';
 import {
   makeBuddha, makeCat, makeWildflowers, groundHeight, washMaterial,
-  plantTree, plantRock,
+  plantTree, plantRock, tapMeshes,
 } from '../../kit/index.js';
 import { eyePosition } from '../../camera.js';
 
@@ -88,7 +88,10 @@ export default {
   ambience: ['wind:0.30', 'music'],
   mood: 'in',
   camera: CAM,
-  build() {
+  // ctx is optional the way the preface's is: scripts/dev/hub-trees.js builds
+  // this page with no arguments to print its scatter, and must keep working.
+  build(ctx = {}) {
+    const { audio = null, input = null, touched = null } = ctx;
     const built = buildHub({ gate: false, path: false, monk: false, lanterns: false, ...SEEDS });
     const scene = built.scene;
 
@@ -218,13 +221,52 @@ export default {
     });
     scene.add(flowers.mesh);
 
+    // ---- the last page you can touch --------------------------------------
+    // This page had nothing to reach at all: the book's other fifty answer a
+    // touch, and its closing scene sat there being looked at. Two things now,
+    // and only one of them is the find.
+    //
+    // HIM: a chime at the seated figure — the smallest sound the book has for
+    // a page whose whole subject is stillness, and nothing that could read as
+    // striking a man. This is the afterword's mark in the Contents.
+    //
+    // THE CAT: it stirs, and that is all. Reaching for the cat on the last page
+    // should do what reaching for a cat does; it should not be a second way to
+    // finish the book. The cloth brush is k14's ruling — a touched thing
+    // answers, and for fur the answer is a brush and never an impact.
+    let clock = 0;
+    let camera = null;
+    let greets = 0;
+    let stirs = 0;
+    let lastGreet = -99;
+    const buddhaTargets = tapMeshes(buddha);
+    input && input.onTap(() => {
+      if (!camera) return;
+      const onHim = input.raycastFirst(camera, buddhaTargets);
+      if (onHim) {
+        if (clock - lastGreet < 0.5) return;      // the book's usual held-pointer floor
+        lastGreet = clock;
+        greets++;
+        touched && touched();
+        audio && audio.chimeStrike({ tube: 2, force: 0.42, at: onHim.point });
+        return;
+      }
+      const onCat = input.raycastFirst(camera, cat.meshes());
+      if (onCat) {
+        cat.stir();
+        stirs++;
+        audio && audio.cloth({ force: 0.6, at: onCat.point });
+      }
+    });
+
     // buildHub's own return, with the cat driven off the end of it: its barrel
     // breathes and its tail drifts, which is the only thing moving on this page
     // besides the meadow. The simTime guard is the house idiom — a cat handed a
     // NaN clock stops breathing and never starts again.
-    let clock = 0;
     return {
       ...built,
+      setCamera(c) { camera = c; },
+      fragment() { return { greets, stirs }; },
       update(dt, simTime) {
         built.update(dt, simTime);
         clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);

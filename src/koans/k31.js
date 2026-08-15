@@ -184,7 +184,7 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   if (!camera) return;
   // the eave chime first, so a tap aimed at it never starts an asking
   const chimeHit = furin.pick(camera, input);
-  if (chimeHit) { touched && touched(); furin.ring(0.75, chimeHit.tube); return; }
+  if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
   if (!input.raycastFirst(camera, [hit])) return;
   if (clock - askedAt < POINT) return;
   touched && touched();

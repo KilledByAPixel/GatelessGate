@@ -342,7 +342,8 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   }
   const hit = input.raycastFirst(camera, meadow);
   if (hit) {
-  touched && touched();
+  // no touched() — the moon is the find (above); the meadow is the everyday
+  // life the case names, and brushing it raises the breeze and nothing more
   breeze = 1;
   touches++;
   }

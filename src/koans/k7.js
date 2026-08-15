@@ -179,12 +179,17 @@ export default {
     input.onTap(() => {
       if (!camera) return;
       // the deer-scarer first: a tap tips it without waiting out the fill
-      if (input.raycastFirst(camera, odoshi.pickTargets())) { touched && touched(); odoshi.tip(); return; }
+      if (input.raycastFirst(camera, odoshi.pickTargets())) { odoshi.tip(); return; }
       // The bowl is ITS OWN thing now — it used to answer with a ripple in the
       // basin two steps away, a cause with somebody else's effect. Touched, it
       // rocks on its foot and clinks like the empty thing it is — the ceramic
       // touch voice, k40's vase being the precedent for fired clay.
       if (input.raycastFirst(camera, bowlMeshes)) {
+        // THE BOWL IS THE FIND, and it is the only one on this page. The
+        // deer-scarer and the basin both answer — this scene has three things
+        // that do — but the koan is "go wash your bowl", and a mark earned by
+        // tipping the odoshi would say the reader had found the case when they
+        // had found the garden it sits in.
         touched && touched();
         rocks.push(clock);
         if (rocks.length > 4) rocks.shift();
@@ -195,7 +200,7 @@ export default {
       // touching the water rings it where you touched
       const onWater = surface ? input.raycastFirst(camera, [surface]) : null;
       if (onWater) {
-        touched && touched();
+        // rings, but is not the find — see the bowl above
         const local = water.group.worldToLocal(onWater.point.clone());
         water.ripple(local.x, local.z);
         audio && audio.drip({ loud: true, at: onWater.point });   // the touch you see is the drop you hear

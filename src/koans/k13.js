@@ -174,7 +174,7 @@ export default {
       // still holds even though main's handler runs before this one.
       if (input.raycastFirst(camera, bell.pickTargets())) {
         if (clock - lastRing < 0.5) return;
-        touched && touched();
+        // no touched() — "Tokusan holds his BOWL", and the bowl is above
         lastRing = clock;
         bell.strike();
         rings++;

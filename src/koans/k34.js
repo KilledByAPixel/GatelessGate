@@ -175,7 +175,7 @@ const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 2
   if (!camera) return;
   // the eave chime first, so a tap aimed at it never also calls the rain
   const chimeHit = eaveChime.pick(camera, input);
-  if (chimeHit) { touched && touched(); eaveChime.ring(0.75, chimeHit.tube); return; }
+  if (chimeHit) { eaveChime.ring(0.75, chimeHit.tube); return; }
   if (!input.raycastFirst(camera, hutMeshes)) return;
   if (clock - lastAt < 0.5) return;
   touched && touched();

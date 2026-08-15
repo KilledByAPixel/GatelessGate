@@ -201,7 +201,8 @@ const CAM = { distance: 11, target: [1.05, 1.25, -3.35], heading: 17, pitch: 18 
   // (Probing the cat first also silenced the staging net's hit-everything
   // tap: a silent stir must never be the FIRST thing a tap can reach.)
   const hit = input.raycastFirst(camera, flowerMeshes);
-  if (!hit && input.raycastFirst(camera, cat.meshes())) { touched && touched(); cat.stir(); return; }
+  // the cat stirs but is not the find: the flower is what Buddha holds up
+  if (!hit && input.raycastFirst(camera, cat.meshes())) { cat.stir(); return; }
   if (hit && releasePetal()) {
   touched && touched();
   // A petal genuinely makes no sound. The most that is honest is a suggestion

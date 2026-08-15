@@ -114,7 +114,7 @@ const CAM = { distance: 9.2, target: [0.1, 1.15, 0.6], heading: 36.5, pitch: 14 
   if (!camera) return;
   // the eave cluster first, so a tap aimed at it never also swaps the staff
   const chimeHit = furin.pick(camera, input);
-  if (chimeHit) { touched && touched(); furin.ring(0.75, chimeHit.tube); return; }
+  if (chimeHit) { furin.ring(0.75, chimeHit.tube); return; }
   if (!input.raycastFirst(camera, rack.pickTargets())) return;
   touched && touched();
   const given = rack.toggle();

@@ -8,7 +8,7 @@ import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT, PAPER } from '../src/palette.js';
 import { DRAW_BUDGET } from '../src/budget.js';
 import { SUN_PITCH_RANGE } from '../src/render/lights.js';
 import { emitterCount } from '../src/audio/engine.js';
-import { fakeCtx, hitAll } from './helpers/fake-ctx.js';
+import { fakeCtx, hitAll, hitNth } from './helpers/fake-ctx.js';
 import { stubAudio } from './helpers/stub-audio.js';
 
 // THE STAGING NET.
@@ -73,21 +73,13 @@ const NON_PAPER_SKY = new Set([27, 28]);
 // machinery stays for any future case that needs the silence.
 const SILENT_BY_HISTORY = [];
 
-// Cases whose ctx.touched() a BLIND tap cannot reach. This net taps whatever a
-// case offers FIRST, which is the right crudeness for "does anything answer at
-// all" and the wrong tool for a case whose find is one specific object among
-// several that all answer.
-//
-// 39 is the only one: every stepping stone knocks and the pond rings, but only
-// pushing the RED stone under is the find, and the first stone the handler
-// offers is stone 0 — grey at every seed, because the red starts at the far end
-// of the crossing. So the net can prove the case ANSWERS a touch (it does, with
-// a knock) and cannot prove it REPORTS one.
-//
-// An exemption here is a debt paid somewhere a tap can be aimed: tests/k39.test.js
-// holds both halves — a grey stone reports nothing, the red one reports once —
-// so the rule is checked more tightly than the net could manage, not dropped.
-const TOUCH_BEYOND_A_BLIND_TAP = [39];
+// How far the touch sweep walks a case's probes looking for its find (see the
+// sweep itself, below). Comfortably past the deepest handler in the book —
+// case 39 offers one probe per stepping stone and its red starts at the far
+// end of the crossing, which is the longest walk any case asks for. It exists
+// so that a case whose find is the LAST thing it probes is still reached, and
+// so that no case needs an exemption for being wired the ordinary way.
+const PROBE_SWEEP = 12;
 
 // Case 37's pen used to sit at 185 draws — its lattice was dozens of separate
 // bar meshes, each with its own outline. makePen now bakes each wall into one
@@ -334,14 +326,27 @@ for (const entry of staged) {
     // for, and the reason the signal is per-case at all rather than sniffed
     // centrally.
     //
-    // NO TIER EXEMPTION, unlike the audio assertion above: the tier-3 tableaux
-    // all answer a touch as of the interaction audit that emptied
-    // SILENT_BY_HISTORY, so anything that answers reports. A case that truly
-    // answers with nothing would be exempt from BOTH, and belongs on that list.
-    // The other exemption is the blind tap's own reach — see the constant.
-    if (!SILENT_BY_HISTORY.includes(entry.id)
-      && !TOUCH_BEYOND_A_BLIND_TAP.includes(entry.id)) {
-      assert.ok(actx._touched > 0, 'the case answers a touch without reporting it (ctx.touched)');
+    // SWEPT, NOT TAPPED ONCE. The check above hits whatever a case probes
+    // FIRST, which is all "does anything answer" needs. It is the wrong
+    // instrument here, because a page's find is usually NOT its first probe: a
+    // hung chime is deliberately probed ahead of the case's own subject so a
+    // tap aimed at the chime is never swallowed by the bigger hit box behind
+    // it, and the chime is not what earns the mark. A first-hit tap could only
+    // ever reach the chime, so it would demand a growing list of exemptions for
+    // cases that are wired exactly right.
+    //
+    // hitNth walks the probes instead and asks the question actually worth
+    // asking: is there ANY way to earn this page's mark? Which probe it is, is
+    // the case's business. Sixty frames between attempts so a case that gates
+    // its answer on a clock (most of them do) is not refusing a tap it has
+    // already been given.
+    if (!SILENT_BY_HISTORY.includes(entry.id)) {
+      for (let k = 0; k < PROBE_SWEEP && actx._touched === 0; k++) {
+        actx.input.raycastFirst = hitNth(k, [1, 0.5, -2]);
+        actx._taps.forEach((cb) => cb());
+        for (let i = 0; i < 60; i++) aroot.update(1 / 60, 10 + k + i / 60);
+      }
+      assert.ok(actx._touched > 0, 'no tap anywhere on this page earns its mark (ctx.touched)');
     }
     aroot.dispose();
   });
@@ -377,34 +382,6 @@ test('any case silent by editorial choice makes no sound at all', async () => {
   }
 });
 
-test('a case exempt from the touch report genuinely cannot be reached blind', async () => {
-  // Same argument as the test above, for the other exemption list: it only
-  // SUPPRESSES a failure, so a case could sit on it long after its find became
-  // reachable and nothing would notice. This proves the exemption is still
-  // needed — a blind tap must report NOTHING — which is also what makes it
-  // self-clearing: aim a case's find at its first offered target and this test
-  // is what tells you to take it off the list.
-  //
-  // It does NOT prove the case reports a touch at all; that is the point of the
-  // exemption. The bespoke test named in the constant's comment owns that half.
-  for (const id of TOUCH_BEYOND_A_BLIND_TAP) {
-    const entry = staged.find((e) => e.id === id);
-    assert.ok(entry, `case ${id} is not staged`);
-    const mod = await loadKoan(entry.slug);
-    const ctx = fakeCtx({ audio: STUB_AUDIO() });
-    const root = mod.build(ctx);
-    root.setCamera(rigCamera(mod));
-    root.update(1 / 60, 0);
-    assert.ok(ctx._taps.length > 0, `case ${id} registered no tap at all`);
-    ctx.input.raycastFirst = hitAll();
-    for (let n = 0; n < 3; n++) {
-      ctx._taps.forEach((cb) => cb());
-      for (let i = 0; i < 60; i++) root.update(1 / 60, n + i / 60);
-    }
-    assert.equal(ctx._touched, 0,
-      `case ${id} reports a blind tap now — take it off TOUCH_BEYOND_A_BLIND_TAP`);
-  }
-});
 
 // THE BOOK'S LIGHT, judged whole. Each case's own test above proved its key
 // stands on the rail and pushed the aim into `aims`; what no single case can

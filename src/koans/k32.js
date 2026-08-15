@@ -147,30 +147,30 @@ const CAM = { distance: 10, target: [1.15, 1.45, -1.6], heading: 36.5, pitch: 16
   let sounded = true;      // the pending chime is already spent before the first asking
   const philTargets = tapMeshes(philosopher);
 
-  // ANY tap asks — there is nothing here to hit, which is the point. Aiming
-  // this at the Buddha would make the gesture a target-hunt, and the case is
-  // not one: the question is put to the scene and the scene declines it.
+  // THE PHILOSOPHER IS WHO YOU ASK. This used to fire on a tap ANYWHERE, on the
+  // reading that there is nothing here to hit and aiming would make the gesture
+  // a target-hunt. What that produced was a page where empty grass bowed the man
+  // — the reader saw him move and had no way to connect it to what they did, and
+  // it made "the scene declines the question" into "the scene answers the room".
+  // He is the one you put it to, so he is the one you touch.
   //
-  // But a tap that lands ON the philosopher acknowledges at the touch — a small
-  // chime, immediate, where the bottom-of-the-bow chime stays where it is,
-  // marking the thanking. A CHIME, not cloth: the first cut used a robe rustle,
-  // and a sweeping swish is not what this wants. A higher tube than the bow's
-  // 0, so the two reads stay two sounds. The ack plays even while a bow is in
-  // flight; the asking itself still waits for the bow he already gave you to
-  // finish.
+  // Two answers, one gesture: a small chime AT the touch, immediate, so the
+  // reach is acknowledged while the bow is still starting — and the bow's own
+  // chime at the bottom, marking the thanking. A CHIME, not cloth: the first
+  // cut used a robe rustle, and a sweeping swish is not what this wants; a
+  // higher tube than the bow's 0, so the two reads stay two sounds. The touch
+  // acknowledgment plays even while a bow is in flight; the asking itself still
+  // waits for the bow he already gave you to finish.
   input.onTap(() => {
-  if (camera) {
+  if (!camera) return;
   const hit = input.raycastFirst(camera, philTargets);
-  if (hit && clock - touchedAt >= 0.5) {
+  if (!hit) return;
   touched && touched();
+  if (clock - touchedAt >= 0.5) {
   touchedAt = clock;
   audio && audio.chimeStrike({ tube: 4, force: 0.5, at: hit.point });
   }
-  }
   if (clock - askedAt < BOW_SPAN) return;      // let the bow he already gave you finish
-  // the bow answers a tap ANYWHERE — this case's own idiom, so the reported
-  // touch is ungated by a hit the same way the bow is
-  touched && touched();
   askedAt = clock;
   asked++;
   sounded = false;

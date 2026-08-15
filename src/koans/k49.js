@@ -230,7 +230,7 @@ scene.fog = new THREE.FogExp2(PAPER, 0.028);
   // the closing chime first: it hangs inside the gate's own big
   // forgiving hit-box, so it has to be probed and returned on before
   // that box gets a chance to ring the passage-bell instead
-  if (closingChime.pick(camera, input)) { touched && touched(); closingChime.ring(0.75); return; }
+  if (closingChime.pick(camera, input)) { closingChime.ring(0.75); return; }
   if (input.raycastFirst(camera, [gateHit])) {
   // ONE RING, AS THE GATE STARTS TO GROW — "the opening" here is this
   // page's own gesture, nothing to do with the title screen (the torii is
@@ -252,7 +252,7 @@ scene.fog = new THREE.FogExp2(PAPER, 0.028);
   if (surface) {
   const hit = input.raycastFirst(camera, [surface]);
   if (hit) {
-  touched && touched();
+  // no touched() — the gate is the find that closes the book (above)
   const local = water.group.worldToLocal(hit.point.clone());
   water.ripple(local.x, local.z);
   audio && audio.drip({ loud: true, at: hit.point });

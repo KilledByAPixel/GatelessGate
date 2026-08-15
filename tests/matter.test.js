@@ -408,18 +408,25 @@ test('the afterword\'s own build() clears the whole stage', async () => {
   }
 });
 
-test('the preface monk rings the bell — the red figure acts through the bonshō', async () => {
-  // Touching the red figure rings the bell. Same strike and the same 0.5s floor
-  // as tapping the bonshō itself, spatialised at the bell — the bell is what
-  // sounds, whoever asked it to.
+test('the preface monk answers in his own voice, and he is the page\'s find', async () => {
+  // He used to RING THE BELL — touching him acted through him, on the reading
+  // that the bonshō is what sounds whoever asks. The cost was a first page with
+  // three touchable things and two sounds between them, so the answer could not
+  // tell the reader which one they had reached. He has his own chime now, and
+  // the mark in the Contents is his: the bell and the flag are the road he is
+  // standing on.
   const taps = [];
   const bells = [];
+  const chimes = [];
   const ctx = {
-    audio: { bell: (o) => bells.push(o), cloth: () => {} },
+    audio: {
+      bell: (o) => bells.push(o), chimeStrike: (o) => chimes.push(o), cloth: () => {},
+    },
     input: {
       onTap: (cb) => taps.push(cb), onHover: () => {},
       raycastFirst: () => null, pointer: () => ({ x: 0, y: 0 }),
     },
+    touched: () => { ctx._touched = (ctx._touched || 0) + 1; },
   };
   const mod = await loadKoan(PREFACE_SLUG);
   const built = mod.build(ctx);
@@ -436,14 +443,104 @@ test('the preface monk rings the bell — the red figure acts through the bonsh�
   };
 
   taps.forEach((cb) => cb());
-  assert.equal(bells.length, 1, 'touching the monk rings the bonshō');
-  assert.equal(bells[0].preset, 'temple', 'the same temple voice the bell answers with');
-  assert.equal(built.fragment().strikes, 1, 'counted as a strike like any other');
+  assert.equal(chimes.length, 1, 'the monk answers at the man');
+  assert.equal(bells.length, 0, 'and does NOT ring the bonshō across the road');
+  assert.equal(built.fragment().greets, 1);
+  assert.equal(ctx._touched, 1, 'he is the find on this page');
 
   taps.forEach((cb) => cb());
-  assert.equal(bells.length, 1, 'the held-pointer floor holds for him too');
+  assert.equal(chimes.length, 1, 'the held-pointer floor holds for him too');
 
   built.update(1 / 60, 2);
   taps.forEach((cb) => cb());
-  assert.equal(bells.length, 2, 'and past the floor he rings it again');
+  assert.equal(chimes.length, 2, 'and past the floor he answers again');
+});
+
+test('the preface bell rings without being the find', async () => {
+  // The other half of the ruling above: the bonshō is still the first sound a
+  // reader can make on the first page, and making it is not finishing the page.
+  const taps = [];
+  const calls = [];
+  const ctx = {
+    audio: { bell: (o) => calls.push(['bell', o]), chimeStrike: (o) => calls.push(['chime', o]), cloth: () => {} },
+    input: {
+      onTap: (cb) => taps.push(cb), onHover: () => {},
+      raycastFirst: () => null, pointer: () => ({ x: 0, y: 0 }),
+    },
+    touched: () => { ctx._touched = (ctx._touched || 0) + 1; },
+  };
+  const mod = await loadKoan(PREFACE_SLUG);
+  const built = mod.build(ctx);
+  built.setCamera({});
+  built.update(1 / 60, 1);
+
+  const bell = built.scene.getObjectByName('bell');
+  assert.ok(bell, 'the bonshō stands at the fork');
+  const bellMeshes = [];
+  bell.traverse((o) => { if (o.isMesh) bellMeshes.push(o); });
+  ctx.input.raycastFirst = (cam, objs) => {
+    const m = objs.find && objs.find((o) => bellMeshes.includes(o));
+    return m ? { object: m, point: { clone: () => ({ x: 0, y: 0, z: 0 }) }, distance: 1 } : null;
+  };
+
+  taps.forEach((cb) => cb());
+  assert.equal(calls.length, 1, 'one answer per tap');
+  assert.equal(calls[0][0], 'bell', 'and it is the bell');
+  assert.equal(built.fragment().strikes, 1);
+  assert.ok(!ctx._touched, 'ringing the bell does not finish the page');
+});
+
+// The closing scene had NOTHING to reach — every other page of the book answers
+// a touch and the afterword sat there being looked at. Two things now, and the
+// split between them is the whole point: he is the find, the cat is a cat.
+test('the afterword answers: the seated figure is the find, the cat is not', async () => {
+  const taps = [];
+  const calls = [];
+  const ctx = {
+    audio: { chimeStrike: (o) => calls.push(['chime', o]), cloth: (o) => calls.push(['cloth', o]) },
+    input: {
+      onTap: (cb) => taps.push(cb), onHover: () => {},
+      raycastFirst: () => null, pointer: () => ({ x: 0, y: 0 }),
+    },
+    touched: () => { ctx._touched = (ctx._touched || 0) + 1; },
+  };
+  const mod = await loadKoan(AFTERWORD_SLUG);
+  const built = mod.build(ctx);
+  assert.ok(taps.length > 0, 'the last page is touchable at all');
+  built.setCamera({});
+  built.update(1 / 60, 1);
+
+  const buddha = built.scene.getObjectByName('buddha')
+    || built.scene.children.find((c) => c.name === 'buddha');
+  assert.ok(buddha, 'the meditator is findable by name');
+  const himMeshes = [];
+  buddha.traverse((o) => { if (o.isMesh) himMeshes.push(o); });
+  ctx.input.raycastFirst = (cam, objs) => {
+    const m = objs.find && objs.find((o) => himMeshes.includes(o));
+    return m ? { object: m, point: { x: 0, y: 0, z: 0 }, distance: 1 } : null;
+  };
+  taps.forEach((cb) => cb());
+  assert.equal(calls.length, 1, 'one answer per tap');
+  assert.equal(calls[0][0], 'chime', 'the smallest sound the book has, at the man');
+  assert.equal(built.fragment().greets, 1);
+  assert.equal(ctx._touched, 1, 'and the closing page can be finished');
+
+  // the cat stirs, sounds like fur, and does NOT finish the book
+  const before = ctx._touched;
+  ctx.input.raycastFirst = (cam, objs) => (objs && objs.length && !himMeshes.includes(objs[0])
+    ? { object: objs[0], point: { x: 0, y: 0, z: 0 }, distance: 1 } : null);
+  built.update(1 / 60, 3);
+  taps.forEach((cb) => cb());
+  assert.equal(built.fragment().stirs, 1, 'the cat stirred');
+  assert.equal(calls[calls.length - 1][0], 'cloth', 'fur is a brush, never an impact');
+  assert.equal(ctx._touched, before, 'reaching for the cat is not a second way to finish');
+});
+
+test('the afterword still builds with no ctx at all — hub-trees.js calls it bare', async () => {
+  const mod = await loadKoan(AFTERWORD_SLUG);
+  const bare = mod.build();
+  for (let i = 0; i < 60; i++) bare.update(1 / 60, i / 60);
+  for (const [k, v] of Object.entries(bare.fragment())) {
+    assert.ok(Number.isFinite(v) || typeof v === 'boolean', `fragment.${k} = ${v}`);
+  }
 });

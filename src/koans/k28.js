@@ -241,7 +241,7 @@ const CAM = { distance: 9.6, target: [0.3, 1.25, -1.2], heading: 34, pitch: 13 }
   // the night chime first: it hangs well clear of the candle's own
   // generous hit cylinder, but probed and returned on regardless, same
   // ordering every case with more than one voice uses
-  if (nightChime.pick(camera, input)) { touched && touched(); nightChime.ring(0.75); return; }
+  if (nightChime.pick(camera, input)) { nightChime.ring(0.75); return; }
   // the generous invisible cylinder is still the real target (a flame is
   // a sliver to hit on a phone), but the flame and the kit's candle are
   // listed too so a dead-on tap works even if the cylinder ever moves

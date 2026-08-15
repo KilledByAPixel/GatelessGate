@@ -176,6 +176,7 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   let clock = 0;
   let strikes = 0;
   let ruffles = 0;
+  let greets = 0;      // the monk answering, which is this page's own find
   let lastRing = -99;
   
   input && input.onHover(() => {
@@ -195,17 +196,32 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   audio && audio.bell({ preset: 'temple', at: bell.group.position });
   };
   const monkTargets = tapMeshes(monk);
+  // THE MONK ANSWERS FOR HIMSELF. He used to ring the bonshō — touching him
+  // acted THROUGH him, on the reading that the bell is what sounds whoever asks
+  // — and the cost of that was a page with three touchable things and two
+  // sounds between them: the reader could not tell from the answer which thing
+  // they had reached. He gets his own voice now, a chime at the man rather than
+  // a bell across the road, and the bonshō is left to be the bonshō.
+  //
+  // He is also the page's one FIND: the mark in the Contents is his and not the
+  // bell's, which is the same ruling in the other direction — the bell and the
+  // flag are the road he is standing on.
+  let lastGreet = -99;
+  const greet = (at) => {
+  if (clock - lastGreet < 0.5) return;      // the bell's own floor, for the same reason
+  lastGreet = clock;
+  greets++;
+  touched && touched();
+  audio && audio.chimeStrike({ tube: 2, force: 0.5, at });
+  };
   input && input.onTap(() => {
   if (!camera) return;
-  if (input.raycastFirst(camera, bell.pickTargets())) { touched && touched(); ring(); return; }
-  // THE MONK RINGS THE BELL. The one red thing on the book's first page is the
-  // person about to walk it, so touching him acts THROUGH him — the bonshō
-  // across the road sounds, same strike, same 0.5s floor, spatialised at the
-  // bell rather than the man, because the bell is what sounds.
-  if (input.raycastFirst(camera, monkTargets)) { touched && touched(); ring(); return; }
+  // the bell rings, and ringing it is all it does
+  if (input.raycastFirst(camera, bell.pickTargets())) { ring(); return; }
+  const onMonk = input.raycastFirst(camera, monkTargets);
+  if (onMonk) { greet(onMonk.point); return; }
   const hit = input.raycastFirst(camera, [flag.mesh]);
   if (hit) {
-  touched && touched();
   const local = flag.mesh.worldToLocal(hit.point.clone());
   flag.hoverAt(local.x, local.y);
   ruffles++;
@@ -223,7 +239,7 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   flag.update(dt, simTime);
   },
   fragment() {
-  return { strikes, ruffles };
+  return { strikes, ruffles, greets };
   },
   dispose() {},
 };
