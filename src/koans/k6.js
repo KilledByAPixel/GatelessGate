@@ -94,10 +94,9 @@ const CAM = { distance: 11, target: [1.05, 1.25, -3.35], heading: 17, pitch: 18 
   // stone and the assembly, on his centre line, where the sight line to him
   // passes well over it. Still deliberately big — at this staging distance a
   // real-scale lotus is a red dot — big is fine; intersecting is not.
-  const flower = makeFlower({ height: 0.5, bloom: 0.62, petals: 7 });
-  const FLOWER_Z = SEAT_Z + 1.0;                   // just clear of the stone's skirt
+  const flower = makeFlower({ height: 0.6, bloom: 0.6, petals: 8 });
+  const FLOWER_Z = SEAT_Z + 1.8;
   flower.position.set(1.2, 0, FLOWER_Z);
-  flower.rotation.z = -0.14;
   scene.add(flower);
   
   // Mahakasyapa sits nearest, apart from the rest — the one who understands.
