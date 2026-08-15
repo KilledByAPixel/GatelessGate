@@ -74,7 +74,7 @@ test('a knee splits the hind legs into leg + shin, and only the hind legs', () =
 // headPivot — the invariant must survive both.
 test('ear bases are buried inside the skull — no gap — for dog and fox', () => {
   const builds = [
-    ['dog', makeDog({ height: 0.5 })],
+    ['dog', makeDog({ height: 0.5 }).group],
     ['fox', makeFox({ height: 0.45 }).group],
   ];
   for (const [label, root] of builds) {
@@ -267,7 +267,7 @@ test('the dog dropped the chest ball; the haunch stays', () => {
   // The brisket read as a round ball hanging below the chest — it never merged
   // with the body line, so the dog stopped asking for it. The option itself
   // stays on the shared plan.
-  const dog = makeDog({});
+  const dog = makeDog({}).group;
   assert.strictEqual(dog.getObjectByName('chest'), undefined, 'no brisket');
   assert.ok(dog.getObjectByName('haunch'), 'the rump mass is still there');
 });

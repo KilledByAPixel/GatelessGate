@@ -120,7 +120,7 @@ test('makeCat is cat-sized, not a small dog', () => {
   // being the intent. The direction still holds and stays pinned; the margins
   // belong to him.)
   const cat = makeCat({ height: 0.5, pose: 'stand' });
-  const dog = makeDog({ height: 0.5 });
+  const dog = makeDog({ height: 0.5 }).group;
   assert.ok(legTop(cat.group) < legTop(dog),
     `shorter legs than a dog: ${legTop(cat.group)} vs ${legTop(dog)}`);
 

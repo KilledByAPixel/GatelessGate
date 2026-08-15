@@ -171,13 +171,13 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   // same road everyone walks. That is the case: ordinary mind is the way.
   const dog = makeDog({ height: 0.5, seed: 19 });
   const dp = path.sample(0.155);
-  dog.position.set(dp.x + dp.perp.x * 0.18, 0, dp.z + dp.perp.z * 0.18);
-  faceMonk(dog, joshu.position);
+  dog.group.position.set(dp.x + dp.perp.x * 0.18, 0, dp.z + dp.perp.z * 0.18);
+  faceMonk(dog.group, joshu.position);
   // under this case's own low moon the grazing light drew the peter-pan gap
   // at the dog's feet wider than any sun does; the quadruped is closed
   // geometry throughout, so the contact fix is safe on it
-  frontShadow(dog);
-  scene.add(dog);
+  frontShadow(dog.group);
+  scene.add(dog.group);
   
   // The harvest moon: beyond the mountains and low, just clear of the ridge.
   // Its bearing sits a few degrees right of where the road runs out, so the
@@ -218,7 +218,7 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   ...path.keepout(40, 0.80),
   { x: nansen.position.x, z: nansen.position.z, r: 0.42 },
   { x: joshu.position.x, z: joshu.position.z, r: 0.42 },
-  { x: dog.position.x, z: dog.position.z, r: 0.38 },
+  { x: dog.group.position.x, z: dog.group.position.z, r: 0.38 },
   ],
   });
   scene.add(flowers.mesh);
@@ -356,6 +356,10 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
   world.update(dt, simTime);           // drives the meadow's wind
   flowers.update(dt, simTime);
+  // No tap here: this dog is scenery on its day off, and this case's touch
+  // belongs to the moon. It still breathes, though — the idle drift is the
+  // animal's own and costs the case one line.
+  dog.update(dt, simTime);
 
   // THE MOON COMES ON. The disc swells where it stands — it does not
   // approach, which would put it in front of the mountains; it grows, so

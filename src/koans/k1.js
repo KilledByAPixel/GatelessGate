@@ -69,14 +69,14 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   // unfogged, so when the world is swallowed it is what remains.
   const dog = makeDog({ height: 0.6, color: ACCENT });   // the seal of this koan
   const dp = path.sample(0.145);          // near the pair, inside the shared camera's frame
-  dog.position.set(dp.x - .7, 0, dp.z - 2.7);
-  dog.rotation.y = dp.heading + 2.4;      // looking back up the road at them
-  dog.traverse((o) => {
+  dog.group.position.set(dp.x - .7, 0, dp.z - 2.7);
+  dog.group.rotation.y = dp.heading + 2.4; // looking back up the road at them
+  dog.group.traverse((o) => {
   if (!o.isMesh) return;
   o.material = o.material.clone();
   o.material.fog = false;
   });
-  scene.add(dog);
+  scene.add(dog.group);
   
   const world = composeWorld(scene, {
   view: CAM,
@@ -86,7 +86,7 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   keepout: [
   ...path.keepout(26, 1.1),
   { x: mp.x, z: mp.z, r: 2.6 },
-  { x: dog.position.x, z: dog.position.z, r: 1.0 },
+  { x: dog.group.position.x, z: dog.group.position.z, r: 1.0 },
   { x: HUT.x, z: HUT.z, r: 3.0 },
   { x: LANTERN.x, z: LANTERN.z, r: 0.9 },
   ],
@@ -117,14 +117,19 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   let muPhase = -1;      // -1 idle, otherwise seconds elapsed
   let mu = 0;            // 0..1 how far the world has gone
   
-  const hitTargets = tapMeshes(dog);
-  
+  const hitTargets = tapMeshes(dog.group);
+
   input.onTap(() => {
   if (!camera || muPhase >= 0) return;
   const hit = input.raycastFirst(camera, hitTargets);
   if (!hit) return;
   touched && touched();
   muPhase = 0;
+  // The dog answers first, before the world goes: an ear, the head round and
+  // cocked over, and a burst of wagging. What it does is the DOG's (kit/dog.js)
+  // — the case only says when. It outlasts the emptying by design, so the one
+  // thing left in the paper is the one thing still moving.
+  dog.notice();
   // Not a strike — nothing here is touched. The world thins away and
   // comes back, and the sound is that shape: one long breath over the
   // whole gesture. There was no voice in the palette that was not an
@@ -141,6 +146,7 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   setCamera(c) { camera = c; },
   update(dt, simTime) {
   world.update(dt, simTime);
+  dog.update(dt, simTime);
   if (muPhase >= 0) {
   muPhase += dt;
   const t = muPhase / MU_DUR;
@@ -153,7 +159,7 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   }
   },
   fragment() {
-  return { mu: +mu.toFixed(4), fog: +scene.fog.density.toFixed(4) };
+  return { mu: +mu.toFixed(4), fog: +scene.fog.density.toFixed(4), wag: +dog.tailYaw().toFixed(4) };
   },
   dispose() {},
 };

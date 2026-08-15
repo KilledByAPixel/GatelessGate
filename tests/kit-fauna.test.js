@@ -36,15 +36,102 @@ function assertLegsConnect(root, label) {
 }
 
 test('makeDog is a grounded quadruped with named parts', () => {
-  const d = makeDog({ height: 0.5 });
+  const d = makeDog({ height: 0.5 }).group;
   assert.equal(d.name, 'dog');
-  const names = d.children.map((c) => c.name);
+  // By TRAVERSAL, not by direct children: the head and the tail hang off pivots
+  // of their own so the animal can turn them (kit/dog.js), and a test that pins
+  // the parenting instead of the parts fails on a rig change that broke nothing.
+  const names = [];
+  d.traverse((o) => names.push(o.name));
   assert.equal(names.filter((n) => n === 'leg').length, 4, 'four legs');
   assert.ok(names.includes('body') && names.includes('head') && names.includes('tail'));
   const box = new THREE.Box3().setFromObject(d);
   assert.ok(box.min.y > -0.02, `on the ground: ${box.min.y}`);
   assert.ok(box.max.y > 0.3 && box.max.y < 0.9, `dog-sized: ${box.max.y}`);
   assertLegsConnect(d, 'dog');
+});
+
+// ---- the dog moves ---------------------------------------------------------
+// It was the one animal in the book that was furniture, standing dead still in
+// both cases that use it while a cat and a fox either side of it breathed and
+// turned. What it does belongs to the ANIMAL; a case only says when.
+
+test('the dog hinges on its own joints, not on points in mid air', () => {
+  const d = makeDog({ height: 0.6 });
+  const root = d.group;
+
+  // THE TAIL PIVOT IS AT THE TAIL'S ROOT. A 'stiff' tail is a cylinder centred
+  // on its own origin, so sweeping the MESH swings both ends and the buried end
+  // walks out of the rump. Rotating the pivot must leave the root exactly where
+  // it was — this is the whole reason the pivot exists.
+  const tail = d.tail.getObjectByName('tail');
+  const buried = new THREE.Vector3(0, -tail.geometry.parameters.height / 2, 0);
+  const rootAt = () => { root.updateMatrixWorld(true); return tail.localToWorld(buried.clone()); };
+  const before = rootAt();
+  d.tail.rotation.y = 1;
+  const after = rootAt();
+  d.tail.rotation.y = 0;
+  assert.ok(before.distanceTo(after) < 1e-6,
+    `the tail root walks ${before.distanceTo(after)} under a sweep`);
+
+  // ...and the head hinges INSIDE the skull, so a turn is a turn and not an
+  // orbit. Derived from the head the quadruped built, so it survives the skull
+  // being moved or resized.
+  root.updateMatrixWorld(true);
+  const head = root.getObjectByName('head');
+  const gap = head.getWorldPosition(new THREE.Vector3())
+    .distanceTo(d.head.getWorldPosition(new THREE.Vector3()));
+  assert.ok(gap < head.geometry.parameters.radius, `the hinge sits ${gap} outside the skull`);
+
+  // and none of it costs a draw: pivots are Groups
+  let meshes = 0;
+  root.traverse((o) => { if (o.isMesh) meshes++; });
+  assert.ok(meshes <= 12, `${meshes} meshes in one dog`);
+});
+
+test('a touched dog cocks its head and wags, then goes back to standing there', () => {
+  const d = makeDog({ height: 0.6 });
+  assert.equal(d.notice(), true);
+  assert.equal(d.notice(), false, 'a held pointer stacked a second stir on the first');
+
+  let tilt = 0, wag = 0, flips = 0, prev = d.tailYaw();
+  for (let i = 0; i <= 60 * 6; i++) {
+    d.update(1 / 60, i / 60);
+    tilt = Math.max(tilt, Math.abs(d.head.rotation.z));
+    const w = d.tailYaw();
+    wag = Math.max(wag, Math.abs(w));
+    if (d.stirring() && Math.sign(w) !== Math.sign(prev)) flips++;
+    prev = w;
+  }
+  // THE HEAD COCK is the gesture — a turn alone is a head on a stick. Read as
+  // "big enough to see across a diorama", not as a pinned value.
+  assert.ok(tilt > 0.25, `the head barely cocks: ${tilt} rad`);
+  // A WAG OSCILLATES. A tail that sweeps aside once and comes back is a tail
+  // being pushed; several reversals inside one response is what says dog.
+  assert.ok(flips >= 6, `the tail swung ${flips} times — that is a lean, not a wag`);
+  assert.ok(wag > 0.3, `the wag is ${wag} rad wide`);
+  // and it ENDS. A response that never closes leaves the animal permanently
+  // excited, which reads as broken rather than as alive.
+  assert.equal(d.stirring(), false);
+  assert.ok(Math.abs(d.head.rotation.z) < 1e-9, 'the head stayed cocked');
+});
+
+test('the dog idles without being asked, and two dogs on a seed agree forever', () => {
+  const d = makeDog({ height: 0.6, seed: 3 });
+  let lo = Infinity, hi = -Infinity;
+  for (let i = 0; i < 60 * 90; i++) { d.update(1 / 60, i / 60); lo = Math.min(lo, d.headYaw()); hi = Math.max(hi, d.headYaw()); }
+  // never still...
+  assert.ok(hi - lo > 0.02, `the head never moves: ${hi - lo}`);
+  // ...and never busy. An idle that wanders as far as a response does steals
+  // the response's meaning.
+  assert.ok(hi - lo < 0.25, `the idle wanders ${hi - lo} rad — that is not idling`);
+
+  // the determinism rule: no Math.random outside src/audio
+  const a = makeDog({ seed: 7 }), b = makeDog({ seed: 7 });
+  a.notice(); b.notice();
+  for (let i = 0; i < 200; i++) { a.update(1 / 60, i / 60); b.update(1 / 60, i / 60); }
+  assert.equal(a.headYaw(), b.headYaw());
+  assert.equal(a.tailYaw(), b.tailYaw());
 });
 
 test('the shared quadruped joins legs to the barrel at any proportion', () => {
