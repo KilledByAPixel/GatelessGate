@@ -94,7 +94,7 @@ const CAM = { distance: 10, target: [0.5, 1.35, 0.3], heading: 18.5, pitch: 9.5 
   // lantern's base cover theirs
   grassKeepout: [
   ...path.keepout(26, 1.0),
-  { x: joshu.position.x, z: joshu.position.z, r: 1.6 },
+  { x: joshu.position.x, z: joshu.position.z, r: 1 },
   { x: HUT.x, z: HUT.z, r: 1.9 },
   { x: LANTERN.x, z: LANTERN.z, r: 0.4 },
   ],
