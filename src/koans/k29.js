@@ -38,7 +38,7 @@ const AMBIENCE = ['wind:' + BASE_WIND, 'furin', 'furin', 'music'];
 // so the shot is tuned here like every other case's rather than by moving the
 // book. composeWorld gets the same object as its `view`, so the scatter still
 // refuses spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.5, target: [2.75, 1.35, 0.55], heading: 36.5, pitch: 17.2 };
+const CAM = { distance: 10.2, target: [1.85, 1.35, 0], heading: 30, pitch: 15.5 };
 
 export default {
   id: ID,
@@ -89,14 +89,14 @@ export default {
     const mp = path.sample(0.17);
 
     const flag = makeFlag({ seed: 11 });
-    flag.group.position.set(mp.x + mp.perp.x * 2.4, 0, mp.z + mp.perp.z * 2.4 + 0.6);
+    flag.group.position.set(mp.x-2, 0, mp.z-2.5);
     scene.add(flag.group);
 
     const monkA = makeMonk({ pose: 'point' });
-    monkA.position.set(mp.x + mp.perp.x * 0.6, 0, mp.z + mp.perp.z * 0.6);
+    monkA.position.set(mp.x, .05, mp.z-1.5 );
     aimMonk(monkA, flag.group.position);      // raised sleeve aims at the flag
     const monkB = makeMonk({ stout: 1.12 });
-    monkB.position.set(mp.x - mp.perp.x * 0.8, 0, mp.z - mp.perp.z * 0.8);
+    monkB.position.set(mp.x, .05, mp.z+.5 );
     faceMonk(monkB, monkA.position);           // turns toward monkA — the argument
     scene.add(monkA, monkB);
 

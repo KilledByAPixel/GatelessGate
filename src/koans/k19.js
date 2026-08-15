@@ -179,7 +179,6 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   frontShadow(dog.group);
   scene.add(dog.group);
   
-
   plantRock(scene, { x: 3.1, z: -1, size: 1.9, sink: -.1  });
   plantRock(scene, { x: 3.2, z: 1.5, size: 1, sink: -.1  });
 

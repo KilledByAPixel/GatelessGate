@@ -3,6 +3,7 @@ import { hash1 } from '../util/noise.js';
 import { washMaterial } from '../render/material.js';
 import { WASH } from '../palette.js';
 import { groundHeight } from './ground.js';
+import { applyFoliageWind } from './foliage.js';
 
 // Ground dressing, each kind as ONE InstancedMesh (a single draw call):
 // rocks, bushes, grass tufts. Placement is seeded, ring-shaped, and respects
@@ -30,8 +31,11 @@ export function scatterPoints({ count, rMin = 4, rMax = 24, seed = 1, keepout = 
   return pts;
 }
 
-function instanced(geo, color, pts, { yOf, scaleOf, tintSpread = 0.06, sink = 0 }) {
+function instanced(geo, color, pts, { yOf, scaleOf, tintSpread = 0.06, sink = 0, wind = false }) {
   const mat = washMaterial({ color, flat: true });
+  // the instanced body, or every bush in the scene shares one gust cell and
+  // they all breathe together — see FOLIAGE_BODY_INSTANCED
+  if (wind) applyFoliageWind(mat, { instanced: true });
   const mesh = new THREE.InstancedMesh(geo, mat, pts.length);
   pts.forEach((pt, i) => {
     const sc = scaleOf(pt.u);
@@ -73,8 +77,16 @@ function rockGeometry(seed = 1) {
 // its lobes legible as lobes. Lobe count is itself seeded (2 or 3), and each
 // lobe is bigger than the old five-lobe version's so the whole clump keeps a
 // similar footprint with fewer, chunkier masses.
+// How much of the wood's reach a shrub gets. A bush is knee-high and a tree is
+// midground furniture several metres up, so the SAME world-unit travel that
+// reads as "alive" in a canopy would throw a shrub around: this is a fraction,
+// not a copy. Small on purpose — the brief was a little movement, and a bush
+// that swings is a bush the eye stops on.
+const BUSH_SWAY = 0.30;
+
 function bushGeometry(seed = 1) {
   const parts = [];
+  const phase = [];
   const N = hash1(seed * 13 + 1, seed) < 0.5 ? 2 : 3;
   for (let i = 0; i < N; i++) {
     const d = new THREE.DodecahedronGeometry(0.34 * (0.75 + 0.5 * hash1(i * 6 + 1, seed)), 0);
@@ -83,8 +95,29 @@ function bushGeometry(seed = 1) {
     const rad = i === 0 ? 0 : 0.26 * (0.6 + hash1(i * 6 + 3, seed));
     d.translate(Math.cos(a) * rad, 0.16 + 0.22 * hash1(i * 6 + 4, seed), Math.sin(a) * rad);
     parts.push(d);
+    // Each lobe reads the gust a little later than the last, so the clump
+    // shivers through itself instead of sliding as one block — the same lag
+    // that carries a bend out along a limb (foliage.js's aPhase).
+    phase.push(hash1(i * 6 + 5, seed));
   }
-  return mergeSimple(parts);
+  const geo = mergeSimple(parts, { aPhase: phase });
+
+  // THE WIND ATTRIBUTES (foliage.js). A shrub takes the BENDING COLUMN profile,
+  // not the branching one: aColumn > 0 makes the displacement rise as the
+  // square of the height fraction, so the bush stays rooted where it meets the
+  // ground however hard it blows and only its crown moves. The branching
+  // profile would displace the whole clump bodily and slide it off its own
+  // footprint — the exact failure the column profile was written for on pines.
+  geo.computeBoundingBox();
+  const top = Math.max(1e-4, geo.boundingBox.max.y);
+  const n = geo.attributes.position.count;
+  const sway = new Float32Array(n).fill(BUSH_SWAY);
+  const leaf = new Float32Array(n).fill(1);       // a bush is all foliage: it flutters
+  const column = new Float32Array(n).fill(1 / top);
+  geo.setAttribute('aSway', new THREE.BufferAttribute(sway, 1));
+  geo.setAttribute('aLeaf', new THREE.BufferAttribute(leaf, 1));
+  geo.setAttribute('aColumn', new THREE.BufferAttribute(column, 1));
+  return geo;
 }
 
 export function makeRocks({ count = 12, seed = 51, groundSeed = 21, keepout = [], rMin = 4, rMax = 24, color = WASH.stone } = {}) {
@@ -104,9 +137,10 @@ export function makeBushes({ count = 9, seed = 61, groundSeed = 21, keepout = []
   const geo = bushGeometry(seed);
   const mesh = instanced(geo, color, pts, {
     yOf: (pt) => groundHeight(pt.x, pt.z, { seed: groundSeed }),
-    scaleOf: (u) => 0.55 + 0.8 * u,
+    scaleOf: (u) => 1 + .7 * u,
     sink: 0.1,
     tintSpread: 0.08,
+    wind: true,
   });
   mesh.name = 'bushes';
   return mesh;

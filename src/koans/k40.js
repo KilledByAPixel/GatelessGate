@@ -41,7 +41,7 @@ const CROWD = { x: 4.15, z: -1.1 };   // where the arc's centroid should land
 // depends on where it stands (its keepout, the water sheet, the ripple sound)
 // reads BASIN rather than repeating the numbers, so nudging this one line
 // carries the whole fitting with it.
-const BASIN = { x: -2.1, z: -2.7};
+const BASIN = { x: -2.2, z: -2.7};
 const ARC_R = 1.9;
 const ARC_PULL = ARC_R * 0.81;        // mean(cos) over the 0.7π arc — see k14
 

@@ -194,6 +194,18 @@ export const FOLIAGE_BODY = /* glsl */ `
 transformed += ggFoliageOffset(transformed, (modelMatrix * vec4(position, 1.0)).xz);
 `;
 
+// THE SAME LINE FOR AN INSTANCED FIELD, and the difference is load-bearing.
+// `modelMatrix` on an InstancedMesh is the FIELD's matrix — every instance
+// shares it — so the version above hands every bush in a scene the same world
+// XZ, every bush lands in the same gust cell, and a hundred separate shrubs
+// breathe in perfect lockstep. That reads as one object flickering, not as
+// wind crossing a meadow. instanceMatrix is what gives each one its own place
+// in the field, exactly as a merged stand gets its trees' separation from
+// their baked-in vertex positions.
+export const FOLIAGE_BODY_INSTANCED = /* glsl */ `
+transformed += ggFoliageOffset(transformed, (modelMatrix * instanceMatrix * vec4(position, 1.0)).xz);
+`;
+
 // Hang the wind on a material. Idempotent-ish: a material may only be given one
 // onBeforeCompile, so this OWNS that hook for whatever it is called on.
 //
@@ -202,15 +214,21 @@ transformed += ggFoliageOffset(transformed, (modelMatrix * vec4(position, 1.0)).
 // plain Lambert hash to the same program and the second one built wins — which
 // showed up as the wind working or not depending on which case was visited
 // first. The key makes them different programs.
-export function applyFoliageWind(material) {
+// `instanced` picks the body that reads instanceMatrix (see above) — and it
+// must have its OWN cache key for the same reason this function has one at
+// all: the two injections differ only inside the shader source, so sharing a
+// key means whichever compiled first wins and the other silently gets the
+// wrong world position.
+export function applyFoliageWind(material, { instanced = false } = {}) {
+  const body = instanced ? FOLIAGE_BODY_INSTANCED : FOLIAGE_BODY;
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, FOLIAGE);
     shader.vertexShader = FOLIAGE_PARS + shader.vertexShader.replace(
       '#include <begin_vertex>',
-      `#include <begin_vertex>\n${FOLIAGE_BODY}`,
+      `#include <begin_vertex>\n${body}`,
     );
   };
-  material.customProgramCacheKey = () => 'gg-foliage';
+  material.customProgramCacheKey = () => (instanced ? 'gg-foliage-inst' : 'gg-foliage');
   return material;
 }
 

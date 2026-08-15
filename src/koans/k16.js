@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT } from '../palette.js';
 import {
   aimMonk, bearing, composeWorld, faceMonk, makeBell, makeCylinderChime,
-  makeDrum, makeHut, makeLantern, makeMonk, makePath, wrapPi,
+  makeDrum, makeHut, makeLantern, makeMonk, makePath, wrapPi, plantTree,
 } from '../kit/index.js';
 import { makeLights } from '../render/lights.js';
 
@@ -106,6 +106,8 @@ export default {
 
     // and the monk just out of the hall door, robes on, facing the sound
     const front = { x: Math.sin(hall.rotation.y), z: Math.cos(hall.rotation.y) };
+
+    plantTree(scene, { x: .5, z: -6, height: 4.2 });
 
     // dinner drum
     const drum = makeDrum({ radius: 0.5, seed: 16 });

@@ -90,7 +90,7 @@ const CAM = { distance: 9.6, target: [0.3, 1.25, -1.2], heading: 34, pitch: 13 }
   
   // TOKUSAN, on the step, hand out, having just been given the light
   const tokusan = makeMonk({ height: 1.62, pose: 'point' });
-  tokusan.position.set(1.5, 0, -0.6);
+  tokusan.position.set(1.8, .05, -0.6);
   aimMonk(tokusan, ryutan.position);
   scene.add(tokusan);
   faceMonk(ryutan, tokusan.position);

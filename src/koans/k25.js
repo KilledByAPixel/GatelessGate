@@ -202,11 +202,10 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   view: CAM,
   seed: ID,
   groundSeed: 21,
-  trees: 2,
-  treeRing: [17, 24],
+  trees: 6,
   rocks: 4,
   bushes: 3,
-  keepout: [{ x: 0.2, z: -2.0, r: 8.0 }],
+  keepout: [{ x: 0.2, z: -2.0, r: 6.0 }],
   grassKeepout: [{ x: -.3, z: -2.0, r: 4.4 }],
   });
 

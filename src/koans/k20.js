@@ -228,7 +228,7 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  seed: 23,
   groundSeed: 21,
   shore: SHORE,
   // grass plants at plain groundHeight(groundSeed) by default; without
@@ -251,8 +251,8 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   ],
   keepout: [
   ...path.keepout(24, 1.4),
-  { at: colossus, r: 1.4 },
-  { at: monk, r: 1.2 },
+  { at: colossus, r: 1 },
+  { at: monk, r: 1 },
   { x: MARKER.x, z: MARKER.z, r: 0.9 },
   ...SEA_KEEP,
   ],

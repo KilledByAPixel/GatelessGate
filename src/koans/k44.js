@@ -38,7 +38,7 @@ const CAM = { distance: 9.2, target: [0.1, 1.15, 0.6], heading: 36.5, pitch: 14 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, 0.030);
-  scene.add(makeLights({ sun: { heading: 78, pitch: 45 } }));
+  scene.add(makeLights({ sun: { heading: 67, pitch: 36 } }));
   
   const path = makePath({ from: [3.4, 8.6], to: [-7.3, -20.1], width: 1.4, seed: ID, groundSeed: 21, wander: 4.0 });
   scene.add(path);
@@ -83,7 +83,7 @@ const CAM = { distance: 9.2, target: [0.1, 1.15, 0.6], heading: 36.5, pitch: 14 
   hall.add(furin.group);
   
   const lantern = makeLantern({ height: 1.05 });
-  lantern.position.set(-3.0, 0, -1.4);
+  lantern.position.set(-2.5, 0, -1.9);
   scene.add(lantern);
   
   const world = composeWorld(scene, {

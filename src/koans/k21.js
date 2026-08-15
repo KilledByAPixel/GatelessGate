@@ -161,7 +161,7 @@ const CAM = { distance: 10, target: [0.8, 1.1, 0.2], heading: 4, pitch: 10 };
       groundSeed: 22,
       trees: 7,                       // and those kept out at the fog line
       rocks: 5,
-      bushes: 3,
+      bushes: 9,
       keepout: [
       { x: 0, z:40, r: 48 }, // behind camera
         { at: stick, r: 6.0 },   // the swept yard: nothing scatters into it

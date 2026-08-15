@@ -97,7 +97,7 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
-scene.fog = new THREE.FogExp2(PAPER, 0.028);
+  scene.fog = new THREE.FogExp2(PAPER, 0.028);
   // The last page: the day ending behind the same torii the book
   // opened on, with the shadows running back toward the reader.
   scene.add(makeLights({ sun: { heading: 161, pitch: 40 } }));
@@ -144,7 +144,7 @@ scene.fog = new THREE.FogExp2(PAPER, 0.028);
   const you = makeMonk({ height: 1.6, elder: true });
   const yb = road.sample(0.6);
   const yp = { x: yb.x + yb.perp.x * 0.35, z: yb.z + yb.perp.z * 0.35 };
-  you.position.set(yp.x, 0, yp.z);
+  you.position.set(yp.x, .2, yp.z);
   scene.add(you);
   
   // ---- THE GATE, at the head of the path -------------------------------
@@ -173,11 +173,11 @@ scene.fog = new THREE.FogExp2(PAPER, 0.028);
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  seed: 24,
   groundSeed: 21,
   trees: 4,
   keepout: [
-  ...road.keepout(26, 1.3),
+  ...road.keepout(33, 2),
   { x: POND.x, z: POND.z, r: POND.outer + 0.8 },
   { x: yp.x, z: yp.z, r: 1.0 },
   { x: ep.x, z: ep.z, r: 1.4 },

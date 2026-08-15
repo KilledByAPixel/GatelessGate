@@ -236,7 +236,7 @@ const CAM = { distance: 14.5, target: [-0.6, 0.8, -10.85], heading: 6.5, pitch: 
   view: CAM,
   seed: 47,
   groundSeed: GROUND_SEED,
-  trees: 3,
+  trees: 7,
   rocks: 6,
   bushes: 5,
   // The default mountain rings are built for dioramas that stay near the

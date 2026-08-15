@@ -195,7 +195,7 @@ const CAM = { distance: 10.1, target: [0.2, 1.3, -0.9], heading: 31.5, pitch: 16
       plantRock(scene, { x: 4.8, z: -9.8, size: 1.6 }),
       plantRock(scene, { x: .6, z: -9.5, size: 3.4 }),
     ];
-    const pine = plantTree(scene, { x: -6.0, z: -8.2, kind: 'pine', height: 3.8 });
+    const pine = plantTree(scene, { x: -6.0, z: -3.2, kind: 'pine', height: 3.8 });
     pine.rotation.z = -0.10;   // leaned downwind (+x, the gust direction)
 
     // A trail shelter off the east verge — the kind of hut a pass keeps for
@@ -207,7 +207,7 @@ const CAM = { distance: 10.1, target: [0.2, 1.3, -0.9], heading: 31.5, pitch: 16
 
     const world = composeWorld(scene, {
       view: CAM,
-      seed: ID,
+      seed: 22,
       groundSeed: 21,
       // High open country: the wind the ambience already promises. Leans
       // further (amplitude up from the slider default 3.0), broader gusts
@@ -220,7 +220,7 @@ const CAM = { distance: 10.1, target: [0.2, 1.3, -0.9], heading: 31.5, pitch: 16
       // stone. The country does the talking here.
       trees: 2,
       rocks: 20,
-      bushes: 4,
+      bushes: 8,
       keepout: [
         ...path.keepout(26, 1.25),
         { x: STONE.x, z: STONE.z, r: 1.6 },

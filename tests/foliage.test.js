@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
-import { mergeSimple } from '../src/kit/scatter.js';
+import { mergeSimple, makeBushes, makeRocks } from '../src/kit/scatter.js';
 import { makeTree } from '../src/kit/tree.js';
 import { pineGeometry, makePine } from '../src/kit/pine.js';
 import {
-  FOLIAGE, FOLIAGE_PARS, FOLIAGE_BODY, FOLIAGE_WIND_SHARE,
+  FOLIAGE, FOLIAGE_PARS, FOLIAGE_BODY, FOLIAGE_BODY_INSTANCED, FOLIAGE_WIND_SHARE,
   applyFoliageWind, stepFoliageWind, setFoliageWeather,
 } from '../src/kit/foliage.js';
 
@@ -229,6 +229,78 @@ test('the shader chunk declares what it reads, and the body feeds it world space
   // its own input and the tree drifts
   assert.ok(FOLIAGE_BODY.includes('vec4(position, 1.0)'),
     'sample world space from `position`, never from `transformed`');
+});
+
+// ---- the scattered bushes ---------------------------------------------------
+// The ground dressing answers the same wind as the wood above it. A shrub takes
+// the BENDING COLUMN profile rather than the branching one: it must stay rooted
+// where it meets the ground and only shiver at the crown. The branching profile
+// would displace the whole clump bodily and slide it off its own footprint.
+
+test('a bush carries the wind attributes, and is rooted at the ground', () => {
+  const geo = makeBushes({ count: 6, seed: 61 }).geometry;
+  for (const name of ['aSway', 'aPhase', 'aLeaf', 'aColumn']) {
+    assert.ok(attr(geo, name), `a bush must carry ${name}`);
+  }
+  // aColumn > 0 selects the column profile — this is the whole difference
+  assert.ok(Math.min(...vals(geo, 'aColumn')) > 0, 'a bush bends as a column, not a branch');
+
+  // ...and aColumn is 1/top, so the crown's height fraction reaches exactly 1
+  // and the profile spans the plant instead of clipping or falling short
+  geo.computeBoundingBox();
+  const top = geo.boundingBox.max.y;
+  const column = vals(geo, 'aColumn')[0];
+  assert.ok(Math.abs(top * column - 1) < 1e-3,
+    `the crown's height fraction is ${(top * column).toFixed(3)}, not 1`);
+
+  // rooted: w = h*h*aSway, so the base contributes nothing however hard it blows
+  const pos = attr(geo, 'position').array;
+  const sway = vals(geo, 'aSway');
+  let worst = 0;
+  for (let v = 0; v < sway.length; v++) {
+    const y = pos[v * 3 + 1];
+    if (y > 0.05) continue;                       // only the vertices at the foot
+    const h = Math.min(1, Math.max(0, y * column));
+    worst = Math.max(worst, h * h * sway[v]);
+  }
+  assert.ok(worst < 0.01, `the foot of the bush moves (${worst.toFixed(4)})`);
+});
+
+test('a bush moves far less than a canopy — it is knee-high, not midground', () => {
+  const geo = makeBushes({ count: 4, seed: 61 }).geometry;
+  assert.ok(Math.max(...vals(geo, 'aSway')) < 0.5,
+    'a shrub takes a fraction of the wood\'s reach, or it swings');
+});
+
+test('the lobes of a bush do not share one phase', () => {
+  // Same argument as a tree's leaf clusters: one phase across the clump makes
+  // it slide as a block instead of shivering through itself.
+  const phases = new Set(vals(makeBushes({ count: 4, seed: 61 }).geometry, 'aPhase'));
+  assert.ok(phases.size > 1, 'every lobe reads the gust at the same instant');
+});
+
+test('rocks did not join in — only the things with leaves on move', () => {
+  const geo = makeRocks({ count: 6, seed: 51 }).geometry;
+  assert.equal(attr(geo, 'aSway'), undefined, 'a boulder is not foliage');
+});
+
+test('an instanced field samples the gust per INSTANCE, not per field', () => {
+  // modelMatrix on an InstancedMesh is the field's, shared by every instance —
+  // so the ordinary body would hand every bush in a scene the same world XZ,
+  // land them all in one gust cell, and breathe them in lockstep. That reads as
+  // one object flickering rather than as wind crossing the ground.
+  assert.ok(FOLIAGE_BODY_INSTANCED.includes('instanceMatrix'),
+    'the instanced body must include instanceMatrix in the world position');
+  assert.ok(!FOLIAGE_BODY.includes('instanceMatrix'),
+    'the ordinary body must NOT — a merged stand has no instanceMatrix to read');
+  assert.ok(FOLIAGE_BODY_INSTANCED.includes('vec4(position, 1.0)'),
+    'and it still samples the UNDISPLACED position');
+
+  // the two injections differ only inside the shader source, so they must not
+  // share a program cache key or whichever compiled first silently wins
+  const plain = applyFoliageWind(new THREE.MeshLambertMaterial({}));
+  const inst = applyFoliageWind(new THREE.MeshLambertMaterial({}), { instanced: true });
+  assert.notEqual(plain.customProgramCacheKey(), inst.customProgramCacheKey());
 });
 
 test('the workbench\'s one wind reaches the trees, scaled down on the way in', () => {

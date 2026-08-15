@@ -24,7 +24,7 @@ const AUTO_EVERY = 13;   // and now and then one lets go with nobody touching it
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 14.3, target: [1.05, 1.55, -1.6], heading: 156.5, pitch: 5, minPitch: 1.6 };
+const CAM = { distance: 14.3, target: [1.05, 1.75, -1.6], heading: 156.5, pitch: 5, minPitch: 1.6 };
   export default {
   id: ID,
   slug: 'an-oak-tree-in-the-garden',
