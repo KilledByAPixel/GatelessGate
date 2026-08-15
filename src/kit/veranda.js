@@ -164,6 +164,8 @@ export function makeVeranda({
     eaveGeos.push(seg);
   }
   const eave = new THREE.Mesh(mergeSimple(eaveGeos), flat);
+  eave.translateZ(.1);
+  eave.translateY(.1);
   eave.name = 'eave';
   g.add(eave);
 

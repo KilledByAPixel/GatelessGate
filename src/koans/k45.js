@@ -46,7 +46,7 @@ const ID = 45;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 40.5, pitch: 16 };k15
+const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 40.5, pitch: 16 };
   export default {
   id: ID,
   slug: 'who-is-he',

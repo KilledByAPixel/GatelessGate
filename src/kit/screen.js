@@ -170,7 +170,7 @@ export function makeScreen({
   if (cords && !fixed) {
     const len = cordDrop > 0 ? cordDrop : height * 0.5;
     const cordGeo = new THREE.CylinderGeometry(0.024, 0.024, len, 6);
-    cordGeo.translate(0, -len / 2, 0);
+    cordGeo.translate(0, -len / 2, -.1);
     const cordMat = washMaterial({ color: cordColor, flat: true });
     for (const sx of [-1, 1]) {
       const c = new THREE.Mesh(cordGeo, cordMat);

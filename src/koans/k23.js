@@ -61,7 +61,7 @@ const STIR = (t) => 0.007 * (0.62 * Math.sin(t * 11.3) + 0.38 * Math.sin(t * 6.7
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.1, target: [-0.2, 1.3, -0.9], heading: 31.5, pitch: 16 };
+const CAM = { distance: 10.1, target: [-0.1, 1.3, -0.9], heading: 31.5, pitch: 16 };
   export default {
   id: ID,
   slug: 'do-not-think-good-do-not-think-not-good',

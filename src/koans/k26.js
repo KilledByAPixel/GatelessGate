@@ -14,11 +14,11 @@ const ID = 26;
 const FRONT = -1.4;        // the post line, and the plane the screen hangs in
 const DECK = 0.34;         // floor height — everyone on the veranda stands on this
 const SCREEN_W = 4.4;
-const SCREEN_H = 2.45;
+const SCREEN_H = 2.65;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10, target: [0.2, 1.1, -0.95], heading: 6.5, pitch: 4, minPitch: 0.6 };
+const CAM = { distance: 10, target: [0.3, 1.1, -0.1], heading: 6.5, pitch: 7 };
   export default {
   id: ID,
   slug: 'two-monks-roll-up-the-screen',
@@ -66,10 +66,10 @@ const CAM = { distance: 10, target: [0.2, 1.1, -0.95], heading: 6.5, pitch: 4, m
   // placement rather than handing this case a local position to get wrong.
   const screen = makeScreen({
   width: SCREEN_W, height: SCREEN_H, slats: 11,
-  color: ACCENT_DEEP, cordDrop: 1.07, seed: ID,
+  color: ACCENT_DEEP, cordDrop: 1.5, seed: ID,
   onClack: (force, at) => audio && audio.knock({ force, at }),
   });
-  screen.group.position.set(0, DECK, FRONT);
+  screen.group.position.set(0, DECK+.05, FRONT);
   scene.add(screen.group);
   
   // The two monks, one at each cord, sleeves raised to it. Which of them

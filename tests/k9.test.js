@@ -6,15 +6,33 @@ import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
 import { rigCamera as sharedRig } from './helpers/rig-camera.js';
 
-// Case 9 is staged as a DISCOVERY, not a product shot: the colossus sits off at
-// the left third against the mountain flank, and an ordinary full-grown tree
-// stands at his base so the eye has something to measure him with. These tests
-// pin that composition — if the statue drifts back to the camera axis, or the
-// scale tree wanders away from him or grows out of ordinary world scale, the
-// case has lost its point.
+// Case 9 was staged as a DISCOVERY rather than a product shot, and this file
+// used to pin the colossus off at the left third, away from the camera axis.
+// The thin-screen camera pass centred him on purpose, so the pin moved with the
+// staging: an off-axis subject is the first thing a narrow frame throws away,
+// and the stage is now sometimes barely wider than it is tall — a phone held
+// sideways splits the window with the text, which the layout did not used to do.
+// What is asserted now is not WHERE he sits but that the whole of him survives
+// every aspect the stage actually takes.
+//
+// The scale tree at his base is untouched by any of that, and it is still the
+// thing that makes him read as a colossus rather than as a statue: an ordinary
+// full-grown tree that only reaches his lap. That test is below and unchanged.
 
-// the shipped camera, at a square-ish book aspect (the reading pane's canvas
-// is narrower than the 1.78 test rig, which halves apparent x offsets)
+// Every aspect the stage renders at, narrowest first. The narrow end is the one
+// that matters and it is new — before the layout followed the window's SHAPE, a
+// phone stacked the panel under the scene and never handed the stage anything
+// this close to square.
+const STAGE_ASPECTS = [
+  ['phone landscape, split', 347 / 375],
+  ['square', 1.0],
+  ['reading pane', 1360 / 1080],
+  ['full-window look', 1920 / 1080],
+];
+
+// the shipped camera at one aspect, for the tests below that only need A lens
+// to raycast or to judge occlusion through — square by default, the tightest of
+// the four above
 const shippedCamera = (aspect = 1.0) => sharedRig(k9.camera, { aspect, far: 200 });
 
 function buildScene() {
@@ -25,21 +43,35 @@ function buildScene() {
   return { ctx, root, scene: root.scene };
 }
 
-test('the colossus is off-center: discovered at the left third, not presented', () => {
+test('the colossus is framed whole at every aspect the stage takes', () => {
   const { scene } = buildScene();
   const buddha = scene.getObjectByName('buddha');
   assert.ok(buddha, 'no buddha');
 
-  const cam = shippedCamera(1.0);
-  const v = buddha.getWorldPosition(new THREE.Vector3()).project(cam);
-  assert.ok(v.x < -0.25, `statue base projects to x=${v.x.toFixed(2)} — drifted back toward the camera axis`);
-  assert.ok(v.x > -0.85 && Math.abs(v.y) < 0.85, `statue out of frame at ${v.x.toFixed(2)}, ${v.y.toFixed(2)}`);
+  // The WHOLE silhouette, not a point on it. The old pin projected the base and
+  // then guessed at the crown by adding a fixed height to it, which is a second
+  // copy of how tall he is and went stale the moment the model changed. His own
+  // bounding box cannot.
+  const box = new THREE.Box3().setFromObject(buddha);
 
-  // and the crown stays in frame too — off-center must not mean cropped
-  const crown = buddha.getWorldPosition(new THREE.Vector3());
-  crown.y += 6.0;
-  const vc = crown.project(cam);
-  assert.ok(Math.abs(vc.x) < 0.9 && Math.abs(vc.y) < 0.9, `crown out of frame at ${vc.x.toFixed(2)}, ${vc.y.toFixed(2)}`);
+  for (const [name, aspect] of STAGE_ASPECTS) {
+    const cam = sharedRig(k9.camera, { aspect, far: 200 });
+    let maxX = 0, maxY = 0;
+    for (const x of [box.min.x, box.max.x]) {
+      for (const y of [box.min.y, box.max.y]) {
+        for (const z of [box.min.z, box.max.z]) {
+          const p = new THREE.Vector3(x, y, z).project(cam);
+          maxX = Math.max(maxX, Math.abs(p.x));
+          maxY = Math.max(maxY, Math.abs(p.y));
+        }
+      }
+    }
+    // 1 is the frame edge. The margin is deliberate rather than snug: a case
+    // this size is reframed by hand often, and a pin with no room fails on
+    // every nudge instead of on the one that actually crops him.
+    assert.ok(maxX < 0.95, `${name} (aspect ${aspect.toFixed(2)}): reaches x=${maxX.toFixed(2)} — cropped at the side`);
+    assert.ok(maxY < 0.95, `${name} (aspect ${aspect.toFixed(2)}): reaches y=${maxY.toFixed(2)} — cropped top or bottom`);
+  }
 });
 
 test('a full-size tree stands at his base and gives him scale', () => {

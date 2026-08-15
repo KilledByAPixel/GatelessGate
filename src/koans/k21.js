@@ -120,7 +120,7 @@ const CAM = { distance: 10, target: [0.8, 1.1, 0.2], heading: -1, pitch: 14 };
 
     // a buffalo, off to the side
     const buffalo = makeBuffalo({ height: 1.5});
-    buffalo.group.position.set(1, 0, -6);
+    buffalo.group.position.set(.8, 0, -9);
     buffalo.group.rotation.y = 1;
     scene.add(buffalo.group);
     

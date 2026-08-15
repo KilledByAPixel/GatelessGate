@@ -62,7 +62,7 @@ const SEA_KEEP = [
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.8, target: [-0.2, 1.3, -0.6], heading: 31.5, pitch: 18.4 };
+const CAM = { distance: 10.8, target: [-0.4, 1.3, -0.6], heading: 25, pitch: 18.4 };
   export default {
   id: ID,
   slug: 'joshu-examines-a-monk-in-meditation',
