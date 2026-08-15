@@ -1187,7 +1187,7 @@ export function strikeBell(ctx, dry, verbIn, { partials, gain = 1, verbMix = BEL
 //           the ROOM, not the voice, and the room did not change. The sit bell
 //           is never spatialized and is the one sound allowed to be nearly pure
 //           room; a dry bell reads as a thud at ANY pitch.
-export const SIT_BELL = { degree: 10, decay: 8, level: 0.22, bright: 0.30, verbMix: 0.92 };
+export const SIT_BELL = { degree: 10, decay: 8, level: 0.15, bright: 0.30, verbMix: 0.92 };
 
 // Identical repeats are the giveaway that a strike is synthesized: a real
 // clapper never lands twice the same. ±6 cents is far under "out of tune"

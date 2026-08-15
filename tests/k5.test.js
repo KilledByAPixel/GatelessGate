@@ -124,6 +124,55 @@ test('the hanging man is nearly still until nudged, then swings and steadies', (
   assert.ok(Number.isFinite(m.energy()), 'energy stays finite');
 });
 
+// THE SNAP. A tap used to reset the swing's phase — the nudge was replayed as
+// swingA * sin((simTime - t0) * WS) with t0 set to now, and sin(0) is 0 — so
+// touching him while he was out at the end of an arc threw him back through
+// dead vertical before he started moving. Amplitude survived a tap; the
+// POSITION did not, and the position is the part a reader can see.
+//
+// A kick is a change in velocity. This pins the consequence rather than the
+// implementation: whatever drives him, his pose on the frame a tap lands must
+// be the pose he already had.
+test('a tap does not move him — it only changes how fast he is going', () => {
+  const m = makeHangingMonk({ height: 1.6, seed: 5 });
+  let t = 0;
+  const step = () => { t += 1 / 60; m.update(1 / 60, t); };
+
+  // wind him up and walk out to somewhere well off vertical, which is where
+  // the reset was visible at all
+  m.sway(1);
+  for (let i = 0; i < 200 && Math.abs(m.group.rotation.z) < 0.08; i++) step();
+  assert.ok(Math.abs(m.group.rotation.z) >= 0.08,
+    'he never got far enough off vertical for this test to mean anything');
+
+  const before = m.group.rotation.z;
+  const swingBefore = m.energy();
+  m.sway(1);
+  assert.equal(m.group.rotation.z, before,
+    'the tap moved him — a kick may only touch his velocity');
+  assert.ok(m.energy() > swingBefore, 'and it did put more swing in him');
+
+  // ...and he keeps going the way he was going, rather than lurching back
+  const dir = Math.sign(before - (() => { const z = m.group.rotation.z; step(); return z; })());
+  assert.ok(Number.isFinite(dir));
+});
+
+test('hammering him never builds past the cap, and he still settles', () => {
+  // "He steadies himself, he does not build to a launch." Worth its own test
+  // now the swing is integrated: a kick that ignored the cap would wind a real
+  // pendulum up without limit, where the old replayed curve simply could not.
+  const m = makeHangingMonk({ height: 1.6, seed: 5 });
+  let t = 0;
+  const step = () => { t += 1 / 60; m.update(1 / 60, t); };
+  for (let i = 0; i < 60; i++) { m.sway(1); step(); }
+  assert.ok(m.energy() <= 0.31, `a hammering wound him up to ${m.energy().toFixed(3)}`);
+
+  let peak = 0;
+  for (let i = 0; i < 600; i++) { step(); peak = Math.max(peak, Math.abs(m.group.rotation.z)); }
+  assert.ok(peak <= 0.31, `he swung out to ${peak.toFixed(3)} after the taps stopped`);
+  assert.equal(m.swinging(), false, 'and ten seconds later he is still again');
+});
+
 test('the pendulum is deterministic: same seed and taps, same swing', () => {
   const drive = (seed) => {
     const m = makeHangingMonk({ height: 1.6, seed });

@@ -3,6 +3,7 @@ import { washMaterial } from '../render/material.js';
 import { INK_LIT } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import { sphereHead, neckBetween, sleeve } from './figure.js';
+import { createPendulum, integratePendulum, kickPendulum } from './pendulum.js';
 
 // The man in Kyogen's tree (case 5), holding on by his teeth. Built from
 // figure.js's shared vocabulary — the same sphere head, the same solved
@@ -113,39 +114,79 @@ export function makeHangingMonk({ height = 1.6, color = INK_LIT, seed = 5 } = {}
   }
 
   // ---- the pendulum --------------------------------------------------------
+  // THE NUDGE IS INTEGRATED, NOT REPLAYED, and that is the whole of why this
+  // is not a closed form like the rest of the book's animation.
+  //
+  // It WAS one: swingA * sin((simTime - t0) * WS), with sway() setting
+  // t0 = now. sin(0) is 0, so every tap threw away the phase he was in and
+  // restarted the swing from dead vertical — touch a man who is out at the end
+  // of his arc and he SNAPS through the bottom before moving. Amplitude was
+  // carried across the tap; the position was not, which is the one part the
+  // reader can see.
+  //
+  // A kick is a change in VELOCITY, and kit/pendulum.js already models exactly
+  // that (kickPendulum touches omega and leaves theta alone, so the thing you
+  // just hit is still where it was the instant before your hand landed — the
+  // same reason case 46's pole cannot pop on repeat taps). Determinism is not
+  // lost by integrating: integratePendulum folds any dt into fixed substeps,
+  // so the pose depends on elapsed time and the sequence of kicks, never on
+  // how a caller chopped up the frames.
+  //
+  // THE BREATH STAYS CLOSED-FORM. He is trying very hard to be still, and that
+  // stillness is not a pendulum state — it is a man breathing, and it must not
+  // be something a tap can add energy to. So it rides on top, and only the
+  // nudge is physics.
   const REST = 0.022;                        // rad — the stillness he manages
   const W = 2.3;                             // rest sway, ~2.7 s a side
   const W2 = 1.77;                           // the cross-plane drifts slower
-  const WS = 3.1;                            // a nudge swings a little faster
+  const WS = 3.1;                            // rad/s — a nudge swings a little faster
   const TAU = 2.4;                           // seconds for a swing to fade
   const CAP = 0.30;                          // rad — taps never build past this
+  const KICK = 0.15 * WS;                    // the impulse one sway(1) is worth
+  const G = 9.8;                             // furin.js's GRAVITY, the kit's one value
   const phase = hash1(1, seed) * Math.PI * 2;
 
-  let swingA = 0;      // amplitude at the moment of the last nudge
-  let t0 = 0;          // when that nudge landed (simTime)
-  let last = 0;        // latest simTime seen by update()
+  // Length from the frequency rather than the other way round: WS is the number
+  // that was tuned by eye, so it is the one that stays authored. A lightly
+  // damped oscillator's envelope decays as exp(-damping*t/2), which is what
+  // sets damping from the TAU that was likewise tuned.
+  const p = createPendulum({ length: G / (WS * WS), g: G, damping: 2 / TAU });
+  const noTorque = () => 0;
 
-  const mag = () => swingA * Math.exp(-(last - t0) / TAU);
+  // Amplitude of the swing he would reach if left alone from here — position
+  // and velocity together, which is what "how much swing is in him" means for
+  // something that is moving. The old `mag()` was the decaying amplitude of a
+  // replayed curve; this is the same quantity for a real one, so `energy()`
+  // and `swinging()` keep meaning what they meant.
+  const amp = () => Math.hypot(p.theta, p.omega / WS);
 
   function update(dt, simTime) {
-    last = simTime;
-    const s = mag() * Math.sin((simTime - t0) * WS);
-    g.rotation.z = REST * Math.sin(simTime * W + phase) + s;
-    g.rotation.x = REST * 0.6 * Math.sin(simTime * W2 + phase * 1.7) + s * 0.3;
+    integratePendulum(p, Math.max(0, dt || 0), noTorque);
+    const s = p.theta;
+    const t = Number.isFinite(simTime) ? simTime : p.clock;
+    g.rotation.z = REST * Math.sin(t * W + phase) + s;
+    g.rotation.x = REST * 0.6 * Math.sin(t * W2 + phase * 1.7) + s * 0.3;
   }
   update(0, 0);   // posed at rest from the first frame
 
   return {
     group: g,
     update,
-    // one decaying swing on top of whatever he is already doing. Repeated
-    // taps add a little, never past CAP: he steadies himself, he does not
-    // build to a launch.
+    // A shove, on top of whatever he is already doing — his position at this
+    // instant is untouched. Repeated taps add a little, never past CAP: he
+    // steadies himself, he does not build to a launch. The cap is applied to
+    // the impulse rather than to the pose, because clamping theta afterwards
+    // would be the snap this rewrite exists to remove.
     sway(strength = 1) {
-      swingA = Math.min(CAP, mag() + 0.15 * Math.max(0, strength));
-      t0 = last;
+      const want = KICK * Math.max(0, strength);
+      if (amp() >= CAP) return;                     // already as wound up as he gets
+      // the largest impulse that still lands inside CAP, in the direction he
+      // is already going, so a tap never fights the swing it is adding to
+      const room = Math.sqrt(Math.max(0, CAP * CAP - p.theta * p.theta)) * WS;
+      const dir = p.omega >= 0 ? 1 : -1;
+      kickPendulum(p, dir * Math.min(want, Math.max(0, room - Math.abs(p.omega))));
     },
-    swinging() { return mag() > 0.01; },
-    energy() { return mag(); },
+    swinging() { return amp() > 0.01; },
+    energy() { return amp(); },
   };
 }
