@@ -63,7 +63,7 @@ export function buildHub({
   // out on without ending in one, so a scene that wants its road to vanish into
   // haze has to thin the band, not reroll it.
   mountains = [
-    { count: 9, distance: 55, arcSpan: 3.8, color: wash(0.16) },
+    { count: 9, distance: 55, arcSpan: 3.8, color: wash(0.16), hScale: 0.5  },
     { count: 5, distance: 35, arcSpan: 2.6, color: wash(0.28), hScale: 0.7 },
   ],
 } = {}) {

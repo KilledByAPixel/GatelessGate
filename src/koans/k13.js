@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, WASH } from '../palette.js';
+import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeBell, makeDrum, makeBowl,
   makeMonk, faceMonk, makeLights, tapMeshes,
@@ -56,27 +56,34 @@ export default {
     hall.rotation.y = 1.24;
     scene.add(hall);
 
-    // the bell on one side of the yard — dark bronze, NOT the seal: the bowl
-    // Tokusan carries is the one red thing here, and the bell was competing
-    // with it. It still swings and rings when struck.
+    // the bell on one side of the yard — dark bronze, NOT the seal, so it does
+    // not compete with the drum across from it. It still swings and rings.
     const bell = makeBell({ height: 0.95, seed: ID, color: WASH.mid });
     bell.group.position.set(1.9, 0, -0.4);
     bell.group.rotation.y = 0.7;
     scene.add(bell.group);
 
-    // ...and the drum on the other, its near head turned toward the yard
-    const drum = makeDrum({ radius: 0.5, seed: ID });
+    // ...AND THE DRUM ON THE OTHER, AND THE DRUM IS THE SEAL. The red was on
+    // the bowl in Tokusan's hands, which put a red bowl in this case and
+    // another one in case 7 — the same object carrying the mark twice in a book
+    // whose whole grammar is one red thing per page. The drum is the better
+    // holder anyway: it is what has NOT sounded, which is the case (he crossed
+    // the yard before the drum was struck), and a lacquered temple drum is red
+    // in the world as well as on this page. ACCENT_DEEP because it is a large
+    // mass — the barrel only; the heads stay pale hide.
+    const drum = makeDrum({ radius: 0.5, seed: ID, color: ACCENT_DEEP });
     drum.group.position.set(-4.5, 0, 0.4);
     drum.group.rotation.y = -1.75;
     scene.add(drum.group);
 
-    // TOKUSAN, mid-yard, holding the bowl. The bowl is the seal: it is the one
-    // thing in the scene that is out of time. No staff — both hands are on the
-    // bowl, and the elder's staff was colliding with it: a man carrying his
-    // bowls to dinner is not also carrying a stick.
+    // TOKUSAN, mid-yard, holding the bowl — in wash now that the drum carries
+    // the red. He is still the one thing out of time; he no longer has to be
+    // the one red thing to say so. No staff: both hands are on the bowl, and
+    // the elder's staff was colliding with it — a man carrying his bowls to
+    // dinner is not also carrying a stick.
     const tokusan = makeMonk({ height: 1.64, pose: 'fold' });
     tokusan.position.set(-2.8, 0, -0.5);
-    const bowl = makeBowl({ radius: 0.16, color: ACCENT });
+    const bowl = makeBowl({ radius: 0.16, color: WASH.mid });
     bowl.name = 'held-bowl';
     bowl.position.set(0.0, 0.52, .36);           // held out before him at the waist, clear of the robe
     tokusan.add(bowl);
@@ -159,19 +166,29 @@ export default {
       // one of the big forgiving pick volumes either side of him
       if (input.raycastFirst(camera, bowlMeshes)) {
         if (clock - turnAt < TURN_SPAN) return;      // let him finish going back
-        touched && touched();
         turnAt = clock;
         turns++;
         // fired clay, empty — k7's bowl and k40's vase are the precedent
         audio && audio.ceramic({ force: 0.55, at: bowl.getWorldPosition(scratchPos) });
         return;
       }
-      // The drum is not handled here any more. It answers wherever it stands,
-      // from the kit (kit/drum.js) through main's own tap, the way a hung chime
-      // does — so the second drum in the book stopped being scenery. Nothing
-      // was lost by it: the bowl and the drum sit a third of the frame apart
-      // and neither one's ray reaches the other, so the bowl-first rule above
-      // still holds even though main's handler runs before this one.
+      // THE DRUM IS THE FIND, and this is the one place in the book where a
+      // case DELIBERATELY overlaps main.js's own pick volume.
+      //
+      // The drum's behaviour is not the case's: it answers wherever it stands,
+      // from the kit through main's central tap (kit/drum.js), which is what
+      // stopped the second drum in the book being scenery. That stays exactly
+      // as it is — main strikes it and sounds it, and nothing here duplicates
+      // either. But main cannot report a find: it sees a tap on the canvas and
+      // has no idea which object a page turns on. So the case claims the drum
+      // by probing the same volume and doing NOTHING BUT saying "found".
+      //
+      // Safe because taps are never consumed — main's handler is registered
+      // first and every callback fires — so the two do not race; they do
+      // different halves of one touch. The usual warning against overlapping
+      // main's volumes is about a case that would ALSO answer, and this one
+      // does not.
+      if (input.raycastFirst(camera, drum.pickTargets())) { touched && touched(); return; }
       if (input.raycastFirst(camera, bell.pickTargets())) {
         if (clock - lastRing < 0.5) return;
         // no touched() — "Tokusan holds his BOWL", and the bowl is above
