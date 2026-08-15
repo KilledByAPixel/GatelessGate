@@ -13,7 +13,7 @@ const MU_DUR = 4.4;      // seconds for the full breath
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5 };
+const CAM = { distance: 10, target: [0.5, 1.35, 0.3], heading: 18.5, pitch: 9.5 };
   export default {
   id: ID,
   slug: 'joshu-s-dog',
@@ -29,7 +29,7 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
   scene.fog = new THREE.FogExp2(PAPER, FOG_BASE);
-  scene.add(makeLights({ sun: { heading: 41, pitch: 41 } }));
+  scene.add(makeLights({ sun: { heading: 67, pitch: 45 } }));
   
   const path = makePath({ from: [1.2, 9], to: [1.2, -34], width: 1.7, seed: 13, groundSeed: 21, wander: 3.1 });
   scene.add(path);
@@ -59,7 +59,7 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   faceMonk(joshu, { x: mp.x + mp.perp.x * 1.3, z: mp.z + mp.perp.z * 1.3 });
   
   const monk = makeMonk({ height: 1.6 });
-  monk.position.set(mp.x + mp.perp.x * 1.0, 0, mp.z + mp.perp.z * 0.85);
+  monk.position.set(mp.x + .55, .05, mp.z + .2);
   faceMonk(monk, joshu.position);
   scene.add(joshu, monk);
   
@@ -69,8 +69,8 @@ const CAM = { distance: 10, target: [0.3, 1.35, 0.3], heading: 18.5, pitch: 13.5
   // unfogged, so when the world is swallowed it is what remains.
   const dog = makeDog({ height: 0.6, color: ACCENT });   // the seal of this koan
   const dp = path.sample(0.145);          // near the pair, inside the shared camera's frame
-  dog.group.position.set(dp.x - .7, 0, dp.z - 2.7);
-  dog.group.rotation.y = dp.heading + 2.4; // looking back up the road at them
+  dog.group.position.set(dp.x - 1, 0, dp.z - 2.7);
+  dog.group.rotation.y = dp.heading + 2.5; // looking back up the road at them
   dog.group.traverse((o) => {
   if (!o.isMesh) return;
   o.material = o.material.clone();
