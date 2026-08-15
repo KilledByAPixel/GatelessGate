@@ -141,7 +141,7 @@ export function makeDrum({ radius = 0.52, color = WASH.dark, skinColor = wash(0.
   const trimParts = [
     // spans the legs where they actually are at ankle height, splay included
     new THREE.BoxGeometry(2 * (LEG_X + SPLAY * (1 - 0.26 * R / legH)) + 0.1 * R, 0.10 * R, 0.17 * R)
-      .translate(0, 0.26 * R, 0),
+      .translate(0, 0.5 * R, 0),
   ];
   for (const sx of [-1, 1]) {
     trimParts.push(new THREE.BoxGeometry(capW, capH, capW)
