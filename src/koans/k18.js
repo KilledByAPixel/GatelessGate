@@ -3,8 +3,8 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
-  composeWorld, makePath, makeScale, makeMonk, aimMonk, faceMonk, makeHut,
-  makeLights, washMaterial,
+  composeWorld, makePath, makeScale, makeMonk, aimMonk, faceMonk, makeHut, makeDrum,
+  makeLights, washMaterial, plantTree
 } from '../kit/index.js';
 
 const ID = 18;
@@ -18,7 +18,7 @@ const ID = 18;
 // settles, and it says three pounds. It was always going to say three pounds.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11, target: [-0.5, 1.1, 0.5], heading: 46, pitch: 18 };
+const CAM = { distance: 11, target: [-0.5, 1.35, 0.5], heading: 34, pitch: 16 };
   export default {
   id: ID,
   slug: 'tozan-s-three-pounds',
@@ -42,6 +42,8 @@ const CAM = { distance: 11, target: [-0.5, 1.1, 0.5], heading: 46, pitch: 18 };
   const path = makePath({ from: [-3.6, 8.4], to: [2.4, -18], width: 1.3, seed: ID, groundSeed: 21, wander: 6 });
   scene.add(path);
 
+  plantTree(scene, { x: -3, z: -6.6, size: 1.8, seed: 13, kind: 'pine' });
+
   // THE HALL the yard belongs to. Tozan is weighing flax outside a working
   // building, not in open country, and the case only reads as an interruption
   // if there is somewhere the work is being done. Set well back and off to the
@@ -64,10 +66,16 @@ const CAM = { distance: 11, target: [-0.5, 1.1, 0.5], heading: 46, pitch: 18 };
   // No chimes (the `chimes:` seed other huts carry): this case's ambience is
   // wind, the steelyard and the music bed, and the whole joke is one plain
   // answer — a hanging voice under the eave would be a second thing speaking.
-  const hut = makeHut({ width: 3.2, height: 2.4, depth: 2.6 });
+  const hut = makeHut({ width: 3.2, height: 2.4, depth: 2.6, chimes:129 });
   hut.position.set(-4.8, 0, -3.3);
   hut.rotation.y = 1.15;
   scene.add(hut);
+
+
+    const drum = makeDrum({ radius: 0.5, seed: 16 });
+    drum.group.position.set(-5, 0, 0);
+    drum.group.rotation.y = 2.2;
+    scene.add(drum.group);
 
   // THE SCALE. Its pan hangs on the left of the beam; the flax rides in it.
   const scale = makeScale({ height: 1.4, reading: 3 });

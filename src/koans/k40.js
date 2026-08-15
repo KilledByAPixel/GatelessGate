@@ -2,8 +2,8 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
-  aimMonk, composeWorld, faceMonk, makeAssembly, makeHut, makeMonk,
-  makeVase, tapMeshes,
+  aimMonk, composeWorld, faceMonk, makeAssembly, makeBasin, makeHut, makeMonk,
+  makeVase, makeWater, tapMeshes,
 } from '../kit/index.js';
 import { makeLights } from '../render/lights.js';
 
@@ -35,6 +35,13 @@ const HYAKUJO = { x: 0.45, z: 1.55 };   // beside the vase, not behind it —
                                           // grass, never against a black robe
 const ISAN = { x: 1.9, z: 0 };    // of the crowd, one step out of it
 const CROWD = { x: 4.15, z: -1.1 };   // where the arc's centroid should land
+// The washing basin — case 7's yard fitting, standing in this one. A monastery
+// that argues about a water vase has somewhere it draws the water. Placed off
+// to the side of the courtyard for now and meant to be moved: everything that
+// depends on where it stands (its keepout, the water sheet, the ripple sound)
+// reads BASIN rather than repeating the numbers, so nudging this one line
+// carries the whole fitting with it.
+const BASIN = { x: -2.1, z: -2.7};
 const ARC_R = 1.9;
 const ARC_PULL = ARC_R * 0.81;        // mean(cos) over the 0.7π arc — see k14
 
@@ -109,6 +116,24 @@ const CAM = { distance: 10.8, target: [2.05, 1, -0.5], heading: 57.5, pitch: 20 
   isan.rotation.z = -0.07;   // applied before the yaw: a lean toward what he faces
   scene.add(isan);
   
+  // ---- the washing basin ------------------------------------------------
+  // The same fitting case 7's yard has, built the same way: an OPEN stone
+  // basin (a solid cylinder seals the water under its top cap and there is
+  // nothing to see), taller than it is wide or it reads as a puddle, with a
+  // round sheet dropped just below the rim so the water sits IN it rather
+  // than on it. The sheet is round because the basin is — a square one pokes
+  // its corners out through the stone.
+  const BASIN_H = 0.52;
+  const basin = makeBasin({
+    inner: 0.68, outer: 0.76, rim: BASIN_H, floor: 0.30, color: WASH.stone, segments: 12,
+  });
+  basin.position.set(BASIN.x, 0, BASIN.z);
+  scene.add(basin);
+  const water = makeWater({ shape: 'round', size: 1.4, color: WASH.ground });
+  water.group.position.set(BASIN.x, BASIN_H - 0.10, BASIN.z);
+  scene.add(water.group);
+  const surface = water.group.children.find((c) => c.name === 'surface');
+
   // ---- the world --------------------------------------------------------
   const world = composeWorld(scene, {
   view: CAM,
@@ -123,6 +148,8 @@ const CAM = { distance: 10.8, target: [2.05, 1, -0.5], heading: 57.5, pitch: 20 
   { x: HYAKUJO.x, z: HYAKUJO.z, r: 1.2 },
   { x: ISAN.x, z: ISAN.z, r: 1.1 },
   { x: CROWD.x, z: CROWD.z, r: 3.0 },
+  // by live reference, so moving BASIN moves what it keeps clear with it
+  { at: basin, r: 1.2 },
   ],
   forests :[
     { center: [-23, 0, -27], spread: 23, count: 55 },
@@ -149,10 +176,13 @@ const CAM = { distance: 10.8, target: [2.05, 1, -0.5], heading: 57.5, pitch: 20 
   // foot NOT quite happening. It cannot be knocked over — makeVase caps the
   // tilt far short of the tipping point however often it is tapped.
   let camera = null;
+  let rippled = 0;
   const vaseMeshes = tapMeshes(vase.group);
   
   input.onTap(() => {
   if (!camera) return;
+  // the vase first: it is the case, it is small, and it must never lose a
+  // tap to the basin's broad sheet a few steps behind it
   const hit = input.raycastFirst(camera, vaseMeshes);
   if (hit) {
   touched && touched();
@@ -160,7 +190,18 @@ const CAM = { distance: 10.8, target: [2.05, 1, -0.5], heading: 57.5, pitch: 20 
   // stoneware, tipped and righting itself — the seal of this koan is the
   // only thing in the scene that could make a noise
   audio && audio.ceramic({ force: 0.8, at: hit.point });
+  return;
   }
+  // ...and the basin rings where you touch it, like every other water in the
+  // book. NOT a find: the vase is what this page turns on (one find per
+  // page), and the basin is the yard it is standing in.
+  if (!surface) return;
+  const onWater = input.raycastFirst(camera, [surface]);
+  if (!onWater) return;
+  const local = water.group.worldToLocal(onWater.point.clone());
+  water.ripple(local.x, local.z);
+  rippled++;
+  audio && audio.drip({ loud: true, at: onWater.point });
   });
   
   return {
@@ -169,12 +210,14 @@ const CAM = { distance: 10.8, target: [2.05, 1, -0.5], heading: 57.5, pitch: 20 
   update(dt, simTime) {
   world.update(dt, simTime);   // the meadow's wind
   vase.update(dt, simTime);    // the wobble, when there is one
+  water.update(dt, simTime);   // ...and the basin's rings, or a touch leaves a still sheet
   },
   fragment() {
   return {
   nudges: vase.nudges(),
   rock: +vase.tilt().toFixed(4),
   rocking: vase.rocking(),
+  rippled,
 };
       },
       dispose() {},

@@ -88,15 +88,15 @@ const CAM = { distance: 9.2, target: [0.1, 1.15, 0.6], heading: 36.5, pitch: 14 
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: 300,
+  seed: 301,
   groundSeed: 21,
-  trees: 4,
+  trees: 8,
   keepout: [
   ...path.keepout(24, 1.2),
   { x: hall.position.x, z: hall.position.z, r: 3.2 },
   { x: 0.9, z: 0.6, r: 1.5 },
   { at: basho, r: 1.1 },
-  { at: disciple, r: 1.1 },
+  { at: disciple, r: 5.1 },
   { at: lantern, r: 0.9 },
   ],
   grassKeepout: [

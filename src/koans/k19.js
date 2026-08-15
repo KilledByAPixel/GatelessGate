@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, ACCENT_LIGHT, wash } from '../palette.js';
 import {
-  composeWorld, faceMonk, frontShadow, makeDog, makeMonk, makeMoon, makePath,
+  composeWorld, faceMonk, frontShadow, makeDog, makeMonk, makeMoon, makePath, plantRock,
   makeWildflowers, makeSnow,
 } from '../kit/index.js';
 import { makeLights } from '../render/lights.js';
@@ -179,6 +179,10 @@ const CAM = { distance: 12, target: [1.25, 1.3, -1.3], heading: 22.5, pitch: 8.6
   frontShadow(dog.group);
   scene.add(dog.group);
   
+
+  plantRock(scene, { x: 3.1, z: -1, size: 1.9, sink: -.1  });
+  plantRock(scene, { x: 3.2, z: 1.5, size: 1, sink: -.1  });
+
   // The harvest moon: beyond the mountains and low, just clear of the ridge.
   // Its bearing sits a few degrees right of where the road runs out, so the
   // eye travels up the road and arrives at it.

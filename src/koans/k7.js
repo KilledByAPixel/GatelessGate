@@ -43,7 +43,7 @@ export default {
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
     scene.add(makeLights({ sun: { heading: 67, pitch: 36 } }));
 
-    let rock = plantRock(scene, { x: -2, z: 1.5, size: 2, sink: -.2 });
+    let rock = plantRock(scene, { x: -2, z: 1.5, size: 1.7, sink: -.1 });
     rock.rotation.y = 3;
     scene.add(rock);
 
@@ -66,14 +66,14 @@ export default {
     // was no water to see.
     const BASIN_H = 0.62;
     const basin = makeBasin({
-      inner: 0.44, outer: 0.56, rim: BASIN_H, floor: 0.30, color: WASH.stone, segments: 12,
+      inner: 0.58, outer: 0.66, rim: BASIN_H, floor: 0.30, color: WASH.stone, segments: 12,
     });
     basin.position.set(3.15, 0, 1.5);
     scene.add(basin);
 
     // round, because the basin is: a square sheet also used to poke its corners
     // out through the stone
-    const water = makeWater({ shape: 'round', size: 0.86, color: WASH.ground });
+    const water = makeWater({ shape: 'round', size: 1.2, color: WASH.ground });
     water.group.position.set(3.15, BASIN_H - 0.10, 1.5);   // below the rim, clear of it
     scene.add(water.group);
 

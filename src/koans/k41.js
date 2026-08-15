@@ -170,19 +170,17 @@ const CAM = { distance: 10.6, target: [1, 2.1, -3.15], heading: 39.5, pitch: 10.
       groundSeed: 21,
       // the earth has gone pale — this is the one scene in the book under snow
       groundColor: wash(0.06),
-      trees: 3,
+      trees: 9,
+      treeKind: 'pine',
       treeRing: [9, 18],
       rocks: 7,
-      bushes: 2,
+      bushes: 5,
+      grass:0, // no grass
       keepout: [
         { at: cave, r: 3.0 },
-        { x: 1.5, z: -1.9, r: 1.2 },
-        { x: PINE.x, z: PINE.z, r: 1.6 },
-        { at: b1, r: 2.3 },
-        { at: b2, r: 1.4 },
       ],
       // snow covers everything: no grass anywhere near the clearing
-      grassKeepout: [{ x: 0.4, z: -3.0, r: 13 }],
+      //grassKeepout: [{ x: 0.4, z: -3.0, r: 20 }],
     });
 
     // THE SNOW, falling. Paper-coloured, so it is nearly invisible against the

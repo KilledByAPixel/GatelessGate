@@ -107,13 +107,13 @@ const CAM = { distance: 14.2, target: [0.95, 1.15, -1.4], heading: 27.5, pitch: 
   washMaterial({ color: INK_LIT, flat: true }));
   cushion.name = 'cushion';
   cushion.position.set(BANK.x, SEAT_TOP + 0.05 + 0.021 * Z, BANK.z);
-  //scene.add(cushion);
+  scene.add(cushion);
 
   // cat sitting where budda was
   const cat = makeCat({ height: 0.5, seed: ID, pose: 'sit' });
   cat.group.position.set(BANK.x, SEAT_TOP, BANK.z+.4);
   cat.group.rotation.y = -0.45;
-  scene.add(cat.group);
+  //scene.add(cat.group);
 
   // and the same monk, still standing there
   const monk = makeMonk({ height: 1.58 });
