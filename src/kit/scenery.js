@@ -273,8 +273,8 @@ export function composeWorld(scene, {
     { center: [16, 0, -31], spread: 14, count: 40, color: wash(0.55) },
   ],
   mountains = [
-    { count: 8, distance: 52, arcSpan: 3.6, color: wash(0.16) },   // farthest band
-    { count: 5, distance: 33, arcSpan: 2.4, color: wash(0.28), hScale: 0.65 },
+    { count: 8, distance: 52, arcSpan: 3.6, color: wash(0.16), hScale: 0.7 },   // farthest band
+    { count: 5, distance: 33, arcSpan: 2.4, color: wash(0.28), hScale: 0.5 },
   ],
 } = {}) {
   // one shape from here down, whichever way the case wrote them

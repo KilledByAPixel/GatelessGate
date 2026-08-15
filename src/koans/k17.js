@@ -4,7 +4,7 @@ import { PAPER, ACCENT, ACCENT_DEEP } from '../palette.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeVeranda, makeMonk, makeLantern, wrapPi, bearing,
-  makeLights, washMaterial, makeCylinderChime,
+  makeLights, plantTree, makeCylinderChime,
 } from '../kit/index.js';
 
 const ID = 17;
@@ -75,6 +75,8 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   veranda.rotation.y = 0.5;
   scene.add(veranda);
   
+  plantTree(scene, { x: -8, z: -5, height: 4.7});
+
   // CHU, seated on the boards — HE is the seal. There was nothing else in the
   // courtyard that wanted to be red (it is two people and a call), so the
   // teacher on the platform takes the accent; deepened, since a whole figure at
@@ -141,9 +143,9 @@ const CAM = { distance: 9.9, target: [0.6, 1.3, -0.4], heading: 35.5, pitch: 17.
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: 201,
+  seed: 203,
   groundSeed: 21,
-  trees: 4,
+  trees: 9,
   keepout: [
   { at: veranda, r: 3.8 },
   { x: OSHIN_POS.x, z: OSHIN_POS.z, r: 1.2 },

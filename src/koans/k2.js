@@ -136,7 +136,10 @@ const CAM = {distance: 11, target: [-0.6, 1.5, -2.25], heading: 27.5, pitch: 16.
   ],
   // only the cave's own stone floor actually covers ground. The fox is
   // sitting in the grass like any animal, and so are the monks.
-  grassKeepout: cave.floor(0.15),
+  grassKeepout: [
+    ...cave.floor(0.15),
+    { x: FOX.x, z: FOX.z, r: .6 }
+  ],
     
   forests: [
     { center: [-19, 0, -22], spread: 13, count: 55 },

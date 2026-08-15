@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   composeWorld, makePath, makeHut, makeBasin, makeBowl, makeWater, makeMonk, faceMonk,
-  makeOdoshi, makeLights, tapMeshes,
+  makeOdoshi, makeLights, tapMeshes, plantRock
 } from '../kit/index.js';
 
 const ID = 7;
@@ -42,6 +42,10 @@ export default {
     scene.background = new THREE.Color(PAPER);
     scene.fog = new THREE.FogExp2(PAPER, 0.030);
     scene.add(makeLights({ sun: { heading: 67, pitch: 36 } }));
+
+    let rock = plantRock(scene, { x: -2, z: 1.5, size: 2, sink: -.2 });
+    rock.rotation.y = 3;
+    scene.add(rock);
 
     // a short approach to the threshold, so the ground reads as trodden
     const path = makePath({ from: [2.4, 9], to: [0.2, -20], width: 1.5, seed: 47, groundSeed: 21, wander: 0.9 });

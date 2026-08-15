@@ -2,7 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, wash } from '../palette.js';
 import {
-  composeWorld, makePath, makeHut, makeMoon, makeMonk, faceMonk,
+  composeWorld, makePath, makeHut, makeMoon, makeMonk, faceMonk, makeLantern,
   plantTree, groundHeight, makeLights, } from '../kit/index.js';
 
 const ID = 35;
@@ -118,6 +118,11 @@ export default {
     town.position.set(-6.4, 0, -8.0);
     town.rotation.y = 0.5;
     //scene.add(town);
+
+      
+    const lantern = makeLantern({ height: 1.05 });
+    lantern.position.set(-0, 0, -4);
+    scene.add(lantern);
 
     // THE MOON, standing beyond everything — plain now, not the seal: the two
     // souls carry the red, so the moon is just a pale disc.

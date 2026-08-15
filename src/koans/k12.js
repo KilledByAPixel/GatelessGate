@@ -163,7 +163,8 @@ export default {
       view: CAM,
       seed: ID,
       groundSeed: 115,
-      trees: 7,
+      trees: 10,
+      rocks:10,
       mountains: [
         { count: 8, distance: 252, arcSpan: 3.6 },
         { count: 5, distance: 35, arcSpan: 2.4},

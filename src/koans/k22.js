@@ -74,7 +74,7 @@ const CAM = { distance: 10.6, target: [0.4, 1.9, -0.2], heading: 33, pitch: 12.5
   
   // KASHAPA, who is handing it over, and ANANDA, who has just said yes
   const kashapa = makeMonk({ height: 1.68, elder: true });
-  kashapa.position.set(-1.2, 0, -.5);
+  kashapa.position.set(-1.4, 0, -.5);
   scene.add(kashapa);
   
   const ananda = makeMonk({ height: 1.60 });

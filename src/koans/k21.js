@@ -1,9 +1,9 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, INK_LIT } from '../palette.js';
+import { PAPER, ACCENT, INK_LIT, wash } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 import {
-  composeWorld, frontShadow, makeMonk, faceMonk, makeButterflies,
+  composeWorld, frontShadow, makeMonk, faceMonk, makeButterflies, makeBuffalo,
   makeWildflowers, makeLights, washMaterial,
 } from '../kit/index.js';
 
@@ -31,7 +31,7 @@ const ID = 21;
 // piece of dung, exactly the joke Mumon makes in the commentary. The framing,
 // named so composeWorld can have it too: `view` lets the scatter refuse spots
 // no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10, target: [0.8, 0.9, 0.2], heading: 4, pitch: 14 };
+const CAM = { distance: 10, target: [0.8, 1.1, 0.2], heading: 4, pitch: 10 };
   export default {
   id: ID,
   slug: 'dried-dung',
@@ -118,6 +118,12 @@ const CAM = { distance: 10, target: [0.8, 0.9, 0.2], heading: 4, pitch: 14 };
     });
     scene.add(flies.group);
 
+    // a buffalo, off to the side
+    const buffalo = makeBuffalo({ height: 1.5});
+    buffalo.group.position.set(1, 0, -6);
+    buffalo.group.rotation.y = 1;
+    scene.add(buffalo.group);
+    
     // Ummon, who said it, and the monk who asked. Set well apart: the space
     // between them is doing as much work as they are.
     const ummon = makeMonk({ height: 1.66, elder: true });
