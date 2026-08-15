@@ -67,7 +67,7 @@ const CAM = { distance: 10, target: [0.5, 1.35, 0.3], heading: 18.5, pitch: 9.5 
   
   // The dog: nearer the camera than anything else, and — alone in the scene —
   // unfogged, so when the world is swallowed it is what remains.
-  const dog = makeDog({ height: 0.6, color: ACCENT });   // the seal of this koan
+  const dog = makeDog({ height: 0.7, color: ACCENT });   // the seal of this koan
   const dp = path.sample(0.145);          // near the pair, inside the shared camera's frame
   dog.group.position.set(dp.x - 1, 0, dp.z - 2.7);
   dog.group.rotation.y = dp.heading + 2.5; // looking back up the road at them

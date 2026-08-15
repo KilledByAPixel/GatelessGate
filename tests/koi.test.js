@@ -117,6 +117,95 @@ test('the flex is deterministic: same seed and simTime, same vertices', () => {
   assert.notDeepEqual(a, b, 'update() never moves the vertices');
 });
 
+// ---- the startle ------------------------------------------------------------
+// A touch on the water overhead puts a little speed on the school for a few
+// seconds. The swim stays driven by simTime (the determinism test above depends
+// on it), so this is a phase LEAD accumulated on that clock, never a rewrite of
+// it — which is what keeps a fish from teleporting mid-lap.
+
+// total ground covered by the whole school over `secs`, from simTime `from`
+function swumOver(k, from, secs, startle = false) {
+  let t = from, travelled = 0;
+  let prev = k.group.children.map((f) => ({ x: f.position.x, z: f.position.z }));
+  if (startle) k.startle();
+  for (let i = 0; i * (1 / 60) < secs; i++) {
+    t += 1 / 60;
+    k.update(1 / 60, t);
+    const now = k.group.children.map((f) => ({ x: f.position.x, z: f.position.z }));
+    for (let j = 0; j < now.length; j++) {
+      travelled += Math.hypot(now[j].x - prev[j].x, now[j].z - prev[j].z);
+    }
+    prev = now;
+  }
+  return travelled;
+}
+
+const settled = () => {
+  const k = makeKoi({ count: 3, seed: 30 });
+  run(k, 5);
+  return k;
+};
+
+test('a startle moves no fish — it only changes how fast they swim', () => {
+  // The case-5 lesson, in a pond: change the rate, never the position. A
+  // startle that rewrote the swim clock would jump every fish along its lap.
+  const k = settled();
+  const before = k.group.children.map((f) => `${f.position.x.toFixed(9)},${f.position.z.toFixed(9)}`);
+  k.startle();
+  const after = k.group.children.map((f) => `${f.position.x.toFixed(9)},${f.position.z.toFixed(9)}`);
+  assert.deepEqual(after, before, 'the touch teleported the school');
+});
+
+test('startled fish cover more water, then settle back', () => {
+  const calm = swumOver(settled(), 5, 3);
+  const quick = swumOver(settled(), 5, 3, true);
+  assert.ok(quick > calm * 1.2,
+    `a startle barely showed: ${quick.toFixed(3)} against a calm ${calm.toFixed(3)}`);
+
+  // ...and it is a passing hurry, not a permanent new speed. Measured against
+  // the school's OWN peak rather than a fixed threshold at a fixed time: how
+  // hard and how long they hurry are art (QUICKEN and QUICK_TAU, tuned by eye),
+  // and a test that pinned either would fail the next time they were dialled
+  // without anything actually being wrong.
+  const k = settled();
+  k.startle();
+  k.update(1 / 60, 5);
+  const peak = k.quickened();
+  assert.ok(peak > 0, 'the startle did not register at all');
+  for (let i = 0; i < 60 * 60; i++) k.update(1 / 60, 5 + i / 60);   // a full minute
+  assert.ok(k.quickened() < peak * 0.05,
+    `still hurrying long after: ${k.quickened()} against a peak of ${peak}`);
+});
+
+test('drumming on the water does not accelerate them without limit', () => {
+  // The boost reads off the time since the LAST startle, so repeated taps hold
+  // the school quick rather than stacking into a school that ends up flying.
+  const k = makeKoi({ count: 3, seed: 30 });
+  let t = 0;
+  let peak = 0;
+  for (let i = 0; i < 60 * 5; i++) {
+    k.startle();
+    t += 1 / 60;
+    k.update(1 / 60, t);
+    peak = Math.max(peak, k.quickened());
+  }
+  assert.ok(peak < 2, `five seconds of drumming reached ${peak}`);
+});
+
+test('a pond nobody touches swims exactly as it always did', () => {
+  // extra stays 0 without a startle, so the clock is simTime and this is
+  // bit-identical to the school before any of this existed.
+  const k = makeKoi({ count: 3, seed: 30 });
+  run(k, 4);
+  assert.equal(k.quickened(), 0);
+  const untouched = k.group.children.map((f) => +f.position.x.toFixed(9));
+
+  const ref = makeKoi({ count: 3, seed: 30 });
+  ref.update(0, 4 - 1 / 60);      // the same simTime, reached in one step
+  const closed = ref.group.children.map((f) => +f.position.x.toFixed(9));
+  assert.deepEqual(untouched, closed, 'the untouched swim is no longer a pure function of simTime');
+});
+
 test('two seeds give two different schools', () => {
   const swim = (seed) => {
     const k = makeKoi({ count: 4, seed });

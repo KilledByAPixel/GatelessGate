@@ -118,7 +118,6 @@ export default {
     town.position.set(-6.4, 0, -8.0);
     town.rotation.y = 0.5;
     //scene.add(town);
-
       
     const lantern = makeLantern({ height: 1.05 });
     lantern.position.set(-0, 0, -4);
@@ -172,13 +171,13 @@ export default {
     // the way k3's boy attendant is: children in this book are small adults in
     // silhouette, so the only things saying "child" are scale and difference.
     const kids = [];
-    for (const [i, h] of [1.02, 0.88].entries()) {
-      const side = i === 0 ? 1 : -1;
+    for (const [i, h] of [.7, 1].entries()) {
+      const side = i === 0 ? .85 : -.9;
       const kid = makeMonk({ height: h, hat: false });
       kid.name = 'child';
       const kx = road.x + road.perp.x * KID_SIDE * side;
       const kz = road.z + road.perp.z * KID_SIDE * side;
-      kid.position.set(kx, groundHeight(kx, kz, { seed: 21 }), kz);
+      kid.position.set(kx, .05+groundHeight(kx, kz, { seed: 21 }), kz);
       kid.rotation.y = walker.rotation.y - side * 0.28;   // each turned a little toward her
       scene.add(kid);
       kids.push(kid);

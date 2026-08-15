@@ -70,7 +70,7 @@ const CAM = { distance: 8.6, target: [0.8, 1, -0.2], heading: 29.5, pitch: 11 };
   scene.add(mat);
   
   // SEIZEI, sitting on it with nothing
-  const seizei = makeMonk({ height: 1.5, pose: 'sit' });
+  const seizei = makeMonk({ height: 1.5, pose: 'sit', hat:false, stout: .9 });
   seizei.position.set(1.6, 0.035, 1.0);
   scene.add(seizei);
   

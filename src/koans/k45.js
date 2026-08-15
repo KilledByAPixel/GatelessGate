@@ -192,7 +192,7 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 43, pitch: 16 
   // that saving irrelevant — arms or no arms, these five are one mesh — so they
   // have their arms back.
   const bystander = (x, z, facing, h = 1.56, hat = false) => {
-  const f = makeMonk({ height: h, hat: hat });
+  const f = makeMonk({ height: h, hat: hat, stout: .9 + hash1(x + z, ID) * .3 });
   f.position.set(x, 0, z);
   f.rotation.y = facing;
   return f;

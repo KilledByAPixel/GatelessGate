@@ -110,7 +110,7 @@ const CAM = { distance: 10.8, target: [2.05, 1, -0.5], heading: 57.5, pitch: 20 
   // One monk of the crowd on his feet, a step forward of the others, leaning
   // a few degrees toward the vase. Not labelled, not accented: the
   // composition says who he is — the only one already moving.
-  const isan = makeMonk({ height: 1.58, hat: false });
+  const isan = makeMonk({ height: 1.58, hat: false, stout: 1.2 });
   isan.position.set(ISAN.x, 0, ISAN.z);
   faceMonk(isan, { x: VASE.x, z: VASE.z });
   isan.rotation.z = -0.07;   // applied before the yaw: a lean toward what he faces

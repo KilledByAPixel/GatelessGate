@@ -75,7 +75,7 @@ const MAT_R = 0.55, MAT_H = 0.05;
 const OFF = 1.1;
 // Named, because build() has to solve the rig's own equation to know where the
 // reader is standing before it can put anything to one side of them.
-const CAM = { distance: 12.7, target: [-0.6, 1.9, -6.4], heading: 19.5, pitch: 15.5 };
+const CAM = { distance: 12.7, target: [-0.6, 3.45, -6.4], heading: 19.5, pitch: 16.5 };
 
 export default {
   id: null,
@@ -167,7 +167,7 @@ export default {
     const psi = buddha.rotation.y;
     // his local +x in world, which is his left as the reader sees him
     const CAT = { x: MAT.x + Math.cos(psi) * CAT_OUT, z: MAT.z - Math.sin(psi) * CAT_OUT };
-    const cat = makeCat({ height: 0.32, seed: 49, pose: 'sit' });
+    const cat = makeCat({ height: 0.45, seed: 49, pose: 'sit' });
     cat.group.position.set(CAT.x, groundHeight(CAT.x, CAT.z, { seed: built.groundSeed }), CAT.z);
     cat.group.rotation.y = psi;
     scene.add(cat.group);

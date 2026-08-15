@@ -18,7 +18,7 @@ const SCREEN_H = 2.45;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.3, target: [0.1, 1.45, 0.1], heading: -32.5, pitch: 15 };
+const CAM = { distance: 8.3, target: [0.2, 0.9, -0.95], heading: 6.5, pitch: 4, minPitch: 0.6 };
   export default {
   id: ID,
   slug: 'two-monks-roll-up-the-screen',
@@ -46,7 +46,7 @@ const CAM = { distance: 11.3, target: [0.1, 1.45, 0.1], heading: -32.5, pitch: 1
   // through the raised blinds (-z), so the key has to stand beyond
   // them: the light comes in the way the case says it does, and the
   // assembly are shapes against it.
-  scene.add(makeLights({ sun: { heading: -141, pitch: 36 } }));
+  scene.add(makeLights({ sun: { heading: -149, pitch: 36 } }));
   
   const veranda = makeVeranda({ width: 4.8, depth: 4.4, height: 3.3, deck: DECK });
   veranda.position.set(0, 0, FRONT);
@@ -109,8 +109,8 @@ const CAM = { distance: 11.3, target: [0.1, 1.45, 0.1], heading: -32.5, pitch: 1
   // Hogen, seated a little back on the centre line, facing the bay. A seated
   // monk's front is local +z (the sleeves fold that way), so he is turned by
   // hand rather than with aimMonk, which aims the pointing sleeve instead.
-  const hogen = makeMonk({ pose: 'sit', height: 1.62, stout: 1.08, elder: true });
-  hogen.position.set(0.45, DECK, 0.5);
+  const hogen = makeMonk({ pose: 'sit', height: 1.7, stout: 1.08, elder: true });
+  hogen.position.set(0.35, DECK, 0.5);
   hogen.rotation.y = Math.PI + 0.16;
   scene.add(hogen);
   
@@ -124,7 +124,7 @@ const CAM = { distance: 11.3, target: [0.1, 1.45, 0.1], heading: -32.5, pitch: 1
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: 1207,
+  seed: 1203,
   groundSeed: 21,
   trees: 2,
   keepout: [
@@ -139,12 +139,12 @@ const CAM = { distance: 11.3, target: [0.1, 1.45, 0.1], heading: -32.5, pitch: 1
   // and everything outside the hall keeps its meadow.
   grassKeepout: veranda.footprint(),
   forests :[
-    { center: [-7, 0, -47], spread: 23, count: 55 },
-    { center: [26, 0, -29], spread: 14, count: 40 },
+    { center: [-17, 0, -55], spread: 23, count: 25 },
+    { center: [26, 0, -59], spread: 24, count: 20 },
   ],
   mountains : [
-    { count: 8, distance: 52, arcSpan: 3.6, arcCenter:1, hScale: 0.65},   // farthest band
-    { count: 5, distance: 73, arcSpan: 2.4, hScale: .5, arcCenter:.5 },
+    { count: 8, distance: 52, arcSpan: 3.6, arcCenter:1, hScale: 0.4},   // farthest band
+    { count: 18, distance: 73, arcSpan: 2.4, hScale: .35, arcCenter:.5 },
   ],
   });
 

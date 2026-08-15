@@ -163,16 +163,16 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   const gavel = new THREE.Group();
   gavel.name = 'gavel';
   gavel.position.copy(stand.position);
-  gavel.position.y += 0.24;
+  gavel.position.y += 0.27;
   // The handle (local +z) faces KYOZAN at the third seat, not the audience — it
   // is his hand that takes it up. Derived from where he actually stands, plus a
   // few degrees off square so it still reads hand-laid.
-  gavel.rotation.y = Math.atan2(
+  gavel.rotation.y = .5+Math.atan2(
   kyozan.position.x - stand.position.x,
   kyozan.position.z - stand.position.z) + 0.15;
-  const headGeo = new THREE.CylinderGeometry(0.065, 0.065, 0.21, 8);
+  const headGeo = new THREE.CylinderGeometry(0.07, 0.07, 0.25, 8);
   headGeo.rotateZ(Math.PI / 2);            // the head lies on its side
-  const handleGeo = new THREE.CylinderGeometry(0.020, 0.026, 0.34, 7);
+  const handleGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.4, 7);
   handleGeo.translate(0, 0.17, 0);         // hinge at the head end
   handleGeo.rotateX(Math.PI / 2 + 0.03);   // out along +z, butt settling to the wood
   const mallet = new THREE.Mesh(
@@ -221,7 +221,7 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   // wobble on every click, which read as the camera being knocked out of
   // place the more you tapped. The strike is a sound and a small LOCAL bounce
   // of the gavel; the world is left alone.
-  const GAVEL_Y = stand.position.y + 0.24;
+  const GAVEL_Y = stand.position.y + 0.27;
   let camera = null;
   let clock = 0;
   let strikes = 0;

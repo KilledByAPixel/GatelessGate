@@ -255,6 +255,7 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   // no touched() — the gate is the find that closes the book (above)
   const local = water.group.worldToLocal(hit.point.clone());
   water.ripple(local.x, local.z);
+  koi.startle();      // ...and the fish put on a little speed (kit/koi.js)
   audio && audio.drip({ loud: true, at: hit.point });
   rippled++;
   }

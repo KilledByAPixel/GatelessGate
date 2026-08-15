@@ -177,6 +177,7 @@ const CAM = { distance: 11.5, target: [1.15, 0.55, -0.75], heading: 31.5, pitch:
   touched && touched();
   const local = water.group.worldToLocal(hit.point.clone());
   water.ripple(local.x, local.z);
+  koi.startle();      // ...and the fish put on a little speed (kit/koi.js)
   audio && audio.drip({ loud: true, at: hit.point });
   rippled++;
   });

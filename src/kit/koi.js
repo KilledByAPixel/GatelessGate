@@ -213,7 +213,25 @@ export function makeKoi({
     });
   }
 
+  // ---- the school's own clock, and the startle -----------------------------
+  // THE SWIM IS DRIVEN BY simTime, and it has to stay that way: pose() reads
+  // one clock for the orbit, the bob, the bank and the tailbeat, and a case
+  // handing this a simTime is entitled to the same fish every replay.
+  //
+  // So a startle does NOT rewrite the clock — it accumulates a LEAD on it.
+  // `extra` is a phase offset that grows while they are hurrying and then stops
+  // growing; the clock they swim on is simTime + extra. Continuous, because
+  // extra only ever grows from where it already was, so quickening the school
+  // cannot teleport a fish mid-lap (the case-5 lesson: change the rate, never
+  // the position). And with no startle extra stays exactly 0, which is what
+  // keeps a pond built before this existed swimming identically.
+  const QUICKEN = 2;      // peak extra swim rate
+  const QUICK_TAU = 3;    // seconds for the hurry to die away
   let clock = 0;
+  let extra = 0;            // accumulated lead, in seconds of swim time
+  let lastT = 0;            // the last simTime seen, for the decay envelope
+  let quickAt = -1e9;       // when the last startle landed (simTime)
+  const boostAt = (t) => QUICKEN * Math.exp(-Math.max(0, t - quickAt) / QUICK_TAU);
 
   function pose() {
     for (const k of fish) {
@@ -247,8 +265,23 @@ export function makeKoi({
   return {
     group: g,
     fishCount() { return fish.length; },
+    // A touch on the water overhead. They do not scatter and they do not flee —
+    // this is a pond in an ink painting, not an aquarium being tapped — they
+    // simply put on a little speed for a few seconds and settle again.
+    //
+    // Repeated taps RESET the hurry rather than stacking it: the boost is read
+    // off the time since the last one, so a reader drumming on the water gets a
+    // school that stays quick, never one that accelerates without limit.
+    startle() { quickAt = lastT; },
+    // for a case's fragment, and for a test that wants to see the hurry
+    quickened() { return +boostAt(lastT).toFixed(4); },
     update(dt, simTime) {
-      clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
+      const t = Number.isFinite(simTime) ? simTime : lastT + Math.max(0, dt || 0);
+      // the lead grows only while they are hurrying; at rest this adds exactly
+      // zero and the clock below is simTime, unchanged from before this existed
+      extra += Math.max(0, dt || 0) * boostAt(t);
+      lastT = t;
+      clock = t + extra;
       pose();
     },
   };

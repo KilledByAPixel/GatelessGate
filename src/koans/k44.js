@@ -60,7 +60,7 @@ const CAM = { distance: 9.2, target: [0.1, 1.15, 0.6], heading: 36.5, pitch: 14 
   // Basho beside it, empty-handed — he is the one doing the giving and the
   // taking, so he cannot be carrying one himself
   const basho = makeMonk({ height: 1.66 });
-  basho.position.set(-1.2, 0, 1.4);
+  basho.position.set(-.2, 0, 1.9);
   faceMonk(basho, rack.group.position);
   scene.add(basho);
   

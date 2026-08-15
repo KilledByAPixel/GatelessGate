@@ -85,7 +85,7 @@ const CAM = {distance: 11, target: [-0.6, 1.5, -2.25], heading: 27.5, pitch: 16.
   // owed — a life-sized fox came out at barely half the presence, and this
   // one has to hold the shot against three standing figures. A fox a little
   // larger than a fox should be is also not the wrong note to strike here.
-  const fox = makeFox({ height: 0.6, color: ACCENT, seed: ID });
+  const fox = makeFox({ height: 0.65, color: ACCENT, seed: ID });
   fox.group.position.set(FOX.x, 0, FOX.z);
   // stood broadside so the brush reads across the frame — a fox pointed at the
   // lens is a red smudge — with only the head come round to the monks

@@ -99,7 +99,7 @@ const CAM = { distance: 11.5, target: [1.05, 1.45, -1.75], heading: 35, pitch: 1
   stone.rotation.y = 0.6;
   scene.add(stone);
   
-  const cat = makeCat({ height: 0.32, color: ACCENT, seed: ID, pose: 'sit' });
+  const cat = makeCat({ height: 0.44, color: ACCENT, seed: ID, pose: 'sit' });
   cat.group.position.set(STONE.x, STONE_TOP, STONE.z);
   cat.group.rotation.y = 0.35;        // looking out past the whole argument
   scene.add(cat.group);

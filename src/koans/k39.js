@@ -179,7 +179,7 @@ const CAM = { distance: 12.2, target: [0.95, 0.9, -0.4], heading: 21, pitch: 20}
     scene.add(student);
 
     // Ummon, on the far side, who has already stopped listening
-    const ummon = makeMonk({ height: 1.66, elder: true });
+    const ummon = makeMonk({ height: 1.66, elder: true, hat:false });
     ummon.position.set(-4.2, 0, -4.4);
     faceMonk(ummon, student.position);
     scene.add(ummon);
@@ -303,6 +303,7 @@ const CAM = { distance: 12.2, target: [0.95, 0.9, -0.4], heading: 21, pitch: 20}
       // but the find on this page is the red going under
       const local = water.group.worldToLocal(hit.point.clone());
       water.ripple(local.x, local.z);
+      koi.startle();      // ...and the fish put on a little speed (kit/koi.js)
       audio && audio.drip({ loud: false, at: hit.point });
     });
 
