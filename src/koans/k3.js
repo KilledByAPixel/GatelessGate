@@ -119,14 +119,14 @@ function makeFinger(length, radius) {
 // and what Gutei holds up is a finger held UP — the whole gesture is that it is
 // vertical. The price is that it has to be re-seated whenever the arm moves,
 // which is all seat() does.
-function raiseFinger(monk, { length = 0.15, radius = 0.025, withFinger = true } = {}) {
+function raiseFinger(monk, { length = 0.15, radius = 0.025, withFinger = true, gain = 1 } = {}) {
   const arm = raisedSleeve(monk);
   let finger = null;
   if (withFinger) {
     finger = makeFinger(length, radius);
     monk.add(finger);
   }
-  const f = { monk, arm, finger, radius, restZ: arm.rotation.z, lift: 0, since: -1 };
+  const f = { monk, arm, finger, radius, gain, restZ: arm.rotation.z, lift: 0, since: -1 };
   seat(f);
   return f;
 }
@@ -134,10 +134,27 @@ function raiseFinger(monk, { length = 0.15, radius = 0.025, withFinger = true } 
 const LIFT = 0.24;        // radians of extra sleeve — about a hand's width of rise
 const GESTURE = 1.5;      // seconds, raise to settle
 const BEAT = 0.55;        // the pause before the other one answers
+// HOW MUCH BIGGER THE BOY'S COPY IS, and it has to be bigger to be the same
+// gesture. Both figures ran at identical radians for a long time and the
+// imitation was firing on time and going unseen: the boy is smaller, stands
+// further from the lens, and — this is the half that actually decides it — has
+// nothing on the end of his sleeve, where the master's hem carries the one red
+// mark in the picture and the eye rides it. Measured through the case's own
+// lens, parity in radians put his answer at about two thirds of the master's
+// travel in plain grey. Authored so the copy reads at least as big as the thing
+// copied, which is also how a child imitating an adult actually does it.
+//
+// Bounded ABOVE by the copy staying the same GESTURE. His own head is not the
+// constraint and it is worth writing down, because it looks like it should be:
+// the sleeve swings outward from the shoulder rather than across the face, and
+// the cuff still clears his head at three times the master's. What gives out
+// first is character — far enough and the boy is no longer repeating what he
+// saw, he is waving.
+const COPY = 1.75;
 
 function setLift(f, lift) {
   f.lift = lift;
-  f.arm.rotation.z = f.restZ + lift * LIFT;
+  f.arm.rotation.z = f.restZ + lift * LIFT * f.gain;
   seat(f);
 }
 
@@ -150,7 +167,7 @@ function envelope(u) {
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.6, target: [0.8, 1.85, 0.55], heading: 17, pitch: 15.5 };
+const CAM = { distance: 10, target: [0.5, 1.85, 0.55], heading: 17, pitch: 15.5 };
   export default {
   id: ID,
   slug: 'gutei-s-finger',
@@ -218,7 +235,7 @@ const CAM = { distance: 9.6, target: [0.8, 1.85, 0.55], heading: 17, pitch: 15.5
   // Both figures lift the same arm through the same gesture; only the master
   // has anything on the end of it.
   const master = raiseFinger(gutei, { length: 0.17, radius: 0.027 });
-  const pupil = raiseFinger(boy, { withFinger: false });
+  const pupil = raiseFinger(boy, { withFinger: false, gain: COPY });
   
   // whoever has just asked. Kept off to the sides: the gap between the master
   // and the boy is where both gestures live and nothing else belongs in it.

@@ -31,7 +31,7 @@ const ID = 21;
 // piece of dung, exactly the joke Mumon makes in the commentary. The framing,
 // named so composeWorld can have it too: `view` lets the scatter refuse spots
 // no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10, target: [0.8, 1.1, 0.2], heading: 4, pitch: 10 };
+const CAM = { distance: 10, target: [0.8, 1.1, 0.2], heading: -1, pitch: 14 };
   export default {
   id: ID,
   slug: 'dried-dung',
@@ -127,12 +127,12 @@ const CAM = { distance: 10, target: [0.8, 1.1, 0.2], heading: 4, pitch: 10 };
     // Ummon, who said it, and the monk who asked. Set well apart: the space
     // between them is doing as much work as they are.
     const ummon = makeMonk({ height: 1.66, elder: true });
-    ummon.position.set(-1.9, 0, -0.6);
+    ummon.position.set(-.7, 0, -1);
     faceMonk(ummon, stick.position);
     scene.add(ummon);
 
     const monk = makeMonk({ height: 1.56 });
-    monk.position.set(2.6, 0, 2.4);
+    monk.position.set(2, 0, 2.4);
     faceMonk(monk, ummon.position);
     scene.add(monk);
 

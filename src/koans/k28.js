@@ -48,7 +48,7 @@ const WIND_SWELL = 0.7;      // fraction above BASE_WIND at full dark
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.6, target: [0.3, 1.25, -1.2], heading: 34, pitch: 13 };
+const CAM = { distance: 9.6, target: [-0.1, 1.25, -1.2], heading: 40.5, pitch: 13 };
   export default {
   id: ID,
   slug: 'blow-out-the-candle',

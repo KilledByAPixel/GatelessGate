@@ -6,6 +6,7 @@ import { ACCENT } from '../src/palette.js';
 import { slugify } from '../src/koans/index.js';
 import TEXT from '../src/koans/text/mumonkan.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
+import { rigCamera } from './helpers/rig-camera.js';
 
 const ACCENT_HEX = new THREE.Color(ACCENT).getHexString();
 
@@ -214,6 +215,65 @@ test('a held pointer cannot re-strike inside the cooldown', () => {
   ctx._taps.forEach((cb) => cb());
   assert.equal(root.fragment().taps, 2, 'a tap after the cooldown answers again');
   assert.equal(rings.length, 2, 'the first strike\'s own scripted echo has not fired yet at t=0.52');
+});
+
+// THE COPY HAS TO BE SEEN, not merely scheduled. Both figures ran at identical
+// radians for a long time and the test above passed the whole while — the boy
+// answered on the beat and it went unnoticed on screen, because he is smaller,
+// further off, and his cuff is grey where the master's carries the one red mark
+// in the picture. So this measures the answer where the reader meets it: peak
+// travel of each raised hem in PIXELS, through the case's own lens.
+test('the boy\'s answer reads at least as large as the master\'s on screen', () => {
+  const W = 1350, H = 760;
+  const ctx = fakeCtx();
+  const root = k3.build(ctx);
+  const gutei = guteiOf(root.scene), boy = boyOf(root.scene);
+
+  // the raised arm on each: the one whose hem sits highest
+  const raisedArm = (monk) => {
+    let best = null, top = -Infinity;
+    for (const c of monk.children) {
+      if (c.name !== 'arm') continue;
+      const geo = c.geometry;
+      if (!geo.boundingBox) geo.computeBoundingBox();
+      const tip = new THREE.Vector3(0, geo.boundingBox.min.y, 0).applyMatrix4(c.matrix);
+      if (tip.y > top) { top = tip.y; best = c; }
+    }
+    return best;
+  };
+  const gArm = raisedArm(gutei), bArm = raisedArm(boy);
+  const cam = rigCamera(k3.camera, { aspect: W / H });
+  const hemPixel = (monk, arm) => {
+    monk.updateMatrixWorld(true);
+    const p = new THREE.Vector3(0, arm.geometry.boundingBox.min.y, 0)
+      .applyMatrix4(arm.matrixWorld).project(cam);
+    return { x: (p.x * 0.5 + 0.5) * W, y: (-p.y * 0.5 + 0.5) * H };
+  };
+
+  root.setCamera(cam);
+  root.update(0, 0);
+  const rest = { g: hemPixel(gutei, gArm), b: hemPixel(boy, bArm) };
+  // both gestures have to be IN the shot for any of this to mean anything
+  for (const [who, p] of [['gutei', rest.g], ['boy', rest.b]]) {
+    assert.ok(p.x > 0 && p.x < W && p.y > 0 && p.y < H, `${who}'s hem is in frame`);
+  }
+
+  const guteiBody = gutei.children.find((c) => c.name === 'body');
+  ctx.input.raycastFirst = (c, list) => (list.includes(guteiBody) ? { object: guteiBody, point: new THREE.Vector3() } : null);
+  ctx._taps.forEach((cb) => cb());
+
+  let peakG = 0, peakB = 0;
+  for (let i = 1; i <= 200; i++) {
+    root.update(1 / 60, i / 60);
+    const g = hemPixel(gutei, gArm), b = hemPixel(boy, bArm);
+    peakG = Math.max(peakG, Math.hypot(g.x - rest.g.x, g.y - rest.g.y));
+    peakB = Math.max(peakB, Math.hypot(b.x - rest.b.x, b.y - rest.b.y));
+  }
+  // A floor in absolute pixels as well as a ratio: two hems that both moved
+  // three pixels would satisfy the ratio and still be invisible.
+  assert.ok(peakG > 8, `the master's gesture carries (${peakG.toFixed(1)}px)`);
+  assert.ok(peakB > 8, `the boy's gesture carries (${peakB.toFixed(1)}px)`);
+  assert.ok(peakB >= peakG, `the copy is not the smaller event: boy ${peakB.toFixed(1)}px vs master ${peakG.toFixed(1)}px`);
 });
 
 test('the finger never dips below the shoulder while the gesture plays', () => {

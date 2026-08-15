@@ -18,7 +18,7 @@ const SCREEN_H = 2.45;
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 8.3, target: [0.2, 0.9, -0.95], heading: 6.5, pitch: 4, minPitch: 0.6 };
+const CAM = { distance: 10, target: [0.2, 1.1, -0.95], heading: 6.5, pitch: 4, minPitch: 0.6 };
   export default {
   id: ID,
   slug: 'two-monks-roll-up-the-screen',

@@ -41,7 +41,7 @@ const WIND_HEARD = 0.16;  // the ambience's own level, from the recipe below
 // where the composition already points.)
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.5, target: [1.75, 1.5, -0.8], heading: 31.5, pitch: 20.1 };
+const CAM = { distance: 10.5, target: [1.55, 1.5, -0.8], heading: 34, pitch: 15.5 };
   export default {
   id: ID,
   slug: 'learning-is-not-the-path',

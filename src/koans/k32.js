@@ -44,7 +44,7 @@ function bowShape(u) {
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10, target: [1.15, 1.45, -1.6], heading: 36.5, pitch: 16 };
+const CAM = { distance: 10, target: [1.15, 1.7, -1.6], heading: 36.5, pitch: 16 };
   export default {
   id: ID,
   slug: 'a-philosopher-asks-buddha',

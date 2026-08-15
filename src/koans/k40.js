@@ -30,7 +30,7 @@ const ID = 40;
 const VASE = { x: 1.5, z: 0.5 };      // forward of everyone, nearest the lens
 const VASE_H = 0.55;
 const HALL = { x: -1.0, z: -6.2 };    // the new monastery's stand-in, far back
-const HYAKUJO = { x: 0.45, z: 1.55 };   // beside the vase, not behind it —
+const HYAKUJO = { x: 0.7, z: 1.3 };   // beside the vase, not behind it —
                                           // the red must sit against paper and
                                           // grass, never against a black robe
 const ISAN = { x: 1.9, z: 0 };    // of the crowd, one step out of it
@@ -47,7 +47,7 @@ const ARC_PULL = ARC_R * 0.81;        // mean(cos) over the 0.7π arc — see k1
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.8, target: [2.05, 1, -0.5], heading: 57.5, pitch: 20 };
+const CAM = { distance: 10.8, target: [1.25, 1, -0.1], heading: 56, pitch: 20 };
   export default {
   id: ID,
   slug: 'tipping-over-a-water-vase',

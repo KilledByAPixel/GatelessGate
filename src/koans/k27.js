@@ -78,7 +78,7 @@ const scratchPos = new THREE.Vector3();
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 30, pitch: 15, maxDist: 18.4 };
+const CAM = { distance: 17.4, target: [0.1, 0.95, -0.55], heading: 36.5, pitch: 15, maxDist: 18.4 };
   export default {
   id: ID,
   slug: 'it-is-not-mind-it-is-not-buddha-it-is-not-things',
@@ -145,13 +145,13 @@ const CAM = { distance: 17.4, target: [0.3, 0.95, -1.4], heading: 30, pitch: 15,
   
   // the monk who asked, left standing in whatever is left
   const monk = makeMonk({ height: 1.58 });
-  monk.position.set(1.0, 0, 2.6);
-  faceMonk(monk, { x: -2.2, z: -4.4 });
+  monk.position.set(2.0, 0, 2.6);
   scene.add(monk);
   
   // Nansen, who is about to do this to him
   const nansen = makeMonk({ height: 1.66, elder: true });
   nansen.position.set(-1.0, 0, 1.2);
+  faceMonk(monk, nansen.position);
   faceMonk(nansen, monk.position);
   scene.add(nansen);
   

@@ -142,9 +142,9 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   // far side, back to us, walking on into the fog. He has passed through; the
   // book is behind him.
   const you = makeMonk({ height: 1.6, elder: true });
-  const yb = road.sample(0.6);
+  const yb = road.sample(0.56);
   const yp = { x: yb.x + yb.perp.x * 0.35, z: yb.z + yb.perp.z * 0.35 };
-  you.position.set(yp.x, .2, yp.z);
+  you.position.set(yp.x, .1, yp.z);
   scene.add(you);
   
   // ---- THE GATE, at the head of the path -------------------------------

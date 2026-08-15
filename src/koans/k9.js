@@ -20,7 +20,7 @@ const ID = 9;
 // happens; nothing else has happened for ten cycles.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 17, target: [-0.8, 3.05, -1.6], heading: 31.5, pitch: 10.5, maxDist: 18 };
+const CAM = {distance: 17.3, target: [-1.6, 3.05, -1.6], heading: 42, pitch: 8, maxDist: 18.3 };
   export default {
   id: ID,
   slug: 'a-buddha-before-history',
@@ -128,7 +128,7 @@ const CAM = { distance: 17, target: [-0.8, 3.05, -1.6], heading: 31.5, pitch: 10
   
   // and Seijo, who answered that the question answers itself
   const seijo = makeMonk({ height: 1.64, elder: true });
-  seijo.position.set(4.1, 0, 0.7);
+  seijo.position.set(4.1, 0, 1);
   faceMonk(seijo, monk.position);
   scene.add(seijo);
   
@@ -143,7 +143,7 @@ const CAM = { distance: 17, target: [-0.8, 3.05, -1.6], heading: 31.5, pitch: 10
   // right edge, past the two monks, watching from the side the way an animal
   // actually attends a place.
   const fox = makeFox({ height: 0.45, seed: 9 });
-  fox.group.position.set(-1.6, 0, 3.6);
+  fox.group.position.set(-1, 0, 3);
   faceMonk(fox.group, buddha.position);
   scene.add(fox.group);
   

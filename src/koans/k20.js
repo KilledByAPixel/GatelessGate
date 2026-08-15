@@ -147,7 +147,7 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   
   // a traveller who stopped in front of him — the one who asked
   const monk = makeMonk({ height: 1.58 });
-  monk.position.set(3.6, 0, 3.4);
+  monk.position.set(3.2, 0, 3.4);
   faceMonk(monk, colossus.position);
   scene.add(monk);
 

@@ -104,7 +104,7 @@ const GATE_PRESETS = ['great', 'temple', 'hand'];
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 14.5, target: [-0.6, 0.8, -10.85], heading: 6.5, pitch: 11 };
+const CAM = { distance: 16.5, target: [-0.6, 0.8, -10.85], heading: 9, pitch: 11 };
   export default {
   id: ID,
   slug: 'three-gates-of-tosotsu',

@@ -23,7 +23,7 @@ const POINT = 1.5;        // seconds: raise, hold, and back down
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 18.4 };
+const CAM = { distance: 11.3, target: [0.3, 1.3, -0.2], heading: 35.5, pitch: 15 };
   export default {
   id: ID,
   slug: 'joshu-investigates',
@@ -49,9 +49,9 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   scene.add(makeLights({ sun: { heading: -33, pitch: 48 } }));
   
   // the road, and the branch of it that goes on to Taizan
-  const road = makePath({ from: [5.4, 7.6], to: [-4.4, -16], width: 1.6, seed: ID, groundSeed: 21, wander: 0.6 });
+  const road = makePath({ from: [5.4, 17.6], to: [-4.4, -16], width: 1.6, seed: 33, groundSeed: 21, wander: 2.6 });
   scene.add(road);
-  const branch = makePath({ from: [1.6, -2.2], to: [9.0, -14], width: 1.1, seed: ID * 3, groundSeed: 21, wander: 0.9 });
+  const branch = makePath({ from: [1.6, -0.2], to: [29.0, -9], width: 1.1, seed: ID * 3, groundSeed: 21, wander: 0.9 });
   scene.add(branch);
   
   // the tea stall at the fork: a hut with an awning over a bench
@@ -127,12 +127,12 @@ const CAM = { distance: 10.4, target: [1.95, 1.3, -0.2], heading: 31.5, pitch: 1
   
   // and the traveller currently receiving it
   const traveller = makeMonk({ height: 1.6, elder: true });
-  traveller.position.set(3.4, 0, 2.);
+  traveller.position.set(3.0, .05, 2.);
   faceMonk(traveller, WOMAN);
   scene.add(traveller);
   
   const lantern = makeLantern({ height: 1.0 });
-  lantern.position.set(2, 0, -4.2);
+  lantern.position.set(2, 0, -1.5);
   scene.add(lantern);
   
   // A single small tube on a cord, under the stall's own front eave — the

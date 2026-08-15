@@ -18,7 +18,7 @@ const ID = 44;
 // The behaviour lives in the kit piece, so the paradox travels with it.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9.2, target: [0.1, 1.15, 0.6], heading: 36.5, pitch: 14 };
+const CAM = { distance: 9.2, target: [0.3, 1.15, 0.6], heading: 35.5, pitch: 12.5 };
   export default {
   id: ID,
   slug: 'basho-s-staff',
@@ -60,13 +60,13 @@ const CAM = { distance: 9.2, target: [0.1, 1.15, 0.6], heading: 36.5, pitch: 14 
   // Basho beside it, empty-handed — he is the one doing the giving and the
   // taking, so he cannot be carrying one himself
   const basho = makeMonk({ height: 1.66 });
-  basho.position.set(-.2, 0, 1.9);
+  basho.position.set(.1, 0, 1.9);
   faceMonk(basho, rack.group.position);
   scene.add(basho);
   
   // the disciple, come to be given or relieved of something
   const disciple = makeMonk({ height: 1.56 });
-  disciple.position.set(2.9, 0, 2.0);
+  disciple.position.set(2.5, 0, 2.0);
   faceMonk(disciple, rack.group.position);
   scene.add(disciple);
   

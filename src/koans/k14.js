@@ -44,7 +44,7 @@ const EAST_HALL = { x: 2.4, z: -6.2 }, WEST_HALL = { x: -3.7, z: -3.5 };
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11.5, target: [1.05, 1.45, -1.75], heading: 35, pitch: 18.5 };
+const CAM = { distance: 11.5, target: [1.05, 1.45, -1.75], heading: 35, pitch: 23.5 };
   export default {
   id: ID,
   slug: 'nansen-cuts-the-cat-in-two',

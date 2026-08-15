@@ -174,13 +174,13 @@ const CAM = { distance: 12.2, target: [0.95, 0.9, -0.4], heading: 21, pitch: 20}
 
     // the student, on the near shore, mid-sentence
     const student = makeMonk({ height: 1.58, pose: 'point' });
-    student.position.set(4.9, 0, 3.0);
+    student.position.set(3.5, 0, 3.5);
     aimMonk(student, stones[STONES - 1].pivot.position);
     scene.add(student);
 
     // Ummon, on the far side, who has already stopped listening
     const ummon = makeMonk({ height: 1.66, elder: true, hat:false });
-    ummon.position.set(-4.2, 0, -4.4);
+    ummon.position.set(-3.8, 0, -4.4);
     faceMonk(ummon, student.position);
     scene.add(ummon);
 

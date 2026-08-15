@@ -20,7 +20,7 @@ const VERANDA_H = 3.2;   // shared with the chime hang point below
 // silk. You cannot add what the picture is refusing to be.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9, target: [0.5, 1.7, -1.4], heading: 29, pitch: 12.5 };
+const CAM = { distance: 10, target: [0.2, 1.7, -1.4], heading: 29, pitch: 12.5 };
   export default {
   id: ID,
   slug: 'a-beardless-foreigner',

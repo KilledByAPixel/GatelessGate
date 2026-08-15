@@ -20,7 +20,7 @@ const ID = 24;
 // China, spring, borrowed from someone else.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 17, target: [3.95, 1.25, -1.3], heading: -24.5, pitch: 17.5, maxDist: 18 };
+const CAM = { distance: 17, target: [3.25, 1.25, -1.3], heading: -24.5, pitch: 17.5, maxDist: 18 };
   export default {
   id: ID,
   slug: 'without-words-without-silence',

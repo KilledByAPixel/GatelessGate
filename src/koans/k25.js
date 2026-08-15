@@ -34,7 +34,7 @@ const scratchPos = new THREE.Vector3();
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5 };
+const CAM = { distance: 12, target: [0.7, 1.45, -0.95], heading: 17, pitch: 16.5 };
   export default {
   id: ID,
   slug: 'preaching-from-the-third-seat',
@@ -200,7 +200,7 @@ const CAM = { distance: 11, target: [-0.1, 1.7, -0.95], heading: 17, pitch: 21.5
   // scene, the dream's furniture to `hall`, whatever `hall` does.
   const world = composeWorld(scene, {
   view: CAM,
-  seed: ID,
+  seed: 255,
   groundSeed: 21,
   trees: 6,
   rocks: 4,

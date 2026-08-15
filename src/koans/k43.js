@@ -21,7 +21,7 @@ const scratchPos = new THREE.Vector3();
 // refusal — the object simply behaves like an object.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.6, target: [0.7, 0.7, -0.55], heading: 12, pitch: 5.5, minPitch: 2.1 };
+const CAM = { distance: 10.6, target: [0.4, 0.7, -0.55], heading: 12, pitch: 5.5, minPitch: 2.1 };
   export default {
   id: ID,
   slug: 'shuzan-s-short-staff',

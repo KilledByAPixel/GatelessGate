@@ -93,7 +93,7 @@ function liftShape(u) {
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15.5 };
+const CAM = { distance: 9.2, target: [0.4, 1.35, -0.95], heading: 34, pitch: 16.5 };
   export default {
   id: ID,
   slug: 'the-girl-comes-out-from-meditation',
@@ -128,7 +128,7 @@ const CAM = { distance: 8.3, target: [0.8, 1.15, -1.2], heading: 31.5, pitch: 15
   // THE GIRL, unmoved, in the middle of the floor. She is the seal: the one
   // figure in the book rendered in the accent, because she is the only thing
   // in this case that nobody can shift.
-  const GIRL = new THREE.Vector3(0.85, 0, -1.15);
+  const GIRL = new THREE.Vector3(0.6, 0, -1);
   const girl = makeMonk({ height: 1.24, pose: 'sit', hat: false, color: ACCENT_DEEP });
   girl.position.copy(GIRL);
   faceMonk(girl, buddha.position);

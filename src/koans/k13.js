@@ -24,7 +24,7 @@ const scratchPos = new THREE.Vector3();
 // other case's rather than by moving the book. composeWorld gets the same
 // object as its `view`, so the scatter still refuses spots no reachable heading
 // can see (kit/scenery.js).
-const CAM = { distance: 11, target: [-1.4, 1.35, -1.2], heading: 21, pitch: 16.5 };
+const CAM = { distance: 11.7, target: [-2.75, 1.55, -0.85], heading: 26.5, pitch: 16 };
 
 export default {
   id: ID,
@@ -82,7 +82,7 @@ export default {
     // the elder's staff was colliding with it — a man carrying his bowls to
     // dinner is not also carrying a stick.
     const tokusan = makeMonk({ height: 1.64, pose: 'fold' });
-    tokusan.position.set(-2.8, 0, -0.5);
+    tokusan.position.set(-2.8, .05, -1);
     const bowl = makeBowl({ radius: 0.16, color: WASH.mid });
     bowl.name = 'held-bowl';
     bowl.position.set(0.0, 0.52, .36);           // held out before him at the waist, clear of the robe
@@ -92,7 +92,7 @@ export default {
     // Seppo on duty at the hall door, who is about to ask him where he is going
     const seppo = makeMonk({ height: 1.58, stout: 1.04 });
     const front = { x: Math.sin(hall.rotation.y), z: Math.cos(hall.rotation.y) };
-    seppo.position.set(hall.position.x + front.x * 2.5, 0, hall.position.z + front.z * 2.5);
+    seppo.position.set(hall.position.x + front.x * 2.5, .05, hall.position.z + front.z * 2.5);
     faceMonk(seppo, tokusan.position);
     scene.add(seppo);
     faceMonk(tokusan, seppo.position);

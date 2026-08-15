@@ -29,7 +29,7 @@ const ID = 16;
 // every other case's rather than by moving the book. composeWorld gets the same
 // object as its `view`, so the scatter still refuses spots no reachable heading
 // can see (kit/scenery.js).
-const CAM = { distance: 10, target: [-0.4, 1.35, 0.3], heading: -1, pitch: 18 };
+const CAM = { distance: 10.1, target: [0.9, 1.3, -0.8], heading: -7.5, pitch: 18.5 };
 
 export default {
   id: ID,
@@ -64,7 +64,7 @@ export default {
 
     // the hall, back-left, its threshold facing the yard
     const hall = makeHut({ width: 3.4, height: 2.4, depth: 2.6 });
-    hall.position.set(-3.6, 0, -5.0);
+    hall.position.set(-1, 0, -4.5);
     hall.rotation.y = 0.62;
     scene.add(hall);
 
@@ -94,7 +94,7 @@ export default {
     // bearing and the bell's. Striking the bell finishes the turn for him.
     // (He is the elder because a plain kit monk is nearly symmetric — a turn
     // only reads on a figure with a staff to carry around.)
-    const ep = path.sample(0.42);
+    const ep = path.sample(0.47);
     const elder = makeMonk({ height: 1.66, elder: true });
     elder.position.set(ep.x + ep.perp.x * -2.45, 0, ep.z + ep.perp.z * 3.45);
     const walkTo = path.sample(0.72);
@@ -107,7 +107,7 @@ export default {
     // and the monk just out of the hall door, robes on, facing the sound
     const front = { x: Math.sin(hall.rotation.y), z: Math.cos(hall.rotation.y) };
 
-    plantTree(scene, { x: .5, z: -6, height: 4.2 });
+    plantTree(scene, { x: 2.5, z: -6, height: 4.2 });
 
     // dinner drum
     const drum = makeDrum({ radius: 0.5, seed: 16 });

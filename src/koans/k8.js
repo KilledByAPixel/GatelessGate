@@ -16,7 +16,7 @@ const ID = 8;
 // What is left keeps turning. It was never the hub that turned it.
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 9, target: [0, 1.25, 0.55], heading: 31.5, pitch: 19 };
+const CAM = { distance: 10.1, target: [0.5, 1.25, 0.55], heading: 40.5, pitch: 19 };
   export default {
   id: ID,
   slug: 'keichu-s-wheel',
