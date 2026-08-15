@@ -110,7 +110,7 @@ const CAM = { distance: 11, target: [1.05, 1.25, -3.35], heading: 17, pitch: 18 
   // opens toward +z (the camera), so its centre must sit WELL BACK or the
   // front row looms in the lens as a wall of black cones.
   const assembly = makeAssembly({
-  count: 7, radius: 3.1, center: [1.2, -3.9], facing: [1.2, SEAT_Z], spread: 1.3, seed: 6,
+  count: 7, radius: 3, center: [1.2, -3.9], facing: [1.2, SEAT_Z], spread: 1.3, seed: 6,
   });
   scene.add(assembly);
   
