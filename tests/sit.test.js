@@ -83,20 +83,19 @@ test('the reader\'s bell is no brighter than a chime in a scene', () => {
     `bright ${SIT_BELL.bright} against the fūrin's ${CHIME.bright}`);
 });
 
-// Every way a sitting ends is marked by the bell: the timer running out, and
-// the reader tapping out early. Leaving on silence made ending early read as
-// walking out — and it also meant the reader could go a whole sitting without
-// hearing the sound the timer closes with.
-test('both endings ring, and a finished sitting rings exactly once', () => {
+// The bell marks a sitting COMPLETED and nothing else. It rang on the way out
+// briefly, on the reasoning that every ending should be marked; it should not,
+// because a bell answering the reader's decision to stop is the book commenting
+// on it. Ending early is silent, and so is leaving a sitting that already rang.
+test('tapping out of a sitting is silent', () => {
   const leave = SIT_SRC.slice(SIT_SRC.indexOf('function leave()'));
   const body = leave.slice(0, leave.indexOf('\n  }'));
-  assert.match(body, /audio\.sitBell\(\)/, 'tapping out ends a sitting in silence');
-  // ...but only out of 'sitting'. From 'done' the closing bell has already rung
-  // and the tap is just leaving the scene; ringing there is two bells for one
-  // ending, a few seconds apart.
-  assert.match(body, /phase === 'sitting'/, 'the exit bell is not gated on the phase');
-  assert.ok(body.indexOf('phase === \'sitting\'') < body.indexOf('sitBell()'),
-    'the gate must come before the strike');
+  assert.doesNotMatch(body, /sitBell/, 'tapping out rings the bell');
+  // ...and the completing path is the only one that does ring, so the sound
+  // still means exactly one thing.
+  const done = SIT_SRC.slice(SIT_SRC.indexOf('function complete()'));
+  assert.match(done.slice(0, done.indexOf('\n  }')), /audio\.sitBell\(\)/,
+    'the timer runs out in silence');
 });
 
 test('the reader\'s bell is the wettest thing in the book', () => {
