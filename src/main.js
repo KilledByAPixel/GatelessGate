@@ -17,7 +17,7 @@ import { setBreezePointer, clearBreeze } from './kit/breeze.js';
 import { stepFoliageWind } from './kit/foliage.js';
 import { createSave } from './save.js';
 import { createAudio, shouldPauseForHide } from './audio/engine.js';
-import { windGust, gustSlope } from './audio/synths.js';
+import { windGust, gustSlope, SIT_BELL } from './audio/synths.js';
 import { createNarration } from './audio/narration.js';
 import { CASES } from './koans/index.js';
 import { makeNavQueue } from './nav_queue.js';
@@ -231,17 +231,18 @@ panel.appendChild(menu.el);
 const about = makeAbout({ onBack: () => { menu.refresh(save.state()); showView(menu.el); } });
 panel.appendChild(about.el);
 
-// Longer than the sit bell's hum and the room tail behind it, with room to
-// spare — it is deliberately generous rather than derived, because overshooting
-// costs nothing here (a hidden page stays quiet either way) and undershooting
-// costs the one sound this whole exemption exists to protect. Set against the
-// bespoke voice the timer used to ring and left alone when SIT_BELL moved to a
-// preset, which rings SHORTER; re-check it only if the sit bell ever gets a
-// bigger body than a hand bell's. This is how long a pause forced by the
-// 'sitting'->'done' transition (below) waits before it is allowed to actually
-// fade `master` — arming it any sooner cuts the closing bell down to the
-// ~300ms of pauseForHide's own fade-then-suspend window.
-const SIT_BELL_TAIL_MS = 10000;
+// How long a pause forced by the 'sitting'->'done' transition (below) waits
+// before it is allowed to actually fade `master` — arming it any sooner cuts
+// the closing bell down to the ~300ms of pauseForHide's own fade-then-suspend
+// window, which is the exact silence the sitting exemption exists to prevent.
+//
+// DERIVED from the bell it is waiting out, plus the room behind it. It was a
+// hand-set 10s picked against a voice the timer no longer rings, and it survived
+// one voice change already by luck — the replacement happened to be shorter.
+// The next one might not be, and nothing would fail: the bell would just get
+// cut, on a hidden page, where nobody is watching. Reading SIT_BELL.decay costs
+// one import and takes that whole class of silent staleness off the table.
+const SIT_BELL_TAIL_MS = (SIT_BELL.decay + 2) * 1000;
 
 const sit = makeSit({
   audio,

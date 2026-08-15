@@ -1147,33 +1147,47 @@ export function strikeBell(ctx, dry, verbIn, { partials, gain = 1, verbMix = BEL
 }
 
 // ---- the sit bell ----
-// The inkin: the small hand bell that opens and closes a sitting. It is NOT the
-// book's temple bell — but it IS one of the book's bells now, which it was not
-// before. It used to be a bespoke five-mode voice of its own, struck near
-// 1.2 kHz, and up there it read as harsh rather than clean: the ear's most
-// sensitive octave, a hard bright mallet tick on top of it, and no body under
-// it at all. `hand` is the same small bell auditioned for the cases, an octave
-// and a half lower, with the mallet balance (beam/ping/pingFreq) that was
-// approved by ear on the audition page — so the reader's bell is now tuned by
-// the same instrument as everything else in the book, and retuning it means
-// naming a different preset here rather than hand-editing modes.
+// THE INKIN — the small hand chime that opens and closes a sitting, and the one
+// sound in the book that belongs to the reader rather than to a scene.
 //
-// `size` null takes the preset's own body size; a number overrides it, and
-// bigger is deeper AND longer together (see bellVoice). `gain` is the plain
-// velocity strikeBell() multiplies by BELL.level — set so the bell arrives at
-// roughly the amplitude the old voice did, which is well under a case bell
-// because nothing in the scene struck it.
+// It is NOT a bell, and that is the finding. It shipped twice as one: first as a
+// bonshō down at 70 Hz (a thud), then as a bespoke five-mode voice struck near
+// 1.2 kHz, which is the ear's most sensitive octave and read as harsh — a hard
+// bright mallet tick over a stretched near-harmonic series with no body beneath
+// it. Both attempts were the wrong instrument. An inkin is a struck BAR, not a
+// struck shell: barPartials' free-free series (1 : 2.756 : 5.404 : 8.933) is
+// what makes it a clean single pitch hanging in the room instead of the beating
+// cluster of modes that makes a bell a bell, and no amount of retuning a bell
+// reaches it, because the two mode series are not related.
 //
-// The mood no longer pitches it, and nothing is lost: the old degree 15 was the
-// root four octaves up, the same note in both scales, so the timer never
-// changed pitch with the case anyway. Presets are addressed by size, not pitch.
+// So it takes strikeBar(), like the fūrin and the hanging cylinder — but its OWN
+// voice, on the same principle BRONZE is separate from CHIME: retuning the
+// reader's bell must never disturb a wind chime in a case, and the reverse.
 //
-// verbMix carries over unchanged from the bespoke voice — it is about the ROOM,
-// not the bell, and the room did not change. The sit bell belongs to the
-// READER, not to any diorama: it is never spatialized and it is the one sound
-// in the book allowed to be nearly pure room. (A dry bell reads as a thud at
-// ANY pitch, which is why this sits so far above every preset's own mix.)
-export const SIT_BELL = { preset: 'hand', size: null, gain: 0.5, verbMix: 0.92 };
+//   degree  a ROOT degree, which is what makes the timer mood-blind — both
+//           scales are five notes, so degree % 5 === 0 is the same note in `in`
+//           and `yo` and the bell never retunes with the case. Two octaves over
+//           the root: an inkin's register, clear of the beds without climbing
+//           back into the pierce the last voice was killed for. (The voice
+//           before that sat at degree 15, three octaves up, not four as its
+//           comment claimed.)
+//   decay   the fundamental's length. Long: an inkin rings on well after the
+//           reader has stopped listening for it, and barPartials dies the upper
+//           modes off much faster than this, which is the whole ting.
+//   bright  the lowpass in strikeBar — "the whole difference between shimmer
+//           and pierce", and the knob to reach for first if this ever gets
+//           sharp again. Down from CHIME's: nothing here is heard across a
+//           garden, so the top has no distance to carry through.
+//   level   the peak gain strikeBar applies whole. Far above CHIME's and
+//           BRONZE's because those are struck across a scene and land through
+//           spatial attenuation, and this one is at the reader's ear. Set to
+//           arrive at about the peak the previous voice did, so the sitting
+//           did not get louder or quieter when the instrument changed.
+//   verbMix carried unchanged through every version of this bell — it is about
+//           the ROOM, not the voice, and the room did not change. The sit bell
+//           is never spatialized and is the one sound allowed to be nearly pure
+//           room; a dry bell reads as a thud at ANY pitch.
+export const SIT_BELL = { degree: 10, decay: 8, level: 0.22, bright: 0.30, verbMix: 0.92 };
 
 // Identical repeats are the giveaway that a strike is synthesized: a real
 // clapper never lands twice the same. ±6 cents is far under "out of tune"

@@ -534,24 +534,28 @@ export function createAudio(save) {
       strikeBell(ctx, bus ? bus.in : voicesDry, bus ? null : voicesWet,
         { partials: v.partials, gain, verbMix: bus ? 0 : verbMix, beam, ping, pingFreq });
     },
-    // The timer's bell — it opens a sitting, closes one that ran its course, and
-    // marks one ended early. Same VOICE as a case bell now (SIT_BELL names which
-    // preset), but deliberately NOT routed through bell() above: every other
-    // bell in the book belongs to a case and is struck by something you can see,
-    // and this one belongs to the reader. So it takes no `at:` and never goes
-    // near a spatial bus, and it writes straight to master/verb.in rather than
-    // the hush pair — hushVoices() closes the scene's voices at a page turn, and
-    // the sitting bell is not the scene's. SIT_BELL.verbMix overrides the
-    // preset's own for the same reason.
+    // The timer's inkin — it opens a sitting, closes one that ran its course,
+    // and marks one ended early. strikeBar, not bell(): see SIT_BELL's own
+    // comment in synths.js for why a hand chime is a struck BAR and every
+    // attempt to reach it from a bell voice failed.
+    //
+    // It writes straight to master/verb.in and takes no position. Every other
+    // struck thing in the book belongs to a case and is struck by something you
+    // can see; this one belongs to the reader, so it never goes near a spatial
+    // bus and never near the hush pair — hushVoices() closes the SCENE's voices
+    // at a page turn, and a sitting outlives the page it was started on.
+    //
+    // `mood` is passed for form and cannot actually move it: SIT_BELL.degree is
+    // a root degree, which both scales share. It is here so that a future
+    // non-root degree retunes rather than silently ignoring the case's mood.
     sitBell() {
       if (!ensureCtx() || ctx.state !== 'running') return;
-      const p = BELL_PRESETS[SIT_BELL.preset];
-      const voice = bellVoice(SIT_BELL.size === null ? p.size : SIT_BELL.size);
-      strikeBell(ctx, master, verb.in, {
-        partials: applyBellPreset(voice, p),
-        gain: SIT_BELL.gain,
+      strikeBar(ctx, master, verb.in, {
+        f0: hz(SIT_BELL.degree, mood),
+        gain: SIT_BELL.level,
+        decay: SIT_BELL.decay,
+        bright: SIT_BELL.bright,
         verbMix: SIT_BELL.verbMix,
-        beam: p.beam, ping: p.ping, pingFreq: p.pingFreq,
       });
     },
     // tube index -> scale degree -> Hz. The engine owns the mapping so the kit
