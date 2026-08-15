@@ -33,6 +33,17 @@
 #gg-panel.fading { opacity: 0; }
 #gg-stage { flex: 1; position: relative; overflow: hidden; background: var(--paper); }
 #gg-stage canvas { display: block; }
+/* THE CAMERA'S GESTURES, ONLY WHERE THE CAMERA HAS ANY. In the look a drag
+   orbits and two fingers pinch the distance, and the browser's own panning and
+   double-tap zoom are competing for exactly those touches — on a phone the drag
+   rubber-bands the page instead of turning the scene. touch-action: none hands
+   the gesture to the rig.
+   Scoped to `.ambient` because that class is toggled by the same test that hands
+   out the controls (canDragCamera / stageOnly in main.js): reading a page, the
+   camera is the case's own composition and there is nothing here to steer, so
+   swallowing the reader's pinch would take the browser's zoom away and give
+   nothing back. */
+#gg-app.ambient #gg-stage canvas { touch-action: none; }
 /* ambient view: the text steps aside and the stage takes the freed width. The
    flex row does the rest — but the renderer has to be told, since no resize
    event fires for a layout change inside the page (see applyStageSize). */
@@ -46,7 +57,17 @@ button.gg-btn, .gg-view button {
   font-family: Georgia, serif; background: none; border: 1px solid rgba(var(--ink-rgb),0.3);
   color: var(--ink); padding: 6px 14px; border-radius: 3px; cursor: pointer;
 }
-button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.05); }
+/* EVERY :hover IN THIS FILE IS GUARDED BY `@media (hover: hover)`, and this is
+   the first of them. A touch screen has no pointer that moves away: the browser
+   applies :hover on tap and LEAVES it applied until something else is tapped, so
+   a button the reader has finished with sits there lit, reading as still-pressed
+   or half-broken. The guard is the whole fix — where there is no hovering
+   pointer, the affordance simply does not exist.
+   :focus-visible is deliberately NOT inside these blocks anywhere: that is the
+   keyboard's affordance and it has to survive on every device. */
+@media (hover: hover) {
+  button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.05); }
+}
 
 /* ---- title screen (intro), in the left panel ---- */
 .gg-title-view { display: flex; flex-direction: column; justify-content: center; }
@@ -76,7 +97,7 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
    sits a little back on the page — readable, clearly not withheld. It used to
    be `locked` at 0.32 opacity, which read as unavailable. */
 .gg-menu li .ttl { cursor: pointer; }
-.gg-menu li .ttl:hover { color: var(--accent); }
+@media (hover: hover) { .gg-menu li .ttl:hover { color: var(--accent); } }
 .gg-menu li.unstaged .ttl { color: rgba(var(--ink-rgb),0.62); }
 /* THE MARK IN THE MARGIN. Every cell keeps its width whether or not it carries
    a mark, so the rows stay ruled straight down the page. A marked cell is a
@@ -114,11 +135,14 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
    the `background: none` is load-bearing, not a repeat of the reset above: the
    panel-wide `.gg-view button:hover` tint would otherwise draw a grey square
    around the one control on this page that must not look like a control. */
-.gg-menu li button.mark:hover, .gg-menu li button.mark:focus-visible { background: none; }
-.gg-menu li button.mark:hover::before,
+.gg-menu li button.mark:focus-visible { background: none; }
 .gg-menu li button.mark:focus-visible::before { opacity: 0.3; }
-.gg-menu li button.mark.stamp:hover,
 .gg-menu li button.mark.stamp:focus-visible { opacity: 0.3; }
+@media (hover: hover) {
+  .gg-menu li button.mark:hover { background: none; }
+  .gg-menu li button.mark:hover::before { opacity: 0.3; }
+  .gg-menu li button.mark.stamp:hover { opacity: 0.3; }
+}
 .gg-continue { margin: 4px 0 10px; }
 
 /* Search. A ruled line to write on, not a widget — the panel is a book page and
@@ -149,7 +173,7 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
   font: 17px/1 var(--serif, Georgia, 'Times New Roman', serif);
   color: rgba(var(--ink-rgb),0.40);
 }
-.gg-find-clear:hover { color: var(--accent); background: rgba(var(--ink-rgb),0.07); }
+@media (hover: hover) { .gg-find-clear:hover { color: var(--accent); background: rgba(var(--ink-rgb),0.07); } }
 .gg-found { font-size: 12px; color: var(--gray); margin: 6px 0 0; min-height: 14px; letter-spacing: 0.04em; }
 /* the matched line, under its title — the reason the result list is readable */
 .gg-menu li .ttl .hit {
@@ -170,7 +194,7 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
   background: none; border: none; padding: 0; cursor: pointer;
   font-family: Georgia, serif; font-size: 15px; font-style: italic; color: var(--gray);
 }
-.gg-about-link:hover { color: var(--accent); background: none; }
+@media (hover: hover) { .gg-about-link:hover { color: var(--accent); background: none; } }
 /* Clear progress, at the far end of the colophon from About. It asks twice —
    `armed` is the question showing — and the armed state is the one moment this
    quiet italic link is allowed to be the red on the page, because that is the
@@ -198,18 +222,18 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
    source) reads before any section does. */
 .gg-about-repo { margin-top: 10px; font-size: 16.5px; }
 .gg-about-repo a { color: var(--accent); text-decoration-color: rgba(199,62,58,0.4); }
-.gg-about-repo a:hover { text-decoration-color: var(--accent); }
+@media (hover: hover) { .gg-about-repo a:hover { text-decoration-color: var(--accent); } }
 .gg-about .gg-section-text a { color: var(--accent); text-decoration-color: rgba(199,62,58,0.4); }
-.gg-about .gg-section-text a:hover { text-decoration-color: var(--accent); }
+@media (hover: hover) { .gg-about .gg-section-text a:hover { text-decoration-color: var(--accent); } }
 .gg-scroll-bar { display: flex; align-items: center; gap: 10px; margin: -8px 0 18px; }
 .gg-back { border: none; color: var(--gray); padding: 4px 6px; }
-.gg-back:hover { color: var(--accent); background: none; }
+@media (hover: hover) { .gg-back:hover { color: var(--accent); background: none; } }
 .gg-page-nav { display: inline-flex; gap: 2px; }
 .gg-page {
   border: none; background: none; color: var(--gray);
   font-size: 20px; line-height: 1; padding: 2px 8px; border-radius: 6px;
 }
-.gg-page:hover:not(:disabled) { color: var(--accent); background: rgba(var(--ink-rgb),0.05); }
+@media (hover: hover) { .gg-page:hover:not(:disabled) { color: var(--accent); background: rgba(var(--ink-rgb),0.05); } }
 .gg-page:disabled { opacity: 0.28; cursor: default; }
 /* the reading light, beside Sit and on the colophon line: a glyph, no chrome —
    it must not read as a third page-turn button */
@@ -222,7 +246,7 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 .gg-view .gg-theme {
   min-width: 40px; padding: 6px 10px; text-align: center; color: var(--gray);
 }
-.gg-view .gg-theme:hover { color: var(--accent); }
+@media (hover: hover) { .gg-view .gg-theme:hover { color: var(--accent); } }
 .gg-scroll-bar .spacer { flex: 1; }
 .gg-scroll-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .gg-scroll-head h2 { font-weight: normal; font-size: 25px; margin: 0; flex: 1 1 60%; }
@@ -270,7 +294,7 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
   color: var(--ink); border-radius: 3px; backdrop-filter: blur(2px);
   padding: 0;
 }
-.gg-tool:hover, .gg-debug-toggle:hover { border-color: rgba(30,30,36,0.55); }
+@media (hover: hover) { .gg-tool:hover, .gg-debug-toggle:hover { border-color: rgba(30,30,36,0.55); } }
 .gg-tool.active, .gg-debug-toggle.active { background: var(--ink); color: var(--paper); }
 
 /* ---- the look's toolbar: TOP-LEFT, opposite the stage tools ----
@@ -295,7 +319,7 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
   background: rgba(243,237,223,0.82); border: 1px solid rgba(30,30,36,0.28);
   border-radius: 3px; backdrop-filter: blur(2px);
 }
-.gg-look-bar button:hover:not(:disabled) { border-color: rgba(30,30,36,0.55); }
+@media (hover: hover) { .gg-look-bar button:hover:not(:disabled) { border-color: rgba(30,30,36,0.55); } }
 .gg-look-bar button:disabled { opacity: 0.35; cursor: default; }
 /* Square like the stage tools; "Read aloud" is a whole word wide, which is the
    distinction — those three move you, that one does something to the page.
@@ -314,7 +338,7 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 .gg-look-auto.active {
   background: rgba(199,62,58,0.14); border-color: rgba(199,62,58,0.55);
 }
-.gg-look-auto.active:hover:not(:disabled) { border-color: rgba(199,62,58,0.8); }
+@media (hover: hover) { .gg-look-auto.active:hover:not(:disabled) { border-color: rgba(199,62,58,0.8); } }
 /* ---- debug workbench: panel sliding out under the toolbar ---- */
 /* THE WORKBENCH TAKES LAYOUT, IT DOES NOT OVERLAY.
    It used to be an absolute sheet over the stage at 94% opacity, which put the
@@ -352,7 +376,7 @@ button.gg-btn:hover, .gg-view button:hover { background: rgba(var(--ink-rgb),0.0
 .gg-debug-keep { margin-top: 8px; opacity: 0.75; }
 /* an action button in a control row — a thing you press, not a thing you set */
 .gg-debug-act { font: inherit; padding: 1px 8px; cursor: pointer; color: var(--ink); background: rgba(30,30,36,0.06); border: 1px solid rgba(30,30,36,0.25); border-radius: 2px; }
-.gg-debug-act:hover { background: rgba(30,30,36,0.14); }
+@media (hover: hover) { .gg-debug-act:hover { background: rgba(30,30,36,0.14); } }
 /* the Compose block: the copied camera line wraps and is selectable by hand,
    because a clipboard write can be refused and the line is the whole point */
 .gg-compose { margin-top: 10px; }

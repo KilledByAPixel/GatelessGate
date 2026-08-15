@@ -207,6 +207,17 @@ export function makeCameraRig(camera, el, {
   // (Compose does) moves every clamp at once instead of three quarters of them.
   const bounds = { headingRange, minPitch, maxPitch, minDist, maxDist };
   let dragging = false, px = 0, py = 0;
+  // EVERY FINGER DOWN ON THE STAGE, keyed by pointerId — one orbits, two pinch
+  // the distance. A mouse is a single pointer and never reaches the second
+  // branch, so nothing about the desktop controls changes. Only collected while
+  // the controls are handed out, so a locked rig accumulates nothing.
+  const pointers = new Map();
+  // A pinch in progress: the finger spread it began at and the distance it began
+  // from. The zoom is a RATIO against the grab, not an accumulation of frame
+  // deltas — fingers returning to where they started bring the distance back
+  // with them, which is what makes a pinch feel like holding the scene rather
+  // than nudging it.
+  let pinch = null;
   let wander = false, wanderTime = 0;
   // On the way home from the look, and only until it gets there — see
   // returnDamping above and the arrival test in update().
@@ -229,12 +240,40 @@ export function makeCameraRig(camera, el, {
   // exactly the snap this replaced.
   let taken = false;
 
+  const spread = () => {
+    const [a, b] = [...pointers.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  };
   const onPointerDown = (e) => {
     if (!drag) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    // THE SECOND FINGER TAKES OVER. An orbit begun with the first has to stop,
+    // and must not resume when the pinch ends: `dragging` is only ever armed by
+    // a fresh FIRST-finger press, so lifting back to one finger leaves the
+    // camera still instead of snapping by however far apart the two were.
+    if (pointers.size === 2) {
+      dragging = false;
+      pinch = { spread: spread() || 1, distance: goal.distance };
+      return;
+    }
+    if (pointers.size > 2) return;   // a third finger is not a third control
     dragging = true;
     px = e.clientX; py = e.clientY;
   };
   const onPointerMove = (e) => {
+    const held = pointers.get(e.pointerId);
+    if (held) { held.x = e.clientX; held.y = e.clientY; }
+    if (pinch && pointers.size === 2) {
+      const s = spread();
+      if (s > 0) {
+        // Spreading the fingers pulls the scene closer, which is LESS distance.
+        goal.distance = clamp(pinch.distance * (pinch.spread / s), bounds.minDist, bounds.maxDist);
+        taken = true;       // the lens is theirs now, exactly as the wheel does
+      }
+      // Two fingers are zooming, not breathing: feeding either one to the
+      // parallax would swing the heading as they alternate reports.
+      return;
+    }
     const w = el.clientWidth || 1, h = el.clientHeight || 1;
     mouse.x = clamp((e.clientX / w) * 2 - 1, -1, 1);
     mouse.y = clamp((e.clientY / h) * 2 - 1, -1, 1);
@@ -250,8 +289,23 @@ export function makeCameraRig(camera, el, {
       taken = true;         // the lens is theirs now; the drift is done
     }
   };
-  const onPointerUp = () => { dragging = false; };
-  const onPointerLeave = () => { dragging = false; };
+  // Both of these forget only the pointer they are about — a finger lifting off
+  // a two-finger pinch must not take the other one's entry with it, or the map
+  // would say nothing is down while a finger still is. `pointercancel` is here
+  // for the OS stealing a gesture mid-pinch: without it that finger stays in the
+  // map forever and every later touch looks like a pinch already in progress.
+  const onPointerUp = (e) => {
+    pointers.delete(e && e.pointerId);
+    dragging = false;
+    if (pointers.size < 2) pinch = null;
+    // Back down to two from three: the surviving pair need not be the pair the
+    // pinch was seeded against, and reusing the old spread would jump the zoom by
+    // the whole difference between the two pairs. Re-seed against where the
+    // fingers are NOW, from the distance the camera is at now — the same ratio
+    // form as a fresh grab, so the gesture just carries on.
+    else if (pinch) pinch = { spread: spread() || 1, distance: goal.distance };
+  };
+  const onPointerLeave = onPointerUp;
   const onWheel = (e) => {
     // Bail BEFORE preventDefault: with the camera locked, a wheel over the
     // stage is not ours to swallow.
@@ -264,6 +318,7 @@ export function makeCameraRig(camera, el, {
   el.addEventListener('pointermove', onPointerMove);
   el.addEventListener('pointerup', onPointerUp);
   el.addEventListener('pointerleave', onPointerLeave);
+  el.addEventListener('pointercancel', onPointerLeave);
   el.addEventListener('wheel', onWheel);
 
   function update(dt) {
@@ -319,6 +374,7 @@ export function makeCameraRig(camera, el, {
     el.removeEventListener?.('pointermove', onPointerMove);
     el.removeEventListener?.('pointerup', onPointerUp);
     el.removeEventListener?.('pointerleave', onPointerLeave);
+    el.removeEventListener?.('pointercancel', onPointerLeave);
     el.removeEventListener?.('wheel', onWheel);
   }
 
@@ -348,8 +404,13 @@ export function makeCameraRig(camera, el, {
     else { Object.assign(goal, home); returning = true; }
   };
   // Turning the controls off mid-grab has to release the grab too, or the next
-  // pointermove over the locked stage would still be steering.
-  const setDrag = (on) => { drag = !!on; if (!drag) dragging = false; };
+  // pointermove over the locked stage would still be steering. The finger map
+  // goes with it: a page turn locks the rig, and a hand still on the glass would
+  // otherwise be counted as half a pinch by the rig that arrives next.
+  const setDrag = (on) => {
+    drag = !!on;
+    if (!drag) { dragging = false; pinch = null; pointers.clear(); }
+  };
   const canDrag = () => drag;
 
   // ---- composing (the workbench's Compose panel) --------------------------

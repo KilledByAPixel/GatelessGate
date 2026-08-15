@@ -53,6 +53,93 @@ test('a locked camera ignores the drag and does not swallow the wheel', () => {
   assert.equal(prevented, false, 'a locked rig must not preventDefault the wheel');
 });
 
+// The wheel has no equivalent on a phone, so two fingers are the zoom. The
+// gesture is a RATIO against the spread it started at, which is what lets a
+// pinch be taken back: fingers returning to where they began bring the distance
+// with them, where accumulated per-move deltas would have drifted.
+test('a two-finger pinch zooms, and returns the distance when the fingers return', () => {
+  const el = fakeEl();
+  const rig = makeCameraRig(new THREE.PerspectiveCamera(), el, {});
+  const start = rig.goal.distance;
+  el.handlers.pointerdown({ pointerId: 1, clientX: 300, clientY: 300 });
+  el.handlers.pointerdown({ pointerId: 2, clientX: 400, clientY: 300 });   // spread 100
+  el.handlers.pointermove({ pointerId: 2, clientX: 420, clientY: 300 });   // spread 120
+  assert.ok(rig.goal.distance < start, `spreading pulls the scene closer (${rig.goal.distance})`);
+  el.handlers.pointermove({ pointerId: 2, clientX: 400, clientY: 300 });   // back to 100
+  assert.ok(Math.abs(rig.goal.distance - start) < 1e-9, 'and coming back gives the distance back');
+});
+
+test('a locked camera ignores the pinch, exactly as it ignores the wheel', () => {
+  const el = fakeEl();
+  const rig = makeCameraRig(new THREE.PerspectiveCamera(), el, {});
+  rig.setDrag(false);
+  const start = rig.goal.distance;
+  el.handlers.pointerdown({ pointerId: 1, clientX: 300, clientY: 300 });
+  el.handlers.pointerdown({ pointerId: 2, clientX: 400, clientY: 300 });
+  el.handlers.pointermove({ pointerId: 2, clientX: 600, clientY: 300 });
+  assert.equal(rig.goal.distance, start, 'reading a page, two fingers are not a control either');
+});
+
+// The two gestures must not run at once, and — the part that actually shows —
+// the orbit must not RESUME when the pinch ends. `dragging` is armed only by a
+// first-finger press, so the finger still on the glass is inert until it lifts;
+// picking the orbit back up would swing the heading by the whole gap between
+// where the two fingers were.
+test('the second finger stops the orbit and lifting it does not restart one', () => {
+  const el = fakeEl();
+  const rig = makeCameraRig(new THREE.PerspectiveCamera(), el, {});
+  el.handlers.pointerdown({ pointerId: 1, clientX: 300, clientY: 300 });
+  el.handlers.pointermove({ pointerId: 1, clientX: 320, clientY: 300 });
+  const turned = rig.goal.heading;
+  assert.notEqual(turned, rig.home.heading, 'one finger still orbits');
+
+  el.handlers.pointerdown({ pointerId: 2, clientX: 420, clientY: 300 });
+  el.handlers.pointermove({ pointerId: 1, clientX: 200, clientY: 300 });
+  assert.equal(rig.goal.heading, turned, 'a pinch must not also be aiming');
+
+  el.handlers.pointerup({ pointerId: 2 });
+  el.handlers.pointermove({ pointerId: 1, clientX: 100, clientY: 300 });
+  assert.equal(rig.goal.heading, turned, 'and the leftover finger must not pick the orbit up');
+});
+
+// A third finger is not a third control, but it must not corrupt the pinch it
+// lands in either: dropping back to two leaves a pair that may not be the pair
+// the gesture was seeded against.
+test('a third finger neither zooms nor jumps the zoom when it leaves', () => {
+  const el = fakeEl();
+  const rig = makeCameraRig(new THREE.PerspectiveCamera(), el, {});
+  el.handlers.pointerdown({ pointerId: 1, clientX: 300, clientY: 300 });
+  el.handlers.pointerdown({ pointerId: 2, clientX: 400, clientY: 300 });   // spread 100
+  const twoFinger = rig.goal.distance;
+
+  el.handlers.pointerdown({ pointerId: 3, clientX: 700, clientY: 300 });
+  el.handlers.pointermove({ pointerId: 3, clientX: 760, clientY: 300 });
+  assert.equal(rig.goal.distance, twoFinger, 'three fingers do nothing');
+
+  // Finger 1 leaves; 2 and 3 survive, and they are 360 apart where the seeded
+  // pair was 100. Without the re-seed the next move would zoom by that ratio.
+  el.handlers.pointerup({ pointerId: 1 });
+  assert.equal(rig.goal.distance, twoFinger, 'and dropping back to two does not jump');
+  el.handlers.pointermove({ pointerId: 3, clientX: 780, clientY: 300 });
+  assert.ok(rig.goal.distance < twoFinger, 'the surviving pair carries the pinch on');
+  assert.ok(rig.goal.distance > twoFinger * 0.8, `by their OWN spread, not the old one (${rig.goal.distance})`);
+});
+
+// The OS stealing a gesture mid-pinch must not leave a finger in the map: every
+// later touch would then look like a pinch already half in progress.
+test('pointercancel forgets its finger', () => {
+  const el = fakeEl();
+  const rig = makeCameraRig(new THREE.PerspectiveCamera(), el, {});
+  el.handlers.pointerdown({ pointerId: 1, clientX: 300, clientY: 300 });
+  el.handlers.pointerdown({ pointerId: 2, clientX: 400, clientY: 300 });
+  el.handlers.pointercancel({ pointerId: 2 });
+  el.handlers.pointercancel({ pointerId: 1 });
+  // A clean single-finger drag afterwards, which is only possible from an empty map.
+  el.handlers.pointerdown({ pointerId: 3, clientX: 300, clientY: 300 });
+  el.handlers.pointermove({ pointerId: 3, clientX: 340, clientY: 300 });
+  assert.notEqual(rig.goal.heading, rig.home.heading, 'the next touch is a fresh drag');
+});
+
 test('locking mid-grab releases the grab', () => {
   // Otherwise the next pointermove over the now-locked stage keeps steering,
   // because `dragging` was left true when the controls went away.

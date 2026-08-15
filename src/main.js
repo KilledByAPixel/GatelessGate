@@ -395,7 +395,19 @@ setFsLabel();
 // Don't offer a control that cannot work. Some embedded and managed browser
 // views expose the API, resolve the promise, and simply never go fullscreen;
 // where the browser is honest enough to say so up front, take it at its word.
-if (document.fullscreenEnabled === false) fsBtn.remove();
+//
+// A phone is the other half of that, and it is not honest up front: iOS Safari
+// has no element fullscreen at all yet leaves `fullscreenEnabled` undefined
+// rather than false, so the flag alone never catches it — hence the direct look
+// for the method. And where a touch browser DOES have the API, the whole screen
+// is already the whole screen: the button spends a slot in a four-button toolbar
+// to hide a URL bar the browser hands back on the next scroll. The test is
+// touch-primary, not a user-agent sniff — a laptop with a touchscreen still
+// hovers, and keeps its button.
+const noFsApi = !(fsEl.requestFullscreen || fsEl.webkitRequestFullscreen);
+const touchPrimary = typeof matchMedia === 'function'
+  && matchMedia('(hover: none) and (pointer: coarse)').matches;
+if (document.fullscreenEnabled === false || noFsApi || touchPrimary) fsBtn.remove();
 
 // ---- the look: just the picture ----
 // The text steps aside, the diorama takes the whole window, and the camera
