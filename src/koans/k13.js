@@ -24,7 +24,7 @@ const scratchPos = new THREE.Vector3();
 // other case's rather than by moving the book. composeWorld gets the same
 // object as its `view`, so the scatter still refuses spots no reachable heading
 // can see (kit/scenery.js).
-const CAM = { distance: 11, target: [-1.4, 1.35, -1.2], heading: 31.5, pitch: 16.5 };
+const CAM = { distance: 11, target: [-1.4, 1.35, -1.2], heading: 21, pitch: 16.5 };
 
 export default {
   id: ID,
@@ -59,7 +59,7 @@ export default {
     // the bell on one side of the yard — dark bronze, NOT the seal, so it does
     // not compete with the drum across from it. It still swings and rings.
     const bell = makeBell({ height: 0.95, seed: ID, color: WASH.mid });
-    bell.group.position.set(1.9, 0, -0.4);
+    bell.group.position.set(.9, 0, -1);
     bell.group.rotation.y = 0.7;
     scene.add(bell.group);
 
@@ -72,7 +72,7 @@ export default {
     // in the world as well as on this page. ACCENT_DEEP because it is a large
     // mass — the barrel only; the heads stay pale hide.
     const drum = makeDrum({ radius: 0.5, seed: ID, color: ACCENT_DEEP });
-    drum.group.position.set(-4.5, 0, 0.4);
+    drum.group.position.set(-4.5, 0, -.5);
     drum.group.rotation.y = -1.75;
     scene.add(drum.group);
 
@@ -119,8 +119,8 @@ export default {
         ...path.keepout(26, 0.9),
         ...path2.keepout(26, 0.9),
         { x: hall.position.x, z: hall.position.z, r: 2.1 },
-        { x: -4.5, z: 0.4, r: 1.1 },
-        { x: 1.9, z: -0.4, r: 0.8 },
+        { x: drum.group.position.x, z: drum.group.position.z, r: 1.1 },
+        { x: bell.group.position.x, z: bell.group.position.z, r: 0.8 },
       ],
     });
 
