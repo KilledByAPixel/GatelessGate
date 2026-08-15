@@ -2,7 +2,7 @@
 
 *An interactive edition of the Mumonkan in your browser.*
 
-## [Open the Gate](https://killedbyapixel.github.io/GatelessGate/)
+## [Enter the Gate](https://killedbyapixel.github.io/GatelessGate/)
 
 Works on desktop and phone. No install, no sign-in, nothing to download.
 
