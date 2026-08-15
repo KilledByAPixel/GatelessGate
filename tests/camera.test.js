@@ -94,6 +94,64 @@ test('leaving the look hands the page its composed framing back', () => {
   assert.equal(rig.goal.distance, home.distance);
 });
 
+// THE WAY BACK OUT IS SLOWER THAN EVERYTHING ELSE, and it is the same
+// exponential at a gentler rate rather than a second easing. Feel-tuning like
+// this regresses silently — the goal lands in the right place either way, and
+// only the rate says whether the shot settles or is snatched back — so it is
+// pinned as a comparison rather than as a number.
+// Drift for half a minute, leave the look, and run `frames` of the way back.
+// MEASURED AGAINST WHERE IT ACTUALLY COMES TO REST, not against `home`: the
+// resting pose is home PLUS the pointer's parallax, and `lastPointer` is module
+// state that an earlier test in this file has already moved. Measuring to home
+// silently folds that offset into every reading.
+function driftThenLeave(opts, frames) {
+  const rig = makeCameraRig(new THREE.PerspectiveCamera(), fakeEl(), opts);
+  rig.setWander(true);
+  for (let i = 0; i < 60 * 30; i++) rig.update(1 / 60);
+  const start = rig.state().heading;
+  rig.setWander(false);
+  for (let i = 0; i < frames; i++) rig.update(1 / 60);
+  return { rig, start, now: rig.state().heading };
+}
+// Where a rig built RIGHT NOW comes to rest, run far past arrival. Computed
+// inside each test rather than once at the top of the file: `lastPointer` is
+// module state that earlier tests move, and a rest measured before they ran is
+// a target none of these rigs is actually heading for.
+const restingHeading = () => driftThenLeave({ returnDamping: 4 }, 60 * 10).now;
+
+test('leaving the look eases back more gently than the standing damping', () => {
+  const REST = restingHeading();
+  const soft = driftThenLeave({}, 6);                          // a tenth of a second
+  const hard = driftThenLeave({ returnDamping: 4 }, 6);         // ...at the standing rate
+  assert.ok(Math.abs(soft.start - REST) > 0.4,
+    `the drift barely moved (${Math.abs(soft.start - REST).toFixed(2)} deg) — the test means nothing`);
+  assert.equal(soft.start.toFixed(6), hard.start.toFixed(6),
+    'both rigs must leave from the same place or the comparison says nothing');
+
+  const softLeft = Math.abs(soft.now - REST);
+  const hardLeft = Math.abs(hard.now - REST);
+  assert.ok(softLeft > hardLeft * 1.15,
+    `the return is not softer: ${softLeft.toFixed(3)} left vs ${hardLeft.toFixed(3)} at the standing rate`);
+});
+
+test('the softer rate is spent by the time it arrives, and never on the page', () => {
+  // Otherwise the whole visit reads laggy: the page's own cursor parallax would
+  // keep running at the return's rate long after the return was over.
+  const REST = restingHeading();
+  const { rig } = driftThenLeave({}, 60 * 5);                  // five seconds is plenty
+  assert.ok(Math.abs(rig.state().heading - REST) < 0.05, 'it never actually settled');
+
+  // and from here it moves at the standing rate again: a fresh rig, asked to
+  // cover the same ground from the same place, arrives together with it
+  const fresh = makeCameraRig(new THREE.PerspectiveCamera(), fakeEl(), {});
+  fresh.update(1 / 60);
+  fresh.goal.heading = fresh.home.heading + 10;
+  rig.goal.heading = rig.home.heading + 10;
+  for (let i = 0; i < 6; i++) { fresh.update(1 / 60); rig.update(1 / 60); }
+  assert.ok(Math.abs(fresh.state().heading - rig.state().heading) < 0.05,
+    `the returned rig is still moving at the softer rate (${fresh.state().heading.toFixed(3)} vs ${rig.state().heading.toFixed(3)})`);
+});
+
 test('a second visit to the look opens on the composed shot too', () => {
   // Without rewinding the drift clock, re-entering resumes mid-curve and jumps
   // exactly the way the first visit used to.

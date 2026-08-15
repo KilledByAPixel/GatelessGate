@@ -172,6 +172,17 @@ export function makeCameraRig(camera, el, {
   maxDist = RIG_BOUNDS.maxDist,
   parallax = 2.6,
   damping = 4,
+  // THE WAY BACK OUT OF THE LOOK IS SLOWER THAN EVERYTHING ELSE. Leaving
+  // restores `home` (setWander, below) and the standing damping took the
+  // camera there in about a quarter second — correct, and it read as the shot
+  // being snatched back the moment the panel returned. The reader has usually
+  // just been moving this camera by hand, so the last thing it does under their
+  // hand should settle rather than snap.
+  //
+  // NOT a second easing — the comment in update() rules that out and is right.
+  // It is the SAME exponential, at a gentler rate, for the one stretch where
+  // the camera is going somewhere the reader did not just ask it to go.
+  returnDamping = 2,
 } = {}) {
   // A COPY of the caller's target, never the caller's own array. A koan
   // module's `camera.target` literal is evaluated once and cached with the
@@ -197,6 +208,9 @@ export function makeCameraRig(camera, el, {
   const bounds = { headingRange, minPitch, maxPitch, minDist, maxDist };
   let dragging = false, px = 0, py = 0;
   let wander = false, wanderTime = 0;
+  // On the way home from the look, and only until it gets there — see
+  // returnDamping above and the arrival test in update().
+  let returning = false;
   // WHO IS ALLOWED TO AIM THE CAMERA. Cursor parallax (below) is always on —
   // it is the scene breathing with the reader, not a control. Dragging and the
   // wheel are a control, and main.js hands them out only in the look and to
@@ -266,10 +280,21 @@ export function makeCameraRig(camera, el, {
       wanderTime += dt;
       Object.assign(goal, wanderGoal(wanderTime, home, bounds));
     }
-    const k = 1 - Math.exp(-damping * dt);
-    cur.heading += (goal.heading + mouse.x * parallax - cur.heading) * k;
-    cur.pitch += (goal.pitch + mouse.y * parallax - cur.pitch) * k;
+    const wantHeading = goal.heading + mouse.x * parallax;
+    const wantPitch = goal.pitch + mouse.y * parallax;
+    const k = 1 - Math.exp(-(returning ? returnDamping : damping) * dt);
+    cur.heading += (wantHeading - cur.heading) * k;
+    cur.pitch += (wantPitch - cur.pitch) * k;
     cur.distance += (goal.distance - cur.distance) * k;
+    // ARRIVED, so hand the camera back to the standing damping. An exponential
+    // never technically lands, so this asks whether the gap is smaller than the
+    // reader could see — a twentieth of a degree, a hundredth of a unit — which
+    // is also what stops the softer rate leaking into the page's own parallax
+    // and leaving the cursor feeling laggy for the rest of the visit.
+    if (returning
+      && Math.abs(wantHeading - cur.heading) < 0.05
+      && Math.abs(wantPitch - cur.pitch) < 0.05
+      && Math.abs(goal.distance - cur.distance) < 0.01) returning = false;
     const [tx, ty, tz] = target;
     const [ex, ey, ez] = eyePosition(cur, target);
     camera.position.set(ex, ey, ez);
@@ -316,8 +341,11 @@ export function makeCameraRig(camera, el, {
     const next = !!on;
     if (next === wander) return;
     wander = next;
-    if (wander) { wanderTime = 0; taken = false; }
-    else Object.assign(goal, home);
+    // Entering cancels a return still in flight (look, leave, look again before
+    // it settles) — the softer rate belongs to the way OUT, and carrying it in
+    // would make that second visit open sluggishly.
+    if (wander) { wanderTime = 0; taken = false; returning = false; }
+    else { Object.assign(goal, home); returning = true; }
   };
   // Turning the controls off mid-grab has to release the grab too, or the next
   // pointermove over the locked stage would still be steering.
