@@ -176,8 +176,10 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   let clock = 0;
   let strikes = 0;
   let ruffles = 0;
+  let stills = 0;      // the flag stopping and starting again
   let greets = 0;      // the monk answering, which is this page's own find
   let lastRing = -99;
+  let lastCloth = -99;
   
   input && input.onHover(() => {
   if (!camera) return;
@@ -222,10 +224,23 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   if (onMonk) { greet(onMonk.point); return; }
   const hit = input.raycastFirst(camera, [flag.mesh]);
   if (hit) {
+  if (clock - lastCloth < 0.5) return;    // the bell's own floor, for the same reason
+  lastCloth = clock;
+  // THE BRUSH LANDS, THEN THE FLAG ANSWERS IT. Touching the cloth used to be
+  // a ruffle and nothing else here, which left the one flag in the book a
+  // reader meets first as the one flag that cannot be stopped — case 22 and
+  // case 29 both hand it over. The order matters: hoverAt is REFUSED by a
+  // stilled flag, so ruffling after the toggle would do nothing at all on the
+  // tap that stops it, which is the tap most in need of an answer.
   const local = flag.mesh.worldToLocal(hit.point.clone());
   flag.hoverAt(local.x, local.y);
   ruffles++;
   audio && audio.cloth({ force: 0.8, at: hit.point });
+  flag.toggleWind();
+  stills++;
+  // No touched(). The monk is this page's find and the flag is the road he
+  // stands on (see greet, above) — giving the flag the mark too would make
+  // the first page the one page where two different things earn it.
   }
   });
   
@@ -239,7 +254,7 @@ const CAM = { distance: 13, target: [0.2, 1.2, -3.2], heading: -18.6, pitch: 15.
   flag.update(dt, simTime);
   },
   fragment() {
-  return { strikes, ruffles, greets };
+  return { strikes, ruffles, stills, greets, windOn: flag.isWindOn() };
   },
   dispose() {},
 };

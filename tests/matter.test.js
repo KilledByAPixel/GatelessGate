@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import * as THREE from '../lib/three.module.js';
 import { loadKoan, isRegistered, isStaged } from '../src/koans/registry.js';
 import { CASES } from '../src/koans/index.js';
 import { PREFACE_SLUG, AFTERWORD_SLUG } from '../src/spine.js';
@@ -462,6 +463,52 @@ test('the preface monk answers in his own voice, and he is the page\'s find', as
   built.update(1 / 60, 2);
   taps.forEach((cb) => cb());
   assert.equal(chimes.length, 2, 'and past the floor he answers again');
+});
+
+// Cases 22 and 29 both hand the flag's wind to the reader, and the preface —
+// the first flag anyone meets — used to be the one that only ruffled. It stops
+// now. It does NOT take the mark: the monk is this page's find, and the flag is
+// the road he stands on, the same ruling the bonshō gets.
+test('the preface flag stops when it is touched, and does not claim the find', async () => {
+  const taps = [];
+  const cloths = [];
+  const ctx = {
+    audio: { bell: () => {}, chimeStrike: () => {}, cloth: (o) => cloths.push(o) },
+    input: {
+      onTap: (cb) => taps.push(cb), onHover: () => {},
+      raycastFirst: () => null, pointer: () => ({ x: 0, y: 0 }),
+    },
+    touched: () => { ctx._touched = (ctx._touched || 0) + 1; },
+  };
+  const mod = await loadKoan(PREFACE_SLUG);
+  const built = mod.build(ctx);
+  built.setCamera({});
+  built.update(1 / 60, 1);
+  assert.equal(built.fragment().windOn, true, 'the flag arrives flying');
+
+  const cloth = built.scene.getObjectByName('flag').getObjectByName('cloth');
+  assert.ok(cloth, 'the cloth is the pick target');
+  // A REAL Vector3, unlike the fakes the other preface tests get away with: the
+  // flag path takes the hit through mesh.worldToLocal to find where on the cloth
+  // it landed, and a plain {x,y,z} throws there.
+  ctx.input.raycastFirst = (cam, objs) => (objs && objs.includes && objs.includes(cloth)
+    ? { object: cloth, point: new THREE.Vector3(0, 0, 0), distance: 1 }
+    : null);
+
+  taps.forEach((cb) => cb());
+  assert.equal(built.fragment().windOn, false, 'a touch stills it');
+  assert.equal(built.fragment().stills, 1);
+  assert.equal(cloths.length, 1, 'and the touch itself is heard at the cloth');
+  assert.equal(ctx._touched, undefined, 'the flag is not this page\'s find');
+
+  // the held-pointer floor, the same one the bell and the monk keep
+  taps.forEach((cb) => cb());
+  assert.equal(built.fragment().stills, 1, 'a repeat inside the floor must not flip it back');
+
+  built.update(1 / 60, 2);
+  taps.forEach((cb) => cb());
+  assert.equal(built.fragment().windOn, true, 'and past the floor it flies again');
+  assert.equal(built.fragment().stills, 2);
 });
 
 test('the preface bell rings without being the find', async () => {
