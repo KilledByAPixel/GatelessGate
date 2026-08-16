@@ -5,7 +5,7 @@ import { hash1 } from '../util/noise.js';
 import { clamp01 } from '../util/math.js';
 import {
   composeWorld, makeCave, makeSnow, makePine, makeMonk, faceMonk,
-  makeLights, washMaterial, plantRock,
+  makeLights, washMaterial, plantRock, plantTree
 } from '../kit/index.js';
 
 const ID = 41;
@@ -58,7 +58,7 @@ const CAM = { distance: 10.6, target: [1, 1.8, -3.15], heading: 39.5, pitch: 10.
   scene.fog = new THREE.FogExp2(PAPER, 0.045);
   // A winter sun: low, and behind the snow rather than on it, so the
   // ground carries the light and the figures are dark against it.
-  scene.add(makeLights({ sun: { heading: 89, pitch: 32 } }));
+  scene.add(makeLights({ sun: { heading: 73, pitch: 32 } }));
   
   // the cave he sat in, facing its wall for nine years
   const cave = makeCave({ width: 3.0, height: 2.8, depth: 3.2, seed: ID });
@@ -147,17 +147,10 @@ const CAM = { distance: 10.6, target: [1, 1.8, -3.15], heading: 39.5, pitch: 10.
     drop(0.96, -3.24, 0.038, 'drop');
     scene.add(blood);
 
-    // The pine. It used to stand at (3.6, -3.4) in wash(0.55) — hard against
-    // the right frame edge, stone-pale, cropped to a stack of faceted pads that
-    // read as boulders piled beside the cave, with its lowest bough hovering
-    // over the snow like a floating mound. Moved to the open snow on the LEFT,
-    // where the whole silhouette fits the frame, and dropped to the book's
-    // standard pine ink (WASH.dark) so it separates from the rock instead of
-    // matching it. A tree again.
-    const PINE = { x: -4.2, z: -3.2 };
-    const pine = makePine({ height: 4.2, seed: ID, color: WASH.dark });
-    pine.position.set(PINE.x, 0, PINE.z);
-    scene.add(pine);
+    plantTree(scene, { x: -6.5, z: -3.2, height: 3, seed: ID + 1, kind: 'pine', color: WASH.dark });
+    plantTree(scene, { x: -6.2, z: -6.2, height: 6, seed: ID + 1, kind: 'pine', color: WASH.dark });
+    plantTree(scene, { x: -4.2, z: -3.2, height: 4.2, seed: ID + 1, kind: 'pine', color: WASH.dark });
+    plantTree(scene, { x: 4.2, z: -5.2, height: 4, seed: ID + 1, kind: 'pine', color: WASH.dark });
 
     // stone shoulders in the open snow, balancing the pine across the frame —
     // pale ground, dark rock, and the snowfall passing in front of both
