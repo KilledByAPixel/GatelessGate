@@ -97,7 +97,7 @@ const CAM = { distance: 10.6, target: [0.4, 0.7, -0.55], heading: 12, pitch: 5.5
   // trap is what you may and may not call the thing — a row of the same
   // thing at rest, off to the side, is the quietest possible joke.
   const rack = makeRack({ height: 1.25, holding: true });
-  rack.group.position.set(-3.1, 0, -2.6);
+  rack.group.position.set(-3.1, 0, -1.9);
   faceMonk(rack.group, second.position);
   scene.add(rack.group);
   

@@ -37,7 +37,7 @@ const DIP_SPAN = 2.4;        // seconds down and up, and the retap floor
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.1, target: [1.35, 1.3, -0.8], heading: -4, pitch: 13.5 };
+const CAM = { distance: 10.1, target: [1.4, 1.3, -0.8], heading: -4, pitch: 13.5 };
   export default {
   id: ID,
   slug: 'tozan-s-three-blows',
@@ -108,7 +108,7 @@ const CAM = { distance: 10.1, target: [1.35, 1.3, -0.8], heading: -4, pitch: 13.
   
   // UMMON, beyond the gate, holding the stick he is not going to use
   const ummon = makeMonk({ height: 1.68, elder: true });
-  ummon.position.set(0.5, 0, -1.1);
+  ummon.position.set(0.8, 0, -1.1);
   faceMonk(ummon, tozan.position);
   const stick = ummon.getObjectByName('staff');
   if (stick) stick.material = washMaterial({ color: ACCENT, flat: true });

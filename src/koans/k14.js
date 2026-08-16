@@ -165,7 +165,7 @@ const CAM = { distance: 11.5, target: [1.05, 1.45, -1.75], heading: 35, pitch: 2
   ],
   // stingy: only the swept courtyard actually covers ground. The monks
   // stand in the meadow, which is where monks stand.
-  grassKeepout: [{ x: C.x, z: C.z, r: 2.15 }],
+  grassKeepout: [{ x: C.x, z: C.z, r: 2.5 }],
   });
 
   // ---- the moment: the cat is fine --------------------------------------

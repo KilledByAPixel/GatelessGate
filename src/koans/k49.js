@@ -165,7 +165,7 @@ const CAM = { distance: 12.5, target: [0.2, 1.5, -2.4], heading: 33.1, pitch: 21
   // flush underside (k29's own derivation); -0.75 sits close to that edge
   // at this width (2.6, span |x| < 0.946) rather than near the middle.
   const closingChime = makeCylinderChime({
-  size: 0.4, seed: 49, cordLength: .3,
+  size: 0.4, seed: 49, cordLength: .2,
   onStrike: (note, force, pos) => audio && audio.cylinderStrike({ note, force, at: pos }),
   });
   closingChime.group.position.set(-0.75, 2.5, 0);

@@ -110,7 +110,7 @@ const CAM = { distance: 10.5, target: [1.55, 1.5, -0.8], heading: 34, pitch: 15.
   
   // NANSEN, apart from it, facing away — he said the sentence and walked off
   const nansen = makeMonk({ height: 1.66, elder: true });
-  nansen.position.set(3.4, 0, 0.9);
+  nansen.position.set(3.35, 0, 0.9);
   faceMonk(nansen, { x: 8.0, z: 4.0 });
   scene.add(nansen);
   

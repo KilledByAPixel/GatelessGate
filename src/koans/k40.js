@@ -47,7 +47,7 @@ const ARC_PULL = ARC_R * 0.81;        // mean(cos) over the 0.7π arc — see k1
 
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 10.8, target: [1.25, 1, -0.1], heading: 56, pitch: 20 };
+const CAM = { distance: 11, target: [1.5, 1, -0.1], heading: 73, pitch: 14 };
   export default {
   id: ID,
   slug: 'tipping-over-a-water-vase',
@@ -77,7 +77,8 @@ const CAM = { distance: 10.8, target: [1.25, 1, -0.1], heading: 56, pitch: 20 };
   hall.rotation.y = Math.atan2(VASE.x - HALL.x, VASE.z - HALL.z);
   scene.add(hall);
 
-    plantTree(scene, { x: -4, z: 0, height: 4, seed: ID + 1 });
+  plantTree(scene, { x: -4, z: 0, height: 4, seed: ID + 1 });
+  plantTree(scene, { x: -2, z: 2.5, height: 3.5, seed: ID + 2, kind:'pine' });
   
   // ---- the vase ---------------------------------------------------------
   // Alone on open ground, the way a test object is put down: nothing within

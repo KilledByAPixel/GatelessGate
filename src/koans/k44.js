@@ -53,7 +53,7 @@ const CAM = { distance: 9.2, target: [0.3, 1.15, 0.6], heading: 35.5, pitch: 12.
   
   // THE RACK, with the staff in it. Accent, because the staff is the case.
   const rack = makeRack({ height: 1.3, staffColor: ACCENT, holding: true });
-  rack.group.position.set(1.2, 0, 0.6);
+  rack.group.position.set(1.1, 0, 0.6);
   rack.group.rotation.y = 0.5;
   scene.add(rack.group);
   
