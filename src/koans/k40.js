@@ -3,7 +3,7 @@ import TEXT from './text/mumonkan.js';
 import { PAPER, ACCENT, WASH } from '../palette.js';
 import {
   aimMonk, composeWorld, faceMonk, makeAssembly, makeBasin, makeHut, makeMonk,
-  makeVase, makeWater, tapMeshes,
+  makeVase, makeWater, tapMeshes, plantTree
 } from '../kit/index.js';
 import { makeLights } from '../render/lights.js';
 
@@ -76,6 +76,8 @@ const CAM = { distance: 10.8, target: [1.25, 1, -0.1], heading: 56, pitch: 20 };
   hall.position.set(HALL.x, 0, HALL.z);
   hall.rotation.y = Math.atan2(VASE.x - HALL.x, VASE.z - HALL.z);
   scene.add(hall);
+
+    plantTree(scene, { x: -4, z: 0, height: 4, seed: ID + 1 });
   
   // ---- the vase ---------------------------------------------------------
   // Alone on open ground, the way a test object is put down: nothing within
