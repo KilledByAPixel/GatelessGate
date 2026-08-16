@@ -121,15 +121,16 @@ export function buildHub({
     scene.add(gateB);
   }
 
+  const lp = path.sample(0.38);
   let lanternA = null, lanternB = null;
   if (withLanterns) {
     const lw = 2.0;
     lanternA = makeLantern({});
-    lanternA.position.set(gp.x + gp.perp.x * lw, 0, gp.z + gp.perp.z * lw);
-    lanternA.rotation.y = gp.heading;
+    lanternA.position.set(lp.x + lp.perp.x * lw, 0, lp.z + lp.perp.z * lw);
+    lanternA.rotation.y = lp.heading;
     lanternB = makeLantern({ height: 1.0 });
-    lanternB.position.set(gp.x - gp.perp.x * lw, 0, gp.z - gp.perp.z * lw);
-    lanternB.rotation.y = gp.heading;
+    lanternB.position.set(lp.x - lp.perp.x * lw, 0, lp.z - lp.perp.z * lw);
+    lanternB.rotation.y = lp.heading;
     scene.add(lanternA, lanternB);
   }
   // One keepout covers the gate AND the lanterns, so it is needed if EITHER
