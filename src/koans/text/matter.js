@@ -22,21 +22,18 @@ export default {
     "sections": [
       "prose",
       "verse",
-      "colophon",
       "warnings",
       "amban"
     ],
     "labels": {
       "prose": "Mumon's Afterword",
       "verse": "The Verse",
-      "colophon": "Colophon",
       "warnings": "Zen Warnings",
       "amban": "Amban's Letter"
     },
     "text": {
       "prose": "The Buddhas and the patriarchs, handing these encounters down, took the confession and closed the case. Never a word to spare. They lifted the lid off your skull and let your eyes open into the daylight. What they want is for you to take hold of it here and now and not go looking for it anywhere else.\n\nAnyone who has been all the way through hears one of these raised and knows at once where it lands. There is no doorway to pass through and no stairway to climb. They walk through the barrier swinging their arms and never ask the man at the gate.\n\nHave you not heard what Gensha said? \"No gate is the gate of freedom. No intent is the intent of a person of the Way.\" And as Hakuun said: \"You know perfectly well it is just this. So why can't you get through?\"\n\nTalk like that is smearing milk on red clay. Get through the Gateless Gate and you have already made a fool of Mumon. Fail to get through and you have disappointed yourself.",
       "verse": "The mind of Nirvana is the easy part.\nTelling one thing from another is hard.\nWhere that telling is clear,\nhouse and country come to rest on their own.",
-      "colophon": "Five days before the end of the summer retreat, in the first year of the Jotei era, 1228.\n\nRespectfully set down by the monk Ekai, called Mumon, eighth in the line from Yogi.",
       "warnings": "Follow the rules and keep to the forms:\nyou tie yourself up with no rope.\n\nRoam where you like with nothing in your way:\noff the road altogether, in with the devil's army.\n\nKeep the mind settled and still:\nthe crooked Zen of silent illumination.\n\nDo as you please and let every tie go:\ndown you go into the deep pit.\n\nWide awake, never dull:\nchains on your legs, a board around your neck.\n\nThink good, think evil:\nhell and heaven.\n\nOpinions about Buddha, opinions about the teaching:\niron mountains closing on either side.\n\nCatch each thought the moment it stirs:\nyou're fooling around with spirits.\n\nSit like a stump working at your concentration:\nmaking a living in a house of ghosts.\n\nPush on and you miss the point;\npull back and you break with the source.\n\nNeither forward nor back:\na corpse that is still breathing.\n\nNow tell me: how do you actually walk the road?\n\nPut your back into it and settle it in this life.\nLeave it unfinished and it will grind on you for ages without end.",
       "amban": "Old master Mumon commented on forty-eight koans, passing verdict on the words of the old masters. It was very like a man selling fried cakes, who gets the customer to open his mouth and take one, so that the customer can neither swallow it nor spit it out.\n\nEven so, I would like to use the man's own stove while it is still hot, fry up one more, and round the count out to forty-nine, the number used in the Great Expansion, then send it back to him as before. And I wonder where the old man will sink his teeth in. If he takes it in one bite, light will pour out and the ground will shake. If not, then even the forty-eight before it all turn to hot sand.\n\nSay it quick. Say it quick."
     }

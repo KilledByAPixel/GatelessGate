@@ -47,10 +47,6 @@ The buddhas handed these down.
 The mind of nirvana is easy.
 The wisdom is hard.
 
-### Colophon
-
-Set down by the monk Ekai.
-
 ### Zen Warnings
 
 Follow the rules:
@@ -129,7 +125,7 @@ test('the case entry key order is the one the committed module carries', () => {
 test('the matter page shape is the one the reader consumes', () => {
   const { matter } = parseBook(book());
   assert.deepEqual(Object.keys(matter.afterword), ['slug', 'title', 'sections', 'labels', 'text']);
-  assert.deepEqual(matter.afterword.sections, ['prose', 'verse', 'colophon', 'warnings', 'amban']);
+  assert.deepEqual(matter.afterword.sections, ['prose', 'verse', 'warnings', 'amban']);
   assert.equal(matter.afterword.labels.warnings, 'Zen Warnings');
 });
 

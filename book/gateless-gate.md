@@ -31,7 +31,7 @@ which is in the United States public domain. NOTICE.md has the detail.
 
 A new edition, not a reprint of an old one.
 
-Its front and back matter (Mumon's preface, his afterword, his colophon, the Zen Warnings, and Amban's letter) are new translations, made for this edition from the Chinese of the Taishō canon (CBETA T48n2005). The 1934 text it otherwise rests on carries none of them.
+Its front and back matter (Mumon's preface, his afterword, the Zen Warnings, and Amban's letter) are new translations, made for this edition from the Chinese of the Taishō canon (CBETA T48n2005). The 1934 text it otherwise rests on carries none of them.
 
 Its forty-nine cases have been edited throughout: archaic constructions eased, wording simplified where it clouded the sense, the reader addressed directly where the old text spoke of a hypothetical man, and the capping verses restored to verse. The aim is a Gateless Gate that reads plainly in the English of now, without losing what the older renderings were reaching for.
 
@@ -1195,12 +1195,6 @@ The mind of Nirvana is the easy part.
 Telling one thing from another is hard.
 Where that telling is clear,
 house and country come to rest on their own.
-
-### Colophon
-
-Five days before the end of the summer retreat, in the first year of the Jotei era, 1228.
-
-Respectfully set down by the monk Ekai, called Mumon, eighth in the line from Yogi.
 
 ### Zen Warnings
 

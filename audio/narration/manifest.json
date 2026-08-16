@@ -936,12 +936,6 @@
       "hash": "ec866b5cb784",
       "bytes": 135789,
       "seconds": 16.88
-    },
-    "afterword:colophon": {
-      "file": "afterword-colophon.mp3",
-      "hash": "c22c758620d2",
-      "bytes": 140781,
-      "seconds": 17.52
     }
   },
   "provider": "gemini"

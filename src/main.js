@@ -1261,7 +1261,7 @@ const SECTION_GAP_MS = 1500;
 // case's mood; duck-compensated so it is actually audible under narration.
 const SECTION_TUBE = {
   case: 2, comment: 1, verse: 0,
-  prose: 2, colophon: 1, warnings: 1, amban: 0,
+  prose: 2, warnings: 1, amban: 0,
 };
 const sectionChime = (key) =>
   audio.chimeStrike({ tube: SECTION_TUBE[key] ?? 0, force: 0.8, punctuate: true });

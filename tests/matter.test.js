@@ -94,13 +94,14 @@ test('the lead-in to the verse does not survive into the prose', async () => {
 
 test('the afterword runs Mumon\'s afterword, the Zen Warnings, then Amban\'s letter, in that order', async () => {
   const mod = await loadKoan(AFTERWORD_SLUG);
-  assert.deepEqual(mod.sections, ['prose', 'verse', 'colophon', 'warnings', 'amban']);
+  assert.deepEqual(mod.sections, ['prose', 'verse', 'warnings', 'amban']);
 });
 
 test('the afterword\'s verse is a section of its own, like every other verse in the book', async () => {
-  // It sits MID-piece in the source, with the colophon after it, which is why it
-  // is addressed by block index rather than as a tail. Getting that wrong would
-  // put the colophon under a heading that calls it verse.
+  // It sits MID-piece in the source rather than closing it, which is why it is
+  // addressed by block index and not as a tail. Getting that wrong would sweep
+  // whatever follows in under a heading that calls it verse — which for a long
+  // time was Mumon's colophon, and is now the Zen Warnings.
   const mod = await loadKoan(AFTERWORD_SLUG);
   const lines = mod.text.verse.split('\n');
   assert.equal(lines.length, 4);
@@ -109,7 +110,10 @@ test('the afterword\'s verse is a section of its own, like every other verse in 
   // neither of its neighbours. Its opening words were pinned here once; the
   // edition rewrote them, and the test failed for a change that was correct.
   // The shape is the claim, not the sentence.
-  assert.ok(!mod.text.verse.includes(mod.text.colophon), 'the colophon must not ride along in the verse');
+  const head = mod.text.warnings.trimStart().split(/\s+/).slice(0, 5).join(' ');
+  assert.ok(!mod.text.verse.includes(head), 'the Warnings must not ride along in the verse');
+  // The colophon that used to sit between the two is gone from the book; a
+  // rebuild that quietly brought it back would land here first.
   assert.ok(!mod.text.verse.includes('Respectfully set down'));
 });
 
@@ -127,19 +131,23 @@ test('the lead-in sentence does not survive into the afterword\'s prose', async 
     'the prose should close on its last real sentence');
 });
 
-test('the colophon stands on its own, and it is not the verse', async () => {
+// THE COLOPHON IS GONE, and this is what used to test it. Mumon's date and
+// signature sat between the verse and the Warnings; it was cut because it
+// restated what the Preface already says in his own voice and better, because
+// it signed a piece that then ran on for two more sections, and because an
+// era-name date stamp landed between the verse's close and the best writing in
+// the back matter. Pinned as an ABSENCE rather than deleted outright: the
+// afterword is generated from book/gateless-gate.md through a manifest, and
+// restoring a heading to either would bring the section back with nothing
+// failing.
+test('the cut colophon has not come back', async () => {
   const mod = await loadKoan(AFTERWORD_SLUG);
-  assert.equal(mod.labels.colophon, 'Colophon');
-  // A colophon is the signature at the end of the writing: it says who set the
-  // book down, and it says so nowhere else on the page. Both halves are checked
-  // against the colophon's own text rather than a remembered sentence, so
-  // rewording it stays free while losing it or duplicating it still fails. This
-  // pinned "eighth in descent from Yangqi", then "...from Yogi", and failed both
-  // times for edits that were correct.
-  assert.match(mod.text.colophon, /Ekai|Mumon/, 'the colophon should name who set it down');
-  const tail = mod.text.colophon.trimEnd().split(/\s+/).slice(-4).join(' ');
-  assert.ok(!mod.text.verse.includes(tail), 'the colophon must not ride along inside the verse');
-  assert.ok(!mod.text.prose.includes(tail), 'nor stay behind in the prose');
+  assert.ok(!mod.sections.includes('colophon'), 'no colophon section');
+  assert.equal(mod.labels.colophon, undefined, 'and no label left behind for one');
+  for (const key of mod.sections) {
+    assert.ok(!/Respectfully set down|Jotei era/.test(mod.text[key]),
+      `the colophon's text has reappeared inside ${key}`);
+  }
 });
 
 test('no page carries a rendered indent', async () => {

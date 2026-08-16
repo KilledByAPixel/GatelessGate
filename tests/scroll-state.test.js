@@ -35,7 +35,7 @@ test('the narration queue accepts a page\'s own section names', () => {
   );
   assert.deepEqual(
     narrationQueue(MATTER.afterword.text, MATTER.afterword.sections),
-    ['prose', 'verse', 'colophon', 'warnings', 'amban'],
+    ['prose', 'verse', 'warnings', 'amban'],
   );
 });
 
@@ -50,10 +50,9 @@ test('the matter pages bring their own sections and labels', () => {
   assert.equal(pre.labels.verse, 'The Verse');
 
   const aft = pageShape({ id: null, ...MATTER.afterword });
-  assert.deepEqual(aft.sections, ['prose', 'verse', 'colophon', 'warnings', 'amban']);
+  assert.deepEqual(aft.sections, ['prose', 'verse', 'warnings', 'amban']);
   assert.equal(aft.labels.prose, "Mumon's Afterword");
   assert.equal(aft.labels.verse, 'The Verse');
-  assert.equal(aft.labels.colophon, 'Colophon');
   assert.equal(aft.labels.warnings, 'Zen Warnings');
   assert.equal(aft.labels.amban, "Amban's Letter");
 });

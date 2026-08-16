@@ -1159,12 +1159,6 @@ Telling one thing from another is hard.
 Where that telling is clear,  
 house and country come to rest on their own.
 
-**Colophon**
-
-Five days before the end of the summer retreat, in the first year of the Jotei era, 1228.
-
-Respectfully set down by the monk Ekai, called Mumon, eighth in the line from Yogi.
-
 **Zen Warnings**
 
 Follow the rules and keep to the forms:  

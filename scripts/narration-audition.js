@@ -1,5 +1,5 @@
 // Narration bake-off. Generates short samples so a voice (and then a delivery
-// preset) can be chosen by ear before committing to the full 154-unit bake.
+// preset) can be chosen by ear before committing to the full 153-unit bake.
 //
 //   node scripts/narration-audition.js --provider gemini
 //   node scripts/narration-audition.js --provider gemini --voices Charon --presets plain,japanese

@@ -42,12 +42,18 @@ export const MATTER_PAGES = [
     slug: 'afterword',
     title: 'Afterword',
     parts: [
-      // Mumon's verse sits mid-page here, and his colophon follows it. A
-      // colophon is not the verse and not the argument; it is the signature at
-      // the end of the writing, and the book has room to say so.
+      // Mumon's verse sits MID-page here rather than closing the piece, which is
+      // why the parser addresses it by block index and not as a tail.
+      //
+      // A COLOPHON USED TO SIT BETWEEN THE VERSE AND THE WARNINGS — his date and
+      // signature — and it was cut. Not for length: it restated what the Preface
+      // already says in Mumon's own voice and far better ("In the summer of 1228
+      // I was head monk at Ryusho..."), it signed a piece that then ran on for
+      // two more sections, and it put an era-name date stamp between the verse's
+      // close and the best writing in the back matter. The lineage claim went
+      // with it; the About page carries who he was.
       { key: 'prose', labels: ["Mumon's Afterword"], kind: 'prose' },
       { key: 'verse', labels: ['The Verse'], kind: 'verse' },
-      { key: 'colophon', labels: ['Colophon'], kind: 'prose' },
       { key: 'warnings', labels: ['Zen Warnings'], kind: 'verse' },
       { key: 'amban', labels: ["Amban's Letter"], kind: 'prose' },
     ],
