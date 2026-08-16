@@ -437,6 +437,21 @@ const EYE = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" 
   + '<path d="M1.8 12S5.4 5.8 12 5.8 22.2 12 22.2 12 18.6 18.2 12 18.2 1.8 12 1.8 12Z"/>'
   + '<circle cx="12" cy="12" r="3.1"/></svg>';
 const ambientBtn = tool(EYE, 'Look at the scene', () => setAmbient(!ambient));
+// WHAT ORDER THE ROW READS IN, decided here rather than by where each button's
+// code happens to sit: sound, the eye, fullscreen — and the workbench's gear
+// after them, which it gets for free by being appended much later (makeDebug,
+// below). The two that change the BOOK come first and the one that changes the
+// window follows them.
+//
+// appendChild on an already-attached node moves it, so this is a reorder and
+// not a second button. Done in the DOM rather than with CSS `order` because
+// focus follows the DOM: ordering visually alone would leave the keyboard
+// tabbing through the row in an order nobody can see.
+//
+// Guarded, because on a touch device the button has already removed itself (it
+// can do nothing there) — and appending a detached node is exactly how it would
+// come back.
+if (fsBtn.parentNode) toolbar.appendChild(fsBtn);
 function setAmbient(on) {
   ambient = !!on;
   ambientBtn.classList.toggle('active', ambient);

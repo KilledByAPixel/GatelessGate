@@ -38,6 +38,40 @@ test('wind off settles the cloth; wind on revives it', () => {
   assert.ok(clothEnergy(f.cloth) > still * 2, 'wind should re-energize the cloth');
 });
 
+// STOPPING IS AN ANSWER TO A TOUCH; starting is weather. The two ramps used to
+// share one tau, and the stop read as the flag tiring rather than as the reader
+// having stilled it — on the page whose whole argument is what moves, that is
+// the wrong reading to leave available. Pinned as a RATIO rather than as two
+// durations, so retuning either end by feel does not fail this, but collapsing
+// them back to one constant does.
+test('the flag stops markedly faster than it starts', () => {
+  const timeTo = (f, test, cap = 900) => {
+    for (let i = 1; i <= cap; i++) {
+      run(f, 1, i * DT);
+      if (test(f.windLevel())) return i * DT;
+    }
+    return null;
+  };
+
+  const down = makeFlag({ seed: 11 });
+  run(down, 120);                       // fly for two seconds first
+  down.setWindTarget(0);
+  const stop = timeTo(down, (w) => w < 0.1);
+
+  const up = makeFlag({ seed: 11 });
+  up.setWindTarget(0);
+  run(up, 600);                         // all the way still
+  up.setWindTarget(1);
+  const start = timeTo(up, (w) => w > 0.9);
+
+  assert.ok(stop !== null && start !== null, `stop ${stop}, start ${start}`);
+  // The stop has to land while the hand is still on the cloth. Anything past
+  // about a second stops reading as a response at all.
+  assert.ok(stop < 1.0, `stopping takes ${stop.toFixed(2)}s — too slow to read as an answer`);
+  assert.ok(stop * 2 < start,
+    `stop ${stop.toFixed(2)}s vs start ${start.toFixed(2)}s — the two ramps have converged`);
+});
+
 test('toggleWind flips the target and reports it', () => {
   const f = makeFlag({ seed: 11 });
   assert.equal(f.toggleWind(), false); // was on → now off

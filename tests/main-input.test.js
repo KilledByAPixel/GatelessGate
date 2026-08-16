@@ -50,3 +50,27 @@ test('the Contents gate recursion handler survives page turns the same way', () 
   assert.match(wrapper[0], /input\.onTap\(hubGateTap\)/, 'clearInput() must put it back');
   assert.match(main, /hub\.tapGate\(camera, input\)/, 'and it drives the hub\'s own probe');
 });
+
+// The stage toolbar's order is a DOM move, and the move and the mobile removal
+// are two rules about the same button that fail in opposite directions with
+// nothing to read either way. Fullscreen is built with the other settings but
+// belongs after the eye, so it is re-appended once the eye exists — and on a
+// touch device it has already removed itself, where appending a DETACHED node
+// is precisely how it would come back. Nobody would see that on a desktop.
+test('reordering the toolbar cannot resurrect the removed fullscreen button', () => {
+  const move = main.match(/^.*toolbar\.appendChild\(fsBtn\).*$/m);
+  assert.ok(move, 'fullscreen is moved to the end of the row');
+  assert.match(move[0], /fsBtn\.parentNode/,
+    'the move must be guarded on the button still being in the toolbar');
+
+  // and the removal it is guarding is still the touch-primary one
+  assert.match(main, /if \(document\.fullscreenEnabled === false \|\| noFsApi \|\| touchPrimary\) fsBtn\.remove\(\);/);
+  assert.match(main, /matchMedia\('\(hover: none\) and \(pointer: coarse\)'\)/,
+    'touch-primary, not a user-agent sniff');
+
+  // the row reads sound, eye, fullscreen — the gear appends itself later still
+  const order = ['soundBtn = tool(', 'ambientBtn = tool(', 'toolbar.appendChild(fsBtn)']
+    .map((s) => main.indexOf(s));
+  assert.ok(order.every((i) => i > 0), 'all three landmarks present');
+  assert.deepEqual([...order].sort((a, b) => a - b), order, 'sound, then the eye, then fullscreen last');
+});

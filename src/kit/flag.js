@@ -4,9 +4,23 @@ import { noise3 } from '../util/noise.js';
 import { washMaterial } from '../render/material.js';
 import { ACCENT_DEEP, INK_LIT } from '../palette.js';
 
-// Case 29's flag. Wind is a controllable [0..1] level (click toggles it, ~2 s ramp);
-// hover injects decaying localized puffs. These behaviors travel with the component.
-const WIND_TAU = 0.7;      // ~2 s to full
+// Case 29's flag. Wind is a controllable [0..1] level (click toggles it); hover
+// injects decaying localized puffs. These behaviors travel with the component.
+//
+// THE TWO DIRECTIONS ARE NOT THE SAME SPEED, and the asymmetry is the point.
+// Wind rising is weather arriving and can take its time. Wind stopping is the
+// READER'S doing — they touched the cloth to still it — and an answer to a touch
+// has to land while the hand is still there. At one symmetric tau the stop read
+// as a long sag that might have been the flag tiring rather than as the flag
+// having been stopped, which on the page whose whole argument is what moves is
+// the wrong reading to leave available.
+//
+// This is only how fast the DRIVING force goes away. The cloth's settle under
+// gravity is the verlet sim's own and is untouched, so a quick fall does not
+// snap the banner flat — it drops the wind and lets the cloth fall at its own
+// rate. That is also why the fall can be this much shorter without looking cut.
+const WIND_RISE_TAU = 0.7;
+const WIND_FALL_TAU = 0.22;
 const PUFF_RADIUS = 0.4;
 const PUFF_LIFE = 0.6;
 
@@ -62,7 +76,8 @@ export function makeFlag({ cols = 24, rows = 16, width = 1.5, poleH = 3.4, seed 
   const puffs = []; // { x, y, age }
 
   const update = (dt, simTime) => {
-    windLevel += (windTarget - windLevel) * (1 - Math.exp(-dt / WIND_TAU));
+    const tau = windTarget > windLevel ? WIND_RISE_TAU : WIND_FALL_TAU;
+    windLevel += (windTarget - windLevel) * (1 - Math.exp(-dt / tau));
     for (const pf of puffs) pf.age += dt;
     while (puffs.length && puffs[0].age > PUFF_LIFE) puffs.shift();
     const t = simTime * 0.9;
