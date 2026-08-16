@@ -155,7 +155,7 @@ const CAM = { distance: 10.1, target: [1.35, 1.3, -0.8], heading: -4, pitch: 13.
   phase: 1.1 + 2.3 * i,        // own clock, so the three never sway or strike in step
   onStrike: (note, force, pos) => audio && audio.chimeStrike({ tube: note, force, at: pos }),
   });
-  f.group.position.set(x, 3.0, 0);
+  f.group.position.set(x, 2.5, 0);
   gate.add(f.group);
   return f;
   });

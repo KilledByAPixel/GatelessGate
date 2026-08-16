@@ -113,10 +113,10 @@ const CAM = { distance: 10.6, target: [-0.4, 1.9, -0.2], heading: 33, pitch: 12.
   // sign is the one thing changing hands here, and a busy chorus would
   // upstage the plain banner it hangs beside.
   const furin = makeFurin({
-  tubes: 1, seed: 22,
+  tubes: 1, seed: 22, cordLength:.2,
   onStrike: (_, force, pos) => audio && audio.chimeStrike({ tube: 3, force, at: pos }),
   });
-  furin.group.position.set(0.5, 3.1, 0);
+  furin.group.position.set(0.5, 2.6, 0);
   gate.add(furin.group);
   
   const world = composeWorld(scene, {

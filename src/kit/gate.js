@@ -83,7 +83,7 @@ export function makeGate({
   // posts rather than nearly meeting them.
   const second = new THREE.Mesh(new THREE.BoxGeometry(width * 1.16, 0.14, 0.26), flatMat);
   second.name = 'tie';
-  second.position.y = height * 0.78;
+  second.position.y = height * 0.86;
   g.add(top, second);
 
   // ---- chimes under the lintel --------------------------------------------
