@@ -9,6 +9,45 @@
      on a subpath deploy (the site is served from /GatelessGate/, not a domain
      root) and would leave the tab blank. -->
 <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+
+<!-- LINK PREVIEWS. What a pasted link becomes on Reddit, LinkedIn, Discord,
+     Slack and X. Two things about them are worth knowing before editing:
+
+     og:image and the canonical MUST be absolute. A relative path resolves
+     against the SCRAPER'S host, not this page's, so it silently yields a card
+     with no image — and the site is served from /GatelessGate/ rather than a
+     domain root, so the path has to carry that too. Same trap the favicon
+     comment above describes, with no visible 404 to hint at it.
+
+     Every scraper CACHES on first fetch, and Reddit and LinkedIn cache at the
+     moment a link is posted. A link shared before these tags existed keeps its
+     blank card no matter what is fixed afterwards, so this has to be deployed
+     before anything is posted rather than after.
+
+     The image is 1280x640 = 2:1, which is exactly X's large-card ratio and
+     within tolerance of Open Graph's 1.91:1 (~30px of height trimmed, and the
+     title art sits well inside the safe area). The declared width/height must
+     keep matching the file: several scrapers lay out the card from these
+     numbers before the image has finished loading. -->
+<meta name="description" content="The Mumonkan, a Zen koan collection from 1228, as 49 interactive ink-painting scenes. Free in your browser, fully narrated, with generated art and sound.">
+<link rel="canonical" href="https://killedbyapixel.github.io/GatelessGate/">
+<meta name="theme-color" content="#F3EDDF">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The Gateless Gate 3D">
+<meta property="og:url" content="https://killedbyapixel.github.io/GatelessGate/">
+<meta property="og:title" content="The Gateless Gate 3D">
+<meta property="og:description" content="An interactive edition of the Mumonkan: 49 Zen koans, each with its own 3D scene. Everything drawn and sounded by code, free in your browser.">
+<meta property="og:image" content="https://killedbyapixel.github.io/GatelessGate/social.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="A red torii gate over a pale path running between grassy banks toward faint mountains, with a black-robed monk in a conical hat walking away up the path.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Gateless Gate 3D">
+<meta name="twitter:description" content="An interactive edition of the Mumonkan: 49 Zen koans, each with its own 3D scene. Everything drawn and sounded by code, free in your browser.">
+<meta name="twitter:image" content="https://killedbyapixel.github.io/GatelessGate/social.jpg">
+<meta name="twitter:image:alt" content="A red torii gate over a pale path running between grassy banks toward faint mountains, with a black-robed monk in a conical hat walking away up the path.">
+
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #F3EDDF; }
   canvas { display: block; }
