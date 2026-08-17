@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-An interactive sumi-e reading of the Mumonkan (The Gateless Gate) in the browser: all 49 koan cases staged as small low-poly ink-painting dioramas, with text, narration, ambience, and a meditation timer. It is an **interactive book, not a game** — dioramas are ambient scenes; touch responses are optional delights, never gates.
+An interactive edition of the Mumonkan (The Gateless Gate) in the browser: all 49 koan cases staged as small low-poly ink-painting dioramas, with text, narration, ambience, and a meditation timer. It is an **interactive book, not a game** — dioramas are ambient scenes; touch responses are optional delights, never gates.
 
 The design doc at `docs/gateless-gate-design-doc.md` is authoritative; its dated revision notes **override** anything they contradict elsewhere in the doc. Milestone plans/specs live in `docs/superpowers/`. **`docs/` is gitignored**, like `local/` — it is the working record, not part of the published repo, so a fresh clone will not have it and nothing that ships may depend on it.
 

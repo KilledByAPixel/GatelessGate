@@ -100,7 +100,7 @@ export const SECTIONS = [
   {
     label: 'This edition',
     parts: [
-      'An interactive sumi-e reading: every case staged as a small ink-painting '
+      'An interactive edition: every case staged as a small ink-painting '
       + 'diorama you can look around and touch, with narration, procedural '
       + 'ambience, and a timer for sitting. It is a book rather than a game — '
       + 'nothing here is a puzzle to solve, and nothing is locked. Made by Frank '

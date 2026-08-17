@@ -6,6 +6,16 @@
      at its own weight. Changing one number here re-inks the whole page. */
   --ink-rgb: 30,30,36;
   --seal-ink: var(--paper);   /* the glyph cut out of the seal */
+  /* One stack, named once. It was written out eight times and had drifted into
+     two spellings, so a fix to the type reached some of the page and not the
+     rest; now it lands everywhere or nowhere.
+     Georgia's figures are OLDSTYLE — 3,4,5,7,9 hang below the baseline and 6,8
+     ascend — and that is kept deliberately. Borrowing lining digits from
+     another local face was tried (the only way to change them: system Georgia
+     carries no lining alternate, so font-variant-numeric has nothing to
+     select) and the borrowed numerals read as pasted in from another font
+     against Georgia's letters. The book keeps one face. */
+  --serif: Georgia, 'Times New Roman', serif;
 }
 /* ---- the dark page ----
    Scoped to the panel ON PURPOSE, not to :root. This is the reading light over
@@ -38,7 +48,7 @@
   width: var(--panel-w); flex: none; position: relative; overflow: hidden;
   background: var(--paper); color: var(--ink);
   border-right: 1px solid rgba(var(--ink-rgb),0.12);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--serif);
   transition: opacity 0.35s ease;
 }
 #gg-panel.fading { opacity: 0; }
@@ -65,7 +75,7 @@
 .gg-view.hidden { display: none; }
 
 button.gg-btn, .gg-view button {
-  font-family: Georgia, serif; background: none; border: 1px solid rgba(var(--ink-rgb),0.3);
+  font-family: var(--serif); background: none; border: 1px solid rgba(var(--ink-rgb),0.3);
   color: var(--ink); padding: 6px 14px; border-radius: 3px; cursor: pointer;
 }
 /* EVERY :hover IN THIS FILE IS GUARDED BY `@media (hover: hover)`, and this is
@@ -203,7 +213,7 @@ button.gg-btn, .gg-view button {
 /* the About link: quiet, italic, and set apart from the numbered rows */
 .gg-about-link {
   background: none; border: none; padding: 0; cursor: pointer;
-  font-family: Georgia, serif; font-size: 15px; font-style: italic; color: var(--gray);
+  font-family: var(--serif); font-size: 15px; font-style: italic; color: var(--gray);
 }
 @media (hover: hover) { .gg-about-link:hover { color: var(--accent); background: none; } }
 /* Clear progress, at the far end of the colophon from About. It asks twice —
@@ -217,7 +227,7 @@ button.gg-btn, .gg-view button {
    part of the book's ordinary look. Deliberately drab: it is a tool shelf. */
 .gg-dev { margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(var(--ink-rgb),0.15); }
 .gg-dev-head {
-  font-family: Georgia, serif; font-size: 11px; letter-spacing: 0.14em;
+  font-family: var(--serif); font-size: 11px; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--gray); opacity: 0.7; margin-bottom: 6px;
 }
 .gg-dev .gg-about-link { display: block; font-style: normal; font-size: 14px; }
@@ -283,7 +293,7 @@ button.gg-btn, .gg-view button {
   position: absolute; top: 8vh; left: 0; right: 0; z-index: 7;
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   pointer-events: none; text-align: center; padding: 0 24px;
-  font-family: Georgia, 'Times New Roman', serif; color: var(--ink);
+  font-family: var(--serif); color: var(--ink);
   opacity: 0; transition: opacity 1.4s ease;
 }
 /* Quicker in than out: the name should arrive with the page and leave without
@@ -300,7 +310,7 @@ button.gg-btn, .gg-view button {
 .gg-tool, .gg-debug-toggle {
   width: 30px; height: 30px; line-height: 1; font-size: 15px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  font-family: Georgia, serif;
+  font-family: var(--serif);
   background: rgba(243,237,223,0.82); border: 1px solid rgba(30,30,36,0.28);
   color: var(--ink); border-radius: 3px; backdrop-filter: blur(2px);
   padding: 0;
@@ -326,7 +336,7 @@ button.gg-btn, .gg-view button {
 .gg-look-bar.on { display: flex; }
 #gg-app.sitting .gg-look-bar { display: none; }
 .gg-look-bar button {
-  font-family: Georgia, serif; cursor: pointer; color: var(--ink);
+  font-family: var(--serif); cursor: pointer; color: var(--ink);
   background: rgba(243,237,223,0.82); border: 1px solid rgba(30,30,36,0.28);
   border-radius: 3px; backdrop-filter: blur(2px);
 }
@@ -405,7 +415,7 @@ button.gg-btn, .gg-view button {
    Deliberately NOT themed: it lies over the painting, not over the text. */
 .gg-sit {
   position: fixed; inset: 0; z-index: 55;
-  color: var(--ink); font-family: Georgia, serif; cursor: pointer;
+  color: var(--ink); font-family: var(--serif); cursor: pointer;
 }
 .gg-sit.hidden { display: none; }
 /* Set like the reading's title card and in the same place, since it is the same

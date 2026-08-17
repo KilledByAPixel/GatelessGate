@@ -1227,7 +1227,7 @@ The Gateless Gate was compiled in 1228 by the Chinese master Ekai, called Mu-mon
 
 **This edition**
 
-An interactive sumi-e reading: every case staged as a small ink-painting diorama you can look around and touch, with narration, procedural ambience, and a timer for sitting. It is a book rather than a game — nothing here is a puzzle to solve, and nothing is locked. Made by Frank Force, [frankforce.com](https://frankforce.com). The code is [on GitHub](https://github.com/KilledByAPixel/GatelessGate), and the whole text also exists as [a single plain page](THE-GATELESS-GATE.md), generated from the same source this edition reads, for anyone who would rather read it straight through or keep a copy.
+An interactive edition: every case staged as a small ink-painting diorama you can look around and touch, with narration, procedural ambience, and a timer for sitting. It is a book rather than a game — nothing here is a puzzle to solve, and nothing is locked. Made by Frank Force, [frankforce.com](https://frankforce.com). The code is [on GitHub](https://github.com/KilledByAPixel/GatelessGate), and the whole text also exists as [a single plain page](THE-GATELESS-GATE.md), generated from the same source this edition reads, for anyone who would rather read it straight through or keep a copy.
 
 **Rights**
 

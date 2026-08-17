@@ -136,27 +136,40 @@ test("case 15's chimes stay clear of each other at the LIVE swing cap, counter-p
   }
 });
 
-test('the three chimes clear the gate\'s own cross-tie', () => {
-  // The tanzaku hangs below the bell now, so a chime reaches deeper than it
-  // used to — and this gate has a nuki spanning the full width right under
-  // them. Rest is the worst case: swinging only ever shortens the drop.
+// How far under the tie's underside a chime's top may sit. It is hung FROM
+// that face, so the gap is a joint, not a drop: wide enough to allow the
+// modelled clearance, tight enough that a chime which came loose from the beam
+// and floated on its own would fail rather than pass quietly.
+const HANG_GAP_MAX = 0.12;
+
+test('the three chimes hang from the underside of the gate\'s cross-tie', () => {
+  // This guard used to read the other way round — chime bottom ABOVE the tie —
+  // back when the nuki sat low and the chimes hung from the lintel over it.
+  // The tie was raised to where a nuki belongs and the chimes were rehung
+  // beneath it, so "clears the tie" now describes a gate that no longer
+  // exists. What still has to hold is the same thing it always protected:
+  // nothing passes THROUGH the beam. Rest is the worst case — swinging only
+  // ever shortens the drop.
   const k = k15.build(stubs());
   const gate = k.scene.getObjectByName('gate');
   k.scene.updateMatrixWorld(true);
 
-  // read the tie beam's own top face off the built gate rather than
+  // read the tie beam's own bottom face off the built gate rather than
   // recomputing it from k15's height constant
-  let nukiTop = -Infinity;
+  let nukiBottom = Infinity;
   gate.traverse((o) => {
-    if (o.isMesh && o.name === 'tie') nukiTop = Math.max(nukiTop, new THREE.Box3().setFromObject(o).max.y);
+    if (o.isMesh && o.name === 'tie') nukiBottom = Math.min(nukiBottom, new THREE.Box3().setFromObject(o).min.y);
   });
-  assert.ok(Number.isFinite(nukiTop) && nukiTop > 0, 'no cross-tie found on the gate to measure against');
+  assert.ok(Number.isFinite(nukiBottom) && nukiBottom > 0, 'no cross-tie found on the gate to measure against');
 
   for (const c of gate.children.filter((n) => n.name === 'furin')) {
     const box = new THREE.Box3();
     c.traverse((o) => { if (o.isMesh && o.material.visible !== false) box.union(new THREE.Box3().setFromObject(o)); });
-    assert.ok(box.min.y > nukiTop,
-      `a chime reaches to y=${box.min.y.toFixed(3)}, through the cross-tie at ${nukiTop.toFixed(3)}`);
+    assert.ok(box.max.y <= nukiBottom,
+      `a chime reaches up to y=${box.max.y.toFixed(3)}, through the cross-tie whose underside is ${nukiBottom.toFixed(3)}`);
+    assert.ok(nukiBottom - box.max.y < HANG_GAP_MAX,
+      `a chime's top hangs ${(nukiBottom - box.max.y).toFixed(3)} below the tie — it is meant to hang FROM it, ` +
+      `not float under it (max ${HANG_GAP_MAX})`);
   }
 });
 
