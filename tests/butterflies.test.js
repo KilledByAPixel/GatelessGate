@@ -22,9 +22,14 @@ test('a butterfly is two shaped wings and nothing else, red, double-sided', () =
   assert.equal(flock.count(), 6);
 
   for (const b of each) {
-    const wings = b.children.filter((c) => c.isMesh);
+    const wings = b.children.filter((c) => c.name === 'butterfly-wing');
     assert.equal(wings.length, 2, 'two wings basically stuck together');
-    assert.equal(b.children.length, 2, 'and NOTHING else — no body, no antennae');
+    // NOTHING ELSE IS DRAWN — no body, no antennae. The third child is the
+    // invisible pick sphere, which is not paint; it is checked on its own
+    // below, and it is why this counts by name rather than by isMesh.
+    assert.equal(b.children.length, 3, 'two wings and the hit proxy, nothing more');
+    assert.equal(b.children.filter((c) => c.isMesh && c.material.visible !== false).length, 2,
+      'and only the two wings ever render');
     for (const w of wings) {
       assert.equal(w.name, 'butterfly-wing');
       assert.equal(w.material.side, THREE.DoubleSide, 'wings read from both faces');
@@ -41,6 +46,74 @@ test('a butterfly is two shaped wings and nothing else, red, double-sided', () =
     }
     // the two wings share ONE material — six butterflies is twelve draws, one program
     assert.equal(wings[0].material, wings[1].material);
+  }
+});
+
+test('every butterfly carries a pick sphere, and it rides the flight', () => {
+  // land: false so every one of them is airborne for the whole run. With
+  // landing on, a perched butterfly legitimately sits still, and "the handle
+  // moved with it" would then fail on a butterfly that did nothing wrong.
+  const flock = makeButterflies({ count: 5, seed: 11, hitRadius: 0.8, land: false });
+  const targets = flock.pickTargets();
+  assert.equal(targets.length, 5, 'one handle per butterfly');
+  assert.notEqual(targets, flock.pickTargets(), 'handed out as a copy, not the live array');
+
+  for (const t of targets) {
+    assert.equal(t.name, 'butterfly-hit');
+    // Hidden through the MATERIAL. `visible: false` on the object would make
+    // the raycaster skip it and the proxy could never be picked at all, which
+    // is the failure this pins: it would look identical and answer nothing.
+    assert.equal(t.material.visible, false, 'never painted');
+    assert.equal(t.visible, true, 'but still reachable by a ray');
+    assert.equal(t.castShadow, false);
+    const r = new THREE.Box3().setFromObject(t).getSize(new THREE.Vector3()).x / 2;
+    assert.ok(Math.abs(r - 0.8) < 0.05, `honours hitRadius, got ${r.toFixed(3)}`);
+  }
+
+  // It is parented to the butterfly, so it must move WITH it rather than being
+  // tracked separately — a second copy of the flight path is the thing this
+  // arrangement exists to avoid.
+  const before = targets.map((t) => t.getWorldPosition(new THREE.Vector3()).clone());
+  for (let i = 0; i < 120; i++) flock.update(1 / 60, i / 60);
+  const each = butterflies(flock);
+  targets.forEach((t, i) => {
+    const now = t.getWorldPosition(new THREE.Vector3());
+    assert.ok(now.distanceTo(before[i]) > 1e-4, 'the handle went where the butterfly went');
+    assert.ok(now.distanceTo(each[i].getWorldPosition(new THREE.Vector3())) < 1e-9,
+      'and is still centred on it');
+  });
+});
+
+test('a second scare extends the flight and never drops one out of the air', () => {
+  // The startle envelope is measured from the moment of the scare, so
+  // re-stamping it mid-flight restarted it at zero: one already up went from
+  // wherever its envelope had got to straight back to the ground value in a
+  // single frame, then climbed out again. A second tap has to CONTINUE the
+  // flight, not begin a new one. Swept across the whole envelope — the drop
+  // only shows on a butterfly whose scheduled round has it perched, so a
+  // single sample time proves nothing.
+  for (const delay of [0.5, 1.2, 2.0, 3.0, 3.9, 4.6, 5.4, 6.2]) {
+    const flock = makeButterflies({ count: 8, seed: 5 });
+    let t = 0;
+    const run = (secs) => {
+      for (let i = 0; i < Math.round(secs * 60); i++) { t += 1 / 60; flock.update(1 / 60, t); }
+    };
+    run(0.05);
+    flock.flit();
+    run(delay);
+
+    const before = flock.lift();
+    flock.flit();
+    const after = flock.lift();
+    after.forEach((a, i) => {
+      assert.ok(a >= before[i] - 1e-9,
+        `at +${delay}s butterfly ${i} fell from ${before[i].toFixed(3)} to ${a.toFixed(3)} on the second scare`);
+    });
+
+    // and the scare still DOES something: everyone is at full height shortly
+    // after, however late in the envelope the second tap landed
+    run(1.4);
+    for (const l of flock.lift()) assert.ok(l > 0.99, `re-scared and still only ${l.toFixed(3)} up`);
   }
 });
 

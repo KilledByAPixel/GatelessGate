@@ -144,7 +144,11 @@ test('the butterflies are the seal, and they play where the lens is pointed', ()
   assert.ok(each.length >= 5 && each.length <= 9, `a handful, got ${each.length}`);
   for (const b of each) {
     b.traverse((o) => {
-      if (!o.isMesh) return;
+      // Everything PAINTED is the one red. The invisible pick sphere each one
+      // carries is not paint and never reaches the frame, so its material
+      // colour means nothing — sweeping it in was reading white off a thing
+      // that is never drawn.
+      if (!o.isMesh || o.material.visible === false) return;
       assert.equal('#' + o.material.color.getHexString(), ACCENT.toLowerCase(),
         'they carry this case\'s one red');
     });
@@ -237,7 +241,8 @@ test('a landed butterfly is landed — it holds its spot, then leaves it', () =>
 test('calling startles them, and the fragment stays finite', () => {
   const ctx = fakeCtx();
   const root = k12.build(ctx);
-  const hit = root.scene.getObjectByName('zuigan-hit');
+  // The BUTTERFLIES are the handle — see 'the man is not the handle' below.
+  const hit = root.scene.getObjectByName('butterfly-hit');
   root.setCamera(new THREE.PerspectiveCamera());
   for (let i = 0; i < 240; i++) root.update(1 / 60, i / 60);
   const calm = root.fragment().flutter;
@@ -261,6 +266,27 @@ test('calling startles them, and the fragment stays finite', () => {
   for (const [k, v] of Object.entries(frag)) {
     assert.ok(Number.isFinite(v) || typeof v === 'boolean', `fragment.${k} = ${v}`);
   }
+});
+
+test('the man is not the handle — only the butterflies are', () => {
+  // Everywhere else in the book the reader reaches for the red thing. This was
+  // the one page that asked them to reach for something else, and the pick
+  // volume around the man is gone rather than merely deprioritised: leaving it
+  // in would keep two ways to start the call, and the whole point of the change
+  // is that there is one, and it is the seal.
+  const ctx = fakeCtx();
+  const root = k12.build(ctx);
+  root.setCamera(new THREE.PerspectiveCamera());
+  assert.equal(root.scene.getObjectByName('zuigan-hit'), undefined,
+    'no pick volume left on the man');
+
+  // Every object the handler probes belongs to the flock.
+  let probed = null;
+  ctx.input.raycastFirst = (cam, objs) => { probed = objs; return null; };
+  ctx._taps.forEach((cb) => cb(10, 10));
+  assert.ok(probed && probed.length > 0, 'the tap probes something');
+  for (const o of probed) assert.equal(o.name, 'butterfly-hit');
+  assert.equal(root.fragment().calls, 0, 'and a miss calls nothing');
 });
 
 test('the ledge is seen, not papered over', () => {

@@ -83,12 +83,28 @@ export function makeButterflies({
   // and the round's timings are simply never consulted.
   land = true,
   groundFn = null,                 // (x, z) => terrain height; flat ground without one
+  // How near a butterfly a tap still counts, in world units. Several times the
+  // span of the wing it stands for, and deliberately so: the wings are a couple
+  // of tenths across and never hold still, so picking the geometry itself would
+  // be a dexterity test the book asks nowhere else. A reader aims AT a butterfly
+  // and lands somewhere around it. At this reach the spheres of a spread flock
+  // overlap into one soft region rather than staying separate targets, which is
+  // the intent — the flock answers, not the individual insect.
+  hitRadius = 1.6,
 } = {}) {
   const g = new THREE.Group();
   g.name = 'butterflies';
 
   const mat = washMaterial({ color, flat: true, side: THREE.DoubleSide });
   const [yLo, yHi] = height;
+
+  // One geometry and one material behind every proxy — they are identical, and
+  // nothing about a hit sphere is per-butterfly. Invisible through the
+  // MATERIAL and never `visible: false` on the object: the raycaster skips
+  // hidden objects outright, so an object-hidden proxy could never be hit.
+  const hitGeo = new THREE.SphereGeometry(hitRadius, 8, 6);
+  const hitMat = new THREE.MeshBasicMaterial({ visible: false });
+  const hits = [];
 
   const flock = [];
   for (let i = 0; i < count; i++) {
@@ -102,6 +118,14 @@ export function makeButterflies({
       b.add(w);
       wings.push({ mesh: w, side });
     }
+    // Parented to the butterfly rather than tracked in update(): the proxy
+    // then rides every wander, climb and landing for free, and there is no
+    // second copy of the flight path to fall out of step with the first.
+    const hit = new THREE.Mesh(hitGeo, hitMat);
+    hit.name = 'butterfly-hit';
+    hit.castShadow = false;
+    b.add(hit);
+    hits.push(hit);
     g.add(b);
 
     const h = (n) => hash1(i * 13 + n, seed);
@@ -189,6 +213,12 @@ const ATTACK = 0.30;               // seconds for an alarm to come up
   }
 
   const smooth = (v) => { const c = clamp(v, 0, 1); return c * c * (3 - 2 * c); };
+  // smooth's exact inverse (y = 3c² - 2c³ solved for c). It exists so a second
+  // scare can re-enter the startle envelope at the height the butterfly is
+  // ALREADY at instead of at zero — see flit(). Closed-form rather than a
+  // numeric search because the point is that the re-entry frame is identical to
+  // the frame before it, and "close enough" is exactly the visible glitch.
+  const unsmooth = (y) => 0.5 - Math.sin(Math.asin(clamp(1 - 2 * clamp(y, 0, 1), -1, 1)) / 3);
 
   // WHERE IT IS IN ITS ROUND, 0..1 — and how airborne that makes it.
   // `lift` is 1 in flight, 0 perched, easing smoothly through the descent and
@@ -373,13 +403,31 @@ const ATTACK = 0.30;               // seconds for an alarm to come up
     flit() {
       bursts.push(clock);
       if (bursts.length > 6) bursts.shift();
-      // and any of them sitting in the grass gets up — on the round's own
-      // take-off pacing, not thrown
-      for (const b of flock) b.scared = clock;
+      // Any of them sitting in the grass gets up — on the round's own take-off
+      // pacing, not thrown.
+      //
+      // A SECOND SCARE CONTINUES THE FLIGHT, it does not begin a new one.
+      // Stamping `clock` outright restarted the envelope from zero, and the
+      // envelope is what scales the height: one already up read its current
+      // value one frame and the ground value the next, then climbed out again.
+      // Tapping a flock that was already flying popped them. So re-stamp to the
+      // point on the RISE that already reads what the envelope reads now — the
+      // value is unchanged on the re-scare frame and simply carries on upward —
+      // and for one at full height, to the start of the hold, which is what
+      // extending the flight means here. Speed is extended separately and was
+      // never the problem: that is the burst pushed above.
+      for (const b of flock) {
+        const e = startleAt(b);
+        b.scared = clock - (e >= 1 ? STARTLE_UP : STARTLE_UP * unsmooth(e));
+      }
       pose();
     },
     energy() { return energy(); },
     count() { return flock.length; },
+    // What a case hands input.raycastFirst to make the flock tappable. Named
+    // as furin's is, and returned as a copy so a caller can concat it without
+    // reaching into the flock's own array.
+    pickTargets() { return [...hits]; },
     // how airborne each one is right now, 1 flying .. 0 perched in the grass
     lift() { return flock.map((b) => liftAt(b, clock)); },
     update(dt, simTime) {

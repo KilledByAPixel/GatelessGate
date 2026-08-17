@@ -144,11 +144,11 @@ export default {
     // lens is actually pointed at rather than tucked in beside him. The camera
     // looks down the diagonal past his shoulder, so the middle of the frame
     // is the plain out past (-2, -4); a ray down the centre column lands
-    // there at every height. Seven of them over a wide disc
-    // is a scattering across the whole open half of the picture rather than a
-    // knot in one corner of it.
+    // there at every height. A handful of them over a wide disc scatters across
+    // the whole open half of the picture rather than knotting in one corner of
+    // it — the count is set for that spread, not for a number.
     const butterflies = makeButterflies({
-      count: 7, seed: ID, color: ACCENT, size: 0.42,
+      count: 8, seed: ID, color: ACCENT, size: 0.42,
       center: [-2.2, -4.4], radius: 5.0, height: [0.7, 2.6],
       groundFn: (x, z) => groundHeight(x, z, { seed: 21 }),
     });
@@ -217,12 +217,14 @@ export default {
     gpos.needsUpdate = true;
     groundMesh.geometry.computeVertexNormals();
 
-    const hit = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.8, 0.8, 2.0, 8),
-      new THREE.MeshBasicMaterial({ visible: false }));
-    hit.name = 'zuigan-hit';
-    hit.position.set(ZUIGAN.x, 1.0, ZUIGAN.z);
-    scene.add(hit);
+    // WHERE HIS VOICE COMES FROM — a position, not a pick volume. He used to
+    // be the handle: an invisible cylinder around him, and a tap on the man
+    // set the call going. Everywhere else in the book you reach for the red
+    // thing, and this was the one page that asked you to reach for something
+    // else; the butterflies are the seal here, so they are the handle now and
+    // he is not tappable at all. The knock still has to sound from HIM — it is
+    // his voice, and it would read as coming out of the flock otherwise.
+    const voiceAt = new THREE.Vector3(ZUIGAN.x, 1.0, ZUIGAN.z);
 
     // ---- the moment: call, and answer yourself ---------------------------
     let camera = null;
@@ -235,7 +237,7 @@ export default {
 
     input.onTap(() => {
       if (!camera) return;
-      if (!input.raycastFirst(camera, [hit])) return;
+      if (!input.raycastFirst(camera, butterflies.pickTargets())) return;
       if (pending >= 0) return;
       touched && touched();
       line = (line % LINES) + 1;
@@ -244,7 +246,7 @@ export default {
       calledAt = clock;
       butterflies.flit();               // a man shouting on a clifftop startles them
       // each line of the daily exercise is pitched a little lower than the last
-      audio && audio.knock({ force: 0.9 - (line - 1) * 0.12, at: hit.position });
+      audio && audio.knock({ force: 0.9 - (line - 1) * 0.12, at: voiceAt });
     });
 
     return {
@@ -262,7 +264,7 @@ export default {
           // second position in the scene for the echo to come from — it is
           // the same shout heard back — so it reuses his own spot rather than
           // inventing a point out over the gorge.
-          audio && audio.knock({ force: 0.30, at: hit.position });
+          audio && audio.knock({ force: 0.30, at: voiceAt });
           if (line >= LINES) line = 0;      // and tomorrow he does it again
         }
 
