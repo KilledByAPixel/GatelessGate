@@ -261,7 +261,7 @@ the bravest man in China,
 he barely sustains himself,  
 yet wishes to rival the wealthiest.
 
-## 11. Joshu Examines Two Hermits
+## 11. Joshu Tests Two Hermits
 
 **The Case**
 

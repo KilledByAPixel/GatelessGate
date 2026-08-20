@@ -13,13 +13,21 @@ import { INK_LIT } from '../palette.js';
 // indicating a thing across the scene), 'raise' (one sleeve held nearly
 // vertical, offered to the air — see figure.js for why those two are not the
 // same gesture), 'sit' (seated proportions, elbowed arms folded, hands
-// together in the lap), 'fold' (standing, the same folded arms held at the
-// belly — a monk waiting, hands in his sleeves).
+// together in the lap), 'sit-raise' (seated, and the one sleeve up), 'fold'
+// (standing, the same folded arms held at the belly — a monk waiting, hands in
+// his sleeves).
 // The pose chooses how the arms are held. There is no way to ask for a monk
 // without them — see figure.js for why that option is gone.
 const POSES = {
   stand: { stance: 'stand', arms: 'rest' },
   sit: { stance: 'sit', arms: 'fold' },
+  // Seated AND gesturing — a man who answers without getting up. Stance and
+  // arms were always independent inside figure.js (the gesture sleeve stays a
+  // single arm while the OTHER hand still folds into the lap, seated or not);
+  // what was missing was a name for the pair, so case 11's hermit had to stand
+  // up to raise his fist. The seated stance carries its own shorter sleeve and
+  // lower shoulder, so the raised cuff still clears the crown.
+  'sit-raise': { stance: 'sit', arms: 'raise' },
   point: { stance: 'stand', arms: 'point' },
   raise: { stance: 'stand', arms: 'raise' },
   fold: { stance: 'stand', arms: 'fold' },

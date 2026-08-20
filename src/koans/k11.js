@@ -72,7 +72,7 @@ const SEA_KEEP = [
 const CAM = { distance: 10.8, target: [-0.4, 1.3, -0.6], heading: 25, pitch: 18.4 };
   export default {
   id: ID,
-  slug: 'joshu-examines-two-hermits',
+  slug: 'joshu-tests-two-hermits',
   title: TEXT[ID].title,
   accent: ACCENT,
   tier: 2,
@@ -137,9 +137,15 @@ const CAM = { distance: 10.8, target: [-0.4, 1.3, -0.6], heading: 25, pitch: 18.
     hut.rotation.y = 0.62;
     scene.add(hut);
 
-    // THE MONK, seated before his door with the fist up. pose 'raise' holds the
-    // sleeve nearly vertical, offered to the air rather than aimed at anyone.
-    const monk = makeMonk({ height: 1.5, pose: 'raise', hat: false });
+    // THE MONK, seated before his door with the fist up. He used to STAND to
+    // raise it, which reads as a man interrupted at the door; a hermit who
+    // answers from his cushion without getting up is the same gesture given
+    // with much more indifference, which is the hermit these two are. The
+    // seated half of the pose is the stance and the raised half is the arms —
+    // his other hand still folds into his lap (kit/monk.js, 'sit-raise'). The
+    // raise itself is unchanged: nearly vertical, offered to the air rather
+    // than aimed at anyone.
+    const monk = makeMonk({ height: 1.56, pose: 'sit-raise', hat: false });
     monk.position.set(RISE.x + 0.9, 0.44, RISE.z + 0.7);
     scene.add(monk);
     // he is looking at his visitor, both times — a fist raised at nobody in
@@ -155,12 +161,19 @@ const CAM = { distance: 10.8, target: [-0.4, 1.3, -0.6], heading: 25, pitch: 18.
       .find((c) => Math.abs(c.rotation.z) > 1);
     // Parented to the sleeve at its far end rather than positioned by eye in
     // the monk's frame: the sleeve geometry runs from 0 to -sleeveL in its own
-    // local y, so this lands on the hand wherever the pose puts it.
+    // local y, so this lands on the hand wherever the pose puts it. The length
+    // is READ OFF THE GEOMETRY (k3's sleeveHem idiom) rather than restated from
+    // the standing stance's fraction — that copy was already a second
+    // definition, and sitting him down made it wrong: the seated sleeve is
+    // shorter, and the fist would have hung a hand's width past the cuff.
     const fist = new THREE.Mesh(
       new THREE.SphereGeometry(0.075, 9, 7),
       washMaterial({ color: INK_LIT, flat: true }));
     fist.name = 'fist';
-    fist.position.y = -0.34 * 1.5;
+    if (raised) {
+      if (!raised.geometry.boundingBox) raised.geometry.computeBoundingBox();
+      fist.position.y = raised.geometry.boundingBox.min.y;
+    }
     (raised || monk).add(fist);
 
     // JOSHU, down on the path, who will make up his mind about it — beside
@@ -300,7 +313,13 @@ const CAM = { distance: 10.8, target: [-0.4, 1.3, -0.6], heading: 25, pitch: 18.
     // thing actually touched needed feedback of its own. A
     // decaying roll on top of the swell's, at the tap and gone in a few
     // seconds. Elapsed-since-tap only, never absolute time.
-    const ROCK = { amp: 0.10, hz: 1.1, tau: 1.2, span: 4.0 };
+    //
+    // The amplitude is set by how far away the ship is, not by what looks like
+    // a plausible roll up close: it stands off twenty-five units in fog, a few
+    // dozen pixels tall, so a roll that would be a real lurch alongside was not
+    // visible at all from shore. It is a fair way past the swell's own trim now
+    // — a deliberate knock, the one thing that answers a touch out there.
+    const ROCK = { amp: 0.30, hz: 1.1, tau: 1.2, span: 4.0 };
     let camera = null;
     let clock = 0;
     let visits = 0;             // odd = dismissed, even = approved

@@ -1236,9 +1236,19 @@ different men make the identical gesture and draw opposite verdicts, and with on
 is only Joshu being inconsistent. It also left the repaired comment talking about "the two
 hermits" over a case that had one monk in it — the contradiction that surfaced this. The
 case now has both hermits, and 便行 is "went on" rather than "left". The page is retitled
-**Joshu Examines Two Hermits**: 庵主 is a hermit in a hut, not a monk in meditation (that
-was Reps's addition), and naming the two prepares the ear for the mechanism. Slug moved
-with the title; `src/koans/k11.js` records why the diorama still stages one figure.
+**Joshu Tests Two Hermits**: 庵主 is a hermit in a hut, not a monk in meditation (that was
+Reps's addition), and naming the two prepares the ear for the mechanism. **The verb was
+"Examines" for a day and should not go back.** That was Reps's word, kept to keep the page
+recognisable, but "examine a person" in current English is a doctor, a barrister or an
+examining board, and none of them is a master calling at a hut. "Tests" is the plain
+English for what 勘 does in Chan — probing what someone has — and the book already uses it
+that way in case 17 ("to test his pupil"). It also sets the reversal up: the title says
+Joshu tests them, and the comment says they saw through him, which is 勘破, the same
+character coming back the other way. ("Visits" was considered and dropped: true to the
+action, but it loses the testing the koan is made of.) 勘 is "investigates" in case 31's
+title and "tests" here, per §5's rule that a word is chosen for the sentence it is in.
+Slug moved with the title; `src/koans/k11.js` records why the diorama still stages one
+figure.
 
 **Case 11, comment (0294b13–15).** 爭奈趙州却被二庵主勘破 — and yet Joshu was himself seen
 through by the two hermits. Reps: "Yet perhaps Joshu is wrong. Or, through that monk, he

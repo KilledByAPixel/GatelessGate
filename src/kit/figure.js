@@ -334,14 +334,22 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // hands rest DOWN in the lap (a gentle bend), while standing hands meet at the
 // waist (the forearm swings nearly horizontal). The inward swing (the cuffs
 // crossing to the centre) is the same for all.
+// `gesture` is the sleeve length for a point/raise arm, and it is a separate
+// number from `sleeve` for one reason: AN ARM DOES NOT SHORTEN WHEN ITS OWNER
+// SITS DOWN. A stance's `sleeve` is a hanging/folding length, and seated it is
+// cut back so the cuffs settle into the lap the knees frame rather than
+// spilling past them — right for cloth at rest, wrong for cloth thrown up in
+// the air, where the same cut left case 11's raised fist level with the
+// hermit's own crown instead of well above it. Standing, the two are equal, so
+// no standing figure in the book moves.
 const KNEEL = 0.5;
-const STAND_STANCE = { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, head: 0.765, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.2, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.92 };
+const STAND_STANCE = { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, gesture: 0.34, head: 0.765, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.2, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.92 };
 // Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did: the
 // chest run in SIT_PROFILE was lengthened and steepened so a meditator sits
 // STRAIGHT, the way the Buddha does — the crown now tops out at 0.610·h, still
 // comfortably a seated man, and the fold angle eases to -0.44 so the cuffs keep
 // landing in the lap the knees now frame.
-const SIT_STANCE = { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, head: 0.545, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31, foldCross: 1.1 };
+const SIT_STANCE = { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, gesture: 0.34, head: 0.545, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31, foldCross: 1.1 };
 // Kneel is DERIVED, field by field, from whatever stand and sit currently are.
 // It used to repeat their values as literals, and every retune of the endpoints
 // (the sit +0.015 lift, staffAng 0.9 → 0.2) silently un-halved it — four fields
@@ -388,8 +396,9 @@ export function makeFigure({
 
   const shoulderY = st.shoulder * height;
   const sleeveL = st.sleeve * height;
-  const makeSleeve = (side) => {
-    const arm = sleeve({ height, len: sleeveL, mat });
+  const gestureL = (st.gesture ?? st.sleeve) * height;
+  const makeSleeve = (side, len = sleeveL) => {
+    const arm = sleeve({ height, len, mat });
     arm.position.set(side * 0.115 * s * height, shoulderY, st.armZ * height);
     if (arms === 'point' && side === 1) { arm.rotation.z = Math.PI - 0.95; arm.rotation.y = 0.15; }
     // 'raise' is NOT 'point'. Point swings the sleeve up and OUT along the
@@ -445,7 +454,7 @@ export function makeFigure({
     // pointing teacher still keeps his OTHER hand in his lap
     const gesture = (arms === 'point' || arms === 'raise') && side === 1;
     if (!gesture && (arms === 'fold' || seated)) makeFoldedArm(side);
-    else makeSleeve(side);
+    else makeSleeve(side, gesture ? gestureL : sleeveL);
   }
 
   const head = sphereHead({ height, mat });

@@ -154,8 +154,13 @@ test('a tap rocks the ship on top of the swell, and the sea takes it back', () =
     tapped.root.update(1 / 60, t);
     peak = Math.max(peak, Math.abs(boatOf(tapped.root).rotation.z - boatOf(calm.root).rotation.z));
   }
-  assert.ok(peak > 0.04, `the tap added no legible roll (peak ${peak.toFixed(4)})`);
-  assert.ok(peak < 0.2, `"rock a little" — peak ${peak.toFixed(4)} is a capsize`);
+  // The floor is well above the swell's own trim on purpose. The first
+  // version of this roll cleared the old 0.04 bound comfortably and still read
+  // as nothing on screen, because the ship is twenty-five units out in fog: a
+  // bound that only asks "did the number move" cannot tell a knock from a
+  // rounding error at that range.
+  assert.ok(peak > 0.15, `the tap added no legible roll (peak ${peak.toFixed(4)})`);
+  assert.ok(peak < 0.45, `rocked, not rolled over — peak ${peak.toFixed(4)} is a capsize`);
 
   for (let t = 4; t < 6.5; t += 1 / 60) {
     calm.root.update(1 / 60, t);
