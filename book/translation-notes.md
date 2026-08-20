@@ -1102,6 +1102,12 @@ chiasmus *reads like a typesetting error* to someone who does not know the Chine
   true across the cases.
 - **Case 24's title** matches case 32's wording better than its own case's. Kept: the
   titles are what readers recognise.
+- **Case 48's humps.** 兩箇駞子相撞著 sets up 世上應無直底人 — two bent things collide and
+  neither is straight, so there is no straight man in the world. The English keeps Reps's
+  deadlocked riders and loses the wordplay, knowingly: it is a choice of witness (CBETA
+  2019 against the Taishō base), and the pun needs explaining in English before it lands,
+  which is the end of it. The full reasoning, including why a "cancel each other out"
+  rendering would invert the passage, is in Part Three §4 under case 48.
 
 ## 10. Narration
 
@@ -1624,11 +1630,36 @@ charm. None should be "fixed" without rereading §2 of Part Two first.
 - **47** — 設三關問學者 ("set three barriers to question students") → "built three gates
   and made the monks pass through them" (the book's imagery, kept); 撥草參玄 ("parting
   the grasses to seek the profound") → "studying Zen."
-- **48** — 兩箇駞子相撞著 "like two CAMELS colliding" (駞 is CBETA's 2019 emendation from
-  柳幹康's collation of the Muromachi manuscript; the Taishō prints 馳) → "two riders
-  neither of whom can get ahead of the other," which fits the Taishō reading loosely and
-  keeps the deadlock; 世上應無直底人 ("no one in the world could walk straight") → "It is
-  very difficult to find the right person"; verse lines 3–4 (機先, 向上竅) paraphrased.
+- **48 — examined properly in August 2026 and deliberately left alone. Do not reopen it
+  without reading this.** 兩箇駞子相撞著。世上應無直底人 → "two riders neither of whom can get
+  ahead of the other. It is very difficult to find the right person." Both halves are
+  Reps's invention, and there is a real joke under them: **駞 is humped** (CBETA's 2019
+  emendation, from 柳幹康's collation of the Muromachi manuscript), which sets up **直,
+  straight**, in the very next clause. That the emendation makes the couplet cohere is
+  itself an argument for it; the Taishō prints 馳, a galloper, which is where Reps's
+  "riders" came from and which leaves the 直 line hanging on nothing.
+  **What the joke is, and is not.** It is *not* cancellation — two humps meeting and
+  levelling out. It runs the other way: two bent things blunder into each other and
+  **neither of them is straight**, so you would conclude there is no straight man anywhere.
+  The sentence Mumon writes next settles it — 二大老總未識路頭在, "neither of these two old
+  men knows where the road is." He is disparaging both masters, not describing a
+  resolution. Any English built on "they cancel each other out" therefore **inverts** the
+  passage: cancellation yields something straight, and the Chinese insists nothing is.
+  **Not restored, for two independent reasons, either of which would be enough.**
+  (i) It is a **choice of witness**, not a mistranslation — following CBETA's 2019 reading
+  against the Taishō base text is a different kind of decision from every other repair in
+  Part Three, and this edition has no standing to make it silently.
+  (ii) **The wordplay does not survive into English.** It needs the reader to hold "humped"
+  and "straight" as one word's opposite, and an English reader has to be told that before
+  it lands, at which point it is not a joke.
+  Reps's version keeps the one thing that does carry, the deadlock between two masters, and
+  crucially it does **not** assert the resolution the cancellation reading would. So it
+  stands. Recorded in §9 as a known loss rather than repaired.
+  (A wave image was floated for the collision and dropped on a second ground: this same
+  comment already has 立白浪滔天, "raises waves that almost touch heaven," three sentences
+  earlier, and the preface and case 41 both use 無風起浪, raising waves where there is no
+  wind. A fourth wave here would read as a callback to those.)
+  Also inherited: verse lines 3–4 (機先, 向上竅) paraphrased.
 - **49** — the letter appears twice by design (Reps's rendering opens the case, the new
   translation closes the afterword — the book's blurb owns it), and that first
   paragraph stays Reps's voice, including "as a bargain" where the letter's 大衍
