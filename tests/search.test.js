@@ -17,8 +17,8 @@ test('finds the case you half-remember', () => {
   assert.equal(ids('dog')[0], 1, 'dog -> Joshu\'s Dog');
   assert.equal(ids('wash the bowl')[0], 7, 'wash the bowl -> case 7');
   assert.equal(ids('flag')[0], 29, 'flag -> Not the Wind, Not the Flag');
-  assert.equal(ids('buffalo')[0], 37);
-  assert.equal(ids('oak tree')[0], 38);
+  assert.equal(ids('oak tree')[0], 37);
+  assert.equal(ids('buffalo')[0], 38);
   assert.ok(ids('flower').includes(6));
 });
 

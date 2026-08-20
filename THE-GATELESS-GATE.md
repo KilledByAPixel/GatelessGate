@@ -47,14 +47,14 @@ Then your previous lesser knowledge disappears. As a fruit ripening in season, i
 
 When you enter this condition your ego-shell is crushed and you can shake the heaven and move the earth. You are like a great warrior with a sharp sword. If a Buddha stands in your way, you will cut him down; if a patriarch offers you any obstacle, you will kill him; and you will be free in the face of birth and death. You can enter any world as if it were your own playground. I will tell you how to do this with this koan:
 
-Just concentrate your whole energy into this Mu, and do not let it break. When you enter this Mu and there is no break, your attainment will be as a candle burning and illuminating the whole universe.
+Just concentrate your whole energy into this Mu, and do not let it break. When you enter this Mu and there is no break, your attainment will be like a candle that takes the flame at one touch.
 
 **The Verse**
 
 Has a dog Buddha nature?  
 This is the most serious question of all.  
 If you say yes or no,  
-you lose your own Buddha nature.
+you lose your body and your life.
 
 ## 2. Hyakujo's Fox
 
@@ -64,7 +64,7 @@ Once when Hyakujo delivered some Zen lectures an old man attended them, unseen b
 
 The old man replied: "I am not a human being, but I was a human being when the Kashapa Buddha preached in this world. I was a Zen master and lived on this mountain. At that time one of my students asked me whether or not the enlightened person is subject to the law of causation. I answered him: 'The enlightened person is not subject to the law of causation.' Because that answer clung to absoluteness I became a fox for five hundred rebirths, and I am still a fox. Will you save me from this condition with your Zen words and let me get out of a fox's body? Now may I ask you: Is the enlightened person subject to the law of causation?"
 
-Hyakujo said: "The enlightened person is one with the law of causation."
+Hyakujo said: "The enlightened person is not blind to the law of causation."
 
 At the words of Hyakujo the old man was enlightened. "I am free," he said, paying homage with a deep bow. "I am no more a fox, but I have to leave my body in my dwelling place behind this mountain. Please perform my funeral as a monk." Then he disappeared.
 
@@ -86,16 +86,16 @@ Hyakujo clapped his hands and laughed at this insight. "I thought a Persian had 
 
 "The enlightened person is not subject to the law of causation." How can this answer make the old man a fox?
 
-"The enlightened person is one with the law of causation." How can this answer set the fox free?
+"The enlightened person is not blind to the law of causation." How can this answer set the fox free?
 
-To understand this clearly you must have just one eye.
+To understand this clearly you must have just one eye. Then you will also see that the old man's five hundred fox lives were five hundred lives of grace.
 
 **The Verse**
 
-Controlled or not controlled?  
-The same die shows two faces.  
-Not controlled or controlled,  
-both are a serious error.
+Not subject, not blind:  
+the same die shows two faces.  
+Not blind, not subject:  
+a thousand errors, ten thousand errors.
 
 ## 3. Gutei's Finger
 
@@ -109,14 +109,14 @@ When Gutei was about to pass from this world he gathered his monks around him. "
 
 **Mumon's Comment**
 
-Enlightenment, which Gutei and the boy attained, has nothing to do with a finger. If anyone clings to a finger, Tenryu will be so disappointed that he will annihilate Gutei, the boy, and the one who clings, all together.
+Enlightenment, which Gutei and the boy attained, has nothing to do with a finger. If you can see that, then Tenryu, Gutei, the boy, and you yourself are all run through on one skewer.
 
 **The Verse**
 
 Gutei cheapens the teaching of Tenryu,  
 freeing the boy with a knife.  
-A god once split a mountain with one hand.  
-Old Gutei is a poor imitator.
+A god once split a mountain with one hand  
+and thought nothing of it.
 
 ## 4. A Beardless Foreigner
 
@@ -133,7 +133,7 @@ If you want to study Zen, you must study it with your heart. When you attain rea
 Do not discuss a dream  
 in front of a simpleton.  
 Why has Bodhidharma no beard?  
-What an absurd question!
+It muddles even the wide-awake.
 
 ## 5. Kyogen Mounts the Tree
 
@@ -145,14 +145,14 @@ Kyogen said: "Zen is like a man hanging in a tree by his teeth over a cliff. His
 
 **Mumon's Comment**
 
-In such a predicament the cleverest talk is of no use. If you have memorized all the sutras, you cannot use them. When you can give the right answer, even though your past road was one of death, you open up a new road of life. But if you cannot answer, you will have to wait ages and ask the future Buddha, Maitreya.
+In such a predicament the cleverest talk is of no use. If you have memorized all the sutras, you cannot use them. When you can give the right answer, you bring the dead road of before to life and put the live road of before to death. But if you cannot answer, you will have to wait ages and ask the future Buddha, Maitreya.
 
 **The Verse**
 
 Kyogen is truly a fool  
 spreading ego-killing poison  
 that closes his pupils' mouths  
-and lets tears stream from their dead eyes.
+and sets demon eyes bursting from their bodies.
 
 ## 6. Buddha Twirls a Flower
 
@@ -164,14 +164,14 @@ Buddha said: "I have the eye of the true teaching, the heart of Nirvana, the tru
 
 **Mumon's Comment**
 
-Golden-faced Gautama thought he could cheat anyone. He made the good listeners bad, and sold dog meat under the sign of mutton. And he himself thought it was wonderful. What if all the audience had laughed together? How could he have transmitted the teaching? And again, if Mahakashapa had not smiled, how could he have transmitted the teaching? If he says that realization can be transmitted, he is like a city slicker cheating a farm boy, and if he says it cannot be transmitted, why does he approve of Mahakashapa?
+Golden-faced Gautama thought he could cheat anyone. He passed good people off as slaves, and sold dog meat under the sign of mutton. And he himself thought it was wonderful. What if all the audience had laughed together? How could he have transmitted the teaching? And again, if Mahakashapa had not smiled, how could he have transmitted the teaching? If he says that realization can be transmitted, he is like a city slicker cheating a farm boy, and if he says it cannot be transmitted, why does he approve of Mahakashapa?
 
 **The Verse**
 
 At the twirling of a flower  
 his disguise was exposed.  
-No one in heaven or earth can match  
-Mahakashapa's wrinkled face.
+Mahakashapa breaks into a smile,  
+and humans and gods are at a loss.
 
 ## 7. Joshu Washes the Bowl
 
@@ -202,7 +202,7 @@ he could have cooked his rice much sooner.
 
 **The Case**
 
-Getsuan said to his students: "Keichu, the first wheelwright of China, made two wheels of fifty spokes each. Now, suppose you removed the hub uniting the spokes. What would become of the wheel? And had Keichu done this, could he be called the master wheelwright?"
+Getsuan said to his students: "Keichu, the first wheelwright of China, made a cart whose wheels had a hundred spokes. Now, take off both wheels and remove the axle. What does that make clear?"
 
 **Mumon's Comment**
 
@@ -211,7 +211,7 @@ If you can answer this question instantly, your eyes will be like a comet and yo
 **The Verse**
 
 When the hubless wheel turns,  
-master or no master, none can stop it.  
+even the master loses his way.  
 It turns above heaven and below earth,  
 south, north, east, and west.
 
@@ -281,9 +281,9 @@ Joshu said: "Well given, well taken, well killed, well saved." And he bowed to t
 
 The raised fist was the same both times. Why is it Joshu did not admit the first and approved the second one? Where is the fault?
 
-Whoever answers this knows that Joshu's tongue has no bone so he can use it freely. Yet perhaps Joshu is wrong. Or, through that monk, he may have discovered his mistake.
+Whoever answers this knows that Joshu's tongue has no bone so he can use it freely. And yet the two hermits, in their turn, saw through Joshu.
 
-If you think that one insight exceeds the other, you have no eyes.
+If you say one hermit was deeper than the other, you have no eye for study. If you say there was nothing between them, you have no eye for study either.
 
 **The Verse**
 
@@ -300,7 +300,7 @@ Zuigan called out to himself every day: "Master."
 
 Then he answered himself: "Yes, sir."
 
-And after that he added: "Become sober."
+And after that he added: "Wake up."
 
 Again he answered: "Yes, sir."
 
@@ -310,11 +310,11 @@ Again he answered: "Yes, sir."
 
 **Mumon's Comment**
 
-Old Zuigan sells out and buys himself. He is opening a puppet show. He uses one mask to call "Master" and another that answers the master. Another mask says "Become sober" and another, "Do not be deceived by others." If you cling to any of his masks, you are mistaken, yet if you imitate Zuigan, you will make yourself a fox.
+Old Zuigan sells out and buys himself. He is opening a puppet show. He uses one mask to call "Master" and another that answers the master. Another mask says "Wake up" and another, "Do not be deceived by others." If you cling to any of his masks, you are mistaken, yet if you imitate Zuigan, you will make yourself a fox.
 
 **The Verse**
 
-Some Zen students do not realize the true man in a mask  
+Some Zen students do not realize the true man  
 because they recognize ego-soul.  
 Ego-soul is the seed of birth and death,  
 and foolish people call it the true man.
@@ -329,7 +329,7 @@ So Tokusan returned to his room.
 
 Seppo told Ganto about this. Ganto said: "Old Tokusan did not understand the ultimate truth."
 
-Tokusan heard of this remark and asked Ganto to come to him. "I have heard," he said, "you are not approving my Zen." Ganto admitted this indirectly. Tokusan said nothing.
+Tokusan heard of this remark and asked Ganto to come to him. "I have heard," he said, "you are not approving my Zen." Ganto secretly made his meaning known to him. Tokusan said nothing more.
 
 The next day Tokusan delivered an entirely different kind of lecture to the monks. Ganto laughed and clapped his hands, saying: "I see our old man understands the ultimate truth indeed. No one in China can equal him."
 
@@ -341,8 +341,8 @@ Speaking about the ultimate truth, both Ganto and Tokusan did not even dream it.
 
 Whoever understands the first truth  
 should understand the ultimate truth.  
-The last and first,  
-are they not the same?
+The last and first:  
+they are not the same.
 
 ## 14. Nansen Cuts the Cat in Two
 
@@ -414,7 +414,7 @@ Ummon asked: "The world is such a wide world, why do you answer a bell and don c
 
 **Mumon's Comment**
 
-When you study Zen you need not follow sound or color or form. Even though some have attained insight when hearing a voice or seeing a color or a form, this is a very common way. It is not true Zen. The real Zen student controls sound, color, and form, and actualizes the truth in everyday life.
+When you study Zen you must not chase sound or color or form. Even though some have attained insight when hearing a voice or seeing a color or a form, this is a very common way. It is not true Zen. The real Zen student controls sound, color, and form, and actualizes the truth in everyday life.
 
 Sound comes to the ear, the ear goes to sound. When you blot out sound and sense, what do you understand? While listening with ears you can never understand. To understand it fully you should see sound.
 
@@ -447,7 +447,7 @@ Chu said: "I ought to apologize to you for all this calling, but really you ough
 
 When old Chu called Oshin three times his tongue was rotting, but when Oshin answered three times his words were brilliant. Chu was getting old and lonely, and his method of teaching was like holding a cow's head to feed it clover.
 
-Oshin did not trouble to show his Zen either. His satisfied stomach had no desire to feast. When the country is prosperous everyone is lazy; when the home is wealthy the children are spoiled.
+Oshin did not trouble to show his Zen either. His satisfied stomach had no desire to feast. When the country is at peace, its talents are prized; when the home is wealthy, the children are spoiled.
 
 Now I want to ask you: Which one should apologize?
 
@@ -462,9 +462,9 @@ and you will be in trouble too.
 
 **The Case**
 
-A monk asked Tozan when he was weighing some flax: "What is Buddha?"
+A monk asked Tozan: "What is Buddha?"
 
-Tozan said: "This flax weighs three pounds."
+Tozan said: "Three pounds of flax."
 
 **Mumon's Comment**
 
@@ -477,27 +477,27 @@ close enough, and mind is still closer.
 Whoever talks about yes and no  
 lives in the land of right and wrong.
 
-## 19. Everyday Life Is the Path
+## 19. Ordinary Mind Is the Path
 
 **The Case**
 
 Joshu asked Nansen: "What is the path?"
 
-Nansen said: "Everyday life is the path."
+Nansen said: "Ordinary mind is the path."
 
-Joshu asked: "Can it be studied?"
+Joshu asked: "Can it be aimed at?"
 
-Nansen said: "If you try to study, you will be far away from it."
+Nansen said: "If you aim for it, you will be far away from it."
 
-Joshu asked: "If I do not study, how can I know it is the path?"
+Joshu asked: "If I do not aim for it, how can I know it is the path?"
 
-Nansen said: "The path does not belong to knowing, and it does not belong to not-knowing. Knowing is a delusion, and not-knowing is blankness. If you want to reach the true path beyond doubt, place yourself in the same freedom as sky. You name it neither good nor not-good."
+Nansen said: "The path does not belong to knowing, and it does not belong to not-knowing. Knowing is a delusion, and not-knowing is blankness. If you want to reach the true path beyond aiming, place yourself in the same freedom as sky. You name it neither good nor not-good."
 
 At these words Joshu was enlightened.
 
 **Mumon's Comment**
 
-Nansen could melt Joshu's frozen doubts at once when Joshu asked his questions. I doubt though if Joshu reached the point that Nansen did. He needed thirty more years of study.
+Questioned by Joshu, Nansen crumbled like a tiled roof and melted like ice; he could not explain himself. And even if Joshu did awaken, he would need thirty more years of study to get it.
 
 **The Verse**
 
@@ -506,11 +506,11 @@ in summer, a refreshing breeze; in winter, snow will accompany you.
 If useless things do not hang in your mind,  
 any season is a good season for you.
 
-## 20. The Enlightened Person
+## 20. The Person of Great Strength
 
 **The Case**
 
-Shogen asked: "Why does the enlightened person not stand on their feet and explain themselves?" And he also said: "It is not necessary for speech to come from the tongue."
+Shogen asked: "Why can the person of great strength not lift their leg?" And he also said: "It is not with the tongue that we speak."
 
 **Mumon's Comment**
 
@@ -518,8 +518,8 @@ Shogen spoke plainly enough, but how many will understand? If you comprehend, yo
 
 **The Verse**
 
-If the feet of enlightenment moved, the great ocean would overflow;  
-if its head bowed, it would look down upon the heavens.  
+One lift of the leg turns the great ocean over;  
+one bow of the head looks down on the heavens.  
 Such a body has no place to rest.  
 Let another continue this poem.
 
@@ -533,7 +533,7 @@ Ummon answered him: "Dried dung."
 
 **Mumon's Comment**
 
-It seems to me Ummon is so poor he cannot distinguish the taste of one food from another, or else he is too busy to write readable letters. Well, he tried to hold his school with dried dung, and his teaching was just as useless.
+It seems to me Ummon is too poor to put a plain meal together and too busy even to scribble a note. At every turn he reaches for the dried dung to prop the gate and hold up the door. You can see what has become of the Dharma.
 
 **The Verse**
 
@@ -552,7 +552,7 @@ Mahakashapa said: "Ananda."
 
 Ananda answered: "Yes, brother."
 
-Said Mahakashapa: "Now you can take down my preaching sign and put up your own."
+Said Mahakashapa: "Take down the preaching sign at the front gate."
 
 **Mumon's Comment**
 
@@ -562,8 +562,8 @@ If you understand this, you will see the old brotherhood still gathering, but if
 
 The point of the question is dull but the answer is intimate.  
 How many persons hearing it will open their eyes?  
-Elder brother calls and younger brother answers,  
-this spring does not belong to the ordinary season.
+Elder brother calls, younger brother answers, the family shame is out.  
+This spring does not belong to the ordinary season.
 
 ## 23. Do Not Think Good, Do Not Think Not-Good
 
@@ -573,7 +573,7 @@ When the sixth patriarch was enlightened he received from the fifth patriarch th
 
 A monk named Emyo out of envy pursued the patriarch to take this great treasure away from him. The sixth patriarch placed the bowl and robe on a stone in the road and told Emyo: "These objects just symbolize the faith. There is no use fighting over them. If you desire to take them, take them now."
 
-When Emyo went to move the bowl and robe they were as heavy as mountains. He could not budge them. Trembling for shame he said: "I came wanting the teaching, not the material treasures. Please teach me."
+When Emyo went to move the bowl and robe they were as heavy as mountains. He could not budge them. Trembling with fear he said: "I came wanting the teaching, not the material treasures. Please teach me."
 
 The sixth patriarch said: "When you do not think good and when you do not think not-good, what is your true self?"
 
@@ -612,8 +612,8 @@ Fuketsu used to have lightning Zen. Whenever he had the opportunity, he flashed 
 
 Without revealing his own penetration,  
 he offered another's words, not his to give.  
-Had he chattered on and on,  
-even his listeners would have been embarrassed.
+Press forward chattering and chattering,  
+and you will find yourself at a loss.
 
 ## 25. Preaching from the Third Seat
 
@@ -621,7 +621,7 @@ even his listeners would have been embarrassed.
 
 In a dream Kyozan went to Maitreya's Pure Land. He recognized himself seated in the third seat in the abode of Maitreya. Someone announced: "Today the one who sits in the third seat will preach."
 
-Kyozan arose and, hitting the gavel, said: "The truth of Mahayana teaching is transcendent, above words and thought. Do you understand?"
+Kyozan arose and, hitting the gavel, said: "The truth of Mahayana teaching is transcendent, above words and thought. Listen carefully! Listen carefully!"
 
 **Mumon's Comment**
 
@@ -633,7 +633,7 @@ When he opens his mouth he is lost. When he seals his mouth he is lost. If he do
 
 In the light of day,  
 yet in a dream he talks of a dream.  
-A monster among monsters,  
+Faking wonders, faking wonders,  
 he intended to deceive the whole crowd.
 
 ## 26. Two Monks Roll Up the Screen
@@ -642,11 +642,11 @@ he intended to deceive the whole crowd.
 
 Hogen of Seiryo monastery was about to lecture before dinner when he noticed that the bamboo screen lowered for meditation had not been rolled up. He pointed to it. Two monks arose from the audience and rolled it up.
 
-Hogen, observing the physical movement, said: "The state of the first monk is good, not that of the other."
+Hogen, observing the physical movement, said: "One gain, one loss."
 
 **Mumon's Comment**
 
-I want to ask you: Which of those two monks gained and which lost? If any of you has one eye, you will see the failure on the teacher's part. However, I am not discussing gain and loss.
+I want to ask you: Which of those two monks gained and which lost? If any of you has one eye, you will see the failure on the teacher's part. Even so, never go weighing it out in gain and loss.
 
 **The Verse**
 
@@ -669,7 +669,7 @@ Nansen replied: "It is not mind, it is not Buddha, it is not things."
 
 **Mumon's Comment**
 
-Old Nansen gave away his treasure-words. He must have been greatly upset.
+Old Nansen gave away his treasure-words. It left him in no small mess.
 
 **The Verse**
 
@@ -688,7 +688,7 @@ So Tokusan bowed and opened the screen to go out, observing: "It is very dark ou
 
 Ryutan offered Tokusan a lighted candle to find his way. Just as Tokusan received it, Ryutan blew it out. At that moment the mind of Tokusan was opened.
 
-"What have you attained?" asked Ryutan. "From now on," said Tokusan, "I will not doubt the teacher's words."
+"What have you attained?" asked Ryutan. "From now on," said Tokusan, "I will not doubt the words of the old masters anywhere under heaven."
 
 The next day Ryutan told the monks at his lecture: "I see one monk among you. His teeth are like the sword tree, his mouth is like the blood bowl. If you hit him hard with a big stick, he will not even so much as look back at you. Someday he will mount the highest peak and carry my teaching there."
 
@@ -704,14 +704,14 @@ The old woman said: "I read that sutra which says: 'The past mind cannot be held
 
 Tokusan was speechless. Finally he asked the woman: "Do you know of any good teacher around here?"
 
-The old woman referred him to Ryutan, not more than five miles away. So he went to Ryutan in all humility, quite different from when he had started his journey. Ryutan in turn was so kind he forgot his own dignity. It was like pouring muddy water over a drunken man to sober him. After all, it was an unnecessary comedy.
+The old woman referred him to Ryutan, not more than five miles away. So he went to Ryutan in all humility, quite different from when he had started his journey. Ryutan in turn doted like a parent who cannot see that the child is ugly. Finding one live ember in Tokusan, he snatched up the slop water and with one splash put it out for good. Looked at coldly, the whole thing is one good laugh.
 
 **The Verse**
 
 A hundred hearings cannot surpass one seeing.  
 One seeing cannot surpass a hundred hearings.  
-His nose was very high,  
-but he was blind after all.
+He saved his nose,  
+but he lost his eyes.
 
 ## 29. Not the Wind, Not the Flag
 
@@ -744,12 +744,12 @@ Baso said: "This mind is Buddha."
 
 **Mumon's Comment**
 
-If you wholly understand this, you are wearing Buddha's clothing, you are eating Buddha's food, you are speaking Buddha's words, you are behaving as Buddha, you are Buddha. This anecdote, however, has given many a pupil the sickness of formality. If you truly understand, you will wash out your mouth for three days after saying the word Buddha, and you will close your ears and flee after hearing "This mind is Buddha."
+If you wholly understand this, you are wearing Buddha's clothing, you are eating Buddha's food, you are speaking Buddha's words, you are behaving as Buddha, you are Buddha. This anecdote, however, has led many a pupil to misread the marker on the scale. If you truly understand, you will wash out your mouth for three days after saying the word Buddha, and you will close your ears and flee after hearing "This mind is Buddha."
 
 **The Verse**
 
 Under blue sky, in bright sunlight,  
-you need not search around.  
+never go searching around.  
 Asking what is Buddha  
 is like claiming innocence with stolen goods in your pocket.
 
@@ -769,10 +769,10 @@ The old woman understood how war is planned, but she did not know how spies snea
 
 **The Verse**
 
-When the question is common  
-the answer is also common.  
-When the question is sand in a bowl of boiled rice  
-the answer is a stick in the soft mud.
+The question was the same as before,  
+the answer was the same as before.  
+Sand in the bowl of rice,  
+thorns in the soft mud.
 
 ## 32. A Philosopher Asks Buddha
 
@@ -780,7 +780,7 @@ the answer is a stick in the soft mud.
 
 A philosopher asked Buddha: "Without words, without the wordless, will you tell me truth?"
 
-The Buddha kept silence.
+The Buddha sat still.
 
 The philosopher bowed and thanked the Buddha, saying: "With your loving kindness I have cleared away my delusions and entered the true path."
 
@@ -790,22 +790,22 @@ The Buddha replied: "A good horse runs even at the shadow of the whip."
 
 **Mumon's Comment**
 
-Ananda was the disciple of the Buddha. Even so, his opinion did not go beyond that of outsiders. I want to ask you: How much difference is there between disciples and outsiders?
+Ananda was the disciple of the Buddha. Even so, his understanding fell short of the outsider's. I want to ask you: How much difference is there between disciples and outsiders?
 
 **The Verse**
 
 To tread the sharp edge of a sword,  
 to run on smooth-frozen ice,  
 you need no footsteps to follow.  
-Walk over the cliffs with hands free.
+Hang from the cliff, and let go.
 
-## 33. This Mind Is Not Buddha
+## 33. Not Mind, Not Buddha
 
 **The Case**
 
 A monk asked Baso: "What is Buddha?"
 
-Baso said: "This mind is not Buddha."
+Baso said: "Not mind, not Buddha."
 
 **Mumon's Comment**
 
@@ -813,8 +813,8 @@ If you understand this, you are a graduate of Zen.
 
 **The Verse**
 
-If you meet a fencing-master on the road, you may give him your sword,  
-if you meet a poet, you may offer him your poem.  
+If you meet a fencing-master on the road, give him your sword.  
+Unless you meet a poet, do not offer your poem.  
 When you meet others, say only a part of what you intend.  
 Never give the whole thing at once.
 
@@ -831,7 +831,7 @@ Nansen was getting old and forgot to be ashamed. He spoke out with bad breath an
 **The Verse**
 
 When the sky is clear the sun appears,  
-when the earth is parched rain will fall.  
+when the rain falls the earth is wet.  
 He opened his heart fully and spoke out,  
 but it was useless to talk to pigs and fish.
 
@@ -843,7 +843,7 @@ but it was useless to talk to pigs and fish.
 
 **Mumon's Comment**
 
-When you understand this, you will know it is possible to come out from one shell and enter another, as if you were stopping at an inn. But if you cannot understand, when your time comes and your four elements separate, you will be just like a crab dipped in boiling water, struggling with many hands and legs. At that point you may say: "Mumon did not tell me where to go!" but it will be too late then.
+When you understand this, you will know it is possible to come out from one shell and enter another, as if you were stopping at an inn. But if you cannot understand, do not go running wildly about. When your time comes and your four elements separate, you will be just like a crab dipped in boiling water, struggling with many hands and legs. At that point you may say: "Mumon did not tell me where to go!" but it will be too late then.
 
 **The Verse**
 
@@ -860,33 +860,16 @@ Goso said: "When you meet a Zen master on the road you cannot talk to him, you c
 
 **Mumon's Comment**
 
-In such a case, if you can answer him to the point, your realization will be beautiful, but if you cannot, you should look about without seeing anything.
+In such a case, if you can answer him to the point, your realization will be beautiful, but if you cannot, you must keep your eyes open everywhere you go.
 
 **The Verse**
 
 Meeting a Zen master on the road,  
 face him neither with words nor silence.  
-Give him a punch in the jaw  
-and you will be called one who understands Zen.
+Give him a punch in the jaw:  
+understand it right there, and you understand.
 
-## 37. A Buffalo Passes Through the Gate
-
-**The Case**
-
-Goso said: "When a buffalo goes through a gate, his horns and his head and his hoofs all pass through, but why can't the tail also pass?"
-
-**Mumon's Comment**
-
-If you can open one eye at this point and say a word of Zen, you are qualified to repay the four debts of gratitude, and, not only that, you can save all sentient beings under you. But if you cannot say such a word of true Zen, you should turn back to your tail.
-
-**The Verse**
-
-If the buffalo runs, he will fall into the trench;  
-if he returns, he will be butchered.  
-That little tail  
-is a very strange thing.
-
-## 38. An Oak Tree in the Garden
+## 37. An Oak Tree in the Garden
 
 **The Case**
 
@@ -903,7 +886,24 @@ If you see Joshu's answer clearly, there is no Shakyamuni Buddha before you and 
 Words cannot describe everything.  
 The heart's message cannot be delivered in words.  
 If you receive words literally, you will be lost,  
-if you try to explain with words, you will not attain enlightenment in this life.
+if you get stuck in the phrases, you will go astray.
+
+## 38. A Buffalo Passes Through the Gate
+
+**The Case**
+
+Goso said: "When a buffalo goes through a gate, his horns and his head and his hoofs all pass through, but why can't the tail also pass?"
+
+**Mumon's Comment**
+
+If you can open one eye at this point and say a word of Zen, you are qualified to repay the four debts of gratitude, and, not only that, you can save all sentient beings under you. But if you cannot say such a word of true Zen, you should turn back to your tail.
+
+**The Verse**
+
+If the buffalo runs, he will fall into the trench;  
+if he returns, he will be butchered.  
+That little tail  
+is a very strange thing.
 
 ## 39. Ummon's Sidetrack
 
@@ -921,7 +921,7 @@ Afterwards another teacher, Shishin, asked his pupils: "At what point did that s
 
 **Mumon's Comment**
 
-If you perceive Ummon's particular skillfulness, you will know at what point the student was off the track, and you will be a teacher of humans and gods. If not, you cannot even perceive yourself.
+If you perceive Ummon's particular skillfulness, you will know at what point the student was off the track, and you will be a teacher of humans and gods. If not, you cannot even save yourself.
 
 **The Verse**
 
@@ -967,14 +967,14 @@ Bodhidharma said: "Then your mind is pacified already."
 
 **Mumon's Comment**
 
-That broken-toothed old foreigner, Bodhidharma, came thousands of miles over the sea from India to China as if he had something wonderful. It is like raising waves without wind. After he remained years in China he had only one disciple and that one lost his arm and was deformed. Alas, ever since he has had brainless disciples.
+That broken-toothed old foreigner, Bodhidharma, came thousands of miles over the sea from India to China as if he had something wonderful. It is like raising waves without wind. After he remained years in China he had only one disciple and that one lost his arm and was deformed. Ha! Sha Sanro cannot read even four words.
 
 **The Verse**
 
 Why did Bodhidharma come to China?  
-For years monks have discussed this.  
-All the troubles that have followed since  
-came from that teacher and disciple.
+The whole affair began with the handing-down.  
+The uproar that fills the monasteries  
+was you, all along.
 
 ## 42. The Girl Comes Out from Meditation
 
@@ -982,7 +982,7 @@ came from that teacher and disciple.
 
 In the time of Buddha Shakyamuni, Manjusri went to the assembly of the Buddhas. When he arrived there, the conference was over and each Buddha had returned to his own Buddha-land. Only one girl was yet unmoved in deep meditation.
 
-Manjusri asked Buddha Shakyamuni how it was possible for this girl to reach this state, one which even he could not attain. "Bring her out from Samadhi and ask her yourself," said the Buddha.
+Manjusri asked Buddha Shakyamuni how this girl could sit so close to the Buddha's seat when he himself could not. "Bring her out from Samadhi and ask her yourself," said the Buddha.
 
 Manjusri walked around the girl three times and snapped his fingers. She still remained in meditation. So by his miracle power he transported her to a high heaven and tried his best to call her, but in vain.
 
@@ -999,9 +999,9 @@ If you understand this deeply, you yourself can enter the great meditation while
 **The Verse**
 
 One could not awaken her, the other could.  
-Neither is a good actor.  
+Freedom, either way.  
 One wears the mask of god, one a devil's mask.  
-Had both failed, the drama still would be a comedy.
+The fiasco itself made a fine performance.
 
 ## 43. Shuzan's Short Staff
 
@@ -1018,7 +1018,7 @@ If you call this a short staff, you oppose its reality. If you do not call it a 
 Holding out the short staff,  
 he gave an order of life or death.  
 Positive and negative interwoven,  
-even Buddhas and patriarchs cannot escape this attack.
+and Buddhas and patriarchs beg for their lives.
 
 ## 44. Basho's Staff
 
@@ -1069,7 +1069,7 @@ You can continue your steps or turn your body freely about on the top of the pol
 **The Verse**
 
 If you lack the third eye of insight  
-you will cling to the measure of the hundred feet.  
+you will misread the marker on the scale.  
 You will jump from there and kill yourself,  
 like the blind leading the blind.
 
@@ -1083,7 +1083,7 @@ The first gate is studying Zen. In studying Zen the aim is to see your own true 
 
 The second gate is that once you realize your own true nature you are free from birth and death. Now when you shut the light from your eyes and become a corpse, how can you free yourself?
 
-The third gate is that once you are free from birth and death you should know where you are. Now your body separates into the four elements. Where are you?
+The third gate is that once you are free from birth and death you should know where you are going. Now your body separates into the four elements. Where are you going?
 
 **Mumon's Comment**
 
@@ -1106,7 +1106,7 @@ A Zen pupil asked Kembo: "All Buddhas of the ten parts of the world enter the on
 
 Kembo, raising his walking stick and drawing the figure one in the air, said: "Here it is."
 
-This pupil went to Ummon and asked the same question. Ummon, who happened to have a fan in his hand, said: "This fan will reach to the thirty-third heaven and hit the nose of the presiding deity there. It is like the Dragon Carp of the Eastern Sea tipping over the rain-cloud with his tail."
+This pupil went to Ummon and asked the same question. Ummon, who happened to have a fan in his hand, said: "This fan will reach to the thirty-third heaven and hit the nose of the presiding deity there. Strike the Dragon Carp of the Eastern Sea one blow, and the rain pours down in buckets."
 
 **Mumon's Comment**
 
@@ -1125,20 +1125,20 @@ to find the origin of the right road.
 
 Amban, a layman Zen student, said: "Mumon has just published forty-eight koans and called the book The Gateless Gate. He criticizes the old patriarchs' words and actions. I think he is very mischievous. He is like an old man selling fried cakes, catching a passerby and forcing one into his mouth. The customer can neither swallow the cake nor spit it out, and this causes suffering. Mumon has annoyed everyone enough, so I think I shall add one more as a bargain. I wonder if he himself can eat this bargain. If he can, and digest it well, it will be fine, but if not, we will have to put it back into the frying pan with his forty-eight also and cook them again. Mumon, you eat first, before someone else does:
 
-"Buddha, according to a sutra, once said: 'Stop, stop. Do not speak. The ultimate truth is not even to think.'"
+"Buddha, according to a sutra, once said: 'Stop, stop. Do not speak. My teaching is subtle, beyond all thinking.'"
 
 **Mumon's Comment**
 
-Where did that so-called teaching come from? How is it that one could not even think it? Suppose someone spoke about it; then what would become of it? Buddha himself never stopped talking and in this sutra spoke contrarily. Because of this, persons like Mumon appear afterwards in China and fry up useless cakes, annoying people. What shall we do after all? I will show you.
+Where did that so-called teaching come from? Where does its subtlety come from? Suppose someone spoke about it; then what would become of it? It was not only Bukan whose tongue ran loose: Shakyamuni himself was all mouth. That old man conjured up such a spook that a thousand generations of descendants have been tangled in the vines and never gotten their heads out. A rare piece of talk like this: no spoon can lift it, no steamer can cook it through. How many have taken it wrong!
 
-Then Amban put his palms together, folded his hands, and said: "Stop, stop. Do not speak. The ultimate truth is not even to think. And now I will make a little circle on the sutra with my finger and add that five thousand other sutras and Vimalakirti's gateless gate all are here!"
+Someone asked: "Then how, in the end, will you settle it?" Amban put his palms together and said: "Stop, stop. Do not speak. My teaching is subtle, beyond all thinking. And now I will draw a little circle around the words 'beyond thinking' and say: the five thousand scrolls of the canon and Vimalakirti's gate of not-two are all inside it!"
 
 **The Verse**
 
-If anyone tells you fire is light,  
-pay no attention.  
-When two thieves meet they need no introduction:  
-they recognize each other without question.
+If anyone tells you fire is the lamp,  
+turn your head away and do not answer.  
+Only a thief knows a thief:  
+one question, and he owns it at once.
 
 ## Afterword
 

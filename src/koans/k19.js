@@ -114,7 +114,7 @@ const BREEZE_TAU = 1.7;   // how long a crossing breath stays in the sound
 const CAM = { distance: 12, target: [1.15, 1.3, -0.55], heading: 25, pitch: 8.6 };
   export default {
   id: ID,
-  slug: 'everyday-life-is-the-path',
+  slug: 'ordinary-mind-is-the-path',
   title: TEXT[ID].title,
   accent: ACCENT,
   tier: 2,

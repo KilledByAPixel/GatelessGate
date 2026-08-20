@@ -95,7 +95,7 @@ test('leaf clusters do not share one phase — a cluster shivers, it does not sl
 
 // THE REGRESSION THIS FILE EXISTS FOR. The phase jitter was first drawn from
 // tree.js's main `rnd` stream, which shifted every fork count and spread angle
-// after it and quietly rebuilt every tree in the book. Only k38's oak-width
+// after it and quietly rebuilt every tree in the book. Only k37's oak-width
 // test noticed. Wind is decoration; it must not be able to move a branch.
 test('adding wind moved no geometry: a seed still grows the exact same tree', () => {
   const a = makeTree({ height: 3.2, seed: 11 });
@@ -109,7 +109,7 @@ test('adding wind moved no geometry: a seed still grows the exact same tree', ()
   // The pin with teeth. Two identical trees agreeing proves only that hash1 is
   // a function; what actually caught the stream bug was a number measured
   // against the tree's SHAPE. These are seed 11's, snapshotted after the phase
-  // draws were moved onto their own counter and confirmed against k38's oak
+  // draws were moved onto their own counter and confirmed against k37's oak
   // comparison. Retuning the tree on purpose means updating them on purpose —
   // a wind tweak must never be able to.
   const trunk = a.getObjectByName('trunk');

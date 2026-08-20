@@ -1,6 +1,6 @@
 # The Gateless Gate — editorial and translation notes
 
-> **What this is.** The record behind the 2026 edition. It covers two separate
+> **What this is.** The record behind the 2026 edition. It covers three separate
 > pieces of work:
 >
 > **Part One — new translations.** The front and back matter, translated from the
@@ -11,6 +11,12 @@
 > modernised throughout in August 2026. The earlier version of this file said "none
 > of the cases is touched here." That is no longer true of the edition, and Part Two
 > is what changed.
+>
+> **Part Three — the verification of the forty-nine cases.** Every case checked line
+> by line against the Chinese, August 2026: the errors repaired (each recorded with
+> its Taishō line), the disputable calls flagged for a ruling, and Reps's readings
+> that diverge by choice documented. Part Two's §7 said the edit reached the Chinese
+> in two places; Part Three is where that count stopped being two.
 >
 > Nothing builds from this file. It does not ship with the book.
 >
@@ -32,7 +38,8 @@
 > can reach Chinese Wikisource — see "Source" below.
 
 Translations prepared 27 July 2026. Cases edited and the whole book brought into one
-register, 11 August 2026.
+register, 11 August 2026. The forty-nine cases verified against the Chinese and the
+errors repaired, 20 August 2026.
 
 ---
 ---
@@ -922,7 +929,8 @@ Collisions resolved inside the cases:
 - **Kashapa** now belongs only to the **Kashapa Buddha** of case 2, a past buddha.
   Ananda's colleague is **Mahakashapa** everywhere, including case 22's title, which the
   1934 text left bare. The two were one character apart for two different beings.
-- **Goso** and *Hoen* were the same man, 五祖法演, split across cases 35/36/37 and 45 with
+- **Goso** and *Hoen* were the same man, 五祖法演, split across cases 35, 36, 45 and the
+  buffalo koan (case 38 since Part Three's reorder; 37 in the 1934 numbering) with
   nothing linking them. Now Goso throughout.
 - **Seijo** is genuinely two people — the master of case 9 and the girl of case 35.
   Inherited, correct, left alone.
@@ -943,7 +951,8 @@ Roughly 30 passages converted. Constraints observed:
 - **Where "you" would change the question, it was not forced.** Case 2 asks about a
   *category* — "are **you** subject to the law of causation?" is a different question with
   a different answer. That noun went neutral instead: **the enlightened person** (case 2
-  ×6, and case 20's title). Case 9's comment is a maxim about categories and went plural.
+  ×6; case 20's title carried it too until Part Three's verification renamed that page
+  The Person of Great Strength). Case 9's comment is a maxim about categories and went plural.
 - **Specific or indefinite people keep *man*** — Joshu, the man at the gate, the man in
   the tree, the man selling fried cakes. **Technical terms stay** — *the true man*, 真人.
 - **Orphaned pronouns are the failure mode.** Neutralising a noun strands the pronouns
@@ -1019,12 +1028,15 @@ is meant. Representative:
 ## 7. Two places the edit reached the Chinese
 
 Both are departures from the "no case retranslated" rule and are recorded as such.
+**Superseded in scale by Part Three**, the August 2026 verification pass, which repaired
+some forty further places against the Chinese; these two remain the precedent it applied.
 
 - **Case 29 — a recovered joke.** Mumon's comment in Chinese is 不是風動，不是幡動，**不是
   心動** — three negations. The sixth patriarch said mind *is* moving; Mumon negates that
   too, out-doing him, and then asks 甚處見祖師. The 1934 English turned the third negation
   into an affirmation and collapsed the comment into a restatement of the case. Restored.
-- **Case 37 — a substitution, not a restoration.** The Chinese is 水牯牛過**窗櫺**, a
+- **The buffalo koan — a substitution, not a restoration.** (Case 37 when this was
+  written; **case 38** since Part Three restored the Taishō order.) The Chinese is 水牯牛過**窗櫺**, a
   buffalo passing through a **window lattice**: head, horns and four hooves through the
   bars, and the tail stuck. The 1934 English has him leaving an enclosure at a cliff edge
   — **no aperture at all**, which leaves the koan with nothing for the tail to be caught
@@ -1035,7 +1047,7 @@ Both are departures from the "no case retranslated" rule and are recorded as suc
 **關 renders two ways, on purpose.** *Barrier* for the single obstacle you break through
 — case 1's 祖師關, the preface, the afterword's 掉臂度關. *Gate* for checkpoints passed in
 sequence — case 47's three, whose title has always been "Three Gates of Tosotsu." The
-distinction is functional, not accidental, and it is why case 37's buffalo can go through
+distinction is functional, not accidental, and it is why case 38's buffalo can go through
 a gate without colliding with case 1's barrier.
 
 ## 8. Method
@@ -1061,7 +1073,7 @@ decisions:
   "does this parse as English."
 
 The cold read is the one worth defending as method. It caught what rule-based passes
-structurally cannot: that case 37's koan had no aperture in it, that case 40's verse
+structurally cannot: that the buffalo koan (case 37 then, 38 since the reorder) had no aperture in it, that case 40's verse
 named a person who was never there, and — usefully against us — that case 28's restored
 chiasmus *reads like a typesetting error* to someone who does not know the Chinese.
 
@@ -1070,7 +1082,8 @@ chiasmus *reads like a typesetting error* to someone who does not know the Chine
 - **Case 17's fourth line.** 赤腳上刀山, "climb the sword mountain barefoot," which the
   1934 English flattens to "you will be in trouble too." A vivid image reduced to a shrug.
   Not restored: restoring it is retranslation.
-- **Case 37's window lattice**, replaced by a gate (§7).
+- **The buffalo koan's window lattice**, replaced by a gate (§7) — case 38 since the
+  reorder.
 - **無門 doing three jobs at once** — "no gate," the author's name, the book's title. Part
   One records this as the largest unavoidable loss in the translated matter; it is equally
   true across the cases.
@@ -1082,8 +1095,9 @@ chiasmus *reads like a typesetting error* to someone who does not know the Chine
 Each `###` section is baked to an audio file. The front matter sits under no `###`
 heading and is therefore not narrated — which is fortunate, since it holds the markdown
 link, `CBETA T48n2005`, `©`, `CC BY-NC-ND 4.0` and `NOTICE.md`. The narrated body is pure
-ASCII: straight quotes, no curly quotes, no ellipses, and only two non-ASCII characters in
-the whole file, both in front matter (`Taishō`, `©`).
+ASCII: straight quotes, no curly quotes, no ellipses, and only three non-ASCII characters
+in the whole file, all of them in front matter (`Taishō` twice — the second added by Part
+Three's verification sentence — and `©`).
 
 **Audition the Zen Warnings first.** Its eleven couplets depend on the line break after
 each colon; without a pause there the section becomes a stream of contradictory fragments.
@@ -1093,7 +1107,467 @@ individually.
 
 Three `##` page titles changed and may need narration keys rebuilt: **case 20** (The
 Enlightened Man → The Enlightened Person), **case 22** (Kashapa's → Mahakashapa's Preaching
-Sign), **case 37** (A Buffalo Passes Through the Enclosure → the Gate).
+Sign), and the buffalo case (A Buffalo Passes Through the Enclosure → the Gate; case 38
+since the reorder). Part Three's verification then retitled three more — **case 19**
+(Everyday Life Is the Path → Ordinary Mind Is the Path), **case 20** again (The
+Enlightened Person → The Person of Great Strength), **case 33** (This Mind Is Not Buddha
+→ Not Mind, Not Buddha) — and the 37/38 reorder renumbered two pages. Slugs derive from
+titles, so the three retitled pages' saved marks and old deep links were orphaned
+knowingly; the reordered pair kept their slugs and lost nothing.
+
+---
+---
+
+# PART THREE — THE VERIFICATION OF THE FORTY-NINE CASES
+
+August 2026. Part Two edited the 1934 English on its own terms; this part checked it
+against the Chinese. Every case — case, comment, and verse — was read line against line
+with **CBETA T48n2005** open (the same XML witness as Part One, retrieved again 19 August
+2026 from the cbeta-org/xml-p5 repository). Until this pass, nobody had ever done that for
+an edited-Reps text: the errors that read as good English were all still invisible.
+
+Each divergence was classified **error** (the English asserts what the Chinese does not,
+reverses a sense, or destroys the koan's mechanism — the class the §7 case-29 fix belongs
+to) or **choice** (Reps's interpretation, compression, or voice — defensible, and part of
+what this edition is). Errors were repaired, in the book's register, with the smallest
+edit that restores the Chinese. Choices were recorded, not touched. A third pile —
+divergences tangled with a page title, a diorama, or a genuinely disputed reading — was
+**flagged and left alone**; those are listed in §3 and are editorial decisions, not
+philology.
+
+Where Part Two §7 said the edit reached the Chinese in two places, it now reaches it in
+these places too. Every repair below is a knowing, recorded departure from the 1934 text.
+
+## 1. A structural repair first: cases 37 and 38 are back in the Taishō order
+
+In the Taishō (both the 目錄 at 0292c12 and the body), case 37 is 庭前柏樹 — Joshu's tree —
+and case 38 is 牛過窓櫺, the buffalo. The 1934 Senzaki/Reps book printed them the other
+way around, and the first draft of this pass left the 1934 order standing. **Reversed on
+review, 20 August 2026: the edition now follows the original order** — 37 the tree, 38
+the buffalo — since nothing recommends the 1934 accident over the order every other
+edition shares. The dioramas, their tests and the k37/k38 modules swapped numbers with
+their cases; slugs travel with the koan, so saved marks and deep links to both pages
+survived. The narration units under both numbers are stale until the next bake, and every
+"case 37's gate" reference elsewhere in this file now reads case 38.
+
+## 2. The repairs
+
+Each entry: the Chinese with its Taishō line, what the 1934 text said, what the book now
+says, and why it was an error rather than a choice. All repairs are in
+[gateless-gate.md](gateless-gate.md); the narration units they touch are stale until the
+next bake.
+
+**Case 1, comment (0293a11).** 好似法燭一點便著 — like a dharma-candle, one touch and it
+lights. Was "as a candle burning and illuminating the whole universe": instant ignition
+had become gradual cosmic glow. Now "like a candle that takes the flame at one touch."
+
+**Case 1, verse (0293a14).** 喪身失命 — "you lose your body and your life." Was "you lose
+your own Buddha nature" — invented, and doctrinally backwards (Buddha nature is exactly
+what cannot be lost). Now literal.
+
+**Case 2, comment (0293b06).** 便知得前百丈贏得風流五百生 — Mumon's punchline, that the
+five hundred fox lives were a windfall (風流, grace, style), was dropped entirely by Reps.
+Restored as "Then you will also see that the old man's five hundred fox lives were five
+hundred lives of grace." 前百丈 is strictly "the former Hyakujo" — the old man as the
+mountain's earlier abbot — simplified to "the old man" because the English case never
+names him. ⚑ 風流 is contested ground — grace, style, splendor, worldly panache — and
+"lives of grace" is the received English shape, not a uniquely literal one; it may land
+on a published translator's wording and is listed with the coincidences at the end of
+this file.
+
+**Case 3, comment (0293b18).** 天龍同俱胝并童子。與自己一串穿却 — Tenryu, Gutei, the boy
+*and you yourself* are strung on one skewer — a positive image: seeing it strings you on
+with them. Reps had
+"If anyone clings to a finger, Tenryu will be so disappointed that he will annihilate
+Gutei, the boy, and the one who clings" — clinging, disappointment and annihilation all
+invented; union had become punishment. Same class as the case-29 reversal.
+
+**Case 3, verse (0293b22).** 巨靈擡手無多子 — the god raised his hand and it was 無多子,
+no great matter. Reps's fourth line "Old Gutei is a poor imitator" appears nowhere in the
+Chinese; the effortlessness became dispraise. Now "and thought nothing of it." The §5
+line "a god once split a mountain with one hand" stands.
+
+**Case 4, verse (0293b29).** 惺惺添懵 — it adds muddle to the wide-awake. Was "What an
+absurd question!" — editorial comment where the Chinese makes a claim. Now "It muddles
+even the wide-awake."
+
+**Case 5, comment (0293c07).** 活却從前死路頭。死却從前活路頭 — the answer brings the dead
+road to life AND puts the live road to death. Reps kept only the first half; the symmetry
+is the content. Both halves now stand.
+
+**Case 5, verse (0293c11).** 通身迸鬼眼 — demon eyes burst out over their whole bodies.
+Was "lets tears stream from their dead eyes" — the tears invented, the bursting lost.
+
+**Case 6, comment (0293c17).** 壓良為賤 — the slaver's idiom: passing free people off as
+base. Was "He made the good listeners bad" (a §6 grammar repair on top of Reps's
+misreading — the listeners did not become bad; he degraded them). Now "He passed good
+people off as slaves," which also pairs with the dog-meat market fraud beside it.
+
+**Case 6, verse (0293c25).** 迦葉破顏。人天罔措 — Kashapa's face breaks into a smile;
+humans and gods are at a loss. Reps misread 罔措 (at a loss) as "can match" and 破顏 (a
+breaking smile) as "wrinkled face," producing praise of a face. Now literal. 罔措 recurs
+in case 24's verse and is now rendered "at a loss" both times.
+
+**Case 8, case (0294a07).** 拈却兩頭。去却軸。明甚麼邊事 — take off both wheels, remove
+the axle: what does that clarify? The demolition is total. Reps had "removed the hub
+uniting the spokes," asked "what would become of the wheel?", and invented a second
+question ("could he be called the master wheelwright?"). Now the full demolition and the
+one real question. "A hundred spokes" restored from 一百輻 (Reps had rationalised it into
+two wheels of fifty). 兩頭 is literally "the two ends"; the wheels are the received
+referent, not the only possible one.
+
+**Case 8, verse (0294a12).** 達者猶迷 — even the adept goes astray. Reps's line had lost
+its negation by 1934 and §6 repaired it to "none can stop it" — completing Reps's
+invention, since the Chinese has no stopping in it. Now "even the master loses his way."
+
+**Case 11, comment (0294b13–15).** 爭奈趙州却被二庵主勘破 — and yet Joshu was himself seen
+through by the two hermits. Reps: "Yet perhaps Joshu is wrong. Or, through that monk, he
+may have discovered his mistake" — wrong agent, wrong direction, and hedged. And the
+double bind that follows kept only one horn; 若道無優劣。亦未具參學眼 ("…no difference —
+you also lack the eye") is restored, since the two horns are the koan.
+
+**Case 12, case and comment (0294b20).** 惺惺著 — "Be wide awake!" Was "Become sober,"
+which in current English points at alcohol (§5's own register test), and the same 惺惺 is
+"wide awake" in this book's Zen Warnings. Now "Wake up." in both places.
+
+**Case 12, verse (0294b26).** "The true man in a mask" — the mask was Reps's, carried in
+from his comment image; 不識真 has no mask. Now "the true man."
+
+**Case 13, case (0294c03).** 巖頭密啟其意 — Ganto secretly disclosed his meaning to him.
+Was "Ganto admitted this indirectly" — erases the secret disclosure the story turns on.
+Now "Ganto secretly made his meaning known to him." (A first repair said "whispered";
+密 gives the secrecy, not the means — a whisper is a detail the text does not supply.
+Softened on review.)
+
+**Case 13, verse (0294c11).** 末後與最初。不是者一句 — the last and the first are NOT this
+one phrase. Reps: "are they not the same?" — a negation turned into a rhetorical
+affirmation, the same class as the case-29 fix. Now "they are not the same."
+
+**Case 16, comment (0295a14).** 切忌隨聲逐色 — above all, do not chase sounds and forms.
+Was "you need not follow" — a prohibition weakened to non-necessity. Now "must not chase."
+(The same 切忌 weakening in case 30's verse is repaired below.)
+
+**Case 17, comment (0295a29).** 國清才子貴 — when the state is at peace, its talents are
+prized. Was "When the country is prosperous everyone is lazy" — 貴 (prized) had become
+laziness, garbling the aphorism's parallel with the spoiled children.
+
+**Case 19, comment (0295b19).** 南泉被趙州發問。直得瓦解氷消。分疎不下 — questioned by
+Joshu, NANSEN crumbles like tiles and melting ice and cannot explain himself. Reps flipped
+it: "Nansen could melt Joshu's frozen doubts at once." The following sentence's "I doubt
+though if Joshu reached the point that Nansen did" was also invented (縱饒悟去。更參三十年
+始得 compares Joshu to nothing). Mumon needles both men; the English had him praising one.
+
+**Case 21, comment (0295c07).** 家貧難辨素食。事忙不及草書 — too poor to put together even
+a plain meal, too busy even for cursive (the fast script — no time even to scribble).
+Reps read 辨 as "distinguish the taste" and 草書 as fair-copy letters. And 佛法興衰可見 —
+"you can see the rise and fall of the Dharma" — had become "his teaching was just as
+useless." Now the poverty, the scribble, the propped gate (撑門拄戶, the same idiom as
+case 17's verse) and the deadpan.
+
+**Case 22, case (0295c14).** 倒却門前剎竿著 — take down the flagpole in front of the gate.
+Reps added "and put up your own," inventing a succession-advertisement the cut deliberately
+lacks. "Preaching sign" stays — it is the title's word — but nothing goes up.
+
+**Case 22, verse (0295c21).** 兄呼弟應揚家醜 — brother calls, brother answers, *airing the
+family shame*. The sting was dropped; case 34's comment keeps the same idiom. Restored.
+
+**Case 23, case (0295c25).** 悚慄 — trembling with fear (Emyo, unable to lift the robe).
+Was "for shame"; the shame comes two lines later, the shudder is fear.
+
+**Case 25, case (0296a24).** 諦聽諦聽 — "Listen carefully! Listen carefully!" Was "Do you
+understand?" — an imperative turned into a question.
+
+**Case 26, case (0296b03).** 一得一失 — "One gain, one loss." The master does not say
+which monk. Reps assigned it ("The state of the first monk is good, not that of the
+other"), which guts Mumon's own question three lines later — 且道是誰得誰失, "who gained
+and who lost?" — the question the koan runs on.
+
+**Case 26, comment (0296b06).** 切忌向得失裏商量 — above all, do not weigh it out in gain
+and loss: an order to the reader, not (as Reps had it) Mumon declining a topic.
+
+**Case 27, comment (0296b14).** 郎當不少 — "It left him in no small mess." Was "He must
+have been greatly upset." The same phrase in Meng Gong's colophon is translated in Part
+One as "makes no small mess of it"; the two now agree.
+
+**Case 28, case (0296b24).** 不疑天下老和尚舌頭 — never again doubt the tongues of the old
+masters of all the world. Reps narrowed the vow to "the teacher's words" — one man. The
+claim is universal, which is what makes it worth doubting.
+
+**Case 28, comment (0296c11–13).** Two images restored. 憐兒不覺醜 — a doting parent
+cannot see the child's ugliness (was "so kind he forgot his own dignity" — the blindness
+is to Tokusan's faults, not his own dignity). And 見他有些子火種。郎忙將惡水驀頭一澆澆殺 —
+seeing one live ember, he doused it dead with slop water — Mumon's reading of the
+blown-out candle. Reps had "pouring muddy water over a drunken man to sober him": no
+drunk, no sobering, and the act is extinguishing, not reviving. 冷地看來一場好笑 is now
+"Looked at coldly, the whole thing is one good laugh."
+
+**Case 28, verse (0296c16).** 雖然救得鼻孔。爭奈瞎却眼睛 — he saved his nose but went
+blind. Was "His nose was very high, but he was blind after all" — 救得 (rescued) misread
+as pride. The paradox — the saving cost the eyes — is the verse.
+
+**Case 30, comment (0297a02).** 大梅引多少人錯認定盤星 — Daibai has led many to misread
+the 定盤星, the zero-marker on a steelyard: to be cheated on the weight. Was "has given
+many a pupil the sickness of formality" — invented. The same idiom in case 46's verse
+(below) now uses the same English.
+
+**Case 30, verse (0297a06).** 切忌尋覓 — "never go searching around." Was "you need not
+search around"; same 切忌 repair as case 16.
+
+**Case 31, verse (0297a19).** 問既一般。答亦相似。飯裏有砂。泥中有刺 — the question was
+the same, the answer alike; sand in the rice, thorns in the mud. Reps read 一般 (the same)
+as "common" and rebuilt lines three and four into similes about question-types. The flat
+parallel — hidden grit inside a plain exchange — is restored, keeping Reps's bowl and mud.
+
+**Case 32, case (0297a22).** 世尊據座 — the Buddha held his seat. Was "kept silence"; the
+answer is the seated presence, and silence is what the outsider ruled out.
+
+**Case 32, comment (0297a27).** 宛不如外道見解 — clearly fell short of the outsider's
+understanding. Was "did not go beyond" — strictly-worse had become at-most-equal.
+
+**Case 32, verse (0297b02).** 懸崖撒手 — hanging from the cliff, let go: the release. Was
+"Walk over the cliffs with hands free" — confident strolling where the Chinese lets go of
+the last hold.
+
+**Case 33, case (0297b04).** 非心非佛 — "Not mind, not Buddha." Two negations, the flip of
+case 30's 即心即佛. Reps's "This mind is not Buddha" is a different, single statement, and
+it made case 33 nearly indistinguishable from case 34's 心不是佛. The title keeps the 1934
+wording (§3 below).
+
+**Case 33, verse (0297b07).** 路逢劍客須呈。不遇詩人莫献 — meeting a swordsman you MUST
+present the sword; NOT meeting a poet, do NOT offer the poem. Reps dropped both the
+obligation and the negation ("you may give… you may offer"), flattening the asymmetry
+that is the couplet's point.
+
+**Case 34, verse (0297b14).** 雨下地上濕 — when rain falls, the earth is wet. Was "when
+the earth is parched rain will fall" — providence where the Chinese is a truism, and the
+truism's banality is the teaching.
+
+**Case 35, comment (0297b19).** 切莫亂走 — "do not go running wildly about" — restored
+between the failure and the boiling crab; it is the instruction the crab illustrates.
+
+**Case 36, comment (0297b29).** 也須一切處著眼 — you must keep your eye on it everywhere.
+Was "you should look about without seeing anything" — near-opposite: watchfulness
+everywhere had become vacant gazing.
+
+**Case 36, verse (0297c03).** 直下會便會 — understand right there, and you understand. Was
+"and you will be called one who understands Zen" — the punch had become a credential.
+
+**Case 37, verse (0297c11)** — Joshu's tree, case 38 before the reorder. 滯句者迷 —
+stuck in the phrases, you go astray. Was "if you try to explain with words, you will not
+attain enlightenment in this life" — the lifetime sentence invented.
+
+**Case 24, verse (0296a20).** 進步口喃喃。知君大罔措 — press forward chattering and you
+(the reader) will be utterly at a loss. Reps aimed it at Fuketsu and invented embarrassed
+listeners. Lines one and two, which are genuinely ambiguous about their subject, stand.
+
+**Case 39, comment (0297c27).** 自救不了 — you cannot even save yourself. Was "perceive
+yourself"; 救 is save.
+
+**Case 42, case (0298a28).** 云何女人得近佛坐。而我不得 — how may this woman sit close to
+the Buddha's seat, when I may not? Reps recast the question as attainment of her state;
+the Chinese asks about the seat.
+
+**Case 42, verse (0298b12–13).** 渠儂得自由 — freedom, whoever the subject is (渠儂 is
+Song colloquial "that one," and readings split between the two bodhisattvas and the girl;
+the English commits to neither: "Freedom, either way"). Was "Neither is a good actor" —
+freedom granted had become skill denied. And 敗闕當風流 — the fiasco passes for style —
+was "Had both failed, the drama still would be a comedy," an invented conditional; now
+"The fiasco itself made a fine performance."
+
+**Case 43, verse (0298b22).** 佛祖乞命 — buddhas and patriarchs beg for their lives. Was
+"cannot escape this attack." The Chinese repeats the preface's 乞命, and the book's own
+preface already has "beg for their lives"; the echo is now audible in English.
+
+**Case 46, verse (0298c18).** 錯認定盤星 — "you will misread the marker on the scale."
+Was "you will cling to the measure of the hundred feet" — invented, and inconsistent with
+case 30's rendering of the same idiom.
+
+**Case 47, case (0298c23–24).** 便知去處…向甚處去 — you should know where you are GOING;
+where are you going? Was "know where you are… Where are you?" — the destination had become
+a location. The third gate asks about the journey after death.
+
+**Case 48, case (0299a05).** 東海鯉魚打一棒。雨似盆傾 — strike the carp of the Eastern Sea
+one blow and the rain pours like an upturned basin. Reps had the carp "tipping over the
+rain-cloud with his tail" — tail and cloud invented, the blow and the basin gone. Reps's
+"Dragon Carp of the Eastern Sea" is kept.
+
+**Front matter.** The "This edition" paragraph now states the verification: every case
+checked line by line against the Chinese, and repaired where the 1934 rendering strayed.
+That sentence is the claim this part of the file substantiates.
+
+## 3. The seven flagged items, and how each was ruled — 20 August 2026
+
+All seven were put to the author and resolved the day after the pass. The rulings:
+restore the Chinese wherever the 1934 text is wrong, and retitle wherever the title is
+wrong — titles included, deliberately, knowing that slugs derive from titles, so a
+retitled page orphans its saved marks and old deep links.
+
+1. **Case 2 — 不昧因果 (0293a22). REPAIRED.** Hyakujo's answer now reads "The enlightened
+   person is not blind to the law of causation" (case and comment both), restoring the
+   one-character flip against 不落 "is not subject to." The verse now carries the same
+   pair — "Not subject, not blind: / the same die shows two faces. / Not blind, not
+   subject: / a thousand errors, ten thousand errors" (千錯萬錯 literal) — where Reps had
+   a third rendering, "controlled," and "both are a serious error."
+2. **Case 18 — the weighing scene. REPAIRED in the text, kept in the art.** The case is
+   now the bare exchange the Chinese is: "A monk asked Tozan: 'What is Buddha?' / Tozan
+   said: 'Three pounds of flax.'" The weighing is the commentators' traditional staging;
+   the k18 diorama keeps it as this page's illustration, and the module's header records
+   the split. Title unchanged ("Tozan's Three Pounds" is exact).
+3. **Case 19 — 平常心是道. REPAIRED AND RETITLED.** The page is now "Ordinary Mind Is the
+   Path"; Nansen answers "Ordinary mind is the path"; the exchange runs on aiming (還可
+   趣向否 "Can it be aimed at?", 擬向即乖 "If you aim for it, you will be far away from
+   it", 不擬 "If I do not aim for it…"), and 不擬之道 is "the true path beyond aiming" —
+   the callback restored. Slug changed with the title.
+4. **Case 20 — 大力量人. REPAIRED AND RETITLED.** Now "The Person of Great Strength";
+   the question is the strongman paradox, "Why can the person of great strength not lift
+   their leg?" (擡脚不起), the second utterance "It is not with the tongue that we speak"
+   (開口不在舌頭上), and the verse asserts instead of supposing: "One lift of the leg
+   turns the great ocean over; / one bow of the head looks down on the heavens" (踏翻
+   treads it over — a first repair said "kicks," which 踏 does not say; softened on
+   review).
+5. **Case 33 — the title. RETITLED** to "Not Mind, Not Buddha," matching the repaired
+   body and the Contents pairing against case 30's "This Mind Is Buddha."
+6. **Case 41 — 謝三郎不識四字 (0298a21). REPAIRED.** Now "Ha! Sha Sanro cannot read even
+   four words" — the line translated as it stands, Japanese reading per the names
+   rule, and 字 rendered "word" as case 1 already renders 無字 ("this one word, Mu"). The research that settled it: 謝三郎 is the proverbial illiterate ("knows the
+   three characters of his own name and not a fourth"), and the Japanese commentarial
+   tradition points the jab at **Bodhidharma himself**, whose famous answer to Emperor Wu
+   was 不識, "I don't know" — a compliment-shaped jab at not-knowing, which Reps's
+   "brainless disciples" inverted into plain insult. The verse is also repaired: 事因囑起
+   "The whole affair began with the handing-down," 撓聒叢林 "The uproar that fills the
+   monasteries," and 元來是爾 "was you, all along" — the direct address restored, its
+   target left as open as the Chinese leaves it.
+7. **Case 49 — REPAIRED throughout the case proper.** The sutra line reads "Stop, stop.
+   Do not speak. My teaching is subtle, beyond all thinking" in both places; 妙從何有 is
+   "Where does its subtlety come from?"; 豈但豐干饒舌。元是釋迦多口 is "It was not only
+   Bukan whose tongue ran loose: Shakyamuni himself was all mouth" (豐干 takes the
+   Japanese reading, Bukan of the Kanzan-Jittoku trio); the spook-and-kudzu sentence
+   (造作妖怪…葛藤纏倒) is restored in place of Reps's "persons like Mumon… fry up useless
+   cakes"; the dropped 匙挑不上。甑蒸不熟 ("no spoon can lift it, no steamer can cook it
+   through") and the bystander's question (傍人問云) are back; the little circle is drawn
+   **around the words "beyond thinking"** (却急去難思兩字上), which Reps had as "on the
+   sutra"; and 維摩不二門 is "Vimalakirti's gate of not-two" — Reps's "Vimalakirti's
+   gateless gate" had conflated the nonduality gate with this book's own title. The verse
+   follows the Chinese: "If anyone tells you fire is the lamp, / turn your head away and
+   do not answer. / Only a thief knows a thief: / one question, and he owns it at once"
+   (一問即承 — the thief confesses at one question; Reps's "without question" inverted
+   it). The first paragraph of the case — Reps's loose rendering of Amban's letter — is
+   untouched: the careful translation of the letter closes the afterword, and the book's
+   blurb owns the doubling.
+
+## 4. Divergences recorded as choices — checked, and left as Reps
+
+By case. These are compressions, glosses and voice, not errors; several are the book's
+charm. None should be "fixed" without rereading §2 of Part Two first.
+
+- **1** — the naming sentence 遂目之曰禪宗無門關 (Mumon christening the book after Mu),
+  the tangled eyebrows (眉毛廝結), the 360 joints and 84,000 pores, and General Guan's
+  sword (關將軍大刀 → "a great warrior with a sharp sword") are all compressed away; verse
+  line 2 replaces 全提正令 ("the full presentation of the true imperative") with "This is
+  the most serious question of all."
+- **2** — 大修行底人 "person of great practice" → "the enlightened person" (see §4 of
+  Part Two); Obaku's question reframed around "some modern master." (The verse's
+  "controlled" pair was repaired under §3's first ruling; its line 2, 兩采一賽 — "two
+  throws, one game," a gambling idiom — stays as Reps's "the same die shows two faces.")
+- **4** — the bearded picture is Reps's scene-setting (the Chinese only asks why the
+  Western barbarian has no beard); 早成兩箇 "it has already become two" → "you never saw
+  him at all."
+- **5** — "ego-killing" is Reps's benign gloss on 惡毒 (sheer malice).
+- **6** — Mahakashapa "tried to control the lines of his face" is invented psychology;
+  傍若無人 → "thought he could cheat anyone"; 誑謼閭閻 → the kept "city slicker" line.
+- **7** — the flat assertion 者僧聽事不真。喚鐘作甕 is softened to "I doubt… I hope"; the
+  verse's lantern-seeker is Reps unpacking 燈是火 into an anecdote.
+- **9** — 大通智勝佛 unnamed ("a Buddha who lived before recorded history"); 其問甚諦當
+  ("a thoroughly apt question") → "self-explanatory"; 為伊不成佛 ("because he does not
+  BECOME a buddha") → "He was not a Buddha"; the verse's immortal-without-a-fief →
+  "desire no praise."
+- **10** — Fan Dan and Xiang Yu genericized to "poorest/bravest man in China"; "You have
+  Zen" is an explanatory insert; 活計雖無 is "no livelihood at all," slightly softened.
+- **11** — 肯一箇不肯一箇 does not say which fist was approved; Reps assigned
+  first/second. 殺人刀／活人劍 (two blades) merged into one sword — the received
+  interpretation, kept.
+- **13** — 末後句 "the last word" → "the ultimate truth" throughout; the cheeky 老漢 and
+  the unrung bell dropped; 一棚傀儡 "a stageful of puppets" → "dummies."
+- **14** — "boldly" is added to the cut; 險 ("danger!") → "you should watch your own
+  head." Both keep the force.
+- **15** — 三頓棒 is three ROUNDS of the staff, not three blows (title says blows; kept);
+  飯袋子 "rice-bag!" → "good for nothing"; 江西湖南 → "one monastery to another"; 與洞山
+  出一口氣 ("vindicate Tozan / breathe one breath with him") → "eat the same food as
+  Tozan"; 草木叢林皆合喫棒 ("the grasses and trees all deserve the staff" — with 叢林
+  punning on "monastery") → "every one of you."
+- **16** — "It is not true Zen" is added; 騎聲蓋色 "rides sounds and caps forms" →
+  "controls"; the verse personalizes 事同一家 ("all things one family") into
+  family/stranger. The chiasmus survives.
+- **17** — 辜負 is "apologize" here but "disappointed yourself" in the afterword (same
+  word; inherited); verse lines 1–2 are a Reps rewrite and line 4 is §9's known loss —
+  all left with it.
+- **22** — 靈山一會 ("the Vulture Peak assembly, solemnly not yet dispersed") → "the old
+  brotherhood still gathering" (case 6 translates 靈山); Vipasyin Buddha's gāthā
+  genericized.
+- **23** — 本來面目 "original face" → "true self" throughout (iconic; consistent); the
+  grandmother of 老婆心切 dropped ("certainly was kind"); the lychee generic; 擲 "flung"
+  → "placed."
+- **24** — the technical 語默涉離微 simplified to "without speaking, without silence";
+  verse lines 1–2 ("another's words, not his to give") import the comment's borrowing
+  theme into a genuinely ambiguous couplet.
+- **25** — 離四句絕百非 → "transcendent, above words and thought."
+- **26** — the meditation-screen detail is added; verse line 4 綿綿密密不通風 ("airtight,
+  no wind gets through") → "retire from every wind."
+- **28** — 天下人不奈伊何 and the solitary peak are loose; "in comparison with this
+  enlightenment" added twice to the torch speech; the verse's 聞名/見面 (name/face)
+  became the cousin proverb about hearings and seeings — the chiasmus itself was restored
+  in §2 of Part Two.
+- **29** — 二僧悚然 (the monks shudder) still ends the Chinese case, not the English;
+  "passing by" added; 一狀領過 ("convicted on one indictment" — the courtroom register of
+  據欵結案) → "the same understanding"; 忍俊不禁一場漏逗 ("could not hold back — one
+  grand leak") → the dull-heads bargain.
+- **31** — 臺山 is Mount Wutai (glossed as "a popular temple"); 好箇師僧又恁麼去 ("a fine
+  monk, and off he goes like that") → "He also is a common pilgrim"; 著賊 ("got robbed")
+  expanded into the spy image; 無大人相 → "not an able general."
+- **35** — the Tang tale is unpacked into the case (the Chinese is one line); 萬福萬福
+  ("Blessings! Blessings!" — a deadpan felicitation) → "Each is happy in its unity and
+  variety."
+- **37** (the tree, since the reorder) — 柏樹 is a cypress/juniper; "oak" is the 1934
+  book's famous rendering, kept with its title.
+- **38** (the buffalo, since the reorder) — 顛倒 dropped from "open one eye upside-down";
+  被壞 ("is ruined") → "will be butchered." The gate itself is §7's recorded departure.
+- **39** — Graduate Zhang Zhuo (張拙秀才) unnamed; 孤危 ("solitary and steep") →
+  "particular skillfulness."
+- **40** — 大溈 (Mount Gui) → "a new monastery"; 重關 "double barrier" → "a barrier";
+  佛如麻 "buddhas thick as hemp" → "everything, even the Buddha."
+- **41** — 六根不具 ("not all six faculties intact," wry) → "lost his arm and was
+  deformed"; 為汝安心竟 (a completed act: "There — I have finished pacifying it") → a
+  state ("is pacified already"). The punchline and verse were repaired under §3's
+  sixth ruling.
+- **42** — 不通小小 is genuinely unclear ("no small performance" / "beyond the petty");
+  "set a very poor stage" may invert it, unresolved; 那伽大定 (the naga's samadhi) and
+  業識忙忙 simplified.
+- **45** — 釋迦彌勒 → "the past and future Buddhas" (case 37's comment names them); 奴
+  "slaves" → "servants."
+- **46** — 麁飡易飽。細嚼難飢 (coarse food fills fast; fine chewing keeps hunger away) →
+  "living on poor food…"; 𢬵身能捨命 ("ready to fling away body and life") concretized to
+  jumping; 嗄 (the grunt) → "Look out!"
+- **47** — 設三關問學者 ("set three barriers to question students") → "built three gates
+  and made the monks pass through them" (the book's imagery, kept); 撥草參玄 ("parting
+  the grasses to seek the profound") → "studying Zen."
+- **48** — 兩箇駞子相撞著 "like two CAMELS colliding" (駞 is CBETA's 2019 emendation from
+  柳幹康's collation of the Muromachi manuscript; the Taishō prints 馳) → "two riders
+  neither of whom can get ahead of the other," which fits the Taishō reading loosely and
+  keeps the deadlock; 世上應無直底人 ("no one in the world could walk straight") → "It is
+  very difficult to find the right person"; verse lines 3–4 (機先, 向上竅) paraphrased.
+- **49** — the letter appears twice by design (Reps's rendering opens the case, the new
+  translation closes the afterword — the book's blurb owns it), and that first
+  paragraph stays Reps's voice, including "as a bargain" where the letter's 大衍
+  allusion lives. Everything from the sutra quotation onward was repaired under §3's
+  seventh ruling.
+
+## 5. Narration
+
+After the second round — the seven rulings, the retitles, and the 37/38 reorder — the
+repairs touch 70 of the 153 narration units (25,268 characters — still a modest bake).
+`node scripts/build-narration.js --dry-run` lists them. Not baked as part of this pass:
+the wording should survive review first, since a re-worded line after baking is a unit
+baked twice.
 
 ---
 ---
@@ -1184,6 +1658,12 @@ nobody has to discover them later:
   A comparative (*is harder*) was tried and dropped: it makes the opposition relative where
   the Chinese states it flat. 難 says *hard*, not *harder*.
 
+- **"five hundred lives of grace"** for 風流五百生 — case 2's restored punchline (Part
+  Three). The phrase-shape is the received one for this line and may land on Shibayama's
+  or Aitken's exact wording; the published fox-case pages could not be re-fetched from
+  this session to verify. If it proves exact and unwanted, "five hundred lives lived in
+  style" is the ready alternative.
+
 **Not yet re-checked:** the Zen Warnings, Huanglong's Three Barriers and Zongshou's verse.
 The published volumes carrying that back matter could not be fetched past their front
 sections from this session. Those three should be run against Shibayama and Yamada before
@@ -1214,8 +1694,9 @@ Three further traps were found that the brief does not list:
 
 - **瑞巖 is two different mountains.** Zongshou's is in Ningbo; case 12's is in Taizhou. Carrying
   the 1934 romanisation "Zuigan" across sends the reader to the wrong man.
-- **五祖 is two different men.** In the 1934 cases it is Fayan — who appears as **Goso in cases
-  35, 36, 37 and 45** (an earlier draft of this file said 38; case 38 is Joshu's oak tree). In
+- **五祖 is two different men.** In the cases it is Fayan — who appears as **Goso in cases
+  35, 36, 38 and 45** (numbering per Part Three's restored Taishō order; the buffalo koan
+  was case 37 in the 1934 book, and case 37 is now Joshu's tree). In
   Huanglong's Three Barriers it is almost certainly Hongren. Following the naming rule here
   would introduce the error.
 - **幹緣 is not 勸緣.** The first runs the project; the second raises the money.
@@ -1270,7 +1751,9 @@ Three things this file exists to prevent:
 
 1. **Do not "fix" a deliberate divergence.** Several wordings are odd on purpose, to avoid
    coinciding with a published translation. They look like errors and one has already been
-   reverted by accident. The list is above.
+   reverted by accident. The list is above. The same goes the other way: every repair in
+   Part Three §2 was made against the Chinese on purpose — do not "restore" a familiar
+   Reps line without reading its entry first.
 2. **Do not harmonise the flagged uncertainties.** Where the Chinese will not decide between
    two readings, the English was built to survive both. Picking one quietly loses information
    that took real work to establish.

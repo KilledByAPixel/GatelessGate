@@ -26,10 +26,10 @@ const rigCamera = (heading = k19.camera.heading, aspect = 1.78) =>
 
 test('module shape matches the koan contract', () => {
   assert.equal(k19.id, 19);
-  assert.equal(k19.slug, 'everyday-life-is-the-path');
+  assert.equal(k19.slug, 'ordinary-mind-is-the-path');
   assert.equal(k19.accent, ACCENT);
   assert.ok(k19.tier === 1 || k19.tier === 2);
-  assert.equal(k19.title, 'Everyday Life Is the Path');
+  assert.equal(k19.title, 'Ordinary Mind Is the Path');
   for (const f of ['case', 'comment', 'verse']) {
     assert.ok(k19.text[f] && k19.text[f].trim().length > 0, `text.${f} empty`);
   }

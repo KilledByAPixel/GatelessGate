@@ -53,7 +53,7 @@ const SEEDS = { seed: 35, groundSeed: 58, pathSeed: 17 };
 // second thing left to go stale.
 //
 // An OAK, not the scatter's broadleaf: it is bigger and broader than anything
-// the hub plants (tests/k38 pins that), so the one tree in this picture that
+// the hub plants (tests/k37 pins that), so the one tree in this picture that
 // matters reads as his rather than as one more tree that happened to be there.
 const TREE = {
   kind: 'oak',

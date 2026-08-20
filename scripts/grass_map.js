@@ -112,7 +112,7 @@ console.log(`\npatchiness ${PATCHINESS} · near field (r<12): ${nearKept}/${near
 // that actually gets noticed. Check the spots each case stands its figures on.
 // each case seeds its own field (composeWorld: seed * 81), so check each one's
 for (const [name, x, z, s] of [['k29 monks', 1.4, 1.7, 29], ['k29 gate', 1.4, -2.6, 29],
-  ['k6 assembly', 1.2, -2.2, 6], ['k7 basin', 2.15, 0.9, 7], ['k37 buffalo', 1.0, 0.1, 37],
+  ['k6 assembly', 1.2, -2.2, 6], ['k7 basin', 2.15, 0.9, 7], ['k38 buffalo', 1.0, 0.1, 38],
   ['k1 dog', 0, 0, 1]]) {
   const ring = [];
   for (let a = 0; a < 8; a++) {

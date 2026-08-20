@@ -56,7 +56,7 @@ const CAM = { distance: 17, target: [3.25, 1.25, -1.3], heading: -24.5, pitch: 1
   faceMonk(monk, fuketsu.position);
   scene.add(monk);
   
-  // A buffalo (k37's, off its tether) grazing far up the meadow — spring
+  // A buffalo (k38's, off its tether) grazing far up the meadow — spring
   // in southern China is a WORKED landscape, and one grazing animal in
   // the middle distance is what says so without saying anything. Angled
   // away from camera, head down: grazing, not posing.

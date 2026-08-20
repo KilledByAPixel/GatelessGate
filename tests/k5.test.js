@@ -260,7 +260,7 @@ test('build stages the predicament: cliff, grey oak, one man alone over a real d
   assert.equal(body.material.color.getHexString(), deep, 'the hanging robe carries the seal');
   const canopy = found.oak[0].children.find((c) => c.name === 'canopy');
   assert.equal(canopy.material.color.getHexString(), new THREE.Color(WASH.deep).getHexString(),
-    'the oak stays grey — k38 owns the red tree');
+    'the oak stays grey — k37 owns the red tree');
   // the precipice is REAL: the ground mesh is carved below the lip. Sample
   // the actual geometry west of the cliff line and it must fall away, while
   // the meadow east of it stays put.

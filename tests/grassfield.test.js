@@ -50,7 +50,7 @@ test('every case is staged on ground that has grass', () => {
   // composeWorld seeds the field with koan seed * 81
   for (const [name, x, z, seed] of [
     ['k1 dog', 0, 0, 1], ['k6 assembly', 1.2, -2.2, 6], ['k7 basin', 2.15, 0.9, 7],
-    ['k29 monks', 1.4, 1.7, 29], ['k29 gate', 1.4, -2.6, 29], ['k37 buffalo', 1.0, 0.1, 37],
+    ['k29 monks', 1.4, 1.7, 29], ['k29 gate', 1.4, -2.6, 29], ['k38 buffalo', 1.0, 0.1, 38],
   ]) {
     let sum = 0;
     for (let a = 0; a < 8; a++) {

@@ -92,7 +92,7 @@ const CAM = { distance: 10.5, target: [-5.05, 2.3, -1.6], heading: -35, pitch: -
   scene.add(cliff);
 
   // ---- the tree at its lip ---------------------------------------------
-  // Grey through and through: k38's oak owns the red canopy, and this case's
+  // Grey through and through: k37's oak owns the red canopy, and this case's
   // one warm note hangs from the branch, not on it.
   const oak = makeOak({ height: OAK.height, seed: OAK.seed });
   oak.position.set(OAK.x, 0, OAK.z);

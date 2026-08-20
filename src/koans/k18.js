@@ -10,7 +10,11 @@ import {
 const ID = 18;
 
 // A monk asks what Buddha is while Tozan happens to be weighing flax, and
-// Tozan answers with the weight. The scene is therefore not a teaching hall
+// Tozan answers with the weight. In the Chinese the answer is a bare
+// non-sequitur ("Three pounds of flax") with no scene attached; the weighing is
+// the commentators' traditional staging, and since the verification pass the
+// text gives the answer bare while this diorama keeps the staging as its
+// illustration. The scene is therefore not a teaching hall
 // but a working one: the steelyard, the flax, and a question arriving at the
 // wrong moment.
 //

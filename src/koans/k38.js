@@ -1,285 +1,189 @@
 import * as THREE from '../../lib/three.module.js';
 import TEXT from './text/mumonkan.js';
-import { PAPER, ACCENT, ACCENT_DEEP, WASH } from '../palette.js';
+import { PAPER, ACCENT, ACCENT_DEEP } from '../palette.js';
 import {
-  aimMonk, composeWorld, faceMonk, makeMonk, makeOak, makePath, makeTree,
-  tapMeshes,
+  composeWorld, makeBuffalo, makePen, makeMonk, faceMonk,
+  makeLights, tapMeshes,
 } from '../kit/index.js';
-import { washMaterial } from '../render/material.js';
-import { makeLights } from '../render/lights.js';
-import { hash1 } from '../util/noise.js';
 
 const ID = 38;
 
-const LEAF_POOL = 12;    // hard ceiling: a leaf is always borrowed, never made
-const LEAF_FALL = 6.4;   // seconds from the canopy to the grass — a leaf takes its time
-const LEAF_REST = 7.0;   // then it just lies there, because that is what leaves do
-const LEAF_SINK = 0.9;   // and the grass takes it back
-// where a landed leaf lies: clear of the swept apron's rim (0.09) so a leaf that
-// drifts in under the tree rests ON the earth instead of inside it, and low
-// enough that one landing in the meadow nestles down among the blades
-const LEAF_LIE = 0.14;
-const PER_TAP = 3;       // "a few"
-const AUTO_EVERY = 13;   // and now and then one lets go with nobody touching it
-
+// HE TURNS ALL THE WAY ROUND. Tug the tail and the buffalo swings clockwise to
+// face away, stops and shakes it, then carries on the same way round until he
+// is standing exactly as he was — one full circle, always the same way round.
+//
+// Which is the koan, and it is better than the swish alone was. His head, horns
+// and body pass through — everything passes through — and then his tail comes
+// round after them and he is exactly where he started, with nothing having
+// happened. A full circle also costs nothing to end: 2*PI is the same heading
+// he began at, so the shape below can simply return 0 once it is over instead
+// of holding a wound-up offset for the life of the page.
+//
+// Clockwise seen from above is DECREASING rotation.y — the right-hand rule
+// about +y turns the other way, and getting this backwards is a bug you can
+// only catch by looking.
+const TURN_IN = 2.4;      // the first half, to face away
+const SHAKE = 1.7;        // stopped, tail going
+const TURN_OUT = 2.4;     // and round the rest of the way
+const TURN_SPAN = TURN_IN + SHAKE + TURN_OUT;
+const TURN_LEAN = 0.05;   // radians of bank into the turn: a heavy animal pivoting,
+                          // not a model on a turntable. The legs do not step —
+                          // makeBuffalo has no walk — so this is what carries the
+                          // weight, and it is why the turn is slow.
+const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
+// Turns completed, `u` seconds after the tug: 0 at rest, 0.5 while he stands
+// facing away, 1 at the far end — which is the same heading as 0.
+function turnAt(u) {
+  if (!(u >= 0) || u >= TURN_SPAN) return 0;
+  if (u < TURN_IN) return 0.5 * smooth(u / TURN_IN);
+  if (u < TURN_IN + SHAKE) return 0.5;
+  return 0.5 + 0.5 * smooth((u - TURN_IN - SHAKE) / TURN_OUT);
+}
+// how fast he is turning, as a fraction of full pace — what the bank rides on
+function turnRate(u) {
+  if (!(u >= 0) || u >= TURN_SPAN) return 0;
+  if (u < TURN_IN) { const t = u / TURN_IN; return 6 * t * (1 - t); }
+  if (u < TURN_IN + SHAKE) return 0;
+  const t = (u - TURN_IN - SHAKE) / TURN_OUT;
+  return 6 * t * (1 - t);
+}
 // The framing, named so composeWorld can have it too: `view` lets the
 // scatter refuse spots no reachable heading can see (kit/scenery.js).
-const CAM = { distance: 14.3, target: [1.05, 1.75, -1.6], heading: 156.5, pitch: 5, minPitch: 1.6 };
+const CAM = { distance: 13.8, target: [1.45, 1.3, -1.5], heading: 29, pitch: 21 };
   export default {
   id: ID,
-  slug: 'an-oak-tree-in-the-garden',
+  slug: 'a-buffalo-passes-through-the-gate',
   title: TEXT[ID].title,
   accent: ACCENT,
-  tier: 1,
+  tier: 2,
   text: { case: TEXT[ID].case, comment: TEXT[ID].comment, verse: TEXT[ID].verse },
-  ambience: ['wind:0.16', 'music'],
-  mood: 'yo',      // one magnificent tree, wind through the branches
-  
-  // The tree is six units of the eight in frame, so this case gets a wider,
-  // higher shot than the standard diorama: the crown has to fit, and the two
-  // men have to end up small at the bottom of the picture.
-  // Sat back and levelled off: the closer, higher shot looked DOWN on the monks,
-  // which turns a robed figure into a cone. Target sits between the oak and the
-  // pair so both carry the frame.
+  ambience: ['wind:0.2:broadleaf', 'music'],
+  // Orbit around the BUFFALO. On the shared default target the pivot landed on
+  // the middle of a fence panel, so the camera swung around a wall while the
+  // subject drifted across frame — the scene appeared to rotate about nothing.
   camera: CAM,
   
   build(ctx) {
   const { audio, input, touched } = ctx;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(PAPER);
-  // a touch thinner than the house 0.030: the oak sits sixteen units out and
-  // the standard fog eats the one red thing in the book's most ordinary scene
-  scene.fog = new THREE.FogExp2(PAPER, 0.027);
-  scene.add(makeLights());
+  scene.fog = new THREE.FogExp2(PAPER, 0.030);
+  scene.add(makeLights({ sun: { heading: 56, pitch: 47 } }));
   
-  // A garden walk, not a road. It comes out of the foreground, runs between
-  // the two men and passes under the edge of the oak on its way into the fog —
-  // so the tree is beside the path you are already on, which is the point.
-  const path = makePath({ from: [3.6, 8], to: [-3.0, -20], width: 1.3, seed: 38, groundSeed: 21, wander: 1.1 });
-  scene.add(path);
+  // The enclosure. Three walls of lattice — and the fourth side is not missing
+  // but a DOUBLE DOOR: one leaf standing shut, the other pushed ajar, the way a
+  // gate stands after somebody slipped through and did not look back. Both
+  // leaves standing wide read as too open, so one is shut. A wall that was
+  // never built says nothing; a door left ajar says the pen has never once held
+  // him. The shut leaf is the far corner, the ajar one the near — it opens
+  // across the buffalo's own facing line, toward the lens.
+  const PEN = { x: 1.0, z: -2.3, size: 5.4 };   // room to stand, not a crate
+  const pen = makePen({ size: PEN.size, height: 1.9, open: '+x', panelsPerSide: 2, doors: [0, 0.62] });
+  pen.position.set(PEN.x, 0, PEN.z);
+  scene.add(pen);
   
-  // ---- the oak ---------------------------------------------------------
-  // Every scene in this book has trees in it. This one's LEAVES are red, and
-  // that does Joshu's pointing for him — the wood stays on the same grey ramp
-  // as every other tree. Deep accent, not full: across a mass this size the
-  // bright red stops reading as a seal and starts reading as glare.
-  // 5.4, down from 5.8: the taller crown filled two thirds of the frame and
-  // pushed Joshu into the corner as a blob, and Joshu POINTING at the tree is
-  // the case. Most of that fix was the camera, though — this cannot go much
-  // lower. Scatter trees reach 4.2, and k38.test.js requires a clear 1.0 of
-  // daylight above the tallest of them, because "the oak is the biggest thing
-  // growing" is the property that makes Joshu's answer land at all.
-  const OAK = { x: -1.0, z: -3.0, height: 5.4, radius: 3.5 };
-  // seed 20 of the first sixty: the most compact crown still balanced over
-  // its own trunk
-  const oak = makeOak({ height: OAK.height, seed: 20, canopyColor: ACCENT_DEEP });
-  oak.position.set(OAK.x, 0, OAK.z);
+  // He stands in the middle of his own pen, facing the side that is standing
+  // open. Nothing is holding him. Red, because the buffalo IS this koan —
+  // deepened, since full accent across an animal this size reads as glare.
+  const buffalo = makeBuffalo({ height: 1.5, color: ACCENT_DEEP, tailColor: ACCENT });
+  buffalo.group.position.set(PEN.x, 0, PEN.z);
+  // +z is his forward, so +PI/2 turns him to face +x — the opening. Backed off
+  // a little from square so the camera gets his hump and horns in three-quarter
+  // instead of a flat profile, and the tail stays clear of the body.
+  buffalo.group.rotation.y = Math.PI / 2 - 0.42;
+  scene.add(buffalo.group);
   
-  // (Grey butterflies played about the crown for a while. Gone: the oak and its
-  // falling leaves carry all the motion this garden needs; the flock read as
-  // decoration.)
-  oak.rotation.y = 0.4;
-  scene.add(oak);
-  oak.updateMatrixWorld(true);
-  
-  // swept earth around its foot — the one thing that says "garden" rather than
-  // "a tree happens to grow here". It is also the only ground the grass leaves.
-  const APRON_R = 2.15;
-  const apron = new THREE.Mesh(
-  new THREE.CylinderGeometry(APRON_R, APRON_R * 1.05, 0.12, 11),
-  washMaterial({ color: WASH.stone, flat: true }));
-  apron.name = 'apron';
-  apron.position.set(OAK.x, 0.03, OAK.z);
-  scene.add(apron);
-  
-  // ---- the ordinary trees ----------------------------------------------
-  // Grey, smaller, unremarkable, and there so the oak is unmistakably THAT one.
-  const GREY = [[5.6, -5.8, 3.5, 3801], [-6.8, -0.8, 3.0, 3802]];
-  for (const [x, z, h, seed] of GREY) {
-  const t = makeTree({ height: h, seed });
-  t.position.set(x, 0, z);
-  t.rotation.y = hash1(seed, ID) * Math.PI * 2;
-  scene.add(t);
-  }
-  
-  // ---- the two men -----------------------------------------------------
-  // Joshu, asked the largest question there is, has turned and put a sleeve out
-  // at the scenery. The monk is still facing Joshu, waiting for the answer.
-  const jp = path.sample(0.34);
-  const joshu = makeMonk({ pose: 'point', height: 1.72, stout: 1.1 });
-  joshu.position.set(jp.x, 0, jp.z);
-  aimMonk(joshu, { x: OAK.x, z: OAK.z });      // the raised sleeve lands in the crown
-  scene.add(joshu);
-  
-  const mp = path.sample(0.31);
-  const monk = makeMonk({ height: 1.58 });
-  monk.position.set(mp.x + mp.perp.x * 0.85, 0, mp.z + mp.perp.z * 0.85);
-  faceMonk(monk, joshu.position);
+  // a monk watching the impossible thing, set back so he doesn't fill the lens
+  const monk = makeMonk({ height: 1.6 });
+  monk.position.set(4.9, 0, 1.4);
+  faceMonk(monk, buffalo.group.position);
   scene.add(monk);
   
   const world = composeWorld(scene, {
   view: CAM,
-  seed: 209,
+  seed: 40,
   groundSeed: 21,
-  trees: 7,
-    forests :[
-      { center: [-13, 0, 27], spread: 23, count: 55 },
-      { center: [16, 0, 31], spread: 24, count: 40 },
-    ],
-    mountains : [
-      { count: 8, distance: 52, arcSpan: 3.6, arcCenter:3,hScale: 0.65},   // farthest band
-      { count: 5, distance: 73, arcSpan: 2.4, hScale: 1, arcCenter:2.5 },
-    ],
+  trees: 4,
   keepout: [
-  ...path.keepout(26, 1.1),
-  // generous — a full crown's width past the crown. Nothing grows inside
-  // that, so the oak is the only thing standing in its own patch of garden.
-  { x: OAK.x, z: OAK.z, r: OAK.radius + 2.4 },
-  ...GREY.map(([x, z]) => ({ x, z, r: 2.1 })),
-  { x: joshu.position.x, z: joshu.position.z, r: 1.3 },
-  { x: monk.position.x, z: monk.position.z, r: 1.3 },,
-  { x: 9.0, z: -9.0, r: 9.5 }
+  ...pen.footprint(1.0),                              // the three standing walls
+  { x: PEN.x, z: PEN.z, r: PEN.size * 0.5 },          // nothing clutters the pen floor
+  { x: monk.position.x, z: monk.position.z, r: 1.1 },
   ],
-  // only the walk and the swept earth actually cover ground; both men stand
-  // in the grass, and the grass grows right up under the oak
-  grassKeepout: [
-  ...path.keepout(26, .8),
-  { x: OAK.x, z: OAK.z, r: APRON_R * 0.98 },
-  ],
+  // nothing here covers the ground — grass grows through a fence and around
+  // hooves in life, so let it
+  grassKeepout: [],
   });
-  
-  // ---- the leaves ------------------------------------------------------
-  // A fixed pool, borrowed and returned.
-  const leafGeo = new THREE.ConeGeometry(0.11, 0.32, 4);
-  leafGeo.rotateX(Math.PI / 2);    // the blade lies flat, tip toward +z
-  leafGeo.scale(1, 0.32, 1);       // and is pressed thin
-  const leafMat = washMaterial({ color: ACCENT, flat: true, side: THREE.DoubleSide });
-  const idle = [];
-  const falling = [];
-  for (let i = 0; i < LEAF_POOL; i++) {
-  const leaf = new THREE.Mesh(leafGeo, leafMat);
-  leaf.name = 'leaf';
-  leaf.visible = false;
-  scene.add(leaf);
-  idle.push(leaf);
-  }
 
-  // Where a leaf can let go, in world space. Only the outer clumps: a leaf
-  // released from the middle of the crown falls through the mass unseen.
-  const anchors = oak.canopyPoints.map((p) => oak.localToWorld(p.clone()));
-  const fringe = anchors.slice(0, Math.max(3, Math.round(anchors.length * 0.6)));
-  
+  // ---- the moment: the whole animal --------------------------------------
+  // Touch him and he goes all the way round (see the note at the top of the
+  // file). It never passes. That is the whole koan, and nothing in the UI
+  // says so.
+  //
+  // THE WHOLE ANIMAL IS THE TARGET. It was the TAIL alone — the one part of him
+  // painted full ACCENT against his deepened body, so the small thing the
+  // reader is invited to touch is the small thing the case is named for. A
+  // lovely argument, and it meant the page was dead to anybody who did the
+  // obvious thing: clicking the buffalo itself did nothing at all.
+  //
+  // Which is the whole lesson: a target chosen because it is thematically right
+  // is still wrong if it is not the thing a hand goes to. He is a metre and a
+  // half of animal and the tail is a few centimetres of it, swinging, at the
+  // end furthest from the lens. Touch him anywhere.
   let camera = null;
-  let released = 0;
-  let taps = 0;
-  
-  // One leaf, posed at whatever moment of its fall f.age says. dt only feeds
-  // the spin, which is integrated rather than absolute.
-  function pose(f, dt) {
-  const t = Math.min(1, f.age / LEAF_FALL);
-  const sway = Math.sin(f.age * f.rate + f.phase);
-  const swayZ = Math.cos(f.age * f.rate * 0.78 + f.phase);
-  // it does not drop. It slips sideways off one cushion of air onto the
-  // next, and turns over each time it does
-  f.mesh.position.set(
-  f.x0 + sway * 0.5 + f.drift * t,
-  f.y0 - t * (f.y0 - LEAF_LIE),
-  f.z0 + swayZ * 0.42 + f.driftZ * t,
-  );
-  const settle = Math.min(1, Math.max(0, (1 - t) / 0.22));   // lies flat as it arrives
-  f.mesh.rotation.set(
-  sway * 1.35 * settle,
-  f.mesh.rotation.y + f.spin * settle * dt,
-  swayZ * 1.15 * settle,
-  );
+  let clock = 0;
+  let tugs = 0;
+  let tuggedAt = -99;
+  const BASE_Y = buffalo.group.rotation.y;
+  const buffaloMeshes = tapMeshes(buffalo.group).filter((m) => m.material.visible !== false);
+  const swishes = [];
+
+  input.onTap(() => {
+  if (!camera) return;
+  const hit = input.raycastFirst(camera, buffaloMeshes);
+  if (!hit) return;
+  // let him finish the circle he is already walking
+  if (clock - tuggedAt < TURN_SPAN) return;
+  touched && touched();
+  tuggedAt = clock;
+  tugs++;
+  buffalo.tail.impulse(1.2);
+  // a heavier brush than a robe: this is a tail, and there is an animal
+  // on the other end of it
+  audio && audio.cloth({ force: 1.1, at: hit.point });
+  // and again when he has got round and stopped, which is the shake — three
+  // of them, spaced, so it reads as a tail being used rather than struck
+  swishes.length = 0;
+  for (let i = 0; i < 3; i++) swishes.push(clock + TURN_IN + 0.2 + i * 0.6);
+  });
+
+  return {
+  scene,
+  setCamera(c) { camera = c; },
+  update(dt, simTime) {
+  clock = Number.isFinite(simTime) ? simTime : clock + (dt || 0);
+  world.update(dt, simTime);
+  const u = clock - tuggedAt;
+  // clockwise from above is NEGATIVE rotation.y, and a full turn lands him
+  // back on BASE_Y exactly — turnAt returns 0 once it is over, which IS
+  // that heading, so nothing has to be unwound
+  buffalo.group.rotation.y = BASE_Y - turnAt(u) * Math.PI * 2;
+  buffalo.group.rotation.z = -turnRate(u) * TURN_LEAN;
+  while (swishes.length && clock >= swishes[0]) {
+  swishes.shift();
+  const impulse = 1;
+  buffalo.tail.impulse(impulse);
+  audio && audio.cloth({ force: impulse, at: buffalo.group.position });
   }
-  
-  function release(near) {
-  const leaf = idle.pop();
-  if (!leaf) return false;              // the pool is out; nothing accumulates
-  let a = fringe[released % fringe.length];
-  if (near) {
-  let bestD = Infinity;
-  for (const p of fringe) {
-  const d = p.distanceToSquared(near);
-  if (d < bestD) { bestD = d; a = p; }
-  }
-  }
-  const j = released * 11;
-  const f = {
-  mesh: leaf,
-  age: 0,
-  x0: a.x + (hash1(j + 1, ID) - 0.5) * 0.9,
-  y0: a.y - hash1(j + 2, ID) * 0.35,
-  z0: a.z + (hash1(j + 3, ID) - 0.5) * 0.9,
-  drift: (hash1(j + 4, ID) - 0.5) * 1.5,
-  driftZ: (hash1(j + 5, ID) - 0.5) * 1.5,
-  spin: (hash1(j + 6, ID) - 0.5) * 2.4,
-  rate: 1.4 + hash1(j + 7, ID) * 1.4,
-  phase: hash1(j + 8, ID) * Math.PI * 2,
+  buffalo.update(dt, simTime);
+  },
+  fragment() {
+  return {
+  tailEnergy: +buffalo.tail.energy().toFixed(6),
+  tugs,
+  turned: +turnAt(clock - tuggedAt).toFixed(4),
+  };
+  },
+  dispose() {},
 };
-      // Posed HERE, at age zero, by the same function that will drive it. A leaf
-      // woken at the world origin is one frame of a red fleck sitting on the path,
-      // and a leaf woken without its sway offset jumps half a unit sideways on
-      // its first tick.
-      leaf.scale.setScalar(0.85 + 0.35 * hash1(j + 9, ID));
-      leaf.rotation.y = hash1(j + 10, ID) * Math.PI * 2;
-      pose(f, 0);
-      leaf.visible = true;
-      falling.push(f);
-      released++;
-      return true;
-    }
-
-    const oakMeshes = tapMeshes(oak);
-
-    // Touch the tree and a few leaves come off it. There is nothing to solve and
-    // nothing that says so; it is the same as touching a tree.
-    input.onTap(() => {
-      if (!camera) return;
-      const hit = input.raycastFirst(camera, oakMeshes);
-      if (!hit) return;
-      touched && touched();
-      taps++;
-      for (let i = 0; i < PER_TAP; i++) release(hit.point);
-      // the trunk you touched, and the leaves letting go of it
-      audio && audio.wood({ force: .7, at: hit.point });
-      audio && audio.breath({ force: 1, at: hit.point });
-    });
-
-    let sinceAuto = AUTO_EVERY * 0.5;
-
-    return {
-      scene,
-      setCamera(c) { camera = c; },
-      update(dt, simTime) {
-        world.update(dt, simTime);
-
-        sinceAuto += dt;
-        if (sinceAuto >= AUTO_EVERY) { sinceAuto = 0; release(null); }
-
-        for (let i = falling.length - 1; i >= 0; i--) {
-          const f = falling[i];
-          f.age += dt;
-
-          if (f.age < LEAF_FALL) {
-            pose(f, dt);
-          } else if (f.age > LEAF_FALL + LEAF_REST) {
-            // then the grass takes it back, so the ground never fills up
-            const s = (f.age - LEAF_FALL - LEAF_REST) / LEAF_SINK;
-            f.mesh.position.y = LEAF_LIE - Math.min(1, s) * 0.5;
-            if (s >= 1) {
-              f.mesh.visible = false;
-              idle.push(f.mesh);
-              falling.splice(i, 1);
-            }
-          }
-        }
-      },
-      fragment() {
-        return { falling: falling.length, idle: idle.length, released, taps };
-      },
-      dispose() {},   // the pool lives in the scene; disposeRoot collects it
-    };
   },
 };

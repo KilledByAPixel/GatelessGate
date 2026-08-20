@@ -25,7 +25,7 @@ const ID = 33;
 const CAM = { distance: 14.2, target: [0.95, 1.15, -1.4], heading: 27.5, pitch: 21.5 };
   export default {
   id: ID,
-  slug: 'this-mind-is-not-buddha',
+  slug: 'not-mind-not-buddha',
   title: TEXT[ID].title,
   accent: ACCENT,
   tier: 3,

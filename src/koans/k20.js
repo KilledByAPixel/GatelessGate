@@ -96,7 +96,7 @@ const SEA_KEEP = [
 const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10.9 };
   export default {
   id: ID,
-  slug: 'the-enlightened-person',
+  slug: 'the-person-of-great-strength',
   title: TEXT[ID].title,
   accent: ACCENT,
   tier: 2,

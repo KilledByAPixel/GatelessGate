@@ -1,169 +1,261 @@
-import test from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
+import { makeOak } from '../src/kit/oak.js';
+import { makeTree } from '../src/kit/tree.js';
 import k37 from '../src/koans/k37.js';
-import { fakeCtx } from './helpers/fake-ctx.js';
+import { ACCENT, ACCENT_DEEP } from '../src/palette.js';
+import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
 
-// "A buffalo passes through an enclosure. His head, horns and four legs all
-// pass through. Why can't his tail pass too?"
-//
-// Tug the tail and he swings CLOCKWISE to face away, stops and shakes it, then
-// carries on the same way round until he is standing exactly as he was — one
-// full circle, always clockwise. Everything passes through, his tail comes
-// round after it, and nothing has happened — which is the koan.
+const box = (o) => new THREE.Box3().setFromObject(o);
+const width = (o) => { const b = box(o); return Math.max(b.max.x - b.min.x, b.max.z - b.min.z); };
 
-function staged() {
-  const heard = [];
-  const ctx = fakeCtx({ audio: { cloth: (o) => heard.push(o) } });
-  const root = k37.build(ctx);
-  root.setCamera(new THREE.PerspectiveCamera());
-  const buffalo = root.scene.children.find((c) => c.name === 'buffalo');
-  assert.ok(buffalo, 'the buffalo is staged');
-  let t = 0;
-  const step = () => { root.update(1 / 60, t); t += 1 / 60; root.scene.updateMatrixWorld(true); };
-  const run = (secs) => { for (let i = 0; i < Math.round(60 * secs); i++) step(); };
-  run(1);
-  // hit whatever is offered — the only thing the case ever offers is the tail
-  const aim = () => {
-    ctx.input.raycastFirst = (cam, objs) => (objs && objs.length
-      ? { object: objs[0], point: new THREE.Vector3(), distance: 1 } : null);
-  };
-  // where his nose points in world space, which is the only thing a reader sees
-  const facing = () => {
-    const q = new THREE.Quaternion();
-    buffalo.getWorldQuaternion(q);
-    return new THREE.Vector3(0, 0, 1).applyQuaternion(q);
-  };
-  return { ctx, root, buffalo, step, run, heard, aim, facing, tug: () => ctx._taps.forEach((cb) => cb()) };
-}
+const fakeCtx = () => sharedCtx({ accent: k37.accent });
 
-test('case 37: a tug turns him all the way round, and back to where he stood', () => {
-  const { root, buffalo, run, aim, facing, tug } = staged();
-  const base = buffalo.rotation.y;
-  const faced = facing();
-  assert.equal(root.fragment().turned, 0, 'standing still to begin with');
+// ---- the kit piece -------------------------------------------------------
 
-  aim();
-  tug();
-  assert.equal(root.fragment().tugs, 1);
+test('makeOak stands on the ground and is one tree, two meshes', () => {
+  const oak = makeOak({ height: 5.8, seed: 20 });
+  assert.equal(oak.name, 'oak');
+  const trunk = oak.children.find((c) => c.name === 'trunk');
+  const canopy = oak.children.find((c) => c.name === 'canopy');
+  assert.ok(trunk && trunk.isMesh, 'a merged limb mesh');
+  assert.ok(canopy && canopy.isMesh, 'a merged foliage mesh');
+  assert.equal(oak.children.length, 2, 'two draw calls, however many branches');
 
-  run(2.6);                                    // past the first half
-  assert.ok(root.fragment().turned > 0.45 && root.fragment().turned < 0.55,
-    `halfway round and stopped (${root.fragment().turned})`);
-  assert.ok(facing().angleTo(faced) > Math.PI * 0.9, 'he is facing away');
-
-  run(4.5);                                    // and round the rest of it
-  assert.equal(root.fragment().turned, 0, 'the circle is closed');
-  // 2*PI is the same heading, so the shape returns 0 rather than holding a
-  // wound-up offset for the life of the page
-  assert.ok(Math.abs(buffalo.rotation.y - base) < 1e-9, 'exactly the heading he started at');
-  assert.ok(facing().angleTo(faced) < 1e-6, 'and exactly the way he was facing');
+  const b = box(oak);
+  assert.ok(b.min.y > -0.02 && b.min.y < 0.02, `grounded at y=0, got ${b.min.y}`);
+  assert.ok(b.max.y > 5.8 * 0.9, `should reach about its nominal height, got ${b.max.y}`);
 });
 
-test('case 37: he turns CLOCKWISE, both halves the same way round', () => {
-  // clockwise seen from above is DECREASING rotation.y — the right-hand rule
-  // about +y turns the other way, and getting it backwards is a bug you can
-  // only catch by looking
-  const { buffalo, step, run, aim, tug } = staged();
-  const base = buffalo.rotation.y;
-  aim();
-  tug();
-  let everIncreased = false;
-  let lowest = 0;
-  for (let i = 0; i < 60 * 8; i++) {
-    const before = buffalo.rotation.y;
-    step();
-    const d = buffalo.rotation.y - before;
-    lowest = Math.min(lowest, buffalo.rotation.y - base);
-    // the only rise allowed is the 2*PI wrap on the last frame of the circle
-    if (d > 1e-9 && d < 6) everIncreased = true;
+test('makeOak takes trunk and canopy colours independently — case 37 needs red leaves on grey wood', () => {
+  const oak = makeOak({ height: 5.8, seed: 20, canopyColor: ACCENT_DEEP });
+  const trunk = oak.children.find((c) => c.name === 'trunk');
+  const canopy = oak.children.find((c) => c.name === 'canopy');
+  assert.notEqual(trunk.material, canopy.material, 'separate materials, or the seal would paint the wood too');
+  assert.equal(canopy.material.color.getHexString(), new THREE.Color(ACCENT_DEEP).getHexString());
+  assert.notEqual(trunk.material.color.getHexString(), canopy.material.color.getHexString());
+});
+
+test('the crown carries the wind — attributes baked, material injected, geometry unmoved', () => {
+  // The oak was the last foliage in the book with no wind, standing visibly
+  // still while every other tree moved, and this class of breakage is SILENT —
+  // a canopy missing its attributes just stands still with nothing to read. The
+  // trunk is asserted inert on purpose: an old oak's wood carrying canopy-scale
+  // motion is the whole-tree bowing the wind system exists to avoid.
+  const oak = makeOak({ height: 5.8, seed: 20 });
+  const canopy = oak.children.find((c) => c.name === 'canopy');
+  const trunk = oak.children.find((c) => c.name === 'trunk');
+  for (const a of ['aSway', 'aPhase', 'aLeaf', 'aColumn']) {
+    assert.ok(canopy.geometry.attributes[a], `canopy missing ${a}`);
   }
-  assert.equal(everIncreased, false, 'he never doubles back — the second half is the same way round');
-  assert.ok(lowest < -Math.PI * 1.9, `and he goes the whole way (${(lowest / Math.PI).toFixed(2)} pi)`);
-  run(1);
+  assert.equal(canopy.material.customProgramCacheKey(), 'gg-foliage',
+    'the canopy material must compile the foliage shader');
+  assert.equal(canopy.userData.foliageWind, true, 'and be marked so bakeStatic refuses it');
+  assert.ok(!trunk.geometry.attributes.aSway, 'the wood stays inert — leaves shiver, the oak stands');
+
+  // sway spreads: the fringe moves, the lobes against the bole barely do
+  const sway = canopy.geometry.attributes.aSway;
+  let min = Infinity, max = -Infinity;
+  for (let i = 0; i < sway.count; i++) { min = Math.min(min, sway.getX(i)); max = Math.max(max, sway.getX(i)); }
+  assert.ok(max > 0.99 && max <= 1 + 1e-6, `the furthest lobe carries full weight, got ${max}`);
+  // the crown is a SHELL, so the spread is real but not wide: what matters is
+  // that the weights vary at all (uniform sway = the whole crown sliding as
+  // one mass), not that any lobe sits near zero — none does, on a shell
+  assert.ok(min < max - 0.1, `lobe weights should vary, got ${min}..${max}`);
+
+  // and the wind machinery moved NOTHING: same seed, same silhouette as a
+  // build from before the attributes existed — the phases draw from their
+  // own stream (tree.js's lesson), so k5's scanned crown clearance holds
+  const again = makeOak({ height: 5.8, seed: 20 });
+  assert.deepEqual(box(oak), box(again), 'deterministic');
 });
 
-test('case 37: nothing the reader can see ever jumps', () => {
-  // the raw rotation.y wraps by 2*PI when the circle closes; the FACING does
-  // not move, and the facing is the only thing on screen
-  const { step, aim, facing, tug } = staged();
-  aim();
-  tug();
-  let prev = facing();
-  let worst = 0;
-  for (let i = 0; i < 60 * 9; i++) {
-    step();
-    const now = facing();
-    worst = Math.max(worst, now.angleTo(prev));
-    prev = now;
+test('an oak is broader and heavier than the scatter trees it has to stand out from', () => {
+  const oak = makeOak({ height: 5.8, seed: 20 });
+  const tree = makeTree({});                       // the default kit tree, height 3.2
+  const tall = makeTree({ height: 4.2, seed: 9 }); // the tallest composeWorld ever scatters
+
+  assert.ok(box(oak).max.y > box(tall).max.y + 1.0,
+    `oak ${box(oak).max.y} should tower over the tallest scatter tree ${box(tall).max.y}`);
+  assert.ok(width(oak) > width(tree) * 1.8,
+    `oak spread ${width(oak)} vs kit tree ${width(tree)}`);
+  assert.ok(width(oak) > width(tall) * 1.7,
+    `oak spread ${width(oak)} vs tall kit tree ${width(tall)}`);
+
+  // and the silhouette itself is different in kind: an oak is wider than it is
+  // tall, where the kit tree is a vertical
+  const b = box(oak);
+  assert.ok(width(oak) / (b.max.y - b.min.y) > 1.05,
+    `an oak spreads wider than it stands tall, got ${(width(oak) / (b.max.y - b.min.y)).toFixed(2)}`);
+  assert.ok(width(tree) / box(tree).max.y < 1.1, 'the kit tree is not (this would make the test vacuous)');
+});
+
+test('the crown is a mass the limbs disappear into, not a hat balanced on top', () => {
+  const oak = makeOak({ height: 5.8, seed: 20 });
+  const trunk = box(oak.children.find((c) => c.name === 'trunk'));
+  const canopy = box(oak.children.find((c) => c.name === 'canopy'));
+  assert.ok(canopy.min.y < trunk.max.y, `crown ${canopy.min.y} must swallow the limb tops ${trunk.max.y}`);
+  // the bole is short: the crown starts well below halfway up the tree
+  assert.ok(canopy.min.y < box(oak).max.y * 0.55, `crown starts low, got ${canopy.min.y}`);
+});
+
+test('makeOak is deterministic by seed and offers somewhere for a leaf to let go', () => {
+  const verts = (s) => Array.from(
+    makeOak({ height: 5.8, seed: s }).children.find((c) => c.name === 'canopy')
+      .geometry.attributes.position.array);
+  assert.deepEqual(verts(20), verts(20));
+  assert.notDeepEqual(verts(20), verts(21));
+
+  const oak = makeOak({ height: 5.8, seed: 20 });
+  const canopy = box(oak.children.find((c) => c.name === 'canopy'));
+  assert.ok(oak.canopyPoints.length > 8, 'a spot under every clump');
+  for (const p of oak.canopyPoints) {
+    assert.ok(p.y > canopy.min.y - 0.6 && p.y < canopy.max.y, `anchor inside the crown, got y=${p.y}`);
   }
-  // a 180-degree turn over 2.4s peaks near 2 degrees a frame
-  assert.ok(worst < 0.06, `worst single-frame turn ${(worst * 180 / Math.PI).toFixed(2)} degrees`);
+  // sorted outward, so a caller can take the fringe where a falling leaf is seen
+  const r = oak.canopyPoints.map((p) => Math.hypot(p.x, p.z));
+  assert.ok(r[0] > r[r.length - 1], 'outermost anchor first');
 });
 
-test('case 37: he shakes the tail when he gets there, not when you tug it', () => {
-  const { root, run, heard, aim, tug } = staged();
-  aim();
-  tug();
-  assert.equal(heard.length, 1, 'the tug itself is one sound');
-  run(2.0);
-  assert.equal(heard.length, 1, 'and nothing more while he is turning');
-  run(2.0);                                    // through the shake
-  assert.ok(heard.length >= 3, `the shake is several swishes, spaced (${heard.length})`);
-  assert.ok(root.fragment().tailEnergy > 0, 'and the tail is actually moving');
-  const during = heard.length;
-  run(3.0);
-  assert.equal(heard.length, during, 'and it is over before he is back');
-});
-
-test('case 37: a tug is refused until he has finished the circle', () => {
-  const { root, run, aim, tug } = staged();
-  aim();
-  tug();
-  run(1);
-  tug();
-  tug();
-  assert.equal(root.fragment().tugs, 1, 'let him finish the circle he is already walking');
-  run(7);
-  assert.equal(root.fragment().turned, 0);
-  tug();
-  assert.equal(root.fragment().tugs, 2, 'and he answers again once it is done');
-});
-
-test('case 37: nothing goes non-finite over a long run of tugging', () => {
-  const { root, buffalo, run, aim, tug } = staged();
-  aim();
-  for (let i = 0; i < 6; i++) { tug(); run(7); }
-  for (const [k, v] of Object.entries(root.fragment())) {
-    assert.ok(typeof v === 'boolean' || Number.isFinite(v), `fragment.${k} is ${v}`);
+test('the hero limb is tamed by default; `reach` restores it and moves nothing else', () => {
+  const H = 5.8;
+  const rMax = (o) => Math.max(...o.canopyPoints.map((p) => Math.hypot(p.x, p.z)));
+  for (const seed of [5, 20, 38]) {
+    const tame = makeOak({ height: H, seed });
+    const long = makeOak({ height: H, seed, reach: 1 });
+    // tamed: every clump, the hero limb's tip included, finishes at the crown
+    // fringe (shell lobes centre out to ~0.44H and are up to ~0.19H fat) — no
+    // clump on a spear past it — untamed it reads as one odd extra-long branch
+    // sticking out of the crown.
+    assert.ok(rMax(tame) < H * 0.68,
+      `seed ${seed}: tamed limb still spears out to ${(rMax(tame) / H).toFixed(2)}H`);
+    // asked for, the reach is real — the legacy hanging bough comes back
+    assert.ok(rMax(long) > rMax(tame) + H * 0.08,
+      `seed ${seed}: reach 1 should out-reach the tamed default`);
+    // and it is surgical: the option stretches the hero limb's own clump and
+    // nothing else — every other anchor of the same seed is bit-identical,
+    // because reach must not reorder the deterministic stream
+    const key = (p) => p.toArray().map((v) => v.toFixed(4)).join(',');
+    const tameSet = new Set(tame.canopyPoints.map(key));
+    const moved = long.canopyPoints.filter((p) => !tameSet.has(key(p)));
+    assert.equal(moved.length, 1, `seed ${seed}: exactly one clump moves, got ${moved.length}`);
   }
-  assert.ok(Number.isFinite(buffalo.rotation.y) && Number.isFinite(buffalo.rotation.z));
 });
 
-test('case 37: the whole animal is the target, not just his tail', () => {
-  // It WAS the tail alone — the one part of him painted full ACCENT against his
-  // deepened body, so the small thing the reader is invited to touch was the
-  // small thing the case is named for. A lovely argument, and it meant the page
-  // was dead to anybody who did the obvious thing: clicking the buffalo itself
-  // produced nothing at all.
-  //
-  // A target chosen because it is thematically right is still wrong if it is
-  // not the thing a hand goes to.
-  const { ctx, root, buffalo, run, tug } = staged();
-  const inTail = (o) => { for (let p = o; p; p = p.parent) if (p.name === 'tail') return true; return false; };
-  const body = [];
-  buffalo.traverse((o) => {
-    if (o.isMesh && o.material && o.material.visible !== false && !inTail(o)) body.push(o);
+// ---- the case ------------------------------------------------------------
+
+// The module contract itself is the staging net's job (tests/staging.test.js);
+// what is this case's alone is the prose pin — the title must actually name
+// the tree the whole page is about.
+test('the title names the oak', () => {
+  assert.ok(/oak/i.test(k37.title), `title comes from the text artifact: ${k37.title}`);
+});
+
+test('build stages one great red oak, two men, and ordinary grey trees', () => {
+  const built = k37.build(fakeCtx());
+  assert.ok(built.scene instanceof THREE.Scene);
+  for (const fn of ['update', 'dispose', 'fragment']) {
+    assert.equal(typeof built[fn], 'function', `root.${fn} missing`);
+  }
+
+  const oaks = [], trees = [], monks = [];
+  built.scene.traverse((o) => {
+    if (o.name === 'oak') oaks.push(o);
+    if (o.name === 'tree') trees.push(o);
+    if (o.name === 'monk') monks.push(o);
   });
-  assert.ok(body.length > 6, `he is made of more than his tail (${body.length} meshes)`);
+  assert.equal(oaks.length, 1, 'exactly one oak — the whole answer is "that one"');
+  assert.equal(monks.length, 2, 'Joshu and the monk who asked');
+  assert.ok(trees.length >= 3, 'ordinary trees elsewhere in the garden');
 
-  // aim at his BODY — a mesh with no tail anywhere above it in the graph
-  ctx.input.raycastFirst = (cam, objs) => {
-    for (const o of objs || []) if (body.includes(o)) return { object: o, point: new THREE.Vector3() };
-    return null;
-  };
-  tug();
-  assert.equal(root.fragment().tugs, 1, 'touching the animal reaches the case');
-  run(3);
-  assert.ok(root.fragment().turned > 0.4, `and he turns (${root.fragment().turned})`);
+  // the seal: the oak's LEAVES are red, its wood is not, and no scatter tree is
+  const oak = oaks[0];
+  const canopy = oak.children.find((c) => c.name === 'canopy');
+  const trunk = oak.children.find((c) => c.name === 'trunk');
+  const deep = new THREE.Color(ACCENT_DEEP).getHexString();
+  assert.equal(canopy.material.color.getHexString(), deep, 'the canopy carries the seal');
+  assert.notEqual(trunk.material.color.getHexString(), deep, 'the wood stays on the grey ramp');
+  for (const t of trees) {
+    const c = t.children.find((x) => x.name === 'canopy');
+    assert.notEqual(c.material.color.getHexString(), deep, 'no other tree wears the seal');
+  }
+
+  // and it towers over every ordinary tree in the scene
+  const oakTop = box(oak).max.y;
+  for (const t of trees) assert.ok(oakTop > box(t).max.y + 1.0, 'the oak is the biggest thing growing');
+});
+
+test('the scene runs without a renderer or audio, and reports a finite fragment', () => {
+  const built = k37.build(fakeCtx());
+  built.setCamera(null);
+  built.onEnter && built.onEnter();      // audio is null: must not throw
+  for (let i = 0; i < 120; i++) built.update(1 / 60, i / 60);
+  const frag = built.fragment();
+  assert.ok(Object.keys(frag).length > 0);
+  for (const [k, v] of Object.entries(frag)) {
+    assert.ok(Number.isFinite(v) || typeof v === 'boolean', `fragment.${k} = ${v}`);
+  }
+  built.onExit && built.onExit();
+  built.dispose();
+});
+
+test('the case wires a tap, and touching the oak sheds leaves', () => {
+  const ctx = fakeCtx();
+  const built = k37.build(ctx);
+  assert.ok(ctx._taps.length > 0, 'there has to be something to find');
+
+  const oak = built.scene.getObjectByName('oak');
+  const canopy = oak.children.find((c) => c.name === 'canopy');
+  built.setCamera(new THREE.PerspectiveCamera());
+
+  assert.equal(built.fragment().falling, 0, 'nothing falls until it is touched');
+  ctx.input.raycastFirst = () => ({ object: canopy, point: new THREE.Vector3(-2.4, 2.6, -1.4) });
+  ctx._taps.forEach((cb) => cb(400, 300));
+  const after = built.fragment();
+  assert.ok(after.falling >= 2, `a few leaves let go, got ${after.falling}`);
+  assert.equal(after.taps, 1);
+
+  // they are real meshes, they start up in the crown rather than at the world
+  // origin, and they go DOWN
+  const leaves = [];
+  built.scene.traverse((o) => { if (o.name === 'leaf') leaves.push(o); });
+  const airborne = leaves.filter((l) => l.visible);
+  assert.ok(airborne.length >= 2, 'the leaves that let go are visible');
+  const startY = airborne.map((l) => l.position.y);
+  for (const y of startY) assert.ok(y > 1.5, `a leaf lets go from the crown, not the ground: ${y}`);
+  for (let i = 0; i < 120; i++) built.update(1 / 60, i / 60);
+  airborne.forEach((l, i) => {
+    assert.ok(l.position.y < startY[i], `leaf ${i} drifts down: ${startY[i]} -> ${l.position.y}`);
+  });
+});
+
+test('leaves are a pool, not a leak — the ground never fills up', () => {
+  const ctx = fakeCtx();
+  const built = k37.build(ctx);
+  const oak = built.scene.getObjectByName('oak');
+  built.setCamera(new THREE.PerspectiveCamera());
+  ctx.input.raycastFirst = () => ({
+    object: oak.children[1], point: new THREE.Vector3(-2.4, 2.6, -1.4),
+  });
+
+  const total = built.fragment().falling + built.fragment().idle;
+  let peak = 0;
+  // hammer it: a tap every half second for four minutes of sim
+  for (let i = 0; i < 60 * 240; i++) {
+    if (i % 30 === 0) ctx._taps.forEach((cb) => cb(400, 300));
+    built.update(1 / 60, i / 60);
+    const f = built.fragment();
+    peak = Math.max(peak, f.falling);
+    assert.equal(f.falling + f.idle, total, 'every leaf is either falling or in the pool');
+  }
+  assert.ok(peak <= total, `never more leaves in the air than exist: ${peak}`);
+
+  const leaves = [];
+  built.scene.traverse((o) => { if (o.name === 'leaf') leaves.push(o); });
+  assert.equal(leaves.length, total, 'no leaf meshes were ever created beyond the pool');
+
+  // and once you stop touching it, the garden clears itself
+  for (let i = 0; i < 60 * 30; i++) built.update(1 / 60, i / 60);
+  assert.ok(built.fragment().falling <= 1, 'settles back to at most the ambient one');
 });

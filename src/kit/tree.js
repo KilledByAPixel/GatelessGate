@@ -42,7 +42,7 @@ export function makeTree({
   // A THIRD stream, for the wind phases, and for exactly the reason the second
   // one exists. Drawing the phase jitter from `rnd` shifted every fork count
   // and spread angle after it and silently rebuilt every tree in the book —
-  // k38's "an oak is broader than the scatter trees" test caught it, which is
+  // k37's "an oak is broader than the scatter trees" test caught it, which is
   // the only reason it was noticed at all. Wind is decoration; it must not be
   // able to move a branch.
   let phaseDraw = 0;
