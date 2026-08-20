@@ -30,7 +30,7 @@ const staged = () => {
 
 test('module shape matches the koan contract', () => {
   assert.equal(k12.id, 12);
-  assert.equal(k12.slug, 'zuigan-calls-his-own-master');
+  assert.equal(k12.slug, 'zuigan-calls-to-himself');
   assert.equal(k12.accent, ACCENT);
   assert.equal(k12.mood, 'yo');
   assert.equal(typeof k12.build, 'function');

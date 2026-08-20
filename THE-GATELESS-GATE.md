@@ -37,7 +37,7 @@ Joshu answered: "Mu."
 
 **Mumon's Comment**
 
-To realize Zen you have to pass through the barrier of the patriarchs. Enlightenment always comes after the road of thinking is blocked. If you do not pass the barrier of the patriarchs or if your thinking road is not blocked, whatever you think, whatever you do, is like a tangled ghost. You may ask: What is a barrier of a patriarch? This one word, Mu, is it.
+To realize Zen you have to pass through the barrier of the patriarchs. Enlightenment always comes after the road of thinking is blocked. If you do not pass the barrier of the patriarchs or if your thinking road is not blocked, whatever you think, whatever you do, is like a ghost clinging to grass and trees. You may ask: What is a barrier of a patriarch? This one word, Mu, is it.
 
 This is the barrier of Zen. If you pass through it you will see Joshu face to face. Then you can work hand in hand with the whole line of patriarchs. Is this not a pleasant thing to do?
 
@@ -45,7 +45,7 @@ If you want to pass this barrier, you must work through every bone in your body,
 
 Then your previous lesser knowledge disappears. As a fruit ripening in season, inside and outside naturally become one. It is like a man who cannot speak and has had a dream. He knows it but he cannot tell it.
 
-When you enter this condition your ego-shell is crushed and you can shake the heaven and move the earth. You are like a great warrior with a sharp sword. If a Buddha stands in your way, you will cut him down; if a patriarch offers you any obstacle, you will kill him; and you will be free in the face of birth and death. You can enter any world as if it were your own playground. I will tell you how to do this with this koan:
+When you enter this condition it breaks open all at once, and heaven is startled and the earth shakes. You are like a great warrior with a sharp sword. If a Buddha stands in your way, you will cut him down; if a patriarch offers you any obstacle, you will kill him; and you will be free in the face of birth and death. You can enter any world as if it were your own playground. I will tell you how to do this with this koan:
 
 Just concentrate your whole energy into this Mu, and do not let it break. When you enter this Mu and there is no break, your attainment will be like a candle that takes the flame at one touch.
 
@@ -62,7 +62,7 @@ you lose your body and your life.
 
 Once when Hyakujo delivered some Zen lectures an old man attended them, unseen by the monks. At the end of each talk when the monks left so did he. But one day he remained after they had gone, and Hyakujo asked him: "Who are you?"
 
-The old man replied: "I am not a human being, but I was a human being when the Kashapa Buddha preached in this world. I was a Zen master and lived on this mountain. At that time one of my students asked me whether or not the enlightened person is subject to the law of causation. I answered him: 'The enlightened person is not subject to the law of causation.' Because that answer clung to absoluteness I became a fox for five hundred rebirths, and I am still a fox. Will you save me from this condition with your Zen words and let me get out of a fox's body? Now may I ask you: Is the enlightened person subject to the law of causation?"
+The old man replied: "I am not a human being, but I was a human being when the Kashapa Buddha preached in this world. I was a Zen master and lived on this mountain. At that time one of my students asked me whether or not the enlightened person is subject to the law of causation. I answered him: 'The enlightened person is not subject to the law of causation.' For that answer I became a fox for five hundred rebirths, and I am still a fox. Will you save me from this condition with your Zen words and let me get out of a fox's body? Now may I ask you: Is the enlightened person subject to the law of causation?"
 
 Hyakujo said: "The enlightened person is not blind to the law of causation."
 
@@ -150,7 +150,7 @@ In such a predicament the cleverest talk is of no use. If you have memorized all
 **The Verse**
 
 Kyogen is truly a fool  
-spreading ego-killing poison  
+spreading poison without limit  
 that closes his pupils' mouths  
 and sets demon eyes bursting from their bodies.
 
@@ -219,7 +219,7 @@ south, north, east, and west.
 
 **The Case**
 
-A monk asked Seijo: "I understand that a Buddha who lived before recorded history sat in meditation for ten cycles of existence and could not realize the highest truth, and so could not become fully free. Why was this so?"
+A monk asked Seijo: "I understand that a Buddha who lived before recorded history sat in meditation for ten ages and could not realize the highest truth, and so could not become fully free. Why was this so?"
 
 Seijo replied: "Your question is self-explanatory."
 
@@ -292,7 +292,7 @@ and Zen's activity is like lightning.
 The sword that kills the man  
 is the sword that saves the man.
 
-## 12. Zuigan Calls His Own Master
+## 12. Zuigan Calls to Himself
 
 **The Case**
 
@@ -315,8 +315,8 @@ Old Zuigan sells out and buys himself. He is opening a puppet show. He uses one 
 **The Verse**
 
 Some Zen students do not realize the true man  
-because they recognize ego-soul.  
-Ego-soul is the seed of birth and death,  
+because they take the thinking mind for it.  
+The thinking mind is the seed of birth and death,  
 and foolish people call it the true man.
 
 ## 13. Tokusan Holds His Bowl
@@ -335,7 +335,7 @@ The next day Tokusan delivered an entirely different kind of lecture to the monk
 
 **Mumon's Comment**
 
-Speaking about the ultimate truth, both Ganto and Tokusan did not even dream it. After all, they are dummies.
+Speaking about the ultimate truth, both Ganto and Tokusan did not even dream it. Look them over and they are a stage full of puppets.
 
 **The Verse**
 
@@ -414,7 +414,7 @@ Ummon asked: "The world is such a wide world, why do you answer a bell and don c
 
 **Mumon's Comment**
 
-When you study Zen you must not chase sound or color or form. Even though some have attained insight when hearing a voice or seeing a color or a form, this is a very common way. It is not true Zen. The real Zen student controls sound, color, and form, and actualizes the truth in everyday life.
+When you study Zen you must not chase sound or color or form. Even though some have attained insight when hearing a voice or seeing a color or a form, this is a very common way. It is not true Zen. The real Zen student rides on sound and covers form, clear about each thing, sure of every move.
 
 Sound comes to the ear, the ear goes to sound. When you blot out sound and sense, what do you understand? While listening with ears you can never understand. To understand it fully you should see sound.
 
@@ -453,7 +453,7 @@ Now I want to ask you: Which one should apologize?
 
 **The Verse**
 
-Iron stocks with no hole for the head: the prisoner is doubly in trouble.  
+An iron yoke with no opening: the prisoner is doubly in trouble.  
 No room for Zen in the head of our generation: the same trouble.  
 Try to hold up the gate and door of a falling house,  
 and you will be in trouble too.
@@ -546,7 +546,7 @@ you have missed seeing.
 
 **The Case**
 
-Ananda asked Mahakashapa: "Buddha gave you the golden-woven robe of successorship. What else did he give you?"
+Ananda asked Mahakashapa: "Buddha gave you the golden robe of successorship. What else did he give you?"
 
 Mahakashapa said: "Ananda."
 
@@ -621,7 +621,7 @@ and you will find yourself at a loss.
 
 In a dream Kyozan went to Maitreya's Pure Land. He recognized himself seated in the third seat in the abode of Maitreya. Someone announced: "Today the one who sits in the third seat will preach."
 
-Kyozan arose and, hitting the gavel, said: "The truth of Mahayana teaching is transcendent, above words and thought. Listen carefully! Listen carefully!"
+Kyozan arose, struck the block, and said: "The truth of Mahayana teaching is transcendent, above words and thought. Listen carefully! Listen carefully!"
 
 **Mumon's Comment**
 
@@ -759,13 +759,13 @@ is like claiming innocence with stolen goods in your pocket.
 
 A traveling monk asked an old woman the road to Taizan, a popular temple supposed to give wisdom to the one who worships there. The old woman said: "Go straight ahead." When the monk proceeded a few steps, she said to herself: "He also is a common pilgrim."
 
-Someone told this incident to Joshu, who said: "Wait until I investigate." The next day he went and asked the same question, and the old woman gave the same answer.
+Someone told this incident to Joshu, who said: "Wait until I have checked her out." The next day he went and asked the same question, and the old woman gave the same answer.
 
-Joshu remarked: "I have investigated that old woman."
+Joshu remarked: "I have seen through that old woman."
 
 **Mumon's Comment**
 
-The old woman understood how war is planned, but she did not know how spies sneak in behind her tent. Old Joshu did the spy's work and turned the tables on her, but he was not an able general. Both had their faults. Now I want to ask you: What was the point of Joshu's investigating the old woman?
+The old woman understood how war is planned, but she did not know how spies sneak in behind her tent. Old Joshu did the spy's work and turned the tables on her, but he was not an able general. Both had their faults. Now I want to ask you: What was it that Joshu saw through in the old woman?
 
 **The Verse**
 
@@ -905,7 +905,7 @@ if he returns, he will be butchered.
 That little tail  
 is a very strange thing.
 
-## 39. Ummon's Sidetrack
+## 39. Ummon Catches a Slip
 
 **The Case**
 
@@ -915,13 +915,13 @@ Before he finished the phrase Ummon asked: "You are reciting another's poem, are
 
 "Yes," answered the student.
 
-"You are sidetracked," said Ummon.
+"Your words have slipped," said Ummon.
 
-Afterwards another teacher, Shishin, asked his pupils: "At what point did that student go off the track?"
+Afterwards another teacher, Shishin, asked his pupils: "Just where did that student slip?"
 
 **Mumon's Comment**
 
-If you perceive Ummon's particular skillfulness, you will know at what point the student was off the track, and you will be a teacher of humans and gods. If not, you cannot even save yourself.
+If you perceive Ummon's particular skillfulness, you will know just where the student slipped, and you will be a teacher of humans and gods. If not, you cannot even save yourself.
 
 **The Verse**
 
@@ -930,21 +930,21 @@ he will be caught if he is too greedy.
 As soon as his mouth opens  
 his life already is lost.
 
-## 40. Tipping Over a Water Vase
+## 40. Tipping Over a Water Jug
 
 **The Case**
 
-Hyakujo wished to send a monk to open a new monastery. He told his pupils that whoever answered a question most ably would be appointed. Placing a water vase on the ground, he asked: "Who can say what this is without calling its name?"
+Hyakujo wished to send a monk to open a new monastery. He told his pupils that whoever answered a question most ably would be appointed. Placing a water jug on the ground, he asked: "Who can say what this is without calling its name?"
 
 The chief monk said: "No one can call it a wooden shoe."
 
-Isan, the cooking monk, tipped over the vase with his foot and went out.
+Isan, the cooking monk, tipped over the jug with his foot and went out.
 
 Hyakujo smiled and said: "The chief monk loses." And Isan became the master of the new monastery.
 
 **Mumon's Comment**
 
-Isan was brave enough, but he could not escape Hyakujo's trick. After all, he gave up a light job and took a heavy one. Why, can't you see, he took off his comfortable hat and placed himself in iron stocks.
+Isan was brave enough, but he could not escape Hyakujo's trick. After all, he gave up a light job and took a heavy one. Why, can't you see, he took off his comfortable hat and shouldered an iron yoke.
 
 **The Verse**
 
@@ -1123,7 +1123,7 @@ to find the origin of the right road.
 
 **The Case**
 
-Amban, a layman Zen student, said: "Mumon has just published forty-eight koans and called the book The Gateless Gate. He criticizes the old patriarchs' words and actions. I think he is very mischievous. He is like an old man selling fried cakes, catching a passerby and forcing one into his mouth. The customer can neither swallow the cake nor spit it out, and this causes suffering. Mumon has annoyed everyone enough, so I think I shall add one more as a bargain. I wonder if he himself can eat this bargain. If he can, and digest it well, it will be fine, but if not, we will have to put it back into the frying pan with his forty-eight also and cook them again. Mumon, you eat first, before someone else does:
+Amban, a layman Zen student, said: "Mumon has just published forty-eight koans and called the book The Gateless Gate. He criticizes the old patriarchs' words and actions. I think he is very mischievous. He is like an old man selling fried cakes, catching a passerby and forcing one into his mouth. The customer can neither swallow the cake nor spit it out, and this causes suffering. Mumon has annoyed everyone enough, so I think I shall add one more and round the count out to forty-nine. I wonder if he himself can eat this one. If he can, and digest it well, it will be fine, but if not, we will have to put it back into the frying pan with his forty-eight also and cook them again. Mumon, you eat first, before someone else does:
 
 "Buddha, according to a sutra, once said: 'Stop, stop. Do not speak. My teaching is subtle, beyond all thinking.'"
 
@@ -1174,7 +1174,7 @@ Do as you please and let every tie go:
 down you go into the deep pit.
 
 Wide awake, never dull:  
-chains on your legs, a board around your neck.
+chains on your legs, a yoke on your neck.
 
 Think good, think evil:  
 hell and heaven.

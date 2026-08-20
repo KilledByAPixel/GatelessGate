@@ -90,7 +90,7 @@ distance: 15, target: [0.8, 1.9, 0.35], heading: 23.5, pitch: 18
 };
 export default {
   id: ID,
-  slug: 'zuigan-calls-his-own-master',
+  slug: 'zuigan-calls-to-himself',
   title: TEXT[ID].title,
   accent: ACCENT,
   tier: 2,

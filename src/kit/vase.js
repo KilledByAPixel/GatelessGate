@@ -3,10 +3,14 @@ import { washMaterial } from '../render/material.js';
 import { WASH } from '../palette.js';
 import { hash1 } from '../util/noise.js';
 
-// A water vase (case 40) — the jing, the pitcher form: a small foot, a full
+// The water jug of case 40 — the jing, the pitcher form: a small foot, a full
 // belly, a narrow neck, a lip that flares just enough to pour. One lathe, so
 // the silhouette stays a single unbroken curve — this must NOT read as the
-// bowl (wide, open, squat) or as a lantern (a stack of separate stones).
+// bowl (wide, open, squat) or as a lantern (a stack of separate stones). The
+// file and the builder are still named for a vase, which the text no longer
+// says: 淨瓶 is a monk's water pitcher, and "vase" put flowers on a table in a
+// modern reader's head. Renaming the module reaches the kit facade and every
+// caller, so the name stayed and this note carries the correction.
 //
 // THE ROCK. Tap it and it tips a few degrees, then wobbles back upright on a
 // decaying swing, pivoting on the rim of its base the way a real vessel does —

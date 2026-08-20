@@ -13,7 +13,7 @@ const ID = 39;
 
 // A student quotes a line of somebody else's poem at Ummon — "Brilliancy of
 // Buddha illuminates the whole universe" — and before he can finish it Ummon
-// asks whose poem it is, and tells him he is sidetracked.
+// asks whose poem it is, and tells him his words have slipped.
 //
 // So the crossing is made of borrowed words: stepping stones laid across dark
 // water, each one a phrase. Only ONE of them ever gives way — the vermillion
@@ -66,7 +66,7 @@ export function nextRed(red, tapped, sunk) {
 const CAM = { distance: 12.2, target: [0.95, 0.9, -0.4], heading: 21, pitch: 20};
   export default {
   id: ID,
-  slug: 'ummon-s-sidetrack',
+  slug: 'ummon-catches-a-slip',
   title: TEXT[ID].title,
   accent: ACCENT,
   tier: 2,

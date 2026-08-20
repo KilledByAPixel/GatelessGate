@@ -1599,6 +1599,78 @@ charm. None should be "fixed" without rereading §2 of Part Two first.
   allusion lives. Everything from the sutra quotation onward was repaired under §3's
   seventh ruling.
 
+## 4b. The modern-register pass — August 2026
+
+A second read-aloud pass, on a different question from §2's: not "does the English say
+what the Chinese says" but **"does a reader in 2026 hear what Reps meant."** These are
+places where the 1934 wording was defensible when it was written and has since drifted, or
+where it was always philosophy-department English. Nothing here was found by comparing
+characters; it was found by listening. The trigger was case 11's title, where "examines"
+was accurate to 勘 and wrong in current English.
+
+**Words whose modern sense points somewhere else:**
+
+- **Case 13 — "dummies" → "a stage full of puppets."** 一棚傀儡 is a *stage of puppets*,
+  and in 1934 a "dummy" was a mannequin or a ventriloquist's figure, so Reps was exact.
+  The word has drifted to mean fools, which makes Mumon call two masters stupid when he is
+  saying they are worked on strings. **The clearest case in the book of the English moving
+  while the Chinese stood still.**
+- **Case 40 — "water vase" → "water jug", title included.** 淨瓶 is the monk's water
+  pitcher. "Vase" puts flowers on a table, so the koan became a man kicking over an
+  ornament instead of a working tool. `src/kit/vase.js` keeps its name and records why.
+- **Case 31 — "investigate" → "check out" / "see through."** 勘破 is *to see through*
+  someone. "I have investigated that old woman" reads as police procedure now, and faintly
+  sinister with it. This also puts case 31 in step with case 11's title, the same 勘.
+- **Case 39 — "sidetracked" → "slipped", and the title with it.** 話墮 is *words fallen*:
+  the monk is caught out by his own speech, mid-quotation. "Sidetrack" is a railway
+  metaphor that now means merely distracted. **And the title had the wrong man**: Reps's
+  "Ummon's Sidetrack" reads as Ummon going astray, when the slip is the monk's and Ummon
+  only calls it. The page is now **Ummon Catches a Slip**.
+- **枷 had three Englishes and now has one.** It is the cangue, the collar locked round a
+  prisoner's neck: "iron stocks" in case 17's verse and case 40, "a board around your neck"
+  in the Zen Warnings. All three now read **yoke**. Not "board", which was the standing
+  choice: 鐵枷 wants its metal, and "an iron board" is an ironing board. A yoke sits on the
+  neck and is *carried*, which is what 擔 says in both places.
+
+**The 1930s psychology, which dated the book faster than anything else in it.** None of
+these compounds is in the Chinese:
+
+- **Case 1 — "your ego-shell is crushed"** for 驀然打發。驚天動地, which is "it breaks open
+  all at once; heaven is startled and the earth shakes." The shell was Reps's own.
+- **Case 5 — "ego-killing poison"** for 惡毒無盡限, "malice without limit" — now "poison
+  without limit." "Ego-killing" was a benign gloss on a word that is not benign.
+- **Case 12 — "ego-soul"** for 識神, the discriminating consciousness — now "the thinking
+  mind." "Ego-soul" sends a reader to Theosophy.
+
+**Philosophy-department English, the fault Part Two §1 named and did not finish:**
+
+- **Case 2 — "Because that answer clung to absoluteness"** is **not in the Chinese at
+  all.** The old man says he answered so and fell into a fox's body; Reps inserted an
+  abstraction at the hinge of the book's most famous cause-and-effect koan. Cut.
+- **Case 16 — "actualizes the truth in everyday life"** for 頭頭上明。著著上妙 — now "clear
+  about each thing, sure of every move."
+- **Case 9 — "ten cycles of existence"** for 十劫 — now "ten ages", which is also the
+  book's own word for a long span (cases 22, 35, and the Zen Warnings).
+
+**Smaller:**
+
+- **Case 1 — "a tangled ghost" → "a ghost clinging to grass and trees"** (依草附木精靈, a
+  spirit with no body of its own that leans on whatever it can). The clinging is the
+  insult, and "tangled" lost it.
+- **Case 22 — "golden-woven robe" → "golden robe."** "Successorship" stays: the robe needs
+  to say what it is for, or a reader wonders why a garment is the question.
+- **Case 25 — "hitting the gavel" → "struck the block."** 白槌 is the wooden block struck
+  to open a talk; a gavel puts a judge or an auctioneer in the room.
+- **Case 49 — "add one more as a bargain" → "add one more and round the count out to
+  forty-nine."** "Bargain" now means a discount. The real joke is the number, and the
+  afterword's translation of the letter already carries it; this makes the case agree with
+  it instead of shopping.
+- **Case 12's title — "Zuigan Calls His Own Master" → "Zuigan Calls to Himself."** He calls
+  "Master!" to himself and answers himself; the old title reads as summoning a teacher.
+
+Three of these move a title, and slugs derive from titles, so cases 12, 39 and 40 lose
+their saved marks and old deep links, knowingly, as cases 19, 20 and 33 did in §3.
+
 ## 5. Narration
 
 After the second round — the seven rulings, the retitles, and the 37/38 reorder — the
