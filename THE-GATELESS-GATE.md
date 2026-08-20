@@ -261,21 +261,21 @@ the bravest man in China,
 he barely sustains himself,  
 yet wishes to rival the wealthiest.
 
-## 11. Joshu Examines a Monk in Meditation
+## 11. Joshu Examines Two Hermits
 
 **The Case**
 
-Joshu went to a place where a monk had retired to meditate and asked him: "Anything? Anything?"
+Joshu came to a hermit's hut and asked: "Anything? Anything?"
 
-The monk raised his fist.
+The hermit raised his fist.
 
-Joshu replied: "Ships cannot remain where the water is too shallow." And he left.
+Joshu replied: "Ships cannot remain where the water is too shallow." And he went on.
 
-A few days later Joshu went again to visit the monk and asked the same question.
+Joshu came to another hermit's hut and asked the same question.
 
-The monk answered the same way.
+This hermit too raised his fist.
 
-Joshu said: "Well given, well taken, well killed, well saved." And he bowed to the monk.
+Joshu said: "Well given, well taken, well killed, well saved." And he bowed to him.
 
 **Mumon's Comment**
 
@@ -497,7 +497,7 @@ At these words Joshu was enlightened.
 
 **Mumon's Comment**
 
-Questioned by Joshu, Nansen crumbled like a tiled roof and melted like ice; he could not explain himself. And even if Joshu did awaken, he would need thirty more years of study to get it.
+Questioned by Joshu, Nansen crumbled like a tiled roof and melted like ice; he could not explain himself. And even if Joshu did awaken, he would need thirty more years of study.
 
 **The Verse**
 
@@ -510,7 +510,7 @@ any season is a good season for you.
 
 **The Case**
 
-Shogen asked: "Why can the person of great strength not lift their leg?" And he also said: "It is not with the tongue that we speak."
+Shogen asked: "Why can't the person of great strength lift a foot?" And he also said: "It is not with the tongue that we speak."
 
 **Mumon's Comment**
 
@@ -518,7 +518,7 @@ Shogen spoke plainly enough, but how many will understand? If you comprehend, yo
 
 **The Verse**
 
-One lift of the leg turns the great ocean over;  
+One lift of the foot turns the great ocean over;  
 one bow of the head looks down on the heavens.  
 Such a body has no place to rest.  
 Let another continue this poem.
@@ -867,7 +867,7 @@ In such a case, if you can answer him to the point, your realization will be bea
 Meeting a Zen master on the road,  
 face him neither with words nor silence.  
 Give him a punch in the jaw:  
-understand it right there, and you understand.
+understand it on the spot, and you have it.
 
 ## 37. An Oak Tree in the Garden
 
@@ -967,12 +967,12 @@ Bodhidharma said: "Then your mind is pacified already."
 
 **Mumon's Comment**
 
-That broken-toothed old foreigner, Bodhidharma, came thousands of miles over the sea from India to China as if he had something wonderful. It is like raising waves without wind. After he remained years in China he had only one disciple and that one lost his arm and was deformed. Ha! Sha Sanro cannot read even four words.
+That broken-toothed old foreigner, Bodhidharma, came thousands of miles over the sea from India to China as if he had something wonderful. It is like raising waves without wind. After he remained years in China he had only one disciple and that one lost his arm and was deformed. Ha! And Bodhidharma could not read four words.
 
 **The Verse**
 
 Why did Bodhidharma come to China?  
-The whole affair began with the handing-down.  
+The whole affair began with that entrusting.  
 The uproar that fills the monasteries  
 was you, all along.
 

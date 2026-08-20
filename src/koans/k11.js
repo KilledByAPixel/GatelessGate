@@ -9,11 +9,18 @@ import {
 
 const ID = 11;
 
-// Joshu comes to a monk who has retired to meditate and asks "What is, is
-// what?" The monk raises his fist. Joshu says "ships cannot remain where the
-// water is too shallow", and leaves. Days later he comes back, asks the same
-// question, gets the same fist, and says "Well given, well taken, well
-// killed, well saved" — and bows.
+// Joshu comes to a hermit's hut and asks "Anything? Anything?" The hermit
+// raises his fist. Joshu says "ships cannot remain where the water is too
+// shallow", and goes on. He comes to a SECOND hermit, asks the same question,
+// gets the same fist, and says "Well given, well taken, well killed, well
+// saved" — and bows.
+//
+// Two hermits, not one man visited twice: the Chinese is 又到一庵主處 and Mumon's
+// comment counts 二庵主. The 1934 English merged them, and the verification pass
+// unmerged them. This scene still stages ONE figure answering twice, because the
+// koan's mechanism is the identical fist drawing opposite verdicts and one figure
+// delivers that in a single frame — the same knowing split as case 18's weighing,
+// where the diorama keeps a staging the text no longer claims.
 //
 // The fist is identical both times, and the interaction is Joshu's verdict:
 // touch it and he turns away; touch it again and he bows to it. Nothing about
@@ -65,7 +72,7 @@ const SEA_KEEP = [
 const CAM = { distance: 10.8, target: [-0.4, 1.3, -0.6], heading: 25, pitch: 18.4 };
   export default {
   id: ID,
-  slug: 'joshu-examines-a-monk-in-meditation',
+  slug: 'joshu-examines-two-hermits',
   title: TEXT[ID].title,
   accent: ACCENT,
   tier: 2,

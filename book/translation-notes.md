@@ -1227,6 +1227,19 @@ referent, not the only possible one.
 its negation by 1934 and §6 repaired it to "none can stop it" — completing Reps's
 invention, since the Chinese has no stopping in it. Now "even the master loses his way."
 
+**Case 11, case and title (0294b06–08) — found by reading the book aloud, after the
+comment below had been repaired.** 趙州到**一庵主**處…**又到一庵主**處 — Joshu comes to
+*a* hermit's hut, and then to *another* hermit's hut. **Two different men, one visit
+each.** The 1934 English merged them into one monk visited twice ("A few days later Joshu
+went again to visit the monk"), which costs the koan its mechanism: the point is that two
+different men make the identical gesture and draw opposite verdicts, and with one man it
+is only Joshu being inconsistent. It also left the repaired comment talking about "the two
+hermits" over a case that had one monk in it — the contradiction that surfaced this. The
+case now has both hermits, and 便行 is "went on" rather than "left". The page is retitled
+**Joshu Examines Two Hermits**: 庵主 is a hermit in a hut, not a monk in meditation (that
+was Reps's addition), and naming the two prepares the ear for the mechanism. Slug moved
+with the title; `src/koans/k11.js` records why the diorama still stages one figure.
+
 **Case 11, comment (0294b13–15).** 爭奈趙州却被二庵主勘破 — and yet Joshu was himself seen
 through by the two hermits. Reps: "Yet perhaps Joshu is wrong. Or, through that monk, he
 may have discovered his mistake" — wrong agent, wrong direction, and hedged. And the
@@ -1435,8 +1448,16 @@ retitled page orphans its saved marks and old deep links.
 5. **Case 33 — the title. RETITLED** to "Not Mind, Not Buddha," matching the repaired
    body and the Contents pairing against case 30's "This Mind Is Buddha."
 6. **Case 41 — 謝三郎不識四字 (0298a21). REPAIRED.** Now "Ha! Sha Sanro cannot read even
-   four words" — the line translated as it stands, Japanese reading per the names
-   rule, and 字 rendered "word" as case 1 already renders 無字 ("this one word, Mu"). The research that settled it: 謝三郎 is the proverbial illiterate ("knows the
+   four words" — the line translated as it stands, and 字 rendered "word" as case 1
+   already renders 無字 ("this one word, Mu"). **Revised again after a read-aloud pass:
+   the shipped line is "Ha! And Bodhidharma could not read four words."** A name no
+   reader can place, dropped into the last sentence of a comment, is a non-sequitur in
+   English where it is an allusion in Chinese — and this edition elsewhere drops exactly
+   such names (Fan Dan, Xiang Yu, Zhang Zhuo, General Guan are all unnamed, §4). What is
+   left is the commentarial reading itself: the jab lands on Bodhidharma, whose answer to
+   Emperor Wu was 不識, "I do not know." That commits to one reading of a contested line,
+   which is why it is written down here. The verse's 事因囑起 also reads "began with that
+   entrusting" rather than "the handing-down", which was a noun the ear could not hold. The research that settled it: 謝三郎 is the proverbial illiterate ("knows the
    three characters of his own name and not a fourth"), and the Japanese commentarial
    tradition points the jab at **Bodhidharma himself**, whose famous answer to Emperor Wu
    was 不識, "I don't know" — a compliment-shaped jab at not-knowing, which Reps's
