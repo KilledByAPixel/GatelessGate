@@ -1848,10 +1848,48 @@ nobody has to discover them later:
   this session to verify. If it proves exact and unwanted, "five hundred lives lived in
   style" is the ready alternative.
 
-**Not yet re-checked:** the Zen Warnings, Huanglong's Three Barriers and Zongshou's verse.
-The published volumes carrying that back matter could not be fetched past their front
-sections from this session. Those three should be run against Shibayama and Yamada before
-the page is set.
+## The Zen Warnings, checked at last — 20 August 2026
+
+For a month this section read "**Not yet re-checked:** the Zen Warnings, Huanglong's Three
+Barriers and Zongshou's verse," because the volumes could not be fetched. The Warnings are
+the only one of the three that **ships**, and they have now been run, couplet by couplet,
+against four independent published renderings: **Blyth**, **Eiichi Shimomissé**, **Gregory
+Wonderwheel** (the only complete one reached) and an unattributed version in circulation.
+
+**The result is clean.** No run of our English matches a published one at any length worth
+worrying about. Every overlap found is a **technical term or a forced two-to-four-word
+phrase** where English offers no real alternative:
+
+- **"silent illumination"** (默照) — a named method, Hongzhi's; the note above already
+  records that renaming it would erase the target. Our qualifier is **"crooked"** where the
+  others have *perverted*, *false* and *wrong*.
+- **"iron mountains"** (鐵圍山), **"deep pit"** (深坑), **"devil's army"** (魔軍),
+  **"chains"** (鎖) — all two words, all the standard English.
+- Couplet 1 shares the frame *"Follow the … and keep to the …"* with Blyth, who has
+  *compass* and *rule* where we have *rules* and *forms*. That frame is what the
+  four-character parallel 循規守矩 gives anyone who renders it as a parallel.
+
+**And in several places ours is the more faithful.** Couplet 6 keeps the Chinese order —
+地獄天堂, "hell and heaven" — where the published versions all flip to the English idiom
+*heaven and hell*. Couplet 9's 兀然 is **"like a stump"** here and *"on a high plateau"* in
+Wonderwheel, which is a different reading of the character, not a different wording of the
+same one. Our closing (努力今生須了却。莫教永劫受餘殃) shares nothing at all with his.
+
+### ⚑ The one overlap worth recording
+
+**Couplet 9, 鬼家活計.** Ours reads "**making a living in a house of ghosts**"; Wonderwheel
+has "the stratagem of **living in the house of ghosts**." That is a six-word run separated
+by one article, and it is the longest coincidence in the piece by some distance.
+
+It is **kept**, on the rule this file already applies elsewhere — where a coincidence is
+forced by the source, accuracy wins. 活計 *is* livelihood, and "making a living" is the
+English for it; the sneer this note documents above, at dead sitting as a comfortable
+career, is carried by exactly those words and by nothing else. Wonderwheel's "stratagem"
+does not carry it. If it ever needs clearing, "making your living among ghosts" breaks the
+run and costs the ghost-house its walls.
+
+**Still owed, and now the only items:** Huanglong's Three Barriers and Zongshou's verse.
+**Neither ships** — both are notes-only, so nothing a reader ever sees depends on them.
 
 ---
 
