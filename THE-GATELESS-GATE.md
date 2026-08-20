@@ -1223,7 +1223,7 @@ Mumon's preface, his afterword, the Zen Warnings and Amban's letter are not part
 
 **The book**
 
-The Gateless Gate was compiled in 1228 by the Chinese master Ekai, called Mu-mon (Wumen Huikai). It gathers forty-eight koans, each followed by his own commentary and a capping verse. The forty-ninth case is not his: Amban, described in the text only as a layman Zen student, added it afterwards as a bargain, complaining that Mu-mon was "like an old doughnut seller." It has travelled with the book ever since. The names throughout are the Japanese readings of Chinese ones, as Senzaki and Reps gave them: Joshu is Zhaozhou, Hyakujo is Baizhang.
+The Gateless Gate was compiled in 1228 by the Chinese master Ekai, called Mumon (Wumen Huikai). It gathers forty-eight koans, each followed by his own commentary and a capping verse. The forty-ninth case is not his: Amban, described in the text only as a layman Zen student, added it afterwards as a bargain, complaining that Mumon was "like an old doughnut seller." It has travelled with the book ever since. The names throughout are the Japanese readings of Chinese ones, as Senzaki and Reps gave them: Joshu is Zhaozhou, Hyakujo is Baizhang.
 
 **This edition**
 
