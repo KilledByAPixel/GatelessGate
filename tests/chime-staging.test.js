@@ -25,7 +25,7 @@ const CASES = [
   { slug: 'the-three-calls-of-the-emperor-s-teacher', kind: 'cylinder', pair: true }, // k17
   { slug: 'mahakashapa-s-preaching-sign', kind: 'chime', windTied: true },   // k22
   { slug: 'blow-out-the-candle', kind: 'cylinder' },             // k28
-  { slug: 'joshu-investigates', kind: 'chime' },                 // k31
+  { slug: 'joshu-tests-the-old-woman', kind: 'chime' },                 // k31
   { slug: 'learning-is-not-the-path', kind: 'chime' },           // k34 (revised from a cylinder)
   { slug: 'basho-s-staff', kind: 'chime' },                      // k44
   { slug: 'amban-s-addition', kind: 'cylinder' },                // k49

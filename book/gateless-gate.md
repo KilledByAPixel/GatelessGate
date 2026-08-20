@@ -451,7 +451,7 @@ Ummon asked: "The world is such a wide world, why do you answer a bell and don c
 
 ### Mumon's Comment
 
-When you study Zen you must not chase sound or color or form. Even though some have attained insight when hearing a voice or seeing a color or a form, this is a very common way. It is not true Zen. The real Zen student rides on sound and covers form, clear about each thing, sure of every move.
+When you study Zen you must not chase sound or color or form. Even though some have attained insight when hearing a voice or seeing a color or a form, this is a very common way. It is not true Zen. The real Zen student controls sound, color, and form, clear about each thing, sure of every move.
 
 Sound comes to the ear, the ear goes to sound. When you blot out sound and sense, what do you understand? While listening with ears you can never understand. To understand it fully you should see sound.
 
@@ -790,7 +790,7 @@ never go searching around.
 Asking what is Buddha
 is like claiming innocence with stolen goods in your pocket.
 
-## 31. Joshu Investigates
+## 31. Joshu Tests the Old Woman
 
 ### The Case
 

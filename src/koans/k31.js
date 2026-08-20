@@ -26,7 +26,7 @@ const POINT = 1.5;        // seconds: raise, hold, and back down
 const CAM = { distance: 11.3, target: [0.3, 1.3, -0.2], heading: 35.5, pitch: 15 };
   export default {
   id: ID,
-  slug: 'joshu-investigates',
+  slug: 'joshu-tests-the-old-woman',
   title: TEXT[ID].title,
   accent: ACCENT,
   tier: 2,

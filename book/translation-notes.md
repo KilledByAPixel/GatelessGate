@@ -1112,15 +1112,33 @@ each colon; without a pause there the section becomes a stream of contradictory 
 quantity out, and `1228` in the colophon follows a comma, where some engines read the digits
 individually.
 
-Three `##` page titles changed and may need narration keys rebuilt: **case 20** (The
-Enlightened Man → The Enlightened Person), **case 22** (Kashapa's → Mahakashapa's Preaching
-Sign), and the buffalo case (A Buffalo Passes Through the Enclosure → the Gate; case 38
-since the reorder). Part Three's verification then retitled three more — **case 19**
-(Everyday Life Is the Path → Ordinary Mind Is the Path), **case 20** again (The
-Enlightened Person → The Person of Great Strength), **case 33** (This Mind Is Not Buddha
-→ Not Mind, Not Buddha) — and the 37/38 reorder renumbered two pages. Slugs derive from
-titles, so the three retitled pages' saved marks and old deep links were orphaned
-knowingly; the reordered pair kept their slugs and lost nothing.
+**A `##` page title costs a slug, never an mp3.** An earlier draft of this section said a
+retitled page "may need narration keys rebuilt"; that is **wrong**, and the pre-bake sweep
+of August 2026 established it. A narration unit is `CASES[id][section]` for
+`case`/`comment`/`verse` only, and its file is `k{id}-{section}.mp3` — keyed by number and
+section, never by title. A page title is not narrated at all, so retitling renames no file,
+orphans no file, and does not by itself make a unit stale. (The rule that *does* bite is
+about `###` **section** headings, per CLAUDE.md: those choose the key.) What a retitle does
+cost is the **slug**, which derives from the title — so that page's saved marks and any
+old deep link to it are dropped.
+
+Retitled so far, all knowingly: **case 20** twice (The Enlightened Man → The Enlightened
+Person in Part Two, then → **The Person of Great Strength** in §3), **case 22** (Kashapa's
+→ Mahakashapa's Preaching Sign), the buffalo case (…Enclosure → …the Gate), **case 19**
+(Everyday Life Is the Path → **Ordinary Mind Is the Path**), **case 33** (This Mind Is Not
+Buddha → **Not Mind, Not Buddha**), **case 11** (Joshu Examines a Monk in Meditation →
+**Joshu Tests Two Hermits**), **case 12** (Zuigan Calls His Own Master → **Zuigan Calls to
+Himself**), **case 39** (Ummon's Sidetrack → **Ummon Catches a Slip**), **case 40**
+(…Water Vase → **…Water Jug**), and **case 31** (Joshu Investigates → **Joshu Tests the
+Old Woman**). The 37/38 reorder renumbered two pages but kept their slugs, and lost
+nothing.
+
+**Case 31's retitle is the one to learn from.** Nobody chose it: §4b changed 勘破 inside
+the case from "investigate" to "checked her out" and "seen through", and the page went on
+calling itself *Joshu Investigates* over a case in which nothing investigates. The final
+read-aloud sweep caught it. **A word repaired in a case can strand the title above it**,
+exactly as case 11's repaired comment stranded its own case — so after any wording pass,
+read each changed page's title against its changed text.
 
 ---
 ---
@@ -1618,9 +1636,12 @@ was accurate to 勘 and wrong in current English.
 - **Case 40 — "water vase" → "water jug", title included.** 淨瓶 is the monk's water
   pitcher. "Vase" puts flowers on a table, so the koan became a man kicking over an
   ornament instead of a working tool. `src/kit/vase.js` keeps its name and records why.
-- **Case 31 — "investigate" → "check out" / "see through."** 勘破 is *to see through*
-  someone. "I have investigated that old woman" reads as police procedure now, and faintly
-  sinister with it. This also puts case 31 in step with case 11's title, the same 勘.
+- **Case 31 — "investigate" → "check out" / "see through", and the title with it.** 勘破 is
+  *to see through* someone. "I have investigated that old woman" reads as police procedure
+  now, and faintly sinister with it. The page had to follow: it was still called *Joshu
+  Investigates* over a case in which nothing investigated, so it is now **Joshu Tests the
+  Old Woman** — 趙州勘婆, the same 勘 as case 11, and the pair now shows in English what it
+  shows in Chinese.
 - **Case 39 — "sidetracked" → "slipped", and the title with it.** 話墮 is *words fallen*:
   the monk is caught out by his own speech, mid-quotation. "Sidetrack" is a railway
   metaphor that now means merely distracted. **And the title had the wrong man**: Reps's
@@ -1648,7 +1669,11 @@ these compounds is in the Chinese:
   all.** The old man says he answered so and fell into a fox's body; Reps inserted an
   abstraction at the hinge of the book's most famous cause-and-effect koan. Cut.
 - **Case 16 — "actualizes the truth in everyday life"** for 頭頭上明。著著上妙 — now "clear
-  about each thing, sure of every move."
+  about each thing, sure of every move." Reps's "controls sound, color, and form" **stays**
+  in front of it. A first attempt replaced that too, with the literal 騎聲蓋色 ("rides on
+  sound and covers form"), and the pre-bake read caught it as a step backwards: more
+  faithful to the characters, and opaque to anyone hearing it once. This pass is about what
+  a reader receives, so where the literal is the harder read, the literal loses.
 - **Case 9 — "ten cycles of existence"** for 十劫 — now "ten ages", which is also the
   book's own word for a long span (cases 22, 35, and the Zen Warnings).
 
