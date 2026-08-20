@@ -41,7 +41,7 @@ A few other small editorial changes were made along the way, and the book's own 
 
 Shared under [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International](https://creativecommons.org/licenses/by-nc-nd/4.0/).
 
-This is a new edition of the Mumonkan rather than a reprint of an old one: the forty-nine cases have been edited and modernised throughout, and the preface and back matter were translated for it from the Chinese and appear in no earlier English edition.
+This is a new edition of the Mumonkan rather than a reprint of an old one: the forty-nine cases have been edited and modernised throughout, and the preface and back matter are new translations, made for it from the Chinese, which the 1934 text it rests on does not carry.
 
 That license covers: the code, the dioramas, the audio, the narration, the new translations of the front and back matter, and the editing of the cases, (c) 2026 Frank Force.
 

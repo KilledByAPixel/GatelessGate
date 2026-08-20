@@ -54,9 +54,22 @@ original.
 "has never appeared in our edition," which was true, but the book's front matter went
 further and said it appears "in no earlier English edition of the Mumonkan." That is
 false: Blyth, Shibayama, Sekida and Aitken all carry this apparatus, and an English
-"Zen Warnings" is in open circulation. The front matter now claims only what is true —
-that these are new translations made for this edition, and that the 1934 text it rests
-on carries none of them.
+"Zen Warnings" is in open circulation. The claim now made is only what is true — that
+these are new translations made for this edition, and that the 1934 text it rests on
+carries none of them.
+
+⚑ **And this file was wrong about its own fix until 20 August 2026.** The paragraph above
+said "the front matter now claims only what is true," and the book's front matter did
+carry the safe wording — but the false claim was still shipping in **five other places**
+that nobody went back for: the About panel's Rights section, the header the book builder
+writes into `THE-GATELESS-GATE.md`, `README.md`, and `NOTICE.md`, where it sat inside a
+rights statement. An outside reader of the book flagged it, which is how it was found.
+All five now carry the true claim. **The lesson is worth more than the fix: a claim
+corrected in the source it was noticed in is not corrected in the product.** When a
+factual assertion about the edition changes, grep every surface that repeats it —
+`book/gateless-gate.md`, `src/ui/about_state.js`, `scripts/lib/book-md.js`, `README.md`,
+`NOTICE.md` — because four of those five are outside the book file and no test covers
+their content.
 
 ---
 
@@ -1595,9 +1608,14 @@ charm. None should be "fixed" without rereading §2 of Part Two first.
   deformed"; 為汝安心竟 (a completed act: "There — I have finished pacifying it") → a
   state ("is pacified already"). The punchline and verse were repaired under §3's
   sixth ruling.
-- **42** — 不通小小 is genuinely unclear ("no small performance" / "beyond the petty");
-  "set a very poor stage" may invert it, unresolved; 那伽大定 (the naga's samadhi) and
-  業識忙忙 simplified.
+- **42** — **resolved, August 2026, and no longer a choice.** 不通小小 was not mistranslated
+  by Reps; it was **dropped**, and "set a very poor stage" rendered 做者一場雜劇 alone. The
+  readings of 不通小小 split over whether the play is contemptible ("a farce — and no small
+  one") or admirable ("not in the least petty"), but **both agree it is not small**, so the
+  restored clause is the part that is not in dispute. The English is now "staged a whole
+  farce here, and no small one": 雜劇 is the genre — a variety-play — rather than Reps's
+  verdict on its quality, and "no small one" survives either reading. 那伽大定 (the naga's
+  samadhi) and 業識忙忙 stay simplified.
 - **45** — 釋迦彌勒 → "the past and future Buddhas" (case 37's comment names them); 奴
   "slaves" → "servants."
 - **46** — 麁飡易飽。細嚼難飢 (coarse food fills fast; fine chewing keeps hunger away) →

@@ -77,8 +77,9 @@ export function bookMarkdown({ entries, cases, matter, about, script }) {
     // "About this text" below; this is the sentence that cannot wait.
     'A new edition, (c) 2026 Frank Force, shared under '
     + '[CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/). '
-    + 'The cases are edited and modernised throughout; the preface and back matter were '
-    + 'translated for this edition from the Chinese and appear in no earlier English one. '
+    + 'The cases are edited and modernised throughout; the preface and back matter are new '
+    + 'translations, made for this edition from the Chinese, which the 1934 text it rests '
+    + 'on does not carry. '
     + 'The 1934 translation underneath the editing is public domain and stays that way; '
     + 'see [NOTICE.md](NOTICE.md).',
     '---',

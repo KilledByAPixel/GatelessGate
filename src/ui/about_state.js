@@ -118,9 +118,9 @@ export const SECTIONS = [
     label: 'Rights',
     parts: [
       'This is a new edition of the Mumonkan, (c) 2026 Frank Force: the cases '
-      + 'edited and modernised throughout, and a preface and back matter '
-      + 'translated for it from the Chinese that appear in no earlier English '
-      + 'edition. The 1934 translation underneath that editing is in the public '
+      + 'edited and modernised throughout, and a preface and back matter newly '
+      + 'translated for it from the Chinese, which the 1934 text it rests on does '
+      + 'not carry. The 1934 translation underneath that editing is in the public '
       + 'domain and stays that way. Everything else (the code, the dioramas, '
       + 'the audio, the narration, the new translations and the editing) is '
       + 'shared under ',

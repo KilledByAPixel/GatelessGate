@@ -29,8 +29,9 @@ sitting alone at the root of a repository looks like it covers the whole of it.
 In short: attribution required, no commercial use, no derivative works.
 
 This is a new edition of the Mumonkan, not a reprint of an old one. It carries a
-preface and back matter that have appeared in no earlier English edition, and its
-forty-nine cases have been edited throughout. What it inherits, it says so.
+preface and back matter newly translated for it from the Chinese, which the 1934
+text underneath does not carry at all, and its forty-nine cases have been edited
+throughout. What it inherits, it says so.
 
 ## Not covered
 

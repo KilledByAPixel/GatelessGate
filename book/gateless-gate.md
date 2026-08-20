@@ -1029,7 +1029,7 @@ No sooner had the Buddha spoken than that Bodhisattva sprang up from the earth a
 
 ### Mumon's Comment
 
-Old Shakyamuni set a very poor stage. I want to ask you: If Manjusri, who is supposed to have been the teacher of seven Buddhas, could not bring this girl out of meditation, how then could a Bodhisattva who was a mere beginner?
+Old Shakyamuni staged a whole farce here, and no small one. I want to ask you: If Manjusri, who is supposed to have been the teacher of seven Buddhas, could not bring this girl out of meditation, how then could a Bodhisattva who was a mere beginner?
 
 If you understand this deeply, you yourself can enter the great meditation while you are living in the world of delusion.
 
