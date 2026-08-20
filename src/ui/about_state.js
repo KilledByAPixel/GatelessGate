@@ -52,14 +52,14 @@ export const SECTIONS = [
   {
     label: 'The translation',
     parts: [
-      'The English text is Nyogen Senzaki and Paul Reps’s rendering of the '
+      "The English text is Nyogen Senzaki and Paul Reps's rendering of the "
       + 'Mumonkan, privately printed by John Murray in Los Angeles in 1934. That '
-      + 'printing is in the United States public domain — its copyright was never '
+      + 'printing is in the United States public domain; its copyright was never '
       + 'renewed. Reps later expanded this material into Zen Flesh, Zen Bones '
       + '(1957), the version most readers know. Archaic verb forms and pronouns, '
       + 'which survive here and there in the capping verses, have been lightly '
-      + 'modernised; Mumon’s commentaries were already in plain modern English. '
-      + 'Other small editorial changes have been made — bracketed translator’s '
+      + "modernised; Mumon's commentaries were already in plain modern English. "
+      + "Other small editorial changes have been made: bracketed translator's "
       + 'notes let go where they explained a koan before it had finished asking, '
       + 'and the like. Transcribed from ',
       ['sacred-texts.com', SOURCE_URL],
@@ -73,12 +73,12 @@ export const SECTIONS = [
     // this page attached to it.
     label: 'The front and back matter',
     parts: [
-      'Mumon’s preface, his afterword, the Zen Warnings and Amban’s letter are not '
+      "Mumon's preface, his afterword, the Zen Warnings and Amban's letter are not "
       + 'part of the 1934 translation, which carries only the cases. They were '
-      + 'translated for this edition from the Chinese of the Taishō canon (CBETA '
+      + 'translated for this edition from the Chinese of the Taisho canon (CBETA '
       + 'T48n2005), in three independent passes made blind to one another and to any '
-      + 'existing English version — a philological one, one in Song Chan idiom, and '
-      + 'one in plain English. The three were then compared and every divergence of '
+      + 'existing English version (a philological one, one in Song Chan idiom, and '
+      + 'one in plain English). The three were then compared and every divergence of '
       + 'meaning taken back to the Chinese and settled by hand. It is a new rendering '
       + 'and worth reading as one: it has had no scholarly review, and the Chinese '
       + 'text it works from was not independently collated against a second witness.',
@@ -88,11 +88,11 @@ export const SECTIONS = [
     label: 'The book',
     parts: [
       'The Gateless Gate was compiled in 1228 by the Chinese master Ekai, called '
-      + 'Mu-mon — Wumen Huikai. It gathers forty-eight koans, each followed by his '
+      + 'Mu-mon (Wumen Huikai). It gathers forty-eight koans, each followed by his '
       + 'own commentary and a capping verse. The forty-ninth case is not his: '
       + 'Amban, described in the text only as a layman Zen student, added it '
-      + 'afterwards as a bargain, complaining that Mu-mon was “like an old '
-      + 'doughnut seller.” It has travelled with the book ever since. The names '
+      + 'afterwards as a bargain, complaining that Mu-mon was "like an old '
+      + 'doughnut seller." It has travelled with the book ever since. The names '
       + 'throughout are the Japanese readings of Chinese ones, as Senzaki and Reps '
       + 'gave them: Joshu is Zhaozhou, Hyakujo is Baizhang.',
     ],
@@ -102,7 +102,7 @@ export const SECTIONS = [
     parts: [
       'An interactive edition: every case staged as a small ink-painting '
       + 'diorama you can look around and touch, with narration, procedural '
-      + 'ambience, and a timer for sitting. It is a book rather than a game — '
+      + 'ambience, and a timer for sitting. It is a book rather than a game: '
       + 'nothing here is a puzzle to solve, and nothing is locked. Made by Frank '
       + 'Force, ',
       ['frankforce.com', SITE],
@@ -117,16 +117,16 @@ export const SECTIONS = [
   {
     label: 'Rights',
     parts: [
-      'This is a new edition of the Mumonkan, © 2026 Frank Force: the cases '
+      'This is a new edition of the Mumonkan, (c) 2026 Frank Force: the cases '
       + 'edited and modernised throughout, and a preface and back matter '
       + 'translated for it from the Chinese that appear in no earlier English '
       + 'edition. The 1934 translation underneath that editing is in the public '
-      + 'domain and stays that way. Everything else — the code, the dioramas, '
-      + 'the audio, the narration, the new translations and the editing — is '
+      + 'domain and stays that way. Everything else (the code, the dioramas, '
+      + 'the audio, the narration, the new translations and the editing) is '
       + 'shared under ',
       ['Creative Commons BY-NC-ND 4.0', LICENSE_URL],
-      ': credit it, don’t sell it, don’t publish a changed version of it. For '
-      + 'anything the licence doesn’t cover, ask. Three.js, vendored here, is '
+      ": credit it, don't sell it, don't publish a changed version of it. For "
+      + "anything the licence doesn't cover, ask. Three.js, vendored here, is "
       + 'MIT-licensed and travels under its own terms.',
     ],
   },
@@ -135,9 +135,9 @@ export const SECTIONS = [
     parts: [
       `Three.js (${THREE_VERSION}) for the rendering, vendored rather than fetched. `
       + 'Every sound in the book except the narration is generated at runtime with '
-      + 'the Web Audio API — the wind, the bells, the knocks and the drift are '
+      + 'the Web Audio API: the wind, the bells, the knocks and the drift are '
       + 'synthesised, not sampled. The narration was baked ahead of time with '
-      + `Google’s ${TTS_MODEL}. There is no build step, no framework, no `
+      + `Google's ${TTS_MODEL}. There is no build step, no framework, no `
       + 'analytics, and nothing at all is loaded from a third party while you '
       + 'read.',
     ],

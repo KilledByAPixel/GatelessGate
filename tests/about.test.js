@@ -118,7 +118,10 @@ test('the favicon is declared and the file is there', () => {
 test('the rights line names the holder, the year and the licence', () => {
   const rights = SECTIONS.find((s) => s.label === 'Rights');
   const txt = rights.parts.join('');
-  assert.match(txt, /©\s*2026\s*Frank Force/);
+  // "(c)" rather than the sign: the book is ASCII end to end, and this page's
+  // text is rendered into THE-GATELESS-GATE.md, which tests/book-md.test.js
+  // holds to that.
+  assert.match(txt, /\(c\)\s*2026\s*Frank Force/);
   assert.match(txt, /BY-NC-ND 4\.0/);
   // and it still says what is NOT his to license. That is the reason this page
   // has a rights line at all: the book is a new edition standing on a public

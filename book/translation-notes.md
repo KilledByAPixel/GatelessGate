@@ -1094,10 +1094,17 @@ chiasmus *reads like a typesetting error* to someone who does not know the Chine
 
 Each `###` section is baked to an audio file. The front matter sits under no `###`
 heading and is therefore not narrated — which is fortunate, since it holds the markdown
-link, `CBETA T48n2005`, `©`, `CC BY-NC-ND 4.0` and `NOTICE.md`. The narrated body is pure
-ASCII: straight quotes, no curly quotes, no ellipses, and only three non-ASCII characters
-in the whole file, all of them in front matter (`Taishō` twice — the second added by Part
-Three's verification sentence — and `©`).
+link, `CBETA T48n2005`, `CC BY-NC-ND 4.0` and `NOTICE.md`.
+
+**The file is now pure ASCII throughout** — straight quotes, no curly quotes, no
+ellipses, and not one non-ASCII character anywhere, front matter and build comment
+included. The last two went in August 2026: the macron on `Taishō`, which was the only
+macron a reader ever saw in a book whose naming rule already spells every name bare
+(*Joshu*, *Hyakujo*, *Tosotsu*), and `©`, now `(c)`. Neither was narrated, which is
+exactly why they drifted — the ASCII discipline was enforced by the bake on the body and
+by nothing at all on the front matter. `tests/book-md.test.js` now pins the property on
+both the source and the generated page, and since the generated page carries the About
+text, a curly apostrophe typed into `about_state.js` fails there too.
 
 **Audition the Zen Warnings first.** Its eleven couplets depend on the line break after
 each colon; without a pause there the section becomes a stream of contradictory fragments.

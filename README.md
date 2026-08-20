@@ -29,10 +29,10 @@ You can read the koans, meditate in the scenes, or have it read to you.
 The whole book is also here as one plain page: [THE GATELESS GATE](THE-GATELESS-GATE.md).
 It is generated from the same source the interactive edition reads, so the two cannot drift apart.
 That source is [book/gateless-gate.md](book/gateless-gate.md) — the preface, the forty-nine and the afterword in one file — and `node scripts/build-text.js` is what turns it into what the site reads.
-Beside it, [book/translation-notes.md](book/translation-notes.md) is the scholarly record behind the new translation: the Chinese, the exact Taishō page and line spans, the reasoning, and the readings still unresolved.
+Beside it, [book/translation-notes.md](book/translation-notes.md) is the scholarly record behind the new translation: the Chinese, the exact Taisho page and line spans, the reasoning, and the readings still unresolved.
 
 The English is Nyogen Senzaki and Paul Reps's rendering of the Mumonkan, privately printed by John Murray in Los Angeles in 1934 which is in the United States public domain.
-Mumon's preface, his afterword, the Zen Warnings and Amban's letter were translated with AI assistance for this edition from the Chinese of the Taishō canon (CBETA T48n2005).
+Mumon's preface, his afterword, the Zen Warnings and Amban's letter were translated with AI assistance for this edition from the Chinese of the Taisho canon (CBETA T48n2005).
 There were three independent passes, each made blind to the others and to any existing English version, then compared line by line, with every difference in meaning settled against the Chinese.
 It is a new rendering and worth reading as one: it has had no scholarly review, please reach out if you are interested in doing one.
 A few other small editorial changes were made along the way, and the book's own About page has the details.
@@ -43,7 +43,7 @@ Shared under [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 Inter
 
 This is a new edition of the Mumonkan rather than a reprint of an old one: the forty-nine cases have been edited and modernised throughout, and the preface and back matter were translated for it from the Chinese and appear in no earlier English edition.
 
-That license covers: the code, the dioramas, the audio, the narration, the new translations of the front and back matter, and the editing of the cases, © 2026 Frank Force.
+That license covers: the code, the dioramas, the audio, the narration, the new translations of the front and back matter, and the editing of the cases, (c) 2026 Frank Force.
 
 It does not cover the 1934 translation underneath that editing, which is public domain and nobody's to license, or Three.js in `lib/`, which is MIT and travels under its own terms.
 [NOTICE.md](NOTICE.md) sorts out which is which, and [LICENSE](LICENSE) is the legal text.

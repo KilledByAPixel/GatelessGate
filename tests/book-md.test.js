@@ -90,6 +90,27 @@ test('no ideographic indent reaches the file', () => {
   assert.ok(!MD.includes('　'), 'the verse marker is structure, never rendered');
 });
 
+test('the book is pure ASCII, front matter and all', () => {
+  // Curly quotes and ellipses reach a TTS engine as something other than the
+  // straight marks the bake was auditioned on, so the narrated body has always
+  // been ASCII. The last holdouts sat in the front matter, which is NOT narrated
+  // and so drifted unwatched: a macron on Taisho and a copyright sign. Both went
+  // in August 2026 — the edition's naming rule already spells every other name
+  // bare (Joshu, Hyakujo, Tosotsu), and (c) costs a reader nothing — which makes
+  // the property total and therefore worth pinning.
+  //
+  // Both files are checked because they fail differently: the source is what an
+  // editor pastes into, and the generated page additionally carries the About
+  // text, so a curly apostrophe typed into about_state.js lands here too.
+  const offenders = (text, where) => text.split('\n').flatMap((line, i) => {
+    const bad = line.match(/[^\x00-\x7F]/g);
+    return bad ? [`${where}:${i + 1} has ${[...new Set(bad)].join(' ')}`] : [];
+  });
+  const source = readFileSync(join(ROOT, 'book', 'gateless-gate.md'), 'utf8');
+  assert.deepEqual(offenders(source, 'book/gateless-gate.md'), []);
+  assert.deepEqual(offenders(MD, 'THE-GATELESS-GATE.md'), []);
+});
+
 test('the committed THE-GATELESS-GATE.md is what the builder produces', () => {
   // The guard that stops this file rotting: edit the text, forget to regenerate,
   // and the book and its Markdown quietly disagree. Line endings are normalised

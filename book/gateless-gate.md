@@ -9,7 +9,7 @@ which writes src/koans/text/mumonkan.js and matter.js. Those two are
 GENERATED and say so at the top; this is the file to change.
 
 `##` opens a page, `###` opens a section, and the section headings are
-matched exactly — they choose the key that names the baked narration file,
+matched exactly: they choose the key that names the baked narration file,
 so a retitled heading fails the build rather than orphaning an mp3.
 
 Inside a section a blank line is a paragraph or stanza break. Within a
@@ -18,7 +18,7 @@ breaks are the verse and are kept. scripts/lib/parse-book.js says which
 sections are which.
 
 RIGHTS: this is a new edition of the Mumonkan, (c) 2026 Frank Force,
-CC BY-NC-ND 4.0 — re-edited and modernized throughout, with a preface and
+CC BY-NC-ND 4.0: re-edited and modernized throughout, with a preface and
 a back matter translated for it from the Chinese and published in no
 earlier English edition. What it inherits is nobody's to license: Wumen
 Huikai's 1228 Chinese, and the 1934 Senzaki/Reps English under the edits,
@@ -31,11 +31,11 @@ which is in the United States public domain. NOTICE.md has the detail.
 
 A new edition, not a reprint of an old one.
 
-Its front and back matter (Mumon's preface, his afterword, the Zen Warnings, and Amban's letter) are new translations, made for this edition from the Chinese of the Taishō canon (CBETA T48n2005). The 1934 text it otherwise rests on carries none of them.
+Its front and back matter (Mumon's preface, his afterword, the Zen Warnings, and Amban's letter) are new translations, made for this edition from the Chinese of the Taisho canon (CBETA T48n2005). The 1934 text it otherwise rests on carries none of them.
 
-Its forty-nine cases have been edited throughout: archaic constructions eased, wording simplified where it clouded the sense, the reader addressed directly where the old text spoke of a hypothetical man, and the capping verses restored to verse. Every case has then been checked, line by line, against Wumen's Chinese in the Taishō canon, and repaired where the 1934 rendering strayed from what the Chinese says. The aim is a Gateless Gate that reads plainly in the English of now, without losing what the older renderings were reaching for.
+Its forty-nine cases have been edited throughout: archaic constructions eased, wording simplified where it clouded the sense, the reader addressed directly where the old text spoke of a hypothetical man, and the capping verses restored to verse. Every case has then been checked, line by line, against Wumen's Chinese in the Taisho canon, and repaired where the 1934 rendering strayed from what the Chinese says. The aim is a Gateless Gate that reads plainly in the English of now, without losing what the older renderings were reaching for.
 
-The new translations and the editing are © 2026 Frank Force, shared under CC BY-NC-ND 4.0.
+The new translations and the editing are (c) 2026 Frank Force, shared under CC BY-NC-ND 4.0.
 
 **What it descends from**
 
