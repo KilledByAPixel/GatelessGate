@@ -359,7 +359,7 @@ const CAM = { distance: 10.8, target: [-0.4, 1.3, -0.6], heading: 25, pitch: 18.
         // rather than fighting it
         const r = clock - rockedAt;
         if (r >= 0 && r < ROCK.span) {
-          boat.group.rotation.z +=
+          boat.group.rotation.z -=
             ROCK.amp * Math.sin(r * ROCK.hz * Math.PI * 2) * Math.exp(-r / ROCK.tau);
         }
         // the lapping breathes with the sea it belongs to (k20's idiom):
