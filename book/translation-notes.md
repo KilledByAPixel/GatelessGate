@@ -34,8 +34,11 @@
 > phrases are translated, they are Mumon's, and they are written out here so that
 > deleting the working drafts did not delete them.
 >
-> The collation against a non-CBETA witness is still owed, and wants a machine that
-> can reach Chinese Wikisource — see "Source" below.
+> **The collation against a non-CBETA witness has been performed** (20 August 2026),
+> after a month of being the one thing this file said still wanted doing. The witness
+> is independent of CBETA and its lineage is unstated; it confirms four of CBETA's
+> eight emendations and leaves three unsupported, including the camel in case 48.
+> See "The collation, finally performed" below.
 
 Translations prepared 27 July 2026. Cases edited and the whole book brought into one
 register, 11 August 2026. The forty-nine cases verified against the Chinese and the
@@ -86,12 +89,68 @@ CBETA's punctuation retained except where noted.
 
 Each piece below carries its exact Taishō page and line span, e.g. `p.292b12–b25`.
 
-**Chinese Wikisource could not be reached from this session** — `zh.wikisource.org` is
-cache-only on this proxy, and the Wayback and ctext mirrors are blocked as well. A
-substitute Chinese witness was collated (佛弟子文庫, fodizi.tw), but it reproduces all three
-of CBETA's emendations, so it is CBETA-derived and its agreement is close to circular.
-**Treat the collation as unperformed.** It is the one thing in this file that still wants
-doing, and it wants doing from a machine that can reach Wikisource.
+## The collation, finally performed — 20 August 2026
+
+For a month this section read "Chinese Wikisource could not be reached from this session…
+**treat the collation as unperformed.**" It has now been done. Wikisource was reachable,
+and the text was pulled as **raw wikitext** rather than through any summarising fetch,
+because a model in the pipeline can silently normalise the very characters a collation
+exists to compare.
+
+**Why this was worth doing at all.** Our edition rests entirely on CBETA's digitisation.
+CBETA did not merely transcribe the Taishō: at **eight points its editors printed a
+different character** from the base text. Every one of those is a modern judgement about a
+1228 document, and our English inherits all eight without ever having questioned one. The
+earlier attempt failed not for want of a witness but because the witness (佛弟子文庫)
+reproduced CBETA's emendations exactly — agreement from a copy of your own source is an
+echo, not evidence.
+
+**So the first job was to test the witness, not the text.** Wikisource diverges from CBETA
+orthographically in at least four places — 注**腳**/注**脚**, **冰**消/**氷**消,
+隔**窗**/隔**窓**, 扶**豎**/扶**竪** — which is what independent typesetting leaves behind
+and what a copy cannot. **This witness is not derived from CBETA.** That is the finding
+that makes the rest mean anything.
+
+**⚑ But its lineage is unstated, and this bounds every conclusion below.** The page names
+no 底本, and its substantive readings track the Taishō. It is best treated as
+Taishō-adjacent with modernised orthography. Therefore: where it fails to confirm a CBETA
+emendation, that is **absence of independent support, not refutation** — a witness sharing
+the Taishō's ancestry inherits the Taishō's errors. Nothing here gets us back to 1228.
+
+### Results — four agree, three do not, one passage absent
+
+**Agrees with CBETA:** 報**因**佑慈禪寺 (the monastery, base against the Enpō witness),
+懸崖**撒**手 (case 32's verse), 辜負自**己** (the afterword), 常**牧** (the Ōei colophon).
+Note that the two real corrections among these — 己 for 已 and 牧 for 收 — differ from the
+error by one stroke and by a close visual resemblance, so a careful transcriber might well
+have fixed both silently. **Even the confirmations are weak evidence.**
+
+**Reads with the Taishō, so CBETA's emendation stands unsupported here:**
+
+- **貶得眼來** for CBETA's **眨得眼來** (p.292b22) — the preface's "blink, and it is gone."
+  CBETA is very likely right on sense: 貶 is to demote or disparage and does nothing to an
+  eye, while 眨 is to blink. A shared visual error inherited by both.
+- **請續一向** for CBETA's **請續一句** (p.295c04) — case 20's verse, which ships as "Let
+  another continue this poem." That English depends on 句, a line of verse; 一向 will not
+  carry it. CBETA is again likely right, and worth knowing that the line rests on an
+  emendation.
+- **兩箇馳子相撞著** for CBETA's **兩箇駞子** (p.299a09) — **case 48's camel.**
+
+**Absent:** the 無 that CBETA deletes at p.293a25 could not be located in this witness;
+inconclusive rather than either way.
+
+### ⚑ What this settles about case 48
+
+The camel is **not in the mainstream transmission.** It is CBETA's 2019 emendation, taken
+from 柳幹康's collation of a single Muromachi manuscript, and the independent witness reads
+馳, the galloper, exactly as the Taishō does.
+
+Part Three §4 declined to restore the camel on the ground that adopting it is a choice of
+witness this edition has no standing to make silently. **That reasoning was methodological
+when it was written; it is now empirical.** Reps's "two riders" tracks the reading that the
+Taishō and an independent witness both carry, and the humped-and-therefore-nothing-straight
+joke belongs to one manuscript and one 2019 article. The decision to keep the riders stands
+on firmer ground than the argument that produced it.
 
 For what it is worth: the 云/雲 conversion artifact the brief warns about **cannot touch
 this material**. There is no 云 anywhere in the front or back matter, and the only 雲 is the
