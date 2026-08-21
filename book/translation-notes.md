@@ -1956,6 +1956,69 @@ but the sentence is murky for a different reason — the idiom turns on having h
 redbeards and then meeting one — and swapping the noun would not fix it. **Left as a known
 weak spot rather than half-mended.**
 
+## 4f. The readability pass — 21 August 2026
+
+The finished book read end to end for English flow, not for fidelity. Fidelity had already
+been settled; this asked only whether the sentences work. Roughly sixty edits, none of which
+changes what a line means.
+
+**The class that mattered most is the register test again**, and it caught six the earlier
+sweeps missed — because those hunted words that had *drifted*, and these are words that were
+always ambiguous and are now read the wrong way first:
+
+- **"leading each student on"** (preface) for 隨機引導. To lead someone on is now to string
+  them along. Exactly backwards for a teacher. Now **guiding**.
+- **"Old Zuigan sells out and buys himself"** for 自買自賣, *himself buys, himself sells*.
+  "Sells out" imports a betrayal that is not there; the Chinese is a closed loop. Now
+  **"buys and sells himself."**
+- **"One holds, the other gives out"** (case 48) for 把定放行, the standard Chan pair
+  *hold fast / let pass*. "Gives out" is what a knee does. Now **"One holds fast, the other
+  lets go."**
+- **"you will turn into Zen"** (case 47) — a garden path whose natural parse is the reader
+  turning into Zen. One word: **turn it into Zen**.
+- **"did not admit the first"** (case 11) — "admit" now means confess, or let in. 肯/不肯 is
+  one verb affirmed and negated, so: **refuse the first and approve the second**.
+- **"but especially transmitted beyond teaching"** (case 6) for 教外別傳. This is the
+  classic four-phrase formula, *a separate transmission outside the teachings*, and
+  "especially" is not an intensifier that belongs anywhere near it. **The oldest surviving
+  defect in the book**, and it read as a typo for ninety years. Now **"transmitted
+  separately, outside the teachings."**
+
+**Twenty sentence-level stumbles** were repaired: a question mark mid-sentence in case 1, a
+dangling participle ("As a fruit ripening in season"), a verb that cannot govern a quotation
+("wondered the monks"), "After he remained years in China", "oppositely", "asked of Sozan",
+the book's one inverted attribution ("Said Mahakashapa"), and case 26's "observing the
+physical movement", which is the philosophy-department filler Part Two §1 names as a fault
+class and had survived every pass. **Three of the twenty repaired wordings introduced by
+this session's own earlier passes**: "the dead road of before" twice over, "the officer on
+it" sitting oddly on a barrier, and "struck that trade" where English strikes bargains and
+makes trades.
+
+**Twenty smaller items** — articles, comma splices, "arose" for "rose", three "proceed on
+from"s — took the same pass.
+
+### Rulings on the four left open
+
+- **Case 2's redbeard line.** Reopened and changed after all: "I thought the Persian's
+  beard was red; now I see a red-bearded Persian before me." The turn — hearsay, then the
+  thing itself — was inaudible in Reps's version. **Note that this reverses a decline
+  recorded in §4e**; the earlier ruling was against swapping the *noun*, which would not
+  have fixed the sentence. Recasting it did.
+- **Case 15's narrator aside** ("wondering how long Tozan would continue with such factual
+  answers") — **cut**. It is Reps's insertion, the only novelistic narrator-comment in any
+  case, and it tells the reader what to think about an exchange that works without it.
+- **Case 33's "you are a graduate of Zen"** — now **"your study is finished."** 參學事畢 is
+  the business of study being over, and **參學 is already "study" in case 11** ("no eye for
+  study"), so this also unifies a term. The diploma is gone; the deadpan one-line abruptness
+  that makes the comment land is not.
+- **Kept:** case 19's articleless "the same freedom as sky" (poetic, and the narration does
+  not trip on it) and case 28's "Why don't you retire?" (formal, but clear, and the whole
+  scene is a night visit to a teacher).
+
+The same review supplied the protect list now standing before "The open questions,
+gathered" — the most durable thing to come out of any of these passes, because it names what
+must not be tidied and says where each reason lives.
+
 ## 5. Narration
 
 After the second round — the seven rulings, the retitles, and the 37/38 reorder — the
@@ -1966,6 +2029,41 @@ baked twice.
 
 ---
 ---
+
+# THE PROTECT LIST — wordings that look wrong and are not
+
+Assembled 21 August 2026, from a readability review that read the finished book and then
+went looking for what it must NOT change. Everything here has a reason recorded elsewhere
+in this file; this is the index, in one place, because the reasons are scattered and the
+wordings are not obviously deliberate.
+
+**Why this section exists.** "Has a start and a finish" was reverted once by accident — a
+grammar pass repaired a misspelling in the clause and, not knowing the wording was chosen
+to avoid a published translation, restored the very phrase it was avoiding. Every entry
+below is exposed to that same failure: each looks like a small infelicity a careful editor
+would tidy.
+
+| Looks like an error | It is | Where the reason lives |
+|---|---|---|
+| Case 9: "Because he does not **become** a Buddha" | The tense clash with the past-tense question IS the repair; buddhahood is not something one becomes | §4d |
+| Case 28 verse: lines 1 and 2 contradict each other | The restored chiasmus, 聞名不如見面／見面不如聞名. A cold reader called it a typesetting error and it stayed | Part Two §2 |
+| Case 13 verse: "they are **not** the same" | A repaired negation, not a typo for "are they not the same?" | §2 |
+| Case 16 verse: the family/stranger reversal in lines 3-4 | The chiasmus is the point | Part Two §2 |
+| Case 33 verse: give the sword, do **not** offer the poem | The must/must-not asymmetry is the repaired content | §2 |
+| Preface: "has a **start and a finish**" | Deliberately not "a beginning and an end" — avoids Aitken. **Already reverted once by accident** | coincidences |
+| Preface verse: "there are a thousand roads" | Deliberately silent about where the roads go, because 千差有路 is. Drifted to "approached by" once and was restored | open question 4, §4e |
+| Afterword verse: "the easy part / is hard" | Built to break a shared run with J. C. Cleary | coincidences |
+| Zen Warnings: "**hell and heaven**" | The Chinese order 地獄天堂, kept against the English idiom | §4e |
+| Zen Warnings: "making a living in a house of ghosts" | Kept knowingly despite a recorded six-word overlap with Wonderwheel | Zen Warnings collation |
+| Case 48: "It is very difficult to find the right person" and the two riders | Reps's invention, kept: restoring the camel is a choice of witness the collation showed is not the mainstream reading | §4, collation |
+| Case 2 verse: "the same die shows two faces" | Reps's image for 兩采一賽, kept as his voice | §4 |
+| Case 24's title vs its own case | A recorded known loss; titles are what readers recognise | Part Two §9 |
+| Case 1: "Has a dog Buddha nature **or not**?" and case 4's "Why hasn't that fellow a beard?" | House archaism, and the two pair with each other. **This one is a judgement, not a finding** — no note establishes it, but modernising one alone would break the pairing | — |
+
+Two further classes are protected by their own sections rather than listed here: the six
+names that ship in Japanese readings (Part Two §3), and everything in "The open questions,
+gathered", where the English was built to survive both readings and picking one quietly
+destroys information.
 
 # The open questions, gathered
 

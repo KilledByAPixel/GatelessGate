@@ -16,13 +16,13 @@ The Buddha's teaching takes mind as its source, and no gate as its gate. If ther
 
 It is said that what comes in through the gate can never be your own treasure. What you gain from outside conditions has a start and a finish; it comes together and it falls apart. Even saying that much is raising waves where there is no wind, cutting into healthy flesh. Worse still to snag on words and phrases and go hunting for meaning. Swinging a stick at the moon. Scratching an itch through your boot. What has any of it to do with anything?
 
-In the summer of 1228 I was head monk at Ryusho, in Onshu. Monks kept coming to ask for instruction, so I took the old teachers' koans and used them the way you'd grab a piece of broken tile to knock at a door, leading each student on according to what they needed. I copied them down as they came, and before I knew it there was a book. I never put them in any order. Forty-eight of them altogether. The whole thing goes under the name Mumonkan, "The Gateless Gate."
+In the summer of 1228 I was head monk at Ryusho, in Onshu. Monks kept coming to ask for instruction, so I took the old teachers' koans and used them the way you'd grab a piece of broken tile to knock at a door, guiding each student according to what they needed. I copied them down as they came, and before I knew it there was a book. I never put them in any order. Forty-eight of them altogether. The whole thing goes under the name Mumonkan, "The Gateless Gate."
 
 If you push forward bravely, regardless of all danger, then eight-armed Nata cannot stop you. At the sight of you the twenty-eight patriarchs of India and the six of this land would beg for their lives. However, if you hang back, it is like a horse galloping past an open window. Blink, and it is gone.
 
 **The Verse**
 
-The Great Way is gateless,  
+The Great Way is gateless;  
 there are a thousand roads.  
 Once past this barrier  
 you walk alone through heaven and earth.
@@ -37,13 +37,13 @@ Joshu answered: "Mu."
 
 **Mumon's Comment**
 
-To realize Zen you have to pass through the barrier of the patriarchs. Enlightenment always comes after the road of thinking is blocked. If you do not pass the barrier of the patriarchs or if your thinking road is not blocked, whatever you think, whatever you do, is like a ghost clinging to grass and trees. You may ask: What is a barrier of a patriarch? This one word, Mu, is it.
+To realize Zen you have to pass through the barrier of the patriarchs. Enlightenment always comes after the road of thinking is blocked. If you do not pass the barrier of the patriarchs or if your thinking road is not blocked, whatever you think, whatever you do, is like a ghost clinging to grass and trees. You may ask: What is the barrier of the patriarchs? This one word, Mu, is it.
 
 This is the barrier of Zen. If you pass through it you will see Joshu face to face. Then you can work hand in hand with the whole line of patriarchs. Is this not a pleasant thing to do?
 
-If you want to pass this barrier, you must work through every bone in your body, through every pore of your skin, filled with this question: What is Mu? and carry it day and night. Do not believe it is the common negative symbol meaning nothing. It is not nothingness, the opposite of existence. If you really want to pass this barrier, you should feel as if you had swallowed a hot iron ball that you can neither get down nor spit out.
+If you want to pass this barrier, you must work through every bone in your body, through every pore of your skin, filled with this one question: What is Mu? Carry it day and night. Do not believe it is the common negative symbol meaning nothing. It is not nothingness, the opposite of existence. If you really want to pass this barrier, you should feel as if you had swallowed a hot iron ball that you can neither get down nor spit out.
 
-Then your previous lesser knowledge disappears. As a fruit ripening in season, inside and outside naturally become one. It is like a man who cannot speak and has had a dream. He knows it but he cannot tell it.
+Then your previous lesser knowledge disappears. As a fruit ripens in season, inside and outside naturally become one. It is like a man who cannot speak and has had a dream. He knows it but he cannot tell it.
 
 When you enter this condition it breaks open all at once, and heaven is startled and the earth shakes. You are like a great warrior with a sharp sword. If a Buddha stands in your way, you will cut him down; if a patriarch offers you any obstacle, you will kill him; and you will be free in the face of birth and death. You can enter any world as if it were your own playground. I will tell you how to do this with this koan:
 
@@ -60,7 +60,7 @@ you lose your body and your life.
 
 **The Case**
 
-Once when Hyakujo delivered some Zen lectures an old man attended them, unseen by the monks. At the end of each talk when the monks left so did he. But one day he remained after they had gone, and Hyakujo asked him: "Who are you?"
+Once when Hyakujo delivered some Zen lectures, an old man attended them, unseen by the monks. At the end of each talk, when the monks left, so did he. But one day he remained after they had gone, and Hyakujo asked him: "Who are you?"
 
 The old man replied: "I am not a human being, but I was a human being when the Kashapa Buddha preached in this world. I was a Zen master and lived on this mountain. At that time one of my students asked me whether or not the enlightened person is subject to the law of causation. I answered him: 'The enlightened person is not subject to the law of causation.' For that answer I became a fox for five hundred rebirths, and I am still a fox. Will you save me from this condition with your Zen words and let me get out of a fox's body? Now may I ask you: Is the enlightened person subject to the law of causation?"
 
@@ -68,19 +68,19 @@ Hyakujo said: "The enlightened person is not blind to the law of causation."
 
 At the words of Hyakujo the old man was enlightened. "I am free," he said, paying homage with a deep bow. "I am no more a fox, but I have to leave my body in my dwelling place behind this mountain. Please perform my funeral as a monk." Then he disappeared.
 
-The next day Hyakujo gave an order through the chief monk to prepare to attend the funeral of a monk. "No one was sick in the infirmary," wondered the monks. "What does our teacher mean?"
+The next day, through the chief monk, Hyakujo ordered the monks to prepare for a funeral. The monks wondered: "No one was sick in the infirmary. What does our teacher mean?"
 
-After dinner Hyakujo led the monks out and around the mountain. In a cave, with his staff he poked out the corpse of an old fox and then performed the ceremony of cremation.
+After dinner Hyakujo led the monks out and around the mountain. In a cave he poked out the corpse of an old fox with his staff, and then performed the ceremony of cremation.
 
 That evening Hyakujo gave a talk to the monks and told them this story about the law of causation.
 
-Obaku, upon hearing the story, asked Hyakujo: "I understand that a long time ago because a certain person gave a wrong Zen answer he became a fox for five hundred rebirths. Now I want to ask: If some modern master is asked many questions and he always gives the right answer, what will become of him?"
+Obaku, upon hearing the story, asked Hyakujo: "I understand that a long time ago, because a certain person gave a wrong Zen answer, he became a fox for five hundred rebirths. Now I want to ask: If some modern master is asked many questions and he always gives the right answer, what will become of him?"
 
-Hyakujo said: "You come here near me and I will tell you."
+Hyakujo said: "Come nearer and I will tell you."
 
 Obaku went near Hyakujo and slapped the teacher's face with his hand, for he knew this was the answer his teacher intended to give him.
 
-Hyakujo clapped his hands and laughed at this insight. "I thought a Persian had a red beard," he said, "and now I know a Persian who has a red beard."
+Hyakujo clapped his hands and laughed at this insight. "I thought the Persian's beard was red," he said, "and now I see a red-bearded Persian before me."
 
 **Mumon's Comment**
 
@@ -101,9 +101,9 @@ a thousand errors, ten thousand errors.
 
 **The Case**
 
-Gutei raised his finger whenever he was asked a question about Zen. A boy attendant began to imitate him in this way. When anyone asked the boy what his master had preached about, the boy would raise his finger.
+Gutei raised his finger whenever he was asked a question about Zen. A boy attendant began to imitate him. When anyone asked the boy what his master had preached about, the boy would raise his finger.
 
-Gutei heard about the boy's mischief. He seized him and cut off his finger. The boy cried and ran away. Gutei called and stopped him. When the boy turned his head to Gutei, Gutei raised up his own finger. In that instant the boy was enlightened.
+Gutei heard about the boy's mischief. He seized him and cut off his finger. The boy cried and ran away. Gutei called and stopped him. When the boy turned his head to Gutei, Gutei raised his own finger. In that instant the boy was enlightened.
 
 When Gutei was about to pass from this world he gathered his monks around him. "I attained my finger-Zen," he said, "from my teacher Tenryu, and in my whole life I could not exhaust it." Then he passed away.
 
@@ -139,13 +139,13 @@ It muddles even the wide-awake.
 
 **The Case**
 
-Kyogen said: "Zen is like a man hanging in a tree by his teeth over a cliff. His hands grasp no branch, his feet rest on no limb, and under the tree another person asks him: 'Why did Bodhidharma come to China from India?'
+Kyogen said: "Zen is like a man hanging by his teeth from a tree over a cliff. His hands grasp no branch, his feet rest on no limb, and under the tree another person asks him: 'Why did Bodhidharma come to China from India?'
 
 "If the man in the tree does not answer, he fails; and if he does answer, he falls and loses his life. Now what shall he do?"
 
 **Mumon's Comment**
 
-In such a predicament the cleverest talk is of no use. If you have memorized all the sutras, you cannot use them. When you can give the right answer, you bring the dead road of before to life and put the live road of before to death. But if you cannot answer, you will have to wait ages and ask the future Buddha, Maitreya.
+In such a predicament the cleverest talk is of no use. If you have memorized all the sutras, you cannot use them. When you can give the right answer, you bring the old dead road to life and put the old live road to death. But if you cannot answer, you will have to wait ages and ask the future Buddha, Maitreya.
 
 **The Verse**
 
@@ -160,7 +160,7 @@ and sets demon eyes bursting from their bodies.
 
 When Buddha was on Vulture Peak he twirled a flower in his fingers and held it before his listeners. Everyone was silent. Only Mahakashapa smiled at this revelation, although he tried to control the lines of his face.
 
-Buddha said: "I have the eye of the true teaching, the heart of Nirvana, the true aspect of formlessness, and the subtle gate of Dharma. It is not expressed by words, but especially transmitted beyond teaching. This teaching I have given to Mahakashapa."
+Buddha said: "I have the eye of the true teaching, the heart of Nirvana, the true aspect of formlessness, and the subtle gate of Dharma. It is not expressed by words, but transmitted separately, outside the teachings. This teaching I have given to Mahakashapa."
 
 **Mumon's Comment**
 
@@ -242,13 +242,13 @@ you are free and desire no praise.
 
 **The Case**
 
-A monk named Seizei asked of Sozan: "Seizei is alone and poor. Will you give him support?"
+A monk named Seizei asked Sozan: "Seizei is alone and poor. Will you give him support?"
 
 Sozan asked: "Seizei?"
 
 Seizei responded: "Yes, sir."
 
-Sozan said: "You have Zen, the best wine in China, and already have finished three cups, and still you are saying that it did not even wet your lips."
+Sozan said: "You have Zen, the best wine in China; you have already finished three cups, and still you say it did not even wet your lips."
 
 **Mumon's Comment**
 
@@ -279,7 +279,7 @@ Joshu said: "Well given, well taken, well killed, well saved." And he bowed to h
 
 **Mumon's Comment**
 
-The raised fist was the same both times. Why is it Joshu did not admit the first and approved the second one? Where is the fault?
+The raised fist was the same both times. Why did Joshu refuse the first and approve the second? Where is the fault?
 
 Whoever answers this knows that Joshu's tongue has no bone so he can use it freely. And yet the two hermits, in their turn, saw through Joshu.
 
@@ -310,7 +310,7 @@ Again he answered: "Yes, sir."
 
 **Mumon's Comment**
 
-Old Zuigan sells out and buys himself. He is opening a puppet show. He uses one mask to call "Master" and another that answers the master. Another mask says "Wake up" and another, "Do not be deceived by others." If you cling to any of his masks, you are mistaken, yet if you imitate Zuigan, you will make yourself a fox.
+Old Zuigan buys and sells himself. He is opening a puppet show. He uses one mask to call "Master" and another that answers the master. Another mask says "Wake up" and another, "Do not be deceived by others." If you cling to any of his masks, you are mistaken, yet if you imitate Zuigan, you will make yourself a fox.
 
 **The Verse**
 
@@ -329,7 +329,7 @@ So Tokusan returned to his room.
 
 Seppo told Ganto about this. Ganto said: "Old Tokusan did not understand the ultimate truth."
 
-Tokusan heard of this remark and asked Ganto to come to him. "I have heard," he said, "you are not approving my Zen." Ganto secretly made his meaning known to him. Tokusan said nothing more.
+Tokusan heard of this remark and asked Ganto to come to him. "I have heard," he said, "you do not approve of my Zen." Ganto secretly made his meaning known to him. Tokusan said nothing more.
 
 The next day Tokusan delivered an entirely different kind of lecture to the monks. Ganto laughed and clapped his hands, saying: "I see our old man understands the ultimate truth indeed. No one in China can equal him."
 
@@ -363,7 +363,7 @@ Why did Joshu put his sandals on his head? If you can answer this question, you 
 **The Verse**
 
 Had Joshu been there,  
-he would have enforced the edict oppositely.  
+he would have enforced the edict the other way around.  
 Joshu snatches the sword  
 and Nansen begs for his life.
 
@@ -379,7 +379,7 @@ Ummon asked: "In what temple did you remain for the summer?"
 
 Tozan replied: "The temple of Hoji, south of the lake."
 
-"When did you leave there?" asked Ummon, wondering how long Tozan would continue with such factual answers.
+"When did you leave there?" asked Ummon.
 
 "The twenty-fifth of the eighth month," answered Tozan.
 
@@ -389,7 +389,7 @@ The next day Tozan bowed to Ummon and asked: "Yesterday you forgave me three blo
 
 Ummon, rebuking Tozan's spiritless responses, said: "You sack of rice. You simply wander from one monastery to another."
 
-Before Ummon's words were ended Tozan was enlightened.
+Before Ummon's words had ended Tozan was enlightened.
 
 **Mumon's Comment**
 
@@ -410,7 +410,7 @@ his second arrow shot deep.
 
 **The Case**
 
-Ummon asked: "The world is such a wide world, why do you answer a bell and don ceremonial robes?"
+Ummon asked: "The world is so wide. Why do you answer a bell and put on ceremonial robes?"
 
 **Mumon's Comment**
 
@@ -429,7 +429,7 @@ and when they understand they are strangers.
 
 **The Case**
 
-Chu, called Kokushi, the teacher of the emperor, called to his attendant: "Oshin."
+Chu, known as Kokushi, the teacher of the emperor, called to his attendant: "Oshin."
 
 Oshin answered: "Yes."
 
@@ -540,7 +540,7 @@ It seems to me Ummon is too poor to put a plain meal together and too busy even 
 Lightning flashes,  
 sparks shower.  
 In one blink of your eyes  
-you have missed seeing.
+you have already missed it.
 
 ## 22. Mahakashapa's Preaching Sign
 
@@ -552,7 +552,7 @@ Mahakashapa said: "Ananda."
 
 Ananda answered: "Yes, brother."
 
-Said Mahakashapa: "Take down the preaching sign at the front gate."
+Mahakashapa said: "Take down the preaching sign at the front gate."
 
 **Mumon's Comment**
 
@@ -561,7 +561,7 @@ If you understand this, you will see the old brotherhood still gathering, but if
 **The Verse**
 
 The point of the question is dull but the answer is intimate.  
-How many persons hearing it will open their eyes?  
+How many people hearing it will open their eyes?  
 Elder brother calls, younger brother answers, the family shame is out.  
 This spring does not belong to the ordinary season.
 
@@ -571,7 +571,7 @@ This spring does not belong to the ordinary season.
 
 When the sixth patriarch was enlightened he received from the fifth patriarch the bowl and robe given from the Buddha to his successors, generation after generation.
 
-A monk named Emyo out of envy pursued the patriarch to take this great treasure away from him. The sixth patriarch placed the bowl and robe on a stone in the road and told Emyo: "These objects just symbolize the faith. There is no use fighting over them. If you desire to take them, take them now."
+Out of envy, a monk named Emyo pursued the patriarch to take this great treasure away from him. The sixth patriarch placed the bowl and robe on a stone in the road and told Emyo: "These objects just symbolize the faith. There is no use fighting over them. If you desire to take them, take them now."
 
 When Emyo went to move the bowl and robe they were as heavy as mountains. He could not budge them. Trembling with fear he said: "I came wanting the teaching, not the material treasures. Please teach me."
 
@@ -619,9 +619,9 @@ and you will find yourself at a loss.
 
 **The Case**
 
-In a dream Kyozan went to Maitreya's Pure Land. He recognized himself seated in the third seat in the abode of Maitreya. Someone announced: "Today the one who sits in the third seat will preach."
+In a dream Kyozan went to Maitreya's Pure Land. He found himself seated in the third seat in the abode of Maitreya. Someone announced: "Today the one who sits in the third seat will preach."
 
-Kyozan arose, struck the block, and said: "The truth of Mahayana teaching is transcendent, above words and thought. Listen carefully! Listen carefully!"
+Kyozan rose, struck the block, and said: "The truth of Mahayana teaching is transcendent, above words and thought. Listen carefully! Listen carefully!"
 
 **Mumon's Comment**
 
@@ -640,9 +640,9 @@ he intended to deceive the whole crowd.
 
 **The Case**
 
-Hogen of Seiryo monastery was about to lecture before dinner when he noticed that the bamboo screen lowered for meditation had not been rolled up. He pointed to it. Two monks arose from the audience and rolled it up.
+Hogen of Seiryo monastery was about to lecture before dinner when he noticed that the bamboo screen lowered for meditation had not been rolled up. He pointed to it. Two monks rose from the audience and rolled it up.
 
-Hogen, observing the physical movement, said: "One gain, one loss."
+Hogen watched them and said: "One gain, one loss."
 
 **Mumon's Comment**
 
@@ -700,7 +700,7 @@ When Tokusan was in his own country he was not satisfied with Zen although he ha
 
 Tokusan replied: "This is a commentary I have made on the 'Diamond Sutra' after many years of work."
 
-The old woman said: "I read that sutra which says: 'The past mind cannot be held, the present mind cannot be held, the future mind cannot be held.' You wish some tea and refreshments. Which mind do you propose to use for them?"
+The old woman said: "I have read that sutra, which says: 'The past mind cannot be held, the present mind cannot be held, the future mind cannot be held.' You want some tea and refreshments. Which mind do you propose to use for them?"
 
 Tokusan was speechless. Finally he asked the woman: "Do you know of any good teacher around here?"
 
@@ -725,7 +725,7 @@ The sixth patriarch happened to be passing by. He told them: "Not the wind, not 
 
 **Mumon's Comment**
 
-Not the wind moving, not the flag moving, not the mind moving. Where is the patriarch in that? If you understand this thoroughly, you will see the two monks there trying to buy iron and gaining gold. The sixth patriarch could not bear to see those two dull heads, so he struck that trade for them.
+Not the wind moving, not the flag moving, not the mind moving. Where is the patriarch in that? If you understand this thoroughly, you will see the two monks there trying to buy iron and gaining gold. The sixth patriarch could not bear to see those two dull heads, so he made that trade for them.
 
 **The Verse**
 
@@ -757,7 +757,7 @@ is like claiming innocence with stolen goods in your pocket.
 
 **The Case**
 
-A traveling monk asked an old woman the road to Taizan, a popular temple supposed to give wisdom to the one who worships there. The old woman said: "Go straight ahead." When the monk proceeded a few steps, she said to herself: "He also is a common pilgrim."
+A traveling monk asked an old woman the road to Taizan, a popular temple supposed to give wisdom to anyone who worships there. The old woman said: "Go straight ahead." When the monk had gone a few steps, she said to herself: "He too is a common pilgrim."
 
 Someone told this incident to Joshu, who said: "Wait until I have tested her." The next day he went and asked the same question, and the old woman gave the same answer.
 
@@ -778,7 +778,7 @@ thorns in the soft mud.
 
 **The Case**
 
-An outsider asked Buddha: "Without words, without the wordless, will you tell me truth?"
+An outsider asked Buddha: "Without words, without the wordless, will you tell me the truth?"
 
 The Buddha sat still.
 
@@ -809,7 +809,7 @@ Baso said: "Not mind, not Buddha."
 
 **Mumon's Comment**
 
-If you understand this, you are a graduate of Zen.
+If you understand this, your study is finished.
 
 **The Verse**
 
@@ -885,7 +885,7 @@ If you see Joshu's answer clearly, there is no Shakyamuni Buddha before you and 
 
 Words cannot describe everything.  
 The heart's message cannot be delivered in words.  
-If you receive words literally, you will be lost,  
+If you receive words literally, you will be lost;  
 if you get stuck in the phrases, you will go astray.
 
 ## 38. A Buffalo Passes Through the Gate
@@ -909,7 +909,7 @@ is a very strange thing.
 
 **The Case**
 
-A Zen student told Ummon: "Brilliancy of Buddha illuminates the whole universe."
+A Zen student told Ummon: "The radiance of Buddha illuminates the whole universe."
 
 Before he finished the phrase Ummon asked: "You are reciting another's poem, are you not?"
 
@@ -967,7 +967,7 @@ Bodhidharma said: "Then your mind is pacified already."
 
 **Mumon's Comment**
 
-That broken-toothed old foreigner, Bodhidharma, came thousands of miles over the sea from India to China as if he had something wonderful. It is like raising waves without wind. After he remained years in China he had only one disciple and that one lost his arm and was deformed. Ha! And Bodhidharma could not read four words.
+That broken-toothed old foreigner, Bodhidharma, came thousands of miles over the sea from India to China as if he had something wonderful. It is like raising waves without wind. After years in China he had only one disciple, and that one lost his arm and was deformed. Ha! And Bodhidharma could not read four words.
 
 **The Verse**
 
@@ -980,11 +980,11 @@ was you, all along.
 
 **The Case**
 
-In the time of Buddha Shakyamuni, Manjusri went to the assembly of the Buddhas. When he arrived there, the conference was over and each Buddha had returned to his own Buddha-land. Only one girl was yet unmoved in deep meditation.
+In the time of Buddha Shakyamuni, Manjusri went to the assembly of the Buddhas. When he arrived there, the conference was over and each Buddha had returned to his own Buddha-land. Only one girl remained, unmoved, in deep meditation.
 
 Manjusri asked Buddha Shakyamuni how this girl could sit so close to the Buddha's seat when he himself could not. "Bring her out from Samadhi and ask her yourself," said the Buddha.
 
-Manjusri walked around the girl three times and snapped his fingers. She still remained in meditation. So by his miracle power he transported her to a high heaven and tried his best to call her, but in vain.
+Manjusri walked around the girl three times and snapped his fingers. She still remained in meditation. So by his miraculous power he transported her to a high heaven and tried his best to call her, but in vain.
 
 Buddha Shakyamuni said: "Even a hundred thousand Manjusris could not disturb her, but below this place, past twelve hundred million countries, is a Bodhisattva, Momyo, seed of delusion. If he comes here, she will awaken."
 
@@ -1028,7 +1028,7 @@ Basho said to his disciple: "When you have a staff, I will give it to you. If yo
 
 **Mumon's Comment**
 
-When there is no bridge over the creek the staff will help me. When I return home on a moonless night the staff will accompany me. But if you call this a staff, you will enter hell like an arrow.
+When there is no bridge over the creek, the staff will help me. When I return home on a moonless night the staff will accompany me. But if you call this a staff, you will enter hell like an arrow.
 
 **The Verse**
 
@@ -1058,9 +1058,9 @@ Do not interfere with another's work.
 
 **The Case**
 
-Sekiso asked: "How can you proceed on from the top of a hundred-foot pole?"
+Sekiso asked: "How can you proceed from the top of a hundred-foot pole?"
 
-An earlier master had said: "One who sits on the top of a hundred-foot pole has attained a certain height but still is not handling Zen freely. He should proceed on from there and appear with his whole body in the ten parts of the world."
+An earlier master had said: "One who sits on the top of a hundred-foot pole has attained a certain height but still is not handling Zen freely. He should go on from there and appear with his whole body in the ten parts of the world."
 
 **Mumon's Comment**
 
@@ -1087,7 +1087,7 @@ The third gate is that once you are free from birth and death you should know wh
 
 **Mumon's Comment**
 
-If you can pass these three barriers you will be a master wherever you stand. Whatever happens around you, you will turn into Zen.
+If you can pass these three barriers you will be a master wherever you stand. Whatever happens around you, you will turn it into Zen.
 
 Otherwise: coarse food fills you quickly, but chew it fine and you will not go hungry.
 
@@ -1110,7 +1110,7 @@ This pupil went to Ummon and asked the same question. Ummon, who happened to hav
 
 **Mumon's Comment**
 
-One teacher enters the deep sea and scratches the earth and raises dust. The other goes to the mountain top and raises waves that almost touch heaven. One holds, the other gives out. Each supports the profound teaching with a single hand. Kembo and Ummon are like two riders neither of whom can get ahead of the other. It is very difficult to find the right person. Seen with a true eye, neither of them knows where the road starts.
+One teacher enters the deep sea and scratches the earth and raises dust. The other goes to the mountain top and raises waves that almost touch heaven. One holds fast, the other lets go. Each supports the profound teaching with a single hand. Kembo and Ummon are like two riders neither of whom can get ahead of the other. It is very difficult to find the right person. Seen with a true eye, neither of them knows where the road starts.
 
 **The Verse**
 
@@ -1123,7 +1123,7 @@ to find the origin of the right road.
 
 **The Case**
 
-Amban, a layman Zen student, said: "Mumon has just published forty-eight koans and called the book The Gateless Gate. He criticizes the old patriarchs' words and actions. I think he is very mischievous. He is like an old man selling fried cakes, catching a passerby and forcing one into his mouth. The customer can neither swallow the cake nor spit it out, and this causes suffering. Mumon has annoyed everyone enough, so I think I shall add one more and round the count out to forty-nine. I wonder if he himself can eat this one. If he can, and digest it well, it will be fine, but if not, we will have to put it back into the frying pan with his forty-eight also and cook them again. Mumon, you eat first, before someone else does:
+Amban, a layman Zen student, said: "Mumon has just published forty-eight koans and called the book The Gateless Gate. He criticizes the old patriarchs' words and actions. I think he is very mischievous. He is like an old man selling fried cakes, catching a passerby and forcing one into his mouth. The customer can neither swallow the cake nor spit it out, and this causes suffering. Mumon has annoyed everyone enough, so I think I shall add one more and round the count out to forty-nine. I wonder if he himself can eat this one. If he can, and digest it well, it will be fine, but if not, we will have to put it back into the frying pan with his other forty-eight and cook them again. Mumon, you eat first, before someone else does:
 
 "Buddha, according to a sutra, once said: 'Stop, stop. Do not speak. My teaching is subtle, beyond all thinking.'"
 
@@ -1146,7 +1146,7 @@ one question, and he owns it at once.
 
 The Buddhas and the patriarchs, handing these encounters down, took the confession and closed the case. Never a word to spare. They lifted the lid off your skull and let your eyes open into the daylight. What they want is for you to take hold of it here and now and not go looking for it anywhere else.
 
-Anyone who has been all the way through hears one of these raised and knows at once where it lands. There is no doorway to pass through and no stairway to climb. They walk through the barrier swinging their arms and never ask the officer on it.
+Anyone who has been all the way through hears one of these raised and knows at once where it lands. There is no doorway to pass through and no stairway to climb. They walk through the barrier swinging their arms and never ask the officer posted there.
 
 Have you not heard what Gensha said? "No gate is the gate of freedom. No intent is the intent of a person of the Way." And as Hakuun said: "You know perfectly well it is just this. So why can't you get through?"
 

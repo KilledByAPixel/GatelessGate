@@ -194,7 +194,7 @@ test('module shape matches the koan contract', () => {
     assert.ok(k16.text[f] && k16.text[f].trim().length > 0, `text.${f} empty`);
   }
   // the case file must never author prose — it all comes from TEXT[16]
-  assert.match(k16.text.case, /wide world/);
+  assert.match(k16.text.case, /ceremonial robes/);
   assert.equal(typeof k16.build, 'function');
 });
 
