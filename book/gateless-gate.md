@@ -82,7 +82,7 @@ If you want to pass this barrier, you must work through every bone in your body,
 
 Then your previous lesser knowledge disappears. As a fruit ripens in season, inside and outside naturally become one. It is like a man who cannot speak and has had a dream. He knows it but he cannot tell it.
 
-When you enter this condition it breaks open all at once, and heaven is startled and the earth shakes. You are like a great warrior with a sharp sword. If a Buddha stands in your way, you will cut him down; if a patriarch offers you any obstacle, you will kill him; and you will be free in the face of birth and death. You can enter any world as if it were your own playground. I will tell you how to do this with this koan:
+When you enter this condition it breaks open all at once, and heaven is startled and the earth shakes. You are like a great warrior with a sharp sword. If a Buddha stands in your way, you will cut him down; if a patriarch offers you any obstacle, you will kill him; and you will be free in the face of birth and death. You can enter any world as if it were your own playground. Now, how will you carry this koan?
 
 Just concentrate your whole energy into this Mu, and do not let it break. When you enter this Mu and there is no break, your attainment will be like a candle that takes the flame at one touch.
 
@@ -105,7 +105,7 @@ Hyakujo said: "The enlightened person is not blind to the law of causation."
 
 At the words of Hyakujo the old man was enlightened. "I am free," he said, paying homage with a deep bow. "I am no more a fox, but I have to leave my body in my dwelling place behind this mountain. Please perform my funeral as a monk." Then he disappeared.
 
-The next day, through the chief monk, Hyakujo ordered the monks to prepare for a funeral. The monks wondered: "No one was sick in the infirmary. What does our teacher mean?"
+The next day, through the chief monk, Hyakujo ordered the monks to prepare for a monk's funeral. The monks wondered: "No one was sick in the infirmary. What does our teacher mean?"
 
 After dinner Hyakujo led the monks out and around the mountain. In a cave he poked out the corpse of an old fox with his staff, and then performed the ceremony of cremation.
 
@@ -1143,7 +1143,7 @@ A Zen pupil asked Kembo: "All Buddhas of the ten parts of the world enter the on
 
 Kembo, raising his walking stick and drawing the figure one in the air, said: "Here it is."
 
-This pupil went to Ummon and asked the same question. Ummon, who happened to have a fan in his hand, said: "This fan will reach to the thirty-third heaven and hit the nose of the presiding deity there. Strike the Dragon Carp of the Eastern Sea one blow, and the rain pours down in buckets."
+This pupil went to Ummon and asked the same question. Ummon, who happened to have a fan in his hand, said: "This fan leaps up to the thirty-third heaven and hits the nose of the presiding deity there. Strike the Dragon Carp of the Eastern Sea one blow, and the rain pours down in buckets."
 
 ### Mumon's Comment
 

@@ -2019,6 +2019,47 @@ The same review supplied the protect list now standing before "The open question
 gathered" — the most durable thing to come out of any of these passes, because it names what
 must not be tidied and says where each reason lives.
 
+## 4g. Three left after the readability pass — 21 August 2026
+
+A second read of the finished book returned three lines. All three were taken back to the
+Taisho and all three were repaired; two of them were more than a stumble.
+
+- **Case 2, the funeral order.** The pass above recast this sentence to fix a verb that
+  cannot govern a quotation ("wondered the monks") and, in recasting it, dropped the words
+  *of a monk*. The Chinese is 食後送亡僧 — after the meal we see off a **deceased monk** —
+  and 亡僧 is the hinge of the scene: the assembly answers 一眾皆安涅槃堂。又無人病, the
+  whole assembly is well and no one is sick in the infirmary. Without the monk in the
+  announcement there is nothing for them to be puzzled by, and the echo of the fox's own
+  request one paragraph earlier ("perform my funeral as a monk", 乞依亡僧事例) is broken
+  too. Restored: **"prepare for a monk's funeral."**
+
+  **This is the third time a repair inside a case has damaged something else in the same
+  case**, and the first time a pure readability edit has cost fidelity. The lesson is not
+  "read more carefully" — it is that a recast sentence is a NEW sentence and owes the
+  Chinese the same check a substantive change does.
+
+- **Case 48, Ummon's fan.** 扇子𨁝跳。上三十三天。築著帝釋鼻孔。The 1934 line reads
+  "This fan will reach to the thirty-third heaven and hit the nose of the presiding deity
+  there." Two faults in one clause: "reach to" is an awkward survival, and *reach* drops 跳,
+  the leap, which is the whole gesture — Ummon is not measuring, he is throwing. The future
+  tense also fights the second half of his own speech, which is present ("the rain pours
+  down in buckets"). Now **"This fan leaps up to the thirty-third heaven and hits the nose
+  of the presiding deity there."** The 上 survives as *up to*; the presiding deity stays a
+  gloss for 帝釋 rather than becoming Indra, per the edition's naming rule.
+
+- **Case 1, Mumon's comment.** "I will tell you how to do this with this koan:" doubles
+  *this*, which is what a reader notices; the fault underneath it is that 且作麼生提撕 is a
+  **question** and this makes it a promise. Mumon asks and then answers, and he does it
+  twice in this one comment: the other 且道 in the same passage is already rendered as a
+  question ("You may ask: What is the barrier of the patriarchs?"), so the flattened one
+  broke a parallel standing three paragraphs away. 提撕 is also already **carry** earlier in
+  this comment (晝夜提撕, "Carry it day and night"), so the repair unifies a term as well.
+  Now **"Now, how will you carry this koan?"** — the same "Now," the back matter uses for
+  且道 at 且道如何履踐.
+
+Bake cost: cases 1 and 2 were already stale from the pass above, so only case 48's case
+section is newly so.
+
 ## 5. Narration
 
 After the second round — the seven rulings, the retitles, and the 37/38 reorder — the
