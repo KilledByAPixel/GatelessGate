@@ -727,7 +727,7 @@ Ryutan offered Tokusan a lighted candle to find his way. Just as Tokusan receive
 
 "What have you attained?" asked Ryutan. "From now on," said Tokusan, "I will not doubt the words of the old masters anywhere under heaven."
 
-The next day Ryutan told the monks at his lecture: "I see one monk among you. His teeth are like the sword tree, his mouth is like the blood bowl. If you hit him hard with a big stick, he will not even so much as look back at you. Someday he will mount the highest peak and carry my teaching there."
+The next day Ryutan told the monks at his lecture: "I see one monk among you. His teeth are like a tree of swords, his mouth like a bowl of blood. If you hit him hard with a big stick, he will not even so much as look back at you. Someday he will mount the highest peak and carry my teaching there."
 
 On that day, in front of the lecture hall, Tokusan burned to ashes his commentaries on the sutras. He said: "However deep the teachings are, in comparison with this enlightenment they are like a single hair to the great sky. However profound the complicated knowledge of the world, compared to this enlightenment it is like one drop of water to the great ocean." Then he left that monastery.
 
@@ -886,8 +886,8 @@ When you understand this, you will know it is possible to come out from one shel
 
 The moon above the clouds is the same moon,
 the mountains and rivers below are all different.
-Each is happy in its unity and variety.
-This is one, this is two.
+Blessings on the one, blessings on the other:
+this is one, this is two.
 
 ## 36. Meeting a Zen Master on the Road
 
@@ -933,7 +933,7 @@ Goso said: "When a buffalo goes through a gate, his horns and his head and his h
 
 ### Mumon's Comment
 
-If you can open one eye at this point and say a word of Zen, you are qualified to repay the four debts of gratitude, and, not only that, you can save all sentient beings under you. But if you cannot say such a word of true Zen, you should turn back to your tail.
+If you can open one eye at this point and say a word of Zen, you are qualified to repay the four debts of gratitude, and, not only that, you can save all sentient beings under you. But if you cannot say such a word of true Zen, you should look to your tail.
 
 ### The Verse
 
@@ -967,7 +967,7 @@ he will be caught if he is too greedy.
 As soon as his mouth opens
 his life already is lost.
 
-## 40. Tipping Over a Water Jug
+## 40. Kicking Over a Water Jug
 
 ### The Case
 
@@ -975,7 +975,7 @@ Hyakujo wished to send a monk to open a new monastery. He told his pupils that w
 
 The chief monk said: "No one can call it a wooden shoe."
 
-Isan, the cooking monk, tipped over the jug with his foot and went out.
+Isan, the cooking monk, kicked over the jug and went out.
 
 Hyakujo smiled and said: "The chief monk loses." And Isan became the master of the new monastery.
 
@@ -988,7 +988,7 @@ Isan was brave enough, but he could not escape Hyakujo's trick. After all, he ga
 Giving up cooking utensils,
 cutting off all the talk,
 though his teacher sets a barrier for him
-his feet will tip over everything, even the Buddha.
+his foot kicks over everything, even the Buddha.
 
 ## 41. Bodhidharma Pacifies the Mind
 
@@ -1037,7 +1037,7 @@ If you understand this deeply, you yourself can enter the great meditation while
 
 One could not awaken her, the other could.
 Freedom, either way.
-One wears the mask of god, one a devil's mask.
+One wears a god's mask, one a demon's.
 The fiasco itself made a fine performance.
 
 ## 43. Shuzan's Short Staff
@@ -1130,10 +1130,10 @@ Otherwise: coarse food fills you quickly, but chew it fine and you will not go h
 
 ### The Verse
 
-An instant realization sees endless time.
-Endless time is like one moment.
-When you comprehend the endless moment
-you realize the person who is seeing it.
+One instant of thought takes in endless time;
+endless time is just this moment.
+See through this one instant of thought
+and you see through the one who is seeing.
 
 ## 48. One Road of Kembo
 
@@ -1147,7 +1147,7 @@ This pupil went to Ummon and asked the same question. Ummon, who happened to hav
 
 ### Mumon's Comment
 
-One teacher enters the deep sea and scratches the earth and raises dust. The other goes to the mountain top and raises waves that almost touch heaven. One holds fast, the other lets go. Each supports the profound teaching with a single hand. Kembo and Ummon are like two riders neither of whom can get ahead of the other. It is very difficult to find the right person. Seen with a true eye, neither of them knows where the road starts.
+One teacher enters the deep sea and scratches the earth and raises dust. The other goes to the mountain top and raises waves that almost touch heaven. One holds fast, the other lets go. Each supports the profound teaching with a single hand. Kembo and Ummon are like two riders neither of whom can get ahead of the other. In the whole world, it seems, there is no one who runs straight. Seen with a true eye, neither of them knows where the road starts.
 
 ### The Verse
 
@@ -1183,7 +1183,7 @@ one question, and he owns it at once.
 
 The Buddhas and the patriarchs, handing these encounters down, took the confession and closed the case. Never a word to spare. They lifted the lid off your skull and let your eyes open into the daylight. What they want is for you to take hold of it here and now and not go looking for it anywhere else.
 
-Anyone who has been all the way through hears one of these raised and knows at once where it lands. There is no doorway to pass through and no stairway to climb. They walk through the barrier swinging their arms and never ask the officer posted there.
+Anyone who has been all the way through hears one of these raised and knows at once where it lands. There is no doorway to pass through and no stairway to climb. They walk through the barrier swinging their arms and never ask the guard.
 
 Have you not heard what Gensha said? "No gate is the gate of freedom. No intent is the intent of a person of the Way." And as Hakuun said: "You know perfectly well it is just this. So why can't you get through?"
 

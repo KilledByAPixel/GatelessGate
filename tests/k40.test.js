@@ -158,7 +158,7 @@ test('the wobble is deterministic: same seed and same taps, same motion', () => 
 
 test('module shape matches the koan contract', () => {
   assert.equal(k40.id, 40);
-  assert.equal(k40.slug, 'tipping-over-a-water-jug');
+  assert.equal(k40.slug, 'kicking-over-a-water-jug');
   assert.equal(k40.accent, ACCENT);
   assert.equal(k40.tier, 1);
   assert.ok(/jug/i.test(k40.title), `title comes from the text artifact: ${k40.title}`);

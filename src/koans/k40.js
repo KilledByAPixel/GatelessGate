@@ -50,7 +50,7 @@ const ARC_PULL = ARC_R * 0.81;        // mean(cos) over the 0.7π arc — see k1
 const CAM = { distance: 11, target: [1.5, 1, -0.1], heading: 73, pitch: 14 };
   export default {
   id: ID,
-  slug: 'tipping-over-a-water-jug',
+  slug: 'kicking-over-a-water-jug',
   title: TEXT[ID].title,
   accent: ACCENT,
   tier: 1,

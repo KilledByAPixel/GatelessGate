@@ -1175,9 +1175,9 @@ chiasmus *reads like a typesetting error* to someone who does not know the Chine
   titles are what readers recognise.
 - **Case 48's humps.** 兩箇駞子相撞著 sets up 世上應無直底人 — two bent things collide and
   neither is straight, so there is no straight man in the world. The English keeps Reps's
-  deadlocked riders and loses the wordplay, knowingly: it is a choice of witness (CBETA
+  deadlocked riders and loses **the wordplay**, knowingly: it is a choice of witness (CBETA
   2019 against the Taishō base), and the pun needs explaining in English before it lands,
-  which is the end of it. The full reasoning, including why a "cancel each other out"
+  which is the end of it. The **sentence** the pun sits in is no longer lost — see §4h. The full reasoning, including why a "cancel each other out"
   rendering would invert the passage, is in Part Three §4 under case 48.
 
 ## 10. Narration
@@ -1219,7 +1219,8 @@ Person in Part Two, then → **The Person of Great Strength** in §3), **case 22
 Buddha → **Not Mind, Not Buddha**), **case 11** (Joshu Examines a Monk in Meditation →
 **Joshu Tests Two Hermits**), **case 12** (Zuigan Calls His Own Master → **Zuigan Calls to
 Himself**), **case 39** (Ummon's Sidetrack → **Ummon Catches a Slip**), **case 40**
-(…Water Vase → **…Water Jug**), and **case 31** (Joshu Investigates → **Joshu Tests the
+(Tipping Over a Water Vase → **Kicking Over a Water Jug**, in two steps: the noun in
+§2, the verb in §4h), and **case 31** (Joshu Investigates → **Joshu Tests the
 Old Woman**). The 37/38 reorder renumbered two pages but kept their slugs, and lost
 nothing.
 
@@ -1679,9 +1680,9 @@ charm. None should be "fixed" without rereading §2 of Part Two first.
   standing outside. **Now "outsider" throughout, and the page is retitled An Outsider Asks
   Buddha.** (§5 once objected that "outsider" reads as a compliment now; that was 外道 as a
   wrong *path*. Here it is plain category, and the disciples-and-outsiders pairing settles it.)
-- **35** — the Tang tale is unpacked into the case (the Chinese is one line); 萬福萬福
-  ("Blessings! Blessings!" — a deadpan felicitation) → "Each is happy in its unity and
-  variety."
+- **35** — the Tang tale is unpacked into the case (the Chinese is one line). The verse's
+  萬福萬福 was listed here as a choice left as Reps and **has since been repaired** (§4h):
+  "Each is happy in its unity and variety" is gone and the doubled greeting is back.
 - **37** (the tree, since the reorder) — 柏樹 is a cypress/juniper; "oak" is the 1934
   book's famous rendering, kept with its title.
 - **38** (the buffalo, since the reorder) — 顛倒 dropped from "open one eye upside-down";
@@ -1710,8 +1711,9 @@ charm. None should be "fixed" without rereading §2 of Part Two first.
 - **47** — 設三關問學者 ("set three barriers to question students") → "built three gates
   and made the monks pass through them" (the book's imagery, kept); 撥草參玄 ("parting
   the grasses to seek the profound") → "studying Zen."
-- **48 — examined properly in August 2026 and deliberately left alone. Do not reopen it
-  without reading this.** 兩箇駞子相撞著。世上應無直底人 → "two riders neither of whom can get
+- **48 — examined in August 2026, left alone, and then half-reopened in §4h. Read both.**
+  The camel stays out; the sentence it sets up is now rendered. Everything below stands
+  except the last two sentences, which §4h overturns for a reason recorded there. 兩箇駞子相撞著。世上應無直底人 → "two riders neither of whom can get
   ahead of the other. It is very difficult to find the right person." Both halves are
   Reps's invention, and there is a real joke under them: **駞 is humped** (CBETA's 2019
   emendation, from 柳幹康's collation of the Muromachi manuscript), which sets up **直,
@@ -1799,7 +1801,7 @@ was accurate to 勘 and wrong in current English.
   The word has drifted to mean fools, which makes Mumon call two masters stupid when he is
   saying they are worked on strings. **The clearest case in the book of the English moving
   while the Chinese stood still.**
-- **Case 40 — "water vase" → "water jug", title included.** 淨瓶 is the monk's water
+- **Case 40 — "water vase" → "water jug", title included** (the verb followed in §4h). 淨瓶 is the monk's water
   pitcher. "Vase" puts flowers on a table, so the koan became a man kicking over an
   ornament instead of a working tool. `src/kit/vase.js` keeps its name and records why.
 - **Case 31 — "investigate" → "check out" / "see through", and the title with it.** 勘破 is
@@ -2060,6 +2062,101 @@ Taisho and all three were repaired; two of them were more than a stumble.
 Bake cost: cases 1 and 2 were already stale from the pass above, so only case 48's case
 section is newly so.
 
+## 4h. The last eight — 21 August 2026
+
+A third outside read, taken back to the Chinese item by item. Six repairs, and two more
+that were offered as optional and taken. Two of them overturn entries recorded earlier in
+this file as settled, and both of those are amended where they stand rather than left to
+be found here.
+
+**Case 35, the verse (0297b23).** 萬福萬福 — was "Each is happy in its unity and variety."
+§4 recorded this as a choice left as Reps and glossed it correctly in the same breath
+("Blessings! Blessings!" — a deadpan felicitation), which is the shape of a note that was
+half-written. 萬福 is a salutation, specifically a woman's, and the doubling is the joke:
+Mumon curtsies to **both** Seijos and then asks which is real, so line 4 lands on a setup
+instead of on a summary. Now **"Blessings on the one, blessings on the other:"**. The
+*on the one / on the other* is an addition — the Chinese only doubles the greeting — kept
+because the two-Seijos reading is what the doubling is for, and English will not carry it
+by repetition alone.
+
+**Case 40, the verb — and the title with it.** 趯 is *to kick*, and it does the work three
+times in this case: the title 趯倒淨瓶, the case itself (Isan 趯倒 the jug), and the verse's
+脚尖趯出佛如麻. All three shipped as **tip**. The verse repair alone was proposed, and would
+have split one Chinese verb into two Englishes — the worse fault, because the verse exists
+to echo the case: *that same toe* kicks out buddhas thick as hemp. There is a plain reading
+problem under that one, too: "tipped over the jug with his foot" sounds careful, nearly
+polite, where the koan wants a contemptuous act answering a clever verbal one. Now
+**kicked / kicks** in all three, the page is **Kicking Over a Water Jug**, and the slug
+moves with it.
+
+  Note the contrast with **case 20**, where a first repair said "kicks" and was rolled
+  back because 踏 is *tread*. The verb decides it, not the force of the image.
+
+  The slug cost was nil in the event: case 40's slug had already moved this pass (vase →
+  jug) and nothing had been published, so no reader's marks or links were live on either
+  spelling. **That window is the only reason to take a retitle now rather than later**,
+  and it closes at the first push.
+
+**Case 42, the verse (0298b13).** 神頭并鬼面 — was "One wears the mask of god, one a
+devil's mask." Two faults. *The mask of god* with no article reads as capital-G God; and
+**鬼 is already "demon"** in case 5's verse (迸鬼眼, "demon eyes"), while "devil" is already
+spoken for by 魔 in the afterword's 外道魔軍. One English was doing two Chinese words. Now
+**"One wears a god's mask, one a demon's."** *Mask* is right and is the house word: case
+12's comment renders the same 神頭鬼面 as the masks of a puppet show. No Sanskrit was
+admitted — *deva* was offered and declined, since 人天 is "humans and gods" twice already.
+
+**Case 47, the verse (0298c29–30).** 一念普觀無量劫。無量劫事即如今。如今覻破箇一念。
+覻破如今覻底人。 **This verse had never been examined** — not by §2, not by §4 — which is
+worth recording on its own, since the pass that swept the cases and the comments evidently
+did not sweep every verse. Line 1 had no word for 一念 (one instant of thought) and invented
+"realization"; line 3 conflated 如今 with 一念 and produced "the endless moment", a thing the
+Chinese is careful never to say. The verse is a spiral — instant, endless time, this
+instant, the one seeing — and it now walks it. The wording offered by the review repeated
+that same conflation in its line 3 ("this one moment", after line 2 had spent *moment* on
+如今); the line takes **"this one instant of thought"** instead.
+
+**Case 48, the comment (0299a10) — and this one overturns a standing ruling.**
+世上應無直底人 — was "It is very difficult to find the right person", a hiring remark that
+follows from nothing, and a misreading of 直底人 (*a straight person*) as *the right sort of
+person*. §4 declined to touch it and the protect list carried it. **Both were over-drawn**,
+and the fault is worth naming precisely: §4's two reasons — the choice of witness, and that
+the humped/straight pun cannot survive in English — are reasons about the **pun**. But
+世上應無直底人 stands in **both** witnesses. Losing the wordplay is not a reason to drop the
+sentence, and dropping it left an English sentence that means almost nothing at the point
+where Mumon is being scathing.
+
+Now **"In the whole world, it seems, there is no one who runs straight."** *It seems*
+carries the inferential 應. This **asserts no cancellation** — §4's red line, and still the
+red line: cancellation would yield something straight, and the Chinese insists nothing is.
+It does not restore the camel either; the riders stay and the witness question stays
+closed. One thing claimed for this wording by the review is **not** true and should not be
+repeated: it does not work under either witness, since a humped man does not *run*. It
+works because this edition ships riders.
+
+**The afterword, the guard (0299a19).** 不問關吏 — was "never ask the officer posted
+there", which reads bureaucratic. 關吏 keeps the barrier; **guard** is the plain word.
+*Gatekeeper* is unavailable and always will be — 門 against 關 is the book's own title.
+
+**Case 28, the case (0296b26).** 牙如劍樹。口似血盆 — was "his teeth are like the sword
+tree, his mouth is like the blood bowl". Both are named hells, and the definite articles
+are defensible for exactly that reason; but they read as technical terms a reader has
+missed, and nothing in the scene depends on the reference. Now **"His teeth are like a
+tree of swords, his mouth like a bowl of blood."** — the image, which anyone can see.
+
+**Case 38, the comment (0297c17).** 更須照顧尾巴始得 — was "you should turn back to your
+tail". 照顧 is *attend to, look after*; there is no turning in it, and *turn back to* was
+Reps's. The repair offered kept the turning and added the tending; this takes the plainer
+and more accurate **"you should look to your tail."**
+
+### What was declined
+
+Nothing, this round — but four things were re-affirmed on the record rather than
+re-argued: case 37's **oak** (§4's known choice, and a retitle would move a slug over a
+botanical footnote), case 30's piling-on (the original's own stacking), case 28's
+**retire**, and case 41's four words. The review arrived at the protect list independently
+and matched it, which is the first outside sign that the list is legible to someone who
+did not write it.
+
 ## 5. Narration
 
 After the second round — the seven rulings, the retitles, and the 37/38 reorder — the
@@ -2096,7 +2193,7 @@ would tidy.
 | Afterword verse: "the easy part / is hard" | Built to break a shared run with J. C. Cleary | coincidences |
 | Zen Warnings: "**hell and heaven**" | The Chinese order 地獄天堂, kept against the English idiom | §4e |
 | Zen Warnings: "making a living in a house of ghosts" | Kept knowingly despite a recorded six-word overlap with Wonderwheel | Zen Warnings collation |
-| Case 48: "It is very difficult to find the right person" and the two riders | Reps's invention, kept: restoring the camel is a choice of witness the collation showed is not the mainstream reading | §4, collation |
+| Case 48: the two riders (**not** the line that followed them) | The riders stay: restoring the camel is a choice of witness the collation showed is not the mainstream reading. "It is very difficult to find the right person" was listed here too and **has been repaired** | §4, §4h, collation |
 | Case 2 verse: "the same die shows two faces" | Reps's image for 兩采一賽, kept as his voice | §4 |
 | Case 24's title vs its own case | A recorded known loss; titles are what readers recognise | Part Two §9 |
 | Case 1: "Has a dog Buddha nature **or not**?" and case 4's "Why hasn't that fellow a beard?" | House archaism, and the two pair with each other. **This one is a judgement, not a finding** — no note establishes it, but modernising one alone would break the pairing | — |
