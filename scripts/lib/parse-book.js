@@ -120,6 +120,11 @@ function takeParts(page, parts, where) {
       + `${page.sections.length ? `: ${page.sections.map((s) => s.label).join(', ')}` : ''}.`);
   }
   const text = {};
+  // The heading a section actually carried, when it is not the default for its
+  // key. Case 49's comment is Amban's, not Mumon's, and the source says so --
+  // this used to be matched, validated and then thrown away, so the reader saw
+  // "Mumon's Comment" over a paragraph that names Amban as its author.
+  const seen = {};
   parts.forEach((part, i) => {
     const section = page.sections[i];
     if (!part.labels.includes(section.label)) {
@@ -131,8 +136,9 @@ function takeParts(page, parts, where) {
     const body = sectionText(section.lines, part.kind);
     if (!body) fail(`${where} (${section.at}): "${section.label}" is empty.`);
     text[part.key] = body;
+    if (section.label !== part.labels[0]) seen[part.key] = section.label;
   });
-  return text;
+  return { text, labels: seen };
 }
 
 export function parseBook(md) {
@@ -148,12 +154,13 @@ export function parseBook(md) {
     if (numbered) {
       const id = Number(numbered[1]);
       if (cases[id]) fail(`${page.at}: case ${id} appears twice.`);
-      const parts = takeParts(page, CASE_PARTS, `case ${id}`);
+      const { text: parts, labels: caseLabels } = takeParts(page, CASE_PARTS, `case ${id}`);
       // Key order is not cosmetic: the generated module is JSON.stringify of
       // these objects, and the committed file carries this order.
       const entry = {
         title: numbered[2].trim(), case: parts.case, comment: parts.comment, verse: parts.verse,
       };
+      if (Object.keys(caseLabels).length) entry.labels = caseLabels;
       if (id === CASE_COUNT) entry.extra = true;   // Amban's addition stands apart from the forty-eight
       cases[id] = entry;
       order.push(id);
@@ -165,7 +172,7 @@ export function parseBook(md) {
         + `${MATTER_PAGES.map((p) => p.title).join(', ')}.`);
     }
     if (matter[spec.slug]) fail(`${page.at}: the ${spec.title} appears twice.`);
-    const text = takeParts(page, spec.parts, spec.title);
+    const { text } = takeParts(page, spec.parts, spec.title);
     const labels = {};
     for (const part of spec.parts) labels[part.key] = part.labels[0];
     matter[spec.slug] = {

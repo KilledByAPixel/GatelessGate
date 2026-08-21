@@ -59,6 +59,9 @@ export const SECTIONS = [
       + '(1957), the version most readers know. Archaic verb forms and pronouns, '
       + 'which survive here and there in the capping verses, have been lightly '
       + "modernised; Mumon's commentaries were already in plain modern English. "
+      + 'Every case has since been checked, line by line, against the Chinese and '
+      + 'repaired where the 1934 rendering strayed from it, and the reader is '
+      + 'addressed directly where the old text spoke of a hypothetical man. '
       + "Other small editorial changes have been made: bracketed translator's "
       + 'notes let go where they explained a koan before it had finished asking, '
       + 'and the like. Transcribed from ',
@@ -80,8 +83,10 @@ export const SECTIONS = [
       + 'existing English version (a philological one, one in Song Chan idiom, and '
       + 'one in plain English). The three were then compared and every divergence of '
       + 'meaning taken back to the Chinese and settled by hand. It is a new rendering '
-      + 'and worth reading as one: it has had no scholarly review, and the Chinese '
-      + 'text it works from was not independently collated against a second witness.',
+      + 'and worth reading as one: it has had no scholarly review. The Chinese text '
+      + 'it works from has since been collated against an independent witness, which '
+      + "confirms half of the digital edition's editorial corrections and leaves the "
+      + 'rest resting on modern judgement.',
     ],
   },
   {
@@ -91,8 +96,8 @@ export const SECTIONS = [
       + 'Mumon (Wumen Huikai). It gathers forty-eight koans, each followed by his '
       + 'own commentary and a capping verse. The forty-ninth case is not his: '
       + 'Amban, described in the text only as a layman Zen student, added it '
-      + 'afterwards as a bargain, complaining that Mumon was "like an old '
-      + 'doughnut seller." It has travelled with the book ever since. The names '
+      + 'afterwards to round the count out to forty-nine, complaining that Mumon was '
+      + 'like a man selling fried cakes. It has travelled with the book ever since. The names '
       + 'throughout are the Japanese readings of Chinese ones, as Senzaki and Reps '
       + 'gave them: Joshu is Zhaozhou, Hyakujo is Baizhang.',
     ],

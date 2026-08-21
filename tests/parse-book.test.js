@@ -112,14 +112,18 @@ test("case 49 alone is marked extra, and its comment is Amban's", () => {
   const { cases } = parseBook(book());
   assert.equal(cases[49].extra, true);
   assert.equal(cases[48].extra, undefined);
-  // The label never reaches the module — only the key does.
   assert.ok(cases[49].comment.length > 0);
+  // The label DOES reach the module when it is not the default for its key.
+  // It used to be matched, validated and then dropped, so every reader saw
+  // "Mumon's Comment" over the one comment in the book Mumon did not write.
+  assert.deepEqual(cases[49].labels, { comment: "Amban's Comment" });
+  assert.equal(cases[1].labels, undefined, 'a case using the default heading carries no override');
 });
 
 test('the case entry key order is the one the committed module carries', () => {
   const { cases } = parseBook(book());
   assert.deepEqual(Object.keys(cases[1]), ['title', 'case', 'comment', 'verse']);
-  assert.deepEqual(Object.keys(cases[49]), ['title', 'case', 'comment', 'verse', 'extra']);
+  assert.deepEqual(Object.keys(cases[49]), ['title', 'case', 'comment', 'verse', 'labels', 'extra']);
 });
 
 test('the matter page shape is the one the reader consumes', () => {

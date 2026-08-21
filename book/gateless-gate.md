@@ -53,14 +53,14 @@ The Buddha's teaching takes mind as its source, and no gate as its gate. If ther
 
 It is said that what comes in through the gate can never be your own treasure. What you gain from outside conditions has a start and a finish; it comes together and it falls apart. Even saying that much is raising waves where there is no wind, cutting into healthy flesh. Worse still to snag on words and phrases and go hunting for meaning. Swinging a stick at the moon. Scratching an itch through your boot. What has any of it to do with anything?
 
-In the summer of 1228 I was head monk at Ryusho, in Onshu. Monks kept coming to ask for instruction, so I took the old teachers' koans and used them the way you'd grab a piece of broken tile to knock at a gate, leading each student on according to what they needed. I copied them down as they came, and before I knew it there was a book. I never put them in any order. Forty-eight of them altogether. The whole thing goes under the name Mumonkan, "The Gateless Gate."
+In the summer of 1228 I was head monk at Ryusho, in Onshu. Monks kept coming to ask for instruction, so I took the old teachers' koans and used them the way you'd grab a piece of broken tile to knock at a door, leading each student on according to what they needed. I copied them down as they came, and before I knew it there was a book. I never put them in any order. Forty-eight of them altogether. The whole thing goes under the name Mumonkan, "The Gateless Gate."
 
 If you push forward bravely, regardless of all danger, then eight-armed Nata cannot stop you. At the sight of you the twenty-eight patriarchs of India and the six of this land would beg for their lives. However, if you hang back, it is like a horse galloping past an open window. Blink, and it is gone.
 
 ### The Verse
 
 The Great Way is gateless,
-approached by a thousand roads.
+there are a thousand roads.
 Once past this barrier
 you walk alone through heaven and earth.
 
@@ -150,7 +150,7 @@ Enlightenment, which Gutei and the boy attained, has nothing to do with a finger
 
 ### The Verse
 
-Gutei cheapens the teaching of Tenryu,
+Gutei makes a fool of old Tenryu,
 freeing the boy with a knife.
 A god once split a mountain with one hand
 and thought nothing of it.
@@ -418,7 +418,7 @@ Tozan replied: "The temple of Hoji, south of the lake."
 
 "When did you leave there?" asked Ummon, wondering how long Tozan would continue with such factual answers.
 
-"The twenty-fifth of August," answered Tozan.
+"The twenty-fifth of the eighth month," answered Tozan.
 
 Ummon said: "I should give you three blows with a stick, but today I forgive you."
 
@@ -618,7 +618,7 @@ At these words Emyo was enlightened. Sweat broke out all over his body. He cried
 
 The sixth patriarch replied: "What I have told you is no secret at all. When you realize your own true self the secret belongs to you."
 
-Emyo said: "I was under the fifth patriarch many years but could not realize my true self until now. Through your teaching I find the source. A person drinks water and knows for himself whether it is cold or warm. May I call you my teacher?"
+Emyo said: "I was under the fifth patriarch many years but could not realize my true self until now. Through your teaching I find the source. A person drinks water and knows for themselves whether it is cold or warm. May I call you my teacher?"
 
 The sixth patriarch replied: "We studied together under the fifth patriarch. Call him your teacher, but just treasure what you have attained."
 
@@ -762,7 +762,7 @@ The sixth patriarch happened to be passing by. He told them: "Not the wind, not 
 
 ### Mumon's Comment
 
-Not the wind moving, not the flag moving, not the mind moving. Where is the patriarch in that? If you understand this thoroughly, you will see the two monks there trying to buy iron and gaining gold. The sixth patriarch could not bear to see those two dull heads, so he made such a bargain.
+Not the wind moving, not the flag moving, not the mind moving. Where is the patriarch in that? If you understand this thoroughly, you will see the two monks there trying to buy iron and gaining gold. The sixth patriarch could not bear to see those two dull heads, so he struck that trade for them.
 
 ### The Verse
 
@@ -796,7 +796,7 @@ is like claiming innocence with stolen goods in your pocket.
 
 A traveling monk asked an old woman the road to Taizan, a popular temple supposed to give wisdom to the one who worships there. The old woman said: "Go straight ahead." When the monk proceeded a few steps, she said to herself: "He also is a common pilgrim."
 
-Someone told this incident to Joshu, who said: "Wait until I have checked her out." The next day he went and asked the same question, and the old woman gave the same answer.
+Someone told this incident to Joshu, who said: "Wait until I have tested her." The next day he went and asked the same question, and the old woman gave the same answer.
 
 Joshu remarked: "I have seen through that old woman."
 
@@ -1183,7 +1183,7 @@ one question, and he owns it at once.
 
 The Buddhas and the patriarchs, handing these encounters down, took the confession and closed the case. Never a word to spare. They lifted the lid off your skull and let your eyes open into the daylight. What they want is for you to take hold of it here and now and not go looking for it anywhere else.
 
-Anyone who has been all the way through hears one of these raised and knows at once where it lands. There is no doorway to pass through and no stairway to climb. They walk through the barrier swinging their arms and never ask the man at the gate.
+Anyone who has been all the way through hears one of these raised and knows at once where it lands. There is no doorway to pass through and no stairway to climb. They walk through the barrier swinging their arms and never ask the officer on it.
 
 Have you not heard what Gensha said? "No gate is the gate of freedom. No intent is the intent of a person of the Way." And as Hakuun said: "You know perfectly well it is just this. So why can't you get through?"
 

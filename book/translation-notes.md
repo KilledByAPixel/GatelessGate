@@ -254,6 +254,11 @@ It is not duplicated here — a second copy is a second thing to keep true.
   thousand distinctions is nothing but roads" (contrastive, against the gateless Way) or
   "there are a thousand ways to approach it" (the received interpretation). The English is
   deliberately silent about where the roads go, because the Chinese is.
+  ⚑ **This went wrong once and was put back, 21 August 2026.** A later verse polish set the
+  line as "approached by a thousand roads", which commits to the received reading and
+  excludes the contrastive one — precisely the harmonising this file's own closing rules
+  forbid. The neutral line is restored. A flagged uncertainty is easy to lose, because the
+  wording that protects it looks like a wording that could be improved.
 - **紹定戊子夏 (p.292b16) — a dating question, not a translation one.** "Summer" is safe in the
   English, but the span underneath it is not settled. **Calendrically**, 夏 is lunar months 4–6,
   about 6 May – 1 August 1228 Julian. **Monastically**, it is the summer retreat, 4/15–7/15,
@@ -439,9 +444,16 @@ It is not duplicated here — a second copy is a second thing to keep true.
   ride** — not "to dull". The squeeze play is exact: get through and a gateless gate turns out
   to have had something to pass, so the man who built it is a fraud; fail, and you have wasted
   yourself. Somebody loses either way, and the person named in the losing clause is also the
-  title on the cover. English cannot hold all three senses of 無門; the man was taken. This is
-  why the signature runs "the monk Ekai, called Mumon" — the 1934 title page's own formula,
-  which tells the reader four lines later that Mumon is a person.
+  title on the cover. English cannot hold all three senses of 無門; the man was taken.
+  ⚑ **This note used to go on to say that the signature "tells the reader four lines
+  later that Mumon is a person." It does not, because the book does not carry the
+  signature.** 旹紹定改元解制前五日。楊岐八世孫無門比丘慧開謹識 — the dateline and the
+  eighth-generation-Yogi signature — is translated and sits in this file, but the shipped
+  afterword ends at "you have disappointed yourself" and goes straight to the verse.
+  **Ruled 21 August 2026: it stays out.** A reader does not need to be told Mumon is a
+  man, and a colophon after that closing line reads as an appendix rather than an ending.
+  Yogi and Jotei are therefore prepared names that never reach print; the table below
+  says so.
 - **涅槃心易曉，差別智難明 is a quotation**, marked as one by 所謂. Its earliest canonical
   attestation is 古尊宿語錄 juan 10, the record of **汾陽善昭 (Fenyang Shanzhao, 947–1024)** —
   who is in Mumon's own ancestral line, which is coherent with Mumon signing himself an
@@ -1547,7 +1559,7 @@ retitled page orphans its saved marks and old deep links.
 4. **Case 20 — 大力量人. REPAIRED AND RETITLED.** Now "The Person of Great Strength";
    the question is the strongman paradox, "Why can the person of great strength not lift
    their leg?" (擡脚不起), the second utterance "It is not with the tongue that we speak"
-   (開口不在舌頭上), and the verse asserts instead of supposing: "One lift of the leg
+   (開口不在舌頭上), and the verse asserts instead of supposing: "One lift of the foot
    turns the great ocean over; / one bow of the head looks down on the heavens" (踏翻
    treads it over — a first repair said "kicks," which 踏 does not say; softened on
    review).
@@ -1889,6 +1901,61 @@ blurb owns the doubling; modernising half of it would blur a distinction that is
 喫痛棒 (*eat a painful staff*) to "test out my big stick", and turns Mumon's third-person
 無門處 (*Mumon's place*) into "my place". None is wrong, so none made the six.
 
+## 4e. An outside read of the PRODUCT — 21 August 2026
+
+Every pass before this one read `book/gateless-gate.md`, the source. This one read
+**THE-GATELESS-GATE.md**, the generated book, against this file — and found things no
+amount of source-reading could, because **the builder sits between the two**. That is the
+finding worth keeping: *checking the source is not checking the product.*
+
+**The label bug, which reached actual readers.** `src/ui/scroll_state.js` held one table —
+`comment: "Mumon's Comment"` — and both the reading UI and the book builder rendered from
+it. So **case 49 was headed "Mumon's Comment" over the one comment in the book Mumon did
+not write.** The source said `### Amban's Comment` all along; `parse-book.js` matched that
+heading, validated it, and threw it away. Fixed at the root: `takeParts` now returns the
+label it matched when it differs from the default, the case entry carries it, and both
+renderers prefer it. `tests/parse-book.test.js` had a comment reading "the label never
+reaches the module — only the key does", which is the bug written down as if it were a
+design.
+
+**The About had gone stale in four places**, all of them invisible from the source file
+because `scripts/lib/book-md.js` builds its own colophon from `about_state.js`:
+the Chinese was still described as "not independently collated against a second witness"
+the day after the collation was run; the verification sentence and the direct-address
+disclosure that Parts Two and Three both claim the front matter carries had never reached
+the generated book at all; and it quoted Amban on an "old doughnut seller" and an addition
+made "as a bargain" — two phrasings the register and voice passes had already removed from
+the book itself. **The About was quoting a text the edition no longer contained.**
+
+**Two record-versus-product mismatches.** §3's case-20 ruling still said *leg* where the
+book says *foot* (the book is right; the note is now corrected), and the preface verse had
+drifted to "approached by a thousand roads" against a flag demanding neutrality — see the
+千差有路 entry, now restored.
+
+**And the afterword signature was never in the book**, though three separate places here
+assumed it was. Ruled out deliberately rather than added; see the 鈍置 note.
+
+### What was accepted from the same read, and what was declined
+
+Accepted, as consistency repairs the edition's own tests already called for: case 3's
+鈍置 rendered "cheapens", which is exactly the dulling reading the afterword note says is
+wrong (now "makes a fool of old Tenryu", matching the afterword); case 15's "twenty-fifth
+of August", a Western month in a Tang exchange, in a book that removed an uppercut from a
+Tang monastery (now "the twenty-fifth of the eighth month"); case 23's "knows for himself"
+after a neutralised noun, the orphaned-pronoun failure Part Two §4 names; case 31's "checked
+her out", which in current English appraises a woman's looks (now "tested her", which also
+makes the 勘 pairing with case 11's title audible); case 29's surviving "bargain", swept
+from case 49 for its discount drift; and two 門/關 edge spots — 關吏 as "the man at the
+gate" inside a sentence that calls 關 a barrier (now "the officer on it"), and the
+preface's 敲門瓦子, the one 門 this file calls an ordinary house door, which now knocks at
+a door rather than a gate.
+
+Declined: rendering 據座 as "held his seat" (faithful but stilted; "sat still" stays), and
+unifying 胡 as "foreigner" in case 2's redbeard punchline. The inconsistency there is real,
+but the sentence is murky for a different reason — the idiom turns on having heard of
+redbeards and then meeting one — and swapping the noun would not fix it. **Left as a known
+weak spot rather than half-mended.**
+
 ## 5. Narration
 
 After the second round — the seven rulings, the retitles, and the 37/38 reorder — the
@@ -2090,11 +2157,11 @@ the Chinese. The provenance section states this policy so a reader can see it is
 | 五祖 (in 黃龍三關) | the Fifth Patriarch | **deliberate departure** — "Goso" is Fayan in the 1934 cases; see the flag |
 | 玄沙 | **Gensha** | ships — Japanese reading (Ch. Xuansha) |
 | 白雲 | **Hakuun** | ships — Japanese reading (Ch. Baiyun) |
-| 楊岐 | **Yogi** | ships — Japanese reading (Ch. Yangqi), no macron |
+| 楊岐 | **Yogi** | prepared, but **does not ship** — it occurs only in the afterword signature, which the book does not carry (see below) |
 | 那吒 | **Nata** | ships — Japanese reading (Ch. Nezha) |
 | 龍翔 | **Ryusho** | ships — Japanese reading (Ch. Longxiang) |
 | 東嘉 / 溫州 | **Onshu** | ships — Japanese reading (Ch. Wenzhou) |
-| 紹定 | **Jotei** | ships — Japanese reading (Ch. Shaoding) |
+| 紹定 | **Jotei** | prepared, but **does not ship**, for the same reason as Yogi |
 | 陳塤 | Chen Xun | Pinyin — does not ship |
 | 孟珙 | Meng Gong | Pinyin — does not ship |
 | 無庵 | Wu'an | Pinyin — Meng Gong's own 號; does not ship |

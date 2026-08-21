@@ -16,14 +16,14 @@ The Buddha's teaching takes mind as its source, and no gate as its gate. If ther
 
 It is said that what comes in through the gate can never be your own treasure. What you gain from outside conditions has a start and a finish; it comes together and it falls apart. Even saying that much is raising waves where there is no wind, cutting into healthy flesh. Worse still to snag on words and phrases and go hunting for meaning. Swinging a stick at the moon. Scratching an itch through your boot. What has any of it to do with anything?
 
-In the summer of 1228 I was head monk at Ryusho, in Onshu. Monks kept coming to ask for instruction, so I took the old teachers' koans and used them the way you'd grab a piece of broken tile to knock at a gate, leading each student on according to what they needed. I copied them down as they came, and before I knew it there was a book. I never put them in any order. Forty-eight of them altogether. The whole thing goes under the name Mumonkan, "The Gateless Gate."
+In the summer of 1228 I was head monk at Ryusho, in Onshu. Monks kept coming to ask for instruction, so I took the old teachers' koans and used them the way you'd grab a piece of broken tile to knock at a door, leading each student on according to what they needed. I copied them down as they came, and before I knew it there was a book. I never put them in any order. Forty-eight of them altogether. The whole thing goes under the name Mumonkan, "The Gateless Gate."
 
 If you push forward bravely, regardless of all danger, then eight-armed Nata cannot stop you. At the sight of you the twenty-eight patriarchs of India and the six of this land would beg for their lives. However, if you hang back, it is like a horse galloping past an open window. Blink, and it is gone.
 
 **The Verse**
 
 The Great Way is gateless,  
-approached by a thousand roads.  
+there are a thousand roads.  
 Once past this barrier  
 you walk alone through heaven and earth.
 
@@ -113,7 +113,7 @@ Enlightenment, which Gutei and the boy attained, has nothing to do with a finger
 
 **The Verse**
 
-Gutei cheapens the teaching of Tenryu,  
+Gutei makes a fool of old Tenryu,  
 freeing the boy with a knife.  
 A god once split a mountain with one hand  
 and thought nothing of it.
@@ -381,7 +381,7 @@ Tozan replied: "The temple of Hoji, south of the lake."
 
 "When did you leave there?" asked Ummon, wondering how long Tozan would continue with such factual answers.
 
-"The twenty-fifth of August," answered Tozan.
+"The twenty-fifth of the eighth month," answered Tozan.
 
 Ummon said: "I should give you three blows with a stick, but today I forgive you."
 
@@ -581,7 +581,7 @@ At these words Emyo was enlightened. Sweat broke out all over his body. He cried
 
 The sixth patriarch replied: "What I have told you is no secret at all. When you realize your own true self the secret belongs to you."
 
-Emyo said: "I was under the fifth patriarch many years but could not realize my true self until now. Through your teaching I find the source. A person drinks water and knows for himself whether it is cold or warm. May I call you my teacher?"
+Emyo said: "I was under the fifth patriarch many years but could not realize my true self until now. Through your teaching I find the source. A person drinks water and knows for themselves whether it is cold or warm. May I call you my teacher?"
 
 The sixth patriarch replied: "We studied together under the fifth patriarch. Call him your teacher, but just treasure what you have attained."
 
@@ -725,7 +725,7 @@ The sixth patriarch happened to be passing by. He told them: "Not the wind, not 
 
 **Mumon's Comment**
 
-Not the wind moving, not the flag moving, not the mind moving. Where is the patriarch in that? If you understand this thoroughly, you will see the two monks there trying to buy iron and gaining gold. The sixth patriarch could not bear to see those two dull heads, so he made such a bargain.
+Not the wind moving, not the flag moving, not the mind moving. Where is the patriarch in that? If you understand this thoroughly, you will see the two monks there trying to buy iron and gaining gold. The sixth patriarch could not bear to see those two dull heads, so he struck that trade for them.
 
 **The Verse**
 
@@ -759,7 +759,7 @@ is like claiming innocence with stolen goods in your pocket.
 
 A traveling monk asked an old woman the road to Taizan, a popular temple supposed to give wisdom to the one who worships there. The old woman said: "Go straight ahead." When the monk proceeded a few steps, she said to herself: "He also is a common pilgrim."
 
-Someone told this incident to Joshu, who said: "Wait until I have checked her out." The next day he went and asked the same question, and the old woman gave the same answer.
+Someone told this incident to Joshu, who said: "Wait until I have tested her." The next day he went and asked the same question, and the old woman gave the same answer.
 
 Joshu remarked: "I have seen through that old woman."
 
@@ -1127,7 +1127,7 @@ Amban, a layman Zen student, said: "Mumon has just published forty-eight koans a
 
 "Buddha, according to a sutra, once said: 'Stop, stop. Do not speak. My teaching is subtle, beyond all thinking.'"
 
-**Mumon's Comment**
+**Amban's Comment**
 
 Where did that so-called teaching come from? Where does its subtlety come from? Suppose someone spoke about it; then what would become of it? It was not only Bukan whose tongue ran loose: Shakyamuni himself was all mouth. That old man conjured up such a spook that a thousand generations of descendants have been tangled in the vines and never gotten their heads out. A rare piece of talk like this: no spoon can lift it, no steamer can cook it through. How many have taken it wrong!
 
@@ -1146,7 +1146,7 @@ one question, and he owns it at once.
 
 The Buddhas and the patriarchs, handing these encounters down, took the confession and closed the case. Never a word to spare. They lifted the lid off your skull and let your eyes open into the daylight. What they want is for you to take hold of it here and now and not go looking for it anywhere else.
 
-Anyone who has been all the way through hears one of these raised and knows at once where it lands. There is no doorway to pass through and no stairway to climb. They walk through the barrier swinging their arms and never ask the man at the gate.
+Anyone who has been all the way through hears one of these raised and knows at once where it lands. There is no doorway to pass through and no stairway to climb. They walk through the barrier swinging their arms and never ask the officer on it.
 
 Have you not heard what Gensha said? "No gate is the gate of freedom. No intent is the intent of a person of the Way." And as Hakuun said: "You know perfectly well it is just this. So why can't you get through?"
 
@@ -1215,15 +1215,15 @@ This file is generated from the same text the interactive edition reads, so the 
 
 **The translation**
 
-The English text is Nyogen Senzaki and Paul Reps's rendering of the Mumonkan, privately printed by John Murray in Los Angeles in 1934. That printing is in the United States public domain; its copyright was never renewed. Reps later expanded this material into Zen Flesh, Zen Bones (1957), the version most readers know. Archaic verb forms and pronouns, which survive here and there in the capping verses, have been lightly modernised; Mumon's commentaries were already in plain modern English. Other small editorial changes have been made: bracketed translator's notes let go where they explained a koan before it had finished asking, and the like. Transcribed from [sacred-texts.com](https://sacred-texts.com/bud/glg/index.htm).
+The English text is Nyogen Senzaki and Paul Reps's rendering of the Mumonkan, privately printed by John Murray in Los Angeles in 1934. That printing is in the United States public domain; its copyright was never renewed. Reps later expanded this material into Zen Flesh, Zen Bones (1957), the version most readers know. Archaic verb forms and pronouns, which survive here and there in the capping verses, have been lightly modernised; Mumon's commentaries were already in plain modern English. Every case has since been checked, line by line, against the Chinese and repaired where the 1934 rendering strayed from it, and the reader is addressed directly where the old text spoke of a hypothetical man. Other small editorial changes have been made: bracketed translator's notes let go where they explained a koan before it had finished asking, and the like. Transcribed from [sacred-texts.com](https://sacred-texts.com/bud/glg/index.htm).
 
 **The front and back matter**
 
-Mumon's preface, his afterword, the Zen Warnings and Amban's letter are not part of the 1934 translation, which carries only the cases. They were translated for this edition from the Chinese of the Taisho canon (CBETA T48n2005), in three independent passes made blind to one another and to any existing English version (a philological one, one in Song Chan idiom, and one in plain English). The three were then compared and every divergence of meaning taken back to the Chinese and settled by hand. It is a new rendering and worth reading as one: it has had no scholarly review, and the Chinese text it works from was not independently collated against a second witness.
+Mumon's preface, his afterword, the Zen Warnings and Amban's letter are not part of the 1934 translation, which carries only the cases. They were translated for this edition from the Chinese of the Taisho canon (CBETA T48n2005), in three independent passes made blind to one another and to any existing English version (a philological one, one in Song Chan idiom, and one in plain English). The three were then compared and every divergence of meaning taken back to the Chinese and settled by hand. It is a new rendering and worth reading as one: it has had no scholarly review. The Chinese text it works from has since been collated against an independent witness, which confirms half of the digital edition's editorial corrections and leaves the rest resting on modern judgement.
 
 **The book**
 
-The Gateless Gate was compiled in 1228 by the Chinese master Ekai, called Mumon (Wumen Huikai). It gathers forty-eight koans, each followed by his own commentary and a capping verse. The forty-ninth case is not his: Amban, described in the text only as a layman Zen student, added it afterwards as a bargain, complaining that Mumon was "like an old doughnut seller." It has travelled with the book ever since. The names throughout are the Japanese readings of Chinese ones, as Senzaki and Reps gave them: Joshu is Zhaozhou, Hyakujo is Baizhang.
+The Gateless Gate was compiled in 1228 by the Chinese master Ekai, called Mumon (Wumen Huikai). It gathers forty-eight koans, each followed by his own commentary and a capping verse. The forty-ninth case is not his: Amban, described in the text only as a layman Zen student, added it afterwards to round the count out to forty-nine, complaining that Mumon was like a man selling fried cakes. It has travelled with the book ever since. The names throughout are the Japanese readings of Chinese ones, as Senzaki and Reps gave them: Joshu is Zhaozhou, Hyakujo is Baizhang.
 
 **This edition**
 

@@ -83,7 +83,12 @@ test('the colophon says where the front and back matter came from', () => {
   assert.ok(MD.includes('**The front and back matter**'));
   assert.match(MD, /not\s+part of the 1934 translation/);
   assert.match(MD, /T48n2005/, 'the Chinese source should be named');
-  assert.match(MD, /not independently collated/, 'the open caveat should be stated, not buried');
+  // The caveat this pins has changed once already: it used to be that the Chinese
+  // had never been collated against a second witness. That was done on 20 August 2026,
+  // so the sentence went false and the About had to be corrected. What must NEVER be
+  // quietly dropped is the standing admission, so that is what is pinned now.
+  assert.match(MD, /no scholarly review/, 'the open caveat should be stated, not buried');
+  assert.match(MD, /collated against an independent witness/, 'and what the collation did and did not settle');
 });
 
 test('no ideographic indent reaches the file', () => {

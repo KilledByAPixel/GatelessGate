@@ -50,7 +50,7 @@ function page({ entry, cases, matter }) {
   // the same table the scroll renders from, so the two cannot drift apart.
   for (const key of ['case', 'comment', 'verse']) {
     if (!c[key] || !c[key].trim()) continue;
-    out.push(`**${LABELS[key]}**`);
+    out.push(`**${(c.labels && c.labels[key]) || LABELS[key]}**`);
     out.push(preserveLines(c[key]));
   }
   return out;
