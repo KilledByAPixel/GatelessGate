@@ -2092,10 +2092,21 @@ moves with it.
   Note the contrast with **case 20**, where a first repair said "kicks" and was rolled
   back because 踏 is *tread*. The verb decides it, not the force of the image.
 
-  The slug cost was nil in the event: case 40's slug had already moved this pass (vase →
-  jug) and nothing had been published, so no reader's marks or links were live on either
-  spelling. **That window is the only reason to take a retitle now rather than later**,
-  and it closes at the first push.
+  **The slug cost was mis-stated here when this was written, and the correction is the
+  more useful half of the entry.** What stood here was that case 40's slug had already
+  moved this pass (vase → jug) with nothing published, so no marks or links were live on
+  either spelling, and that the window closes at the first push. Checked afterwards: the
+  vase → jug retitle shipped in *A modern-register pass over the 1934 wording*, which is
+  on origin. Case 40's slug has therefore moved **twice across published versions**, and
+  marks are keyed by slug (`src/save.js`), so a reader who marked that page under either
+  older spelling has lost the mark.
+
+  The retitle stands — the verb is the verb, and one page's marks is a small price for a
+  case that had been telling the reader Isan was careful. But it was taken on a
+  reassurance that did not hold, and the rule runs the other way from what was written:
+  **a slug is free to move only before its first push, and case 40's was already past
+  that.** The check is one command (`git merge-base --is-ancestor <commit> origin/master`)
+  and it was not run until after the commit.
 
 **Case 42, the verse (0298b13).** 神頭并鬼面 — was "One wears the mask of god, one a
 devil's mask." Two faults. *The mask of god* with no article reads as capital-G God; and
