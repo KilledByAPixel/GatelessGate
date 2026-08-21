@@ -1218,7 +1218,9 @@ Person in Part Two, then → **The Person of Great Strength** in §3), **case 22
 (Everyday Life Is the Path → **Ordinary Mind Is the Path**), **case 33** (This Mind Is Not
 Buddha → **Not Mind, Not Buddha**), **case 11** (Joshu Examines a Monk in Meditation →
 **Joshu Tests Two Hermits**), **case 12** (Zuigan Calls His Own Master → **Zuigan Calls to
-Himself**), **case 39** (Ummon's Sidetrack → **Ummon Catches a Slip**), **case 40**
+Himself**), **case 39** (Ummon's Sidetrack → **Ummon Catches a Slip**), **case 32** (A Philosopher
+Asks Buddha → **An Outsider Asks Buddha**, recorded in §4 and missing from this roster
+until the count was needed for the README), **case 40**
 (Tipping Over a Water Vase → **Kicking Over a Water Jug**, in two steps: the noun in
 §2, the verb in §4h), and **case 31** (Joshu Investigates → **Joshu Tests the
 Old Woman**). The 37/38 reorder renumbered two pages but kept their slugs, and lost

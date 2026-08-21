@@ -20,7 +20,7 @@ You can read the koans, meditate in the scenes, or have it read to you.
 
 - **All forty-nine cases.** Each case has its own scene, the full text, and a spoken reading.
 - **Scenes that answer back.** Optional touch feedback. A flag ruffles and settles, water rings, a bell sounds.
-- **Atmospheric soundscape.** Diagetic sound from wind, bells, the occasional chime. Nothing is loud.
+- **Atmospheric soundscape.** Diegetic sound from wind, bells, the occasional chime. Nothing is loud.
 - **Read aloud.** One button steps the text aside, gives the diorama the whole window, and reads the page to you.
 - **A timer for sitting.** From any case you can start a short meditation, opened and closed by a bell.
 
@@ -29,13 +29,15 @@ You can read the koans, meditate in the scenes, or have it read to you.
 The whole book is also here as one plain page: [THE GATELESS GATE](THE-GATELESS-GATE.md).
 It is generated from the same source the interactive edition reads, so the two cannot drift apart.
 That source is [book/gateless-gate.md](book/gateless-gate.md) — the preface, the forty-nine and the afterword in one file — and `node scripts/build-text.js` is what turns it into what the site reads.
-Beside it, [book/translation-notes.md](book/translation-notes.md) is the scholarly record behind the new translation: the Chinese, the exact Taisho page and line spans, the reasoning, and the readings still unresolved.
+Beside it, [book/translation-notes.md](book/translation-notes.md) is the scholarly record behind both the new translation and the work on the cases: the Chinese, the exact Taisho page and line spans, the reasoning, and the readings still unresolved.
 
 The English is Nyogen Senzaki and Paul Reps's rendering of the Mumonkan, privately printed by John Murray in Los Angeles in 1934 which is in the United States public domain.
+Every case has since been checked line by line against the Chinese and repaired where the 1934 rendering strayed from it: sentences whose sense had turned over or inverted, two cases restored to the order the Taisho canon gives them, and eleven pages retitled where the old title no longer matched what its case said.
 Mumon's preface, his afterword, the Zen Warnings and Amban's letter were translated with AI assistance for this edition from the Chinese of the Taisho canon (CBETA T48n2005).
 There were three independent passes, each made blind to the others and to any existing English version, then compared line by line, with every difference in meaning settled against the Chinese.
+That Chinese has since been collated against an independent witness of the same text.
 It is a new rendering and worth reading as one: it has had no scholarly review, please reach out if you are interested in doing one.
-A few other small editorial changes were made along the way, and the book's own About page has the details.
+Other editorial changes were made along the way, and the book's own About page has the details.
 
 ## License
 

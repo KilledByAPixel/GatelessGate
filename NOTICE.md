@@ -23,8 +23,9 @@ sitting alone at the root of a repository looks like it covers the whole of it.
   are the seven further pieces translated there but not published in the book,
   excepting the Chinese any of it quotes.
 - The editing of the forty-nine cases for this edition — the modernising, the
-  simplified wording, the capping verses set back as lines. The 1934 English
-  underneath that editing is not covered; see below.
+  simplified wording, the capping verses set back as lines, and the repairs made
+  to the 1934 English against the Chinese. The 1934 English underneath that
+  editing is not covered; see below.
 
 In short: attribution required, no commercial use, no derivative works.
 
@@ -45,11 +46,12 @@ edition through [sacred-texts.com](https://sacred-texts.com/bud/glg/index.htm).
 
 **The editing of those cases for this edition** is a different matter, and is
 covered. Archaic constructions have been eased, wording simplified where it
-clouded the sense, and the capping verses set back as lines after a flattening
-upstream had run them together into prose. That editorial work is (c) 2026 Frank
-Force under the licence above. It does not reach back to the 1934 text beneath
-it, which stays public domain and free for anyone to take up as it was
-printed.
+clouded the sense, the capping verses set back as lines after a flattening
+upstream had run them together into prose, and every case checked against the
+Chinese of the Taisho canon and repaired where the 1934 rendering strayed from
+it. That editorial work is (c) 2026 Frank Force under the licence above. It
+does not reach back to the 1934 text beneath it, which stays public domain and
+free for anyone to take up as it was printed.
 
 **Three.js**, vendored in `lib/`, is (c) 2010-2026 Three.js Authors and is
 licensed MIT. Each file carries its own SPDX header. It travels under its own
