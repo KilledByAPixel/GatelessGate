@@ -164,7 +164,7 @@ Buddha said: "I have the eye of the true teaching, the heart of Nirvana, the tru
 
 **Mumon's Comment**
 
-Golden-faced Gautama thought he could cheat anyone. He passed good people off as slaves, and sold dog meat under the sign of mutton. And he himself thought it was wonderful. What if all the audience had laughed together? How could he have transmitted the teaching? And again, if Mahakashapa had not smiled, how could he have transmitted the teaching? If he says that realization can be transmitted, he is like a city slicker cheating a farm boy, and if he says it cannot be transmitted, why does he approve of Mahakashapa?
+Golden-faced Gautama thought he could cheat anyone. He passed good people off as slaves, and sold dog meat under the sign of mutton. And he himself thought it was wonderful. What if all the audience had laughed together? How could he have transmitted the teaching? And again, if Mahakashapa had not smiled, how could he have transmitted the teaching? If he says that realization can be transmitted, he is swindling the whole village, and if he says it cannot be transmitted, why does he approve of Mahakashapa?
 
 **The Verse**
 
@@ -387,7 +387,7 @@ Ummon said: "I should give you three blows with a stick, but today I forgive you
 
 The next day Tozan bowed to Ummon and asked: "Yesterday you forgave me three blows. I do not know why you thought me wrong."
 
-Ummon, rebuking Tozan's spiritless responses, said: "You are good for nothing. You simply wander from one monastery to another."
+Ummon, rebuking Tozan's spiritless responses, said: "You sack of rice. You simply wander from one monastery to another."
 
 Before Ummon's words were ended Tozan was enlightened.
 
@@ -395,7 +395,7 @@ Before Ummon's words were ended Tozan was enlightened.
 
 Ummon fed Tozan good Zen food. If Tozan can digest it, Ummon may add another member to his family.
 
-In the evening Tozan swam around in a sea of good and bad, but at dawn Ummon cracked his shell. After all, he wasn't so smart.
+In the evening Tozan swam around in a sea of good and bad, but at dawn Ummon cracked his shell. He was no quick study, even so.
 
 Now, I want to ask: Did Tozan deserve the three blows? If you say yes, not only Tozan but every one of you deserves them. If you say no, Ummon is speaking a lie. If you answer this question clearly, you can eat the same food as Tozan.
 
@@ -514,7 +514,7 @@ Shogen asked: "Why can't the person of great strength lift a foot?" And he also 
 
 **Mumon's Comment**
 
-Shogen spoke plainly enough, but how many will understand? If you comprehend, you should come to my place and test out my big stick. Why, look here, to test real gold you must see it through fire.
+Shogen spoke plainly enough, but how many will understand? If you comprehend, you should come to my place and test out my big stick. Why is that? If you want to know real gold, look in the fire.
 
 **The Verse**
 
@@ -944,7 +944,7 @@ Hyakujo smiled and said: "The chief monk loses." And Isan became the master of t
 
 **Mumon's Comment**
 
-Isan was brave enough, but he could not escape Hyakujo's trick. After all, he gave up a light job and took a heavy one. Why, can't you see, he took off his comfortable hat and shouldered an iron yoke.
+Isan was brave enough, but he could not escape Hyakujo's trick. After all, he gave up a light job and took a heavy one. Why is that? He took off his comfortable hat and shouldered an iron yoke.
 
 **The Verse**
 
@@ -1110,7 +1110,7 @@ This pupil went to Ummon and asked the same question. Ummon, who happened to hav
 
 **Mumon's Comment**
 
-One teacher enters the deep sea and scratches the earth and raises dust. The other goes to the mountain top and raises waves that almost touch heaven. One holds, the other gives out. Each supports the profound teaching with a single hand. Kembo and Ummon are like two riders neither of whom can get ahead of the other. It is very difficult to find the right person. Frankly, neither of them knows where the road starts.
+One teacher enters the deep sea and scratches the earth and raises dust. The other goes to the mountain top and raises waves that almost touch heaven. One holds, the other gives out. Each supports the profound teaching with a single hand. Kembo and Ummon are like two riders neither of whom can get ahead of the other. It is very difficult to find the right person. Seen with a true eye, neither of them knows where the road starts.
 
 **The Verse**
 

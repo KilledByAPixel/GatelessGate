@@ -1804,6 +1804,45 @@ these compounds is in the Chinese:
 Three of these move a title, and slugs derive from titles, so cases 12, 39 and 40 lose
 their saved marks and old deep links, knowingly, as cases 19, 20 and 33 did in §3.
 
+## 4c. The Reps voice, swept — 20 August 2026
+
+Part Two §5 kept Reps's Americana on the reasoning that "it is a translator's voice, not
+sloppiness, and stripping it makes the book more neutral and less alive." **That decision
+assumed the book was edited Reps.** Once the cases had been checked against the Chinese
+throughout, the Chinese became the controlling text and Reps the draft that survived where
+it was accurate — and a preserved 1930s voice stopped being the thing the edition was for.
+The rationale was reopened on that ground and six places went.
+
+**Every one is defensible on accuracy alone**, which is why these six and not others: each
+stands where the Chinese has content that Reps replaced with period idiom or with filler.
+
+- **Case 6** — 誑謼閭閻, swindling the people of the lanes. Reps's *"like a city slicker
+  cheating a farm boy"* is a 1930s pairing with no counterpart in the Chinese. Now **"he is
+  swindling the whole village."**
+- **Case 15** — 飯袋子, *rice bag*, a stock Chan insult: you are a sack for rice to go into.
+  Flattened to *"You are good for nothing."* Now **"You sack of rice."**
+- **Case 15** — 未是性燥, not quick-natured, slow off the mark. Reps read it as intelligence:
+  *"he wasn't so smart."* Now **"He was no quick study, even so."**
+- **Case 20** — 何故𦗚 is a real question with a Chan interrogative particle prodding for an
+  answer, and 要識真金。火裏看 is the assay idiom: fire is the **test**, not a medium you peer
+  through. Reps had *"Why, look here, to test real gold you must see it through fire."* Now
+  **"Why is that? If you want to know real gold, look in the fire."**
+- **Case 40** — the **same** 何故𦗚, which Reps costumed differently as *"Why, can't you
+  see."* Now **"Why is that?"**, so one Chinese phrase finally has one English.
+- **Case 48** — 正眼觀來, *seen with a true eye*, replaced by the filler *"Frankly."* Now
+  **"Seen with a true eye."**
+
+**Three candidates were examined and kept.** *"Overplayed his hand"* (case 10) and *"turned
+the tables"* (case 31) read as dated but are ordinary current English. *"Very mischievous"*
+(case 49) sits inside the paragraph that is **deliberately** Reps's loose paraphrase of
+Amban's letter, since the careful translation of that letter closes the Afterword and the
+blurb owns the doubling; modernising half of it would blur a distinction that is on purpose.
+
+**Still not swept, and available if this goes further:** case 20's comment also compresses
+傾膓倒腹 (*poured out his guts and turned his belly over*) to "spoke plainly enough", softens
+喫痛棒 (*eat a painful staff*) to "test out my big stick", and turns Mumon's third-person
+無門處 (*Mumon's place*) into "my place". None is wrong, so none made the six.
+
 ## 5. Narration
 
 After the second round — the seven rulings, the retitles, and the 37/38 reorder — the
