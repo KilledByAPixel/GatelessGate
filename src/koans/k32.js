@@ -47,7 +47,7 @@ function bowShape(u) {
 const CAM = { distance: 10, target: [1.15, 1.7, -1.6], heading: 36.5, pitch: 16 };
   export default {
   id: ID,
-  slug: 'a-philosopher-asks-buddha',
+  slug: 'an-outsider-asks-buddha',
   title: TEXT[ID].title,
   accent: ACCENT,
   tier: 3,

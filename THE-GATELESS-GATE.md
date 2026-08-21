@@ -221,11 +221,11 @@ south, north, east, and west.
 
 A monk asked Seijo: "I understand that a Buddha who lived before recorded history sat in meditation for ten ages and could not realize the highest truth, and so could not become fully free. Why was this so?"
 
-Seijo replied: "Your question is self-explanatory."
+Seijo replied: "That question is very much to the point."
 
 The monk asked: "Since the Buddha was meditating, why could he not fulfill Buddhahood?"
 
-Seijo said: "He was not a Buddha."
+Seijo said: "Because he does not become a Buddha."
 
 **Mumon's Comment**
 
@@ -652,8 +652,8 @@ I want to ask you: Which of those two monks gained and which lost? If any of you
 
 When the screen is rolled up the great sky opens,  
 yet the sky is not attuned to Zen.  
-It is best to forget the great sky  
-and to retire from every wind.
+It is best to let it all go from the emptiness:  
+seamless and close, and no wind gets through.
 
 ## 27. It Is Not Mind, It Is Not Buddha, It Is Not Things
 
@@ -729,8 +729,8 @@ Not the wind moving, not the flag moving, not the mind moving. Where is the patr
 
 **The Verse**
 
-Wind, flag, mind moves,  
-the same understanding.  
+Wind, flag, mind moving:  
+all three convicted on one charge.  
 When the mouth opens  
 all are wrong.
 
@@ -774,17 +774,17 @@ the answer was the same as before.
 Sand in the bowl of rice,  
 thorns in the soft mud.
 
-## 32. A Philosopher Asks Buddha
+## 32. An Outsider Asks Buddha
 
 **The Case**
 
-A philosopher asked Buddha: "Without words, without the wordless, will you tell me truth?"
+An outsider asked Buddha: "Without words, without the wordless, will you tell me truth?"
 
 The Buddha sat still.
 
-The philosopher bowed and thanked the Buddha, saying: "With your loving kindness I have cleared away my delusions and entered the true path."
+The outsider bowed and thanked the Buddha, saying: "With your loving kindness I have cleared away my delusions and entered the true path."
 
-After the philosopher had gone, Ananda asked the Buddha what he had attained.
+After the outsider had gone, Ananda asked the Buddha what he had attained.
 
 The Buddha replied: "A good horse runs even at the shadow of the whip."
 
@@ -1089,7 +1089,7 @@ The third gate is that once you are free from birth and death you should know wh
 
 If you can pass these three barriers you will be a master wherever you stand. Whatever happens around you, you will turn into Zen.
 
-Otherwise you will be living on poor food, and will not have even enough of that to satisfy you.
+Otherwise: coarse food fills you quickly, but chew it fine and you will not go hungry.
 
 **The Verse**
 

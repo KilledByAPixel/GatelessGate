@@ -274,6 +274,19 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   // hands it back exactly on the way out, so the sliders are only ever taken
   // over for the few seconds a squall is actually blowing.
   const surface = water.group.children.find((c) => c.name === 'surface');
+  // ...AND THE GROUND, which is how "did you touch the sea" gets asked.
+  // input.raycastFirst tests ONLY what it is handed — it knows nothing about
+  // occlusion — and this sea is a 150-metre sheet that runs on under the land,
+  // so asking it for the surface alone said yes to every click below the
+  // horizon: a tap on the meadow in the foreground passes through the grass and
+  // meets the sheet a stride or two further on, still well inland, and the
+  // squall came anyway. Handing BOTH to one raycast and requiring the water to
+  // be the nearer hit is the occlusion test, and the ground is exactly the
+  // right occluder for free: it covers the sheet everywhere the land is dry,
+  // and the shore taper drops it below sea level past the waterline, so from
+  // the beach out the water is in front of it. No pick volume, and no copy of
+  // the shoreline here to fall out of step with SHORE.
+  const land = world.ground;
   const grass = world.grass;
   const BASE_WIND = grass && grass.wind ? grass.wind() : 1;
   let camera = null;
@@ -289,7 +302,9 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   // comes; he still does not move, which is the case.
   input.onTap(() => {
   if (!camera) return;
-  if (!surface || !input.raycastFirst(camera, [surface])) return;
+  if (!surface) return;
+  const hit = input.raycastFirst(camera, land ? [surface, land] : [surface]);
+  if (!hit || hit.object !== surface) return;         // the land was in the way: not the sea
   if (clock - gustAt < GUST_IN + GUST_HOLD) return;   // let a squall land before the next
   touched && touched();
   gustAt = clock;

@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import k20 from '../src/koans/k20.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
+import { rigCamera } from './helpers/rig-camera.js';
+import { groundHeight } from '../src/kit/ground.js';
 
 // Case 20 on the coast. The case's two facts, pinned:
 //
@@ -158,4 +160,66 @@ test('case 20: the squall raises the sea, and puts it back', () => {
   for (const end = t + 9; t < end; t += 1 / 60) root.update(1 / 60, t);
   assert.equal(root.fragment().seaLift, 1, 'the squall hands the sea back exactly');
   assert.equal(root.fragment().seaRush, 0);
+});
+
+// THE SHEET RUNS UNDER THE LAND. The ocean here is 150 metres square and sits
+// well below the meadow it is hidden by, and input.raycastFirst only ever tests
+// what it is handed — so "did the ray reach the water" is not the same question
+// as "did you touch the water", and asking the first one made every click below
+// the horizon a squall. Driven through a REAL raycast from the case's own
+// framing rather than a stub, because a stub cannot reproduce a bug whose whole
+// substance is which surface the ray met first.
+function aimedAt(camera, target) {
+  const ndc = target.clone().project(camera);
+  assert.ok(Math.abs(ndc.x) <= 1 && Math.abs(ndc.y) <= 1,
+    `the probe must aim at something actually on screen (ndc ${ndc.x.toFixed(2)}, ${ndc.y.toFixed(2)})`);
+  const ray = new THREE.Raycaster();
+  return (cam, objs) => {
+    ray.setFromCamera({ x: ndc.x, y: ndc.y }, cam);
+    const hits = ray.intersectObjects(objs, false);
+    return hits.length ? hits[0] : null;
+  };
+}
+
+test('case 20: only the sea brings the wind, though the sheet runs under the land', () => {
+  const shot = () => {
+    const ctx = fakeCtx();
+    const root = k20.build(ctx);
+    root.setCamera(rigCamera(k20.camera));
+    root.update(1 / 60, 0);
+    root.scene.updateMatrixWorld(true);
+    return { ctx, root, camera: rigCamera(k20.camera) };
+  };
+
+  // a point on the MEADOW, well landward of the waterline (SHORE.dist 8 out
+  // along -z), and low in the frame — the foreground grass a reader taps
+  const onLand = new THREE.Vector3(0.9, groundHeight(0.9, 1.2, { seed: 21 }), 1.2);
+  const land = shot();
+  const surface = land.root.scene.getObjectByName('surface');
+  const ground = land.root.scene.getObjectByName('ground');
+  assert.ok(surface && ground, 'the sea and the earth are both named');
+
+  // the teeth of it: from here the ray DOES reach the water, a stride or two
+  // past the grass and still nowhere near the sea. That is the whole trap.
+  const aim = aimedAt(land.camera, onLand);
+  const reaches = aim(land.camera, [surface]);
+  assert.ok(reaches, 'the sheet really is under the meadow — otherwise this test proves nothing');
+  assert.ok(reaches.point.z > -8, `and the crossing is inland: z ${reaches.point.z.toFixed(2)}`);
+
+  land.ctx.input.raycastFirst = aim;
+  land.ctx._taps.forEach((cb) => cb());
+  land.root.update(1 / 60, 0.5);
+  assert.equal(land.root.fragment().gusts, 0, 'a tap on the grass is not a tap on the ocean');
+  assert.equal(land.root.fragment().gust, 0, 'and no weather came');
+  assert.equal(land.ctx._touched, 0, 'nor did the page claim it had answered');
+
+  // and the sea itself still does, out past the shallows where the bed has
+  // dropped below the sheet and the water is genuinely the nearest thing
+  const sea = shot();
+  sea.ctx.input.raycastFirst = aimedAt(sea.camera, new THREE.Vector3(0.9, -0.35, -18));
+  sea.ctx._taps.forEach((cb) => cb());
+  sea.root.update(1 / 60, 0.5);
+  assert.equal(sea.root.fragment().gusts, 1, 'the ocean answers');
+  assert.ok(sea.root.fragment().gust > 0.5, 'and the wind comes through');
+  assert.equal(sea.ctx._touched, 1);
 });

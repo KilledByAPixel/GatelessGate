@@ -1606,9 +1606,10 @@ charm. None should be "fixed" without rereading §2 of Part Two first.
 - **4** — the bearded picture is Reps's scene-setting (the Chinese only asks why the
   Western barbarian has no beard); 早成兩箇 "it has already become two" → "you never saw
   him at all."
-- **5** — "ego-killing" is Reps's benign gloss on 惡毒 (sheer malice).
+- **5** — (Reps's "ego-killing" gloss on 惡毒 was replaced in §4b; the verse now reads
+  "poison without limit".)
 - **6** — Mahakashapa "tried to control the lines of his face" is invented psychology;
-  傍若無人 → "thought he could cheat anyone"; 誑謼閭閻 → the kept "city slicker" line.
+  傍若無人 → "thought he could cheat anyone"; 誑謼閭閻 → the "city slicker" line, swept in §4c.
 - **7** — the flat assertion 者僧聽事不真。喚鐘作甕 is softened to "I doubt… I hope"; the
   verse's lantern-seeker is Reps unpacking 燈是火 into an anecdote.
 - **9** — 大通智勝佛 unnamed ("a Buddha who lived before recorded history"); 其問甚諦當
@@ -1621,11 +1622,11 @@ charm. None should be "fixed" without rereading §2 of Part Two first.
   first/second. 殺人刀／活人劍 (two blades) merged into one sword — the received
   interpretation, kept.
 - **13** — 末後句 "the last word" → "the ultimate truth" throughout; the cheeky 老漢 and
-  the unrung bell dropped; 一棚傀儡 "a stageful of puppets" → "dummies."
+  the unrung bell dropped; 一棚傀儡 "a stageful of puppets" → "dummies", repaired in §4b.
 - **14** — "boldly" is added to the cut; 險 ("danger!") → "you should watch your own
   head." Both keep the force.
 - **15** — 三頓棒 is three ROUNDS of the staff, not three blows (title says blows; kept);
-  飯袋子 "rice-bag!" → "good for nothing"; 江西湖南 → "one monastery to another"; 與洞山
+  飯袋子 "rice-bag!" → "good for nothing", repaired in §4c; 江西湖南 → "one monastery to another"; 與洞山
   出一口氣 ("vindicate Tozan / breathe one breath with him") → "eat the same food as
   Tozan"; 草木叢林皆合喫棒 ("the grasses and trees all deserve the staff" — with 叢林
   punning on "monastery") → "every one of you."
@@ -1658,6 +1659,14 @@ charm. None should be "fixed" without rereading §2 of Part Two first.
 - **31** — 臺山 is Mount Wutai (glossed as "a popular temple"); 好箇師僧又恁麼去 ("a fine
   monk, and off he goes like that") → "He also is a common pilgrim"; 著賊 ("got robbed")
   expanded into the spy image; 無大人相 → "not an able general."
+- **32 — repaired, not a choice, August 2026.** 外道 is one word used four times, and Reps
+  gave it two Englishes: "philosopher" in the title and case, "outsider" in the comment. The
+  koan turns on inside against outside — a non-Buddhist understands where the Buddha's own
+  disciple does not, and the comment asks 外道與佛弟子相去多少, how far apart the outsider and
+  the disciple are. "Philosopher" cannot carry that, since a philosopher is not defined by
+  standing outside. **Now "outsider" throughout, and the page is retitled An Outsider Asks
+  Buddha.** (§5 once objected that "outsider" reads as a compliment now; that was 外道 as a
+  wrong *path*. Here it is plain category, and the disciples-and-outsiders pairing settles it.)
 - **35** — the Tang tale is unpacked into the case (the Chinese is one line); 萬福萬福
   ("Blessings! Blessings!" — a deadpan felicitation) → "Each is happy in its unity and
   variety."
@@ -1683,9 +1692,9 @@ charm. None should be "fixed" without rereading §2 of Part Two first.
   samadhi) and 業識忙忙 stay simplified.
 - **45** — 釋迦彌勒 → "the past and future Buddhas" (case 37's comment names them); 奴
   "slaves" → "servants."
-- **46** — 麁飡易飽。細嚼難飢 (coarse food fills fast; fine chewing keeps hunger away) →
-  "living on poor food…"; 𢬵身能捨命 ("ready to fling away body and life") concretized to
-  jumping; 嗄 (the grunt) → "Look out!"
+- **46** — 𢬵身能捨命 ("ready to fling away body and life") concretized to jumping; 嗄 (the
+  grunt) → "Look out!" (The 麁飡易飽 line listed here was case 47's, not this one; corrected
+  20 August 2026 when the bake list showed k47-comment changing.)
 - **47** — 設三關問學者 ("set three barriers to question students") → "built three gates
   and made the monks pass through them" (the book's imagery, kept); 撥草參玄 ("parting
   the grasses to seek the profound") → "studying Zen."
@@ -1724,6 +1733,43 @@ charm. None should be "fixed" without rereading §2 of Part Two first.
   paragraph stays Reps's voice, including "as a bargain" where the letter's 大衍
   allusion lives. Everything from the sutra quotation onward was repaired under §3's
   seventh ruling.
+
+## 4d. The choices re-examined — 20 August 2026
+
+§4 sorted every divergence into **error** (repaired) or **choice** (left as Reps). That
+sorting was one judgement per item, made while deliberately calibrating AGAINST
+over-correction — so its predictable failure mode is not false alarms but **under-calls**:
+things filed as voice that are really meaning. All 34 cases carrying a recorded choice were
+read again, cold, against one question: *did this get let off too easily?* **Five had.**
+
+- **Case 9 — 其問甚諦當.** Seijo *praises* the question: it is thoroughly to the point.
+  Reps has him deflect it — "Your question is self-explanatory" — which is a different
+  speech act, and it leaves him dodging and then answering anyway. Now **"That question is
+  very much to the point."**
+- **Case 9 — 為伊不成佛.** "Because he does **not become** a buddha." Reps: "He was not a
+  Buddha" — a historical fact where the Chinese has the koan's whole point, that
+  buddhahood is not a thing one becomes. Now **"Because he does not become a Buddha."**
+- **Case 47 — 麁飡易飽。細嚼難飢.** The clearest of the five, and an **inversion**. The
+  Chinese is advice about eating: coarse fare fills you *easily*, chewed fine it is hard to
+  go hungry. Reps made it a threat of deprivation — "living on poor food, and will not have
+  even enough of that to satisfy you" — turning 易飽, *easily filled*, into not enough.
+- **Case 26 — 綿綿密密不通風.** Seamless and close, so no wind gets through: a state so
+  complete nothing penetrates it. Reps: "retire from every wind", which is withdrawal, very
+  nearly its opposite. 爭似從空都放下 ("how much better to let it all go from the emptiness")
+  was also flattened to "forget the great sky", and both lines are now restored.
+- **Case 29 — 一狀領過.** Courtroom language, like 據欵結案 in the afterword: wind, flag and
+  mind are **convicted on a single indictment**. Reps's "the same understanding" makes them
+  share an insight rather than share a guilty verdict.
+
+**Confirmed as genuine choices on the second look**, so the record is not one-sided: case
+11 (Reps assigns which fist was approved, but the case itself establishes the order), case
+14 (險, "danger!", as "watch your own head" — keeps the force), case 22 (Reps redirects
+毘婆尸佛早留心 from Vipasyin to the reader, but keeps its force, and naming Vipasyin would
+break this edition's own rule against unglossed names), case 47 (撥草參玄 compressed).
+
+**Five under-calls in 34 cases is the honest error rate of the sorting**, and it is recorded
+here rather than quietly fixed, because it bounds how much the rest of §4 should be trusted.
+A third pass would likely find one or two more.
 
 ## 4b. The modern-register pass — August 2026
 
