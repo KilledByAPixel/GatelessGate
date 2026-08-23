@@ -324,9 +324,9 @@ export function makeDebug({ renderer, getScene, audio, grainEls = [], post = nul
     button.classList.toggle('active', open);
     try { localStorage.setItem(PANEL_KEY, open ? '1' : '0'); } catch { /* private mode */ }
     // The panel is a column beside the stage, not a sheet over it, so opening
-    // it RESIZES the viewport. Nothing in the page fires a resize event for a
-    // layout change of its own, so the renderer has to be told (the same reason
-    // main.js's applyStageSize exists for the look).
+    // it RESIZES the stage. main.js observes the stage's box and would catch it
+    // at the end of the frame; this hands it over at once (the same path the
+    // look takes, see applyStageSize there).
     onPanel && onPanel(open);
   }
 

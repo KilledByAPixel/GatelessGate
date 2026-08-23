@@ -663,7 +663,7 @@ function canDragCamera() { return stageOnly(); }
 function applyStageOnly() {
   app.classList.toggle('ambient', stageOnly());
   app.classList.toggle('sitting', mode === 'sit');   // the toolbar steps aside too
-  applyStageSize();          // the panel just left or returned; see the comment there
+  applyStageSize();          // the panel just left or returned: apply it at once, see there
   if (rig) { rig.setWander(stageOnly()); rig.setDrag(canDragCamera()); }
   syncLookRead();            // sitting takes the button with the toolbar
 }
@@ -821,8 +821,8 @@ const debug = makeDebug({
   // the workbench moved how far the page goes after dark; re-apply through
   // the one path that owns the sky
   onNightDepth: () => applySky(),
-  // Opening the workbench narrows the stage, and no resize event fires for a
-  // layout change inside the page.
+  // Opening the workbench narrows the stage; the stage observer would catch it
+  // at the end of the frame, this applies it at once.
   onPanel: () => applyStageSize(),
   // TRANSITIONS ONLY. This handler fires from the workbench's apply(), which
   // re-asserts the whole state at mount and on every scene swap — so a bare `if
@@ -1528,12 +1528,24 @@ function frame(now) {
 }
 
 // Named rather than inline because the window is not the only thing that
-// resizes the stage: ambient mode hides the text panel, and since the shell is
-// a flex row that hands the stage the freed width — a layout change INSIDE the
-// page, which fires no resize event at all. Anything that changes the stage's
-// size has to call this by hand.
+// resizes the stage: ambient mode hides the text panel, the workbench opens a
+// column beside it, and the flex shell hands the stage the difference — layout
+// changes INSIDE the page, which fire no resize event. The observer below
+// catches every one of those once layout has run, so calling this by hand only
+// applies the new size at once rather than at the end of the frame; it is not
+// what keeps the canvas right.
+//
+// Unchanged is a no-op. The observer runs after the frame's render and before
+// its paint, and assigning canvas.width wipes the drawing buffer whether or not
+// the number changed — so a same-size re-apply from there (every desktop
+// resize, where the window's event has already done the work) would paint a
+// frame of bare paper. A real change draws the frame again for the same reason:
+// this frame's render already happened at the old size.
+const STAGE_SIZE = new THREE.Vector2();
 function applyStageSize() {
   const { w, h } = stageSize();
+  const cur = renderer.getSize(STAGE_SIZE);
+  if (w === cur.x && h === cur.y) return;
   renderer.setSize(w, h);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
@@ -1542,8 +1554,19 @@ function applyStageSize() {
   freeze.setSize(w, h);
   freeze.setAspect(camera.aspect);
   freeze.clear();     // a held frame at the old aspect would stretch
+  scenes.render(camera);
 }
 addEventListener('resize', applyStageSize);
+// THE STAGE ITSELF IS OBSERVED, not just the window. On mobile Chrome the
+// rotation's resize event arrives before the viewport has settled — the toolbar
+// re-lays out afterwards and the dvh shell changes height again with no second
+// event — so a canvas sized only from that handler kept the old orientation, or
+// came up short by the toolbar and left a strip of paper under the diorama.
+// Safari fires once it has settled and never showed it. The stage's box is the
+// number the canvas is sized from, and observing it fires after layout whenever
+// that box actually changes, whatever moved it. The window listener stays as
+// the fallback for a browser without ResizeObserver.
+if ('ResizeObserver' in window) new ResizeObserver(() => applyStageSize()).observe(stage);
 
 // ---- headless hooks ----
 window.gate = {

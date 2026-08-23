@@ -66,8 +66,9 @@
    nothing back. */
 #gg-app.ambient #gg-stage canvas { touch-action: none; }
 /* ambient view: the text steps aside and the stage takes the freed width. The
-   flex row does the rest — but the renderer has to be told, since no resize
-   event fires for a layout change inside the page (see applyStageSize). */
+   flex row does the rest, and main.js observes the stage's box for the renderer
+   (see applyStageSize) — no resize event fires for a layout change inside the
+   page. */
 #gg-app.ambient #gg-panel { display: none; }
 
 /* every mode's panel content fills the panel; only one is shown at a time */
