@@ -101,7 +101,7 @@ const CAM = { distance: 17.4, target: [0.1, 0.95, -0.55], heading: 36.5, pitch: 
   scene.fog = new THREE.FogExp2(SKY, 0.028);
   scene.add(makeLights({ sun: { heading: 75, pitch: 40 } }));
   
-  const path = makePath({ from: [4.6, 8.2], to: [2.1, -18.9], width: 1.4, seed: ID, groundSeed: 21, wander: 1.9 });
+  const path = makePath({ from: [6.6, 24], to: [2.1, -18.9], width: 1.4, seed: ID, groundSeed: 21, wander: 1.9 });
   scene.add(path);
   
   // ---- the three things -------------------------------------------------
