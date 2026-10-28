@@ -1213,26 +1213,22 @@ Say it quick. Say it quick.
 
 This file is generated from the same text the interactive edition reads, so the two cannot disagree. To regenerate it after a text change, run `node scripts/build-book.js`.
 
-**The translation**
-
-The English text is Nyogen Senzaki and Paul Reps's rendering of the Mumonkan, privately printed by John Murray in Los Angeles in 1934. That printing is in the United States public domain; its copyright was never renewed. Reps later expanded this material into Zen Flesh, Zen Bones (1957), the version most readers know. Archaic verb forms and pronouns, which survive here and there in the capping verses, have been lightly modernised; Mumon's commentaries were already in plain modern English. Every case has since been checked, line by line, against the Chinese and repaired where the 1934 rendering strayed from it, and the reader is addressed directly where the old text spoke of a hypothetical man. Other small editorial changes have been made: bracketed translator's notes let go where they explained a koan before it had finished asking, and the like. Transcribed from [sacred-texts.com](https://sacred-texts.com/bud/glg/index.htm).
-
-**The front and back matter**
-
-Mumon's preface, his afterword, the Zen Warnings and Amban's letter are not part of the 1934 translation, which carries only the cases. They were translated for this edition from the Chinese of the Taisho canon (CBETA T48n2005), in three independent passes made blind to one another and to any existing English version (a philological one, one in Song Chan idiom, and one in plain English). The three were then compared and every divergence of meaning taken back to the Chinese and settled by hand. It is a new rendering and worth reading as one: it has had no scholarly review. The Chinese text it works from has since been collated against an independent witness, which confirms half of the digital edition's editorial corrections and leaves the rest resting on modern judgement.
-
 **The book**
 
-The Gateless Gate was compiled in 1228 by the Chinese master Ekai, called Mumon (Wumen Huikai). It gathers forty-eight koans, each followed by his own commentary and a capping verse. The forty-ninth case is not his: Amban, described in the text only as a layman Zen student, added it afterwards to round the count out to forty-nine, complaining that Mumon was like a man selling fried cakes. It has travelled with the book ever since. The names throughout are the Japanese readings of Chinese ones, as Senzaki and Reps gave them: Joshu is Zhaozhou, Hyakujo is Baizhang.
+The Gateless Gate (Mumonkan) is a collection of forty-eight koans gathered by the Chinese Zen master Mumon in 1228, each with his own comment and a short verse. A forty-ninth was added later by a lay student named Amban. The names are the Japanese readings of the Chinese.
 
 **This edition**
 
-An interactive edition: every case staged as a small ink-painting diorama you can look around and touch, with narration, procedural ambience, and a timer for sitting. It is a book rather than a game: nothing here is a puzzle to solve, and nothing is locked. Made by Frank Force, [frankforce.com](https://frankforce.com). The code is [on GitHub](https://github.com/KilledByAPixel/GatelessGate), and the whole text also exists as [a single plain page](THE-GATELESS-GATE.md), generated from the same source this edition reads, for anyone who would rather read it straight through or keep a copy.
+Each case is staged as a small ink-painting diorama you can look around and touch, with narration, ambient sound, and a timer for sitting. There is nothing to solve and nothing to unlock. Made by Frank Force ([frankforce.com](https://frankforce.com)), with the source [on GitHub](https://github.com/KilledByAPixel/GatelessGate). If you would rather read straight through, the whole text is also available as [a single plain page](THE-GATELESS-GATE.md).
 
-**Rights**
+**The translation**
 
-This is a new edition of the Mumonkan, (c) 2026 Frank Force: the cases edited and modernised throughout, and a preface and back matter newly translated for it from the Chinese, which the 1934 text it rests on does not carry. The 1934 translation underneath that editing is in the public domain and stays that way. Everything else (the code, the dioramas, the audio, the narration, the new translations and the editing) is shared under [Creative Commons BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/): credit it, don't sell it, don't publish a changed version of it. For anything the licence doesn't cover, ask. Three.js, vendored here, is MIT-licensed and travels under its own terms.
+The cases are based on Nyogen Senzaki and Paul Reps's 1934 English translation, which is in the public domain in the United States. For this edition each case was checked against the original Chinese and corrected where it had drifted, a few titles were changed to fit, and the language was lightly modernised. Mumon's preface and afterword, the Zen Warnings, and Amban's letter are not part of the 1934 translation. They were translated from the Chinese for this edition with AI assistance, in three independent passes compared line by line, with every difference settled against the original. The new translation has had no scholarly review. The details are in the [translation notes](https://github.com/KilledByAPixel/GatelessGate/blob/master/book/translation-notes.md).
 
 **Built with**
 
-Three.js (r185) for the rendering, vendored rather than fetched. Every sound in the book except the narration is generated at runtime with the Web Audio API: the wind, the bells, the knocks and the drift are synthesised, not sampled. The narration was baked ahead of time with Google's gemini-3.1-flash-tts-preview. There is no build step, no framework, no analytics, and nothing at all is loaded from a third party while you read.
+The dioramas are drawn with Three.js. Every sound except the narration is made live in the browser, from the wind to the bells, with no recordings. The narration was generated ahead of time with Google's Gemini text-to-speech. No tracking or third-party requests while you read.
+
+**Rights**
+
+(c) 2026 Frank Force. The 1934 translation is in the public domain in the United States. Everything else, including the code, art, audio, and new translations, is shared under [Creative Commons BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/): credit it, don't sell it, and don't publish a modified version. Three.js is MIT-licensed.

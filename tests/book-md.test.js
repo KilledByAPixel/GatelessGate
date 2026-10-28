@@ -80,15 +80,11 @@ test('the colophon says where the front and back matter came from', () => {
   // It ships as a file that travels without the About page attached, so the one
   // thing a reader must not have to go looking for is that the preface and the
   // back matter are a new translation rather than part of the 1934 rendering.
-  assert.ok(MD.includes('**The front and back matter**'));
   assert.match(MD, /not\s+part of the 1934 translation/);
-  assert.match(MD, /T48n2005/, 'the Chinese source should be named');
-  // The caveat this pins has changed once already: it used to be that the Chinese
-  // had never been collated against a second witness. That was done on 20 August 2026,
-  // so the sentence went false and the About had to be corrected. What must NEVER be
-  // quietly dropped is the standing admission, so that is what is pinned now.
+  // The scholarly detail (Taisho number, collation) lives in
+  // book/translation-notes.md; the colophon keeps it short. What must NEVER be
+  // quietly dropped is the standing admission, so that is what is pinned.
   assert.match(MD, /no scholarly review/, 'the open caveat should be stated, not buried');
-  assert.match(MD, /collated against an independent witness/, 'and what the collation did and did not settle');
 });
 
 test('no ideographic indent reaches the file', () => {
