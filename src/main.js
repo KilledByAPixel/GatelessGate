@@ -49,6 +49,11 @@ const stageSize = () => ({
 });
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
+// applyStageSize's scratch. Declared up here, not beside the function: the
+// function is hoisted and the const is not, and the workbench's mount calls it
+// (onPanel) long before execution reaches the bottom of this file — a reload
+// with the panel open died on the TDZ.
+const STAGE_SIZE = new THREE.Vector2();
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 { const { w, h } = stageSize(); renderer.setSize(w, h); }
 stage.appendChild(renderer.domElement);
@@ -1541,7 +1546,6 @@ function frame(now) {
 // resize, where the window's event has already done the work) would paint a
 // frame of bare paper. A real change draws the frame again for the same reason:
 // this frame's render already happened at the old size.
-const STAGE_SIZE = new THREE.Vector2();
 function applyStageSize() {
   const { w, h } = stageSize();
   const cur = renderer.getSize(STAGE_SIZE);
