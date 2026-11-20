@@ -16,16 +16,11 @@ import { makeFigure } from './figure.js';
 // older case was staged against.
 //
 // THE PER-INSTANCE GEOMETRY IS A SEATED FIGURE, WHOLE — makeFigure's own
-// output flattened to one geometry, not parts borrowed from it. Two stand-ins
-// came before. A cone-and-ball pawn read as exactly what it was. Then the
-// figure's robe, head and hat profiles reassembled here by hand, sleeves
-// dropped for economy: closer, but a second copy of the assembly, and it
-// drifted — the head stayed where an older seated stance had put it, and when
-// the figure's arms were rebuilt the crowd was left the only people in the
-// book without shoulders, a row of pawns beside the hero they were watching.
-// Arms cost an instanced mesh nothing (one geometry, one draw, however many
-// triangles), so the economy was never real here. Built this way there is
-// nothing to keep in step: whatever a seated monk is, the crowd is.
+// output flattened to one geometry, not parts borrowed from it. A hand-kept
+// copy of the figure's profiles drifts from the figure it copies; built this
+// way there is nothing to keep in step: whatever a seated monk is, the crowd
+// is. Trimming parts for economy buys nothing here — an instanced mesh is one
+// geometry and one draw however many triangles it carries.
 const FIG_H = 1.5;    // the height each crowd figure is authored at (world units)
 const SLIM = 0.8;     // radial squeeze — figure.js's `stout`, run below 1: a
                       //   full-width seated figure is ~1.0 wide at this height
@@ -35,6 +30,7 @@ const SLIM = 0.8;     // radial squeeze — figure.js's `stout`, run below 1: a
                       //   axis — but the KNEES keep their size (see figure.js:
                       //   the crowd spends its width on the one event fog
                       //   can't erase)
+// exported for the test that holds the crowd to the figure it is built from
 export const CROWD_FIGURE = { height: FIG_H, stout: SLIM };
 // One seated monk as a single geometry in the figure's own frame (on the
 // ground, fronting +z). The figure is built only to be read: its meshes are

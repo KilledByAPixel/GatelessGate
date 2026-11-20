@@ -53,10 +53,11 @@ const MOUTH_JITTER = 0.03;
 // ankle height, too loose and the throat's whole face is exposed and reads as a
 // wall. The loose boulders sit out on the flanks; near the mouth they only
 // added to the heap.
-// LEAN and TIP are shears about the lump's own centre, applied after the scale
-// so the keepout circles still hold: a jamb's head comes in over the opening,
-// and the brow's underside runs downhill instead of level, which is the
-// difference between a capstone and a lintel.
+// LEAN and TIP are shears about the lump's own centre, applied after the scale:
+// a jamb's head comes in over the opening, and the brow's underside runs
+// downhill instead of level, which is the difference between a capstone and a
+// lintel. The keepout circles are the UNSHEARED footprint; a leaned lump
+// overhangs its circle at head height, not at the foot.
 const MASS = [
   ['jamb', 0.46, 0.80, 1.30, 1.05, -1.55, 0.34, -0.02, 0.10, 0.26, 0],
   ['jamb', 0.44, 0.85, 1.15, 1.00, 1.55, 0.30, 0.02, 0.22, -0.44, 0],

@@ -65,11 +65,14 @@ export function robeLathe(profile, height, mat, segments = 10) {
 // THE CONTRACT, which cases lean on and which is therefore API:
 //   - the mesh's origin is the SHOULDER, so setting rotation on the mesh
 //     swings the arm from it;
-//   - the hand is at local (0, -len, 0), and `len` is exactly the bounding
-//     box's -min.y. k3 seats a finger there, k11 a fist, k43 and k48 hang a
-//     staff and a fan off it, and all of them read the length back off the box
-//     rather than restating it. Nothing — elbow, drape, mouth — reaches below
-//     that plane;
+//   - the lowest cloth is at local y = -len, and `len` is exactly the
+//     bounding box's -min.y. Nothing — elbow, drape, mouth — reaches below
+//     that plane. On a square-mouthed (gesture) arm the hand's centre is
+//     (0, -len, 0); on a resting arm the slanted mouth is fitted back onto that
+//     plane, which lifts the hand a little, and `userData.hand` carries the
+//     true point. k3 seats a finger at the hand, k11 a fist, k43 and k48 hang a
+//     staff and a fan off it — all gesture arms — and all of them read the
+//     length back off the box rather than restating it;
 //   - `userData.elbow` and `userData.hand` are those two points in the mesh's
 //     frame, for anything that wants the FOREARM's line rather than the
 //     chord's (the two differ by the bend).

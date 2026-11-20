@@ -233,7 +233,9 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
   }
 
   // ---- the ears: one mesh for the pair ----------------------------------------
-  // Nothing animates them, so the pair is a single draw.
+  // Nothing animates them, so the pair is a single draw. They are a part the
+  // older buffalo did not have, added on purpose (rule 5 above) and paid for by
+  // the pieces the single-loft head removed.
   {
     const geos = [-1, 1].map((sx) => {
       const g = tube(side(EAR_PATH, sx), 5, EAR_THICK);

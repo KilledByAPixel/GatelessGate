@@ -52,11 +52,11 @@ const HALL = { x: -0.30, z: -4.60 };
 // the gesture
 // ---------------------------------------------------------------------------
 
-// Where the raised sleeve ends. monk.js builds an arm as a cylinder translated
-// so the SHOULDER sits at the arm's local origin, which leaves the wide hem at
-// local (0, -sleeveLength, 0). Reading that length back off the geometry's own
-// bounding box, rather than re-deriving monk.js's constants here, means the
-// finger keeps landing on the hem if those proportions are ever retuned.
+// Where the raised sleeve ends. The arm's origin is the SHOULDER and its hand is
+// at local (0, -len, 0), with `len` the bounding box's -min.y (the arm contract
+// in figure.js). Reading that length back off the geometry, rather than
+// re-deriving the kit's constants here, means the finger keeps landing at the
+// hand if those proportions are ever retuned.
 function sleeveHem(arm) {
   const geo = arm.geometry;
   if (!geo.boundingBox) geo.computeBoundingBox();
@@ -65,7 +65,6 @@ function sleeveHem(arm) {
   return {
     point: new THREE.Vector3(0, -len, 0).applyMatrix4(arm.matrix),   // in monk space
     along: new THREE.Vector3(0, -1, 0).applyQuaternion(arm.quaternion), // shoulder -> hem
-    radius: geo.boundingBox.max.x,
   };
 }
 

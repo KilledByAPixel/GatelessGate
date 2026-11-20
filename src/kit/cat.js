@@ -405,7 +405,7 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     // breathing, in the trunk only — scaling the whole cat would pump its legs
     // through the ground. Across and in depth, never along the spine: the
     // body mesh's own y is up and its z is forward (quadruped.js).
-    const br = 1 + 0.014 * Math.sin(simTime * 0.75);
+    const br = 1 + 0.014 * Math.sin(clock * 0.75);
     body.scale.x = br;
     body.scale.y = br;
 
@@ -414,7 +414,7 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
       const w = i / (joints.length - 1);
       j.rotation.x = j.userData.baseX
         + env * TAIL_CURL * (0.35 + 0.65 * w)
-        + 0.012 * Math.sin(simTime * 0.50 - i * 0.7);
+        + 0.012 * Math.sin(clock * 0.50 - i * 0.7);
       // THE WAG. The sweep used to be a one-way lean that rose and fell with
       // the envelope — the tail leaned aside and came back once, which is not
       // what a tail does. It oscillates now, at TAIL_WAG_HZ, with the envelope
@@ -426,7 +426,7 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
         + env * TAIL_SWEEP * (0.2 + 0.8 * w)
         + env * TAIL_WAG * (0.25 + 0.75 * w)
           * Math.sin(2 * Math.PI * TAIL_WAG_HZ * clock - i * 0.55)
-        + 0.020 * Math.sin(simTime * 0.55 - i * 0.6);
+        + 0.020 * Math.sin(clock * 0.55 - i * 0.6);
     }
 
     for (let i = 0; i < ears.length; i++) {

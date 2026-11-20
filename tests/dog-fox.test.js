@@ -18,7 +18,7 @@ const SPECIES = [
 // Everything that is the head's own outline, ears aside. A muzzle built as a
 // separate part counts: the claims below are about the shape, and one of them
 // is that there is no such part.
-const isHead = (o) => o.name === 'head' || o.name === 'snout';
+const isHead = (o) => o.name === 'head';
 const named = (root, name) => {
   const out = [];
   root.traverse((o) => { if (o.name === name) out.push(o); });

@@ -90,9 +90,7 @@ export function makeQuadruped({
   // head
   head = { shape: 'sphere', r: 0.20, fwd: 0.56, up: 0.22 },   // + scaleX/scaleY/scaleZ (default 1): squish the skull in its own tilted frame
   neck = null,           // { r, w, root, set, taper, arch } — see NECK_DEFAULTS; null ends the chest in a blunt breast
-  snout = null,          // { r0, r1, len, fwd, up, tilt } — tilt noses the muzzle DOWN off horizontal
   ears = null,           // { r, h, x, y, z, tilt } — DIRECT base offsets from the head's centre; see EARS ARE PLACED DIRECTLY below
-  horns = null,          // { r, len, x, up, fwd, sweep, back?, curve? } — curve bends the spike into an arc
   tail = null,           // { kind: 'stiff'|'strand', ... } — up/back default to the croup
   seed = 1,
   ...retired
@@ -103,6 +101,14 @@ export function makeQuadruped({
     if (retired[k] != null) {
       throw new Error(`makeQuadruped: '${k}' is retired — the body is one lofted profile now; `
         + 'shape it with torso { chest, loin, withers, back, croup, ... } and legs { shoulder, thigh }');
+    }
+  }
+  // Same for the head parts: every species lofts its muzzle into the skull, and
+  // a species with horns builds its own (buffalo.js).
+  for (const k of ['snout', 'horns']) {
+    if (retired[k] != null) {
+      throw new Error(`makeQuadruped: '${k}' is retired — the muzzle is the front of the head `
+        + 'loft, and horns belong to the species that wears them');
     }
   }
   if (neck && (neck.len !== undefined || neck.tilt !== undefined)) {
@@ -418,11 +424,11 @@ export function makeQuadruped({
   const headY = bodyY + Hy;
   const headZ = Hz;
 
-  // A circular ring loft for the small pointed parts — ears, horns, a stiff
-  // tail. `stations` is [{ p: [x,y,z], r }] from ROOT to TIP: the root ring
-  // stays open (it is always buried inside a larger mass), the tip is fanned
-  // shut. Each ring sits square to the path's own tangent, so a curved run
-  // (the horn arc below) carries its rings around the bend without shearing.
+  // A circular ring loft for the small pointed parts — ears, a stiff tail.
+  // `stations` is [{ p: [x,y,z], r }] from ROOT to TIP: the root ring stays
+  // open (it is always buried inside a larger mass), the tip is fanned shut.
+  // Each ring sits square to the path's own tangent, so a curved run carries
+  // its rings around the bend without shearing.
   const loft = (stations, seg, spin = 0) => {
     const P = stations.map((s) => new THREE.Vector3(...s.p));
     const last = P.length - 1;
@@ -466,7 +472,7 @@ export function makeQuadruped({
   headMesh.name = 'head';
   headMesh.position.set(0, headY, headZ);
   // the skull SQUISH: a sphere r is one number, and no real head is a ball —
-  // per-axis scales (defaulting to 1, same idiom as hump.scaleY) let a
+  // per-axis scales (defaulting to 1) let a
   // species flatten, lengthen or narrow it without a new shape. Applied in
   // the mesh's own frame, so a tilted head squishes along its own axes.
   headMesh.scale.set(head.scaleX ?? 1, head.scaleY ?? 1, head.scaleZ ?? 1);
@@ -475,32 +481,6 @@ export function makeQuadruped({
   // the thing that sticks out, which is what the silhouette wants.
   if (head.tilt) headMesh.rotation.x = head.tilt;
   g.add(headMesh);
-
-  if (snout) {
-    const m = new THREE.Mesh(
-      new THREE.CylinderGeometry(snout.r0 * h, snout.r1 * h, snout.len * h, 7), mat);
-    m.name = 'snout';
-    // π/2 lies the cylinder along +z; `tilt` noses it DOWN from there, so a
-    // nosed-down head (the horse) can carry its muzzle along the skull's own
-    // line instead of jutting a horizontal beak off the jaw.
-    m.rotation.x = Math.PI / 2 + (snout.tilt || 0);
-    m.position.set(0, bodyY + snout.up * h, snout.fwd * h);
-    g.add(m);
-  }
-
-  // Ears and horns HINGE AT THEIR BASE. A cone is built centred on its own
-  // origin, so attaching one at the skull buries half its length inside the head
-  // and only the outer half shows — which is why the buffalo's horns read as two
-  // small bumps rather than a sweep. Translating the geometry first means the
-  // stated length is the length you actually see. `spin` pre-turns the cone
-  // about its own axis at the GEOMETRY level, so all three rotation channels
-  // stay free for placement and animation.
-  const spike = (r, len, seg, spin = 0) => {
-    const geo = new THREE.ConeGeometry(r, len, seg);
-    if (spin) geo.rotateY(spin);
-    geo.translate(0, len / 2, 0);
-    return geo;
-  };
 
   // EARS ARE PLACED DIRECTLY — width, height, position, angle. Nothing hidden.
   //
@@ -544,44 +524,10 @@ export function makeQuadruped({
       // the hinge the species animate (the fox's flick and the cat's swivel
       // overwrite it every frame, so anything stored there would be lost on
       // the first update). Sign note: rotating +y about +z sends it toward
-      // -x, so the LEFT ear (sx = -1) takes the POSITIVE angle — same
-      // convention as the horns below.
+      // -x, so the LEFT ear (sx = -1) takes the POSITIVE angle.
       m.rotation.z = -sx * (ears.tilt || 0);
       g.add(m);
     }
-  }
-
-  // A HORN IS AN ARC, NOT A SPIKE — a buffalo's are round and curved, like a
-  // devil's horn. `horns.curve` (additive; absent keeps the legacy straight
-  // cone) lofts the rings along a quadratic arc instead: the horn leaves its
-  // base along local +y, then bends toward local -z — up, then hooking back —
-  // with the radius shrinking to a point. `curve` is how far the tip is
-  // displaced off the straight line, as a fraction of len; the arc trades some
-  // vertical reach for it (0.85·len), the way a bent finger stands shorter than
-  // a straight one. Base still hinges at the origin, so placement and the
-  // sweep/back channels work unchanged.
-  if (horns) for (const sx of [-1, 1]) {
-    let geo;
-    if (horns.curve) {
-      const N = 6, sts = [];
-      for (let i = 0; i <= N; i++) {
-        const t = i / N;
-        sts.push({
-          p: [0, (2 * (1 - t) * t * 0.55 + t * t * 0.85) * horns.len * h,
-            -t * t * horns.curve * horns.len * h],
-          r: Math.max(horns.r * h * Math.pow(1 - t, 0.8), horns.r * h * 0.04),
-        });
-      }
-      geo = loft(sts, 6);
-    } else {
-      geo = spike(horns.r * h, horns.len * h, 6);
-    }
-    const m = new THREE.Mesh(geo, mat);
-    m.name = 'horn';
-    m.position.set(sx * horns.x * h, bodyY + horns.up * h, horns.fwd * h);
-    if (horns.back) m.rotation.x = -horns.back;  // swept back over the skull
-    m.rotation.z = -sx * horns.sweep;            // and out to the side — see the sign note above
-    g.add(m);
   }
 
   // WHERE A TAIL LEAVES THE BODY, when the species does not say: the croup —

@@ -134,11 +134,11 @@ const CAM = { distance: 17, target: [3.25, 1.25, -1.3], heading: -24.5, pitch: 1
   // NOT THE BIRDS. They are the seal of this case and every one of them
   // flaps: three meshes apiece that have to stay three meshes.
   //
-  // The buffalo keeps its TAIL. Twelve of its eighteen pieces never move,
-  // but the tail swings on makeTail's own clock (buffalo.update), and a
-  // merged tail is a tail that has stopped. Its six segment meshes stay
-  // unbaked, which is why this scene costs six draws more than a fully-still
-  // prop would have.
+  // The buffalo keeps its TAIL. Everything else on him is still, but the
+  // tail swings on makeTail's own clock (buffalo.update), and a merged tail
+  // is a tail that has stopped. Its segment meshes stay unbaked, which is
+  // why this scene costs a draw per segment more than a fully-still prop
+  // would have.
   //
   // The trees and pines are not passed in at all — bakeStatic would refuse
   // them anyway (their canopies carry wind attributes a merge would drop),

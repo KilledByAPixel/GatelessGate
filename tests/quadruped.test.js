@@ -13,16 +13,14 @@ const names = (g) => g.children.map((c) => c.name).sort();
 
 test('child names survive (species re-parent by name)', () => {
   const { group } = makeQuadruped({
-    neck: { r: 0.07 }, snout: { r0: 0.03, r1: 0.07, len: 0.2, fwd: 0.7, up: 0.2 },
+    neck: { r: 0.07 },
     ears: { r: 0.09, h: 0.2, x: 0.07, y: 0.1, z: 0.02 },
-    horns: { r: 0.05, len: 0.3, x: 0.1, up: 0.3, fwd: 0.4, sweep: 0.8 },
     tail: { kind: 'stiff', r0: 0.05, r1: 0.07, length: 0.5, up: 0.1, back: 0.35 },
   });
-  for (const n of ['body', 'head', 'snout', 'tail'])
+  for (const n of ['body', 'head', 'tail'])
     assert.ok(names(group).includes(n), `missing child '${n}'`);
   assert.strictEqual(group.children.filter((c) => c.name === 'leg').length, 4);
   assert.strictEqual(group.children.filter((c) => c.name === 'ear').length, 2);
-  assert.strictEqual(group.children.filter((c) => c.name === 'horn').length, 2);
   // the neck is the body's own profile carried on, and a hock is a bend in
   // the leg's own loft: neither is a part any more
   assert.ok(!names(group).includes('neck'), 'no separate neck mesh');
@@ -235,30 +233,9 @@ test('legs carry the limb profile: mass > cannon < foot', () => {
   }
 });
 
-// A HORN IS AN ARC: with `curve` set, the tip ends displaced BACK (-z) and
-// UP (+y) off the base plane — a crescent, not a spike — while the legacy
-// straight cone stays available (and straight) when curve is absent.
-test('horns.curve bends the horn back and up; no curve stays a cone', () => {
-  const opts = { r: 0.06, len: 0.5, x: 0.1, up: 0.3, fwd: 0.4, sweep: 0 };
-  const straight = makeQuadruped({ horns: opts });
-  const bent = makeQuadruped({ horns: { ...opts, curve: 0.5 } });
-  for (const g of [straight, bent]) g.group.updateMatrixWorld(true);
-  const tipOf = (group) => {
-    const horn = group.children.find((c) => c.name === 'horn');
-    const p = horn.geometry.getAttribute('position');
-    // the tip is the vertex farthest from the base (geometry origin)
-    let tip = new THREE.Vector3(), best = -1;
-    for (let i = 0; i < p.count; i++) {
-      const v = new THREE.Vector3(p.getX(i), p.getY(i), p.getZ(i));
-      if (v.length() > best) { best = v.length(); tip = v; }
-    }
-    return tip;
-  };
-  const st = tipOf(straight.group), bt = tipOf(bent.group);
-  assert.ok(Math.abs(st.z) < 1e-6, 'straight cone tip stays on its own axis');
-  assert.ok(bt.z < -0.15, `curved tip hooks back: z = ${bt.z.toFixed(3)}`);
-  assert.ok(bt.y > 0.3, `and still stands up: y = ${bt.y.toFixed(3)}`);
-  assert.ok(bt.y < st.y, 'the arc trades some reach for the hook');
+test('snout and horns are retired and say so rather than building nothing', () => {
+  assert.throws(() => makeQuadruped({ snout: { r0: 0.03, r1: 0.07, len: 0.2, fwd: 0.7, up: 0.2 } }), /snout/);
+  assert.throws(() => makeQuadruped({ horns: { r: 0.05, len: 0.3, x: 0.1, up: 0.3, fwd: 0.4, sweep: 0.8 } }), /horns/);
 });
 
 test('the ear hinge channel (rotation.x) is left free for the species to animate', () => {
@@ -278,7 +255,7 @@ test('the dog is body, legs, skull and tail: nothing bolted on', () => {
   // A brisket ball and a haunch dome were each tried on the dog and each read
   // as a growth. Its chest and haunch are the trunk's own profile and the
   // thigh's own top, so there is no mesh in it that is not one of these.
-  const known = new Set(['body', 'leg', 'head', 'snout', 'ear', 'tail']);
+  const known = new Set(['body', 'leg', 'head', 'ear', 'tail']);
   makeDog({}).group.traverse((o) => {
     if (o.isMesh) assert.ok(known.has(o.name), `unexpected mesh '${o.name}'`);
   });
@@ -422,7 +399,7 @@ test('no mass stands proud of the back line', () => {
   // shoulder — a dome riding on the barrel is a second animal. And the body's
   // own back may sway, but only broadly: the taut line over it never stands
   // more than a small fraction of the body's depth clear of the surface.
-  const notBack = new Set(['body', 'neck', 'head', 'snout', 'ear', 'horn', 'tail', 'seg', 'tailseg']);
+  const notBack = new Set(['body', 'neck', 'head', 'ear', 'horn', 'tail', 'seg', 'tailseg']);
   for (const [label, build] of STANDING) {
     const root = build();
     const body = triangles(root, (o) => o.name === 'body');

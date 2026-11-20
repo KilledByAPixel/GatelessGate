@@ -68,8 +68,9 @@ const CAM = { distance: 10.6, target: [1, 1.8, -3.15], heading: 39.5, pitch: 10.
   
   // BODHIDHARMA, turned to the wall — his back to the whole case.
   //
-  // He used to sit at z -5.6, which is BEHIND the cave's throat: makeCave fills
-  // the opening with an unlit pure-INK box (the honest way to paint an absence
+  // He used to sit BEHIND the cave's throat: makeCave fills the opening with an
+  // unlit pure-INK prism, the mouth's outline extruded back into the rock (the
+  // honest way to paint an absence
   // of light — see cave.js), so an ink monk placed inside it was ink-on-ink and
   // simply gone — the cave read as a completely solid thing with nobody in it.
   // Two fixes, both needed: sit him ON the threshold apron, just forward of the
@@ -80,16 +81,15 @@ const CAM = { distance: 10.6, target: [1, 1.8, -3.15], heading: 39.5, pitch: 10.
   //
   // That lift used to be an EXPLICIT one — WASH.mid, a mid grey — and it made
   // him the one visibly pale person in the book. It is unnecessary now: every
-  // figure sits a step off ink, and the cave's throat is still an unlit box at
-  // INK itself, so his lit bands stand at 46 and 73 against its flat 30. Only
-  // his shadow side merges into the black behind him, which is what an ink
-  // painting of a man in a cave mouth should do. makeCave's throat is a SOLID
-  // box (an absence of light has to be opaque), so he cannot be IN it — he sits
-  // in the room the mouth opens onto, between the brow overhead and the black
-  // behind. That room only exists because the cave is deeper now and its dark
-  // set further back: at 0.35 he is well under the brow and genuinely inside,
-  // rather than perched on the lip, with the cave reading as a wall rather than
-  // as depth.
+  // figure sits a step off ink, and the cave's throat is still unlit at INK
+  // itself, so his lit side stands clear of its flat black. Only his shadow
+  // side merges into the black behind him, which is what an ink painting of a
+  // man in a cave mouth should do. makeCave's throat is a SOLID prism (an
+  // absence of light has to be opaque), so he cannot be IN it — he sits in the
+  // room the mouth opens onto, between the brow overhead and the black behind.
+  // That room only exists because the cave is deep and its dark set back: at
+  // IN he is well under the brow and genuinely inside, rather than perched on
+  // the lip, with the cave reading as a wall rather than as depth.
   const CAVE = { x: -0.4, z: -5.2, yaw: 0.18 };
   const IN = 0.5;                       // along the cave's own axis, from its origin
   const bodhidharma = makeMonk({ height: 1.56, pose: 'sit', hat: false });

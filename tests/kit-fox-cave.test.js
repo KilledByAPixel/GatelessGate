@@ -66,12 +66,8 @@ test('the brush is thick, trails well behind the rump, and reads as a tail not a
   // tests/dog-fox.test.js pins that against the dog's cocked tail. What is
   // pinned here is that it runs BACKWARD far more than it rises or drops.)
   //
-  // 2026-08-05 "model tweaks": the barrel widened (BODY_R 0.16 -> 0.19) faster
-  // than the brush did (tail r0 0.05 -> 0.06, r1 pinned at 0.1 instead of
-  // BODY_R * 2/3), so thickness-vs-barrel now lands just under half (~0.49x)
-  // rather than comfortably over it. The pin comes down to 0.45x — enough
-  // headroom for that shift without opening the door to an actually whippy
-  // tail.
+  // The thickness floor is a fraction of the barrel set low enough to leave
+  // room for retuning either one, and high enough that a whippy tail fails.
   const f = makeFox({ height: 0.5 });
   const tail = box(part(f.group, 'tail'));
   const body = box(part(f.group, 'body'));

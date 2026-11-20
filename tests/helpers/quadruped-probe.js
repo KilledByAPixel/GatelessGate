@@ -93,9 +93,11 @@ export function trunk(root) {
 
 // Is a point inside a closed set of triangles? Parity of crossings along one
 // ray. The direction is deliberately skew, so it does not run along a facet or
-// through a shared edge of a body built from axis-aligned rings.
+// through a shared edge of a body built from axis-aligned rings. It is NOT the
+// ray quadruped.js's own inTrunk casts: a ray that grazed an edge would fool
+// both the same way, and the probe would agree with the code it checks.
 export function inside(tris, p) {
-  const d = [0.5377, 0.8011, 0.2618];
+  const d = [-0.4136, 0.7259, 0.5497];
   let hits = 0;
   for (const t of tris) {
     const e1 = [t[3] - t[0], t[4] - t[1], t[5] - t[2]];

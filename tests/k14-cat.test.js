@@ -7,9 +7,9 @@ import k14 from '../src/koans/k14.js';
 import { legsJoinBody } from './helpers/quadruped-probe.js';
 
 // PRECISE boxes throughout. Box3.setFromObject() normally transforms the
-// GEOMETRY's box, which for the seated cat's tilted capsule reports a rump
-// 0.017 units underground that is not actually there. The seated pose cannot be
-// checked at all without walking the vertices.
+// GEOMETRY's box, which for the seated cat's tilted body reports a rump below
+// ground that is not actually there. The seated pose cannot be checked at all
+// without walking the vertices.
 const box = (o) => {
   o.updateMatrixWorld(true);
   return new THREE.Box3().setFromObject(o, true);

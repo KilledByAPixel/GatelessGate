@@ -182,10 +182,9 @@ export function makeOak({
 
   const root = grow(new THREE.Matrix4(), BOLE_LEN, 0);
 
-  // The root flare: an oak is fattest where it meets the ground. It has been a
-  // squashed ball at the foot (a boulder beside the trunk) and then a tapered
-  // collar around it, whose top edge stood out from the bole as a step. It is
-  // the bole itself now — the same tube, widening over its last few rings.
+  // The root flare: an oak is fattest where it meets the ground. It is the bole
+  // itself — the same tube, widening over its last few rings — because any
+  // separate piece at the foot reads as a boulder or shows its edge as a step.
   const bole = (y) => BOLE_R * (1 - (1 - BOLE_TIP) * y / BOLE_LEN);
   const flareTop = FLARE_TOP * H;
   const wood = clothe(root, flarePoints({ top: flareTop, spread: BOLE_R * FLARE_SPREAD, radiusAt: bole }), {
