@@ -20,26 +20,24 @@ import { clamp01, smoothstep } from '../util/math.js';
 //
 // WHAT SAYS DOG, in the order it is lost at distance:
 //
-//   1. THE HEAD IS A WEDGE WITH A STOP. A ball skull with a muzzle part on its
-//      front was the last toy thing on an anatomical body, and a ball that
-//      size made the whole animal a puppy. One loft instead (skull.js): a
-//      skull about half as deep as the chest, a brow, a short fall to a muzzle
-//      that is deep and BLUNT — the fox's is a needle, and the bluntness is
-//      half of what separates them.
-//   2. SMALL EARS, STANDING. Laid out flat to either side they drew a bar
-//      across the top of the head, a cap rather than ears. Short and pricked,
-//      at the back corners of the skull, canted out.
-//   3. THE NECK LIFTS THE HEAD CLEAR OF THE BACK. The jaw rides above the
-//      withers; a head carried level with the back is the fox's carriage.
-//   4. THE TAIL IS COCKED — up more than back. It is the one line on him that
-//      a fox never draws.
-//
-// THE TAIL ROOTS INTO THE BODY. A 'stiff' tail is centred on its own origin,
-// and stating that centre by hand leaves the root perched ON the outline
-// instead of growing out of it. Same cure as the fox's brush: pin the ROOT to a
-// stated point just under the rump's surface and solve the centre the quadruped
-// wants, so the cocked tail emerges from inside the body at any length or
-// angle.
+//   1. THE HEAD IS A BLOCK WITH A STOP. A ball skull with a muzzle part on its
+//      front was the last toy thing on an anatomical body. One loft instead
+//      (skull.js): a domed skull well over half as deep as the chest, a brow,
+//      a short fall to a muzzle that is deep and BLUNT — the fox's is a
+//      needle, and the bluntness is half of what separates them. Built small
+//      and shallow it was a wedge on a stalk, and the whole animal read as
+//      leggy because nothing up front balanced the trunk.
+//   2. THE EARS HANG. Flaps beside the skull, rooted in its upper corners and
+//      falling to the jaw. Standing points are the fox's ears; laid out flat
+//      to either side they drew a bar across the top of the head. Hanging,
+//      they leave the crown a clean dome, which is the outline that says dog.
+//   3. THE NECK IS THICK AND LIFTS THE HEAD CLEAR OF THE BACK. It leaves the
+//      whole front of the chest, withers to breast, and is still most of the
+//      skull's depth where it enters it. The jaw rides above the withers; a
+//      head carried level with the back is the fox's carriage.
+//   4. THE TAIL IS CARRIED UP AND BACK IN A CURVE, thick where it leaves the
+//      croup and drawn to a point. A straight rod standing on the rump was a
+//      spike, and a fox never carries its brush above its back at all.
 //
 // IT MOVES, and it returns a handle rather than a bare group for that reason —
 // the same shape makeFox and makeCat return, and the same division of labour:
@@ -48,28 +46,53 @@ import { clamp01, smoothstep } from '../util/math.js';
 // it while a cat and a fox either side of it breathed and turned. Everything
 // below is a pure function of (simTime, stir): no wall clock, no Math.random,
 // so two dogs on the same seed pose identically forever.
-const TAIL_TILT = -0.62;                 // rad off vertical, backward: up more than back
-const TAIL_LEN = 0.3;
-const TAIL_ROOT = [0.07, -0.37];         // [above the body's axis, z] — just under the croup
-const TAIL_UP = TAIL_ROOT[0] + (TAIL_LEN / 2) * Math.cos(TAIL_TILT);
-const TAIL_BACK = -(TAIL_ROOT[1] + (TAIL_LEN / 2) * Math.sin(TAIL_TILT));
+
+// THE TAIL, root to tip: [back, up, radius] in heights, from the point it
+// hinges on. It is its own outline rather than the plan's straight taper, and
+// its first station lies AHEAD of the hinge, inside the croup, so the root
+// grows out of the body at any wag instead of perching on the outline.
+const TAIL = [
+  [-0.06, -0.03, 0.05],
+  [0.0, 0.0, 0.056],
+  [0.07, 0.03, 0.05],
+  [0.14, 0.085, 0.042],
+  [0.2, 0.16, 0.031],
+  [0.24, 0.235, 0.019],
+];
+const TAIL_TIP = [0.262, 0.29];          // [back, up]
+// Where it hinges: this far behind the hip section, sunk this far under the
+// topline there.
+const TAIL_SET = 0.1;                    // x height
+const TAIL_SINK = 0.035;
+// THE RUMP TURNS DOWN IN A ROUND. The plan carries the croup's height nearly
+// to the buttock and drops it there, which on a body this short is a box
+// corner under the tail. So the trunk's upper half is drawn down behind the
+// hips, a little at first and most at the very end: the fraction of its
+// height above the axis that the rump's end gives up. The underside is left
+// alone — the thighs are solved against it. What bounds it is the thigh as
+// well: drawn down further, the rump no longer covers the top of the thigh
+// buried in it, which then shows as a shelf either side of the tail.
+const RUMP_ROUND = 0.45;
 
 // THE HEAD, back of the skull to the nose: [z, top, bottom, half-width] in
 // heights, from the point the neck ends on (see skull.js). The neck comes in
 // low at the back, so the skull stands mostly above and ahead of zero. Read
-// down the `top` column for the profile: crown, brow, the stop, then a muzzle
-// that barely falls; `bottom` is the jaw, nearly straight. Widest at the
-// cheek and never narrow — a pointed nose is the other animal.
+// down the `top` column for the profile: a domed crown, the brow, the stop,
+// then a muzzle that barely falls; `bottom` is the jaw, nearly straight.
+// Widest at the cheek and never narrow — a pointed nose is the other animal.
+// The back half has to hold the end of a thick neck at any turn of the head,
+// which is what bounds how small this can be made.
 const SKULL = [
-  [-0.086, 0.076, -0.054, 0.07],
-  [-0.011, 0.113, -0.092, 0.103],
-  [0.076, 0.106, -0.089, 0.095],
-  [0.13, 0.052, -0.08, 0.063],
-  [0.205, 0.042, -0.075, 0.055],
-  [0.27, 0.034, -0.067, 0.049],
+  [-0.115, 0.1, -0.075, 0.09],
+  [-0.04, 0.158, -0.122, 0.122],
+  [0.06, 0.162, -0.126, 0.122],
+  [0.13, 0.13, -0.118, 0.1],
+  [0.188, 0.07, -0.11, 0.076],
+  [0.25, 0.05, -0.1, 0.067],
+  [0.3, 0.038, -0.088, 0.058],
 ];
-const SKULL_BACK = [0.016, -0.119];      // [y, z] apexes closing the loft
-const SKULL_NOSE = [-0.015, 0.292];
+const SKULL_BACK = [0.016, -0.15];       // [y, z] apexes closing the loft
+const SKULL_NOSE = [-0.022, 0.324];
 const HEAD_NOSE_DOWN = 0.12;             // rad the whole head is carried nose-down
 
 // Where the skull hinges: straight below the point the neck ends on, so the
@@ -79,10 +102,22 @@ const HEAD_NOSE_DOWN = 0.12;             // rad the whole head is carried nose-d
 // the quadruped placed rather than restated as an absolute, so it follows the
 // head when the carriage is retuned.
 const HINGE_DOWN = 0.02;                 // x height
-// A cone is as deep as it is wide, and an ear is a leaf. Flattened fore and
-// aft it is also a root short enough to stay under the skull's surface when
-// the perk tips it — a round root lifted clear of the crown at the back.
-const EAR_FLAT = 0.6;
+
+// AN EAR, root to tip: [along, out, thickness, half-breadth] in heights. A
+// leaf, not a cone: broad fore and aft, thin across. `out` is how far its
+// middle stands off the straight line from root to tip, toward the outside of
+// the head — the flap leaves a corner of the skull and has to clear the cheek
+// below it, which is the widest part of the head, and a straight flap hung
+// from inside the skull stays inside it all the way down.
+const EAR = [
+  [0.0, 0.0, 0.016, 0.042],
+  [0.045, 0.026, 0.015, 0.058],
+  [0.105, 0.036, 0.013, 0.046],
+  [0.16, 0.034, 0.01, 0.026],
+];
+const EAR_TIP = [0.188, 0.032];          // [along, out]
+const EAR_SPLAY = 0.3;                   // rad the flap hangs out from plumb
+const EAR_BACK = 0.2;                    // ...and back, at rest
 
 const STIR = 3.2;                        // seconds for one whole response
 // The envelope: up fast, HELD, then let go slowly. A symmetric out-and-back
@@ -113,34 +148,52 @@ const IDLE_PITCH = 0.045;
 const IDLE_TAIL = 0.10;
 
 export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
-  // Long legs under a trunk that is deep at the chest and tucked at the
-  // flank: the depth is all brisket, so the loin stays lean. Short-legged and
-  // fat-bodied the whole way along reads as a pig.
-  // The neck lifts the head off the shoulders, which is most of what separates
-  // the two silhouettes.
-  const { group, material } = makeQuadruped({
+  // A trunk deep at the chest and tucked at the flank, on legs about as long
+  // as that chest is deep: the depth is all brisket, so the loin stays lean.
+  // Short-legged and fat-bodied the whole way along reads as a pig; the same
+  // trunk carried higher on longer legs reads as a hound on stilts. The
+  // topline falls a little from withers to croup and the rump overhangs the
+  // hind legs enough to turn down in a round rather than a corner.
+  const { group, material, plan } = makeQuadruped({
     height, color, seed,
-    bodyR: 0.2, bodyLen: 0.52, bodyDrop: 0.2,
-    torso: { chest: 1.4, loin: 0.68, withers: 1.05, back: 0.92, croup: 0.95 },
+    bodyR: 0.2, bodyLen: 0.56, bodyDrop: 0.2,
+    torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92 },
     legBury: 0.16,
-    legH: 0.5, legR: 0.07, legTaper: 1.0, hipX: 0.085, hipZ: 0.30,
-    legs: { knee: 0.36, thigh: 3.0, hindSet: 0.09 },
+    legH: 0.46, legR: 0.075, legTaper: 1.0, hipX: 0.085, hipZ: 0.30,
+    // The legs stand under the two ends of the trunk rather than under its
+    // sections: the front pair below the neck, with the withers behind them,
+    // and the hind pair below the buttock. Neither can go further out than
+    // there is trunk above it to bury the top of the leg in.
+    legs: { knee: 0.36, thigh: 3.0, frontSet: 0.035, hindSet: 0.1 },
     // the neck's end has to fit inside the skull it enters, turned or not
-    neck: { r: 0.076, w: 0.9, root: 0.6, set: 0.2, taper: 1.0, arch: 0.02 },
+    neck: { r: 0.1, w: 0.85, root: 0.7, set: 0.05, taper: 1.0, arch: 0.02 },
     // The plan's ball is only a placeholder for where the head is carried and
     // how far it is nosed down; its geometry is replaced by the loft below.
     // No snout: the muzzle is the front half of that loft.
-    head: { shape: 'sphere', r: 0.1, fwd: 0.52, up: 0.34, tilt: HEAD_NOSE_DOWN },
-    // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): r width, h length,
-    // x/y/z = base offset from the point the neck ends on, tilt = outward
-    // lean. Rooted inside the back corners of the skull.
-    ears: { r: 0.04, h: 0.1, x: 0.056, y: 0.042, z: -0.025, tilt: 0.8 },
-    tail: {
-      kind: 'stiff', r0: 0.026, r1: 0.06, length: TAIL_LEN,
-      up: TAIL_UP, back: TAIL_BACK, tilt: TAIL_TILT,
-    },
+    head: { shape: 'sphere', r: 0.1, fwd: 0.55, up: 0.38, tilt: HEAD_NOSE_DOWN },
+    // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): x/y/z = base
+    // offset from the point the neck ends on, in an upper back corner of the
+    // skull and just under its surface. The plan's cone is a placeholder for
+    // that root; its `tilt` turns the ear past level so that it hangs.
+    ears: { r: 0.03, h: 0.1, x: 0.07, y: 0.092, z: -0.02, tilt: Math.PI - EAR_SPLAY },
+    // a placeholder too: only the mesh is kept, reshaped and re-seated below
+    tail: { kind: 'stiff', r0: 0.02, r1: 0.05, length: 0.3, tilt: 0 },
   });
   group.name = 'dog';
+
+  // see RUMP_ROUND. `sag` is kept, because whatever sits on the croup has to
+  // be seated on the rounded one.
+  const body = group.children.find((c) => c.name === 'body');
+  const trunk = body.geometry.getAttribute('position');
+  body.geometry.computeBoundingBox();
+  const rumpLen = plan.zHip - body.geometry.boundingBox.min.z;
+  const sag = (z) => 1 - RUMP_ROUND * clamp01((plan.zHip - z) / rumpLen) ** 2;
+  for (let i = 0; i < trunk.count; i++) {
+    if (trunk.getY(i) > 0) trunk.setY(i, trunk.getY(i) * sag(trunk.getZ(i)));
+  }
+  trunk.needsUpdate = true;
+  body.geometry.computeVertexNormals();
+  body.geometry.computeBoundingBox();
 
   // ---- the skull, onto its own hinge --------------------------------------
   // makeQuadruped hangs the head and ears straight off the body, which
@@ -164,25 +217,61 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
       headPivot.add(part);
     }
   }
+  // The flap is the same closed loft as the skull, stated along its own
+  // length and then stood on the ear's axes: length up local y (which the
+  // mesh's turn points down), breadth fore and aft, and `out` to whichever
+  // side is away from the head — the pair is mirrored, so each ear gets its
+  // own geometry. The hinge the perk turns stays rotation.x, about the root.
   const ears = headPivot.children.filter((c) => c.name === 'ear');
-  for (const ear of ears) { ear.userData.baseX = ear.rotation.x; ear.scale.z = EAR_FLAT; }
+  for (const ear of ears) {
+    const side = ear.position.x < 0 ? 1 : -1;
+    const geo = skullGeometry(
+      EAR.map(([along, out, thick, breadth]) => [along, out + thick, out - thick, breadth]),
+      { unit: height, seg: 4, back: [0, -0.01], nose: [EAR_TIP[1], EAR_TIP[0]] },
+    );
+    geo.applyMatrix4(new THREE.Matrix4().makeBasis(
+      new THREE.Vector3(0, 0, side), new THREE.Vector3(side, 0, 0), new THREE.Vector3(0, 1, 0),
+    ));
+    geo.computeVertexNormals();
+    ear.geometry.dispose();
+    ear.geometry = geo;
+    ear.rotation.x = EAR_BACK;
+    ear.userData.baseX = ear.rotation.x;
+  }
 
   // ---- the tail, onto its own hinge ---------------------------------------
-  // Rotating the tail MESH about y does nothing: y is its own long axis. The
-  // sweep has to happen about the root, which is where the pivot goes — walked
-  // back down the cylinder's own axis from the centre the quadruped placed, so
-  // this stays exact if the tail's length or angle is ever retuned. (Rotating a
-  // +y cylinder by x=t sends its axis to (0, cos t, sin t).)
+  // Rotating a tail about its own long axis does nothing, so the sweep
+  // happens about the root, which is where the pivot goes: on the croup, read
+  // off the trunk as built and rounded so it follows a retuned back. The mesh sits
+  // square on that pivot and the curve is all in its geometry — the skull's
+  // loft again, run tip to root, each ring deepened by the slope of the tail
+  // through it because the loft stands its rings upright and a rising tube
+  // cut that way would otherwise thin as it climbs.
   const tailMesh = group.children.find((c) => c.name === 'tail');
   const tailPivot = new THREE.Group();
   tailPivot.name = 'tailPivot';
+  const tailZ = plan.zHip - TAIL_SET * height;
   tailPivot.position.set(
     0,
-    tailMesh.position.y - (TAIL_LEN / 2) * height * Math.cos(TAIL_TILT),
-    tailMesh.position.z - (TAIL_LEN / 2) * height * Math.sin(TAIL_TILT),
+    plan.bodyY + (plan.topAt(tailZ) - plan.bodyY) * sag(tailZ) - TAIL_SINK * height,
+    tailZ,
   );
   group.add(tailPivot);
-  tailMesh.position.sub(tailPivot.position);
+  const path = [...TAIL, [...TAIL_TIP, 0]];
+  const tailRows = TAIL.map(([back, up, r], i) => {
+    const p = path[Math.max(i - 1, 0)], n = path[i + 1];
+    const run = Math.hypot(n[0] - p[0], n[1] - p[1]) || 1;
+    const deep = r * run / Math.max(0.35 * run, n[0] - p[0]);
+    return [-back, up + deep, up - deep, r];
+  }).reverse();
+  tailMesh.geometry.dispose();
+  tailMesh.geometry = skullGeometry(tailRows, {
+    unit: height, seg: 6,
+    back: [TAIL_TIP[1], -TAIL_TIP[0]],
+    nose: [TAIL[0][1], -TAIL[0][0] + 0.02],
+  });
+  tailMesh.position.set(0, 0, 0);
+  tailMesh.rotation.set(0, 0, 0);
   tailPivot.add(tailMesh);
 
   let look = 0;          // the head's resting bearing, set by the koan
@@ -238,7 +327,8 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     wag = Math.sin(clock * 0.41 + seed) * IDLE_TAIL
       + env * TAIL_WAG * Math.sin(2 * Math.PI * TAIL_WAG_HZ * clock);
     tailPivot.rotation.y = wag;
-    tailPivot.rotation.x = -env * TAIL_COCK;
+    // (+x tips a tail that runs up and back further upright)
+    tailPivot.rotation.x = env * TAIL_COCK;
   }
 
   update(0, 0);

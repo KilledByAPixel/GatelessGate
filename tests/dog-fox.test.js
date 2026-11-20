@@ -102,7 +102,9 @@ test('the neck ends inside the skull, at rest and with the head turned', () => {
   }
 });
 
-test('ears root on the skull and stand up from it', () => {
+test("ears root on the skull: the fox's stand up from it, the dog's hang from it", () => {
+  // Which way an ear runs from its root is half of what tells the two apart,
+  // so it is the same measure with the sign turned over.
   for (const [label, make] of SPECIES) {
     const root = make().group;
     root.updateMatrixWorld(true);
@@ -112,9 +114,9 @@ test('ears root on the skull and stand up from it', () => {
     for (const ear of ears) {
       const base = ear.getWorldPosition(new THREE.Vector3());
       assert.ok(inside(skull, base), `${label}: an ear's base is not buried in the skull`);
-      const rise = earTip(ear).y - base.y;
+      const rise = (earTip(ear).y - base.y) * (label === 'dog' ? -1 : 1);
       assert.ok(rise > 0.6 * earShape(ear).height,
-        `${label}: an ear lies out sideways — it rises ${rise.toFixed(3)} of ${earShape(ear).height.toFixed(3)}`);
+        `${label}: an ear lies out sideways — it ${label === 'dog' ? 'falls' : 'rises'} ${rise.toFixed(3)} of ${earShape(ear).height.toFixed(3)}`);
     }
   }
 });
@@ -147,15 +149,49 @@ test('an ear stays rooted while the animal answers a touch', () => {
 
 // ---- the dog ----------------------------------------------------------------
 
-test("the dog's head is longer than it is tall, and small against its body", () => {
+test("the dog's head is longer than it is tall, and a real mass against its chest", () => {
   const root = makeDog({}).group;
   const b = headBox(root);
   const long = b.max.z - b.min.z, tall = b.max.y - b.min.y;
-  assert.ok(long > 1.7 * tall, `a ball: ${long.toFixed(3)} long, ${tall.toFixed(3)} tall`);
+  assert.ok(long > 1.35 * tall, `a ball: ${long.toFixed(3)} long, ${tall.toFixed(3)} tall`);
+  // Bounded both ways. Under about three fifths of the chest's depth it is a
+  // wedge on a stalk and the animal reads as all leg; near the chest's own
+  // depth it is a puppy.
   const body = triangles(root, (o) => o.name === 'body');
   const chest = sectionY(body, trunk(root).zFront).depth;
-  assert.ok(tall < 0.6 * chest,
+  assert.ok(tall > 0.62 * chest,
+    `a small head: ${tall.toFixed(3)} tall on a chest ${chest.toFixed(3)} deep`);
+  assert.ok(tall < 0.8 * chest,
     `an oversized head: ${tall.toFixed(3)} tall on a chest ${chest.toFixed(3)} deep`);
+});
+
+test("the dog's ears hang under its crown and stand clear of its cheeks", () => {
+  // Nothing of an ear above the top of the skull — points up there are the
+  // fox — and a flap that hangs inside the cheek is not there at all.
+  const root = makeDog({}).group;
+  const head = headBox(root);
+  const skull = triangles(root, isHead);
+  for (const ear of named(root, 'ear')) {
+    const b = new THREE.Box3().setFromObject(ear, true);
+    assert.ok(b.max.y < head.max.y, `an ear stands ${(b.max.y - head.max.y).toFixed(3)} over the crown`);
+    assert.ok(!inside(skull, earTip(ear)), 'an ear hangs inside the skull');
+    const out = Math.max(Math.abs(b.min.x), Math.abs(b.max.x));
+    assert.ok(out > head.max.x, `an ear does not clear the cheek: ${out.toFixed(3)} against ${head.max.x.toFixed(3)}`);
+  }
+});
+
+test('the dog stands on legs no longer than its chest is deep, with a rump that turns down', () => {
+  const root = makeDog({}).group;
+  const body = triangles(root, (o) => o.name === 'body');
+  const { zFront, zHind } = trunk(root);
+  const chest = sectionY(body, zFront);
+  assert.ok(chest.min < 0.82 * chest.depth,
+    `on stilts: ${chest.min.toFixed(3)} of daylight under a chest ${chest.depth.toFixed(3)} deep`);
+  // the topline most of the way out along the rump, against the croup it left
+  const end = boxOf(root, (o) => o.name === 'body').min.z;
+  const croup = sectionY(body, zHind).max, rump = sectionY(body, zHind + 0.85 * (end - zHind)).max;
+  assert.ok(rump < 0.91 * croup,
+    `a box corner: the rump still stands at ${(rump / croup).toFixed(2)} of the croup's height near its end`);
 });
 
 test('the dog has a stop: the skull stands above the muzzle', () => {
@@ -176,10 +212,28 @@ test("the dog's neck lifts its head clear of its back", () => {
     `the jaw hangs at ${b.min.y.toFixed(3)}, under withers at ${withers.toFixed(3)}`);
 });
 
-test("the dog's tail is cocked: it rises more than it trails", () => {
-  const b = boxOf(makeDog({}).group, (o) => o.name === 'tail');
+test("the dog's tail is carried up and back in a curve, thick at the root", () => {
+  const root = makeDog({}).group;
+  const tris = triangles(root, (o) => o.name === 'tail');
+  const b = boxOf(root, (o) => o.name === 'tail');
   const up = b.max.y - b.min.y, back = b.max.z - b.min.z;
-  assert.ok(up > back, `it trails: ${up.toFixed(3)} up, ${back.toFixed(3)} back`);
+  assert.ok(up > 0.7 * back, `it trails: ${up.toFixed(3)} up, ${back.toFixed(3)} back`);
+  // read along the part that shows: tip at 0, the rump end of it at 1
+  const at = (f) => sectionY(tris, b.min.z + 0.7 * back * f);
+  const mid = (s) => (s.min + s.max) / 2;
+  const sag = (mid(at(0.1)) + mid(at(0.9))) / 2 - mid(at(0.5));
+  assert.ok(sag > 0.08 * up, `a straight rod: its middle hangs ${sag.toFixed(4)} under its own chord`);
+  // Thickness is read ACROSS, off the triangles' corners: a column through a
+  // rising tube measures its slope as much as its girth.
+  // As an extent, not a reach from the centreline — the idle carries the tail
+  // a little to one side.
+  const across = (pick) => {
+    const xs = tris.flatMap((t) => [0, 3, 6].filter((k) => pick(t[k + 2])).map((k) => t[k]));
+    return Math.max(...xs) - Math.min(...xs);
+  };
+  const rootW = across((z) => z > b.max.z - 0.4 * back), tipW = across((z) => z < b.min.z + 0.3 * back);
+  assert.ok(rootW > 1.5 * tipW,
+    `a spike: ${rootW.toFixed(3)} across at the root, ${tipW.toFixed(3)} toward the tip`);
 });
 
 // ---- the fox ----------------------------------------------------------------
