@@ -151,12 +151,19 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     bodyR: 0.2, bodyLen: 0.56, bodyDrop: 0.2,
     torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92, round: 1 },
     legBury: 0.16,
-    legH: 0.46, legR: 0.075, legTaper: 1.0, hipX: 0.085, hipZ: 0.30,
+    legH: 0.46, legR: 0.066, legTaper: 0.8, hipX: 0.085, hipZ: 0.30,
     // The legs stand under the two ends of the trunk rather than under its
     // sections: the front pair below the neck, with the withers behind them,
     // and the hind pair below the buttock. Neither can go further out than
     // there is trunk above it to bury the top of the leg in.
-    legs: { knee: 0.36, thigh: 3.0, frontSet: 0.035, hindSet: 0.1 },
+    //
+    // HOW THICK. The forearm is about a third of the chest's depth where it
+    // leaves the belly and tapers from there; nearer half, the front of the
+    // animal stood on two posts. `legR` is the whole leg's scale and
+    // `legTaper` the forearm's share of it, so the pair is slimmed with those
+    // and the masses that are stated as multiples of `legR` — shoulder, thigh,
+    // paw — are raised to stay the size they were.
+    legs: { knee: 0.36, shoulder: 2.8, thigh: 3.4, foot: 1.45, frontSet: 0.035, hindSet: 0.1 },
     // the neck's end has to fit inside the skull it enters, turned or not
     neck: { r: 0.1, w: 0.85, root: 0.7, set: 0.05, taper: 1.0, arch: 0.02 },
     // The plan's ball is only a placeholder for where the head is carried and
