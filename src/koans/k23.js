@@ -47,12 +47,14 @@ const EMYO_H = 1.6;
 // E-myo's reach. pose:'point' raises the sleeve toward the sky — right for
 // indicating a flag or an oak, wrong for a hand closing on a low stone — so
 // the case flattens the raised sleeve until its line runs from the shoulder to
-// the robe itself. Derived from the same constants monk.js builds with (via
-// the hem-direction identity: rotation.z = PI/2 + elevation).
-const SLEEVE_DOWN = (span, targetY) => {
-  const shX = 0.115 * EMYO_H, shY = 0.60 * EMYO_H;
-  return Math.PI / 2 + Math.atan2(targetY - shY, (span - 0.10) - shX);
-};
+// the robe itself (the hem-direction identity: rotation.z = PI/2 + elevation).
+// The shoulder is READ OFF THE ARM, where the figure put it. It used to be
+// restated here from the kit's proportions, and went stale the day the
+// shoulder moved outward: the reach kept aiming from a hinge that was no
+// longer there. What the angle lays on the line is the arm's chord, shoulder
+// to hand — the elbow hangs below it, and the cloth under that.
+const SLEEVE_DOWN = (arm, span, targetY) =>
+  Math.PI / 2 + Math.atan2(targetY - arm.position.y, (span - 0.10) - Math.abs(arm.position.x));
 
 // And the reach is not steady. "Trembling for shame he said: I came wanting
 // the teaching" — a couple of small incommensurate sines, a few milliradians,
@@ -185,7 +187,7 @@ const CAM = { distance: 10.1, target: [-0.1, 1.3, -0.9], heading: 31.5, pitch: 1
       .filter((c) => c.name === 'arm')
       .sort((a, b) => b.rotation.z - a.rotation.z)[0];
     const span = Math.hypot(STONE.x - EMYO.x, STONE.z - EMYO.z);
-    const REACH_Z = SLEEVE_DOWN(span, STONE_H + 0.10);
+    const REACH_Z = SLEEVE_DOWN(reach, span, STONE_H + 0.10);
     reach.rotation.set(0, ARM_YAW, REACH_Z);
 
     // The pass is dressed now: a few boulders where the ranges meet the
