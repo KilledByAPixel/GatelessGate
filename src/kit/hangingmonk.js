@@ -88,19 +88,46 @@ export function makeHangingMonk({ height = 1.6, color = INK_LIT, seed = 5 } = {}
   const neck = neckBetween(collar, nape, { r0: 0.056 * h, r1: 0.070 * h, pad: 0.03 * h, mat });
   g.add(neck);
 
-  // sleeves hanging straight down at his sides — his hands grasp no branch.
-  // figure.js's sleeve() gives him the same cuffed taper the rebuilt monk
-  // wears: its default shoulder/wrist radii (0.035, 0.065) are the exact
-  // numbers this file's plain cylinder always used, so this is the cuff
-  // upgrade landing here, not a new proportion. The mesh's own origin is the
-  // shoulder — the same convention the old hand-translated cylinder used —
-  // so the position below still means what it always meant.
-  const sleeveL = 0.36 * h;
+  // SLEEVES HANGING AT HIS SIDES — his hands grasp no branch. They are
+  // figure.js's sleeve(), so the cloth is the cloth everyone wears, and they
+  // hang SLACK rather than straight: two plain tubes dropped plumb from a
+  // shoulder as wide as the cuff were rods, and the last ones left in the book
+  // once every standing figure had elbows. Three things make them arms, the
+  // same three the standing figure's are made of:
+  //   - a slight bend, elbow back and hand forward, and a different one on
+  //     each side, because a mirrored pair is a chess piece. It is kept well
+  //     short of a gesture: he is not doing anything with them.
+  //   - slim at the shoulder and wide at the mouth, the low back corner of
+  //     the mouth dropped — weight at the bottom edge of the cloth.
+  //   - the hinge set just under the robe's own shoulder ring, so the cap
+  //     closes beneath it and the outline runs collar, shoulder, arm. Hinged
+  //     level with that ring the caps stood up past it as a second pair of
+  //     shoulders, square as a coat hanger.
+  // The mesh's origin is the shoulder, and each sleeve is cut for the way it
+  // is turned (its `hang` is plumb as seen from inside the posed arm), which
+  // is why the rotation is fixed before the sleeve is built. The length is
+  // what brings the hem back to where a slack hand ends, short of the knee,
+  // now that the hinge is lower.
+  const sleeveL = 0.345 * h;
+  const pose = new THREE.Euler();
+  const plumb = new THREE.Quaternion();
+  // one hand hangs a little ahead of the other; which one is the seed's
+  const ahead = hash1(2, seed) < 0.5 ? -1 : 1;
   for (const side of [-1, 1]) {
-    const arm = sleeve({ height: h, len: sleeveL, mat });
-    arm.position.set(side * 0.122 * h, -0.295 * h + LIFT, -0.062 * h);
-    arm.rotation.z = side * -0.055;   // a hair clear of the robe, still plumb
-    arm.rotation.x = 0.02;
+    const k = side < 0 ? 10 : 20;
+    // and each turns a hair in at the wrist, following the robe as it narrows
+    pose.set(
+      0.02 + side * ahead * (0.025 + 0.02 * hash1(k + 1, seed)),
+      0,
+      side * -(0.035 + 0.03 * hash1(k + 3, seed)));
+    const arm = sleeve({
+      height: h, len: sleeveL, r0: 0.037, r1: 0.045, mat,
+      bend: 0.07 + 0.05 * hash1(k + 4, seed),
+      hang: new THREE.Vector3(0, -1, 0).applyQuaternion(plumb.setFromEuler(pose).invert()),
+      drape: 0.03,
+    });
+    arm.position.set(side * 0.120 * h, -0.312 * h + LIFT, -0.062 * h);
+    arm.rotation.copy(pose);
     g.add(arm);
   }
 

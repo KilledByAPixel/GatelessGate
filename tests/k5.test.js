@@ -92,6 +92,71 @@ test('makeHangingMonk hangs from its pivot — the mass is all below the teeth',
   assert.ok(!names.includes('hat'), 'the hat did not stay on');
 });
 
+// His sleeves are the same cloth every other figure wears. Hung as two plain
+// tubes they were the last rods in the book: no elbow, a shoulder as wide as
+// the cuff standing up past the robe's own shoulder, and the pair a mirror
+// image. He hangs slack — which is not the same as hanging straight.
+test('the sleeves of the hanging man hang as cloth, not as rods', () => {
+  const H = 1.6;
+  const m = makeHangingMonk({ height: H, seed: 5 });
+  m.group.rotation.set(0, 0, 0);          // read him plumb, without the breath
+  m.group.updateMatrixWorld(true);
+  const arms = m.group.children.filter((c) => c.name === 'arm');
+  const body = m.group.children.find((c) => c.name === 'body');
+
+  // the robe's shoulder: its widest ring above the waist
+  const bp = body.geometry.attributes.position;
+  let shoulderY = 0, widest = 0;
+  for (let i = 0; i < bp.count; i++) {
+    const y = bp.getY(i) + body.position.y;
+    if (y < -0.35 * H) continue;
+    const r = Math.hypot(bp.getX(i), bp.getZ(i));
+    if (r > widest + 1e-9) { widest = r; shoulderY = y; }
+  }
+
+  const lines = [];
+  for (const arm of arms) {
+    arm.geometry.computeBoundingBox();
+    const len = -arm.geometry.boundingBox.min.y;
+    const { elbow, hand } = arm.userData;
+    assert.ok(elbow, 'the sleeve has an elbow');
+    // how far the elbow stands off the shoulder-to-hand chord
+    const chord = hand.clone().normalize();
+    const off = elbow.clone().addScaledVector(chord, -elbow.dot(chord)).length();
+    assert.ok(off > 0.04 * len && off < 0.16 * len, `a slack bend, not a rod and not a gesture: ${off / len}`);
+    lines.push(off / len);
+
+    // slim at the shoulder, wide at the mouth
+    const p = arm.geometry.attributes.position;
+    let top = 0, mouth = 0;
+    for (let i = 0; i < p.count; i++) {
+      const y = p.getY(i), r = Math.abs(p.getX(i));
+      if (y > -0.15 * len && y <= 0) top = Math.max(top, r);
+      if (y < -0.85 * len) mouth = Math.max(mouth, r);
+    }
+    assert.ok(mouth > top * 1.2, `the width is carried at the cuff: ${mouth} vs ${top}`);
+
+    // the cap sits under the robe's shoulder, so the outline slopes
+    // collar, shoulder, arm instead of stepping up to a second shoulder
+    const box = new THREE.Box3().setFromObject(arm);
+    assert.ok(box.max.y <= shoulderY + 1e-6, `the sleeve stands above the shoulder: ${box.max.y} vs ${shoulderY}`);
+    // and the hem still ends where a hanging hand would, short of the knee
+    assert.ok(box.min.y < -0.52 * H && box.min.y > -0.62 * H, `sleeve end: ${box.min.y / H}`);
+  }
+  const [a, b] = arms;
+  const differ = Math.abs(lines[0] - lines[1]) + Math.abs(a.rotation.x - b.rotation.x)
+    + Math.abs(Math.abs(a.rotation.z) - Math.abs(b.rotation.z));
+  assert.ok(differ > 0.03, `the two sleeves are a mirror image: ${differ}`);
+  // still plumb: a slack arm, not a held one
+  for (const arm of arms) {
+    assert.ok(Math.abs(arm.rotation.z) < 0.15 && Math.abs(arm.rotation.x) < 0.15, 'the sleeves hang');
+  }
+
+  // deterministic, and the seed is what varies it
+  const again = makeHangingMonk({ height: H, seed: 5 }).group.children.filter((c) => c.name === 'arm');
+  assert.deepEqual(again.map((c) => c.rotation.toArray()), arms.map((c) => c.rotation.toArray()));
+});
+
 test('the hanging man is nearly still until nudged, then swings and steadies', () => {
   const m = makeHangingMonk({ height: 1.6, seed: 5 });
   let t = 0;
