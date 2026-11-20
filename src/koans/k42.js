@@ -205,9 +205,9 @@ const CAM = { distance: 9.2, target: [0.4, 1.35, -0.95], heading: 34, pitch: 16.
   let clock = 0;
   let calls = 0;
   let calledAt = -99;
-  // the RAISED sleeve, not the hanging one: pose 'raise' swings it to
-  // PI - 0.34, while the resting sleeve sits at a mere -0.28, so both are
-  // non-zero and only the magnitude tells them apart
+  // the RAISED sleeve, not the hanging one: pose 'raise' turns it most of the
+  // way over about z while a resting sleeve only leans off the body, so both
+  // are non-zero and only the magnitude tells them apart
   const manjusriArm = manjusri.children
   .filter((c) => c.name === 'arm')
   .find((c) => Math.abs(c.rotation.z) > 1);
