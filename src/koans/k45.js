@@ -223,6 +223,9 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 40.5, pitch: 1
     // takes the deep mix rather than glaring full accent across a whole
     // animal.
     const horse = makeHorse({ height: 1.5, color: ACCENT_DEEP, seed: ID });
+    // measured here, before the horse is placed or turned: its own extent in
+    // its own frame, which is what the tap volume below is cut from
+    const horseBox = new THREE.Box3().setFromObject(horse.group);
     // beside the t-0.30 stall, not in front of it — pulled back along the lane
     // so it does not block the counter, and standing a clear step off the road
     // rather than at its very edge — tethered on the grass, not loitering in
@@ -283,13 +286,20 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 40.5, pitch: 1
     // The whole of it is a TOUCH RESPONSE. The street has no idle motion of any
     // kind (see the header), so this is the only thing in the frame that ever
     // moves, and only because you moved it.
+    //
+    // THE VOLUME IS THE HORSE'S OWN BOX, padded, and it rides the horse. A box
+    // of typed dimensions at the horse's origin covered its barrel and left the
+    // head outside — and the head is where a hand reaches for a horse. Cut from
+    // the measured extent it follows the animal through any later re-shaping,
+    // nose to tail; added after the bake, which refuses invisible proxies.
+    const HIT_PAD = 0.12;
+    const hitSize = horseBox.getSize(new THREE.Vector3()).addScalar(2 * HIT_PAD);
     const hit = new THREE.Mesh(
-      new THREE.BoxGeometry(2.0, 1.9, 1.3),
+      new THREE.BoxGeometry(hitSize.x, hitSize.y, hitSize.z),
       new THREE.MeshBasicMaterial({ visible: false }));
     hit.name = 'horse-hit';
-    hit.position.set(horseX, 0.95, horseZ);
-    hit.rotation.y = horse.group.rotation.y;
-    scene.add(hit);
+    horseBox.getCenter(hit.position);
+    horse.group.add(hit);
 
     let camera = null;
     let clock = 0;

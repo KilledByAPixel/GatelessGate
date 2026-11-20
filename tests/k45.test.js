@@ -219,3 +219,50 @@ test('the street is baked, and the budget it frees is spent on the street', () =
   assert.equal(census(root.scene, 'stall'), 5);
   assert.ok(census(root.scene, 'monk') >= 10, 'the crowd is bigger than it was');
 });
+
+// The tap volume is fitted to the horse. A box of typed dimensions at the
+// horse's origin covered the barrel and left the head outside it, and the head
+// is where a hand reaches for a horse — so every extreme of the animal is
+// probed with a real ray, from the side a reader stands on.
+test('a tap on the horse lands, nose to tail', () => {
+  const { root } = staged();
+  root.scene.updateMatrixWorld(true);
+  const horse = named(root.scene, 'horse')[0];
+  const hit = named(root.scene, 'horse-hit')[0];
+  assert.ok(hit, 'the horse has a tap volume');
+  assert.equal(hit.material.visible, false, 'which is never drawn');
+
+  // the horse's own extremes, in its own frame, off the meshes that draw
+  const toLocal = horse.matrixWorld.clone().invert();
+  const v = new THREE.Vector3();
+  const ext = { nose: null, tail: null, top: null };
+  horse.traverse((o) => {
+    if (!o.isMesh || o === hit) return;
+    const p = o.geometry.getAttribute('position');
+    for (let i = 0; i < p.count; i++) {
+      v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld).applyMatrix4(toLocal);
+      if (!ext.nose || v.z > ext.nose.z) ext.nose = v.clone();
+      if (!ext.tail || v.z < ext.tail.z) ext.tail = v.clone();
+      if (!ext.top || v.y > ext.top.y) ext.top = v.clone();
+    }
+  });
+  assert.ok(ext.nose.z > 1.0, `the head is carried well out ahead: ${ext.nose.z.toFixed(2)}`);
+
+  const ray = new THREE.Raycaster();
+  for (const [what, local] of Object.entries(ext)) {
+    const target = local.clone().applyMatrix4(horse.matrixWorld);
+    // from several bearings around the animal, level and from above
+    for (const [dx, dy, dz] of [[6, 5, 8], [-7, 3, 2], [0, 6, 9], [5, 1.2, -6]]) {
+      const from = new THREE.Vector3(dx, dy, dz);
+      ray.set(from, target.clone().sub(from).normalize());
+      const got = ray.intersectObject(hit, false);
+      assert.ok(got.length > 0, `a ray through the ${what} from (${dx}, ${dy}, ${dz}) lands on the tap volume`);
+    }
+  }
+
+  // and it is a fit, not a room: it does not reach much past the animal
+  hit.geometry.computeBoundingBox();
+  const size = hit.geometry.boundingBox.getSize(new THREE.Vector3());
+  assert.ok(size.z < (ext.nose.z - ext.tail.z) + 0.5, 'no longer than the horse and a hand');
+  assert.ok(size.x < 1.2, 'no wider than the horse and a hand');
+});
