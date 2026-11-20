@@ -65,14 +65,10 @@ test('a koi is one mesh shaped like a fish: full shoulder, pinched peduncle, wid
   const fan = halfWidth(body, -0.6 * L, -0.5 * L);
   assert.ok(peduncle < shoulder * 0.55, `no pinch before the tail: ${peduncle} vs ${shoulder}`);
   assert.ok(fan > shoulder * 1.3, `the tail fan does not flare: ${fan} vs ${shoulder}`);
-  // the fork: some tail-cap vertex sits forward of the fan tips on the spine
-  const p = body.geometry.attributes.position;
-  let notch = false;
-  for (let v = 0; v < p.count; v++) {
-    if (p.getX(v) > -0.5 * L && p.getX(v) < -0.4 * L
-      && Math.abs(p.getY(v)) < 0.01 * L && Math.abs(p.getZ(v)) < 0.05 * L) notch = true;
-  }
-  assert.ok(notch, 'no fork notch in the trailing edge');
+  // The fork has its own test below. It used to be checked here by finding a
+  // vertex forward of the tips on the spine, which a cap centre satisfies
+  // while the trailing edge around it stays straight — it passed on a tail
+  // that drew as a plain triangle.
 });
 
 test('the swim is a travelling wave: the tail sweeps, the head barely does', () => {
@@ -231,4 +227,51 @@ test('center offsets the school without moving the group', () => {
   assert.ok(Math.abs((mb.x - ma.x) - 1.4) < 1e-9, `dx ${mb.x - ma.x}`);
   assert.ok(Math.abs((mb.z - ma.z) - (-2.0)) < 1e-9, `dz ${mb.z - ma.z}`);
   assert.equal(a.group.position.x, b.group.position.x, 'the group itself must not move');
+});
+
+// The rest shape, with the swim averaged out of it. The wave only ever moves a
+// vertex sideways and by a sine, so the mean z over many beats is the z the
+// fish was modelled at; x and y are never touched. Returns [x, y, z] triples.
+function restShape(k) {
+  const p = bodyOf(k).geometry.attributes.position;
+  const sum = new Float64Array(p.count);
+  const N = 2400;
+  for (let i = 0; i < N; i++) {
+    k.update(1 / 60, i / 60);
+    for (let v = 0; v < p.count; v++) sum[v] += p.getZ(v);
+  }
+  const out = [];
+  for (let v = 0; v < p.count; v++) out.push([p.getX(v), p.getY(v), sum[v] / N]);
+  return out;
+}
+
+test('the tail is forked in outline: two tips, and the spine ends well forward of them', () => {
+  const L = 0.95;
+  const pts = restShape(makeKoi({ count: 1, seed: 30, length: L }));
+  // what a straight-down pond camera sees is the OUTLINE, so a notch only
+  // counts if nothing on the midline reaches as far back as the tips do — a
+  // cap vertex pulled forward inside a straight trailing edge cuts no fork
+  const tipX = Math.min(...pts.map((q) => q[0]));
+  const tips = pts.filter((q) => q[0] < tipX + 0.01 * L);
+  assert.ok(tips.every((q) => Math.abs(q[2]) > 0.1 * L),
+    `something on the midline reaches the trailing edge: ${tips.map((q) => q[2].toFixed(3))}`);
+  assert.ok(tips.some((q) => q[2] > 0) && tips.some((q) => q[2] < 0), 'a fork has two tips');
+  const spineEnd = Math.min(...pts.filter((q) => Math.abs(q[2]) < 0.03 * L).map((q) => q[0]));
+  assert.ok(spineEnd > tipX + 0.08 * L,
+    `the notch is too shallow to read: spine ends ${((spineEnd - tipX) / L).toFixed(3)}L ahead of the tips`);
+});
+
+test('the pectorals stand clear of the body from above', () => {
+  const L = 0.95;
+  const pts = restShape(makeKoi({ count: 1, seed: 30, length: L }));
+  // the body is widest on its own midplane, where its rings cross y = 0, and
+  // the fins hang below that — so the midplane's reach is the shoulder, and a
+  // fin is whatever in the same stretch reaches further out, on each side
+  const band = pts.filter((q) => q[0] > 0 && q[0] < 0.3 * L);
+  const shoulder = Math.max(...band.filter((q) => Math.abs(q[1]) < 0.005 * L).map((q) => Math.abs(q[2])));
+  for (const side of [1, -1]) {
+    const reach = Math.max(...band.map((q) => q[2] * side));
+    assert.ok(reach > shoulder * 1.7,
+      `side ${side}: a fin that reaches ${(reach / shoulder).toFixed(2)}x the shoulder is a tick, not a paddle`);
+  }
 });

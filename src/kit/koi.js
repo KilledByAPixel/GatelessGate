@@ -16,12 +16,16 @@ import { mergeSimple } from './scatter.js';
 // two-ellipsoid + cone build read as three disconnected lumps, closer to a
 // tadpole than a fish. The body is lofted from elliptical cross-sections along
 // a single profile: full head and shoulder a quarter of the way back, a long
-// taper to a narrow caudal peduncle, then a wide flat caudal fan whose cap
-// centre is pulled FORWARD so the trailing edge cuts a fork — the notch is what
-// says "tail fin" from the top-down pond cameras. Three flat fin hints are
-// merged into the same geometry (one draw call per fish): a dorsal triangle on
-// the spine and a pair of swept-back pectorals at the shoulder, the pair being
-// the mark that reads strongest from directly above.
+// taper to a narrow caudal peduncle, then a wide flat caudal fan whose trailing
+// edge cuts a fork — the notch is what says "tail fin" from the top-down pond
+// cameras. THE FORK IS IN THE OUTLINE OR IT IS NOT THERE: pulling only the cap
+// centre forward left the last ring's own midline vertices on the trailing
+// edge, so the edge stayed straight and the tail drew as a plain triangle with
+// the notch hidden inside it. The last ring is swept instead — see FORK. Three
+// flat fin hints are merged into the same geometry (one draw call per fish): a
+// dorsal triangle on the spine and a pair of swept-back pectoral paddles at the
+// shoulder, the pair being the mark that reads strongest from directly above —
+// which they only do if they stand well clear of the body's own width.
 //
 // THE SWIM. A fish is a travelling wave, not a rigid pellet wagging: each
 // update, every vertex is displaced sideways by amp(s) * sin(phase - s*WAVE),
@@ -49,32 +53,39 @@ const WAVE = 2.6;
 // the fan: wide and flat, the widest z-extent on the whole fish, which is
 // what separates "fish" from "tadpole" in a straight-down view.
 const PROFILE = [
-  [0.42, 0.044, 0.042],   // blunt snout — a koi's head is round, never sharp
-  [0.36, 0.074, 0.066],
-  [0.26, 0.092, 0.082],   // shoulder — the fullest station
-  [0.12, 0.088, 0.078],
-  [-0.03, 0.070, 0.064],
-  [-0.16, 0.046, 0.046],
-  [-0.26, 0.028, 0.026],  // caudal peduncle — the pinch before the fan
-  [-0.32, 0.055, 0.024],  // fan root
-  [-0.45, 0.110, 0.018],
-  [-0.55, 0.155, 0.013],  // fan tips
+  [0.42, 0.048, 0.042],   // blunt snout — a koi's head is round, never sharp
+  [0.36, 0.078, 0.066],
+  [0.26, 0.094, 0.082],   // shoulder — the fullest station
+  [0.12, 0.090, 0.078],
+  [-0.03, 0.074, 0.064],  // the flank holds its width past mid-body: a taper
+  [-0.16, 0.052, 0.046],  // that starts at the shoulder reads as a club
+  [-0.27, 0.028, 0.026],  // caudal peduncle — the pinch before the fan
+  [-0.33, 0.058, 0.022],  // fan root
+  [-0.43, 0.122, 0.017],
+  [-0.55, 0.160, 0.012],  // fan tips
 ];
 const RING = 8;
+// How far forward of the tips the trailing edge's midpoint sits, in units of L.
+// The last ring is not a flat station: each of its vertices is drawn forward by
+// how far it is from a tip, so the edge runs straight in from both tips to a
+// point on the spine. Bounded by the ring ahead of it — a notch cut past that
+// station would fold the fan's skin back through itself.
+const FORK = 0.10;
 
 function fishGeometry(L) {
   // ---- the lofted body ----------------------------------------------------
   const pos = [];
   pos.push(NOSE_X * L, 0, 0);                    // 0: nose point
-  for (const [x, w, h] of PROFILE) {
+  PROFILE.forEach(([x, w, h], i) => {
+    const fork = i === PROFILE.length - 1 ? FORK : 0;
     for (let j = 0; j < RING; j++) {
       const a = (j / RING) * Math.PI * 2;
-      pos.push(x * L, Math.cos(a) * h * L, Math.sin(a) * w * L);
+      const out = Math.abs(Math.sin(a));     // 1 at a tip, 0 on the spine
+      pos.push((x + fork * (1 - out)) * L, Math.cos(a) * h * L, Math.sin(a) * w * L);
     }
-  }
-  // tail cap centre pulled forward of the fan tips: the trailing edge then
-  // slopes from each tip in toward this point — a V notch, the fork
-  pos.push(-0.44 * L, 0, 0);
+  });
+  // the cap closes the fan at the bottom of the notch
+  pos.push((PROFILE[PROFILE.length - 1][0] + FORK) * L, 0, 0);
   const tailC = pos.length / 3 - 1;
 
   const idx = [];
@@ -106,13 +117,18 @@ function fishGeometry(L) {
     [0.04 * L, 0.072 * L, 0], [-0.14 * L, 0.038 * L, 0], [-0.05 * L, 0.115 * L, 0],
   );
   // pectorals: a swept-back pair at the shoulder, tipped down and out — from
-  // straight above they are the two little wings that instantly say koi
-  const pect = (side) => tri(
-    [0.20 * L, -0.018 * L, side * 0.050 * L],
-    [0.11 * L, -0.024 * L, side * 0.042 * L],
-    [0.02 * L, -0.048 * L, side * 0.130 * L],
-  );
-  return mergeSimple([body, dorsal, pect(1), pect(-1)]);
+  // straight above they are the two little wings that instantly say koi. Each
+  // is a paddle with a blunt end, not a spike: a single triangle spends its
+  // whole reach on a point too thin to survive the water. Roots are buried
+  // inside the shoulder so no seam shows where a fin leaves the body.
+  const pect = (side) => {
+    const rootF = [0.22 * L, -0.020 * L, side * 0.055 * L];
+    const rootB = [0.12 * L, -0.026 * L, side * 0.048 * L];
+    const tipB = [-0.02 * L, -0.050 * L, side * 0.150 * L];
+    const tipF = [0.05 * L, -0.046 * L, side * 0.188 * L];
+    return [tri(rootF, rootB, tipB), tri(rootF, tipB, tipF)];
+  };
+  return mergeSimple([body, dorsal, ...pect(1), ...pect(-1)]);
 }
 
 export function makeKoi({
