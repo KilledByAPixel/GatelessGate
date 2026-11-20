@@ -260,25 +260,106 @@ test('a seated front leg is a straight column on a block of a paw', () => {
   assert.ok(b.min.x - a.max.x < wide, `the pair stand ${(b.min.x - a.max.x).toFixed(3)} apart, each ${wide.toFixed(3)} wide`);
 });
 
-test('the tail is a long tapering line with a hook in it', () => {
+// The tail's girth where a plane square to it through `m` cuts its skin: how
+// far the furthest crossing stands from the centre line there. `reach` keeps
+// a curled tail's other passes through the same plane out of the answer.
+const girthAt = (tris, m, dir, reach) => {
+  let r = 0;
+  const side = (x, y, z) => (x - m.x) * dir.x + (y - m.y) * dir.y + (z - m.z) * dir.z;
+  for (const t of tris) {
+    for (let e = 0; e < 3; e++) {
+      const a = e * 3, b = ((e + 1) % 3) * 3;
+      const da = side(t[a], t[a + 1], t[a + 2]), db = side(t[b], t[b + 1], t[b + 2]);
+      if (da * db > 0 || da === db) continue;
+      const k = da / (da - db);
+      const d = Math.hypot(t[a] + (t[b] - t[a]) * k - m.x, t[a + 1] + (t[b + 1] - t[a + 1]) * k - m.y, t[a + 2] + (t[b + 2] - t[a + 2]) * k - m.z);
+      if (d < reach) r = Math.max(r, d);
+    }
+  }
+  return r;
+};
+// the girth at every joint, root first
+const tailGirths = (cat) => {
+  cat.group.updateMatrixWorld(true);
+  const tris = triangles(cat.group, (o) => o.name === 'tailseg');
+  const at = cat.joints.map((j) => j.getWorldPosition(new THREE.Vector3()));
+  return at.map((p, k) => girthAt(tris, p,
+    at[Math.min(k + 1, at.length - 1)].clone().sub(at[Math.max(k - 1, 0)]).normalize(), 0.12));
+};
+const stirred = (cat, frames) => {
+  cat.stir();
+  for (let i = 0; i < frames; i++) cat.update(1 / 60, i / 60);
+  return cat;
+};
+
+test('the tail is one skin from root to a closed end: no joint shows on it, at rest or curled', () => {
+  // A piece per joint leaves each piece's sawn end standing out of the next
+  // wherever the tail bends: a collar at every joint. One skin cannot.
+  for (const [cat, slack] of [[sit(), 1], [stand(), 1], [stirred(sit(), 138), 1.15]]) {
+    const skins = named(cat.group, 'tailseg');
+    assert.equal(skins.length, 1, 'the tail is drawn as one mesh');
+
+    // closed everywhere: every edge is shared by exactly two faces
+    const idx = skins[0].geometry.index;
+    const edges = new Map();
+    for (let i = 0; i < idx.count; i += 3) {
+      for (let e = 0; e < 3; e++) {
+        const p = idx.getX(i + e), q = idx.getX(i + (e + 1) % 3);
+        const key = p < q ? p + ':' + q : q + ':' + p;
+        edges.set(key, (edges.get(key) || 0) + 1);
+      }
+    }
+    assert.ok([...edges.values()].every((n) => n === 2), 'no open end and no loose face');
+
+    // one taper: the girth only ever falls from joint to joint, and never by a
+    // step. Curled hard, a cut square to the joints is no longer square to the
+    // skin and reads a little full, which is what `slack` allows for.
+    const r = tailGirths(cat);
+    for (let k = 0; k + 1 < r.length; k++) {
+      assert.ok(r[k + 1] < slack * r[k] + 0.003, `a bead at joint ${k + 1}: ${r[k + 1].toFixed(4)} after ${r[k].toFixed(4)}`);
+      assert.ok(r[k] - r[k + 1] < 0.02, `a step at joint ${k + 1}: ${r[k].toFixed(4)} down to ${r[k + 1].toFixed(4)}`);
+    }
+    assert.ok(r[0] > 1.2 * r[2], `fullest where it leaves the rump: ${r[0].toFixed(4)} against ${r[2].toFixed(4)} two joints out`);
+    assert.ok(r[r.length - 1] < 0.8 * r[1], `and it tapers on the way to the end: ${r[r.length - 1].toFixed(4)} of ${r[1].toFixed(4)}`);
+    assert.ok(r[r.length - 1] > 0.5 * r[1], `without dwindling to a wire: ${r[r.length - 1].toFixed(4)} of ${r[1].toFixed(4)}`);
+  }
+});
+
+test('the tail leaves the body at full girth from inside it, at rest and through a stir', () => {
+  // The skin does not start at the rump's surface. It starts on a ring ahead
+  // of the root, and that ring has to be the tail's full girth and wholly
+  // under the body's surface whatever the tail is doing — a root that is a
+  // point, or a ring the surface cuts, shows its end the moment the tail turns.
+  for (const cat of [sit(), stand()]) {
+    const g = cat.group;
+    const body = triangles(g, (o) => o.name === 'body');
+    const skin = g.getObjectByName('tailseg');
+    const p = skin.geometry.getAttribute('position');
+    const v = new THREE.Vector3();
+    cat.stir();
+    for (let f = 0; f <= 280; f += 20) {
+      for (let i = 0; i < 20; i++) cat.update(1 / 60, (f + i) / 60);
+      g.updateMatrixWorld(true);
+      const rootGirth = tailGirths(cat)[0];
+      let sunk = 0, spread = 0;
+      for (let i = 0; i < p.count; i++) {
+        v.fromBufferAttribute(p, i);
+        // the skin is laid out in the tail root's own frame, +y along the
+        // tail: anything well behind zero is ahead of the root, in the cat
+        if (v.y > -0.05) continue;
+        spread = Math.max(spread, Math.hypot(v.x, v.z));
+        sunk++;
+        assert.ok(inside(body, v.applyMatrix4(skin.matrixWorld)), `frame ${f}: the buried end of the tail shows outside the body`);
+      }
+      assert.ok(sunk >= 6, `frame ${f}: a whole ring is buried ahead of the root: ${sunk} points`);
+      assert.ok(spread > 0.95 * rootGirth, `frame ${f}: buried at full girth: ${spread.toFixed(4)} against ${rootGirth.toFixed(4)} at the root`);
+    }
+  }
+});
+
+test('the tail is a long line with a hook in it', () => {
   const cat = sit();
   cat.group.updateMatrixWorld(true);
-  const segs = named(cat.group, 'tailseg');
-  const thick = (m) => {
-    m.geometry.computeBoundingBox();
-    const b = m.geometry.boundingBox;
-    return b.max.x - b.min.x;                         // across the segment, in its own frame
-  };
-  const rootT = thick(segs[0]);
-  // the far end of the last segment alone: the tail closes rather than stopping sawn off
-  const last = segs[segs.length - 1].geometry.getAttribute('position');
-  let endR = 0, top = -Infinity;
-  for (let i = 0; i < last.count; i++) top = Math.max(top, last.getY(i));
-  for (let i = 0; i < last.count; i++) {
-    if (last.getY(i) > top - 1e-6) endR = Math.max(endR, Math.hypot(last.getX(i), last.getZ(i)));
-  }
-  assert.ok(2 * endR < 0.25 * rootT, `the tip closes toward a point: ${(2 * endR).toFixed(4)} against a root of ${rootT.toFixed(4)}`);
-  assert.ok(thick(segs[segs.length - 2]) < 0.8 * rootT, 'and it tapers on the way there');
 
   // the hook: the far half of the tail has turned well off the cat's own axis
   const at = (j) => j.getWorldPosition(new THREE.Vector3());

@@ -66,9 +66,22 @@ import { hash1 } from '../util/noise.js';
 // which) with the far end curling up off the ground: a straight tail is a
 // stick laid behind the cat, the hook is what still reads as a tail from
 // above and in front, which is where the cases stand, and the curl is what
-// reads from the side. The lift is spread over the far half — put into the
-// last joint alone it is a spike stood on the end of a rod. It tapers and
-// ends in a point.
+// reads from the side. The lift is spread over the far half and gathers
+// toward the end, a round curl standing up off the ground — put into the last
+// joint alone it is a spike stood on the end of a rod, and spread evenly it
+// is a stick with a kink in it.
+//
+// THE TAIL IS ONE SKIN. The joints are bare pivots: they carry the pose and
+// the stir, and nothing is drawn on them. A cylinder per joint was drawn
+// once, and no trimming of it works — cut to the joint spacing a bend opens
+// daylight on its outside, cut longer each piece's sawn end stands out of
+// the next as a collar, and a ball over the joint beads the tail. So one
+// tube is laid along a smooth curve through the joints, every frame, each
+// ring carried from the one before it: a bend is only a bend, and the taper
+// is one taper. It starts on a ring INSIDE the body, ahead of the root and
+// fixed there, so however the first joint turns the tail bends out of the
+// rump at its full girth instead of pivoting on the surface; it is fullest
+// at the root, and it ends in a blunt point.
 //
 // Faces +z, like its siblings. Returns a handle: the cat has moving parts.
 
@@ -181,12 +194,25 @@ const HAUNCH_X = 0.165;                  // its centre plane, off the animal's o
 const HAUNCH_JOIN_Z = -0.25;             // where its origin is sunk into the body
 
 const TAIL_SEGS = 7;
-const TAIL_LEN = 1.05;
-const TAIL_R0 = 0.055;      // root
-const TAIL_R1 = 0.036;      // the last joint, before it closes to a point
+const TAIL_LEN = 0.95;
+const TAIL_R0 = 0.055;      // the tail proper, where the root's flare has run out
+const TAIL_R1 = 0.036;      // and at its far end, before that closes
+// The root is fuller than the tail behind it — the rump running out into the
+// tail rather than a rod leaving a hole in it — and spends that over a short
+// run. The skin starts on a ring this far INSIDE the body, ahead of the root.
+const TAIL_ROOT_R = 0.075;
+const TAIL_FLARE_RUN = 0.3;     // fraction of the tail's length
+const TAIL_DEEP = 0.13;         // x height
+const TAIL_GROUND = 0.02;       // x height the root's underside rides off the ground
+// The end is a blunt point: one ring just short of it, drawn in, then closed.
+const TAIL_END_U = 0.975, TAIL_END_R = 0.62;
+const TAIL_SIDES = 6, TAIL_CUTS = 2;
 // Cumulative pitch of each joint off horizontal-backward. Seated, the tail
-// lies along the ground and lifts at the tip; standing, it carries high.
-const SIT_TAIL = [0.0, 0.02, 0.08, 0.2, 0.38, 0.6, 0.84];
+// lies along the ground and curls up at the end; standing, it carries high.
+// The seated root starts a little nose-down: its flare holds the root itself
+// clear of the ground, and the slimmer tail behind it would otherwise float
+// at that height all the way out.
+const SIT_TAIL = [-0.1, -0.03, 0.03, 0.14, 0.38, 0.74, 1.1];
 const STAND_TAIL = [-0.12, 0.02, 0.20, 0.42, 0.66, 0.90, 1.12];
 // The seated hook: each joint's own turn to the side, so the bend tightens
 // toward the tip. Kept well short of a half circle in all — wrapped round to
@@ -433,7 +459,7 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
   const segLen = TAIL_LEN * h / TAIL_SEGS;
   const tailRoot = new THREE.Group();
   tailRoot.name = 'tail';
-  const lowRoot = (TAIL_R0 + 0.025) * h;
+  const lowRoot = (TAIL_ROOT_R + TAIL_GROUND) * h;
   if (seated) {
     // the trunk's rearmost point at the root's own height: where a level
     // plane cuts the pear
@@ -470,26 +496,117 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     joint.userData.baseX = joint.rotation.x;
     joint.userData.baseZ = joint.rotation.z;
 
-    const a = i / TAIL_SEGS, b = (i + 1) / TAIL_SEGS;
-    const tip = i === TAIL_SEGS - 1;
-    // Cut 30% longer than the joint spacing (still centred on it), so each
-    // segment overlaps its neighbour and a curled joint never opens daylight.
-    // Replaced a merged joint ball — even trimmed flush it beaded the tail;
-    // overlap covers the same gap without touching the silhouette. The last
-    // one closes to a point instead of a sawn end.
-    const seg = new THREE.Mesh(new THREE.CylinderGeometry(
-      (tip ? 0.3 * TAIL_R1 : TAIL_R0 + (TAIL_R1 - TAIL_R0) * b) * h,
-      (TAIL_R0 + (TAIL_R1 - TAIL_R0) * a) * h,
-      segLen * 1.3, 5), material);
-    seg.name = 'tailseg';
-    seg.position.y = segLen / 2;
-    joint.add(seg);
-
     parent.add(joint);
     joints.push(joint);
     parent = joint;
   }
   group.add(tailRoot);
+
+  // See THE TAIL IS ONE SKIN in the header. Rings are laid along a
+  // curve through the joints, in the tail root's own frame: `cuts` of them to
+  // each joint spacing, one more just short of the end, and one fixed ring
+  // inside the body ahead of the root. Both ends are fanned shut.
+  const ringU = [];
+  for (let k = 0; k < TAIL_SEGS * TAIL_CUTS; k++) ringU.push(k / (TAIL_SEGS * TAIL_CUTS));
+  ringU.push(TAIL_END_U);
+  const girth = (u) => {
+    const flare = Math.max(0, 1 - u / TAIL_FLARE_RUN);
+    const end = u > ringU[ringU.length - 2] ? TAIL_END_R : 1;
+    return (TAIL_R0 + (TAIL_R1 - TAIL_R0) * u + (TAIL_ROOT_R - TAIL_R0) * flare) * end * h;
+  };
+  const nRings = ringU.length + 1;                    // the buried one first
+  const skinPos = new Float32Array((nRings * TAIL_SIDES + 2) * 3);
+  const skinIdx = [];
+  for (let i = 0; i < nRings - 1; i++) {
+    const r0 = i * TAIL_SIDES, r1 = r0 + TAIL_SIDES;
+    for (let j = 0; j < TAIL_SIDES; j++) {
+      const j2 = (j + 1) % TAIL_SIDES;
+      skinIdx.push(r0 + j, r0 + j2, r1 + j, r0 + j2, r1 + j2, r1 + j);
+    }
+  }
+  const rootApex = nRings * TAIL_SIDES, tipApex = rootApex + 1;
+  for (let j = 0; j < TAIL_SIDES; j++) {
+    const j2 = (j + 1) % TAIL_SIDES;
+    skinIdx.push(rootApex, j2, j);
+    skinIdx.push(tipApex, (nRings - 1) * TAIL_SIDES + j, (nRings - 1) * TAIL_SIDES + j2);
+  }
+  const skinGeo = new THREE.BufferGeometry();
+  skinGeo.setAttribute('position', new THREE.BufferAttribute(skinPos, 3));
+  skinGeo.setIndex(skinIdx);
+  const skin = new THREE.Mesh(skinGeo, material);
+  skin.name = 'tailseg';
+  tailRoot.add(skin);
+
+  // the joints' origins and the tail's end, in the root's frame; one phantom
+  // either end so the curve has a direction to arrive and leave by
+  const nodes = [];
+  for (let i = 0; i < TAIL_SEGS + 3; i++) nodes.push(new THREE.Vector3());
+  const centres = [];
+  for (let i = 0; i < nRings; i++) centres.push(new THREE.Vector3());
+  const chain = new THREE.Matrix4();
+  const tan = new THREE.Vector3(), nrm = new THREE.Vector3(), bin = new THREE.Vector3();
+  const deep = TAIL_DEEP * h;
+
+  function layTail() {
+    chain.identity();
+    for (let i = 0; i < TAIL_SEGS; i++) {
+      joints[i].updateMatrix();
+      chain.multiply(joints[i].matrix);
+      nodes[i + 1].setFromMatrixPosition(chain);
+    }
+    nodes[TAIL_SEGS + 1].set(0, segLen, 0).applyMatrix4(chain);
+    // The curve ARRIVES at the root along the root's own axis, whatever the
+    // first joint is doing, so the tail bends out of the body rather than
+    // pivoting on its surface.
+    nodes[0].set(0, -segLen, 0);
+    nodes[TAIL_SEGS + 2].copy(nodes[TAIL_SEGS + 1]).multiplyScalar(2).sub(nodes[TAIL_SEGS]);
+
+    centres[0].set(0, -deep, 0);
+    for (let k = 0; k < ringU.length; k++) {
+      const s = ringU[k] * TAIL_SEGS;
+      const i = Math.min(TAIL_SEGS - 1, Math.floor(s)), t = s - i;
+      const p0 = nodes[i], p1 = nodes[i + 1], p2 = nodes[i + 2], p3 = nodes[i + 3];
+      const t2 = t * t, t3 = t2 * t;
+      const c = centres[k + 1];
+      for (const ax of ['x', 'y', 'z']) {
+        c[ax] = 0.5 * (2 * p1[ax] + (p2[ax] - p0[ax]) * t
+          + (2 * p0[ax] - 5 * p1[ax] + 4 * p2[ax] - p3[ax]) * t2
+          + (3 * p1[ax] - p0[ax] - 3 * p2[ax] + p3[ax]) * t3);
+      }
+    }
+    const end = nodes[TAIL_SEGS + 1];
+
+    // The first ring's side axis is the animal's own left-right and each ring
+    // after it takes the one before's, squared up to its own direction: the
+    // twist is settled once at the root, so a wag bends the facets and never
+    // rolls them round the tail.
+    nrm.set(1, 0, 0);
+    for (let i = 0; i < nRings; i++) {
+      const a = centres[Math.max(0, i - 1)], b = i === nRings - 1 ? end : centres[i + 1];
+      if (i === 0) tan.set(0, 1, 0);
+      else tan.subVectors(b, a).normalize();
+      nrm.addScaledVector(tan, -nrm.dot(tan));
+      if (nrm.lengthSq() < 1e-8) nrm.set(0, 0, 1).addScaledVector(tan, -tan.z);
+      nrm.normalize();
+      bin.crossVectors(tan, nrm);
+      const r = i === 0 ? girth(0) : girth(ringU[i - 1]);
+      const c = centres[i];
+      for (let j = 0; j < TAIL_SIDES; j++) {
+        const t = (j / TAIL_SIDES) * Math.PI * 2;
+        const cs = Math.cos(t) * r, sn = Math.sin(t) * r;
+        const o = (i * TAIL_SIDES + j) * 3;
+        skinPos[o] = c.x + nrm.x * cs + bin.x * sn;
+        skinPos[o + 1] = c.y + nrm.y * cs + bin.y * sn;
+        skinPos[o + 2] = c.z + nrm.z * cs + bin.z * sn;
+      }
+    }
+    skinPos.set([0, -deep - 0.5 * girth(0), 0, end.x, end.y, end.z], rootApex * 3);
+    skinGeo.attributes.position.needsUpdate = true;
+    skinGeo.computeVertexNormals();
+    skinGeo.computeBoundingSphere();
+    skinGeo.computeBoundingBox();
+  }
+  layTail();
 
   // ---- what it does -------------------------------------------------------
   // Nothing dramatic, ever. It breathes; the tail drifts. Disturb it and it
@@ -544,6 +661,7 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
           * Math.sin(2 * Math.PI * TAIL_WAG_HZ * clock - i * 0.55)
         + 0.020 * Math.sin(clock * 0.55 - i * 0.6);
     }
+    layTail();
 
     for (let i = 0; i < ears.length; i++) {
       const ear = ears[i];
