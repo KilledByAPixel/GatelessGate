@@ -4,10 +4,11 @@ import * as THREE from '../lib/three.module.js';
 import { makeBuffalo } from '../src/kit/buffalo.js';
 import { triangles, sectionY } from './helpers/quadruped-probe.js';
 
-// What makes the shared body plan a WATER BUFFALO is all on the skull: a long
-// wedge of a head carried low and nosed down, and horns that lie out sideways
-// and back in a flat crescent. Each of these is read off the meshes in world
-// space, so they hold whichever way the head and horns are built.
+// What makes the shared body plan a WATER BUFFALO: a trunk that is most of his
+// height and falls from high withers to a low croup, a deep blunt block of a
+// head carried low and nosed down, and horns that lie out sideways and back in
+// a crescent. Each of these is read off the meshes, so they hold whichever way
+// the trunk, head and horns are built.
 
 const H = 1.4;
 
@@ -55,7 +56,30 @@ test('the buffalo carries its head below its withers, nosed down', () => {
   assert.ok(mean(front) < mean(rear), 'the muzzle hangs below the back of the skull');
 });
 
-test('the head is one long wedge, not a ball with a muzzle on it', () => {
+test('the back falls in one line from high withers to a low croup', () => {
+  const { root, body, withers } = probe();
+  const legZ = root.children.filter((c) => c.name === 'leg').map((c) => c.position.z);
+  const zf = Math.max(...legZ), zh = Math.min(...legZ);
+  const croup = sectionY(body, zh + 1e-3).max;
+  assert.ok(withers - croup > 0.14 * H,
+    `the back falls ${((withers - croup) / H).toFixed(3)} of his height from withers to croup`);
+  // ...and spends that fall evenly. A level back with a rise at the front end
+  // of it is a long box with a hump on; a step down ahead of the rump is a
+  // table with a rump on.
+  let off = 0;
+  for (let i = 1; i < 20; i++) {
+    const s = i / 20;
+    const top = sectionY(body, zh + (zf - zh) * s).max;
+    off = Math.max(off, Math.abs(top - (croup + (withers - croup) * s)));
+  }
+  assert.ok(off < 0.025 * H, `the back strays ${(off / H).toFixed(3)} of his height off the straight line`);
+  // THE TRUNK IS MOST OF HIM: the legs are what is left under the chest
+  const chest = sectionY(body, zf - 1e-3);
+  assert.ok(chest.depth > 0.69 * withers,
+    `a chest ${chest.depth.toFixed(2)} deep under withers ${withers.toFixed(2)} off the ground`);
+});
+
+test('the head is one deep blunt block, not a wedge and not a ball with a muzzle on it', () => {
   const { root, cloud, ext, body } = probe();
   const names = [];
   root.traverse((o) => names.push(o.name));
@@ -66,7 +90,22 @@ test('the head is one long wedge, not a ball with a muzzle on it', () => {
   const back = head.reduce((a, p) => (p.z < a.z ? p : a));
   const len = Math.hypot(nose.y - back.y, nose.z - back.z);
   const wide = ext(head, 'x');
-  assert.ok(len > 1.8 * wide, `the head is ${len.toFixed(2)} long on ${wide.toFixed(2)} across`);
+  assert.ok(len > 1.4 * wide, `the head is ${len.toFixed(2)} long on ${wide.toFixed(2)} across`);
+  // DEEP, in the head's own frame (the mesh is tilted; its geometry is not):
+  // a head that is long for its depth and narrows to the nose is an anteater's
+  const geo = root.getObjectByName('head').geometry;
+  geo.computeBoundingBox();
+  const hb = geo.boundingBox;
+  const deep = hb.max.y - hb.min.y, long = hb.max.z - hb.min.z;
+  assert.ok(deep > 0.6 * long, `the skull is ${deep.toFixed(2)} deep on ${long.toFixed(2)} long`);
+  // and BLUNT: the last quarter of it keeps most of that depth
+  const p = geo.getAttribute('position');
+  let lo = Infinity, hi = -Infinity;
+  for (let i = 0; i < p.count; i++) {
+    if (p.getZ(i) < hb.max.z - 0.25 * long) continue;
+    lo = Math.min(lo, p.getY(i)); hi = Math.max(hi, p.getY(i));
+  }
+  assert.ok(hi - lo > 0.7 * deep, `the muzzle keeps ${((hi - lo) / deep).toFixed(2)} of the skull's depth`);
   // BROAD-MUZZLED: it narrows toward the nose, but never to a snout
   const zs = head.map((p) => p.z);
   const z0 = Math.min(...zs), z1 = Math.max(...zs);
@@ -81,8 +120,21 @@ test('the head is one long wedge, not a ball with a muzzle on it', () => {
 });
 
 test('the horns sweep wider than they rise, out and back', () => {
-  const { horns, cloud, ext, withers } = probe();
+  const { root, horns, cloud, ext, withers } = probe();
   assert.equal(horns.length, 2, 'two horns');
+  // SIDE-ON THEY STILL SHOW. The nape climbs from the poll to withers that
+  // stand well over it, and a horn laid back inside that line leaves a
+  // hornless animal in profile. Somewhere along its sweep the horn stands
+  // clear above everything solid in the same column.
+  const solid = triangles(root, (o) => o.name === 'body' || o.name === 'head');
+  const hornTris = triangles(root, (o) => o.name === 'horn');
+  const zs = cloud('horn').map((p) => p.z);
+  let clear = -Infinity;
+  for (let z = Math.min(...zs); z < Math.max(...zs); z += 0.004 * H) {
+    const a = sectionY(hornTris, z), b = sectionY(solid, z);
+    if (Number.isFinite(a.max) && Number.isFinite(b.max)) clear = Math.max(clear, a.max - b.max);
+  }
+  assert.ok(clear > 0.05 * H, `side-on the horn stands ${(clear / H).toFixed(3)} of his height clear of the nape`);
   const all = cloud('horn');
   const span = ext(all, 'x');
   for (const horn of horns) {

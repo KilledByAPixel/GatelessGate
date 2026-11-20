@@ -10,17 +10,22 @@ import { mergeSimple } from './scatter.js';
 //      the back falls away from them to the croup — one line, part of the
 //      trunk's own profile (`torso.withers` over `torso.croup`). The shoulder
 //      mass used to be domes riding on a barrel, and two domes on a sausage is
-//      a pig with something on its back.
+//      a pig with something on its back. The fall is LARGE, and it is spent
+//      evenly along the back: a level top with a rise at the front is a long
+//      box, however deep the chest under it (see the back line, below).
 //   2. THE HEAD HANGS LOW AND NOSES DOWN. The poll is carried well under the
 //      withers on a short thick neck, so the nape FALLS from the shoulders to
 //      the skull; and the head itself slopes on down from poll to muzzle. Low
 //      but level is a drawer pulled out of the chest, and level but high is a
 //      dog. The neck needs no angle of its own — it runs from the shoulders to
-//      wherever the head is.
-//   3. THE HEAD IS ONE LONG WEDGE: broad flat forehead, deep jaw, and a muzzle
-//      that narrows but stays broad. A ball with a muzzle stuck on it is a toy
-//      whatever its size, and a ball big enough to look heavy is an oversized
-//      head — the mass a buffalo's head needs comes from its LENGTH.
+//      wherever the head is — but the forehead must fall STEEPER than the nape
+//      does: at the same slope the two are one cone from shoulder to nose, and
+//      the head is not there at all.
+//   3. THE HEAD IS A DEEP BLUNT BLOCK: broad flat forehead, deep jaw, and a
+//      muzzle that keeps most of the skull's depth and breadth and ends
+//      square. Its mass is DEPTH and BREADTH. A head that gets its size from
+//      length and narrows to the nose is an anteater's; a ball with a muzzle
+//      stuck on it is a toy whatever its size.
 //   4. THE HORNS ARE A WIDE CRESCENT LAID BACK. They leave the sides of the
 //      poll going straight out, then sweep back along the neck and turn in at
 //      the tips, always reaching further sideways than they rise. Horns that
@@ -37,7 +42,8 @@ import { mergeSimple } from './scatter.js';
 //      tells the horns from ears: with both present the big pair cannot be the
 //      ears.
 //   6. A DEEP BARREL ON SHORT THICK LEGS, with little tuck: the belly line
-//      rises aft, but this is not a greyhound.
+//      rises aft, but this is not a greyhound. The trunk is most of his
+//      height; the legs are what is left under it.
 //
 // Skull, horns and ears are all placed in the HEAD'S OWN FRAME (+z out the
 // nose, +y out of the forehead), which the plan positions and tilts. Move or
@@ -49,21 +55,30 @@ import { mergeSimple } from './scatter.js';
 
 // Where the head is carried: its centre against the body's axis, x height, and
 // how far it noses down off level (radians).
-const HEAD_UP = 0.10;
-const HEAD_FWD = 0.88;
-const HEAD_TILT = 0.65;
+const HEAD_UP = 0.04;
+const HEAD_FWD = 0.79;
+const HEAD_TILT = 1.1;
+
+// How far the back sags under the straight line from croup to withers, x
+// height, at its middle: a little, so the shoulder stands up out of the back
+// rather than the back being a ramp. Much more and the withers are a dome on
+// a barrel again.
+const BACK_DIP = 0.015;
 
 // The skull, poll to nostril: [z, half-width, top, bottom] in units of height,
 // head-local. The top row is the forehead line and is kept nearly straight —
 // that plane is what the horns continue. The bottom row is deepest at the jaw,
-// just ahead of the centre, where the neck's throat line arrives.
+// just ahead of the centre, where the neck's throat line arrives, and gives
+// up little of that on the way to the nose. The rings sit about evenly either
+// side of the origin in depth, because that is where the neck's last ring is
+// centred and it has to end inside them.
 const HEAD_RINGS = [
-  [-0.10, 0.085, 0.080, -0.060],   // poll, closing behind the horn bases
-  [-0.04, 0.118, 0.108, -0.110],   // forehead at its broadest
-  [0.07, 0.112, 0.102, -0.130],    // cheek and jaw
-  [0.19, 0.092, 0.086, -0.105],    // the face narrows
-  [0.29, 0.090, 0.076, -0.100],    // ...and holds its width: a broad muzzle
-  [0.34, 0.080, 0.064, -0.086],    // blunt end
+  [-0.13, 0.100, 0.120, -0.060],   // poll, closing behind the horn bases
+  [-0.06, 0.135, 0.155, -0.140],   // forehead at its broadest
+  [0.05, 0.132, 0.150, -0.170],    // cheek and jaw
+  [0.17, 0.112, 0.135, -0.135],    // the face narrows a little
+  [0.30, 0.104, 0.125, -0.125],    // ...and holds: a broad, deep muzzle
+  [0.37, 0.094, 0.112, -0.108],    // blunt end
 ];
 
 // One horn (the +x one), base to tip, as offsets from its base in the ANIMAL'S
@@ -73,19 +88,19 @@ const HEAD_RINGS = [
 // flattening it.
 const HORN_PATH = [
   [0.00, 0.00, 0.00, 0.062],
-  [0.15, 0.03, -0.03, 0.056],
-  [0.28, 0.08, -0.11, 0.047],
-  [0.36, 0.14, -0.21, 0.036],
-  [0.39, 0.155, -0.29, 0.023],
-  [0.35, 0.205, -0.33, 0.006],
+  [0.15, 0.035, -0.03, 0.056],
+  [0.28, 0.09, -0.10, 0.047],
+  [0.36, 0.15, -0.19, 0.036],
+  [0.39, 0.19, -0.26, 0.023],
+  [0.35, 0.235, -0.30, 0.006],
 ];
 // A horn is broader in its own sweep plane than it is thick: the flat face is
 // what shows from above and the thin edge from the side.
 const HORN_THICK = 0.68;
 // head-local roots, x height: the horn on the corner of the poll, the ear on
 // the side of the skull under and a little behind it
-const HORN_ROOT = [0.075, 0.05, -0.06];
-const EAR_ROOT = [0.09, -0.05, -0.05];
+const HORN_ROOT = [0.09, 0.09, -0.08];
+const EAR_ROOT = [0.105, -0.02, -0.07];
 const EAR_PATH = [
   [0.00, 0.00, 0.00, 0.024],
   [0.08, -0.02, -0.02, 0.040],
@@ -152,13 +167,13 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
   const h = height;
   const { group, tail, material, plan } = makeQuadruped({
     height, color, seed,
-    bodyR: 0.36, bodyLen: 0.52, bodyDrop: 0.42,
+    bodyR: 0.38, bodyLen: 0.48, bodyDrop: 0.40,
     torso: {
-      chest: 1.26, loin: 0.84, withers: 1.16, back: 0.98, croup: 0.92,
+      chest: 1.26, loin: 0.98, withers: 1.22, back: 1.0, croup: 0.76,
       shoulderW: 0.95, barrelW: 1.08, hipW: 0.92,
     },
     legBury: 0.2,
-    legH: 0.46, legR: 0.105, legTaper: 1.05, hipX: 0.17, hipZ: 0.40,
+    legH: 0.46, legR: 0.11, legTaper: 1.05, hipX: 0.17, hipZ: 0.40,
     // a shallow hock: this animal plods. The shoulder mass is kept short
     // fore-and-aft: the breast closes into the neck just ahead of the front
     // legs, and a broad one stands out past it as a ledge on the brisket.
@@ -166,15 +181,49 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // Short, deep and nearly as wide as the skull it enters. Its end ring is
     // centred on the head's own centre and must stay INSIDE the skull there,
     // so `r` is bounded by the skull's section at its origin — fatten the
-    // skull before the neck. The arch is negative: a buffalo's nape sags
-    // between the withers and the poll, and that sag is where the horns show.
-    neck: { r: 0.13, w: 0.88, root: 0.62, set: 0.3, taper: 1.6, arch: -0.08 },
+    // skull before the neck. It does not slim early (`taper`) and its throat
+    // starts low on the chest (`root`): a neck that thins toward the head
+    // makes one cone of neck and skull. The arch is negative: a buffalo's
+    // nape sags between the withers and the poll, and that sag is where the
+    // horns show — which is also why the nape leaves the topline close to the
+    // withers' own peak (`set`) rather than carrying their height forward.
+    neck: { r: 0.13, w: 0.88, root: 0.8, set: 0.12, taper: 1.0, arch: -0.1 },
     // a placeholder the loft below replaces: the plan only has to put the head
     // where it is carried and turn it down
     head: { shape: 'box', w: 0.2, hh: 0.2, d: 0.4, fwd: HEAD_FWD, up: HEAD_UP, tilt: HEAD_TILT },
-    tail: { kind: 'strand', segments: 7, length: 0.62, thickness: 0.045, color: tailColor },
+    // Rooted just inside the rump's upper rear corner and aimed nearly
+    // straight down. Perched on top of that corner with the plan's own aim,
+    // its first segment stood off the rump as a hook.
+    tail: {
+      kind: 'strand', segments: 7, length: 0.62, thickness: 0.045, color: tailColor,
+      up: 0.17, back: 0.59, root: [0, -0.9, -0.45],
+    },
   });
   group.name = 'buffalo';
+
+  // ---- the back line ----------------------------------------------------------
+  // Restated after the build as ONE line from the withers to the croup. The
+  // plan's own middle sections hold the back nearly level between two steeper
+  // runs, which on a drop this large is a hump, a table and a step down to the
+  // rump. Only what stands above the body's axis is moved, and only between
+  // the hip and the shoulder, so every join the plan solved underneath it is
+  // still the join that renders. `plan.topAt` goes on reporting the plan's
+  // line, not this one.
+  {
+    const body = group.children.find((c) => c.name === 'body');
+    const p = body.geometry.getAttribute('position');
+    const z0 = plan.zHip, z1 = plan.zShoulder;
+    const y0 = plan.topAt(z0) - plan.bodyY, y1 = plan.topAt(z1) - plan.bodyY;
+    for (let i = 0; i < p.count; i++) {
+      const y = p.getY(i), z = p.getZ(i);
+      if (y <= 0 || z <= z0 + 1e-6 || z >= z1 - 1e-6) continue;
+      const s = (z - z0) / (z1 - z0);
+      const want = y0 + (y1 - y0) * s - BACK_DIP * h * Math.sin(Math.PI * s);
+      p.setY(i, y * want / (plan.topAt(z) - plan.bodyY));
+    }
+    p.needsUpdate = true;
+    body.geometry.computeVertexNormals();
+  }
 
   // ---- ONE head: poll to nostril in a single loft ---------------------------
   // An 8-gon turned half a step, so a flat facet faces up (the forehead), down
