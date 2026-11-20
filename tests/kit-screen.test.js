@@ -339,39 +339,92 @@ test('makeVeranda eave sweeps and turns up at the tip, the hut\'s language', () 
   const eave = v.children.find((c) => c.name === 'eave');
   assert.ok(eave, 'a merged eave mesh');
 
-  // The tip (the LAST control point) should stand HIGHER than the low point
-  // just behind it (the SECOND-LAST control point) — that is the lip. Every
-  // board spans the full width (each is one un-subdivided box), so x carries
-  // no information here, unlike a tapered hip roof — only z (reach) and y
-  // matter. Reproduce the builder's own reach formula (same tradeoff as the
-  // post-spacing test above: this constant can drift, but then so does the
-  // test that watches it) to find where those two control points actually
-  // land, then sample real geometry near each rather than trusting the
-  // formula alone. A tight window fails here: each board's own thickness
-  // smears its corners a few centimetres in z once tilted, on the same order
-  // as the ~0.08 reach gap between these two points, so anything narrower
-  // than ~0.05 can miss the real corners entirely (proven empirically —
-  // 0.03 misses, 0.05 does not, on this width/depth).
-  const OVER = 0.55 + 0.075 * width;
-  const ROOT_Z = 0.12;
-  const dipZ = ROOT_Z - 0.91 * OVER;      // the low point, just behind the lip
-  const tipZ = ROOT_Z - 1.00 * OVER;      // the very tip
+  assert.equal(eave.children.length, 0, 'one mesh, nothing to draw separately');
+
+  // The roof is one cross-section pulled straight along the beam, so x carries
+  // no information — only z (reach) and y. Read the section's TOP LINE back
+  // out of the real geometry (the highest vertex at each distinct reach)
+  // rather than reproducing the builder's formula: the lip is the outermost
+  // station standing HIGHER than the one just inside it, and the sweep is the
+  // fall per unit reach shrinking as the slope runs out from the ridge.
   const pos = eave.geometry.attributes.position;
-  const maxYNear = (z0, r) => {
-    let y = -Infinity;
-    for (let i = 0; i < pos.count; i++) {
-      if (Math.abs(pos.getZ(i) - z0) < r) y = Math.max(y, pos.getY(i));
-    }
-    return y;
-  };
-  const tipY = maxYNear(tipZ, 0.05);
-  const dipY = maxYNear(dipZ, 0.05);
-  assert.ok(Number.isFinite(tipY) && Number.isFinite(dipY), 'both control points land on real geometry');
-  assert.ok(tipY > dipY, 'the very tip turns back up above the dip just behind it');
+  const tops = new Map();
+  for (let i = 0; i < pos.count; i++) {
+    const z = Math.round(pos.getZ(i) * 1000) / 1000;
+    tops.set(z, Math.max(tops.get(z) ?? -Infinity, pos.getY(i)));
+  }
+  const line = [...tops.entries()].sort((p, q) => p[0] - q[0]).map(([z, y]) => ({ z, y }));
+  assert.ok(line.length >= 6, 'a swept section, not a single tilted board');
+  const ridge = line.reduce((m, p) => (p.y > m.y ? p : m));
+  const outer = line.filter((p) => p.z <= ridge.z).reverse();   // ridge -> outer tip
+  const inner = line.filter((p) => p.z >= ridge.z);             // ridge -> inner tip
+  for (const [name, run] of [['outer', outer], ['inner', inner]]) {
+    assert.ok(run.length >= 4, 'the ' + name + ' slope has a sweep, a dip and a tip');
+    const tip = run[run.length - 1], dip = run[run.length - 2];
+    assert.ok(tip.y > dip.y, 'the ' + name + ' tip turns back up above the dip just behind it');
+    const slope = (p, q) => (p.y - q.y) / Math.abs(q.z - p.z);
+    assert.ok(slope(run[0], run[1]) > slope(run[run.length - 3], dip),
+      'the ' + name + ' slope is steepest at the ridge and flattens as it runs out');
+  }
 
   const box = new THREE.Box3().setFromObject(eave);
   assert.ok(box.max.y > height, 'the eave clears the posts');
   assert.ok(box.max.z - box.min.z > 0.6, 'the eave reaches well past the beam');
+});
+
+test('makeVeranda roof has a ridge and pitches toward the deck without lowering the opening', () => {
+  // Every case looks at its veranda from the DECK side. A lean-to that only
+  // falls away from that lens shows nothing but its own top edge — a level
+  // slab on posts, a pergola. So the roof must have a slope that faces the
+  // deck: a ridge over the post line and a fall toward +z.
+  for (const [width, depth, height] of [[4.8, 4.4, 3.3], [4.2, 3.4, 3.0], [5.4, 4.4, 3.4]]) {
+    const v = makeVeranda({ width, depth, height, deck: 0.34 });
+    const eave = v.children.find((c) => c.name === 'eave');
+    const beam = v.children.find((c) => c.name === 'beam');
+    v.updateMatrixWorld(true);
+    const pos = eave.geometry.attributes.position;
+    const pts = [];
+    const p = new THREE.Vector3();
+    for (let i = 0; i < pos.count; i++) {
+      p.fromBufferAttribute(pos, i).applyMatrix4(eave.matrixWorld);
+      pts.push({ y: p.y, z: p.z });
+    }
+    const beamBox = new THREE.Box3().setFromObject(beam);
+
+    // the ridge: the roof's highest line stands over the beam, not at an edge
+    const top = Math.max(...pts.map((q) => q.y));
+    const ridgeZ = pts.filter((q) => q.y > top - 1e-4).map((q) => q.z);
+    const minZ = Math.min(...pts.map((q) => q.z)), maxZ = Math.max(...pts.map((q) => q.z));
+    for (const z of ridgeZ) {
+      assert.ok(z > beamBox.min.z - 0.1 && z < beamBox.max.z + 0.1, `ridge over the beam (z=${z.toFixed(2)})`);
+    }
+
+    // both slopes exist and both fall: outward past the posts, inward over the deck
+    assert.ok(minZ < -0.6, 'the outer eave still overhangs the post line');
+    assert.ok(maxZ > 0.6, `a slope reaches in over the deck (max z ${maxZ.toFixed(2)})`);
+    const topAt = (z0) => Math.max(...pts.filter((q) => Math.abs(q.z - z0) < 0.06).map((q) => q.y));
+    const botAt = (z0) => Math.min(...pts.filter((q) => Math.abs(q.z - z0) < 0.06).map((q) => q.y));
+    assert.ok(top - topAt(maxZ) > 0.2, 'the inner slope visibly falls from the ridge');
+    assert.ok(top - topAt(minZ) > top - topAt(maxZ), 'and the outer one falls further: it is the weather side');
+
+    // an eave edge with thickness, not a sheet
+    assert.ok(topAt(maxZ) - botAt(maxZ) > 0.09, 'the inner eave shows an edge');
+
+    // THE CONSTRAINT THAT BOUNDS THE INNER SLOPE. Chimes and screens hang from
+    // the beam's underside, and a roof edge reaching toward a lens that looks
+    // down can slide over them on screen. Seen from the deck side at the
+    // steepest pitch any case uses (with margin), the inner edge's underside
+    // must not project below the beam's own underside.
+    const STEEPEST = (20 * Math.PI) / 180;
+    const screenY = (y, z) => y * Math.cos(STEEPEST) - z * Math.sin(STEEPEST);
+    const edgeLow = Math.min(...pts.filter((q) => q.z > 0.3).map((q) => screenY(q.y, q.z)));
+    assert.ok(edgeLow >= screenY(beamBox.min.y, beamBox.min.z) - 1e-6,
+      `the inner eave stays above the opening from the deck side (${width}x${depth}x${height})`);
+
+    // and no daylight between beam and roof from a level lens: the outer eave
+    // comes down at least to the beam's top behind the gap
+    assert.ok(botAt(minZ) < beamBox.max.y, 'the outer eave closes the gap above the beam');
+  }
 });
 
 test('makeVeranda legs carry a lifted deck to the ground, at all four corners', () => {
