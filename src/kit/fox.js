@@ -8,7 +8,7 @@ import { makeQuadruped } from './quadruped.js';
 // a small dog:
 //
 //   1. LOW and LONG. A fox is a line held just off the ground, not a box on
-//      legs. Short legs under a long barrel.
+//      legs. Short legs under a long body.
 //   2. A narrow pointed muzzle under big upright triangular ears. The ears are
 //      most of the head's outline.
 //   3. THE BRUSH. A fox is mostly tail. It is carried low and straight out
@@ -22,13 +22,13 @@ import { makeQuadruped } from './quadruped.js';
 
 // Proportions in units of `height`. Named, because the tail anchor below is
 // DERIVED from them — hand-tuned offsets drift the moment anything changes.
-const LEG_H = 0.42, BODY_DROP = 0.16;
-const BODY_Y = LEG_H + BODY_DROP;        // height of the barrel's axis
-const BODY_R = 0.19, BODY_LEN = 0.6;
+const LEG_H = 0.42, BODY_DROP = 0.17;
+const BODY_Y = LEG_H + BODY_DROP;        // height of the body's axis
+const BODY_R = 0.16, BODY_LEN = 0.66;
 
-// THE BRUSH. A 'stiff' tail is a cylinder centred on its own origin, so half of
+// THE BRUSH. A 'stiff' tail is centred on its own origin, so half of
 // its length lives inside the animal. Rather than guess an offset and discover
-// the thick end poking out of the back, anchor the buried end ON the barrel's
+// the thick end poking out of the back, anchor the buried end ON the body's
 // axis at TAIL_ROOT_Z and solve for the centre the quadruped wants. The tail
 // then emerges cleanly from the rump at any length or angle.
 const TAIL_TILT = -1.2;                 // rad: sends the tail back, and a touch down
@@ -44,38 +44,34 @@ const NECK_TOP = [0, 0.78, 0.44];
 
 const STIR = 2.4;                        // seconds for one whole response
 
-// A bare four-post barrel reads as a table (quadruped.js's SECOND RULE) — the
-// hind pair folds at the hock so the silhouette shows which end drives, the
-// same fix the buffalo and the horse left on the table for budget and got
-// away without (see their own headers). A fox has room: k2's scene sits well
-// under the draw cap (see the header of k2.js — no other test flags it), so
-// there is nothing stopping the fold here.
-const KNEE = 0.4;                        // rad, hind hock bend
+// A deep fold at the hock: a fox stands crouched over its hind legs, and the
+// angle is most of what keeps it from reading as a small dog on stilts.
+const KNEE = 0.38;                       // rad, hind hock bend
 
 export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
   const { group } = makeQuadruped({
     height, color, seed,
     bodyR: BODY_R, bodyLen: BODY_LEN, bodyDrop: BODY_DROP,
-    legBury: .15,
-    legH: LEG_H, legR: 0.07, legTaper: 1.0, hipX: 0.085, hipZ: 0.31,
-    legs: { knee: KNEE },
-    neck: { r: 0.1, len: 0.30 },
-    head: { shape: 'sphere', r: 0.125, fwd: 0.55, up: 0.26 },
+    torso: { chest: 1.1, loin: 0.68, withers: 1.0, back: 0.92, croup: 0.95, shoulderW: 0.78, barrelW: 0.9, hipW: 0.82 },
+    legBury: .13,
+    legH: LEG_H, legR: 0.055, legTaper: 1.0, hipX: 0.07, hipZ: 0.31,
+    legs: { knee: KNEE, shoulder: 2.0, thigh: 2.3 },
+    neck: { r: 0.085, w: 0.8, root: 0.5, set: 0.2, taper: 1.2, arch: 0.02 },
+    head: { shape: 'sphere', r: 0.125, fwd: 0.55, up: 0.25 },
     // long and narrow, and set a little below the head's centre — the muzzle,
     // not the skull, is what should be sticking out
-    snout: { r0: 0.028, r1: 0.078, len: 0.28, fwd: 0.73, up: 0.235 },
+    snout: { r0: 0.028, r1: 0.078, len: 0.28, fwd: 0.73, up: 0.225 },
     // twice the head's radius tall: on a fox the ears are half the head. DIRECT
     // dials (quadruped.js, EARS ARE PLACED DIRECTLY): base offsets from the
     // skull's centre — high on top with a touch of forward, inside the skull
     // radius so the join is buried, and leaning out.
     ears: { r: 0.05, h: 0.3, x: 0.051, y: 0.09, z: 0.0, tilt: 0.44 },
     tail: {
-      kind: 'stiff', r0: 0.06,
-      // the root end (buried in the barrel — see THE BRUSH above): r1 was
-      // solved directly against BODY_R once, but the tweaks round replaced
-      // the derivation with this hand-tuned value — so it WILL drift if the
-      // barrel's own radius ever changes; re-eyeball it then.
-      r1: 0.1,
+      // thin where it leaves the rump, fat through the middle, drawn to a
+      // point: `swell` is what makes it a brush and not a club. The root end
+      // is buried in the rump (see THE BRUSH above) and hand-sized against
+      // it, so re-eyeball it if the body's own radius changes.
+      kind: 'stiff', r0: 0.045, r1: 0.06, swell: 1.75,
       length: TAIL_LEN, up: TAIL_UP, back: TAIL_BACK, tilt: TAIL_TILT,
     },
   });

@@ -5,35 +5,13 @@ import { makeDog } from '../src/kit/dog.js';
 import { makeQuadruped } from '../src/kit/quadruped.js';
 import { makeTail } from '../src/kit/tail.js';
 import { makeBuffalo } from '../src/kit/buffalo.js';
+import { legsJoinBody, triangles, sectionY } from './helpers/quadruped-probe.js';
 
-// Both animals shipped with their legs hanging in the air below the belly, for
-// the same reason: the barrel is a capsule and narrows toward its sides, so a
-// leg at hip offset x meets the body HIGHER than the body's lowest point. This
-// reconstructs the capsule from the mesh itself and asserts every leg top is
-// genuinely buried inside it.
-function assertLegsConnect(root, label) {
-  const body = root.getObjectByName('body');
-  assert.ok(body, `${label} has a body`);
-  const bb = new THREE.Box3().setFromObject(body);
-  // a capsule lying along z is exactly 2R tall, and (L + 2R) deep
-  const R = (bb.max.y - bb.min.y) / 2;
-  const cy = (bb.max.y + bb.min.y) / 2;
-  const halfL = Math.max(0, (bb.max.z - bb.min.z) / 2 - R);
-
-  const legs = [];
-  root.traverse((o) => { if (o.name === 'leg') legs.push(o); });
-  assert.equal(legs.length, 4, `${label} has four legs`);
-
-  for (const leg of legs) {
-    const lb = new THREE.Box3().setFromObject(leg);
-    const top = new THREE.Vector3((lb.min.x + lb.max.x) / 2, lb.max.y, (lb.min.z + lb.max.z) / 2);
-    // nearest point on the capsule's axis, then the distance to it
-    const az = Math.max(-halfL, Math.min(halfL, top.z));
-    const d = Math.hypot(top.x, top.y - cy, top.z - az);
-    assert.ok(d < R, `${label} leg top is inside the barrel: ${d.toFixed(3)} vs radius ${R.toFixed(3)}`);
-    assert.ok(lb.min.y < 0.02, `${label} leg reaches the ground: ${lb.min.y.toFixed(3)}`);
-  }
-}
+// Both animals first shipped with their legs hanging in the air below the
+// belly, for the same reason: a body narrows toward its sides, so a leg at hip
+// offset x meets it HIGHER than its lowest point. The shared probe asserts
+// every leg's join is genuinely inside the body mesh and its foot is down.
+const assertLegsConnect = (root, label) => legsJoinBody(root, label, assert.ok);
 
 test('makeDog is a grounded quadruped with named parts', () => {
   const d = makeDog({ height: 0.5 }).group;
@@ -60,12 +38,13 @@ test('the dog hinges on its own joints, not on points in mid air', () => {
   const d = makeDog({ height: 0.6 });
   const root = d.group;
 
-  // THE TAIL PIVOT IS AT THE TAIL'S ROOT. A 'stiff' tail is a cylinder centred
-  // on its own origin, so sweeping the MESH swings both ends and the buried end
-  // walks out of the rump. Rotating the pivot must leave the root exactly where
-  // it was — this is the whole reason the pivot exists.
+  // THE TAIL PIVOT IS AT THE TAIL'S ROOT. A 'stiff' tail is centred on its own
+  // origin, so sweeping the MESH swings both ends and the buried end walks out
+  // of the rump. Rotating the pivot must leave the root exactly where it was —
+  // this is the whole reason the pivot exists.
   const tail = d.tail.getObjectByName('tail');
-  const buried = new THREE.Vector3(0, -tail.geometry.parameters.height / 2, 0);
+  tail.geometry.computeBoundingBox();
+  const buried = new THREE.Vector3(0, tail.geometry.boundingBox.min.y, 0);
   const rootAt = () => { root.updateMatrixWorld(true); return tail.localToWorld(buried.clone()); };
   const before = rootAt();
   d.tail.rotation.y = 1;
@@ -215,7 +194,18 @@ test('makeBuffalo is a grounded beast with horns and a live tail', () => {
   assert.ok(names.includes('body') && names.includes('head') && names.includes('tail'));
   assert.ok(new THREE.Box3().setFromObject(b.group).min.y > -0.03, 'on the ground');
   assertLegsConnect(b.group, 'buffalo');
-  assert.ok(names.includes('hump'), 'the shoulder hump that makes it a buffalo');
+  // HEAVY FOREQUARTERS, as one line: the withers are the high point of the
+  // back and it falls away from them to the croup — and nothing rides on it.
+  assert.ok(!names.includes('hump'), 'no mass bolted to the back');
+  b.group.updateMatrixWorld(true);
+  const body = triangles(b.group, (o) => o.name === 'body');
+  const legZ = b.group.children.filter((c) => c.name === 'leg').map((c) => c.position.z);
+  const withers = sectionY(body, Math.max(...legZ) - 1e-3).max;
+  const croup = sectionY(body, Math.min(...legZ) + 1e-3).max;
+  assert.ok(withers > croup + 0.08 * 1.4, `withers ${withers.toFixed(2)} stand over the croup ${croup.toFixed(2)}`);
+  // and the head hangs BELOW them
+  const head = new THREE.Box3().setFromObject(b.group.getObjectByName('head'));
+  assert.ok(head.max.y < withers, `the skull is carried under the withers: ${head.max.y.toFixed(2)}`);
   for (let i = 0; i < 30; i++) b.update(1 / 60, i / 60);
   const rest = b.tail.energy();
   b.tail.impulse(1); b.update(1 / 60, 1);

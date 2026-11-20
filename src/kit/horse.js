@@ -3,87 +3,64 @@ import { INK_LIT } from '../palette.js';
 import { makeQuadruped } from './quadruped.js';
 import { mergeSimple } from './scatter.js';
 
-// A horse (case 45): THE NECK IS THE WEDGE. Rebuilt against a reference photo
-// (in the gitignored local/refs, so a fresh clone will not have it) after the
-// first model read as a llama — the old neck stood nearly vertical with the head
-// perched a full extra withers-height in the air. What says HORSE in
-// silhouette, counted off that reference:
+// A horse (case 45). The first model read as a llama — a neck standing nearly
+// vertical off the front of a barrel, with the head perched a full extra
+// withers-height in the air. What says HORSE in silhouette:
 //
-//   1. THE NECK WEDGE — a tapered slab leaning forward from deep chest to poll,
-//      broad where it leaves the body, narrow at the head. The shared plan aims
-//      the neck from chest anchor to head centre, so the LEAN is not tuned by
-//      eye: head.up/fwd are DERIVED below from the anchor the plan uses, plus a
-//      stated rise and NECK_LEAN. The plan's own taper is nowhere near a wedge,
-//      so the neck's GEOMETRY is re-cut locally; transform, name and material
-//      stay the plan's.
-//   2. A SMALL HEAD, carried forward off the top of that line. ONE PIECE: the
-//      box skull and cylinder muzzle read as two parts bolted together, so the
-//      head is a single koi-style ring loft from poll to nostril, tapering
-//      continuously, tilted down the neck line by head.tilt.
-//   3. DEEP CHEST, RISING BELLY — the barrel is pitched nose-down a few degrees
-//      (body.rotation.x past PI/2), so the underline climbs toward the hind
-//      legs while the broad neck base fills the withers. Costs zero meshes; the
-//      leg-top bury swallows the tilt at both axles.
-//   4. SLIM LEGS with the hind fold at a LOW hock. The knee was left off for
-//      budget once, and is paid for by merging the two front posts into one
-//      mesh and the two ears into one (mergeSimple, transforms baked — nothing
-//      here animates them).
-//   5. TAIL OFF THE CROUP — the strand root sits high on the rump's top-rear
-//      with its join buried, rather than as a stub at rear-centre height.
+//   1. THE NECK IS A WEDGE GROWN FROM THE SHOULDERS — deep where it leaves the
+//      chest, slim at the poll, leaning well forward, crest bowed a little. It
+//      is the trunk's own profile carried on (see quadruped.js), so there is
+//      no neck part to aim: the LEAN is simply where the head is carried,
+//      HEAD_UP against HEAD_FWD, and the wedge is `neck.taper`.
+//   2. A SMALL HEAD, carried forward off the top of that line. ONE PIECE: a box
+//      skull and a cylinder muzzle read as two parts bolted together, so the
+//      head is a single ring loft from poll to nostril, tapering continuously,
+//      tilted down the neck line by head.tilt.
+//   3. DEEP CHEST, RISING BELLY, HIGH WITHERS — all `torso`: the brisket hangs
+//      well below the axis at the shoulder and the flank is tucked up ahead of
+//      the hind legs.
+//   4. LONG SLIM LEGS under real mass: a broad forearm and thigh over wire
+//      cannons, the hind fold at a LOW hock.
+//   5. TAIL OFF THE CROUP — the strand roots on the topline behind the hip (the
+//      plan's own default) and is carried swept back, not hung plumb.
 //
-// Mesh ledger: body, front-leg pair (merged), 2 thighs, 2 shins, neck, head,
-// ear pair (merged), 2 tail strand segments. k45 bakes its own horse down to a
-// single mesh with `bakeStatic`, but the horse is shared, and an unbaked one
-// still spends what it spends.
-const NECK_LEAN = Math.PI / 4;   // off vertical, chest anchor -> head centre
-const NECK_RISE = 0.28;          // the vertical run of that line, x height
-const BODY_PITCH = 0.06;         // rad nose-down: deep chest, belly climbs aft
-const KNEE = 0.28;               // rad, hind hock fold (low: THIGH_RUN in the plan)
-
-// The shared plan's proportions this file derives against (quadruped.js).
-const LEG_H = 0.62, BODY_DROP = 0.05, BODY_LEN = 0.52, BODY_R = 0.195;
+// Mesh ledger: body (with its neck), four legs, head, ear pair (merged), the
+// tail's strand segments. k45 bakes its own horse down to a single mesh with
+// `bakeStatic`, but the horse is shared, and an unbaked one still spends what
+// it spends.
+const HEAD_UP = 0.37;            // head centre above the body's axis, x height
+const HEAD_FWD = 0.70;           // ...and ahead of the animal's middle
+const KNEE = 0.28;               // rad, hind hock fold
 
 export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
-  // The plan's own neck anchor, in units of height: mid-chest, forward.
-  const bodyY = LEG_H + BODY_DROP;
-  const cy = bodyY + 0.04;
-  const cz = 0.4 * BODY_LEN;
-  // Head centre = anchor + the stated rise along the stated lean.
-  const headUp = (cy - bodyY) + NECK_RISE;
-  const headFwd = cz + NECK_RISE * Math.tan(NECK_LEAN);
-
   // A SMALL head, nosed down so the muzzle keeps falling along the neck's line.
-  const head = { shape: 'box', w: 0.08, hh: 0.105, d: 0.21, fwd: headFwd, up: headUp, tilt: 0.58 };
+  const head = { shape: 'box', w: 0.08, hh: 0.105, d: 0.21, fwd: HEAD_FWD, up: HEAD_UP, tilt: 0.58 };
 
-  const { group, tail } = makeQuadruped({
+  const { group, tail, plan } = makeQuadruped({
     height, color, seed,
-    bodyR: BODY_R, bodyLen: BODY_LEN, bodyDrop: BODY_DROP,
-    // the slimmest legs in the kit; legTaper > 1 narrows toward the FOOT
-    // (a slender cannon bone, not a post — quadruped.js's own note)
-    legBury: .18,
-    legH: LEG_H, legR: 0.06, legTaper: 1.2, hipX: 0.09, hipZ: 0.31,
-    legs: { knee: KNEE },
-    // r/len still size the plan's mesh; the wedge taper is re-cut below
-    neck: { r: 0.10, len: 0.50 },
+    bodyR: 0.195, bodyLen: 0.52, bodyDrop: 0.05,
+    torso: {
+      chest: 1.18, loin: 0.76, withers: 1.1, back: 0.9, croup: 1.0,
+      shoulderW: 0.78, barrelW: 0.95, hipW: 0.88,
+    },
+    // the slimmest lower legs in the kit under the broadest forearm for its
+    // size: legTaper is the front leg's top-heaviness
+    legBury: 0.18,
+    legH: 0.62, legR: 0.055, legTaper: 1.2, hipX: 0.09, hipZ: 0.31,
+    legs: { knee: KNEE, shoulder: 2.0, thigh: 2.6 },
+    // narrow across, deep fore-and-aft, and slim well before the poll
+    neck: { r: 0.068, w: 0.62, root: 0.5, set: 0.15, taper: 1.7, arch: 0.05 },
     head,
     // no snout: the muzzle is the front half of the single head loft below.
     // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): rooted on the
     // poll — just inside the tilted crown of the head loft — and laid well
-    // out (1.135 off vertical), the pinned-back read the reference has.
+    // out, the pinned-back read.
     ears: { r: 0.025, h: 0.085, x: 0.02, y: 0.06, z: -0.04, tilt: .5 },
-    // off the CROUP: root on the rump's top-rear, just under the pitched
-    // barrel's surface, so the strand falls from the top line — not a stub
-    // stuck at rear-centre height (the old read)
-    tail: { kind: 'strand', segments: 3, length: 0.4, thickness: 0.04, up: 0.135, back: 0.41 },
+    // full through the middle (`swell`), and leaving the dock aimed back
+    // before it falls: a hank of hair, not a hinged stick
+    tail: { kind: 'strand', segments: 5, length: 0.5, thickness: 0.04, swell: 1.1, root: [0, -0.8, -0.6] },
   });
   group.name = 'horse';
-
-  // ---- deep chest, rising belly ----------------------------------------
-  // Pitch the barrel nose-down about its own centre. The capsule lies along z
-  // (rotation.x = PI/2), so a little MORE x-rotation dips the +z (chest) end
-  // and lifts the rump: the underline climbs toward the hind legs.
-  const body = group.children.find((c) => c.name === 'body');
-  body.rotation.x = Math.PI / 2 + BODY_PITCH;
 
   // ---- the tail FLOWS off the croup --------------------------------------
   // A verlet strand can only hang plumb, and a plumb line from the croup falls
@@ -91,7 +68,7 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // matters (k45 sees the horse rear-three-quarter). The strand settles in its
   // group's LOCAL frame, so sweeping the whole group back turns "hanging
   // string" into "tail carried off the buttock", and the idle sway rides along.
-  if (tail) tail.group.rotation.x = 0.6;
+  if (tail) tail.group.rotation.x = 0.3;
 
   // ---- ONE head: poll to nostril in a single loft -------------------------
   // The box skull + cylinder muzzle read as two parts bolted together; this
@@ -145,24 +122,12 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     headMesh.geometry = geo;
   }
 
-  // ---- the neck wedge ---------------------------------------------------
-  // The plan cuts every neck at a fixed 0.85x taper — a pipe. Re-cut this one
-  // as a wedge: broad at the chest, narrow at the poll. Same length, same
-  // transform (the plan already aimed it chest -> head), same name/material.
-  const neck = group.children.find((c) => c.name === 'neck');
-  neck.geometry.dispose();
-  neck.geometry = new THREE.CylinderGeometry(0.06 * height, 0.15 * height, 0.40 * height, 7);
-  // a horse's neck is deep fore-aft but narrow across — thin it laterally
-  neck.scale.x = 0.8;
-
-  // ---- pay for the hocks: two pair-merges, zero silhouette change --------
-  // Nothing on a horse animates its ears or front legs (the fox's flick and
-  // the walk cycles belong to other species), so each static pair can bake
-  // its transforms and merge to a single mesh: -2 meshes, which is exactly
-  // what legs.knee added. Names survive ('leg', 'ear') — species and cases
-  // reach in by name.
-  const bakePair = (name, keep) => {
-    const pair = group.children.filter((c) => c.name === name && keep(c));
+  // ---- one mesh for the ears ---------------------------------------------
+  // Nothing on a horse animates its ears (the fox's flick belongs to another
+  // species), so the static pair bakes its transforms and merges to a single
+  // mesh. The name survives ('ear') — species and cases reach in by name.
+  const bakePair = (name) => {
+    const pair = group.children.filter((c) => c.name === name);
     if (pair.length !== 2) return;
     const geos = pair.map((m) => {
       m.updateMatrix();
@@ -173,12 +138,12 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     for (const m of pair) { group.remove(m); m.geometry.dispose(); }
     group.add(merged);
   };
-  bakePair('leg', (c) => c.position.z > 0);   // the FRONT posts (hinds are thighs)
-  bakePair('ear', () => true);
+  bakePair('ear');
 
   return {
     group,
     tail,
+    plan,
     update(dt, simTime) { tail && tail.update(dt, simTime); },
   };
 }

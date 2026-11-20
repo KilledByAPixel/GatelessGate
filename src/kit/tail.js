@@ -22,6 +22,11 @@ export function makeTail({
   // default) pins only the top node and is byte-identical to the tail every
   // existing caller already has.
   root = null,
+  // HOW FULL THE STRAND IS, past its plain taper: 0 (the default) is the thin
+  // whip every existing caller has; above it the strand fattens toward its
+  // middle and still closes to the same tip, which is a tail of hair rather
+  // than a tail of rope.
+  swell = 0,
 } = {}) {
   const spacing = length / (segments - 1);
   // pin the top node — and the second one too when the caller aims the root
@@ -66,9 +71,11 @@ export function makeTail({
   // flush it beaded the tail with visible balls at the joints; plain overlap
   // covers the same gap while adding nothing to the silhouette.
   const OVERLAP = 1.35;
+  const radiusAt = (k) => thickness * (1 - k / segments)
+    * (1 + swell * Math.sin(Math.PI * 0.9 * k / (segments - 1)));
   for (let i = 0; i < segments - 1; i++) {
-    const r0 = thickness * (1 - i / segments);
-    const r1 = thickness * (1 - (i + 1) / segments);
+    const r0 = radiusAt(i);
+    const r1 = radiusAt(i + 1);
     const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, spacing * OVERLAP, 6), mat);
     m.name = 'seg';
     segs.push(m);

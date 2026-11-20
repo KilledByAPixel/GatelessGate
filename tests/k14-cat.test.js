@@ -4,6 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import { makeCat } from '../src/kit/cat.js';
 import { makeDog } from '../src/kit/dog.js';
 import k14 from '../src/koans/k14.js';
+import { legsJoinBody } from './helpers/quadruped-probe.js';
 
 // PRECISE boxes throughout. Box3.setFromObject() normally transforms the
 // GEOMETRY's box, which for the seated cat's tilted capsule reports a rump
@@ -14,47 +15,19 @@ const box = (o) => {
   return new THREE.Box3().setFromObject(o, true);
 };
 
-// The barrel as a capsule in WORLD space: centre, axis, radius, half-length.
-// Reconstructed from the mesh rather than the preset's numbers so it stays
-// honest if the proportions are retuned, and from the AXIS rather than a
-// bounding box so it survives the seated pose's tilt.
-function barrel(root) {
+// Which way the spine runs, in world space. The body mesh is authored with its
+// own +z along the spine (quadruped.js), whichever way the pose has turned it.
+const spine = (root) => {
   root.updateMatrixWorld(true);
-  const body = root.getObjectByName('body');
-  body.geometry.computeBoundingBox();
-  const lb = body.geometry.boundingBox;
-  const r = (lb.max.x - lb.min.x) / 2;
-  const scale = body.getWorldScale(new THREE.Vector3()).x;
-  return {
-    centre: body.getWorldPosition(new THREE.Vector3()),
-    // the capsule is authored along its own +y, whichever way it has been turned
-    dir: new THREE.Vector3(0, 1, 0)
-      .applyQuaternion(body.getWorldQuaternion(new THREE.Quaternion())).normalize(),
-    r: r * scale,
-    halfL: ((lb.max.y - lb.min.y) / 2 - r) * scale,
-  };
-}
+  return new THREE.Vector3(0, 0, 1)
+    .applyQuaternion(root.getObjectByName('body').getWorldQuaternion(new THREE.Quaternion())).normalize();
+};
 
-// The bug that hit BOTH existing animals: the barrel is a capsule, so it
-// narrows toward its sides and a leg sized to the body's lowest point hangs in
-// mid-air at the hip. Tilting the barrel for the seated pose makes the same
-// mistake available again at a different depth, so this measures every leg top
-// against the real axis in both poses.
-function assertLegsConnect(root, label, height) {
-  const { centre, dir, r, halfL } = barrel(root);
-  const legs = [];
-  root.traverse((o) => { if (o.name === 'leg') legs.push(o); });
-  assert.equal(legs.length, 4, `${label} has four legs`);
-  for (const leg of legs) {
-    const lb = box(leg);
-    const top = new THREE.Vector3((lb.min.x + lb.max.x) / 2, lb.max.y, (lb.min.z + lb.max.z) / 2);
-    const rel = top.clone().sub(centre);
-    const t = Math.max(-halfL, Math.min(halfL, rel.dot(dir)));
-    const d = top.distanceTo(centre.clone().addScaledVector(dir, t));
-    assert.ok(d < r, `${label} leg top is inside the barrel: ${d.toFixed(4)} vs radius ${r.toFixed(4)}`);
-    assert.ok(lb.min.y < 0.02 * height, `${label} leg reaches the ground: ${lb.min.y.toFixed(4)}`);
-  }
-}
+// The bug that hit BOTH earlier animals: a body narrows toward its sides, so a
+// leg sized to its lowest point hangs in mid-air at the hip. Pitching the body
+// for the seated pose makes the same mistake available again at a different
+// depth, so every leg's join is checked against the real mesh in both poses.
+const assertLegsConnect = (root, label, height) => legsJoinBody(root, label, assert.ok, 0.02 * height);
 
 test('makeCat is a grounded quadruped with named parts, in either pose', () => {
   for (const pose of ['sit', 'stand']) {
@@ -80,8 +53,8 @@ test('the seated cat sits up, tucks its rear, and keeps all four paws down', () 
   const stand = makeCat({ height: 0.32, pose: 'stand' });
 
   // the spine is pitched nose-up rather than lying along the ground
-  assert.ok(barrel(sit.group).dir.y > 0.5, 'the barrel is tilted up');
-  assert.ok(Math.abs(barrel(stand.group).dir.y) < 1e-6, 'and level when standing');
+  assert.ok(spine(sit.group).y > 0.5, 'the body is tilted up');
+  assert.ok(Math.abs(spine(stand.group).y) < 1e-6, 'and level when standing');
 
   // which carries the head up and back over the shoulders
   const head = (c) => box(c.group.getObjectByName('head'));

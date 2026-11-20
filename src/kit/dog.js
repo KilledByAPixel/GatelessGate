@@ -11,24 +11,18 @@ import { clamp01, smoothstep } from '../util/math.js';
 // guessed; see THE LEG RULE in quadruped.js. Faces +z.
 //
 // He is HALF THE CAST of case 1 — a small red seal beside two ink monks, not a
-// showpiece — so this stays humble: the same bare barrel as before, plus just
-// enough mass to stop it reading as a table. `haunch` alone carries that (not
-// `shoulder`, not `legs.knee`): it sits over the hind legs (`back` matches
-// `hipZ` — it seats where the hind pair actually roots, so the dog reads as one
-// animal, not a barrel with sticks) and stands only barely proud of the barrel
-// line (`up + r*scaleY` clears `bodyR` by ~0.04h) — enough to read as weight at
-// k1 scale, not enough to look fed. A `chest` brisket was tried here and CUT:
-// hung ahead of the foreleg it never merged with the body line, and at case
-// distance it read as "something weird hanging below his chest, like a round
-// ball" — the plain barrel beats a bolted-on lump. THE TAIL ROOTS INTO THE BODY.
-// A 'stiff' tail is a cylinder centred on its own origin, and the old up/back
-// numbers left its root end hovering near the barrel's axis — which put the
-// visible root at the top of the rump, perched ON the outline instead of growing
-// out of it, and together with the proud haunch it broke the topline as
-// "something weird on the top of its butt". Same cure as the fox's brush: pin
-// the ROOT to a stated point just under the rump's surface and solve the centre
-// the quadruped wants, so the cocked tail emerges from inside the body at any
-// length or angle.
+// showpiece — so this stays humble: the shared plan at plain, lean proportions,
+// a deep chest under a lifted neck, and nothing added. Masses hung on the body
+// were tried here twice and cut twice: a brisket ball read as something hanging
+// below his chest, and a haunch dome broke the topline over the hips. The chest
+// and the haunch are the trunk's own profile and the thigh's own top now.
+//
+// THE TAIL ROOTS INTO THE BODY. A 'stiff' tail is centred on its own origin,
+// and stating that centre by hand leaves the root perched ON the outline
+// instead of growing out of it. Same cure as the fox's brush: pin the ROOT to a
+// stated point just under the rump's surface and solve the centre the quadruped
+// wants, so the cocked tail emerges from inside the body at any length or
+// angle.
 //
 // IT MOVES, and it returns a handle rather than a bare group for that reason —
 // the same shape makeFox and makeCat return, and the same division of labour:
@@ -39,7 +33,7 @@ import { clamp01, smoothstep } from '../util/math.js';
 // so two dogs on the same seed pose identically forever.
 const TAIL_TILT = -1.0;                  // rad: up and back — the cocked tail is the read
 const TAIL_LEN = 0.28;
-const TAIL_ROOT = [0.13, -0.40];         // [above the barrel axis, z] — 0.07 under the surface
+const TAIL_ROOT = [0.07, -0.37];         // [above the body's axis, z] — just under the croup
 const TAIL_UP = TAIL_ROOT[0] + (TAIL_LEN / 2) * Math.cos(TAIL_TILT);
 const TAIL_BACK = -(TAIL_ROOT[1] + (TAIL_LEN / 2) * Math.sin(TAIL_TILT));
 
@@ -80,33 +74,24 @@ const IDLE_PITCH = 0.045;
 const IDLE_TAIL = 0.10;
 
 export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
-  // Taller legs and a slimmer barrel: the first pass was short-legged and
-  // fat-bodied, which read as a pig rather than a dog. The neck lifts the head
-  // off the shoulders, which is most of what separates the two silhouettes.
+  // Long legs under a lean trunk: short-legged and fat-bodied reads as a pig.
+  // The neck lifts the head off the shoulders, which is most of what separates
+  // the two silhouettes.
   const { group, material } = makeQuadruped({
     height, color, seed,
-    bodyR: 0.25, bodyLen: 0.50, bodyDrop: 0.18,
-    // the legs read as sticks when thinner; the limb profile in the shared plan
-    // (broad thigh, slim cannon, small foot) does the shaping now, and legTaper
-    // hands it a full-width thigh to start from
-    legBury: .2,
-    legH: 0.5, legR: 0.09, legTaper: 1.0, hipX: 0.1, hipZ: 0.30,
-    neck: { r: 0.15, len: 0.26 },
-    head: { shape: 'sphere', r: 0.165, fwd: 0.55, up: 0.30 },
-    snout: { r0: 0.06, r1: 0.1, len: 0.2, fwd: 0.7, up: 0.24 },
+    bodyR: 0.2, bodyLen: 0.52, bodyDrop: 0.2,
+    torso: { chest: 1.15, loin: 0.68, withers: 1.05, back: 0.92, croup: 0.95 },
+    legBury: 0.16,
+    legH: 0.5, legR: 0.07, legTaper: 1.0, hipX: 0.085, hipZ: 0.30,
+    neck: { r: 0.1, w: 0.85, root: 0.5, set: 0.2, taper: 1.2, arch: 0.02 },
+    head: { shape: 'sphere', r: 0.14, fwd: 0.56, up: 0.31, scaleZ: 1.1 },
+    snout: { r0: 0.05, r1: 0.085, len: 0.2, fwd: 0.71, up: 0.255 },
     // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): r width, h length,
     // x/y/z = base offset from the head's CENTRE (keep the offsets inside the
     // head's own radius, above, to bury the join), tilt = outward lean. These
     // numbers reproduce the old aim-ray placement exactly (45° out on the
     // crown); they are a starting point to tune, not a keeper.
-    ears: { r: 0.07, h: 0.16, x: 0.07, y: 0.08, z: -.03, tilt: 1.6 },
-    // rump: `back` sits just short of `hipZ` so the mass gathers where the hind
-    // legs actually drive into the barrel. LOW AND LONG: an earlier round stood
-    // it proud of the barrel line and the bump over the hips was the first
-    // thing anyone saw. `up + r*scaleY` now clears `bodyR` by a hair — the
-    // haunch thickens the topline without breaking it — and the longer scaleZ
-    // lets the extra weight run INTO the back instead of up off it.
-    haunch: { r: 0.145, scaleY: 0.75, scaleZ: 1.30, up: 0.10, back: 0.28 },
+    ears: { r: 0.06, h: 0.14, x: 0.06, y: 0.07, z: -.03, tilt: 1.6 },
     tail: {
       kind: 'stiff', r0: 0.024, r1: 0.052, length: TAIL_LEN,
       up: TAIL_UP, back: TAIL_BACK, tilt: TAIL_TILT,

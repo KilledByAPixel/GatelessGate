@@ -4,9 +4,9 @@ import { makeQuadruped } from './quadruped.js';
 import { hash1 } from '../util/noise.js';
 
 // Nansen's cat (case 14). The third preset on the shared quadruped, after the
-// dog and the buffalo: the same barrel-and-four-legs plan run SMALL and ROUND —
-// a compact body on short legs, a little skull with a blunt muzzle, big
-// triangular ears set wide, and a long jointed tail.
+// dog and the buffalo: the same plan run SMALL and ROUND — a compact body on
+// short legs, a little skull with a blunt muzzle, big triangular ears set
+// wide, and a long jointed tail.
 //
 // Two things here are not the dog with different numbers.
 //
@@ -19,15 +19,18 @@ import { hash1 } from '../util/noise.js';
 // into the haunch. The skull rides in its own group so it can be counter-rotated
 // back to level — otherwise the cat sits there staring at the sky.
 //
-// Every one of those lengths is COMPUTED from the barrel, not hand-tuned, for
-// the same reason THE LEG RULE in quadruped.js exists. Tilting the barrel makes
-// the old rule wrong in a new way: a vertical leg standing at lateral offset x
-// under an axis pitched by t meets the surface at depth
+// Every one of those lengths is COMPUTED from the body, not hand-tuned, for
+// the same reason THE LEG RULE in quadruped.js exists. Pitching the body makes
+// the standing rule wrong in a new way: a vertical leg standing at lateral
+// offset x under an axis pitched by t meets the surface at depth
 //
 //     d = sqrt((kR)^2 - x^2) / cos(t)
 //
 // below the axis, which is DEEPER than the upright case. Sizing a seated leg
-// with the standing formula floats it clear of the belly all over again.
+// with the standing join floats it clear of the belly all over again. The
+// formula treats the trunk as round with radius R, which the lofted trunk is
+// only roughly; BURY (the k above) is what keeps the join inside it anyway,
+// and tests/k14-cat.test.js checks every seated join against the real mesh.
 //
 // THE TAIL. The buffalo's verlet strand is wrong here twice over: at a cat's
 // scale its idle force is four times as strong relative to the segment spacing
@@ -58,7 +61,7 @@ const SIT_HEAD_FWD = 0.26;  // in heights, horizontally
 const SIT_CLEAR = 0.05;     // rump rides this far off the ground, in heights
 const SIT_REAR_Z = -0.10;   // tucked forward of the standing hip
 const SIT_REAR_X = 0.155;   // and splayed a little wider
-const BURY = 0.70;          // leg top sits this deep inside the barrel, as a fraction of R
+const BURY = 0.70;          // leg top sits this deep inside the body, as a fraction of R
 
 const TAIL_SEGS = 7;
 const TAIL_LEN = 0.95;
@@ -79,10 +82,10 @@ const TAIL_CURL = 0.30;     // extra bend per joint at the peak of a stir
 const TAIL_SWEEP = 0.22;    // and the sideways sweep that goes with it
 const EAR_SWIVEL = 0.85;
 const EAR_SPREAD = 0.22;
-// THE BODY DOES NOT MOVE. A stretch was tried here — the barrel lengthening
-// 7.5%, lifting 0.055 off the haunch and the torso rolling into it — on the
+// THE BODY DOES NOT MOVE. A stretch was tried here — the trunk lengthening,
+// lifting off the haunch and the torso rolling into it — on the
 // theory that a silhouette changing shape reads further than details moving
-// inside one. It does, and it also comes apart: the barrel is a separate mesh
+// inside one. It does, and it also comes apart: the body is a separate mesh
 // sitting on four legs that do not follow it, so lifting it opens a gap and the
 // cat visibly detaches from its own feet. The body stays where it is.
 //
@@ -97,10 +100,21 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
   const h = height;
   const seated = pose === 'sit';
 
-  const { group, material } = makeQuadruped({
+  const { group, material, plan } = makeQuadruped({
     height, color, seed,
     bodyR: P.bodyR, bodyLen: P.bodyLen, bodyDrop: P.bodyDrop,
+    // TWO TRUNKS, because sitting changes the animal: standing, a cat is deep
+    // in the chest and tucked at the flank like any other; seated, its weight
+    // settles into the hips and the outline is a pear — full and wide at the
+    // base, narrowing to the shoulders.
+    torso: seated
+      ? { chest: 1.0, loin: 0.95, withers: 0.95, back: 1.0, croup: 1.0, shoulderW: 0.76, barrelW: 1.0, hipW: 1.02 }
+      : { chest: 1.05, loin: 0.78, withers: 1.0, back: 0.95, croup: 0.95 },
     legH: P.legH, legR: P.legR, legTaper: P.legTaper, hipX: P.hipX, hipZ: P.hipZ,
+    // Seated, the hind leg folds the other way round: the hock comes FORWARD
+    // under the haunch and the paw lands ahead of it, so a negative knee, and
+    // a thigh big enough to be the haunch the cat is sitting on.
+    legs: seated ? { knee: -0.5, shoulder: 2.3, thigh: 2.8, proud: 0.08 } : { shoulder: 2.3 },
     head: { shape: 'sphere', r: 0.175, fwd: 0.44, up: 0.24 },
     // blunt and short: a cat's muzzle barely leaves the skull
     snout: { r0: 0.058, r1: 0.100, len: 0.1, fwd: 0.60, up: 0.205 },
@@ -111,14 +125,7 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     // but a pair no wider than the head reads as two bumps at distance,
     // which is the failure the buffalo's horns shipped with.
     ears: { r: 0.075, h: 0.2, x: 0.073, y: 0.111, z: 0.009, tilt: 0.53 },
-    // NO haunch, NO shoulder. The polish pass hung both masses on this barrel
-    // to sell a crouch, and seated — the only pose the book ever shows — the
-    // pitched-torso transform below swung them up into weird lumps sticking out
-    // of its back. A cat's barrel is already the roundest in the kit; it reads
-    // as one animal without bolted-on masses, and the plain silhouette beats a
-    // broken one.
-    //
-    // No tail here either; this one is jointed and built below.
+    // No tail here; this one is jointed and built below.
   });
   group.name = 'cat';
 
@@ -126,7 +133,6 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
   const hipX = P.hipX * h;
   const hipZ = P.hipZ * h;
   const bodyY = (P.legH + P.bodyDrop) * h;
-  const standLegTop = bodyY - Math.sqrt(Math.max(0, R * R - hipX * hipX)) + 0.06 * h;
 
   // ---- split the animal into legs and a torso that can pitch ---------------
   const frontLegs = [], rearLegs = [];
@@ -167,14 +173,14 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
   // ---- sit ----------------------------------------------------------------
   const tilt = seated ? SIT_TILT : 0;
   const cosT = Math.cos(tilt);
-  // local z of the barrel's axis at its rear cap, measured from the pivot
+  // local z of the body's axis near its rear end, measured from the pivot
   const rearAxisZ = -P.bodyLen * h / 2 + hipZ;
   // sink the torso until the rump rides just clear of the ground
   const drop = seated
     ? bodyY + rearAxisZ * Math.sin(tilt) - R - SIT_CLEAR * h
     : 0;
 
-  // how far below the (tilted) barrel axis a vertical leg top must sit
+  // how far below the (tilted) body axis a vertical leg top must sit
   const legDrop = (x) => Math.sqrt(Math.max(0, (BURY * R) ** 2 - x * x)) / cosT;
 
   if (seated) {
@@ -185,11 +191,11 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     skull.position.z += SIT_HEAD_FWD * h * cosT;
     skull.position.y -= SIT_HEAD_FWD * h * Math.sin(tilt);
 
-    const seatLeg = (leg, zWorld, xWorld) => {
+    const seatLeg = (leg, zWorld, xWorld, standTop) => {
       const s = (zWorld + hipZ) / cosT;       // distance along the axis from the pivot
       const axisY = (bodyY - drop) + s * Math.sin(tilt);
       const top = axisY - legDrop(xWorld);
-      leg.scale.y = top / standLegTop;
+      leg.scale.y = top / standTop;
       // the limb loft hangs from its top (quadruped.js), so the mesh origin
       // sits AT the join, not at the leg's middle
       leg.position.set(Math.sign(leg.position.x) * xWorld, top, zWorld);
@@ -197,8 +203,8 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     // the shoulder has swung up and back over the haunch; the front legs stand
     // straight under wherever it ended up
     const frontZ = -hipZ + 2 * hipZ * cosT;
-    for (const leg of frontLegs) seatLeg(leg, frontZ, hipX);
-    for (const leg of rearLegs) seatLeg(leg, SIT_REAR_Z * h, SIT_REAR_X * h);
+    for (const leg of frontLegs) seatLeg(leg, frontZ, hipX, plan.legTop.front);
+    for (const leg of rearLegs) seatLeg(leg, SIT_REAR_Z * h, SIT_REAR_X * h, plan.legTop.hind);
   }
 
   // ---- the tail -----------------------------------------------------------
@@ -279,11 +285,12 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
       else { const s = Math.sin(Math.PI * (stirT / STIR_DUR)); env = s * s; }
     }
 
-    // breathing, in the barrel only — scaling the whole cat would pump its legs
-    // through the ground
+    // breathing, in the trunk only — scaling the whole cat would pump its legs
+    // through the ground. Across and in depth, never along the spine: the
+    // body mesh's own y is up and its z is forward (quadruped.js).
     const br = 1 + 0.014 * Math.sin(simTime * 0.75);
     body.scale.x = br;
-    body.scale.z = br;
+    body.scale.y = br;
 
     for (let i = 0; i < joints.length; i++) {
       const j = joints[i];

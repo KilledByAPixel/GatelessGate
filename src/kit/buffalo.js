@@ -1,67 +1,48 @@
 import { WASH } from '../palette.js';
 import { makeQuadruped } from './quadruped.js';
 
-// A water buffalo (case 37): the dog's body plan, run heavy. Bulky barrel, the
-// shoulder hump that makes a buffalo a buffalo, a blunt box head with swept
-// horns, and a verlet strand for the tail — the one part of him that will not
-// pass through the enclosure.
+// A water buffalo (case 37): the shared body plan, run heavy. What carries the
+// silhouette, in the order it reads at fog distance:
 //
-// Returns a handle so the koan can tug the tail.
+//   1. HEAVY FOREQUARTERS. The withers are the highest point of the animal and
+//      the back falls away from them to the croup — one line, part of the
+//      trunk's own profile (`torso.withers` over `torso.croup`). The shoulder
+//      mass used to be domes riding on a barrel, and two domes on a sausage is
+//      a pig with something on its back.
+//   2. THE HEAD HANGS LOW. A buffalo carries its skull below the withers on a
+//      short thick neck that runs nearly level out of the chest; that is most
+//      of what separates it from a hippo. The head's `up` is negative for that
+//      reason, and the neck needs no angle of its own — it runs from the
+//      shoulders to wherever the head is.
+//   3. A DEEP BARREL ON SHORT THICK LEGS, with little tuck: the belly line
+//      rises aft, but this is not a greyhound.
+//   4. THE HORNS sweep out and back off the SKULL. Their base is stated against
+//      the head's own position, so if the head moves, move them with it — a
+//      base left behind reads as horns sprouting from the neck.
+//
+// The tail is a verlet strand, the one part of him that will not pass through
+// the enclosure. Returns a handle so the koan can tug it.
 export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color, seed = 37 } = {}) {
-  // Four things carry the silhouette: the shoulder hump must stand CLEAR of the
-  // back line (not sit flush in it); haunch/shoulder/chest put weight ON the
-  // barrel so it reads as a heavy body instead of a bare capsule, with the
-  // chest hanging the belly line low; the head must hang LOW — a buffalo
-  // carries its skull below the withers, which is most of what separates it
-  // from a hippo; and the horns must sweep long and back, clearing the skull
-  // line, to read as a crescent at fog distance rather than two bumps. The back
-  // then slopes hump-down-to-rump on its own, because the hump is set forward
-  // of the haunch.
   const { group, tail } = makeQuadruped({
     height, color, seed,
-    // few segments so flatShading facets it — a smooth capsule reads as a lozenge
-    bodyR: 0.40, bodyLen: 0.86, bodyDrop: 0.36,
-    // legTaper is up: the shared limb profile wants a thigh to start from, and
-    // at the stock default the heaviest animal in the book had the thinnest leg
-    // tops
-    legBury: .2,
-    legH: 0.46, legR: 0.125, legTaper: 1.05, hipX: 0.15, hipZ: 0.34,
-    hump: { r: 0.35, scaleY: 0.86, scaleZ: 1.00, up: 0.24, fwd: 0.18 },
-    // up + r*scaleY must clear bodyR (0.40) for these to stand PROUD of the
-    // barrel line rather than sit flush inside it — the same trap the hump
-    // avoided by construction. Haunch runs a touch taller than shoulder so the
-    // back still slopes hump-down-to-rump instead of reading level.
-    haunch: { r: 0.30, scaleY: 0.82, scaleZ: 1.05, up: 0.22, back: 0.32 },
-    // close to the hump's own fwd so the two masses MERGE into one wide crown
-    // rather than reading as two separate peaks (a camel, not a buffalo).
-    shoulder: { r: 0.30, scaleY: 0.82, up: 0.20, fwd: 0.22 },
-    // a compact wedge rather than a long slab: the head sat so far forward it
-    // read as a snout on a crocodile. Lower and more nose-down than the first
-    // pass so the muzzle drops below the withers — the grazing line.
-    head: { shape: 'sphere', r: 0.3, fwd: 0.6, up: -0.05  },
-    snout: { r0: 0.1, r1: 0.15, len: 0.2, fwd: 0.8, up: -.2, tilt:.5},
-    // THE BASE SITS ON THE SKULL, NOT THE HUMP. horns.up/fwd once were NOT
-    // free parameters — they were the poll of the old tilted head BOX, solved
-    // by rotating its top-back corner through head.tilt (that box, and the
-    // cos/sin arithmetic that went with it, left when the head became the
-    // sphere above). Against the sphere they are re-eyeballed in the tweaks
-    // round: up -0.02 / fwd 0.7 keeps the base on the sphere's upper-back
-    // shoulder relative to head { fwd: 0.6, up: -0.05 }, so the pair still
-    // leaves the skull, not the hump. The lesson from the box era stands: a
-    // first pass set `up` from taste without re-checking it against head.up
-    // and the base drifted half a height clear of the skull, reading as
-    // sprouting from the hump — if the head moves, move the horns with it.
-    //
-    // THE HORN IS SMALL, THICK AND CURVED — "round, curved, like a devil's horn
-    // almost, small curved pointy horn" — the long straight cones it replaced
-    // read as spikes coming up from its ears. `curve` (quadruped.js) lofts the
-    // cone along an arc bending toward local -z, so with a wide `sweep` the
-    // pair leaves the SIDES of the skull, stands up-and-out, and hooks back
-    // over the neck, following the reference photo in the gitignored local/refs.
-    // Halved in length and nearly doubled at the base: a devil's horn, not a
-    // fencepost.
-    horns: { r: 0.1, len: 0.5, x: 0.1, up: -0.02, fwd: 0.7, sweep: 0.75, back: 0.25, curve: -0.50 },
-    tail: { kind: 'strand', segments: 7, length: 0.74, thickness: 0.05, up: 0.0, back: 0.8, color: tailColor },
+    bodyR: 0.36, bodyLen: 0.52, bodyDrop: 0.42,
+    torso: {
+      chest: 1.15, loin: 0.82, withers: 1.16, back: 0.98, croup: 0.92,
+      shoulderW: 0.95, barrelW: 1.08, hipW: 0.92,
+    },
+    legBury: 0.2,
+    legH: 0.46, legR: 0.105, legTaper: 1.05, hipX: 0.17, hipZ: 0.40,
+    // a shallow hock: this animal plods
+    legs: { knee: 0.2, shoulder: 1.8, thigh: 2.1 },
+    neck: { r: 0.17, w: 0.85, root: 0.62, set: 0.3, taper: 1.0, arch: 0.02 },
+    // small against the body: a head as big as the barrel's own section was
+    // most of why this read as a toy
+    head: { shape: 'sphere', r: 0.2, fwd: 0.86, up: -0.08, scaleX: 0.9, scaleZ: 1.15 },
+    snout: { r0: 0.085, r1: 0.13, len: 0.24, fwd: 1.03, up: -0.2, tilt: 0.5 },
+    // SMALL, THICK AND CURVED, leaving the sides of the skull's upper back:
+    // long straight cones read as spikes coming up from its ears.
+    horns: { r: 0.08, len: 0.5, x: 0.09, up: 0.03, fwd: 0.8, sweep: 0.75, back: 0.25, curve: -0.50 },
+    tail: { kind: 'strand', segments: 7, length: 0.62, thickness: 0.045, color: tailColor },
   });
   group.name = 'buffalo';
 

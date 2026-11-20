@@ -4,64 +4,89 @@ import * as THREE from '../lib/three.module.js';
 import { makeQuadruped } from '../src/kit/quadruped.js';
 import { makeDog } from '../src/kit/dog.js';
 import { makeFox } from '../src/kit/fox.js';
+import { makeBuffalo } from '../src/kit/buffalo.js';
+import { makeHorse } from '../src/kit/horse.js';
+import { makeCat } from '../src/kit/cat.js';
+import { triangles, sectionY, legClouds, trunk, legsJoinBody } from './helpers/quadruped-probe.js';
 
 const names = (g) => g.children.map((c) => c.name).sort();
 
-test('legacy child names survive (species re-parent by name)', () => {
+test('child names survive (species re-parent by name)', () => {
   const { group } = makeQuadruped({
-    neck: { r: 0.07, len: 0.3 }, snout: { r0: 0.03, r1: 0.07, len: 0.2, fwd: 0.7, up: 0.2 },
+    neck: { r: 0.07 }, snout: { r0: 0.03, r1: 0.07, len: 0.2, fwd: 0.7, up: 0.2 },
     ears: { r: 0.09, h: 0.2, x: 0.07, y: 0.1, z: 0.02 },
     horns: { r: 0.05, len: 0.3, x: 0.1, up: 0.3, fwd: 0.4, sweep: 0.8 },
-    hump: { r: 0.15, up: 0.15, fwd: 0.15 },
     tail: { kind: 'stiff', r0: 0.05, r1: 0.07, length: 0.5, up: 0.1, back: 0.35 },
   });
-  for (const n of ['body', 'head', 'neck', 'snout', 'hump', 'tail'])
+  for (const n of ['body', 'head', 'snout', 'tail'])
     assert.ok(names(group).includes(n), `missing child '${n}'`);
   assert.strictEqual(group.children.filter((c) => c.name === 'leg').length, 4);
   assert.strictEqual(group.children.filter((c) => c.name === 'ear').length, 2);
   assert.strictEqual(group.children.filter((c) => c.name === 'horn').length, 2);
+  // the neck is the body's own profile carried on, and a hock is a bend in
+  // the leg's own loft: neither is a part any more
+  assert.ok(!names(group).includes('neck'), 'no separate neck mesh');
+  assert.strictEqual(group.getObjectByName('shin'), undefined, 'no separate shin mesh');
 });
 
-test('THE LEG RULE holds with knees: every leg part reaches the ground', () => {
-  const { group } = makeQuadruped({ legs: { knee: 0.35 } });
-  const legParts = group.children.filter((c) => c.name === 'leg' || c.name === 'shin');
-  assert.ok(legParts.length >= 4);
-  const box = new THREE.Box3();
-  for (const p of legParts) {
-    box.setFromObject(p);
-    assert.ok(box.min.y < 0.02, `leg part floats: min.y=${box.min.y}`);
+test('THE LEG RULE: every leg joins inside the body and reaches the ground, folded or not', () => {
+  for (const knee of [0, 0.35, -0.4]) {
+    const { group } = makeQuadruped({ legs: { knee } });
+    legsJoinBody(group, `knee ${knee}`, assert.ok);
+    const box = new THREE.Box3();
+    for (const leg of group.children.filter((c) => c.name === 'leg')) {
+      box.setFromObject(leg, true);
+      assert.ok(Math.abs(box.min.y) < 1e-6, `the foot stands ON the ground: ${box.min.y}`);
+    }
   }
 });
 
-test('haunch and shoulder seat ON the barrel, not inside or above it', () => {
-  const { group } = makeQuadruped({
-    haunch: { r: 0.16, back: 0.28 }, shoulder: { r: 0.14, fwd: 0.28 },
-  });
-  const body = group.children.find((c) => c.name === 'body');
-  for (const n of ['haunch', 'shoulder']) {
-    const m = group.children.find((c) => c.name === n);
-    assert.ok(m, `missing '${n}'`);
-    assert.ok(Math.abs(m.position.y - body.position.y) < 0.25, `${n} detached from barrel line`);
+// The masses the capsule plan bolted onto its barrel are retired, and a stale
+// call site must fail LOUDLY: silently ignoring `hump` would build a plain
+// animal where a species asked for a heavy one.
+test('the retired body masses and neck keys are a hard error', () => {
+  for (const key of ['hump', 'haunch', 'shoulder', 'chest']) {
+    assert.throws(() => makeQuadruped({ [key]: { r: 0.15, up: 0.1, fwd: 0.1, drop: 0.1 } }),
+      /is retired/, key);
   }
+  assert.throws(() => makeQuadruped({ neck: { r: 0.07, len: 0.3 } }), /neck takes/);
 });
 
-test('a knee splits the hind legs into leg + shin, and only the hind legs', () => {
-  const plain = makeQuadruped({});
-  assert.strictEqual(plain.group.getObjectByName('shin'), undefined,
-    'no knee asked for, so no shin');
-
+// THE HOCK. The hind leg folds — stifle forward, hock back — and the front
+// leg does not; that asymmetry is what tells a viewer which end drives, even
+// in silhouette at fog distance. Read off the leg's own outline: how far its
+// lower half stands behind the join it hangs from.
+test('legs.knee folds the hind legs back at the hock, and only the hind legs', () => {
+  const setBack = (group) => {
+    group.updateMatrixWorld(true);
+    return group.children.filter((c) => c.name === 'leg').map((leg) => {
+      const p = leg.geometry.getAttribute('position');
+      let lo = 0; for (let i = 0; i < p.count; i++) lo = Math.min(lo, p.getY(i));
+      let z = 0, n = 0;
+      for (let i = 0; i < p.count; i++) if (p.getY(i) < lo * 0.6) { z += p.getZ(i); n++; }
+      return { hind: leg.position.z < 0, back: -z / n, run: -lo };
+    });
+  };
+  const folded = setBack(makeQuadruped({ legs: { knee: 0.35 } }).group);
+  assert.strictEqual(folded.length, 4);
+  for (const l of folded) {
+    if (l.hind) assert.ok(l.back > 0.12 * l.run, `the hock stands behind the hip: ${l.back.toFixed(3)}`);
+    else assert.ok(Math.abs(l.back) < 0.04 * l.run, `a front leg stands under its shoulder: ${l.back.toFixed(3)}`);
+  }
+  // and the fold is the option's doing: knee 0 stands the hind leg plumb
+  for (const l of setBack(makeQuadruped({ legs: { knee: 0 } }).group)) {
+    assert.ok(Math.abs(l.back) < 0.04 * l.run, `knee 0 is a plumb leg: ${l.back.toFixed(3)}`);
+  }
+  // a hock sits LOW: at mid-height the thigh's own mass swallows the bend
   const { group } = makeQuadruped({ legs: { knee: 0.35 } });
-  const legs = group.children.filter((c) => c.name === 'leg');
-  assert.strictEqual(legs.length, 4, 'still four legs at the top level');
-  const shins = [];
-  group.traverse((o) => { if (o.name === 'shin') shins.push(o); });
-  assert.strictEqual(shins.length, 2, 'a knee is a HIND-leg joint: two shins, not four');
-  // the two jointed legs are the rear pair (the animal faces +z)
-  const jointed = legs.filter((l) => l.children.some((c) => c.name === 'shin'));
-  assert.strictEqual(jointed.length, 2);
-  for (const l of jointed) assert.ok(l.position.z < 0, 'the knee went on a FRONT leg');
-  // and the joint is a real bend, not a straight leg cut in two
-  for (const l of jointed) assert.ok(Math.abs(l.rotation.x) > 0.01, 'thigh is not tilted');
+  const hind = group.children.find((c) => c.name === 'leg' && c.position.z < 0);
+  const p = hind.geometry.getAttribute('position');
+  let lo = 0, rear = 0, hockY = 0;
+  for (let i = 0; i < p.count; i++) {
+    lo = Math.min(lo, p.getY(i));
+    if (p.getZ(i) < rear) { rear = p.getZ(i); hockY = p.getY(i); }
+  }
+  assert.ok(hockY < 0.55 * lo, `the rearmost point of the leg is low on it: ${(hockY / lo).toFixed(2)} of the way down`);
 });
 
 // EARS ARE PLACED DIRECTLY — { x, y, z } are the base's offsets from the head's
@@ -126,27 +151,6 @@ test('the ear base flares wider than the ear itself', () => {
   assert.ok(waistR < baseR * 0.85, `waist pulls back in: ${waistR.toFixed(3)} vs base ${baseR.toFixed(3)}`);
 });
 
-// THE KNEE BALL: two lofts meeting at an angle open a wedge of daylight on the
-// outside of the bend ("there's like a gap where the two cylinders are
-// touching"). A ball of the joint's own radius is MERGED into the thigh
-// geometry at the hinge point — no extra mesh, no draw call, and the joint
-// stays covered at any bend.
-test('the knee ball caps the hock joint inside the thigh mesh', () => {
-  const legR = 0.055;                                // the plan's default
-  const { group } = makeQuadruped({ legs: { knee: 0.35 } });
-  const thigh = group.children.find((c) => c.name === 'leg'
-    && c.children.some((k) => k.name === 'shin'));
-  assert.ok(thigh, 'a jointed thigh exists');
-  const thighLen = -thigh.children.find((k) => k.name === 'shin').position.y;
-  const rKnee = legR * 0.85;                         // HOCK_PINCH in the plan
-  // the plain hung() loft ends exactly at -thighLen; only the merged ball
-  // reaches below the hinge point
-  const p = thigh.geometry.attributes.position;
-  let minY = Infinity;
-  for (let i = 0; i < p.count; i++) minY = Math.min(minY, p.getY(i));
-  assert.ok(minY < -thighLen - rKnee * 0.5,
-    `the ball caps below the hinge: ${minY} vs joint at ${-thighLen}`);
-});
 
 // THE SKULL SQUISH: head.scaleX/scaleY/scaleZ (default 1) reshape the head per
 // axis — "not just a sphere... an x y z scale, defaulting to one, to tweak the
@@ -185,43 +189,32 @@ test('legBury sinks the leg tops deeper while the feet stay on the ground', () =
     `feet still land on y = 0: ${a.minY}, ${b.minY}`);
 });
 
-// A LIMB, NOT A DOWEL: the plain leg spends its radii like a leg — broad
-// thigh at the body, slim cannon low down, and a small flare back out at the
-// foot. Measured off the geometry so a regression to a straight cylinder
-// (identical ring radii) trips it.
-test('legs carry the limb profile: thigh > cannon < foot', () => {
+// A LIMB, NOT A DOWEL: a leg spends its width unevenly — a mass where it
+// leaves the body, a slim cannon low down, and a small flare back out at the
+// foot. Measured fore-and-aft off the geometry, ring by ring, so a regression
+// to a straight post (identical ring radii) trips it.
+test('legs carry the limb profile: mass > cannon < foot', () => {
   const legR = 0.06;
   const { group } = makeQuadruped({ legR, legTaper: 1.0 });
-  const leg = group.children.find((c) => c.name === 'leg');
-  const p = leg.geometry.getAttribute('position');
-  // hung from the top: y runs 0 (hip) down to -legTop (foot)
-  let top = 0; for (let i = 0; i < p.count; i++) top = Math.min(top, p.getY(i));
-  const radiusNear = (yFrac) => {
-    let best = Infinity, r = 0;
-    for (let i = 0; i < p.count; i++) {
-      const d = Math.abs(p.getY(i) - top * yFrac);
-      const rr = Math.hypot(p.getX(i), p.getZ(i));
-      if (d < best - 1e-9 || (d < best + 1e-9 && rr > r)) { best = d; r = rr; }
-    }
-    return r;
-  };
-  const hip = radiusNear(0), cannon = radiusNear(0.82), foot = radiusNear(1);
-  assert.ok(hip > legR * 1.15, `thigh broader than legR: ${hip.toFixed(3)}`);
-  assert.ok(cannon < legR * 0.75, `cannon slims: ${cannon.toFixed(3)}`);
-  assert.ok(foot > cannon * 1.1, `the foot flares back out: ${foot.toFixed(3)} vs ${cannon.toFixed(3)}`);
-  // and the hind shin repeats it below the hock
-  const kneed = makeQuadruped({ legR, legs: { knee: 0.35 } });
-  const shin = kneed.group.getObjectByName('shin');
-  const sp = shin.geometry.getAttribute('position');
-  let sTop = 0; for (let i = 0; i < sp.count; i++) sTop = Math.min(sTop, sp.getY(i));
-  let mid = 0, end = 0;
-  for (let i = 0; i < sp.count; i++) {
-    const y = sp.getY(i), rr = Math.hypot(sp.getX(i), sp.getZ(i));
-    if (Math.abs(y - sTop * 0.5) < -sTop * 0.1) mid = Math.max(mid, rr);
-    if (Math.abs(y - sTop) < -sTop * 0.05) end = Math.max(end, rr);
+  for (const leg of group.children.filter((c) => c.name === 'leg')) {
+    const p = leg.geometry.getAttribute('position');
+    let lo = 0; for (let i = 0; i < p.count; i++) lo = Math.min(lo, p.getY(i));
+    // half the fore-aft extent of the vertices within a thin band at a height
+    const halfZ = (frac) => {
+      let a = Infinity, b = -Infinity;
+      for (let i = 0; i < p.count; i++) {
+        if (Math.abs(p.getY(i) - lo * frac) > -lo * 0.035) continue;
+        a = Math.min(a, p.getZ(i)); b = Math.max(b, p.getZ(i));
+      }
+      return (b - a) / 2;
+    };
+    const mass = halfZ(0), foot = halfZ(1);
+    let cannon = Infinity;
+    for (let f = 0.7; f < 0.92; f += 0.02) { const r = halfZ(f); if (r > 0) cannon = Math.min(cannon, r); }
+    assert.ok(mass > legR * 1.6, `a mass where the leg leaves the body: ${mass.toFixed(3)}`);
+    assert.ok(cannon < legR * 0.75, `the cannon slims: ${cannon.toFixed(3)}`);
+    assert.ok(foot > cannon * 1.15, `the foot flares back out: ${foot.toFixed(3)} vs ${cannon.toFixed(3)}`);
   }
-  assert.ok(mid < legR * 0.75, `shin cannon slims: ${mid.toFixed(3)}`);
-  assert.ok(end > mid, 'shin foot flares back out');
 });
 
 // A HORN IS AN ARC: with `curve` set, the tip ends displaced BACK (-z) and
@@ -263,13 +256,14 @@ test('the ear hinge channel (rotation.x) is left free for the species to animate
   }
 });
 
-test('the dog dropped the chest ball; the haunch stays', () => {
-  // The brisket read as a round ball hanging below the chest — it never merged
-  // with the body line, so the dog stopped asking for it. The option itself
-  // stays on the shared plan.
-  const dog = makeDog({}).group;
-  assert.strictEqual(dog.getObjectByName('chest'), undefined, 'no brisket');
-  assert.ok(dog.getObjectByName('haunch'), 'the rump mass is still there');
+test('the dog is body, legs, skull and tail: nothing bolted on', () => {
+  // A brisket ball and a haunch dome were each tried on the dog and each read
+  // as a growth. Its chest and haunch are the trunk's own profile and the
+  // thigh's own top, so there is no mesh in it that is not one of these.
+  const known = new Set(['body', 'leg', 'head', 'snout', 'ear', 'tail']);
+  makeDog({}).group.traverse((o) => {
+    if (o.isMesh) assert.ok(known.has(o.name), `unexpected mesh '${o.name}'`);
+  });
 });
 
 // NOTE — this is the brief's determinism test with ONE change, and the change is
@@ -291,5 +285,150 @@ test('deterministic: same options, identical transforms', () => {
   for (let i = 0; i < A.length; i++) {
     assert.strictEqual(A[i].name, B[i].name);
     assert.deepStrictEqual(A[i].matrix.toArray(), B[i].matrix.toArray());
+  }
+});
+
+// ---- the body plan: anatomy in the outline ---------------------------------
+// Every animal used to be a capsule barrel on four near-identical posts. These
+// five read the SILHOUETTE off the shipped species rather than off the plan's
+// options, so they hold whatever construction produces it.
+//
+// Two probes. `sectionY` is exact: the y-extent of a set of meshes where the
+// plane z = const cuts them, taken from the triangle edges that cross it — a
+// side-profile column with no sampling density to tune. `legClouds` hands back
+// each leg's vertices, split by side so a species that merges a pair into one
+// mesh still yields four.
+const STANDING = [
+  ['buffalo', () => makeBuffalo({}).group],
+  ['horse', () => makeHorse({}).group],
+  ['dog', () => makeDog({}).group],
+  ['fox', () => makeFox({}).group],
+  ['cat', () => makeCat({ pose: 'stand' }).group],
+];
+
+// mean depth and lowest point of the body across one third of the trunk
+function third(body, z0, z1) {
+  let depth = 0, low = Infinity;
+  const N = 9;
+  for (let i = 0; i < N; i++) {
+    const s = sectionY(body, z0 + (z1 - z0) * ((i + 0.5) / N));
+    depth += s.depth / N;
+    low = Math.min(low, s.min);
+  }
+  return { depth, low };
+}
+
+function thirds(root) {
+  const body = triangles(root, (o) => o.name === 'body');
+  const { zHind, zFront, span } = trunk(root);
+  return {
+    rear: third(body, zHind, zHind + span / 3),
+    front: third(body, zFront - span / 3, zFront),
+  };
+}
+
+test('the chest is deeper than the loin', () => {
+  for (const [label, build] of STANDING) {
+    const { rear, front } = thirds(build());
+    assert.ok(front.depth > rear.depth * 1.12,
+      `${label}: chest ${front.depth.toFixed(3)} vs loin ${rear.depth.toFixed(3)}`);
+  }
+});
+
+test('the belly line rises toward the hind legs', () => {
+  for (const [label, build] of STANDING) {
+    const { rear, front } = thirds(build());
+    const rise = (rear.low - front.low) / front.depth;
+    assert.ok(rise > 0.1,
+      `${label}: the underline climbs ${(rise * 100).toFixed(1)}% of the chest's depth`);
+  }
+});
+
+test('a leg is thicker at the top than at the foot', () => {
+  // radius as the area-equivalent of the band's footprint, so a limb that is
+  // broad fore-and-aft but thin across is credited for what it actually spends
+  const radius = (pts) => {
+    const ext = (k) => (Math.max(...pts.map((p) => p[k])) - Math.min(...pts.map((p) => p[k]))) / 2;
+    return Math.sqrt(ext('x') * ext('z'));
+  };
+  for (const [label, build] of STANDING) {
+    const legs = legClouds(build());
+    assert.strictEqual(legs.length, 4, `${label} has four legs`);
+    for (const pts of legs) {
+      const hi = Math.max(...pts.map((p) => p.y)), lo = Math.min(...pts.map((p) => p.y));
+      // the upper third: deep enough to reach past the cap a leg closes with
+      // inside the body and take in the mass itself
+      const top = radius(pts.filter((p) => p.y > hi - 0.35 * (hi - lo)));
+      const foot = radius(pts.filter((p) => p.y < lo + 0.1 * (hi - lo)));
+      assert.ok(top > foot * 1.8,
+        `${label}: leg top ${top.toFixed(3)} vs foot ${foot.toFixed(3)}`);
+    }
+  }
+});
+
+test('the neck leaves the shoulders, not the front of a barrel', () => {
+  // A neck stuck on the front of a barrel shows as a STEP in the side profile:
+  // the chest's own rounding closes to a point, and the outline then jumps to
+  // wherever the neck happens to be. Walk the upper and lower outline of body +
+  // neck from the shoulder to the head in fine columns; a grown neck has a
+  // steep throat but never a discontinuity, so the bound is a slope no real
+  // outline reaches rather than a tuned height.
+  const STEEPEST = 8;                                 // rise over run
+  for (const [label, build] of STANDING) {
+    if (label === 'cat') continue;                    // carries its skull on the chest: no neck to judge
+    const root = build();
+    const tris = triangles(root, (o) => o.name === 'body' || o.name === 'neck');
+    const { zFront } = trunk(root);
+    const headZ = root.getObjectByName('head').getWorldPosition(new THREE.Vector3()).z;
+    const N = 400, dz = (headZ - zFront) / N;
+    assert.ok(dz > 0, `${label}: the head is carried ahead of the shoulder`);
+    let prev = null;
+    for (let i = 0; i < N - 2; i++) {
+      const s = sectionY(tris, zFront + (i + 0.5) * dz);
+      assert.ok(Number.isFinite(s.depth) && s.depth > 0,
+        `${label}: nothing joins the body to the head at column ${i}`);
+      if (prev) {
+        for (const k of ['min', 'max']) {
+          assert.ok(Math.abs(s[k] - prev[k]) <= STEEPEST * dz,
+            `${label}: the ${k === 'min' ? 'underline' : 'topline'} steps `
+            + `${Math.abs(s[k] - prev[k]).toFixed(4)} in one column of ${dz.toFixed(4)} (column ${i})`);
+        }
+      }
+      prev = s;
+    }
+  }
+});
+
+test('no mass stands proud of the back line', () => {
+  // Two halves. Nothing but the body itself may form the back between hip and
+  // shoulder — a dome riding on the barrel is a second animal. And the body's
+  // own back may sway, but only broadly: the taut line over it never stands
+  // more than a small fraction of the body's depth clear of the surface.
+  const notBack = new Set(['body', 'neck', 'head', 'snout', 'ear', 'horn', 'tail', 'seg', 'tailseg']);
+  for (const [label, build] of STANDING) {
+    const root = build();
+    const body = triangles(root, (o) => o.name === 'body');
+    const rest = triangles(root, (o) => !notBack.has(o.name));
+    const { zHind, zFront, span } = trunk(root);
+    const N = 40, top = [];
+    let depth = 0;
+    for (let i = 0; i <= N; i++) {
+      const z = zHind + span * (i / N);
+      const b = sectionY(body, z), r = sectionY(rest, z);
+      depth = Math.max(depth, b.depth);
+      assert.ok(!(r.max > b.max + 0.02 * b.depth),
+        `${label}: something stands ${(r.max - b.max).toFixed(3)} proud of the back at z = ${z.toFixed(2)}`);
+      top.push([z, b.max]);
+    }
+    // upper hull by brute force: the highest chord over each sample
+    let gap = 0;
+    for (let i = 1; i < N; i++) {
+      for (let a = 0; a < i; a++) for (let c = i + 1; c <= N; c++) {
+        const t = (top[i][0] - top[a][0]) / (top[c][0] - top[a][0]);
+        gap = Math.max(gap, top[a][1] + (top[c][1] - top[a][1]) * t - top[i][1]);
+      }
+    }
+    assert.ok(gap < 0.08 * depth,
+      `${label}: the back line dips ${(gap / depth * 100).toFixed(1)}% of the body's depth under its own chord`);
   }
 });

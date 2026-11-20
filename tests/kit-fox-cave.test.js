@@ -4,6 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import { makeFox } from '../src/kit/fox.js';
 import { makeCave } from '../src/kit/cave.js';
 import k2 from '../src/koans/k2.js';
+import { legsJoinBody } from './helpers/quadruped-probe.js';
 
 const box = (o) => { o.updateWorldMatrix(true, true); return new THREE.Box3().setFromObject(o); };
 const part = (root, name) => { const o = root.getObjectByName(name); assert.ok(o, `has a ${name}`); return o; };
@@ -13,30 +14,14 @@ const all = (root, name) => {
   return out;
 };
 
-// The same capsule reconstruction kit-fauna.test.js runs on the dog and the
-// buffalo: a leg at hip offset x meets the barrel HIGHER than the barrel's
-// lowest point, so a leg sized to the belly hangs in the air.
-function assertLegsConnect(root, label) {
-  const bb = box(part(root, 'body'));
-  const R = (bb.max.y - bb.min.y) / 2;
-  const cy = (bb.max.y + bb.min.y) / 2;
-  const halfL = Math.max(0, (bb.max.z - bb.min.z) / 2 - R);
-  const legs = all(root, 'leg');
-  assert.equal(legs.length, 4, `${label} has four legs`);
-  for (const leg of legs) {
-    const lb = box(leg);
-    const top = new THREE.Vector3((lb.min.x + lb.max.x) / 2, lb.max.y, (lb.min.z + lb.max.z) / 2);
-    const az = Math.max(-halfL, Math.min(halfL, top.z));
-    const d = Math.hypot(top.x, top.y - cy, top.z - az);
-    assert.ok(d < R, `${label} leg top is inside the barrel: ${d.toFixed(3)} vs ${R.toFixed(3)}`);
-    assert.ok(lb.min.y < 0.02, `${label} leg reaches the ground: ${lb.min.y.toFixed(3)}`);
-  }
-}
+// THE LEG RULE, by the same probe kit-fauna.test.js runs on the dog and the
+// buffalo: every leg's join inside the body, every foot on the ground.
+const assertLegsConnect = (root, label) => legsJoinBody(root, label, assert.ok);
 
 test('makeFox is a grounded quadruped with a muzzle and big ears', () => {
   const f = makeFox({ height: 0.45 });
   assert.equal(f.group.name, 'fox');
-  for (const n of ['body', 'head', 'snout', 'tail', 'neck']) part(f.group, n);
+  for (const n of ['body', 'head', 'snout', 'tail']) part(f.group, n);
   assert.equal(all(f.group, 'ear').length, 2, 'two ears');
   assertLegsConnect(f.group, 'fox');
 
