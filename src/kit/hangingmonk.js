@@ -2,12 +2,11 @@ import * as THREE from '../../lib/three.module.js';
 import { washMaterial } from '../render/material.js';
 import { INK_LIT } from '../palette.js';
 import { hash1 } from '../util/noise.js';
-import { sphereHead, neckBetween, sleeve } from './figure.js';
+import { sphereHead, sleeve } from './figure.js';
 import { createPendulum, integratePendulum, kickPendulum } from './pendulum.js';
 
 // The man in Kyogen's tree (case 5), holding on by his teeth. Built from
-// figure.js's shared vocabulary — the same sphere head, the same solved
-// neck, the same cuffed sleeve every other person in the book wears — but
+// figure.js's shared vocabulary — the same sphere head, the same cuffed sleeve every other person in the book wears — but
 // the robe stays his own profile (hanging robes hang; see below) and he is
 // hung rather than stood: the group's ORIGIN is the teeth-grip itself, the
 // point where his mouth meets the branch, and every part of him hangs below
@@ -39,6 +38,7 @@ export function makeHangingMonk({ height = 1.6, color = INK_LIT, seed = 5 } = {}
     [0.126, -0.330],   // chest
     [0.130, -0.275],   // shoulders
     [0.055, -0.215],   // collar tucked under the head
+    [0.000, -0.200],   // closed over: with no neck piece the open ring showed paper from above
   ].map(([r, y]) => new THREE.Vector2(r * h, y * h));
   // The whole lower body — robe, sleeves, feet — is lifted toward the head so
   // the collar sits just under the skull. The head can't move (its front is the
@@ -72,21 +72,9 @@ export function makeHangingMonk({ height = 1.6, color = INK_LIT, seed = 5 } = {}
   head.rotateX(-1.0)
   g.add(head);
 
-  // A NECK, bridging the collar to the head. Featureless solids left a visible
-  // gap between the hanging robe and the sphere, so the head read as floating a
-  // little clear of the body. A short tapered column filling that span — thin
-  // under the skull, swelling into the collar — reads as fully connected
-  // without moving either piece. It leans back a touch to follow the head,
-  // which hangs behind the pivot.
-  const collar = new THREE.Vector3(0, -0.232 * h + LIFT, -0.060 * h);   // the lifted collar
-  const nape = new THREE.Vector3(0, -0.140 * h, -0.072 * h);            // just into the skull
-  // neckBetween is this file's own solve, promoted to figure.js — same two
-  // radii and pad this file always used, just passed explicitly: its
-  // defaults are absolute units, not fractions of height, so the
-  // height-scaled numbers below would silently mean something else left
-  // implicit.
-  const neck = neckBetween(collar, nape, { r0: 0.056 * h, r1: 0.070 * h, pad: 0.03 * h, mat });
-  g.add(neck);
+  // NO NECK PIECE. The lifted collar already closes inside the skull, so the
+  // head sits on the robe unaided; a column bridging the two stood wider than
+  // the collar it rose from and read as a peg driven through his throat.
 
   // SLEEVES HANGING AT HIS SIDES — his hands grasp no branch. They are
   // figure.js's sleeve(), so the cloth is the cloth everyone wears, and they
