@@ -197,7 +197,7 @@ test('the tail is a rope that ends in a tuft', () => {
   const nodes = b.tail.nodes();
   const n = nodes.length;
   const P = skin.geometry.getAttribute('position');
-  const sides = (P.count - 2) / n;
+  const sides = 6;   // the skin's own; its vertex count also carries the buried root ring
   const v = new THREE.Vector3(), c = new THREE.Vector3();
   const r = nodes.map((node, ring) => {
     c.set(...node);
@@ -256,12 +256,12 @@ test('the legs are limbs under the trunk, not posts', () => {
   }
 });
 
-// THE TAIL GOES INTO THE RUMP. Its first ring — the one closed on a point —
-// is wholly under the trunk's surface, with room to spare, and at rest the
-// next ring is wholly outside: the surface is crossed by the side of the tail
-// at full girth, never by its end. The first segment is rigid, so the root
-// stays buried through a swish; the second ring is only asked at rest, since
-// it leans after the rope and a corner of it may dip under.
+// THE TAIL GOES INTO THE RUMP. Its skin starts on a ring laid down past the
+// strand's own rings, and that ring — with the point the skin closes on — is
+// wholly under the trunk's surface with room to spare, at the root's full
+// girth, while the stub's free end is outside: the surface is crossed by the
+// side of the tail, never by its end. The buried run and the stub are rigid,
+// so this holds through a swish as it does at rest; both are asked.
 test('the tail enters the rump at full girth, its end buried', () => {
   const b = makeBuffalo({ height: H });
   b.group.updateMatrixWorld(true);
@@ -269,24 +269,43 @@ test('the tail enters the rump at full girth, its end buried', () => {
   const skin = b.group.getObjectByName('strand');
   const P = skin.geometry.getAttribute('position');
   const n = b.tail.nodes().length;
-  const sides = (P.count - 2) / n;
+  const SIDES = 6;
+  assert.equal(P.count, (n + 1) * SIDES + 2, 'the skin carries one ring more than the strand has nodes');
   const at = (i) => new THREE.Vector3().fromBufferAttribute(P, i).applyMatrix4(skin.matrixWorld);
-  const check = (when, resting) => {
-    const apex = at(n * sides);
+  const apexAt = n * SIDES, buried = n * SIDES + 2;
+  const girth = (r0) => Math.max(...Array.from({ length: SIDES }, (_, j) => at(r0 + j).distanceTo(at(r0 + (j + 3) % SIDES))));
+  const check = (when) => {
+    const apex = at(apexAt);
     assert.ok(inside(trunk, apex), `${when}: the tail's closed end is inside the rump`);
-    for (let j = 0; j < sides; j++) {
+    for (let j = 0; j < SIDES; j++) {
       // a quarter again its own size: buried, not merely covered
-      const rim = at(j).sub(apex).multiplyScalar(1.25).add(apex);
-      assert.ok(inside(trunk, rim), `${when}: root ring corner ${j} is under the surface`);
-      if (resting) assert.ok(!inside(trunk, at(sides + j)), `${when}: the second ring (corner ${j}) is clear of it`);
+      const rim = at(buried + j).sub(apex).multiplyScalar(1.25).add(apex);
+      assert.ok(inside(trunk, rim), `${when}: buried ring corner ${j} is under the surface`);
     }
+    assert.ok(girth(buried) > 0.95 * girth(0), `${when}: and it is as thick as the root it runs out to`);
+    const free = new THREE.Vector3(...b.tail.nodes()[1]).applyMatrix4(b.tail.group.matrixWorld);
+    assert.ok(!inside(trunk, free), `${when}: the stub's free end is outside`);
   };
-  check('at rest', true);
+  check('at rest');
   b.tail.impulse(1.2);
   for (let i = 0; i < 90; i++) {
     b.update(1 / 60, i / 60);
     if (i % 6 === 0) check(`${i} steps into a swish`);
   }
+});
+
+// THE BEND IS SOFT. The rope hangs plumb from the end of a rigid stub, and the
+// corner between them is one mitred ring: turned through much more than a
+// third of a right angle, its inside pinches to a dark sliver that reads as a
+// broken join. So the stub itself falls steeply — but still leans back, or
+// the rope would hang inside the buttock.
+test('the tail leaves the rump steeply and falls in a soft bend', () => {
+  const b = makeBuffalo({ height: H });
+  const [root, free] = b.tail.nodes();
+  const dy = free[1] - root[1], dz = free[2] - root[2];
+  const offPlumb = Math.atan2(Math.hypot(dz, free[0] - root[0]), -dy) * 180 / Math.PI;
+  assert.ok(offPlumb < 38, `the stub stands ${offPlumb.toFixed(0)} degrees off plumb`);
+  assert.ok(dz < 0 && offPlumb > 15, 'and still leans back, away from the rump');
 });
 
 // ...and it comes to rest hanging plumb behind the rump, not still swinging

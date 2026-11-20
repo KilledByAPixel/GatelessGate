@@ -178,36 +178,32 @@ function closed(pos, idx) {
 }
 
 // THE TAIL'S ROOT. The strand's first segment is a rigid stub (both its nodes
-// are pinned) and its first ring is closed on a point at the root node. Rooted
-// just under the surface and aimed steeply down a rump that falls away nearly
-// as steeply, that ring was cut by the surface: its upper half stood out of
-// the rump with the closing fan showing, and under it there was daylight
-// between the stub and the buttock. Two things have to hold together, and
-// they pull against each other:
+// are pinned), and the rope hangs plumb from the stub's free end. Three things
+// have to hold together:
 //
-//   - THE ROOT RING IS WHOLLY UNDER THE SURFACE. The shallower the angle
-//     between the stub and the rump, the deeper the root has to go before the
-//     far side of its ring is covered — so the stub leaves going mostly BACK
-//     and only partly down, and it is a long one (the strand's length over
-//     its segments: a longer strand is a longer stub).
-//   - WHAT IS LEFT OUTSIDE CARRIES THE ROPE CLEAR. The rope hangs plumb from
-//     the stub's free end, and the buttock is still going back below the
+//   - THE SKIN STARTS INSIDE THE TRUNK. Closed on the pinned node, just under
+//     the surface, the first ring was cut by the rump at a slant: its upper
+//     half stood out with the closing fan showing. So the skin begins on a
+//     ring of the root's own girth further in (`TAIL_SINK`, forward along the
+//     spine and a little down) and what crosses the hide is the tail's whole
+//     section.
+//   - THE STUB FALLS NEARLY AS STEEPLY AS THE ROPE. The bend at its free end
+//     is a single mitred ring; turned through much more than a third of a
+//     right angle its inside pinches to a dark sliver that reads as a second
+//     broken join. A stub aimed mostly DOWN leaves a soft bend. (It could not
+//     be while the skin closed on the pinned node: a steep stub runs along
+//     the rump rather than into it, and no depth of root covers the ring.)
+//   - THE FREE END CLEARS THE BUTTOCK, which is still going back below the
 //     root. So the stub is slid along its own line — the one through the
-//     plan's root — until that free end stands just behind the rump's
-//     hindmost point, and the root lands wherever that puts it. More
-//     clearance, or a steeper aim, and the root ring comes back out of the
-//     top of the rump: tests/buffalo.test.js holds both ends.
+//     plan's root — until that end stands just behind the rump's hindmost
+//     point; a rope hung from further in lies inside the buttock.
 //
-// The aim is a direction; the clearance is x height.
-const TAIL_AIM = [0, -0.5, -0.866];
+// The aim is a direction; the sink and the clearance are x height.
+const TAIL_AIM = [0, -0.85, -0.53];
+const TAIL_SINK = [0, -0.04, 0.13];
 const TAIL_CLEAR = 0.01;
 const TAIL_SEGMENTS = 7;
-const TAIL_LENGTH = 0.72;
-// The strand is built hanging plumb from its root and then let fall; from a
-// stub held this far out that is a long swing, and the strand's own warm-up
-// leaves the tuft still hooked forward under the animal. These further steps
-// are what it takes to come to rest.
-const TAIL_SETTLE = 240;
+const TAIL_LENGTH = 0.66;
 
 export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color, seed = 37 } = {}) {
   const h = height;
@@ -247,11 +243,11 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     head: { shape: 'box', w: 0.2, hh: 0.2, d: 0.4, fwd: HEAD_FWD, up: HEAD_UP, tilt: HEAD_TILT },
     // A thin rope with a tuft on its end: the fullness is placed near the tip
     // and kept narrow (`swellAt`, `swellSpan`). Where it roots and how it is
-    // aimed: see THE TAIL'S ROOT below.
+    // aimed: see THE TAIL'S ROOT above.
     tail: {
       kind: 'strand', segments: TAIL_SEGMENTS, length: TAIL_LENGTH, thickness: 0.045, color: tailColor,
       swell: 0.8, swellAt: 0.86, swellSpan: 0.2,
-      root: TAIL_AIM,
+      root: TAIL_AIM, rootSink: TAIL_SINK,
     },
   });
   group.name = 'buffalo';
@@ -265,7 +261,6 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     const aim = new THREE.Vector3(...TAIL_AIM).normalize();
     const stub = TAIL_LENGTH * h / (TAIL_SEGMENTS - 1);
     tail.group.position.addScaledVector(aim, (zFree - tail.group.position.z) / aim.z - stub);
-    for (let i = 0; i < TAIL_SETTLE; i++) tail.update(1 / 60, i / 60);
   }
 
   // ---- ONE head: poll to nostril in a single loft ---------------------------
