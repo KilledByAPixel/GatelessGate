@@ -172,8 +172,10 @@ export default {
     // degrees the way anyone stands under a high thing. Scale 1.5 — ordinary
     // figures read small here purely by the drop, which is the point.
     const watchers = [];
+    // the same height, so each takes his own seed: two men of one size are
+    // otherwise one man twice, down to which hand hangs ahead of the other
     for (const [pos, tip] of [[W1, 0.11], [W2, 0.09]]) {
-      const w = makeMonk({ height: 1.5 });
+      const w = makeMonk({ height: 1.5, seed: watchers.length });
       w.position.set(pos.x, 0, pos.z);
       faceMonk(w, { x: POLE.x, z: POLE.z });
       w.rotateZ(tip);                        // craning back to look up

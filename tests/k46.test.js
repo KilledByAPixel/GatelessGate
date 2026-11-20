@@ -540,3 +540,19 @@ test('taps ACCUMULATE — hammering it while it moves never pops', () => {
   for (let i = 0; i < 60 * 12; i++) step();
   assert.ok(built.fragment().sway < 1e-4, `the swing dies away (${built.fragment().sway})`);
 });
+
+// The two watchers are built the same height, and a figure's rest pose is
+// drawn from its size: left alone they are one man twice. Each resting arm
+// carries its own swing and lean, so comparing those is comparing the poses.
+test('the two watchers do not stand identically', () => {
+  const { scene } = k46.build(fakeCtx());
+  scene.updateMatrixWorld(true);
+  const sitter = sitterOf(scene);
+  const watchers = monksOf(scene).filter((m) => m !== sitter);
+  assert.equal(watchers.length, 2);
+  const pose = (m) => m.children.filter((c) => c.name === 'arm')
+    .flatMap((a) => [a.rotation.x, a.rotation.z]);
+  const [a, b] = watchers.map(pose);
+  const apart = a.reduce((sum, v, i) => sum + Math.abs(v - b[i]), 0);
+  assert.ok(apart > 0.02, `the watchers share a rest pose: ${apart}`);
+});
