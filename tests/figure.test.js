@@ -418,17 +418,74 @@ test('the shoulder is a line, not a ball', () => {
       const below = sectionRadius(arm, -0.3 * L);
       assert.ok(knob <= root * 1.05,
         `${stance}/${arms}: a knob ${knob.toFixed(4)} over an arm ${root.toFixed(4)}`);
+      // (a FOLDED arm is the exception to the second half, and has its own
+      // test below: its upper is slim and the sleeve's width is at the cuff)
+      if (arm.getObjectByName('forearm')) continue;
       assert.ok(root >= below * 0.97,
         `${stance}/${arms}: the arm starts thin (${root.toFixed(4)}) and fattens (${below.toFixed(4)})`);
     }
     // and the shoulders make a line ACROSS the figure: the arm roots stand
     // outside the robe at the hinge, so the outline steps out to them
     const body = g.getObjectByName('body');
-    for (const arm of armsOf(g)) {
+    // (a folded arm lies against the torso instead; its own test below holds
+    // it to standing just clear of it)
+    for (const arm of armsOf(g).filter((a) => !a.getObjectByName('forearm'))) {
       const y = arm.position.y;
       const robe = maxRadiusInBand(body, y - 0.06 * H, y + 0.06 * H);
       const edge = Math.max(...worldVerts(arm).filter((q) => Math.abs(q.y - y) < 0.03 * H).map((q) => Math.abs(q.x)));
       assert.ok(edge > robe + 0.02 * H, `${stance}/${arms}: shoulder ${edge.toFixed(3)} inside the robe ${robe.toFixed(3)}`);
+    }
+  }
+});
+
+test('a folded arm is slim at the shoulder and carries its sleeve at the cuff', () => {
+  // The first swept arm gave the folded pose the hanging arm's shoulder: an
+  // upper arm nearly as deep as the torso, hinged outside it and leaning off
+  // it. Seated, that is a block with two boxes bolted on — a yoke — and the
+  // forearms, no wider than the slabs above them, vanished into the lap. A
+  // folded arm is the other way up: slim where it lies against the body, and
+  // widening down the forearm to the mouth the hands are tucked into.
+  for (const [stance, arms] of [['sit', 'fold'], ['stand', 'fold'], ['sit', 'raise']]) {
+    const H = 1.6;
+    const g = makeFigure({ height: H, stance, arms, hat: false });
+    g.updateMatrixWorld(true);
+    const body = g.getObjectByName('body');
+    for (const arm of armsOf(g).filter((a) => a.getObjectByName('forearm'))) {
+      const L = armLength(arm);
+      const fore = arm.getObjectByName('forearm');
+      const mid = sectionAt(arm, -0.5 * L);
+      const box = new THREE.Box3().setFromPoints(mid);
+      const y = arm.position.y - 0.5 * L;
+      // the band is wide because the robe is a lathe with long runs: it has
+      // to reach a ring, and the widest ring in reach is the torso's girth
+      const torso = maxRadiusInBand(body, y - 0.13 * H, y + 0.13 * H);
+      assert.ok(torso > 0.1 * H, 'the torso is there to measure against');
+      const width = box.max.x - box.min.x, depth = box.max.z - box.min.z;
+      assert.ok(width < 0.25 * 2 * torso,
+        `${stance}/${arms}: upper arm ${(width / H).toFixed(3)}·h wide beside a torso ${(2 * torso / H).toFixed(3)}·h`);
+      assert.ok(depth < 0.29 * 2 * torso,
+        `${stance}/${arms}: upper arm ${(depth / H).toFixed(3)}·h deep beside a torso ${(2 * torso / H).toFixed(3)}·h`);
+      // LYING AGAINST the torso: its inner face is inside the robe's surface,
+      // and its outer face stands only a little way off it
+      const world = mid.map((q) => q.clone().applyMatrix4(arm.matrixWorld));
+      const inner = Math.min(...world.map((q) => Math.abs(q.x)));
+      const outer = Math.max(...world.map((q) => Math.abs(q.x)));
+      assert.ok(inner < torso, `${stance}/${arms}: daylight between arm and body: ${inner} vs ${torso}`);
+      assert.ok(outer - torso < 0.03 * H,
+        `${stance}/${arms}: the arm stands ${((outer - torso) / H).toFixed(3)}·h off the torso`);
+      assert.ok(outer > torso + 0.008 * H, `${stance}/${arms}: and is still an arm beside the body`);
+      // THE WIDTH IS AT THE CUFF
+      const FL = armLength(fore);
+      const cuff = sectionRadius(fore, -0.9 * FL);
+      const shoulder = sectionRadius(arm, -0.15 * L);
+      assert.ok(cuff > shoulder * 1.25,
+        `${stance}/${arms}: cuff ${cuff.toFixed(4)} no wider than the shoulder ${shoulder.toFixed(4)}`);
+      // and the forearm CONVERGES: its mouth ends nearer the centre line than
+      // its elbow starts, by most of the shoulder's half-width
+      const elbowX = Math.abs(new THREE.Vector3().applyMatrix4(fore.matrixWorld).x);
+      const tipX = Math.abs(new THREE.Vector3(0, -FL, 0).applyMatrix4(fore.matrixWorld).x);
+      assert.ok(tipX < 0.03 * H && elbowX > 0.10 * H,
+        `${stance}/${arms}: forearm runs ${(elbowX / H).toFixed(3)} -> ${(tipX / H).toFixed(3)}·h`);
     }
   }
 });

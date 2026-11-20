@@ -228,9 +228,12 @@ function downIn(part) {
 // The arm's proportions, in fractions of height: [across, inPlane] at the
 // shoulder, the elbow and the mouth. A hanging sleeve is a panel of cloth — it
 // is deeper fore-and-aft than it is thick, which is what lets it hang close to
-// the robe and still be a broad shape from the side. A lifted arm is seen
+// the robe and still be a broad shape from the side. It holds one width from
+// shoulder to elbow and opens only below it: carried at the shoulder, the
+// same cloth read as a slab of constant width, and a shoulder narrower than
+// the elbow is the doll's joint again. A lifted arm is seen
 // across its bend instead, and is rounder.
-const HANG_ARM = { root: [0.042, 0.052], elbow: [0.038, 0.046], cuff: [0.046, 0.062] };
+const HANG_ARM = { root: [0.037, 0.045], elbow: [0.037, 0.045], cuff: [0.049, 0.067] };
 const LIFT_ARM = { root: [0.046, 0.047], elbow: [0.041, 0.042], cuff: [0.046, 0.048] };
 const scaled = (pair, k) => [pair[0] * k, pair[1] * k];
 
@@ -516,13 +519,13 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // hermit's own crown instead of well above it. Standing, the two are equal, so
 // no standing figure in the book moves.
 const KNEEL = 0.5;
-const STAND_STANCE = { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, gesture: 0.34, head: 0.765, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.2, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.82 };
+const STAND_STANCE = { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, gesture: 0.34, head: 0.765, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.2, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.73 };
 // Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did: the
 // chest run in SIT_PROFILE was lengthened and steepened so a meditator sits
 // STRAIGHT, the way the Buddha does — the crown now tops out at 0.610·h, still
 // comfortably a seated man, and the fold angle eases to -0.44 so the cuffs keep
 // landing in the lap the knees now frame.
-const SIT_STANCE = { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, gesture: 0.34, head: 0.545, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31, foldCross: 1.34 };
+const SIT_STANCE = { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, gesture: 0.34, head: 0.545, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31, foldCross: 1.17 };
 // Kneel is DERIVED, field by field, from whatever stand and sit currently are.
 // It used to repeat their values as literals, and every retune of the endpoints
 // (the sit +0.015 lift, staffAng 0.9 → 0.2) silently un-halved it — four fields
@@ -540,17 +543,22 @@ const SHOULDER_X = 0.130;
 // A hanging arm: the swing forward both arms share and the [least, range] by
 // which the two are pushed apart about it; the lean off the body; the elbow's
 // stand-off as a fraction of the sleeve; how far the back of the mouth drops.
-const REST = { swing: -0.08, apart: [0.04, 0.05], lean: [0.05, 0.05], bend: [0.085, 0.05], drape: 0.035 };
+const REST = { swing: -0.08, apart: [0.04, 0.05], lean: [0.045, 0.04], bend: [0.085, 0.05], drape: 0.035 };
 // A lifted arm: the elbow's stand-off, and the cloth under the forearm. A
 // pointing arm is nearer level, so more of its sleeve hangs clear of it.
 const LIFT = { bend: 0.13, drapePoint: 0.062, drapeRaise: 0.05 };
-// A folded arm: its shoulder, the elbow joint both halves share, and the
-// forearm's mouth — slimmer all the way down than a hanging sleeve, because
-// two of them cross in front of the body and a pair of full sleeves there
-// reads as a shelf. Then the upper's lean off the body, the forearm's length
-// as a fraction of the stance's sleeve, how far one forearm lies over the
-// other, and how far its mouth drops.
-const FOLD = { root: [0.038, 0.049], joint: [0.034, 0.038], cuff: [0.042, 0.050], clear: 0.14, fore: 0.72, over: 0.04, drape: 0.03 };
+// A folded arm: where it hinges, its shoulder, the elbow joint both halves
+// share, and the forearm's mouth. It is the hanging arm turned upside down —
+// SLIM AT THE SHOULDER, WIDE AT THE CUFF — and hinged closer in, so the upper
+// lies against the torso's side. Given the hanging arm's shoulder it was a
+// slab as deep as the torso standing off it, a seated figure read as a block
+// with two boxes bolted on, and forearms no wider than the slabs above them
+// vanished into the lap. The upper arm is the one part of this arm that does
+// NOT follow the broadest-at-the-root rule, and the reason is that it is seen
+// against the body rather than against the sky. Then the upper's lean off the
+// body, the forearm's length as a fraction of the stance's sleeve, how far one
+// forearm lies over the other, and how far its mouth drops.
+const FOLD = { x: 0.118, root: [0.028, 0.034], joint: [0.031, 0.036], cuff: [0.044, 0.056], clear: 0.11, fore: 0.68, over: 0.04, drape: 0.035 };
 
 // ---------------------------------------------------------------------------
 // the assembly
@@ -594,7 +602,7 @@ export function makeFigure({
   // Where the arm hinges. The shoulder stands a little OUTSIDE the robe's own
   // radius at that height, so the outline steps out from the collar to the arm
   // and the arm is seen beside the body rather than as a relief on it.
-  const hinge = (side) => new THREE.Vector3(side * SHOULDER_X * s * height, shoulderY, st.armZ * height);
+  const hinge = (side, x = SHOULDER_X) => new THREE.Vector3(side * x * s * height, shoulderY, st.armZ * height);
   // An arm is posed BEFORE its cloth is cut, because the cloth hangs by the
   // pose: `place` sets the rotation on a bare mesh, `spec` reads it back.
   const cut = (mesh, spec) => {
@@ -696,14 +704,14 @@ export function makeFigure({
   const makeFoldedArm = (side) => {
     const upperLen = sleeveL * 0.55;
     const arm = bare('arm');
-    arm.position.copy(hinge(side));
+    arm.position.copy(hinge(side, FOLD.x));
     arm.rotation.x = st.foldUpper;          // the upper hangs, only a little forward
     arm.rotation.z = side * FOLD.clear;     // elbows just clear of the body
     cut(arm, {
       len: upperLen,
       root: scaled(FOLD.root, height),
       cuff: scaled(FOLD.joint, height),
-      capTip: yoke(side),
+      capTip: yoke(side).multiplyScalar(0.8),
       square: true,
     });
     const fore = bare('forearm');
