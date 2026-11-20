@@ -117,7 +117,7 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 40.5, pitch: 1
   const back = 0.5;
   const kx = sx - faceX / Math.hypot(faceX, faceZ) * back;
   const kz = sz - faceZ / Math.hypot(faceX, faceZ) * back;
-  const keeper = makeMonk({ height: 1.5 + hash1(i, ID) * 0.1, hat: hash1(i + 3, ID) > 0.5, stout: 1.05 });
+  const keeper = makeMonk({ height: 1.5 + hash1(i, ID) * 0.1, hat: hash1(i + 3, ID) > 0.5, stout: 1.05, seed: i });
   keeper.position.set(kx, 0, kz);
   faceMonk(keeper, { x: p.x, z: p.z });
   scene.add(keeper);
@@ -190,9 +190,14 @@ const CAM = { distance: 9.5, target: [1.85, 1.05, -0.4], heading: 40.5, pitch: 1
   // identical monks. They used to lose their SLEEVES as well: two fewer meshes
   // apiece was what let a crowd fit the draw budget at all. The bake below made
   // that saving irrelevant — arms or no arms, these five are one mesh — so they
-  // have their arms back.
+  // have their arms back. Each takes his own `seed`, counted off as they are
+  // placed: how a man's arms hang is drawn from his size and that number, and
+  // a street leaning on size alone is one retune of two heights away from two
+  // of them standing identically. It changes how the sleeves hang and nothing
+  // the bake below counts.
+  let standing = 0;
   const bystander = (x, z, facing, h = 1.56, hat = false) => {
-  const f = makeMonk({ height: h, hat: hat, stout: .9 + hash1(x + z, ID) * .3 });
+  const f = makeMonk({ height: h, hat: hat, stout: .9 + hash1(x + z, ID) * .3, seed: 10 + standing++ });
   f.position.set(x, 0, z);
   f.rotation.y = facing;
   return f;
