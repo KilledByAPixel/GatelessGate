@@ -45,14 +45,25 @@ const CAM = { distance: 10.6, target: [0.4, 0.7, -0.55], heading: 12, pitch: 5.5
   // SHUZAN, holding it out. aimMonk turns local +x toward a target, so a
   // staff laid along +x is a staff offered to whoever he is facing.
   const SH = 1.68;
-  const shuzan = makeMonk({ height: SH });
+  // Built POINTING, then levelled — not a hanging arm turned up. The arm he
+  // holds the staff with is a lifted arm, and only the gesture pose cuts one:
+  // its elbow drops BELOW the line from shoulder to hand and its cloth hangs
+  // under the forearm. A resting arm swung level keeps the bend and the slant
+  // of a sleeve that was hanging, which on its side is an elbow cocked out
+  // sideways and a hem facing the wrong way — a stub with the staff leaving it
+  // at an angle.
+  const shuzan = makeMonk({ height: SH, pose: 'point' });
   shuzan.position.set(-1.5, 0, -1.2);
   
   // He raises his right arm straight out along his FACING and holds the staff
   // continuing that line, so the long part points AWAY from him, out in front —
-  // it used to read as held off to the side. The arm swings about z until it is
-  // level and pointing along +x — which aimMonk then turns toward the monks —
-  // and the staff is parented to the arm so it extends past the hand.
+  // it used to read as held off to the side. The arm swings about z until its
+  // CHORD, shoulder to hand, is level and pointing along +x — which aimMonk
+  // then turns toward the monks — and the staff is parented to the arm so it
+  // extends past the hand. The staff follows the chord and not the forearm:
+  // the forearm climbs to the hand from the dropped elbow, and the staff
+  // leaves the fist level, which is a wrist. Laid along the forearm it would
+  // point over the monks' heads instead of at them.
   const SLEEVE_L = 0.34 * SH;
   const rightArm = shuzan.children
   .filter((c) => c.name === 'arm')
