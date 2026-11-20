@@ -64,40 +64,77 @@ export function makeTail({
   group.userData.cloth = cloth;
 
   const mat = washMaterial({ color, flat: true });
-  const segs = [];
-  // Segments are cut LONGER than their node spacing (still centred between
-  // their nodes), so neighbours overlap into each other at every joint and a
-  // bend never opens daylight. This replaced a merged joint ball — even trimmed
-  // flush it beaded the tail with visible balls at the joints; plain overlap
-  // covers the same gap while adding nothing to the silhouette.
-  const OVERLAP = 1.35;
+  // THE STRAND IS ONE SKIN over the nodes, not a cylinder per segment. Separate
+  // cylinders were each turned to their own segment by the shortest rotation
+  // from straight up, and a tail hangs straight DOWN — the one direction that
+  // rotation is undefined for — so every small sway spun each piece about its
+  // own length, independently of its neighbours, and the facets crawled round
+  // the tail. Overlapping the pieces to hide the joints also left each one's
+  // end standing out of the next at a bend, which beaded a full tail. A ring
+  // at every node, each carried from the one above it, has neither problem:
+  // the facets run unbroken root to tip and a bend is just a bend.
+  const SIDES = 6;
   const radiusAt = (k) => thickness * (1 - k / segments)
     * (1 + swell * Math.sin(Math.PI * 0.9 * k / (segments - 1)));
+  const radii = [];
+  for (let i = 0; i < segments; i++) radii.push(radiusAt(i));
+  const pos = new Float32Array((segments * SIDES + 2) * 3);
+  const idx = [];
   for (let i = 0; i < segments - 1; i++) {
-    const r0 = radiusAt(i);
-    const r1 = radiusAt(i + 1);
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, spacing * OVERLAP, 6), mat);
-    m.name = 'seg';
-    segs.push(m);
-    group.add(m);
+    const r0 = i * SIDES, r1 = r0 + SIDES;
+    for (let j = 0; j < SIDES; j++) {
+      const j2 = (j + 1) % SIDES;
+      idx.push(r0 + j, r0 + j2, r1 + j, r0 + j2, r1 + j2, r1 + j);
+    }
   }
+  // both ends fanned shut: the root is buried in the animal, but a species may
+  // re-aim the group and a closed mesh has nothing to hide either way
+  const rootApex = segments * SIDES, tipApex = rootApex + 1;
+  const lastRing = (segments - 1) * SIDES;
+  for (let j = 0; j < SIDES; j++) {
+    const j2 = (j + 1) % SIDES;
+    idx.push(rootApex, j2, j);
+    idx.push(tipApex, lastRing + j, lastRing + j2);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setIndex(idx);
+  const skin = new THREE.Mesh(geo, mat);
+  skin.name = 'strand';
+  group.add(skin);
 
-  const a = new THREE.Vector3(), b = new THREE.Vector3(), mid = new THREE.Vector3();
-  const up = new THREE.Vector3(0, 1, 0), dir = new THREE.Vector3(), q = new THREE.Quaternion();
+  const tan = new THREE.Vector3(), nrm = new THREE.Vector3(), bin = new THREE.Vector3();
   function layout() {
     const p = cloth.positions;
-    for (let i = 0; i < segs.length; i++) {
-      a.set(p[i * 3], p[i * 3 + 1], p[i * 3 + 2]);
-      b.set(p[(i + 1) * 3], p[(i + 1) * 3 + 1], p[(i + 1) * 3 + 2]);
-      mid.addVectors(a, b).multiplyScalar(0.5);
-      segs[i].position.copy(mid);
-      dir.subVectors(b, a);
-      const len = dir.length() || 1e-6;
-      dir.multiplyScalar(1 / len);
-      q.setFromUnitVectors(up, dir);          // cylinder Y-axis -> segment direction
-      segs[i].quaternion.copy(q);
-      segs[i].scale.y = len / spacing;        // geometry is spacing*OVERLAP long, so the overlap rides the stretch
+    // The first ring's side axis is the animal's own left-right, and each ring
+    // after it takes the one before's, squared up to its own direction — so the
+    // skin's twist is settled once at the root and never by a node's own sway.
+    nrm.set(1, 0, 0);
+    for (let i = 0; i < segments; i++) {
+      const a = Math.max(0, i - 1) * 3, b = Math.min(segments - 1, i + 1) * 3;
+      tan.set(p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]);
+      if (tan.lengthSq() < 1e-12) tan.set(0, -1, 0);
+      tan.normalize();
+      nrm.addScaledVector(tan, -nrm.dot(tan));
+      if (nrm.lengthSq() < 1e-8) nrm.set(0, 0, 1).addScaledVector(tan, -tan.z);
+      nrm.normalize();
+      bin.crossVectors(tan, nrm);
+      const r = radii[i];
+      for (let j = 0; j < SIDES; j++) {
+        const t = (j / SIDES) * Math.PI * 2;
+        const c = Math.cos(t) * r, sn = Math.sin(t) * r;
+        const o = (i * SIDES + j) * 3;
+        pos[o] = p[i * 3] + nrm.x * c + bin.x * sn;
+        pos[o + 1] = p[i * 3 + 1] + nrm.y * c + bin.y * sn;
+        pos[o + 2] = p[i * 3 + 2] + nrm.z * c + bin.z * sn;
+      }
     }
+    const tip = (segments - 1) * 3;
+    pos.set([p[0], p[1], p[2], p[tip], p[tip + 1], p[tip + 2]], rootApex * 3);
+    geo.attributes.position.needsUpdate = true;
+    geo.computeVertexNormals();
+    geo.computeBoundingSphere();
+    geo.computeBoundingBox();
   }
   layout();
 
@@ -124,6 +161,12 @@ export function makeTail({
   return {
     group,
     update,
+    // the strand's nodes, root to tip, in the group's own frame: [x, y, z] each
+    nodes() {
+      const p = cloth.positions, out = [];
+      for (let i = 0; i < segments; i++) out.push([p[i * 3], p[i * 3 + 1], p[i * 3 + 2]]);
+      return out;
+    },
     impulse(strength = 1) {
       const p = cloth.positions;
       const tip = segments - 1;

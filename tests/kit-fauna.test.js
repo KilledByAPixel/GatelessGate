@@ -225,9 +225,8 @@ test('makeTail: an aimed root holds the first segment where it is put', () => {
   const plain = makeTail({ segments: 7, length: 0.5, seed: 37 });
   const aimed = makeTail({ segments: 7, length: 0.5, seed: 37, root: [0, -0.72, -0.69] });
   const first = (t) => {
-    t.group.updateMatrixWorld(true);
-    const seg = t.group.children.find((c) => c.isMesh);
-    return new THREE.Vector3(0, 1, 0).applyQuaternion(seg.quaternion).normalize();
+    const [n0, n1] = t.nodes();
+    return new THREE.Vector3(n1[0] - n0[0], n1[1] - n0[1], n1[2] - n0[2]).normalize();
   };
   const p = first(plain);
   assert.ok(p.y < -0.9, `an unaimed tail hangs straight down (${p.y.toFixed(2)})`);
@@ -247,8 +246,6 @@ test('makeTail: an aimed tail whips outward and never crosses its own root', () 
   // it, because none of the shove is spent fighting the strand's own hang.
   const reachOf = (opts) => {
     const t = makeTail({ segments: 7, length: 0.5, seed: 37, ...opts });
-    const segs = [];
-    t.group.traverse((o) => { if (o.isMesh) segs.push(o); });
     let clock = 0;
     const step = () => { t.update(1 / 60, clock); clock += 1 / 60; t.group.updateMatrixWorld(true); };
     for (let i = 0; i < 60; i++) step();
@@ -258,8 +255,8 @@ test('makeTail: an aimed tail whips outward and never crosses its own root', () 
     for (let i = 0; i < 60 * 6; i++) {
       if (i === 0 || i === 180) t.impulse(1.2);
       step();
-      for (const m of segs) {
-        m.getWorldPosition(w);
+      for (const n of t.nodes()) {
+        w.set(...n);
         forward = Math.max(forward, w.z);
         sideways = Math.max(sideways, Math.abs(w.x));
       }
