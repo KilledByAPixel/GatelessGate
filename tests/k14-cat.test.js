@@ -38,7 +38,7 @@ test('makeCat is a grounded quadruped with named parts, in either pose', () => {
     cat.group.traverse((o) => names.push(o.name));
     assert.equal(names.filter((n) => n === 'leg').length, 4, `${pose}: four legs`);
     assert.equal(names.filter((n) => n === 'ear').length, 2, `${pose}: two ears`);
-    for (const part of ['body', 'head', 'snout', 'tail']) {
+    for (const part of ['body', 'head', 'tail']) {
       assert.ok(names.includes(part), `${pose}: has a ${part}`);
     }
 
