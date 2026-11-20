@@ -3,7 +3,7 @@ import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { hash1 } from '../util/noise.js';
 import { INK_LIT } from '../palette.js';
-import { seatedBodyGeometry, HAT_PROFILE } from './figure.js';
+import { makeFigure } from './figure.js';
 
 // A seated crowd as one InstancedMesh (one draw call): a simplified seated
 // monk repeated in a shallow arc, each facing a focal point. Hero figures
@@ -15,15 +15,17 @@ import { seatedBodyGeometry, HAT_PROFILE } from './figure.js';
 // spot from opposite sides. The defaults are the original fixed fan every
 // older case was staged against.
 //
-// The per-instance geometry is built from figure.js's OWN seated-robe and
-// sedge-hat profiles, not from a stand-in: a cone-and-ball pawn was tried first
-// and read as exactly what it was: a triangle with a tiny circle head. The obi
-// pinch, the collar step and the hat brim are all silhouette events, so they
-// survive fog distance for free — a crowd member is the hero monk's shape with
-// the sleeves dropped. It builds that geometry itself, and it is now the ONLY
-// thing in the kit that drops them: figure.js used to take `arms: null` for the
-// same economy, but bakeStatic made arms free on a still crowd and the option
-// was retired unused.
+// THE PER-INSTANCE GEOMETRY IS A SEATED FIGURE, WHOLE — makeFigure's own
+// output flattened to one geometry, not parts borrowed from it. Two stand-ins
+// came before. A cone-and-ball pawn read as exactly what it was. Then the
+// figure's robe, head and hat profiles reassembled here by hand, sleeves
+// dropped for economy: closer, but a second copy of the assembly, and it
+// drifted — the head stayed where an older seated stance had put it, and when
+// the figure's arms were rebuilt the crowd was left the only people in the
+// book without shoulders, a row of pawns beside the hero they were watching.
+// Arms cost an instanced mesh nothing (one geometry, one draw, however many
+// triangles), so the economy was never real here. Built this way there is
+// nothing to keep in step: whatever a seated monk is, the crowd is.
 const FIG_H = 1.5;    // the height each crowd figure is authored at (world units)
 const SLIM = 0.8;     // radial squeeze — figure.js's `stout`, run below 1: a
                       //   full-width seated figure is ~1.0 wide at this height
@@ -33,22 +35,59 @@ const SLIM = 0.8;     // radial squeeze — figure.js's `stout`, run below 1: a
                       //   axis — but the KNEES keep their size (see figure.js:
                       //   the crowd spends its width on the one event fog
                       //   can't erase)
+export const CROWD_FIGURE = { height: FIG_H, stout: SLIM };
+// One seated monk as a single geometry in the figure's own frame (on the
+// ground, fronting +z). The figure is built only to be read: its meshes are
+// flattened through their own transforms — a forearm rides an upper arm — and
+// its material is thrown away, so the crowd's material stays the crowd's.
+function seatedFigureGeometry() {
+  const figure = makeFigure({ height: FIG_H, stout: SLIM, stance: 'sit', arms: 'fold', hat: true });
+  figure.updateMatrixWorld(true);
+  const parts = [];
+  const mats = new Set();
+  figure.traverse((o) => {
+    if (!o.isMesh) return;
+    parts.push(o.geometry.clone().applyMatrix4(o.matrixWorld));
+    mats.add(o.material);
+  });
+  const geo = mergeSimple(parts);
+  for (const p of parts) p.dispose();
+  for (const m of mats) m.dispose();
+  return geo;
+}
+
+// HOW EACH ONE SITS. The instances share a geometry, so a crowd cannot vary
+// the way standing figures do (by how their arms hang); what an instance owns
+// is its transform. Scale and tint already differ. This is the lean: nobody in
+// a hall sits plumb, and a ring of identical hats all dead level is the stamp
+// showing. Each figure tips a few degrees off vertical in its own direction,
+// and is set down by as much as its cushion's rim would otherwise lift, so
+// the lean never opens a gap under the low edge. Small enough that no one
+// reads as falling asleep — it is how a man sits, not a pose.
+const LEAN = [0.025, 0.045];   // radians: the least, and the range above it
+
+// How far the figure's footing reaches from its axis — the rim a lean pivots
+// on. Read off the geometry, since the cushion is figure.js's to resize.
+function footingRadius(geo) {
+  const p = geo.attributes.position;
+  let r = 0;
+  for (let i = 0; i < p.count; i++) {
+    if (p.getY(i) < 1e-4) r = Math.max(r, Math.hypot(p.getX(i), p.getZ(i)));
+  }
+  return r;
+}
+
 export function makeAssembly({ count = 8, radius = 3.0, center = [0, 0], facing = [0, 0], spread = 1.4, color = INK_LIT, seed = 6, arcSpan = Math.PI * 0.7, arcCenter = 0 } = {}) {
-  // the seated body comes from figure.js WITH its knees merged in — a crowd
-  // member folds the same legs the hero monks do, at crowd polycount
-  const bodyGeo = seatedBodyGeometry({ height: FIG_H, width: SLIM, segments: 8 });
-  const headGeo = new THREE.SphereGeometry(0.095 * FIG_H, 10, 8);
-  headGeo.translate(0, 0.515 * FIG_H, 0);
-  const hatGeo = new THREE.LatheGeometry(
-    HAT_PROFILE.map(([r, y]) => new THREE.Vector2(r * FIG_H, y * FIG_H)), 10);
-  hatGeo.translate(0, 0.560 * FIG_H, 0);
-  const geo = mergeSimple([bodyGeo, headGeo, hatGeo]);
+  const geo = seatedFigureGeometry();
+  const seatR = footingRadius(geo);
 
   const mesh = new THREE.InstancedMesh(geo, washMaterial({ color, flat: true }), count);
   mesh.name = 'assembly';
 
   const m = new THREE.Matrix4();
   const col = new THREE.Color();
+  const turn = new THREE.Quaternion(), tip = new THREE.Quaternion();
+  const axis = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
   const plan = [];   // plan-view [x, z] per instance, for the footprint below
   for (let i = 0; i < count; i++) {
     const t = count === 1 ? 0.5 : i / (count - 1);
@@ -59,9 +98,13 @@ export function makeAssembly({ count = 8, radius = 3.0, center = [0, 0], facing 
     plan.push([x, z]);
     const yaw = Math.atan2(facing[0] - x, facing[1] - z);
     const sc = 0.9 + 0.2 * hash1(i * 2 + 7, seed);
+    const lean = LEAN[0] + LEAN[1] * hash1(i * 2 + 11, seed);
+    const toward = hash1(i * 2 + 13, seed) * Math.PI * 2;
+    axis.set(Math.cos(toward), 0, Math.sin(toward));
+    turn.setFromAxisAngle(UP, yaw).multiply(tip.setFromAxisAngle(axis, lean));
     m.compose(
-      new THREE.Vector3(x, 0, z),
-      new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yaw, 0)),
+      new THREE.Vector3(x, -Math.sin(lean) * seatR * sc, z),
+      turn,
       new THREE.Vector3(sc, sc, sc),
     );
     mesh.setMatrixAt(i, m);

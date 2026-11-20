@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeBuddha, markFor } from '../src/kit/buddha.js';
 import { makeFigure, seatedBodyGeometry, HEAD_OBLONG } from '../src/kit/figure.js';
-import { makeAssembly } from '../src/kit/assembly.js';
+import { makeAssembly, CROWD_FIGURE } from '../src/kit/assembly.js';
+import { makeMonk } from '../src/kit/monk.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT, ACCENT_PALE, INK, INK_LIT, PAPER } from '../src/palette.js';
 
 // The widest radius the mesh's own geometry reaches inside a y band —
@@ -218,4 +219,83 @@ test('makeAssembly is one instanced, grounded, deterministic crowd', () => {
 
 test('makeAssembly accepts a THREE.Color for color (contract parity with siblings)', () => {
   assert.doesNotThrow(() => makeAssembly({ count: 4, color: new THREE.Color(0x336699) }));
+});
+
+// Review focus of the figure rebuild: the crowd is built once, from shared
+// geometry, and can keep an old outline after the hero figure changes. The
+// outline is read the way a camera reads it — the half-width and the front and
+// back reach of everything inside a height band — and the two must agree band
+// by band, from the cushion to the crown of the hat.
+function outline(points, top, bands) {
+  const rows = Array.from({ length: bands }, () => ({ x: 0, front: 0, back: 0 }));
+  for (const p of points) {
+    const k = Math.min(bands - 1, Math.max(0, Math.floor((p.y / top) * bands)));
+    rows[k].x = Math.max(rows[k].x, Math.abs(p.x));
+    rows[k].front = Math.max(rows[k].front, p.z);
+    rows[k].back = Math.max(rows[k].back, -p.z);
+  }
+  return rows;
+}
+function pointsOf(geometry, matrix = null) {
+  const pos = geometry.attributes.position;
+  const out = [];
+  for (let i = 0; i < pos.count; i++) {
+    const p = new THREE.Vector3().fromBufferAttribute(pos, i);
+    out.push(matrix ? p.applyMatrix4(matrix) : p);
+  }
+  return out;
+}
+
+test('assembly silhouette matches the seated figure', () => {
+  const crowd = makeAssembly({ count: 3, seed: 6 });
+  const { height: H, stout } = CROWD_FIGURE;
+  const hero = makeMonk({ pose: 'sit', height: H, stout });
+  hero.updateMatrixWorld(true);
+  const heroPoints = [];
+  hero.traverse((o) => { if (o.isMesh) heroPoints.push(...pointsOf(o.geometry, o.matrixWorld)); });
+  const crowdPoints = pointsOf(crowd.geometry);
+
+  const top = Math.max(...heroPoints.map((p) => p.y));
+  const crowdTop = Math.max(...crowdPoints.map((p) => p.y));
+  assert.ok(Math.abs(top - crowdTop) < 0.01 * H, `same height: ${crowdTop} vs ${top}`);
+
+  const BANDS = 16;
+  const a = outline(crowdPoints, top, BANDS);
+  const b = outline(heroPoints, top, BANDS);
+  const TOL = 0.012 * H;
+  for (let k = 0; k < BANDS; k++) {
+    for (const edge of ['x', 'front', 'back']) {
+      assert.ok(Math.abs(a[k][edge] - b[k][edge]) < TOL,
+        `band ${k} of ${BANDS}, ${edge}: crowd ${a[k][edge].toFixed(3)} vs figure ${b[k][edge].toFixed(3)}`);
+    }
+  }
+
+  // and specifically: a crowd member has shoulders. Below the shoulder line
+  // the folded sleeves stand outside the robe they hang beside, so the crowd
+  // is wider there than its own body is.
+  const bodyOnly = pointsOf(seatedBodyGeometry({ height: H, width: stout }));
+  const widest = (pts) => Math.max(0, ...pts.filter((p) => p.y > 0.30 * H && p.y < 0.40 * H).map((p) => Math.abs(p.x)));
+  assert.ok(widest(crowdPoints) > widest(bodyOnly) + 0.015 * H,
+    `sleeves beside the torso: ${widest(crowdPoints)} vs a bare robe's ${widest(bodyOnly)}`);
+});
+
+// A crowd that sits identically is one stamp repeated. The instances share a
+// geometry, so what can differ is how each one sits: no two neighbours carry
+// the same lean, and none leans far enough to lift its cushion off the ground.
+test('no two neighbours in the assembly sit the same way', () => {
+  const crowd = makeAssembly({ count: 8, seed: 6 });
+  const m = new THREE.Matrix4();
+  const up = [];
+  for (let i = 0; i < crowd.count; i++) {
+    crowd.getMatrixAt(i, m);
+    const y = new THREE.Vector3().setFromMatrixColumn(m, 1).normalize();
+    up.push(y);
+    const tilt = Math.acos(Math.min(1, y.y));
+    assert.ok(tilt > 0.004, `figure ${i} sits bolt upright: ${tilt}`);
+    assert.ok(tilt < 0.09, `figure ${i} is toppling: ${tilt}`);
+  }
+  for (let i = 1; i < up.length; i++) {
+    assert.ok(up[i].distanceTo(up[i - 1]) > 0.004,
+      `figures ${i - 1} and ${i} lean identically`);
+  }
 });
