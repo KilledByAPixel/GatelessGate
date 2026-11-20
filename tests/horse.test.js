@@ -27,16 +27,16 @@ const bodyOf = (group) => triangles(group, (o) => o.name === 'body');
 // withers = the top of the body's own section over the front legs
 const withersOf = ({ group, plan }) => sectionY(bodyOf(group), plan.zShoulder - 1e-3).max;
 
-test('the horse holds at 11 meshes: trade, never add', () => {
+test('the horse holds its mesh count: trade, never add', () => {
   // k45 bakes its whole horse to one mesh with `bakeStatic`, but the horse is
   // shared (k36 stages it unbaked), so its mesh count is exactly what any case
-  // drawing it unbaked pays. Eleven is what it has always spent; the lofted
-  // plan gave back the neck and both shins, and the fuller tail spent two of
-  // those on strand segments.
+  // drawing it unbaked pays: the body with its neck, four legs, the head, the
+  // merged ear pair, the tail's one skin. The crest and the croup are the
+  // body's own rings moved, and cost nothing.
   const { group } = build();
   let meshes = 0;
   group.traverse((o) => { if (o.isMesh) meshes++; });
-  assert.ok(meshes <= 11, `mesh count is what an unbaked horse costs — trade, never add: ${meshes}`);
+  assert.ok(meshes <= 8, `mesh count is what an unbaked horse costs — trade, never add: ${meshes}`);
 });
 
 test('THE NECK WEDGE: leaning 40-50 degrees off vertical, deep at the chest, slim at the poll', () => {
@@ -73,7 +73,7 @@ test('THE NECK WEDGE: leaning 40-50 degrees off vertical, deep at the chest, sli
   assert.ok(endDepth / rootDepth < 0.5, `poll to root ${(endDepth / rootDepth).toFixed(2)}x`);
 });
 
-test('a SMALL head, carried around 1.05-1.25x withers, nosed down the neck line', () => {
+test('a LONG DEEP head, carried around 1.05-1.25x withers, hung steeper than the neck leans', () => {
   const horse = build();
   const withers = withersOf(horse);
   const head = find(horse.group, 'head')[0];
@@ -84,12 +84,24 @@ test('a SMALL head, carried around 1.05-1.25x withers, nosed down the neck line'
   assert.ok(v.y / withers > 1.05 && v.y / withers < 1.25,
     `head centre at ${(v.y / withers).toFixed(2)}x withers`);
 
-  // skull AND muzzle together stay small against the body
+  // A head no bigger than the end of its neck is a deer's. Poll to nostril it
+  // is about as long as the neck is deep at its root, and deep at the jaw —
+  // but still a head, not a second neck.
   head.geometry.computeBoundingBox();
   const bb = head.geometry.boundingBox;
-  assert.ok((bb.max.z - bb.min.z) / withers < 0.40,
-    `the whole head is small against the body: ${((bb.max.z - bb.min.z) / withers).toFixed(2)}`);
-  assert.ok(head.rotation.x > 0.5, 'the head is nosed well down');
+  const long = (bb.max.z - bb.min.z) / withers, deep = (bb.max.y - bb.min.y) / withers;
+  assert.ok(long > 0.36 && long < 0.46, `the head is ${long.toFixed(2)}x withers long`);
+  assert.ok(deep > 0.19, `and ${deep.toFixed(2)}x withers deep at the jaw`);
+  assert.ok(Math.abs(long * withers / horse.plan.neck.rootDepth - 1) < 0.2,
+    `about as long as the neck is deep at its root: ${(long * withers / horse.plan.neck.rootDepth).toFixed(2)}x`);
+
+  // Hung below level by more than the neck rises above it: carried along the
+  // neck's own line the face is only the neck's taper going on, and the two
+  // never read as two masses meeting at the throat.
+  const { root, end } = horse.plan.neck;
+  const rise = Math.atan2(end[0] - root[0], end[1] - root[1]);
+  assert.ok(head.rotation.x > rise,
+    `the face hangs ${head.rotation.x.toFixed(2)} rad below level, the neck rises ${rise.toFixed(2)}`);
 });
 
 test('ONE head: one loft tapering poll to nostril unbroken', () => {
@@ -196,9 +208,12 @@ test('the tail hangs from the croup', () => {
     return hi - lo;
   };
   assert.ok(across(2) > across(0) * 1.5, 'fuller through the middle than at the dock');
-  // reaching about to the hock
-  assert.ok(box.min.y / withers > 0.22 && box.min.y / withers < 0.42,
+  // reaching about to the hock, and long: a full hank is most of the hind
+  // leg's own height, where a short one is a switch
+  assert.ok(box.min.y / withers > 0.2 && box.min.y / withers < 0.36,
     `the tip hangs at ${(box.min.y / withers).toFixed(2)}x withers`);
+  assert.ok((box.max.y - box.min.y) / withers > 0.6,
+    `the hank is ${((box.max.y - box.min.y) / withers).toFixed(2)}x withers from dock to tip`);
 });
 
 // across the neck's own line, the body's extent between two stations along it
@@ -231,9 +246,43 @@ test('the neck is deeper at the shoulder than at the throat, and stays deep leav
   // where it leaves the shoulders, and the head then hangs off a stick.
   assert.ok(third / withers > 0.31,
     `a third of the way up the neck is ${(third / withers).toFixed(3)}x withers deep`);
-  assert.ok(rootDepth / withers > 0.44,
+  // ...and it has to LAST: with the crest standing on it, the upper half of
+  // the neck is still a thick thing where it nears the head
+  assert.ok(upper / withers > 0.26,
+    `two thirds of the way up the neck is ${(upper / withers).toFixed(3)}x withers deep`);
+  // The root runs withers to the point of the breast, and the breast stands
+  // well up the chest — so the root is not the whole depth of the chest, and
+  // the brisket shows as a corner below it.
+  assert.ok(rootDepth / withers > 0.36,
     `at the shoulder it is ${(rootDepth / withers).toFixed(3)}x withers deep`);
   assert.ok(endDepth / rootDepth < 0.4, `throat to root ${(endDepth / rootDepth).toFixed(2)}x`);
+});
+
+test('the crest: the top of the neck bows well clear of a straight line, withers to poll', () => {
+  // The mane is outline, not strands. The body is a ring per section and the
+  // neck is its last four; each ring's top point is the topline there. Between
+  // the withers and the poll the two rings up the neck must stand above the
+  // straight line joining them — a plain wedge barely leaves it.
+  const horse = build();
+  const p = find(horse.group, 'body')[0].geometry.getAttribute('position');
+  const SEG = 8, TOP = 2;                       // quadruped.js, A PROFILE LOFT
+  const rings = (p.count - 2) / SEG;
+  assert.ok(Number.isInteger(rings) && rings >= 6, 'the body is still a ring loft with two apexes');
+  const top = (r) => [p.getY(r * SEG + TOP), p.getZ(r * SEG + TOP)];
+  const a = top(rings - 4), b = top(rings - 1);
+  const chord = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  for (const r of [rings - 3, rings - 2]) {
+    const t = top(r);
+    const clear = ((t[0] - a[0]) * (b[1] - a[1]) - (t[1] - a[1]) * (b[0] - a[0])) / chord;
+    assert.ok(clear / chord > 0.08,
+      `the crest stands ${(clear / chord * 100).toFixed(1)}% of the neck's length clear of its chord`);
+  }
+});
+
+test('the trunk is carried high: more than half the height at the withers is leg', () => {
+  const horse = build();
+  const s = sectionY(bodyOf(horse.group), horse.plan.zShoulder - 1e-3);
+  assert.ok(s.min / s.max > 0.5, `the brisket stands at ${(s.min / s.max).toFixed(3)}x withers`);
 });
 
 test('the head is deep at the jaw and tapers to the muzzle along its underline', () => {
