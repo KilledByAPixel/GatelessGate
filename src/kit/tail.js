@@ -38,6 +38,21 @@ export function makeTail({
   // the last ring still stands inside the hump; near the tip and narrow is a
   // tuft on the end of a rope.
   swellAt = null, swellSpan = 0.5,
+  // WHERE THE SKIN STARTS, when that is not the pinned node: an [x, y, z]
+  // offset from the node, in the tail's own frame, to a point deep inside the
+  // animal. Null (the default) closes the root on the node itself, as every
+  // caller had before this existed — and a root closed where the strand is
+  // pinned is a capped end standing in the body's surface: the hide cuts the
+  // first ring at a slant, one side of it floats, and the tail reads as a
+  // stick pushed into the middle of a facet. With an offset stated the skin
+  // gains one ring THERE, at the root's full girth, and closes on it instead,
+  // so what crosses the hide is the tail's whole section and its end is
+  // somewhere no view reaches. Aim it INTO the body (usually forward along the
+  // spine), not back along the strand: a tail leaves a rump travelling nearly
+  // along its surface, and its own line carried back comes out through the
+  // croup. The buried run is rigid whenever `root` is aimed, since both nodes
+  // it hangs from are pinned.
+  rootSink = null,
 } = {}) {
   const spacing = length / (segments - 1);
   // pin the top node — and the second one too when the caller aims the root
@@ -98,7 +113,11 @@ export function makeTail({
   // the last node, in proportion to that ring: a hank drawn to a blunt point.
   // The plain law's last ring is nearly nothing and closes where it stands.
   const tipReach = swellAt == null ? 0 : 1.6 * radii[segments - 1];
-  const pos = new Float32Array((segments * SIDES + 2) * 3);
+  const sunk = rootSink && Math.hypot(rootSink[0], rootSink[1], rootSink[2]) > 1e-9 ? rootSink : null;
+  // the buried ring is laid down AFTER both apexes, so every ring and apex the
+  // plain strand has keeps its index
+  const sinkRing = segments * SIDES + 2;
+  const pos = new Float32Array((sinkRing + (sunk ? SIDES : 0)) * 3);
   const idx = [];
   for (let i = 0; i < segments - 1; i++) {
     const r0 = i * SIDES, r1 = r0 + SIDES;
@@ -113,7 +132,12 @@ export function makeTail({
   const lastRing = (segments - 1) * SIDES;
   for (let j = 0; j < SIDES; j++) {
     const j2 = (j + 1) % SIDES;
-    idx.push(rootApex, j2, j);
+    if (sunk) {
+      idx.push(sinkRing + j, sinkRing + j2, j, sinkRing + j2, j2, j);
+      idx.push(rootApex, sinkRing + j2, sinkRing + j);
+    } else {
+      idx.push(rootApex, j2, j);
+    }
     idx.push(tipApex, lastRing + j, lastRing + j2);
   }
   const geo = new THREE.BufferGeometry();
@@ -130,9 +154,29 @@ export function makeTail({
     // after it takes the one before's, squared up to its own direction — so the
     // skin's twist is settled once at the root and never by a node's own sway.
     nrm.set(1, 0, 0);
+    if (sunk) {
+      // the buried ring stands square to the run from it to the pinned node
+      const cx = p[0] + sunk[0], cy = p[1] + sunk[1], cz = p[2] + sunk[2];
+      tan.set(-sunk[0], -sunk[1], -sunk[2]).normalize();
+      nrm.addScaledVector(tan, -nrm.dot(tan));
+      if (nrm.lengthSq() < 1e-8) nrm.set(0, 0, 1).addScaledVector(tan, -tan.z);
+      nrm.normalize();
+      bin.crossVectors(tan, nrm);
+      for (let j = 0; j < SIDES; j++) {
+        const t = (j / SIDES) * Math.PI * 2;
+        const c = Math.cos(t) * radii[0], sn = Math.sin(t) * radii[0];
+        const o = (sinkRing + j) * 3;
+        pos[o] = cx + nrm.x * c + bin.x * sn;
+        pos[o + 1] = cy + nrm.y * c + bin.y * sn;
+        pos[o + 2] = cz + nrm.z * c + bin.z * sn;
+      }
+    }
     for (let i = 0; i < segments; i++) {
       const a = Math.max(0, i - 1) * 3, b = Math.min(segments - 1, i + 1) * 3;
       tan.set(p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]);
+      // with a buried run above it, the first ring mitres between that run
+      // and the stub rather than standing square to the stub alone
+      if (sunk && i === 0) tan.set(p[b] - p[0] - sunk[0], p[b + 1] - p[1] - sunk[1], p[b + 2] - p[2] - sunk[2]);
       if (tan.lengthSq() < 1e-12) tan.set(0, -1, 0);
       tan.normalize();
       nrm.addScaledVector(tan, -nrm.dot(tan));
@@ -153,6 +197,8 @@ export function makeTail({
     const tip = (segments - 1) * 3;
     pos.set([p[0], p[1], p[2],
       p[tip] + tan.x * tipReach, p[tip + 1] + tan.y * tipReach, p[tip + 2] + tan.z * tipReach], rootApex * 3);
+    // the skin closes on the buried end when there is one
+    if (sunk) pos.set([p[0] + sunk[0], p[1] + sunk[1], p[2] + sunk[2]], rootApex * 3);
     geo.attributes.position.needsUpdate = true;
     geo.computeVertexNormals();
     geo.computeBoundingSphere();

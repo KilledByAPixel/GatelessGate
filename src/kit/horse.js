@@ -15,9 +15,10 @@ import { mergeSimple } from './scatter.js';
 //      is no neck part to aim: the LEAN is simply where the head is carried,
 //      HEAD_UP against HEAD_FWD. A neck that has spent its taper before the
 //      head is a stick with a head on the end, however deep its root — so
-//      `neck.taper` is a straight wedge and `neck.r` is most of a jaw. The
-//      mane is the CREST: the neck's own upper line stood fuller than the
-//      wedge and bowed (see the topline block below), never strands.
+//      `neck.taper` is a straight wedge and `neck.r` is most of a jaw. But
+//      it is a NECK: its fullness along the crest is the MANE, a narrower
+//      thing standing on it (see the mane block below), and the neck under
+//      it stays the plain wedge.
 //   2. A LONG HEAD, DEEP AT THE JAW, hung off the top of that line. About as
 //      long as the neck is deep at its root, and hung steeper than the neck
 //      leans, so the two read as two masses meeting at the throat. ONE PIECE:
@@ -34,22 +35,28 @@ import { mergeSimple } from './scatter.js';
 //      (tests/quadruped.test.js). Seen from the front a horse is nearly as
 //      broad as it is deep at the shoulder; much narrower and it reads as a
 //      cut-out standing on edge.
-//   4. LONG SLIM LEGS under real mass, STANDING UNDER THE BODY: a broad forearm
-//      and thigh over wire cannons, the hind fold at a LOW hock. The hock goes
+//   4. LONG SLIM LEGS under real mass, STANDING UNDER THE BODY: a full thigh
+//      over a lean gaskin, a forearm that is a modest muscle and no more, wire
+//      cannons, the hind fold at a LOW hock. Thickened to give the legs
+//      substance, the forearm becomes a post as deep as a third of the chest
+//      and the animal is a draught horse on table legs. The hock goes
 //      back only a little — enough for the corner to show. Folded further, the
 //      whole hind leg becomes one diagonal propped out behind the rump and the
 //      animal stops carrying its own weight.
 //   5. THE TAIL IS A FULL HANK FROM THE TOP OF THE CROUP — rooted on the
 //      turn of the rump (the plan's own default), leaving it backward before
-//      it falls: thin at the dock, FULLEST IN ITS LOWER HALF, drawn in to a
-//      blunt point below the hocks, and hanging a little back of plumb,
-//      clear of the buttock. Widest just under the dock it is a club.
+//      it falls: slimmest at the dock, FULLEST IN ITS LOWER HALF, drawn in to
+//      a blunt point below the hocks, and hanging a little back of plumb,
+//      clear of the buttock. Widest just under the dock it is a club; and a
+//      dock far narrower than the rump's own facets, closed where it is
+//      pinned, is a rod pushed into the middle of one — so the dock has
+//      girth and its skin starts deep inside the rump (`rootSink`).
 //
 // The rump itself turns over and down in one arc (`torso.round`): the croup
 // is the high point behind the back and the dock sits on the turn.
 //
-// Mesh ledger: body (with its neck), four legs, head, ear pair (merged), the
-// tail's one skin. k45 bakes its own horse down to a single mesh with
+// Mesh ledger: body (with its neck), four legs, head, ear pair (merged, and
+// carrying the mane and forelock), the tail's one skin. k45 bakes its own horse down to a single mesh with
 // `bakeStatic`, but the horse is shared, and an unbaked one still spends what
 // it spends.
 const HEAD_UP = 0.39;            // head centre above the body's axis, x height
@@ -58,13 +65,28 @@ const HEAD_TILT = 0.9;           // rad the face hangs below level
 const KNEE = 0.17;               // rad, hind hock fold
 const POLL_LEAN = 0.15;          // rad the neck's last section leans back off upright
 const TAIL_LEAN = 0.16;          // rad the whole hank leans back off plumb
-// How far the neck's upper line stands above the plan's wedge, x height: the
-// ring at the skull, then the two up the neck going back. Fullest through the
-// middle of the neck and nearly spent at the poll. The ring at the withers is
-// NOT lifted: the front legs hang just ahead of it, so the plan's bound on a
-// back line (tests/quadruped.test.js) reads that ring as the back's front end,
-// and a crest carried onto it is measured as a deeper sway.
-const CREST = [0.012, 0.046, 0.04];
+// How far the neck's last ring, at the skull, is lifted along its upper half,
+// x height: enough to seat its top in the poll. No other neck ring is lifted —
+// see the mane block for why the crest is not the neck's own outline.
+const POLL_LIFT = 0.012;
+// THE MANE, as locks laid end to end down the crest from the poll to just
+// short of the withers: [where it starts, where it ends (fractions of the
+// crest's length), how high it stands at its front, and at its back (x
+// height)]. Each rises to its own back end and the next starts lower, so the
+// outline is stepped; they overlap a little so no daylight shows between.
+const MANE = [
+  [0.02, 0.21, 0.024, 0.036],
+  [0.19, 0.41, 0.034, 0.048],
+  [0.39, 0.61, 0.040, 0.052],
+  [0.59, 0.80, 0.036, 0.046],
+  [0.78, 0.96, 0.024, 0.034],
+];
+const MANE_W = 0.4;              // half-width at its foot, x the neck's own there
+const MANE_TOP = 0.5;            // ...and how much of that is left along its top edge
+const MANE_SINK = 0.04;          // how far its foot is buried under the crest, x height
+// The forelock, head-local and x height: [z, how high it stands off the
+// forehead, half-width] from between the ears forward to its point.
+const FORELOCK = [[-0.085, 0.026, 0.026], [-0.02, 0.03, 0.024], [0.055, 0.006, 0.01]];
 // How far the trunk ring over the hip is lifted: the croup.
 const CROUP_LIFT = 0.013;
 // [z, halfW, halfH, yOff], x height — see ONE head below
@@ -76,6 +98,8 @@ const HEAD_RINGS = [
   [0.205, 0.039, 0.050, -0.014],
   [0.270, 0.035, 0.043, -0.015],    // muzzle, blunt
 ];
+
+const HEAD_RINGS_SEG = 8;        // sides to a head ring, spun half a step: a flat facet up the face
 
 export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // Nosed well down: the face hangs steeper than the neck leans, so the head
@@ -91,11 +115,16 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
       shoulderW: 1.0, barrelW: 1.14, hipW: 1.06,
     },
     legBury: 0.18,
-    legH: 0.62, legR: 0.055, legTaper: 1.3, hipX: 0.105, hipZ: 0.285,
-    // `proud` under the plan's default: stood further out, the thigh's cap
-    // breaks the flank as a dark dart at the hip. A slim cannon and a short
-    // foot under a heavy forearm (`legTaper`) and thigh: a hoof, not a paw.
-    legs: { knee: KNEE, shoulder: 2.0, thigh: 3.6, proud: 0.06, cannon: 0.7, foot: 1.05, frontSet: 0.04, hindSet: 0.1 },
+    legH: 0.62, legR: 0.048, legTaper: 0.97, hipX: 0.105, hipZ: 0.285,
+    // `legR` is the whole leg's gauge and it is small: `thigh` then asks for
+    // a full haunch in those units, `gaskin` spends most of it before the
+    // hock, and `legTaper` near one keeps the forearm a modest muscle.
+    // `shoulder` and `proud` are both low because what they build shows on a
+    // slim leg as a box cap standing on the forearm, in front of the chest;
+    // stood further out, the thigh's cap also breaks the flank as a dark dart
+    // at the hip. A foot longer than the cannon is thick: a hoof, not a paw,
+    // but a definite block.
+    legs: { knee: KNEE, shoulder: 2.2, thigh: 4.12, proud: 0.0, cannon: 0.72, foot: 1.2, gaskin: 0.8, frontSet: 0.04, hindSet: 0.1 },
     // `set` at nothing: the nape leaves the topline AT the withers, so the
     // withers are the corner where back turns into neck
     neck: { r: 0.068, w: 0.8, root: 0.4, set: 0.0, taper: 1.0, arch: 0.07 },
@@ -105,12 +134,16 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     // poll, just inside the tilted crown of the head loft, and laid a little out.
     ears: { r: 0.025, h: 0.085, x: 0.03, y: 0.075, z: -0.005, tilt: 0.3 },
     // `thickness` is the dock and `swell` the hair, placed low on the strand
-    // (`swellAt`) and spread over most of it (`swellSpan`): a thin root that
-    // fattens is a hank hanging from a tailbone, where a thick root is a
-    // club. The aim leans the dock back so the hank leaves the croup before
-    // it falls — only so far: a stub aimed well out and a strand hanging
-    // plumb from its end is a visible hinge.
-    tail: { kind: 'strand', segments: 7, length: 0.58, thickness: 0.04, swell: 1.8, swellAt: 0.66, swellSpan: 0.6, root: [0, -1, -0.38] },
+    // (`swellAt`) and spread over most of it (`swellSpan`): a slimmer root
+    // that fattens is a hank hanging from a tailbone, where a root as thick
+    // as the hank is a club. The aim leans the dock back so the hank leaves
+    // the croup before it falls — only so far: a stub aimed well out and a
+    // strand hanging plumb from its end is a visible hinge. `rootSink` runs
+    // the skin on from the dock FORWARD AND DOWN into the rump: the tail
+    // leaves nearly along the rump's rear slope, so its own line carried back
+    // would come out through the croup, and a run aimed level stands its
+    // upper side out of that slope as a bright fleck over the dock.
+    tail: { kind: 'strand', segments: 7, length: 0.58, thickness: 0.05, swell: 1.37, swellAt: 0.66, swellSpan: 0.6, root: [0, -1, -0.38], rootSink: [0, -0.05, 0.1] },
   });
   group.name = 'horse';
 
@@ -122,20 +155,18 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // tail stops hanging and sticks out.
   if (tail) tail.group.rotation.x = TAIL_LEAN;
 
-  // ---- the topline: a crest on the neck, a croup that rounds ---------------
+  // ---- the topline: a poll that meets the skull, a croup that rounds -------
   // The plan's trunk and neck are sections stated by a top point and a bottom
-  // point, and its neck is a plain wedge between two of them. A horse's neck
-  // carries its mane along the crest, and at this size that is not hair but
-  // OUTLINE: the upper line of the neck stands fuller than the wedge and bows.
-  // So the body's own rings are lifted along their upper half — the crest is
-  // the neck's outline, not a part laid on it, and the mesh count is what it
-  // was. The same lift over the hip stands the croup above the back, so it is
-  // the high point the plan's round rump turns down from.
+  // point. Two of the body's own rings are lifted along their upper half: the
+  // last one into the poll, and the one over the hip, which stands the croup
+  // above the back so it is the high point the plan's round rump turns down
+  // from. The neck between is left the plan's plain wedge.
   //
   // Only ever UP and only the upper half: the legs were solved against the
   // trunk the plan built, and a ring that grows upward still contains
   // everything that was sunk in it. The rings behind the hip are left alone —
   // the plan rounds the rump with them and read the tail's root off them.
+  let crest;                       // the neck's upper line, poll to withers: [{ y, z, w }]
   {
     const body = group.children.find((c) => c.name === 'body');
     const P = body.geometry.getAttribute('position');
@@ -168,14 +199,16 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
         P.setZ(o + j, cz + sn * az);
       }
     }
-    // counted from the head back, so the crest stays on the neck whatever the
-    // trunk behind it is made of
-    CREST.forEach((by, i) => lift(rings - 1 - i, by));
+    lift(rings - 1, POLL_LIFT);
     // the croup's ring is the first one ahead of the hip, however many
     // sections the plan spends on the rump behind it
     let croupRing = 0;
     while (croupRing < rings - 1 && P.getZ(croupRing * SEG + TOP) < plan.zHip) croupRing++;
     lift(croupRing, CROUP_LIFT);
+    crest = [1, 2, 3, 4].map((k) => {
+      const o = (rings - k) * SEG;
+      return { y: P.getY(o + TOP) + body.position.y, z: P.getZ(o + TOP), w: Math.abs(P.getX(o)) };
+    });
     P.needsUpdate = true;
     body.geometry.computeVertexNormals();
     body.geometry.computeBoundingBox();
@@ -197,7 +230,7 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // tilt, and the ears' roots on the poll all stay where the plan put them.
   const headMesh = group.children.find((c) => c.name === 'head');
   {
-    const SEG = 8, pos = [], idx = [];
+    const SEG = HEAD_RINGS_SEG, pos = [], idx = [];
     for (const [z, w, hh, yo] of HEAD_RINGS) {
       for (let j = 0; j < SEG; j++) {
         const a = ((j + 0.5) / SEG) * Math.PI * 2;
@@ -233,19 +266,101 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // Nothing on a horse animates its ears (the fox's flick belongs to another
   // species), so the static pair bakes its transforms and merges to a single
   // mesh. The name survives ('ear') — species and cases reach in by name.
-  const bakePair = (name) => {
+  const bakePair = (name, extra = []) => {
     const pair = group.children.filter((c) => c.name === name);
     if (pair.length !== 2) return;
     const geos = pair.map((m) => {
       m.updateMatrix();
       return m.geometry.clone().applyMatrix4(m.matrix);
-    });
+    }).concat(extra);
     const merged = new THREE.Mesh(mergeSimple(geos), pair[0].material);
     merged.name = name;
     for (const m of pair) { group.remove(m); m.geometry.dispose(); }
     group.add(merged);
   };
-  bakePair('ear');
+
+  // ---- the mane: hair ON the neck, not the neck's own outline --------------
+  // Lifting the neck's rings into a crest drew the right profile and the
+  // wrong animal: the fullness was the neck's own section, as wide as the
+  // neck, so from anywhere but square-on it was a horse with a thick neck.
+  // Hair is a separate, NARROWER thing standing on the crest: the step in
+  // width is what the light and the shadow find, and the step in its outline
+  // from lock to lock is what a silhouette finds. So the neck keeps the
+  // plan's plain wedge and the mane is a row of blunt wedges along it, each a
+  // closed solid with its foot buried under the crest, and a forelock lies
+  // down the forehead between the ears. Nothing here moves and the ears do
+  // not either, so the hair rides in the ears' mesh and costs no draw.
+  const hair = [];
+  {
+    const va = new THREE.Vector3(), vb = new THREE.Vector3(), vc = new THREE.Vector3();
+    // one closed solid lofted through quads; faces are turned outward off
+    // the solid's own middle, which a blunt wedge is always convex enough for
+    const solid = (secs, matrix) => {
+      const pts = secs.flat();
+      const mid = pts.reduce((m, p) => m.add(p), new THREE.Vector3()).multiplyScalar(1 / pts.length);
+      const soup = [];
+      const tri = (a, b, c) => {
+        va.subVectors(b, a); vb.subVectors(c, a); vc.crossVectors(va, vb);
+        const out = vc.dot(va.subVectors(a, mid)) >= 0;
+        for (const p of out ? [a, b, c] : [a, c, b]) soup.push(p.x, p.y, p.z);
+      };
+      const quad = (a, b, c, d) => { tri(a, b, c); tri(a, c, d); };
+      for (let i = 0; i < secs.length - 1; i++) {
+        for (let j = 0; j < 4; j++) quad(secs[i][j], secs[i][(j + 1) % 4], secs[i + 1][(j + 1) % 4], secs[i + 1][j]);
+      }
+      quad(...secs[0]);
+      quad(...secs[secs.length - 1]);
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(soup), 3));
+      if (matrix) geo.applyMatrix4(matrix);
+      geo.computeVertexNormals();
+      hair.push(geo);
+    };
+
+    // the crest as one run, by length
+    const at = [0];
+    for (let i = 1; i < crest.length; i++) at.push(at[i - 1] + Math.hypot(crest[i].y - crest[i - 1].y, crest[i].z - crest[i - 1].z));
+    const total = at[at.length - 1];
+    const crestAt = (u) => {
+      const d = u * total;
+      let i = 0;
+      while (i < crest.length - 2 && d > at[i + 1]) i++;
+      const a = crest[i], b = crest[i + 1], t = (d - at[i]) / (at[i + 1] - at[i]);
+      const ty = b.y - a.y, tz = b.z - a.z, n = Math.hypot(ty, tz) || 1;
+      // `up` is square to the crest on its outer side
+      return { y: a.y + ty * t, z: a.z + tz * t, w: a.w + (b.w - a.w) * t, up: [-tz / n, ty / n] };
+    };
+    for (const [u0, u1, h0, h1] of MANE) {
+      // a lock that crosses a corner of the crest takes a section there too,
+      // so it bends with the neck instead of cutting the corner
+      const us = [u0, ...at.slice(1, -1).map((d) => d / total).filter((u) => u > u0 + 0.03 && u < u1 - 0.03), u1];
+      solid(us.map((u) => {
+        const c = crestAt(u);
+        const rise = (h0 + (h1 - h0) * (u - u0) / (u1 - u0)) * height;
+        const foot = -MANE_SINK * height, wf = MANE_W * c.w, wt = wf * MANE_TOP;
+        const p = (x, k) => new THREE.Vector3(x, c.y + c.up[0] * k, c.z + c.up[1] * k);
+        return [p(-wf, foot), p(-wt, rise), p(wt, rise), p(wf, foot)];
+      }));
+    }
+
+    // The forelock is stated against the head loft's own upper facet, in the
+    // head's frame, and carried out by the head's transform.
+    const flat = Math.cos(Math.PI / HEAD_RINGS_SEG);
+    const browAt = (z) => {
+      let i = 0;
+      while (i < HEAD_RINGS.length - 2 && z > HEAD_RINGS[i + 1][0]) i++;
+      const a = HEAD_RINGS[i], b = HEAD_RINGS[i + 1];
+      const t = Math.min(1, Math.max(0, (z - a[0]) / (b[0] - a[0])));
+      return (a[2] + (b[2] - a[2]) * t) * flat + a[3] + (b[3] - a[3]) * t;
+    };
+    headMesh.updateMatrix();
+    solid(FORELOCK.map(([z, rise, w]) => {
+      const brow = browAt(z);
+      const p = (x, y) => new THREE.Vector3(x * height, y * height, z * height);
+      return [p(-w, brow - MANE_SINK), p(-w * MANE_TOP, brow + rise), p(w * MANE_TOP, brow + rise), p(w, brow - MANE_SINK)];
+    }), headMesh.matrix);
+  }
+  bakePair('ear', hair);
 
   return {
     group,

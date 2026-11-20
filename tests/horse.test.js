@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeHorse } from '../src/kit/horse.js';
-import { triangles, sectionY } from './helpers/quadruped-probe.js';
+import { triangles, sectionY, sectionZ } from './helpers/quadruped-probe.js';
 
 // Pins the silhouette events that make it a HORSE and not a llama, measured
 // from the meshes themselves wherever a mesh can answer, so a regression in
@@ -31,8 +31,8 @@ test('the horse holds its mesh count: trade, never add', () => {
   // k45 bakes its whole horse to one mesh with `bakeStatic`, but the horse is
   // shared (k36 stages it unbaked), so its mesh count is exactly what any case
   // drawing it unbaked pays: the body with its neck, four legs, the head, the
-  // merged ear pair, the tail's one skin. The crest and the croup are the
-  // body's own rings moved, and cost nothing.
+  // merged ear pair, the tail's one skin. The croup is the body's own ring
+  // moved, and the mane rides in the ears' mesh: neither costs a draw.
   const { group } = build();
   let meshes = 0;
   group.traverse((o) => { if (o.isMesh) meshes++; });
@@ -201,7 +201,9 @@ test('the tail hangs from the croup', () => {
   // the skin is one mesh, a ring of vertices per node: measure a ring across
   const skin = find(group, 'strand')[0];
   const P = skin.geometry.getAttribute('position');
-  const sides = (P.count - 2) / nodes.length;
+  // a ring per node, the two apexes, and the one buried ring past them
+  const sides = (P.count - 2) / (nodes.length + 1);
+  assert.ok(Number.isInteger(sides), 'the skin is rings, two apexes, and one buried ring');
   const across = (ring) => {
     let lo = Infinity, hi = -Infinity;
     for (let j = 0; j < sides; j++) { const x = P.getX(ring * sides + j); lo = Math.min(lo, x); hi = Math.max(hi, x); }
@@ -214,7 +216,10 @@ test('the tail hangs from the croup', () => {
   const widest = widths.indexOf(Math.max(...widths));
   assert.ok(widest >= nodes.length / 2,
     `the hank is fullest at ring ${widest} of ${nodes.length}: in its lower half`);
-  assert.ok(widths[widest] > widths[0] * 1.8, 'far fuller there than at the dock');
+  assert.ok(widths[widest] > widths[0] * 1.6, 'far fuller there than at the dock');
+  // ...but the dock is not a rod: a root much narrower than the rump's own
+  // facets reads as a stick pushed into the middle of one
+  assert.ok(widths[0] / withers > 0.09, `the dock is ${(widths[0] / withers).toFixed(3)}x withers across`);
   assert.ok(widths[nodes.length - 1] < 0.5 * widths[widest], 'and drawn in again to its end');
   // reaching below the hock but never near the ground, and long: a full hank
   // is most of the hind leg's own height, where a short one is a switch
@@ -222,6 +227,60 @@ test('the tail hangs from the croup', () => {
     `the tip hangs at ${(box.min.y / withers).toFixed(2)}x withers`);
   assert.ok((box.max.y - box.min.y) / withers > 0.6,
     `the hank is ${((box.max.y - box.min.y) / withers).toFixed(2)}x withers from dock to tip`);
+});
+
+test('the tail joins: its root is a full section buried in the rump, at rest and mid-swish', () => {
+  const horse = build();
+  const { group, tail } = horse;
+  const body = bodyOf(group);
+  const skin = find(group, 'strand')[0];
+  const n = tail.nodes().length;
+  const P = skin.geometry.getAttribute('position');
+  const sides = (P.count - 2) / (n + 1);
+  const buried = n * sides + 2;                 // tail.js: the buried ring follows both apexes
+  const v = new THREE.Vector3();
+  const ring = (first) => {
+    const out = [];
+    for (let j = 0; j < sides; j++) out.push(v.fromBufferAttribute(P, first + j).applyMatrix4(skin.matrixWorld).clone());
+    return out;
+  };
+  const span = (pts) => Math.max(...pts.map((p) => p.x)) - Math.min(...pts.map((p) => p.x));
+  const check = (when) => {
+    const deep = ring(buried), dock = ring(0);
+    // FULL GIRTH: what crosses the hide is the dock's whole section, not a
+    // cone closing to a point somewhere in the surface
+    assert.ok(span(deep) > 0.95 * span(dock), `${when}: the buried end is as wide as the dock`);
+    // DEEP: every corner of the buried ring, and the point the skin closes
+    // on, is well inside the trunk's own section there — under the back,
+    // over the belly, inside the flanks
+    const apex = v.fromBufferAttribute(P, n * sides).applyMatrix4(skin.matrixWorld).clone();
+    for (const p of [...deep, apex]) {
+      const s = sectionY(body, p.z);
+      const margin = 0.02 * (s.max - s.min);
+      assert.ok(p.y < s.max - margin && p.y > s.min + margin,
+        `${when}: buried at y ${p.y.toFixed(3)} inside ${s.min.toFixed(3)}..${s.max.toFixed(3)}`);
+    }
+    // and it is a real run into the body, not a ring a hair behind the dock
+    const mid = (pts) => pts.reduce((m, p) => m.add(p), new THREE.Vector3()).multiplyScalar(1 / pts.length);
+    const run = mid(deep).distanceTo(mid(dock));
+    assert.ok(run > 0.9 * span(dock), `${when}: the buried run is ${run.toFixed(3)} long`);
+    assert.ok(mid(deep).z > mid(dock).z + 0.5 * span(dock), `${when}: and it runs forward, into the rump`);
+    return deep;
+  };
+  const rest = check('at rest');
+  // a swish swings the hank and must not carry the root out with it
+  tail.impulse(1);
+  let swung = 0;
+  const tip0 = new THREE.Vector3(...tail.nodes()[n - 1]);
+  for (let i = 0; i < 40; i++) {
+    horse.update(1 / 60, 2 + i / 60);
+    swung = Math.max(swung, tip0.distanceTo(new THREE.Vector3(...tail.nodes()[n - 1])));
+    if (i % 8 === 7) {
+      const now = check(`step ${i}`);
+      now.forEach((p, j) => assert.ok(p.distanceTo(rest[j]) < 1e-6, 'the buried ring does not move'));
+    }
+  }
+  assert.ok(swung > 0.1, `the hank did swing: ${swung.toFixed(3)}`);
 });
 
 // across the neck's own line, the body's extent between two stations along it
@@ -252,12 +311,16 @@ test('the neck is deeper at the shoulder than at the throat, and stays deep leav
     'one wedge: every station slimmer than the one below it');
   // A deep root is not enough. A neck that spends its depth at once is thin
   // where it leaves the shoulders, and the head then hangs off a stick.
-  assert.ok(third / withers > 0.31,
+  assert.ok(third / withers > 0.28,
     `a third of the way up the neck is ${(third / withers).toFixed(3)}x withers deep`);
-  // ...and it has to LAST: with the crest standing on it, the upper half of
-  // the neck is still a thick thing where it nears the head
-  assert.ok(upper / withers > 0.26,
+  // ...and it has to LAST: the upper half of the neck is still a real thing
+  // where it nears the head
+  assert.ok(upper / withers > 0.2,
     `two thirds of the way up the neck is ${(upper / withers).toFixed(3)}x withers deep`);
+  // BUT IT IS A NECK. The mane's fullness is hair standing on the crest; drawn
+  // as the neck's own depth it is a horse with a thick neck.
+  assert.ok(third / withers < 0.33 && upper / withers < 0.26,
+    `the neck itself stays slim: ${(third / withers).toFixed(3)}x and ${(upper / withers).toFixed(3)}x withers`);
   // The root runs withers to the point of the breast, and the breast stands
   // well up the chest — so the root is not the whole depth of the chest, and
   // the brisket shows as a corner below it.
@@ -266,25 +329,107 @@ test('the neck is deeper at the shoulder than at the throat, and stays deep leav
   assert.ok(endDepth / rootDepth < 0.4, `throat to root ${(endDepth / rootDepth).toFixed(2)}x`);
 });
 
-test('the crest: the top of the neck bows well clear of a straight line, withers to poll', () => {
-  // The mane is outline, not strands. The body is a ring per section and the
-  // neck is its last four; each ring's top point is the topline there. Between
-  // the withers and the poll the two rings up the neck must stand above the
-  // straight line joining them — a plain wedge barely leaves it.
+test('the mane is hair on the neck: proud of the crest, narrower than it, stepped lock to lock', () => {
   const horse = build();
-  const p = find(horse.group, 'body')[0].geometry.getAttribute('position');
+  const withers = withersOf(horse);
+  const body = find(horse.group, 'body')[0];
+  const p = body.geometry.getAttribute('position');
   const SEG = 8, TOP = 2;                       // quadruped.js, A PROFILE LOFT
   const rings = (p.count - 2) / SEG;
   assert.ok(Number.isInteger(rings) && rings >= 6, 'the body is still a ring loft with two apexes');
-  const top = (r) => [p.getY(r * SEG + TOP), p.getZ(r * SEG + TOP)];
-  const a = top(rings - 4), b = top(rings - 1);
-  const chord = Math.hypot(b[0] - a[0], b[1] - a[1]);
-  for (const r of [rings - 3, rings - 2]) {
-    const t = top(r);
-    const clear = ((t[0] - a[0]) * (b[1] - a[1]) - (t[1] - a[1]) * (b[0] - a[0])) / chord;
-    assert.ok(clear / chord > 0.08,
-      `the crest stands ${(clear / chord * 100).toFixed(1)}% of the neck's length clear of its chord`);
+  // the neck's own crest, poll back to withers: [y, z, half-width]
+  const crest = [1, 2, 3, 4].map((k) => {
+    const o = (rings - k) * SEG;
+    return [p.getY(o + TOP) + body.position.y, p.getZ(o + TOP), Math.abs(p.getX(o))];
+  });
+  const at = (z) => {
+    let i = 0;
+    while (i < crest.length - 2 && z < crest[i + 1][1]) i++;
+    const a = crest[i], b = crest[i + 1], t = (z - a[1]) / (b[1] - a[1]);
+    return { y: a[0] + (b[0] - a[0]) * t, w: a[2] + (b[2] - a[2]) * t };
+  };
+
+  // The hair rides in the ears' mesh. Everything in that mesh that stands
+  // over the neck, clear of the head, is mane.
+  const ear = find(horse.group, 'ear');
+  assert.equal(ear.length, 1, 'one mesh for the ears and the hair');
+  const E = ear[0].geometry.getAttribute('position');
+  const z0 = crest[3][1], z1 = crest[0][1];
+  const hair = triangles(horse.group, (o) => o.name === 'ear');
+  const N = 24, mid = [];
+  for (let k = 3; k < N - 3; k++) {
+    const z = z0 + (z1 - z0) * (k + 0.5) / N;
+    mid.push(sectionY(hair, z).max - at(z).y);
   }
+  // PROUD, and for the whole length of the neck: it stands off the crest by
+  // enough to be a thing of its own, with no break in it
+  assert.ok(Math.min(...mid) / withers > 0.012,
+    `the mane runs the length of the neck without a break: lowest ${(Math.min(...mid) / withers).toFixed(3)}x withers`);
+  const proud = Math.max(...mid) / withers;
+  assert.ok(proud > 0.035 && proud < 0.08, `the mane stands ${proud.toFixed(3)}x withers off the crest`);
+  // NARROWER: the step in width is what separates hair from neck off the
+  // square-on view. Only what stands above the crest counts — below it is a
+  // lock's buried foot.
+  let wide = 0;
+  for (let i = 0; i < E.count; i++) {
+    const z = E.getZ(i);
+    if (z < z0 + 0.1 * (z1 - z0) || z > z1 - 0.1 * (z1 - z0) || E.getY(i) < at(z).y) continue;
+    wide = Math.max(wide, Math.abs(E.getX(i)) / at(z).w);
+  }
+  assert.ok(wide > 0.1 && wide < 0.45, `its upper edge is ${wide.toFixed(2)}x the neck's half-width`);
+
+  // STEPPED: read lock by lock off the solids themselves. Each lock is a
+  // closed solid; its highest point above the crest at its two ends differ,
+  // and where one ends the next starts lower.
+  const tops = [];
+  for (let i = 0; i < E.count; i++) {
+    const z = E.getZ(i);
+    if (z < z0 || z > z1 - 0.02 * (z1 - z0)) continue;
+    const rise = E.getY(i) - at(z).y;
+    if (rise > 0.01 * withers) tops.push([z, rise]);
+  }
+  tops.sort((a, b) => b[0] - a[0]);              // poll first
+  let drops = 0;
+  for (let i = 1; i < tops.length; i++) {
+    if (tops[i - 1][1] - tops[i][1] > 0.006 * withers && Math.abs(tops[i - 1][0] - tops[i][0]) < 0.03 * withers) drops++;
+  }
+  assert.ok(drops >= 3, `the outline steps down from lock to lock: ${drops} steps`);
+
+  // The neck under it is the plain wedge: its own crest barely leaves the
+  // straight line from withers to poll, so none of the fullness is neck.
+  const a = crest[3], b = crest[0];
+  const chord = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  for (const t of [crest[1], crest[2]]) {
+    const clear = ((t[0] - a[0]) * (b[1] - a[1]) - (t[1] - a[1]) * (b[0] - a[0])) / chord;
+    assert.ok(clear / chord < 0.07,
+      `the neck's own crest stands only ${(clear / chord * 100).toFixed(1)}% of its length clear of its chord`);
+  }
+
+  // and a forelock lies forward of the ears, down the forehead
+  const head = find(horse.group, 'head')[0];
+  ear[0].geometry.computeBoundingBox();
+  assert.ok(ear[0].geometry.boundingBox.max.z > head.position.z + 0.06 * withers, 'a forelock reaches forward of the ears');
+});
+
+test('slim legs under real mass: the cannon is a fraction of the chest, the forearm a modest muscle', () => {
+  const horse = build();
+  const { plan } = horse;
+  const chest = sectionY(bodyOf(horse.group), plan.zShoulder - 1e-3);
+  // fore-and-aft thickness of one leg at a height, stated as a fraction of
+  // the brisket's own height off the ground, x the chest's depth
+  const legs = find(horse.group, 'leg');
+  const front = legs.find((l) => l.position.z > 0), hind = legs.find((l) => l.position.z < 0);
+  const thick = (leg, f) => {
+    const s = sectionZ(triangles(horse.group, (o) => o === leg), f * chest.min);
+    return (s.max - s.min) / chest.depth;
+  };
+  const forearm = thick(front, 0.85), cannonF = thick(front, 0.2);
+  const gaskin = thick(hind, 0.75), cannonH = thick(hind, 0.2);
+  assert.ok(forearm > 0.2 && forearm < 0.3, `the forearm is ${forearm.toFixed(2)}x the chest's depth`);
+  assert.ok(cannonF > 0.1 && cannonF < 0.17, `the front cannon is ${cannonF.toFixed(2)}x`);
+  assert.ok(forearm > cannonF * 1.4, 'and the forearm still tapers into it');
+  assert.ok(gaskin > 0.2 && gaskin < 0.27, `the gaskin is ${gaskin.toFixed(2)}x the chest's depth`);
+  assert.ok(cannonH > 0.1 && cannonH < 0.17, `the hind cannon is ${cannonH.toFixed(2)}x`);
 });
 
 test('the trunk is carried high: more than half the height at the withers is leg', () => {

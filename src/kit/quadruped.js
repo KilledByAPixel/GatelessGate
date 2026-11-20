@@ -50,7 +50,12 @@ const NECK_DEFAULTS = { r: 0.08, w: 0.8, root: 0.55, set: 0.25, taper: 1.5, arch
 //           what lets the thigh fill the rear: the thigh's back edge reaches
 //           for the rump's end, and can only get there if the hip hangs
 //           close enough to it.
-const LEG_DEFAULTS = { knee: 0.3, shoulder: 2.0, thigh: 2.8, proud: 0.09, cannon: 0.8, foot: 1.3, frontSet: 0, hindSet: 0 };
+// gaskin    how far the hind leg has slimmed from the thigh's breadth to the
+//           plain leg's by the section midway between stifle and hock: 0 is
+//           still the whole thigh there, 1 the leg's own radius. High is a
+//           lean second thigh under a full haunch; low carries the haunch
+//           most of the way to the hock
+const LEG_DEFAULTS = { knee: 0.3, shoulder: 2.0, thigh: 2.8, proud: 0.09, cannon: 0.8, foot: 1.3, frontSet: 0, hindSet: 0, gaskin: 0.66 };
 // Share of a hind leg's run that lies above the hock.
 const HOCK_RUN = 0.66;
 // A limb's ring is a hexagon with a corner to each side, so fore and aft it
@@ -129,12 +134,12 @@ export function makeQuadruped({
   // legs
   legH = 0.52, legR = 0.055, legTaper = 0.82, hipX = 0.13, hipZ = 0.32,
   legBury = 0.06,        // how far above the flank's underside the shoulder/thigh ring rides, x height
-  legs = null,           // { knee, shoulder, thigh, proud, cannon, foot, frontSet, hindSet } — see LEG_DEFAULTS
+  legs = null,           // { knee, shoulder, thigh, proud, cannon, foot, frontSet, hindSet, gaskin } — see LEG_DEFAULTS
   // head
   head = { shape: 'sphere', r: 0.20, fwd: 0.56, up: 0.22 },   // + scaleX/scaleY/scaleZ (default 1): squish the skull in its own tilted frame
   neck = null,           // { r, w, root, set, taper, arch } — see NECK_DEFAULTS; null ends the chest in a blunt breast
   ears = null,           // { r, h, x, y, z, tilt } — DIRECT base offsets from the head's centre; see EARS ARE PLACED DIRECTLY below
-  tail = null,           // { kind: 'stiff'|'strand', ... } — up/back default to the croup; a strand takes makeTail's root/swell/swellAt/swellSpan
+  tail = null,           // { kind: 'stiff'|'strand', ... } — up/back default to the croup; a strand takes makeTail's root/swell/swellAt/swellSpan, and its rootSink x height
   seed = 1,
   ...retired
 } = {}) {
@@ -479,7 +484,7 @@ export function makeQuadruped({
       pts = [
         [0, ringZ, rz0, rx0],
         [-0.26 * run, zStifle, rT, Math.max(proudAt(top), 1.1 * lr)],
-        [-0.46 * run, lerp(zStifle, zHock, 0.55), lerp(rT, lr, 0.66), 1.15 * lr],
+        [-0.46 * run, lerp(zStifle, zHock, 0.55), lerp(rT, lr, LG.gaskin), 1.15 * lr],
         [-HOCK_RUN * run, zHock, 1.0 * lr, 0.9 * lr],
         [-0.80 * run, zHock + 0.09 * hb, 1.08 * C, C],
         [-(run - 1.25 * fH), zPastern, 1.05 * C, 0.95 * C],
@@ -666,6 +671,7 @@ export function makeQuadruped({
       swell: tail.swell ?? 0,
       swellAt: tail.swellAt ?? null,
       swellSpan: tail.swellSpan,
+      rootSink: tail.rootSink ? tail.rootSink.map((v) => v * h) : null,
     });
     strand.group.position.set(0, tailY, tailZ);
     g.add(strand.group);
