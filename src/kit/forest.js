@@ -35,12 +35,17 @@ const OAK_TEMPLATES = 2;
 const PINE_SHARE = 0.55;
 const TREE_SHARE = 0.25;
 
-function buildTemplates(kind, n, baseSeed, treeH) {
+// `limbs` collects the templates' join records (see kit/limbs.js): a stand is
+// one merged mesh with no per-tree object left to carry them, so the stand
+// carries the records of the shapes every tree in it is a stamped copy of.
+function buildTemplates(kind, n, baseSeed, treeH, limbs) {
   const out = [];
   for (let k = 0; k < n; k++) {
     const tplSeed = baseSeed * 977 + k * 131 + 7;
     if (kind === 'pine') {
-      out.push(pineGeometry({ height: treeH, tiers: 5, seed: tplSeed }));
+      const p = pineGeometry({ height: treeH, tiers: 5, seed: tplSeed });
+      limbs.push(...p.userData.limbs);
+      out.push(p);
     } else if (kind === 'tree') {
       // depth 2, not makeTree's own default 3: a forest member is a small
       // silhouette in the fog, not a hero placement, and the shallower
@@ -50,6 +55,7 @@ function buildTemplates(kind, n, baseSeed, treeH) {
       // occlusion test caught it); species mix must not change the stand's
       // silhouette ENVELOPE, only what's inside it.
       const t = makeTree({ height: treeH, seed: tplSeed, depth: 2 });
+      limbs.push(...t.userData.limbs);
       out.push(mergeSimple([
         t.getObjectByName('trunk').geometry,
         t.getObjectByName('canopy').geometry,
@@ -59,6 +65,7 @@ function buildTemplates(kind, n, baseSeed, treeH) {
       // height matches `treeH` too, for the same reason as tree above
       out.push((() => {
         const o = makeOak({ height: treeH, seed: tplSeed, lobes: 8 });
+        limbs.push(...o.userData.limbs);
         return mergeSimple([
           o.getObjectByName('trunk').geometry,
           o.getObjectByName('canopy').geometry,
@@ -97,9 +104,10 @@ export function makeForest({
   // hovers on a downslope edge.
   groundSeed = 21,
 } = {}) {
-  const pineTpl = buildTemplates('pine', PINE_TEMPLATES, seed, treeH);
-  const treeTpl = buildTemplates('tree', TREE_TEMPLATES, seed, treeH);
-  const oakTpl = buildTemplates('oak', OAK_TEMPLATES, seed, treeH);
+  const limbs = [];
+  const pineTpl = buildTemplates('pine', PINE_TEMPLATES, seed, treeH, limbs);
+  const treeTpl = buildTemplates('tree', TREE_TEMPLATES, seed, treeH, limbs);
+  const oakTpl = buildTemplates('oak', OAK_TEMPLATES, seed, treeH, limbs);
 
   const parts = [];
   const m4 = new THREE.Matrix4();
@@ -151,5 +159,6 @@ export function makeForest({
   const mesh = new THREE.Mesh(merged, mat);
   mesh.name = 'forest';
   mesh.userData.instances = kept;  // self-describing, for the scene nets (positions are LOCAL to this mesh)
+  mesh.userData.limbs = limbs;     // the templates' joins, not one set per stamped tree
   return mesh;
 }

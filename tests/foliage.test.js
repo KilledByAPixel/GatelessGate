@@ -114,7 +114,10 @@ test('adding wind moved no geometry: a seed still grows the exact same tree', ()
   // a wind tweak must never be able to.
   const trunk = a.getObjectByName('trunk');
   const canopy = a.getObjectByName('canopy');
-  assert.equal(trunk.geometry.attributes.position.count, 4752, 'trunk vertex count is frozen');
+  // (the trunk's was re-snapshotted when the wood became skinned tubes rather
+  // than stacked prisms and knots; the canopy's and the crown height did not
+  // move, which is that rebuild's own proof it touched no leaf)
+  assert.equal(trunk.geometry.attributes.position.count, 1854, 'trunk vertex count is frozen');
   assert.equal(canopy.geometry.attributes.position.count, 2916, 'canopy vertex count is frozen');
   const box = new THREE.Box3().setFromObject(a);
   assert.ok(Math.abs(box.max.y - 3.2459) < 1e-3, `crown height frozen, got ${box.max.y}`);

@@ -73,6 +73,8 @@ const TIER_LIFE = 0.30;     // the tiers' share of the leaf flutter — the pine
                             // overshot the correction. This is life without
                             // slide.
 
+const ROOT_FLARE = 1.35;   // the ground ring against the bole's own base
+
 export function pineGeometry({ height = 4, tiers = 5, seed = 3 } = {}) {
   const parts = [];
   const sway = [], phase = [], leaf = [], column = [];
@@ -89,7 +91,7 @@ export function pineGeometry({ height = 4, tiers = 5, seed = 3 } = {}) {
   const rBase = height * 0.038;      // thick enough to survive fog distance
   const rTip = height * 0.012;
   const rootH = height * 0.055;      // an old trunk flares at the ground
-  const root = new THREE.CylinderGeometry(rBase, rBase * 1.35, rootH, 5);
+  const root = new THREE.CylinderGeometry(rBase, rBase * ROOT_FLARE, rootH, 5);
   root.translate(0, rootH / 2, 0);
   parts.push(root);
   sway.push(MAST_SWAY); phase.push(0); leaf.push(0); column.push(col);
@@ -138,7 +140,13 @@ export function pineGeometry({ height = 4, tiers = 5, seed = 3 } = {}) {
     column.push(col);
   }
 
-  return mergeSimple(parts, { aSway: sway, aPhase: phase, aLeaf: leaf, aColumn: column });
+  const geo = mergeSimple(parts, { aSway: sway, aPhase: phase, aLeaf: leaf, aColumn: column });
+  // The join record every tree carries (see kit/limbs.js). A pine has one
+  // entry and no joins to answer for: it is a bole, and its tiers are foliage
+  // threaded on it rather than limbs growing out of it. It rides the geometry
+  // because that is all a stand's template is.
+  geo.userData.limbs = [{ gen: 0, r0: rBase * ROOT_FLARE, flareTop: rootH }];
+  return geo;
 }
 
 export function makePine({ height = 4, tiers = 5, seed = 3, color = WASH.dark } = {}) {
@@ -146,6 +154,7 @@ export function makePine({ height = 4, tiers = 5, seed = 3, color = WASH.dark } 
     pineGeometry({ height, tiers, seed }),
     applyFoliageWind(washMaterial({ color, flat: true })));
   mesh.name = 'pine';
+  mesh.userData.limbs = mesh.geometry.userData.limbs;
   mesh.userData.foliageWind = true;   // carries wind attributes — keeps bakeStatic off it
   return mesh;
 }

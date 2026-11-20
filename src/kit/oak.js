@@ -3,6 +3,7 @@ import { hash1 } from '../util/noise.js';
 import { washMaterial } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { applyFoliageWind } from './foliage.js';
+import { clothe, flarePoints } from './limbs.js';
 import { GRAY_DARK, WASH } from '../palette.js';
 
 // THE oak — the one Joshu points at when he is asked why Bodhidharma came
@@ -13,12 +14,13 @@ import { GRAY_DARK, WASH } from '../palette.js';
 // of the fixed world-space swing column k5.js hangs him on. See
 // tests/k5.test.js's canopy-clearance assertion, which is the actual gate —
 // pass that and the branch reads as buried in the tree without ever
-// touching the man. Built the same cheap way as makeTree (every limb merged
-// into one mesh, all the foliage into another, so it is two draw calls no
-// matter how many branches) but it is deliberately a different animal.
+// touching the man. Built the same cheap way as makeTree (the limbs skinned
+// into one mesh by the same builder, kit/limbs.js, and all the foliage merged
+// into another, so it is two draw calls no matter how many branches) but it is
+// deliberately a different animal.
 //
 // A scatter tree is slender and vertical. This one is short in the bole,
-// throws four heavy, knotty primaries — one of them a near-horizontal hero
+// throws four heavy primaries — one of them a near-horizontal hero
 // limb, a low bough that elbows out of the crown — and carries a domed crown
 // WIDER than the tree is tall. It has to read as "that one" from across the
 // meadow before anyone reads a word of the case.
@@ -36,11 +38,23 @@ import { GRAY_DARK, WASH } from '../palette.js';
 // makeTree cannot be talked into this silhouette — its bole radius, limb spread
 // and crown size are all fixed fractions of `height` with no way in — so the
 // shape is authored here and tree.js is left alone. Fork angles here run much
-// wider than a sapling's, and limb radius falls off more slowly generation to
-// generation, so a cut branch reads thick and old rather than twiggy.
+// wider than a sapling's, the bole keeps its girth to the top, and a limb
+// tapers more slowly along its length, so the wood reads thick and old rather
+// than twiggy.
 //
 // Trunk and canopy are separate meshes on purpose: case 38 wants the leaves red
 // and the wood on the same grey ramp as every other tree in the book.
+
+// What the wood is made of — `clothe` in limbs.js says what each one means.
+const SIDES = 6;
+const BOLE_TIP = 0.8;
+const HERO_TIP = 0.8;
+const LIMB_TIP = 0.7;
+const LATERAL = 0.66;
+// The foot: how far up the widening runs, as a share of the tree's height, and
+// how much wider than the bole the ground ring is, in bole radii.
+const FLARE_TOP = 0.12;
+const FLARE_SPREAD = 0.5;
 export function makeOak({
   height = 5.8,
   seed = 38,
@@ -57,7 +71,6 @@ export function makeOak({
   g.name = 'oak';
   const H = height;
 
-  const wood = [];
   const leaves = [];
   const anchors = [];
   // Per-lobe wind attributes, one entry per pushed leaf geometry, in push order
@@ -84,7 +97,6 @@ export function makeOak({
   const T = (x, y, z) => new THREE.Matrix4().makeTranslation(x, y, z);
   const RY = (a) => new THREE.Matrix4().makeRotationY(a);
   const RZ = (a) => new THREE.Matrix4().makeRotationZ(a);
-  const _v = new THREE.Vector3();
 
   const BOLE_LEN = 0.30 * H;    // short: the crown starts low, the way old oaks do
   const BOLE_R = 0.085 * H;     // and thick — nearly twice makeTree's, relatively
@@ -107,21 +119,17 @@ export function makeOak({
     anchors.push(new THREE.Vector3(x, y - r * 0.62, z));
   }
 
-  // a small knuckle where two segments meet: reads as a knot/burl and hides
-  // the radius step where a heavier-falloff child meets its parent's tip
-  function addKnuckle(m, r) {
-    const knot = new THREE.DodecahedronGeometry(r, 0);
-    knot.applyMatrix4(m);
-    wood.push(knot);
-  }
+  const at = (m) => new THREE.Vector3().setFromMatrixPosition(m);
 
-  function grow(m, len, rad, level, hero) {
-    const seg = new THREE.CylinderGeometry(rad * 0.64, rad, len, 6);
-    seg.translate(0, len / 2, 0);           // grow upward from the joint
-    seg.applyMatrix4(m);
-    wood.push(seg);
-
-    const tip = m.clone().multiply(T(0, len, 0));
+  // THE SKELETON, and the only thing here that draws from the seed: where each
+  // limb starts (S) and ends (E) and what forks from its tip. How thick the
+  // wood is and how it is joined is `clothe`'s business (kit/limbs.js), so the
+  // crown — and with it k5's scanned clearance — sits where the seed puts it
+  // however the limbs are skinned.
+  function grow(m, len, level, hero) {
+    const node = { S: at(m), E: null, len, level, hero: !!hero, kids: [] };
+    const tip = m.clone().multiply(T(0, len, 0));   // grow upward from the joint
+    node.E = at(tip);
     if (level >= DEPTH) {
       // a clump at every limb tip: this is what stitches the crown onto the wood
       // and what keeps its outline ragged instead of a ball. The tamed hero
@@ -129,26 +137,25 @@ export function makeOak({
       // small ball there reads as a lollipop on a stick, not a low bough
       // shoulder. At full reach the legacy small clump returns: out past the
       // crown, small is what keeps the limb readable as wood with leaves.
-      _v.setFromMatrixPosition(tip);
-      addLobe(_v.x, _v.y, _v.z, H * ((hero ? R(0.14, 0.10) : 0.10) + 0.05 * rnd()));
-      return;
+      addLobe(node.E.x, node.E.y, node.E.z, H * ((hero ? R(0.14, 0.10) : 0.10) + 0.05 * rnd()));
+      return node;
     }
 
     if (hero) {
-      // THE hero branch: one continuous reach, not a fork. A second segment
+      // THE hero branch: one continuous reach, not a fork. A second stretch
       // in almost the same direction as the first — composing the same-axis
       // tilt additively (RZ(a)*RZ(b) = RZ(a+b)) is what turns a primary that
       // left the bole climbing into a limb that finishes near-horizontal,
       // the way a real low bough elbows out from an upward start. The tiny
       // extra droop (rather than a sharp new angle) is the clean underside
       // line: one smooth concave curve a body could actually hang from,
-      // not a knee.
-      addKnuckle(tip, rad * 0.72);
+      // not a knee. Its one child is its leader, so the two stretches are
+      // skinned as a single tube bent round the elbow.
       const droop = 0.38 + 0.12 * rnd();
       const wobble = (rnd() - 0.5) * 0.10;
       const child = tip.clone().multiply(RY(wobble)).multiply(RZ(droop));
-      grow(child, len * (R(0.34, 0.56) + R(0.10, 0.16) * rnd()), rad * 0.80, level + 1, true);
-      return;
+      node.kids.push(grow(child, len * (R(0.34, 0.56) + R(0.10, 0.16) * rnd()), level + 1, true));
+      return node;
     }
 
     const kids = level === 0 ? 4 : (rnd() > 0.5 ? 3 : 2);
@@ -168,22 +175,32 @@ export function makeOak({
       // character is the horizontal elbow, not raw length. At reach 1 it grows
       // the full reaching spear again.
       const scale = isHero ? R(1.24, 1.62) + R(0.10, 0.18) * rnd() : level === 0 ? 1.18 : 0.42;
-      const fall = isHero ? 0.80 : level === 0 ? 0.66 : 0.66;
-      if (level === 0) addKnuckle(tip, rad * 0.62);
-      grow(child, len * scale * (0.86 + 0.28 * rnd()), rad * fall, level + 1, isHero);
+      node.kids.push(grow(child, len * scale * (0.86 + 0.28 * rnd()), level + 1, isHero));
     }
+    return node;
   }
 
-  // the root flare: an oak is fattest where it meets the ground. It used to be
-  // a squashed dodecahedron ball resting at the foot, which read as a rock at
-  // its base — a boulder beside the trunk, not the trunk itself. A short
-  // tapered collar instead: same width at the ground, but it runs INTO the bole
-  // so the flare is the trunk widening.
-  const flare = new THREE.CylinderGeometry(BOLE_R * 1.02, BOLE_R * 1.5, 0.07 * H, 6);
-  flare.translate(0, 0.035 * H, 0);
-  wood.push(flare);
+  const root = grow(new THREE.Matrix4(), BOLE_LEN, 0);
 
-  grow(new THREE.Matrix4(), BOLE_LEN, BOLE_R, 0);
+  // The root flare: an oak is fattest where it meets the ground. It has been a
+  // squashed ball at the foot (a boulder beside the trunk) and then a tapered
+  // collar around it, whose top edge stood out from the bole as a step. It is
+  // the bole itself now — the same tube, widening over its last few rings.
+  const bole = (y) => BOLE_R * (1 - (1 - BOLE_TIP) * y / BOLE_LEN);
+  const flareTop = FLARE_TOP * H;
+  const wood = clothe(root, flarePoints({ top: flareTop, spread: BOLE_R * FLARE_SPREAD, radiusAt: bole }), {
+    sides: SIDES,
+    baseR: BOLE_R,
+    // The bole keeps most of its girth to the top, because four heavy
+    // primaries have to be rooted inside it; the hero's first stretch tapers
+    // least of the limbs, which is all that marks it as the heavy bough.
+    taper: (n) => (n.level === 0 ? BOLE_TIP : n.hero && n.level === 1 ? HERO_TIP : LIMB_TIP),
+    lateral: LATERAL,
+    // The primaries all leave at better than fifty degrees, so the bole has no
+    // leader: it ends under the crown and all four are rooted in its head.
+    leads: (n) => n.level > 0,
+    extra: { flareTop },
+  });
 
   // The crown proper. Limb tips alone leave a spindly, gappy top; an oak reads
   // as ONE heavy mass with the branches disappearing into it. So the mass is
@@ -205,7 +222,7 @@ export function makeOak({
     );
   }
 
-  const trunk = new THREE.Mesh(mergeSimple(wood), washMaterial({ color: trunkColor, flat: true }));
+  const trunk = new THREE.Mesh(wood.geometry, washMaterial({ color: trunkColor, flat: true }));
   trunk.name = 'trunk';
   // aColumn 0: a broadleaf is not a mast (see the two profiles in
   // kit/foliage.js). aLeaf 1 on every lobe — the flutter is the whole point
@@ -228,5 +245,8 @@ export function makeOak({
   // clear air and one released from the middle falls through the mass unseen.
   anchors.sort((a, b) => Math.hypot(b.x, b.z) - Math.hypot(a.x, a.z));
   g.canopyPoints = anchors;
+  // One record per limb — how each is joined to the one it grows out of, as
+  // skinned (see limbs.js). Data only.
+  g.userData.limbs = wood.records;
   return g;
 }
