@@ -7,7 +7,7 @@ import { makeFox } from '../src/kit/fox.js';
 import { makeBuffalo } from '../src/kit/buffalo.js';
 import { makeHorse } from '../src/kit/horse.js';
 import { makeCat } from '../src/kit/cat.js';
-import { triangles, sectionY, legClouds, trunk, legsJoinBody } from './helpers/quadruped-probe.js';
+import { triangles, sectionY, legClouds, trunk, legsJoinBody, inside } from './helpers/quadruped-probe.js';
 
 const names = (g) => g.children.map((c) => c.name).sort();
 
@@ -104,20 +104,21 @@ test('ear bases are buried inside the skull — no gap — for dog and fox', () 
   ];
   for (const [label, root] of builds) {
     root.updateMatrixWorld(true);
-    const head = root.getObjectByName('head');
-    const r = head.geometry.parameters.radius;
-    const centre = head.getWorldPosition(new THREE.Vector3());
+    // Asked of the skull's own mesh: a species may loft its head, and a loft
+    // has no radius to measure a base against.
+    const skull = triangles(root, (o) => o.name === 'head');
+    const box = new THREE.Box3().setFromObject(root.getObjectByName('head'));
     const ears = [];
     root.traverse((o) => { if (o.name === 'ear') ears.push(o); });
     assert.strictEqual(ears.length, 2, `${label} has two ears`);
     for (const ear of ears) {
       // the geometry is base-hinged (root ring at the origin), so the mesh
       // origin IS the base
-      const d = ear.getWorldPosition(new THREE.Vector3()).distanceTo(centre);
-      assert.ok(d < r * 0.99,
-        `${label} ear base is inside the skull, not gapped: d/r = ${(d / r).toFixed(3)}`);
-      assert.ok(d > r * 0.4,
-        `${label} ear base stays near the surface, not sunk to the core: d/r = ${(d / r).toFixed(3)}`);
+      const at = ear.getWorldPosition(new THREE.Vector3());
+      assert.ok(inside(skull, at),
+        `${label} ear base is inside the skull, not gapped: (${at.x.toFixed(3)}, ${at.y.toFixed(3)}, ${at.z.toFixed(3)})`);
+      assert.ok(at.y > (box.min.y + box.max.y) / 2 && Math.abs(at.x) > 0.2 * (box.max.x - box.min.x) / 2,
+        `${label} ear base stays up in a corner of the skull, not sunk to the core: (${at.x.toFixed(3)}, ${at.y.toFixed(3)})`);
     }
   }
 });

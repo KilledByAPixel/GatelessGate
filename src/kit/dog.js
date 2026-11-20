@@ -1,6 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { INK_LIT } from '../palette.js';
 import { makeQuadruped } from './quadruped.js';
+import { skullGeometry } from './skull.js';
 import { hash1, noise1 } from '../util/noise.js';
 import { clamp01, smoothstep } from '../util/math.js';
 
@@ -17,6 +18,22 @@ import { clamp01, smoothstep } from '../util/math.js';
 // below his chest, and a haunch dome broke the topline over the hips. The chest
 // and the haunch are the trunk's own profile and the thigh's own top now.
 //
+// WHAT SAYS DOG, in the order it is lost at distance:
+//
+//   1. THE HEAD IS A WEDGE WITH A STOP. A ball skull with a muzzle part on its
+//      front was the last toy thing on an anatomical body, and a ball that
+//      size made the whole animal a puppy. One loft instead (skull.js): a
+//      skull about half as deep as the chest, a brow, a short fall to a muzzle
+//      that is deep and BLUNT — the fox's is a needle, and the bluntness is
+//      half of what separates them.
+//   2. SMALL EARS, STANDING. Laid out flat to either side they drew a bar
+//      across the top of the head, a cap rather than ears. Short and pricked,
+//      at the back corners of the skull, canted out.
+//   3. THE NECK LIFTS THE HEAD CLEAR OF THE BACK. The jaw rides above the
+//      withers; a head carried level with the back is the fox's carriage.
+//   4. THE TAIL IS COCKED — up more than back. It is the one line on him that
+//      a fox never draws.
+//
 // THE TAIL ROOTS INTO THE BODY. A 'stiff' tail is centred on its own origin,
 // and stating that centre by hand leaves the root perched ON the outline
 // instead of growing out of it. Same cure as the fox's brush: pin the ROOT to a
@@ -31,19 +48,41 @@ import { clamp01, smoothstep } from '../util/math.js';
 // it while a cat and a fox either side of it breathed and turned. Everything
 // below is a pure function of (simTime, stir): no wall clock, no Math.random,
 // so two dogs on the same seed pose identically forever.
-const TAIL_TILT = -1.0;                  // rad: up and back — the cocked tail is the read
-const TAIL_LEN = 0.28;
+const TAIL_TILT = -0.62;                 // rad off vertical, backward: up more than back
+const TAIL_LEN = 0.3;
 const TAIL_ROOT = [0.07, -0.37];         // [above the body's axis, z] — just under the croup
 const TAIL_UP = TAIL_ROOT[0] + (TAIL_LEN / 2) * Math.cos(TAIL_TILT);
 const TAIL_BACK = -(TAIL_ROOT[1] + (TAIL_LEN / 2) * Math.sin(TAIL_TILT));
 
-// Where the skull hinges, as an offset from the head's own centre: back and
-// down, at the base of the crown, so the head PIVOTS on the neck instead of
-// orbiting a point in mid-air. Derived from the head mesh the quadruped
-// actually built rather than restated in heights — the fox states its hinge as
-// an absolute and has to be re-measured whenever the skull moves.
-const HINGE_BACK = 0.78;                 // x the skull's radius
-const HINGE_DOWN = 0.42;
+// THE HEAD, back of the skull to the nose: [z, top, bottom, half-width] in
+// heights, from the point the neck ends on (see skull.js). The neck comes in
+// low at the back, so the skull stands mostly above and ahead of zero. Read
+// down the `top` column for the profile: crown, brow, the stop, then a muzzle
+// that barely falls; `bottom` is the jaw, nearly straight. Widest at the
+// cheek and never narrow — a pointed nose is the other animal.
+const SKULL = [
+  [-0.086, 0.076, -0.054, 0.07],
+  [-0.011, 0.113, -0.092, 0.103],
+  [0.076, 0.106, -0.089, 0.095],
+  [0.13, 0.052, -0.08, 0.063],
+  [0.205, 0.042, -0.075, 0.055],
+  [0.27, 0.034, -0.067, 0.049],
+];
+const SKULL_BACK = [0.016, -0.119];      // [y, z] apexes closing the loft
+const SKULL_NOSE = [-0.015, 0.292];
+const HEAD_NOSE_DOWN = 0.12;             // rad the whole head is carried nose-down
+
+// Where the skull hinges: straight below the point the neck ends on, so the
+// head PIVOTS on the neck instead of orbiting a point in mid-air. Any offset
+// fore or aft swings the skull sideways off the neck's end as it turns, and
+// the end of the neck then shows through the cheek. Taken from the head mesh
+// the quadruped placed rather than restated as an absolute, so it follows the
+// head when the carriage is retuned.
+const HINGE_DOWN = 0.02;                 // x height
+// A cone is as deep as it is wide, and an ear is a leaf. Flattened fore and
+// aft it is also a root short enough to stay under the skull's surface when
+// the perk tips it — a round root lifted clear of the crown at the back.
+const EAR_FLAT = 0.6;
 
 const STIR = 3.2;                        // seconds for one whole response
 // The envelope: up fast, HELD, then let go slowly. A symmetric out-and-back
@@ -83,45 +122,47 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     torso: { chest: 1.15, loin: 0.68, withers: 1.05, back: 0.92, croup: 0.95 },
     legBury: 0.16,
     legH: 0.5, legR: 0.07, legTaper: 1.0, hipX: 0.085, hipZ: 0.30,
-    neck: { r: 0.1, w: 0.85, root: 0.5, set: 0.2, taper: 1.2, arch: 0.02 },
-    head: { shape: 'sphere', r: 0.14, fwd: 0.56, up: 0.31, scaleZ: 1.1 },
-    snout: { r0: 0.05, r1: 0.085, len: 0.2, fwd: 0.71, up: 0.255 },
+    // the neck's end has to fit inside the skull it enters, turned or not
+    neck: { r: 0.076, w: 0.9, root: 0.66, set: 0.2, taper: 1.0, arch: 0.02 },
+    // The plan's ball is only a placeholder for where the head is carried and
+    // how far it is nosed down; its geometry is replaced by the loft below.
+    // No snout: the muzzle is the front half of that loft.
+    head: { shape: 'sphere', r: 0.1, fwd: 0.52, up: 0.34, tilt: HEAD_NOSE_DOWN },
     // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): r width, h length,
-    // x/y/z = base offset from the head's CENTRE (keep the offsets inside the
-    // head's own radius, above, to bury the join), tilt = outward lean. These
-    // numbers reproduce the old aim-ray placement exactly (45° out on the
-    // crown); they are a starting point to tune, not a keeper.
-    ears: { r: 0.06, h: 0.14, x: 0.06, y: 0.07, z: -.03, tilt: 1.6 },
+    // x/y/z = base offset from the point the neck ends on, tilt = outward
+    // lean. Rooted inside the back corners of the skull.
+    ears: { r: 0.04, h: 0.1, x: 0.056, y: 0.042, z: -0.025, tilt: 0.8 },
     tail: {
-      kind: 'stiff', r0: 0.024, r1: 0.052, length: TAIL_LEN,
+      kind: 'stiff', r0: 0.026, r1: 0.06, length: TAIL_LEN,
       up: TAIL_UP, back: TAIL_BACK, tilt: TAIL_TILT,
     },
   });
   group.name = 'dog';
 
   // ---- the skull, onto its own hinge --------------------------------------
-  // makeQuadruped hangs the head, muzzle and ears straight off the body, which
+  // makeQuadruped hangs the head and ears straight off the body, which
   // is right for a body plan and useless for a look. Re-parent them onto a pivot
   // at the base of the skull; the neck stays behind, buried, so the head turns
   // against it rather than dragging it along.
   const headMesh = group.children.find((c) => c.name === 'head');
-  const skullR = headMesh.geometry.parameters.radius;
+  headMesh.geometry.dispose();
+  headMesh.geometry = skullGeometry(SKULL, { unit: height, back: SKULL_BACK, nose: SKULL_NOSE });
   const headPivot = new THREE.Group();
   headPivot.name = 'headPivot';
   headPivot.position.set(
     0,
-    headMesh.position.y - HINGE_DOWN * skullR,
-    headMesh.position.z - HINGE_BACK * skullR,
+    headMesh.position.y - HINGE_DOWN * height,
+    headMesh.position.z,
   );
   group.add(headPivot);
   for (const part of group.children.slice()) {
-    if (part.name === 'head' || part.name === 'snout' || part.name === 'ear') {
+    if (part.name === 'head' || part.name === 'ear') {
       part.position.sub(headPivot.position);
       headPivot.add(part);
     }
   }
   const ears = headPivot.children.filter((c) => c.name === 'ear');
-  for (const ear of ears) ear.userData.baseX = ear.rotation.x;
+  for (const ear of ears) { ear.userData.baseX = ear.rotation.x; ear.scale.z = EAR_FLAT; }
 
   // ---- the tail, onto its own hinge ---------------------------------------
   // Rotating the tail MESH about y does nothing: y is its own long axis. The

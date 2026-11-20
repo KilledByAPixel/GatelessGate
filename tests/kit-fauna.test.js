@@ -5,7 +5,7 @@ import { makeDog } from '../src/kit/dog.js';
 import { makeQuadruped } from '../src/kit/quadruped.js';
 import { makeTail } from '../src/kit/tail.js';
 import { makeBuffalo } from '../src/kit/buffalo.js';
-import { legsJoinBody, triangles, sectionY } from './helpers/quadruped-probe.js';
+import { legsJoinBody, triangles, sectionY, inside } from './helpers/quadruped-probe.js';
 
 // Both animals first shipped with their legs hanging in the air below the
 // belly, for the same reason: a body narrows toward its sides, so a leg at hip
@@ -54,13 +54,12 @@ test('the dog hinges on its own joints, not on points in mid air', () => {
     `the tail root walks ${before.distanceTo(after)} under a sweep`);
 
   // ...and the head hinges INSIDE the skull, so a turn is a turn and not an
-  // orbit. Derived from the head the quadruped built, so it survives the skull
-  // being moved or resized.
+  // orbit. Asked of the head mesh itself — the skull is a loft with no radius
+  // to compare against — so it survives the skull being moved or reshaped.
   root.updateMatrixWorld(true);
-  const head = root.getObjectByName('head');
-  const gap = head.getWorldPosition(new THREE.Vector3())
-    .distanceTo(d.head.getWorldPosition(new THREE.Vector3()));
-  assert.ok(gap < head.geometry.parameters.radius, `the hinge sits ${gap} outside the skull`);
+  const hinge = d.head.getWorldPosition(new THREE.Vector3());
+  assert.ok(inside(triangles(root, (o) => o.name === 'head'), hinge),
+    `the hinge sits outside the skull: (${hinge.y.toFixed(3)}, ${hinge.z.toFixed(3)})`);
 
   // and none of it costs a draw: pivots are Groups
   let meshes = 0;
