@@ -41,54 +41,78 @@ test('makeBell is a grounded bonshō hung from a roofed two-post frame', () => {
   assert.ok(bb.min.y > 0.2, `mouth swings free of the pad: ${bb.min.y}`);
   assert.ok(bb.max.y < 1.7, `crown below the beam: ${bb.max.y}`);
 
-  // dome-topped, slightly flared: the widest ring of the profile is the lowest
+  // widest at the mouth: the lip is the lowest ring and nothing above overhangs it
   const pos = body.geometry.attributes.position;
   let maxR = 0, yAtMaxR = 0;
   for (let i = 0; i < pos.count; i++) {
     const r = Math.hypot(pos.getX(i), pos.getZ(i));
     if (r > maxR) { maxR = r; yAtMaxR = pos.getY(i); }
   }
-  assert.ok(yAtMaxR < 0.1, `the flare is at the mouth, got widest ring at y=${yAtMaxR}`);
+  assert.ok(yAtMaxR < 0.1, `the widest ring is the mouth's, got y=${yAtMaxR}`);
 
   // a tap has something forgiving to land on
   assert.ok(b.pickTargets().length >= 2, 'pick targets include a hit proxy');
   assert.ok(b.pickTargets().some((m) => m.name === 'bell-hit'));
 });
 
-test('the bonshō profile carries a flared mouth, a waist, and shoulder bands', () => {
-  // Reproduces the builder's own profile formula (same disclosed
-  // reproduce-the-tuned-constant tradeoff other D-tasks' eave/post/roof
-  // tests use) rather than a magic epsilon, and every comparison here is
-  // mutation-provable — flattening any one of these features makes the
-  // matching assertion false.
-  const H = 1.1;
+// The lathe's rings, mouth to crown, as [height, radius] in units of the bell's
+// own height — read off the built geometry, so these tests hold the shape that
+// ships rather than a copy of the builder's table.
+function bellRings(H) {
   const b = makeBell({ height: H });
   const body = b.group.children.find((c) => c.name === 'swing')
     .children.find((c) => c.name === 'body');
   const pos = body.geometry.attributes.position;
-  const radiusAt = (yFrac, tol = 0.008) => {
-    let r = -Infinity;
-    for (let i = 0; i < pos.count; i++) {
-      if (Math.abs(pos.getY(i) - yFrac * H) < tol * H) {
-        r = Math.max(r, Math.hypot(pos.getX(i), pos.getZ(i)));
-      }
-    }
-    return r;
-  };
-  const mouth = radiusAt(0.000);
-  const lip = radiusAt(0.065);
-  const waist = radiusAt(0.300);
-  const band1 = radiusAt(0.600);
-  const valley = radiusAt(0.625);
-  const band2 = radiusAt(0.655);
-  for (const [name, v] of [['mouth', mouth], ['lip', lip], ['waist', waist], ['band1', band1], ['valley', valley], ['band2', band2]]) {
-    assert.ok(v > -Infinity, `found a vertex ring near ${name}`);
+  const byY = new Map();
+  for (let i = 0; i < pos.count; i++) {
+    const y = Math.round(pos.getY(i) / H * 1000) / 1000;
+    const r = Math.hypot(pos.getX(i), pos.getZ(i)) / H;
+    byY.set(y, Math.max(byY.get(y) ?? 0, r));
   }
-  assert.ok(mouth > lip + 0.03 * H, `the mouth flares out past the ring just above it: mouth=${mouth.toFixed(4)} lip=${lip.toFixed(4)}`);
-  assert.ok(waist < lip - 0.005 * H, `the waist pulls in below the flare: waist=${waist.toFixed(4)} lip=${lip.toFixed(4)}`);
-  assert.ok(waist < band1 - 0.01 * H, `the waist is narrower than the shoulder above it: waist=${waist.toFixed(4)} band1=${band1.toFixed(4)}`);
-  assert.ok(band1 > valley + 0.005 * H, `shoulder band 1 stands proud of the valley behind it: band1=${band1.toFixed(4)} valley=${valley.toFixed(4)}`);
-  assert.ok(band2 > valley + 0.005 * H, `shoulder band 2 stands proud of the same valley: band2=${band2.toFixed(4)} valley=${valley.toFixed(4)}`);
+  // the axis points (recessed underside, crown tip) are not part of the outline
+  return [...byY.entries()].filter(([, r]) => r > 0.01).sort((p, q) => p[0] - q[0]);
+}
+function radiusAtHeight(rings, y) {
+  for (let i = 1; i < rings.length; i++) {
+    const [y0, r0] = rings[i - 1], [y1, r1] = rings[i];
+    if (y >= y0 && y <= y1) return r0 + (r1 - r0) * ((y - y0) / (y1 - y0 || 1));
+  }
+  return 0;
+}
+
+test('the bonshō is a straight-sided barrel: no waist, no flare, a dome and not a cone', () => {
+  // The profile this replaces pinched to a waist under a banded shoulder,
+  // kicked out at the mouth like a handbell and ran to a point, and at case
+  // distance that outline is a fire hydrant. Each assertion below names one of
+  // those and fails on it.
+  const rings = bellRings(1.1);
+  const mouth = rings[0][1];
+  const top = rings[rings.length - 1][0];
+  assert.ok(rings[0][0] < 0.01, `the outline starts at the mouth: y=${rings[0][0]}`);
+
+  // NO WAIST: climbing from the mouth, no ring is ever wider than the one
+  // under it — the sides only ever close, and they close toward the crown
+  for (let i = 1; i < rings.length; i++) {
+    assert.ok(rings[i][1] <= rings[i - 1][1] + 1e-6,
+      `the wall widens again at ${rings[i][0]} of the height: ${rings[i - 1][1].toFixed(3)} -> ${rings[i][1].toFixed(3)}`);
+  }
+
+  // NEAR-STRAIGHT: over the barrel's long middle the wall barely leans
+  const low = radiusAtHeight(rings, 0.15), high = radiusAtHeight(rings, 0.65);
+  assert.ok(high > low * 0.88, `the barrel tapers too fast to read as straight: ${low.toFixed(3)} -> ${high.toFixed(3)}`);
+
+  // A LIP, NOT A FLARE: the mouth ring stands proud of the wall above it by a
+  // thickness, not by a skirt
+  assert.ok(mouth > low, `the mouth carries a lip: mouth=${mouth.toFixed(3)} wall=${low.toFixed(3)}`);
+  assert.ok(mouth < low * 1.12, `the mouth flares: mouth=${mouth.toFixed(3)} wall=${low.toFixed(3)}`);
+
+  // A DOME: most of the way up, the crown is still most of the barrel wide
+  const nearTop = radiusAtHeight(rings, top * 0.9);
+  assert.ok(nearTop > low * 0.6, `the crown runs to a point: ${nearTop.toFixed(3)} at nine tenths, wall ${low.toFixed(3)}`);
+
+  // A HANGING MASS, NOT A POST: about one and a half barrels tall
+  const squat = 1 / (2 * radiusAtHeight(rings, 0.4));
+  assert.ok(squat > 1.3 && squat < 1.75, `height over barrel width: ${squat.toFixed(2)}`);
 });
 
 test('the ryuzu is a loop, not a bare rod: it reaches well off the hanging axis', () => {

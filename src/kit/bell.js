@@ -82,19 +82,32 @@ export function makeBell({ height = 1.1, color = ACCENT, frameColor = WASH.dark,
     g.add(post);
   }
 
+  // There is no striking log, and that is a finding rather than an omission.
+  // A two-post frame has no room for one in its own plane — the bell fills the
+  // gap between the posts — so the log can only hang outside a post, and there
+  // it reads as a trapeze beside the bell rather than as the thing that rings
+  // it. It would also be a striker that stands still while the bell is struck.
   const beam = new THREE.Mesh(new THREE.BoxGeometry(spread + 0.5 * H, 0.13 * H, 0.13 * H), flat);
   beam.name = 'beam';
   beam.position.y = beamY;
   g.add(beam);
 
   // a small roof over the beam: the hut's pyramid, squared to the posts and
-  // squashed front-to-back so it reads as a beam cap rather than a building
-  const roofGeo = new THREE.ConeGeometry(1.31 * H, 0.34 * H, 4);
+  // squashed front-to-back so it reads as a beam cap rather than a building.
+  // It sits on an eave board of its own footprint, merged into the same mesh:
+  // a bare pyramid has no edge, and seen level it is a sheet of paper balanced
+  // on the ridge beam.
+  const roofR = 1.31 * H, roofH = 0.34 * H, roofDepth = 0.55, eaveH = 0.05 * H;
+  const roofGeo = new THREE.ConeGeometry(roofR, roofH, 4);
   roofGeo.rotateY(Math.PI / 4);
-  roofGeo.scale(1, 1, 0.55);
-  const roof = new THREE.Mesh(roofGeo, flat);
+  roofGeo.scale(1, 1, roofDepth);
+  roofGeo.translate(0, eaveH / 2, 0);
+  const eaveSide = roofR * Math.SQRT2;
+  const eaveGeo = new THREE.BoxGeometry(eaveSide, eaveH, eaveSide * roofDepth);
+  eaveGeo.translate(0, -roofH / 2, 0);
+  const roof = new THREE.Mesh(mergeSimple([roofGeo, eaveGeo]), flat);
   roof.name = 'roof';
-  roof.position.y = beamY + 0.065 * H + 0.17 * H;
+  roof.position.y = beamY + 0.065 * H + eaveH / 2 + roofH / 2;
   g.add(roof);
 
   // Everything below the pivot swings as one piece about it.
@@ -120,26 +133,33 @@ export function makeBell({ height = 1.1, color = ACCENT, frameColor = WASH.dark,
   link.name = 'link';
   swing.add(link);
 
-  // The bell itself: a dome crown taper into a shoulder carrying two raised
-  // bands (the chi bosses' beat, simplified to a plain ring rather than the
-  // individual studs — legible at this scale, invisible past it), a waist
-  // that pulls the barrel in below the shoulder, and a flared mouth lip —
-  // the widest ring is the lowest one, pulled in sharply just above the rim
-  // so the flare actually reads instead of blending into the taper. The
-  // profile runs mouth to crown with a shallow recessed underside, so
+  // The bell itself, and the whole of it is the outline: a bonshō is a
+  // barrel, not a handbell. The wall rises from the mouth almost straight,
+  // closing only slightly, turns over a rounded shoulder and finishes as a low
+  // dome. The one step in it is the lip — the thickened rim at the mouth,
+  // proud of the wall by a thickness and square-edged, so it reads as a band
+  // of metal rather than a skirt.
+  //
+  // Three things this profile must never grow back, because together they are
+  // a fire hydrant at case distance: a waist (any ring wider than the ring
+  // under it), a mouth that flares, and a crown that runs to a point. The
+  // shoulder bands went with the waist — they were only legible as the bulge
+  // above it.
+  //
+  // The barrel is as wide as the frame allows and no wider: the bell swings
+  // front-to-back, but its off-axis wobble carries the mouth toward the posts.
+  // The profile runs mouth to crown with a shallow recessed underside, so
   // nothing is open from below.
   const P = [
     [0.000, 0.050],                                    // recessed underside
-    [0.335, 0.000],                                    // MOUTH — the widest ring
-    [0.250, 0.065],                                     // sharp pull-in: the flared lip reads here
-    [0.232, 0.300],                                     // WAIST — the narrowest point
-    [0.255, 0.520],
-    [0.272, 0.600],                                     // shoulder band 1
-    [0.262, 0.625],                                     // the valley between the two bands
-    [0.278, 0.655],                                     // shoulder band 2 / the shoulder's own widest point
-    [0.205, 0.800],
-    [0.110, 0.920],
-    [0.000, 1.000],                                     // crown
+    [0.345, 0.000],                                    // MOUTH — the lip's lower edge, the widest ring
+    [0.345, 0.060],                                    // the lip's upper edge: square, not a skirt
+    [0.322, 0.078],                                    // step in to the wall
+    [0.300, 0.700],                                    // the barrel's long straight run ends: SHOULDER
+    [0.270, 0.840],
+    [0.200, 0.930],                                    // the dome
+    [0.100, 0.985],
+    [0.000, 1.000],                                    // crown
   ].map(([r, y]) => new THREE.Vector2(r * H, y * H));
   const body = new THREE.Mesh(new THREE.LatheGeometry(P, 12), washMaterial({ color, flat: true }));
   body.name = 'body';
