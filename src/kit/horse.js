@@ -40,9 +40,13 @@ import { mergeSimple } from './scatter.js';
 //      whole hind leg becomes one diagonal propped out behind the rump and the
 //      animal stops carrying its own weight.
 //   5. THE TAIL IS A FULL HANK FROM THE TOP OF THE CROUP — rooted on the
-//      topline behind the hip (the plan's own default), leaving it backward
-//      before it falls, fullest below the dock, closing to a point about the
-//      hocks, and hanging a little back of plumb, clear of the buttock.
+//      turn of the rump (the plan's own default), leaving it backward before
+//      it falls: thin at the dock, FULLEST IN ITS LOWER HALF, drawn in to a
+//      blunt point below the hocks, and hanging a little back of plumb,
+//      clear of the buttock. Widest just under the dock it is a club.
+//
+// The rump itself turns over and down in one arc (`torso.round`): the croup
+// is the high point behind the back and the dock sits on the turn.
 //
 // Mesh ledger: body (with its neck), four legs, head, ear pair (merged), the
 // tail's one skin. k45 bakes its own horse down to a single mesh with
@@ -61,8 +65,8 @@ const TAIL_LEAN = 0.16;          // rad the whole hank leans back off plumb
 // back line (tests/quadruped.test.js) reads that ring as the back's front end,
 // and a crest carried onto it is measured as a deeper sway.
 const CREST = [0.012, 0.046, 0.04];
-// The croup: which trunk ring stands over the hip, and how far it is lifted.
-const CROUP_RING = 2, CROUP_LIFT = 0.013;
+// How far the trunk ring over the hip is lifted: the croup.
+const CROUP_LIFT = 0.013;
 // [z, halfW, halfH, yOff], x height — see ONE head below
 const HEAD_RINGS = [
   [-0.085, 0.040, 0.058, 0.000],    // poll, rounding away behind
@@ -83,7 +87,7 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     height, color, seed,
     bodyR: 0.18, bodyLen: 0.59, bodyDrop: 0.055,
     torso: {
-      chest: 1.1, loin: 0.74, withers: 1.28, back: 1.05, croup: 1.06,
+      chest: 1.1, loin: 0.74, withers: 1.28, back: 1.05, croup: 1.06, round: 1,
       shoulderW: 1.0, barrelW: 1.14, hipW: 1.06,
     },
     legBury: 0.18,
@@ -100,13 +104,13 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): rooted on the
     // poll, just inside the tilted crown of the head loft, and laid a little out.
     ears: { r: 0.025, h: 0.085, x: 0.03, y: 0.075, z: -0.005, tilt: 0.3 },
-    // `thickness` is the dock and `swell` the hair: a thin root that fattens
-    // is a hank hanging from a tailbone, where a thick root is a club. Enough
-    // nodes that the fullness sits below the dock rather than at it. The aim
-    // leans the dock back so the hank leaves the croup before it falls — only
-    // so far: a stub aimed well out and a strand hanging plumb from its end is
-    // a visible hinge.
-    tail: { kind: 'strand', segments: 7, length: 0.58, thickness: 0.04, swell: 2.6, root: [0, -1, -0.38] },
+    // `thickness` is the dock and `swell` the hair, placed low on the strand
+    // (`swellAt`) and spread over most of it (`swellSpan`): a thin root that
+    // fattens is a hank hanging from a tailbone, where a thick root is a
+    // club. The aim leans the dock back so the hank leaves the croup before
+    // it falls — only so far: a stub aimed well out and a strand hanging
+    // plumb from its end is a visible hinge.
+    tail: { kind: 'strand', segments: 7, length: 0.58, thickness: 0.04, swell: 1.8, swellAt: 0.66, swellSpan: 0.6, root: [0, -1, -0.38] },
   });
   group.name = 'horse';
 
@@ -125,13 +129,13 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // OUTLINE: the upper line of the neck stands fuller than the wedge and bows.
   // So the body's own rings are lifted along their upper half — the crest is
   // the neck's outline, not a part laid on it, and the mesh count is what it
-  // was. The same lift over the hip stands the croup above the back, so the
-  // rump rounds down to the dock instead of running level to a corner.
+  // was. The same lift over the hip stands the croup above the back, so it is
+  // the high point the plan's round rump turns down from.
   //
   // Only ever UP and only the upper half: the legs were solved against the
   // trunk the plan built, and a ring that grows upward still contains
   // everything that was sunk in it. The rings behind the hip are left alone —
-  // the plan read the tail's root off them.
+  // the plan rounds the rump with them and read the tail's root off them.
   {
     const body = group.children.find((c) => c.name === 'body');
     const P = body.geometry.getAttribute('position');
@@ -167,7 +171,11 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     // counted from the head back, so the crest stays on the neck whatever the
     // trunk behind it is made of
     CREST.forEach((by, i) => lift(rings - 1 - i, by));
-    lift(CROUP_RING, CROUP_LIFT);
+    // the croup's ring is the first one ahead of the hip, however many
+    // sections the plan spends on the rump behind it
+    let croupRing = 0;
+    while (croupRing < rings - 1 && P.getZ(croupRing * SEG + TOP) < plan.zHip) croupRing++;
+    lift(croupRing, CROUP_LIFT);
     P.needsUpdate = true;
     body.geometry.computeVertexNormals();
     body.geometry.computeBoundingBox();

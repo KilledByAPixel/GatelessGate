@@ -12,7 +12,9 @@ import { mergeSimple } from './scatter.js';
 //      mass used to be domes riding on a barrel, and two domes on a sausage is
 //      a pig with something on its back. The fall is LARGE, and it is spent
 //      evenly along the back: a level top with a rise at the front is a long
-//      box, however deep the chest under it (see the back line, below).
+//      box, however deep the chest under it. The plan's own middle sections
+//      hold a back nearly level between two steeper runs, so this one is
+//      stated as a single sagging line instead (`torso.sag`).
 //   2. THE HEAD HANGS LOW AND NOSES DOWN. The poll is carried well under the
 //      withers on a short thick neck, so the nape FALLS from the shoulders to
 //      the skull; and the head itself slopes on down from poll to muzzle. Low
@@ -43,7 +45,9 @@ import { mergeSimple } from './scatter.js';
 //      ears.
 //   6. A DEEP BARREL ON SHORT THICK LEGS, with little tuck: the belly line
 //      rises aft, but this is not a greyhound. The trunk is most of his
-//      height; the legs are what is left under it.
+//      height; the legs are what is left under it. Behind, the rump turns
+//      over and down to the buttock (`torso.round`) rather than ending in a
+//      corner, and the thin tail hangs off that turn to a tuft.
 //
 // Skull, horns and ears are all placed in the HEAD'S OWN FRAME (+z out the
 // nose, +y out of the forehead), which the plan positions and tilts. Move or
@@ -59,11 +63,11 @@ const HEAD_UP = 0.04;
 const HEAD_FWD = 0.79;
 const HEAD_TILT = 1.1;
 
-// How far the back sags under the straight line from croup to withers, x
-// height, at its middle: a little, so the shoulder stands up out of the back
-// rather than the back being a ramp. Much more and the withers are a dome on
-// a barrel again.
-const BACK_DIP = 0.015;
+// How far the back sags under the straight line from croup to withers, at
+// its middle (the plan's `torso.sag`, x bodyR): a little, so the shoulder
+// stands up out of the back rather than the back being a ramp. Much more and
+// the withers are a dome on a barrel again.
+const BACK_SAG = 0.04;
 
 // The skull, poll to nostril: [z, half-width, top, bottom] in units of height,
 // head-local. The top row is the forehead line and is kept nearly straight —
@@ -169,7 +173,7 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     height, color, seed,
     bodyR: 0.38, bodyLen: 0.48, bodyDrop: 0.40,
     torso: {
-      chest: 1.26, loin: 0.98, withers: 1.22, back: 1.0, croup: 0.76,
+      chest: 1.26, loin: 0.98, withers: 1.22, croup: 0.745, sag: BACK_SAG, round: 1,
       shoulderW: 0.95, barrelW: 1.08, hipW: 0.92,
     },
     legBury: 0.2,
@@ -191,39 +195,18 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // a placeholder the loft below replaces: the plan only has to put the head
     // where it is carried and turn it down
     head: { shape: 'box', w: 0.2, hh: 0.2, d: 0.4, fwd: HEAD_FWD, up: HEAD_UP, tilt: HEAD_TILT },
-    // Rooted just inside the rump's upper rear corner and aimed nearly
-    // straight down. Perched on top of that corner with the plan's own aim,
-    // its first segment stood off the rump as a hook.
+    // A thin rope with a tuft on its end: the fullness is placed near the tip
+    // and kept narrow (`swellAt`, `swellSpan`). It roots where the plan puts
+    // it, on the turn of the round rump, and that turn carries on back and
+    // down below the root — so the first segment is aimed well back, far
+    // enough for the rope to fall clear of the buttock instead of into it.
     tail: {
       kind: 'strand', segments: 7, length: 0.62, thickness: 0.045, color: tailColor,
-      up: 0.17, back: 0.59, root: [0, -0.9, -0.45],
+      swell: 0.8, swellAt: 0.86, swellSpan: 0.2,
+      root: [0, -0.75, -0.7],
     },
   });
   group.name = 'buffalo';
-
-  // ---- the back line ----------------------------------------------------------
-  // Restated after the build as ONE line from the withers to the croup. The
-  // plan's own middle sections hold the back nearly level between two steeper
-  // runs, which on a drop this large is a hump, a table and a step down to the
-  // rump. Only what stands above the body's axis is moved, and only between
-  // the hip and the shoulder, so every join the plan solved underneath it is
-  // still the join that renders. `plan.topAt` goes on reporting the plan's
-  // line, not this one.
-  {
-    const body = group.children.find((c) => c.name === 'body');
-    const p = body.geometry.getAttribute('position');
-    const z0 = plan.zHip, z1 = plan.zShoulder;
-    const y0 = plan.topAt(z0) - plan.bodyY, y1 = plan.topAt(z1) - plan.bodyY;
-    for (let i = 0; i < p.count; i++) {
-      const y = p.getY(i), z = p.getZ(i);
-      if (y <= 0 || z <= z0 + 1e-6 || z >= z1 - 1e-6) continue;
-      const s = (z - z0) / (z1 - z0);
-      const want = y0 + (y1 - y0) * s - BACK_DIP * h * Math.sin(Math.PI * s);
-      p.setY(i, y * want / (plan.topAt(z) - plan.bodyY));
-    }
-    p.needsUpdate = true;
-    body.geometry.computeVertexNormals();
-  }
 
   // ---- ONE head: poll to nostril in a single loft ---------------------------
   // An 8-gon turned half a step, so a flat facet faces up (the forehead), down

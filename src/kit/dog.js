@@ -64,15 +64,6 @@ const TAIL_TIP = [0.262, 0.29];          // [back, up]
 // topline there.
 const TAIL_SET = 0.1;                    // x height
 const TAIL_SINK = 0.035;
-// THE RUMP TURNS DOWN IN A ROUND. The plan carries the croup's height nearly
-// to the buttock and drops it there, which on a body this short is a box
-// corner under the tail. So the trunk's upper half is drawn down behind the
-// hips, a little at first and most at the very end: the fraction of its
-// height above the axis that the rump's end gives up. The underside is left
-// alone — the thighs are solved against it. What bounds it is the thigh as
-// well: drawn down further, the rump no longer covers the top of the thigh
-// buried in it, which then shows as a shelf either side of the tail.
-const RUMP_ROUND = 0.45;
 
 // THE HEAD, back of the skull to the nose: [z, top, bottom, half-width] in
 // heights, from the point the neck ends on (see skull.js). The neck comes in
@@ -153,11 +144,12 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
   // Short-legged and fat-bodied the whole way along reads as a pig; the same
   // trunk carried higher on longer legs reads as a hound on stilts. The
   // topline falls a little from withers to croup and the rump overhangs the
-  // hind legs enough to turn down in a round rather than a corner.
+  // hind legs enough to turn down in a round rather than a corner (`round`:
+  // on a body this short a blunt end is a box under the tail).
   const { group, material, plan } = makeQuadruped({
     height, color, seed,
     bodyR: 0.2, bodyLen: 0.56, bodyDrop: 0.2,
-    torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92 },
+    torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92, round: 1 },
     legBury: 0.16,
     legH: 0.46, legR: 0.075, legTaper: 1.0, hipX: 0.085, hipZ: 0.30,
     // The legs stand under the two ends of the trunk rather than under its
@@ -180,20 +172,6 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     tail: { kind: 'stiff', r0: 0.02, r1: 0.05, length: 0.3, tilt: 0 },
   });
   group.name = 'dog';
-
-  // see RUMP_ROUND. `sag` is kept, because whatever sits on the croup has to
-  // be seated on the rounded one.
-  const body = group.children.find((c) => c.name === 'body');
-  const trunk = body.geometry.getAttribute('position');
-  body.geometry.computeBoundingBox();
-  const rumpLen = plan.zHip - body.geometry.boundingBox.min.z;
-  const sag = (z) => 1 - RUMP_ROUND * clamp01((plan.zHip - z) / rumpLen) ** 2;
-  for (let i = 0; i < trunk.count; i++) {
-    if (trunk.getY(i) > 0) trunk.setY(i, trunk.getY(i) * sag(trunk.getZ(i)));
-  }
-  trunk.needsUpdate = true;
-  body.geometry.computeVertexNormals();
-  body.geometry.computeBoundingBox();
 
   // ---- the skull, onto its own hinge --------------------------------------
   // makeQuadruped hangs the head and ears straight off the body, which
@@ -242,7 +220,7 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
   // ---- the tail, onto its own hinge ---------------------------------------
   // Rotating a tail about its own long axis does nothing, so the sweep
   // happens about the root, which is where the pivot goes: on the croup, read
-  // off the trunk as built and rounded so it follows a retuned back. The mesh sits
+  // off the plan's own topline so it follows a retuned back. The mesh sits
   // square on that pivot and the curve is all in its geometry — the skull's
   // loft again, run tip to root, each ring deepened by the slope of the tail
   // through it because the loft stands its rings upright and a rising tube
@@ -253,7 +231,7 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
   const tailZ = plan.zHip - TAIL_SET * height;
   tailPivot.position.set(
     0,
-    plan.bodyY + (plan.topAt(tailZ) - plan.bodyY) * sag(tailZ) - TAIL_SINK * height,
+    plan.topAt(tailZ) - TAIL_SINK * height,
     tailZ,
   );
   group.add(tailPivot);

@@ -6,9 +6,22 @@ import { makeTail } from './tail.js';
 // What a species gets when it states nothing: a plain, lean animal. Every
 // number here is in the units its option is documented in beside the builder.
 const TORSO_DEFAULTS = {
-  chest: 1.1, loin: 0.72, withers: 1.0, back: 0.9, croup: 0.94, rump: 1,
+  chest: 1.1, loin: 0.72, withers: 1.0, back: 0.9, croup: 0.94, rump: 1, round: 0, sag: null,
   shoulderW: 0.8, barrelW: 0.95, hipW: 0.85,
 };
+// THE ROUND OF A RUMP (`torso.round`), as the three sections it is drawn
+// with behind the hip: [how far along the overhang, how deep the underside
+// still is (x loin), half-width (x hipW)], from the end forward. The topline
+// over them is not listed — it is an arc (ROUND_ARC: 2 is a quarter ellipse,
+// higher is squarer) from the croup down to the rump's hindmost point, which
+// sits ROUND_LOW (x loin) BELOW the axis. See THE RUMP beside the rows.
+const ROUND_ROWS = [[0.93, 0.66, 0.6], [0.7, 0.84, 0.86], [0.4, 0.92, 0.95]];
+const ROUND_ARC = 2;
+const ROUND_LOW = 0.38;
+// Where on that arc a tail roots when the species does not say, as a fraction
+// of the overhang: on the turn, not at the end of it, where the arc has
+// already fallen to the buttock.
+const ROUND_ROOT = 0.76;
 // r      half-depth of the neck where it enters the skull, x height
 // w      how wide that end is across, as a fraction of its depth
 // root   how far down the chest the throat line starts, as a fraction of
@@ -70,6 +83,14 @@ const HEX = Math.sin(Math.PI / 3);
 //   rump       how full the trunk stays behind the hips: 1 carries most of
 //              its depth to the buttock and turns down there, 0 tapers it
 //              away to a point — and moves the default tail root with it
+//   round      how that full rump ends: 0 is a blunt cap, its top carried
+//              nearly level to a corner; 1 turns the croup over and down in
+//              one arc to the buttock, with the thigh carrying the line on
+//              (see THE RUMP beside the trunk's rows)
+//   sag        null states the back by `back`. A number states it instead as
+//              ONE line from croup to withers that sags this far at its
+//              middle — for a back that falls a long way, which the fixed
+//              middle sections otherwise spend as a rise, a table and a step
 //   shoulderW / barrelW / hipW   half-widths at shoulder, mid-barrel and hip
 //
 // The shoulder section stands over the front legs and the hip section over the
@@ -113,7 +134,7 @@ export function makeQuadruped({
   head = { shape: 'sphere', r: 0.20, fwd: 0.56, up: 0.22 },   // + scaleX/scaleY/scaleZ (default 1): squish the skull in its own tilted frame
   neck = null,           // { r, w, root, set, taper, arch } — see NECK_DEFAULTS; null ends the chest in a blunt breast
   ears = null,           // { r, h, x, y, z, tilt } — DIRECT base offsets from the head's centre; see EARS ARE PLACED DIRECTLY below
-  tail = null,           // { kind: 'stiff'|'strand', ... } — up/back default to the croup
+  tail = null,           // { kind: 'stiff'|'strand', ... } — up/back default to the croup; a strand takes makeTail's root/swell/swellAt/swellSpan
   seed = 1,
   ...retired
 } = {}) {
@@ -194,19 +215,52 @@ export function makeQuadruped({
   // [z, top, bottom, half-width], heights and widths in R off the axis.
   // The flank row is where the belly stands highest: just ahead of the thigh,
   // not at the hip itself, where the thigh covers it anyway.
+  // The back, at a fraction of the way from hip to shoulder: by `back` at
+  // the plan's own middle sections, or as one sagging line (`sag`).
+  const backAt = (f, stated) => (T.sag == null ? stated
+    : lerp(T.croup, T.withers, f) - T.sag * Math.sin(Math.PI * f));
+  // Behind the hip, as [fraction of the overhang, top, bottom, half-width],
+  // nearest the end first.
+  const blunt = [
+    [lerp(0.84, 0.90, T.rump), lerp(0.52, 0.66, T.rump) * T.croup, -lerp(0.20, 0.42, T.rump) * T.loin, lerp(0.42, 0.58, T.rump) * T.hipW],
+    [lerp(0.36, 0.45, T.rump), lerp(0.94, 0.95, T.rump) * T.croup, -lerp(0.70, 0.80, T.rump) * T.loin, lerp(0.88, 0.90, T.rump) * T.hipW],
+  ];
+  // THE RUMP. Blunt, the trunk carries its top nearly level to the end and
+  // closes on a point at mid-height: a box corner under the tail, and an end
+  // that is cut away BELOW, exactly where the thigh's buried top needs trunk
+  // around it. Rounding that shape — drawing its top down — uncovers the
+  // thigh and shows it as a shelf either side of the tail. So a round rump
+  // is a different section, not a softened one: the UNDERSIDE keeps its depth
+  // to the end, the hindmost point drops below the axis to the buttock, and
+  // the whole turn is spent on the topline, as one arc from the croup down to
+  // that point. The thigh's rear edge starts just under it, so the outline
+  // runs croup, buttock, thigh, hock without a notch, and the leg's top is
+  // solved against a rump that is fullest where it is buried. One more
+  // section than the blunt cap has, because an arc drawn through two is a
+  // chamfer.
+  const yEnd = lerp(0.16 * T.croup, -ROUND_LOW * T.loin, T.round);
+  let rear = blunt;
+  if (T.round > 0) {
+    const mid = blunt[0].map((v, k) => lerp(v, blunt[1][k], 0.5));
+    rear = [blunt[0], mid, blunt[1]].map((b, i) => {
+      const [u, deep, w] = ROUND_ROWS[i];
+      const arc = Math.pow(1 - Math.pow(u, ROUND_ARC), 1 / ROUND_ARC);
+      const full = [u, lerp(-ROUND_LOW * T.loin, T.croup, arc), -deep * T.loin, w * T.hipW];
+      return b.map((v, k) => lerp(v, full[k], T.round));
+    });
+  }
   const rows = [
-    [zHip - lerp(0.84, 0.90, T.rump) * over, lerp(0.52, 0.66, T.rump) * T.croup, -lerp(0.20, 0.42, T.rump) * T.loin, lerp(0.42, 0.58, T.rump) * T.hipW],
-    [zHip - lerp(0.36, 0.45, T.rump) * over, lerp(0.94, 0.95, T.rump) * T.croup, -lerp(0.70, 0.80, T.rump) * T.loin, lerp(0.88, 0.90, T.rump) * T.hipW],
-    [zHip + 0.08 * span, T.croup, -0.96 * T.loin, T.hipW],
-    [zHip + 0.36 * span, lerp(T.croup, T.back, 0.8), -T.loin, lerp(T.hipW, T.barrelW, 0.7)],
-    [zHip + 0.68 * span, T.back, -lerp(T.loin, T.chest, 0.8), T.barrelW],
+    ...rear.map(([u, top, bot, w]) => [zHip - u * over, top, bot, w]),
+    [zHip + 0.08 * span, backAt(0.08, T.croup), -0.96 * T.loin, T.hipW],
+    [zHip + 0.36 * span, backAt(0.36, lerp(T.croup, T.back, 0.8)), -T.loin, lerp(T.hipW, T.barrelW, 0.7)],
+    [zHip + 0.68 * span, backAt(0.68, T.back), -lerp(T.loin, T.chest, 0.8), T.barrelW],
     [zShoulder, T.withers, -T.chest, T.shoulderW],
   ];
   const station = ([z, top, bot, w]) => ({
     c: [(top + bot) / 2 * R, z], a: [(top - bot) / 2 * R, 0], w: w * R,
   });
   const stations = rows.map(station);
-  const rearApex = [0.16 * T.croup * R, zHip - over];
+  const rearApex = [yEnd * R, zHip - over];
   const zBreast = zShoulder + over;
 
   // head centre, in the body's own frame (y off the axis)
@@ -589,7 +643,7 @@ export function makeQuadruped({
   // buried. Read off the trunk's own sections, so it follows a retuned rump —
   // and set further back on a full one, where a root nearer the hip hangs
   // its tail down inside the buttock and the thighs.
-  const croupZ = zHip - lerp(0.6, 0.88, T.rump) * over;
+  const croupZ = zHip - lerp(lerp(0.6, 0.88, T.rump), ROUND_ROOT, T.round) * over;
   const croupY = bodyY + sectionAt(croupZ).top - 0.12 * R;
   const tailY = tail && tail.up !== undefined ? bodyY + tail.up * h : croupY;
   const tailZ = tail && tail.back !== undefined ? -tail.back * h : croupZ;
@@ -610,15 +664,17 @@ export function makeQuadruped({
       // overrides it for a beast that carries its own differently.
       root: tail.root ?? [0, -0.72, -0.69],
       swell: tail.swell ?? 0,
+      swellAt: tail.swellAt ?? null,
+      swellSpan: tail.swellSpan,
     });
     strand.group.position.set(0, tailY, tailZ);
     g.add(strand.group);
   } else if (tail && tail.kind === 'stiff') {
-    // Centred on its own origin and laid along local +y, root end down, so the
-    // species' root-pinning arithmetic (half a length back along the tilt) is
-    // unchanged. It closes to a point rather than a sawn-off disc, and
-    // `swell` lets it fatten past both ends on the way — a brush, where a
-    // plain taper is a stick.
+    // Centred on its own origin and laid along local +y, root end down — so
+    // it turns about its MIDDLE, and a species that wags it has to re-seat it
+    // on a pivot at the root. It closes to a point rather than a sawn-off
+    // disc, and `swell` lets it fatten past both ends on the way — a brush,
+    // where a plain taper is a stick.
     const len = tail.length * h, r0 = tail.r0 * h, r1 = tail.r1 * h;
     const sts = [{ p: [0, -len / 2, 0], r: r1 }];
     if (tail.swell) sts.push({ p: [0, -len * 0.08, 0], r: Math.max(r0, r1) * tail.swell });

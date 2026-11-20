@@ -561,3 +561,101 @@ test('the rump keeps its depth to the buttock', () => {
       `${label}: the rump is ${(buttock / hip * 100).toFixed(0)}% of the hip's depth a quarter of the way in from its end`);
   }
 });
+
+// A ROUND RUMP IS AN ARC, AND IT ENDS LOW. `torso.round` is not the blunt cap
+// softened: drawing a blunt rump's top down uncovers the thigh buried in it.
+// The round one keeps its underside, drops its hindmost point below the axis
+// to the buttock and spends the whole turn on the topline. Read off the trunk
+// as how far down the topline has come, from the croup's height (0) to the
+// hindmost point's (1), at stations along the overhang.
+test('torso.round turns the croup over in an arc to a low buttock, and the thigh stays buried', () => {
+  const rumpOf = (root) => {
+    const mesh = root.getObjectByName('body');
+    const body = triangles(root, (o) => o === mesh);
+    const p = mesh.geometry.getAttribute('position');
+    let end = 0;
+    for (let i = 1; i < p.count; i++) if (p.getZ(i) < p.getZ(end)) end = i;
+    const { zHind } = trunk(root);
+    const endZ = p.getZ(end), endY = p.getY(end) + mesh.position.y;
+    const hip = sectionY(body, zHind);
+    const fall = (u) => (hip.max - sectionY(body, zHind + u * (endZ - zHind)).max) / (hip.max - endY);
+    return { fall, low: (endY - hip.min) / hip.depth };
+  };
+  const opts = { legs: { hindSet: 0.08 } };
+  const blunt = rumpOf(makeQuadruped(opts).group);
+  const round = rumpOf(makeQuadruped({ ...opts, torso: { round: 1 } }).group);
+
+  assert.ok(blunt.low > 0.5, `a blunt rump closes at mid-height: ${blunt.low.toFixed(2)} of the way up the hip`);
+  assert.ok(round.low < 0.4, `a round one ends low, at the buttock: ${round.low.toFixed(2)} of the way up the hip`);
+  // an arc: it has fallen a little by the middle, most of the way by the end,
+  // and it stands proud of the straight chamfer between the two all the way
+  assert.ok(round.fall(0.5) > 0.08 && round.fall(0.5) < 0.3, `mid-rump the topline has fallen ${round.fall(0.5).toFixed(2)}`);
+  assert.ok(round.fall(0.9) > 0.45, `near its end it has fallen ${round.fall(0.9).toFixed(2)}`);
+  for (const u of [0.3, 0.5, 0.7, 0.85]) {
+    assert.ok(round.fall(u) < u - 0.08, `a chamfer, not an arc, at ${u}: fallen ${round.fall(u).toFixed(2)}`);
+  }
+
+  // the thigh under it, with the hind legs set back toward the end
+  for (const hindSet of [0, 0.06, 0.1]) {
+    const { group } = makeQuadruped({ torso: { round: 1 }, legs: { hindSet } });
+    legsJoinBody(group, `round rump, hindSet ${hindSet}`, assert.ok);
+    const body = triangles(group, (o) => o.name === 'body');
+    for (const leg of group.children.filter((o) => o.name === 'leg' && o.position.z < 0)) {
+      // the ring the limb hangs from is the first six vertices of its loft
+      const p = leg.geometry.getAttribute('position');
+      for (let j = 0; j < 6; j++) {
+        const q = new THREE.Vector3().fromBufferAttribute(p, j).add(leg.position);
+        assert.ok(inside(body, q), `hindSet ${hindSet}: the thigh's top ring stands out of the round rump at `
+          + `(${q.x.toFixed(3)}, ${q.y.toFixed(3)}, ${q.z.toFixed(3)})`);
+      }
+    }
+  }
+});
+
+// The animals that state a round rump get one, measured on what ships: the
+// trunk's hindmost point is the buttock, in the lower half of the hip's depth,
+// and the topline has turned well down before it gets there.
+test('dog, horse and buffalo end in a round rump, not a box', () => {
+  for (const [label, build] of STANDING) {
+    if (!['dog', 'horse', 'buffalo'].includes(label)) continue;
+    const root = build();
+    const mesh = root.getObjectByName('body');
+    const body = triangles(root, (o) => o === mesh);
+    const box = new THREE.Box3().setFromObject(mesh, true);
+    const { zHind } = trunk(root);
+    const hip = sectionY(body, zHind);
+    const end = sectionY(body, box.min.z + 0.01 * (zHind - box.min.z));
+    const endUp = ((end.max + end.min) / 2 - hip.min) / hip.depth;
+    assert.ok(endUp < 0.42, `${label}: the rump's end stands ${endUp.toFixed(2)} of the way up the hip`);
+    const late = sectionY(body, zHind + 0.9 * (box.min.z - zHind));
+    const fallen = (hip.max - late.max) / hip.depth;
+    assert.ok(fallen > 0.2,
+      `${label}: a corner — near the rump's end the topline has fallen only ${fallen.toFixed(2)} of the hip's depth`);
+  }
+});
+
+// `torso.sag` states the back as one line. With it, the middle sections lie on
+// the chord from croup to withers (less the sag); without it, a long fall is
+// spent unevenly and the same chord stands well clear of the back. Either
+// way the plan's own `topAt` is the line that renders, so nothing has to be
+// restated after the build.
+test('torso.sag spends a falling back evenly, and plan.topAt reports it', () => {
+  const backOf = (torso) => {
+    const { group, plan } = makeQuadruped({ torso: { withers: 1.3, croup: 0.7, ...torso } });
+    const body = triangles(group, (o) => o.name === 'body');
+    const z0 = plan.zHip + 0.08 * (plan.zShoulder - plan.zHip), z1 = plan.zShoulder - 1e-6;
+    const y0 = sectionY(body, z0).max, y1 = sectionY(body, z1).max;
+    let off = 0, drift = 0;
+    for (let i = 1; i < 20; i++) {
+      const z = z0 + (z1 - z0) * (i / 20), y = sectionY(body, z).max;
+      off = Math.max(off, Math.abs(y0 + (y1 - y0) * (i / 20) - y));
+      drift = Math.max(drift, Math.abs(plan.topAt(z) - y));
+    }
+    return { off: off / plan.R, drift: drift / plan.R };
+  };
+  const stepped = backOf({}), line = backOf({ sag: 0 }), sagged = backOf({ sag: 0.08 });
+  assert.ok(stepped.off > 0.08, `the default back leaves its own chord by ${stepped.off.toFixed(3)} R`);
+  assert.ok(line.off < 0.01, `sag 0 is the chord: off it by ${line.off.toFixed(4)} R`);
+  assert.ok(sagged.off > 0.05 && sagged.off < 0.09, `and a stated sag is that sag: ${sagged.off.toFixed(3)} R`);
+  for (const b of [stepped, line, sagged]) assert.ok(b.drift < 1e-6, `plan.topAt is the mesh's own topline: ${b.drift}`);
+});

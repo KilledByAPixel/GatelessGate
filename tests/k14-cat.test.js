@@ -79,10 +79,16 @@ test('the seated cat sits up, tucks its rear, and keeps all four paws down', () 
 });
 
 test('makeCat is cat-sized, not a small dog', () => {
+  // A leg's length is the height of its JOIN — the mesh origin, the ring the
+  // limb hangs from. Not the top of its bounding box: that is the tip of the
+  // cone the leg closes with inside the trunk, which follows how much trunk
+  // there is over the hip and moved with the shape of a rump while both
+  // animals' legs stayed exactly as long as they were.
   const legTop = (root) => {
     root.updateMatrixWorld(true);
     let y = 0;
-    root.traverse((o) => { if (o.name === 'leg') y = Math.max(y, box(o).max.y); });
+    const at = new THREE.Vector3();
+    root.traverse((o) => { if (o.name === 'leg') y = Math.max(y, o.getWorldPosition(at).y); });
     return y;
   };
 

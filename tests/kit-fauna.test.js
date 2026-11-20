@@ -284,3 +284,60 @@ test('makeTail: an unaimed tail is exactly the tail it always was', () => {
   };
   assert.equal(snap(), snap(), 'and deterministic besides');
 });
+
+// ---- where the fullness sits --------------------------------------------------
+// The plain law multiplies the taper by a hump that peaks above the middle, so
+// its widest ring is always high and its tip is nothing. `swellAt` places the
+// fullness instead: low and broad for a hank of hair, at the tip and narrow
+// for a tuft. Read off the skin's own rings.
+test('makeTail: swellAt places the fullness, and leaves the strand itself alone', () => {
+  const radii = (t) => {
+    const P = t.group.getObjectByName('strand').geometry.getAttribute('position');
+    const nodes = t.nodes();
+    const sides = (P.count - 2) / nodes.length;
+    const v = new THREE.Vector3(), c = new THREE.Vector3();
+    return nodes.map((n, i) => {
+      c.set(...n);
+      let r = 0;
+      for (let j = 0; j < sides; j++) r = Math.max(r, v.fromBufferAttribute(P, i * sides + j).distanceTo(c));
+      return r;
+    });
+  };
+  const widest = (r) => r.indexOf(Math.max(...r));
+  const base = { segments: 7, length: 0.9, thickness: 0.05, seed: 5 };
+  const HANK = { swell: 1.8, swellAt: 0.66, swellSpan: 0.6 };
+
+  const plain = radii(makeTail({ ...base, swell: 2.5 }));
+  assert.ok(widest(plain) <= 3, `the plain law is fullest high: ring ${widest(plain)}`);
+  assert.ok(plain[6] < 0.2 * Math.max(...plain), 'and ends on almost nothing');
+
+  const hank = radii(makeTail({ ...base, ...HANK }));
+  assert.ok(widest(hank) >= 4, `a low hank is fullest in its lower half: ring ${widest(hank)}`);
+  const end = hank[6] / Math.max(...hank);
+  assert.ok(end > 0.2 && end < 0.6, `and ends bluntly, neither a point nor a club: ${end.toFixed(2)} of its widest`);
+  assert.ok(hank[0] < 1.05 * base.thickness, `thin at the root still: ${hank[0].toFixed(3)}`);
+
+  const tuft = radii(makeTail({ ...base, swell: 0.8, swellAt: 0.86, swellSpan: 0.2 }));
+  assert.ok(tuft[5] > 1.8 * tuft[4] && tuft[5] > 2 * tuft[6],
+    `a tuft stands out of the rope near the tip: ${tuft.map((x) => x.toFixed(3))}`);
+  for (let i = 1; i <= 4; i++) assert.ok(tuft[i] < tuft[i - 1], 'and the rope above it is a plain taper');
+
+  // a placed fullness closes on a point carried past the last node; the plain
+  // law closes where it stands
+  const tipGap = (opts) => {
+    const t = makeTail({ ...base, ...opts });
+    const P = t.group.getObjectByName('strand').geometry.getAttribute('position');
+    return new THREE.Vector3().fromBufferAttribute(P, P.count - 1).distanceTo(new THREE.Vector3(...t.nodes()[6]));
+  };
+  assert.ok(tipGap({ swell: 2.5 }) < 1e-6, 'the plain tail closes on its last node');
+  assert.ok(tipGap(HANK) > 0.01, 'a hank is drawn on to a point');
+
+  // the skin is all it changes: the same strand swings underneath
+  const swing = (opts) => {
+    const t = makeTail({ ...base, ...opts });
+    t.impulse(1);
+    for (let i = 0; i < 90; i++) t.update(1 / 60, i / 60);
+    return t.nodes().flat();
+  };
+  assert.deepEqual(swing(HANK), swing({}));
+});

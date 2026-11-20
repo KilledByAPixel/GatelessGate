@@ -172,3 +172,43 @@ test('small ears hang below the horn bases', () => {
   // body, four legs, head, an ear pair, two horns
   assert.ok(meshes <= 9, `${meshes} meshes besides the tail`);
 });
+
+// The back line is the plan's own (`torso.sag`), not a restatement laid over
+// the trunk after the build — so what the plan reports is what renders, and
+// anything seated on the back from `plan.topAt` sits on the back.
+test('the plan reports the back that renders', () => {
+  const b = makeBuffalo({ height: H });
+  b.group.updateMatrixWorld(true);
+  const body = triangles(b.group, (o) => o.name === 'body');
+  const { zHip, zShoulder } = b.plan;
+  for (let i = 0; i <= 10; i++) {
+    const z = zHip + (zShoulder - zHip - 1e-6) * (i / 10);
+    const drift = Math.abs(b.plan.topAt(z) - sectionY(body, z).max);
+    assert.ok(drift < 1e-6 * H, `plan.topAt is ${drift.toFixed(4)} off the trunk at z = ${z.toFixed(2)}`);
+  }
+});
+
+// A THIN TAIL WITH A TUFT ON ITS END. Read off the strand's own rings: the
+// rope tapers from the root, then one ring near the tip stands well out of
+// that taper, and the ring after it is drawn in again.
+test('the tail is a rope that ends in a tuft', () => {
+  const b = makeBuffalo({ height: H });
+  const skin = b.group.getObjectByName('strand');
+  const nodes = b.tail.nodes();
+  const n = nodes.length;
+  const P = skin.geometry.getAttribute('position');
+  const sides = (P.count - 2) / n;
+  const v = new THREE.Vector3(), c = new THREE.Vector3();
+  const r = nodes.map((node, ring) => {
+    c.set(...node);
+    let far = 0;
+    for (let j = 0; j < sides; j++) far = Math.max(far, v.fromBufferAttribute(P, ring * sides + j).distanceTo(c));
+    return far;
+  });
+  const tuft = 2 + r.slice(2).indexOf(Math.max(...r.slice(2)));
+  assert.ok(tuft >= n - 3 && tuft < n - 1, `the tuft is ring ${tuft} of ${n}: near the tip, not on it`);
+  assert.ok(r[tuft] > 1.8 * r[tuft - 1], `it stands out of the rope: ${r[tuft].toFixed(3)} against ${r[tuft - 1].toFixed(3)}`);
+  assert.ok(r[n - 1] < 0.5 * r[tuft], 'and closes again below');
+  for (let i = 1; i < tuft; i++) assert.ok(r[i] < r[i - 1], `the rope above it tapers (ring ${i})`);
+  assert.ok(r[tuft] < 1.3 * r[0], 'a tuft, not a club: no fuller than the root of the tail');
+});

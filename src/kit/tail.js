@@ -27,6 +27,17 @@ export function makeTail({
   // middle and still closes to the same tip, which is a tail of hair rather
   // than a tail of rope.
   swell = 0,
+  // WHERE THAT FULLNESS SITS, as a fraction of the length from the root, and
+  // how much of the length it is spread over either side of there. Null (the
+  // default) is the law every caller had before this existed: the taper
+  // MULTIPLIED by a hump that peaks above the middle, which cannot put the
+  // widest point low — the taper has spent most of the radius by then — and
+  // cannot make a tuft at all. With a place stated the hump is ADDED to the
+  // taper instead, `swell` thicknesses at its peak, so it is as full at the
+  // tip as anywhere: low and broad is a hank of hair that ends bluntly, since
+  // the last ring still stands inside the hump; near the tip and narrow is a
+  // tuft on the end of a rope.
+  swellAt = null, swellSpan = 0.5,
 } = {}) {
   const spacing = length / (segments - 1);
   // pin the top node — and the second one too when the caller aims the root
@@ -74,10 +85,19 @@ export function makeTail({
   // at every node, each carried from the one above it, has neither problem:
   // the facets run unbroken root to tip and a bend is just a bend.
   const SIDES = 6;
-  const radiusAt = (k) => thickness * (1 - k / segments)
-    * (1 + swell * Math.sin(Math.PI * 0.9 * k / (segments - 1)));
+  const radiusAt = (k) => {
+    const taper = 1 - k / segments;
+    if (swellAt == null) return thickness * taper * (1 + swell * Math.sin(Math.PI * 0.9 * k / (segments - 1)));
+    const off = Math.min(1, Math.abs(k / (segments - 1) - swellAt) / swellSpan);
+    return thickness * (taper + swell * Math.cos(off * Math.PI / 2) ** 2);
+  };
   const radii = [];
   for (let i = 0; i < segments; i++) radii.push(radiusAt(i));
+  // A placed fullness leaves a last ring of some size, and closed flat on its
+  // own node that is a sawn-off end. So the closing point is carried on past
+  // the last node, in proportion to that ring: a hank drawn to a blunt point.
+  // The plain law's last ring is nearly nothing and closes where it stands.
+  const tipReach = swellAt == null ? 0 : 1.6 * radii[segments - 1];
   const pos = new Float32Array((segments * SIDES + 2) * 3);
   const idx = [];
   for (let i = 0; i < segments - 1; i++) {
@@ -129,8 +149,10 @@ export function makeTail({
         pos[o + 2] = p[i * 3 + 2] + nrm.z * c + bin.z * sn;
       }
     }
+    // `tan` is still the last node's own direction here
     const tip = (segments - 1) * 3;
-    pos.set([p[0], p[1], p[2], p[tip], p[tip + 1], p[tip + 2]], rootApex * 3);
+    pos.set([p[0], p[1], p[2],
+      p[tip] + tan.x * tipReach, p[tip + 1] + tan.y * tipReach, p[tip + 2] + tan.z * tipReach], rootApex * 3);
     geo.attributes.position.needsUpdate = true;
     geo.computeVertexNormals();
     geo.computeBoundingSphere();

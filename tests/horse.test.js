@@ -207,10 +207,18 @@ test('the tail hangs from the croup', () => {
     for (let j = 0; j < sides; j++) { const x = P.getX(ring * sides + j); lo = Math.min(lo, x); hi = Math.max(hi, x); }
     return hi - lo;
   };
-  assert.ok(across(2) > across(0) * 1.5, 'fuller through the middle than at the dock');
-  // reaching about to the hock, and long: a full hank is most of the hind
-  // leg's own height, where a short one is a switch
-  assert.ok(box.min.y / withers > 0.2 && box.min.y / withers < 0.36,
+  // FULLEST LOW. A hank widest just under the dock is a club hung by its
+  // thick end; a tail of hair is thin at the dock, widest in its lower half,
+  // and drawn in again to its end.
+  const widths = nodes.map((n, i) => across(i));
+  const widest = widths.indexOf(Math.max(...widths));
+  assert.ok(widest >= nodes.length / 2,
+    `the hank is fullest at ring ${widest} of ${nodes.length}: in its lower half`);
+  assert.ok(widths[widest] > widths[0] * 1.8, 'far fuller there than at the dock');
+  assert.ok(widths[nodes.length - 1] < 0.5 * widths[widest], 'and drawn in again to its end');
+  // reaching below the hock but never near the ground, and long: a full hank
+  // is most of the hind leg's own height, where a short one is a switch
+  assert.ok(box.min.y / withers > 0.08 && box.min.y / withers < 0.3,
     `the tip hangs at ${(box.min.y / withers).toFixed(2)}x withers`);
   assert.ok((box.max.y - box.min.y) / withers > 0.6,
     `the hank is ${((box.max.y - box.min.y) / withers).toFixed(2)}x withers from dock to tip`);
