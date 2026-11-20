@@ -16,22 +16,23 @@ test('sleeves hinge at the shoulder (geometry translated, not centred)', () => {
   const g = makeFigure({});
   const arm = g.children.find((c) => c.name === 'arm');
   // `precise` (walk the real vertices) rather than the default AABB-of-AABB.
-  // A resting sleeve leans 0.28 rad off plumb, and the loose form transforms
-  // the eight corners of the geometry's box — including the corner that pairs
-  // the WIDE cuff radius with the TOP of the sleeve, a point no vertex of a
-  // tapered cylinder actually occupies. That phantom corner swings 0.028 above
-  // the shoulder and would fail this by itself, saying nothing about where the
-  // hinge is. Measured against real vertices the answer is 0.015 — while a
-  // centred (un-translated) sleeve gives 0.276, so the check still catches the
-  // thing it is for by a factor of eighteen. Same reason k14-cat.test.js
-  // passes `true` here.
+  // A resting sleeve leans off plumb, and the loose form transforms the eight
+  // corners of the geometry's box — including the corner that pairs the WIDE
+  // cuff with the TOP of the sleeve, a point no vertex of the arm actually
+  // occupies. That phantom corner swings above the shoulder and would fail
+  // this by itself, saying nothing about where the hinge is. Same reason
+  // k14-cat.test.js passes `true` here.
   const box = new THREE.Box3().setFromObject(arm, true);
   // The mesh's origin (shoulder) must sit at the top of its CLOTH — only the
-  // SHOULDER BALL (r = r0·1.35·h, merged at the hinge to bury the arm/body
-  // join at any pose) may crest above it. An un-translated (centred) sleeve
-  // overshoots this bound by ~0.19, so the check still catches what it is for.
-  const ballR = 0.035 * 1.22 * 1.6;
-  assert.ok(box.max.y <= arm.position.y + ballR + 0.01, 'sleeve not hinged at shoulder');
+  // shoulder CAP, which closes the arm over the hinge to bury the arm/body
+  // join, may crest above it, and the cap is a small fraction of the sleeve. A
+  // centred (un-translated) sleeve stands half its own length above the hinge,
+  // so the check still catches what it is for several times over.
+  const H = 1.6;
+  const crest = box.max.y - arm.position.y;
+  assert.ok(crest > 0, 'the cap closes over the hinge');
+  assert.ok(crest <= 0.06 * H, `sleeve not hinged at shoulder: crests ${crest}`);
+  assert.ok(crest < 0.2 * (box.max.y - box.min.y), 'the cap is a cap, not half the arm');
 });
 
 // The widest radius a mesh's own geometry reaches inside a y band — the
@@ -235,4 +236,252 @@ test('the bow is a HINGE AT THE WAIST, forward, with the hem left standing', () 
   assert.ok(Math.abs(bowed.head.x - up.head.x) < 1e-6, 'and never leans sideways');
   // the hem is still planted: he bent, he did not topple
   assert.ok(Math.abs(bowed.box.min.y) < 1e-6, `the hem stays on the ground: ${bowed.box.min.y}`);
+});
+
+// ---------------------------------------------------------------------------
+// the arms
+// ---------------------------------------------------------------------------
+// What the arm tests read is the mesh's own geometry, sliced: a ring count is
+// a tuning, so a check that walked vertices would pin where the rings happen
+// to be rather than what the arm does.
+
+// The cross-section of a mesh's geometry at local y = `y`: the points where
+// its triangles' edges cross that plane.
+function sectionAt(mesh, y) {
+  const geo = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry;
+  const p = geo.attributes.position;
+  const out = [];
+  const a = new THREE.Vector3(), b = new THREE.Vector3();
+  for (let i = 0; i < p.count; i += 3) {
+    for (let e = 0; e < 3; e++) {
+      a.fromBufferAttribute(p, i + e);
+      b.fromBufferAttribute(p, i + (e + 1) % 3);
+      if ((a.y - y) * (b.y - y) >= 0) continue;
+      out.push(a.clone().lerp(b, (y - a.y) / (b.y - a.y)));
+    }
+  }
+  return out;
+}
+// The middle of a section — the box centre, not the mean, so a ring that is
+// sampled densely on one side does not pull it.
+function sectionCentre(mesh, y) {
+  const pts = sectionAt(mesh, y);
+  if (!pts.length) return null;
+  return new THREE.Box3().setFromPoints(pts).getCenter(new THREE.Vector3());
+}
+function sectionRadius(mesh, y) {
+  const pts = sectionAt(mesh, y);
+  const c = new THREE.Box3().setFromPoints(pts).getCenter(new THREE.Vector3());
+  return Math.max(...pts.map((q) => Math.hypot(q.x - c.x, q.z - c.z)));
+}
+const armLength = (arm) => {
+  arm.geometry.computeBoundingBox();
+  return -arm.geometry.boundingBox.min.y;
+};
+// The bend, in radians: how far the arm's centre line turns between the run
+// out of the shoulder and the run into the cuff. Sampled along the whole arm
+// and read at the point furthest off the shoulder-to-cuff chord, so it finds
+// the elbow wherever it sits.
+function elbowBend(arm) {
+  const L = armLength(arm);
+  const top = sectionCentre(arm, -0.06 * L);
+  const end = sectionCentre(arm, -0.94 * L);
+  const chord = end.clone().sub(top);
+  const len = chord.length();
+  chord.normalize();
+  let best = 0, at = 0.5;
+  for (let t = 0.2; t <= 0.8; t += 0.05) {
+    const c = sectionCentre(arm, -t * L).sub(top);
+    const along = c.dot(chord);
+    const off = c.addScaledVector(chord, -along).length();
+    if (off > best) { best = off; at = along / len; }
+  }
+  return Math.atan(best / (at * len)) + Math.atan(best / ((1 - at) * len));
+}
+const armsOf = (g) => g.children.filter((c) => c.name === 'arm');
+const gestureArm = (g) => armsOf(g).find((c) => Math.abs(c.rotation.z) > 1);
+const worldVerts = (mesh) => {
+  mesh.updateWorldMatrix(true, false);
+  const p = mesh.geometry.attributes.position;
+  const out = [];
+  for (let i = 0; i < p.count; i++) {
+    out.push(new THREE.Vector3().fromBufferAttribute(p, i).applyMatrix4(mesh.matrixWorld));
+  }
+  return out;
+};
+
+test('a resting arm hangs close to the body', () => {
+  // The cuffs used to stand further out than the hem — the widest thing on a
+  // standing figure was the pair of sleeve mouths, held away from the robe.
+  // Measured where it shows: how far the cuff's outer edge stands off the
+  // robe's own surface at the height the cuff hangs.
+  for (const [H, stout] of [[1.6, 1], [1.72, 1.08], [1.1, 1]]) {
+    const g = makeFigure({ height: H, stout });
+    const body = g.getObjectByName('body');
+    for (const arm of armsOf(g)) {
+      const v = worldVerts(arm);
+      const low = Math.min(...v.map((q) => q.y));
+      const cuff = v.filter((q) => q.y < low + 0.05 * H);
+      const reach = Math.max(...cuff.map((q) => Math.abs(q.x)));
+      const robe = maxAxisInBand(body, low - 0.02 * H, low + 0.09 * H, 'x');
+      assert.ok(robe > 0, 'the robe is there to measure against');
+      assert.ok(reach - robe < 0.06 * H,
+        `cuff stands ${((reach - robe) / H).toFixed(3)}·h off the robe at h=${H}`);
+      // and it is still an arm BESIDE the body, not one swallowed by it
+      assert.ok(reach > robe, `the cuff still clears the robe: ${reach} vs ${robe}`);
+    }
+  }
+});
+
+test('a resting arm bends at the elbow', () => {
+  for (const arm of armsOf(makeFigure({}))) {
+    const bend = elbowBend(arm);
+    assert.ok(bend > 0.25, `a hanging arm is not a rod: ${bend.toFixed(3)} rad`);
+    assert.ok(bend < 0.9, `nor is it folded: ${bend.toFixed(3)} rad`);
+  }
+});
+
+test('the two resting arms are not mirror images', () => {
+  // The left arm's centre line reflected in x and laid over the right's: on a
+  // mirrored pair the two coincide all the way down. Centre lines rather than
+  // vertices, because a sleeve with an odd number of sides is not its own
+  // reflection and a vertex comparison would call any such pair asymmetric.
+  const offMirror = (g) => {
+    const [l, r] = armsOf(g).sort((a, b) => a.position.x - b.position.x);
+    g.updateMatrixWorld(true);
+    let worst = 0;
+    for (let t = 0.1; t < 0.95; t += 0.1) {
+      const a = sectionCentre(l, -t * armLength(l)).applyMatrix4(l.matrixWorld);
+      const b = sectionCentre(r, -t * armLength(r)).applyMatrix4(r.matrixWorld);
+      a.x = -a.x;
+      worst = Math.max(worst, a.distanceTo(b));
+    }
+    return worst;
+  };
+  const H = 1.6;
+  const off = offMirror(makeFigure({ height: H }));
+  assert.ok(off > 0.012 * H, `the rest pose is a mirror image: ${off}`);
+  // MILD: one figure, not two different men stitched down the middle
+  assert.ok(off < 0.09 * H, `the asymmetry is a lean, not a pose: ${off}`);
+
+  // `seed` varies it, deterministically, so a crowd is not one stamp
+  const pose = (g) => armsOf(g).map((a) => [a.rotation.x, a.rotation.z].map((n) => n.toFixed(4)).join());
+  assert.deepEqual(pose(makeFigure({ seed: 5 })), pose(makeFigure({ seed: 5 })), 'same seed, same man');
+  const seen = new Set([0, 1, 2, 3, 4, 5].map((seed) => pose(makeFigure({ seed })).join('|')));
+  assert.ok(seen.size >= 5, `seeds give different rest poses: ${seen.size} of 6`);
+  // every seed is still a rest pose a case can read: each arm on its own
+  // side, both hanging, neither past the |rotation.z| > 1 line that cases use
+  // to tell a gesture arm from a resting one
+  for (let seed = 0; seed < 40; seed++) {
+    const g = makeFigure({ seed });
+    for (const a of armsOf(g)) {
+      assert.ok(Math.sign(a.rotation.z) === Math.sign(a.position.x), `seed ${seed}: arm leans off its own side`);
+      assert.ok(Math.abs(a.rotation.z) < 0.3 && Math.abs(a.rotation.x) < 0.4, `seed ${seed}: still hanging`);
+    }
+    assert.ok(offMirror(g) > 0.012 * H, `seed ${seed} is a mirror image`);
+  }
+});
+
+test('a pointing arm bends at the elbow', () => {
+  for (const [stance, arms] of [['stand', 'point'], ['stand', 'raise'], ['sit', 'raise']]) {
+    const g = makeFigure({ stance, arms });
+    const arm = gestureArm(g);
+    assert.ok(arm, `${stance}/${arms}: the gesture arm is still found by its rotation`);
+    const bend = elbowBend(arm);
+    assert.ok(bend > 0.35, `${stance}/${arms}: a club, not an arm: ${bend.toFixed(3)} rad`);
+    assert.ok(bend < 1.1, `${stance}/${arms}: folded back on itself: ${bend.toFixed(3)} rad`);
+  }
+});
+
+test('the shoulder is a line, not a ball', () => {
+  // A ball joint is two things at once: a knob standing wider than the arm
+  // that leaves it, and an arm that starts thin there and only fattens further
+  // down. A shoulder is the reverse on both counts — the arm is at its
+  // broadest where it leaves the body, and nothing above the hinge is wider
+  // than the arm itself.
+  for (const [stance, arms] of [['stand', 'rest'], ['stand', 'fold'], ['sit', 'fold'], ['stand', 'point'], ['stand', 'raise']]) {
+    const H = 1.6;
+    const g = makeFigure({ height: H, stance, arms });
+    for (const arm of armsOf(g)) {
+      const L = armLength(arm);
+      const p = arm.geometry.attributes.position;
+      // the side that shows: a cap that leans IN, toward the neck, is buried in
+      // the robe and is the slope of the shoulder, not a knob on it
+      const out = Math.sign(arm.position.x);
+      let knob = 0;
+      for (let i = 0; i < p.count; i++) {
+        if (p.getY(i) > 0.004 * H) knob = Math.max(knob, Math.hypot(Math.max(0, out * p.getX(i)), p.getZ(i)));
+      }
+      // both read about the hinge's own axis, a little way down the arm so the
+      // section is clear of the root ring's tilt
+      const root = Math.max(...sectionAt(arm, -0.02 * H).map((q) => Math.hypot(q.x, q.z)));
+      const below = sectionRadius(arm, -0.3 * L);
+      assert.ok(knob <= root * 1.05,
+        `${stance}/${arms}: a knob ${knob.toFixed(4)} over an arm ${root.toFixed(4)}`);
+      assert.ok(root >= below * 0.97,
+        `${stance}/${arms}: the arm starts thin (${root.toFixed(4)}) and fattens (${below.toFixed(4)})`);
+    }
+    // and the shoulders make a line ACROSS the figure: the arm roots stand
+    // outside the robe at the hinge, so the outline steps out to them
+    const body = g.getObjectByName('body');
+    for (const arm of armsOf(g)) {
+      const y = arm.position.y;
+      const robe = maxRadiusInBand(body, y - 0.06 * H, y + 0.06 * H);
+      const edge = Math.max(...worldVerts(arm).filter((q) => Math.abs(q.y - y) < 0.03 * H).map((q) => Math.abs(q.x)));
+      assert.ok(edge > robe + 0.02 * H, `${stance}/${arms}: shoulder ${edge.toFixed(3)} inside the robe ${robe.toFixed(3)}`);
+    }
+  }
+});
+
+test('every documented child name still resolves', () => {
+  // The names cases reach for, and the idioms they find an arm by. Read off
+  // src/koans: `children.filter(name === 'arm')` on the figure itself (k11,
+  // k23, k31, k41, k42, k43, k48), the gesture arm told apart by
+  // |rotation.z| > 1 or by the larger rotation.z or position.x, traversal for
+  // 'arm' (k20), getObjectByName for 'waist' and 'staff'.
+  const stand = makeMonk({ elder: true });
+  for (const n of ['body', 'head', 'hat', 'staff', 'arm']) assert.ok(stand.getObjectByName(n), `stand: ${n}`);
+  assert.equal(stand.name, 'monk');
+  assert.equal(armsOf(stand).length, 2, 'both arms are direct children of the figure');
+  for (const a of armsOf(stand)) assert.ok(a.isMesh, 'an arm is a mesh — cases read its geometry');
+
+  for (const pose of ['sit', 'fold']) {
+    const m = makeMonk({ pose });
+    assert.equal(armsOf(m).length, 2, pose);
+    for (const a of armsOf(m)) assert.ok(a.getObjectByName('forearm'), `${pose}: the forearm hangs off the arm`);
+  }
+  const bow = makeMonk({ pose: 'bow' });
+  const waist = bow.getObjectByName('waist');
+  assert.ok(waist && waist.getObjectByName('torso') && waist.getObjectByName('head'));
+  assert.equal(waist.children.filter((c) => c.name === 'arm').length, 2, 'the arms of a bowing figure ride the waist');
+  assert.ok(bow.getObjectByName('body'));
+
+  for (const pose of ['point', 'raise', 'sit-raise']) {
+    const H = 1.6;
+    const m = makeMonk({ pose, height: H });
+    const arms = armsOf(m);
+    const raised = arms.filter((c) => Math.abs(c.rotation.z) > 1);
+    assert.equal(raised.length, 1, `${pose}: exactly one arm past the gesture line`);
+    assert.equal(raised[0], [...arms].sort((a, b) => b.rotation.z - a.rotation.z)[0], `${pose}: and it has the larger rotation.z`);
+    assert.equal(raised[0], [...arms].sort((a, b) => b.position.x - a.position.x)[0], `${pose}: and it is the +x arm`);
+    // THE CUFF CONTRACT: the hand is at local (0, -len, 0), `len` read off the
+    // bounding box — k3 seats a finger there, k11 a fist, k43/k48 hang a staff
+    // and a fan off it. So the mouth of a gesture sleeve ends exactly on that
+    // plane and is centred on the axis.
+    const L = armLength(raised[0]);
+    assert.ok(Math.abs(L - 0.34 * H) < 1e-4, `${pose}: the gesture sleeve keeps its length: ${L}`);
+    // (cloth hangs off one side of it, so the mouth is not CENTRED there —
+    // what matters is that the point is well inside the sleeve)
+    const mouth = new THREE.Box3().setFromPoints(sectionAt(raised[0], -0.97 * L));
+    const inset = Math.min(-mouth.min.x, mouth.max.x, -mouth.min.z, mouth.max.z);
+    assert.ok(inset > 0.02 * H, `${pose}: the hand is inside the cuff by ${(inset / H).toFixed(3)}·h`);
+    // and it is higher than the head: the gesture is still made
+    raised[0].updateMatrix();
+    const hand = new THREE.Vector3(0, -L, 0).applyMatrix4(raised[0].matrix);
+    assert.ok(hand.y > m.getObjectByName('head').position.y, `${pose}: the hand is above the head`);
+  }
+  // a resting sleeve is likewise as long as its bounding box says
+  for (const a of armsOf(makeMonk({ height: 1.6 }))) {
+    assert.ok(Math.abs(armLength(a) - 0.34 * 1.6) < 1e-4, `rest sleeve length: ${armLength(a)}`);
+  }
 });

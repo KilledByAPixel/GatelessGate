@@ -2,12 +2,13 @@ import * as THREE from '../../lib/three.module.js';
 import { washMaterial, frontShadow } from '../render/material.js';
 import { mergeSimple } from './scatter.js';
 import { INK_LIT } from '../palette.js';
+import { hash1 } from '../util/noise.js';
 
 // The shared human vocabulary — the makeQuadruped of people.
 //
 // Every person in the book is the same four ideas: a lathed robe (a closed hem
-// on the ground flaring up to narrow shoulders), sleeves with the hands hidden
-// inside, a sphere head, and — usually — a wide sedge hat. Featureless by
+// on the ground flaring up to narrow shoulders), arms that are sleeves with
+// the hands hidden inside, a sphere head, and — usually — a wide sedge hat. Featureless by
 // design: ink figures have no faces (a smile is an event). This module owns
 // those parts and the assembly; `monk.js` is a thin naming layer over it, and
 // anything else that needs a person (a girl, a woman on the road, a keeper at
@@ -33,65 +34,234 @@ export function robeLathe(profile, height, mat, segments = 10) {
   return body;
 }
 
-// How far the cuff lip flares past the wrist. A straight cone from shoulder to
-// hem reads as a stick of cloth; a sleeve reads as a sleeve when the mouth of
-// it is wider than the arm above, with a nip between the two so the flare has
-// something to flare FROM.
+// ---- the arm ---------------------------------------------------------------
+//
+// An arm is cloth swept along a bent line — shoulder, elbow, wrist — and not a
+// lathe. A lathe can only make a straight thing, and a straight sleeve hung
+// from a shoulder is a rod however it is turned: the resting arms read as
+// wooden and the raised one as a club, because nothing in either had an elbow.
+// Three things carry the read, and all three are silhouette:
+//
+//   THE ELBOW. The line from shoulder to hand is the CHORD, and the elbow
+//   stands off it. The chord is still the mesh's local -y — see the contract
+//   below — so the bend costs a case nothing: the hand is where it always was.
+//
+//   THE SHOULDER. The arm is at its broadest where it leaves the body and is
+//   closed by a cap no wider than itself. The old arm was the reverse — thin at
+//   the root, fattening downward, with a ball on the hinge wider than the arm
+//   leaving it — and that is a doll's joint however well the ball hides the
+//   seam. The cap does the ball's job (it surrounds the hinge, so the join
+//   stays covered when a case turns the arm) without standing proud of it.
+//
+//   THE HANG. Cloth has weight, so the underside of a sleeve drops away from
+//   the forearm toward the mouth and the mouth is cut on the slant. `hang` is
+//   which way is DOWN in the arm's own frame, which is what lets one rule make
+//   a low back corner on a hanging sleeve, a pendant wedge under a pointing
+//   one, and a mouth slipped back down a raised one. It is baked for the pose
+//   the figure is built in: a case that turns the arm a little carries the
+//   drape with it, and one that turns it a long way gets cloth hanging the
+//   wrong way — which is a pose driver to adapt, not something to solve here.
+//
+// THE CONTRACT, which cases lean on and which is therefore API:
+//   - the mesh's origin is the SHOULDER, so setting rotation on the mesh
+//     swings the arm from it;
+//   - the hand is at local (0, -len, 0), and `len` is exactly the bounding
+//     box's -min.y. k3 seats a finger there, k11 a fist, k43 and k48 hang a
+//     staff and a fan off it, and all of them read the length back off the box
+//     rather than restating it. Nothing — elbow, drape, mouth — reaches below
+//     that plane;
+//   - `userData.elbow` and `userData.hand` are those two points in the mesh's
+//     frame, for anything that wants the FOREARM's line rather than the
+//     chord's (the two differ by the bend).
+const ARM_SIDES = 8;    // even, so a ring has a vertex on each axis of its
+                        //   ellipse and the drape has a true lowest point
+const X_AXIS = new THREE.Vector3(1, 0, 0);
+const Z_AXIS = new THREE.Vector3(0, 0, 1);
+const DOWN = new THREE.Vector3(0, -1, 0);
+// what an arm holds between being posed and being cut — shared, never drawn
+const EMPTY = new THREE.BufferGeometry();
+
+// Rings of cloth strung along `stations` and skinned, closed at both ends.
+// A station is { p, r: [across, inPlane], facing?, sag? }: an ellipse centred
+// on p whose first radius lies along `ref` and whose second lies in the plane
+// the arm bends in. A ring faces along the path — mitred at a bend, so the
+// elbow is one crease rather than a pinch — unless `facing` says otherwise.
+// `sag` drops the underside of that ring along `hang`: only the half of the
+// ring that faces down moves, and it moves straight down, which is what makes
+// it cloth under an arm rather than a fatter arm.
+function sweptCloth(stations, ref, { tip, hang } = {}) {
+  const n = stations.length;
+  const rings = [];
+  const t = new THREE.Vector3(), u = new THREE.Vector3(), v = new THREE.Vector3();
+  const d = new THREE.Vector3(), across = new THREE.Vector3(), radial = new THREE.Vector3();
+  for (let i = 0; i < n; i++) {
+    const st = stations[i];
+    if (st.facing) t.copy(st.facing);
+    else {
+      t.set(0, 0, 0);
+      if (i > 0) t.add(d.subVectors(st.p, stations[i - 1].p).normalize());
+      if (i < n - 1) t.add(d.subVectors(stations[i + 1].p, st.p).normalize());
+    }
+    t.normalize();
+    u.copy(ref).addScaledVector(t, -ref.dot(t)).normalize();
+    v.crossVectors(t, u);
+    // which way is down ACROSS this ring; a sleeve hanging plumb has no
+    // underside, so the drape fades out as the arm comes to vertical
+    let under = 0;
+    if (st.sag && hang) {
+      across.copy(hang).addScaledVector(t, -hang.dot(t));
+      const m = across.length();
+      if (m > 1e-4) across.multiplyScalar(1 / m);
+      under = st.sag * Math.min(1, Math.max(0, (m - 0.05) / 0.2));
+    }
+    const ring = [];
+    for (let k = 0; k < ARM_SIDES; k++) {
+      const a = (k / ARM_SIDES) * Math.PI * 2;
+      radial.copy(u).multiplyScalar(Math.cos(a)).addScaledVector(v, Math.sin(a));
+      const q = st.p.clone()
+        .addScaledVector(u, Math.cos(a) * st.r[0])
+        .addScaledVector(v, Math.sin(a) * st.r[1]);
+      if (under) q.addScaledVector(hang, under * Math.max(0, radial.dot(across)));
+      ring.push(q);
+    }
+    rings.push(ring);
+  }
+
+  const tris = [];
+  const start = tip || rings[0].reduce((c, q) => c.add(q), new THREE.Vector3()).multiplyScalar(1 / ARM_SIDES);
+  const last = rings[n - 1];
+  const end = last.reduce((c, q) => c.add(q), new THREE.Vector3()).multiplyScalar(1 / ARM_SIDES);
+  for (let k = 0; k < ARM_SIDES; k++) {
+    const k1 = (k + 1) % ARM_SIDES;
+    tris.push(start, rings[0][k1], rings[0][k]);
+    for (let i = 0; i < n - 1; i++) {
+      tris.push(rings[i][k], rings[i][k1], rings[i + 1][k1]);
+      tris.push(rings[i][k], rings[i + 1][k1], rings[i + 1][k]);
+    }
+    tris.push(end, last[k], last[k1]);
+  }
+  return tris;
+}
+
+// One arm. Everything is in world units (the callers scale by height).
+//   len      shoulder to hand, along local -y
+//   bend     how far the elbow stands off that chord, toward `toward`
+//   ref      the axis the arm does NOT bend about — a ring's first radius
+//   root, elbow, cuff   the three ellipses, [across, inPlane]; no `elbow`
+//            means a straight run (the upper half of a folded arm)
+//   capTip   where the shoulder cap closes, in the arm's frame. Default is
+//            straight back along the upper arm; a hanging arm leans it in
+//            toward the neck so the cap is the slope of a shoulder
+//   hang, drape   see THE HANG above
+//   square   the mouth is cut square to the chord rather than to the forearm:
+//            for a sleeve something is seated in, where the mouth is a socket
+function armGeometry({
+  len, bend = 0, toward = Z_AXIS, elbowAt = 0.46, ref = X_AXIS,
+  root, elbow = null, cuff, capTip = null, hang = null, drape = 0, square = false,
+}) {
+  const shoulder = new THREE.Vector3();
+  const hand = new THREE.Vector3(0, -len, 0);
+  const joint = new THREE.Vector3(0, -len * elbowAt, 0).addScaledVector(toward, bend);
+  const first = elbow ? joint : hand;
+  const tip = capTip
+    ? capTip.clone()
+    : first.clone().normalize().multiplyScalar(-0.8 * Math.min(root[0], root[1]));
+  const stations = [
+    { p: tip.clone().multiplyScalar(0.5), r: [root[0] * 0.66, root[1] * 0.70] },
+    { p: shoulder, r: root },
+  ];
+  if (elbow) stations.push({ p: joint, r: elbow });
+  stations.push({ p: hand, r: cuff, sag: drape, facing: square ? DOWN : null });
+  const tris = sweptCloth(stations, ref, { tip, hang });
+
+  // THE LENGTH IS THE BOX. A slanted mouth and a dropped hem both reach past
+  // the hand, so whatever hangs below the shoulder is brought back to end
+  // exactly on y = -len — the drape is taken out of the arm's length rather
+  // than added to it. (`tris` shares its points between triangles, hence the
+  // set.)
+  const seen = new Set(tris);
+  let low = 0;
+  for (const q of seen) low = Math.min(low, q.y);
+  const fit = len / -low;
+  for (const q of seen) if (q.y < 0) q.y *= fit;
+  joint.y *= fit;
+
+  const pos = new Float32Array(tris.length * 3);
+  const nor = new Float32Array(tris.length * 3);
+  const e1 = new THREE.Vector3(), e2 = new THREE.Vector3();
+  for (let i = 0; i < tris.length; i += 3) {
+    e1.subVectors(tris[i + 1], tris[i]);
+    e2.subVectors(tris[i + 2], tris[i]);
+    e2.crossVectors(e1, e2).normalize();
+    for (let j = 0; j < 3; j++) {
+      tris[i + j].toArray(pos, (i + j) * 3);
+      e2.toArray(nor, (i + j) * 3);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  geo.userData.elbow = elbow ? joint : null;
+  geo.userData.hand = hand.clone().multiplyScalar(fit);
+  return geo;
+}
+
+function armMesh(spec, mat) {
+  const geo = armGeometry(spec);
+  const arm = new THREE.Mesh(geo, mat);
+  arm.name = 'arm';
+  arm.userData.elbow = geo.userData.elbow;
+  arm.userData.hand = geo.userData.hand;
+  return arm;
+}
+
+// Which way is down, seen from inside a part that has been posed — the `hang`
+// its cloth should be built with. Reads the part's own rotation and its
+// parents' (a forearm rides an upper arm), so it must be called after both are
+// set.
+function downIn(part) {
+  const q = new THREE.Quaternion();
+  for (let o = part; o; o = o.parent) q.premultiply(o.quaternion);
+  return DOWN.clone().applyQuaternion(q.invert());
+}
+
+// The arm's proportions, in fractions of height: [across, inPlane] at the
+// shoulder, the elbow and the mouth. A hanging sleeve is a panel of cloth — it
+// is deeper fore-and-aft than it is thick, which is what lets it hang close to
+// the robe and still be a broad shape from the side. A lifted arm is seen
+// across its bend instead, and is rounder.
+const HANG_ARM = { root: [0.042, 0.052], elbow: [0.038, 0.046], cuff: [0.046, 0.062] };
+const LIFT_ARM = { root: [0.046, 0.047], elbow: [0.041, 0.042], cuff: [0.046, 0.048] };
+const scaled = (pair, k) => [pair[0] * k, pair[1] * k];
+
+// How far the mouth of a plain sleeve opens past the wrist radius it is given.
 const CUFF_FLARE = 1.14;
 
-// A sleeve, with the hand hidden inside it.
-//
-// THE ORIGIN IS THE SHOULDER. The profile is authored in shoulder-origin space
-// so the mesh's own origin sits at the top of it and the cloth hangs along
-// local -y: that is what makes an arm rotatable from the shoulder by setting
-// rotation on the mesh, and it is what lets a case find the cuff at local
-// (0, -len, 0) without knowing anything else about the figure. Cases do exactly
-// that (k3 reads the length back off the bounding box's min.y and the cuff
-// width off its max.x; k11 parents a fist to the hem; k43/k48 hang a staff off
-// it), so this convention is API — the profile may be retuned, but it must
-// always reach y = -len at the cuff and be widest there. (The shoulder ball
-// below pokes a little ABOVE y = 0; min.y and max.x, the two numbers cases
-// actually read, are untouched by it.)
-//
-// `r0` is the shoulder, `r1` the wrist; everything between is expressed in
-// terms of those two so a caller retuning either still gets the same shape.
-// `flare` overrides the cuff lip: 1 = a flush mouth — what an ELBOW wants,
-// since the flare is a sleeve-mouth thing and a joint wearing one reads as a
-// second wrist, which is what the folded arms showed.
-export function sleeve({ height = 1.6, len = 0.34 * 1.6, r0 = 0.035, r1 = 0.065, flare = CUFF_FLARE, mat }) {
-  const a = r0 * height;              // shoulder
-  const b = r1 * height;              // wrist
-  // flare <= 1 means the mouth is a JOINT (an elbow), not a cuff: the whole
-  // lip-nip-belly shaping goes with it — even a flush lip kept the roll and
-  // read as a weird flare on the elbow. A joint sleeve is a plain taper,
-  // nothing else.
-  const rows = flare > 1 ? [
-    [0, -len],                        // the mouth of the cuff, closed
-    [b * flare, -len],                // THE CUFF LIP — the widest cloth on the arm
-    [b * 0.99, -len * 0.930],         // the flare rolling back in
-    [b * 0.76, -len * 0.840],         // the nip above it
-    [b * 0.88, -len * 0.620],         // the belly of the sleeve
-    [b * 0.81, -len * 0.320],
-    [a, 0],                           // THE SHOULDER — origin, and the top of the bounds
-    [0, 0],                           // closed
-  ] : [
-    [0, -len],
-    [b, -len],                        // a plain taper down to the joint
-    [b * 0.94, -len * 0.55],
-    [a, 0],
-    [0, 0],
-  ];
-  const profile = rows.map(([r, y]) => new THREE.Vector2(r, y));
-  // THE SHOULDER BALL. The sleeve hinges at its origin, and any rotation tips
-  // its top ring away from the robe — a wedge of daylight at every posed arm, a
-  // visible gap where the arm attaches. A ball centred exactly on the hinge is
-  // rotation-invariant, so the join stays covered at ANY arm pose; merged into
-  // the sleeve's own geometry, it costs no mesh.
-  const ball = new THREE.SphereGeometry(a * 1.22, 7, 6);   // 1.35 read as bulky pauldrons on the seated figure
-  const arm = new THREE.Mesh(
-    mergeSimple([new THREE.LatheGeometry(profile, 7), ball]), mat);
-  arm.name = 'arm';
-  return arm;
+// A plain sleeve — the straight, unposed part, for a figure that is not built
+// by makeFigure (the man hanging by his teeth borrows two). Same contract as
+// every arm above. `r0` is the shoulder and `r1` the wrist, in fractions of
+// height; `flare` opens the mouth past the wrist, and 1 or less means the far
+// end is a JOINT rather than a mouth — an elbow wearing a flare reads as a
+// second wrist. `bend` (a fraction of `len`, toward local -z) and `hang` are
+// the same two ideas makeFigure's arms are built from, offered here so a
+// borrowed sleeve need not be a rod either.
+export function sleeve({
+  height = 1.6, len = 0.34 * 1.6, r0 = 0.046, r1 = 0.050, flare = CUFF_FLARE,
+  bend = 0, hang = null, drape = 0, mat,
+}) {
+  const a = r0 * height;
+  const b = r1 * height * Math.max(1, flare);
+  const mouth = flare > 1;
+  return armMesh({
+    len,
+    bend: bend * len,
+    toward: Z_AXIS.clone().negate(),
+    root: [a, a * 1.12],
+    elbow: mouth ? [a * 0.92, a * 1.0] : null,
+    cuff: mouth ? [b, b * 1.12] : [b, b],
+    hang, drape: drape * height,
+    square: !mouth,
+  }, mat);
 }
 
 // A head: slightly OBLONG, not a ball — narrowed a touch and stretched tall —
@@ -332,8 +502,11 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // local +z) for the two-piece arm — the upper's hang and the forearm's bend at
 // the elbow — and they are per-stance because the hands' destination is: seated
 // hands rest DOWN in the lap (a gentle bend), while standing hands meet at the
-// waist (the forearm swings nearly horizontal). The inward swing (the cuffs
-// crossing to the centre) is the same for all.
+// waist (the forearm swings nearly horizontal). `foldCross` is the inward
+// swing, and it is solved rather than chosen: whatever lays one cuff just past
+// the other at the centre line, so the two mouths read as one gathered mass.
+// It moves whenever the shoulder width, the forearm's length or either pitch
+// does — re-measure the cuff tips after touching any of them.
 // `gesture` is the sleeve length for a point/raise arm, and it is a separate
 // number from `sleeve` for one reason: AN ARM DOES NOT SHORTEN WHEN ITS OWNER
 // SITS DOWN. A stance's `sleeve` is a hanging/folding length, and seated it is
@@ -343,13 +516,13 @@ const mixProfile = (a, b, t) => a.map(([r, y], i) => [mix(r, b[i][0], t), mix(y,
 // hermit's own crown instead of well above it. Standing, the two are equal, so
 // no standing figure in the book moves.
 const KNEEL = 0.5;
-const STAND_STANCE = { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, gesture: 0.34, head: 0.765, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.2, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.92 };
+const STAND_STANCE = { profile: STAND_PROFILE, shoulder: 0.60, sleeve: 0.34, gesture: 0.34, head: 0.765, hat: 0.80, armZ: 0, staff: 1.2, staffX: 0.26, staffAng: 0.2, foldUpper: -0.12, foldFore: -1.45, foldCross: 0.82 };
 // Seated head/shoulder/hat ride 0.015·h higher than the lap-shelf tune did: the
 // chest run in SIT_PROFILE was lengthened and steepened so a meditator sits
 // STRAIGHT, the way the Buddha does — the crown now tops out at 0.610·h, still
 // comfortably a seated man, and the fold angle eases to -0.44 so the cuffs keep
 // landing in the lap the knees now frame.
-const SIT_STANCE = { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, gesture: 0.34, head: 0.545, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31, foldCross: 1.1 };
+const SIT_STANCE = { profile: SIT_PROFILE, shoulder: 0.415, sleeve: 0.24, gesture: 0.34, head: 0.545, hat: 0.560, armZ: 0.03, staff: 0.7, staffX: 0.3625, staffAng: 0, foldUpper: -0.22, foldFore: -0.31, foldCross: 1.34 };
 // Kneel is DERIVED, field by field, from whatever stand and sit currently are.
 // It used to repeat their values as literals, and every retune of the endpoints
 // (the sit +0.015 lift, staffAng 0.9 → 0.2) silently un-halved it — four fields
@@ -361,6 +534,24 @@ for (const k of Object.keys(STAND_STANCE)) {
 }
 const STANCES = { stand: STAND_STANCE, sit: SIT_STANCE, kneel: KNEEL_STANCE };
 
+// The arms' own numbers, which no stance changes. Lengths are fractions of
+// height, angles radians.
+const SHOULDER_X = 0.130;
+// A hanging arm: the swing forward both arms share and the [least, range] by
+// which the two are pushed apart about it; the lean off the body; the elbow's
+// stand-off as a fraction of the sleeve; how far the back of the mouth drops.
+const REST = { swing: -0.08, apart: [0.04, 0.05], lean: [0.05, 0.05], bend: [0.085, 0.05], drape: 0.035 };
+// A lifted arm: the elbow's stand-off, and the cloth under the forearm. A
+// pointing arm is nearer level, so more of its sleeve hangs clear of it.
+const LIFT = { bend: 0.13, drapePoint: 0.062, drapeRaise: 0.05 };
+// A folded arm: its shoulder, the elbow joint both halves share, and the
+// forearm's mouth — slimmer all the way down than a hanging sleeve, because
+// two of them cross in front of the body and a pair of full sleeves there
+// reads as a shelf. Then the upper's lean off the body, the forearm's length
+// as a fraction of the stance's sleeve, how far one forearm lies over the
+// other, and how far its mouth drops.
+const FOLD = { root: [0.038, 0.049], joint: [0.034, 0.038], cuff: [0.042, 0.050], clear: 0.14, fore: 0.72, over: 0.04, drape: 0.03 };
+
 // ---------------------------------------------------------------------------
 // the assembly
 // ---------------------------------------------------------------------------
@@ -369,14 +560,17 @@ const STANCES = { stand: STAND_STANCE, sit: SIT_STANCE, kneel: KNEEL_STANCE };
 // `elder` (a staff), `stout`, `color`. Every figure has arms — `arms` chooses
 // how they are held, never whether they exist.
 //
-// Children are named 'body', 'head', 'arm' (×2), 'hat', 'staff'. Those names
-// are API: cases reach in by name to re-pose a sleeve, recolour a staff, or
-// remove an arm.
+// Children are named 'body', 'head', 'arm' (×2), 'hat', 'staff'; a folded arm
+// carries a 'forearm', and a bowing figure a 'waist' holding its 'torso', head
+// and arms. Those names are API: cases reach in by name to re-pose a sleeve,
+// recolour a staff, or remove an arm. `seed` is the one option that changes
+// nothing a case can name — only how the resting arms happen to hang.
 export function makeFigure({
   height = 1.6, color = INK_LIT, stance = 'stand', arms = 'rest',
   hat = true, stout = 1, elder = false, staffAng, mat: matIn,
   cushion = true,          // seated only — false where the case lays its own mat
   bow = 0,                 // radians bent FORWARD at the waist; see bendForward
+  seed = 0,                // integer; varies the rest pose — see makeSleeve
 } = {}) {
   const g = new THREE.Group();
   g.name = 'figure';
@@ -397,48 +591,134 @@ export function makeFigure({
   const shoulderY = st.shoulder * height;
   const sleeveL = st.sleeve * height;
   const gestureL = (st.gesture ?? st.sleeve) * height;
-  const makeSleeve = (side, len = sleeveL) => {
-    const arm = sleeve({ height, len, mat });
-    arm.position.set(side * 0.115 * s * height, shoulderY, st.armZ * height);
-    if (arms === 'point' && side === 1) { arm.rotation.z = Math.PI - 0.95; arm.rotation.y = 0.15; }
-    // 'raise' is NOT 'point'. Point swings the sleeve up and OUT along the
-    // bearing the figure faces, which is right for indicating a thing across the
-    // scene (case 29's monk and the flag). Held up beside another person it aims
-    // at them, and a raised finger aimed at someone reads as an insult rather
-    // than a teaching — which is exactly how case 3 first came out. This holds
-    // the arm nearly vertical, a few degrees clear of the body and tipped
-    // forward, so the gesture is offered to the air instead of at anybody.
-    // Rest sits ~20 degrees off plumb rather than dead vertical so a case can
-    // still ANIMATE the lift toward vertical (k3 adds 0.24rad); starting plumb
-    // would send the arm over the top and back down the far side.
-    else if (arms === 'raise' && side === 1) { arm.rotation.z = Math.PI - 0.34; arm.rotation.x = 0.22; }
-    else { arm.rotation.z = side * 0.28; }
-    g.add(arm);
+  // Where the arm hinges. The shoulder stands a little OUTSIDE the robe's own
+  // radius at that height, so the outline steps out from the collar to the arm
+  // and the arm is seen beside the body rather than as a relief on it.
+  const hinge = (side) => new THREE.Vector3(side * SHOULDER_X * s * height, shoulderY, st.armZ * height);
+  // An arm is posed BEFORE its cloth is cut, because the cloth hangs by the
+  // pose: `place` sets the rotation on a bare mesh, `spec` reads it back.
+  const cut = (mesh, spec) => {
+    mesh.geometry = armGeometry(spec);
+    mesh.userData.elbow = mesh.geometry.userData.elbow;
+    mesh.userData.hand = mesh.geometry.userData.hand;
+    return mesh;
+  };
+  const bare = (name) => {
+    const m = new THREE.Mesh(EMPTY, mat);
+    m.name = name;
+    return m;
+  };
+  // the cap of an arm that hangs leans in toward the neck: the slope of a
+  // shoulder rather than the end of a tube
+  const yoke = (side) => new THREE.Vector3(-side * 0.050 * height, 0.050 * height, 0);
+
+  // THE REST POSE IS NOT A MIRROR IMAGE. Two identical sleeves hung at the same
+  // angle either side of a symmetric robe is a chess piece. Each arm takes its
+  // own forward swing, its own lean off the body and its own bend, and the two
+  // swings are pushed apart rather than drawn independently, so one hand is
+  // always ahead of the other and no draw can land back on symmetry. All of it
+  // is kept small: this is how a man stands, not a pose. The draw is keyed on
+  // `seed` AND on the figure's own height and girth, because a pose that leans
+  // the same way on every figure reads as a stamp wherever several stand
+  // together — and most cases already build their people at different sizes,
+  // so they come out different without being asked. Every draw keeps each arm
+  // leaning off its own side and far short of a gesture, since cases tell a
+  // resting arm from a raised one by its rotation.z.
+  const key = Math.imul(seed | 0, 7919) + Math.round(height * 1000) + Math.round(s * 100) * 131;
+  const ahead = hash1(1, key) < 0.5 ? -1 : 1;
+  const apart = REST.apart[0] + REST.apart[1] * hash1(2, key);
+  const makeSleeve = (side) => {
+    const i = side < 0 ? 10 : 20;
+    const arm = bare('arm');
+    arm.position.copy(hinge(side));
+    arm.rotation.x = REST.swing + side * ahead * apart;
+    arm.rotation.z = side * (REST.lean[0] + REST.lean[1] * hash1(i + 1, key));
+    g.add(cut(arm, {
+      len: sleeveL,
+      bend: (REST.bend[0] + REST.bend[1] * hash1(i + 2, key)) * sleeveL,
+      toward: Z_AXIS.clone().negate(),          // the elbow sits BACK; the hand comes forward
+      root: scaled(HANG_ARM.root, height),
+      elbow: scaled(HANG_ARM.elbow, height),
+      cuff: scaled(HANG_ARM.cuff, height),
+      capTip: yoke(side),
+      hang: downIn(arm), drape: REST.drape * height,
+    }));
     return arm;
   };
 
-  // FOLDED ARMS HAVE ELBOWS. One straight sleeve pitched into the lap read as
-  // very stiff arms with no forearms at all. A folded arm is two sleeves: a
-  // short UPPER hanging from the shoulder (its slimmer cuff is the elbow), and
-  // a FOREARM hinged there, swung inward and forward so the two cuff mouths
-  // meet at the lap centre — hands tucked into the opposite sleeves, no hand
-  // detail needed. The forearm is a sleeve() too, so its merged shoulder ball
-  // covers the elbow joint at any bend, the same way the upper's covers the
-  // shoulder.
+  // THE GESTURE ARM — always the right. The mesh's rotation lays the CHORD,
+  // shoulder to hand, exactly where the straight sleeve used to lie, so every
+  // case that aims this arm, lifts it a little further, or seats something in
+  // its cuff still finds the hand where it was. What changed is between the
+  // two ends: the elbow drops below the chord, so the upper arm leaves the
+  // shoulder lower and the forearm climbs more steeply than the chord does,
+  // and the sleeve hangs under the forearm.
+  //
+  // 'raise' is NOT 'point'. Point swings the sleeve up and OUT along the
+  // bearing the figure faces, which is right for indicating a thing across the
+  // scene (case 29's monk and the flag). Held up beside another person it aims
+  // at them, and a raised finger aimed at someone reads as an insult rather
+  // than a teaching — which is exactly how case 3 first came out. This holds
+  // the arm nearly vertical, a few degrees clear of the body and tipped
+  // forward, so the gesture is offered to the air instead of at anybody. It
+  // rests well short of plumb so a case can still ANIMATE the lift toward
+  // vertical (k3 does); starting plumb would send the arm over the top and
+  // back down the far side.
+  const makeGestureArm = (side) => {
+    const arm = bare('arm');
+    arm.position.copy(hinge(side));
+    if (arms === 'point') { arm.rotation.z = Math.PI - 0.95; arm.rotation.y = 0.15; }
+    else { arm.rotation.z = Math.PI - 0.34; arm.rotation.x = 0.22; }
+    g.add(cut(arm, {
+      len: gestureL,
+      bend: LIFT.bend * gestureL,
+      toward: X_AXIS.clone().negate(),          // local -x is down-and-out once the arm is up
+      ref: Z_AXIS,
+      root: scaled(LIFT_ARM.root, height),
+      elbow: scaled(LIFT_ARM.elbow, height),
+      cuff: scaled(LIFT_ARM.cuff, height),
+      hang: downIn(arm), drape: (arms === 'point' ? LIFT.drapePoint : LIFT.drapeRaise) * height,
+      square: true,                             // a finger, a fist, a fan sits in this mouth
+    }));
+    return arm;
+  };
+
+  // FOLDED ARMS HAVE ELBOWS, and theirs is a real hinge. One straight sleeve
+  // pitched into the lap read as very stiff arms with no forearms at all. A
+  // folded arm is two pieces: a short UPPER hanging from the shoulder, ending
+  // in a joint rather than a mouth, and a FOREARM hinged there, swung inward
+  // and forward so the two cuffs meet at the lap centre — hands tucked into
+  // the opposite sleeves, no hand detail needed. The forearm is its own mesh
+  // named 'forearm', a child of the arm; its cap surrounds the elbow the way
+  // the upper's surrounds the shoulder, so the joint stays covered at any
+  // bend. One hand lies a little over the other, for the same reason the
+  // resting arms differ.
   const makeFoldedArm = (side) => {
     const upperLen = sleeveL * 0.55;
-    // the upper's mouth is an ELBOW, not a wrist: flush, no cuff lip
-    const arm = sleeve({ height, len: upperLen, r1: 0.052, flare: 1, mat });
-    arm.position.set(side * 0.115 * s * height, shoulderY, st.armZ * height);
+    const arm = bare('arm');
+    arm.position.copy(hinge(side));
     arm.rotation.x = st.foldUpper;          // the upper hangs, only a little forward
-    arm.rotation.z = side * 0.12;           // elbows just clear of the body
-    // a quieter mouth than a hanging sleeve: gathered hands, not trumpets
-    const fore = sleeve({ height, len: sleeveL * 0.62, r1: 0.052, flare: 1.04, mat });
-    fore.name = 'forearm';
+    arm.rotation.z = side * FOLD.clear;     // elbows just clear of the body
+    cut(arm, {
+      len: upperLen,
+      root: scaled(FOLD.root, height),
+      cuff: scaled(FOLD.joint, height),
+      capTip: yoke(side),
+      square: true,
+    });
+    const fore = bare('forearm');
     fore.position.y = -upperLen;            // hinged at the elbow, in the upper's frame
-    fore.rotation.x = st.foldFore;          // seated: down into the lap; standing: up to the waist
+    // seated: down into the lap; standing: up to the waist
+    fore.rotation.x = st.foldFore + side * ahead * FOLD.over;
     fore.rotation.z = -side * st.foldCross; // and across the body, until the cuffs all but touch
     arm.add(fore);
+    cut(fore, {
+      len: sleeveL * FOLD.fore,
+      root: scaled(FOLD.joint, height),
+      cuff: scaled(FOLD.cuff, height),
+      hang: downIn(fore), drape: FOLD.drape * height,
+      square: true,
+    });
     g.add(arm);
     return arm;
   };
@@ -449,12 +729,13 @@ export function makeFigure({
   // wanted, and no case ever passed it again. Retired: nobody should be getting
   // rid of arms.
   for (const side of [-1, 1]) {
-    // the gesture arm (point/raise, always the right) stays a single sleeve;
-    // everything else folds when the pose or the stance says so — a seated
-    // pointing teacher still keeps his OTHER hand in his lap
+    // the gesture arm (point/raise, always the right) is one mesh, bent in its
+    // own geometry; everything else folds when the pose or the stance says so
+    // — a seated pointing teacher still keeps his OTHER hand in his lap
     const gesture = (arms === 'point' || arms === 'raise') && side === 1;
-    if (!gesture && (arms === 'fold' || seated)) makeFoldedArm(side);
-    else makeSleeve(side, gesture ? gestureL : sleeveL);
+    if (gesture) makeGestureArm(side);
+    else if (arms === 'fold' || seated) makeFoldedArm(side);
+    else makeSleeve(side);
   }
 
   const head = sphereHead({ height, mat });

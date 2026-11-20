@@ -43,10 +43,11 @@ export function makeMonk({
   staffAng,   // optional plant-bearing override, passed through to the figure
   cushion = true,   // seated only — false where the case lays its own mat
   bow,              // true = hinge him at the waist; a number also sets the angle
+  seed = 0,         // integer; varies how the resting arms hang, so a crowd is not one stamp
 } = {}) {
   const p = POSES[pose] || POSES.stand;
   const g = makeFigure({
-    height, stout, color, hat, elder, staffAng, cushion,
+    height, stout, color, hat, elder, staffAng, cushion, seed,
     stance: p.stance,
     arms: p.arms,
     bow: bow !== undefined ? bow : (p.bow || 0),
