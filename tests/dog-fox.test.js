@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeDog } from '../src/kit/dog.js';
+import { makeFox } from '../src/kit/fox.js';
 import { triangles, sectionY, inside, trunk } from './helpers/quadruped-probe.js';
 
 // The dog and the fox share a body plan, so what tells them apart — and what
@@ -11,6 +12,7 @@ import { triangles, sectionY, inside, trunk } from './helpers/quadruped-probe.js
 
 const SPECIES = [
   ['dog', () => makeDog({})],
+  ['fox', () => makeFox({})],
 ];
 
 // Everything that is the head's own outline, ears aside. A muzzle built as a
@@ -178,4 +180,72 @@ test("the dog's tail is cocked: it rises more than it trails", () => {
   const b = boxOf(makeDog({}).group, (o) => o.name === 'tail');
   const up = b.max.y - b.min.y, back = b.max.z - b.min.z;
   assert.ok(up > back, `it trails: ${up.toFixed(3)} up, ${back.toFixed(3)} back`);
+});
+
+// ---- the fox ----------------------------------------------------------------
+
+test("the fox's head is a long low wedge drawn to a point", () => {
+  const root = makeFox({}).group;
+  const b = headBox(root);
+  const long = b.max.z - b.min.z, tall = b.max.y - b.min.y;
+  assert.ok(long > 2 * tall, `${long.toFixed(3)} long, ${tall.toFixed(3)} tall`);
+  const tris = triangles(root, isHead);
+  const at = (f) => sectionY(tris, b.min.z + (b.max.z - b.min.z) * f);
+  assert.ok(at(0.9).depth < 0.4 * at(0.25).depth,
+    `the muzzle does not narrow: ${at(0.9).depth.toFixed(3)} vs ${at(0.25).depth.toFixed(3)}`);
+});
+
+test("the fox's ears are taller than its skull, and triangles rather than spikes", () => {
+  const root = makeFox({}).group;
+  const b = headBox(root);
+  const tall = b.max.y - b.min.y;
+  for (const ear of named(root, 'ear')) {
+    const e = earShape(ear);
+    assert.ok(e.height > tall, `an ear ${e.height.toFixed(3)} tall on a skull ${tall.toFixed(3)} tall`);
+    assert.ok(e.width > 0.5 * e.height,
+      `a spike: ${e.width.toFixed(3)} across the base, ${e.height.toFixed(3)} tall`);
+  }
+});
+
+test("the fox's brush is at least half the body's thickness, and carried no higher than its back", () => {
+  const root = makeFox({}).group;
+  const tail = boxOf(root, (o) => o.name === 'tail');
+  const body = boxOf(root, (o) => o.name === 'body');
+  const thick = tail.max.x - tail.min.x;
+  assert.ok(thick > 0.5 * (body.max.x - body.min.x),
+    `whippy: ${thick.toFixed(3)} on a body ${(body.max.x - body.min.x).toFixed(3)} across`);
+  const tris = triangles(root, (o) => o.name === 'body');
+  const back = sectionY(tris, trunk(root).zHind).max;
+  assert.ok(tail.max.y < back + 0.02,
+    `the brush stands ${(tail.max.y - back).toFixed(3)} over the back`);
+  // and behind, not under: it still trails further than it drops
+  assert.ok(tail.max.z - tail.min.z > 2 * (tail.max.y - tail.min.y), 'the brush hangs');
+});
+
+// ---- the pair ---------------------------------------------------------------
+
+test('a dog and a fox are told apart by ears, tail and carriage', () => {
+  const dog = makeDog({}).group, fox = makeFox({}).group;
+  const earOverSkull = (root) => {
+    const b = headBox(root);
+    return earShape(named(root, 'ear')[0]).height / (b.max.y - b.min.y);
+  };
+  assert.ok(earOverSkull(fox) > 1.8 * earOverSkull(dog),
+    `ears: fox ${earOverSkull(fox).toFixed(2)} of its skull, dog ${earOverSkull(dog).toFixed(2)}`);
+
+  const tailOverBack = (root) => {
+    const tris = triangles(root, (o) => o.name === 'body');
+    return boxOf(root, (o) => o.name === 'tail').max.y - sectionY(tris, trunk(root).zHind).max;
+  };
+  assert.ok(tailOverBack(dog) > 0.05, `the dog's tail does not clear its back: ${tailOverBack(dog).toFixed(3)}`);
+  assert.ok(tailOverBack(fox) < 0.02, `the fox's brush is cocked like a dog's: ${tailOverBack(fox).toFixed(3)}`);
+
+  // the fox is the lower and the longer of the two, each against its own height
+  const shape = (root) => {
+    const body = boxOf(root, (o) => o.name === 'body');
+    const all = boxOf(root, (o) => o.name !== 'ear');
+    return { belly: body.min.y / body.max.y, run: (all.max.z - all.min.z) / body.max.y };
+  };
+  const d = shape(dog), f = shape(fox);
+  assert.ok(f.run > 1.25 * d.run, `length over height: fox ${f.run.toFixed(2)}, dog ${d.run.toFixed(2)}`);
 });

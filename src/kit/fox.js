@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { INK_LIT } from '../palette.js';
 import { hash1, noise1 } from '../util/noise.js';
 import { makeQuadruped } from './quadruped.js';
+import { skullGeometry } from './skull.js';
 
 // Hyakujo's fox (case 2): the dog's body plan run slim and low. Three things
 // carry the silhouette at distance, and a fox that misses any of them reads as
@@ -9,11 +10,18 @@ import { makeQuadruped } from './quadruped.js';
 //
 //   1. LOW and LONG. A fox is a line held just off the ground, not a box on
 //      legs. Short legs under a long body.
-//   2. A narrow pointed muzzle under big upright triangular ears. The ears are
-//      most of the head's outline.
-//   3. THE BRUSH. A fox is mostly tail. It is carried low and straight out
-//      behind — never cocked up like the dog's — and it is two thirds as thick
-//      as the body. A thin tail reads as a cat.
+//   2. A narrow pointed muzzle under big upright triangular ears. The head is
+//      ONE wedge (skull.js): broad at the cheek, flat on top, and drawn
+//      straight out to a point with barely a stop — a ball with a spout on it
+//      was a toy's head, and the dog's blunt muzzle under a brow is the other
+//      animal. The ears are most of the head's outline: taller than the skull
+//      is deep, and BROAD at the base. Tall and thin they were a hare's, or a
+//      pair of horns.
+//   3. THE BRUSH. A fox is mostly tail. It leaves the croup and is carried
+//      low and straight out behind, never above the back — cocked up is the
+//      dog's line, and the two animals are told apart by that at any distance
+//      — and it is two thirds as thick as the body. A thin tail reads as a
+//      cat.
 //
 // Faces +z like every quadruped in the kit. Built on makeQuadruped so the
 // leg-to-belly join is computed rather than guessed (see THE LEG RULE there),
@@ -28,19 +36,40 @@ const BODY_R = 0.16, BODY_LEN = 0.66;
 
 // THE BRUSH. A 'stiff' tail is centred on its own origin, so half of
 // its length lives inside the animal. Rather than guess an offset and discover
-// the thick end poking out of the back, anchor the buried end ON the body's
-// axis at TAIL_ROOT_Z and solve for the centre the quadruped wants. The tail
-// then emerges cleanly from the rump at any length or angle.
-const TAIL_TILT = -1.2;                 // rad: sends the tail back, and a touch down
+// the thick end poking out of the back, anchor the buried end at a stated
+// point inside the croup and solve for the centre the quadruped wants. The
+// tail then emerges cleanly from the rump at any length or angle.
+const TAIL_TILT = -1.72;                // rad off vertical, backward: past level, so it trails a touch down
 const TAIL_LEN = 0.90;
-const TAIL_ROOT_Z = -0.30;
+const TAIL_ROOT = [0.045, -0.30];       // [above the body's axis, z] — inside the croup
 const TAIL_AXIS_Y = Math.cos(TAIL_TILT);
 const TAIL_AXIS_Z = Math.sin(TAIL_TILT);
-const TAIL_UP = (TAIL_LEN / 2) * TAIL_AXIS_Y;
-const TAIL_BACK = -(TAIL_ROOT_Z + (TAIL_LEN / 2) * TAIL_AXIS_Z);
+const TAIL_UP = TAIL_ROOT[0] + (TAIL_LEN / 2) * TAIL_AXIS_Y;
+const TAIL_BACK = -(TAIL_ROOT[1] + (TAIL_LEN / 2) * TAIL_AXIS_Z);
 
-// where the skull hinges — the back of the head, behind and below its centre
-const NECK_TOP = [0, 0.78, 0.44];
+// THE HEAD, back of the skull to the nose: [z, top, bottom, half-width] in
+// heights, from the point the neck ends on (see skull.js). Read down the
+// `top` column: a flat crown and then one long fall to the nose, with the
+// stop no more than a change of slope. The half-widths are the other half of
+// it — broad at the cheek and pinched hard just ahead of it, so from the front
+// and from above the face is a triangle.
+const SKULL = [
+  [-0.075, 0.058, -0.042, 0.06],
+  [-0.01, 0.08, -0.07, 0.092],
+  [0.06, 0.07, -0.064, 0.078],
+  [0.115, 0.042, -0.054, 0.044],
+  [0.18, 0.028, -0.044, 0.031],
+  [0.25, 0.014, -0.034, 0.021],
+];
+const SKULL_BACK = [0.01, -0.1];        // [y, z] apexes closing the loft
+const SKULL_NOSE = [-0.012, 0.272];
+const HEAD_NOSE_DOWN = 0.1;             // rad the whole head is carried nose-down
+// The skull hinges straight below the point the neck ends on: an offset fore
+// or aft swings the cheek off the end of the neck as the head turns.
+const HINGE_DOWN = 0.02;                // x height
+// A cone is as deep as it is wide, and an ear is a leaf: flattened fore and
+// aft, so it is a broad triangle from the front and a blade from the side.
+const EAR_FLAT = 0.55;
 
 const STIR = 2.4;                        // seconds for one whole response
 
@@ -56,43 +85,48 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     legBury: .13,
     legH: LEG_H, legR: 0.055, legTaper: 1.0, hipX: 0.07, hipZ: 0.31,
     legs: { knee: KNEE, shoulder: 2.0, thigh: 2.3 },
-    neck: { r: 0.085, w: 0.8, root: 0.5, set: 0.2, taper: 1.2, arch: 0.02 },
-    head: { shape: 'sphere', r: 0.125, fwd: 0.55, up: 0.25 },
-    // long and narrow, and set a little below the head's centre — the muzzle,
-    // not the skull, is what should be sticking out
-    snout: { r0: 0.028, r1: 0.078, len: 0.28, fwd: 0.73, up: 0.225 },
-    // twice the head's radius tall: on a fox the ears are half the head. DIRECT
-    // dials (quadruped.js, EARS ARE PLACED DIRECTLY): base offsets from the
-    // skull's centre — high on top with a touch of forward, inside the skull
-    // radius so the join is buried, and leaning out.
-    ears: { r: 0.05, h: 0.3, x: 0.051, y: 0.09, z: 0.0, tilt: 0.44 },
+    // the neck's end has to fit inside the skull it enters, turned or not
+    neck: { r: 0.056, w: 0.9, root: 0.5, set: 0.2, taper: 1.1, arch: 0.02 },
+    // The plan's ball only says where the head is carried — low and forward,
+    // barely above the back — and how far it is nosed down; its geometry is
+    // replaced by the loft below. No snout: the muzzle is that loft's front.
+    head: { shape: 'sphere', r: 0.1, fwd: 0.6, up: 0.2, tilt: HEAD_NOSE_DOWN },
+    // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): base offsets from
+    // the point the neck ends on — inside the back corners of the skull, so
+    // the join is buried — and leaning out a little.
+    ears: { r: 0.062, h: 0.215, x: 0.05, y: 0.024, z: -0.03, tilt: 0.3 },
     tail: {
       // thin where it leaves the rump, fat through the middle, drawn to a
       // point: `swell` is what makes it a brush and not a club. The root end
       // is buried in the rump (see THE BRUSH above) and hand-sized against
       // it, so re-eyeball it if the body's own radius changes.
-      kind: 'stiff', r0: 0.045, r1: 0.06, swell: 1.75,
+      kind: 'stiff', r0: 0.05, r1: 0.05, swell: 2.3,
       length: TAIL_LEN, up: TAIL_UP, back: TAIL_BACK, tilt: TAIL_TILT,
     },
   });
   group.name = 'fox';
 
   // ---- the skull, onto its own hinge -----------------------------------
-  // makeQuadruped hangs the head, muzzle and ears straight off the body, which
-  // is right for a body plan and useless for a look. Re-parent them onto a
-  // pivot at the back of the skull; the neck stays behind, buried, so the head
-  // turns against it instead of dragging it along.
+  // makeQuadruped hangs the head and ears straight off the body, which is
+  // right for a body plan and useless for a look. Re-parent them onto a pivot
+  // under the end of the neck; the neck stays behind, buried, so the head
+  // turns against it instead of dragging it along. The pivot is read off the
+  // head the plan placed, so it follows the head when the carriage is retuned.
+  const headMesh = group.children.find((c) => c.name === 'head');
+  headMesh.geometry.dispose();
+  headMesh.geometry = skullGeometry(SKULL, { unit: height, back: SKULL_BACK, nose: SKULL_NOSE });
   const headPivot = new THREE.Group();
   headPivot.name = 'headPivot';
-  headPivot.position.set(NECK_TOP[0] * height, NECK_TOP[1] * height, NECK_TOP[2] * height);
+  headPivot.position.set(0, headMesh.position.y - HINGE_DOWN * height, headMesh.position.z);
   group.add(headPivot);
   for (const part of group.children.slice()) {
-    if (part.name === 'head' || part.name === 'snout' || part.name === 'ear') {
+    if (part.name === 'head' || part.name === 'ear') {
       part.position.sub(headPivot.position);
       headPivot.add(part);
     }
   }
   const ears = headPivot.children.filter((c) => c.name === 'ear');
+  for (const ear of ears) ear.scale.z = EAR_FLAT;
   // (The old EAR_SPIN facet hack lived here — quadruped.js now bakes half a
   // facet of pre-spin into the ear GEOMETRY so a flat face meets the 3/4
   // camera, and rotation.y belongs to the shared placement. Nothing to do.)
@@ -103,7 +137,7 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
   const tailMesh = group.children.find((c) => c.name === 'tail');
   const tailPivot = new THREE.Group();
   tailPivot.name = 'tailPivot';
-  tailPivot.position.set(0, BODY_Y * height, TAIL_ROOT_Z * height);
+  tailPivot.position.set(0, (BODY_Y + TAIL_ROOT[0]) * height, TAIL_ROOT[1] * height);
   group.add(tailPivot);
   if (tailMesh) {
     tailMesh.position.sub(tailPivot.position);

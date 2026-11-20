@@ -21,7 +21,7 @@ const assertLegsConnect = (root, label) => legsJoinBody(root, label, assert.ok);
 test('makeFox is a grounded quadruped with a muzzle and big ears', () => {
   const f = makeFox({ height: 0.45 });
   assert.equal(f.group.name, 'fox');
-  for (const n of ['body', 'head', 'snout', 'tail']) part(f.group, n);
+  for (const n of ['body', 'head', 'tail']) part(f.group, n);
   assert.equal(all(f.group, 'ear').length, 2, 'two ears');
   assertLegsConnect(f.group, 'fox');
 
@@ -34,8 +34,13 @@ test('makeFox is a grounded quadruped with a muzzle and big ears', () => {
   const earTop = Math.max(...all(f.group, 'ear').map((e) => box(e).max.y));
   assert.ok(earTop > head.max.y + 0.05, `ears stand above the skull: ${earTop} vs ${head.max.y}`);
 
-  // and the muzzle is the thing sticking out in front, not the skull
-  assert.ok(box(part(f.group, 'snout')).max.z > head.max.z + 0.02, 'the muzzle leads');
+  // and the muzzle is the thing sticking out in front. The head is one loft,
+  // skull and muzzle together (tests/dog-fox.test.js pins its profile), so the
+  // claim is that its nose is the animal's foremost point, well ahead of the
+  // breast.
+  assert.equal(all(f.group, 'snout').length, 0, 'no muzzle part stuck on the skull');
+  assert.ok(Math.abs(head.max.z - b.max.z) < 1e-6, 'the muzzle leads');
+  assert.ok(head.max.z > box(part(f.group, 'body')).max.z + 0.1 * 0.45, 'and stands well clear of the breast');
 });
 
 test('the fox is longer and lower than the dog it is built from', () => {
@@ -57,9 +62,9 @@ test('the fox is longer and lower than the dog it is built from', () => {
 test('the brush is thick, trails well behind the rump, and reads as a tail not a flag', () => {
   // The tail is most of what makes a fox a fox. The dog's is cocked UP and
   // thin; if this one ever ends up looking like that the animal stops reading.
-  // (The old "carried below the back line" pin is gone: a retune cocked the
-  // brush up on purpose — TAIL_TILT -1.72 -> -1.2 — so the claim that survives
-  // is that it still runs BACKWARD far more than up.)
+  // (It is carried low again, off the croup and no higher than the back —
+  // tests/dog-fox.test.js pins that against the dog's cocked tail. What is
+  // pinned here is that it runs BACKWARD far more than it rises or drops.)
   //
   // 2026-08-05 "model tweaks": the barrel widened (BODY_R 0.16 -> 0.19) faster
   // than the brush did (tail r0 0.05 -> 0.06, r1 pinned at 0.1 instead of
