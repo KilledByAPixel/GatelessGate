@@ -4,6 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import k13 from '../src/koans/k13.js';
 
 import { fakeCtx } from './helpers/fake-ctx.js';
+import { tapFit } from './helpers/tap-fit.js';
 import { rigCamera } from './helpers/rig-camera.js';
 import { collectDrums, beatDrumAt, setDrumAudio } from '../src/kit/drum.js';
 
@@ -108,4 +109,20 @@ test('the bowl still wins a tap aimed at it, with the drum handled elsewhere', (
   ray.setFromCamera(new THREE.Vector2(at.x, at.y), cam);
   assert.equal(ray.intersectObjects(drumMeshes, false).length, 0,
     'a ray aimed at the bowl reaches the drum — main’s handler would take the tap first');
+});
+
+// The bell's tap drum is sized by hand in fractions of the bell's height
+// (kit/bell.js), not cut from the bronze it surrounds: re-shape the bell and
+// a tap aimed at its crown or lip lands outside the drum. The bronze is still
+// in pickTargets() itself, but the drum is the forgiving part on a phone.
+// Held to the bronze's drawn extent, padded around it, not beside it.
+test('tap targets still sit on their models', () => {
+  const root = k13.build(fakeCtx());
+  root.update(1 / 60, 0);
+  const bell = root.scene.getObjectByName('bell');
+  const hit = bell.getObjectByName('bell-hit');
+  assert.ok(hit && hit.material.visible === false, 'the bell has an invisible tap drum');
+  const fit = tapFit(hit, bell.getObjectByName('body'));
+  assert.ok(fit.uncovered <= 0.15, `the bronze pokes out of its tap drum: ${(fit.uncovered * 100).toFixed(0)}% uncovered`);
+  assert.ok(fit.offCentre < 0.35, `the tap drum hangs beside the bronze: ${(fit.offCentre * 100).toFixed(0)}% off centre`);
 });

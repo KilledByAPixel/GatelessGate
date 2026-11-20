@@ -5,6 +5,7 @@ import k16 from '../src/koans/k16.js';
 import { makeBell } from '../src/kit/bell.js';
 import { ACCENT } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
+import { tapFit } from './helpers/tap-fit.js';
 import { stubAudio } from './helpers/stub-audio.js';
 import { rigCamera as sharedRig, DEFAULT_HOME } from './helpers/rig-camera.js';
 
@@ -380,4 +381,20 @@ test('tapping the bell swings it, rings the temple preset, and the elder finishe
     : null);
   assert.doesNotThrow(() => mute._taps.forEach((cb) => cb()));
   assert.equal(quiet.fragment().strikes, 1, 'the bell still swings, silently');
+});
+
+// The bell's tap drum is sized by hand in fractions of the bell's height
+// (kit/bell.js), not cut from the bronze it surrounds: re-shape the bell and
+// a tap aimed at its crown or lip lands outside the drum. The bronze is still
+// in pickTargets() itself, but the drum is the forgiving part on a phone.
+// Held to the bronze's drawn extent, padded around it, not beside it.
+test('tap targets still sit on their models', () => {
+  const root = k16.build(fakeCtx());
+  root.update(1 / 60, 0);
+  const bell = root.scene.getObjectByName('bell');
+  const hit = bell.getObjectByName('bell-hit');
+  assert.ok(hit && hit.material.visible === false, 'the bell has an invisible tap drum');
+  const fit = tapFit(hit, bell.getObjectByName('body'));
+  assert.ok(fit.uncovered <= 0.15, `the bronze pokes out of its tap drum: ${(fit.uncovered * 100).toFixed(0)}% uncovered`);
+  assert.ok(fit.offCentre < 0.35, `the tap drum hangs beside the bronze: ${(fit.offCentre * 100).toFixed(0)}% off centre`);
 });

@@ -4,6 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import k31 from '../src/koans/k31.js';
 import { ACCENT } from '../src/palette.js';
 import { fakeCtx } from './helpers/fake-ctx.js';
+import { tapFit } from './helpers/tap-fit.js';
 
 // THE SEAL IS THE WOMAN. It used to be the two tea cups on the bench, which is
 // a poor place to spend a page's one warm note: at the home lens they are two
@@ -64,4 +65,18 @@ test('case 31: one accent on the page, and it is a person', () => {
   });
   assert.ok(reds.length > 0);
   assert.deepEqual([...new Set(reds)], ['monk'], `only the woman is red, found: ${[...new Set(reds)]}`);
+});
+
+// Her tap volume is a cylinder placed at her feet by copied coordinates, not
+// parented to her: re-shape the figure (her pointing arm, the new sleeves) and
+// the touch that earns the page its mark lands where she used to be, with
+// nothing failing. Held to her drawn extent, padded around her, not beside her.
+test('case 31: tap targets still sit on their models', () => {
+  const root = staged();
+  const woman = root.scene.children.find((c) => c.name === 'monk' && c.position.x < 0);
+  const hit = root.scene.getObjectByName('woman-hit');
+  assert.ok(hit && hit.material.visible === false, 'she has an invisible tap volume');
+  const fit = tapFit(hit, woman);
+  assert.ok(fit.uncovered <= 0.15, `she pokes out of her tap volume: ${(fit.uncovered * 100).toFixed(0)}% uncovered`);
+  assert.ok(fit.offCentre < 0.35, `the tap volume stands beside her: ${(fit.offCentre * 100).toFixed(0)}% off centre`);
 });

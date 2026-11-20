@@ -6,6 +6,7 @@ import { CASES } from '../src/koans/index.js';
 import { PREFACE_SLUG, AFTERWORD_SLUG } from '../src/spine.js';
 import { buildHub } from '../src/intro.js';
 import { eyePosition } from '../src/camera.js';
+import { tapFit } from './helpers/tap-fit.js';
 
 // THE MATTER NET.
 //
@@ -598,4 +599,20 @@ test('the afterword still builds with no ctx at all — hub-trees.js calls it ba
   for (const [k, v] of Object.entries(bare.fragment())) {
     assert.ok(Number.isFinite(v) || typeof v === 'boolean', `fragment.${k} = ${v}`);
   }
+});
+
+// The bell's tap drum is sized by hand in fractions of the bell's height
+// (kit/bell.js), not cut from the bronze it surrounds: re-shape the bell and
+// a tap aimed at its crown or lip lands outside the drum. The bronze is still
+// in pickTargets() itself, but the drum is the forgiving part on a phone.
+// Held to the bronze's drawn extent, padded around it, not beside it.
+test('the preface: tap targets still sit on their models', async () => {
+  const built = (await loadKoan(PREFACE_SLUG)).build();
+  built.update(1 / 60, 0);
+  const bell = built.scene.getObjectByName('bell');
+  const hit = bell.getObjectByName('bell-hit');
+  assert.ok(hit && hit.material.visible === false, 'the bonshō has an invisible tap drum');
+  const fit = tapFit(hit, bell.getObjectByName('body'));
+  assert.ok(fit.uncovered <= 0.15, `the bronze pokes out of its tap drum: ${(fit.uncovered * 100).toFixed(0)}% uncovered`);
+  assert.ok(fit.offCentre < 0.35, `the tap drum hangs beside the bronze: ${(fit.offCentre * 100).toFixed(0)}% off centre`);
 });

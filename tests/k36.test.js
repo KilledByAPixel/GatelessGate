@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import k36 from '../src/koans/k36.js';
 import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
+import { tapFit } from './helpers/tap-fit.js';
 
 // Case 36, meeting a Zen master on the road.
 //
@@ -171,4 +172,18 @@ test('a second reach never restarts the bow he is already giving you', () => {
   assert.equal(built.fragment().bowing, 0);
   for (const cb of ctx._taps) cb();
   assert.equal(built.fragment().reaches, 2);
+});
+
+// The master's tap volume is a hand-sized cylinder placed at his feet by copied
+// coordinates, not parented to him: re-shape the figure (new arms, a new hat)
+// or move him and the reach that bows the traveller lands beside him with
+// nothing failing. Held to his drawn extent, padded around him, not beside him.
+test('tap targets still sit on their models', () => {
+  const built = k36.build(fakeCtx());
+  built.update(1 / 60, 0);
+  const hit = built.scene.getObjectByName('master-hit');
+  assert.ok(hit && hit.material.visible === false, 'the master has an invisible tap volume');
+  const fit = tapFit(hit, built.scene.getObjectByName('master'));
+  assert.ok(fit.uncovered <= 0.15, `the master pokes out of his tap volume: ${(fit.uncovered * 100).toFixed(0)}% uncovered`);
+  assert.ok(fit.offCentre < 0.35, `the tap volume stands beside him: ${(fit.offCentre * 100).toFixed(0)}% off centre`);
 });

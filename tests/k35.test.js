@@ -4,6 +4,7 @@ import * as THREE from '../lib/three.module.js';
 import k35 from '../src/koans/k35.js';
 import { ACCENT, ACCENT_DEEP, ACCENT_LIGHT } from '../src/palette.js';
 import { fakeCtx as sharedCtx } from './helpers/fake-ctx.js';
+import { tapFit, drawnBox } from './helpers/tap-fit.js';
 import { rigCamera } from './helpers/rig-camera.js';
 
 // Case 35, the two souls, restaged: instead of two people walking, one red
@@ -265,5 +266,26 @@ test('the scene runs clean with no camera and no audio', () => {
   for (let i = 0; i < 300; i++) bare.update(1 / 60, i / 60);
   for (const [k, v] of Object.entries(bare.fragment())) {
     assert.ok(Number.isFinite(v), `fragment.${k} = ${v}`);
+  }
+});
+
+// Both tap volumes are boxes placed by copied coordinates and typed sizes, not
+// parented to anyone: re-shape the figures (new arms, the seated pose) or move
+// one of them and a touch lands where she used to be, with nothing failing.
+// The family's box takes her and both children; the sitter's takes the sitter.
+test('tap targets still sit on their models', () => {
+  const built = staged();
+  const souls = collect(built.scene, 'soul');
+  const height = (o) => drawnBox(o).getSize(new THREE.Vector3()).y;
+  const [sitter, walker] = [...souls].sort((a, b) => height(a) - height(b));
+  for (const [name, models] of [
+    ['family-hit', [walker, ...collect(built.scene, 'child')]],
+    ['sitter-hit', [sitter]],
+  ]) {
+    const hit = collect(built.scene, name)[0];
+    assert.ok(hit && hit.material.visible === false, `${name} is an invisible tap volume`);
+    const fit = tapFit(hit, models);
+    assert.ok(fit.uncovered <= 0.15, `${name}: the figures poke out of it, ${(fit.uncovered * 100).toFixed(0)}% uncovered`);
+    assert.ok(fit.offCentre < 0.35, `${name}: it stands beside them, ${(fit.offCentre * 100).toFixed(0)}% off centre`);
   }
 });
