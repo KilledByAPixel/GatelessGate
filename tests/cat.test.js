@@ -153,8 +153,25 @@ test('the seated cat is a pear on its haunches, not a standing animal folded in 
     const b = box(l).getSize(new THREE.Vector3());
     assert.ok(b.z > 1.15 * b.y, `a haunch lies along the ground: ${b.z.toFixed(3)} long, ${b.y.toFixed(3)} tall`);
   }
-  assert.ok(haunch.max.z > paws.min.z, 'the hind paws reach the front legs');
-  assert.ok(haunch.max.z < paws.max.z + 0.02, 'without overtaking them');
+  // Paw against paw, AT THE GROUND. A leg's whole box includes the shoulder on
+  // top of it, and how far that stands forward is the plan's business: bounded
+  // against the box, this passed or failed with the plan's leg tops while the
+  // paws themselves had not moved.
+  const toes = (list) => {
+    let lo = Infinity, hi = -Infinity;
+    const v = new THREE.Vector3();
+    for (const o of list) {
+      const p = o.geometry.getAttribute('position');
+      for (let i = 0; i < p.count; i++) {
+        v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld);
+        if (v.y < 0.12) { lo = Math.min(lo, v.z); hi = Math.max(hi, v.z); }
+      }
+    }
+    return { lo, hi };
+  };
+  const hindToe = toes(hind).hi, frontPaw = toes(front);
+  assert.ok(hindToe > frontPaw.lo, `the hind paws reach the front ones: ${hindToe.toFixed(3)} vs ${frontPaw.lo.toFixed(3)}`);
+  assert.ok(hindToe < frontPaw.hi + 0.005, `without overtaking them: ${hindToe.toFixed(3)} vs ${frontPaw.hi.toFixed(3)}`);
 
   // from the side: nothing but the cat between the rump and the front paws.
   // A rescaled standing hind leg leaves the rump hanging in the air behind it.

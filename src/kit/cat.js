@@ -128,17 +128,19 @@ const BURY = 0.3;           // a seated front leg's top, as a fraction of the wa
 // animal's own frame with the ground at zero — the same cut as the skull, and
 // the same builder. `top` is the whole read: up over the hip, level along the
 // thigh, down at the knee, and a paw. It stays under the back line all the
-// way, so from the side the back is still the cat's outline.
+// way, so from the side the back is still the cat's outline. The toe stops
+// level with the front paws' own toes: measured at the ground, not against
+// the front leg's whole depth, which includes the shoulder above it.
 const HAUNCH = [
   [-0.41, 0.35, 0.01, 0.082],
   [-0.25, 0.5, 0.0, 0.112],
   [-0.1, 0.47, 0.0, 0.115],
   [0.02, 0.33, 0.0, 0.09],
-  [0.075, 0.12, 0.0, 0.06],
-  [0.15, 0.085, 0.0, 0.052],
+  [0.06, 0.12, 0.0, 0.06],
+  [0.125, 0.085, 0.0, 0.052],
 ];
 const HAUNCH_BACK = [0.1, -0.5];
-const HAUNCH_TOE = [0.03, 0.195];
+const HAUNCH_TOE = [0.03, 0.162];
 const HAUNCH_X = 0.165;                  // its centre plane, off the animal's own
 const HAUNCH_JOIN_Z = -0.2;              // where its origin is sunk into the body
 
