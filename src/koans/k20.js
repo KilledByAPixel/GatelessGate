@@ -141,8 +141,10 @@ const CAM = { distance: 12.0, target: [0.9, 1.15, 0.2], heading: 20.1, pitch: 10
   colossus.rotation.z = -0.05;
   const arms = [];
   colossus.traverse((o) => { if (o.name === 'arm') arms.push(o); });
+  // Only the free arm swings. The other is on his staff — the figure solves
+  // that hand to the shaft — and a counter-swing set on it here would pull the
+  // hand off the staff he is leaning on.
   if (arms[0]) arms[0].rotation.x = -0.55;
-  if (arms[1]) arms[1].rotation.x = 0.42;
   scene.add(colossus);
   
   // a traveller who stopped in front of him — the one who asked
