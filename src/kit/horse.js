@@ -8,84 +8,101 @@ import { mergeSimple } from './scatter.js';
 // withers-height in the air. What says HORSE in silhouette:
 //
 //   1. THE NECK IS A WEDGE GROWN FROM THE SHOULDERS — deep where it leaves the
-//      chest, slim at the poll, leaning well forward, crest bowed a little. It
-//      is the trunk's own profile carried on (see quadruped.js), so there is
-//      no neck part to aim: the LEAN is simply where the head is carried,
-//      HEAD_UP against HEAD_FWD, and the wedge is `neck.taper`.
+//      chest, slim at the throat, leaning well forward, crest bowed a little.
+//      It is the trunk's own profile carried on (see quadruped.js), so there
+//      is no neck part to aim: the LEAN is simply where the head is carried,
+//      HEAD_UP against HEAD_FWD. The depth has to LAST: a neck that has spent
+//      its taper by a third of the way up is a stick with a head on the end,
+//      however deep its root — so `neck.taper` stays near a straight wedge
+//      and `neck.root` starts the throat low on the breast.
 //   2. A SMALL HEAD, carried forward off the top of that line. ONE PIECE: a box
 //      skull and a cylinder muzzle read as two parts bolted together, so the
-//      head is a single ring loft from poll to nostril, tapering continuously,
-//      tilted down the neck line by head.tilt.
-//   3. DEEP CHEST, RISING BELLY, HIGH WITHERS — all `torso`: the brisket hangs
-//      well below the axis at the shoulder and the flank is tucked up ahead of
-//      the hind legs.
-//   4. LONG SLIM LEGS under real mass: a broad forearm and thigh over wire
-//      cannons, the hind fold at a LOW hock.
-//   5. TAIL OFF THE CROUP — the strand roots on the topline behind the hip (the
-//      plan's own default) and is carried swept back, not hung plumb.
+//      head is a single ring loft from poll to nostril, tilted down the neck
+//      line by head.tilt. Its depth is in the JAW: the forehead-to-nose line
+//      runs nearly straight and the underline climbs to the muzzle. Tapered
+//      evenly about its own axis it is a wedge, not a head.
+//   3. DEEP BROAD CHEST, RISING BELLY, WITHERS OVER A DIPPED BACK — all
+//      `torso`. The dip is as much as the plan's own bound on a back line
+//      allows (tests/quadruped.test.js); the croup stands over it as well, and
+//      the rump's overhang (`bodyLen` against `hipZ`) is what rounds it. Seen
+//      from the front a horse is nearly as broad as it is deep at the
+//      shoulder; much narrower and it reads as a cut-out standing on edge.
+//   4. LONG SLIM LEGS under real mass, STANDING UNDER THE BODY: a broad forearm
+//      and thigh over wire cannons, the hind fold at a LOW hock. The hock goes
+//      back only a little — enough for the corner to show. Folded further, the
+//      whole hind leg becomes one diagonal propped out behind the rump and the
+//      animal stops carrying its own weight.
+//   5. THE TAIL HANGS FROM THE CROUP AS ONE MASS — rooted on the topline behind
+//      the hip (the plan's own default), thin at the dock, full through the
+//      middle, closing to a point, and falling nearly plumb just clear of the
+//      buttock.
 //
 // Mesh ledger: body (with its neck), four legs, head, ear pair (merged), the
 // tail's strand segments. k45 bakes its own horse down to a single mesh with
 // `bakeStatic`, but the horse is shared, and an unbaked one still spends what
 // it spends.
-const HEAD_UP = 0.37;            // head centre above the body's axis, x height
-const HEAD_FWD = 0.70;           // ...and ahead of the animal's middle
-const KNEE = 0.28;               // rad, hind hock fold
+const HEAD_UP = 0.39;            // head centre above the body's axis, x height
+const HEAD_FWD = 0.69;           // ...and ahead of the animal's middle
+const KNEE = 0.17;               // rad, hind hock fold
 
 export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // A SMALL head, nosed down so the muzzle keeps falling along the neck's line.
-  const head = { shape: 'box', w: 0.08, hh: 0.105, d: 0.21, fwd: HEAD_FWD, up: HEAD_UP, tilt: 0.58 };
+  const head = { shape: 'box', w: 0.08, hh: 0.105, d: 0.21, fwd: HEAD_FWD, up: HEAD_UP, tilt: 0.62 };
 
   const { group, tail, plan } = makeQuadruped({
     height, color, seed,
-    bodyR: 0.195, bodyLen: 0.52, bodyDrop: 0.05,
+    bodyR: 0.195, bodyLen: 0.59, bodyDrop: 0.05,
     torso: {
-      chest: 1.18, loin: 0.76, withers: 1.1, back: 0.9, croup: 1.0,
-      shoulderW: 0.78, barrelW: 0.95, hipW: 0.88,
+      chest: 1.25, loin: 0.76, withers: 1.2, back: 0.965, croup: 1.05,
+      shoulderW: 0.92, barrelW: 1.06, hipW: 0.98,
     },
-    // the slimmest lower legs in the kit under the broadest forearm for its
-    // size: legTaper is the front leg's top-heaviness
     legBury: 0.18,
-    legH: 0.62, legR: 0.055, legTaper: 1.2, hipX: 0.09, hipZ: 0.31,
-    legs: { knee: KNEE, shoulder: 2.0, thigh: 2.6 },
-    // narrow across, deep fore-and-aft, and slim well before the poll
-    neck: { r: 0.068, w: 0.62, root: 0.5, set: 0.15, taper: 1.7, arch: 0.05 },
+    legH: 0.62, legR: 0.055, legTaper: 1.2, hipX: 0.105, hipZ: 0.285,
+    // `proud` under the plan's default: stood further out, the thigh's cap
+    // breaks the flank as a dark dart at the hip
+    legs: { knee: KNEE, shoulder: 2.0, thigh: 2.6, proud: 0.06 },
+    // `set` at nothing: the nape leaves the topline AT the withers, so the
+    // withers are the corner where back turns into neck
+    neck: { r: 0.072, w: 0.7, root: 0.68, set: 0.0, taper: 1.25, arch: 0.04 },
     head,
-    // no snout: the muzzle is the front half of the single head loft below.
+    // no snout: the muzzle is the front of the single head loft below.
     // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): rooted on the
-    // poll — just inside the tilted crown of the head loft — and laid well
-    // out, the pinned-back read.
-    ears: { r: 0.025, h: 0.085, x: 0.02, y: 0.06, z: -0.04, tilt: .5 },
-    // full through the middle (`swell`), and leaving the dock aimed back
-    // before it falls: a hank of hair, not a hinged stick
-    tail: { kind: 'strand', segments: 5, length: 0.5, thickness: 0.04, swell: 1.1, root: [0, -0.8, -0.6] },
+    // poll, just inside the tilted crown of the head loft, and laid well out.
+    ears: { r: 0.025, h: 0.085, x: 0.022, y: 0.06, z: -0.04, tilt: .5 },
+    // `thickness` is the dock and `swell` the hair: a thin root that fattens
+    // is a hank hanging from a tailbone, where a thick root is a club. The aim
+    // leans the dock only a little back — a stub aimed well out and a strand
+    // hanging plumb from its end is a visible hinge.
+    tail: { kind: 'strand', segments: 5, length: 0.5, thickness: 0.038, swell: 1.9, root: [0, -1, -0.26] },
   });
   group.name = 'horse';
 
-  // ---- the tail FLOWS off the croup --------------------------------------
+  // ---- the tail hangs just CLEAR of the buttock ---------------------------
   // A verlet strand can only hang plumb, and a plumb line from the croup falls
-  // INSIDE the rump's own outline — the tail vanished from every angle that
-  // matters (k45 sees the horse rear-three-quarter). The strand settles in its
-  // group's LOCAL frame, so sweeping the whole group back turns "hanging
-  // string" into "tail carried off the buttock", and the idle sway rides along.
-  if (tail) tail.group.rotation.x = 0.3;
+  // INSIDE the rump's own outline. The strand settles in its group's LOCAL
+  // frame, so leaning the whole group back a little carries the hang clear of
+  // the buttock, and the idle sway rides along. Only a little: leaned far, the
+  // tail stops hanging and sticks out.
+  if (tail) tail.group.rotation.x = 0.1;
 
   // ---- ONE head: poll to nostril in a single loft -------------------------
   // The box skull + cylinder muzzle read as two parts bolted together; this
   // nails the vertices into one continuous form. Rings of
   // [z, halfW, halfH, yOff] in units of height, head-local: +z out the nose,
-  // the mesh transform still carrying head.tilt down the neck line. Full at
-  // the cheek, one unbroken taper to a blunt nostril — same koi-style loft,
-  // same half-step spin so a flat facet (not an edge) faces top and sides.
-  // Replacing the box geometry moves nothing: position, tilt, and the ears'
-  // solved roots on the poll all stay exactly where the plan put them.
+  // the mesh transform still carrying head.tilt down the neck line. yOff is
+  // what puts the depth in the jaw: the deep rings are dropped and the muzzle
+  // rings are not, so the top line stays nearly straight while the underline
+  // climbs. Same koi-style loft, same half-step spin so a flat facet (not an
+  // edge) faces top and sides. Half-widths only ever narrow forward of the
+  // cheek. Replacing the box geometry moves nothing: position, tilt, and the
+  // ears' roots on the poll all stay exactly where the plan put them.
   const HEAD_RINGS = [
-    [-0.105, 0.030, 0.042, 0.004],    // poll, rounding away behind
-    [-0.070, 0.040, 0.0525, 0.000],   // skull at its fullest (the old box)
-    [-0.005, 0.040, 0.050, -0.002],   // cheek and jaw
-    [0.060, 0.032, 0.040, -0.006],    // the taper begins
-    [0.130, 0.026, 0.031, -0.010],
-    [0.205, 0.020, 0.023, -0.012],    // nostril end, blunt — the old snout tip
+    [-0.105, 0.028, 0.036, 0.008],    // poll, rounding away behind
+    [-0.060, 0.040, 0.056, -0.006],   // jaw: the deep part
+    [0.000, 0.039, 0.050, -0.006],    // cheek
+    [0.070, 0.030, 0.034, 0.000],     // the underline has climbed
+    [0.140, 0.024, 0.026, 0.002],
+    [0.200, 0.021, 0.023, 0.000],     // muzzle, blunt
   ];
   const headMesh = group.children.find((c) => c.name === 'head');
   {

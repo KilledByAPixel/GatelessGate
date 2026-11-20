@@ -152,7 +152,7 @@ test('the hind fold sits at a LOW hock, behind the hip', () => {
   }
 });
 
-test('the tail flows off the CROUP, swept back clear of the rump', () => {
+test('the tail hangs from the croup', () => {
   const horse = build();
   const { group, tail, plan } = horse;
   assert.ok(tail, 'the strand tail is live');
@@ -163,8 +163,150 @@ test('the tail flows off the CROUP, swept back clear of the rump', () => {
   assert.ok(tail.group.position.z < plan.zHip - 0.05, 'roots behind the hip');
   assert.ok(tail.group.position.y < sectionY(bodyOf(group), tail.group.position.z).max,
     'and under the topline there, not perched on it');
-  // and the group is swept back so the hanging strand clears the buttock line
-  assert.ok(tail.group.rotation.x > 0.2, 'carried off the croup, not plumb inside the rump');
+
+  // ONE HANGING MASS. A stub aimed well back with a strand plumb off its end
+  // is two sticks and a hinge, so: no joint bends far, and below the dock the
+  // strand is close to plumb.
+  const segs = find(group, 'seg');
+  const up = new THREE.Vector3(0, 1, 0), q = new THREE.Quaternion();
+  const dirs = segs.map((s) => up.clone().applyQuaternion(s.getWorldQuaternion(q)));
+  const deg = THREE.MathUtils.radToDeg;
+  for (let i = 1; i < dirs.length; i++) {
+    const kink = deg(dirs[i].angleTo(dirs[i - 1]));
+    assert.ok(kink < 22, `joint ${i} bends ${kink.toFixed(1)} deg — a hinge`);
+    const lean = deg(Math.acos(Math.min(1, Math.abs(dirs[i].y))));
+    assert.ok(lean < 13, `below the dock the tail hangs: segment ${i} is ${lean.toFixed(1)} deg off plumb`);
+  }
+  // it still falls just clear of the buttock rather than down inside the rump
+  const box = new THREE.Box3().setFromObject(tail.group);
+  const rump = new THREE.Box3().setFromObject(find(group, 'body')[0]);
+  assert.ok(box.min.z < rump.min.z - 0.03, 'the hang shows behind the rump');
+  // and it is a mass, not a whip: thin at the dock, fuller below it
+  const withers = withersOf(horse);
+  assert.ok((box.max.x - box.min.x) / withers > 0.18,
+    `the tail is ${((box.max.x - box.min.x) / withers).toFixed(3)}x withers across`);
+  const radius = (m) => Math.max(m.geometry.parameters.radiusTop, m.geometry.parameters.radiusBottom);
+  assert.ok(radius(segs[1]) > segs[0].geometry.parameters.radiusBottom * 1.5,
+    'fuller through the middle than at the dock');
+  // reaching about to the hock
+  assert.ok(box.min.y / withers > 0.22 && box.min.y / withers < 0.42,
+    `the tip hangs at ${(box.min.y / withers).toFixed(2)}x withers`);
+});
+
+// across the neck's own line, the body's extent between two stations along it
+function neckDepth(horse, t0, t1) {
+  const { root, end } = horse.plan.neck;
+  const len = Math.hypot(end[0] - root[0], end[1] - root[1]);
+  const d = [(end[0] - root[0]) / len, (end[1] - root[1]) / len];
+  const n = [d[1], -d[0]];
+  const body = find(horse.group, 'body')[0];
+  const p = body.geometry.getAttribute('position');
+  let lo = Infinity, hi = -Infinity;
+  for (let i = 0; i < p.count; i++) {
+    const y = p.getY(i) + body.position.y - root[0], z = p.getZ(i) - root[1];
+    const along = (y * d[0] + z * d[1]) / len;
+    if (along < t0 || along > t1) continue;
+    const across = y * n[0] + z * n[1];
+    lo = Math.min(lo, across); hi = Math.max(hi, across);
+  }
+  return hi - lo;
+}
+
+test('the neck is deeper at the shoulder than at the throat, and stays deep leaving it', () => {
+  const horse = build();
+  const withers = withersOf(horse);
+  const { rootDepth, endDepth } = horse.plan.neck;
+  const third = neckDepth(horse, 0.2, 0.45), upper = neckDepth(horse, 0.55, 0.8);
+  assert.ok(rootDepth > third && third > upper && upper > endDepth,
+    'one wedge: every station slimmer than the one below it');
+  // A deep root is not enough. A neck that spends its depth at once is thin
+  // where it leaves the shoulders, and the head then hangs off a stick.
+  assert.ok(third / withers > 0.31,
+    `a third of the way up the neck is ${(third / withers).toFixed(3)}x withers deep`);
+  assert.ok(rootDepth / withers > 0.44,
+    `at the shoulder it is ${(rootDepth / withers).toFixed(3)}x withers deep`);
+  assert.ok(endDepth / rootDepth < 0.4, `throat to root ${(endDepth / rootDepth).toFixed(2)}x`);
+});
+
+test('the head is deep at the jaw and tapers to the muzzle along its underline', () => {
+  const horse = build();
+  const head = find(horse.group, 'head')[0];
+  const p = head.geometry.getAttribute('position');
+  const rings = new Map();
+  for (let i = 0; i < p.count; i++) {
+    const z = +p.getZ(i).toFixed(4);
+    const r = rings.get(z) ?? { lo: Infinity, hi: -Infinity, n: 0 };
+    r.lo = Math.min(r.lo, p.getY(i)); r.hi = Math.max(r.hi, p.getY(i)); r.n++;
+    rings.set(z, r);
+  }
+  const rs = [...rings.entries()].filter(([, r]) => r.n > 1).sort((x, y) => x[0] - y[0]).map(([, r]) => r);
+  const depth = (r) => r.hi - r.lo;
+  const jawAt = rs.reduce((m, r, i) => (depth(r) > depth(rs[m]) ? i : m), 0);
+  const jaw = rs[jawAt], muzzle = rs[rs.length - 1];
+  assert.ok(jawAt <= 2, 'the deepest section is back at the jaw, not out along the face');
+  assert.ok(depth(jaw) > depth(muzzle) * 2.3,
+    `jaw ${depth(jaw).toFixed(3)} against muzzle ${depth(muzzle).toFixed(3)}`);
+  // The taper is the JAW's: the underline climbs to the muzzle further than
+  // the forehead falls to it. Tapered evenly about its axis the head is a
+  // wedge on the end of the neck.
+  const rise = muzzle.lo - jaw.lo, fall = jaw.hi - muzzle.hi;
+  assert.ok(rise > fall * 1.2,
+    `underline climbs ${rise.toFixed(3)}, forehead falls ${fall.toFixed(3)}`);
+  // and the neck arrives no deeper than the jaw it joins
+  assert.ok(horse.plan.neck.endDepth < depth(jaw), 'the throat is slimmer than the jaw');
+});
+
+test('the withers stand above the low point of the back, and so does the croup', () => {
+  const horse = build();
+  const { plan } = horse;
+  const body = bodyOf(horse.group);
+  const span = plan.zShoulder - plan.zHip;
+  const withers = withersOf(horse);
+  const depth = sectionY(body, plan.zShoulder - 1e-3).depth;
+  let low = Infinity, lowAt = 0, croup = -Infinity;
+  for (let i = 0; i <= 40; i++) {
+    const s = sectionY(body, plan.zHip + span * (i / 40));
+    if (s.max < low) { low = s.max; lowAt = i / 40; }
+    if (i <= 8) croup = Math.max(croup, s.max);
+  }
+  assert.ok(lowAt > 0.3 && lowAt < 0.85,
+    `the low point is in the back itself: ${lowAt.toFixed(2)} of the way forward`);
+  // the shared plan test bounds how far a back may dip under its own chord, so
+  // these are small numbers by construction — but they are not nothing
+  assert.ok((withers - low) / depth > 0.092,
+    `withers stand ${((withers - low) / depth * 100).toFixed(1)}% of the chest's depth over the back`);
+  assert.ok(croup > low + 0.03 * depth, 'the croup rises behind the dip');
+  assert.ok(withers > croup, 'and the withers are the high point of the trunk');
+});
+
+test('a broad chest: nearly as wide as deep at the shoulder', () => {
+  const horse = build();
+  const { plan } = horse;
+  const body = find(horse.group, 'body')[0];
+  const p = body.geometry.getAttribute('position');
+  let w = 0;
+  for (let i = 0; i < p.count; i++) {
+    if (Math.abs(p.getZ(i) - plan.zShoulder) < 1e-3) w = Math.max(w, Math.abs(p.getX(i)));
+  }
+  const depth = sectionY(bodyOf(horse.group), plan.zShoulder - 1e-3).depth;
+  assert.ok(2 * w / depth > 0.72, `shoulder breadth ${(2 * w / depth).toFixed(2)}x its depth — a slab is ~0.68`);
+});
+
+test('the hind feet stand under the body, not propped out behind it', () => {
+  const horse = build();
+  const withers = withersOf(horse);
+  const v = new THREE.Vector3();
+  for (const leg of find(horse.group, 'leg').filter((l) => l.position.z < 0)) {
+    const p = leg.geometry.getAttribute('position');
+    let z = 0, n = 0;
+    for (let i = 0; i < p.count; i++) {
+      v.fromBufferAttribute(p, i).applyMatrix4(leg.matrixWorld);
+      if (v.y < 0.02) { z += v.z; n++; }
+    }
+    assert.ok(n > 0, 'the leg reaches the ground');
+    const behind = (leg.position.z - z / n) / withers;
+    assert.ok(behind > 0 && behind < 0.1, `the hoof stands ${behind.toFixed(3)}x withers behind the hip`);
+  }
 });
 
 test('deterministic and steady: the update only stirs the tail', () => {
