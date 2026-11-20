@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import * as THREE from '../lib/three.module.js';
 import { makeBird } from '../src/kit/bird.js';
 import { makeBirds } from '../src/kit/birds.js';
 
@@ -160,4 +161,62 @@ test('a proxy costs no draw call — invisible materials are not drawn', () => {
   let drawn = 0;
   flock.group.traverse((o) => { if (o.isMesh && o.material.visible !== false) drawn++; });
   assert.equal(drawn, 9 * 3, 'nine birds, three meshes each, and nothing else');
+});
+
+// ---- the single bird's shape ------------------------------------------------
+
+// How thick the body is at a station along its length, as a side-on camera
+// sees it: a ray down through the spine and one up, the gap between where they
+// land. Measured on the surface rather than on vertices, because the question
+// is what the OUTLINE does between two rings, not where the rings are.
+function thicknessAt(body, z) {
+  const ray = new THREE.Raycaster();
+  const hit = (dir) => {
+    ray.set(new THREE.Vector3(0, -5 * dir, z), new THREE.Vector3(0, dir, 0));
+    const h = ray.intersectObject(body, false);
+    return h.length ? h[0].point.y : null;
+  };
+  const lo = hit(1), hi = hit(-1);
+  return lo == null || hi == null ? 0 : hi - lo;
+}
+
+test('the head runs into the body — no ball on a pinched neck', () => {
+  const s = 0.5;
+  const b = makeBird({ size: s });
+  b.group.updateMatrixWorld(true);
+  const body = b.group.getObjectByName('bird-body');
+  const at = (u) => thicknessAt(body, u * s);
+  // the head is the thickest thing ahead of the shoulder; the neck is the
+  // thinnest thing between it and the breast
+  let head = 0, headU = 0;
+  for (let u = 0.34; u <= 0.56; u += 0.01) if (at(u) > head) { head = at(u); headU = u; }
+  let neck = Infinity;
+  for (let u = 0.10; u <= headU; u += 0.01) neck = Math.min(neck, at(u));
+  assert.ok(head > 0, 'no head found ahead of the shoulder');
+  assert.ok(neck > head * 0.85,
+    `the neck pinches to ${(neck / head).toFixed(2)} of the head — a ball stuck on the front`);
+  // and the head must not have grown to do it: still clearly the smaller mass
+  let breast = 0;
+  for (let u = -0.2; u <= 0.3; u += 0.01) breast = Math.max(breast, at(u));
+  assert.ok(head < breast * 0.85, `head ${head} is as deep as the breast ${breast}`);
+});
+
+test('a wing has a wrist: the leading edge reaches forward out along the span, not at the root', () => {
+  const b = makeBird({ size: 0.5 });
+  const wings = [];
+  b.group.traverse((o) => { if (o.name === 'bird-wing') wings.push(o); });
+  assert.equal(wings.length, 2);
+  for (const w of wings) {
+    const p = w.geometry.attributes.position;
+    let span = 0, lead = -Infinity, leadAt = 0, rootLead = -Infinity;
+    for (let v = 0; v < p.count; v++) span = Math.max(span, Math.abs(p.getX(v)));
+    for (let v = 0; v < p.count; v++) {
+      const u = Math.abs(p.getX(v)) / span;
+      if (p.getZ(v) > lead) { lead = p.getZ(v); leadAt = u; }
+      if (u < 0.02) rootLead = Math.max(rootLead, p.getZ(v));
+    }
+    assert.ok(leadAt > 0.2 && leadAt < 0.6,
+      `the foremost point of the wing is at ${leadAt.toFixed(2)} of the span — a plank has it at the root`);
+    assert.ok(lead > rootLead + 0.02 * span, 'the wrist does not stand forward of the root');
+  }
 });

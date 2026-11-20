@@ -1,6 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
 import { washMaterial } from '../render/material.js';
-import { mergeSimple } from './scatter.js';
 
 // One bird, in flight. The flock in birds.js drives a school of these across
 // the sky; this file is only the body and how it beats its wings.
@@ -9,11 +8,17 @@ import { mergeSimple } from './scatter.js';
 // beak, a tail and little legs, and it read as fiddly and wrong — the head too
 // big, the legs pointless on a bird that only flies, the wings too sharp. The
 // flat two-stroke chevron it replaced was almost better. So this is barely more
-// than that chevron: a small flattened body, a head with a beak, a short tail,
-// and two broad blunt wings. No legs.
+// than that chevron: one body that runs from beak to tail, and two broad blunt
+// wings. No legs.
 //
-// Three meshes — one merged body and two wings. The body is baked into one
-// mesh; only the wings move.
+// Three meshes — one body and two wings. Only the wings move.
+//
+// THE BODY IS ONE FORM. It was four primitives pushed together — an ellipsoid,
+// a ball for the head, a cone, a plate — and where the ball met the ellipsoid
+// the outline pinched to a neck, so from the side it read as a bead on the end
+// of a sausage. A bird in flight has no neck to see: the head is the front of
+// the body. So the body is lofted from one profile, and the only step in it is
+// the one that sets the beak off from the face.
 //
 // The wings FOLD. A flat paddle that only hinges up and down at the shoulder
 // reads fine at flock distance but static up close — the close-up single
@@ -25,59 +30,99 @@ import { mergeSimple } from './scatter.js';
 // mesh is added (a wrist joint would cost a second mesh per wing, doubling
 // per-bird draws across an 8-9 bird flock for no gain at flock distance).
 
+// The body's profile, beak to tail, in units of size:
+// [z, halfWidth (x), halfHeight (y), centre height]. Read it as three masses
+// with no gap between them — a small head, a breast that is the fullest
+// station, and a tail that flattens and FANS, wider at its trailing edge than
+// where it leaves the rump. The head stays clearly the smaller mass (the
+// too-big head is the mistake the note above records) but the station behind
+// it is no thinner than the head itself, which is what keeps a neck from
+// appearing.
+const PROFILE = [
+  [0.520, 0.026, 0.024, 0.016],   // beak base — the tip is the loft's nose point
+  [0.495, 0.070, 0.060, 0.030],   // face: the one step, so the beak reads as a beak
+  [0.420, 0.095, 0.082, 0.036],   // head
+  [0.330, 0.100, 0.082, 0.030],   // nape and throat — carried through, not pinched
+  [0.200, 0.140, 0.105, 0.010],   // shoulder, where the wings root
+  [0.060, 0.155, 0.112, 0.000],   // breast — the fullest station
+  [-0.100, 0.135, 0.095, 0.004],
+  [-0.240, 0.095, 0.060, 0.010],
+  [-0.340, 0.070, 0.028, 0.016],  // rump
+  [-0.400, 0.085, 0.014, 0.018],  // tail root, already flat
+  [-0.540, 0.150, 0.009, 0.018],  // tail's trailing edge
+];
+const BEAK_TIP = [0.62, 0.012];   // [z, y]
+const RING = 8;
+
 function bodyGeometry(s) {
-  const parts = [];
+  const pos = [0, BEAK_TIP[1] * s, BEAK_TIP[0] * s];
+  for (const [z, w, h, cy] of PROFILE) {
+    for (let j = 0; j < RING; j++) {
+      const a = (j / RING) * Math.PI * 2;
+      pos.push(Math.cos(a) * w * s, (cy + Math.sin(a) * h) * s, z * s);
+    }
+  }
+  const end = PROFILE[PROFILE.length - 1];
+  pos.push(0, end[3] * s, end[0] * s);
+  const tailC = pos.length / 3 - 1;
 
-  // the body: a short, flattened teardrop along z — full at the breast,
-  // tapering to the tail. No neck, no separate head sticking up.
-  const body = new THREE.SphereGeometry(0.16 * s, 8, 6);
-  body.scale(1, 0.7, 2.5);                   // long and flat, not a ball
-  parts.push(body);
+  const idx = [];
+  for (let j = 0; j < RING; j++) idx.push(0, 1 + ((j + 1) % RING), 1 + j);
+  for (let i = 0; i < PROFILE.length - 1; i++) {
+    const a = 1 + i * RING, b = a + RING;
+    for (let j = 0; j < RING; j++) {
+      const j2 = (j + 1) % RING;
+      idx.push(a + j, a + j2, b + j, a + j2, b + j2, b + j);
+    }
+  }
+  const last = 1 + (PROFILE.length - 1) * RING;
+  for (let j = 0; j < RING; j++) idx.push(tailC, last + j, last + ((j + 1) % RING));
 
-  // a suggestion of a head: a small bump at the front, not a sphere on a neck —
-  // sized up a touch from the first pass so the close-up single reads as having
-  // a head at all, short of the too-big mistake the header above still warns
-  // against.
-  const head = new THREE.SphereGeometry(0.105 * s, 7, 5);
-  head.scale(1, 0.82, 1.05);
-  head.translate(0, 0.025 * s, 0.43 * s);
-  parts.push(head);
-
-  // a small beak — just a nub at the front of the head, restored after it went
-  // missing. Kept tiny so it reads as a point, not the fiddly cone the earlier
-  // detailed bird had.
-  const beak = new THREE.ConeGeometry(0.035 * s, 0.14 * s, 4);
-  beak.rotateX(Math.PI / 2);
-  beak.translate(0, 0.015 * s, 0.555 * s);
-  parts.push(beak);
-
-  // a short tail fanned flat behind
-  const tail = new THREE.ConeGeometry(0.14 * s, 0.30 * s, 3);
-  tail.scale(1, 0.22, 1);
-  tail.translate(0, 0.02 * s, -0.4 * s);
-  parts.push(tail);
-
-  return mergeSimple(parts);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
 }
 
-// a wing: a broad blunt paddle, hinged at the root (x = 0). Two triangles make
-// a quad with a rounded-off outer edge rather than one sharp point: the wings
-// read as too pointy otherwise.
+// A wing, hinged at the root (x = 0), as [span (x), lift (y), chord (z)] in
+// units of size. Two parts in one mesh, creased where they meet:
+//
+//   the ARM, root to wrist — it carries the chord out from the body and its
+//   leading edge runs FORWARD to the wrist, which is the one thing that turns a
+//   plank into a wing from above;
+//   the HAND, wrist to tip — swept back and tapering to a blunt three-point
+//   tip. Blunt on purpose: a single sharp point is the too-pointy wing the note
+//   at the top records.
+//
+// The wrist also stands a little above the root and the tip, so the wing is a
+// shallow bent line seen edge-on rather than a plane that vanishes when the
+// camera is level with it. That is fixed shape, not motion: the beat is still
+// the hinge and nothing else.
+const WING = {
+  rootFront: [0.00, 0.000, 0.17],
+  wristFront: [0.34, 0.045, 0.22],
+  tipFront: [0.72, 0.005, 0.07],
+  tip: [0.84, -0.025, -0.05],
+  tipBack: [0.74, 0.000, -0.15],
+  wristBack: [0.36, 0.040, -0.16],
+  rootBack: [0.00, 0.000, -0.22],
+};
 function wingGeometry(s, side) {
+  const W = WING;
+  const tris = [
+    // the arm
+    W.rootFront, W.wristFront, W.wristBack,
+    W.rootFront, W.wristBack, W.rootBack,
+    // the hand, fanned from the wrist's leading corner
+    W.wristFront, W.tipFront, W.tip,
+    W.wristFront, W.tip, W.tipBack,
+    W.wristFront, W.tipBack, W.wristBack,
+  ];
+  const v = [];
+  for (const [x, y, z] of tris) v.push(x * s * side, y * s, z * s);
   const g = new THREE.BufferGeometry();
-  const t = side;
-  const v = new Float32Array([
-    // inner edge, at the body the span reaches further from the body without
-    // getting wider
-    0, 0, 0.16 * s,          // root front
-    0, 0, -0.20 * s,         // root back
-    0.80 * s * t, 0, -0.12 * s,   // outer back
-    // and the front half of the paddle
-    0, 0, 0.16 * s,          // root front
-    0.80 * s * t, 0, -0.12 * s,   // outer back
-    0.70 * s * t, 0, 0.08 * s,    // outer front — blunts the tip
-  ]);
-  g.setAttribute('position', new THREE.BufferAttribute(v, 3));
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(v), 3));
   g.computeVertexNormals();
   return g;
 }
