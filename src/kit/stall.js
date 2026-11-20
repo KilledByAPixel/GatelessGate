@@ -29,7 +29,27 @@ export function makeStall({
   g.name = 'stall';
   const hw = width / 2;
   const hd = depth / 2;
-  const post = 0.06 * (width + depth);
+  // Slim enough that the open bay over the counter is the stall's main
+  // negative shape; at pier thickness the frame read as a crate on stilts.
+  const post = 0.035 * (width + depth);
+
+  // ---- the awning's plane -------------------------------------------------
+  // EVERYTHING UNDER THE CLOTH IS MEASURED FROM THE CLOTH. The awning used to
+  // be tilted one way while the posts were cut for the other: it rose toward
+  // the lane, the tall rear posts stood through its low back edge as two
+  // blocks above the roof, and the level rafters parted company with it along
+  // their whole length. Now the slope is stated once, the posts are cut to
+  // the height the cloth has over each of them, and the eave timbers are
+  // built in the awning's own frame and tilted with it.
+  const TILT = 0.20;                            // radians; the front edge dips
+  const thick = height * 0.05;                  // an edge that survives edge-on
+  const awnY = height * 0.9;
+  const awnZ = 0.02;
+  // world height of the cloth's underside over a given z
+  const under = (z) => awnY - (thick / 2) / Math.cos(TILT) - (z - awnZ) * Math.tan(TILT);
+  // a piece authored flat in the awning's frame (y measured down from the
+  // cloth's middle), carried onto the slope
+  const slung = (geo) => geo.rotateX(TILT).translate(0, awnY, awnZ);
 
   // ---- the frame: posts, counter, shelf — one merged mesh -----------------
   const frame = [];
@@ -40,9 +60,11 @@ export function makeStall({
   };
   for (const sx of [-1, 1]) {
     for (const sz of [-1, 1]) {
-      // front posts a touch shorter — the awning slopes forward
-      const ph = sz > 0 ? height * 0.86 : height;
-      frame.push(box(post, ph, post, sx * (hw - post), ph / 2, sz * (hd - post)));
+      // each post ends a little way INTO the cloth: short of it leaves the
+      // roof hovering, through it is the old fault
+      const pz = sz * (hd - post);
+      const ph = under(pz) + thick * 0.3;
+      frame.push(box(post, ph, post, sx * (hw - post), ph / 2, pz));
     }
   }
   // the counter, a board at standing height across the front
@@ -53,32 +75,30 @@ export function makeStall({
   frame.push(box(width, 0.07, 0.22, 0, height * 0.72, -hd + post * 1.5));
 
   // ---- the awning's own eave: fascia + rafter-tip rhythm -------------------
-  // The stall's cloth roof had no eave language at all — a flat tilted box
-  // with nothing telling the reader it is a ROOF rather than a lid. hut.js's
-  // eave is a fascia band with rafter tips poking through it on a regular
-  // beat; a market awning cannot afford the full hipped shell, but it can
-  // afford the same two moves in timber, baked into the one frame mesh so
-  // the rhythm costs nothing extra to draw. eaveY sits just under the cloth
-  // (awning is set below); ribs run back under the cloth and their tips
-  // poke a hair proud of the fascia, echoing hut.js's RAFTER_OUT.
-  const eaveY = height * 0.88;
-  const fasciaZ = hd + 0.03;
-  frame.push(box(width + 0.20, 0.05, 0.05, 0, eaveY, fasciaZ));       // the fascia band
+  // A bare tilted slab says "lid", not "roof". hut.js's eave is a fascia band
+  // with rafter tips poking through it on a regular beat; a market awning
+  // cannot afford the full hipped shell, but it can afford the same two moves
+  // in timber, baked into the one frame mesh so the rhythm costs nothing
+  // extra to draw. Both hang directly under the cloth and follow its slope;
+  // the ribs run its depth and their tips stand a hair proud of the fascia,
+  // echoing hut.js's RAFTER_OUT.
+  const eave = -(thick / 2 + 0.02);             // just under the cloth, in its frame
+  frame.push(slung(box(width + 0.20, 0.05, 0.05, 0, eave, hd + 0.01)));   // the fascia band
   const ribN = Math.max(3, Math.round(width / 0.42));
   for (let i = 0; i <= ribN; i++) {
     const rx = -width / 2 + (width * i) / ribN;
-    frame.push(box(0.045, 0.045, depth + 0.10, rx, eaveY - 0.01, 0.02));
+    frame.push(slung(box(0.045, 0.045, depth + 0.10, rx, eave, 0)));
   }
   const frameMesh = new THREE.Mesh(mergeSimple(frame), washMaterial({ color: wood, flat: true }));
   frameMesh.name = 'stall-frame';
   g.add(frameMesh);
 
   // ---- the awning: a cloth sloping down toward the lane -------------------
-  const awn = new THREE.BoxGeometry(width + 0.18, 0.04, depth + 0.12);
+  const awn = new THREE.BoxGeometry(width + 0.18, thick, depth + 0.12);
   const awning = new THREE.Mesh(awn, washMaterial({ color: cloth, flat: true }));
   awning.name = 'stall-awning';
-  awning.position.set(0, height * 0.9, 0.02);
-  awning.rotation.x = -0.20;                    // front edge dips
+  awning.position.set(0, awnY, awnZ);
+  awning.rotation.x = TILT;
   g.add(awning);
 
   // ---- the goods heaped on the counter ------------------------------------
