@@ -184,15 +184,20 @@ test("the dog's tail is cocked: it rises more than it trails", () => {
 
 // ---- the fox ----------------------------------------------------------------
 
-test("the fox's head is a long low wedge drawn to a point", () => {
+test("the fox's head is a wedge drawn to a point, with a skull behind the muzzle", () => {
   const root = makeFox({}).group;
   const b = headBox(root);
   const long = b.max.z - b.min.z, tall = b.max.y - b.min.y;
-  assert.ok(long > 2 * tall, `${long.toFixed(3)} long, ${tall.toFixed(3)} tall`);
+  assert.ok(long > 1.5 * tall, `a ball: ${long.toFixed(3)} long, ${tall.toFixed(3)} tall`);
   const tris = triangles(root, isHead);
   const at = (f) => sectionY(tris, b.min.z + (b.max.z - b.min.z) * f);
   assert.ok(at(0.9).depth < 0.4 * at(0.25).depth,
     `the muzzle does not narrow: ${at(0.9).depth.toFixed(3)} vs ${at(0.25).depth.toFixed(3)}`);
+  // and not a needle: a wedge with no depth at the cheek is a spout on the end
+  // of the neck, however well it tapers
+  const chest = sectionY(triangles(root, (o) => o.name === 'body'), trunk(root).zFront).depth;
+  assert.ok(tall > 0.55 * chest,
+    `a needle: a skull ${tall.toFixed(3)} tall on a chest ${chest.toFixed(3)} deep`);
 });
 
 test("the fox's ears are taller than its skull, and triangles rather than spikes", () => {
@@ -219,7 +224,34 @@ test("the fox's brush is at least half the body's thickness, and carried no high
   assert.ok(tail.max.y < back + 0.02,
     `the brush stands ${(tail.max.y - back).toFixed(3)} over the back`);
   // and behind, not under: it still trails further than it drops
-  assert.ok(tail.max.z - tail.min.z > 2 * (tail.max.y - tail.min.y), 'the brush hangs');
+  assert.ok(tail.max.z - tail.min.z > 1.2 * (tail.max.y - tail.min.y), 'the brush hangs');
+});
+
+test("the fox's brush falls away in an arc, as deep as the body through its middle", () => {
+  // A straight brush of any thickness is a bar stuck in the animal. Three
+  // things make it the one flowing shape: it ends well below the belly line
+  // (and still off the ground), it is deepest in its middle rather than at
+  // either end, and that depth is the body's own.
+  const root = makeFox({}).group;
+  const tail = boxOf(root, (o) => o.name === 'tail');
+  const body = boxOf(root, (o) => o.name === 'body');
+  assert.ok(tail.min.y < 0.6 * body.min.y,
+    `carried straight out: its lowest point ${tail.min.y.toFixed(3)} against a belly at ${body.min.y.toFixed(3)}`);
+  assert.ok(tail.min.y > 0.1 * body.min.y, `and it drags: ${tail.min.y.toFixed(3)}`);
+
+  const tris = triangles(root, (o) => o.name === 'tail');
+  const depthAt = (f) => sectionY(tris, tail.max.z - (tail.max.z - tail.min.z) * f).depth;
+  let deepest = 0, where = 0;
+  for (let i = 1; i < 40; i++) {
+    const d = depthAt(i / 40);
+    if (d > deepest) { deepest = d; where = i / 40; }
+  }
+  assert.ok(where > 0.25 && where < 0.75, `the swell sits ${where.toFixed(2)} of the way along`);
+  const chest = sectionY(triangles(root, (o) => o.name === 'body'), trunk(root).zFront).depth;
+  assert.ok(deepest > 0.85 * chest,
+    `a thin brush: ${deepest.toFixed(3)} deep against a chest of ${chest.toFixed(3)}`);
+  assert.ok(depthAt(0.95) < 0.35 * deepest,
+    `it ends in a club: ${depthAt(0.95).toFixed(3)} near the tip, ${deepest.toFixed(3)} at its deepest`);
 });
 
 // ---- the pair ---------------------------------------------------------------

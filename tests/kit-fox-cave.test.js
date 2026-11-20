@@ -62,9 +62,10 @@ test('the fox is longer and lower than the dog it is built from', () => {
 test('the brush is thick, trails well behind the rump, and reads as a tail not a flag', () => {
   // The tail is most of what makes a fox a fox. The dog's is cocked UP and
   // thin; if this one ever ends up looking like that the animal stops reading.
-  // (It is carried low again, off the croup and no higher than the back —
-  // tests/dog-fox.test.js pins that against the dog's cocked tail. What is
-  // pinned here is that it runs BACKWARD far more than it rises or drops.)
+  // (It leaves the rump no higher than the back and falls away behind in an
+  // arc — tests/dog-fox.test.js pins both, the first against the dog's
+  // cocked tail. What is pinned here is that it still runs BACKWARD more than
+  // it drops: a brush that hangs straight down is a rope.)
   //
   // The thickness floor is a fraction of the barrel set low enough to leave
   // room for retuning either one, and high enough that a whippy tail fails.

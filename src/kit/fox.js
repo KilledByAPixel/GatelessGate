@@ -10,18 +10,23 @@ import { skullGeometry } from './skull.js';
 //
 //   1. LOW and LONG. A fox is a line held just off the ground, not a box on
 //      legs. Short legs under a long body.
-//   2. A narrow pointed muzzle under big upright triangular ears. The head is
-//      ONE wedge (skull.js): broad at the cheek, flat on top, and drawn
-//      straight out to a point with barely a stop — a ball with a spout on it
-//      was a toy's head, and the dog's blunt muzzle under a brow is the other
-//      animal. The ears are most of the head's outline: taller than the skull
-//      is deep, and BROAD at the base. Tall and thin they were a hare's, or a
-//      pair of horns.
-//   3. THE BRUSH. A fox is mostly tail. It leaves the croup and is carried
-//      low and straight out behind, never above the back — cocked up is the
-//      dog's line, and the two animals are told apart by that at any distance
-//      — and it is two thirds as thick as the body. A thin tail reads as a
-//      cat.
+//   2. A short pointed muzzle under big upright triangular ears. The head is
+//      ONE wedge (skull.js): a skull with real depth and cheek to it, drawn
+//      out to a point with barely a stop — a ball with a spout on it was a
+//      toy's head, the dog's blunt muzzle under a brow is the other animal,
+//      and a wedge with no skull behind it is a needle on the end of a neck.
+//      The ears are most of the head's outline: taller than the skull is
+//      deep, and BROAD at the base from the side as well as the front. Tall
+//      and thin they were a hare's, or a pair of horns. The neck under it is
+//      a ruff: thick the whole way up, so the head sits on the chest's own
+//      mass rather than on a stalk.
+//   3. THE BRUSH. A fox is mostly tail, and the brush is the biggest single
+//      shape on it. It leaves the rump level with the back and falls away
+//      behind in one arc, swelling through its middle to about the depth of
+//      the body and drawn to a point not far off the ground. Never above the
+//      back — cocked up is the dog's line, and the two animals are told apart
+//      by that at any distance. A thin tail reads as a cat, and a straight
+//      one as a bar stuck in the animal.
 //
 // Faces +z like every quadruped in the kit. Built on makeQuadruped so the
 // leg-to-belly join is computed rather than guessed (see THE LEG RULE there),
@@ -34,18 +39,23 @@ const LEG_H = 0.42, BODY_DROP = 0.17;
 const BODY_Y = LEG_H + BODY_DROP;        // height of the body's axis
 const BODY_R = 0.16, BODY_LEN = 0.66;
 
-// THE BRUSH. A 'stiff' tail is centred on its own origin, so half of
-// its length lives inside the animal. Rather than guess an offset and discover
-// the thick end poking out of the back, anchor the buried end at a stated
-// point inside the croup and solve for the centre the quadruped wants. The
-// tail then emerges cleanly from the rump at any length or angle.
-const TAIL_TILT = -1.72;                // rad off vertical, backward: past level, so it trails a touch down
-const TAIL_LEN = 0.90;
-const TAIL_ROOT = [0.045, -0.30];       // [above the body's axis, z] — inside the croup
-const TAIL_AXIS_Y = Math.cos(TAIL_TILT);
-const TAIL_AXIS_Z = Math.sin(TAIL_TILT);
-const TAIL_UP = TAIL_ROOT[0] + (TAIL_LEN / 2) * TAIL_AXIS_Y;
-const TAIL_BACK = -(TAIL_ROOT[1] + (TAIL_LEN / 2) * TAIL_AXIS_Z);
+// THE BRUSH, root to tip along its own centre line: [y, z, depth, half-width]
+// in heights, y and z measured from the root (the hinge it sweeps about), the
+// last row being the tip itself. `depth` is the half-thickness seen from the
+// side, laid square to the line, so the two outlines are the line offset
+// either way by it; the brush is deeper than it is wide, because seen from
+// above a round one of this depth is wider than the animal carrying it.
+// The body plan's own stiff tail is a straight loft and cannot bend, so the
+// fox builds this one itself.
+const BRUSH_ROOT = [0.065, -0.38];      // [above the body's axis, z] — inside the rump
+const BRUSH = [
+  [0.0, 0.0, 0.085, 0.07],
+  [-0.045, -0.15, 0.125, 0.1],
+  [-0.15, -0.31, 0.175, 0.125],
+  [-0.26, -0.455, 0.17, 0.12],
+  [-0.385, -0.61, 0.1, 0.075],
+  [-0.49, -0.755, 0, 0],
+];
 
 // THE HEAD, back of the skull to the nose: [z, top, bottom, half-width] in
 // heights, from the point the neck ends on (see skull.js). Read down the
@@ -54,22 +64,23 @@ const TAIL_BACK = -(TAIL_ROOT[1] + (TAIL_LEN / 2) * TAIL_AXIS_Z);
 // it — broad at the cheek and pinched hard just ahead of it, so from the front
 // and from above the face is a triangle.
 const SKULL = [
-  [-0.075, 0.058, -0.042, 0.06],
-  [-0.01, 0.08, -0.07, 0.092],
-  [0.06, 0.07, -0.064, 0.078],
-  [0.115, 0.042, -0.054, 0.044],
-  [0.18, 0.028, -0.044, 0.031],
-  [0.25, 0.014, -0.034, 0.021],
+  [-0.1, 0.076, -0.066, 0.08],
+  [-0.03, 0.106, -0.084, 0.115],
+  [0.04, 0.1, -0.078, 0.1],
+  [0.1, 0.06, -0.062, 0.058],
+  [0.165, 0.034, -0.048, 0.037],
+  [0.225, 0.016, -0.038, 0.025],
 ];
-const SKULL_BACK = [0.01, -0.1];        // [y, z] apexes closing the loft
-const SKULL_NOSE = [-0.012, 0.272];
+const SKULL_BACK = [0.006, -0.128];     // [y, z] apexes closing the loft
+const SKULL_NOSE = [-0.013, 0.246];
 const HEAD_NOSE_DOWN = 0.1;             // rad the whole head is carried nose-down
 // The skull hinges straight below the point the neck ends on: an offset fore
 // or aft swings the cheek off the end of the neck as the head turns.
 const HINGE_DOWN = 0.02;                // x height
-// A cone is as deep as it is wide, and an ear is a leaf: flattened fore and
-// aft, so it is a broad triangle from the front and a blade from the side.
-const EAR_FLAT = 0.55;
+// An ear is a little flatter fore and aft than it is wide, but only a little:
+// flattened to a leaf it is a broad triangle from the front and a spike from
+// the side, and the side is how this animal is usually seen.
+const EAR_FLAT = 0.95;
 
 const STIR = 2.4;                        // seconds for one whole response
 
@@ -78,31 +89,28 @@ const STIR = 2.4;                        // seconds for one whole response
 const KNEE = 0.38;                       // rad, hind hock bend
 
 export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
-  const { group } = makeQuadruped({
+  const { group, material } = makeQuadruped({
     height, color, seed,
     bodyR: BODY_R, bodyLen: BODY_LEN, bodyDrop: BODY_DROP,
-    torso: { chest: 1.25, loin: 0.68, withers: 1.0, back: 0.92, croup: 0.95, shoulderW: 0.78, barrelW: 0.9, hipW: 0.82 },
+    // deep at the chest and tucked at the flank, with the croup carried as
+    // high as the withers: a back that falls to the rump is a dog standing
+    torso: { chest: 1.35, loin: 0.62, withers: 1.0, back: 0.92, croup: 1.0, shoulderW: 0.78, barrelW: 0.9, hipW: 0.82 },
     legBury: .13,
-    legH: LEG_H, legR: 0.058, legTaper: 1.0, hipX: 0.07, hipZ: 0.31,
+    legH: LEG_H, legR: 0.058, legTaper: 1.15, hipX: 0.07, hipZ: 0.31,
     legs: { knee: KNEE, shoulder: 2.0, thigh: 3.0, hindSet: 0.09 },
-    // the neck's end has to fit inside the skull it enters, turned or not
-    neck: { r: 0.056, w: 0.9, root: 0.65, set: 0.2, taper: 1.1, arch: 0.02 },
-    // The plan's ball only says where the head is carried — low and forward,
-    // barely above the back — and how far it is nosed down; its geometry is
+    // A ruff, not a stalk: the throat starts low on the chest, the nape leaves
+    // the back early, and the taper spends little of that on the way up. Its
+    // end still has to fit inside the skull it enters, turned or not.
+    neck: { r: 0.078, w: 0.9, root: 0.7, set: 0.05, taper: 1.0, arch: 0.02 },
+    // The plan's ball only says where the head is carried — forward, and a
+    // little above the back — and how far it is nosed down; its geometry is
     // replaced by the loft below. No snout: the muzzle is that loft's front.
-    head: { shape: 'sphere', r: 0.1, fwd: 0.6, up: 0.2, tilt: HEAD_NOSE_DOWN },
+    head: { shape: 'sphere', r: 0.1, fwd: 0.56, up: 0.215, tilt: HEAD_NOSE_DOWN },
     // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): base offsets from
     // the point the neck ends on — inside the back corners of the skull, so
     // the join is buried — and leaning out a little.
-    ears: { r: 0.062, h: 0.215, x: 0.05, y: 0.024, z: -0.03, tilt: 0.3 },
-    tail: {
-      // thin where it leaves the rump, fat through the middle, drawn to a
-      // point: `swell` is what makes it a brush and not a club. The root end
-      // is buried in the rump (see THE BRUSH above) and hand-sized against
-      // it, so re-eyeball it if the body's own radius changes.
-      kind: 'stiff', r0: 0.05, r1: 0.05, swell: 2.3,
-      length: TAIL_LEN, up: TAIL_UP, back: TAIL_BACK, tilt: TAIL_TILT,
-    },
+    ears: { r: 0.072, h: 0.235, x: 0.062, y: 0.05, z: -0.012, tilt: 0.3 },
+    // no plan tail: the brush is built below, on its own hinge
   });
   group.name = 'fox';
 
@@ -131,18 +139,17 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
   // facet of pre-spin into the ear GEOMETRY so a flat face meets the 3/4
   // camera, and rotation.y belongs to the shared placement. Nothing to do.)
 
-  // ---- the brush, onto its own hinge -----------------------------------
-  // Rotating the tail MESH about y does nothing: y is its own long axis. The
-  // sweep has to happen about the anchor, which is exactly where the pivot goes.
-  const tailMesh = group.children.find((c) => c.name === 'tail');
+  // ---- the brush, on its own hinge --------------------------------------
+  // The hinge is the root, buried in the rump, and the mesh hangs from it
+  // untransformed: the sweep turns the whole arc about the point it grows
+  // from.
   const tailPivot = new THREE.Group();
   tailPivot.name = 'tailPivot';
-  tailPivot.position.set(0, (BODY_Y + TAIL_ROOT[0]) * height, TAIL_ROOT[1] * height);
+  tailPivot.position.set(0, (BODY_Y + BRUSH_ROOT[0]) * height, BRUSH_ROOT[1] * height);
   group.add(tailPivot);
-  if (tailMesh) {
-    tailMesh.position.sub(tailPivot.position);
-    tailPivot.add(tailMesh);
-  }
+  const tailMesh = new THREE.Mesh(brushGeometry(BRUSH, height), material);
+  tailMesh.name = 'tail';
+  tailPivot.add(tailMesh);
 
   let look = 0;          // the head's resting bearing, set by the koan
   let stir = 0;          // 1 -> 0 across one response
@@ -198,4 +205,45 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     tailYaw: () => sweep,
     update,
   };
+}
+
+// One closed loft along a curved centre line in the animal's side plane. Each
+// ring is an ellipse standing across the brush, square to the line where it
+// crosses it, with a vertex at its top and at its bottom — so the side
+// outline is exactly the line offset by each row's depth, the same cut as the
+// trunk and the skull. The root is fanned shut on a point further inside the
+// rump and the far end on the tip, so the mesh is closed.
+function brushGeometry(rows, unit, seg = 8) {
+  const last = rows.length - 1;                       // the tip: an apex, not a ring
+  const pos = [], idx = [];
+  for (let i = 0; i < last; i++) {
+    const a = rows[Math.max(i - 1, 0)], b = rows[i + 1];
+    let dy = b[0] - a[0], dz = b[1] - a[1];
+    const n = Math.hypot(dy, dz) || 1; dy /= n; dz /= n;
+    const [y, z, r, w] = rows[i];
+    for (let j = 0; j < seg; j++) {
+      const t = (j / seg) * Math.PI * 2, sn = Math.sin(t);
+      pos.push(Math.cos(t) * w * unit, (y + sn * dz * r) * unit, (z - sn * dy * r) * unit);
+    }
+  }
+  for (let i = 0; i < last - 1; i++) {
+    const a = i * seg, b = a + seg;
+    for (let j = 0; j < seg; j++) {
+      const j2 = (j + 1) % seg;
+      idx.push(a + j, a + j2, b + j, a + j2, b + j2, b + j);
+    }
+  }
+  const dy0 = rows[1][0] - rows[0][0], dz0 = rows[1][1] - rows[0][1];
+  const p0 = pos.length / 3;
+  pos.push(0, (rows[0][0] - 0.4 * dy0) * unit, (rows[0][1] - 0.4 * dz0) * unit);
+  for (let j = 0; j < seg; j++) idx.push(p0, (j + 1) % seg, j);
+  const p1 = pos.length / 3;
+  pos.push(0, rows[last][0] * unit, rows[last][1] * unit);
+  const e = (last - 1) * seg;
+  for (let j = 0; j < seg; j++) idx.push(p1, e + j, e + (j + 1) % seg);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  return geo;
 }
