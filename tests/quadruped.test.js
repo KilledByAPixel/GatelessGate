@@ -54,28 +54,41 @@ test('the retired body masses and neck keys are a hard error', () => {
 
 // THE HOCK. The hind leg folds — stifle forward, hock back — and the front
 // leg does not; that asymmetry is what tells a viewer which end drives, even
-// in silhouette at fog distance. Read off the leg's own outline: how far its
-// lower half stands behind the join it hangs from.
-test('legs.knee folds the hind legs back at the hock, and only the hind legs', () => {
-  const setBack = (group) => {
+// in silhouette at fog distance. Read off the leg's own outline: where its
+// centre line stands, fore and aft of the join it hangs from, at the height
+// of the stifle and at the height of the hock.
+test('legs.knee folds the hind legs at the hock, and only the hind legs', () => {
+  const fold = (group) => {
     group.updateMatrixWorld(true);
     return group.children.filter((c) => c.name === 'leg').map((leg) => {
       const p = leg.geometry.getAttribute('position');
-      let lo = 0; for (let i = 0; i < p.count; i++) lo = Math.min(lo, p.getY(i));
-      let z = 0, n = 0;
-      for (let i = 0; i < p.count; i++) if (p.getY(i) < lo * 0.6) { z += p.getZ(i); n++; }
-      return { hind: leg.position.z < 0, back: -z / n, run: -lo };
+      const run = leg.position.y;
+      const centre = (f0, f1) => {
+        let lo = Infinity, hi = -Infinity;
+        for (let i = 0; i < p.count; i++) {
+          const f = -p.getY(i) / run;
+          if (f < f0 || f > f1) continue;
+          lo = Math.min(lo, p.getZ(i)); hi = Math.max(hi, p.getZ(i));
+        }
+        return (lo + hi) / 2;
+      };
+      return { hind: leg.position.z < 0, stifle: centre(0.25, 0.35), hock: centre(0.6, 0.72), run };
     });
   };
-  const folded = setBack(makeQuadruped({ legs: { knee: 0.35 } }).group);
+  const folded = fold(makeQuadruped({ legs: { knee: 0.35 } }).group);
   assert.strictEqual(folded.length, 4);
   for (const l of folded) {
-    if (l.hind) assert.ok(l.back > 0.12 * l.run, `the hock stands behind the hip: ${l.back.toFixed(3)}`);
-    else assert.ok(Math.abs(l.back) < 0.04 * l.run, `a front leg stands under its shoulder: ${l.back.toFixed(3)}`);
+    if (l.hind) {
+      assert.ok(l.stifle - l.hock > 0.12 * l.run,
+        `the hock stands behind the stifle: ${(l.stifle - l.hock).toFixed(3)}`);
+      assert.ok(l.hock < 0 && l.stifle > 0, 'stifle ahead of the hip, hock behind it');
+    } else {
+      assert.ok(Math.abs(l.hock) < 0.04 * l.run, `a front leg stands under its shoulder: ${l.hock.toFixed(3)}`);
+    }
   }
-  // and the fold is the option's doing: knee 0 stands the hind leg plumb
-  for (const l of setBack(makeQuadruped({ legs: { knee: 0 } }).group)) {
-    assert.ok(Math.abs(l.back) < 0.04 * l.run, `knee 0 is a plumb leg: ${l.back.toFixed(3)}`);
+  // and the fold is the option's doing: knee 0 stands the hind leg plumb below its thigh
+  for (const l of fold(makeQuadruped({ legs: { knee: 0 } }).group)) {
+    assert.ok(Math.abs(l.hock) < 0.04 * l.run, `knee 0 is a plumb leg: ${l.hock.toFixed(3)}`);
   }
   // a hock sits LOW: at mid-height the thigh's own mass swallows the bend
   const { group } = makeQuadruped({ legs: { knee: 0.35 } });
@@ -209,10 +222,14 @@ test('legs carry the limb profile: mass > cannon < foot', () => {
       }
       return (b - a) / 2;
     };
-    const mass = halfZ(0), foot = halfZ(1);
+    // the mass is the fullest ring in the upper third, wherever in it the
+    // plan has had to seat it to keep it inside the body
+    let mass = 0;
+    for (let f = 0; f < 0.34; f += 0.02) mass = Math.max(mass, halfZ(f));
+    const foot = halfZ(1);
     let cannon = Infinity;
     for (let f = 0.7; f < 0.92; f += 0.02) { const r = halfZ(f); if (r > 0) cannon = Math.min(cannon, r); }
-    assert.ok(mass > legR * 1.6, `a mass where the leg leaves the body: ${mass.toFixed(3)}`);
+    assert.ok(mass > legR * 1.15, `a mass where the leg leaves the body: ${mass.toFixed(3)}`);
     assert.ok(cannon < legR * 0.75, `the cannon slims: ${cannon.toFixed(3)}`);
     assert.ok(foot > cannon * 1.15, `the foot flares back out: ${foot.toFixed(3)} vs ${cannon.toFixed(3)}`);
   }
@@ -431,5 +448,65 @@ test('no mass stands proud of the back line', () => {
     }
     assert.ok(gap < 0.08 * depth,
       `${label}: the back line dips ${(gap / depth * 100).toFixed(1)}% of the body's depth under its own chord`);
+  }
+});
+
+// A LEG LEAVES THE TRUNK AS A SLOPE, NEVER A SHELF. The mass on top of a leg
+// is a ring, and a ring standing out of the chest shows its upper side as a
+// small level ledge: a box corner on the shoulder in three-quarter view, an
+// epaulette either side of the chest from the front. So no part of a leg's
+// upper half that faces the sky may lie outside the body. Sampled toward each
+// corner of every such facet, because a ledge is the rim of a ring and the
+// middle of the facet is the part that is safely buried.
+test('a leg leaves the trunk as a slope, never a shelf', () => {
+  const SKYWARD = 0.6;                                // normal.y past which a facet is a shelf, not a slope
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+  const n = new THREE.Vector3(), q = new THREE.Vector3();
+  for (const [label, build] of STANDING) {
+    const root = build();
+    const body = triangles(root, (o) => o.name === 'body');
+    for (const leg of root.children.filter((o) => o.name === 'leg')) {
+      const box = new THREE.Box3().setFromObject(leg, true);
+      const mid = (box.min.y + box.max.y) / 2;
+      for (const t of triangles(root, (o) => o === leg)) {
+        a.set(t[0], t[1], t[2]); b.set(t[3], t[4], t[5]); c.set(t[6], t[7], t[8]);
+        if ((a.y + b.y + c.y) / 3 < mid) continue;
+        n.subVectors(b, a).cross(q.subVectors(c, a)).normalize();
+        if (n.y < SKYWARD) continue;
+        for (const w of [[0.8, 0.1, 0.1], [0.1, 0.8, 0.1], [0.1, 0.1, 0.8]]) {
+          q.set(0, 0, 0).addScaledVector(a, w[0]).addScaledVector(b, w[1]).addScaledVector(c, w[2]);
+          assert.ok(inside(body, q),
+            `${label}: a ${leg.position.z > 0 ? 'front' : 'hind'} leg shows a shelf at `
+            + `(${q.x.toFixed(3)}, ${q.y.toFixed(3)}, ${q.z.toFixed(3)})`);
+        }
+      }
+    }
+  }
+});
+
+// WEIGHT ON THE HIND LEG. A leg that rakes back from hip to hock and then
+// drops is an animal camped out: stiff, and standing behind itself. Standing,
+// the stifle is carried forward under the flank, the hock back, and the foot
+// comes down under the hip.
+test('a standing hind leg carries its foot under the hip, stifle ahead of hock', () => {
+  const v = new THREE.Vector3();
+  for (const [label, build] of STANDING) {
+    const root = build();
+    root.updateMatrixWorld(true);
+    for (const leg of root.children.filter((o) => o.name === 'leg' && o.position.z < 0)) {
+      const p = leg.geometry.getAttribute('position');
+      const pts = [];
+      for (let i = 0; i < p.count; i++) pts.push(v.fromBufferAttribute(p, i).applyMatrix4(leg.matrixWorld).clone());
+      const run = leg.position.y;                     // the join's height: the leg's own run to the ground
+      const meanZ = (lo, hi) => {
+        const band = pts.filter((q) => q.y >= lo * run && q.y <= hi * run);
+        return band.reduce((sum, q) => sum + q.z, 0) / band.length;
+      };
+      const foot = meanZ(-1, 0.02), hock = meanZ(0.28, 0.4), stifle = meanZ(0.62, 0.78);
+      assert.ok(Math.abs(foot - leg.position.z) < 0.08 * run,
+        `${label}: the hind foot stands ${((leg.position.z - foot) / run * 100).toFixed(1)}% of the leg's run behind the hip`);
+      assert.ok(stifle > hock + 0.04 * run,
+        `${label}: the stifle is carried ${((stifle - hock) / run * 100).toFixed(1)}% ahead of the hock`);
+    }
   }
 });

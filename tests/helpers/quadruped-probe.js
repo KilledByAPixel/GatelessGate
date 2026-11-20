@@ -70,15 +70,23 @@ export function legClouds(root) {
   return clouds;
 }
 
-// Where the legs leave the body, fore and aft: the z of each leg's topmost
-// vertices. The span between them is the animal's own trunk, whatever overhangs
-// it at either end.
+// Where the legs leave the body, fore and aft. A leg standing off the
+// centreline says so itself: its mesh origin is its join. A merged pair has no
+// such origin, and is read off the z of its topmost vertices instead. The span
+// between the two ends is the animal's own trunk, whatever overhangs it.
 export function trunk(root) {
-  const tops = legClouds(root).map((pts) => {
+  root.updateMatrixWorld(true);
+  const at = new THREE.Vector3();
+  const tops = [];
+  root.traverse((o) => {
+    if (o.name === 'leg' && Math.abs(o.getWorldPosition(at).x) > 1e-6) tops.push(at.z);
+  });
+  if (tops.length < 4) tops.length = 0;
+  if (!tops.length) for (const pts of legClouds(root)) {
     const hi = Math.max(...pts.map((p) => p.y)), lo = Math.min(...pts.map((p) => p.y));
     const top = pts.filter((p) => p.y > hi - 0.1 * (hi - lo));
-    return top.reduce((s, p) => s + p.z, 0) / top.length;
-  });
+    tops.push(top.reduce((s, p) => s + p.z, 0) / top.length);
+  }
   const zHind = Math.min(...tops), zFront = Math.max(...tops);
   return { zHind, zFront, span: zFront - zHind };
 }

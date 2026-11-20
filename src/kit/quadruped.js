@@ -18,12 +18,13 @@ const TORSO_DEFAULTS = {
 // taper  1 is a straight wedge root to head; higher slims the neck sooner
 // arch   bow of the whole neck toward its crest, x its own length
 const NECK_DEFAULTS = { r: 0.08, w: 0.8, root: 0.55, set: 0.25, taper: 1.5, arch: 0.03 };
-// knee      radians the hind leg folds at the hock; 0 stands it plumb
+// knee      radians the hind leg folds at the hock — how far apart, fore and
+//           aft, the stifle and the hock stand; 0 stands it plumb
 // shoulder  fore-aft radius of the mass on top of a front leg, x legR
 //           (and x legTaper, which is the front leg's own top-heaviness)
 // thigh     the same for the hind leg
 // proud     how far those masses stand out of the flank, x bodyR
-const LEG_DEFAULTS = { knee: 0.3, shoulder: 2.0, thigh: 2.3, proud: 0.09 };
+const LEG_DEFAULTS = { knee: 0.3, shoulder: 2.0, thigh: 2.4, proud: 0.09 };
 // Share of a hind leg's run that lies above the hock.
 const HOCK_RUN = 0.66;
 
@@ -64,13 +65,17 @@ const HOCK_RUN = 0.66;
 // (`flank` below), never hand-tuned, and `legBury` sinks it further in.
 //
 // A LEG IS A LIMB WITH A MASS ON TOP OF IT. Four identical posts make a table.
-// Each leg is one closed loft whose first ring is the shoulder or the thigh —
-// broad fore-and-aft, and solved across so it stands a little proud of the
-// flank it is buried in (`legs.proud`), which is what gives the body a haunch
-// and a shoulder without a separate mass. Below that the path is not plumb:
-// the front leg sets its elbow back and its knee forward, and the hind leg
-// goes stifle-forward, hock-back (`legs.knee`), so each joint is a corner in
-// the outline rather than a change of radius. One mesh per leg.
+// Each leg is one closed loft whose first ring is the shoulder or the thigh,
+// broad fore-and-aft and SUNK whole inside the trunk: a ring left standing out
+// of the body shows its upper side as a shelf. The leg breaks the surface
+// below that ring, where the next one swells a little proud of the flank
+// (`legs.proud`) — which is what gives the body a haunch and a shoulder
+// without a separate mass. Below that the path is not plumb: the front leg
+// sets its elbow back and its knee forward, and the hind leg carries its
+// stifle forward and its hock back (`legs.knee`) with the foot coming down
+// under the hip, so each joint is a corner in the outline rather than a change
+// of radius, and the animal stands on its hind legs rather than behind them.
+// One mesh per leg.
 export function makeQuadruped({
   height = 1,
   color = INK_LIT,
@@ -276,6 +281,37 @@ export function makeQuadruped({
     return profileLoft(sts, 6, [capH, pts[0][1]], [pts[last][0], pts[last][1]]);
   };
 
+  // Is a point (in the animal's frame) inside the trunk that was just built?
+  // Parity of crossings along one skew ray, asked of the body's own triangles,
+  // so it is true of the faceted, slanted thing that renders and not of an
+  // idealised section. This is what lets a leg's top be SUNK rather than
+  // guessed at.
+  const inTrunk = (() => {
+    const p = body.geometry.getAttribute('position').array;
+    const ix = body.geometry.index.array;
+    const dx = 0.5377, dy = 0.8011, dz = 0.2618;
+    return (x, y, z) => {
+      const py = y - bodyY;
+      let hits = 0;
+      for (let i = 0; i < ix.length; i += 3) {
+        const a = ix[i] * 3, b = ix[i + 1] * 3, c = ix[i + 2] * 3;
+        const e1x = p[b] - p[a], e1y = p[b + 1] - p[a + 1], e1z = p[b + 2] - p[a + 2];
+        const e2x = p[c] - p[a], e2y = p[c + 1] - p[a + 1], e2z = p[c + 2] - p[a + 2];
+        const hx = dy * e2z - dz * e2y, hy = dz * e2x - dx * e2z, hz = dx * e2y - dy * e2x;
+        const det = e1x * hx + e1y * hy + e1z * hz;
+        if (Math.abs(det) < 1e-14) continue;
+        const sx = x - p[a], sy = py - p[a + 1], sz = z - p[a + 2];
+        const u = (sx * hx + sy * hy + sz * hz) / det;
+        if (u < 0 || u > 1) continue;
+        const qx = sy * e1z - sz * e1y, qy = sz * e1x - sx * e1z, qz = sx * e1y - sy * e1x;
+        const v = (dx * qx + dy * qy + dz * qz) / det;
+        if (v < 0 || u + v > 1) continue;
+        if ((e2x * qx + e2y * qy + e2z * qz) / det > 1e-9) hits++;
+      }
+      return hits % 2 === 1;
+    };
+  })();
+
   const legTop = {};
   for (const hind of [false, true]) {
     const z = hind ? zHip : zShoulder;
@@ -291,45 +327,76 @@ export function makeQuadruped({
     legTop[hind ? 'hind' : 'front'] = top;
     const run = top;                                  // the ring's height off the ground
     const rz = lr * (hind ? LG.thigh : LG.shoulder * legTaper);
+    // How wide the body is at a height, at this leg's own section.
+    const widthAt = (y) => s.w * facet((y - bodyY - (s.top + s.bot) / 2) / ((s.top - s.bot) / 2));
     // ACROSS, the mass is solved rather than stated: wide enough to stand
-    // `proud` of the flank at the height it sits, so the haunch shows from the
-    // front and from above whatever the body's own width is there.
-    const off = (top - bodyY - (s.top + s.bot) / 2) / ((s.top - s.bot) / 2);
-    const wHere = s.w * facet(off);
-    const rx = Math.min(rz, Math.max(0.9 * lr, wHere + LG.proud * R - hx));
-    // Its cap is a TALL cone, kept under the back. A low one leaves a ledge
-    // where the ring stands out of the flank, and a ledge catches the key
-    // light as a bright dart on the animal's side; a steep one is a slope of
-    // muscle running up into the body. And a cap that crests the topline is
-    // the bolted-on mass all over again.
-    const capH = Math.max(0.1 * rz, Math.min(1.1 * rz, 0.8 * (roof - top)));
+    // `proud` of the flank, so the haunch shows from the front and from above
+    // whatever the body's own width is there.
+    const proudAt = (y) => Math.min(rz, Math.max(0.9 * lr, widthAt(y) + LG.proud * R - hx));
+
+    // THE TOP RING IS SUNK. A ring standing out of the trunk shows its upper
+    // side as a level shelf — a box corner on the shoulder, an epaulette
+    // either side of the chest from the front. So the ring the limb hangs
+    // from is shrunk until every corner of it is inside the body, with a
+    // margin, and the leg first breaks the surface BELOW it, along the run
+    // down to the next ring: a slope of muscle, which is all a shoulder is.
+    // The front mass rides behind the shoulder point and the hind one ahead
+    // of the hip, because that is where there is trunk to bury them in — the
+    // chest closes into the neck just ahead of the front legs, and the rump
+    // tapers away just behind the hind ones.
+    const SINK = 1.12;                                // how far inside: the ring must fit at this much its own size
+    // Across first, then fore-and-aft, each on its own: a body too narrow for
+    // the ring must not cost the mass its length, nor the other way about.
+    // And before it is cut down fore-and-aft it is offered a little more
+    // room, further toward the middle of the animal; the fullest fit wins.
+    let ringZ = 0, rz0 = 0, rx0 = 0;
+    for (const slide of [0.3, 0.45, 0.6]) {
+      const zr = (hind ? slide : -slide) * rz;
+      let fz = rz, fx = Math.min(rz, Math.max(0.9 * lr, widthAt(top) - hx));
+      const fits = (j) => {
+        const t = (j / 6) * Math.PI * 2;
+        return inTrunk(hx + Math.cos(t) * fx * SINK, top, z + zr + Math.sin(t) * fz * SINK);
+      };
+      for (let k = 0; k < 30 && !(fits(0) && fits(3)); k++) fx *= 0.94;
+      for (let k = 0; k < 30 && !(fits(1) && fits(2) && fits(4) && fits(5)); k++) fz *= 0.94;
+      if (fz * fx > rz0 * rx0 * 1.02) { ringZ = zr; rz0 = fz; rx0 = fx; }
+    }
+    // Its cap is a cone up into the body, kept under the back.
+    const capH = Math.max(0.1 * rz0, Math.min(1.1 * rz0, 0.8 * (roof - top)));
 
     let pts;
     if (hind) {
-      // Stifle forward, hock back. The hock sits LOW: a joint at mid-height
-      // lands where the thigh's own mass is and the fold vanishes into it.
-      const hb = Math.tan(LG.knee) * HOCK_RUN * run;  // how far the hock stands behind the hip
-      // The thigh's mass rides AHEAD of the hip point. Centred on it, the
-      // disc's rear edge stands out behind the rump's own taper and shows as
-      // a block on the buttock.
-      const fwd = 0.34 * rz;
+      // STIFLE FORWARD, HOCK BACK, FOOT UNDER THE HIP. `knee` sets how far
+      // apart the stifle and the hock stand fore-and-aft, and that spread is
+      // laid mostly AHEAD of the hip: a thigh that only rakes back to its hock
+      // is an animal standing behind itself. The hock sits LOW — a joint at
+      // mid-height lands where the thigh's own mass is and the fold vanishes
+      // into it — and the cannon below it is all but plumb.
+      const hb = Math.tan(LG.knee) * HOCK_RUN * run;
+      const zStifle = 0.5 * ringZ + 0.72 * hb, zHock = -0.28 * hb;
+      const yStifle = -0.30 * run;
       pts = [
-        [0, fwd, rz, rx],
-        [-0.30 * run, 0.9 * fwd + 0.1 * hb, 0.78 * rz, 0.85 * rx],
-        [-0.50 * run, -0.32 * hb, 1.30 * lr, 1.10 * lr],
-        [-HOCK_RUN * run, -hb, 0.88 * lr, 0.84 * lr],
-        [-0.84 * run, -0.93 * hb, 0.60 * lr, 0.58 * lr],
-        [-0.95 * run, -0.90 * hb, 0.60 * lr, 0.58 * lr],
-        [-run, -0.89 * hb + 0.2 * lr, 0.84 * lr, 0.76 * lr],
+        [0, ringZ, rz0, rx0],
+        [yStifle, zStifle, 0.78 * rz, Math.max(proudAt(top), 1.1 * lr)],
+        [-0.50 * run, lerp(zStifle, zHock, 0.52), 1.30 * lr, 1.10 * lr],
+        [-HOCK_RUN * run, zHock, 0.88 * lr, 0.84 * lr],
+        [-0.84 * run, zHock + 0.05 * hb, 0.60 * lr, 0.58 * lr],
+        [-0.95 * run, zHock + 0.08 * hb, 0.60 * lr, 0.58 * lr],
+        [-run, zHock + 0.09 * hb + 0.2 * lr, 0.84 * lr, 0.76 * lr],
       ];
     } else {
       // The elbow rides at the belly line and a touch back; the knee splits
-      // what is left and stands a touch forward.
+      // what is left and stands a touch forward. Between the sunk ring and
+      // the elbow sits the shoulder's own swell, where the mass is allowed to
+      // stand proud — never fuller fore-and-aft than the ring above it, so
+      // the surface between them leans out and down rather than up.
       const rE = lr * legTaper * 1.15;
       const eY = Math.min(0.42 * run, Math.max(0.26 * run, legBury * h * 1.1));
       const low = run - eY;
+      const yS = -0.5 * eY;
       pts = [
-        [0, 0, rz, rx],
+        [0, ringZ, rz0, rx0],
+        [yS, 0.4 * ringZ, Math.min(rz0, lerp(rz, rE, 0.5)), Math.max(proudAt(top), 0.9 * rE)],
         [-eY, -0.25 * lr, rE, 0.9 * rE],
         [-eY - 0.48 * low, 0.22 * lr, 0.84 * lr, 0.80 * lr],
         [-eY - 0.80 * low, 0.10 * lr, 0.60 * lr, 0.58 * lr],
