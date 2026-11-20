@@ -30,6 +30,7 @@ export const ROSTER = [
   { key: 'butterflies', section: 'creatures', build: (kit) => kit.makeButterflies({}) },
   // figures
   { key: 'monk', section: 'figures', build: (kit) => kit.makeMonk({}) },
+  { key: 'monk-elder', section: 'figures', build: (kit) => kit.makeMonk({ elder: true }) },
   { key: 'monk-sit', section: 'figures', build: (kit) => kit.makeMonk({ pose: 'sit' }) },
   { key: 'monk-point', section: 'figures', build: (kit) => kit.makeMonk({ pose: 'point' }) },
   { key: 'monk-raise', section: 'figures', build: (kit) => kit.makeMonk({ pose: 'raise' }) },

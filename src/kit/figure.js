@@ -547,6 +547,12 @@ const REST = { swing: -0.08, apart: [0.04, 0.05], lean: [0.045, 0.04], bend: [0.
 // A lifted arm: the elbow's stand-off, and the cloth under the forearm. A
 // pointing arm is nearer level, so more of its sleeve hangs clear of it.
 const LIFT = { bend: 0.13, drapePoint: 0.062, drapeRaise: 0.05 };
+// A hand on a staff: how far below the shoulder it grips, the most of the
+// arm's length the reach may use (short of straight, so there is always an
+// elbow), and the mouth of the sleeve the shaft passes through.
+const GRIP = { drop: 0.26, reach: 0.95, cuff: [0.045, 0.050] };
+// How far a planted staff tips off plumb, top toward its owner.
+const STAFF_LEAN = 0.02;
 // A folded arm: where it hinges, its shoulder, the elbow joint both halves
 // share, and the forearm's mouth. It is the hanging arm turned upside down —
 // SLIM AT THE SHOULDER, WIDE AT THE CUFF — and hinged closer in, so the upper
@@ -635,6 +641,73 @@ export function makeFigure({
   const key = Math.imul(seed | 0, 7919) + Math.round(height * 1000) + Math.round(s * 100) * 131;
   const ahead = hash1(1, key) < 0.5 ? -1 : 1;
   const apart = REST.apart[0] + REST.apart[1] * hash1(2, key);
+  // ---- THE STAFF, AND THE HAND ON IT ---------------------------------------
+  // A MAN HOLDING A STAFF HOLDS IT. The plant is where it always was — a
+  // distance out past the hem, on a bearing off the facing axis (see the
+  // STANCES note) — and the ARM is solved to it: the hand on that side is laid
+  // on the shaft, a fixed drop below the shoulder, and the elbow takes up
+  // whatever length is left over. It was the other way round by accident for
+  // as long as the arms stuck out: the plant was a stored offset that happened
+  // to meet a sleeve leaning far enough to reach it, and when the arms came in
+  // to hang by the body every standing elder was left beside a pole he was not
+  // touching. Solving the arm rather than moving the staff keeps every plant
+  // the cases are framed around, and keeps the shaft clear of the hem, which a
+  // staff brought in to a hanging hand would not be.
+  //
+  // Who holds it: the right hand, unless the right hand is busy. A figure that
+  // points or raises does so with the right arm, so its staff crosses to the
+  // left — the same plant mirrored — and is held there. Folded hands hold
+  // nothing and a seated elder has set his staff down, so neither reaches.
+  const holds = elder && !seated && arms !== 'fold';
+  const staffSide = holds && (arms === 'point' || arms === 'raise') ? -1 : 1;
+  const staffBearing = staffAng !== undefined ? staffAng : st.staffAng;
+  const staffFoot = new THREE.Vector3(
+    staffSide * Math.cos(staffBearing) * st.staffX * s * height, 0,
+    Math.sin(staffBearing) * st.staffX * s * height);
+  // the shaft's centre at a given height, lean and all
+  const staffAt = (y) => staffFoot.clone().add(
+    new THREE.Vector3(-staffSide * Math.tan(STAFF_LEAN) * y, y, 0));
+  const makeGripArm = (side) => {
+    const from = hinge(side);
+    // an arm does not shorten when its owner kneels: the gesture length is
+    // the arm's own (see `gesture` in the STANCES note)
+    const reach = GRIP.reach * gestureL;
+    let drop = GRIP.drop * height;
+    let to = staffAt(from.y - drop);
+    const flat = Math.hypot(to.x - from.x, to.z - from.z);
+    // a wide hem can put the staff further out than the arm reaches that far
+    // down: grip higher, where it does
+    if (Math.hypot(flat, drop) > reach) {
+      drop = Math.sqrt(Math.max(0, reach * reach - flat * flat));
+      to = staffAt(from.y - drop);
+    }
+    const d = to.sub(from);
+    const chord = d.length();
+    const arm = bare('arm');
+    arm.position.copy(from);
+    // lay local -y along the chord: z leans it out to the staff, x swings it
+    // fore or aft. Still a resting arm to any case that asks — on its own
+    // side, far short of a gesture.
+    const lean = Math.asin(Math.max(-1, Math.min(1, d.x / chord)));
+    arm.rotation.z = lean;
+    arm.rotation.x = Math.asin(Math.max(-1, Math.min(1, -d.z / (chord * Math.cos(lean)))));
+    const half = gestureL / 2;
+    g.add(cut(arm, {
+      len: chord,
+      // upper arm and forearm are each half the arm; the elbow stands back
+      // by whatever the chord does not use
+      bend: Math.sqrt(Math.max(0, half * half - chord * chord / 4)),
+      elbowAt: 0.5,
+      toward: Z_AXIS.clone().negate(),
+      root: scaled(HANG_ARM.root, height),
+      elbow: scaled(HANG_ARM.elbow, height),
+      cuff: scaled(GRIP.cuff, height),
+      capTip: yoke(side),
+      square: true,                             // the shaft passes through this mouth
+    }));
+    return arm;
+  };
+
   const makeSleeve = (side) => {
     const i = side < 0 ? 10 : 20;
     const arm = bare('arm');
@@ -743,6 +816,7 @@ export function makeFigure({
     const gesture = (arms === 'point' || arms === 'raise') && side === 1;
     if (gesture) makeGestureArm(side);
     else if (arms === 'fold' || seated) makeFoldedArm(side);
+    else if (holds && side === staffSide) makeGripArm(side);
     else makeSleeve(side);
   }
 
@@ -842,13 +916,10 @@ export function makeFigure({
     staffGeo.translate(0, staffLen / 2, 0);   // base at the local origin -> stands on the ground
     const staff = new THREE.Mesh(staffGeo, mat);
     staff.name = 'staff';
-    // polar plant: same distance out, swung `staffAng` around the figure
-    // (see the STANCES note). ang = 0 reproduces the old on-axis plant
-    // bit-exactly: (staffX·s·h, 0, 0.06·h).
-    const ang = staffAng !== undefined ? staffAng : st.staffAng;
-    staff.position.set(
-      Math.cos(ang) * st.staffX * s * height, 0,
-      Math.sin(ang) * st.staffX * s * height);
+    // polar plant: a distance out, swung `staffAng` around the figure (see the
+    // STANCES note, and THE STAFF AND THE HAND ON IT above — the arm was
+    // solved to this point, so the two must stay the same point)
+    staff.position.copy(staffFoot);
 
     // A SEATED ELDER SETS HIS STAFF DOWN. Planted upright beside a man on the
     // ground it read as a pole stuck in the earth next to him rather than as
@@ -881,11 +952,10 @@ export function makeFigure({
     // hat-brim height — the brim reaches 0.192·h — so from roughly half of all
     // camera bearings the staff read as growing out of the wearer's hat
     // (k11/k19/k21/k22/k27/k31/k34/k36/k39, the "not in the right place"
-    // audit). Leaned back a hair, the shaft clears the brim and still passes
-    // within a hand's reach of the resting cuff, so it reads as the same
-    // planted, gripped staff — just beside the monk instead of through his hat.
-    // The plant distances (staffX) are untouched.
-      staff.rotation.z = 0.02;
+    // audit). Leaned back a hair, the shaft clears the brim. The hand is laid
+    // on it wherever it stands (makeGripArm), so the lean is free to be
+    // whatever clears the hat. The plant distances (staffX) are untouched.
+      staff.rotation.z = staffSide * STAFF_LEAN;
     }
     g.add(staff);
   }

@@ -542,3 +542,60 @@ test('every documented child name still resolves', () => {
     assert.ok(Math.abs(armLength(a) - 0.34 * 1.6) < 1e-4, `rest sleeve length: ${armLength(a)}`);
   }
 });
+
+test('a held staff passes through the holding hand', () => {
+  // The staff's plant was a stored sideways offset, tuned by eye against an arm
+  // that stuck out far enough to meet it. When the arms came in to hang by the
+  // body the staff stayed where it was, and every standing elder in the book
+  // stood beside a pole he was not touching. So the grip is solved: the arm on
+  // the staff's side reaches to the staff, and this holds it there whatever
+  // either is retuned to.
+  const staffToHand = (g, H) => {
+    g.updateMatrixWorld(true);
+    const staff = g.getObjectByName('staff');
+    const foot = new THREE.Vector3().applyMatrix4(staff.matrixWorld);
+    const up = new THREE.Vector3(0, 1, 0).transformDirection(staff.matrixWorld);
+    let best = null;
+    g.traverse((c) => {
+      if (c.name !== 'arm' || !c.userData.hand) return;
+      const hand = c.userData.hand.clone().applyMatrix4(c.matrixWorld);
+      const along = hand.clone().sub(foot).dot(up);
+      const off = hand.clone().sub(foot).addScaledVector(up, -along).length();
+      if (!best || off < best.off) best = { off, along, hand, arm: c };
+    });
+    return { ...best, foot, staff };
+  };
+  for (const [stance, arms, bow] of [
+    ['stand', 'rest', 0], ['kneel', 'rest', 0], ['stand', 'point', 0], ['stand', 'raise', 0], ['stand', 'rest', true],
+  ]) {
+    for (const [H, stout] of [[1.6, 1], [1.72, 1.12], [1.58, 1.2]]) {
+      const tag = `${stance}/${arms}${bow ? '/bow' : ''} h=${H} s=${stout}`;
+      const g = makeFigure({ stance, arms, elder: true, height: H, stout, bow });
+      const r = staffToHand(g, H);
+      assert.ok(r.off < 0.02 * H, `${tag}: the hand is ${(r.off / H).toFixed(3)}·h off the staff`);
+      // gripped somewhere a hand would be: above the knee, below the shoulder,
+      // and well short of the top of the shaft
+      assert.ok(r.along > 0.2 * H && r.along < r.arm.getWorldPosition(new THREE.Vector3()).y,
+        `${tag}: gripped at ${(r.along / H).toFixed(3)}·h`);
+      // the foot is on the ground and outside the hem
+      assert.ok(Math.abs(r.foot.y) < 1e-9, `${tag}: the staff's foot is on the ground`);
+      const body = g.getObjectByName('body');
+      const hem = maxRadiusInBand(body, -1, 0.05 * H);
+      assert.ok(Math.hypot(r.foot.x, r.foot.z) > hem + 0.018 * H, `${tag}: planted outside the hem`);
+      // a hand that holds a staff is not also making the gesture: the arm on
+      // the staff is a hanging one, and the gesture arm is still found
+      assert.ok(Math.abs(r.arm.rotation.z) < 1, `${tag}: the staff is in the resting hand`);
+      if (arms !== 'rest') assert.ok(gestureArm(g), `${tag}: and the other hand still gestures`);
+    }
+  }
+  // the OTHER arm of a man holding a staff hangs exactly as it would without
+  const plain = armsOf(makeFigure({ height: 1.6 })).find((a) => a.position.x < 0);
+  const held = armsOf(makeFigure({ height: 1.6, elder: true })).find((a) => a.position.x < 0);
+  assert.deepEqual(held.rotation.toArray(), plain.rotation.toArray());
+  assert.deepEqual([...held.geometry.attributes.position.array], [...plain.geometry.attributes.position.array]);
+  // a seated elder has set his staff down, and folded hands hold nothing:
+  // neither is asked to reach
+  for (const opts of [{ stance: 'sit' }, { arms: 'fold' }]) {
+    assert.ok(makeFigure({ ...opts, elder: true }).getObjectByName('staff'), 'the staff is still there');
+  }
+});
