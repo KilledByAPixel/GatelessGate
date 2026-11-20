@@ -43,11 +43,12 @@ import { mergeSimple } from './scatter.js';
 //   5. SMALL EARS, UNDER THE HORNS, held out and a little down. They are what
 //      tells the horns from ears: with both present the big pair cannot be the
 //      ears.
-//   6. A DEEP BARREL ON SHORT THICK LEGS, with little tuck: the belly line
+//   6. A DEEP BARREL ON SHORT STURDY LEGS, with little tuck: the belly line
 //      rises aft, but this is not a greyhound. The trunk is most of his
-//      height; the legs are what is left under it. Behind, the rump turns
-//      over and down to the buttock (`torso.round`) rather than ending in a
-//      corner, and the thin tail hangs off that turn to a tuft.
+//      height; the legs are what is left under it, and they are limbs, far
+//      slimmer than the trunk is deep. Behind, the rump turns over and down
+//      to the buttock (`torso.round`) rather than ending in a corner, and the
+//      thin tail comes out of the back of that turn and hangs to a tuft.
 //
 // Skull, horns and ears are all placed in the HEAD'S OWN FRAME (+z out the
 // nose, +y out of the forehead), which the plan positions and tilts. Move or
@@ -98,6 +99,15 @@ const HORN_PATH = [
   [0.39, 0.19, -0.26, 0.023],
   [0.35, 0.235, -0.30, 0.006],
 ];
+// THE HORN STARTS INSIDE THE SKULL, not on it. A tube whose first ring stands
+// at its base has that ring's centre on the surface and half its rim in the
+// air: the horn touches the head at a point and shows its own end cap from in
+// front and above. So one more ring is laid before the base, at full girth, on
+// the skull's mid-plane — which both horns reach, and which is inside the head
+// whatever its width — drawn this share of the way from the base toward the
+// centre of the forehead's section so the ring clears the forehead and the
+// poll as well. What breaks the surface is then the side of the horn.
+const HORN_SINK = 0.2;
 // A horn is broader in its own sweep plane than it is thick: the flat face is
 // what shows from above and the thin edge from the side.
 const HORN_THICK = 0.68;
@@ -167,6 +177,38 @@ function closed(pos, idx) {
   return geo;
 }
 
+// THE TAIL'S ROOT. The strand's first segment is a rigid stub (both its nodes
+// are pinned) and its first ring is closed on a point at the root node. Rooted
+// just under the surface and aimed steeply down a rump that falls away nearly
+// as steeply, that ring was cut by the surface: its upper half stood out of
+// the rump with the closing fan showing, and under it there was daylight
+// between the stub and the buttock. Two things have to hold together, and
+// they pull against each other:
+//
+//   - THE ROOT RING IS WHOLLY UNDER THE SURFACE. The shallower the angle
+//     between the stub and the rump, the deeper the root has to go before the
+//     far side of its ring is covered — so the stub leaves going mostly BACK
+//     and only partly down, and it is a long one (the strand's length over
+//     its segments: a longer strand is a longer stub).
+//   - WHAT IS LEFT OUTSIDE CARRIES THE ROPE CLEAR. The rope hangs plumb from
+//     the stub's free end, and the buttock is still going back below the
+//     root. So the stub is slid along its own line — the one through the
+//     plan's root — until that free end stands just behind the rump's
+//     hindmost point, and the root lands wherever that puts it. More
+//     clearance, or a steeper aim, and the root ring comes back out of the
+//     top of the rump: tests/buffalo.test.js holds both ends.
+//
+// The aim is a direction; the clearance is x height.
+const TAIL_AIM = [0, -0.5, -0.866];
+const TAIL_CLEAR = 0.01;
+const TAIL_SEGMENTS = 7;
+const TAIL_LENGTH = 0.72;
+// The strand is built hanging plumb from its root and then let fall; from a
+// stub held this far out that is a long swing, and the strand's own warm-up
+// leaves the tuft still hooked forward under the animal. These further steps
+// are what it takes to come to rest.
+const TAIL_SETTLE = 240;
+
 export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color, seed = 37 } = {}) {
   const h = height;
   const { group, tail, material, plan } = makeQuadruped({
@@ -177,11 +219,19 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
       shoulderW: 0.95, barrelW: 1.08, hipW: 0.92,
     },
     legBury: 0.2,
-    legH: 0.46, legR: 0.11, legTaper: 1.05, hipX: 0.17, hipZ: 0.40,
+    // LIMBS UNDER A MASS, NOT POSTS. Side-on, the cannon is a small fraction
+    // of the chest's depth: thick enough to be near the forearm's own width
+    // all the way down, the four of them are table legs and the trunk is a
+    // box set on them. The bulk that makes him heavy is stated where it
+    // belongs, on the masses that join the trunk — `shoulder` and `thigh` are
+    // in units of the leg's radius, so slimming the leg means raising them to
+    // keep the haunch — and in the taper from elbow to knee (`legTaper`).
+    // The hoof is a block wider than the cannon over it.
+    legH: 0.46, legR: 0.07, legTaper: 1.3, hipX: 0.17, hipZ: 0.40,
     // a shallow hock: this animal plods. The shoulder mass is kept short
     // fore-and-aft: the breast closes into the neck just ahead of the front
     // legs, and a broad one stands out past it as a ledge on the brisket.
-    legs: { knee: 0.2, shoulder: 1.5, thigh: 2.3, foot: 1.05, hindSet: 0.08 },
+    legs: { knee: 0.2, shoulder: 1.7, thigh: 3.4, cannon: 0.72, foot: 1.3, hindSet: 0.08 },
     // Short, deep and nearly as wide as the skull it enters. Its end ring is
     // centred on the head's own centre and must stay INSIDE the skull there,
     // so `r` is bounded by the skull's section at its origin — fatten the
@@ -196,17 +246,27 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // where it is carried and turn it down
     head: { shape: 'box', w: 0.2, hh: 0.2, d: 0.4, fwd: HEAD_FWD, up: HEAD_UP, tilt: HEAD_TILT },
     // A thin rope with a tuft on its end: the fullness is placed near the tip
-    // and kept narrow (`swellAt`, `swellSpan`). It roots where the plan puts
-    // it, on the turn of the round rump, and that turn carries on back and
-    // down below the root — so the first segment is aimed well back, far
-    // enough for the rope to fall clear of the buttock instead of into it.
+    // and kept narrow (`swellAt`, `swellSpan`). Where it roots and how it is
+    // aimed: see THE TAIL'S ROOT below.
     tail: {
-      kind: 'strand', segments: 7, length: 0.62, thickness: 0.045, color: tailColor,
+      kind: 'strand', segments: TAIL_SEGMENTS, length: TAIL_LENGTH, thickness: 0.045, color: tailColor,
       swell: 0.8, swellAt: 0.86, swellSpan: 0.2,
-      root: [0, -0.75, -0.7],
+      root: TAIL_AIM,
     },
   });
   group.name = 'buffalo';
+
+  // ---- the tail's root ----------------------------------------------------------
+  // see THE TAIL'S ROOT above
+  {
+    const body = group.children.find((c) => c.name === 'body');
+    body.geometry.computeBoundingBox();
+    const zFree = body.position.z + body.geometry.boundingBox.min.z - TAIL_CLEAR * h;
+    const aim = new THREE.Vector3(...TAIL_AIM).normalize();
+    const stub = TAIL_LENGTH * h / (TAIL_SEGMENTS - 1);
+    tail.group.position.addScaledVector(aim, (zFree - tail.group.position.z) / aim.z - stub);
+    for (let i = 0; i < TAIL_SETTLE; i++) tail.update(1 / 60, i / 60);
+  }
 
   // ---- ONE head: poll to nostril in a single loft ---------------------------
   // An 8-gon turned half a step, so a flat facet faces up (the forehead), down
@@ -257,10 +317,19 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
   // ---- the horns --------------------------------------------------------------
   // Two meshes, each standing at its own base, so `horn.position` is where it
   // leaves the skull.
+  // The buried ring is stated in the head's frame like the base, and carried
+  // into the path's (the animal's) as an offset from that base.
+  const [fz, , ftop, fbot] = HEAD_RINGS[1];
+  const core = [0,
+    HORN_ROOT[1] + ((ftop + fbot) / 2 - HORN_ROOT[1]) * HORN_SINK,
+    HORN_ROOT[2] + (fz - HORN_ROOT[2]) * HORN_SINK];
   for (const sx of [-1, 1]) {
-    const m = new THREE.Mesh(tube(side(HORN_PATH, sx), 6, HORN_THICK), material);
+    const base = onHead(HORN_ROOT, sx);
+    const sunk = onHead(core, sx).sub(base);
+    const path = [[sunk.x, sunk.y, sunk.z, HORN_PATH[0][3] * h], ...side(HORN_PATH, sx)];
+    const m = new THREE.Mesh(tube(path, 6, HORN_THICK), material);
     m.name = 'horn';
-    m.position.copy(onHead(HORN_ROOT, sx));
+    m.position.copy(base);
     group.add(m);
   }
 

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeBuffalo } from '../src/kit/buffalo.js';
-import { triangles, sectionY } from './helpers/quadruped-probe.js';
+import { triangles, sectionY, sectionZ } from './helpers/quadruped-probe.js';
 
 // What makes the shared body plan a WATER BUFFALO: a trunk that is most of his
 // height and falls from high withers to a low croup, a deep blunt block of a
@@ -211,4 +211,122 @@ test('the tail is a rope that ends in a tuft', () => {
   assert.ok(r[n - 1] < 0.5 * r[tuft], 'and closes again below');
   for (let i = 1; i < tuft; i++) assert.ok(r[i] < r[i - 1], `the rope above it tapers (ring ${i})`);
   assert.ok(r[tuft] < 1.3 * r[0], 'a tuft, not a club: no fuller than the root of the tail');
+});
+
+// Is a point inside a closed surface? Parity of crossings along one skew ray,
+// asked of the triangles that render.
+function inside(tris, p) {
+  const dx = 0.5377, dy = 0.8011, dz = 0.2618;
+  let hits = 0;
+  for (const t of tris) {
+    const e1x = t[3] - t[0], e1y = t[4] - t[1], e1z = t[5] - t[2];
+    const e2x = t[6] - t[0], e2y = t[7] - t[1], e2z = t[8] - t[2];
+    const hx = dy * e2z - dz * e2y, hy = dz * e2x - dx * e2z, hz = dx * e2y - dy * e2x;
+    const det = e1x * hx + e1y * hy + e1z * hz;
+    if (Math.abs(det) < 1e-14) continue;
+    const sx = p.x - t[0], sy = p.y - t[1], sz = p.z - t[2];
+    const u = (sx * hx + sy * hy + sz * hz) / det;
+    if (u < 0 || u > 1) continue;
+    const qx = sy * e1z - sz * e1y, qy = sz * e1x - sx * e1z, qz = sx * e1y - sy * e1x;
+    const v = (dx * qx + dy * qy + dz * qz) / det;
+    if (v < 0 || u + v > 1) continue;
+    if ((e2x * qx + e2y * qy + e2z * qz) / det > 1e-9) hits++;
+  }
+  return hits % 2 === 1;
+}
+
+// LIMBS UNDER A MASS. Side-on, the leg between the hoof and the belly is a
+// small fraction of the chest's depth — at a sixth of it the animal stands on
+// posts — and it is still a leg with a shape: thicker where it leaves the
+// belly, and standing on a hoof wider than the cannon over it.
+test('the legs are limbs under the trunk, not posts', () => {
+  const { root, body } = probe();
+  const legs = root.children.filter((c) => c.name === 'leg');
+  const chest = sectionY(body, Math.max(...legs.map((l) => l.position.z)) - 1e-3);
+  for (const leg of legs) {
+    const tris = triangles(root, (o) => o === leg);
+    const wide = (f) => sectionZ(tris, f * chest.min).depth;
+    let cannon = Infinity;
+    for (let f = 0.15; f < 0.6; f += 0.05) cannon = Math.min(cannon, wide(f));
+    assert.ok(cannon < 0.13 * chest.depth,
+      `a cannon ${(cannon / chest.depth).toFixed(3)} of the chest's depth is a post`);
+    assert.ok(cannon > 0.07 * chest.depth, `and ${(cannon / chest.depth).toFixed(3)} of it is a deer's`);
+    assert.ok(wide(0.9) > 1.5 * cannon, 'the leg is thickest where it leaves the belly');
+    assert.ok(wide(0.05) > 1.3 * cannon, 'and stands on a hoof wider than its cannon');
+  }
+});
+
+// THE TAIL GOES INTO THE RUMP. Its first ring — the one closed on a point —
+// is wholly under the trunk's surface, with room to spare, and at rest the
+// next ring is wholly outside: the surface is crossed by the side of the tail
+// at full girth, never by its end. The first segment is rigid, so the root
+// stays buried through a swish; the second ring is only asked at rest, since
+// it leans after the rope and a corner of it may dip under.
+test('the tail enters the rump at full girth, its end buried', () => {
+  const b = makeBuffalo({ height: H });
+  b.group.updateMatrixWorld(true);
+  const trunk = triangles(b.group, (o) => o.name === 'body');
+  const skin = b.group.getObjectByName('strand');
+  const P = skin.geometry.getAttribute('position');
+  const n = b.tail.nodes().length;
+  const sides = (P.count - 2) / n;
+  const at = (i) => new THREE.Vector3().fromBufferAttribute(P, i).applyMatrix4(skin.matrixWorld);
+  const check = (when, resting) => {
+    const apex = at(n * sides);
+    assert.ok(inside(trunk, apex), `${when}: the tail's closed end is inside the rump`);
+    for (let j = 0; j < sides; j++) {
+      // a quarter again its own size: buried, not merely covered
+      const rim = at(j).sub(apex).multiplyScalar(1.25).add(apex);
+      assert.ok(inside(trunk, rim), `${when}: root ring corner ${j} is under the surface`);
+      if (resting) assert.ok(!inside(trunk, at(sides + j)), `${when}: the second ring (corner ${j}) is clear of it`);
+    }
+  };
+  check('at rest', true);
+  b.tail.impulse(1.2);
+  for (let i = 0; i < 90; i++) {
+    b.update(1 / 60, i / 60);
+    if (i % 6 === 0) check(`${i} steps into a swish`);
+  }
+});
+
+// ...and it comes to rest hanging plumb behind the rump, not still swinging
+// from its own construction: the tuft under the end of the stub, clear of the
+// buttock, from the first frame anyone sees.
+test('the tail is at rest when the buffalo is built', () => {
+  const b = makeBuffalo({ height: H });
+  b.group.updateMatrixWorld(true);
+  const nodes = b.tail.nodes();
+  const stubEnd = nodes[1], tip = nodes[nodes.length - 1];
+  assert.ok(Math.abs(tip[2] - stubEnd[2]) < 0.03 * H,
+    `the tip hangs ${((tip[2] - stubEnd[2]) / H).toFixed(3)} of his height off plumb, fore and aft`);
+  assert.ok(Math.abs(tip[0]) < 0.03 * H, 'and on the centreline');
+  const rumpEnd = Math.min(...triangles(b.group, (o) => o.name === 'body').flatMap((t) => [t[2], t[5], t[8]]));
+  assert.ok(b.tail.group.position.z + stubEnd[2] < rumpEnd, 'the rope hangs from behind the rump, not from inside it');
+});
+
+// THE HORNS GO INTO THE SKULL. Each horn's first ring is wholly inside the
+// head and its tip wholly outside, so what crosses the skull's surface is the
+// horn's side at full girth. A horn that begins at its own base has half that
+// ring in the air and shows its end.
+test('each horn is rooted inside the skull', () => {
+  const { root, horns } = probe();
+  const skull = triangles(root, (o) => o.name === 'head');
+  for (const horn of horns) {
+    const P = horn.geometry.getAttribute('position');
+    const at = (i) => new THREE.Vector3().fromBufferAttribute(P, i).applyMatrix4(horn.matrixWorld);
+    const SIDES = 6;
+    const mid = new THREE.Vector3();
+    for (let j = 0; j < SIDES; j++) mid.add(at(j));
+    mid.multiplyScalar(1 / SIDES);
+    for (let j = 0; j < SIDES; j++) {
+      const rim = at(j).sub(mid).multiplyScalar(1.1).add(mid);
+      assert.ok(inside(skull, rim), `the horn's first ring (corner ${j}) is inside the skull`);
+    }
+    // the buried ring is as thick as the horn is where it shows
+    const girth = (ring) => Math.max(...Array.from({ length: SIDES }, (_, j) => at(ring * SIDES + j).distanceTo(at(ring * SIDES + (j + 3) % SIDES))));
+    assert.ok(girth(0) > 0.95 * girth(1), 'and at full girth');
+    // `position` is still where the horn leaves the head: on its surface, give or take
+    assert.ok(inside(skull, horn.position) && !inside(skull, at(2 * SIDES).add(at(2 * SIDES + 3)).multiplyScalar(0.5)),
+      'the horn leaves the skull between its base and the ring after');
+  }
 });
