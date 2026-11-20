@@ -47,6 +47,23 @@ export function sectionY(tris, z) {
   return { min, max, depth: max - min };
 }
 
+// The same cut laid level: the fore-and-aft extent of a set of triangles where
+// the plane y = const cuts them — one row of the side profile.
+export function sectionZ(tris, y) {
+  let min = Infinity, max = -Infinity;
+  for (const t of tris) {
+    for (let e = 0; e < 3; e++) {
+      const a = e * 3, b = ((e + 1) % 3) * 3;
+      const ya = t[a + 1], yb = t[b + 1];
+      if ((ya - y) * (yb - y) > 0 || ya === yb) continue;
+      const z = t[a + 2] + (t[b + 2] - t[a + 2]) * ((y - ya) / (yb - ya));
+      if (z < min) min = z;
+      if (z > max) max = z;
+    }
+  }
+  return { min, max, depth: max - min };
+}
+
 export function legClouds(root) {
   root.updateMatrixWorld(true);
   const clouds = [];

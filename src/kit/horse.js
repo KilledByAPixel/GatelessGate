@@ -57,10 +57,11 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
       shoulderW: 0.92, barrelW: 1.06, hipW: 0.98,
     },
     legBury: 0.18,
-    legH: 0.62, legR: 0.055, legTaper: 1.2, hipX: 0.105, hipZ: 0.285,
+    legH: 0.62, legR: 0.055, legTaper: 1.3, hipX: 0.105, hipZ: 0.285,
     // `proud` under the plan's default: stood further out, the thigh's cap
-    // breaks the flank as a dark dart at the hip
-    legs: { knee: KNEE, shoulder: 2.0, thigh: 2.6, proud: 0.06, frontSet: 0.04, hindSet: 0.07 },
+    // breaks the flank as a dark dart at the hip. A slim cannon and a short
+    // foot under a heavy forearm (`legTaper`) and thigh: a hoof, not a paw.
+    legs: { knee: KNEE, shoulder: 2.0, thigh: 3.6, proud: 0.06, cannon: 0.7, foot: 1.05, frontSet: 0.04, hindSet: 0.1 },
     // `set` at nothing: the nape leaves the topline AT the withers, so the
     // withers are the corner where back turns into neck
     neck: { r: 0.072, w: 0.7, root: 0.68, set: 0.0, taper: 1.25, arch: 0.04 },

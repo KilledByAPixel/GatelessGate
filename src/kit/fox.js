@@ -81,12 +81,12 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
   const { group } = makeQuadruped({
     height, color, seed,
     bodyR: BODY_R, bodyLen: BODY_LEN, bodyDrop: BODY_DROP,
-    torso: { chest: 1.1, loin: 0.68, withers: 1.0, back: 0.92, croup: 0.95, shoulderW: 0.78, barrelW: 0.9, hipW: 0.82 },
+    torso: { chest: 1.25, loin: 0.68, withers: 1.0, back: 0.92, croup: 0.95, shoulderW: 0.78, barrelW: 0.9, hipW: 0.82 },
     legBury: .13,
-    legH: LEG_H, legR: 0.055, legTaper: 1.0, hipX: 0.07, hipZ: 0.31,
-    legs: { knee: KNEE, shoulder: 2.0, thigh: 2.3, hindSet: 0.06 },
+    legH: LEG_H, legR: 0.058, legTaper: 1.0, hipX: 0.07, hipZ: 0.31,
+    legs: { knee: KNEE, shoulder: 2.0, thigh: 3.0, hindSet: 0.09 },
     // the neck's end has to fit inside the skull it enters, turned or not
-    neck: { r: 0.056, w: 0.9, root: 0.5, set: 0.2, taper: 1.1, arch: 0.02 },
+    neck: { r: 0.056, w: 0.9, root: 0.65, set: 0.2, taper: 1.1, arch: 0.02 },
     // The plan's ball only says where the head is carried — low and forward,
     // barely above the back — and how far it is nosed down; its geometry is
     // replaced by the loft below. No snout: the muzzle is that loft's front.

@@ -6,7 +6,7 @@ import { makeTail } from './tail.js';
 // What a species gets when it states nothing: a plain, lean animal. Every
 // number here is in the units its option is documented in beside the builder.
 const TORSO_DEFAULTS = {
-  chest: 1.1, loin: 0.72, withers: 1.0, back: 0.9, croup: 0.94,
+  chest: 1.1, loin: 0.72, withers: 1.0, back: 0.9, croup: 0.94, rump: 1,
   shoulderW: 0.8, barrelW: 0.95, hipW: 0.85,
 };
 // r      half-depth of the neck where it enters the skull, x height
@@ -22,16 +22,27 @@ const NECK_DEFAULTS = { r: 0.08, w: 0.8, root: 0.55, set: 0.25, taper: 1.5, arch
 //           aft, the stifle and the hock stand; 0 stands it plumb
 // shoulder  fore-aft radius of the mass on top of a front leg, x legR
 //           (and x legTaper, which is the front leg's own top-heaviness)
-// thigh     the same for the hind leg
+// thigh     how far the thigh reaches AHEAD of the hip, to the stifle, x legR
+//           (its rear edge is not stated: it follows the rump, see hindSet)
 // proud     how far those masses stand out of the flank, x bodyR
+// cannon    radius of the slim lower leg, x legR — a hoofed animal's is wire
+//           under a heavy forearm, a pawed one's keeps more of the leg
+// foot      fore-aft radius of the foot block, x legR: long for a paw, short
+//           for a hoof; never less than the cannon
 // frontSet  how far AHEAD of the shoulder section the front leg hangs, x height
 // hindSet   how far BEHIND the hip section the hind leg hangs, x height.
 //           The sections stay where `hipZ` puts them; these move only the
 //           limb, for an animal whose legs read as gathered under its middle
-//           with the breast or the rump overhanging them.
-const LEG_DEFAULTS = { knee: 0.3, shoulder: 2.0, thigh: 2.4, proud: 0.09, frontSet: 0, hindSet: 0 };
+//           with the breast or the rump overhanging them. `hindSet` is also
+//           what lets the thigh fill the rear: the thigh's back edge reaches
+//           for the rump's end, and can only get there if the hip hangs
+//           close enough to it.
+const LEG_DEFAULTS = { knee: 0.3, shoulder: 2.0, thigh: 2.8, proud: 0.09, cannon: 0.8, foot: 1.3, frontSet: 0, hindSet: 0 };
 // Share of a hind leg's run that lies above the hock.
 const HOCK_RUN = 0.66;
+// A limb's ring is a hexagon with a corner to each side, so fore and aft it
+// reaches only this fraction of its stated radius.
+const HEX = Math.sin(Math.PI / 3);
 
 // The shared body plan for every four-legged animal in the book. Everything
 // scales off `height` and faces +z; a species is this plan at its own
@@ -56,6 +67,9 @@ const HOCK_RUN = 0.66;
 //   withers    height of the topline over the front legs
 //   back       ...at the middle of the back (below both ends is a sway)
 //   croup      ...over the hind legs
+//   rump       how full the trunk stays behind the hips: 1 carries most of
+//              its depth to the buttock and turns down there, 0 tapers it
+//              away to a point — and moves the default tail root with it
 //   shoulderW / barrelW / hipW   half-widths at shoulder, mid-barrel and hip
 //
 // The shoulder section stands over the front legs and the hip section over the
@@ -80,18 +94,21 @@ const HOCK_RUN = 0.66;
 // stifle forward and its hock back (`legs.knee`) with the foot coming down
 // under the hip, so each joint is a corner in the outline rather than a change
 // of radius, and the animal stands on its hind legs rather than behind them.
-// One mesh per leg.
+// What shows below the belly has to carry mass of its own — a forearm, a
+// thigh as wide as the rump behind the hip, a cannon with substance, a foot —
+// because everything above the belly line is inside the trunk and a leg that
+// is only thick up there is a stick. One mesh per leg.
 export function makeQuadruped({
   height = 1,
   color = INK_LIT,
   // trunk: bodyR is its half-depth and the unit every torso knob is in;
   // legH + bodyDrop is the height of its axis off the ground
   bodyR = 0.22, bodyLen = 0.72, bodyDrop = 0.16,
-  torso = null,          // { chest, loin, withers, back, croup, shoulderW, barrelW, hipW } — see THE TORSO
+  torso = null,          // { chest, loin, withers, back, croup, rump, shoulderW, barrelW, hipW } — see THE TORSO
   // legs
   legH = 0.52, legR = 0.055, legTaper = 0.82, hipX = 0.13, hipZ = 0.32,
   legBury = 0.06,        // how far above the flank's underside the shoulder/thigh ring rides, x height
-  legs = null,           // { knee, shoulder, thigh, proud } — see LEG_DEFAULTS
+  legs = null,           // { knee, shoulder, thigh, proud, cannon, foot, frontSet, hindSet } — see LEG_DEFAULTS
   // head
   head = { shape: 'sphere', r: 0.20, fwd: 0.56, up: 0.22 },   // + scaleX/scaleY/scaleZ (default 1): squish the skull in its own tilted frame
   neck = null,           // { r, w, root, set, taper, arch } — see NECK_DEFAULTS; null ends the chest in a blunt breast
@@ -178,8 +195,8 @@ export function makeQuadruped({
   // The flank row is where the belly stands highest: just ahead of the thigh,
   // not at the hip itself, where the thigh covers it anyway.
   const rows = [
-    [zHip - 0.84 * over, 0.52 * T.croup, -0.20 * T.loin, 0.42 * T.hipW],
-    [zHip - 0.36 * over, 0.94 * T.croup, -0.70 * T.loin, 0.88 * T.hipW],
+    [zHip - lerp(0.84, 0.90, T.rump) * over, lerp(0.52, 0.66, T.rump) * T.croup, -lerp(0.20, 0.42, T.rump) * T.loin, lerp(0.42, 0.58, T.rump) * T.hipW],
+    [zHip - lerp(0.36, 0.45, T.rump) * over, lerp(0.94, 0.95, T.rump) * T.croup, -lerp(0.70, 0.80, T.rump) * T.loin, lerp(0.88, 0.90, T.rump) * T.hipW],
     [zHip + 0.08 * span, T.croup, -0.96 * T.loin, T.hipW],
     [zHip + 0.36 * span, lerp(T.croup, T.back, 0.8), -T.loin, lerp(T.hipW, T.barrelW, 0.7)],
     [zHip + 0.68 * span, T.back, -lerp(T.loin, T.chest, 0.8), T.barrelW],
@@ -273,6 +290,13 @@ export function makeQuadruped({
   // ---- the legs --------------------------------------------------------------
   const LG = { ...LEG_DEFAULTS, ...legs };
   const lr = legR * h;
+  // The cannon, and the foot it stands on. A FOOT IS A BLOCK: two level rings
+  // a little apart, so it keeps its length for a height of its own — a leg
+  // that only flares where it meets the ground stands on a point. It is longer
+  // than it is wide, never slimmer than the cannon, and its heel is nearly
+  // the cannon's own back, so its length reaches forward.
+  const C = LG.cannon * lr;
+  const fR = Math.max(C, LG.foot * lr), fX = Math.max(0.95 * C, 0.74 * fR), fH = 0.7 * lr;
 
   // A limb from a path. `pts` are [y, z, rz, rx] from the top ring down: y and
   // z relative to the leg's own origin, rz the fore-aft radius, rx the lateral
@@ -281,9 +305,9 @@ export function makeQuadruped({
   // top closes in a cone up into the body, and a foot is flat on the ground.
   const limb = (pts, capH) => {
     const last = pts.length - 1;
-    const sts = pts.map(([y, z, rz, rx], i) => {
+    const sts = pts.map(([y, z, rz, rx, level], i) => {
       let dy = -1, dz = 0;
-      if (i > 0 && i < last) {
+      if (i > 0 && i < last && !level) {
         dy = pts[i + 1][0] - pts[i - 1][0]; dz = pts[i + 1][1] - pts[i - 1][1];
         const n = Math.hypot(dy, dz) || 1; dy /= n; dz /= n;
       }
@@ -378,41 +402,63 @@ export function makeQuadruped({
     let pts;
     if (hind) {
       // STIFLE FORWARD, HOCK BACK, FOOT UNDER THE HIP. `knee` sets how far
-      // apart the stifle and the hock stand fore-and-aft, and that spread is
-      // laid mostly AHEAD of the hip: a thigh that only rakes back to its hock
-      // is an animal standing behind itself. The hock sits LOW — a joint at
+      // apart the stifle and the hock stand fore-and-aft, laid half ahead of
+      // the hip and half behind it: the hock is the corner that shows behind
+      // the animal, and the cannon leans forward off it to bring the foot
+      // back under the hip — a leg that only rakes back to its hock is an
+      // animal standing behind itself. The hock sits LOW: a joint at
       // mid-height lands where the thigh's own mass is and the fold vanishes
-      // into it — and the cannon below it is all but plumb.
+      // into it.
       const hb = Math.tan(LG.knee) * HOCK_RUN * run;
-      const zStifle = 0.5 * ringZ + 0.72 * hb, zHock = -0.28 * hb;
-      const yStifle = -0.30 * run;
+      const zHock = -0.5 * hb;
+      const zPastern = zHock + 0.2 * hb;
+      const zFoot = zPastern + 0.9 * HEX * (fR - C);
+      // THE THIGH IS STATED BY ITS TWO EDGES, not a centre and a radius. Its
+      // rear edge is the rump's own end carried on down (so `hindSet` decides
+      // how much rump is left overhanging it), but never further back than
+      // the point of the hock, which has to stay the rearmost thing on the
+      // leg. Its front edge is the stifle, under the flank. A thigh hung as a
+      // bar from the middle of the belly leaves the rump as a stub behind it.
+      const thighBack = Math.min(0.6 * lr - zHock, Math.max(0.4 * rz, 0.88 * over - LG.hindSet * h));
+      const thighFront = 0.5 * hb + 0.62 * rz;
+      const zStifle = (thighFront - thighBack) / 2, rT = (thighFront + thighBack) / 2 / HEX;
       pts = [
         [0, ringZ, rz0, rx0],
-        [yStifle, zStifle, 0.78 * rz, Math.max(proudAt(top), 1.1 * lr)],
-        [-0.50 * run, lerp(zStifle, zHock, 0.52), 1.30 * lr, 1.10 * lr],
-        [-HOCK_RUN * run, zHock, 0.88 * lr, 0.84 * lr],
-        [-0.84 * run, zHock + 0.05 * hb, 0.60 * lr, 0.58 * lr],
-        [-0.95 * run, zHock + 0.08 * hb, 0.60 * lr, 0.58 * lr],
-        [-run, zHock + 0.09 * hb + 0.2 * lr, 0.84 * lr, 0.76 * lr],
+        [-0.26 * run, zStifle, rT, Math.max(proudAt(top), 1.1 * lr)],
+        [-0.46 * run, lerp(zStifle, zHock, 0.55), lerp(rT, lr, 0.66), 1.15 * lr],
+        [-HOCK_RUN * run, zHock, 1.0 * lr, 0.9 * lr],
+        [-0.80 * run, zHock + 0.09 * hb, 1.08 * C, C],
+        [-(run - 1.25 * fH), zPastern, 1.05 * C, 0.95 * C],
+        [-(run - 0.7 * fH), zFoot, fR, fX, true],
+        [-run, zFoot, 1.05 * fR, 1.05 * fX, true],
       ];
     } else {
       // The elbow rides at the belly line and a touch back; the knee splits
       // what is left and stands a touch forward. Between the sunk ring and
       // the elbow sits the shoulder's own swell, where the mass is allowed to
       // stand proud — never fuller fore-and-aft than the ring above it, so
-      // the surface between them leans out and down rather than up.
-      const rE = lr * legTaper * 1.15;
+      // the surface between them leans out and down rather than up. Across,
+      // the swell is held to the plain leg's width: wider, its upper side
+      // shows on a narrow chest as a ledge. THE FOREARM IS THE VISIBLE MASS:
+      // everything above the elbow is inside the chest, so a leg that is only
+      // thick up there is a post from the belly down. It is broadest at the
+      // elbow and spends that on the way to the knee.
+      const rE = lr * legTaper * 1.45;
+      const rK = Math.max(1.15 * C, 0.95 * lr);
       const eY = Math.min(0.42 * run, Math.max(0.26 * run, legBury * h * 1.1));
       const low = run - eY;
       const yS = -0.5 * eY;
+      const zFoot = 0.1 * lr + 0.9 * HEX * (fR - C);
       pts = [
         [0, ringZ, rz0, rx0],
-        [yS, 0.4 * ringZ, Math.min(rz0, lerp(rz, rE, 0.5)), Math.max(proudAt(top), 0.9 * rE)],
-        [-eY, -0.25 * lr, rE, 0.9 * rE],
-        [-eY - 0.48 * low, 0.22 * lr, 0.84 * lr, 0.80 * lr],
-        [-eY - 0.80 * low, 0.10 * lr, 0.60 * lr, 0.58 * lr],
-        [-eY - 0.93 * low, 0.12 * lr, 0.60 * lr, 0.58 * lr],
-        [-run, 0.24 * lr, 0.84 * lr, 0.76 * lr],
+        [yS, 0.4 * ringZ, Math.min(rz0, lerp(rz, 1.15 * lr * legTaper, 0.5)), Math.max(proudAt(top), lr * legTaper)],
+        [-eY, -0.25 * lr, rE, 0.78 * rE],
+        [-eY - 0.27 * low, -0.05 * lr, lerp(rE, rK, 0.45), 0.8 * lerp(rE, rK, 0.45)],
+        [-eY - 0.52 * low, 0.2 * lr, rK, 0.9 * rK],
+        [-eY - 0.76 * low, 0.1 * lr, C, 0.92 * C],
+        [-(run - 1.25 * fH), 0.1 * lr, C, 0.92 * C],
+        [-(run - 0.7 * fH), zFoot, fR, fX, true],
+        [-run, zFoot, 1.05 * fR, 1.05 * fX, true],
       ];
     }
     for (const sx of [-1, 1]) {
@@ -540,8 +586,10 @@ export function makeQuadruped({
 
   // WHERE A TAIL LEAVES THE BODY, when the species does not say: the croup —
   // on the topline behind the hip, sunk just under the surface so the join is
-  // buried. Read off the trunk's own sections, so it follows a retuned rump.
-  const croupZ = zHip - 0.6 * over;
+  // buried. Read off the trunk's own sections, so it follows a retuned rump —
+  // and set further back on a full one, where a root nearer the hip hangs
+  // its tail down inside the buttock and the thighs.
+  const croupZ = zHip - lerp(0.6, 0.88, T.rump) * over;
   const croupY = bodyY + sectionAt(croupZ).top - 0.12 * R;
   const tailY = tail && tail.up !== undefined ? bodyY + tail.up * h : croupY;
   const tailZ = tail && tail.back !== undefined ? -tail.back * h : croupZ;

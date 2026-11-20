@@ -109,7 +109,10 @@ const STAND = {
 };
 const SIT = {
   bodyLen: 0.46,
-  torso: { chest: 0.86, loin: 1.0, withers: 0.86, back: 1.04, croup: 1.0, shoulderW: 0.72, barrelW: 0.98, hipW: 1.02 },
+  // `rump` at nothing: pitched up, the trunk's rear end IS the seat, and a
+  // full rump puts its lower corner on the ground and lifts the rest of the
+  // seat clear behind the haunches.
+  torso: { chest: 0.86, loin: 1.0, withers: 0.86, back: 1.04, croup: 1.0, rump: 0, shoulderW: 0.72, barrelW: 0.98, hipW: 1.02 },
   // in the PITCHED torso's frame: ahead of the breast along the spine
   head: { fwd: 0.625, up: 0.045 },
   // A seated front leg is a column under the chest. The mass that gives a

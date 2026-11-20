@@ -7,7 +7,7 @@ import { makeFox } from '../src/kit/fox.js';
 import { makeBuffalo } from '../src/kit/buffalo.js';
 import { makeHorse } from '../src/kit/horse.js';
 import { makeCat } from '../src/kit/cat.js';
-import { triangles, sectionY, legClouds, trunk, legsJoinBody, inside } from './helpers/quadruped-probe.js';
+import { triangles, sectionY, sectionZ, legClouds, trunk, legsJoinBody, inside } from './helpers/quadruped-probe.js';
 
 const names = (g) => g.children.map((c) => c.name).sort();
 
@@ -352,10 +352,11 @@ test('a leg is thicker at the top than at the foot', () => {
     for (const pts of legs) {
       const hi = Math.max(...pts.map((p) => p.y)), lo = Math.min(...pts.map((p) => p.y));
       // the upper third: deep enough to reach past the cap a leg closes with
-      // inside the body and take in the mass itself
+      // inside the body and take in the mass itself. The foot is a block in
+      // its own right, so the margin is over a real paw and not a pinched tip.
       const top = radius(pts.filter((p) => p.y > hi - 0.35 * (hi - lo)));
       const foot = radius(pts.filter((p) => p.y < lo + 0.1 * (hi - lo)));
-      assert.ok(top > foot * 1.8,
+      assert.ok(top > foot * 1.25,
         `${label}: leg top ${top.toFixed(3)} vs foot ${foot.toFixed(3)}`);
     }
   }
@@ -485,5 +486,78 @@ test('a standing hind leg carries its foot under the hip, stifle ahead of hock',
       assert.ok(stifle > hock + 0.04 * run,
         `${label}: the stifle is carried ${((stifle - hock) / run * 100).toFixed(1)}% ahead of the hock`);
     }
+  }
+});
+
+// ---- the limbs and the rump: mass where an animal carries it ----------------
+// The slimmest level cut through the lower part of a leg is its cannon.
+function cannonOf(tris, lo, hi) {
+  let best = null;
+  for (let f = 0.1; f <= 0.32; f += 0.01) {
+    const s = sectionZ(tris, lo + f * (hi - lo));
+    if (Number.isFinite(s.depth) && (!best || s.depth < best.depth)) best = s;
+  }
+  return best;
+}
+
+// A FOOT IS A BLOCK, AND IT REACHES FORWARD. A leg that only flares where it
+// meets the ground stands on a point: the flare is gone a finger's height up.
+// A paw or a hoof keeps its length for a height of its own, and spends that
+// length ahead of the cannon rather than evenly about it.
+test('a leg stands on a block of a foot that reaches forward of its cannon', () => {
+  for (const [label, build] of STANDING) {
+    const root = build();
+    for (const leg of root.children.filter((o) => o.name === 'leg')) {
+      const tris = triangles(root, (o) => o === leg);
+      const box = new THREE.Box3().setFromObject(leg, true);
+      const cannon = cannonOf(tris, box.min.y, box.max.y);
+      const sole = sectionZ(tris, box.min.y + 0.02 * cannon.depth);
+      const instep = sectionZ(tris, box.min.y + 0.3 * cannon.depth);
+      assert.ok(instep.depth > 1.2 * cannon.depth,
+        `${label}: the foot holds its length above the ground: ${instep.depth.toFixed(3)} vs cannon ${cannon.depth.toFixed(3)}`);
+      assert.ok(sole.max - cannon.max > 2 * Math.max(0, cannon.min - sole.min) + 0.1 * cannon.depth,
+        `${label}: the toe reaches ${(sole.max - cannon.max).toFixed(3)} ahead of the cannon, the heel ${(cannon.min - sole.min).toFixed(3)} behind`);
+    }
+  }
+});
+
+// THE THIGH FILLS THE REAR OF THE ANIMAL. A hind leg hung from the middle of
+// the trunk leaves the rump overhanging it as a stub, and the animal reads as
+// a tube on posts. Just under the trunk the thigh is a broad wedge whose rear
+// edge is the rump's own end carried on down. Asked of the four animals that
+// stand in the book; the cat's standing pose is not staged anywhere.
+test('the thigh is a broad wedge that reaches back to the end of the rump', () => {
+  for (const [label, build] of STANDING) {
+    if (label === 'cat') continue;
+    const root = build();
+    const body = triangles(root, (o) => o.name === 'body');
+    const rumpEnd = new THREE.Box3().setFromObject(root.getObjectByName('body'), true).min.z;
+    for (const leg of root.children.filter((o) => o.name === 'leg' && o.position.z < 0)) {
+      const tris = triangles(root, (o) => o === leg);
+      const run = leg.position.y;
+      // just under the trunk, where the limb has left it
+      const under = sectionY(body, leg.position.z).min;
+      const thigh = sectionZ(tris, under - 0.03 * run);
+      assert.ok(thigh.depth > 0.27 * run,
+        `${label}: the thigh is ${(thigh.depth / run * 100).toFixed(1)}% of the leg's run fore and aft`);
+      assert.ok(thigh.min - rumpEnd < 0.07 * run,
+        `${label}: the rump overhangs the thigh by ${((thigh.min - rumpEnd) / run * 100).toFixed(1)}% of the leg's run`);
+    }
+  }
+});
+
+// A RUMP IS ROUND, NOT A POINT. Tapered away behind the hips the trunk ends in
+// a stub; an animal's croup carries most of its depth nearly to the tail and
+// then turns down into the buttock.
+test('the rump keeps its depth to the buttock', () => {
+  for (const [label, build] of STANDING) {
+    const root = build();
+    const body = triangles(root, (o) => o.name === 'body');
+    const rumpEnd = new THREE.Box3().setFromObject(root.getObjectByName('body'), true).min.z;
+    const { zHind } = trunk(root);
+    const hip = sectionY(body, zHind).depth;
+    const buttock = sectionY(body, rumpEnd + 0.25 * (zHind - rumpEnd)).depth;
+    assert.ok(buttock > 0.6 * hip,
+      `${label}: the rump is ${(buttock / hip * 100).toFixed(0)}% of the hip's depth a quarter of the way in from its end`);
   }
 });

@@ -113,18 +113,20 @@ const IDLE_PITCH = 0.045;
 const IDLE_TAIL = 0.10;
 
 export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
-  // Long legs under a lean trunk: short-legged and fat-bodied reads as a pig.
+  // Long legs under a trunk that is deep at the chest and tucked at the
+  // flank: the depth is all brisket, so the loin stays lean. Short-legged and
+  // fat-bodied the whole way along reads as a pig.
   // The neck lifts the head off the shoulders, which is most of what separates
   // the two silhouettes.
   const { group, material } = makeQuadruped({
     height, color, seed,
     bodyR: 0.2, bodyLen: 0.52, bodyDrop: 0.2,
-    torso: { chest: 1.15, loin: 0.68, withers: 1.05, back: 0.92, croup: 0.95 },
+    torso: { chest: 1.4, loin: 0.68, withers: 1.05, back: 0.92, croup: 0.95 },
     legBury: 0.16,
     legH: 0.5, legR: 0.07, legTaper: 1.0, hipX: 0.085, hipZ: 0.30,
-    legs: { hindSet: 0.06 },
+    legs: { knee: 0.36, thigh: 3.0, hindSet: 0.09 },
     // the neck's end has to fit inside the skull it enters, turned or not
-    neck: { r: 0.076, w: 0.9, root: 0.66, set: 0.2, taper: 1.0, arch: 0.02 },
+    neck: { r: 0.076, w: 0.9, root: 0.6, set: 0.2, taper: 1.0, arch: 0.02 },
     // The plan's ball is only a placeholder for where the head is carried and
     // how far it is nosed down; its geometry is replaced by the loft below.
     // No snout: the muzzle is the front half of that loft.
