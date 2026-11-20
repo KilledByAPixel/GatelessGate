@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeDog } from '../src/kit/dog.js';
 import { makeFox } from '../src/kit/fox.js';
-import { triangles, sectionY, inside, trunk } from './helpers/quadruped-probe.js';
+import { triangles, sectionY, sectionZ, inside, trunk } from './helpers/quadruped-probe.js';
 
 // The dog and the fox share a body plan, so what tells them apart — and what
 // tells either from a toy — is the head, the ears and the tail. These pin the
@@ -309,6 +309,25 @@ test("the fox's brush falls away in an arc, as deep as the body through its midd
 });
 
 // ---- the pair ---------------------------------------------------------------
+
+test('a front leg is slim against the chest it stands under, and still a tapering leg on a paw', () => {
+  // One front leg's fore-and-aft extent, read level at fractions of the
+  // daylight under the chest and held against the chest's own depth: a
+  // forearm near two fifths of the chest is a post, and under a sixth it is a
+  // stick.
+  for (const [label, make] of SPECIES) {
+    const root = make().group;
+    const chest = sectionY(triangles(root, (o) => o.name === 'body'), trunk(root).zFront);
+    const leg = triangles(root, (o) => o.name === 'leg' && o.position.z > 0 && o.position.x > 0);
+    const at = (f) => sectionZ(leg, f * chest.min).depth / chest.depth;
+    assert.ok(at(0.9) < 0.3, `${label}: a post: the forearm is ${at(0.9).toFixed(3)} of the chest's depth`);
+    assert.ok(at(0.9) > 0.18, `${label}: a stick: the forearm is ${at(0.9).toFixed(3)} of the chest's depth`);
+    assert.ok(at(0.9) > 1.2 * at(0.25), `${label}: no taper: ${at(0.9).toFixed(3)} above, ${at(0.25).toFixed(3)} below`);
+    assert.ok(at(0.25) > 0.14, `${label}: the cannon is wire: ${at(0.25).toFixed(3)}`);
+    const paw = sectionZ(leg, 0.04 * chest.min).depth / chest.depth;
+    assert.ok(paw > 1.5 * at(0.25), `${label}: no paw: ${paw.toFixed(3)} long under a leg ${at(0.25).toFixed(3)} deep`);
+  }
+});
 
 test('a dog and a fox are told apart by ears, tail and carriage', () => {
   const dog = makeDog({}).group, fox = makeFox({}).group;

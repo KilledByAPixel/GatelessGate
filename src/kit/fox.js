@@ -96,8 +96,13 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     // high as the withers: a back that falls to the rump is a dog standing
     torso: { chest: 1.35, loin: 0.62, withers: 1.0, back: 0.92, croup: 1.0, shoulderW: 0.78, barrelW: 0.9, hipW: 0.82 },
     legBury: .13,
-    legH: LEG_H, legR: 0.058, legTaper: 1.15, hipX: 0.07, hipZ: 0.31,
-    legs: { knee: KNEE, shoulder: 2.0, thigh: 3.0, hindSet: 0.09 },
+    // FINE LIMBS. A fox's front leg is about a quarter of its chest's depth
+    // below the elbow and barely swells above it; a forearm half as deep as
+    // the chest is a dog's leg under a fox. `legR` scales the whole leg and
+    // `legTaper` the forearm alone, so the shoulder, thigh and paw — stated
+    // as multiples of `legR` — are raised to keep the masses they had.
+    legH: LEG_H, legR: 0.047, legTaper: 0.76, hipX: 0.07, hipZ: 0.31,
+    legs: { knee: KNEE, shoulder: 3.6, thigh: 3.7, foot: 1.5, hindSet: 0.09 },
     // A ruff, not a stalk: the throat starts low on the chest, the nape leaves
     // the back early, and the taper spends little of that on the way up. Its
     // end still has to fit inside the skull it enters, turned or not.
