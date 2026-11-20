@@ -42,7 +42,7 @@ test('makeBundle stands from y=0: a robe of folds with the kit bowl seated on to
 
   const b = box(bun.group);
   assert.ok(b.min.y > -0.02 && b.min.y < 0.02, `grounded at y=0, got ${b.min.y}`);
-  assert.ok(b.max.y > 0.25 && b.max.y < 0.55, `a low bundle, roughly 0.3-0.4 tall, got ${b.max.y}`);
+  assert.ok(b.max.y > 0.2 && b.max.y < 0.34, `a low bundle, well under its own width, got ${b.max.y}`);
 });
 
 test('the robe is folded cloth: wider than it is tall, and the bowl sits ABOVE it', () => {
@@ -57,6 +57,63 @@ test('the robe is folded cloth: wider than it is tall, and the bowl sits ABOVE i
   const bowl = box(bun.group.children.find((c) => c.name === 'bowl'));
   assert.ok(bowl.min.y > robe.max.y - 0.03, `bowl seated on the robe, not inside it: ${bowl.min.y} vs robe top ${robe.max.y}`);
   assert.ok(bowl.max.y > robe.max.y, 'and it rises above the cloth');
+});
+
+// THE SILHOUETTE. The stack was three shrinking round discs with a full-height
+// bowl on a bare foot above them — an hourglass, which is a goblet or a chess
+// piece and not cloth. These pin what makes it a folded robe with a bowl
+// resting on it instead.
+test('the robe is an oblong folded slab that dwarfs the bowl, not a round pedestal under it', () => {
+  const bun = makeBundle({ seed: 23 });
+  bun.group.updateMatrixWorld(true);
+  const folds = bun.group.children.filter((c) => c.name === 'fold');
+  // each layer of cloth is longer one way than the other IN ITS OWN FRAME — a
+  // turned disc's world box is oblong by accident, so measure the geometry
+  for (const f of folds) {
+    f.geometry.computeBoundingBox();
+    const bb = f.geometry.boundingBox;
+    const sx = (bb.max.x - bb.min.x) * f.scale.x, sz = (bb.max.z - bb.min.z) * f.scale.z;
+    const long = Math.max(sx, sz), short = Math.min(sx, sz);
+    assert.ok(long > short * 1.25, `a folded rectangle, not a disc: ${long} x ${short}`);
+  }
+  const robe = new THREE.Box3();
+  for (const f of folds) robe.union(box(f));
+  const bowl = box(bun.group.children.find((c) => c.name === 'bowl'));
+  const robeW = Math.max(robe.max.x - robe.min.x, robe.max.z - robe.min.z);
+  // the bowl's own diameter, off the lathe: its group is turned at random and
+  // a turned box reports its diagonal
+  const bowlG = bun.group.children.find((c) => c.name === 'bowl');
+  const shell = bowlG.getObjectByName('shell');
+  shell.geometry.computeBoundingBox();
+  const bowlW = (shell.geometry.boundingBox.max.x - shell.geometry.boundingBox.min.x) * bowlG.scale.x;
+  assert.ok(robeW > bowlW * 1.6, `the cloth is clearly the wider mass: ${robeW} vs bowl ${bowlW}`);
+  // a shallow bowl: what shows above the cloth is lower than the cloth is tall
+  const rise = bowl.max.y - robe.max.y;
+  const robeH = robe.max.y - robe.min.y;
+  assert.ok(rise < robeH * 0.85, `a shallow bowl on a cushion, not a cup on a stem: ${rise} over ${robeH}`);
+  assert.ok(robeW > (bowl.max.y - robe.min.y) * 1.8, 'and the whole thing is wider than it is tall');
+});
+
+test('the bowl nests in the cloth and the tie lies in the fold — no neck, no hoops', () => {
+  const bun = makeBundle({ seed: 23 });
+  bun.group.updateMatrixWorld(true);
+  const folds = bun.group.children.filter((c) => c.name === 'fold');
+  const robe = new THREE.Box3();
+  for (const f of folds) robe.union(box(f));
+  const foot = box(bun.group.getObjectByName('foot'));
+  assert.ok(foot.max.y <= robe.max.y + 1e-6,
+    `the foot is sunk in the cloth, so no stem shows under the bowl: ${foot.max.y} vs ${robe.max.y}`);
+  // the cord binds the top layer and stays inside its outline: it reads as the
+  // dark of the fold line, never as a ring standing off the stack
+  const top = box(folds[folds.length - 1]);
+  const ropes = bun.group.children.filter((c) => c.name === 'rope');
+  assert.ok(ropes.length >= 1, 'it is still tied');
+  for (const r of ropes) {
+    const rb = box(r);
+    const proud = Math.max(top.min.x - rb.min.x, rb.max.x - top.max.x, top.min.z - rb.min.z, rb.max.z - top.max.z);
+    assert.ok(proud < 0.012, `the tie is buried in the seam, proud by ${proud}`);
+    assert.ok(rb.max.y < top.max.y && rb.min.y > robe.min.y, 'and it sits in the seam between the layers');
+  }
 });
 
 test('budge() is the smallest possible motion: a capped tilt that settles all the way back', () => {
