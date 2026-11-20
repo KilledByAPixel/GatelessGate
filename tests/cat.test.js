@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeCat } from '../src/kit/cat.js';
-import { triangles, sectionY, inside } from './helpers/quadruped-probe.js';
+import { triangles, sectionY, sectionZ, inside } from './helpers/quadruped-probe.js';
 
 // The cat's own silhouette, read off the meshes at height 1 so every number
 // below is a proportion. The body plan it rides is pinned in
@@ -171,7 +171,10 @@ test('the seated cat is a pear on its haunches, not a standing animal folded in 
   };
   const hindToe = toes(hind).hi, frontPaw = toes(front);
   assert.ok(hindToe > frontPaw.lo, `the hind paws reach the front ones: ${hindToe.toFixed(3)} vs ${frontPaw.lo.toFixed(3)}`);
-  assert.ok(hindToe < frontPaw.hi + 0.005, `without overtaking them: ${hindToe.toFixed(3)} vs ${frontPaw.hi.toFixed(3)}`);
+  // and stop at the back of them: a hind paw laid alongside the whole of the
+  // front one hides it from the side, and the cat sits on one pair of feet
+  const mid = (frontPaw.lo + frontPaw.hi) / 2;
+  assert.ok(hindToe < mid, `without coming alongside them: ${hindToe.toFixed(3)} vs the front paw's middle at ${mid.toFixed(3)}`);
 
   // from the side: nothing but the cat between the rump and the front paws.
   // A rescaled standing hind leg leaves the rump hanging in the air behind it.
@@ -197,6 +200,64 @@ test('the seated cat is a pear on its haunches, not a standing animal folded in 
   const base = Math.max(paws.max.z, haunch.max.z) - body.min.z;
   const tall = box(g.getObjectByName('head')).max.y;
   assert.ok(tall > 1.2 * base, `a compact sit: ${tall.toFixed(3)} tall on a base of ${base.toFixed(3)}`);
+});
+
+test('the seated back is one curve bowed out, round at the rump — not a tent', () => {
+  const g = sit().group;
+  const trunk = triangles(g, (o) => o.name === 'body');
+  // the outline behind the cat, read level by level
+  const back = [];
+  for (let y = 0.045; y < 0.9; y += 0.015) back.push([y, sectionZ(trunk, y).min]);
+  const rear = back.reduce((a, b) => (b[1] < a[1] ? b : a));
+  const nape = back[back.length - 1];
+  assert.ok(rear[0] < 0.3, `widest low, at the rump: the rearmost point stands ${rear[0].toFixed(3)} up`);
+
+  // Against the straight line from the rump to the nape, the back stands out
+  // behind it. A pitched standing trunk is that straight line, near enough.
+  let bow = 0;
+  for (const [y, z] of back) {
+    if (y <= rear[0]) continue;
+    bow = Math.max(bow, rear[1] + (nape[1] - rear[1]) * (y - rear[0]) / (nape[0] - rear[0]) - z);
+  }
+  assert.ok(bow > 0.075, `the back bows out ${bow.toFixed(3)} behind the line from rump to nape`);
+
+  // and the rump comes round to the ground instead of being undercut to a
+  // corner hanging behind the seat
+  const seat = back[0][1];
+  assert.ok(seat - rear[1] < 0.09, `the rump turns under by ${(seat - rear[1]).toFixed(3)}`);
+
+  // the outline never jogs: from the rump up, every level stands ahead of
+  // the one below it
+  for (let i = 1; i < back.length; i++) {
+    if (back[i][0] <= rear[0]) continue;
+    assert.ok(back[i][1] > back[i - 1][1] - 1e-6, `the back steps out again at ${back[i][0].toFixed(3)}`);
+  }
+});
+
+test('a seated front leg is a straight column on a block of a paw', () => {
+  const g = sit().group;
+  const legs = named(g, 'leg').filter((l) => box(l).min.z > -0.2);
+  assert.equal(legs.length, 2);
+  for (const leg of legs) {
+    const tris = triangles(g, (o) => o === leg);
+    const depth = (y) => sectionZ(tris, y).depth;
+    const shin = depth(0.2);
+    // Nothing swells above the wrist. A standing leg cut down to fit carries
+    // its shoulder mass with it, and that shows on the breast as a plate.
+    for (let y = 0.15; y < box(leg).max.y - 0.03; y += 0.05) {
+      assert.ok(depth(y) < 1.3 * shin, `the leg swells to ${depth(y).toFixed(3)} at ${y.toFixed(2)} over a shin of ${shin.toFixed(3)}`);
+    }
+    // plumb: the column does not lean or bend between the wrist and the chest
+    const lean = Math.abs(sectionZ(tris, 0.45).min - sectionZ(tris, 0.15).min);
+    assert.ok(lean < 0.02, `the column leans ${lean.toFixed(3)}`);
+    // and it stands on a paw that is longer than the leg is thick, forward
+    assert.ok(depth(0.03) > 1.12 * shin, `a paw ${depth(0.03).toFixed(3)} long under a shin of ${shin.toFixed(3)}`);
+    assert.ok(sectionZ(tris, 0.03).max > sectionZ(tris, 0.2).max + 0.02, 'reaching forward of it');
+  }
+  // close together under the breast: the gap between them is narrower than a leg
+  const [a, b] = legs.map(box).sort((p, q) => p.min.x - q.min.x);
+  const wide = a.max.x - a.min.x;
+  assert.ok(b.min.x - a.max.x < wide, `the pair stand ${(b.min.x - a.max.x).toFixed(3)} apart, each ${wide.toFixed(3)} wide`);
 });
 
 test('the tail is a long tapering line with a hook in it', () => {
@@ -228,6 +289,12 @@ test('the tail is a long tapering line with a hook in it', () => {
   assert.ok(turn < 1.5, `but it stays a line behind the cat, not a wrap around it: ${turn.toFixed(2)}`);
   const tail = box(cat.tail);
   assert.ok(tail.max.z - tail.min.z > 0.6, `still long behind the rump: ${(tail.max.z - tail.min.z).toFixed(3)}`);
+
+  // along the ground and then up: the near half lies low, the far end curls
+  // well clear of it
+  const root = at(cat.tail).y;
+  assert.ok(Math.abs(mid.y - root) < 0.08, `the near half lies along the ground: ${(mid.y - root).toFixed(3)}`);
+  assert.ok(tail.max.y > root + 0.2, `the tip curls up off it: ${(tail.max.y - root).toFixed(3)}`);
 
   // either side, by seed — a book of cats does not all hook the same way
   const sides = new Set();
