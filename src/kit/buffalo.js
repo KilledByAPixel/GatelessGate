@@ -162,7 +162,7 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // a shallow hock: this animal plods. The shoulder mass is kept short
     // fore-and-aft: the breast closes into the neck just ahead of the front
     // legs, and a broad one stands out past it as a ledge on the brisket.
-    legs: { knee: 0.2, shoulder: 1.5, thigh: 2.1 },
+    legs: { knee: 0.2, shoulder: 1.5, thigh: 2.1, hindSet: 0.05 },
     // Short, deep and nearly as wide as the skull it enters. Its end ring is
     // centred on the head's own centre and must stay INSIDE the skull there,
     // so `r` is bounded by the skull's section at its origin — fatten the

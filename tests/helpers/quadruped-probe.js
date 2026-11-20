@@ -79,7 +79,8 @@ export function trunk(root) {
   const at = new THREE.Vector3();
   const tops = [];
   root.traverse((o) => {
-    if (o.name === 'leg' && Math.abs(o.getWorldPosition(at).x) > 1e-6) tops.push(at.z);
+    // a leg may hang ahead of or behind its own section; the trunk is the sections
+    if (o.name === 'leg' && Math.abs(o.getWorldPosition(at).x) > 1e-6) tops.push(at.z - (o.userData.setZ || 0));
   });
   if (tops.length < 4) tops.length = 0;
   if (!tops.length) for (const pts of legClouds(root)) {

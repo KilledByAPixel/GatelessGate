@@ -122,6 +122,7 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     torso: { chest: 1.15, loin: 0.68, withers: 1.05, back: 0.92, croup: 0.95 },
     legBury: 0.16,
     legH: 0.5, legR: 0.07, legTaper: 1.0, hipX: 0.085, hipZ: 0.30,
+    legs: { hindSet: 0.06 },
     // the neck's end has to fit inside the skull it enters, turned or not
     neck: { r: 0.076, w: 0.9, root: 0.66, set: 0.2, taper: 1.0, arch: 0.02 },
     // The plan's ball is only a placeholder for where the head is carried and

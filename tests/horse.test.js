@@ -167,9 +167,10 @@ test('the tail hangs from the croup', () => {
   // ONE HANGING MASS. A stub aimed well back with a strand plumb off its end
   // is two sticks and a hinge, so: no joint bends far, and below the dock the
   // strand is close to plumb.
-  const segs = find(group, 'seg');
-  const up = new THREE.Vector3(0, 1, 0), q = new THREE.Quaternion();
-  const dirs = segs.map((s) => up.clone().applyQuaternion(s.getWorldQuaternion(q)));
+  // the strand's own nodes, carried into the animal's frame
+  group.updateMatrixWorld(true);
+  const nodes = tail.nodes().map((n) => tail.group.localToWorld(new THREE.Vector3(...n)));
+  const dirs = nodes.slice(1).map((n, i) => n.clone().sub(nodes[i]).normalize());
   const deg = THREE.MathUtils.radToDeg;
   for (let i = 1; i < dirs.length; i++) {
     const kink = deg(dirs[i].angleTo(dirs[i - 1]));
@@ -185,9 +186,16 @@ test('the tail hangs from the croup', () => {
   const withers = withersOf(horse);
   assert.ok((box.max.x - box.min.x) / withers > 0.18,
     `the tail is ${((box.max.x - box.min.x) / withers).toFixed(3)}x withers across`);
-  const radius = (m) => Math.max(m.geometry.parameters.radiusTop, m.geometry.parameters.radiusBottom);
-  assert.ok(radius(segs[1]) > segs[0].geometry.parameters.radiusBottom * 1.5,
-    'fuller through the middle than at the dock');
+  // the skin is one mesh, a ring of vertices per node: measure a ring across
+  const skin = find(group, 'strand')[0];
+  const P = skin.geometry.getAttribute('position');
+  const sides = (P.count - 2) / nodes.length;
+  const across = (ring) => {
+    let lo = Infinity, hi = -Infinity;
+    for (let j = 0; j < sides; j++) { const x = P.getX(ring * sides + j); lo = Math.min(lo, x); hi = Math.max(hi, x); }
+    return hi - lo;
+  };
+  assert.ok(across(2) > across(0) * 1.5, 'fuller through the middle than at the dock');
   // reaching about to the hock
   assert.ok(box.min.y / withers > 0.22 && box.min.y / withers < 0.42,
     `the tip hangs at ${(box.min.y / withers).toFixed(2)}x withers`);
@@ -315,12 +323,12 @@ test('deterministic and steady: the update only stirs the tail', () => {
   a.group.updateMatrixWorld(true);
   b.group.updateMatrixWorld(true);
   const va = new THREE.Vector3(), vb = new THREE.Vector3();
-  const segsA = find(a.group, 'seg'), segsB = find(b.group, 'seg');
-  assert.ok(segsA.length >= 2, 'the strand has segments');
+  const segsA = a.tail.nodes(), segsB = b.tail.nodes();
+  assert.ok(segsA.length >= 3, 'the strand has nodes');
   assert.equal(segsA.length, segsB.length);
   for (let i = 0; i < segsA.length; i++) {
-    segsA[i].getWorldPosition(va);
-    segsB[i].getWorldPosition(vb);
+    va.set(...segsA[i]);
+    vb.set(...segsB[i]);
     assert.ok(Number.isFinite(va.x + va.y + va.z), 'finite tail');
     assert.ok(va.distanceTo(vb) < 1e-9, 'same seed, same sway');
   }

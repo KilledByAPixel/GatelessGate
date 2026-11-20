@@ -116,7 +116,7 @@ test('small ears hang below the horn bases', () => {
   assert.ok(ext(ears, 'x') < 0.6 * ext(cloud('horn'), 'x'), 'the ears do not compete with the horns');
   // and the pair is one draw: the whole skull costs what the ball and spikes did
   let meshes = 0;
-  root.traverse((o) => { if (o.isMesh && o.name !== 'seg' && !o.parent.name.includes('tail')) meshes++; });
+  root.traverse((o) => { if (o.isMesh && !o.parent.name.includes('tail')) meshes++; });
   // body, four legs, head, an ear pair, two horns
   assert.ok(meshes <= 9, `${meshes} meshes besides the tail`);
 });

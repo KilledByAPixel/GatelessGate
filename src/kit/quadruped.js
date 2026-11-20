@@ -24,7 +24,12 @@ const NECK_DEFAULTS = { r: 0.08, w: 0.8, root: 0.55, set: 0.25, taper: 1.5, arch
 //           (and x legTaper, which is the front leg's own top-heaviness)
 // thigh     the same for the hind leg
 // proud     how far those masses stand out of the flank, x bodyR
-const LEG_DEFAULTS = { knee: 0.3, shoulder: 2.0, thigh: 2.4, proud: 0.09 };
+// frontSet  how far AHEAD of the shoulder section the front leg hangs, x height
+// hindSet   how far BEHIND the hip section the hind leg hangs, x height.
+//           The sections stay where `hipZ` puts them; these move only the
+//           limb, for an animal whose legs read as gathered under its middle
+//           with the breast or the rump overhanging them.
+const LEG_DEFAULTS = { knee: 0.3, shoulder: 2.0, thigh: 2.4, proud: 0.09, frontSet: 0, hindSet: 0 };
 // Share of a hind leg's run that lies above the hock.
 const HOCK_RUN = 0.66;
 
@@ -320,7 +325,7 @@ export function makeQuadruped({
 
   const legTop = {};
   for (const hind of [false, true]) {
-    const z = hind ? zHip : zShoulder;
+    const z = hind ? zHip - LG.hindSet * h : zShoulder + LG.frontSet * h;
     const s = sectionAt(z);
     // A leg cannot stand wider than the body it hangs from: past the section's
     // own half-width there is no flank to join, and the leg would hang in the
@@ -417,6 +422,9 @@ export function makeQuadruped({
       // height of the mass's ring — so a species that re-seats a leg moves and
       // scales it about that point
       leg.position.set(sx * hx, top, z);
+      // how far the limb hangs from the trunk section it belongs to (see
+      // frontSet / hindSet), for anything that has to find that section again
+      leg.userData.setZ = z - (hind ? zHip : zShoulder);
       g.add(leg);
     }
   }
