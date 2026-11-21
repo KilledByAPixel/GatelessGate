@@ -7,7 +7,7 @@ import { makeTail } from './tail.js';
 // number here is in the units its option is documented in beside the builder.
 const TORSO_DEFAULTS = {
   chest: 1.1, loin: 0.72, withers: 1.0, back: 0.9, croup: 0.94, rump: 1, round: 0, sag: null,
-  shoulderW: 0.8, barrelW: 0.95, hipW: 0.85, slab: 0,
+  shoulderW: 0.8, barrelW: 0.95, hipW: 0.85, slab: 0, barrel: 0, girth: null,
 };
 // THE SLAB-SIDED CHEST (`torso.slab`). SLAB_Y is how far down a fully slabbed
 // section's two lower corners stand, x its half-depth (round, they stand on
@@ -16,6 +16,14 @@ const TORSO_DEFAULTS = {
 // slab is left one section behind the shoulder, where the chest is giving
 // way to the barrel.
 const SLAB_Y = 0.84, SLAB_MAX = 0.97, SLAB_BACK = 0.3;
+// THE BARREL (`torso.barrel`), as where a section's corners stand when it is
+// fully barrelled, [across, x half-width; along, x half-depth]: the two upper
+// ones (BACK) and the two lower ones (BELLY). Round, all four stand on the
+// ellipse, and the section is a diamond with its corners cut.
+// How much of the trunk's breadth is left at the girth: a little under all of
+// it, so the shoulder ahead and the ribs behind both turn away from it.
+const GIRTH_IN = 0.93;
+const BARREL_BACK = [0.93, 0.6], BARREL_BELLY = [0.88, 0.64];
 // THE ROUND OF A RUMP (`torso.round`), as the three sections it is drawn
 // with behind the hip: [how far along the overhang, how deep the underside
 // still is (x loin), half-width (x hipW)], from the end forward. The topline
@@ -126,6 +134,13 @@ const HEX = Math.sin(Math.PI / 3);
 //              middle — for a back that falls a long way, which the fixed
 //              middle sections otherwise spend as a rise, a table and a step
 //   shoulderW / barrelW / hipW   half-widths at shoulder, mid-barrel and hip
+//   barrel     how full the trunk's section is: 0 is the round one, widest
+//              along one line; 1 keeps most of its breadth well up and well
+//              down, rump to breast (see THE TRUNK IS A BARREL)
+//   girth      null eases the slab away over the section behind the shoulder.
+//              A number ends it at a section of its own that fraction of the
+//              trunk behind the shoulder, so the shoulder is a plane with an
+//              edge (see THE GIRTH)
 //   slab       how slab-sided the chest is over the front legs: 0 is the
 //              round section everywhere, 1 carries the chest's sides straight
 //              down to a corner over each leg, with the brisket a keel
@@ -172,7 +187,7 @@ export function makeQuadruped({
   // trunk: bodyR is its half-depth and the unit every torso knob is in;
   // legH + bodyDrop is the height of its axis off the ground
   bodyR = 0.22, bodyLen = 0.72, bodyDrop = 0.16,
-  torso = null,          // { chest, loin, withers, back, croup, rump, round, sag, slab, shoulderW, barrelW, hipW } — see THE TORSO
+  torso = null,          // { chest, loin, withers, back, croup, rump, round, sag, slab, barrel, girth, shoulderW, barrelW, hipW } — see THE TORSO
   // legs
   legH = 0.52, legR = 0.055, legTaper = 0.82, hipX = 0.13, hipZ = 0.32,
   legBury = 0.06,        // how far above the flank's underside the shoulder/thigh ring rides, x height
@@ -232,6 +247,8 @@ export function makeQuadruped({
         // a lower corner of a slab-sided section stands where the section says
         if (s.k && sn < -0.5 && Math.abs(cs) > 0.5) {
           pos.push(Math.sign(cs) * s.k[0] * s.w, s.c[0] - s.k[1] * s.a[0], s.c[1] - s.k[1] * s.a[1]);
+        } else if (s.u && sn > 0.5 && Math.abs(cs) > 0.5) {
+          pos.push(Math.sign(cs) * s.u[0] * s.w, s.c[0] + s.u[1] * s.a[0], s.c[1] + s.u[1] * s.a[1]);
         } else pos.push(cs * s.w, s.c[0] + sn * s.a[0], s.c[1] + sn * s.a[1]);
       }
     }
@@ -304,9 +321,22 @@ export function makeQuadruped({
     ...rear.map(([u, top, bot, w]) => [zHip - u * over, top, bot, w]),
     [zHip + 0.08 * span, backAt(0.08, T.croup), -0.96 * T.loin, T.hipW],
     [zHip + 0.36 * span, backAt(0.36, lerp(T.croup, T.back, 0.8)), -T.loin, lerp(T.hipW, T.barrelW, 0.7)],
-    [zHip + 0.68 * span, backAt(0.68, T.back), -lerp(T.loin, T.chest, 0.8), T.barrelW, SLAB_BACK * T.slab],
+    [zHip + 0.68 * span, backAt(0.68, T.back), -lerp(T.loin, T.chest, 0.8), T.barrelW, T.girth == null ? SLAB_BACK * T.slab : 0],
     [zShoulder, T.withers, -T.chest, T.shoulderW, T.slab],
   ];
+  // THE GIRTH (`torso.girth`). A slab that eases away over a whole section
+  // behind the shoulder is a chest that slowly becomes a barrel, and nothing
+  // on the flank says where the shoulder ends. With a girth stated there is
+  // one more section, that fraction of the trunk behind the shoulder, on the
+  // trunk's own lines but drawn in a little across and with no slab left in
+  // it: the upright face over the leg turns under and inward along one edge,
+  // running down behind the elbow, so the shoulder is a plane of its own
+  // that catches the light differently from the ribs swelling out behind it.
+  if (T.girth != null) {
+    const a = rows[rows.length - 2], b = rows[rows.length - 1];
+    const t = 1 - T.girth * span / (b[0] - a[0]);
+    rows.splice(rows.length - 1, 0, [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t), GIRTH_IN * lerp(a[3], b[3], t), 0]);
+  }
   // THE CHEST IS SLAB-SIDED WHERE THE FRONT LEGS HANG. A round section's lower
   // sides fall away under its widest line at half a right angle, so a front
   // leg comes out from under an overhang: a post entering the underside of the
@@ -327,9 +357,24 @@ export function makeQuadruped({
   const LGs = { ...LEG_DEFAULTS, ...legs };
   const slabX = Math.min(SLAB_MAX, Math.max(Math.SQRT1_2,
     (Math.min(hipX * h, 0.86 * T.shoulderW * R) + 0.78 * LGs.elbow * legTaper * legR * h) / (T.shoulderW * R)));
-  const corner = (slab) => (slab ? [lerp(Math.SQRT1_2, slabX, slab), lerp(Math.SQRT1_2, SLAB_Y, slab)] : null);
+  //
+  // THE TRUNK IS A BARREL, where a species asks (`torso.barrel`). The round
+  // section is widest along one line and falls away at half a right angle
+  // above and below it: from the front a diamond, from three-quarter two flat
+  // planes meeting at a ridge down the flank, and a back that is a roof. A
+  // barrel keeps most of its breadth well up and well down, so the back is
+  // broad either side of the spine and the ribs are full. It is the same
+  // outline — top and bottom points do not move — and it runs the whole
+  // trunk, rump included, because a croup is broad too. A slab and a barrel
+  // on the same section take whichever stands further out and further down.
+  const B = T.barrel;
+  const upper = B ? [lerp(Math.SQRT1_2, BARREL_BACK[0], B), lerp(Math.SQRT1_2, BARREL_BACK[1], B)] : null;
+  const corner = (slab) => (slab || B ? [
+    Math.max(lerp(Math.SQRT1_2, slabX, slab || 0), lerp(Math.SQRT1_2, BARREL_BELLY[0], B)),
+    Math.max(lerp(Math.SQRT1_2, SLAB_Y, slab || 0), lerp(Math.SQRT1_2, BARREL_BELLY[1], B)),
+  ] : null);
   const station = ([z, top, bot, w, slab]) => ({
-    c: [(top + bot) / 2 * R, z], a: [(top - bot) / 2 * R, 0], w: w * R, k: corner(slab),
+    c: [(top + bot) / 2 * R, z], a: [(top - bot) / 2 * R, 0], w: w * R, k: corner(slab), u: upper,
   });
   const stations = rows.map(station);
   const rearApex = [yEnd * R, zHip - over];
@@ -355,7 +400,7 @@ export function makeQuadruped({
     const rEnd = N.r * h;
     const w0 = 0.78 * T.shoulderW * R, wEnd = rEnd * N.w;
     const rootAt = stations.length;
-    stations.push({ c: c0, a: a0, w: w0, k: corner(T.slab) });
+    stations.push({ c: c0, a: a0, w: w0, k: corner(T.slab), u: upper });
     // Between root and head the section turns from the root's slant to square
     // across the neck, and narrows on a curve rather than a straight wedge —
     // `taper` above 1 spends the depth early, which is a neck that leaves a
@@ -387,7 +432,7 @@ export function makeQuadruped({
       const wy = T.withers * R, ny = n1.c[0] + n1.a[0], nz = n1.c[1] + n1.a[1];
       const ty = wy + N.easeUp * N.ease * (ny - wy), tz = zShoulder + N.ease * (nz - zShoulder);
       stations[rootAt] = {
-        c: [(ty + bot[0]) / 2, (tz + bot[1]) / 2], a: [(ty - bot[0]) / 2, (tz - bot[1]) / 2], w: w0, k: corner(T.slab),
+        c: [(ty + bot[0]) / 2, (tz + bot[1]) / 2], a: [(ty - bot[0]) / 2, (tz - bot[1]) / 2], w: w0, k: corner(T.slab), u: upper,
       };
     }
     // the last ring is centred on the head itself, so it ends inside the skull
@@ -430,12 +475,14 @@ export function makeQuadruped({
     const a = Math.min(1, Math.abs(t));
     return a <= cx ? 1 - a * (1 - cy) / cx : cy * (1 - a) / (1 - cx);
   };
-  const cornerAt = (s) => corner(s.slab) || [Math.SQRT1_2, Math.SQRT1_2];
+  const ROUND = [Math.SQRT1_2, Math.SQRT1_2];
+  const cornerAt = (s) => corner(s.slab) || ROUND;
+  const upperAt = upper || ROUND;
   // see THE LEG RULE: the surface's own height at lateral offset x, upper
   // (side = 1) or under (side = -1), in world y
   const flank = (z, x, side) => {
     const s = sectionAt(z);
-    const [cx, cy] = side < 0 ? cornerAt(s) : [Math.SQRT1_2, Math.SQRT1_2];
+    const [cx, cy] = side < 0 ? cornerAt(s) : upperAt;
     return bodyY + (s.top + s.bot) / 2 + side * (s.top - s.bot) / 2 * facet(x / s.w, cx, cy);
   };
 
@@ -517,7 +564,7 @@ export function makeQuadruped({
     // How wide the body is at a height, at this leg's own section.
     const widthAt = (y) => {
       const t = (y - bodyY - (s.top + s.bot) / 2) / ((s.top - s.bot) / 2);
-      const [cx, cy] = t < 0 ? cornerAt(s) : [Math.SQRT1_2, Math.SQRT1_2];
+      const [cx, cy] = t < 0 ? cornerAt(s) : upperAt;
       return s.w * facet(t, cy, cx);
     };
     // ACROSS, the mass is solved rather than stated: wide enough to stand
