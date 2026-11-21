@@ -328,8 +328,10 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // back into the belly, it was a hind leg standing under the chest. The
     // hock stands higher than the plan's (`hock`), folded under the buttock
     // (`knee`), over a near-upright cannon (`rake`): low, the rump stood out
-    // behind the hock.
-    legs: { knee: 0.35, shoulder: 1.7, thigh: 3.4, cannon: 0.72, foot: 1.3, hindSet: 0.08, point: 0.6, flare: 0.8, drop: 0.25, spread: 1, elbow: 0.85, hock: 0.56, rake: 0.05 },
+    // behind the hock. The gaskin is slim well before it (`gaskin`), so the
+    // back of the leg dips forward between buttock and hock instead of
+    // running down from the rump as one plank.
+    legs: { knee: 0.35, shoulder: 1.7, thigh: 3.4, cannon: 0.72, foot: 1.3, hindSet: 0.08, gaskin: 0.85, point: 0.6, flare: 0.8, drop: 0.25, spread: 1, elbow: 0.85, hock: 0.56, rake: 0.05 },
     // Short, deep and nearly as wide as the skull it enters. Its end ring is
     // centred on the head's own centre and must stay INSIDE the skull there,
     // so `r` is bounded by the skull's section at its origin — fatten the
