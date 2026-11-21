@@ -398,7 +398,7 @@ test('a seated front leg is an arm: a plumb column that opens both ways into the
       }
       return bx;
     };
-    assert.ok(foremostX(0.4) < foremostX(0.3) - 0.04, `the front line stays out at ${foremostX(0.4).toFixed(3)} over a column at ${foremostX(0.3).toFixed(3)}`);
+    assert.ok(foremostX(0.4) < foremostX(0.2) - 0.04, `the front line stays out at ${foremostX(0.4).toFixed(3)} over a column at ${foremostX(0.2).toFixed(3)}`);
 
     // Above the elbow the leg is INSIDE the chest, every vertex of it: the
     // shoulder is the chest's own surface swelling over the arm, so there is
@@ -416,18 +416,18 @@ test('a seated front leg is an arm: a plumb column that opens both ways into the
     let above = 0, seam = 0;
     for (let i = 0; i < p.count; i++) {
       v.fromBufferAttribute(p, i).applyMatrix4(leg.matrixWorld);
-      if (v.y > 0.415 && v.y < 0.435 && v.z > -0.01 && (Math.abs(v.x) > 0.1 || v.z > 0.19)) {
+      if (((v.y > 0.415 && v.y < 0.435) || (v.y > 0.36 && v.y < 0.38)) && v.z > -0.01 && (Math.abs(v.x) > 0.1 || v.z > 0.19)) {
         seam++;
         assert.ok(inside(body, v), `the seam stands out of the chest at (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`);
         const w = v.clone();
-        w.x += side * 0.02;
+        w.x += side * 0.04;
         if (Math.abs(v.x) > 0.1) assert.ok(!inside(body, w), `the seam lies deep in the chest at (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`);
       }
       if (v.y < 0.47) continue;
       above++;
       assert.ok(inside(body, v), `the arm stands out of the chest at (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`);
     }
-    assert.ok(above >= 24 && seam >= 3, `there is an upper arm to judge: ${above} points, ${seam} on the seam`);
+    assert.ok(above >= 24 && seam >= 6, `there is an upper arm to judge: ${above} points, ${seam} on the seam`);
   }
   // From in front the chest comes DOWN between the legs: its lowest front
   // line, at the midline, stands as far forward as the columns do at the

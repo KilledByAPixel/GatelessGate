@@ -236,21 +236,24 @@ const SIT_LEVEL = 1.0;      // how much of that the skull takes back out
 //     It lies FORELEG_SINK lower than `proud`; at `proud` it is a ridge
 //     running up the breast as a needle.
 //
-// THE SEAM. The elbow ring's `proud` is 'seam': its outer and front vertices
-// are put just under the chest's skin (SEAM_SINK), read off whichever side of
-// the animal is narrower there. So the column's faces run INTO the chest's at
-// that ring and the rings above are wholly inside: the column's outer edge
-// carries on as the chest's side and its front turns in to the keel. A column
-// that simply goes on up into the chest crosses its surface at a glancing
-// angle wherever the facets happen to meet, and every crossing showed as a
-// pointed cap on top of a post.
+// THE SEAM. The two elbow rings' `proud` is 'seam': their outer and front
+// vertices are put just under the chest's skin (SEAM_SINK), read off
+// whichever side of the animal is narrower there. So the column's faces run
+// INTO the chest's along them and the rings above are wholly inside: the
+// column's outer edge carries on as the chest's side and its front turns in
+// to the keel in one facet. A column that simply goes on up into the chest
+// crosses its surface at a glancing angle wherever the facets happen to meet,
+// and every crossing showed as a pointed cap on top of a post. The free
+// column runs straight to the lower seam: a ring between them that stands
+// out further than the seam folds back into it, and the fold showed as a
+// splinter standing up from the top of the leg.
 const FORELEG = [
   [0.64, 0.21, 0.75, -0.12, 0.03, 0.03, -0.05, 1],
   [0.58, 0.212, 0.71, -0.11, 0.045, 0.03, -0.04, 1, 0.95],
   [0.53, 0.198, 0.62, -0.06, 0.05, 0.03, -0.03, 1, 0.92],
   [0.485, 0.17, 0.5, -0.03, 0.054, 0.03, -0.02, 1, 0.88],
   [0.425, 0.198, 0.425, -0.025, 0.056, 0.028, 'seam', 0, 0.8],
-  [0.32, 0.179, 0.32, 0.015, 0.054, 0.032, -0.004],
+  [0.37, 0.185, 0.37, 0.005, 0.055, 0.03, 'seam', 0, 0.8],
   [0.2, 0.177, 0.2, 0.03, 0.05, 0.012, 0.008],
   [0.09, 0.174, 0.09, 0.045, 0.046, 0],
   [0.055, 0.212, 0.055, 0.04, 0.052, 0],
@@ -261,7 +264,7 @@ const FORELEG_TOP = [0.76, 0.04];        // [y, z] apex closing the loft inside 
 const FORELEG_X = 0.06;                  // the paws' centre plane
 const FORELEG_MID = 0.012;               // nearer the midline than this, a tucked front end does not go
 const FORELEG_SINK = 0.012;              // how much lower than `proud` the front corner lies as it turns in
-const SEAM_SINK = 0.01;                  // how far under the skin a seam vertex lies; on it, the edges between stand out
+const SEAM_SINK = 0.02;                  // how far under the skin a seam vertex lies; on it, the edges between stand out
 const FORELEG_JOIN = [0.55, 0.06];       // [y, z] of the mesh origin, inside the chest
 
 // THE HAUNCH is a boss on the flank: an egg lying on its side, half sunk in
