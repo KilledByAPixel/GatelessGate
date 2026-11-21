@@ -25,12 +25,13 @@
     proportions, not a lens. Each animal is fitted to its own cell, so the
     sheet does NOT show relative size; press S to put them all on one scale.
 
-      V   side view / three-quarter
+      V   side view / three-quarter / front / front three-quarter
       M   lit / flat-ink silhouette
       S   fit each cell / one shared scale
       L   labels and cell borders on / off (off for a clean screenshot)
 
-    ?only=horse,buffalo narrows the sheet. window.sheet.capture() returns the
+    ?only=horse,buffalo narrows the sheet; ?view=34, ?view=front or
+    ?view=front34 opens on that view. window.sheet.capture() returns the
     canvas as a dataURL for shot.js (use its url flag to open this page).
 
     The roster is the model viewer's own, so a new creature registered there
@@ -59,8 +60,13 @@
     renderer.setPixelRatio(window.devicePixelRatio || 1);
     renderer.setScissorTest(true);
 
+    // yaw from the animal's own front (+z), pitch above level, in degrees.
+    // Front-on is where an ear's or a horn's join to the skull shows, and a
+    // side view hides it entirely.
+    const VIEWS = { side: [90, 0], 34: [50, 14], front: [0, 0], front34: [22, 10] };
+    const ORDER = ['side', '34', 'front', 'front34'];
     const state = {
-      view: params.get('view') === '34' ? '34' : 'side',
+      view: VIEWS[params.get('view')] ? params.get('view') : 'side',
       ink: params.get('mode') === 'silhouette',
       shared: params.has('shared'),
     };
@@ -116,8 +122,8 @@
       renderer.clear();
 
       // every kit animal faces +z; from +x that is nose to the LEFT
-      const yaw = (state.view === 'side' ? 90 : 50) * Math.PI / 180;
-      const pitch = (state.view === 'side' ? 0 : 14) * Math.PI / 180;
+      const yaw = VIEWS[state.view][0] * Math.PI / 180;
+      const pitch = VIEWS[state.view][1] * Math.PI / 180;
       dir.set(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
 
       const MARGIN = 1.22;
@@ -156,7 +162,7 @@
     addEventListener('resize', draw);
     addEventListener('keydown', (e) => {
       const k = e.key.toLowerCase();
-      if (k === 'v') state.view = state.view === 'side' ? '34' : 'side';
+      if (k === 'v') state.view = ORDER[(ORDER.indexOf(state.view) + 1) % ORDER.length];
       else if (k === 'm') state.ink = !state.ink;
       else if (k === 's') state.shared = !state.shared;
       else if (k === 'l') document.body.classList.toggle('bare');
