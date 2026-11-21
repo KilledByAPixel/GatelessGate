@@ -59,8 +59,8 @@ import { mergeSimple } from './scatter.js';
 // carrying the mane and forelock), the tail's one skin. k45 bakes its own horse down to a single mesh with
 // `bakeStatic`, but the horse is shared, and an unbaked one still spends what
 // it spends.
-const HEAD_UP = 0.39;            // head centre above the body's axis, x height
-const HEAD_FWD = 0.69;           // ...and ahead of the animal's middle
+const HEAD_UP = 0.45;            // head centre above the body's axis, x height
+const HEAD_FWD = 0.80;           // ...and ahead of the animal's middle
 const HEAD_TILT = 0.9;           // rad the face hangs below level
 const KNEE = 0.17;               // rad, hind hock fold
 const POLL_LEAN = 0.15;          // rad the neck's last section leans back off upright
@@ -111,11 +111,19 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // The box is only the plan's placeholder — the loft below replaces it.
   const head = { shape: 'box', w: 0.08, hh: 0.105, d: 0.21, fwd: HEAD_FWD, up: HEAD_UP, tilt: HEAD_TILT };
 
+  // THE TRUNK IS A BARREL (`barrel`), about as deep at the chest as the leg
+  // under it is long, deepest just behind the elbow: with the plan's round
+  // section it was a diamond from the front and a ridge down the flank. The
+  // shoulder ends at a girth (`girth`), so it is a plane against the ribs.
+  // THE NECK IS LONG AND DEEP AT ITS BASE: its root takes most of the front
+  // of the chest (`root`), and the head is carried far enough out and up
+  // that the neck is well over half the height of the withers long. Shorter
+  // and shallower, it was a pony's head on a foal's neck.
   const { group, tail, plan } = makeQuadruped({
     height, color, seed,
     bodyR: 0.18, bodyLen: 0.59, bodyDrop: 0.055,
     torso: {
-      chest: 1.1, loin: 0.74, withers: 1.28, back: 1.05, croup: 1.06, round: 1, slab: 1,
+      chest: 1.18, loin: 0.8, withers: 1.28, back: 1.05, croup: 1.06, round: 1, slab: 1, barrel: 1, girth: 0.16,
       shoulderW: 1.0, barrelW: 1.14, hipW: 1.06,
     },
     legBury: 0.18,
@@ -129,19 +137,24 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     // at the hip. A foot longer than the cannon is thick: a hoof, not a paw,
     // but a definite block.
     //
+    // The forearm is a real muscle: about twice the cannon fore and aft at
+    // the elbow (`elbow`), tapering to the knee. The breast stands a little
+    // forward of the leg (`frontSet` is kept short of putting the leg under
+    // its point).
+    //
     // THE SHOULDER is not a mass on the leg at all. It is the chest's own
     // side carried straight down to the elbow (`torso.slab`), with the leg
     // widening into it above the forearm (`point` forward toward the breast,
     // `arm` back into the belly) and standing forward under the breast
     // (`frontSet`), so the front line of the leg runs on up into the chest.
-    legs: { knee: KNEE, shoulder: 2.2, thigh: 4.12, proud: 0.0, cannon: 0.72, foot: 1.2, gaskin: 0.8, frontSet: 0.07, hindSet: 0.1, point: 0.55, arm: 1.2 },
+    legs: { knee: KNEE, shoulder: 2.2, thigh: 4.12, proud: 0.0, cannon: 0.72, foot: 1.2, gaskin: 0.8, frontSet: 0.05, hindSet: 0.1, point: 0.55, arm: 1.2, elbow: 1.65 },
     // `set` at nothing: the nape leaves the topline AT the withers, so the
     // withers are the corner where back turns into neck — but not the only
     // one. `ease` carries the root's top a way up the nape, so the line
     // climbs from the withers at once and turns again at the root; left where
     // the plan puts it, the root stands under the withers and the crest
     // starts from a step down.
-    neck: { r: 0.068, w: 0.8, root: 0.4, set: 0.0, taper: 1.0, arch: 0.07, ease: 0.4 },
+    neck: { r: 0.068, w: 0.8, root: 0.65, set: 0.0, taper: 1.0, arch: 0.07, ease: 0.4 },
     head,
     // no snout: the muzzle is the front of the single head loft below.
     // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): rooted on the

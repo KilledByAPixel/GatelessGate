@@ -319,7 +319,7 @@ test('the neck is deeper at the shoulder than at the throat, and stays deep leav
     `two thirds of the way up the neck is ${(upper / withers).toFixed(3)}x withers deep`);
   // BUT IT IS A NECK. The mane's fullness is hair standing on the crest; drawn
   // as the neck's own depth it is a horse with a thick neck.
-  assert.ok(third / withers < 0.33 && upper / withers < 0.26,
+  assert.ok(third / withers < 0.36 && upper / withers < 0.26,
     `the neck itself stays slim: ${(third / withers).toFixed(3)}x and ${(upper / withers).toFixed(3)}x withers`);
   // The root runs withers to the point of the breast, and the breast stands
   // well up the chest — so the root is not the whole depth of the chest, and
