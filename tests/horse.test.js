@@ -378,22 +378,33 @@ test('the mane is hair on the neck: proud of the crest, narrower than it, steppe
   }
   assert.ok(wide > 0.1 && wide < 0.45, `its upper edge is ${wide.toFixed(2)}x the neck's half-width`);
 
-  // STEPPED: read lock by lock off the solids themselves. Each lock is a
-  // closed solid; its highest point above the crest at its two ends differ,
-  // and where one ends the next starts lower.
-  const tops = [];
-  for (let i = 0; i < E.count; i++) {
-    const z = E.getZ(i);
-    if (z < z0 || z > z1 - 0.02 * (z1 - z0)) continue;
-    const rise = E.getY(i) - at(z).y;
-    if (rise > 0.01 * withers) tops.push([z, rise]);
+  // STEPPED, AND RUN OUT ONTO THE WITHERS: read off the hair's own outline,
+  // poll back to the withers, as its height over the topline under it. Where
+  // one lock ends and the next starts lower the outline drops at once; along
+  // a lock it only ramps. The last lock is the exception: it falls away to
+  // nothing on the withers, so the mane does not end in a step of its own on
+  // top of the corner where the neck leaves the back.
+  const oW = (rings - 5) * SEG;
+  const wth = [p.getY(oW + TOP) + body.position.y, p.getZ(oW + TOP)];
+  const line = (z) => (z >= z0 ? at(z).y : wth[0] + (crest[3][0] - wth[0]) * (z - wth[1]) / (z0 - wth[1]));
+  const M = 400, zEnd = z1 - 0.04 * (z1 - z0);
+  const rise = [];
+  for (let k = 0; k <= M; k++) {
+    const z = zEnd + (wth[1] - zEnd) * k / M;
+    const top = sectionY(hair, z).max;
+    rise.push(Number.isFinite(top) ? top - line(z) : 0);
   }
-  tops.sort((a, b) => b[0] - a[0]);              // poll first
   let drops = 0;
-  for (let i = 1; i < tops.length; i++) {
-    if (tops[i - 1][1] - tops[i][1] > 0.006 * withers && Math.abs(tops[i - 1][0] - tops[i][0]) < 0.03 * withers) drops++;
-  }
-  assert.ok(drops >= 3, `the outline steps down from lock to lock: ${drops} steps`);
+  for (let k = 1; k <= M; k++) if (rise[k - 1] - rise[k] > 0.006 * withers) drops++;
+  assert.ok(drops >= 3 && drops <= 5, `the outline steps down from lock to lock: ${drops} steps`);
+  const tail = rise.slice(Math.round(0.9 * M));
+  let step = 0;
+  for (let k = 1; k < tail.length; k++) step = Math.max(step, tail[k - 1] - tail[k]);
+  assert.ok(step < 0.004 * withers,
+    `the mane's last run to the withers has no step in it: ${(step / withers).toFixed(4)}x withers`);
+  assert.ok(rise[M - 2] < 0.012 * withers && rise[M - 2] > -0.01 * withers,
+    `the mane has run out by the withers: ${(rise[M - 2] / withers).toFixed(3)}x withers left standing`);
+  assert.ok(rise[Math.round(0.8 * M)] > 0.012 * withers, 'and it is still hair over the root of the neck');
 
   // The neck under it is the plain wedge: its own crest barely leaves the
   // straight line from withers to poll, so none of the fullness is neck.

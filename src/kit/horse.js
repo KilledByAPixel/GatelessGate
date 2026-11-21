@@ -69,17 +69,21 @@ const TAIL_LEAN = 0.16;          // rad the whole hank leans back off plumb
 // x height: enough to seat its top in the poll. No other neck ring is lifted —
 // see the mane block for why the crest is not the neck's own outline.
 const POLL_LIFT = 0.012;
-// THE MANE, as locks laid end to end down the crest from the poll to just
-// short of the withers: [where it starts, where it ends (fractions of the
-// crest's length), how high it stands at its front, and at its back (x
+// THE MANE, as locks laid end to end down the crest from the poll onto the
+// withers: [where it starts, where it ends (fractions of the crest's length,
+// poll to withers), how high it stands at its front, and at its back (x
 // height)]. Each rises to its own back end and the next starts lower, so the
 // outline is stepped; they overlap a little so no daylight shows between.
+// THE LAST ONE FALLS INSTEAD, and runs out to nothing on the withers: a mane
+// that stops short of them at full height ends in a step, and that step, on
+// top of the corner where the neck leaves the back, is a notch in the
+// topline.
 const MANE = [
-  [0.02, 0.21, 0.024, 0.036],
-  [0.19, 0.41, 0.034, 0.048],
-  [0.39, 0.61, 0.040, 0.052],
-  [0.59, 0.80, 0.036, 0.046],
-  [0.78, 0.96, 0.024, 0.034],
+  [0.02, 0.19, 0.024, 0.036],
+  [0.17, 0.37, 0.034, 0.048],
+  [0.35, 0.55, 0.040, 0.052],
+  [0.53, 0.73, 0.036, 0.046],
+  [0.71, 1.0, 0.032, 0.002],
 ];
 const MANE_W = 0.4;              // half-width at its foot, x the neck's own there
 const MANE_TOP = 0.5;            // ...and how much of that is left along its top edge
@@ -111,7 +115,7 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     height, color, seed,
     bodyR: 0.18, bodyLen: 0.59, bodyDrop: 0.055,
     torso: {
-      chest: 1.1, loin: 0.74, withers: 1.28, back: 1.05, croup: 1.06, round: 1,
+      chest: 1.1, loin: 0.74, withers: 1.28, back: 1.05, croup: 1.06, round: 1, slab: 1,
       shoulderW: 1.0, barrelW: 1.14, hipW: 1.06,
     },
     legBury: 0.18,
@@ -124,10 +128,20 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     // stood further out, the thigh's cap also breaks the flank as a dark dart
     // at the hip. A foot longer than the cannon is thick: a hoof, not a paw,
     // but a definite block.
-    legs: { knee: KNEE, shoulder: 2.2, thigh: 4.12, proud: 0.0, cannon: 0.72, foot: 1.2, gaskin: 0.8, frontSet: 0.04, hindSet: 0.1 },
+    //
+    // THE SHOULDER is not a mass on the leg at all. It is the chest's own
+    // side carried straight down to the elbow (`torso.slab`), with the leg
+    // widening into it above the forearm (`point` forward toward the breast,
+    // `arm` back into the belly) and standing forward under the breast
+    // (`frontSet`), so the front line of the leg runs on up into the chest.
+    legs: { knee: KNEE, shoulder: 2.2, thigh: 4.12, proud: 0.0, cannon: 0.72, foot: 1.2, gaskin: 0.8, frontSet: 0.07, hindSet: 0.1, point: 0.55, arm: 1.2 },
     // `set` at nothing: the nape leaves the topline AT the withers, so the
-    // withers are the corner where back turns into neck
-    neck: { r: 0.068, w: 0.8, root: 0.4, set: 0.0, taper: 1.0, arch: 0.07 },
+    // withers are the corner where back turns into neck — but not the only
+    // one. `ease` carries the root's top a way up the nape, so the line
+    // climbs from the withers at once and turns again at the root; left where
+    // the plan puts it, the root stands under the withers and the crest
+    // starts from a step down.
+    neck: { r: 0.068, w: 0.8, root: 0.4, set: 0.0, taper: 1.0, arch: 0.07, ease: 0.4 },
     head,
     // no snout: the muzzle is the front of the single head loft below.
     // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): rooted on the
@@ -166,7 +180,7 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // trunk the plan built, and a ring that grows upward still contains
   // everything that was sunk in it. The rings behind the hip are left alone —
   // the plan rounds the rump with them and read the tail's root off them.
-  let crest;                       // the neck's upper line, poll to withers: [{ y, z, w }]
+  let crest;                       // the neck's upper line, poll to root and on to the withers: [{ y, z, w }]
   {
     const body = group.children.find((c) => c.name === 'body');
     const P = body.geometry.getAttribute('position');
@@ -205,7 +219,7 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     let croupRing = 0;
     while (croupRing < rings - 1 && P.getZ(croupRing * SEG + TOP) < plan.zHip) croupRing++;
     lift(croupRing, CROUP_LIFT);
-    crest = [1, 2, 3, 4].map((k) => {
+    crest = [1, 2, 3, 4, 5].map((k) => {
       const o = (rings - k) * SEG;
       return { y: P.getY(o + TOP) + body.position.y, z: P.getZ(o + TOP), w: Math.abs(P.getX(o)) };
     });
