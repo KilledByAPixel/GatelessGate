@@ -12,6 +12,15 @@ import { triangles, sectionY, sectionZ } from './helpers/quadruped-probe.js';
 
 const H = 1.4;
 
+// The ears and the hanging hair share one mesh. The ears stand wholly out to
+// one side of the skull; everything in that mesh that reaches the middle of
+// him is hair.
+const isHair = (t) => {
+  const xs = [t[0], t[3], t[6]];
+  return Math.min(...xs.map(Math.abs)) < 0.09 * H || (Math.min(...xs) < 0 && Math.max(...xs) > 0);
+};
+const points = (tris) => tris.flatMap((t) => [0, 3, 6].map((k) => new THREE.Vector3(t[k], t[k + 1], t[k + 2])));
+
 function probe() {
   const b = makeBuffalo({ height: H });
   const root = b.group;
@@ -80,7 +89,7 @@ test('the back falls in one line from high withers to a low croup', () => {
 });
 
 test('the head is one deep blunt block, not a wedge and not a ball with a muzzle on it', () => {
-  const { root, cloud, ext, body } = probe();
+  const { root, cloud, ext, body, withers } = probe();
   const names = [];
   root.traverse((o) => names.push(o.name));
   assert.ok(!names.includes('snout'), 'skull and muzzle are one piece');
@@ -98,6 +107,10 @@ test('the head is one deep blunt block, not a wedge and not a ball with a muzzle
   const hb = geo.boundingBox;
   const deep = hb.max.y - hb.min.y, long = hb.max.z - hb.min.z;
   assert.ok(deep > 0.6 * long, `the skull is ${deep.toFixed(2)} deep on ${long.toFixed(2)} long`);
+  // ...but it is a skull, and a jaw's depth is all it has: carried deeper to
+  // stand for the beard under it, the head is as deep as the chest it hangs
+  // in front of and the beard is body
+  assert.ok(deep < 0.22 * withers, `the skull is ${(deep / withers).toFixed(3)} of the withers' height deep`);
   // and BLUNT: the last quarter of it keeps most of that depth
   const p = geo.getAttribute('position');
   let lo = Infinity, hi = -Infinity;
@@ -158,7 +171,7 @@ test('the horns sweep wider than they rise, out and back', () => {
 
 test('small ears hang below the horn bases', () => {
   const { root, horns, cloud, ext } = probe();
-  const ears = cloud('ear');
+  const ears = points(triangles(root, (o) => o.name === 'ear').filter((t) => !isHair(t)));
   assert.ok(ears.length > 0, 'the buffalo has ears');
   const hornBase = Math.min(...horns.map((h) => h.position.y));
   const mid = ears.reduce((s, p) => s + p.y, 0) / ears.length;
@@ -166,11 +179,95 @@ test('small ears hang below the horn bases', () => {
   // on both sides, and much the smaller pair
   assert.ok(Math.min(...ears.map((p) => p.x)) < 0 && Math.max(...ears.map((p) => p.x)) > 0);
   assert.ok(ext(ears, 'x') < 0.6 * ext(cloud('horn'), 'x'), 'the ears do not compete with the horns');
-  // and the pair is one draw: the whole skull costs what the ball and spikes did
+  // and the pair is one draw, hair and all: the whole skull costs what the ball and spikes did
+  assert.equal(root.children.filter((c) => c.name === 'ear').length, 1, 'one mesh for the ears and the hair');
   let meshes = 0;
   root.traverse((o) => { if (o.isMesh && !o.parent.name.includes('tail')) meshes++; });
   // body, four legs, head, an ear pair, two horns
   assert.ok(meshes <= 9, `${meshes} meshes besides the tail`);
+});
+
+// WHAT HANGS UNDER THE HEAD IS HAIR, NOT BODY: a beard under the jaw running
+// back down the throat to a bib on the brisket. Four things make it hair, and
+// each is read off the mesh: it hangs below everything it is hung from; its
+// lower edge is a few large points with the page between them; it is
+// narrower than what carries it; and it stops clear of the front legs.
+test('a beard and a fringe hang under the head and throat, ragged, narrow and clear of the legs', () => {
+  const { root, body } = probe();
+  const hair = triangles(root, (o) => o.name === 'ear').filter(isHair);
+  assert.ok(hair.length > 0, 'the buffalo has hair hanging under him');
+  const skull = triangles(root, (o) => o.name === 'head');
+  const solid = [...body, ...skull];
+  const front = root.children.filter((c) => c.name === 'leg' && c.position.z > 0);
+  const legs = triangles(root, (o) => front.includes(o));
+  const zs = points(hair).map((p) => p.z);
+  const z0 = Math.min(...zs), z1 = Math.max(...zs);
+  const chin = Math.max(...points(skull).map((p) => p.z));
+  assert.ok(z1 > chin - 0.2 * H && z0 < chin - 0.3 * H,
+    `it runs from under the jaw back to the brisket: z ${(z0 / H).toFixed(2)} to ${(z1 / H).toFixed(2)}`);
+
+  // THE LOWER EDGE, walked front to back: where it turns from falling to
+  // rising is a point, from rising to falling a notch
+  const N = 240, edge = [], hung = [];
+  for (let i = 1; i < N; i++) {
+    const z = z0 + (z1 - z0) * (i / N);
+    edge.push(sectionY(hair, z).min);
+    hung.push(sectionY(solid, z).min - edge[i - 1]);
+  }
+  assert.ok(Math.max(...hung) > 0.12 * H, `its longest point hangs ${(Math.max(...hung) / H).toFixed(3)} of his height below him`);
+  const turns = [];
+  for (let i = 1; i < edge.length - 1; i++) {
+    const down = edge[i] < edge[i - 1], up = edge[i + 1] > edge[i];
+    if (down && up) turns.push({ y: edge[i], point: true });
+    else if (!down && !up) turns.push({ y: edge[i], point: false });
+  }
+  const tips = turns.filter((t) => t.point);
+  assert.ok(tips.length >= 3 && tips.length <= 6, `a few large points, not a straight edge and not a comb: ${tips.length}`);
+  for (let i = 1; i < turns.length - 1; i++) {
+    if (turns[i].point) continue;
+    const bite = turns[i].y - Math.max(turns[i - 1].y, turns[i + 1].y);
+    assert.ok(bite > 0.04 * H, `the page shows ${(bite / H).toFixed(3)} of his height up between two points`);
+  }
+
+  // NARROWER THAN WHAT CARRIES IT, all the way along
+  const across = (tris, z) => {
+    let w = 0;
+    for (const t of tris) {
+      for (let e = 0; e < 3; e++) {
+        const a = e * 3, b = ((e + 1) % 3) * 3;
+        if ((t[a + 2] - z) * (t[b + 2] - z) > 0 || t[a + 2] === t[b + 2]) continue;
+        w = Math.max(w, Math.abs(t[a] + (t[b] - t[a]) * ((z - t[a + 2]) / (t[b + 2] - t[a + 2]))));
+      }
+    }
+    return w;
+  };
+  for (let i = 1; i < 12; i++) {
+    const z = z0 + (z1 - z0) * (i / 12);
+    assert.ok(across(hair, z) < 0.75 * across(solid, z),
+      `at z = ${(z / H).toFixed(2)} the hair is ${(across(hair, z) / across(solid, z)).toFixed(2)} of the width it hangs from`);
+  }
+
+  // ITS FOOT IS BURIED: the top of every section is under the hide
+  const tops = new Map();
+  for (const p of points(hair)) {
+    const k = p.z.toFixed(4);
+    if (!tops.has(k) || p.y > tops.get(k).y) tops.set(k, p);
+  }
+  for (const p of tops.values()) {
+    assert.ok(inside(body, p) || inside(skull, p), `the hair's foot at z = ${(p.z / H).toFixed(2)} is inside him`);
+  }
+
+  // CLEAR OF THE FRONT LEGS: below the brisket there is paper between the
+  // last point and the leg, at every height the point reaches
+  const lowest = Math.min(...edge);
+  const brisket = sectionY(body, z0).min;
+  let rows = 0;
+  for (let y = lowest + 0.01 * H; y < brisket - 0.02 * H; y += 0.01 * H) {
+    const gap = sectionZ(hair, y).min - sectionZ(legs, y).max;
+    assert.ok(gap > 0.05 * H, `at y = ${(y / H).toFixed(2)} the hair stands ${(gap / H).toFixed(3)} of his height ahead of the leg`);
+    rows++;
+  }
+  assert.ok(rows > 8, 'and the last point hangs well below the brisket');
 });
 
 // The back line is the plan's own (`torso.sag`), not a restatement laid over

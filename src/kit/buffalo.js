@@ -23,11 +23,17 @@ import { mergeSimple } from './scatter.js';
 //      wherever the head is — but the forehead must fall STEEPER than the nape
 //      does: at the same slope the two are one cone from shoulder to nose, and
 //      the head is not there at all.
-//   3. THE HEAD IS A DEEP BLUNT BLOCK: broad flat forehead, deep jaw, and a
-//      muzzle that keeps most of the skull's depth and breadth and ends
-//      square. Its mass is DEPTH and BREADTH. A head that gets its size from
-//      length and narrows to the nose is an anteater's; a ball with a muzzle
-//      stuck on it is a toy whatever its size.
+//   3. THE HEAD IS A BLUNT BLOCK, AND WHAT HANGS UNDER IT IS HAIR. Broad flat
+//      forehead, a short muzzle that keeps most of the skull's depth and
+//      breadth and ends square: its mass is DEPTH and BREADTH. A head that
+//      gets its size from length and narrows to the nose is an anteater's; a
+//      ball with a muzzle stuck on it is a toy whatever its size. But the
+//      depth under the jaw and down the throat is NOT skull and not neck.
+//      Lofted as one with them it was a head as deep as the chest on a neck
+//      with a dewlap, all of it body. It is a beard and a fringe: a narrower
+//      thing hung from the jaw, the throat and the brisket, with a ragged
+//      lower edge (see THE HAIR below), and the skull and neck over it are
+//      kept lean so there is somewhere for it to hang.
 //   4. THE HORNS ARE A WIDE CRESCENT LAID BACK. They leave the sides of the
 //      poll going straight out, then sweep back along the neck and turn in at
 //      the tips, always reaching further sideways than they rise. Horns that
@@ -74,16 +80,16 @@ const BACK_SAG = 0.04;
 // head-local. The top row is the forehead line and is kept nearly straight —
 // that plane is what the horns continue. The bottom row is deepest at the jaw,
 // just ahead of the centre, where the neck's throat line arrives, and gives
-// up little of that on the way to the nose. The rings sit about evenly either
-// side of the origin in depth, because that is where the neck's last ring is
-// centred and it has to end inside them.
+// up little of that on the way to the nose — but it is the jaw's own depth
+// and no more: what hangs below it is the beard's to draw. The neck's last
+// ring is centred on the origin and has to end inside the section there.
 const HEAD_RINGS = [
-  [-0.13, 0.100, 0.120, -0.060],   // poll, closing behind the horn bases
-  [-0.06, 0.135, 0.155, -0.140],   // forehead at its broadest
-  [0.05, 0.132, 0.150, -0.170],    // cheek and jaw
-  [0.17, 0.112, 0.135, -0.135],    // the face narrows a little
-  [0.30, 0.104, 0.125, -0.125],    // ...and holds: a broad, deep muzzle
-  [0.37, 0.094, 0.112, -0.108],    // blunt end
+  [-0.13, 0.100, 0.120, -0.055],   // poll, closing behind the horn bases
+  [-0.06, 0.135, 0.155, -0.105],   // forehead at its broadest
+  [0.04, 0.130, 0.150, -0.120],    // cheek and jaw
+  [0.14, 0.108, 0.132, -0.100],    // the face narrows a little
+  [0.24, 0.096, 0.116, -0.088],    // ...and holds: a short, broad muzzle
+  [0.30, 0.086, 0.104, -0.074],    // blunt end
 ];
 
 // One horn (the +x one), base to tip, as offsets from its base in the ANIMAL'S
@@ -121,6 +127,61 @@ const EAR_PATH = [
   [0.17, -0.06, -0.04, 0.004],
 ];
 const EAR_THICK = 0.5;
+
+// THE HAIR: a beard under the jaw running back as a fringe down the throat to
+// a bib on the brisket, ending ahead of the front legs. One curtain, hung
+// from the underline of head and trunk — which is read off the meshes, so it
+// follows the head wherever that is carried — and three things make it hair
+// rather than more body:
+//
+//   - IT IS NARROWER than everything it hangs from, and narrows again to its
+//     lower edge. The step in width is what the light finds from any angle
+//     but square-on; from in front the bib is a wedge between the legs.
+//   - ITS LOWER EDGE IS A FEW LARGE POINTS with the page showing between them.
+//     A straight edge is a dewlap. Many small points are a texture, and gone
+//     at the distance he is seen from.
+//   - THE LAST POINT HANGS CLEAR OF THE FRONT LEG: the curtain stops short of
+//     the leg and its last edge falls forward of plumb, so paper shows behind
+//     it all the way up to the chest.
+//
+// Its lower edge, front leg to chin: [where along that run, how far the edge
+// hangs below the straight line from the brisket to the chin (x height)].
+// Points and the notches between them alternate; the two ends are drawn up
+// into the body.
+const FUR = [
+  [0.00, -1], [0.20, 0.165], [0.33, 0.050], [0.45, 0.130], [0.55, 0.045],
+  [0.66, 0.140], [0.76, 0.035], [0.86, 0.095], [0.96, -1],
+];
+const FUR_GAP = 0.035;            // how far ahead of the front leg the curtain ends, x height
+const FUR_W = [0.11, 0.06];      // half-width at its foot, on the brisket and under the chin, x height
+const FUR_EDGE = 0.15;           // ...and how much of that is left along its lower edge
+const FUR_SINK = 0.03;           // how far its foot is buried in what it hangs from, x height
+
+// The underside of a set of triangles over one spot: the lowest point at
+// which the plumb line through (x, z) meets any of them.
+function under(tris, x, z) {
+  let low = Infinity;
+  for (const [a, b, c] of tris) {
+    const d = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z);
+    if (Math.abs(d) < 1e-12) continue;
+    const u = ((b.z - c.z) * (x - c.x) + (c.x - b.x) * (z - c.z)) / d;
+    const v = ((c.z - a.z) * (x - c.x) + (a.x - c.x) * (z - c.z)) / d;
+    if (u < 0 || v < 0 || u + v > 1) continue;
+    low = Math.min(low, u * a.y + v * b.y + (1 - u - v) * c.y);
+  }
+  return low;
+}
+
+// a mesh's triangles in its parent's frame
+function trianglesOf(mesh) {
+  mesh.updateMatrix();
+  const p = mesh.geometry.getAttribute('position'), idx = mesh.geometry.index;
+  const n = idx ? idx.count : p.count, out = [];
+  for (let i = 0; i < n; i += 3) {
+    out.push([0, 1, 2].map((k) => new THREE.Vector3().fromBufferAttribute(p, idx ? idx.getX(i + k) : i + k).applyMatrix4(mesh.matrix)));
+  }
+  return out;
+}
 
 // A closed tube along a path of [x, y, z, r]. Each ring stands square to the
 // path and is an ellipse: `r` across the path in the horizontal, `r * thick`
@@ -244,7 +305,7 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // nape sags between the withers and the poll, and that sag is where the
     // horns show — which is also why the nape leaves the topline close to the
     // withers' own peak (`set`) rather than carrying their height forward.
-    neck: { r: 0.13, w: 0.88, root: 0.8, set: 0.12, taper: 1.0, arch: -0.1 },
+    neck: { r: 0.105, w: 0.95, root: 0.8, set: 0.12, taper: 1.0, arch: -0.1 },
     // a placeholder the loft below replaces: the plan only has to put the head
     // where it is carried and turn it down
     head: { shape: 'box', w: 0.2, hh: 0.2, d: 0.4, fwd: HEAD_FWD, up: HEAD_UP, tilt: HEAD_TILT },
@@ -335,16 +396,55 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     group.add(m);
   }
 
-  // ---- the ears: one mesh for the pair ----------------------------------------
-  // Nothing animates them, so the pair is a single draw. They are a part the
-  // older buffalo did not have, added on purpose (rule 5 above) and paid for by
-  // the pieces the single-loft head removed.
+  // ---- the hair under him -------------------------------------------------------
+  // see THE HAIR above. One loft through a section at every point and notch of
+  // the lower edge; each section's foot is sunk into whatever it hangs from there.
+  let fur;
+  {
+    const solid = [group.children.find((c) => c.name === 'body'), headMesh].flatMap(trianglesOf);
+    const chin = solid.flat().reduce((a, p) => (p.z > headMesh.position.z && p.y < a.y ? p : a), new THREE.Vector3(0, Infinity, 0));
+    let zLeg = -Infinity;
+    for (const leg of group.children.filter((c) => c.name === 'leg' && c.position.z > 0)) {
+      for (const p of trianglesOf(leg).flat()) zLeg = Math.max(zLeg, p.z);
+    }
+    const z0 = zLeg + FUR_GAP * h, y0 = under(solid, 0, z0);
+    const pos = [], idx = [];
+    FUR.forEach(([u, drop], i) => {
+      const z = z0 + (chin.z - z0) * u;
+      const w = (FUR_W[0] + (FUR_W[1] - FUR_W[0]) * u) * h;
+      // sunk where the curtain's own edges meet him, not on the centreline:
+      // the brisket and the jaw both turn up toward their sides, and a foot
+      // laid from the middle stands out of them at its corners
+      // (a curtain wider than what is over it has no such place, and hangs
+      // from the middle rather than from nothing)
+      const top = under(solid, w, z);
+      const foot = (Number.isFinite(top) ? top : under(solid, 0, z)) + FUR_SINK * h;
+      // an end is drawn up into the body; a point never stands above its foot
+      const edge = drop < 0 ? foot : Math.min(foot, y0 + (chin.y - y0) * u - drop * h);
+      pos.push(-w, foot, z, -w * FUR_EDGE, edge, z, w * FUR_EDGE, edge, z, w, foot, z);
+      if (i === 0) return;
+      const a = (i - 1) * 4, b = i * 4;
+      for (let j = 0; j < 4; j++) {
+        const j2 = (j + 1) % 4;
+        idx.push(a + j, a + j2, b + j, a + j2, b + j2, b + j);
+      }
+    });
+    const end = (FUR.length - 1) * 4;
+    idx.push(0, 2, 1, 0, 3, 2, end, end + 1, end + 2, end, end + 2, end + 3);
+    fur = closed(pos, idx);
+  }
+
+  // ---- the ears: one mesh for the pair, and the hair rides in it ---------------
+  // Nothing animates either, so together they are a single draw. The ears are
+  // a part the older buffalo did not have, added on purpose (rule 5 above) and
+  // paid for by the pieces the single-loft head removed.
   {
     const geos = [-1, 1].map((sx) => {
       const g = tube(side(EAR_PATH, sx), 5, EAR_THICK);
       const at = onHead(EAR_ROOT, sx);
       return g.translate(at.x, at.y, at.z);
     });
+    geos.push(fur);
     const ears = new THREE.Mesh(mergeSimple(geos), material);
     ears.name = 'ear';
     group.add(ears);
