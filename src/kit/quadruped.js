@@ -7,7 +7,7 @@ import { makeTail } from './tail.js';
 // number here is in the units its option is documented in beside the builder.
 const TORSO_DEFAULTS = {
   chest: 1.1, loin: 0.72, withers: 1.0, back: 0.9, croup: 0.94, rump: 1, round: 0, sag: null,
-  shoulderW: 0.8, barrelW: 0.95, hipW: 0.85, slab: 0, barrel: 0, girth: null,
+  shoulderW: 0.8, barrelW: 0.95, hipW: 0.85, slab: 0, barrel: 0, girth: null, keel: null,
 };
 // THE SLAB-SIDED CHEST (`torso.slab`). SLAB_Y is how far down a fully slabbed
 // section's two lower corners stand, x its half-depth (round, they stand on
@@ -24,6 +24,18 @@ const SLAB_Y = 0.84, SLAB_MAX = 0.97, SLAB_BACK = 0.3;
 // it, so the shoulder ahead and the ribs behind both turn away from it.
 const GIRTH_IN = 0.93;
 const BARREL_BACK = [0.93, 0.6], BARREL_BELLY = [0.88, 0.64];
+// THE KEEL (`torso.keel`), as where a section's three lower corners a side
+// stand, [across, x half-width; down, x half-depth], from the side toward the
+// keel: round, fully barrelled, fully slabbed. A slabbed section's corners
+// stand across as fractions of the slab's own (see THE CORNER STANDS OVER THE
+// LEG'S OWN OUTER SIDE): its first is that corner, carried down only as far
+// as the legs' tops, and the rest turn under between the legs.
+const KEEL_ROUND = [[0.924, 0.383], [0.707, 0.707], [0.383, 0.924]];
+const KEEL_BARREL = [[0.97, 0.36], [0.84, 0.68], [0.46, 0.93]];
+const KEEL_SLAB = [[1, 0.7], [0.75, 0.86], [0.38, 0.96]];
+// How far from the flank's depth to the brisket's a keeled underline has come
+// at the middle of the barrel: a straight chord there is under half.
+const KEEL_SWEEP = 0.5;
 // THE ROUND OF A RUMP (`torso.round`), as the three sections it is drawn
 // with behind the hip: [how far along the overhang, how deep the underside
 // still is (x loin), half-width (x hipW)], from the end forward. The topline
@@ -111,6 +123,9 @@ const HEX = Math.sin(Math.PI / 3);
 // How far forward the front leg's flare ring is carried, as a share of what
 // it gains over the column: see THE FLARE MEETS THE TRUNK ALONG A SLANT.
 const FLARE_LEAD = 0.3;
+// How steeply a keeled chest's flare ring may be lifted corner by corner
+// across the leg, rise over run: see A KEELED CHEST IS NOT FLAT ACROSS EITHER.
+const LEAN_MAX = 1;
 
 // The shared body plan for every four-legged animal in the book. Everything
 // scales off `height` and faces +z; a species is this plan at its own
@@ -158,6 +173,9 @@ const FLARE_LEAD = 0.3;
 //              round section everywhere, 1 carries the chest's sides straight
 //              down to a corner over each leg, with the brisket a keel
 //              between (see THE CHEST IS SLAB-SIDED beside the rows)
+//   keel       null keeps one lower corner a side. A number turns the
+//              underside under on a curve, rump to breast, and sweeps the
+//              underline up from the brisket (see THE UNDERSIDE IS A KEEL)
 //
 // The shoulder section stands over the front legs and the hip section over the
 // hind ones (`hipZ`), so `bodyLen` now only decides how far the breast and the
@@ -200,7 +218,7 @@ export function makeQuadruped({
   // trunk: bodyR is its half-depth and the unit every torso knob is in;
   // legH + bodyDrop is the height of its axis off the ground
   bodyR = 0.22, bodyLen = 0.72, bodyDrop = 0.16,
-  torso = null,          // { chest, loin, withers, back, croup, rump, round, sag, slab, barrel, girth, shoulderW, barrelW, hipW } — see THE TORSO
+  torso = null,          // { chest, loin, withers, back, croup, rump, round, sag, slab, barrel, girth, keel, shoulderW, barrelW, hipW } — see THE TORSO
   // legs
   legH = 0.52, legR = 0.055, legTaper = 0.82, hipX = 0.13, hipZ = 0.32,
   legBury = 0.06,        // how far above the flank's underside the shoulder/thigh ring rides, x height
@@ -260,6 +278,11 @@ export function makeQuadruped({
   const profileLoft = (stations, seg, apex0, apex1) => {
     const pos = [], idx = [];
     for (const s of stations) {
+      // a section that states its own ring, as [across x w, along x a] points
+      if (s.p) {
+        for (const [x, y] of s.p) pos.push(x * s.w, s.c[0] + y * s.a[0], s.c[1] + y * s.a[1]);
+        continue;
+      }
       for (let j = 0; j < seg; j++) {
         const t = (j / seg) * Math.PI * 2;
         const sn = Math.sin(t);
@@ -269,7 +292,7 @@ export function makeQuadruped({
           pos.push(Math.sign(cs) * s.k[0] * s.w, s.c[0] - s.k[1] * s.a[0], s.c[1] - s.k[1] * s.a[1]);
         } else if (s.u && sn > 0.5 && Math.abs(cs) > 0.5) {
           pos.push(Math.sign(cs) * s.u[0] * s.w, s.c[0] + s.u[1] * s.a[0], s.c[1] + s.u[1] * s.a[1]);
-        } else pos.push(cs * s.w, s.c[0] + sn * s.a[0], s.c[1] + sn * s.a[1]);
+        } else pos.push(cs * s.w, s.c[0] + sn * s.a[0] + (s.dy ? s.dy[j] : 0), s.c[1] + sn * s.a[1] + (s.dz ? s.dz[j] : 0));
       }
     }
     const last = stations.length - 1;
@@ -341,6 +364,11 @@ export function makeQuadruped({
     ...rear.map(([u, top, bot, w]) => [zHip - u * over, top, bot, w]),
     [zHip + 0.08 * span, backAt(0.08, T.croup), -0.96 * T.loin, T.hipW],
     [zHip + 0.36 * span, backAt(0.36, lerp(T.croup, T.back, 0.8)), -T.loin, lerp(T.hipW, T.barrelW, 0.7)],
+    // a keeled trunk's underline sweeps up from the brisket on a curve, not
+    // a chord: one more section on it, its top and width on the lines either
+    // side and its underside fuller than halfway (KEEL_SWEEP)
+    ...(T.keel != null ? [[zHip + 0.52 * span, backAt(0.52, lerp(lerp(T.croup, T.back, 0.8), T.back, 0.5)),
+      -lerp(T.loin, T.chest, KEEL_SWEEP), lerp(lerp(T.hipW, T.barrelW, 0.7), T.barrelW, 0.5)]] : []),
     [zHip + 0.68 * span, backAt(0.68, T.back), -lerp(T.loin, T.chest, 0.8), T.barrelW, T.girth == null ? SLAB_BACK * T.slab : 0],
     [zShoulder, T.withers, -T.chest, T.shoulderW, T.slab],
   ];
@@ -393,8 +421,45 @@ export function makeQuadruped({
     Math.max(lerp(Math.SQRT1_2, slabX, slab || 0), lerp(Math.SQRT1_2, BARREL_BELLY[0], B)),
     Math.max(lerp(Math.SQRT1_2, SLAB_Y, slab || 0), lerp(Math.SQRT1_2, BARREL_BELLY[1], B)),
   ] : null);
+  //
+  // THE UNDERSIDE IS A KEEL, where a species asks (`torso.keel`). With one
+  // lower corner a side, a slabbed or barrelled section is a box: its sides
+  // come down to a corner and the underside between the two is a floor,
+  // nearly level, facing straight down. Side-on that floor is a dark band
+  // under a hard edge the whole length of the belly; from the front it is a
+  // dark rectangle between the forelegs, and the legs are pegs pushed up into
+  // it. So the section takes three lower corners a side instead of one, laid on
+  // a curve: the side turns under early and the brisket hangs below the
+  // legs' tops as a rounded keel between them, and the belly as a round
+  // underside — the light falls off it in steps rather than at one edge.
+  // `keel` runs from the plan's own one-corner section (0) to the curve (1);
+  // either way the underline takes one more section (see KEEL_SWEEP).
+  const KEEL = T.keel != null;
+  const SEG = KEEL ? 12 : 8;
+  const roundK = [Math.SQRT1_2, Math.SQRT1_2];
+  // what one corner turns into, as [across, down] corners from the side to
+  // the keel: the old corner and two more on the way on to the keel...
+  const asOctagon = (K) => [K, ...[1 / 3, 2 / 3].map((t) => [lerp(K[0], 0, t), lerp(K[1], 1, t)])];
+  // ...or the curve, round, barrelled, slabbed
+  const keelOf = (slab) => {
+    const S = KEEL_SLAB.map(([x, y]) => [x * slabX, y]);
+    return KEEL_ROUND.map((p, i) => p.map((v, k) => lerp(lerp(v, KEEL_BARREL[i][k], B), S[i][k], slab || 0)));
+  };
+  const lowerOf = (slab, round) => {
+    const from = asOctagon(round ? roundK : corner(slab) || roundK);
+    const to = round ? KEEL_ROUND : keelOf(slab);
+    return from.map((p, i) => p.map((v, k) => lerp(v, to[i][k], T.keel)));
+  };
+  // the ring a keeled section is drawn with, in the order the plain ring runs
+  const ringOf = (slab, round) => {
+    const u = round ? roundK : upper || roundK;
+    const lo = lowerOf(slab, round);
+    return [[1, 0], [u[0], u[1]], [0, 1], [-u[0], u[1]], [-1, 0],
+      ...lo.map(([x, y]) => [-x, -y]), [0, -1], ...lo.slice().reverse().map(([x, y]) => [x, -y])];
+  };
   const station = ([z, top, bot, w, slab]) => ({
     c: [(top + bot) / 2 * R, z], a: [(top - bot) / 2 * R, 0], w: w * R, k: corner(slab), u: upper,
+    p: KEEL ? ringOf(slab) : undefined,
   });
   const stations = rows.map(station);
   const rearApex = [yEnd * R, zHip - over];
@@ -420,7 +485,7 @@ export function makeQuadruped({
     const rEnd = N.r * h;
     const w0 = 0.78 * T.shoulderW * R, wEnd = rEnd * N.w;
     const rootAt = stations.length;
-    stations.push({ c: c0, a: a0, w: w0, k: corner(T.slab), u: upper });
+    stations.push({ c: c0, a: a0, w: w0, k: corner(T.slab), u: upper, p: KEEL ? ringOf(T.slab) : undefined });
     // Between root and head the section turns from the root's slant to square
     // across the neck, and narrows on a curve rather than a straight wedge —
     // `taper` above 1 spends the depth early, which is a neck that leaves a
@@ -435,6 +500,7 @@ export function makeQuadruped({
         c: [lerp(c0[0], Hy, t) + nape[0] * bow, lerp(c0[1], Hz, t) + nape[1] * bow],
         a: [ay / an * m, az / an * m],
         w: lerp(wEnd, w0, k),
+        p: KEEL ? ringOf(0, true) : undefined,
       });
     }
     // THE BASE OF THE NECK. The root's top stands just under the withers and
@@ -453,6 +519,7 @@ export function makeQuadruped({
       const ty = wy + N.easeUp * N.ease * (ny - wy), tz = zShoulder + N.ease * (nz - zShoulder);
       stations[rootAt] = {
         c: [(ty + bot[0]) / 2, (tz + bot[1]) / 2], a: [(ty - bot[0]) / 2, (tz - bot[1]) / 2], w: w0, k: corner(T.slab), u: upper,
+        p: KEEL ? ringOf(T.slab) : undefined,
       };
     }
     // the last ring is centred on the head itself, so it ends inside the skull
@@ -467,8 +534,11 @@ export function makeQuadruped({
     frontApex = [0, zBreast];
   }
 
-  const body = new THREE.Mesh(profileLoft(stations, 8, rearApex, frontApex), mat);
+  const body = new THREE.Mesh(profileLoft(stations, SEG, rearApex, frontApex), mat);
   body.name = 'body';
+  // the ring it is lofted from: how many vertices to a section, and which of
+  // them is the top point and which the bottom one
+  body.userData.ring = { seg: SEG, top: 2, bot: KEEL ? 2 + SEG / 2 : 6 };
   // the mesh stands on the body's axis with no rotation of its own: local y is
   // up and local z is forward, so a species may scale x and y to breathe
   body.position.set(0, bodyY, 0);
@@ -498,12 +568,27 @@ export function makeQuadruped({
   const ROUND = [Math.SQRT1_2, Math.SQRT1_2];
   const cornerAt = (s) => corner(s.slab) || ROUND;
   const upperAt = upper || ROUND;
+  // A keeled section's half-profile instead, as the corners it is drawn
+  // through from the side to the top (side = 1) or the keel (side = -1), each
+  // [across, along] as fractions of the half-axes; and the one coordinate
+  // read off the other along them (`from`, `to`: 0 across, 1 along).
+  const halfOf = (s, side) => (side < 0 ? [[1, 0], ...lowerOf(s.slab), [0, 1]] : [[1, 0], upperAt, [0, 1]]);
+  const along = (poly, v, from, to) => {
+    const a = Math.min(1, Math.abs(v));
+    for (let i = 0; i < poly.length - 1; i++) {
+      const p = poly[i], q = poly[i + 1];
+      const lo = Math.min(p[from], q[from]), hi = Math.max(p[from], q[from]);
+      if (a >= lo && a <= hi) return hi - lo < 1e-9 ? Math.max(p[to], q[to]) : lerp(p[to], q[to], (a - p[from]) / (q[from] - p[from]));
+    }
+    return from === 0 ? 1 : 0;
+  };
   // see THE LEG RULE: the surface's own height at lateral offset x, upper
   // (side = 1) or under (side = -1), in world y
   const flank = (z, x, side) => {
     const s = sectionAt(z);
     const [cx, cy] = side < 0 ? cornerAt(s) : upperAt;
-    return bodyY + (s.top + s.bot) / 2 + side * (s.top - s.bot) / 2 * facet(x / s.w, cx, cy);
+    const f = KEEL ? along(halfOf(s, side), x / s.w, 0, 1) : facet(x / s.w, cx, cy);
+    return bodyY + (s.top + s.bot) / 2 + side * (s.top - s.bot) / 2 * f;
   };
 
   // ---- the legs --------------------------------------------------------------
@@ -523,12 +608,15 @@ export function makeQuadruped({
   // with it — except the first and the last, which are held level: the mass on
   // top closes in a cone up into the body, and a foot is flat on the ground.
   // A ring may instead state its own slant as a number in place of `level`:
-  // how far its front edge stands above its centre, as a fraction of rz.
+  // how far its front edge stands above its centre, as a fraction of rz. And
+  // a sixth entry lifts each of its corners on its own, as world heights
+  // above the ring's centre, for a ring laid along a hide that is not flat,
+  // and a seventh moves each fore and aft.
   const limb = (pts, capH) => {
     const last = pts.length - 1;
-    const sts = pts.map(([y, z, rz, rx, level], i) => {
+    const sts = pts.map(([y, z, rz, rx, level, lift, pull], i) => {
       let dy = -1, dz = 0;
-      if (typeof level === 'number') return { c: [y, z], a: [level * rz, rz], w: rx };
+      if (typeof level === 'number') return { c: [y, z], a: [level * rz, rz], w: rx, dy: lift, dz: pull };
       if (i > 0 && i < last && !level) {
         dy = pts[i + 1][0] - pts[i - 1][0]; dz = pts[i + 1][1] - pts[i - 1][1];
         const n = Math.hypot(dy, dz) || 1; dy /= n; dz /= n;
@@ -588,7 +676,7 @@ export function makeQuadruped({
     const widthAt = (y) => {
       const t = (y - bodyY - (s.top + s.bot) / 2) / ((s.top - s.bot) / 2);
       const [cx, cy] = t < 0 ? cornerAt(s) : upperAt;
-      return s.w * facet(t, cy, cx);
+      return s.w * (KEEL ? along(halfOf(s, t < 0 ? -1 : 1), t, 1, 0) : facet(t, cy, cx));
     };
     // ACROSS, the mass is solved rather than stated: wide enough to stand
     // `proud` of the flank, so the haunch shows from the front and from above
@@ -701,11 +789,12 @@ export function makeQuadruped({
         return lo;
       };
       // a ring's six corners, scaled by k about its centre, all inside the
-      // trunk (`tilt` as in `limb`)
-      const ringIn = (y, zc, rz, rx, tilt, k) => {
+      // trunk (`tilt` as in `limb`, and `lean` each corner's own lift,
+      // x the ring's rx)
+      const ringIn = (y, zc, rz, rx, tilt, k, lean = null) => {
         for (let j = 0; j < 6; j++) {
           const t = (j / 6) * Math.PI * 2, sn = Math.sin(t);
-          if (!inTrunk(hx + k * Math.cos(t) * rx, y + k * sn * tilt * rz, z + zc + k * sn * rz)) return false;
+          if (!inTrunk(hx + k * Math.cos(t) * rx, y + k * sn * tilt * rz + (lean ? k * lean[j] * rx : 0), z + zc + k * sn * rz)) return false;
         }
         return true;
       };
@@ -737,10 +826,13 @@ export function makeQuadruped({
       // by a share of its own gain (FLARE_LEAD) until the two open about
       // alike at any one height.
       const zf = HEX * rF, zc = FLARE_LEAD * HEX * (rF - rE);
-      const underside = (zz) => {
+      // (on a keeled chest the breast may already have risen past the axis
+      // there, and the search starts higher up)
+      const underside = (zz, xx = hx) => {
         let lo = bodyY - 3 * R, hi = bodyY;
-        if (!inTrunk(hx, hi, zz)) return floor;
-        for (let k = 0; k < 18; k++) { const m = (lo + hi) / 2; if (inTrunk(hx, m, zz)) hi = m; else lo = m; }
+        for (let k = 0; KEEL && k < 8 && !inTrunk(xx, hi, zz); k++) { lo = hi; hi += 0.15 * R; }
+        if (!inTrunk(xx, hi, zz)) return floor;
+        for (let k = 0; k < 18; k++) { const m = (lo + hi) / 2; if (inTrunk(xx, m, zz)) hi = m; else lo = m; }
         return hi;
       };
       // Every corner of it is just inside: one left out on the narrowing
@@ -749,24 +841,60 @@ export function makeQuadruped({
       const uF = underside(z + zc + zf), uB = underside(z + zc - zf);
       let rxF = lerp(0.78 * rE, vault(lerp(floor, top, 0.5)).rxP, 0.5);
       const slant = (uF - uB) / (2 * zf);
+      // A KEELED CHEST IS NOT FLAT ACROSS EITHER: its underside climbs from
+      // the keel out to the side. A ring level across is inside it at its
+      // inner side only and is drawn in across until it is a blade: from the
+      // front the leg's top is then a peg's point, and side-on the chest's
+      // underside shows as a dark crease between the leg and the slab. So
+      // the ring keeps the column's breadth, and each corner is lifted by how
+      // far the hide over it stands above the hide over the leg's middle, at
+      // the same station — the outer edge up into the side, the inner one
+      // down toward the keel — never steeper than LEAN_MAX, or the outer edge
+      // runs on up the flank as a spike.
+      if (KEEL) rxF = Math.max(rxF, 0.78 * rE);
+      const lean = KEEL ? [0, 1, 2, 3, 4, 5].map((j) => {
+        const t = (j / 6) * Math.PI * 2, cs = Math.cos(t), zj = z + zc + Math.sin(t) * zf;
+        if (Math.abs(cs) < 1e-6) return 0;
+        const d = (underside(zj, hx + cs * rxF) - underside(zj, hx)) / rxF;
+        return Math.max(-LEAN_MAX, Math.min(LEAN_MAX, d));
+      }) : null;
       let yF = (uF + uB) / 2 + 0.15 * rE;
       // ...but never past the middle of the chest's lower half: where the
       // trunk is narrower than the leg, the ring is drawn in across instead
       const yFmax = Math.max(yF, lerp(floor, top, 0.5) - HEX * Math.abs(slant) * rF);
-      for (let k = 0; k < 120 && !ringIn(yF, zc, rF, rxF, slant, 1); k++) {
+      for (let k = 0; k < 120 && !ringIn(yF, zc, rF, rxF, slant, 1, lean); k++) {
         if (yF < yFmax) yF = Math.min(yFmax, yF + 0.05 * rE);
+        else if (KEEL) break;
         else rxF *= 0.95;
       }
+      const lift = lean && lean.map((v) => v * rxF);
+      // Drawn in no further across, a keeled chest's ring may still leave a
+      // corner out under the narrowing breast, which shows as a lit tab on
+      // top of the leg: that corner alone climbs a little, and then draws
+      // back toward the leg's middle, until it is inside.
+      const pull = lift && [0, 0, 0, 0, 0, 0];
+      if (lift) {
+        for (let j = 0; j < 6; j++) {
+          const t = (j / 6) * Math.PI * 2, sn = Math.sin(t);
+          const at = () => inTrunk(hx + Math.cos(t) * rxF, yF + sn * slant * rF + lift[j], z + zc + sn * rF + pull[j]);
+          const cap = lerp(floor, top, 0.6) - yF - sn * slant * rF;
+          while (!at() && lift[j] < cap) lift[j] = Math.min(cap, lift[j] + 0.1 * rE);
+          for (let k = 0; k < 12 && !at(); k++) pull[j] -= 0.05 * sn * rF;
+        }
+      }
       // and the vault stands above the whole of it
-      const V = vault(Math.max(lerp(floor, top, 0.5), lerp(yF + HEX * Math.abs(slant) * rF, top, 0.4)));
+      // (and under the sunk ring the leg hangs from, or the loft folds back on
+      // itself there and shows a shelf)
+      const yV = Math.max(lerp(floor, top, 0.5), lerp(yF + HEX * Math.abs(slant) * rF + (lift ? Math.max(...lift) : 0), top, 0.4));
+      const V = vault(KEEL ? Math.min(lerp(floor, top, 0.85), yV) : yV);
       yF -= top;
       // the knee, and the cannon's first ring a little under it
       const yK = eY + LG.wrist * low, yC = lerp(yK, run - 1.25 * fH, 0.45);
       pts = [
         [0, ringZ, rz0, rx0],
         [V.yP - top, V.zP, V.rzP, V.rxP, true],
-        [yF, zc, rF, rxF, slant],
-        [lerp(yF, -eY, 0.5), 0.5 * zc, lerp(rF, rE, 0.6), lerp(rxF, 0.78 * rE, 0.6), 0.5 * slant],
+        [yF, zc, rF, rxF, slant, lift, pull],
+        [lerp(yF, -eY, 0.5), 0.5 * zc, lerp(rF, rE, 0.6), lerp(rxF, 0.78 * rE, 0.6), 0.5 * slant, lift && lift.map((v) => 0.5 * v), pull && pull.map((v) => 0.5 * v)],
         [-eY, 0, rE, 0.78 * rE, true],
         [-lerp(eY, yK, 0.5), 0.05 * lr, lerp(rE, rK, 0.5), 0.8 * lerp(rE, rK, 0.5)],
         [-yK, 0.1 * lr, rK, 0.9 * rK],
@@ -805,7 +933,9 @@ export function makeQuadruped({
       ];
     }
     for (const sx of [-1, 1]) {
-      const leg = new THREE.Mesh(limb(pts, capH), mat);
+      // a ring lifted corner by corner is lifted mirrored on the other side
+      const flip = (a) => a && a.map((_, j) => a[(9 - j) % 6]);
+      const leg = new THREE.Mesh(limb(sx > 0 ? pts : pts.map((p) => (p[5] ? [...p.slice(0, 5), flip(p[5]), flip(p[6])] : p)), capH), mat);
       leg.name = 'leg';
       // the origin is the join itself — the shoulder or hip point, at the
       // height of the mass's ring — so a species that re-seats a leg moves and
@@ -991,6 +1121,7 @@ export function makeQuadruped({
       topAt: (z) => bodyY + sectionAt(z).top,   // the back line, rump to shoulder
       bellyAt: (z) => bodyY + sectionAt(z).bot, // and the underline
       neck: neckPlan,                           // { root, end: [y, z], rootDepth, endDepth } or null
+      ring: body.userData.ring,                 // { seg, top, bot }: see the body's own
     },
   };
 }

@@ -140,6 +140,9 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // under it is long, deepest just behind the elbow: with the plan's round
   // section it was a diamond from the front and a ridge down the flank. The
   // shoulder ends at a girth (`girth`), so it is a plane against the ribs.
+  // Its underside is a keel (`keel`): the brisket a rounded keel between the
+  // forelegs and the belly turning under on a curve, where one corner a side
+  // made a floor under a hard edge the length of the belly.
   // THE NECK IS LONG AND DEEP AT ITS BASE, and the head is carried far enough
   // out and up that the neck is well over half the height of the withers
   // long. Shorter and shallower, it was a pony's head on a foal's neck. The
@@ -150,7 +153,7 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     height, color, seed,
     bodyR: 0.18, bodyLen: 0.59, bodyDrop: 0.055,
     torso: {
-      chest: 1.18, loin: 0.8, withers: 1.28, back: 1.05, croup: 1.06, round: 1, slab: 1, barrel: 1, girth: 0.16,
+      chest: 1.18, loin: 0.8, withers: 1.28, back: 1.05, croup: 1.06, round: 1, slab: 1, barrel: 1, girth: 0.16, keel: 1,
       shoulderW: 1.0, barrelW: 1.14, hipW: 1.06,
     },
     legBury: 0.18,
@@ -244,7 +247,7 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   {
     const body = group.children.find((c) => c.name === 'body');
     const P = body.geometry.getAttribute('position');
-    const SEG = 8, TOP = 2, BOT = 6;            // the plan's trunk ring: vertex 2 is its top point, 6 its bottom
+    const { seg: SEG, top: TOP, bot: BOT } = plan.ring;
     const rings = (P.count - 2) / SEG;
     const lift = (ring, by) => {
       const o = ring * SEG;
@@ -267,8 +270,12 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
       const cy = (P.getY(o + TOP) + P.getY(o + BOT)) / 2, cz = (P.getZ(o + TOP) + P.getZ(o + BOT)) / 2;
       const m = Math.hypot(P.getY(o + TOP) - P.getY(o + BOT), P.getZ(o + TOP) - P.getZ(o + BOT)) / 2;
       const ay = Math.cos(POLL_LEAN) * m, az = -Math.sin(POLL_LEAN) * m;
+      // how far along the section's own half-axis each vertex stands
+      const ty = P.getY(o + TOP) - cy, tz = P.getZ(o + TOP) - cz;
+      const along = [];
+      for (let j = 0; j < SEG; j++) along.push(((P.getY(o + j) - cy) * ty + (P.getZ(o + j) - cz) * tz) / (m * m));
       for (let j = 0; j < SEG; j++) {
-        const sn = Math.sin((j / SEG) * Math.PI * 2);
+        const sn = along[j];
         P.setY(o + j, cy + sn * ay);
         P.setZ(o + j, cz + sn * az);
       }

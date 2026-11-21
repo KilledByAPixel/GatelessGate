@@ -7,7 +7,7 @@ import { makeFox } from '../src/kit/fox.js';
 import { makeBuffalo } from '../src/kit/buffalo.js';
 import { makeHorse } from '../src/kit/horse.js';
 import { makeCat } from '../src/kit/cat.js';
-import { triangles, sectionY, sectionZ, legClouds, trunk, legsJoinBody, inside, foreleg } from './helpers/quadruped-probe.js';
+import { triangles, sectionY, sectionZ, legClouds, trunk, legsJoinBody, inside, foreleg, undersideTurn } from './helpers/quadruped-probe.js';
 
 const names = (g) => g.children.map((c) => c.name).sort();
 
@@ -777,7 +777,7 @@ function column(root, lo, hi) {
 function toplineTurns(root) {
   const body = root.children.find((c) => c.name === 'body');
   const P = body.geometry.getAttribute('position');
-  const SEG = 8, TOP = 2;                        // quadruped.js, A PROFILE LOFT
+  const { seg: SEG, top: TOP } = body.userData.ring;   // quadruped.js, A PROFILE LOFT
   const rings = (P.count - 2) / SEG;
   const zFront = trunk(root).zFront;
   let sh = 0;
@@ -814,6 +814,32 @@ test('torso.slab carries the sides of the chest straight down over the front leg
     assert.ok(Math.abs(a.min - b.min) < 1e-9 && Math.abs(a.max - b.max) < 1e-9, `same top and bottom at z=${z.toFixed(2)}`);
   }
   legsJoinBody(slab.group, 'slab-chested plan', assert.ok);
+});
+
+// THE UNDERSIDE IS A KEEL. With one lower corner a side, a slabbed or
+// barrelled section turns most of a right angle at that corner and runs on to
+// the keel as a floor: a hard edge with a dark band under it the length of the
+// belly, and from the front a flat rectangle between the forelegs. Keeled, it
+// turns under in steps, and the underline sweeps up from the brisket on a
+// curve.
+test('torso.keel turns the underside under on a curve, rump to breast, with no more meshes', () => {
+  const base = { height: 1, neck: {}, torso: { slab: 1, barrel: 1, girth: 0.16, round: 1, shoulderW: 1, barrelW: 1.05 }, legs: { point: 0.6, flare: 0.8, drop: 0.2 } };
+  const box = makeQuadruped(base), keel = makeQuadruped({ ...base, torso: { ...base.torso, keel: 1 } });
+  const bodyOf = (q) => triangles(q.group, (o) => o.name === 'body');
+  const { zShoulder, zHip } = box.plan, span = zShoulder - zHip;
+  for (const z of [zShoulder - 1e-4, zHip + 0.6 * span, zHip + 0.3 * span]) {
+    const a = undersideTurn(bodyOf(box), z), b = undersideTurn(bodyOf(keel), z);
+    assert.ok(a > 50, `one corner turns ${a.toFixed(0)} degrees at z=${z.toFixed(2)}`);
+    assert.ok(b < 40, `keeled, no short stretch turns more than ${b.toFixed(0)} degrees at z=${z.toFixed(2)}`);
+  }
+  // the underline is fuller than the chord from flank to brisket
+  const zM = zHip + 0.52 * span;
+  assert.ok(sectionY(bodyOf(keel), zM).min < sectionY(bodyOf(box), zM).min - 0.005, 'the belly sweeps down toward the brisket');
+  assert.strictEqual(keel.group.children.length, box.group.children.length, 'no more meshes');
+  const ring = (q) => q.group.children.find((c) => c.name === 'body').userData.ring;
+  assert.deepStrictEqual([ring(box).seg, ring(keel).seg], [8, 12], 'the ring says what it is');
+  assert.ok(ring(keel).bot === ring(keel).top + ring(keel).seg / 2, 'and where its bottom point is');
+  legsJoinBody(keel.group, 'keeled plan', assert.ok);
 });
 
 test('legs.point stands the forearm as a column that flares both ways into the chest', () => {
@@ -875,16 +901,22 @@ test('dog, fox, horse and buffalo: a front leg is a column opening both ways int
     assert.ok(Math.max(c.fwd, c.aft) < 2.2 * Math.min(c.fwd, c.aft), `${label}: one-sided: ${c.fwd.toFixed(2)} forward, ${c.aft.toFixed(2)} back`);
     assert.ok(c.w * c.F.H < 0.25 * sectionY(c.F.body, c.F.leg.position.z).depth, `${label}: a fat forearm`);
     assert.ok(c.breast > 0.4, `${label}: the breast stands only ${c.breast.toFixed(2)} of the forearm's breadth ahead of it`);
-    // the chest at the shoulder: still most of its breadth low down
+    // the chest at the shoulder: still most of its breadth well down its
+    // side, and then turning under on a curve to a keel, not at one corner
+    // onto a floor
     const { tris, body, z, belly } = frontLeg(root);
     const zS = trunk(root).zFront - 1e-4;
     const cut = sectionY(body, zS), mid = (cut.max + cut.min) / 2;
-    const kept = halfWidthAt(body, zS, mid - 0.6 * (mid - cut.min)) / halfWidthAt(body, zS, mid);
+    const kept = halfWidthAt(body, zS, mid - 0.45 * (mid - cut.min)) / halfWidthAt(body, zS, mid);
     assert.ok(kept > 0.8, `${label}: the chest keeps ${kept.toFixed(2)} of its breadth down toward the leg`);
+    const turn = undersideTurn(body, zS);
+    assert.ok(turn < 45, `${label}: the chest turns ${turn.toFixed(0)} degrees at one corner under the side`);
     // ...and that side neither hangs far out past the leg nor stands inside it
     const height = new THREE.Box3().setFromObject(root).max.y;
     const corner = halfWidthAt(body, z, belly + 0.03 * height);
-    const legOut = halfWidthAt(tris, z, belly - 0.02 * height);
+    // (just off the leg's own station: a cut through a ring's corners exactly
+    // finds no edge crossing it there)
+    const legOut = halfWidthAt(tris, z + 1e-4, belly - 0.02 * height);
     assert.ok(legOut > 0 && corner - legOut < (EAVE[label] ?? 0.05) * height && legOut - corner < 0.03 * height,
       `${label}: chest side ${(corner / height).toFixed(3)} against the outer side of the leg ${(legOut / height).toFixed(3)} (x height)`);
   }
@@ -949,6 +981,9 @@ test('dog, fox and horse are barrels: broad either side of the spine and full in
         const k = breadthKept(root, z, side);
         assert.ok(k > 0.84, `${label}: the trunk keeps ${k.toFixed(2)} of its breadth (side ${side}) at z=${z.toFixed(2)}`);
       }
+      // ...and still turns under to its keel on a curve, not at one corner
+      const turn = undersideTurn(triangles(root, (o) => o.name === 'body'), z);
+      assert.ok(turn < 40, `${label}: the belly turns ${turn.toFixed(0)} degrees at one corner at z=${z.toFixed(2)}`);
     }
     const body = triangles(root, (o) => o.name === 'body');
     const wide = (z) => { const c = sectionY(body, z); return halfWidthAt(body, z, (c.max + c.min) / 2); };

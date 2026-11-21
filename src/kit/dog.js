@@ -153,7 +153,10 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // plan's round section he was widest along one line and fell away above
     // and below it — a thin slab from the front, two flat planes meeting at a
     // ridge from three-quarter. `girth` ends the shoulder at an edge behind
-    // the elbow, so it reads as a plane of its own against the ribs.
+    // the elbow, so it reads as a plane of its own against the ribs. Under
+    // it all the trunk is a KEEL (`keel`): with one lower corner a side the
+    // belly was a floor under a hard edge, and the chest a flat dark plate
+    // between the forelegs.
     //
     // SEEN FROM THE FRONT HE IS BROAD: about a third as wide as he is tall
     // through the chest, with the front legs coming down from under the
@@ -161,7 +164,7 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // widths he was a plank on edge with his legs pressed together. The stance
     // (hipX) is bounded by the hips: set wider than this the hind leg's top
     // ring stands out of the rump as a shelf.
-    torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92, round: 1, slab: 1, barrel: 1, girth: 0.16, shoulderW: 1.0, barrelW: 1.08, hipW: 1.02 },
+    torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92, round: 1, slab: 1, barrel: 1, girth: 0.16, keel: 1, shoulderW: 1.0, barrelW: 1.08, hipW: 1.02 },
     legBury: 0.16,
     legH: 0.46, legR: 0.066, legTaper: 0.8, hipX: 0.11, hipZ: 0.30,
     // The legs stand under the two ends of the trunk rather than under its
@@ -175,7 +178,8 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // the whole leg's scale and `legTaper` the forearm's share of it, so the
     // pair is slimmed with those and the masses that are stated as multiples
     // of `legR` — shoulder, thigh, paw — are raised to stay the size they
-    // were.
+    // were. The keeled chest is narrower low down where the shoulder's sunk
+    // ring sits, so `shoulder` asks for more than the ring is given.
     //
     // THE SHOULDER is the chest's own side, carried straight down to the leg
     // (`torso.slab`). The forearm under it is an arm, not a thigh: a column
@@ -194,7 +198,7 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // his height up (`hock`), over a cannon that is nearly upright (`rake`):
     // the hock is the point behind him, with the back of the leg dipping
     // forward above it to the buttock.
-    legs: { knee: 0.48, shoulder: 2.8, thigh: 3.4, foot: 1.45, frontSet: 0.06, hindSet: 0.1, point: 0.7, flare: 0.8, drop: 0.3, elbow: 1.2, wrist: 0.45, hock: 0.6, rake: 0.12 },
+    legs: { knee: 0.48, shoulder: 3.6, thigh: 3.4, foot: 1.45, frontSet: 0.06, hindSet: 0.1, point: 0.7, flare: 0.8, drop: 0.3, elbow: 1.2, wrist: 0.45, hock: 0.6, rake: 0.12 },
     // the neck's end has to fit inside the skull it enters, turned or not.
     // The head is carried high on a neck that stands steeply, so the back has
     // a long way to turn to become the nape: `ease` and `easeUp` split that

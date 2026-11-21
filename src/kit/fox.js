@@ -126,11 +126,12 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     // high as the withers: a back that falls to the rump is a dog standing.
     // The section is most of a barrel (`barrel`) — full in the rib and broad
     // over the back, but finer than the dog's — and the shoulder ends at a
-    // girth behind the elbow.
+    // girth behind the elbow. Its underside is a keel (`keel`), turning under
+    // on a curve rather than at a corner onto a floor.
     // Narrow, but not a blade: from the front the chest is a little over a
     // quarter of the animal's height across, and the legs stand under its
     // sides with a gap between them.
-    torso: { chest: 1.35, loin: 0.62, withers: 1.0, back: 0.92, croup: 1.0, slab: 1, barrel: 0.7, girth: 0.16, shoulderW: 0.86, barrelW: 0.97, hipW: 0.86 },
+    torso: { chest: 1.35, loin: 0.62, withers: 1.0, back: 0.92, croup: 1.0, slab: 1, barrel: 0.7, girth: 0.16, keel: 1, shoulderW: 0.86, barrelW: 0.97, hipW: 0.86 },
     legBury: .16,
     // FINE LIMBS. A fox's front leg is under a fifth of its chest's depth
     // below the knee, and the forearm over it is a slim column (`elbow`) that

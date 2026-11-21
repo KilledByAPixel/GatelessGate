@@ -221,3 +221,44 @@ export function cornerKey(tris, score) {
   }
   return out;
 }
+
+// The half-width of a set of triangles along the line (z, y), exactly: the
+// widest |x| at which the plane z = const and the height y cross an edge.
+export function halfWidth(tris, z, y) {
+  let w = 0;
+  for (const t of tris) {
+    const pts = [];
+    for (let e = 0; e < 3; e++) {
+      const a = e * 3, b = ((e + 1) % 3) * 3;
+      const za = t[a + 2], zb = t[b + 2];
+      if ((za - z) * (zb - z) > 0 || za === zb) continue;
+      const k = (z - za) / (zb - za);
+      pts.push([t[a] + (t[b] - t[a]) * k, t[a + 1] + (t[b + 1] - t[a + 1]) * k]);
+    }
+    if (pts.length < 2) continue;
+    const [p, q] = pts;
+    if ((p[1] - y) * (q[1] - y) > 0 || p[1] === q[1]) continue;
+    w = Math.max(w, Math.abs(p[0] + (q[0] - p[0]) * ((y - p[1]) / (q[1] - p[1]))));
+  }
+  return w;
+}
+
+// THE UNDERSIDE AS A CURVE. The outline of a trunk's section at z, from its
+// widest line down to the keel, read as half-widths at `n` heights, and the
+// sharpest turn it makes over any `run` of them, in degrees. A section with
+// one lower corner a side turns most of a right angle at that corner and
+// runs on into the keel as a floor; a rounded one turns a little at each of
+// several corners, and no short stretch of it turns much.
+export function undersideTurn(tris, z, n = 40, run = 4) {
+  const cut = sectionY(tris, z), mid = (cut.max + cut.min) / 2;
+  const pts = [];
+  for (let i = 0; i <= n; i++) {
+    const y = mid - (mid - cut.min) * Math.min(i / n, 0.999);
+    pts.push([halfWidth(tris, z, y), y]);
+  }
+  const dir = [];
+  for (let i = 0; i < n; i++) dir.push(Math.atan2(pts[i + 1][1] - pts[i][1], pts[i + 1][0] - pts[i][0]));
+  let worst = 0;
+  for (let i = 0; i + run < dir.length; i++) worst = Math.max(worst, Math.abs(dir[i + run] - dir[i]) * 180 / Math.PI);
+  return worst;
+}

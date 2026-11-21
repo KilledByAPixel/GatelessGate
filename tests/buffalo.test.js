@@ -395,8 +395,9 @@ test('the trunk is a barrel, not a diamond, and the shoulder is set off by a gir
   const mid = (z) => { const c = sectionY(body, z); return (c.max + c.min) / 2; };
   for (const z of [zShoulder - 1e-3, 0.5 * zHip]) {
     const c = sectionY(body, z), m = mid(z);
-    for (const end of [c.max, c.min]) {
-      const kept = halfWidthAt(body, z, m + 0.6 * (end - m)) / halfWidthAt(body, z, m);
+    // (down only so far: below that the underside rounds into a keel)
+    for (const [end, f] of [[c.max, 0.6], [c.min, 0.45]]) {
+      const kept = halfWidthAt(body, z, m + f * (end - m)) / halfWidthAt(body, z, m);
       assert.ok(kept > 0.8, `at z = ${(z / H).toFixed(2)} the section keeps ${kept.toFixed(2)} of its breadth ${end === c.max ? 'up' : 'down'}`);
     }
   }

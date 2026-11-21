@@ -296,9 +296,11 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // shoulder ends at an edge and stands on his side as a plane of its own
     // running up into the hump; the shoulder is stated nearly as broad as
     // the ribs for the same reason, since a shoulder much narrower than the
-    // barrel behind it has nothing to be drawn in from.
+    // barrel behind it has nothing to be drawn in from. The underside turns
+    // under on a curve (`keel`), so his chest is a rounded keel between the
+    // forelegs and not a flat shelf; the belly stays as deep.
     torso: {
-      chest: 1.26, loin: 0.98, withers: 1.22, croup: 0.745, sag: BACK_SAG, round: 1, slab: 0.85, barrel: 0.6, girth: 0.16,
+      chest: 1.26, loin: 0.98, withers: 1.22, croup: 0.745, sag: BACK_SAG, round: 1, slab: 0.85, barrel: 0.6, girth: 0.16, keel: 1,
       shoulderW: 1.02, barrelW: 1.08, hipW: 0.92,
     },
     legBury: 0.2,
