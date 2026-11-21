@@ -149,9 +149,15 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
   const { group, material, plan } = makeQuadruped({
     height, color, seed,
     bodyR: 0.2, bodyLen: 0.56, bodyDrop: 0.2,
-    torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92, round: 1, slab: 1 },
+    // SEEN FROM THE FRONT HE IS BROAD: about a third as wide as he is tall
+    // through the chest, with the front legs coming down from under the
+    // shoulders well apart and daylight between them. At the plan's lean
+    // widths he was a plank on edge with his legs pressed together. The stance
+    // (hipX) is bounded by the hips: set wider than this the hind leg's top
+    // ring stands out of the rump as a shelf.
+    torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92, round: 1, slab: 1, shoulderW: 1.0, barrelW: 1.08, hipW: 1.02 },
     legBury: 0.16,
-    legH: 0.46, legR: 0.066, legTaper: 0.8, hipX: 0.085, hipZ: 0.30,
+    legH: 0.46, legR: 0.066, legTaper: 0.8, hipX: 0.11, hipZ: 0.30,
     // The legs stand under the two ends of the trunk rather than under its
     // sections: the front pair below the neck, with the withers behind them,
     // and the hind pair below the buttock. Neither can go further out than
