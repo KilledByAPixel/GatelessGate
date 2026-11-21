@@ -36,10 +36,11 @@ import { mergeSimple } from './scatter.js';
 //      broad as it is deep at the shoulder; much narrower and it reads as a
 //      cut-out standing on edge.
 //   4. LONG SLIM LEGS under real mass, STANDING UNDER THE BODY: a full thigh
-//      over a lean gaskin, a forearm that is a modest muscle and no more, wire
-//      cannons, the hind fold at a LOW hock. Thickened to give the legs
-//      substance, the forearm becomes a post as deep as a third of the chest
-//      and the animal is a draught horse on table legs. The hock goes
+//      over a lean gaskin, a forearm broad at the elbow and spent by the
+//      knee, wire cannons, the hind fold at a LOW hock. The slimness is the
+//      CANNON's: thickened all the way down to give the legs substance, the
+//      animal is a draught horse on table legs, and slimmed all the way up
+//      the forearm is a stick pushed into the chest. The hock goes
 //      back only a little — enough for the corner to show. Folded further, the
 //      whole hind leg becomes one diagonal propped out behind the rump and the
 //      animal stops carrying its own weight.
@@ -130,15 +131,17 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     legH: 0.62, legR: 0.048, legTaper: 0.97, hipX: 0.105, hipZ: 0.285,
     // `legR` is the whole leg's gauge and it is small: `thigh` then asks for
     // a full haunch in those units, `gaskin` spends most of it before the
-    // hock, and `legTaper` near one keeps the forearm a modest muscle.
+    // hock, and the forearm's own breadth is stated at the elbow (below).
     // `shoulder` and `proud` are both low because what they build shows on a
     // slim leg as a box cap standing on the forearm, in front of the chest;
     // stood further out, the thigh's cap also breaks the flank as a dark dart
     // at the hip. A foot longer than the cannon is thick: a hoof, not a paw,
     // but a definite block.
     //
-    // The forearm is a real muscle: about twice the cannon fore and aft at
-    // the elbow (`elbow`), tapering to the knee. The breast stands a little
+    // The forearm is a real muscle: getting on for three times the cannon
+    // fore and aft at the elbow (`elbow`), over a third of the chest's depth,
+    // tapering to the knee. Nearer the cannon's own width up there the leg
+    // was one post from hoof to chest. The breast stands a little
     // forward of the leg (`frontSet` is kept short of putting the leg under
     // its point).
     //
@@ -147,7 +150,7 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     // widening into it above the forearm (`point` forward toward the breast,
     // `arm` back into the belly) and standing forward under the breast
     // (`frontSet`), so the front line of the leg runs on up into the chest.
-    legs: { knee: KNEE, shoulder: 2.2, thigh: 4.12, proud: 0.0, cannon: 0.72, foot: 1.2, gaskin: 0.8, frontSet: 0.05, hindSet: 0.1, point: 0.55, arm: 1.2, elbow: 1.65 },
+    legs: { knee: KNEE, shoulder: 2.2, thigh: 4.12, proud: 0.0, cannon: 0.72, foot: 1.2, gaskin: 0.8, frontSet: 0.05, hindSet: 0.1, point: 0.55, arm: 1.8, elbow: 2.15 },
     // `set` at nothing: the nape leaves the topline AT the withers, so the
     // withers are the corner where back turns into neck — but not the only
     // one. `ease` carries the root's top a way up the nape, so the line

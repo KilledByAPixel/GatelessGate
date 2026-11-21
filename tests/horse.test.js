@@ -422,7 +422,7 @@ test('the mane is hair on the neck: proud of the crest, narrower than it, steppe
   assert.ok(ear[0].geometry.boundingBox.max.z > head.position.z + 0.06 * withers, 'a forelock reaches forward of the ears');
 });
 
-test('slim legs under real mass: the cannon is a fraction of the chest, the forearm a modest muscle', () => {
+test('slim legs under real mass: the cannon is a fraction of the chest, the forearm broad at the elbow', () => {
   const horse = build();
   const { plan } = horse;
   const chest = sectionY(bodyOf(horse.group), plan.zShoulder - 1e-3);
@@ -436,9 +436,14 @@ test('slim legs under real mass: the cannon is a fraction of the chest, the fore
   };
   const forearm = thick(front, 0.85), cannonF = thick(front, 0.2);
   const gaskin = thick(hind, 0.75), cannonH = thick(hind, 0.2);
-  assert.ok(forearm > 0.2 && forearm < 0.3, `the forearm is ${forearm.toFixed(2)}x the chest's depth`);
+  // The slimness is the cannon's. A forearm held near the cannon's width all
+  // the way up is one post from hoof to chest; it is broad just under the
+  // elbow and has spent that by the knee.
+  assert.ok(forearm > 0.3 && forearm < 0.42, `the forearm is ${forearm.toFixed(2)}x the chest's depth`);
   assert.ok(cannonF > 0.1 && cannonF < 0.17, `the front cannon is ${cannonF.toFixed(2)}x`);
-  assert.ok(forearm > cannonF * 1.4, 'and the forearm still tapers into it');
+  assert.ok(forearm > cannonF * 2.3, `and the forearm tapers into it: ${(forearm / cannonF).toFixed(2)}x the cannon`);
+  const knee = thick(front, 0.45);
+  assert.ok(knee < 0.62 * forearm, `the elbow's breadth is spent by the knee: ${knee.toFixed(2)}x against ${forearm.toFixed(2)}x`);
   assert.ok(gaskin > 0.2 && gaskin < 0.27, `the gaskin is ${gaskin.toFixed(2)}x the chest's depth`);
   assert.ok(cannonH > 0.1 && cannonH < 0.17, `the hind cannon is ${cannonH.toFixed(2)}x`);
 });
