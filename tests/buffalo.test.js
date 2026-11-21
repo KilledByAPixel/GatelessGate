@@ -351,14 +351,14 @@ test('the legs are limbs under the trunk, not posts', () => {
     assert.ok(wide(0.9) > 1.5 * cannon, 'the leg is thickest where it leaves the belly');
     assert.ok(wide(0.05) > 1.3 * cannon, 'and stands on a hoof wider than its cannon');
     if (leg.position.z < 0) continue;
-    // A FRONT LEG GROWS OUT OF THE SHOULDER. Slim all the way up it is a post
-    // set under a box, however slim the cannon: the forearm is a heavy
-    // animal's, well over twice the cannon where it leaves the belly, and it
-    // spends that steadily on the way down to the knee.
-    assert.ok(wide(0.9) > 2.5 * cannon, `the forearm is ${(wide(0.9) / cannon).toFixed(2)}x the cannon at the elbow`);
-    assert.ok(wide(0.9) > wide(0.75) && wide(0.75) > wide(0.6) && wide(0.6) > 1.3 * cannon,
-      'and tapers from there to the knee, not all at once');
-    assert.ok(wide(0.9) < 0.3 * chest.depth, `but still a leg: ${(wide(0.9) / chest.depth).toFixed(3)} of the chest's depth`);
+    // A FRONT LEG IS A HEAVY ARM, NOT A THIGH. Slim all the way up it is a
+    // post set under a box; broad at the elbow and tapering hard it is a hind
+    // thigh under the chest. The forearm is a column well over the cannon's
+    // breadth, near one width to the top, opening into the chest there.
+    assert.ok(wide(0.6) > 1.3 * cannon, `the forearm is ${(wide(0.6) / cannon).toFixed(2)}x the cannon`);
+    assert.ok(wide(0.75) < 1.2 * wide(0.6), `a wedge: ${(wide(0.75) / wide(0.6)).toFixed(2)}x broader a little higher`);
+    assert.ok(wide(0.9) > wide(0.75), 'and it opens into the chest at its top');
+    assert.ok(wide(0.9) < 0.2 * chest.depth, `but still a leg: ${(wide(0.9) / chest.depth).toFixed(3)} of the chest's depth`);
   }
 });
 

@@ -311,23 +311,25 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // keep the haunch — and in the taper from elbow to knee (`legTaper`).
     // The hoof is a block wider than the cannon over it.
     legH: 0.46, legR: 0.07, legTaper: 1.3, hipX: 0.17, hipZ: 0.40,
-    // a shallow hock: this animal plods. The shoulder mass is kept short
+    // The shoulder mass is kept short
     // fore-and-aft: the breast closes into the neck just ahead of the front
     // legs, and a broad one stands out past it as a ledge on the brisket.
     // The shoulder that shows is the chest's own side come down toward the
-    // leg (`torso.slab`), and the leg widens into it (`point`, `arm`). His
+    // leg (`torso.slab`), and the leg opens into it (`point`, `flare`). His
     // stance is well inside a very wide chest, so the corner of that chest
     // cannot stand over the leg as it does on the slimmer animals: the slab
     // is left short of full, and the leg's buried ring is carried out toward
     // the hide instead (`spread`), which is what keeps the chest from hanging
     // over the leg as a skirt.
-    // THE FOREARM IS HEAVY AT THE ELBOW (`elbow`) and spends that on the way
-    // to the knee, and the widening above it reaches well back behind the
-    // elbow (`arm`): slim all the way up, the front leg is a post set under
-    // the chest however the chest is shaped, and the two have to grow
-    // together — a broader forearm under the same short widening is a leg
-    // that no longer flares into the body at all.
-    legs: { knee: 0.2, shoulder: 1.7, thigh: 3.4, cannon: 0.72, foot: 1.3, hindSet: 0.08, point: 0.6, arm: 1.9, spread: 1, elbow: 1.7 },
+    // THE FOREARM IS A HEAVY ARM, NOT A THIGH: a column well over the
+    // cannon's breadth, near one width to the elbow (`elbow`), that opens
+    // both ways into the chest over its upper part (`flare`, `drop`). Broad
+    // at the elbow and tapering hard to the knee, with the widening reaching
+    // back into the belly, it was a hind leg standing under the chest. The
+    // hock stands higher than the plan's (`hock`), folded under the buttock
+    // (`knee`), over a near-upright cannon (`rake`): low, the rump stood out
+    // behind the hock.
+    legs: { knee: 0.35, shoulder: 1.7, thigh: 3.4, cannon: 0.72, foot: 1.3, hindSet: 0.08, point: 0.6, flare: 0.8, drop: 0.25, spread: 1, elbow: 0.85, hock: 0.56, rake: 0.05 },
     // Short, deep and nearly as wide as the skull it enters. Its end ring is
     // centred on the head's own centre and must stay INSIDE the skull there,
     // so `r` is bounded by the skull's section at its origin — fatten the

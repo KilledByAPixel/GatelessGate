@@ -184,6 +184,32 @@ export function partOf(tris, seed) {
   return { tris: part, verts: [...verts.values()], closed: part.length > 0 && [...edges.values()].every((n) => n === 2) };
 }
 
+// THE FRONT LEG SIDE-ON, as a column under a vault. The nearer front leg on
+// +x, read level: `at(f)` is its rear and front edge and its breadth at a
+// fraction f of the BELLY's height (the lowest level at which the leg's own
+// axis is inside the trunk), in units of the animal's whole height and
+// measured from the leg's own station, + forward. `breast(f)` is how far the
+// trunk's front stands ahead of the leg's front edge at that same height.
+export function foreleg(root) {
+  root.updateMatrixWorld(true);
+  const legs = [];
+  root.traverse((o) => { if (o.name === 'leg') legs.push(o); });
+  const leg = legs.filter((l) => l.position.x > 0).sort((a, b) => b.position.z - a.position.z)[0];
+  const H = new THREE.Box3().setFromObject(root).max.y;
+  const tris = triangles(leg, () => true), body = triangles(root, (o) => o.name === 'body');
+  const z = leg.position.z;
+  const cut = sectionY(body, z);
+  let belly = cut.min;
+  const step = (cut.max - cut.min) / 400;
+  while (belly < cut.max && !inside(body, { x: leg.position.x, y: belly, z })) belly += step;
+  const at = (f) => {
+    const s = sectionZ(tris, f * belly);
+    return { back: (s.min - z) / H, front: (s.max - z) / H, width: s.depth / H };
+  };
+  const breast = (f) => (sectionZ(body, f * belly).max - sectionZ(tris, f * belly).max) / H;
+  return { leg, tris, body, belly, H, at, breast };
+}
+
 // the key `partOf` wants for the corner of `tris` that scores highest
 export function cornerKey(tris, score) {
   let best = -Infinity, out = null;

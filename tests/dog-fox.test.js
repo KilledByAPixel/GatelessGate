@@ -398,23 +398,23 @@ test("the fox's brush falls away in an arc, as deep as the body through its midd
 
 // ---- the pair ---------------------------------------------------------------
 
-test('a front leg is slim below the knee and broad at the elbow: a tapering limb on a paw, not one width to the chest', () => {
+test('a front leg is a slim forearm on a paw, opening into the chest only at its top', () => {
   // One front leg's fore-and-aft extent, read level at fractions of the
   // daylight under the chest and held against the chest's own depth. The
-  // slimness belongs to the LOWER leg. Carried up to the belly at nearly that
-  // width, the leg is a stick pushed into the chest; the forearm widens to
-  // the elbow and has spent most of that by mid-leg. Past a little over two
-  // fifths of the chest it is a post again.
+  // forearm is an arm, not a thigh: near one width from the knee up, a little
+  // under a quarter of the chest, and broader only where it opens into the
+  // trunk at its top (the column itself is held in tests/quadruped.test.js).
+  // Broad at the elbow and spent by mid-leg, it was a hind thigh standing
+  // under the chest, and fat.
   for (const [label, make] of SPECIES) {
     const root = make().group;
     const chest = sectionY(triangles(root, (o) => o.name === 'body'), trunk(root).zFront);
     const leg = triangles(root, (o) => o.name === 'leg' && o.position.z > 0 && o.position.x > 0);
     const at = (f) => sectionZ(leg, f * chest.min).depth / chest.depth;
-    assert.ok(at(0.9) < 0.44, `${label}: a post: the forearm is ${at(0.9).toFixed(3)} of the chest's depth`);
-    assert.ok(at(0.9) > 0.28, `${label}: a stick: the forearm is ${at(0.9).toFixed(3)} of the chest's depth`);
-    assert.ok(at(0.9) > 1.6 * at(0.25), `${label}: no taper: ${at(0.9).toFixed(3)} above, ${at(0.25).toFixed(3)} below`);
-    assert.ok(at(0.5) < 0.8 * at(0.9),
-      `${label}: the elbow's breadth is carried to mid-leg: ${at(0.5).toFixed(3)} against ${at(0.9).toFixed(3)}`);
+    assert.ok(at(0.5) < 0.24 && at(0.7) < 0.26, `${label}: a fat forearm: ${at(0.5).toFixed(3)} / ${at(0.7).toFixed(3)} of the chest's depth`);
+    assert.ok(at(0.5) > 0.17, `${label}: a stick: the forearm is ${at(0.5).toFixed(3)} of the chest's depth`);
+    assert.ok(at(0.5) < 1.3 * at(0.25), `${label}: a wedge: ${at(0.5).toFixed(3)} at mid-leg, ${at(0.25).toFixed(3)} below`);
+    assert.ok(at(0.9) > 1.1 * at(0.5), `${label}: it never opens into the chest: ${at(0.9).toFixed(3)} at the top, ${at(0.5).toFixed(3)} at mid-leg`);
     assert.ok(at(0.25) < 0.21, `${label}: the lower leg is thick: ${at(0.25).toFixed(3)}`);
     assert.ok(at(0.25) > 0.14, `${label}: the cannon is wire: ${at(0.25).toFixed(3)}`);
     const paw = sectionZ(leg, 0.04 * chest.min).depth / chest.depth;

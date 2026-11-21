@@ -545,7 +545,7 @@ test('each ear is a closed leaf rising out of a corner of the poll, buried at it
   }
 });
 
-test('slim legs under real mass: the cannon is a fraction of the chest, the forearm broad at the elbow', () => {
+test('slim legs under real mass: the cannon is a fraction of the chest, the forearm a column over it', () => {
   const horse = build();
   const { plan } = horse;
   const chest = sectionY(bodyOf(horse.group), plan.zShoulder - 1e-3);
@@ -557,16 +557,18 @@ test('slim legs under real mass: the cannon is a fraction of the chest, the fore
     const s = sectionZ(triangles(horse.group, (o) => o === leg), f * chest.min);
     return (s.max - s.min) / chest.depth;
   };
-  const forearm = thick(front, 0.85), cannonF = thick(front, 0.2);
+  const forearm = thick(front, 0.7), cannonF = thick(front, 0.2);
   const gaskin = thick(hind, 0.75), cannonH = thick(hind, 0.2);
-  // The slimness is the cannon's. A forearm held near the cannon's width all
-  // the way up is one post from hoof to chest; it is broad just under the
-  // elbow and has spent that by the knee.
-  assert.ok(forearm > 0.3 && forearm < 0.42, `the forearm is ${forearm.toFixed(2)}x the chest's depth`);
+  // The slimness is the cannon's, and the forearm over it is a column, not a
+  // wedge: a little broader than the cannon, near one width from the knee to
+  // where it opens into the chest. Broad at the elbow and spent by the knee,
+  // it leaned its rear line back into the belly like a hind thigh, and it was
+  // fat.
+  assert.ok(forearm > 0.15 && forearm < 0.24, `the forearm is ${forearm.toFixed(2)}x the chest's depth`);
   assert.ok(cannonF > 0.1 && cannonF < 0.17, `the front cannon is ${cannonF.toFixed(2)}x`);
-  assert.ok(forearm > cannonF * 2.3, `and the forearm tapers into it: ${(forearm / cannonF).toFixed(2)}x the cannon`);
+  assert.ok(forearm > cannonF * 1.2, `and the forearm stands on it: ${(forearm / cannonF).toFixed(2)}x the cannon`);
   const knee = thick(front, 0.45);
-  assert.ok(knee < 0.62 * forearm, `the elbow's breadth is spent by the knee: ${knee.toFixed(2)}x against ${forearm.toFixed(2)}x`);
+  assert.ok(knee > 0.7 * forearm, `a wedge: ${knee.toFixed(2)}x at the knee against ${forearm.toFixed(2)}x above`);
   assert.ok(gaskin > 0.2 && gaskin < 0.27, `the gaskin is ${gaskin.toFixed(2)}x the chest's depth`);
   assert.ok(cannonH > 0.1 && cannonH < 0.17, `the hind cannon is ${cannonH.toFixed(2)}x`);
 });

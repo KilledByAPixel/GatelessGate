@@ -112,8 +112,11 @@ const EAR = {
 const STIR = 2.4;                        // seconds for one whole response
 
 // A deep fold at the hock: a fox stands crouched over its hind legs, and the
-// angle is most of what keeps it from reading as a small dog on stilts.
-const KNEE = 0.38;                       // rad, hind hock bend
+// angle is most of what keeps it from reading as a small dog on stilts. The
+// hock stands well behind the thigh, so the back of the leg dips forward
+// above it, and the cannon under it is near plumb (`rake`) — leaned forward
+// to the hip it was a second slope where a fox has an upright pin.
+const KNEE = 0.45;                       // rad, hind hock bend
 
 export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
   const { group, material } = makeQuadruped({
@@ -130,18 +133,17 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     torso: { chest: 1.35, loin: 0.62, withers: 1.0, back: 0.92, croup: 1.0, slab: 1, barrel: 0.7, girth: 0.16, shoulderW: 0.86, barrelW: 0.97, hipW: 0.86 },
     legBury: .16,
     // FINE LIMBS. A fox's front leg is under a fifth of its chest's depth
-    // below the knee and widens to the elbow (`elbow`) by about half as much
-    // again — less than the dog's does, but one width from paw to chest is a
-    // stick, and a forearm half as deep as the chest is a dog's leg under a
-    // fox. `legR` scales the whole leg and
-    // `legTaper` the forearm alone, so the shoulder, thigh and paw — stated
-    // as multiples of `legR` — are raised to keep the masses they had. The
-    // shoulder is the chest's own side come down to the leg (`torso.slab`),
-    // and the leg widens into it only a little (`point`, `arm`): a long lean
-    // either way is a dog's elbow, and the face it makes under the chest
-    // shows from in front as a dark band across the top of a thin leg.
+    // below the knee, and the forearm over it is a slim column (`elbow`) that
+    // opens both ways into the chest over a long run (`flare`, `drop`): a
+    // fox's forearm edges part gently all the way up rather than flaring at
+    // the elbow. `legR` scales the whole leg and `legTaper` the forearm
+    // alone, so the shoulder, thigh and paw — stated as multiples of `legR`
+    // — are raised to keep the masses they had. The shoulder is the chest's
+    // own side come down to the leg (`torso.slab`). The leg stands forward
+    // under the breast (`frontSet`): further back, the chest jutted ahead of
+    // it as a keel with the leg's front line meeting it in a notch.
     legH: LEG_H, legR: 0.047, legTaper: 0.76, hipX: 0.08, hipZ: 0.31,
-    legs: { knee: KNEE, shoulder: 3.6, thigh: 3.7, foot: 1.5, hindSet: 0.09, point: 0.5, arm: 1.3, elbow: 1.85 },
+    legs: { knee: KNEE, shoulder: 3.6, thigh: 3.7, foot: 1.5, hindSet: 0.09, frontSet: 0.07, point: 0.5, flare: 0.9, drop: 0.45, elbow: 1.3, rake: 0.15 },
     // A ruff, not a stalk: the throat starts low on the chest, the nape leaves
     // the back early, and the taper spends little of that on the way up. Its
     // end still has to fit inside the skull it enters, turned or not. `ease`

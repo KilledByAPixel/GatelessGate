@@ -7,7 +7,7 @@ import { makeFox } from '../src/kit/fox.js';
 import { makeBuffalo } from '../src/kit/buffalo.js';
 import { makeHorse } from '../src/kit/horse.js';
 import { makeCat } from '../src/kit/cat.js';
-import { triangles, sectionY, sectionZ, legClouds, trunk, legsJoinBody, inside } from './helpers/quadruped-probe.js';
+import { triangles, sectionY, sectionZ, legClouds, trunk, legsJoinBody, inside, foreleg } from './helpers/quadruped-probe.js';
 
 const names = (g) => g.children.map((c) => c.name).sort();
 
@@ -480,12 +480,59 @@ test('a standing hind leg carries its foot under the hip, stifle ahead of hock',
         const band = pts.filter((q) => q.y >= lo * run && q.y <= hi * run);
         return band.reduce((sum, q) => sum + q.z, 0) / band.length;
       };
-      const foot = meanZ(-1, 0.02), hock = meanZ(0.28, 0.4), stifle = meanZ(0.62, 0.78);
+      // the hock is wherever the leg's rear point is, below its middle: a
+      // species may stand it higher (`legs.hock`)
+      const low = pts.filter((q) => q.y < 0.55 * run);
+      const hockY = low.reduce((a, q) => (q.z < a.z ? q : a)).y / run;
+      const foot = meanZ(-1, 0.02), hock = meanZ(hockY - 0.06, hockY + 0.06), stifle = meanZ(0.62, 0.78);
       assert.ok(Math.abs(foot - leg.position.z) < 0.08 * run,
         `${label}: the hind foot stands ${((leg.position.z - foot) / run * 100).toFixed(1)}% of the leg's run behind the hip`);
       assert.ok(stifle > hock + 0.04 * run,
         `${label}: the stifle is carried ${((stifle - hock) / run * 100).toFixed(1)}% ahead of the hock`);
     }
+  }
+});
+
+// THE HOCK STANDS WHERE THE SPECIES SAYS, OVER A CANNON IT CHOOSES THE LEAN OF.
+// Stated at their defaults `hock` and `rake` change nothing; a lower `hock`
+// stands the joint higher on the leg, and a low `rake` stands the cannon
+// plumb under it instead of leaning it forward to the hip.
+test('legs.hock and legs.rake: the hock higher, the cannon plumb', () => {
+  const hindOf = (legs) => {
+    const q = makeQuadruped({ height: 1, legs });
+    const leg = q.group.children.filter((c) => c.name === 'leg' && c.position.z < 0 && c.position.x > 0)[0];
+    const tris = triangles(q.group, (o) => o === leg);
+    let hock = { z: Infinity, y: 0 };
+    for (const t of tris) for (let k = 0; k < 9; k += 3) if (t[k + 1] < 0.55 * leg.position.y && t[k + 2] < hock.z) hock = { z: t[k + 2], y: t[k + 1] };
+    return { leg, tris, hock, foot: sectionZ(tris, 0.03 * leg.position.y).min };
+  };
+  const same = hindOf({}), stated = hindOf({ hock: 0.66, rake: 0.2 });
+  assert.deepStrictEqual(Array.from(stated.leg.geometry.getAttribute('position').array),
+    Array.from(same.leg.geometry.getAttribute('position').array), 'stated at their defaults they change nothing');
+  const high = hindOf({ hock: 0.56 });
+  assert.ok(high.hock.y > same.hock.y + 0.05 * same.leg.position.y,
+    `the hock stands at ${high.hock.y.toFixed(3)} against ${same.hock.y.toFixed(3)}`);
+  const plumb = hindOf({ rake: 0.03, knee: 0.4 }), leaned = hindOf({ knee: 0.4 });
+  const lean = (h) => (h.foot - h.hock.z) / h.leg.position.y;
+  assert.ok(lean(leaned) > 0.05 && lean(plumb) < 0.5 * lean(leaned),
+    `the heel stands ${lean(plumb).toFixed(3)} ahead of the hock, against ${lean(leaned).toFixed(3)} leaned`);
+});
+
+// THE HOCK IS NOT AT THE GROUND. Left at the plan's share, a horse's, a dog's
+// and a bison's hock all stood about a fifth of the animal's height up, a low
+// fold with the cannon short under it; each stands it higher, the fox about
+// where it was. Fractions of the whole height, ears included.
+const HOCK = { dog: [0.23, 0.28], fox: [0.2, 0.25], horse: [0.235, 0.29], buffalo: [0.235, 0.3] };
+test('dog, fox, horse and buffalo: the hock stands where each carries it', () => {
+  for (const [label, build] of STANDING.filter(([l]) => HOCK[l])) {
+    const root = build();
+    root.updateMatrixWorld(true);
+    const H = new THREE.Box3().setFromObject(root).max.y;
+    const leg = root.children.filter((c) => c.name === 'leg' && c.position.z < 0 && c.position.x > 0)[0];
+    let hock = { z: Infinity, y: 0 };
+    for (const t of triangles(root, (o) => o === leg)) for (let k = 0; k < 9; k += 3) if (t[k + 1] < 0.55 * leg.position.y && t[k + 2] < hock.z) hock = { z: t[k + 2], y: t[k + 1] };
+    const [lo, hi] = HOCK[label];
+    assert.ok(hock.y / H > lo && hock.y / H < hi, `${label}: the hock stands ${(hock.y / H).toFixed(3)} of the height up`);
   }
 });
 
@@ -663,9 +710,9 @@ test('torso.sag spends a falling back evenly, and plan.topAt reports it', () => 
 // ---- THE SHOULDER, as tests ---------------------------------------------------
 // A front leg used to be a post entering the underside of a round chest. Three
 // things replace that and each is held on its own: the chest's sides come
-// straight down to a corner over the leg (torso.slab), the leg widens fore and
-// aft into the chest above its forearm (legs.point), and the back turns up
-// into the nape without a notch (neck.ease).
+// straight down to a corner over the leg (torso.slab), the leg is a column
+// opening both ways into the chest at its top (legs.point), and the back turns
+// up into the nape without a notch (neck.ease).
 
 // half-width of a set of triangles at a station z and a height y: the cut of
 // the cut, so it reads the surface that renders and not a ring's own vertices
@@ -704,13 +751,25 @@ function frontLeg(root) {
   return { leg, tris: triangles(leg, () => true), body, z: leg.position.z, keel: cut.min, top: cut.max, belly };
 }
 
-// how much broader, fore and aft, a front leg is where it leaves the chest
-// than a fifth of the way down to the ground, and how far its rear line has
-// leaned back by there
-function flare(root) {
-  const { tris, belly } = frontLeg(root);
-  const at = sectionZ(tris, belly), under = sectionZ(tris, 0.8 * belly);
-  return { ratio: at.depth / under.depth, back: under.min - at.min };
+// THE FOREARM AS A COLUMN, read off one front leg between two levels of its
+// column (fractions of the belly's height) and on up to the belly: how far
+// each edge drifts over the column and how much broader its top is than its
+// foot (the column), and how far each edge sweeps out from the column's top
+// to the hide, all as fractions of the column's breadth at its top (the
+// flare). `breast` is how far the trunk stands ahead of the column's front
+// edge a little above the belly line.
+function column(root, lo, hi) {
+  const F = foreleg(root);
+  const L = F.at(lo), U = F.at(hi), T = F.at(1);
+  const w = U.width;
+  const front = sectionZ(F.body, 1.3 * F.belly).max;
+  return {
+    F, w,
+    drift: Math.max(Math.abs(U.front - L.front), Math.abs(U.back - L.back)) / w,
+    taper: U.width / L.width,
+    fwd: (T.front - U.front) / w, aft: (U.back - T.back) / w,
+    breast: ((front - F.leg.position.z) / F.H - U.front) / w,
+  };
 }
 
 // the body's topline as the corners it turns through, from the back over the
@@ -757,16 +816,25 @@ test('torso.slab carries the sides of the chest straight down over the front leg
   legsJoinBody(slab.group, 'slab-chested plan', assert.ok);
 });
 
-test('legs.point widens a front leg into the chest, fore and aft', () => {
+test('legs.point stands the forearm as a column that flares both ways into the chest', () => {
   const base = { height: 1, neck: {}, torso: { slab: 1 } };
-  const post = flare(makeQuadruped(base).group);
-  const arm = flare(makeQuadruped({ ...base, legs: { point: 0.6 } }).group);
-  assert.ok(post.ratio < 1.25, `without it the leg meets the belly near the width it has below: ${post.ratio.toFixed(2)}x`);
-  assert.ok(arm.ratio > 1.4, `with it the leg leaves the chest ${arm.ratio.toFixed(2)}x as broad as it is a fifth of the way down`);
-  assert.ok(arm.back > post.back + 0.01, `its rear line leans back into the belly: ${arm.back.toFixed(3)} against ${post.back.toFixed(3)}`);
+  const legs = { point: 0.6, elbow: 1.1, flare: 0.8, drop: 0.2 };
+  const post = column(makeQuadruped(base).group, 0.5, 0.75);
+  const col = column(makeQuadruped({ ...base, legs }).group, 0.5, 0.75);
+  // the plain limb opens only backward, its elbow pushed back into the belly
+  assert.ok(post.fwd < 0.05 && post.aft > 0.15, `without it the leg opens ${post.fwd.toFixed(2)} forward and ${post.aft.toFixed(2)} back`);
+  assert.ok(col.taper < 1.25 && col.drift < 0.2,
+    `with it a column: ${col.taper.toFixed(2)}x broader at its top, its edges drifting ${col.drift.toFixed(2)} of its breadth`);
+  assert.ok(col.fwd > 0.15 && col.aft > 0.15, `opening forward ${col.fwd.toFixed(2)} and back ${col.aft.toFixed(2)} at its top`);
+  assert.ok(Math.max(col.fwd, col.aft) < 2 * Math.min(col.fwd, col.aft), 'and about as far one way as the other');
+  const flat = column(makeQuadruped({ ...base, legs: { ...legs, flare: 0 } }).group, 0.5, 0.75);
+  assert.ok(col.fwd > flat.fwd + 0.1 && col.aft > flat.aft + 0.1, `flare is what opens it: ${flat.fwd.toFixed(2)} / ${flat.aft.toFixed(2)} without`);
   const hind = (q) => q.group.children.filter((c) => c.name === 'leg' && c.position.z < 0)[0].geometry.getAttribute('position').array;
-  assert.deepStrictEqual(Array.from(hind(makeQuadruped({ ...base, legs: { point: 0.6 } }))), Array.from(hind(makeQuadruped(base))),
+  assert.deepStrictEqual(Array.from(hind(makeQuadruped({ ...base, legs }))), Array.from(hind(makeQuadruped(base))),
     'and only the front legs take it');
+  legsJoinBody(makeQuadruped({ ...base, legs }).group, 'column-legged plan', assert.ok);
+  // the one-sided reach back into the belly is gone, and says so
+  assert.throws(() => makeQuadruped({ ...base, legs: { point: 0.6, arm: 1.5 } }), /arm is retired/);
 });
 
 test('neck.ease turns the back up into the nape without a notch', () => {
@@ -783,18 +851,30 @@ test('neck.ease turns the back up into the nape without a notch', () => {
 });
 
 const SHOULDERED = STANDING.filter(([label]) => label !== 'cat');
-// How much a front leg must widen over the last fifth of its visible length.
-// Each bar stands between that animal's leg as built and the same leg as a
-// plain limb: a heavy forearm already spreads a little toward its elbow, so
-// one number for all four would be passed by the stoutest post.
-const FLARE = { dog: 1.5, fox: 1.35, horse: 1.3, buffalo: 1.22 };
+// Where each animal's column stands, as fractions of the belly's height: from
+// above its knee to below its flare. A horse's knee is high under a short
+// forearm; a fox's flare starts low and runs long.
+const COLUMN = { dog: [0.35, 0.6], fox: [0.3, 0.5], horse: [0.45, 0.75], buffalo: [0.45, 0.7] };
+// How far the slab corner may hang out past the leg's outer side, x height.
+// A bison's chest is far wider than his stance and does hang over his legs.
+const EAVE = { buffalo: 0.07 };
 
-test('dog, fox, horse and buffalo: a front leg widens into a slab-sided chest whose corner stands over it', () => {
+// THE FRONT LEG IS AN ARM, NOT A THIGH. Side-on, the forearm is a slim column,
+// both edges near plumb and only a little broader at its top than at its foot;
+// at its top it opens both ways into the trunk about equally, and the breast
+// stands out ahead of it. A leg broad at the elbow and tapering hard, with its
+// rear line leaning back into the belly and its front line straight, is a hind
+// thigh standing under a chest.
+test('dog, fox, horse and buffalo: a front leg is a column opening both ways into a slab-sided chest whose corner stands over it', () => {
   for (const [label, build] of SHOULDERED) {
     const root = build();
-    const f = flare(root);
-    assert.ok(f.ratio > FLARE[label], `${label}: the leg leaves the chest ${f.ratio.toFixed(2)}x as broad as it is below`);
-    assert.ok(f.back > 0, `${label}: its rear line leans back into the belly`);
+    const c = column(root, ...COLUMN[label]);
+    assert.ok(c.drift < 0.2, `${label}: the column's edges drift ${c.drift.toFixed(2)} of its breadth: it leans`);
+    assert.ok(c.taper > 0.95 && c.taper < 1.4, `${label}: the column is ${c.taper.toFixed(2)}x broader at its top`);
+    assert.ok(c.fwd > 0.2 && c.aft > 0.12, `${label}: it opens ${c.fwd.toFixed(2)} forward and ${c.aft.toFixed(2)} back at its top`);
+    assert.ok(Math.max(c.fwd, c.aft) < 2.2 * Math.min(c.fwd, c.aft), `${label}: one-sided: ${c.fwd.toFixed(2)} forward, ${c.aft.toFixed(2)} back`);
+    assert.ok(c.w * c.F.H < 0.25 * sectionY(c.F.body, c.F.leg.position.z).depth, `${label}: a fat forearm`);
+    assert.ok(c.breast > 0.4, `${label}: the breast stands only ${c.breast.toFixed(2)} of the forearm's breadth ahead of it`);
     // the chest at the shoulder: still most of its breadth low down
     const { tris, body, z, belly } = frontLeg(root);
     const zS = trunk(root).zFront - 1e-4;
@@ -805,7 +885,7 @@ test('dog, fox, horse and buffalo: a front leg widens into a slab-sided chest wh
     const height = new THREE.Box3().setFromObject(root).max.y;
     const corner = halfWidthAt(body, z, belly + 0.03 * height);
     const legOut = halfWidthAt(tris, z, belly - 0.02 * height);
-    assert.ok(legOut > 0 && corner - legOut < 0.05 * height && legOut - corner < 0.03 * height,
+    assert.ok(legOut > 0 && corner - legOut < (EAVE[label] ?? 0.05) * height && legOut - corner < 0.03 * height,
       `${label}: chest side ${(corner / height).toFixed(3)} against the outer side of the leg ${(legOut / height).toFixed(3)} (x height)`);
   }
 });

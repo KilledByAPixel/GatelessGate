@@ -64,7 +64,7 @@ import { mergeSimple } from './scatter.js';
 const HEAD_UP = 0.45;            // head centre above the body's axis, x height
 const HEAD_FWD = 0.80;           // ...and ahead of the animal's middle
 const HEAD_TILT = 0.9;           // rad the face hangs below level
-const KNEE = 0.17;               // rad, hind hock fold
+const KNEE = 0.32;               // rad, hind hock fold
 const POLL_LEAN = 0.15;          // rad the neck's last section leans back off upright
 const TAIL_LEAN = 0.16;          // rad the whole hank leans back off plumb
 // Where the dock is pinned, against the plan's own croup point: [down, forward]
@@ -140,10 +140,12 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // under it is long, deepest just behind the elbow: with the plan's round
   // section it was a diamond from the front and a ridge down the flank. The
   // shoulder ends at a girth (`girth`), so it is a plane against the ribs.
-  // THE NECK IS LONG AND DEEP AT ITS BASE: its root takes most of the front
-  // of the chest (`root`), and the head is carried far enough out and up
-  // that the neck is well over half the height of the withers long. Shorter
-  // and shallower, it was a pony's head on a foal's neck.
+  // THE NECK IS LONG AND DEEP AT ITS BASE, and the head is carried far enough
+  // out and up that the neck is well over half the height of the withers
+  // long. Shorter and shallower, it was a pony's head on a foal's neck. The
+  // throat leaves the breast a little above the brisket (`root`): from lower
+  // down, the chest ran on ahead of the front leg as a level keel and the
+  // leg's front line met it in a notch.
   const { group, tail, plan } = makeQuadruped({
     height, color, seed,
     bodyR: 0.18, bodyLen: 0.59, bodyDrop: 0.055,
@@ -154,34 +156,38 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     legBury: 0.18,
     legH: 0.62, legR: 0.048, legTaper: 0.97, hipX: 0.105, hipZ: 0.285,
     // `legR` is the whole leg's gauge and it is small: `thigh` then asks for
-    // a full haunch in those units, `gaskin` spends most of it before the
-    // hock, and the forearm's own breadth is stated at the elbow (below).
+    // a full haunch in those units, `gaskin` spends nearly all of it before
+    // the hock so the back of the leg dips forward above the hock, and the
+    // forearm's own breadth is stated at the elbow (below). The hock stands a
+    // quarter of the height up (`hock`) over a cannon that is close to
+    // plumb (`rake`); the fold behind it (`KNEE`) puts it under the
+    // buttock. Lower, it was a fetlock-high joint over a stub of cannon.
     // `shoulder` and `proud` are both low because what they build shows on a
     // slim leg as a box cap standing on the forearm, in front of the chest;
     // stood further out, the thigh's cap also breaks the flank as a dark dart
     // at the hip. A foot longer than the cannon is thick: a hoof, not a paw,
     // but a definite block.
     //
-    // The forearm is a real muscle: getting on for three times the cannon
-    // fore and aft at the elbow (`elbow`), over a third of the chest's depth,
-    // tapering to the knee. Nearer the cannon's own width up there the leg
-    // was one post from hoof to chest. The breast stands a little
-    // forward of the leg (`frontSet` is kept short of putting the leg under
-    // its point).
+    // THE FOREARM IS AN ARM, NOT A THIGH: a slim column, a little broader
+    // than the cannon and near one width from the knee to the elbow, both
+    // edges close to plumb (`elbow`), over a knee carried high (`wrist`).
+    // Getting on for three times the cannon at the elbow and tapering to the
+    // knee, it sloped its back line into the belly like a hind leg and was
+    // fat. It opens both ways into the trunk only over a short run at its
+    // top (`flare`, `drop`): forward into the breast, back into the girth.
     //
     // THE SHOULDER is not a mass on the leg at all. It is the chest's own
     // side carried straight down to the elbow (`torso.slab`), with the leg
-    // widening into it above the forearm (`point` forward toward the breast,
-    // `arm` back into the belly) and standing forward under the breast
-    // (`frontSet`), so the front line of the leg runs on up into the chest.
-    legs: { knee: KNEE, shoulder: 2.2, thigh: 4.12, proud: 0.0, cannon: 0.72, foot: 1.2, gaskin: 0.8, frontSet: 0.05, hindSet: 0.1, point: 0.55, arm: 1.8, elbow: 2.15 },
+    // standing forward under the breast (`frontSet`) and the breast still
+    // standing out ahead of it.
+    legs: { knee: KNEE, shoulder: 2.2, thigh: 4.12, proud: 0.0, cannon: 0.72, foot: 1.2, gaskin: 0.95, frontSet: 0.06, hindSet: 0.1, point: 0.55, flare: 0.8, drop: 0.15, elbow: 1.15, wrist: 0.35, hock: 0.58, rake: 0.06 },
     // `set` at nothing: the nape leaves the topline AT the withers, so the
     // withers are the corner where back turns into neck — but not the only
     // one. `ease` carries the root's top a way up the nape, so the line
     // climbs from the withers at once and turns again at the root; left where
     // the plan puts it, the root stands under the withers and the crest
     // starts from a step down.
-    neck: { r: 0.068, w: 0.8, root: 0.65, set: 0.0, taper: 1.0, arch: 0.07, ease: 0.4 },
+    neck: { r: 0.068, w: 0.8, root: 0.4, set: 0.0, taper: 1.0, arch: 0.07, ease: 0.4 },
     head,
     // no snout: the muzzle is the front of the single head loft below.
     // The plan's cones only say that there are two ears: each is restated

@@ -77,27 +77,40 @@ const NECK_DEFAULTS = { r: 0.08, w: 0.8, root: 0.55, set: 0.25, taper: 1.5, arch
 //           lean second thigh under a full haunch; low carries the haunch
 //           most of the way to the hock
 // point     null leaves the front leg a limb from the belly down. A number
-//           builds THE UPPER ARM (see it beside the front leg's rows): how
-//           far AHEAD of the leg its buried ring reaches, as a fraction of
-//           the breast's overhang in front of the leg — and never further
-//           than there is chest to hold it
-// arm       ...and how far BEHIND the forearm's own rear edge it reaches, x legR
-// drop      ...and how far below the belly line the forearm proper starts,
+//           builds THE FOREARM AS A COLUMN (see it beside the front leg's
+//           rows): how far its buried vault ring reaches, ahead of the leg
+//           and as far behind it, as a fraction of the breast's overhang in
+//           front of the leg — and never further than there is chest to
+//           hold it
+// flare     ...and how far each edge of the column has swept out by the
+//           time it reaches the hide, x the forearm's own half-depth: the
+//           same both ways, forward into the breast and back into the girth
+// drop      ...and how far below the belly line the column proper starts,
 //           as a fraction of the leg's length under the belly: the run over
-//           which the leg widens into the chest
-// spread    ...and how far out toward the hide that ring is carried across:
-//           0 keeps the leg's own width, for a chest whose corner already
-//           stands over the leg; 1 is for a stance well inside a wide chest
+//           which it flares
+// spread    ...and how far out toward the hide the vault ring is carried
+//           across: 0 keeps the leg's own width, for a chest whose corner
+//           already stands over the leg; 1 is for a stance well inside a
+//           wide chest
+// wrist     ...and where the knee stands, as a fraction of the leg's run
+//           from the column's top to the ground: high is a horse's short
+//           forearm over a long cannon, low a dog's long one
 // elbow     fore-aft radius of the forearm at its top, x legR (and x legTaper)
+// hock      share of a hind leg's run that lies above the hock: lower stands
+//           the hock higher, a horse's or an ox's over a long cannon
+// rake      how far forward of the hock the hind cannon carries the foot, as
+//           a fraction of `knee`'s spread: low stands the cannon plumb under
+//           the hock, high leans it forward to bring the foot under the hip
 const LEG_DEFAULTS = {
   knee: 0.3, shoulder: 2.0, thigh: 2.8, proud: 0.09, cannon: 0.8, foot: 1.3, frontSet: 0, hindSet: 0, gaskin: 0.66,
-  point: null, arm: 1.5, drop: 0.12, spread: 0, elbow: 1.45,
+  point: null, flare: 0.6, drop: 0.12, spread: 0, wrist: 0.52, elbow: 1.45, hock: 0.66, rake: 0.2,
 };
-// Share of a hind leg's run that lies above the hock.
-const HOCK_RUN = 0.66;
 // A limb's ring is a hexagon with a corner to each side, so fore and aft it
 // reaches only this fraction of its stated radius.
 const HEX = Math.sin(Math.PI / 3);
+// How far forward the front leg's flare ring is carried, as a share of what
+// it gains over the column: see THE FLARE MEETS THE TRUNK ALONG A SLANT.
+const FLARE_LEAD = 0.3;
 
 // The shared body plan for every four-legged animal in the book. Everything
 // scales off `height` and faces +z; a species is this plan at its own
@@ -178,9 +191,9 @@ const HEX = Math.sin(Math.PI / 3);
 // ON the ribs above the belly line, and anything of the leg's own up there is
 // a second surface crossing the flank. So it is two things, each opted into:
 // the chest's sides brought straight down over the legs (`torso.slab`, see THE
-// CHEST IS SLAB-SIDED), and the leg widened into that chest above its forearm
-// (`legs.point`, see THE UPPER ARM). Stated neither, the front leg is the limb
-// described above.
+// CHEST IS SLAB-SIDED), and the leg a slim column flaring into that chest both
+// ways at its top (`legs.point`, see THE FOREARM IS A COLUMN). Stated neither,
+// the front leg is the limb described above.
 export function makeQuadruped({
   height = 1,
   color = INK_LIT,
@@ -191,7 +204,7 @@ export function makeQuadruped({
   // legs
   legH = 0.52, legR = 0.055, legTaper = 0.82, hipX = 0.13, hipZ = 0.32,
   legBury = 0.06,        // how far above the flank's underside the shoulder/thigh ring rides, x height
-  legs = null,           // { knee, shoulder, thigh, proud, cannon, foot, frontSet, hindSet, gaskin, point, arm, drop, spread, elbow } — see LEG_DEFAULTS
+  legs = null,           // { knee, shoulder, thigh, proud, cannon, foot, frontSet, hindSet, gaskin, point, flare, drop, spread, wrist, elbow } — see LEG_DEFAULTS
   // head
   head = { shape: 'sphere', r: 0.20, fwd: 0.56, up: 0.22 },   // + scaleX/scaleY/scaleZ (default 1): squish the skull in its own tilted frame
   neck = null,           // { r, w, root, set, taper, arch, ease, easeUp } — see NECK_DEFAULTS; null ends the chest in a blunt breast
@@ -215,6 +228,13 @@ export function makeQuadruped({
       throw new Error(`makeQuadruped: '${k}' is retired — the muzzle is the front of the head `
         + 'loft, and horns belong to the species that wears them');
     }
+  }
+  // The front leg's upper arm reached back into the belly on its own, and
+  // that one-sided lean was a hind thigh under a chest: the column's flare
+  // is stated once, for both edges (`flare`).
+  if (legs && legs.arm !== undefined) {
+    throw new Error("makeQuadruped: legs.arm is retired — the forearm flares the same both ways now; "
+      + 'state legs.flare (and legs.point for the buried vault ring\'s reach)');
   }
   if (neck && (neck.len !== undefined || neck.tilt !== undefined)) {
     throw new Error('makeQuadruped: neck takes { r, w, root, set, taper, arch } now — '
@@ -502,10 +522,13 @@ export function makeQuadruped({
   // one. Each ring stands square to the path, so a bend carries its ring round
   // with it — except the first and the last, which are held level: the mass on
   // top closes in a cone up into the body, and a foot is flat on the ground.
+  // A ring may instead state its own slant as a number in place of `level`:
+  // how far its front edge stands above its centre, as a fraction of rz.
   const limb = (pts, capH) => {
     const last = pts.length - 1;
     const sts = pts.map(([y, z, rz, rx, level], i) => {
       let dy = -1, dz = 0;
+      if (typeof level === 'number') return { c: [y, z], a: [level * rz, rz], w: rx };
       if (i > 0 && i < last && !level) {
         dy = pts[i + 1][0] - pts[i - 1][0]; dz = pts[i + 1][1] - pts[i - 1][1];
         const n = Math.hypot(dy, dz) || 1; dy /= n; dz /= n;
@@ -612,9 +635,9 @@ export function makeQuadruped({
       // animal standing behind itself. The hock sits LOW: a joint at
       // mid-height lands where the thigh's own mass is and the fold vanishes
       // into it.
-      const hb = Math.tan(LG.knee) * HOCK_RUN * run;
+      const hb = Math.tan(LG.knee) * LG.hock * run;
       const zHock = -0.5 * hb;
-      const zPastern = zHock + 0.2 * hb;
+      const zPastern = zHock + LG.rake * hb;
       const zFoot = zPastern + 0.9 * HEX * (fR - C);
       // THE THIGH IS STATED BY ITS TWO EDGES, not a centre and a radius. Its
       // rear edge is the rump's own end carried on down (so `hindSet` decides
@@ -629,36 +652,47 @@ export function makeQuadruped({
         [0, ringZ, rz0, rx0],
         [-0.26 * run, zStifle, rT, Math.max(proudAt(top), 1.1 * lr)],
         [-0.46 * run, lerp(zStifle, zHock, 0.55), lerp(rT, lr, LG.gaskin), 1.15 * lr],
-        [-HOCK_RUN * run, zHock, 1.0 * lr, 0.9 * lr],
-        [-0.80 * run, zHock + 0.09 * hb, 1.08 * C, C],
+        [-LG.hock * run, zHock, 1.0 * lr, 0.9 * lr],
+        [-0.80 * run, zHock + 0.45 * LG.rake * hb, 1.08 * C, C],
         [-(run - 1.25 * fH), zPastern, 1.05 * C, 0.95 * C],
         [-(run - 0.7 * fH), zFoot, fR, fX, true],
         [-run, zFoot, 1.05 * fR, 1.05 * fX, true],
       ];
     } else if (LG.point != null) {
-      // THE UPPER ARM. A front leg that keeps one width up to the belly line
-      // meets it square: a post entering the underside of the chest, with a
-      // notch in front of it under the breast and another behind it. A leg
-      // WIDENS INTO THE BODY. So between the buried top and the forearm there
-      // is one more ring, inside the chest just above the belly line and
-      // stated like the thigh by its two edges: the front one reaches for the
-      // breast (`point`), the rear one lies behind the elbow (`arm`). The
-      // forearm proper starts a little below the belly (`drop`), and over
-      // that run the leg's front line leans forward into the breast and its
-      // rear line back into the belly. Across, the ring stays under the hide
+      // THE FOREARM IS A COLUMN. Side-on, a front leg is nearly one width
+      // from the knee to the elbow, its front and back edges both close to
+      // plumb, and at its top it opens BOTH ways into the trunk: the front
+      // edge sweeps forward and up into the breast, the back edge back and up
+      // into the girth behind the elbow, like the top of a column meeting a
+      // vault. A leg that leans only its back line into the belly, with its
+      // front line straight, is a hind thigh standing under a chest; one that
+      // keeps its width up to the belly meets it square, a post with a notch
+      // either side.
+      //
+      // So above the column's top ring (at `drop` below the belly) there are
+      // two more. One stands AT the hide, its edges swept out by `flare` of
+      // the column's half-depth both ways, with a ring between that has made
+      // less than half of that sweep, so each edge curves out rather than
+      // running up as a straight cone. What shows of the flare is that run,
+      // and where each edge then meets the trunk: under the breast, which rises ahead of the leg, the front edge
+      // shows further up than the back one does under the girth, which is
+      // why the reach is stated once and not per edge. The last is the vault,
+      // buried in the chest above the belly line and reaching the same
+      // distance ahead and behind (`point`), each edge drawn in until its
+      // outer corner is inside the chest so that nothing stands out of the
+      // narrowing breast as a prong. Across, that ring stays under the hide
       // (`spread`): the shoulder's breadth is the chest's own slab side
       // (`torso.slab`), and a mass of the leg's own standing on the ribs cuts
-      // in and out of them along a ragged line however it is shaped. Each edge
-      // is drawn in until its outer corner is inside the chest, or it stands
-      // out of the narrowing breast as a prong. The lean of the front line is
-      // paid for from in front: that face looks down, and a long one is a dark
-      // band across the top of the leg.
+      // in and out of them along a ragged line however it is shaped. The
+      // flare is paid for from in front: its faces look down, and a long one
+      // is a dark band across the top of the leg.
       const rE = lr * legTaper * LG.elbow;
       const rK = Math.max(1.15 * C, 0.95 * lr);
-      const eY = top - floor + Math.max(0.1 * legBury * h, LG.drop * floor);
+      const hY = top - floor;
+      const eY = hY + Math.max(0.1 * legBury * h, LG.drop * floor);
       const low = run - eY;
       const zFoot = 0.1 * lr + 0.9 * HEX * (fR - C);
-      const yP = lerp(floor, top, 0.5);
+      const rF = rE * (1 + LG.flare);
       // the hide's own half-width at a height and a station, off the trunk
       // that renders
       const hide = (y, zz) => {
@@ -666,24 +700,77 @@ export function makeQuadruped({
         for (let k = 0; k < 14; k++) { const m = (lo + hi) / 2; if (inTrunk(m, y, zz)) lo = m; else hi = m; }
         return lo;
       };
-      let fwd = Math.max(0, LG.point * (zBreast - z)), aft = 0.25 * lr + HEX * rE + LG.arm * lr;
-      let rxP = 0, zP = 0;
-      for (let k = 0; k < 60; k++) {
-        zP = (fwd - aft) / 2;
-        rxP = Math.max(0.78 * rE, LG.spread * (0.92 * hide(yP, z + zP) - hx));
-        const under = (e) => inTrunk(hx + 0.5 * rxP, yP, z + e);
-        const okF = fwd <= rE || under(fwd), okA = aft <= rE || under(-aft);
-        if (okF && okA) break;
-        if (!okF) fwd *= 0.95;
-        if (!okA) aft *= 0.95;
+      // a ring's six corners, scaled by k about its centre, all inside the
+      // trunk (`tilt` as in `limb`)
+      const ringIn = (y, zc, rz, rx, tilt, k) => {
+        for (let j = 0; j < 6; j++) {
+          const t = (j / 6) * Math.PI * 2, sn = Math.sin(t);
+          if (!inTrunk(hx + k * Math.cos(t) * rx, y + k * sn * tilt * rz, z + zc + k * sn * rz)) return false;
+        }
+        return true;
+      };
+      // THE VAULT at a height: its reach drawn in, each end on its own, until
+      // the whole ring fits with a margin
+      const vault = (yP) => {
+        let fwd = Math.max(HEX * rF, LG.point * (zBreast - z)), aft = fwd;
+        let rxP = 0, zP = 0, across = 1;
+        for (let k = 0; k < 80; k++) {
+          zP = (fwd - aft) / 2;
+          rxP = across * Math.max(0.78 * rE, LG.spread * (0.92 * hide(yP, z + zP) - hx));
+          const under = (e) => inTrunk(hx + 0.5 * SINK * rxP, yP, z + SINK * e) && inTrunk(hx - 0.5 * SINK * rxP, yP, z + SINK * e);
+          const okF = fwd <= HEX * rF || under(fwd), okA = aft <= HEX * rF || under(-aft);
+          if (okF && okA && ringIn(yP, zP, (fwd + aft) / 2 / HEX, rxP, 0, SINK)) break;
+          if (!okF || okA) fwd *= 0.95;
+          if (!okA || okF) aft *= 0.95;
+          across *= 0.97;
+        }
+        return { yP, zP, rzP: (fwd + aft) / 2 / HEX, rxP };
+      };
+      // THE FLARE MEETS THE TRUNK ALONG A SLANT. The hide the leg comes out
+      // of is not level: ahead of it the breast is already rising, behind it
+      // the girth hangs at or below the belly line. So the ring at the hide
+      // is laid through two points, its front edge just inside the breast's
+      // underside and its back edge just inside the girth's, and each edge of
+      // the leg runs into the trunk at its own height. Read level, the back
+      // edge then opens sooner than the front, since the girth it meets is
+      // lower — the leg leaning back again — so the ring is carried forward
+      // by a share of its own gain (FLARE_LEAD) until the two open about
+      // alike at any one height.
+      const zf = HEX * rF, zc = FLARE_LEAD * HEX * (rF - rE);
+      const underside = (zz) => {
+        let lo = bodyY - 3 * R, hi = bodyY;
+        if (!inTrunk(hx, hi, zz)) return floor;
+        for (let k = 0; k < 18; k++) { const m = (lo + hi) / 2; if (inTrunk(hx, m, zz)) hi = m; else lo = m; }
+        return hi;
+      };
+      // Every corner of it is just inside: one left out on the narrowing
+      // breast shows as a lit tab on top of the leg. So the ring rises until
+      // it fits, and the leg breaks the hide just below it.
+      const uF = underside(z + zc + zf), uB = underside(z + zc - zf);
+      let rxF = lerp(0.78 * rE, vault(lerp(floor, top, 0.5)).rxP, 0.5);
+      const slant = (uF - uB) / (2 * zf);
+      let yF = (uF + uB) / 2 + 0.15 * rE;
+      // ...but never past the middle of the chest's lower half: where the
+      // trunk is narrower than the leg, the ring is drawn in across instead
+      const yFmax = Math.max(yF, lerp(floor, top, 0.5) - HEX * Math.abs(slant) * rF);
+      for (let k = 0; k < 120 && !ringIn(yF, zc, rF, rxF, slant, 1); k++) {
+        if (yF < yFmax) yF = Math.min(yFmax, yF + 0.05 * rE);
+        else rxF *= 0.95;
       }
+      // and the vault stands above the whole of it
+      const V = vault(Math.max(lerp(floor, top, 0.5), lerp(yF + HEX * Math.abs(slant) * rF, top, 0.4)));
+      yF -= top;
+      // the knee, and the cannon's first ring a little under it
+      const yK = eY + LG.wrist * low, yC = lerp(yK, run - 1.25 * fH, 0.45);
       pts = [
         [0, ringZ, rz0, rx0],
-        [yP - top, zP, (fwd + aft) / 2 / HEX, rxP, true],
-        [-eY, -0.25 * lr, rE, 0.78 * rE, true],
-        [-eY - 0.27 * low, -0.05 * lr, lerp(rE, rK, 0.45), 0.8 * lerp(rE, rK, 0.45)],
-        [-eY - 0.52 * low, 0.2 * lr, rK, 0.9 * rK],
-        [-eY - 0.76 * low, 0.1 * lr, C, 0.92 * C],
+        [V.yP - top, V.zP, V.rzP, V.rxP, true],
+        [yF, zc, rF, rxF, slant],
+        [lerp(yF, -eY, 0.5), 0.5 * zc, lerp(rF, rE, 0.6), lerp(rxF, 0.78 * rE, 0.6), 0.5 * slant],
+        [-eY, 0, rE, 0.78 * rE, true],
+        [-lerp(eY, yK, 0.5), 0.05 * lr, lerp(rE, rK, 0.5), 0.8 * lerp(rE, rK, 0.5)],
+        [-yK, 0.1 * lr, rK, 0.9 * rK],
+        [-yC, 0.1 * lr, C, 0.92 * C],
         [-(run - 1.25 * fH), 0.1 * lr, C, 0.92 * C],
         [-(run - 0.7 * fH), zFoot, fR, fX, true],
         [-run, zFoot, 1.05 * fR, 1.05 * fX, true],

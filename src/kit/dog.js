@@ -178,23 +178,29 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // were.
     //
     // THE SHOULDER is the chest's own side, carried straight down to the leg
-    // (`torso.slab`), and the leg widens into it above the forearm (`point`,
-    // `arm`): a dog's elbow sits against a deep chest with a long fall of
-    // muscle behind it, so the rear line leans back further than the front
-    // one leans forward. The front pair stands well forward (`frontSet`) so
-    // that fall has chest over it and the breast does not hang out ahead of
-    // the leg as a second thing. The forearm is deep at the elbow (`elbow`)
-    // — about twice the lower leg, well over a third of the chest's depth —
-    // and has spent it by the knee. That taper is what makes it a limb grown
-    // out of the shoulder: held near the lower leg's own width up there, the
-    // front of the dog stood on two sticks pushed into its chest.
-    legs: { knee: 0.36, shoulder: 2.8, thigh: 3.4, foot: 1.45, frontSet: 0.06, hindSet: 0.1, point: 0.7, arm: 2.4, elbow: 2.1 },
+    // (`torso.slab`). The forearm under it is an arm, not a thigh: a column
+    // about as broad as the leg at the knee (`elbow`), its edges near plumb,
+    // a long one over a low wrist (`wrist`), and at its top it opens both
+    // ways into the trunk over its upper third (`flare`, `drop`) — the
+    // front edge up into the breast, the back edge into the girth. Broad at
+    // the elbow and leaning its rear line back into the belly, it read as a
+    // hind leg standing under the chest. The front pair stands well forward
+    // (`frontSet`), and the throat leaves the breast high on it (neck
+    // `root`), so the breast rises off the front of the leg at once and
+    // stands out ahead of it: from a low point of the breast the chest ran
+    // on ahead of the leg as a level keel, a notch where the leg met it.
+    //
+    // THE HIND LEG folds well (`knee`) at a hock standing about a quarter of
+    // his height up (`hock`), over a cannon that is nearly upright (`rake`):
+    // the hock is the point behind him, with the back of the leg dipping
+    // forward above it to the buttock.
+    legs: { knee: 0.48, shoulder: 2.8, thigh: 3.4, foot: 1.45, frontSet: 0.06, hindSet: 0.1, point: 0.7, flare: 0.8, drop: 0.3, elbow: 1.2, wrist: 0.45, hock: 0.6, rake: 0.12 },
     // the neck's end has to fit inside the skull it enters, turned or not.
     // The head is carried high on a neck that stands steeply, so the back has
     // a long way to turn to become the nape: `ease` and `easeUp` split that
     // turn about evenly between the withers and the root of the neck. All of
     // it at one point, under a root that dips first, was a notch.
-    neck: { r: 0.1, w: 0.85, root: 0.7, set: 0.05, taper: 1.0, arch: 0.02, ease: 0.5, easeUp: 0.45 },
+    neck: { r: 0.1, w: 0.85, root: 0.3, set: 0.05, taper: 1.0, arch: 0.02, ease: 0.5, easeUp: 0.45 },
     // The plan's ball is only a placeholder for where the head is carried and
     // how far it is nosed down; its geometry is replaced by the loft below.
     // No snout: the muzzle is the front half of that loft.
