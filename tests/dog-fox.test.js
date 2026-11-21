@@ -453,7 +453,7 @@ test('a dog and a fox are told apart by ears, tail and carriage', () => {
 // THE FOX'S THROAT IS HAIR. Drawn as the neck's own depth, the ruff made a
 // thick neck that came down to a point at the chest. The neck is slim, and the
 // ruff is a curtain of its own in the body's mesh, after the loft's vertices:
-// standing out ahead of the front line in a few points, and narrower than the
+// a few soft tufts hanging close down the front line, and narrower than the
 // neck it grows from.
 test("the fox's throat is a slim neck with a ruff of hair down its front", () => {
   const a = makeFox();
@@ -486,13 +486,30 @@ test("the fox's throat is a slim neck with a ruff of hair down its front", () =>
     return z;
   };
   assert.ok(P.count > n, 'the ruff rides in the body mesh');
-  let out = 0, wide = 0;
+  // Its outer edge is the run of its points on the midline, chest to jaw. It
+  // is hair lying close on the throat: a few tufts, each standing only a
+  // little off the front line where it hangs and hanging BELOW where it grows
+  // (its feet either side of it), and the edge climbs all the way — a tuft
+  // that falls past the notch below it folds its faces back over it. Stood
+  // far out ahead of the line it was a bib jutting off a throat that slopes
+  // back, and seven points falling past each other read as a glitch.
+  let wide = 0;
+  const edge = [];
   for (let i = n; i < P.count; i++) {
     const v = at(i);
-    if (v.z - front(v.y) > 0.02 * H) out++;
     wide = Math.max(wide, Math.abs(v.x));
+    if (Math.abs(v.x) < 1e-6 * H) edge.push({ v, feet: at(i - 1).y, off: v.z - front(v.y) });
   }
-  assert.ok(out >= 6, `${out} of its corners stand out ahead of the front line`);
+  assert.ok(edge.length >= 3, `an edge to judge: ${edge.length} points`);
+  for (let i = 1; i < edge.length; i++) {
+    assert.ok(edge[i].v.y > edge[i - 1].v.y, `the ruff's edge folds back down at point ${i}: ${(edge[i].v.y / H).toFixed(3)} under ${(edge[i - 1].v.y / H).toFixed(3)}`);
+  }
+  const tufts = edge.filter((e) => e.off > 0.01 * H);
+  assert.ok(tufts.length >= 2 && tufts.length <= 3, `${tufts.length} tufts`);
+  for (const t of tufts) {
+    assert.ok(t.off < 0.03 * H, `a tuft stands ${(t.off / H).toFixed(3)} off the throat`);
+    assert.ok(t.v.y < t.feet - 0.02 * H, `a tuft juts rather than hangs: tip ${(t.v.y / H).toFixed(3)}, grows at ${(t.feet / H).toFixed(3)}`);
+  }
   const neckW = Math.max(...loft.flatMap((t) => [0, 3, 6].filter((k) => Math.abs(t[k + 2] - (legZ + headZ) / 2) < 0.05 * H).map((k) => Math.abs(t[k]))));
   assert.ok(wide < neckW, `the ruff is ${(wide / H).toFixed(3)} across, the neck ${(neckW / H).toFixed(3)}`);
 });

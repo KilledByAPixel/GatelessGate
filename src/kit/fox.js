@@ -116,23 +116,25 @@ const EAR = {
 // the front line from under the jaw to the chest ahead of the front legs,
 // narrower than the neck it grows from and narrowing again to its outer
 // edge, which is a few soft points — the buffalo's beard, smaller and
-// gentler. The front line there is steep, so it stands out forward of it and
-// falls a little, rather than hanging plumb, which on a steep throat goes
-// nowhere. It fills the corner between the throat and the breast, so the
-// front line runs from the chin down to the chest in one slope.
+// gentler. It is hair lying CLOSE on the throat: a few soft tufts that hang
+// DOWN the front line, each tip standing only a little off the line where it
+// hangs, so the front line still runs from the chin down to the chest in one
+// slope. Stood out ahead of the line it was a bib jutting forward off a
+// throat that slopes back, ending over the chest in a step; and a tuft that
+// falls further than the run to the notch below it folds its own strip of
+// faces back over that notch, which from any side is a glitch, not hair.
 //
 // Its outer edge, chest to jaw: [where along that run (by height), how far
-// the edge stands out ahead of the front line there (x height)]. The two ends
-// are drawn into the body.
+// the edge stands off the front line at the height it hangs to (x height),
+// how far it hangs below where it grows (x height)]. A tuft's tip alternates
+// with a notch lying nearly on the line; the two ends are drawn into the body.
 const RUFF = [
-  [0.0, -1], [0.1, 0.04], [0.2, 0.06], [0.3, 0.042], [0.41, 0.058], [0.53, 0.036], [0.67, 0.03], [0.83, 0.02], [1.0, -1],
+  [0.0, -1, 0], [0.3, 0.018, 0.034], [0.5, 0.004, 0], [0.76, 0.014, 0.028], [1.0, -1, 0],
 ];
 const RUFF_LOW = 0.02;           // how far over the front leg's top it starts, x height
 const RUFF_HIGH = 0.04;          // how far under the head's hinge it ends, x height
-const RUFF_W = [0.045, 0.03];    // half-width at its foot, on the chest and under the jaw, x height
-const RUFF_EDGE = 0.35;          // ...and how much of that is left along its outer edge
+const RUFF_W = [0.05, 0.04];     // half-width at its foot, on the chest and under the jaw, x height
 const RUFF_SINK = 0.012;         // how far its foot is buried behind the front line, x height
-const RUFF_FALL = 1.2;           // how far its points fall, x how far they stand out
 
 const STIR = 2.4;                        // seconds for one whole response
 
@@ -245,22 +247,24 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     const base = P.count, pos = Array.from(P.array), idx = Array.from(body.geometry.index.array);
     const quads = [], caps = [];
     const at = (x, y, z) => pos.push(x - body.position.x, y - body.position.y, z - body.position.z);
-    RUFF.forEach(([u, out], i) => {
+    RUFF.forEach(([u, out, hang], i) => {
       const y = y0 + (y1 - y0) * u;
       const w = (RUFF_W[0] + (RUFF_W[1] - RUFF_W[0]) * u) * height;
       // sunk where its own edges meet the front line, which turns back toward
       // its sides; a foot laid from the middle stands out of it at its corners
       const side = ahead(solid, w, y);
       const foot = (Number.isFinite(side) ? side : ahead(solid, 0, y)) - RUFF_SINK * height;
-      const front = ahead(solid, 0, y);
-      const edge = out < 0 ? foot : Math.max(foot, front + out * height);
-      const fall = out < 0 ? 0 : RUFF_FALL * out * height;
-      at(-w, y, foot); at(-w * RUFF_EDGE, y - fall, edge); at(w * RUFF_EDGE, y - fall, edge); at(w, y, foot);
+      const fall = hang * height;
+      // off the line where the tip hangs, not where it grows: the throat
+      // slopes back going down, so a tip measured from above stands off it by
+      // the slope as well
+      const edge = out < 0 ? foot : Math.max(foot, ahead(solid, 0, y - fall) + out * height);
+      at(-w, y, foot); at(0, y - fall, edge); at(w, y, foot);
       if (i === 0) return;
-      ringQuads(quads, base + (i - 1) * 4, base + i * 4, 4);
+      ringQuads(quads, base + (i - 1) * 3, base + i * 3, 3);
     });
-    const end = base + (RUFF.length - 1) * 4;
-    caps.push(base, base + 2, base + 1, base, base + 3, base + 2, end, end + 1, end + 2, end, end + 2, end + 3);
+    const end = base + (RUFF.length - 1) * 3;
+    caps.push(base, base + 2, base + 1, end, end + 1, end + 2);
     body.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
     // It was wound inside out, every face turned in toward the throat, so
     // what showed of it was its far side seen through the near one: a
