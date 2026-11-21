@@ -157,8 +157,10 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     // on a curve rather than at a corner onto a floor.
     // Narrow, but not a blade: from the front the chest is a little over a
     // quarter of the animal's height across, and the legs stand under its
-    // sides with a gap between them.
-    torso: { chest: 1.35, loin: 0.62, withers: 1.0, back: 0.92, croup: 1.0, slab: 1, barrel: 0.7, girth: 0.16, keel: 1, haunch: 1.3, shoulderW: 0.86, barrelW: 0.97, hipW: 0.86 },
+    // sides with a gap between them. Over the front legs the chest hangs
+    // down round the forearm's top (`arm`): without it the leg's top front
+    // stood out of the narrowing breast as a lit tab, from either side.
+    torso: { chest: 1.35, loin: 0.62, withers: 1.0, back: 0.92, croup: 1.0, slab: 1, barrel: 0.7, girth: 0.16, keel: 1, haunch: 1.3, arm: 0.3, shoulderW: 0.86, barrelW: 0.97, hipW: 0.86 },
     legBury: .16,
     // FINE LIMBS. A fox's front leg is under a fifth of its chest's depth
     // below the knee, and the forearm over it is a slim column (`elbow`) that

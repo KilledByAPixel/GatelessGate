@@ -513,3 +513,39 @@ test("the fox's throat is a slim neck with a ruff of hair down its front", () =>
   const neckW = Math.max(...loft.flatMap((t) => [0, 3, 6].filter((k) => Math.abs(t[k + 2] - (legZ + headZ) / 2) < 0.05 * H).map((k) => Math.abs(t[k]))));
   assert.ok(wide < neckW, `the ruff is ${(wide / H).toFixed(3)} across, the neck ${(neckW / H).toFixed(3)}`);
 });
+
+// THE FOX'S FOREARM LEAVES THE CHEST, IT DOES NOT STAND ON IT. Read round the
+// column, the top of the leg as a reader sees it is the highest point of its
+// surface standing outside the trunk. Where the leg's outer face stood flush
+// with the narrowing breast, that top rose highest on the outer side, a lit
+// tab beside the chest from either side; with the chest hung down round the
+// forearm's top (torso.arm) the trunk covers the outer face lower than the
+// front, where the leg runs on up into the breast.
+test("the fox's forearm shows no tab beside the chest", () => {
+  const g = makeFox({ height: 1 }).group;
+  g.updateWorldMatrix(true, true);
+  const body = triangles(g, (o) => o.name === 'body');
+  const legs = [];
+  g.traverse((o) => { if (o.name === 'leg' && o.position.z > 0) legs.push(o); });
+  assert.equal(legs.length, 2);
+  for (const leg of legs) {
+    const tris = triangles(g, (o) => o === leg);
+    let cx = 0, cz = 0, n = 0;
+    for (const t of tris) for (let k = 0; k < 9; k += 3) if (Math.abs(t[k + 1] - 0.3) < 0.05) { cx += Math.abs(t[k]); cz += t[k + 2]; n++; }
+    cx /= n; cz /= n;
+    const top = new Map();
+    const N = 16;
+    for (const t of tris) {
+      for (let a = 0; a <= N; a++) for (let b = 0; a + b <= N; b++) {
+        const u = a / N, w = b / N, s = 1 - u - w;
+        const p = new THREE.Vector3(t[0] * u + t[3] * w + t[6] * s, t[1] * u + t[4] * w + t[7] * s, t[2] * u + t[5] * w + t[8] * s);
+        if (p.y < 0.3 || inside(body, p)) continue;
+        // 0 degrees the column's outer side, 90 its front
+        const ang = Math.round(Math.atan2(p.z - cz, Math.abs(p.x) - cx) * 6 / Math.PI) * 30;
+        top.set(ang, Math.max(top.get(ang) ?? -Infinity, p.y));
+      }
+    }
+    const outer = Math.max(top.get(-30), top.get(0), top.get(30)), front = top.get(90);
+    assert.ok(outer < front - 0.02, `the forearm's outer side shows to ${outer.toFixed(3)}, its front to ${front.toFixed(3)}: a tab beside the chest`);
+  }
+});
