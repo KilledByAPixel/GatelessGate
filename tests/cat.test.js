@@ -32,6 +32,20 @@ const halfWidthAt = (tris, z) => {
   }
   return w;
 };
+// How far out a line across the animal through (y, z) leaves a set of
+// triangles: the side view's counterpart of the two sections.
+const reachAt = (tris, y, z) => {
+  let out = -Infinity;
+  for (const t of tris) {
+    const d = (t[5] - t[8]) * (t[1] - t[7]) + (t[7] - t[4]) * (t[2] - t[8]);
+    if (Math.abs(d) < 1e-12) continue;
+    const u = ((t[5] - t[8]) * (y - t[7]) + (t[7] - t[4]) * (z - t[8])) / d;
+    const w = ((t[8] - t[2]) * (y - t[7]) + (t[1] - t[7]) * (z - t[8])) / d;
+    if (u < 0 || w < 0 || u + w > 1) continue;
+    out = Math.max(out, Math.abs(u * t[0] + w * t[3] + (1 - u - w) * t[6]));
+  }
+  return out;
+};
 const sit = () => makeCat({ height: 1, pose: 'sit' });
 const stand = () => makeCat({ height: 1, pose: 'stand' });
 
@@ -147,11 +161,13 @@ test('the seated cat is a pear on its haunches, not a standing animal folded in 
   assert.ok(width(haunch) > 1.12 * width(body), `the haunches stand wider than the trunk: ${width(haunch).toFixed(3)} vs ${width(body).toFixed(3)}`);
   assert.ok(width(head) < 0.62 * width(haunch), `and the head is narrow over them: ${width(head).toFixed(3)} vs ${width(haunch).toFixed(3)}`);
 
-  // each haunch is a mass lying along the ground: longer than it is tall, and
-  // it reaches from behind the hip to beside the front feet
+  // each haunch is a round with a short paw out from under it: a little
+  // longer than it is tall, and no more — a mass laid along the ground to the
+  // front feet is one long foot
   for (const l of hind) {
     const b = box(l).getSize(new THREE.Vector3());
-    assert.ok(b.z > 1.15 * b.y, `a haunch lies along the ground: ${b.z.toFixed(3)} long, ${b.y.toFixed(3)} tall`);
+    assert.ok(b.z > b.y, `a haunch and its paw are longer than tall: ${b.z.toFixed(3)} long, ${b.y.toFixed(3)} tall`);
+    assert.ok(b.z < 1.2 * b.y, `but it is a round, not a slab along the ground: ${b.z.toFixed(3)} long, ${b.y.toFixed(3)} tall`);
   }
   // Paw against paw, AT THE GROUND. A leg's whole box includes the shoulder on
   // top of it, and how far that stands forward is the plan's business: bounded
@@ -170,17 +186,18 @@ test('the seated cat is a pear on its haunches, not a standing animal folded in 
     return { lo, hi };
   };
   const hindToe = toes(hind).hi, frontPaw = toes(front);
-  assert.ok(hindToe > frontPaw.lo, `the hind paws reach the front ones: ${hindToe.toFixed(3)} vs ${frontPaw.lo.toFixed(3)}`);
-  // and stop at the back of them: a hind paw laid alongside the whole of the
-  // front one hides it from the side, and the cat sits on one pair of feet
-  const mid = (frontPaw.lo + frontPaw.hi) / 2;
-  assert.ok(hindToe < mid, `without coming alongside them: ${hindToe.toFixed(3)} vs the front paw's middle at ${mid.toFixed(3)}`);
+  // The hind paws stop behind the front ones: laid alongside, a hind paw
+  // hides the front one from the side and the cat sits on one pair of feet.
+  assert.ok(hindToe < frontPaw.lo, `the hind paws stop behind the front ones: ${hindToe.toFixed(3)} vs ${frontPaw.lo.toFixed(3)}`);
+  // and close behind: less than a paw's length of ground shows between them
+  const pawLen = frontPaw.hi - frontPaw.lo;
+  assert.ok(frontPaw.lo - hindToe < 0.5 * pawLen, `and close behind them: ${(frontPaw.lo - hindToe).toFixed(3)} short, a paw ${pawLen.toFixed(3)} long`);
 
-  // from the side: nothing but the cat between the rump and the front paws.
+  // from the side: nothing but the cat between the rump and the hind toes.
   // A rescaled standing hind leg leaves the rump hanging in the air behind it.
   const solid = triangles(g, (o) => o.name === 'body' || o.name === 'leg');
   for (let i = 0; i <= 40; i++) {
-    const z = body.min.z + 0.1 + (paws.min.z - body.min.z - 0.1) * (i / 40);
+    const z = body.min.z + 0.1 + (hindToe - 0.01 - body.min.z - 0.1) * (i / 40);
     const low = sectionY(solid, z).min;
     assert.ok(low < 0.06, `daylight under the cat at z = ${z.toFixed(3)}: ${low.toFixed(3)}`);
   }
@@ -232,32 +249,171 @@ test('the seated back is one curve bowed out, round at the rump — not a tent',
     if (back[i][0] <= rear[0]) continue;
     assert.ok(back[i][1] > back[i - 1][1] - 1e-6, `the back steps out again at ${back[i][0].toFixed(3)}`);
   }
+
+  // The one turn in it is over the shoulder blades: there the line runs
+  // forward fast, and above it the nape stands much nearer plumb. One slope
+  // kept from the rump to the ears is the tent again, higher up.
+  const run = (y0, y1) => (sectionZ(trunk, y1).min - sectionZ(trunk, y0).min) / (y1 - y0);
+  const shoulders = run(0.7, 0.78), napeLean = run(0.85, 1.0);
+  assert.ok(shoulders > 2 * napeLean, `the back turns over the shoulders: ${shoulders.toFixed(2)} forward per height there, ${napeLean.toFixed(2)} up the nape`);
+  assert.ok(napeLean < 0.7, `and the nape stands up: it leans ${napeLean.toFixed(2)}`);
+
+  // and the nape runs up BEHIND the skull, so the skull's back is inside the
+  // neck rather than a knob standing out of it
+  const head = g.getObjectByName('head');
+  const hp = head.geometry.getAttribute('position');
+  const v = new THREE.Vector3(), occiput = new THREE.Vector3(0, 0, Infinity);
+  for (let i = 0; i < hp.count; i++) {
+    v.fromBufferAttribute(hp, i).applyMatrix4(head.matrixWorld);
+    if (v.z < occiput.z) occiput.copy(v);
+  }
+  assert.ok(inside(trunk, occiput), `the back of the skull stands out of the nape at z = ${occiput.z.toFixed(3)}`);
 });
 
-test('a seated front leg is a straight column on a block of a paw', () => {
+test('the breast is fullest below the throat, and the front legs come down out of its line', () => {
   const g = sit().group;
+  const trunk = triangles(g, (o) => o.name === 'body');
+  const front = (y) => sectionZ(trunk, y).max;
+  const throat = front(0.86);
+  let full = -Infinity, at = 0;
+  for (let y = 0.3; y < 0.86; y += 0.02) if (front(y) > full) { full = front(y); at = y; }
+  assert.ok(full > throat + 0.02, `the breast stands ${(full - throat).toFixed(3)} ahead of the throat`);
+  assert.ok(at > 0.55 && at < 0.75, `and is fullest at ${at.toFixed(2)}`);
+  // below that it falls back, and the legs' front line is never ahead of it
+  const legs = triangles(g, (o) => o.name === 'leg');
+  for (let y = 0.1; y < 0.7; y += 0.05) {
+    assert.ok(sectionZ(legs, y).max < full, `a leg stands ahead of the breast at ${y.toFixed(2)}`);
+  }
+});
+
+test('a seated front leg is a slim column below the elbow and a shoulder on the chest above it', () => {
+  const g = sit().group;
+  const body = triangles(g, (o) => o.name === 'body');
   const legs = named(g, 'leg').filter((l) => box(l).min.z > -0.2);
   assert.equal(legs.length, 2);
   for (const leg of legs) {
     const tris = triangles(g, (o) => o === leg);
-    const depth = (y) => sectionZ(tris, y).depth;
-    const shin = depth(0.2);
-    // Nothing swells above the wrist. A standing leg cut down to fit carries
-    // its shoulder mass with it, and that shows on the breast as a plate.
-    for (let y = 0.15; y < box(leg).max.y - 0.03; y += 0.05) {
-      assert.ok(depth(y) < 1.3 * shin, `the leg swells to ${depth(y).toFixed(3)} at ${y.toFixed(2)} over a shin of ${shin.toFixed(3)}`);
+    const cut = (y) => sectionZ(tris, y);
+    const shin = cut(0.2).depth;
+
+    // below the elbow: a column, plumb, that does not swell
+    for (let y = 0.12; y <= 0.3; y += 0.03) {
+      assert.ok(cut(y).depth < 1.15 * shin, `the forearm swells to ${cut(y).depth.toFixed(3)} at ${y.toFixed(2)} over a shin of ${shin.toFixed(3)}`);
     }
-    // plumb: the column does not lean or bend between the wrist and the chest
-    const lean = Math.abs(sectionZ(tris, 0.45).min - sectionZ(tris, 0.15).min);
+    const lean = Math.abs(cut(0.3).max - cut(0.12).max);
     assert.ok(lean < 0.02, `the column leans ${lean.toFixed(3)}`);
-    // and it stands on a paw that is longer than the leg is thick, forward
-    assert.ok(depth(0.03) > 1.12 * shin, `a paw ${depth(0.03).toFixed(3)} long under a shin of ${shin.toFixed(3)}`);
-    assert.ok(sectionZ(tris, 0.03).max > sectionZ(tris, 0.2).max + 0.02, 'reaching forward of it');
+    // on a paw that is longer than the leg is thick, forward
+    assert.ok(cut(0.03).depth > 1.12 * shin, `a paw ${cut(0.03).depth.toFixed(3)} long under a shin of ${shin.toFixed(3)}`);
+    assert.ok(cut(0.03).max > cut(0.2).max + 0.02, 'reaching forward of it');
+
+    // Above the elbow it WIDENS, steadily, and all of it backward: the back
+    // line runs up and back across the ribs while the front line only ever
+    // leans in. A column carried on up into the chest is a stick pushed into
+    // it; a swelling on the front of one is a plate on the breast.
+    let last = cut(0.35).depth;
+    for (let y = 0.4; y <= 0.6; y += 0.05) {
+      assert.ok(cut(y).depth > last, `the upper arm stops widening at ${y.toFixed(2)}: ${cut(y).depth.toFixed(3)} after ${last.toFixed(3)}`);
+      assert.ok(cut(y).max < cut(0.3).max + 0.005, `its front line steps forward at ${y.toFixed(2)}`);
+      last = cut(y).depth;
+    }
+    assert.ok(cut(0.6).depth > 1.6 * shin, `a shoulder ${cut(0.6).depth.toFixed(3)} across over a shin of ${shin.toFixed(3)}`);
+    assert.ok(cut(0.6).min < cut(0.3).min - 0.08, `reaching back over the ribs: ${(cut(0.3).min - cut(0.6).min).toFixed(3)}`);
+
+    // It lies ON the chest. Everything above the elbow is within a thin skin
+    // of the trunk's surface — carried that little way toward the middle of
+    // the animal, every vertex is inside the body — and the top of it is
+    // under the surface outright, so the shoulder has no top edge to show.
+    leg.updateWorldMatrix(true, false);
+    const p = leg.geometry.getAttribute('position');
+    const v = new THREE.Vector3();
+    const side = Math.sign(leg.getWorldPosition(new THREE.Vector3()).x);
+    let on = 0, under = 0;
+    for (let i = 0; i < p.count; i++) {
+      v.fromBufferAttribute(p, i).applyMatrix4(leg.matrixWorld);
+      if (v.y < 0.5) continue;
+      if (v.y > 0.7) {
+        under++;
+        assert.ok(inside(body, v), `the top of the shoulder stands out of the trunk at (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`);
+      }
+      on++;
+      v.x -= side * 0.025;
+      assert.ok(inside(body, v), `the shoulder stands off the chest at (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`);
+    }
+    assert.ok(on >= 16 && under >= 8, `there is a shoulder to judge: ${on} points on the chest, ${under} at its top`);
+    // and it does show: over the upper arm the limb's surface stands a
+    // little outside the trunk's — a low relief, not a plate and not nothing
+    for (const [y, z] of [[0.5, 0.07], [0.54, 0.03]]) {
+      const proud = reachAt(tris, y, z) - reachAt(body, y, z);
+      assert.ok(proud > 0.004 && proud < 0.03, `the shoulder stands ${proud.toFixed(4)} off the flank at (${y}, ${z})`);
+    }
   }
-  // close together under the breast: the gap between them is narrower than a leg
-  const [a, b] = legs.map(box).sort((p, q) => p.min.x - q.min.x);
-  const wide = a.max.x - a.min.x;
-  assert.ok(b.min.x - a.max.x < wide, `the pair stand ${(b.min.x - a.max.x).toFixed(3)} apart, each ${wide.toFixed(3)} wide`);
+  // close together under the breast: at the ground, the gap between the paws
+  // is narrower than a paw
+  const paw = (leg) => {
+    const p = leg.geometry.getAttribute('position');
+    const v = new THREE.Vector3();
+    let lo = Infinity, hi = -Infinity;
+    for (let i = 0; i < p.count; i++) {
+      v.fromBufferAttribute(p, i).applyMatrix4(leg.matrixWorld);
+      if (v.y < 0.12) { lo = Math.min(lo, v.x); hi = Math.max(hi, v.x); }
+    }
+    return { lo, hi };
+  };
+  const [a, b] = legs.map(paw).sort((p, q) => p.lo - q.lo);
+  assert.ok(b.lo - a.hi < a.hi - a.lo, `the paws stand ${(b.lo - a.hi).toFixed(3)} apart, each ${(a.hi - a.lo).toFixed(3)} wide`);
+});
+
+test('a haunch is a round on the flank, its facets running out from the middle', () => {
+  const g = sit().group;
+  const hind = named(g, 'leg').filter((l) => box(l).min.z < -0.2);
+  for (const leg of hind) {
+    const tris = triangles(g, (o) => o === leg);
+    const b = box(leg);
+    // the crown, and where it stands along the haunch
+    let top = -Infinity, at = 0;
+    for (let i = 1; i < 60; i++) {
+      const z = b.min.z + (b.max.z - b.min.z) * (i / 60);
+      const y = sectionY(tris, z).max;
+      if (y > top) { top = y; at = z; }
+    }
+    // no level run across the top: a little way either side it has already
+    // fallen
+    for (const d of [-0.1, 0.1]) {
+      const y = sectionY(tris, at + d).max;
+      assert.ok(y < top - 0.02, `the haunch runs level from its crown: ${y.toFixed(3)} beside ${top.toFixed(3)}`);
+    }
+
+    // Its outer face is a dome with a pole at the middle, and the facets are
+    // gores round that pole. Rings stood across the haunch draw level creases
+    // from end to end of it instead, and a round with level creases across
+    // it reads as a box with a lid.
+    const side = Math.sign(leg.getWorldPosition(new THREE.Vector3()).x);
+    const p = leg.geometry.getAttribute('position');
+    const at3 = (i) => new THREE.Vector3().fromBufferAttribute(p, i).applyMatrix4(leg.matrixWorld);
+    let pole = 0;
+    for (let i = 1; i < p.count; i++) if (side * at3(i).x > side * at3(pole).x) pole = i;
+    const far = at3(pole);
+    assert.ok(Math.abs(far.y - top / 2) < 0.08 && Math.abs(far.z - at) < 0.08,
+      `the dome's pole is at its middle: (${far.y.toFixed(3)}, ${far.z.toFixed(3)}) for a crown ${top.toFixed(3)} high at ${at.toFixed(3)}`);
+    const idx = leg.geometry.index;
+    const round = new Set();
+    for (let i = 0; i < idx.count; i += 3) {
+      const tri = [idx.getX(i), idx.getX(i + 1), idx.getX(i + 2)];
+      if (tri.includes(pole)) for (const k of tri) if (k !== pole) round.add(k);
+    }
+    const spokes = [...round].map((k) => at3(k).sub(far));
+    assert.ok(spokes.length >= 8, `${spokes.length} facets meet at the pole`);
+    // all the way round it, and about as far in every direction
+    const angles = spokes.map((v) => Math.atan2(v.y, v.z)).sort((x, y) => x - y);
+    let gap = angles[0] + 2 * Math.PI - angles[angles.length - 1];
+    for (let i = 1; i < angles.length; i++) gap = Math.max(gap, angles[i] - angles[i - 1]);
+    assert.ok(gap < 1.0, `the gores leave ${gap.toFixed(2)} rad of the round uncovered`);
+    const reach = spokes.map((v) => Math.hypot(v.y, v.z));
+    assert.ok(Math.max(...reach) < 1.6 * Math.min(...reach), `the gores reach ${Math.min(...reach).toFixed(3)} to ${Math.max(...reach).toFixed(3)}`);
+    // and they stop well short of the outline, where the face turns over: a
+    // first ring out at the rim is a drum, flat across and sheer at the edge
+    assert.ok(Math.max(...reach) < 0.35 * top, `the dome's first ring stands ${Math.max(...reach).toFixed(3)} out on a haunch ${top.toFixed(3)} tall`);
+  }
 });
 
 // The tail's girth where a plane square to it through `m` cuts its skin: how

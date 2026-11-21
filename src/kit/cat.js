@@ -40,23 +40,22 @@ import { hash1 } from '../util/noise.js';
 //     frame the breathing and the stir are written in.
 //   - THE HIND LEGS ARE HAUNCHES. A standing hind leg rescaled to fit under a
 //     lowered rump is a flap hanging off the flank with daylight behind it.
-//     Seated, each hind leg is its own loft: a round mass lying beside the
-//     body, low at the rear, falling steeply at the knee to a paw on the
-//     ground. The pair stand wider than the trunk, which is the base of the
-//     pear from the front, and they close the gap under the belly from the
-//     side.
-//   - THE FRONT LEGS ARE COLUMNS (see FORELEG), plumb under the breast and
-//     close together, each ending in a block of a paw.
+//     Seated, each hind leg is a round boss on the flank (see THE HAUNCH)
+//     with a short paw out from under its front. The pair stand wider than
+//     the trunk, which is the base of the pear from the front, and they
+//     close the gap under the belly from the side.
+//   - THE FRONT LEGS ARE SHOULDERS ABOVE THE ELBOW (see A SEATED FRONT LEG):
+//     plumb and slim below it, close together, each on a block of a paw, and
+//     above it a wedge lying on the side of the chest that fades into it.
 //   - THE HEAD IS PLACED FOR THE POSE, NOT CARRIED OVER (see SIT_HEAD), and
-//     the pear is lofted to it.
+//     the pear's own last rings end inside it.
 //
 // EVERY JOIN IS READ OFF THE POSED MESH. No closed form says where a lofted
-// trunk's surface is under a given paw. So the body's vertices are carried
-// into the animal's own frame once (`pts`), and the rest is measured from
-// them: where a vertical leg enters the chest (`column`), where the haunch's
-// origin sits so that it is inside the body, and where the tail leaves the
-// rump. tests/cat.test.js and tests/k14-cat.test.js check the joins against
-// the mesh in both poses.
+// trunk's surface is at a given point of its side. So the body's vertices
+// are carried into the animal's own frame once (`pts`), and the rest is
+// measured from them: where the flank is under each vertex of a shoulder
+// (`flank`), and where the tail leaves the rump. tests/cat.test.js and
+// tests/k14-cat.test.js check the joins against the mesh in both poses.
 //
 // THE TAIL. The buffalo's verlet strand is wrong here twice over: at a cat's
 // scale its idle force would thrash, and a rope cannot hold a shape. This
@@ -125,73 +124,110 @@ const STAND = {
   legs: { shoulder: 2.3 },
 };
 
-// THE PEAR, seat to throat: [backY, backZ, frontY, frontZ, half-width] in
+// THE PEAR, seat to skull: [backY, backZ, frontY, frontZ, half-width] in
 // heights, in the animal's own frame with the ground at zero. Each row is one
 // ring through the sitting trunk, and the two columns of points ARE the side
-// view: read down the back pair for the outline behind — out over the rump,
-// widest low, in over the shoulders and up a nape that is nearly plumb — and
-// down the front pair for the breast, which stands just proud of the legs
-// under it and stays behind the chin.
+// view. Read down the back pair for the outline behind: round at the rump and
+// widest low, a long bow up the back, then the one turn in it — over the
+// shoulder blades, where the back gives way to a nape that stands nearly
+// plumb and runs up behind the skull. A back that keeps one slope from rump
+// to ears is a tent, and a nape that leans in under the skull leaves the
+// skull's back standing out of it as a knob. Read down the front pair for the
+// breast: fullest a little below the throat and falling back from there, so
+// the front legs come down out of its line instead of standing ahead of it.
+// The last rows are the neck, as deep as the skull it ends in.
 const PEAR = [
-  [0.05, -0.49, 0.02, -0.12, 0.185],
-  [0.19, -0.545, 0.14, 0.03, 0.235],
-  [0.35, -0.505, 0.3, 0.11, 0.235],
-  [0.5, -0.42, 0.47, 0.17, 0.215],
-  [0.64, -0.305, 0.62, 0.215, 0.185],
-  [0.75, -0.17, 0.76, 0.23, 0.152],
-  [0.86, -0.075, 0.875, 0.215, 0.12],
+  [0.05, -0.475, 0.02, -0.12, 0.185],
+  [0.17, -0.515, 0.13, 0.03, 0.235],
+  [0.32, -0.505, 0.28, 0.11, 0.24],
+  [0.46, -0.467, 0.42, 0.17, 0.23],
+  [0.6, -0.395, 0.53, 0.222, 0.21],
+  [0.715, -0.29, 0.64, 0.25, 0.19],
+  [0.78, -0.15, 0.73, 0.24, 0.165],
+  [0.9, -0.045, 0.81, 0.225, 0.13],
+  [1.0, -0.002, 0.885, 0.215, 0.105],
+  [1.07, 0.06, 0.93, 0.25, 0.09],
 ];
-const PEAR_SEAT = [0.02, -0.3];          // [y, z] apex closing the loft under the cat
-// Where a sitting cat carries its head, [y, z], and the ring the trunk ends
-// on there: barely a neck, so the last ring is nearly as deep as the skull it
-// is buried in and the nape and throat arrive at the head as the trunk's own
-// lines.
+const PEAR_SEAT = [0.02, -0.3];          // [y, z] apexes closing the loft: under the cat,
+const PEAR_CROWN = [1.01, 0.18];         // and inside the skull
+// Where a sitting cat carries its head, [y, z]. The pear's last ring has to
+// lie inside the skull placed here, and its last back point just under the
+// skull's own back corner: that is what makes the nape and the throat arrive
+// at the head as the trunk's own lines.
 const SIT_HEAD = [0.99, 0.165];
-const SIT_NECK = { r: 0.088, w: 0.092 };
 // The point the seated torso turns and breathes about, [y, z]: the middle of
 // the pear, so a breath swells it evenly and moves no edge of it far.
 const SIT_CORE = [0.4, -0.17];
 
 const SIT_TILT = 0.98;      // radians the seated torso's frame pitches up off horizontal
 const SIT_LEVEL = 1.0;      // how much of that the skull takes back out
-const BURY = 0.3;           // a seated front leg's top, as a fraction of the way up through the chest above it
 
-// A SEATED FRONT LEG, from below its buried top down to the ground: [y, z,
-// fore-aft radius, lateral radius] in heights, y off the ground and z off the
-// leg's own plumb line. A straight column with a wrist and a block of a paw
-// reaching forward. The top ring is not here: it rides wherever the chest is
-// (see BURY).
+// A SEATED FRONT LEG, shoulder to ground: [frontY, frontZ, backY, backZ,
+// half-width, proud] in heights, in the animal's own frame — the pear's own
+// cut, so the two outlines can be read against each other. Below the elbow it
+// is a slim column to a wrist and a block of a paw reaching forward, standing
+// free of the belly. Above the elbow it is not a leg any more but the upper
+// arm and shoulder: the back line leaves the column and runs up and BACK
+// across the ribs, so the limb widens into a flat wedge lying on the side of
+// the chest. A column carried straight up into the chest is a stick pushed
+// into it, however deep it is buried, and a swelling at the top of a column
+// is a cap on a stick.
+//
+// Every ring starts as the free leg's: an ellipse about FORELEG_X. `proud`
+// then DRAPES its outer side on the trunk — the flank is read off the mesh
+// under each of the ring's outer vertices, and each is carried out to stand
+// that far off it, while the ring's two ends are tucked just under the skin.
+// So the wedge shows at the outline written here and stands off the body by
+// the same small amount all over. The chest is a prow, narrowing toward the
+// breast, and anything flat laid on it is buried at the back and stands off
+// at the front like a piece of armour. Where there is no flank behind a
+// vertex, or the free leg already stands outside it, the free leg wins: that
+// is the elbow coming out from under the chest. `proud` runs out to nothing
+// and then under, so the top ring is wholly inside the trunk and the wedge
+// fades into the flank with no top to show — which also needs the free
+// ellipse of the upper rings to be slight, or it is the one that surfaces.
 const FORELEG = [
-  [0.3, 0.0, 0.066, 0.06],
-  [0.09, 0.004, 0.052, 0.05],
-  [0.055, 0.03, 0.07, 0.058],
-  [0.0, 0.03, 0.074, 0.06],
+  [0.72, 0.06, 0.8, -0.08, 0.015, -0.05],
+  [0.62, 0.14, 0.7, -0.09, 0.04, -0.004],
+  [0.52, 0.155, 0.56, -0.035, 0.062, 0.016],
+  [0.4, 0.176, 0.42, 0.03, 0.062, 0.024],
+  [0.3, 0.176, 0.3, 0.058, 0.058, null],
+  [0.09, 0.17, 0.09, 0.076, 0.048, null],
+  [0.055, 0.212, 0.055, 0.082, 0.056, null],
+  [0.0, 0.216, 0.0, 0.078, 0.058, null],
 ];
+const SHOULDER_TUCK = 0.035;             // how far under the skin a draped ring's ends lie
+const FORELEG_TOP = [0.8, -0.01];        // [y, z] apex closing the loft inside the chest
 const FORELEG_X = 0.09;                  // the pair stand close under the breast
-const FORELEG_Z = 0.12;                  // and this far ahead of the animal's origin
+const FORELEG_JOIN = [0.55, 0.06];       // [y, z] of the mesh origin, inside the chest
 
-// THE HAUNCH, rump to toe: [z, top, bottom, half-width] in heights, in the
-// animal's own frame with the ground at zero — the same cut as the skull, and
-// the same builder. `top` is the whole read: a round over the hip — rising
-// and falling, never a level run, which is a box lid — then steeply down at
-// the knee to a paw that keeps a height of its own. It stays under the back
-// line all the way, so from the side the back is still the cat's outline.
-// The toe reaches the back of the front paws and stops there: from the side
-// the hind paw shows behind the front one, not across it.
-const HAUNCH = [
-  [-0.48, 0.3, 0.05, 0.065],
-  [-0.42, 0.42, 0.0, 0.1],
-  [-0.33, 0.475, 0.0, 0.116],
-  [-0.23, 0.475, 0.0, 0.118],
-  [-0.15, 0.42, 0.0, 0.108],
-  [-0.095, 0.3, 0.0, 0.088],
-  [-0.06, 0.11, 0.0, 0.062],
-  [0.065, 0.095, 0.0, 0.055],
+// THE HAUNCH is a boss on the flank: an egg lying on its side, half sunk in
+// the trunk, [y, z] its centre in the animal's own frame and the three radii
+// its reach up, along and out. From the side it is a round, and the round is
+// the whole read — its facets run out from the middle like the gores of an
+// umbrella. A loft of rings stood across it instead draws level creases from
+// end to end, and a round with level creases across it is a box with a lid.
+// It stays under the back line all the way, so from the side the back is
+// still the cat's outline, and what would hang below the ground is cut flat.
+// The half inside the trunk is as round as the half outside: the rump
+// narrows behind the hip, so from behind and above the back of the haunch
+// stands clear of it, and a flat back there is a wheel leant on the cat.
+const HAUNCH = { c: [0.225, -0.268], up: 0.262, along: 0.212, out: 0.1 };
+const HAUNCH_X = 0.185;                  // its centre plane, off the animal's own
+const HAUNCH_SIDES = 10;
+// Rings from one pole to the other, as [reach, out] fractions of the radii.
+const HAUNCH_RINGS = [[0.5, 0.88], [0.86, 0.52], [1, 0], [0.86, -0.52], [0.5, -0.88]];
+// THE HIND PAW, knee to toe: [z, top, bottom, half-width], the skull's cut.
+// It starts inside the haunch and is short: it shows between the haunch and
+// the front paws and stops behind them, so the cat sits on two pairs of feet
+// rather than one long one.
+const HIND_PAW = [
+  [-0.16, 0.1, 0.0, 0.05],
+  [-0.06, 0.095, 0.0, 0.056],
+  [0.005, 0.08, 0.0, 0.052],
 ];
-const HAUNCH_BACK = [0.18, -0.51];
-const HAUNCH_TOE = [0.04, 0.102];
-const HAUNCH_X = 0.165;                  // its centre plane, off the animal's own
-const HAUNCH_JOIN_Z = -0.25;             // where its origin is sunk into the body
+const HIND_PAW_HEEL = [0.05, -0.2];
+const HIND_PAW_TOE = [0.035, 0.032];
 
 const TAIL_SEGS = 7;
 const TAIL_LEN = 0.95;
@@ -242,38 +278,91 @@ const TAIL_WAG = 0.30;      // radians of sweep, either way
 const TAIL_WAG_HZ = 1.35;   // and how fast it goes back and forth
 
 // A closed loft of slanted rings — the trunk's own cut in quadruped.js, for
-// the parts a sitting cat has to state for itself. Each station is an ellipse
+// the parts a sitting cat has to state for itself. Each station is a ring
 // standing across the animal: centre `c` and half-axis `a` are [y, z] pairs in
-// the side view, `w` the half-width in x, so a ring's two end vertices are the
-// two outline points it was written from. Winding wants x cross a to point
-// along the direction of travel. Both ends are fanned shut on an apex.
-function ringLoft(stations, seg, apex0, apex1) {
+// the side view and `w` the half-width in x, so a ring's two end vertices are
+// the two outline points it was written from. `xs` (optional) states each
+// vertex's x outright instead. Winding wants x cross a to point along the
+// direction of travel; `mirror` builds the other side's copy of a part that
+// is not its own mirror image. Both ends are fanned shut on an apex.
+function ringLoft(stations, seg, apex0, apex1, { mirror = false } = {}) {
   const pos = [], idx = [];
+  const side = mirror ? -1 : 1;
   for (const s of stations) {
     for (let j = 0; j < seg; j++) {
       const t = (j / seg) * Math.PI * 2;
       const sn = Math.sin(t);
-      pos.push(Math.cos(t) * s.w, s.c[0] + sn * s.a[0], s.c[1] + sn * s.a[1]);
+      pos.push(side * (s.xs ? s.xs[j] : Math.cos(t) * s.w), s.c[0] + sn * s.a[0], s.c[1] + sn * s.a[1]);
     }
   }
+  const tri = (a, b, c) => (mirror ? idx.push(a, c, b) : idx.push(a, b, c));
   const last = stations.length - 1;
   for (let i = 0; i < last; i++) {
     const a = i * seg, b = a + seg;
     for (let j = 0; j < seg; j++) {
       const j2 = (j + 1) % seg;
-      idx.push(a + j, a + j2, b + j, a + j2, b + j2, b + j);
+      tri(a + j, a + j2, b + j);
+      tri(a + j2, b + j2, b + j);
     }
   }
   const p0 = pos.length / 3;
   pos.push(0, apex0[0], apex0[1]);
-  for (let j = 0; j < seg; j++) idx.push(p0, (j + 1) % seg, j);
+  for (let j = 0; j < seg; j++) tri(p0, (j + 1) % seg, j);
   const p1 = pos.length / 3;
   pos.push(0, apex1[0], apex1[1]);
-  for (let j = 0; j < seg; j++) idx.push(p1, last * seg + j, last * seg + (j + 1) % seg);
+  for (let j = 0; j < seg; j++) tri(p1, last * seg + j, last * seg + (j + 1) % seg);
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
   geo.setIndex(idx);
   geo.computeVertexNormals();
+  return geo;
+}
+
+// An egg on its side: see THE HAUNCH. Built about its own centre, x across
+// the animal; nothing reaches below `floor`.
+function bossGeometry(up, along, out, floor) {
+  const n = HAUNCH_SIDES;
+  const pos = [out, 0, 0], idx = [];
+  for (const [reach, bulge] of HAUNCH_RINGS) {
+    for (let j = 0; j < n; j++) {
+      // a quarter turn on, so a vertex stands at the top: two either side of
+      // it would be a level run across the crown of the round
+      const t = (j / n + 0.25) * Math.PI * 2;
+      pos.push(out * bulge, Math.max(floor, Math.sin(t) * up * reach), Math.cos(t) * along * reach);
+    }
+  }
+  const rings = HAUNCH_RINGS.length;
+  for (let j = 0; j < n; j++) idx.push(0, 1 + (j + 1) % n, 1 + j);
+  for (let i = 0; i + 1 < rings; i++) {
+    const a = 1 + i * n, b = a + n;
+    for (let j = 0; j < n; j++) {
+      const j2 = (j + 1) % n;
+      idx.push(a + j, a + j2, b + j, a + j2, b + j2, b + j);
+    }
+  }
+  const rim = 1 + (rings - 1) * n, inner = pos.length / 3;
+  pos.push(-out, 0, 0);
+  for (let j = 0; j < n; j++) idx.push(inner, rim + j, rim + (j + 1) % n);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
+  geo.setIndex(idx);
+  return geo;
+}
+
+// Two closed shells as one mesh's geometry.
+function joinShells(a, b) {
+  const pa = a.getAttribute('position'), pb = b.getAttribute('position');
+  const pos = new Float32Array((pa.count + pb.count) * 3);
+  pos.set(pa.array, 0);
+  pos.set(pb.array, pa.count * 3);
+  const idx = [...a.index.array];
+  for (const i of b.index.array) idx.push(i + pa.count);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  a.dispose();
+  b.dispose();
   return geo;
 }
 
@@ -356,17 +445,9 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     const stations = PEAR.map(([by, bz, fy, fz, w]) => ({
       c: [(by + fy) / 2 * h, (bz + fz) / 2 * h], a: [(by - fy) / 2 * h, (bz - fz) / 2 * h], w: w * h,
     }));
-    // The last ring is centred on the head itself and stands square to the
-    // run up from the shoulders, so it ends inside the skull whichever way
-    // the skull is turned afterwards.
-    const from = stations[stations.length - 1].c;
     const hy = SIT_HEAD[0] * h, hz = SIT_HEAD[1] * h;
-    const len = Math.hypot(hy - from[0], hz - from[1]);
-    const d = [(hy - from[0]) / len, (hz - from[1]) / len];
-    const r = SIT_NECK.r * h;
-    stations.push({ c: [hy, hz], a: [d[1] * r, -d[0] * r], w: SIT_NECK.w * h });
     const pear = ringLoft(stations, 8,
-      [PEAR_SEAT[0] * h, PEAR_SEAT[1] * h], [hy + d[0] * r * 0.3, hz + d[1] * r * 0.3]);
+      [PEAR_SEAT[0] * h, PEAR_SEAT[1] * h], [PEAR_CROWN[0] * h, PEAR_CROWN[1] * h]);
     pear.applyMatrix4(toTorso);
     body.geometry.dispose();
     body.geometry = pear;
@@ -390,62 +471,79 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     }
   }
 
-  // where a plumb line at (x, z) enters and leaves the trunk
-  const column = (x, z) => {
-    let lo = Infinity, hi = -Infinity;
+  // The trunk's half-width at a point of the side view: how far out a line
+  // across the animal through (y, z) leaves it. -Infinity where it misses.
+  const flank = (y, z) => {
+    let out = -Infinity;
     for (let i = 0; i < index.count; i += 3) {
       const a = index.getX(i) * 3, b = index.getX(i + 1) * 3, c = index.getX(i + 2) * 3;
-      const ax = pts[a], az = pts[a + 2], bx = pts[b], bz = pts[b + 2], cx = pts[c], cz = pts[c + 2];
-      const d = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz);
+      const ay = pts[a + 1], az = pts[a + 2], by = pts[b + 1], bz = pts[b + 2], cy = pts[c + 1], cz = pts[c + 2];
+      const d = (bz - cz) * (ay - cy) + (cy - by) * (az - cz);
       if (Math.abs(d) < 1e-12) continue;
-      const u = ((bz - cz) * (x - cx) + (cx - bx) * (z - cz)) / d;
-      const w = ((cz - az) * (x - cx) + (ax - cx) * (z - cz)) / d;
+      const u = ((bz - cz) * (y - cy) + (cy - by) * (z - cz)) / d;
+      const w = ((cz - az) * (y - cy) + (ay - cy) * (z - cz)) / d;
       if (u < 0 || w < 0 || u + w > 1) continue;
-      const y = u * pts[a + 1] + w * pts[b + 1] + (1 - u - w) * pts[c + 1];
-      lo = Math.min(lo, y);
-      hi = Math.max(hi, y);
+      out = Math.max(out, u * pts[a] + w * pts[b] + (1 - u - w) * pts[c]);
     }
-    return { lo, hi };
+    return out;
   };
 
   if (seated) {
-    // The front legs stand plumb under the breast, each cut to the length the
-    // chest above it leaves: the top ring rides inside the trunk at a height
-    // read off the mesh, and the rows below it are stated from the ground, so
-    // the paw is the same paw whatever the chest does. A standing leg scaled
-    // down to fit stretches its shoulder mass into a plate on the breast and
-    // squashes its paw.
-    const fx = FORELEG_X * h, fz = FORELEG_Z * h;
-    const chest = column(fx, fz);
-    const top = chest.lo + BURY * (chest.hi - chest.lo);
-    const [, , rz0, rx0] = FORELEG[0];
-    const rings = [[top / h, 0, 0.8 * rz0, 0.8 * rx0], ...FORELEG].map(([y, z, rz, rx]) => ({
-      c: [y * h - top, z * h], a: [0, rz * h], w: rx * h,
-    }));
-    const foreleg = ringLoft(rings, 6, [0.6 * rz0 * h, 0], rings[rings.length - 1].c);
+    // see A SEATED FRONT LEG. Every row is stated from the ground, so the paw
+    // is the same paw whatever the chest does; the rows that lie on the chest
+    // take their place across the animal from the flank under them. The mesh
+    // origin sits inside the trunk, as the plan's own legs have theirs at the
+    // join.
+    const fx = FORELEG_X * h;
+    const oy = FORELEG_JOIN[0] * h, oz = FORELEG_JOIN[1] * h;
+    const SEG = 8, D = Math.SQRT1_2;
+    const rings = FORELEG.map(([fy, fz, by, bz, w, proud]) => {
+      const cy = (fy + by) / 2 * h, cz = (fz + bz) / 2 * h;
+      const ay = (fy - by) / 2 * h, az = (fz - bz) / 2 * h;
+      const ring = { c: [cy - oy, cz - oz], a: [ay, az], w: w * h };
+      if (proud === null) return ring;
+      // see `proud`. Vertex 0 is the outer one, the quarters stand either
+      // side of it and vertices 2 and 6 are the ring's fore and aft ends; x
+      // here is measured from the leg's own plane, as ringLoft wants it.
+      const drape = (k, off) => {
+        const at = flank(cy + k * ay, cz + k * az);
+        return Number.isFinite(at) ? at + off * h - fx : -Infinity;
+      };
+      ring.xs = [];
+      for (let j = 0; j < SEG; j++) ring.xs.push(Math.cos((j / SEG) * Math.PI * 2) * ring.w);
+      ring.xs[0] = Math.max(ring.xs[0], drape(0, proud));
+      ring.xs[1] = Math.max(ring.xs[1], drape(D, proud));
+      ring.xs[7] = Math.max(ring.xs[7], drape(-D, proud));
+      const under = Math.min(proud, 0) - SHOULDER_TUCK;
+      ring.xs[2] = Math.max(ring.xs[2], drape(1, under));
+      ring.xs[6] = Math.max(ring.xs[6], drape(-1, under));
+      return ring;
+    });
+    const top = [FORELEG_TOP[0] * h - oy, FORELEG_TOP[1] * h - oz];
+    const foot = rings[rings.length - 1].c;
     for (const leg of frontLegs) {
-      // one geometry between the pair: the column is its own mirror image.
-      // The mesh origin sits AT the join, as the plan's own legs have it.
       leg.geometry.dispose();
-      leg.geometry = foreleg;
-      leg.position.set(Math.sign(leg.position.x) * fx, top, fz);
+      leg.geometry = ringLoft(rings, SEG, top, foot, { mirror: leg.position.x < 0 });
+      leg.position.set(Math.sign(leg.position.x) * fx, oy, oz);
     }
 
-    // see THE HIND LEGS ARE HAUNCHES. The origin is sunk into the trunk's
-    // middle at the haunch's own centre plane, and the rows — stated from the
-    // ground — are restated from there.
-    const jx = HAUNCH_X * h, jz = HAUNCH_JOIN_Z * h;
-    const through = column(jx, jz);
-    const jy = (through.lo + through.hi) / 2;
-    const rel = ([y, z]) => [y - jy / h, z - HAUNCH_JOIN_Z];
-    const rows = HAUNCH.map(([z, top2, bot, w]) => [z - HAUNCH_JOIN_Z, top2 - jy / h, bot - jy / h, w]);
-    const haunch = skullGeometry(rows, { unit: h, back: rel(HAUNCH_BACK), nose: rel(HAUNCH_TOE) });
-    rearLegs.forEach((leg) => {
-      // one geometry between the pair: the loft is its own mirror image
+    // see THE HIND LEGS ARE HAUNCHES. The mesh origin is the boss's own
+    // centre, which lies inside the trunk; the paw is stated from the ground
+    // and restated from there.
+    const jx = HAUNCH_X * h, jy = HAUNCH.c[0] * h, jz = HAUNCH.c[1] * h;
+    const rel = ([y, z]) => [y * h - jy, z * h - jz];
+    const paw = HIND_PAW.map(([z, top2, bot, w]) => ({
+      c: rel([(top2 + bot) / 2, z]), a: [(top2 - bot) / 2 * h, 0], w: w * h,
+    }));
+    const haunch = joinShells(
+      bossGeometry(HAUNCH.up * h, HAUNCH.along * h, HAUNCH.out * h, -jy),
+      ringLoft(paw, 8, rel(HIND_PAW_HEEL), rel(HIND_PAW_TOE)));
+    for (const leg of rearLegs) {
+      // one geometry between the pair: boss and paw are their own mirror images
       leg.geometry.dispose();
       leg.geometry = haunch;
       leg.position.set(Math.sign(leg.position.x) * jx, jy, jz);
-    });
+    }
   }
 
   // ---- the tail -----------------------------------------------------------
