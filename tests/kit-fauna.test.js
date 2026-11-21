@@ -341,3 +341,50 @@ test('makeTail: swellAt places the fullness, and leaves the strand itself alone'
   };
   assert.deepEqual(swing(HANK), swing({}));
 });
+
+// ---- how a dock leaves a rounded rump ------------------------------------------
+// Three additions for a tail that has to come out of a croup as the croup's
+// own line: a second aimed segment so it leaves in an arc (`rootBend`), a
+// root broader across than it is deep (`rootWide`), and a section turned to
+// put a ridge up its back (`spin`). Each is off by default, and off is the
+// tail every caller already had.
+test('makeTail: rootBend, rootWide and spin shape the dock, and stated at their defaults change nothing', () => {
+  const base = { segments: 7, length: 0.9, thickness: 0.05, seed: 5, root: [0, -1, -1], swell: 1.2, swellAt: 0.66 };
+  const skinOf = (t) => Array.from(t.group.getObjectByName('strand').geometry.getAttribute('position').array);
+  assert.deepEqual(skinOf(makeTail({ ...base, rootBend: null, rootWide: 1, spin: 0 })), skinOf(makeTail(base)));
+
+  // the first two segments stand where they were aimed, and stay there
+  const bent = makeTail({ ...base, rootBend: [0, -1, -0.3] });
+  const seg = (t, i) => {
+    const n = t.nodes();
+    return new THREE.Vector3(n[i + 1][0] - n[i][0], n[i + 1][1] - n[i][1], n[i + 1][2] - n[i][2]).normalize();
+  };
+  const want = [new THREE.Vector3(0, -1, -1).normalize(), new THREE.Vector3(0, -1, -0.3).normalize()];
+  const held = () => want.every((w, i) => seg(bent, i).distanceTo(w) < 1e-6);
+  assert.ok(held(), 'both aimed segments point where they were told');
+  // ...and the strand below is already hanging from the end of the arc when
+  // it is first seen, not still swinging in from under the root
+  for (let i = 2; i < 6; i++) {
+    assert.ok(seg(bent, i).y < -0.95, `segment ${i} of a freshly built arc is ${seg(bent, i).y.toFixed(2)} off straight down`);
+  }
+  bent.impulse(1);
+  for (let i = 0; i < 60; i++) bent.update(1 / 60, 2 + i / 60);
+  assert.ok(held(), 'a swish does not move them');
+
+  // a ring's breadth across the animal against its depth in the side plane
+  const shape = (t, ring) => {
+    const P = t.group.getObjectByName('strand').geometry.getAttribute('position');
+    const pts = [];
+    for (let j = 0; j < 6; j++) pts.push(new THREE.Vector3().fromBufferAttribute(P, ring * 6 + j));
+    const xs = pts.map((p) => p.x);
+    const deep = Math.max(...pts.flatMap((a) => pts.map((b) => Math.hypot(a.y - b.y, a.z - b.z))));
+    return { ratio: (Math.max(...xs) - Math.min(...xs)) / deep, deep, top: pts.reduce((m, p) => (p.y - p.z > m.y - m.z ? p : m)) };
+  };
+  const round = makeTail(base), band = makeTail({ ...base, rootWide: 1.6 });
+  assert.ok(shape(band, 0).ratio > 1.5 * shape(round, 0).ratio, 'a wide root is broader across');
+  assert.ok(Math.abs(shape(band, 0).deep - shape(round, 0).deep) < 1e-6, 'and no deeper from the side');
+  assert.ok(Math.abs(shape(band, 4).ratio - shape(round, 4).ratio) < 1e-6, 'the breadth is gone again down the strand');
+
+  assert.ok(Math.abs(shape(round, 0).top.x) > 0.01, 'unturned, the section has a flat face up its back');
+  assert.ok(Math.abs(shape(makeTail({ ...base, spin: Math.PI / 6 }), 0).top.x) < 1e-6, 'turned half a facet, it has a ridge there');
+});

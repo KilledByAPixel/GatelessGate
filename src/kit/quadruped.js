@@ -196,7 +196,7 @@ export function makeQuadruped({
   head = { shape: 'sphere', r: 0.20, fwd: 0.56, up: 0.22 },   // + scaleX/scaleY/scaleZ (default 1): squish the skull in its own tilted frame
   neck = null,           // { r, w, root, set, taper, arch, ease, easeUp } — see NECK_DEFAULTS; null ends the chest in a blunt breast
   ears = null,           // { r, h, x, y, z, tilt } — DIRECT base offsets from the head's centre; see EARS ARE PLACED DIRECTLY below
-  tail = null,           // { kind: 'stiff'|'strand', ... } — up/back default to the croup; a strand takes makeTail's root/swell/swellAt/swellSpan, and its rootSink x height
+  tail = null,           // { kind: 'stiff'|'strand', ... } — up/back default to the croup; a strand takes makeTail's root/rootBend/swell/swellAt/swellSpan/rootWide/rootWideSpan/spin, and its rootSink x height
   seed = 1,
   ...retired
 } = {}) {
@@ -869,6 +869,10 @@ export function makeQuadruped({
       swellAt: tail.swellAt ?? null,
       swellSpan: tail.swellSpan,
       rootSink: tail.rootSink ? tail.rootSink.map((v) => v * h) : null,
+      rootBend: tail.rootBend ?? null,
+      spin: tail.spin ?? 0,
+      rootWide: tail.rootWide ?? 1,
+      rootWideSpan: tail.rootWideSpan,
     });
     strand.group.position.set(0, tailY, tailZ);
     g.add(strand.group);

@@ -22,6 +22,16 @@ export function makeTail({
   // default) pins only the top node and is byte-identical to the tail every
   // existing caller already has.
   root = null,
+  // A SECOND AIMED SEGMENT, for a dock that leaves the body in an arc: with
+  // `root` stated, this is the direction of the segment after it, and the
+  // third node is pinned as well. One aimed stub is a straight spoke with the
+  // strand hanging plumb from its end, and the further out it is aimed the
+  // harder that corner reads as a hinge — but a tail has to leave a rounded
+  // rump at a shallower angle than the rump is falling away at, or its upper
+  // side stands out of the hide ahead of the place it then dives back in.
+  // Two segments split the turn from that shallow start to the hang. Null (the
+  // default) pins nothing more than `root` does.
+  rootBend = null,
   // HOW FULL THE STRAND IS, past its plain taper: 0 (the default) is the thin
   // whip every existing caller has; above it the strand fattens toward its
   // middle and still closes to the same tip, which is a tail of hair rather
@@ -53,10 +63,29 @@ export function makeTail({
   // croup. The buried run is rigid whenever `root` is aimed, since both nodes
   // it hangs from are pinned.
   rootSink = null,
+  // HOW BROAD THE DOCK IS ACROSS THE ANIMAL, as a multiple of the strand's own
+  // radius at the root, eased back to round over the first `rootWideSpan` of
+  // the length. 1 (the default) is the round section every caller had. A
+  // round root is the same width from behind as it is deep from the side, and
+  // on a broad rump that is a rod standing in the middle of it however well
+  // its end is buried; a tail of hair leaves the croup as a band lying across
+  // it and gathers into the hank below. Only the breadth grows — from the
+  // side the dock is as deep as it was, so it stands no further out of the
+  // rump's slope.
+  rootWide = 1, rootWideSpan = 0.35,
+  // WHICH WAY ROUND THE SECTION STANDS, radians about the strand. At 0 (the
+  // default) the six-sided section has a corner to either side and a flat
+  // face up its back. A rump is a ridge down its middle, and a flat face
+  // coming out through a ridge breaks the hide at its two corners first: from
+  // behind, the top of the tail is a notch. Turned half a facet, the section
+  // has a ridge of its own up its back and comes out of the rump's point
+  // first.
+  spin = 0,
 } = {}) {
   const spacing = length / (segments - 1);
   // pin the top node — and the second one too when the caller aims the root
-  const cloth = createCloth(1, segments, spacing, (c, r) => r === 0 || (root && r === 1));
+  const bent = !!(root && rootBend);
+  const cloth = createCloth(1, segments, spacing, (c, r) => r === 0 || (root && r === 1) || (bent && r === 2));
   if (root) {
     // the stub's far end, one spacing along the aim, and its `prev` with it so
     // verlet reads the node as having always been there rather than as having
@@ -67,6 +96,24 @@ export function makeTail({
     cloth.positions[3] = cloth.positions[0] + d.x;
     cloth.positions[4] = cloth.positions[1] + d.y;
     cloth.positions[5] = cloth.positions[2] + d.z;
+    if (bent) {
+      d.set(rootBend[0], rootBend[1], rootBend[2]);
+      if (d.lengthSq() < 1e-12) d.set(0, -1, 0);
+      d.normalize().multiplyScalar(spacing);
+      cloth.positions[6] = cloth.positions[3] + d.x;
+      cloth.positions[7] = cloth.positions[4] + d.y;
+      cloth.positions[8] = cloth.positions[5] + d.z;
+      // The free strand starts plumb under the END of the dock, not under the
+      // root it was laid out from. An arc carries that end a long way from
+      // the root's own plumb line, and a strand left hanging from where it
+      // was is a pendulum let go from the side: it is still swinging when the
+      // warm-up ends, and a case that bakes its animal freezes it mid-swing.
+      for (let r = 3; r < segments; r++) {
+        cloth.positions[r * 3] = cloth.positions[6];
+        cloth.positions[r * 3 + 1] = cloth.positions[7] - (r - 2) * spacing;
+        cloth.positions[r * 3 + 2] = cloth.positions[8];
+      }
+    }
     cloth.prev.set(cloth.positions);
   }
   // HOW MUCH OF THE WHIP IS ALONG Z, and the answer for an aimed root is none.
@@ -106,8 +153,12 @@ export function makeTail({
     const off = Math.min(1, Math.abs(k / (segments - 1) - swellAt) / swellSpan);
     return thickness * (taper + swell * Math.cos(off * Math.PI / 2) ** 2);
   };
-  const radii = [];
-  for (let i = 0; i < segments; i++) radii.push(radiusAt(i));
+  const radii = [], wide = [];
+  for (let i = 0; i < segments; i++) {
+    radii.push(radiusAt(i));
+    const u = Math.min(1, (i / (segments - 1)) / Math.max(1e-6, rootWideSpan));
+    wide.push(1 + (rootWide - 1) * (1 - u * u * (3 - 2 * u)));
+  }
   // A placed fullness leaves a last ring of some size, and closed flat on its
   // own node that is a sawn-off end. So the closing point is carried on past
   // the last node, in proportion to that ring: a hank drawn to a blunt point.
@@ -163,8 +214,8 @@ export function makeTail({
       nrm.normalize();
       bin.crossVectors(tan, nrm);
       for (let j = 0; j < SIDES; j++) {
-        const t = (j / SIDES) * Math.PI * 2;
-        const c = Math.cos(t) * radii[0], sn = Math.sin(t) * radii[0];
+        const t = spin + (j / SIDES) * Math.PI * 2;
+        const c = Math.cos(t) * radii[0] * wide[0], sn = Math.sin(t) * radii[0];
         const o = (sinkRing + j) * 3;
         pos[o] = cx + nrm.x * c + bin.x * sn;
         pos[o + 1] = cy + nrm.y * c + bin.y * sn;
@@ -185,8 +236,8 @@ export function makeTail({
       bin.crossVectors(tan, nrm);
       const r = radii[i];
       for (let j = 0; j < SIDES; j++) {
-        const t = (j / SIDES) * Math.PI * 2;
-        const c = Math.cos(t) * r, sn = Math.sin(t) * r;
+        const t = spin + (j / SIDES) * Math.PI * 2;
+        const c = Math.cos(t) * r * wide[i], sn = Math.sin(t) * r;
         const o = (i * SIDES + j) * 3;
         pos[o] = p[i * 3] + nrm.x * c + bin.x * sn;
         pos[o + 1] = p[i * 3 + 1] + nrm.y * c + bin.y * sn;
