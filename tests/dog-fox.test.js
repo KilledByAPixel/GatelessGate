@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeDog } from '../src/kit/dog.js';
 import { makeFox } from '../src/kit/fox.js';
-import { triangles, sectionY, sectionZ, inside, trunk } from './helpers/quadruped-probe.js';
+import { triangles, sectionY, sectionZ, inside, trunk, partOf, cornerKey } from './helpers/quadruped-probe.js';
 
 // The dog and the fox share a body plan, so what tells them apart — and what
 // tells either from a toy — is the head, the ears and the tail. These pin the
@@ -254,16 +254,104 @@ test("the fox's head is a wedge drawn to a point, with a skull behind the muzzle
     `a needle: a skull ${tall.toFixed(3)} tall on a chest ${chest.toFixed(3)} deep`);
 });
 
-test("the fox's ears are taller than its skull, and triangles rather than spikes", () => {
+// what a set of triangles spans across (x) and fore-and-aft (z) where the
+// level plane y = const cuts it, and how far it reaches to either side
+const levelCut = (tris, y) => {
+  const lo = [Infinity, Infinity], hi = [-Infinity, -Infinity];
+  for (const t of tris) {
+    for (let k = 0; k < 3; k++) {
+      const a = [t[3 * k], t[3 * k + 1], t[3 * k + 2]], j = (k + 1) % 3, b = [t[3 * j], t[3 * j + 1], t[3 * j + 2]];
+      if ((a[1] - y) * (b[1] - y) > 0 || a[1] === b[1]) continue;
+      const u = (y - a[1]) / (b[1] - a[1]);
+      [a[0] + (b[0] - a[0]) * u, a[2] + (b[2] - a[2]) * u].forEach((v, i) => { lo[i] = Math.min(lo[i], v); hi[i] = Math.max(hi[i], v); });
+    }
+  }
+  return { x: hi[0] - lo[0], z: hi[1] - lo[1], left: -lo[0], right: hi[0] };
+};
+
+test("the fox's ears stand most of a skull's depth over its crown, broad from the front and from the side", () => {
+  // Measured on what SHOWS: the part of each ear standing over the crown. The
+  // buried base says nothing about how the ear reads.
   const root = makeFox({}).group;
   const b = headBox(root);
   const tall = b.max.y - b.min.y;
   for (const ear of named(root, 'ear')) {
-    const e = earShape(ear);
-    assert.ok(e.height > tall, `an ear ${e.height.toFixed(3)} tall on a skull ${tall.toFixed(3)} tall`);
-    assert.ok(e.width > 0.5 * e.height,
-      `a spike: ${e.width.toFixed(3)} across the base, ${e.height.toFixed(3)} tall`);
+    const tris = triangles(root, (o) => o === ear);
+    const rise = Math.max(...tris.map((t) => Math.max(t[1], t[4], t[7]))) - b.max.y;
+    assert.ok(rise > 0.78 * tall, `an ear stands ${rise.toFixed(3)} over a skull ${tall.toFixed(3)} deep`);
+    const cut = levelCut(tris, b.max.y + 0.05 * rise);
+    assert.ok(cut.x > 0.45 * rise, `a spike from the front: ${cut.x.toFixed(3)} across where it clears the crown, ${rise.toFixed(3)} tall`);
+    assert.ok(cut.z > 0.4 * rise, `a spike from the side: ${cut.z.toFixed(3)} fore and aft, ${rise.toFixed(3)} tall`);
   }
+});
+
+test("the fox's ear rises out of the skull through its surface: closed, buried at full width, its outer edge the cheek's own line carried up", () => {
+  // An open-rooted cone stood on the corner of the skull overhangs it: the
+  // skull falls away beside its crown, so the cone's base shows from in front
+  // as a flap beside the head with paper between it and the cheek. Three
+  // things hold the join. The ear is a closed solid. Everything at its base —
+  // at least four of its corners — is inside the skull. And from in front the
+  // outline of head and ear together never steps in between the widest part
+  // of the head and the broadest part of the ear: the ear's outer edge leaves
+  // the head AT its side. Held at rest and through the whole flick, when the
+  // ear turns on its hinge.
+  const fox = makeFox({});
+  const root = fox.group;
+  const check = (when) => {
+    root.updateMatrixWorld(true);
+    const skull = triangles(root, isHead);
+    const head = headBox(root);
+    for (const ear of named(root, 'ear')) {
+      const tris = triangles(root, (o) => o === ear);
+      // the head drifts a little on its hinge, so each ear is held against its
+      // own side of the head
+      const side = ear.getWorldPosition(new THREE.Vector3()).x > 0 ? 'right' : 'left';
+      const sgn = side === 'right' ? 1 : -1;
+      const part = partOf(tris, cornerKey(tris, (x, y) => y));
+      assert.equal(part.tris.length, tris.length, 'an ear is one piece');
+      assert.ok(part.closed, `${when}: an ear is open underneath`);
+      const buried = part.verts.filter((p) => inside(skull, p));
+      assert.ok(buried.length >= 4, `${when}: only ${buried.length} corners of an ear's base are inside the skull`);
+      if (when !== 'at rest') continue;
+      // the outline from the head's widest level up to the ear's broadest
+      const both = [...skull, ...tris];
+      let yWide = 0, wide = 0, yEar = 0, earOut = 0;
+      for (let k = 0; k <= 60; k++) {
+        const y = head.min.y + (head.max.y - head.min.y) * k / 60, w = levelCut(skull, y)[side];
+        if (w > wide) { wide = w; yWide = y; }
+      }
+      const reach = Math.max(...buried.map((p) => sgn * p.x));
+      assert.ok(reach > 0.9 * wide, `the base stops short of the side of the head: ${reach.toFixed(3)} of ${wide.toFixed(3)}`);
+      const top = Math.max(...tris.map((t) => Math.max(t[1], t[4], t[7])));
+      for (let k = 0; k <= 60; k++) {
+        const y = head.max.y + (top - head.max.y) * k / 60, w = levelCut(tris, y)[side];
+        if (w > earOut) { earOut = w; yEar = y; }
+      }
+      for (let k = 1; k < 40; k++) {
+        const y = yWide + (yEar - yWide) * k / 40;
+        const out = levelCut(both, y)[side];
+        assert.ok(out > 0.93 * wide, `a notch between cheek and ear: the outline is ${out.toFixed(3)} against a head ${wide.toFixed(3)} wide`);
+      }
+      assert.ok(earOut < 1.15 * wide, `the ear hangs out past the head: ${earOut.toFixed(3)} against ${wide.toFixed(3)}`);
+    }
+  };
+  check('at rest');
+  for (let i = 0; i < 30; i++) fox.update(1 / 60, i / 60);
+  fox.notice();
+  for (let i = 0; i < 200; i++) {
+    fox.update(1 / 60, (30 + i) / 60);
+    check(`${i} frames into a flick`);
+  }
+});
+
+test("the fox's skull is broad from the front: most of the width of the trunk behind it", () => {
+  // off the vertices themselves: a mesh's box carried through a turned head
+  // is looser than the head
+  const root = makeFox({}).group;
+  root.updateMatrixWorld(true);
+  const half = (name) => Math.max(...triangles(root, (o) => o.name === name).map((t) => Math.max(Math.abs(t[0]), Math.abs(t[3]), Math.abs(t[6]))));
+  const ratio = half('head') / half('body');
+  assert.ok(ratio > 0.8 && ratio < 1.05, `the head is ${ratio.toFixed(2)}x the trunk's width`);
 });
 
 test("the fox's brush is at least half the body's thickness, and carried no higher than its back", () => {

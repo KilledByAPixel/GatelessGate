@@ -1,7 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { INK_LIT } from '../palette.js';
 import { hash1, noise1 } from '../util/noise.js';
-import { makeQuadruped } from './quadruped.js';
+import { makeQuadruped, earShell } from './quadruped.js';
 import { skullGeometry } from './skull.js';
 
 // Hyakujo's fox (case 2): the dog's body plan run slim and low. Three things
@@ -62,12 +62,14 @@ const BRUSH = [
 // `top` column: a flat crown and then one long fall to the nose, with the
 // stop no more than a change of slope. The half-widths are the other half of
 // it — broad at the cheek and pinched hard just ahead of it, so from the front
-// and from above the face is a triangle.
+// and from above the face is a triangle. BROAD means most of the width of the
+// trunk behind it: a skull much narrower than the body is a snout on a neck
+// from in front, with the ears standing wider than the head they grow from.
 const SKULL = [
-  [-0.1, 0.076, -0.066, 0.08],
-  [-0.03, 0.106, -0.084, 0.115],
-  [0.04, 0.1, -0.078, 0.1],
-  [0.1, 0.06, -0.062, 0.058],
+  [-0.1, 0.076, -0.066, 0.095],
+  [-0.03, 0.106, -0.084, 0.135],
+  [0.04, 0.1, -0.078, 0.118],
+  [0.1, 0.06, -0.062, 0.062],
   [0.165, 0.034, -0.048, 0.037],
   [0.225, 0.016, -0.038, 0.025],
 ];
@@ -77,10 +79,35 @@ const HEAD_NOSE_DOWN = 0.1;             // rad the whole head is carried nose-do
 // The skull hinges straight below the point the neck ends on: an offset fore
 // or aft swings the cheek off the end of the neck as the head turns.
 const HINGE_DOWN = 0.02;                // x height
-// An ear is a little flatter fore and aft than it is wide, but only a little:
-// flattened to a leaf it is a broad triangle from the front and a spike from
-// the side, and the side is how this animal is usually seen.
-const EAR_FLAT = 0.95;
+// AN EAR IS A BROAD SHELL RISING OUT OF A CORNER OF THE SKULL (quadruped.js,
+// earShell), each point [x, y, z] in heights from the head's origin, in the
+// skull's own frame, for the ear on +x. The base ring is `outer`, `inner`,
+// `back` in that order, all buried: `outer` in the widest part of the head, so the ear's
+// outer edge comes up out of the cheek and carries the side of the head on
+// upward; `inner` under the crown, leaving a flat of crown between the pair;
+// `back` behind and between, which is the ear's depth from the side — broad
+// from there too, or it is a triangle from the front and a spike in profile,
+// and profile is how this animal is usually seen. The second ring bows the
+// outer edge a little on the way to the tip. The plan's cone could not make
+// this join: its round base, wide enough to read as an ear, hung out past a
+// skull that falls away beside its crown, and showed from in front as a flap
+// beside the head with paper under it.
+//
+// `hinge` is the point the flick turns about, and the flick tips the ear
+// BACK. It sits forward in the base, so most of the base swings deeper into
+// the skull and only what is ahead of it can lift; and not far above `outer`,
+// because what hangs below the hinge swings forward, and the skull narrows
+// ahead of its cheek. `outer` is set in from the cheek by just the margin
+// that swing needs — further in, and the ear's edge steps in from the head's.
+const EAR = {
+  tip: [0.137, 0.305, -0.055],
+  rings: [
+    [[0.127, 0.015, -0.03], [0.012, 0.075, 0.03], [0.055, 0.03, -0.098]],
+    [[0.146, 0.125, -0.04], [0.05, 0.158, 0.006], [0.088, 0.135, -0.092]],
+  ],
+  root: [0.08, -0.02, -0.04],
+  hinge: [0.07, 0.035, -0.01],
+};
 
 const STIR = 2.4;                        // seconds for one whole response
 
@@ -125,10 +152,9 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     // little above the back — and how far it is nosed down; its geometry is
     // replaced by the loft below. No snout: the muzzle is that loft's front.
     head: { shape: 'sphere', r: 0.1, fwd: 0.56, up: 0.215, tilt: HEAD_NOSE_DOWN },
-    // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): base offsets from
-    // the point the neck ends on — inside the back corners of the skull, so
-    // the join is buried — and leaning out a little.
-    ears: { r: 0.072, h: 0.235, x: 0.062, y: 0.05, z: -0.012, tilt: 0.3 },
+    // The plan's cones only say that there are two ears; their shape and
+    // their hinges are stated against the skull below (see EAR).
+    ears: { r: 0.03, h: 0.1, x: EAR.hinge[0], y: EAR.hinge[1], z: EAR.hinge[2], tilt: 0 },
     // no plan tail: the brush is built below, on its own hinge
   });
   group.name = 'fox';
@@ -152,11 +178,22 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
       headPivot.add(part);
     }
   }
+  // The ears are stated in the skull's frame and the skull is carried nose
+  // down, so each shell goes through the head's own transform and is then
+  // hung from its hinge, which is all the ear mesh's own transform is: the
+  // flick is a plain turn about that point.
   const ears = headPivot.children.filter((c) => c.name === 'ear');
-  for (const ear of ears) ear.scale.z = EAR_FLAT;
-  // (The old EAR_SPIN facet hack lived here — quadruped.js now bakes half a
-  // facet of pre-spin into the ear GEOMETRY so a flat face meets the 3/4
-  // camera, and rotation.y belongs to the shared placement. Nothing to do.)
+  headMesh.updateMatrix();
+  for (const ear of ears) {
+    const mirror = ear.position.x < 0;
+    const hinge = new THREE.Vector3((mirror ? -1 : 1) * EAR.hinge[0], EAR.hinge[1], EAR.hinge[2])
+      .multiplyScalar(height).applyMatrix4(headMesh.matrix);
+    ear.position.copy(hinge);
+    ear.rotation.set(0, 0, 0);
+    ear.geometry.dispose();
+    ear.geometry = earShell(EAR, { unit: height, mirror, matrix: headMesh.matrix })
+      .translate(-hinge.x, -hinge.y, -hinge.z);
+  }
 
   // ---- the brush, on its own hinge --------------------------------------
   // The hinge is the root, buried in the rump, and the mesh hangs from it
