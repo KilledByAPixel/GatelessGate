@@ -819,3 +819,60 @@ test('dog, fox and horse: the topline runs back, withers, nape with no notch and
     assert.ok(Math.max(...turns) < 40, `${label}: sharpest corner ${Math.max(...turns).toFixed(0)} degrees`);
   }
 });
+
+// ---- THE BARREL, as tests -------------------------------------------------------
+// how much of a trunk's breadth is left three fifths of the way from its
+// widest line to its top (side = 1) or its keel (side = -1), at a station
+function breadthKept(root, z, side) {
+  const body = triangles(root, (o) => o.name === 'body');
+  const cut = sectionY(body, z), mid = (cut.max + cut.min) / 2;
+  const y = mid + side * 0.6 * ((side > 0 ? cut.max : cut.min) - mid) * side;
+  return halfWidthAt(body, z, y) / halfWidthAt(body, z, mid);
+}
+
+test('torso.barrel fills the section above and below its widest line, rump to shoulder, and leaves the outline alone', () => {
+  const base = { height: 1, neck: {} };
+  const round = makeQuadruped(base), full = makeQuadruped({ ...base, torso: { barrel: 1 } });
+  for (const z of [round.plan.zShoulder - 1e-4, 0, round.plan.zHip + 1e-4]) {
+    for (const side of [1, -1]) {
+      const a = breadthKept(round.group, z, side), b = breadthKept(full.group, z, side);
+      assert.ok(a < 0.8, `round, the section has fallen away to ${a.toFixed(2)} (z=${z.toFixed(2)}, side ${side})`);
+      assert.ok(b > 0.86, `barrelled, it keeps ${b.toFixed(2)} of its breadth (z=${z.toFixed(2)}, side ${side})`);
+    }
+    const p = sectionY(triangles(round.group, (o) => o.name === 'body'), z), q = sectionY(triangles(full.group, (o) => o.name === 'body'), z);
+    assert.ok(Math.abs(p.min - q.min) < 1e-9 && Math.abs(p.max - q.max) < 1e-9, 'same top and bottom');
+  }
+  legsJoinBody(full.group, 'barrelled plan', assert.ok);
+});
+
+test('torso.girth ends the shoulder at a section of its own, drawn in behind the elbow', () => {
+  const base = { height: 1, neck: {}, torso: { slab: 1, barrel: 1, shoulderW: 1, barrelW: 1 } };
+  const eased = makeQuadruped(base), girt = makeQuadruped({ ...base, torso: { ...base.torso, girth: 0.16 } });
+  const count = (q) => q.group.children.find((c) => c.name === 'body').geometry.getAttribute('position').count;
+  assert.strictEqual(count(girt) - count(eased), 8, 'one more ring in the trunk, and no more meshes');
+  assert.strictEqual(girt.group.children.length, eased.group.children.length);
+  const { zShoulder, zHip } = girt.plan, zG = zShoulder - 0.16 * (zShoulder - zHip) - 1e-4;
+  const wide = (q, z) => { const body = triangles(q.group, (o) => o.name === 'body'); const c = sectionY(body, z); return halfWidthAt(body, z, (c.max + c.min) / 2); };
+  assert.ok(wide(girt, zG) < wide(girt, zShoulder - 1e-4) && wide(girt, zG) < wide(girt, zG - 0.2 * (zShoulder - zHip)),
+    'the trunk is narrower at the girth than at the shoulder ahead of it or the ribs behind');
+  assert.ok(wide(eased, zG) > wide(girt, zG), 'without it there is no such waist');
+  // and the slab is gone by there: the chest's side has turned under
+  assert.ok(breadthKept(girt.group, zG, -1) < breadthKept(girt.group, zShoulder - 1e-4, -1), 'the slab ends at the girth');
+});
+
+test('dog, fox and horse are barrels: broad either side of the spine and full in the rib, with a shoulder that ends at a girth', () => {
+  for (const [label, build] of SHOULDERED.filter(([l]) => l !== 'buffalo')) {
+    const root = build();
+    const { zHind, zFront, span } = trunk(root);
+    for (const z of [zHind + 0.3 * span, zHind + 0.6 * span]) {
+      for (const side of [1, -1]) {
+        const k = breadthKept(root, z, side);
+        assert.ok(k > 0.84, `${label}: the trunk keeps ${k.toFixed(2)} of its breadth (side ${side}) at z=${z.toFixed(2)}`);
+      }
+    }
+    const body = triangles(root, (o) => o.name === 'body');
+    const wide = (z) => { const c = sectionY(body, z); return halfWidthAt(body, z, (c.max + c.min) / 2); };
+    const zG = zFront - 0.16 * span;
+    assert.ok(wide(zG) < wide(zFront - 1e-4), `${label}: the shoulder stands out of the girth behind it`);
+  }
+});
