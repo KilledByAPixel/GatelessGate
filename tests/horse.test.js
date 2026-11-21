@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeHorse } from '../src/kit/horse.js';
-import { triangles, sectionY, sectionZ } from './helpers/quadruped-probe.js';
+import { triangles, sectionY, sectionZ, inside, partOf, cornerKey } from './helpers/quadruped-probe.js';
 
 // Pins the silhouette events that make it a HORSE and not a llama, measured
 // from the meshes themselves wherever a mesh can answer, so a regression in
@@ -420,6 +420,44 @@ test('the mane is hair on the neck: proud of the crest, narrower than it, steppe
   const head = find(horse.group, 'head')[0];
   ear[0].geometry.computeBoundingBox();
   assert.ok(ear[0].geometry.boundingBox.max.z > head.position.z + 0.06 * withers, 'a forelock reaches forward of the ears');
+});
+
+test('each ear is a closed leaf rising out of a corner of the poll, buried at its base and inside the width of the head', () => {
+  // A cone on an open ring, stood on a poll narrower than the ring, hangs out
+  // past the side of the head: from in front there is paper under its outer
+  // edge. The ears ride in one mesh with the hair, so each is found from its
+  // tip — the highest thing on its side of the head — and held to being a
+  // solid of its own whose base is inside the skull and whose outer side
+  // stays within the head's own breadth.
+  const horse = build();
+  const withers = withersOf(horse);
+  const head = triangles(horse.group, (o) => o.name === 'head');
+  const headOut = Math.max(...head.map((t) => Math.max(Math.abs(t[0]), Math.abs(t[3]), Math.abs(t[6]))));
+  const headTop = Math.max(...head.map((t) => Math.max(t[1], t[4], t[7])));
+  const all = triangles(horse.group, (o) => o.name === 'ear');
+  for (const side of [-1, 1]) {
+    const part = partOf(all, cornerKey(all, (x, y) => (side * x > 0.4 * headOut ? y : -Infinity)));
+    assert.ok(part.closed, 'an ear is open underneath');
+    assert.ok(part.tris.length <= 16, `an ear is a part of its own, not joined to the hair: ${part.tris.length} faces`);
+    const buried = part.verts.filter((p) => inside(head, p));
+    assert.ok(buried.length >= 4, `only ${buried.length} corners of an ear's base are inside the skull`);
+    const out = Math.max(...part.verts.map((p) => side * p.x));
+    assert.ok(out < 1.02 * headOut, `an ear hangs out past the side of the head: ${out.toFixed(3)} against ${headOut.toFixed(3)}`);
+    assert.ok(Math.max(...buried.map((p) => side * p.x)) > 0.6 * headOut, 'its base reaches toward the side of the poll');
+    // upright and small: it stands over the poll by a few hundredths of the
+    // withers' height, and leans out less than it stands
+    const tip = part.verts.reduce((m, p) => (p.y > m.y ? p : m));
+    const foot = buried.reduce((m, p) => ({ x: m.x + p.x / buried.length, y: m.y + p.y / buried.length }), { x: 0, y: 0 });
+    const rise = (tip.y - headTop) / withers;
+    assert.ok(rise > 0.03 && rise < 0.1, `an ear stands ${rise.toFixed(3)}x withers over the poll`);
+    assert.ok(Math.abs(tip.x - foot.x) < 0.4 * (tip.y - foot.y), 'an ear lies out sideways');
+    // a leaf: broader partway up than where it leaves the skull would give a
+    // straight-sided triangle
+    const free = part.verts.filter((p) => !buried.includes(p) && p !== tip);
+    assert.ok(free.length >= 3, 'an ear has a section between base and tip');
+    assert.ok(Math.max(...free.map((p) => side * p.x)) > Math.max(...buried.map((p) => side * p.x)),
+      'the ear bows outward above its base');
+  }
 });
 
 test('slim legs under real mass: the cannon is a fraction of the chest, the forearm broad at the elbow', () => {

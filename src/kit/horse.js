@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { INK_LIT } from '../palette.js';
-import { makeQuadruped } from './quadruped.js';
+import { makeQuadruped, earShell } from './quadruped.js';
 import { mergeSimple } from './scatter.js';
 
 // A horse (case 45). The first model read as a llama — a neck standing nearly
@@ -96,13 +96,32 @@ const FORELOCK = [[-0.085, 0.026, 0.026], [-0.02, 0.03, 0.024], [0.055, 0.006, 0
 const CROUP_LIFT = 0.013;
 // [z, halfW, halfH, yOff], x height — see ONE head below
 const HEAD_RINGS = [
-  [-0.085, 0.040, 0.058, 0.000],    // poll, rounding away behind
-  [-0.030, 0.060, 0.105, -0.040],   // jaw: the deep part
-  [0.045, 0.057, 0.092, -0.035],    // cheek
-  [0.125, 0.046, 0.068, -0.019],    // the underline has climbed
+  [-0.085, 0.048, 0.058, 0.000],    // poll, rounding away behind
+  [-0.030, 0.066, 0.105, -0.040],   // jaw: the deep part, and the breadth of the forehead
+  [0.045, 0.062, 0.092, -0.035],    // cheek
+  [0.125, 0.048, 0.068, -0.019],    // the underline has climbed
   [0.205, 0.039, 0.050, -0.014],
   [0.270, 0.035, 0.043, -0.015],    // muzzle, blunt
 ];
+
+// AN EAR IS A SMALL UPRIGHT LEAF EITHER SIDE OF THE POLL (quadruped.js,
+// earShell), each point [x, y, z] x height in the head loft's own frame — so
+// it rides the face's hang — for the ear on +x. The base ring is buried in
+// the back corner of the skull: its outer point just under the poll's widest
+// corner, so the ear's outer edge leaves the head where the head's own
+// outline turns over, and its inner point under the crown, leaving the
+// forelock's width between the pair. The second ring is the leaf: a little
+// broader than where the ear leaves the skull, bowed outward. The plan's cone
+// stood a round base on a poll narrower than itself, and from in front each
+// ear hung out past the side of the head with paper under it.
+const EAR = {
+  tip: [0.05, 0.08, -0.14],
+  rings: [
+    [[0.042, 0.023, -0.048], [0.016, 0.046, -0.058], [0.028, -0.005, -0.074]],
+    [[0.06, 0.056, -0.089], [0.02, 0.067, -0.084], [0.04, 0.023, -0.109]],
+  ],
+  root: [0.028, 0.003, -0.036],
+};
 
 const HEAD_RINGS_SEG = 8;        // sides to a head ring, spun half a step: a flat facet up the face
 
@@ -160,9 +179,9 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     neck: { r: 0.068, w: 0.8, root: 0.65, set: 0.0, taper: 1.0, arch: 0.07, ease: 0.4 },
     head,
     // no snout: the muzzle is the front of the single head loft below.
-    // DIRECT dials (quadruped.js, EARS ARE PLACED DIRECTLY): rooted on the
-    // poll, just inside the tilted crown of the head loft, and laid a little out.
-    ears: { r: 0.025, h: 0.085, x: 0.03, y: 0.075, z: -0.005, tilt: 0.3 },
+    // The plan's cones only say that there are two ears: each is restated
+    // against the head loft below (see EAR).
+    ears: { r: 0.025, h: 0.085, x: 0.03, y: 0.075, z: -0.005, tilt: 0 },
     // `thickness` is the dock and `swell` the hair, placed low on the strand
     // (`swellAt`) and spread over most of it (`swellSpan`): a slimmer root
     // that fattens is a hank hanging from a tailbone, where a root as thick
@@ -290,6 +309,18 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     geo.computeVertexNormals();
     headMesh.geometry.dispose();
     headMesh.geometry = geo;
+  }
+
+  // ---- the ears, out of the skull -------------------------------------------
+  // Stated in the head loft's frame and carried out by the head's transform,
+  // so each mesh is left with no transform of its own for the bake below.
+  headMesh.updateMatrix();
+  for (const ear of group.children.filter((c) => c.name === 'ear')) {
+    const mirror = ear.position.x < 0;
+    ear.geometry.dispose();
+    ear.geometry = earShell(EAR, { unit: height, mirror, matrix: headMesh.matrix });
+    ear.position.set(0, 0, 0);
+    ear.rotation.set(0, 0, 0);
   }
 
   // ---- one mesh for the ears ---------------------------------------------
