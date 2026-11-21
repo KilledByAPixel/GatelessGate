@@ -62,7 +62,7 @@ import { mergeSimple } from './scatter.js';
 // `bakeStatic`, but the horse is shared, and an unbaked one still spends what
 // it spends.
 const HEAD_UP = 0.45;            // head centre above the body's axis, x height
-const HEAD_FWD = 0.80;           // ...and ahead of the animal's middle
+const HEAD_FWD = 0.77;           // ...and ahead of the animal's middle
 const HEAD_TILT = 0.9;           // rad the face hangs below level
 const KNEE = 0.32;               // rad, hind hock fold
 const POLL_LEAN = 0.15;          // rad the neck's last section leans back off upright
@@ -145,10 +145,14 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // made a floor under a hard edge the length of the belly.
   // THE NECK IS LONG AND DEEP AT ITS BASE, and the head is carried far enough
   // out and up that the neck is well over half the height of the withers
-  // long. Shorter and shallower, it was a pony's head on a foal's neck. The
-  // throat leaves the breast a little above the brisket (`root`): from lower
-  // down, the chest ran on ahead of the front leg as a level keel and the
-  // leg's front line met it in a notch.
+  // long. Shorter and shallower, it was a pony's head on a foal's neck. It
+  // rises at about half a right angle, and a third of the way up it is still
+  // about as deep as the head is long: the throat leaves the breast well
+  // down the chest (`root`) and the neck spends its depth late (`taper`)
+  // into a full throatlatch (`r`). Leaving the breast high, the neck was
+  // thin and the head hung forward off it. The front leg stands forward under
+  // that low breast (`frontSet`): behind it, the chest ran on ahead of the
+  // leg as a level keel and the leg's front line met it in a notch.
   const { group, tail, plan } = makeQuadruped({
     height, color, seed,
     bodyR: 0.18, bodyLen: 0.59, bodyDrop: 0.055,
@@ -190,14 +194,14 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     // side carried straight down to the elbow (`torso.slab`), with the leg
     // standing forward under the breast (`frontSet`) and the breast still
     // standing out ahead of it.
-    legs: { knee: KNEE, shoulder: 2.2, thigh: 4.12, proud: 0.0, cannon: 0.72, foot: 1.2, gaskin: 0.95, frontSet: 0.06, hindSet: 0.1, point: 0.55, flare: 0.8, drop: 0.15, elbow: 1.15, wrist: 0.35, hock: 0.58, rake: 0.06 },
+    legs: { knee: KNEE, shoulder: 2.2, thigh: 4.12, proud: 0.0, cannon: 0.72, foot: 1.2, gaskin: 0.95, frontSet: 0.075, hindSet: 0.1, point: 0.55, flare: 0.8, drop: 0.15, elbow: 1.15, wrist: 0.35, hock: 0.58, rake: 0.06 },
     // `set` at nothing: the nape leaves the topline AT the withers, so the
     // withers are the corner where back turns into neck — but not the only
     // one. `ease` carries the root's top a way up the nape, so the line
     // climbs from the withers at once and turns again at the root; left where
     // the plan puts it, the root stands under the withers and the crest
     // starts from a step down.
-    neck: { r: 0.068, w: 0.8, root: 0.4, set: 0.0, taper: 1.0, arch: 0.07, ease: 0.4 },
+    neck: { r: 0.075, w: 0.8, root: 0.55, set: 0.0, taper: 0.7, arch: 0.05, ease: 0.4 },
     head,
     // no snout: the muzzle is the front of the single head loft below.
     // The plan's cones only say that there are two ears: each is restated

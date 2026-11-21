@@ -396,16 +396,17 @@ test('the neck is deeper at the shoulder than at the throat, and stays deep leav
   assert.ok(rootDepth > third && third > upper && upper > endDepth,
     'one wedge: every station slimmer than the one below it');
   // A deep root is not enough. A neck that spends its depth at once is thin
-  // where it leaves the shoulders, and the head then hangs off a stick.
-  assert.ok(third / withers > 0.28,
+  // where it leaves the shoulders, and the head then hangs off a stick: a
+  // horse's neck is about as deep a third of the way up as the head is long.
+  assert.ok(third / withers > 0.33,
     `a third of the way up the neck is ${(third / withers).toFixed(3)}x withers deep`);
   // ...and it has to LAST: the upper half of the neck is still a real thing
   // where it nears the head
-  assert.ok(upper / withers > 0.2,
+  assert.ok(upper / withers > 0.25,
     `two thirds of the way up the neck is ${(upper / withers).toFixed(3)}x withers deep`);
   // BUT IT IS A NECK. The mane's fullness is hair standing on the crest; drawn
-  // as the neck's own depth it is a horse with a thick neck.
-  assert.ok(third / withers < 0.36 && upper / withers < 0.26,
+  // as the neck's own depth it is a horse with a bull's neck.
+  assert.ok(third / withers < 0.42 && upper / withers < 0.33,
     `the neck itself stays slim: ${(third / withers).toFixed(3)}x and ${(upper / withers).toFixed(3)}x withers`);
   // The root runs withers to the point of the breast, and the breast stands
   // well up the chest — so the root is not the whole depth of the chest, and
