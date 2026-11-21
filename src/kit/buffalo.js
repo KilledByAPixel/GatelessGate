@@ -255,14 +255,25 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // full, which squares the shoulders off under the hump and makes a crate
     // of him. `girth` draws the trunk in just behind the elbow, so the
     // shoulder ends at an edge and stands on his side as a plane of its own
-    // running up into the hump; the shoulder is stated nearly as broad as
+    // running up into the hump; the shoulder is stated at least as broad as
     // the ribs for the same reason, since a shoulder much narrower than the
     // barrel behind it has nothing to be drawn in from. The underside turns
     // under on a curve (`keel`), so his chest is a rounded keel between the
     // forelegs and not a flat shelf; the belly stays as deep.
+    // THE FOREQUARTERS ROUND OUT. With the chest's sides slabbed nearly
+    // straight down, and the barrel barely carrying its breadth up and down,
+    // the front of him was flat: from in front a hexagon with upright sides,
+    // where a bison's forequarters are one great rounded mass wider than the
+    // hump. So the shoulder is broader than the ribs (`shoulderW`), the slab
+    // is eased (`slab`) and the barrel carries the round further (`barrel`),
+    // and the chest hangs down round the forearms' tops (`torso.arm`) — which
+    // is also what keeps each forearm from showing its top beside the chest
+    // as a tab with a notch. The rump hangs over the thighs the same way
+    // (`haunch`), so the thigh is no longer a box standing out of the flank
+    // (`legs.proud` at nothing).
     torso: {
-      chest: 1.26, loin: 0.98, withers: 1.22, croup: 0.745, sag: BACK_SAG, round: 1, slab: 0.85, barrel: 0.6, girth: 0.16, keel: 1,
-      shoulderW: 1.02, barrelW: 1.08, hipW: 0.92,
+      chest: 1.26, loin: 0.98, withers: 1.22, croup: 0.745, sag: BACK_SAG, round: 1, slab: 0.7, barrel: 0.85, girth: 0.16, keel: 1, arm: 0.4, haunch: 0.5,
+      shoulderW: 1.12, barrelW: 1.1, hipW: 0.92,
     },
     legBury: 0.2,
     // LIMBS UNDER A MASS, NOT POSTS. Side-on, the cannon is a small fraction
@@ -294,7 +305,7 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // behind the hock. The gaskin is slim well before it (`gaskin`), so the
     // back of the leg dips forward between buttock and hock instead of
     // running down from the rump as one plank.
-    legs: { knee: 0.35, shoulder: 1.7, thigh: 3.4, cannon: 0.72, foot: 1.3, hindSet: 0.08, gaskin: 0.85, point: 0.6, flare: 0.8, drop: 0.25, spread: 1, elbow: 0.85, hock: 0.56, rake: 0.05 },
+    legs: { knee: 0.35, shoulder: 1.7, thigh: 3.4, proud: 0, cannon: 0.72, foot: 1.3, hindSet: 0.08, gaskin: 0.85, point: 0.6, flare: 0.8, drop: 0.25, spread: 1, elbow: 0.85, hock: 0.56, rake: 0.05 },
     // Short, deep and nearly as wide as the skull it enters. Its end ring is
     // centred on the head's own centre and must stay INSIDE the skull there,
     // so `r` is bounded by the skull's section at its origin — fatten the

@@ -108,7 +108,17 @@ test('the measure is not vacuous: it finds a one-handed split and a copied pair'
   }
   const copy = new THREE.BufferGeometry();
   copy.setAttribute('position', p);
-  copy.setIndex(Array.from(right.geometry.index.array));
+  // ...and split all one way round, as they also were: since every quad
+  // folds outward (loft.js), a near-round column's copy makes nearly the
+  // same choices as its reflection, and the copy alone no longer shows
+  const cidx = Array.from(right.geometry.index.array);
+  for (let i = 0; i < ringed / 6 - 1; i++) {
+    for (let j = 0; j < 6; j++) {
+      const a = i * 6, b = a + 6, j2 = (j + 1) % 6;
+      cidx.splice((i * 6 + j) * 6, 6, a + j, a + j2, b + j, a + j2, b + j2, b + j);
+    }
+  }
+  copy.setIndex(cidx);
   left.geometry = copy;
   const copied = symmetryReport(root2).filter((r) => r.name === 'leg');
   assert.ok(Math.max(...copied.map((r) => r.gap)) > 100 * EPS * h, 'a leg rebuilt from the same recipe went unnoticed');

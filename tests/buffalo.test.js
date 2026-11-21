@@ -348,7 +348,11 @@ test('the legs are limbs under the trunk, not posts', () => {
     assert.ok(cannon < 0.13 * chest.depth,
       `a cannon ${(cannon / chest.depth).toFixed(3)} of the chest's depth is a post`);
     assert.ok(cannon > 0.07 * chest.depth, `and ${(cannon / chest.depth).toFixed(3)} of it is a deer's`);
-    assert.ok(wide(0.9) > 1.5 * cannon, 'the leg is thickest where it leaves the belly');
+    // read at the leg's own belly: the chest hangs down around the front
+    // legs (torso.arm), and the brisket's height there is not where the
+    // hind leg leaves the trunk
+    const own = sectionY(body, leg.position.z + (leg.position.z > 0 ? -1e-3 : 1e-3));
+    assert.ok(sectionZ(tris, 0.9 * own.min).depth > 1.5 * cannon, 'the leg is thickest where it leaves the belly');
     assert.ok(wide(0.05) > 1.3 * cannon, 'and stands on a hoof wider than its cannon');
     if (leg.position.z < 0) continue;
     // A FRONT LEG IS A HEAVY ARM, NOT A THIGH. Slim all the way up it is a

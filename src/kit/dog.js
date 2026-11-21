@@ -165,7 +165,7 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // widths he was a plank on edge with his legs pressed together. The stance
     // (hipX) is bounded by the hips: set wider than this the hind leg's top
     // ring stands out of the rump as a shelf.
-    torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92, round: 1, slab: 1, barrel: 1, girth: 0.16, keel: 1, haunch: 0.9, shoulderW: 1.0, barrelW: 1.08, hipW: 1.02 },
+    torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92, round: 1, slab: 1, barrel: 1, girth: 0.16, keel: 1, haunch: 0.9, arm: 0.25, shoulderW: 1.0, barrelW: 1.08, hipW: 1.02 },
     legBury: 0.16,
     legH: 0.46, legR: 0.066, legTaper: 0.8, hipX: 0.11, hipZ: 0.30,
     // The legs stand under the two ends of the trunk rather than under its
@@ -183,7 +183,9 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // ring sits, so `shoulder` asks for more than the ring is given.
     //
     // THE SHOULDER is the chest's own side, carried straight down to the leg
-    // (`torso.slab`). The forearm under it is an arm, not a thigh: a column
+    // (`torso.slab`), and out over the forearm's top and a little lower
+    // round it (`torso.arm`), where the leg's outer face stood flush with
+    // the narrowing breast and showed as a tab beside a notch. The forearm under it is an arm, not a thigh: a column
     // about as broad as the leg at the knee (`elbow`), its edges near plumb,
     // a long one over a low wrist (`wrist`), and at its top it opens both
     // ways into the trunk over its upper third (`flare`, `drop`) — the
