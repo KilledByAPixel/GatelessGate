@@ -659,3 +659,125 @@ test('torso.sag spends a falling back evenly, and plan.topAt reports it', () => 
   assert.ok(sagged.off > 0.05 && sagged.off < 0.09, `and a stated sag is that sag: ${sagged.off.toFixed(3)} R`);
   for (const b of [stepped, line, sagged]) assert.ok(b.drift < 1e-6, `plan.topAt is the mesh's own topline: ${b.drift}`);
 });
+
+// ---- THE SHOULDER, as tests ---------------------------------------------------
+// A front leg used to be a post entering the underside of a round chest. Three
+// things replace that and each is held on its own: the chest's sides come
+// straight down to a corner over the leg (torso.slab), the leg widens fore and
+// aft into the chest above its forearm (legs.point), and the back turns up
+// into the nape without a notch (neck.ease).
+
+// half-width of a set of triangles at a station z and a height y: the cut of
+// the cut, so it reads the surface that renders and not a ring's own vertices
+function halfWidthAt(tris, z, y) {
+  let w = 0;
+  for (const t of tris) {
+    const pts = [];
+    for (let e = 0; e < 3; e++) {
+      const a = e * 3, b = ((e + 1) % 3) * 3;
+      const za = t[a + 2], zb = t[b + 2];
+      if ((za - z) * (zb - z) > 0 || za === zb) continue;
+      const k = (z - za) / (zb - za);
+      pts.push([t[a] + (t[b] - t[a]) * k, t[a + 1] + (t[b + 1] - t[a + 1]) * k]);
+    }
+    if (pts.length < 2) continue;
+    const [p, q] = pts;
+    if ((p[1] - y) * (q[1] - y) > 0 || p[1] === q[1]) continue;
+    w = Math.max(w, Math.abs(p[0] + (q[0] - p[0]) * ((y - p[1]) / (q[1] - p[1]))));
+  }
+  return w;
+}
+
+// one front leg, and what it stands under: its own triangles, the station it
+// hangs at, the body's section there, and the belly line at the leg itself —
+// the lowest level at which the leg's own axis is inside the chest
+function frontLeg(root) {
+  root.updateMatrixWorld(true);
+  const legs = [];
+  root.traverse((o) => { if (o.name === 'leg') legs.push(o); });
+  const leg = legs.filter((l) => l.position.x > 0).sort((a, b) => b.position.z - a.position.z)[0];
+  const body = triangles(root, (o) => o.name === 'body');
+  const cut = sectionY(body, leg.position.z);
+  let belly = cut.min;
+  const step = (cut.max - cut.min) / 400;
+  while (belly < cut.max && !inside(body, { x: leg.position.x, y: belly, z: leg.position.z })) belly += step;
+  return { leg, tris: triangles(leg, () => true), body, z: leg.position.z, keel: cut.min, top: cut.max, belly };
+}
+
+// how much broader, fore and aft, a front leg is where it leaves the chest
+// than a fifth of the way down to the ground, and how far its rear line has
+// leaned back by there
+function flare(root) {
+  const { tris, belly } = frontLeg(root);
+  const at = sectionZ(tris, belly), under = sectionZ(tris, 0.8 * belly);
+  return { ratio: at.depth / under.depth, back: under.min - at.min };
+}
+
+// the body's topline as the corners it turns through, from the back over the
+// withers and up the nape: degrees at each, positive turning up
+function toplineTurns(root) {
+  const body = root.children.find((c) => c.name === 'body');
+  const P = body.geometry.getAttribute('position');
+  const SEG = 8, TOP = 2;                        // quadruped.js, A PROFILE LOFT
+  const rings = (P.count - 2) / SEG;
+  const zFront = trunk(root).zFront;
+  let sh = 0;
+  while (sh < rings - 1 && P.getZ(sh * SEG + TOP) < zFront - 1e-6) sh++;
+  const tops = [];
+  for (let r = sh - 1; r < rings; r++) tops.push([P.getY(r * SEG + TOP), P.getZ(r * SEG + TOP)]);
+  const turns = [];
+  for (let i = 1; i < tops.length - 1; i++) {
+    const a = Math.atan2(tops[i][0] - tops[i - 1][0], tops[i][1] - tops[i - 1][1]);
+    const b = Math.atan2(tops[i + 1][0] - tops[i][0], tops[i + 1][1] - tops[i][1]);
+    turns.push((b - a) * 180 / Math.PI);
+  }
+  return { tops: tops.slice(1), turns };          // tops from the withers forward
+}
+
+test('torso.slab carries the sides of the chest straight down over the front legs, and nowhere else', () => {
+  const base = { height: 1, neck: {} };
+  const round = makeQuadruped(base), slab = makeQuadruped({ ...base, torso: { slab: 1 } });
+  // how much of the chest's breadth is left three fifths of the way down from
+  // its widest line to its keel
+  const kept = (q, z) => {
+    const body = triangles(q.group, (o) => o.name === 'body');
+    const cut = sectionY(body, z), mid = (cut.max + cut.min) / 2;
+    return halfWidthAt(body, z, mid - 0.6 * (mid - cut.min)) / halfWidthAt(body, z, mid);
+  };
+  const zS = round.plan.zShoulder - 1e-4, zH = round.plan.zHip + 1e-4;
+  assert.ok(kept(round, zS) < 0.8, `a round chest has fallen away under its widest line: ${kept(round, zS).toFixed(2)}`);
+  assert.ok(kept(slab, zS) > 0.9, `a slab-sided one is still nearly its full breadth: ${kept(slab, zS).toFixed(2)}`);
+  assert.ok(Math.abs(kept(slab, zH) - kept(round, zH)) < 1e-9, 'the hindquarters are the section they were');
+  // the profile is untouched: a slab is a change of section, not of outline
+  const bs = triangles(slab.group, (o) => o.name === 'body'), br = triangles(round.group, (o) => o.name === 'body');
+  for (const z of [zS, 0, zH]) {
+    const a = sectionY(bs, z), b = sectionY(br, z);
+    assert.ok(Math.abs(a.min - b.min) < 1e-9 && Math.abs(a.max - b.max) < 1e-9, `same top and bottom at z=${z.toFixed(2)}`);
+  }
+  legsJoinBody(slab.group, 'slab-chested plan', assert.ok);
+});
+
+test('legs.point widens a front leg into the chest, fore and aft', () => {
+  const base = { height: 1, neck: {}, torso: { slab: 1 } };
+  const post = flare(makeQuadruped(base).group);
+  const arm = flare(makeQuadruped({ ...base, legs: { point: 0.6 } }).group);
+  assert.ok(post.ratio < 1.25, `without it the leg meets the belly near the width it has below: ${post.ratio.toFixed(2)}x`);
+  assert.ok(arm.ratio > 1.4, `with it the leg leaves the chest ${arm.ratio.toFixed(2)}x as broad as it is a fifth of the way down`);
+  assert.ok(arm.back > post.back + 0.01, `its rear line leans back into the belly: ${arm.back.toFixed(3)} against ${post.back.toFixed(3)}`);
+  const hind = (q) => q.group.children.filter((c) => c.name === 'leg' && c.position.z < 0)[0].geometry.getAttribute('position').array;
+  assert.deepStrictEqual(Array.from(hind(makeQuadruped({ ...base, legs: { point: 0.6 } }))), Array.from(hind(makeQuadruped(base))),
+    'and only the front legs take it');
+});
+
+test('neck.ease turns the back up into the nape without a notch', () => {
+  const base = { height: 1, neck: { set: 0.05, taper: 1 }, head: { shape: 'sphere', r: 0.1, fwd: 0.55, up: 0.38 } };
+  const hard = toplineTurns(makeQuadruped(base).group);
+  const eased = toplineTurns(makeQuadruped({ ...base, neck: { ...base.neck, ease: 0.5, easeUp: 0.45 } }).group);
+  // the notch: the root's top stands under the withers, so the line dips
+  // before it climbs, and climbs all at once
+  assert.ok(hard.tops[1][0] < hard.tops[0][0], 'unasked, the root stands just under the withers');
+  assert.ok(Math.max(...hard.turns) > 50, `...and the nape turns up at one corner: ${Math.max(...hard.turns).toFixed(0)} degrees`);
+  assert.ok(eased.tops[1][0] > eased.tops[0][0], 'eased, the line climbs from the withers on');
+  assert.ok(Math.max(...eased.turns) < 0.7 * Math.max(...hard.turns),
+    `...and its sharpest corner is ${Math.max(...eased.turns).toFixed(0)} degrees against ${Math.max(...hard.turns).toFixed(0)}`);
+});

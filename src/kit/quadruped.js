@@ -7,8 +7,15 @@ import { makeTail } from './tail.js';
 // number here is in the units its option is documented in beside the builder.
 const TORSO_DEFAULTS = {
   chest: 1.1, loin: 0.72, withers: 1.0, back: 0.9, croup: 0.94, rump: 1, round: 0, sag: null,
-  shoulderW: 0.8, barrelW: 0.95, hipW: 0.85,
+  shoulderW: 0.8, barrelW: 0.95, hipW: 0.85, slab: 0,
 };
+// THE SLAB-SIDED CHEST (`torso.slab`). SLAB_Y is how far down a fully slabbed
+// section's two lower corners stand, x its half-depth (round, they stand on
+// the ellipse); how far out they stand is solved from the front legs, between
+// the ellipse and SLAB_MAX of the half-width. SLAB_BACK is how much of the
+// slab is left one section behind the shoulder, where the chest is giving
+// way to the barrel.
+const SLAB_Y = 0.84, SLAB_MAX = 0.97, SLAB_BACK = 0.3;
 // THE ROUND OF A RUMP (`torso.round`), as the three sections it is drawn
 // with behind the hip: [how far along the overhang, how deep the underside
 // still is (x loin), half-width (x hipW)], from the end forward. The topline
@@ -30,7 +37,13 @@ const ROUND_ROOT = 0.76;
 //        overhang ahead of the shoulder
 // taper  1 is a straight wedge root to head; higher slims the neck sooner
 // arch   bow of the whole neck toward its crest, x its own length
-const NECK_DEFAULTS = { r: 0.08, w: 0.8, root: 0.55, set: 0.25, taper: 1.5, arch: 0.03 };
+// ease   how far up the nape the top of the root section is carried, as a
+//        fraction of the run from the withers to the nape's first section:
+//        0 leaves it just under the withers (see THE BASE OF THE NECK)
+// easeUp ...and how much of that run's climb it has made by there: 1 is on
+//        the straight line, so the whole turn is at the withers; lower moves
+//        the turn forward, onto the root itself
+const NECK_DEFAULTS = { r: 0.08, w: 0.8, root: 0.55, set: 0.25, taper: 1.5, arch: 0.03, ease: 0, easeUp: 0.75 };
 // knee      radians the hind leg folds at the hock — how far apart, fore and
 //           aft, the stifle and the hock stand; 0 stands it plumb
 // shoulder  fore-aft radius of the mass on top of a front leg, x legR
@@ -55,7 +68,23 @@ const NECK_DEFAULTS = { r: 0.08, w: 0.8, root: 0.55, set: 0.25, taper: 1.5, arch
 //           still the whole thigh there, 1 the leg's own radius. High is a
 //           lean second thigh under a full haunch; low carries the haunch
 //           most of the way to the hock
-const LEG_DEFAULTS = { knee: 0.3, shoulder: 2.0, thigh: 2.8, proud: 0.09, cannon: 0.8, foot: 1.3, frontSet: 0, hindSet: 0, gaskin: 0.66 };
+// point     null leaves the front leg a limb from the belly down. A number
+//           builds THE UPPER ARM (see it beside the front leg's rows): how
+//           far AHEAD of the leg its buried ring reaches, as a fraction of
+//           the breast's overhang in front of the leg — and never further
+//           than there is chest to hold it
+// arm       ...and how far BEHIND the forearm's own rear edge it reaches, x legR
+// drop      ...and how far below the belly line the forearm proper starts,
+//           as a fraction of the leg's length under the belly: the run over
+//           which the leg widens into the chest
+// spread    ...and how far out toward the hide that ring is carried across:
+//           0 keeps the leg's own width, for a chest whose corner already
+//           stands over the leg; 1 is for a stance well inside a wide chest
+// elbow     fore-aft radius of the forearm at its top, x legR (and x legTaper)
+const LEG_DEFAULTS = {
+  knee: 0.3, shoulder: 2.0, thigh: 2.8, proud: 0.09, cannon: 0.8, foot: 1.3, frontSet: 0, hindSet: 0, gaskin: 0.66,
+  point: null, arm: 1.5, drop: 0.12, spread: 0, elbow: 1.45,
+};
 // Share of a hind leg's run that lies above the hock.
 const HOCK_RUN = 0.66;
 // A limb's ring is a hexagon with a corner to each side, so fore and aft it
@@ -97,6 +126,10 @@ const HEX = Math.sin(Math.PI / 3);
 //              middle — for a back that falls a long way, which the fixed
 //              middle sections otherwise spend as a rise, a table and a step
 //   shoulderW / barrelW / hipW   half-widths at shoulder, mid-barrel and hip
+//   slab       how slab-sided the chest is over the front legs: 0 is the
+//              round section everywhere, 1 carries the chest's sides straight
+//              down to a corner over each leg, with the brisket a keel
+//              between (see THE CHEST IS SLAB-SIDED beside the rows)
 //
 // The shoulder section stands over the front legs and the hip section over the
 // hind ones (`hipZ`), so `bodyLen` now only decides how far the breast and the
@@ -124,20 +157,29 @@ const HEX = Math.sin(Math.PI / 3);
 // thigh as wide as the rump behind the hip, a cannon with substance, a foot —
 // because everything above the belly line is inside the trunk and a leg that
 // is only thick up there is a stick. One mesh per leg.
+//
+// THE FRONT SHOULDER IS THE TRUNK'S, where a species asks for one. A swell on
+// the leg can only give a haunch, which hangs below the body: a shoulder lies
+// ON the ribs above the belly line, and anything of the leg's own up there is
+// a second surface crossing the flank. So it is two things, each opted into:
+// the chest's sides brought straight down over the legs (`torso.slab`, see THE
+// CHEST IS SLAB-SIDED), and the leg widened into that chest above its forearm
+// (`legs.point`, see THE UPPER ARM). Stated neither, the front leg is the limb
+// described above.
 export function makeQuadruped({
   height = 1,
   color = INK_LIT,
   // trunk: bodyR is its half-depth and the unit every torso knob is in;
   // legH + bodyDrop is the height of its axis off the ground
   bodyR = 0.22, bodyLen = 0.72, bodyDrop = 0.16,
-  torso = null,          // { chest, loin, withers, back, croup, rump, shoulderW, barrelW, hipW } — see THE TORSO
+  torso = null,          // { chest, loin, withers, back, croup, rump, round, sag, slab, shoulderW, barrelW, hipW } — see THE TORSO
   // legs
   legH = 0.52, legR = 0.055, legTaper = 0.82, hipX = 0.13, hipZ = 0.32,
   legBury = 0.06,        // how far above the flank's underside the shoulder/thigh ring rides, x height
-  legs = null,           // { knee, shoulder, thigh, proud, cannon, foot, frontSet, hindSet, gaskin } — see LEG_DEFAULTS
+  legs = null,           // { knee, shoulder, thigh, proud, cannon, foot, frontSet, hindSet, gaskin, point, arm, drop, spread, elbow } — see LEG_DEFAULTS
   // head
   head = { shape: 'sphere', r: 0.20, fwd: 0.56, up: 0.22 },   // + scaleX/scaleY/scaleZ (default 1): squish the skull in its own tilted frame
-  neck = null,           // { r, w, root, set, taper, arch } — see NECK_DEFAULTS; null ends the chest in a blunt breast
+  neck = null,           // { r, w, root, set, taper, arch, ease, easeUp } — see NECK_DEFAULTS; null ends the chest in a blunt breast
   ears = null,           // { r, h, x, y, z, tilt } — DIRECT base offsets from the head's centre; see EARS ARE PLACED DIRECTLY below
   tail = null,           // { kind: 'stiff'|'strand', ... } — up/back default to the croup; a strand takes makeTail's root/swell/swellAt/swellSpan, and its rootSink x height
   seed = 1,
@@ -186,7 +228,11 @@ export function makeQuadruped({
       for (let j = 0; j < seg; j++) {
         const t = (j / seg) * Math.PI * 2;
         const sn = Math.sin(t);
-        pos.push(Math.cos(t) * s.w, s.c[0] + sn * s.a[0], s.c[1] + sn * s.a[1]);
+        const cs = Math.cos(t);
+        // a lower corner of a slab-sided section stands where the section says
+        if (s.k && sn < -0.5 && Math.abs(cs) > 0.5) {
+          pos.push(Math.sign(cs) * s.k[0] * s.w, s.c[0] - s.k[1] * s.a[0], s.c[1] - s.k[1] * s.a[1]);
+        } else pos.push(cs * s.w, s.c[0] + sn * s.a[0], s.c[1] + sn * s.a[1]);
       }
     }
     const last = stations.length - 1;
@@ -258,11 +304,32 @@ export function makeQuadruped({
     ...rear.map(([u, top, bot, w]) => [zHip - u * over, top, bot, w]),
     [zHip + 0.08 * span, backAt(0.08, T.croup), -0.96 * T.loin, T.hipW],
     [zHip + 0.36 * span, backAt(0.36, lerp(T.croup, T.back, 0.8)), -T.loin, lerp(T.hipW, T.barrelW, 0.7)],
-    [zHip + 0.68 * span, backAt(0.68, T.back), -lerp(T.loin, T.chest, 0.8), T.barrelW],
-    [zShoulder, T.withers, -T.chest, T.shoulderW],
+    [zHip + 0.68 * span, backAt(0.68, T.back), -lerp(T.loin, T.chest, 0.8), T.barrelW, SLAB_BACK * T.slab],
+    [zShoulder, T.withers, -T.chest, T.shoulderW, T.slab],
   ];
-  const station = ([z, top, bot, w]) => ({
-    c: [(top + bot) / 2 * R, z], a: [(top - bot) / 2 * R, 0], w: w * R,
+  // THE CHEST IS SLAB-SIDED WHERE THE FRONT LEGS HANG. A round section's lower
+  // sides fall away under its widest line at half a right angle, so a front
+  // leg comes out from under an overhang: a post entering the underside of the
+  // chest, with the facet above it in shadow like a socket. A chest's sides
+  // come straight down to the elbows and the brisket is a keel between the
+  // legs. So the shoulder section, and the breast ahead of it, carry their
+  // two lower corners out and down (`torso.slab`): the flank over the leg is
+  // one upright face, lit like the leg's own side, and it turns under again
+  // only behind the elbow, on the way to the barrel. That face IS the
+  // shoulder — it belongs to the trunk, so there is no second surface lying
+  // on the ribs to cut in and out of them, and a leg that swings on its
+  // buried top has nothing fused to it to tear.
+  //
+  // THE CORNER STANDS OVER THE LEG'S OWN OUTER SIDE. Further out, the chest
+  // hangs past the leg as an eave and the leg comes out from under it again;
+  // further in, the leg stands beside the chest. So how far out it stands is
+  // read off the stance and the forearm, not stated.
+  const LGs = { ...LEG_DEFAULTS, ...legs };
+  const slabX = Math.min(SLAB_MAX, Math.max(Math.SQRT1_2,
+    (Math.min(hipX * h, 0.86 * T.shoulderW * R) + 0.78 * LGs.elbow * legTaper * legR * h) / (T.shoulderW * R)));
+  const corner = (slab) => (slab ? [lerp(Math.SQRT1_2, slabX, slab), lerp(Math.SQRT1_2, SLAB_Y, slab)] : null);
+  const station = ([z, top, bot, w, slab]) => ({
+    c: [(top + bot) / 2 * R, z], a: [(top - bot) / 2 * R, 0], w: w * R, k: corner(slab),
   });
   const stations = rows.map(station);
   const rearApex = [yEnd * R, zHip - over];
@@ -287,7 +354,8 @@ export function makeQuadruped({
     const m0 = Math.hypot(a0[0], a0[1]);
     const rEnd = N.r * h;
     const w0 = 0.78 * T.shoulderW * R, wEnd = rEnd * N.w;
-    stations.push({ c: c0, a: a0, w: w0 });
+    const rootAt = stations.length;
+    stations.push({ c: c0, a: a0, w: w0, k: corner(T.slab) });
     // Between root and head the section turns from the root's slant to square
     // across the neck, and narrows on a curve rather than a straight wedge —
     // `taper` above 1 spends the depth early, which is a neck that leaves a
@@ -304,6 +372,24 @@ export function makeQuadruped({
         w: lerp(wEnd, w0, k),
       });
     }
+    // THE BASE OF THE NECK. The root's top stands just under the withers and
+    // barely ahead of them, so the topline arrives level, steps down a hair,
+    // and then turns the whole angle of the nape at that one low point: a
+    // notch where the neck is plugged into the back. `ease` carries that
+    // point forward along the run from the withers to the nape's first
+    // section, and up by only `easeUp` of what that run climbs — under the
+    // straight line, so the back turns up into the nape in three shallow
+    // corners (withers, root, first section) instead of one deep one. Only
+    // the root's own ring moves: the neck above it was laid from the
+    // unmoved root and stays where it was.
+    if (N.ease) {
+      const n1 = stations[rootAt + 1];
+      const wy = T.withers * R, ny = n1.c[0] + n1.a[0], nz = n1.c[1] + n1.a[1];
+      const ty = wy + N.easeUp * N.ease * (ny - wy), tz = zShoulder + N.ease * (nz - zShoulder);
+      stations[rootAt] = {
+        c: [(ty + bot[0]) / 2, (tz + bot[1]) / 2], a: [(ty - bot[0]) / 2, (tz - bot[1]) / 2], w: w0, k: corner(T.slab),
+      };
+    }
     // the last ring is centred on the head itself, so it ends inside the skull
     // whichever way a species turns that skull afterwards
     frontApex = [Hy + d[0] * rEnd * 0.3, Hz + d[1] * rEnd * 0.3];
@@ -311,8 +397,8 @@ export function makeQuadruped({
   } else {
     // no neck: the chest closes in a blunt breast, and the species seats its
     // skull on that
-    stations.push(station([zShoulder + 0.55 * over, 0.74 * T.withers, -0.70 * T.chest, 0.72 * T.shoulderW]));
-    stations.push(station([zShoulder + 0.90 * over, 0.36 * T.withers, -0.34 * T.chest, 0.36 * T.shoulderW]));
+    stations.push(station([zShoulder + 0.55 * over, 0.74 * T.withers, -0.70 * T.chest, 0.72 * T.shoulderW, T.slab]));
+    stations.push(station([zShoulder + 0.90 * over, 0.36 * T.withers, -0.34 * T.chest, 0.36 * T.shoulderW, T.slab]));
     frontApex = [0, zBreast];
   }
 
@@ -329,25 +415,32 @@ export function makeQuadruped({
     while (i < rows.length - 2 && z > rows[i + 1][0]) i++;
     const a = rows[i], b = rows[i + 1];
     const t = Math.min(1, Math.max(0, (z - a[0]) / (b[0] - a[0])));
-    return { top: lerp(a[1], b[1], t) * R, bot: lerp(a[2], b[2], t) * R, w: lerp(a[3], b[3], t) * R };
+    return {
+      top: lerp(a[1], b[1], t) * R, bot: lerp(a[2], b[2], t) * R, w: lerp(a[3], b[3], t) * R,
+      slab: lerp(a[4] || 0, b[4] || 0, t),
+    };
   };
   // The trunk's ring is an OCTAGON inscribed in each section's ellipse, and a
   // join solved against the ellipse lands outside the facet that is actually
   // there. This is the octagon's own half-profile: for a fraction t of one
-  // half-axis, the fraction of the other the surface stands at.
-  const facet = (t) => {
-    const a = Math.min(1, Math.abs(t)), c = Math.SQRT1_2;
-    return a <= c ? 1 - a * (1 - c) / c : c * (1 - a) / (1 - c);
+  // half-axis, the fraction of the other the surface stands at. The corner it
+  // turns at is the ellipse's own unless the section is slabbed below: `cx`
+  // along the axis `t` is measured on, `cy` along the other.
+  const facet = (t, cx = Math.SQRT1_2, cy = Math.SQRT1_2) => {
+    const a = Math.min(1, Math.abs(t));
+    return a <= cx ? 1 - a * (1 - cy) / cx : cy * (1 - a) / (1 - cx);
   };
+  const cornerAt = (s) => corner(s.slab) || [Math.SQRT1_2, Math.SQRT1_2];
   // see THE LEG RULE: the surface's own height at lateral offset x, upper
   // (side = 1) or under (side = -1), in world y
   const flank = (z, x, side) => {
     const s = sectionAt(z);
-    return bodyY + (s.top + s.bot) / 2 + side * (s.top - s.bot) / 2 * facet(x / s.w);
+    const [cx, cy] = side < 0 ? cornerAt(s) : [Math.SQRT1_2, Math.SQRT1_2];
+    return bodyY + (s.top + s.bot) / 2 + side * (s.top - s.bot) / 2 * facet(x / s.w, cx, cy);
   };
 
   // ---- the legs --------------------------------------------------------------
-  const LG = { ...LEG_DEFAULTS, ...legs };
+  const LG = LGs;
   const lr = legR * h;
   // The cannon, and the foot it stands on. A FOOT IS A BLOCK: two level rings
   // a little apart, so it keeps its length for a height of its own — a leg
@@ -422,7 +515,11 @@ export function makeQuadruped({
     const run = top;                                  // the ring's height off the ground
     const rz = lr * (hind ? LG.thigh : LG.shoulder * legTaper);
     // How wide the body is at a height, at this leg's own section.
-    const widthAt = (y) => s.w * facet((y - bodyY - (s.top + s.bot) / 2) / ((s.top - s.bot) / 2));
+    const widthAt = (y) => {
+      const t = (y - bodyY - (s.top + s.bot) / 2) / ((s.top - s.bot) / 2);
+      const [cx, cy] = t < 0 ? cornerAt(s) : [Math.SQRT1_2, Math.SQRT1_2];
+      return s.w * facet(t, cy, cx);
+    };
     // ACROSS, the mass is solved rather than stated: wide enough to stand
     // `proud` of the flank, so the haunch shows from the front and from above
     // whatever the body's own width is there.
@@ -491,6 +588,59 @@ export function makeQuadruped({
         [-(run - 0.7 * fH), zFoot, fR, fX, true],
         [-run, zFoot, 1.05 * fR, 1.05 * fX, true],
       ];
+    } else if (LG.point != null) {
+      // THE UPPER ARM. A front leg that keeps one width up to the belly line
+      // meets it square: a post entering the underside of the chest, with a
+      // notch in front of it under the breast and another behind it. A leg
+      // WIDENS INTO THE BODY. So between the buried top and the forearm there
+      // is one more ring, inside the chest just above the belly line and
+      // stated like the thigh by its two edges: the front one reaches for the
+      // breast (`point`), the rear one lies behind the elbow (`arm`). The
+      // forearm proper starts a little below the belly (`drop`), and over
+      // that run the leg's front line leans forward into the breast and its
+      // rear line back into the belly. Across, the ring stays under the hide
+      // (`spread`): the shoulder's breadth is the chest's own slab side
+      // (`torso.slab`), and a mass of the leg's own standing on the ribs cuts
+      // in and out of them along a ragged line however it is shaped. Each edge
+      // is drawn in until its outer corner is inside the chest, or it stands
+      // out of the narrowing breast as a prong. The lean of the front line is
+      // paid for from in front: that face looks down, and a long one is a dark
+      // band across the top of the leg.
+      const rE = lr * legTaper * LG.elbow;
+      const rK = Math.max(1.15 * C, 0.95 * lr);
+      const eY = top - floor + Math.max(0.1 * legBury * h, LG.drop * floor);
+      const low = run - eY;
+      const zFoot = 0.1 * lr + 0.9 * HEX * (fR - C);
+      const yP = lerp(floor, top, 0.5);
+      // the hide's own half-width at a height and a station, off the trunk
+      // that renders
+      const hide = (y, zz) => {
+        let lo = 0, hi = 2 * s.w;
+        for (let k = 0; k < 14; k++) { const m = (lo + hi) / 2; if (inTrunk(m, y, zz)) lo = m; else hi = m; }
+        return lo;
+      };
+      let fwd = Math.max(0, LG.point * (zBreast - z)), aft = 0.25 * lr + HEX * rE + LG.arm * lr;
+      let rxP = 0, zP = 0;
+      for (let k = 0; k < 60; k++) {
+        zP = (fwd - aft) / 2;
+        rxP = Math.max(0.78 * rE, LG.spread * (0.92 * hide(yP, z + zP) - hx));
+        const under = (e) => inTrunk(hx + 0.5 * rxP, yP, z + e);
+        const okF = fwd <= rE || under(fwd), okA = aft <= rE || under(-aft);
+        if (okF && okA) break;
+        if (!okF) fwd *= 0.95;
+        if (!okA) aft *= 0.95;
+      }
+      pts = [
+        [0, ringZ, rz0, rx0],
+        [yP - top, zP, (fwd + aft) / 2 / HEX, rxP, true],
+        [-eY, -0.25 * lr, rE, 0.78 * rE, true],
+        [-eY - 0.27 * low, -0.05 * lr, lerp(rE, rK, 0.45), 0.8 * lerp(rE, rK, 0.45)],
+        [-eY - 0.52 * low, 0.2 * lr, rK, 0.9 * rK],
+        [-eY - 0.76 * low, 0.1 * lr, C, 0.92 * C],
+        [-(run - 1.25 * fH), 0.1 * lr, C, 0.92 * C],
+        [-(run - 0.7 * fH), zFoot, fR, fX, true],
+        [-run, zFoot, 1.05 * fR, 1.05 * fX, true],
+      ];
     } else {
       // The elbow rides at the belly line and a touch back; the knee splits
       // what is left and stands a touch forward. Between the sunk ring and
@@ -502,7 +652,7 @@ export function makeQuadruped({
       // everything above the elbow is inside the chest, so a leg that is only
       // thick up there is a post from the belly down. It is broadest at the
       // elbow and spends that on the way to the knee.
-      const rE = lr * legTaper * 1.45;
+      const rE = lr * legTaper * LG.elbow;
       const rK = Math.max(1.15 * C, 0.95 * lr);
       const eY = Math.min(0.42 * run, Math.max(0.26 * run, legBury * h * 1.1));
       const low = run - eY;
