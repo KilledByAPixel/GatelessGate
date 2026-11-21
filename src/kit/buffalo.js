@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { WASH } from '../palette.js';
 import { trianglesOf, under, makeQuadruped } from './quadruped.js';
 import { mergeSimple } from './scatter.js';
+import { stitch, ringQuads, mirrorGeometry } from './loft.js';
 
 // A water buffalo (case 38): the shared body plan, run heavy. What carries the
 // silhouette, in the order it reads at fog distance:
@@ -177,37 +178,23 @@ function tube(path, seg, thick) {
       pos.push(P[i].x + flat.x * c + rise.x * s, P[i].y + flat.y * c + rise.y * s, P[i].z + flat.z * c + rise.z * s);
     }
   }
-  for (let i = 0; i < last; i++) {
-    const a = i * seg, b = a + seg;
-    for (let j = 0; j < seg; j++) {
-      const j2 = (j + 1) % seg;
-      idx.push(a + j, a + j2, b + j, a + j2, b + j2, b + j);
-    }
-  }
+  const quads = [];
+  for (let i = 0; i < last; i++) ringQuads(quads, i * seg, (i + 1) * seg, seg);
   const c0 = pos.length / 3;
   pos.push(P[0].x, P[0].y, P[0].z);
   for (let j = 0; j < seg; j++) idx.push(c0, (j + 1) % seg, j);
   const c1 = pos.length / 3;
   pos.push(P[last].x, P[last].y, P[last].z);
   for (let j = 0; j < seg; j++) idx.push(c1, last * seg + j, last * seg + (j + 1) % seg);
-  return closed(pos, idx);
+  return closed(pos, quads, idx);
 }
 
-// Index a closed surface so it faces OUT whichever way its rings were walked:
-// the signed volume says which, and a mirrored copy (the other horn) comes out
-// right without a second winding to keep in step.
-function closed(pos, idx) {
-  let vol = 0;
-  for (let i = 0; i < idx.length; i += 3) {
-    const a = idx[i] * 3, b = idx[i + 1] * 3, c = idx[i + 2] * 3;
-    vol += pos[a] * (pos[b + 1] * pos[c + 2] - pos[b + 2] * pos[c + 1])
-      - pos[a + 1] * (pos[b] * pos[c + 2] - pos[b + 2] * pos[c])
-      + pos[a + 2] * (pos[b] * pos[c + 1] - pos[b + 1] * pos[c]);
-  }
-  if (vol < 0) for (let i = 0; i < idx.length; i += 3) { const t = idx[i + 1]; idx[i + 1] = idx[i + 2]; idx[i + 2] = t; }
+// Index a closed surface so it faces OUT whichever way its rings were walked
+// (the signed volume says which), its quads folded outward (loft.js).
+function closed(pos, quads, tris) {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
-  geo.setIndex(idx);
+  geo.setIndex(stitch(pos, quads, tris, { outward: true }));
   geo.computeVertexNormals();
   return geo;
 }
@@ -362,13 +349,8 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
       }
     }
     const last = HEAD_RINGS.length - 1;
-    for (let i = 0; i < last; i++) {
-      const a = i * SEG, b = a + SEG;
-      for (let j = 0; j < SEG; j++) {
-        const j2 = (j + 1) % SEG;
-        idx.push(a + j, b + j, a + j2, a + j2, b + j, b + j2);
-      }
-    }
+    const quads = [];
+    for (let i = 0; i < last; i++) ringQuads(quads, i * SEG, (i + 1) * SEG, SEG, true);
     for (const [ring, i0] of [[HEAD_RINGS[0], 0], [HEAD_RINGS[last], last * SEG]]) {
       const c = pos.length / 3;
       pos.push(0, (ring[2] + ring[3]) / 2 * h, ring[0] * h);
@@ -380,7 +362,7 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
       const t = idx[i + 1]; idx[i + 1] = idx[i + 2]; idx[i + 2] = t;
     }
     headMesh.geometry.dispose();
-    headMesh.geometry = closed(pos, idx);
+    headMesh.geometry = closed(pos, quads, idx);
   }
 
   // a head-local point, in the animal's frame (the plan's tilt noses +z down)
@@ -400,11 +382,15 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
   const core = [0,
     HORN_ROOT[1] + ((ftop + fbot) / 2 - HORN_ROOT[1]) * HORN_SINK,
     HORN_ROOT[2] + (fz - HORN_ROOT[2]) * HORN_SINK];
+  // The +x horn is lofted and the other is its reflection (loft.js, THE
+  // OTHER ONE OF A PAIR): a tube lofted along the mirrored path lays its
+  // rings the same way round, and joined its points into other triangles.
+  const hornBase = onHead(HORN_ROOT, 1);
+  const hornSunk = onHead(core, 1).sub(hornBase);
+  const horn = tube([[hornSunk.x, hornSunk.y, hornSunk.z, HORN_PATH[0][3] * h], ...side(HORN_PATH, 1)], 6, HORN_THICK);
   for (const sx of [-1, 1]) {
     const base = onHead(HORN_ROOT, sx);
-    const sunk = onHead(core, sx).sub(base);
-    const path = [[sunk.x, sunk.y, sunk.z, HORN_PATH[0][3] * h], ...side(HORN_PATH, sx)];
-    const m = new THREE.Mesh(tube(path, 6, HORN_THICK), material);
+    const m = new THREE.Mesh(sx > 0 ? horn : mirrorGeometry(horn), material);
     m.name = 'horn';
     m.position.copy(base);
     group.add(m);
@@ -422,7 +408,7 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
       for (const p of trianglesOf(leg).flat()) zLeg = Math.max(zLeg, p.z);
     }
     const z0 = zLeg + FUR_GAP * h, y0 = under(solid, 0, z0);
-    const pos = [], idx = [];
+    const pos = [], idx = [], quads = [];
     FUR.forEach(([u, drop], i) => {
       const z = z0 + (chin.z - z0) * u;
       const w = (FUR_W[0] + (FUR_W[1] - FUR_W[0]) * u) * h;
@@ -436,16 +422,11 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
       // an end is drawn up into the body; a point never stands above its foot
       const edge = drop < 0 ? foot : Math.min(foot, y0 + (chin.y - y0) * u - drop * h);
       pos.push(-w, foot, z, -w * FUR_EDGE, edge, z, w * FUR_EDGE, edge, z, w, foot, z);
-      if (i === 0) return;
-      const a = (i - 1) * 4, b = i * 4;
-      for (let j = 0; j < 4; j++) {
-        const j2 = (j + 1) % 4;
-        idx.push(a + j, a + j2, b + j, a + j2, b + j2, b + j);
-      }
+      if (i > 0) ringQuads(quads, (i - 1) * 4, i * 4, 4);
     });
     const end = (FUR.length - 1) * 4;
     idx.push(0, 2, 1, 0, 3, 2, end, end + 1, end + 2, end, end + 2, end + 3);
-    fur = closed(pos, idx);
+    fur = closed(pos, quads, idx);
   }
 
   // ---- the ears: one mesh for the pair, and the hair rides in it ---------------
@@ -453,11 +434,11 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
   // a part the older buffalo did not have, added on purpose (rule 5 above) and
   // paid for by the pieces the single-loft head removed.
   {
-    const geos = [-1, 1].map((sx) => {
-      const g = tube(side(EAR_PATH, sx), 5, EAR_THICK);
-      const at = onHead(EAR_ROOT, sx);
-      return g.translate(at.x, at.y, at.z);
-    });
+    // the +x ear, and its reflection: a five-sided tube lofted along the
+    // mirrored path did not even have mirrored points
+    const at = onHead(EAR_ROOT, 1);
+    const ear = tube(side(EAR_PATH, 1), 5, EAR_THICK).translate(at.x, at.y, at.z);
+    const geos = [mirrorGeometry(ear), ear];
     geos.push(fur);
     const ears = new THREE.Mesh(mergeSimple(geos), material);
     ears.name = 'ear';

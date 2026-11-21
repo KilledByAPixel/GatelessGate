@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { INK_LIT } from '../palette.js';
 import { makeQuadruped } from './quadruped.js';
 import { skullGeometry } from './skull.js';
+import { mirrorGeometry } from './loft.js';
 import { hash1, noise1 } from '../util/noise.js';
 import { clamp01, smoothstep } from '../util/math.js';
 
@@ -253,19 +254,21 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
   // mesh's turn points down), breadth fore and aft, and `out` to whichever
   // side is away from the head — the pair is mirrored, so each ear gets its
   // own geometry. The hinge the perk turns stays rotation.x, about the root.
+  // The flap is built for the +x ear and reflected for the other (loft.js,
+  // THE OTHER ONE OF A PAIR): turned round to the other side instead, it was
+  // the same points joined into other triangles, a differently folded flap.
   const ears = headPivot.children.filter((c) => c.name === 'ear');
+  const flap = skullGeometry(
+    EAR.map(([along, out, thick, breadth]) => [along, out + thick, out - thick, breadth]),
+    { unit: height, seg: 4, back: [0, -0.01], nose: [EAR_TIP[1], EAR_TIP[0]] },
+  );
+  flap.applyMatrix4(new THREE.Matrix4().makeBasis(
+    new THREE.Vector3(0, 0, -1), new THREE.Vector3(-1, 0, 0), new THREE.Vector3(0, 1, 0),
+  ));
+  flap.computeVertexNormals();
   for (const ear of ears) {
-    const side = ear.position.x < 0 ? 1 : -1;
-    const geo = skullGeometry(
-      EAR.map(([along, out, thick, breadth]) => [along, out + thick, out - thick, breadth]),
-      { unit: height, seg: 4, back: [0, -0.01], nose: [EAR_TIP[1], EAR_TIP[0]] },
-    );
-    geo.applyMatrix4(new THREE.Matrix4().makeBasis(
-      new THREE.Vector3(0, 0, side), new THREE.Vector3(side, 0, 0), new THREE.Vector3(0, 1, 0),
-    ));
-    geo.computeVertexNormals();
     ear.geometry.dispose();
-    ear.geometry = geo;
+    ear.geometry = ear.position.x < 0 ? mirrorGeometry(flap) : flap;
     ear.rotation.x = EAR_BACK;
     ear.userData.baseX = ear.rotation.x;
   }

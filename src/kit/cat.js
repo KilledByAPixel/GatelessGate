@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { INK_LIT } from '../palette.js';
 import { makeQuadruped } from './quadruped.js';
 import { skullGeometry } from './skull.js';
+import { stitch, ringQuads, mirrorGeometry } from './loft.js';
 import { hash1 } from '../util/noise.js';
 
 // Nansen's cat (case 14). The shared quadruped run SMALL: a compact body on
@@ -350,37 +351,31 @@ const TAIL_WAG_HZ = 1.35;   // and how fast it goes back and forth
 // the two outline points it was written from. `xs` (optional) states each
 // vertex's x outright instead, and `sn` (optional) each vertex's place along
 // the half-axis, in place of the sine of its angle. Winding wants x cross a to point along the
-// direction of travel; `mirror` builds the other side's copy of a part that
-// is not its own mirror image. Both ends are fanned shut on an apex.
-function ringLoft(stations, seg, apex0, apex1, { mirror = false } = {}) {
+// direction of travel. A part that is not its own mirror image is built for
+// the +x side and reflected for the other (mirrorGeometry, loft.js). Both
+// ends are fanned shut on an apex.
+function ringLoft(stations, seg, apex0, apex1) {
   const pos = [], idx = [];
-  const side = mirror ? -1 : 1;
   for (const s of stations) {
     for (let j = 0; j < seg; j++) {
       const t = (j / seg) * Math.PI * 2;
       const sn = s.sn ? s.sn[j] : Math.sin(t);
-      pos.push(side * (s.xs ? s.xs[j] : Math.cos(t) * s.w), s.c[0] + sn * s.a[0], s.c[1] + sn * s.a[1]);
+      pos.push(s.xs ? s.xs[j] : Math.cos(t) * s.w, s.c[0] + sn * s.a[0], s.c[1] + sn * s.a[1]);
     }
   }
-  const tri = (a, b, c) => (mirror ? idx.push(a, c, b) : idx.push(a, b, c));
   const last = stations.length - 1;
-  for (let i = 0; i < last; i++) {
-    const a = i * seg, b = a + seg;
-    for (let j = 0; j < seg; j++) {
-      const j2 = (j + 1) % seg;
-      tri(a + j, a + j2, b + j);
-      tri(a + j2, b + j2, b + j);
-    }
-  }
+  const quads = [];
+  for (let i = 0; i < last; i++) ringQuads(quads, i * seg, (i + 1) * seg, seg);
   const p0 = pos.length / 3;
   pos.push(0, apex0[0], apex0[1]);
-  for (let j = 0; j < seg; j++) tri(p0, (j + 1) % seg, j);
+  for (let j = 0; j < seg; j++) idx.push(p0, (j + 1) % seg, j);
   const p1 = pos.length / 3;
   pos.push(0, apex1[0], apex1[1]);
-  for (let j = 0; j < seg; j++) tri(p1, last * seg + j, last * seg + (j + 1) % seg);
+  for (let j = 0; j < seg; j++) idx.push(p1, last * seg + j, last * seg + (j + 1) % seg);
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
-  geo.setIndex(idx);
+  // see loft.js: each quad folds outward, so the two sides are mirror images
+  geo.setIndex(stitch(pos, quads, idx));
   geo.computeVertexNormals();
   return geo;
 }
@@ -400,19 +395,14 @@ function bossGeometry(up, along, out, floor) {
   }
   const rings = HAUNCH_RINGS.length;
   for (let j = 0; j < n; j++) idx.push(0, 1 + (j + 1) % n, 1 + j);
-  for (let i = 0; i + 1 < rings; i++) {
-    const a = 1 + i * n, b = a + n;
-    for (let j = 0; j < n; j++) {
-      const j2 = (j + 1) % n;
-      idx.push(a + j, a + j2, b + j, a + j2, b + j2, b + j);
-    }
-  }
+  const quads = [];
+  for (let i = 0; i + 1 < rings; i++) ringQuads(quads, 1 + i * n, 1 + (i + 1) * n, n);
   const rim = 1 + (rings - 1) * n, inner = pos.length / 3;
   pos.push(-out, 0, 0);
   for (let j = 0; j < n; j++) idx.push(inner, rim + j, rim + (j + 1) % n);
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
-  geo.setIndex(idx);
+  geo.setIndex(stitch(pos, quads, idx));
   return geo;
 }
 
@@ -588,9 +578,10 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
 
   // The trunk's half-width at a point of the side view: how far out a line
   // across the animal through (y, z) leaves it. -Infinity where it misses.
-  // `both` reads the narrower of the two sides: the loft's facets are not
-  // mirror images of each other, so a vertex placed on one side's skin can
-  // stand out of the other's.
+  // `both` reads the narrower of the two sides. The two are mirror images
+  // now (loft.js), so it is the same reading either way; it was written when
+  // they were not, and a vertex placed on one side's skin stood out of the
+  // other's.
   const flank = (y, z, both = false) => {
     let out = -Infinity, neg = -Infinity;
     for (let i = 0; i < index.count; i += 3) {
@@ -658,9 +649,10 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     });
     const top = [FORELEG_TOP[0] * h - oy, FORELEG_TOP[1] * h - oz];
     const foot = rings[rings.length - 1].c;
+    const arm = ringLoft(rings, SEG, top, foot);
     for (const leg of frontLegs) {
       leg.geometry.dispose();
-      leg.geometry = ringLoft(rings, SEG, top, foot, { mirror: leg.position.x < 0 });
+      leg.geometry = leg.position.x < 0 ? mirrorGeometry(arm) : arm;
       leg.position.set(Math.sign(leg.position.x) * fx, oy, oz);
     }
 
@@ -676,9 +668,11 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
       bossGeometry(HAUNCH.up * h, HAUNCH.along * h, HAUNCH.out * h, -jy),
       ringLoft(paw, 8, rel(HIND_PAW_HEEL), rel(HIND_PAW_TOE)));
     for (const leg of rearLegs) {
-      // one geometry between the pair: boss and paw are their own mirror images
+      // The boss and the paw have mirror-image points, but one geometry
+      // shared between the pair joins them into the same triangles on both
+      // sides, and that is not the reflection: the -x one is reflected.
       leg.geometry.dispose();
-      leg.geometry = haunch;
+      leg.geometry = leg.position.x < 0 ? mirrorGeometry(haunch) : haunch;
       leg.position.set(Math.sign(leg.position.x) * jx, jy, jz);
     }
   }

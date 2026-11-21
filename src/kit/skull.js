@@ -1,4 +1,5 @@
 import * as THREE from '../../lib/three.module.js';
+import { stitch, ringQuads } from './loft.js';
 
 // ONE HEAD, occiput to nose. A ball skull with a muzzle part stuck on its
 // front is a toy's head however good the body under it is: the ball's front
@@ -33,13 +34,8 @@ export function skullGeometry(rows, { unit = 1, seg = 8, back, nose } = {}) {
     }
   }
   const last = rows.length - 1;
-  for (let i = 0; i < last; i++) {
-    const a = i * seg, b = a + seg;
-    for (let j = 0; j < seg; j++) {
-      const j2 = (j + 1) % seg;
-      idx.push(a + j, a + j2, b + j, a + j2, b + j2, b + j);
-    }
-  }
+  const quads = [];
+  for (let i = 0; i < last; i++) ringQuads(quads, i * seg, (i + 1) * seg, seg);
   const first = rows[0], end = rows[last];
   const b0 = back ?? [(first[1] + first[2]) / 2, first[0]];
   const n0 = nose ?? [(end[1] + end[2]) / 2, end[0]];
@@ -51,7 +47,8 @@ export function skullGeometry(rows, { unit = 1, seg = 8, back, nose } = {}) {
   for (let j = 0; j < seg; j++) idx.push(p1, last * seg + j, last * seg + (j + 1) % seg);
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
-  geo.setIndex(idx);
+  // see loft.js: each quad folds outward, so the two sides are mirror images
+  geo.setIndex(stitch(pos, quads, idx));
   geo.computeVertexNormals();
   return geo;
 }

@@ -3,6 +3,7 @@ import { createCloth, stepCloth, clothEnergy } from '../sim/verlet.js';
 import { noise3 } from '../util/noise.js';
 import { washMaterial } from '../render/material.js';
 import { INK_LIT } from '../palette.js';
+import { stitch, ringQuads } from './loft.js';
 
 // A hanging tail: the verlet cloth as a 1-column strand, pinned at the root.
 // Reused by the buffalo (case 37). A tap swishes it; it never breaks free.
@@ -169,14 +170,9 @@ export function makeTail({
   // plain strand has keeps its index
   const sinkRing = segments * SIDES + 2;
   const pos = new Float32Array((sinkRing + (sunk ? SIDES : 0)) * 3);
-  const idx = [];
-  for (let i = 0; i < segments - 1; i++) {
-    const r0 = i * SIDES, r1 = r0 + SIDES;
-    for (let j = 0; j < SIDES; j++) {
-      const j2 = (j + 1) % SIDES;
-      idx.push(r0 + j, r0 + j2, r1 + j, r0 + j2, r1 + j2, r1 + j);
-    }
-  }
+  const idx = [], quads = [];
+  for (let i = 0; i < segments - 1; i++) ringQuads(quads, i * SIDES, (i + 1) * SIDES, SIDES);
+  if (sunk) ringQuads(quads, sinkRing, 0, SIDES);
   // both ends fanned shut: the root is buried in the animal, but a species may
   // re-aim the group and a closed mesh has nothing to hide either way
   const rootApex = segments * SIDES, tipApex = rootApex + 1;
@@ -184,7 +180,6 @@ export function makeTail({
   for (let j = 0; j < SIDES; j++) {
     const j2 = (j + 1) % SIDES;
     if (sunk) {
-      idx.push(sinkRing + j, sinkRing + j2, j, sinkRing + j2, j2, j);
       idx.push(rootApex, sinkRing + j2, sinkRing + j);
     } else {
       idx.push(rootApex, j2, j);
@@ -193,7 +188,15 @@ export function makeTail({
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  geo.setIndex(idx);
+  // Which diagonal each quad folds along is read off the strand as it lies
+  // (loft.js), so it is chosen again on every layout: the strand bends, and a
+  // fold chosen for it hanging straight is a crease once it swings. A quad
+  // only changes its split as it passes through flat, so nothing jumps.
+  geo.setIndex(new THREE.BufferAttribute(new Uint16Array(quads.length * 6 / 4 + idx.length), 1));
+  const restitch = () => {
+    geo.index.array.set(stitch(pos, quads, idx));
+    geo.index.needsUpdate = true;
+  };
   const skin = new THREE.Mesh(geo, mat);
   skin.name = 'strand';
   group.add(skin);
@@ -250,6 +253,7 @@ export function makeTail({
       p[tip] + tan.x * tipReach, p[tip + 1] + tan.y * tipReach, p[tip + 2] + tan.z * tipReach], rootApex * 3);
     // the skin closes on the buried end when there is one
     if (sunk) pos.set([p[0] + sunk[0], p[1] + sunk[1], p[2] + sunk[2]], rootApex * 3);
+    restitch();
     geo.attributes.position.needsUpdate = true;
     geo.computeVertexNormals();
     geo.computeBoundingSphere();

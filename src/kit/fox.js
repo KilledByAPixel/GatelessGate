@@ -3,6 +3,7 @@ import { INK_LIT } from '../palette.js';
 import { hash1, noise1 } from '../util/noise.js';
 import { makeQuadruped, earShell, trianglesOf, under, ahead } from './quadruped.js';
 import { skullGeometry } from './skull.js';
+import { stitch, ringQuads } from './loft.js';
 
 // Hyakujo's fox (case 2): the dog's body plan run slim and low. Three things
 // carry the silhouette at distance, and a fox that misses any of them reads as
@@ -242,6 +243,7 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     const y0 = legTop + RUFF_LOW * height, y1 = headPivot.position.y - RUFF_HIGH * height;
     const P = body.geometry.getAttribute('position');
     const base = P.count, pos = Array.from(P.array), idx = Array.from(body.geometry.index.array);
+    const quads = [], caps = [];
     const at = (x, y, z) => pos.push(x - body.position.x, y - body.position.y, z - body.position.z);
     RUFF.forEach(([u, out], i) => {
       const y = y0 + (y1 - y0) * u;
@@ -255,16 +257,16 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
       const fall = out < 0 ? 0 : RUFF_FALL * out * height;
       at(-w, y, foot); at(-w * RUFF_EDGE, y - fall, edge); at(w * RUFF_EDGE, y - fall, edge); at(w, y, foot);
       if (i === 0) return;
-      const a = base + (i - 1) * 4, b = base + i * 4;
-      for (let j = 0; j < 4; j++) {
-        const j2 = (j + 1) % 4;
-        idx.push(a + j, b + j, a + j2, a + j2, b + j, b + j2);
-      }
+      ringQuads(quads, base + (i - 1) * 4, base + i * 4, 4);
     });
     const end = base + (RUFF.length - 1) * 4;
-    idx.push(base, base + 1, base + 2, base, base + 2, base + 3, end, end + 2, end + 1, end, end + 3, end + 2);
+    caps.push(base, base + 2, base + 1, base, base + 3, base + 2, end, end + 1, end + 2, end, end + 2, end + 3);
     body.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
-    body.geometry.setIndex(idx);
+    // It was wound inside out, every face turned in toward the throat, so
+    // what showed of it was its far side seen through the near one: a
+    // glitch rather than a ruff. It is its own closed piece, so it is turned
+    // to face out by its own volume (tests/symmetry.test.js holds it there).
+    body.geometry.setIndex(idx.concat(stitch(pos, quads, caps, { outward: true })));
     body.geometry.computeVertexNormals();
     body.geometry.computeBoundingBox();
     body.geometry.computeBoundingSphere();
@@ -357,13 +359,8 @@ function brushGeometry(rows, unit, seg = 8) {
       pos.push(Math.cos(t) * w * unit, (y + sn * dz * r) * unit, (z - sn * dy * r) * unit);
     }
   }
-  for (let i = 0; i < last - 1; i++) {
-    const a = i * seg, b = a + seg;
-    for (let j = 0; j < seg; j++) {
-      const j2 = (j + 1) % seg;
-      idx.push(a + j, a + j2, b + j, a + j2, b + j2, b + j);
-    }
-  }
+  const quads = [];
+  for (let i = 0; i < last - 1; i++) ringQuads(quads, i * seg, (i + 1) * seg, seg);
   const dy0 = rows[1][0] - rows[0][0], dz0 = rows[1][1] - rows[0][1];
   const p0 = pos.length / 3;
   pos.push(0, (rows[0][0] - 0.4 * dy0) * unit, (rows[0][1] - 0.4 * dz0) * unit);
@@ -374,7 +371,7 @@ function brushGeometry(rows, unit, seg = 8) {
   for (let j = 0; j < seg; j++) idx.push(p1, e + j, e + (j + 1) % seg);
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
-  geo.setIndex(idx);
+  geo.setIndex(stitch(pos, quads, idx));
   geo.computeVertexNormals();
   return geo;
 }

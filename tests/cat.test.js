@@ -398,7 +398,11 @@ test('a seated front leg is an arm: a plumb column that opens both ways into the
       }
       return bx;
     };
-    assert.ok(foremostX(0.4) < foremostX(0.2) - 0.04, `the front line stays out at ${foremostX(0.4).toFixed(3)} over a column at ${foremostX(0.2).toFixed(3)}`);
+    // (The seam's front vertices are read off the chest, and the chest
+    // between the arms is fuller since its quads all fold outward
+    // (loft.js) — the narrower side it used to be read off was a crease on
+    // one side of the cat only — so the arms close in by less than they did.)
+    assert.ok(foremostX(0.4) < foremostX(0.2) - 0.02, `the front line stays out at ${foremostX(0.4).toFixed(3)} over a column at ${foremostX(0.2).toFixed(3)}`);
 
     // Above the elbow the leg is INSIDE the chest, every vertex of it: the
     // shoulder is the chest's own surface swelling over the arm, so there is

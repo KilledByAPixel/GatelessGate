@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { washMaterial } from '../render/material.js';
 import { INK_LIT } from '../palette.js';
 import { makeTail } from './tail.js';
+import { stitch, ringQuads, mirrorGeometry } from './loft.js';
 
 // What a species gets when it states nothing: a plain, lean animal. Every
 // number here is in the units its option is documented in beside the builder.
@@ -305,13 +306,8 @@ export function makeQuadruped({
       }
     }
     const last = stations.length - 1;
-    for (let i = 0; i < last; i++) {
-      const a = i * seg, b = a + seg;
-      for (let j = 0; j < seg; j++) {
-        const j2 = (j + 1) % seg;
-        idx.push(a + j, a + j2, b + j, a + j2, b + j2, b + j);
-      }
-    }
+    const quads = [];
+    for (let i = 0; i < last; i++) ringQuads(quads, i * seg, (i + 1) * seg, seg);
     const p0 = pos.length / 3;
     pos.push(0, apex0[0], apex0[1]);
     for (let j = 0; j < seg; j++) idx.push(p0, (j + 1) % seg, j);
@@ -320,7 +316,8 @@ export function makeQuadruped({
     for (let j = 0; j < seg; j++) idx.push(p1, last * seg + j, last * seg + (j + 1) % seg);
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
-    geo.setIndex(idx);
+    // see loft.js: each quad folds outward, so the two sides are mirror images
+    geo.setIndex(stitch(pos, quads, idx));
     geo.computeVertexNormals();
     return geo;
   };
@@ -960,10 +957,13 @@ export function makeQuadruped({
         [-run, zFoot, 1.05 * fR, 1.05 * fX, true],
       ];
     }
+    // The leg is solved and built on the +x side, and the -x one is its
+    // reflection (loft.js, THE OTHER ONE OF A PAIR): rebuilt from the same
+    // rings with their lifts flipped, it had the same points joined into
+    // other triangles, and stood differently shaped on its own side.
+    const right = limb(pts, capH);
     for (const sx of [-1, 1]) {
-      // a ring lifted corner by corner is lifted mirrored on the other side
-      const flip = (a) => a && a.map((_, j) => a[(9 - j) % 6]);
-      const leg = new THREE.Mesh(limb(sx > 0 ? pts : pts.map((p) => (p[5] ? [...p.slice(0, 5), flip(p[5]), flip(p[6])] : p)), capH), mat);
+      const leg = new THREE.Mesh(sx > 0 ? right : mirrorGeometry(right), mat);
       leg.name = 'leg';
       // the origin is the join itself — the shoulder or hip point, at the
       // height of the mass's ring — so a species that re-seats a leg moves and
@@ -1002,21 +1002,15 @@ export function makeQuadruped({
           P[i].z + b2.z * c + b1.z * s);
       }
     }
-    const idx = [];
-    for (let i = 0; i < last; i++) {
-      const a = i * seg, b = a + seg;
-      for (let j = 0; j < seg; j++) {
-        const j2 = (j + 1) % seg;
-        idx.push(a + j, b + j, a + j2, a + j2, b + j, b + j2);
-      }
-    }
+    const idx = [], quads = [];
+    for (let i = 0; i < last; i++) ringQuads(quads, i * seg, (i + 1) * seg, seg, true);
     const tip = pos.length / 3;
     pos.push(P[last].x, P[last].y, P[last].z);
     for (let j = 0; j < seg; j++)
       idx.push(tip, last * seg + (j + 1) % seg, last * seg + j);
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
-    geo.setIndex(idx);
+    geo.setIndex(stitch(pos, quads, idx));
     geo.computeVertexNormals();
     return geo;
   };
@@ -1058,18 +1052,20 @@ export function makeQuadruped({
       throw new Error('ears take direct head-relative offsets { r, h, x, y, z, tilt } now — '
         + 'up/fwd belonged to the old aim-ray scheme; see EARS ARE PLACED DIRECTLY in quadruped.js');
     }
+    // Not a bare cone: the base ring FLARES a quarter wider than the stated
+    // radius and waists back in just above it, so the ear grows OUT of the
+    // skull the way a real ear roots in a muscle bulge, instead of a
+    // triangle resting on the surface. 5-gon, and the half-facet of
+    // pre-spin (π/5) centres a flat face on +z so the book's 3/4 cameras
+    // never catch an edge-on sliver. An odd ring is not its own mirror
+    // image, so the left ear is the right one reflected.
+    const earGeo = loft([
+      { p: [0, 0, 0], r: ears.r * h * 1.25 },
+      { p: [0, ears.h * h * 0.30, 0], r: ears.r * h * 0.92 },
+      { p: [0, ears.h * h, 0], r: ears.r * h * 0.02 },
+    ], 5, Math.PI / 5);
     for (const sx of [-1, 1]) {
-      // Not a bare cone: the base ring FLARES a quarter wider than the stated
-      // radius and waists back in just above it, so the ear grows OUT of the
-      // skull the way a real ear roots in a muscle bulge, instead of a
-      // triangle resting on the surface. 5-gon, and the half-facet of
-      // pre-spin (π/5) centres a flat face on +z so the book's 3/4 cameras
-      // never catch an edge-on sliver.
-      const m = new THREE.Mesh(loft([
-        { p: [0, 0, 0], r: ears.r * h * 1.25 },
-        { p: [0, ears.h * h * 0.30, 0], r: ears.r * h * 0.92 },
-        { p: [0, ears.h * h, 0], r: ears.r * h * 0.02 },
-      ], 5, Math.PI / 5), mat);
+      const m = new THREE.Mesh(sx > 0 ? earGeo : mirrorGeometry(earGeo), mat);
       m.name = 'ear';
       m.position.set(
         sx * (ears.x || 0) * h,

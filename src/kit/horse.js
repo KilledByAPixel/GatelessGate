@@ -2,6 +2,7 @@ import * as THREE from '../../lib/three.module.js';
 import { INK_LIT } from '../palette.js';
 import { makeQuadruped, earShell } from './quadruped.js';
 import { mergeSimple } from './scatter.js';
+import { stitch, ringQuads } from './loft.js';
 
 // A horse (case 45). The first model read as a llama — a neck standing nearly
 // vertical off the front of a barrel, with the head perched a full extra
@@ -329,13 +330,8 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
         pos.push(Math.sin(a) * w * height, (Math.cos(a) * hh + yo) * height, z * height);
       }
     }
-    for (let i = 0; i < HEAD_RINGS.length - 1; i++) {
-      const a = i * SEG, b = a + SEG;
-      for (let j = 0; j < SEG; j++) {
-        const j2 = (j + 1) % SEG;
-        idx.push(a + j, b + j, a + j2, a + j2, b + j, b + j2);
-      }
-    }
+    const quads = [];
+    for (let i = 0; i < HEAD_RINGS.length - 1; i++) ringQuads(quads, i * SEG, (i + 1) * SEG, SEG, true);
     // caps: a reversed fan at the poll (the start of the loft) and a fan at
     // the nostril plane (its end) — the same pattern the koi's tail cap uses
     const first = HEAD_RINGS[0], back = HEAD_RINGS[HEAD_RINGS.length - 1];
@@ -348,7 +344,8 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     for (let j = 0; j < SEG; j++) idx.push(nose, l0 + (j + 1) % SEG, l0 + j);
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
-    geo.setIndex(idx);
+    // see loft.js: each quad folds outward, so the two sides are mirror images
+    geo.setIndex(stitch(pos, quads, idx));
     geo.computeVertexNormals();
     headMesh.geometry.dispose();
     headMesh.geometry = geo;
@@ -396,26 +393,19 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // not either, so the hair rides in the ears' mesh and costs no draw.
   const hair = [];
   {
-    const va = new THREE.Vector3(), vb = new THREE.Vector3(), vc = new THREE.Vector3();
-    // one closed solid lofted through quads; faces are turned outward off
-    // the solid's own middle, which a blunt wedge is always convex enough for
+    // one closed solid lofted through four-point sections, turned to face out
+    // by its own volume, its quads folded outward like every loft (loft.js);
+    // split all one way, a lock was one shape on one side of the crest and
+    // another on the other
     const solid = (secs, matrix) => {
-      const pts = secs.flat();
-      const mid = pts.reduce((m, p) => m.add(p), new THREE.Vector3()).multiplyScalar(1 / pts.length);
-      const soup = [];
-      const tri = (a, b, c) => {
-        va.subVectors(b, a); vb.subVectors(c, a); vc.crossVectors(va, vb);
-        const out = vc.dot(va.subVectors(a, mid)) >= 0;
-        for (const p of out ? [a, b, c] : [a, c, b]) soup.push(p.x, p.y, p.z);
-      };
-      const quad = (a, b, c, d) => { tri(a, b, c); tri(a, c, d); };
-      for (let i = 0; i < secs.length - 1; i++) {
-        for (let j = 0; j < 4; j++) quad(secs[i][j], secs[i][(j + 1) % 4], secs[i + 1][(j + 1) % 4], secs[i + 1][j]);
-      }
-      quad(...secs[0]);
-      quad(...secs[secs.length - 1]);
+      const pos = secs.flat().flatMap((p) => [p.x, p.y, p.z]);
+      const quads = [];
+      for (let i = 0; i < secs.length - 1; i++) ringQuads(quads, i * 4, (i + 1) * 4, 4);
+      const e = (secs.length - 1) * 4;
+      quads.push(3, 2, 1, 0, e, e + 1, e + 2, e + 3);
       const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(soup), 3));
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
+      geo.setIndex(stitch(pos, quads, [], { outward: true }));
       if (matrix) geo.applyMatrix4(matrix);
       geo.computeVertexNormals();
       hair.push(geo);
