@@ -46,6 +46,23 @@ const reachAt = (tris, y, z) => {
   }
   return out;
 };
+// A level cut: the extent across and fore-and-aft of a set of triangles where
+// the plane y = const cuts them.
+const levelCut = (tris, y) => {
+  const c = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity };
+  for (const t of tris) {
+    for (let e = 0; e < 3; e++) {
+      const a = e * 3, b = ((e + 1) % 3) * 3;
+      const ya = t[a + 1], yb = t[b + 1];
+      if ((ya - y) * (yb - y) > 0 || ya === yb) continue;
+      const k = (y - ya) / (yb - ya);
+      const x = t[a] + (t[b] - t[a]) * k, z = t[a + 2] + (t[b + 2] - t[a + 2]) * k;
+      c.minX = Math.min(c.minX, x); c.maxX = Math.max(c.maxX, x);
+      c.minZ = Math.min(c.minZ, z); c.maxZ = Math.max(c.maxZ, z);
+    }
+  }
+  return c;
+};
 const sit = () => makeCat({ height: 1, pose: 'sit' });
 const stand = () => makeCat({ height: 1, pose: 'stand' });
 
@@ -72,7 +89,49 @@ test('the head is one small wedge, not a ball with a muzzle on it', () => {
   const g = sit().group;
   const head = box(g.getObjectByName('head')).getSize(new THREE.Vector3());
   const body = box(g.getObjectByName('body')).getSize(new THREE.Vector3());
-  assert.ok(head.x < 0.7 * body.x, `head ${head.x.toFixed(3)} wide on a body ${body.x.toFixed(3)} wide`);
+  assert.ok(head.x < 0.75 * body.x, `head ${head.x.toFixed(3)} wide on a body ${body.x.toFixed(3)} wide`);
+  // and from in front the haunches, not the head, are the widest thing
+  let base = 0;
+  for (const leg of named(g, 'leg')) base = Math.max(base, box(leg).max.x);
+  assert.ok(head.x < 0.65 * 2 * base, `head ${head.x.toFixed(3)} wide over haunches ${(2 * base).toFixed(3)} wide`);
+  // but not a pin on a thick neck either: wider than the neck under it
+  const trunk = triangles(g, (o) => o.name === 'body');
+  const neck = levelCut(trunk, box(g.getObjectByName('head')).min.y - 0.02);
+  assert.ok(head.x > 1.15 * (neck.maxX - neck.minX), `head ${head.x.toFixed(3)} wide on a neck ${(neck.maxX - neck.minX).toFixed(3)} wide`);
+});
+
+test('an ear rises out of the skull through its surface, and carries the side of the head up', () => {
+  for (const [label, cat] of [['sit', sit()], ['stand', stand()]]) {
+    const g = cat.group;
+    const skull = triangles(g, (o) => o.name === 'head');
+    const head = box(g.getObjectByName('head'));
+    const half = (head.max.x - head.min.x) / 2;
+    for (const ear of named(g, 'ear')) {
+      // Everything but the tip is buried. An ear with any of its base outside
+      // the skull shows from somewhere as a flap hanging beside the head.
+      const p = ear.geometry.getAttribute('position');
+      const verts = [];
+      for (let i = 0; i < p.count; i++) verts.push(new THREE.Vector3().fromBufferAttribute(p, i).applyMatrix4(ear.matrixWorld));
+      const tip = verts.reduce((a, b) => (b.y > a.y ? b : a));
+      const base = verts.filter((v) => v !== tip);
+      assert.ok(base.length >= 3, `${label}: a base to bury`);
+      for (const v of base) {
+        assert.ok(inside(skull, v), `${label}: a point of an ear's base is outside the skull: (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`);
+      }
+      // The outer edge comes up out of the widest part of the head: neither
+      // stepped in from the cheek nor standing outside it.
+      const reach = Math.max(...verts.map((v) => Math.abs(v.x)));
+      assert.ok(reach > 0.93 * half && reach <= half, `${label}: the ear reaches ${reach.toFixed(3)} on a head ${half.toFixed(3)} to the side`);
+      assert.ok(Math.abs(tip.x) > 0.8 * half && Math.abs(tip.x) < half, `${label}: and its tip stands over the cheek, ${Math.abs(tip.x).toFixed(3)} out`);
+      // Broad: at the height of the crown it is still most of half a head wide,
+      // and it has a back to it — a blade seen from the side is a spike.
+      const tris = triangles(g, (o) => o === ear);
+      const cut = levelCut(tris, head.max.y);
+      assert.ok(cut.maxX - cut.minX > 0.5 * half, `${label}: ${(cut.maxX - cut.minX).toFixed(3)} wide at the crown`);
+      const low = levelCut(tris, head.max.y - 0.03);
+      assert.ok(low.maxZ - low.minZ > 0.3 * half, `${label}: ${(low.maxZ - low.minZ).toFixed(3)} deep, fore and aft`);
+    }
+  }
 });
 
 test('the ears root on the skull, stand clear of it, and leave a crown between them', () => {
@@ -574,4 +633,28 @@ test('the seated pose reads its joins off the posed trunk at any size', () => {
     const root = cat.tail.getWorldPosition(new THREE.Vector3());
     assert.ok(inside(body, root), `height ${height}: the tail's root is buried in the rump`);
   }
+});
+
+test('from in front the seated cat stands on four paws in a row, the front pair together', () => {
+  const g = sit().group;
+  g.updateMatrixWorld(true);
+  const legs = named(g, 'leg');
+  const at = (leg) => leg.getWorldPosition(new THREE.Vector3());
+  const front = legs.filter((l) => at(l).z > 0 && at(l).x > 0);
+  const hind = legs.filter((l) => at(l).z < 0 && at(l).x > 0);
+  assert.equal(front.length, 1);
+  assert.equal(hind.length, 1);
+  const fore = triangles(g, (o) => o === front[0]);
+  const paw = levelCut(fore, 0.03);
+  // nearly touching its fellow across the centreline, and not through it
+  assert.ok(paw.minX > 0 && paw.minX < 0.025, `a front paw stands ${paw.minX.toFixed(3)} off the centreline`);
+  // the forearm leans in to get there: the leg is further out at the elbow
+  const elbow = levelCut(fore, 0.32);
+  const mid = (c) => (c.minX + c.maxX) / 2;
+  assert.ok(mid(elbow) > mid(paw) + 0.01, `elbow ${mid(elbow).toFixed(3)} out, paw ${mid(paw).toFixed(3)}`);
+  // and the hind paw shows beside it, clear of it, inside the haunch's width
+  const haunch = triangles(g, (o) => o === hind[0]);
+  const low = levelCut(haunch.filter((t) => Math.max(t[2], t[5], t[8]) > -0.03), 0.03);
+  assert.ok(low.minX > paw.maxX - 0.005, `the hind paw starts ${low.minX.toFixed(3)} out, the front paw ends ${paw.maxX.toFixed(3)}`);
+  assert.ok(low.minX < paw.maxX + 0.03, 'and stands right beside it');
 });

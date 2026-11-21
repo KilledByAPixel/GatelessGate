@@ -19,7 +19,7 @@ import { hash1 } from '../util/noise.js';
 //      behind the head for the eye to read as a ball perched on a body.
 //   2. A SMALL HEAD WITH TWO POINTS ON IT. One loft (skull.js), wider than it
 //      is deep and barely longer than it is wide: a rounded wedge. The ears
-//      root on its back corners with a flat of crown showing between them.
+//      rise out of its corners (see EAR) with a flat of crown between them.
 //      A head as wide as the body is a toy's.
 //   3. A SITTING CAT IS A PEAR STANDING ON ITS HAUNCHES. See THE SEATED POSE.
 //   4. THE TAIL IS A LINE WITH A CURVE IN IT. See THE TAIL.
@@ -45,7 +45,8 @@ import { hash1 } from '../util/noise.js';
 //     the trunk, which is the base of the pear from the front, and they
 //     close the gap under the belly from the side.
 //   - THE FRONT LEGS ARE SHOULDERS ABOVE THE ELBOW (see A SEATED FRONT LEG):
-//     plumb and slim below it, close together, each on a block of a paw, and
+//     slim below it and plumb from the side, leaning in from the front to
+//     paws that stand together, each a block, and
 //     above it a wedge lying on the side of the chest that fades into it.
 //   - THE HEAD IS PLACED FOR THE POSE, NOT CARRIED OVER (see SIT_HEAD), and
 //     the pear's own last rings end inside it.
@@ -96,19 +97,41 @@ const P = {
 // brow, a short fall, and a muzzle that barely leaves the face. The jaw
 // rises toward the nose; held level it is a box under the face.
 const SKULL = [
-  [-0.1, 0.1, -0.07, 0.105],
-  [-0.02, 0.135, -0.1, 0.158],
-  [0.075, 0.128, -0.105, 0.145],
-  [0.125, 0.048, -0.085, 0.082],
-  [0.165, 0.03, -0.065, 0.055],
+  [-0.1, 0.1, -0.07, 0.115],
+  [-0.02, 0.135, -0.1, 0.172],
+  [0.075, 0.128, -0.105, 0.158],
+  [0.125, 0.048, -0.085, 0.086],
+  [0.165, 0.03, -0.065, 0.057],
 ];
 const SKULL_BACK = [0.015, -0.145];      // [y, z] apexes closing the loft
 const SKULL_NOSE = [-0.015, 0.182];
-// Rooted inside the back corners of the skull and leaning out, so the tips
-// stand as far apart as the head is wide. The pair has to clear the skull in
-// BOTH directions: standing above it is what says "cat", but a pair no wider
-// than the head reads as two bumps at distance.
-const EARS = { r: 0.058, h: 0.18, x: 0.082, y: 0.07, z: -0.035, tilt: 0.4 };
+// AN EAR IS A BROAD TRIANGLE RISING OUT OF THE CORNER OF THE SKULL, each point
+// [x, y, z] in heights from the head's origin, the skull's own frame, for the
+// ear on +x. Three points of a base, all INSIDE the skull, and a tip: `outer`
+// lies in the widest part of the head, so the ear's outer edge comes up out
+// of the cheek and carries the side of the head on to the tip with no step
+// in; `inner` lies under the crown, leaving a flat of crown between the pair;
+// `back` lies behind and between them, so the front of the ear is one flat
+// face turned a little outward and the back of it is a ridge running down
+// into the nape. Every edge of the ear leaves the skull THROUGH its surface,
+// which is the whole of the join.
+//
+// A cone stood on the corner of the skull cannot do this, however it is
+// sunk: the skull narrows behind its cheeks and falls away to the side of its
+// crown, so a round base wide enough to read as an ear overhangs both, and
+// the overhang shows from in front as a flap hanging beside the head with
+// paper between it and the cheek. The base has to be stated point by point,
+// against the skull it is buried in. `root` closes the shell underneath, so a
+// swivelled ear that lifts a corner of its base shows a solid, not a hole.
+// `hinge` is the point it turns about and must stay inside the skull too.
+const EAR = {
+  tip: [0.15, 0.236, -0.04],
+  outer: [0.165, 0.016, -0.02],
+  inner: [0.02, 0.1, 0.01],
+  back: [0.06, 0.04, -0.11],
+  root: [0.09, -0.01, -0.04],
+  hinge: [0.09, 0.05, -0.04],
+};
 // Standing. Barely a neck: as deep where it enters the skull as the skull
 // allows, so the nape and the throat are the trunk's own lines arriving at
 // the head.
@@ -143,10 +166,10 @@ const PEAR = [
   [0.46, -0.467, 0.42, 0.17, 0.23],
   [0.6, -0.395, 0.53, 0.222, 0.21],
   [0.715, -0.29, 0.64, 0.25, 0.19],
-  [0.78, -0.15, 0.73, 0.24, 0.165],
-  [0.9, -0.045, 0.81, 0.225, 0.13],
-  [1.0, -0.002, 0.885, 0.215, 0.105],
-  [1.07, 0.06, 0.93, 0.25, 0.09],
+  [0.78, -0.15, 0.73, 0.24, 0.17],
+  [0.9, -0.045, 0.81, 0.225, 0.142],
+  [1.0, -0.002, 0.885, 0.215, 0.12],
+  [1.07, 0.06, 0.93, 0.25, 0.1],
 ];
 const PEAR_SEAT = [0.02, -0.3];          // [y, z] apexes closing the loft: under the cat,
 const PEAR_CROWN = [1.01, 0.18];         // and inside the skull
@@ -186,19 +209,26 @@ const SIT_LEVEL = 1.0;      // how much of that the skull takes back out
 // and then under, so the top ring is wholly inside the trunk and the wedge
 // fades into the flank with no top to show — which also needs the free
 // ellipse of the upper rings to be slight, or it is the one that surfaces.
+//
+// A free ring may carry a seventh number: how far IN from FORELEG_X it
+// stands. The shoulders lie on the chest, as far apart as the chest is wide
+// there, and the paws stand together under the breast, nearly touching; the
+// forearm leans in from the one to the other. Moving the whole leg in to
+// bring the paws together drags the shoulder off the flank it is draped on,
+// and the drape comes back as a fin.
 const FORELEG = [
   [0.72, 0.06, 0.8, -0.08, 0.015, -0.05],
   [0.62, 0.14, 0.7, -0.09, 0.04, -0.004],
   [0.52, 0.155, 0.56, -0.035, 0.062, 0.016],
   [0.4, 0.176, 0.42, 0.03, 0.062, 0.024],
-  [0.3, 0.176, 0.3, 0.058, 0.058, null],
-  [0.09, 0.17, 0.09, 0.076, 0.048, null],
-  [0.055, 0.212, 0.055, 0.082, 0.056, null],
-  [0.0, 0.216, 0.0, 0.078, 0.058, null],
+  [0.3, 0.176, 0.3, 0.058, 0.058, null, 0.006],
+  [0.09, 0.17, 0.09, 0.076, 0.048, null, 0.022],
+  [0.055, 0.212, 0.055, 0.082, 0.056, null, 0.022],
+  [0.0, 0.216, 0.0, 0.078, 0.058, null, 0.022],
 ];
 const SHOULDER_TUCK = 0.035;             // how far under the skin a draped ring's ends lie
 const FORELEG_TOP = [0.8, -0.01];        // [y, z] apex closing the loft inside the chest
-const FORELEG_X = 0.09;                  // the pair stand close under the breast
+const FORELEG_X = 0.09;                  // the shoulders' plane; the paws stand in from it
 const FORELEG_JOIN = [0.55, 0.06];       // [y, z] of the mesh origin, inside the chest
 
 // THE HAUNCH is a boss on the flank: an egg lying on its side, half sunk in
@@ -366,6 +396,26 @@ function joinShells(a, b) {
   return geo;
 }
 
+// One ear in the skull's frame: see AN EAR IS A BROAD TRIANGLE. A closed shell
+// of six faces — three up to the tip, three down to the root.
+function earGeometry(unit, mirror) {
+  const side = mirror ? -1 : 1;
+  const pos = [];
+  for (const p of [EAR.tip, EAR.root, EAR.outer, EAR.inner, EAR.back]) pos.push(side * p[0] * unit, p[1] * unit, p[2] * unit);
+  const idx = [];
+  const tri = (a, b, c) => (mirror ? idx.push(a, c, b) : idx.push(a, b, c));
+  for (let j = 0; j < 3; j++) {
+    const a = 2 + j, b = 2 + (j + 1) % 3;
+    tri(0, b, a);
+    tri(1, a, b);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  return geo;
+}
+
 export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit' } = {}) {
   const h = height;
   const seated = pose === 'sit';
@@ -380,7 +430,15 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     // The plan's ball only says where the head is carried; its geometry is
     // replaced by the loft below. No snout: the muzzle is the front of it.
     head: { shape: 'sphere', r: 0.1, fwd: STAND.head.fwd, up: STAND.head.up },
-    ears: EARS,
+    // The plan's cones only say that there are two ears and where they hinge;
+    // their geometry is replaced below, like the head's.
+    ears: {
+      x: EAR.hinge[0], y: EAR.hinge[1], z: EAR.hinge[2],
+      h: Math.hypot(EAR.tip[0] - EAR.hinge[0], EAR.tip[1] - EAR.hinge[1]),
+      r: Math.hypot(EAR.outer[0] - EAR.inner[0], EAR.outer[1] - EAR.inner[1]) / 2,
+      // the lean of hinge-to-tip: the rest angle the stir spreads from
+      tilt: Math.atan2(EAR.tip[0] - EAR.hinge[0], EAR.tip[1] - EAR.hinge[1]),
+    },
     // No tail here; this one is jointed and built below.
   });
   group.name = 'cat';
@@ -423,7 +481,14 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     skull.add(part);
   }
   torso.add(skull);
-  for (const ear of ears) ear.userData.baseZ = ear.rotation.z;
+  for (const ear of ears) {
+    ear.userData.baseZ = ear.rotation.z;
+    // see AN EAR IS A BROAD TRIANGLE. Stated in the skull's frame and carried
+    // into the ear's own, which the plan has already leant out about its hinge.
+    ear.updateMatrix();
+    ear.geometry.dispose();
+    ear.geometry = earGeometry(h, ear.position.x < 0).applyMatrix4(ear.matrix.clone().invert());
+  }
 
   // ---- sit ----------------------------------------------------------------
   const tilt = seated ? SIT_TILT : 0;
@@ -497,11 +562,17 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     const fx = FORELEG_X * h;
     const oy = FORELEG_JOIN[0] * h, oz = FORELEG_JOIN[1] * h;
     const SEG = 8, D = Math.SQRT1_2;
-    const rings = FORELEG.map(([fy, fz, by, bz, w, proud]) => {
+    const rings = FORELEG.map(([fy, fz, by, bz, w, proud, inward = 0]) => {
       const cy = (fy + by) / 2 * h, cz = (fz + bz) / 2 * h;
       const ay = (fy - by) / 2 * h, az = (fz - bz) / 2 * h;
       const ring = { c: [cy - oy, cz - oz], a: [ay, az], w: w * h };
-      if (proud === null) return ring;
+      if (proud === null) {
+        if (inward) {
+          ring.xs = [];
+          for (let j = 0; j < SEG; j++) ring.xs.push(Math.cos((j / SEG) * Math.PI * 2) * ring.w - inward * h);
+        }
+        return ring;
+      }
       // see `proud`. Vertex 0 is the outer one, the quarters stand either
       // side of it and vertices 2 and 6 are the ring's fore and aft ends; x
       // here is measured from the leg's own plane, as ringLoft wants it.
