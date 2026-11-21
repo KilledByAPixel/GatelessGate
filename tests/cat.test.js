@@ -382,27 +382,31 @@ test('a seated front leg is an arm: a plumb column that opens both ways into the
       const ahead = sectionZ(body, y).max - cut(y).max;
       assert.ok(ahead > 0.015, `the breast stands only ${ahead.toFixed(3)} ahead of the leg at ${y}`);
     }
-    // and from in front, the leg's foremost line turns in toward the midline
-    // as it rises into the breast: the arms close under it
-    const foremostX = (y) => {
-      let bz = -Infinity, bx = 0;
-      for (const t of tris) {
-        for (let e = 0; e < 3; e++) {
-          const a = e * 3, b = ((e + 1) % 3) * 3;
-          const ya = t[a + 1], yb = t[b + 1];
-          if ((ya - y) * (yb - y) > 0 || ya === yb) continue;
-          const k = (y - ya) / (yb - ya);
-          const z = t[a + 2] + (t[b + 2] - t[a + 2]) * k;
-          if (z > bz) { bz = z; bx = Math.abs(t[a] + (t[b] - t[a]) * k); }
-        }
+    // The top of the leg as a reader sees it is where the column leaves the
+    // chest: the highest point of the leg's surface standing outside the
+    // trunk, read all round the column (0 degrees its outer side, 90 its
+    // front, 180 its inner side). From in front it falls from the outer edge
+    // to the keel — the chest's side carrying on down the outer edge, the
+    // breast a V between the arms. A front that rises past the outer side is
+    // a point on top of the arm.
+    const c = levelCut(tris, 0.2);
+    const cx = Math.abs((c.minX + c.maxX) / 2), cz = (c.minZ + c.maxZ) / 2;
+    const top = new Map();
+    const N = 20;
+    for (const t of tris) {
+      for (let a = 0; a <= N; a++) for (let b = 0; a + b <= N; b++) {
+        const u = a / N, w = b / N, s = 1 - u - w;
+        const p = new THREE.Vector3(t[0] * u + t[3] * w + t[6] * s, t[1] * u + t[4] * w + t[7] * s, t[2] * u + t[5] * w + t[8] * s);
+        if (p.y < 0.15 || inside(body, p)) continue;
+        const ang = Math.round(Math.atan2(p.z - cz, Math.abs(p.x) - cx) * 18 / Math.PI) * 10;
+        top.set(ang, Math.max(top.get(ang) ?? -Infinity, p.y));
       }
-      return bx;
-    };
-    // (The seam's front vertices are read off the chest, and the chest
-    // between the arms is fuller since its quads all fold outward
-    // (loft.js) — the narrower side it used to be read off was a crease on
-    // one side of the cat only — so the arms close in by less than they did.)
-    assert.ok(foremostX(0.4) < foremostX(0.2) - 0.02, `the front line stays out at ${foremostX(0.4).toFixed(3)} over a column at ${foremostX(0.2).toFixed(3)}`);
+    }
+    const highest = (lo, hi) => Math.max(...[...top].filter(([a]) => a >= lo && a <= hi).map(([, y]) => y));
+    const outer = highest(-10, 30), front = highest(40, 120), inner = highest(150, 180);
+    assert.ok(front < outer + 0.015, `the arm's front rises to ${front.toFixed(3)} past its outer side at ${outer.toFixed(3)}: a point on top of it`);
+    assert.ok(inner < outer - 0.05, `the breast does not come down between the arms: inner side to ${inner.toFixed(3)}, outer ${outer.toFixed(3)}`);
+    assert.ok(outer > 0.31, `the chest's side hides the arm's outer edge from ${outer.toFixed(3)}`);
 
     // Above the elbow the leg is INSIDE the chest, every vertex of it: the
     // shoulder is the chest's own surface swelling over the arm, so there is
@@ -441,7 +445,7 @@ test('a seated front leg is an arm: a plumb column that opens both ways into the
   // and the chest DOES swell over it: over the upper arm the trunk stands
   // well outside the column the arm comes up as
   const arm = triangles(g, (o) => legs.includes(o));
-  const column = reachAt(arm, 0.3, 0.1);
+  const column = reachAt(arm, 0.2, 0.1);
   for (const [y, z] of [[0.48, 0.12], [0.55, 0.13], [0.6, 0.12]]) {
     const over = reachAt(body, y, z) - column;
     assert.ok(over > 0.03, `the shoulder stands only ${over.toFixed(3)} outside the forearm at (${y}, ${z})`);

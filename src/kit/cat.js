@@ -248,13 +248,26 @@ const SIT_LEVEL = 1.0;      // how much of that the skull takes back out
 // column runs straight to the lower seam: a ring between them that stands
 // out further than the seam folds back into it, and the fold showed as a
 // splinter standing up from the top of the leg.
+//
+// WHERE THE COLUMN LEAVES THE CHEST is the line a reader sees as the top of
+// the leg, and from in front it has to fall from the outer edge to the keel:
+// the chest's side carrying on down the leg's outer edge, the breast a V
+// between the pair. Two things set it. The seam's FRONT stands back from the
+// column's front, under the chest's lower front: left at the breast's own
+// line it stood ahead of the chest there, the chest's front quarter hid the
+// column's outer side low and the keel its inner side, and the front between
+// them rose past both as a point on each arm. And the seam lies only just
+// under the skin: sunk deep, the column crosses the chest somewhere along
+// faces as long as the forearm, wherever the chest's facets happen to meet
+// them, and the line it crosses on zigzags into points of its own.
+// tests/cat.test.js reads that line off the meshes.
 const FORELEG = [
   [0.64, 0.21, 0.75, -0.12, 0.03, 0.03, -0.05, 1],
   [0.58, 0.212, 0.71, -0.11, 0.045, 0.03, -0.04, 1, 0.95],
   [0.53, 0.198, 0.62, -0.06, 0.05, 0.03, -0.03, 1, 0.92],
   [0.485, 0.17, 0.5, -0.03, 0.054, 0.03, -0.02, 1, 0.88],
-  [0.425, 0.198, 0.425, -0.025, 0.056, 0.028, 'seam', 0, 0.8],
-  [0.37, 0.185, 0.37, 0.005, 0.055, 0.03, 'seam', 0, 0.8],
+  [0.425, 0.165, 0.425, -0.025, 0.056, 0.028, 'seam', 0, 0.8],
+  [0.37, 0.16, 0.37, 0.005, 0.055, 0.03, 'seam', 0, 0.8],
   [0.2, 0.177, 0.2, 0.03, 0.05, 0.012, 0.008],
   [0.09, 0.174, 0.09, 0.045, 0.046, 0],
   [0.055, 0.212, 0.055, 0.04, 0.052, 0],
@@ -265,7 +278,7 @@ const FORELEG_TOP = [0.76, 0.04];        // [y, z] apex closing the loft inside 
 const FORELEG_X = 0.06;                  // the paws' centre plane
 const FORELEG_MID = 0.012;               // nearer the midline than this, a tucked front end does not go
 const FORELEG_SINK = 0.012;              // how much lower than `proud` the front corner lies as it turns in
-const SEAM_SINK = 0.02;                  // how far under the skin a seam vertex lies; on it, the edges between stand out
+const SEAM_SINK = 0.006;                 // how far under the skin a seam vertex lies; on it, the edges between stand out, and deep, the top of the leg zigzags
 const FORELEG_JOIN = [0.55, 0.06];       // [y, z] of the mesh origin, inside the chest
 
 // THE HAUNCH is a boss on the flank: an egg lying on its side, half sunk in
@@ -745,23 +758,22 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
   };
   const nRings = ringU.length + 1;                    // the buried one first
   const skinPos = new Float32Array((nRings * TAIL_SIDES + 2) * 3);
-  const skinIdx = [];
-  for (let i = 0; i < nRings - 1; i++) {
-    const r0 = i * TAIL_SIDES, r1 = r0 + TAIL_SIDES;
-    for (let j = 0; j < TAIL_SIDES; j++) {
-      const j2 = (j + 1) % TAIL_SIDES;
-      skinIdx.push(r0 + j, r0 + j2, r1 + j, r0 + j2, r1 + j2, r1 + j);
-    }
-  }
+  const skinQuads = [], skinCaps = [];
+  for (let i = 0; i < nRings - 1; i++) ringQuads(skinQuads, i * TAIL_SIDES, (i + 1) * TAIL_SIDES, TAIL_SIDES);
   const rootApex = nRings * TAIL_SIDES, tipApex = rootApex + 1;
   for (let j = 0; j < TAIL_SIDES; j++) {
     const j2 = (j + 1) % TAIL_SIDES;
-    skinIdx.push(rootApex, j2, j);
-    skinIdx.push(tipApex, (nRings - 1) * TAIL_SIDES + j, (nRings - 1) * TAIL_SIDES + j2);
+    skinCaps.push(rootApex, j2, j);
+    skinCaps.push(tipApex, (nRings - 1) * TAIL_SIDES + j, (nRings - 1) * TAIL_SIDES + j2);
   }
   const skinGeo = new THREE.BufferGeometry();
   skinGeo.setAttribute('position', new THREE.BufferAttribute(skinPos, 3));
-  skinGeo.setIndex(skinIdx);
+  // Which diagonal each quad folds along is read off the tail as it lies
+  // (loft.js), so it is chosen again on every layout, as the strand's is
+  // (tail.js): the tail bends and wags, and a fold chosen for it at rest is a
+  // crease once it curls. A quad only changes its split as it passes through
+  // flat, so nothing jumps.
+  skinGeo.setIndex(new THREE.BufferAttribute(new Uint16Array(skinQuads.length * 6 / 4 + skinCaps.length), 1));
   const skin = new THREE.Mesh(skinGeo, material);
   skin.name = 'tailseg';
   tailRoot.add(skin);
@@ -830,6 +842,8 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
       }
     }
     skinPos.set([0, -deep - 0.5 * girth(0), 0, end.x, end.y, end.z], rootApex * 3);
+    skinGeo.index.array.set(stitch(skinPos, skinQuads, skinCaps));
+    skinGeo.index.needsUpdate = true;
     skinGeo.attributes.position.needsUpdate = true;
     skinGeo.computeVertexNormals();
     skinGeo.computeBoundingSphere();
