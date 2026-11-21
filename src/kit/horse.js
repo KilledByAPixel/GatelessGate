@@ -81,16 +81,18 @@ const POLL_LIFT = 0.012;
 // poll to withers), how high it stands at its front, and at its back (x
 // height)]. Each rises to its own back end and the next starts lower, so the
 // outline is stepped; they overlap a little so no daylight shows between.
+// They stand low on the crest: taller, the mane rode high off the neck as a
+// fin rather than lying along it.
 // THE LAST ONE FALLS INSTEAD, and runs out to nothing on the withers: a mane
 // that stops short of them at full height ends in a step, and that step, on
 // top of the corner where the neck leaves the back, is a notch in the
 // topline.
 const MANE = [
-  [0.02, 0.19, 0.024, 0.036],
-  [0.17, 0.37, 0.034, 0.048],
-  [0.35, 0.55, 0.040, 0.052],
-  [0.53, 0.73, 0.036, 0.046],
-  [0.71, 1.0, 0.032, 0.002],
+  [0.02, 0.19, 0.016, 0.024],
+  [0.17, 0.37, 0.022, 0.031],
+  [0.35, 0.55, 0.026, 0.034],
+  [0.53, 0.73, 0.024, 0.030],
+  [0.71, 1.0, 0.021, 0.002],
 ];
 const MANE_W = 0.4;              // half-width at its foot, x the neck's own there
 const MANE_TOP = 0.5;            // ...and how much of that is left along its top edge
@@ -98,6 +100,9 @@ const MANE_SINK = 0.04;          // how far its foot is buried under the crest, 
 // The forelock, head-local and x height: [z, how high it stands off the
 // forehead, half-width] from between the ears forward to its point.
 const FORELOCK = [[-0.085, 0.026, 0.026], [-0.02, 0.03, 0.024], [0.055, 0.006, 0.01]];
+// How much of its breadth each neck ring keeps at the throat, from the poll
+// back toward the root (see THE THROAT IS NARROW).
+const THROAT = [0.8, 0.6, 0.6];
 // How far the trunk ring over the hip is lifted: the croup.
 const CROUP_LIFT = 0.013;
 // [z, halfW, halfH, yOff], x height — see ONE head below
@@ -148,17 +153,21 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // out and up that the neck is well over half the height of the withers
   // long. Shorter and shallower, it was a pony's head on a foal's neck. It
   // rises at about half a right angle, and a third of the way up it is still
-  // about as deep as the head is long: the throat leaves the breast well
-  // down the chest (`root`) and the neck spends its depth late (`taper`)
-  // into a full throatlatch (`r`). Leaving the breast high, the neck was
-  // thin and the head hung forward off it. The front leg stands forward under
+  // about as deep as the head is long: the throat leaves the breast about
+  // halfway down the chest (`root`) and runs to a full throatlatch (`r`)
+  // as near one straight line (`taper`, close to a plain wedge). Leaving
+  // the breast high, the neck was thin and the head hung forward off it;
+  // leaving it lower and spending its depth late, the underside of the
+  // neck sloped out to the breast as a fat mass, where a horse's throat
+  // line runs fairly straight from the jaw down to the chest — the neck's
+  // depth at its base is the crest rising, not the throat bulging. The front leg stands forward under
   // that low breast (`frontSet`): behind it, the chest ran on ahead of the
   // leg as a level keel and the leg's front line met it in a notch.
   const { group, tail, plan } = makeQuadruped({
     height, color, seed,
     bodyR: 0.18, bodyLen: 0.59, bodyDrop: 0.055,
     torso: {
-      chest: 1.18, loin: 0.8, withers: 1.28, back: 1.05, croup: 1.06, round: 1, slab: 1, barrel: 1, girth: 0.16, keel: 1, haunch: 0.8,
+      chest: 1.18, loin: 0.8, withers: 1.28, back: 1.05, croup: 1.06, round: 1, slab: 1, barrel: 1, girth: 0.16, keel: 1, haunch: 0.8, arm: 0.2,
       shoulderW: 1.0, barrelW: 1.14, hipW: 1.06,
     },
     legBury: 0.18,
@@ -188,21 +197,28 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     // edges close to plumb (`elbow`), over a knee carried high (`wrist`).
     // Getting on for three times the cannon at the elbow and tapering to the
     // knee, it sloped its back line into the belly like a hind leg and was
-    // fat. It opens both ways into the trunk only over a short run at its
-    // top (`flare`, `drop`): forward into the breast, back into the girth.
+    // fat. At its top it opens both ways into the trunk (`flare`, `drop`):
+    // forward into the breast, back into the girth, over enough of its run
+    // that the leg visibly widens up into the shoulder it hangs from. Opened
+    // only over a short run at the very top, the column stayed one width
+    // right up into the chest and read as thin there.
     //
     // THE SHOULDER is not a mass on the leg at all. It is the chest's own
     // side carried straight down to the elbow (`torso.slab`), with the leg
     // standing forward under the breast (`frontSet`) and the breast still
-    // standing out ahead of it.
-    legs: { knee: KNEE, shoulder: 2.2, thigh: 4.12, proud: 0.0, cannon: 0.72, foot: 1.2, gaskin: 0.95, frontSet: 0.075, hindSet: 0.1, point: 0.55, flare: 0.8, drop: 0.15, elbow: 1.15, wrist: 0.35, hock: 0.58, rake: 0.06 },
+    // standing out ahead of it — and carried out over the forearm there and
+    // hung a little lower round its top (`torso.arm`): standing forward of
+    // the shoulder section, the leg's outer face was flush with a chest
+    // already narrowing to the breast, and its top showed as a lit tab with
+    // a dark notch beside it.
+    legs: { knee: KNEE, shoulder: 2.2, thigh: 4.12, proud: 0.0, cannon: 0.72, foot: 1.2, gaskin: 0.95, frontSet: 0.075, hindSet: 0.1, point: 0.55, flare: 1.1, drop: 0.3, elbow: 1.15, wrist: 0.35, hock: 0.58, rake: 0.06 },
     // `set` at nothing: the nape leaves the topline AT the withers, so the
     // withers are the corner where back turns into neck — but not the only
     // one. `ease` carries the root's top a way up the nape, so the line
     // climbs from the withers at once and turns again at the root; left where
     // the plan puts it, the root stands under the withers and the crest
     // starts from a step down.
-    neck: { r: 0.075, w: 0.8, root: 0.55, set: 0.0, taper: 0.7, arch: 0.05, ease: 0.4 },
+    neck: { r: 0.075, w: 0.8, root: 0.5, set: 0.0, taper: 0.85, arch: 0.05, ease: 0.4 },
     head,
     // no snout: the muzzle is the front of the single head loft below.
     // The plan's cones only say that there are two ears: each is restated
@@ -298,6 +314,23 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     let croupRing = 0;
     while (croupRing < rings - 1 && P.getZ(croupRing * SEG + TOP) < plan.zHip) croupRing++;
     lift(croupRing, CROUP_LIFT);
+    // THE THROAT IS NARROW. The plan's neck rings are as broad under the
+    // neck as along its sides, so seen from anywhere off square the lower
+    // neck was a full round mass sloping out to the breast. A horse's neck
+    // is a wedge in section: broad at the crest's foot and drawn in to the
+    // throat. So each neck ring ahead of the root has its lower half drawn
+    // in across (THROAT, from the poll back), more the further below the
+    // ring's middle a vertex stands. The root ring is left as it is: it is
+    // the breast, and the front legs were solved against it.
+    THROAT.forEach((f, k) => {
+      const o = (rings - 1 - k) * SEG;
+      const cy = (P.getY(o + TOP) + P.getY(o + BOT)) / 2, cz = (P.getZ(o + TOP) + P.getZ(o + BOT)) / 2;
+      const ay = P.getY(o + TOP) - cy, az = P.getZ(o + TOP) - cz, m2 = ay * ay + az * az;
+      for (let j = 0; j < SEG; j++) {
+        const t = ((P.getY(o + j) - cy) * ay + (P.getZ(o + j) - cz) * az) / m2;
+        if (t < 0) P.setX(o + j, P.getX(o + j) * (1 - (1 - f) * Math.min(1, -t)));
+      }
+    });
     crest = [1, 2, 3, 4, 5].map((k) => {
       const o = (rings - k) * SEG;
       return { y: P.getY(o + TOP) + body.position.y, z: P.getZ(o + TOP), w: Math.abs(P.getX(o)) };
