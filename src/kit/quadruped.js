@@ -903,3 +903,45 @@ export function makeQuadruped({
     },
   };
 }
+
+// AN EAR A SPECIES STATES ITSELF, as a closed shell in the frame of the skull
+// it stands on. The plan's own ear is a cone on an open ring, and a ring wide
+// enough to read as an ear overhangs any skull that narrows behind its cheeks
+// or falls away beside its crown: from in front the ear is then a flap hung
+// beside the head, with paper between its lower edge and the cheek, though
+// from the side nothing shows. No amount of sinking the cone cures that. The
+// base has to be stated point by point against the skull it is buried in —
+// its outer point in the widest part of the head at that station, so the
+// ear's outer edge comes up out of the head's own outline — and closed
+// underneath (`root`), so an ear that turns on its hinge and lifts a corner
+// of its base shows a solid and not a hole.
+//
+// `rings` run from the buried base ring up toward the tip, each the same
+// number of [x, y, z] points for the ear on +x, taken the same way round; a
+// ring between base and tip is what lets an edge bow, for a leaf rather than
+// a plain triangle. `mirror` builds the other ear. `matrix` carries the points
+// out of the skull's frame.
+export function earShell({ tip, rings, root }, { unit = 1, mirror = false, matrix = null } = {}) {
+  const n = rings[0].length;
+  const pts = [tip, root, ...rings.flat()].map(([x, y, z]) => new THREE.Vector3((mirror ? -x : x) * unit, y * unit, z * unit));
+  const idx = [];
+  const ringAt = (r, j) => 2 + r * n + (j % n);
+  for (let j = 0; j < n; j++) {
+    idx.push(1, ringAt(0, j), ringAt(0, j + 1));
+    for (let r = 0; r < rings.length - 1; r++) {
+      idx.push(ringAt(r, j), ringAt(r + 1, j), ringAt(r, j + 1), ringAt(r, j + 1), ringAt(r + 1, j), ringAt(r + 1, j + 1));
+    }
+    idx.push(0, ringAt(rings.length - 1, j + 1), ringAt(rings.length - 1, j));
+  }
+  // faces out: whichever way round the rings were stated, and for either ear
+  let vol = 0;
+  for (let i = 0; i < idx.length; i += 3) {
+    vol += pts[idx[i]].dot(new THREE.Vector3().crossVectors(pts[idx[i + 1]], pts[idx[i + 2]]));
+  }
+  if (vol < 0) for (let i = 0; i < idx.length; i += 3) { const t = idx[i + 1]; idx[i + 1] = idx[i + 2]; idx[i + 2] = t; }
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  geo.setIndex(idx);
+  if (matrix) geo.applyMatrix4(matrix);
+  geo.computeVertexNormals();
+  return geo;
+}

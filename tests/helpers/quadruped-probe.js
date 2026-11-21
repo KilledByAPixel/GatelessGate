@@ -153,3 +153,45 @@ export function legsJoinBody(root, label, ok, ground = 0.02) {
     ok(box.min.y < ground, `${label} leg reaches the ground: ${box.min.y.toFixed(4)}`);
   }
 }
+
+// One part out of a merged mesh: the triangles joined, corner to corner, to
+// the one holding `seed` (the first vertex `pick` accepts, e.g. an ear's tip
+// found as the highest point on its side). Corners are matched by position,
+// since a merge leaves no shared indices. `verts` are its distinct corners,
+// and `closed` says whether every edge is shared by exactly two triangles —
+// a solid, where an open-rooted cone leaves its base ring's edges with one.
+export function partOf(tris, seed) {
+  const key = (t, k) => `${t[3 * k].toFixed(5)},${t[3 * k + 1].toFixed(5)},${t[3 * k + 2].toFixed(5)}`;
+  const at = new Map();
+  tris.forEach((t, i) => { for (let k = 0; k < 3; k++) { const q = key(t, k); if (!at.has(q)) at.set(q, []); at.get(q).push(i); } });
+  const seen = new Set(), queue = [...(at.get(seed) || [])];
+  while (queue.length) {
+    const i = queue.pop();
+    if (seen.has(i)) continue;
+    seen.add(i);
+    for (let k = 0; k < 3; k++) for (const j of at.get(key(tris[i], k))) if (!seen.has(j)) queue.push(j);
+  }
+  const part = [...seen].map((i) => tris[i]);
+  const verts = new Map(), edges = new Map();
+  for (const t of part) {
+    for (let k = 0; k < 3; k++) {
+      const a = key(t, k), b = key(t, (k + 1) % 3);
+      verts.set(a, { x: t[3 * k], y: t[3 * k + 1], z: t[3 * k + 2] });
+      const e = a < b ? `${a}|${b}` : `${b}|${a}`;
+      edges.set(e, (edges.get(e) || 0) + 1);
+    }
+  }
+  return { tris: part, verts: [...verts.values()], closed: part.length > 0 && [...edges.values()].every((n) => n === 2) };
+}
+
+// the key `partOf` wants for the corner of `tris` that scores highest
+export function cornerKey(tris, score) {
+  let best = -Infinity, out = null;
+  for (const t of tris) {
+    for (let k = 0; k < 3; k++) {
+      const s = score(t[3 * k], t[3 * k + 1], t[3 * k + 2]);
+      if (s > best) { best = s; out = `${t[3 * k].toFixed(5)},${t[3 * k + 1].toFixed(5)},${t[3 * k + 2].toFixed(5)}`; }
+    }
+  }
+  return out;
+}
