@@ -398,24 +398,42 @@ test('a seated front leg is an arm: a plumb column that opens both ways into the
       }
       return bx;
     };
-    assert.ok(foremostX(0.55) < foremostX(0.3) - 0.04, `the front line stays out at ${foremostX(0.55).toFixed(3)} over a column at ${foremostX(0.3).toFixed(3)}`);
+    assert.ok(foremostX(0.4) < foremostX(0.3) - 0.04, `the front line stays out at ${foremostX(0.4).toFixed(3)} over a column at ${foremostX(0.3).toFixed(3)}`);
 
     // Above the elbow the leg is INSIDE the chest, every vertex of it: the
     // shoulder is the chest's own surface swelling over the arm, so there is
     // no shell lying on the flank to show a top, an end face or a shadow
     // line down its back. A relief laid on the chest read as a tab stuck on.
+    // At the elbow it meets the chest on a SEAM: the outer and front
+    // vertices of that ring lie just under the skin, on both sides of the
+    // animal, so the column's faces run into the chest's at its vertices —
+    // crossing it anywhere else, at the glancing angle a column meets a
+    // rounded chest, draws a pointed cap.
     leg.updateWorldMatrix(true, false);
     const p = leg.geometry.getAttribute('position');
     const v = new THREE.Vector3();
-    let above = 0;
+    const side = Math.sign(leg.getWorldPosition(new THREE.Vector3()).x);
+    let above = 0, seam = 0;
     for (let i = 0; i < p.count; i++) {
       v.fromBufferAttribute(p, i).applyMatrix4(leg.matrixWorld);
+      if (v.y > 0.415 && v.y < 0.435 && v.z > -0.01 && (Math.abs(v.x) > 0.1 || v.z > 0.19)) {
+        seam++;
+        assert.ok(inside(body, v), `the seam stands out of the chest at (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`);
+        const w = v.clone();
+        w.x += side * 0.02;
+        if (Math.abs(v.x) > 0.1) assert.ok(!inside(body, w), `the seam lies deep in the chest at (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`);
+      }
       if (v.y < 0.47) continue;
       above++;
       assert.ok(inside(body, v), `the arm stands out of the chest at (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`);
     }
-    assert.ok(above >= 24, `there is an upper arm to judge: ${above} points`);
+    assert.ok(above >= 24 && seam >= 3, `there is an upper arm to judge: ${above} points, ${seam} on the seam`);
   }
+  // From in front the chest comes DOWN between the legs: its lowest front
+  // line, at the midline, stands as far forward as the columns do at the
+  // height they enter it, so there is no flat underside showing over them.
+  const legFront = sectionZ(triangles(g, (o) => legs.includes(o)), 0.3).max;
+  assert.ok(sectionZ(body, 0.3).max > legFront - 0.01, `the chest's keel stands ${(legFront - sectionZ(body, 0.3).max).toFixed(3)} behind the legs at the elbow`);
   // and the chest DOES swell over it: over the upper arm the trunk stands
   // well outside the column the arm comes up as
   const arm = triangles(g, (o) => legs.includes(o));

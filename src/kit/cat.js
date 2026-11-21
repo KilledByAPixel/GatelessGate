@@ -46,8 +46,8 @@ import { hash1 } from '../util/noise.js';
 //     close the gap under the belly from the side.
 //   - THE FRONT LEGS ARE ARMS (see A SEATED FRONT LEG): a column plumb on
 //     both edges from a block of a paw to the elbow, the paws together,
-//     coming up from under a shoulder that is the chest's own swelling (see
-//     THE SHOULDER), not a piece laid on it.
+//     running into a chest that swells over it and comes down between the
+//     pair (see THE SHOULDER and THE SEAM), not a piece laid on it.
 //   - THE HEAD IS PLACED FOR THE POSE, NOT CARRIED OVER (see SIT_HEAD), and
 //     the pear's own last rings end inside it.
 //
@@ -160,21 +160,24 @@ const STAND = {
 // the front legs come down out of its line instead of standing ahead of it.
 // The last rows are the neck, as deep as the skull it ends in.
 //
-// THE SHOULDER is the pear's own surface. A row may carry two more numbers,
-// `swell` and `fore`: its two front-quarter vertices stand `swell` further out
-// and sit `fore` of the way along the half-axis toward the breast instead of
-// at the quarter. So over the upper arm the chest bulges out and forward, and
-// the leg comes up from under that bulge with no edge of its own. A shoulder
-// built as a shell lying on the chest — however low, however faded — showed
-// its top as a lit end face and its back edge as a dark line: a tab stuck on
-// the flank.
+// THE SHOULDER is the pear's own surface. A row may carry a sixth entry,
+// [x, z]: where its two front-quarter vertices stand, stated outright (they
+// slide along the ring to reach that z). Over the upper arm the chest bulges
+// out and forward, and the leg comes up into that bulge with no edge of its
+// own (see THE SEAM). A shoulder built as a shell lying on the chest —
+// however low, however faded — showed its top as a lit end face and its back
+// edge as a dark line: a tab stuck on the flank. And the chest comes DOWN
+// between the legs: the low rows' front points and quarters make a keel that
+// reaches as far forward as the columns, low, so from in front the breast is
+// a V between the arms. Left as the plain ellipse, the chest's underside was
+// a flat dark band over two posts.
 const PEAR = [
   [0.05, -0.475, 0.02, -0.12, 0.185],
   [0.17, -0.515, 0.13, 0.03, 0.235],
-  [0.32, -0.505, 0.28, 0.11, 0.24],
-  [0.46, -0.467, 0.42, 0.17, 0.23, 0.02, 0.85],
-  [0.6, -0.395, 0.53, 0.222, 0.21, 0.035, 0.85],
-  [0.715, -0.29, 0.64, 0.25, 0.19, 0.02, 0.8],
+  [0.32, -0.505, 0.26, 0.165, 0.24, [0.12, 0.12]],
+  [0.46, -0.467, 0.40, 0.2, 0.23, [0.155, 0.185]],
+  [0.6, -0.395, 0.53, 0.222, 0.21, [0.17, 0.19]],
+  [0.715, -0.29, 0.64, 0.25, 0.19, [0.16, 0.2]],
   [0.78, -0.15, 0.73, 0.24, 0.17],
   [0.9, -0.045, 0.81, 0.225, 0.142],
   [1.0, -0.002, 0.885, 0.215, 0.12],
@@ -203,7 +206,7 @@ const SIT_LEVEL = 1.0;      // how much of that the skull takes back out
 // it opens BOTH ways, like a column meeting a vault — forward and up under
 // the breast, back and up into the shoulder — and all of that opening is
 // INSIDE the chest: what shows is the chest's own swelling over it (see THE
-// SHOULDER) with the column coming out from under it at the elbow. A leg
+// SHOULDER) with the column running into it on a seam at the elbow. A leg
 // whose back line alone runs up and back across the ribs, with the front
 // straight up into the chest, is a wedge leaning back — a hind thigh stood at
 // the front of the animal.
@@ -232,13 +235,22 @@ const SIT_LEVEL = 1.0;      // how much of that the skull takes back out
 //     turn reaches the breast instead of stopping a hand's width behind it.
 //     It lies FORELEG_SINK lower than `proud`; at `proud` it is a ridge
 //     running up the breast as a needle.
+//
+// THE SEAM. The elbow ring's `proud` is 'seam': its outer and front vertices
+// are put just under the chest's skin (SEAM_SINK), read off whichever side of
+// the animal is narrower there. So the column's faces run INTO the chest's at
+// that ring and the rings above are wholly inside: the column's outer edge
+// carries on as the chest's side and its front turns in to the keel. A column
+// that simply goes on up into the chest crosses its surface at a glancing
+// angle wherever the facets happen to meet, and every crossing showed as a
+// pointed cap on top of a post.
 const FORELEG = [
   [0.64, 0.21, 0.75, -0.12, 0.03, 0.03, -0.05, 1],
   [0.58, 0.212, 0.71, -0.11, 0.045, 0.03, -0.04, 1, 0.95],
   [0.53, 0.198, 0.62, -0.06, 0.05, 0.03, -0.03, 1, 0.92],
   [0.485, 0.17, 0.5, -0.03, 0.054, 0.03, -0.02, 1, 0.88],
-  [0.425, 0.182, 0.425, -0.025, 0.056, 0.028, -0.01, 0.4, 0.8],
-  [0.32, 0.179, 0.32, 0.015, 0.054, 0.022, -0.004],
+  [0.425, 0.198, 0.425, -0.025, 0.056, 0.028, 'seam', 0, 0.8],
+  [0.32, 0.179, 0.32, 0.015, 0.054, 0.032, -0.004],
   [0.2, 0.177, 0.2, 0.03, 0.05, 0.012, 0.008],
   [0.09, 0.174, 0.09, 0.045, 0.046, 0],
   [0.055, 0.212, 0.055, 0.04, 0.052, 0],
@@ -249,6 +261,7 @@ const FORELEG_TOP = [0.76, 0.04];        // [y, z] apex closing the loft inside 
 const FORELEG_X = 0.06;                  // the paws' centre plane
 const FORELEG_MID = 0.012;               // nearer the midline than this, a tucked front end does not go
 const FORELEG_SINK = 0.012;              // how much lower than `proud` the front corner lies as it turns in
+const SEAM_SINK = 0.01;                  // how far under the skin a seam vertex lies; on it, the edges between stand out
 const FORELEG_JOIN = [0.55, 0.06];       // [y, z] of the mesh origin, inside the chest
 
 // THE HAUNCH is a boss on the flank: an egg lying on its side, half sunk in
@@ -528,17 +541,19 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     torso.updateMatrix();
     const toTorso = torso.matrix.clone().invert();
 
-    const stations = PEAR.map(([by, bz, fy, fz, w, swell = 0, fore = Math.SQRT1_2]) => {
+    const stations = PEAR.map(([by, bz, fy, fz, w, quarter]) => {
       const s = { c: [(by + fy) / 2 * h, (bz + fz) / 2 * h], a: [(by - fy) / 2 * h, (bz - fz) / 2 * h], w: w * h };
-      if (swell) {
-        // see THE SHOULDER: the two front quarters stand further out, and
-        // further forward
+      if (quarter) {
+        // see THE SHOULDER: the two front quarters stated outright, [x, z],
+        // and slid along the ring's half-axis to stand at that z
+        const [qx, qz] = quarter;
+        const D = Math.SQRT1_2;
+        const k = (qz - (bz + fz) / 2) / ((bz - fz) / 2);
         s.xs = [];
         for (let j = 0; j < 8; j++) s.xs.push(Math.cos((j / 8) * Math.PI * 2) * s.w);
-        s.xs[5] -= swell * h;
-        s.xs[7] += swell * h;
-        const D = Math.SQRT1_2;
-        s.sn = [0, D, 1, D, 0, -fore, -1, -fore];
+        s.xs[5] = -qx * h;
+        s.xs[7] = qx * h;
+        s.sn = [0, D, 1, D, 0, k, -1, k];
       }
       return s;
     });
@@ -570,8 +585,11 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
 
   // The trunk's half-width at a point of the side view: how far out a line
   // across the animal through (y, z) leaves it. -Infinity where it misses.
-  const flank = (y, z) => {
-    let out = -Infinity;
+  // `both` reads the narrower of the two sides: the loft's facets are not
+  // mirror images of each other, so a vertex placed on one side's skin can
+  // stand out of the other's.
+  const flank = (y, z, both = false) => {
+    let out = -Infinity, neg = -Infinity;
     for (let i = 0; i < index.count; i += 3) {
       const a = index.getX(i) * 3, b = index.getX(i + 1) * 3, c = index.getX(i + 2) * 3;
       const ay = pts[a + 1], az = pts[a + 2], by = pts[b + 1], bz = pts[b + 2], cy = pts[c + 1], cz = pts[c + 2];
@@ -580,9 +598,11 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
       const u = ((bz - cz) * (y - cy) + (cy - by) * (z - cz)) / d;
       const w = ((cz - az) * (y - cy) + (ay - cy) * (z - cz)) / d;
       if (u < 0 || w < 0 || u + w > 1) continue;
-      out = Math.max(out, u * pts[a] + w * pts[b] + (1 - u - w) * pts[c]);
+      const x = u * pts[a] + w * pts[b] + (1 - u - w) * pts[c];
+      out = Math.max(out, x);
+      neg = Math.max(neg, -x);
     }
-    return out;
+    return both ? Math.min(out, neg) : out;
   };
 
   if (seated) {
@@ -600,6 +620,17 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
       const ring = { c: [cy - oy, cz - oz], a: [ay, az], w: w * h, xs: [], sn: [0, fore, 1, D, 0, -D, -1, -D] };
       for (let j = 0; j < SEG; j++) ring.xs.push(Math.cos((j / SEG) * Math.PI * 2) * ring.w + out * h);
       if (proud === undefined) return ring;
+      if (proud === 'seam') {
+        // see THE SEAM: the outer and front vertices just under the skin
+        for (const [j, k] of [[0, 0], [1, fore], [7, -D], [2, 1]]) {
+          const at = flank(cy + k * ay, cz + k * az, true);
+          if (Number.isFinite(at)) ring.xs[j] = Math.max(at - SEAM_SINK * h, FORELEG_MID * h) - fx;
+        }
+        const back = flank(cy - ay, cz - az);
+        if (Number.isFinite(back)) ring.xs[6] = back - SHOULDER_TUCK * h - fx;
+        ring.xs[3] = Math.min(ring.xs[3], (ring.xs[2] + ring.xs[4]) / 2);
+        return ring;
+      }
       // see `proud`, `front` and `fore`. Vertex 0 is the outer one, the
       // quarters stand either side of it, 2 and 6 are the ring's fore and aft
       // ends; x here is measured from the leg's own plane, as ringLoft wants
