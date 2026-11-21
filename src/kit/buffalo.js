@@ -211,7 +211,7 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     height, color, seed,
     bodyR: 0.38, bodyLen: 0.48, bodyDrop: 0.40,
     torso: {
-      chest: 1.26, loin: 0.98, withers: 1.22, croup: 0.745, sag: BACK_SAG, round: 1,
+      chest: 1.26, loin: 0.98, withers: 1.22, croup: 0.745, sag: BACK_SAG, round: 1, slab: 0.85,
       shoulderW: 0.95, barrelW: 1.08, hipW: 0.92,
     },
     legBury: 0.2,
@@ -227,7 +227,14 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // a shallow hock: this animal plods. The shoulder mass is kept short
     // fore-and-aft: the breast closes into the neck just ahead of the front
     // legs, and a broad one stands out past it as a ledge on the brisket.
-    legs: { knee: 0.2, shoulder: 1.7, thigh: 3.4, cannon: 0.72, foot: 1.3, hindSet: 0.08 },
+    // The shoulder that shows is the chest's own side come down toward the
+    // leg (`torso.slab`), and the leg widens into it (`point`, `arm`). His
+    // stance is well inside a very wide chest, so the corner of that chest
+    // cannot stand over the leg as it does on the slimmer animals: the slab
+    // is left short of full, and the leg's buried ring is carried out toward
+    // the hide instead (`spread`), which is what keeps the chest from hanging
+    // over the leg as a skirt.
+    legs: { knee: 0.2, shoulder: 1.7, thigh: 3.4, cannon: 0.72, foot: 1.3, hindSet: 0.08, point: 0.6, arm: 1.2, spread: 1 },
     // Short, deep and nearly as wide as the skull it enters. Its end ring is
     // centred on the head's own centre and must stay INSIDE the skull there,
     // so `r` is bounded by the skull's section at its origin — fatten the

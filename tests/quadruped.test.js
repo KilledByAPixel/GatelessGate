@@ -781,3 +781,41 @@ test('neck.ease turns the back up into the nape without a notch', () => {
   assert.ok(Math.max(...eased.turns) < 0.7 * Math.max(...hard.turns),
     `...and its sharpest corner is ${Math.max(...eased.turns).toFixed(0)} degrees against ${Math.max(...hard.turns).toFixed(0)}`);
 });
+
+const SHOULDERED = STANDING.filter(([label]) => label !== 'cat');
+// How much a front leg must widen over the last fifth of its visible length.
+// Each bar stands between that animal's leg as built and the same leg as a
+// plain limb: a heavy forearm already spreads a little toward its elbow, so
+// one number for all four would be passed by the stoutest post.
+const FLARE = { dog: 1.5, fox: 1.35, horse: 1.3, buffalo: 1.22 };
+
+test('dog, fox, horse and buffalo: a front leg widens into a slab-sided chest whose corner stands over it', () => {
+  for (const [label, build] of SHOULDERED) {
+    const root = build();
+    const f = flare(root);
+    assert.ok(f.ratio > FLARE[label], `${label}: the leg leaves the chest ${f.ratio.toFixed(2)}x as broad as it is below`);
+    assert.ok(f.back > 0, `${label}: its rear line leans back into the belly`);
+    // the chest at the shoulder: still most of its breadth low down
+    const { tris, body, z, belly } = frontLeg(root);
+    const zS = trunk(root).zFront - 1e-4;
+    const cut = sectionY(body, zS), mid = (cut.max + cut.min) / 2;
+    const kept = halfWidthAt(body, zS, mid - 0.6 * (mid - cut.min)) / halfWidthAt(body, zS, mid);
+    assert.ok(kept > 0.8, `${label}: the chest keeps ${kept.toFixed(2)} of its breadth down toward the leg`);
+    // ...and that side neither hangs far out past the leg nor stands inside it
+    const height = new THREE.Box3().setFromObject(root).max.y;
+    const corner = halfWidthAt(body, z, belly + 0.03 * height);
+    const legOut = halfWidthAt(tris, z, belly - 0.02 * height);
+    assert.ok(legOut > 0 && corner - legOut < 0.05 * height && legOut - corner < 0.03 * height,
+      `${label}: chest side ${(corner / height).toFixed(3)} against the outer side of the leg ${(legOut / height).toFixed(3)} (x height)`);
+  }
+});
+
+test('dog, fox and horse: the topline runs back, withers, nape with no notch and no sharp corner', () => {
+  for (const [label, build] of SHOULDERED.filter(([l]) => l !== 'buffalo')) {
+    const { tops, turns } = toplineTurns(build());
+    for (let i = 1; i < tops.length; i++) {
+      assert.ok(tops[i][0] > tops[i - 1][0], `${label}: the line climbs all the way from the withers (section ${i})`);
+    }
+    assert.ok(Math.max(...turns) < 40, `${label}: sharpest corner ${Math.max(...turns).toFixed(0)} degrees`);
+  }
+});
