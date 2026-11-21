@@ -153,7 +153,7 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     height, color, seed,
     bodyR: 0.18, bodyLen: 0.59, bodyDrop: 0.055,
     torso: {
-      chest: 1.18, loin: 0.8, withers: 1.28, back: 1.05, croup: 1.06, round: 1, slab: 1, barrel: 1, girth: 0.16, keel: 1,
+      chest: 1.18, loin: 0.8, withers: 1.28, back: 1.05, croup: 1.06, round: 1, slab: 1, barrel: 1, girth: 0.16, keel: 1, haunch: 0.8,
       shoulderW: 1.0, barrelW: 1.14, hipW: 1.06,
     },
     legBury: 0.18,
@@ -170,6 +170,13 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     // stood further out, the thigh's cap also breaks the flank as a dark dart
     // at the hip. A foot longer than the cannon is thick: a hoof, not a paw,
     // but a definite block.
+    //
+    // THE HAUNCH IS THE TRUNK'S (`torso.haunch`): the trunk hangs down over
+    // each hind leg toward the stifle, so the thigh is the body's own surface
+    // from the croup down and only the gaskin leaves it. A thigh hung under
+    // the belly line showed its top as a pale plate under the trunk's dark
+    // underside, with a step at the rump; and it is not stood out of the
+    // flank (`proud`), or it breaks out through the side of the haunch.
     //
     // THE FOREARM IS AN ARM, NOT A THIGH: a slim column, a little broader
     // than the cannon and near one width from the knee to the elbow, both

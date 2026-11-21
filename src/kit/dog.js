@@ -164,7 +164,7 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // widths he was a plank on edge with his legs pressed together. The stance
     // (hipX) is bounded by the hips: set wider than this the hind leg's top
     // ring stands out of the rump as a shelf.
-    torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92, round: 1, slab: 1, barrel: 1, girth: 0.16, keel: 1, shoulderW: 1.0, barrelW: 1.08, hipW: 1.02 },
+    torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92, round: 1, slab: 1, barrel: 1, girth: 0.16, keel: 1, haunch: 0.9, shoulderW: 1.0, barrelW: 1.08, hipW: 1.02 },
     legBury: 0.16,
     legH: 0.46, legR: 0.066, legTaper: 0.8, hipX: 0.11, hipZ: 0.30,
     // The legs stand under the two ends of the trunk rather than under its
@@ -198,7 +198,14 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // his height up (`hock`), over a cannon that is nearly upright (`rake`):
     // the hock is the point behind him, with the back of the leg dipping
     // forward above it to the buttock.
-    legs: { knee: 0.48, shoulder: 3.6, thigh: 3.4, foot: 1.45, frontSet: 0.06, hindSet: 0.1, point: 0.7, flare: 0.8, drop: 0.3, elbow: 1.2, wrist: 0.45, hock: 0.6, rake: 0.12 },
+    //
+    // THE HAUNCH IS THE TRUNK'S (`torso.haunch`): the trunk hangs down over
+    // each hind leg toward the stifle, so the thigh is the body's own surface
+    // from the croup down and only the gaskin leaves it. A thigh hung under
+    // the belly line showed its top as a pale plate under the trunk's dark
+    // underside, with a step at the rump; and it is not stood out of the
+    // flank (`proud`), or it breaks out through the side of the haunch.
+    legs: { knee: 0.48, shoulder: 3.6, thigh: 3.4, proud: 0, foot: 1.45, frontSet: 0.06, hindSet: 0.1, point: 0.7, flare: 0.8, drop: 0.3, elbow: 1.2, wrist: 0.45, hock: 0.6, rake: 0.12 },
     // the neck's end has to fit inside the skull it enters, turned or not.
     // The head is carried high on a neck that stands steeply, so the back has
     // a long way to turn to become the nape: `ease` and `easeUp` split that

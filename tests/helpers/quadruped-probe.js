@@ -262,3 +262,28 @@ export function undersideTurn(tris, z, n = 40, run = 4) {
   for (let i = 0; i + run < dir.length; i++) worst = Math.max(worst, Math.abs(dir[i + run] - dir[i]) * 180 / Math.PI);
   return worst;
 }
+
+// The trunk's own centreline where the plane z = const cuts it: the top and
+// the bottom of the section at x = 0. A trunk that hangs a haunch over each
+// hind leg (`torso.haunch`) is deeper there at the sides than down its
+// middle, and `sectionY` reads the haunch; the back and the belly line are
+// read here.
+export function keelSection(tris, z) {
+  let min = Infinity, max = -Infinity;
+  for (const t of tris) {
+    const pts = [];
+    for (let e = 0; e < 3; e++) {
+      const a = e * 3, b = ((e + 1) % 3) * 3;
+      const za = t[a + 2], zb = t[b + 2];
+      if ((za - z) * (zb - z) > 0 || za === zb) continue;
+      const k = (z - za) / (zb - za);
+      pts.push([t[a] + (t[b] - t[a]) * k, t[a + 1] + (t[b + 1] - t[a + 1]) * k]);
+    }
+    if (pts.length < 2) continue;
+    const [p, q] = pts;
+    if (p[0] * q[0] > 0 || p[0] === q[0]) continue;
+    const y = p[1] + (q[1] - p[1]) * ((0 - p[0]) / (q[0] - p[0]));
+    min = Math.min(min, y); max = Math.max(max, y);
+  }
+  return { min, max, depth: max - min };
+}

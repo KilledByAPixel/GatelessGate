@@ -131,7 +131,7 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     // Narrow, but not a blade: from the front the chest is a little over a
     // quarter of the animal's height across, and the legs stand under its
     // sides with a gap between them.
-    torso: { chest: 1.35, loin: 0.62, withers: 1.0, back: 0.92, croup: 1.0, slab: 1, barrel: 0.7, girth: 0.16, keel: 1, shoulderW: 0.86, barrelW: 0.97, hipW: 0.86 },
+    torso: { chest: 1.35, loin: 0.62, withers: 1.0, back: 0.92, croup: 1.0, slab: 1, barrel: 0.7, girth: 0.16, keel: 1, haunch: 1.3, shoulderW: 0.86, barrelW: 0.97, hipW: 0.86 },
     legBury: .16,
     // FINE LIMBS. A fox's front leg is under a fifth of its chest's depth
     // below the knee, and the forearm over it is a slim column (`elbow`) that
@@ -143,8 +143,15 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     // own side come down to the leg (`torso.slab`). The leg stands forward
     // under the breast (`frontSet`): further back, the chest jutted ahead of
     // it as a keel with the leg's front line meeting it in a notch.
+    //
+    // THE HAUNCH IS THE TRUNK'S (`torso.haunch`): the trunk hangs down over
+    // each hind leg toward the stifle, so the thigh is the body's own surface
+    // from the croup down and only the gaskin leaves it. A thigh hung under
+    // the belly line showed its top as a pale plate under the trunk's dark
+    // underside, with a step at the rump; and it is not stood out of the
+    // flank (`proud`), or it breaks out through the side of the haunch.
     legH: LEG_H, legR: 0.047, legTaper: 0.76, hipX: 0.08, hipZ: 0.31,
-    legs: { knee: KNEE, shoulder: 3.6, thigh: 3.7, foot: 1.5, hindSet: 0.09, frontSet: 0.07, point: 0.5, flare: 0.9, drop: 0.45, elbow: 1.3, rake: 0.15 },
+    legs: { knee: KNEE, shoulder: 3.6, thigh: 3.7, proud: 0, foot: 1.5, hindSet: 0.09, frontSet: 0.07, point: 0.5, flare: 0.9, drop: 0.45, elbow: 1.3, rake: 0.15 },
     // A ruff, not a stalk: the throat starts low on the chest, the nape leaves
     // the back early, and the taper spends little of that on the way up. Its
     // end still has to fit inside the skull it enters, turned or not. `ease`

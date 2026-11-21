@@ -7,7 +7,7 @@ import { makeFox } from '../src/kit/fox.js';
 import { makeBuffalo } from '../src/kit/buffalo.js';
 import { makeHorse } from '../src/kit/horse.js';
 import { makeCat } from '../src/kit/cat.js';
-import { triangles, sectionY, sectionZ, legClouds, trunk, legsJoinBody, inside, foreleg, undersideTurn } from './helpers/quadruped-probe.js';
+import { triangles, sectionY, sectionZ, legClouds, trunk, legsJoinBody, inside, foreleg, undersideTurn, keelSection } from './helpers/quadruped-probe.js';
 
 const names = (g) => g.children.map((c) => c.name).sort();
 
@@ -306,7 +306,8 @@ function third(body, z0, z1) {
   let depth = 0, low = Infinity;
   const N = 9;
   for (let i = 0; i < N; i++) {
-    const s = sectionY(body, z0 + (z1 - z0) * ((i + 0.5) / N));
+    // down the middle: a haunch over the hind legs is the thigh, not the loin
+    const s = keelSection(body, z0 + (z1 - z0) * ((i + 0.5) / N));
     depth += s.depth / N;
     low = Math.min(low, s.min);
   }
@@ -582,9 +583,13 @@ test('the thigh is a broad wedge that reaches back to the end of the rump', () =
     for (const leg of root.children.filter((o) => o.name === 'leg' && o.position.z < 0)) {
       const tris = triangles(root, (o) => o === leg);
       const run = leg.position.y;
-      // just under the trunk, where the limb has left it
-      const under = sectionY(body, leg.position.z).min;
-      const thigh = sectionZ(tris, under - 0.03 * run);
+      // just under the trunk's belly line, where the limb has left it — or
+      // where the trunk's own haunch is carrying it (`torso.haunch`), so the
+      // haunch is counted with the leg
+      const under = keelSection(body, leg.position.z).min;
+      const zMid = (trunk(root).zHind + trunk(root).zFront) / 2;
+      const haunch = body.filter((t) => t[2] < zMid && t[5] < zMid && t[8] < zMid);
+      const thigh = sectionZ([...tris, ...haunch], under - 0.03 * run);
       assert.ok(thigh.depth > 0.27 * run,
         `${label}: the thigh is ${(thigh.depth / run * 100).toFixed(1)}% of the leg's run fore and aft`);
       assert.ok(thigh.min - rumpEnd < 0.07 * run,
@@ -670,11 +675,11 @@ test('dog, horse and buffalo end in a round rump, not a box', () => {
     const body = triangles(root, (o) => o === mesh);
     const box = new THREE.Box3().setFromObject(mesh, true);
     const { zHind } = trunk(root);
-    const hip = sectionY(body, zHind);
-    const end = sectionY(body, box.min.z + 0.01 * (zHind - box.min.z));
+    const hip = keelSection(body, zHind);
+    const end = keelSection(body, box.min.z + 0.01 * (zHind - box.min.z));
     const endUp = ((end.max + end.min) / 2 - hip.min) / hip.depth;
     assert.ok(endUp < 0.42, `${label}: the rump's end stands ${endUp.toFixed(2)} of the way up the hip`);
-    const late = sectionY(body, zHind + 0.9 * (box.min.z - zHind));
+    const late = keelSection(body, zHind + 0.9 * (box.min.z - zHind));
     const fallen = (hip.max - late.max) / hip.depth;
     assert.ok(fallen > 0.2,
       `${label}: a corner — near the rump's end the topline has fallen only ${fallen.toFixed(2)} of the hip's depth`);
@@ -840,6 +845,45 @@ test('torso.keel turns the underside under on a curve, rump to breast, with no m
   assert.deepStrictEqual([ring(box).seg, ring(keel).seg], [8, 12], 'the ring says what it is');
   assert.ok(ring(keel).bot === ring(keel).top + ring(keel).seg / 2, 'and where its bottom point is');
   legsJoinBody(keel.group, 'keeled plan', assert.ok);
+});
+
+// THE HAUNCH IS THE TRUNK'S. A thigh hung under the belly line shows its top
+// as a pale plate under the trunk's dark underside, with a step where it
+// meets the rump; with `torso.haunch` the trunk itself hangs down over each
+// hind leg, below its own belly line down the middle, and the legs are where
+// they were.
+test('torso.haunch hangs the trunk down over the hind legs and moves no joint', () => {
+  const base = { height: 1, neck: {}, torso: { slab: 1, barrel: 1, girth: 0.16, round: 1, keel: 1, shoulderW: 1, barrelW: 1.05 }, legs: { point: 0.6, proud: 0 } };
+  const flat = makeQuadruped(base), hung = makeQuadruped({ ...base, torso: { ...base.torso, haunch: 0.8 } });
+  const bodyOf = (q) => triangles(q.group, (o) => o.name === 'body');
+  const legZ = flat.group.children.find((o) => o.name === 'leg' && o.position.z < 0).position.z;
+  const drop = (q) => keelSection(bodyOf(q), legZ).min - sectionY(bodyOf(q), legZ).min;
+  assert.ok(drop(flat) < 1e-6, `without it the trunk is deepest down its middle (${drop(flat).toFixed(3)})`);
+  assert.ok(drop(hung) > 0.4 * 0.8 * flat.plan.R, `with it the trunk hangs ${drop(hung).toFixed(3)} below its belly line over the leg`);
+  // the belly line itself, and the back, are where they were
+  for (const z of [legZ, 0, flat.plan.zShoulder - 1e-4]) {
+    const a = keelSection(bodyOf(flat), z), b = keelSection(bodyOf(hung), z);
+    assert.ok(Math.abs(a.min - b.min) < 1e-9 && Math.abs(a.max - b.max) < 1e-9, `same centreline at z=${z.toFixed(2)}`);
+  }
+  // it comes in from nothing at the flank
+  const zF = flat.plan.zHip + 0.4 * (flat.plan.zShoulder - flat.plan.zHip);
+  assert.ok(Math.abs(sectionY(bodyOf(hung), zF).min - sectionY(bodyOf(flat), zF).min) < 1e-9, 'not at the flank');
+  // no joint moves: the hind legs hang from the same points
+  const joints = (q) => q.group.children.filter((o) => o.name === 'leg').map((o) => o.position.toArray().map((v) => v.toFixed(6)).join());
+  assert.deepStrictEqual(joints(hung), joints(flat));
+  assert.strictEqual(hung.group.children.length, flat.group.children.length, 'no more meshes');
+  legsJoinBody(hung.group, 'haunched plan', assert.ok);
+});
+
+// ...and dog, fox and horse carry one
+test('dog, fox and horse: the thigh is the haunch of the trunk, down toward the stifle', () => {
+  for (const [label, build] of STANDING.filter(([l]) => ['dog', 'fox', 'horse'].includes(l))) {
+    const root = build();
+    const body = triangles(root, (o) => o.name === 'body');
+    const leg = root.children.find((o) => o.name === 'leg' && o.position.z < 0);
+    const hang = (keelSection(body, leg.position.z).min - sectionY(body, leg.position.z).min) / leg.position.y;
+    assert.ok(hang > 0.08, `${label}: the trunk hangs only ${hang.toFixed(3)} of the leg's run below its belly line over the thigh`);
+  }
 });
 
 test('legs.point stands the forearm as a column that flares both ways into the chest', () => {

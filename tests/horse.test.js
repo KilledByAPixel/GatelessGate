@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../lib/three.module.js';
 import { makeHorse } from '../src/kit/horse.js';
-import { triangles, sectionY, sectionZ, inside, partOf, cornerKey } from './helpers/quadruped-probe.js';
+import { triangles, sectionY, sectionZ, inside, partOf, cornerKey, keelSection } from './helpers/quadruped-probe.js';
 
 // Pins the silhouette events that make it a HORSE and not a llama, measured
 // from the meshes themselves wherever a mesh can answer, so a regression in
@@ -135,9 +135,10 @@ test('deep chest, tucked flank, withers over the back', () => {
   const { plan } = horse;
   const body = bodyOf(horse.group);
   const span = plan.zShoulder - plan.zHip;
-  const chest = sectionY(body, plan.zShoulder - 0.05 * span);
-  const flank = sectionY(body, plan.zHip + 0.3 * span);
-  const mid = sectionY(body, plan.zHip + 0.6 * span);
+  // down the middle: the haunch over the hind legs is the thigh, not the flank
+  const chest = keelSection(body, plan.zShoulder - 0.05 * span);
+  const flank = keelSection(body, plan.zHip + 0.3 * span);
+  const mid = keelSection(body, plan.zHip + 0.6 * span);
   assert.ok(chest.depth > flank.depth * 1.25,
     `chest ${chest.depth.toFixed(3)} is well deeper than the flank ${flank.depth.toFixed(3)}`);
   assert.ok(flank.min > chest.min + 0.15 * chest.depth,

@@ -7,7 +7,7 @@ import { makeTail } from './tail.js';
 // number here is in the units its option is documented in beside the builder.
 const TORSO_DEFAULTS = {
   chest: 1.1, loin: 0.72, withers: 1.0, back: 0.9, croup: 0.94, rump: 1, round: 0, sag: null,
-  shoulderW: 0.8, barrelW: 0.95, hipW: 0.85, slab: 0, barrel: 0, girth: null, keel: null,
+  shoulderW: 0.8, barrelW: 0.95, hipW: 0.85, slab: 0, barrel: 0, girth: null, keel: null, haunch: 0,
 };
 // THE SLAB-SIDED CHEST (`torso.slab`). SLAB_Y is how far down a fully slabbed
 // section's two lower corners stand, x its half-depth (round, they stand on
@@ -36,6 +36,12 @@ const KEEL_SLAB = [[1, 0.7], [0.75, 0.86], [0.38, 0.96]];
 // How far from the flank's depth to the brisket's a keeled underline has come
 // at the middle of the barrel: a straight chord there is under half.
 const KEEL_SWEEP = 0.5;
+// THE HAUNCH (`torso.haunch`): how much of its drop each of a keeled
+// section's three lower corners takes, side to keel — most at the one over
+// the leg, so the keel between the hind legs stays where it was — and how
+// much of it each section behind the hip takes, the rump's end first.
+const HAUNCH_DROP = [0.6, 1, 0.75];
+const HAUNCH_ROUND = [0.3, 0.75, 1], HAUNCH_BLUNT = [0.45, 1], HAUNCH_HIP = 0.7;
 // THE ROUND OF A RUMP (`torso.round`), as the three sections it is drawn
 // with behind the hip: [how far along the overhang, how deep the underside
 // still is (x loin), half-width (x hipW)], from the end forward. The topline
@@ -176,6 +182,9 @@ const LEAN_MAX = 1;
 //   keel       null keeps one lower corner a side. A number turns the
 //              underside under on a curve, rump to breast, and sweeps the
 //              underline up from the brisket (see THE UNDERSIDE IS A KEEL)
+//   haunch     with a keel, how far below the underline the trunk hangs over
+//              the hind legs, x bodyR, so the thigh is the trunk's down to
+//              the stifle (see THE HAUNCH)
 //
 // The shoulder section stands over the front legs and the hip section over the
 // hind ones (`hipZ`), so `bodyLen` now only decides how far the breast and the
@@ -218,7 +227,7 @@ export function makeQuadruped({
   // trunk: bodyR is its half-depth and the unit every torso knob is in;
   // legH + bodyDrop is the height of its axis off the ground
   bodyR = 0.22, bodyLen = 0.72, bodyDrop = 0.16,
-  torso = null,          // { chest, loin, withers, back, croup, rump, round, sag, slab, barrel, girth, keel, shoulderW, barrelW, hipW } — see THE TORSO
+  torso = null,          // { chest, loin, withers, back, croup, rump, round, sag, slab, barrel, girth, keel, haunch, shoulderW, barrelW, hipW } — see THE TORSO
   // legs
   legH = 0.52, legR = 0.055, legTaper = 0.82, hipX = 0.13, hipZ = 0.32,
   legBury = 0.06,        // how far above the flank's underside the shoulder/thigh ring rides, x height
@@ -360,9 +369,11 @@ export function makeQuadruped({
       return b.map((v, k) => lerp(v, full[k], T.round));
     });
   }
+  // (the sixth entry is how much of `haunch` a row takes: see THE HAUNCH)
+  const HAUNCH_AT = rear.length === 3 ? HAUNCH_ROUND : HAUNCH_BLUNT;
   const rows = [
-    ...rear.map(([u, top, bot, w]) => [zHip - u * over, top, bot, w]),
-    [zHip + 0.08 * span, backAt(0.08, T.croup), -0.96 * T.loin, T.hipW],
+    ...rear.map(([u, top, bot, w], i) => [zHip - u * over, top, bot, w, 0, HAUNCH_AT[i]]),
+    [zHip + 0.08 * span, backAt(0.08, T.croup), -0.96 * T.loin, T.hipW, 0, HAUNCH_HIP],
     [zHip + 0.36 * span, backAt(0.36, lerp(T.croup, T.back, 0.8)), -T.loin, lerp(T.hipW, T.barrelW, 0.7)],
     // a keeled trunk's underline sweeps up from the brisket on a curve, not
     // a chord: one more section on it, its top and width on the lines either
@@ -451,15 +462,30 @@ export function makeQuadruped({
     return from.map((p, i) => p.map((v, k) => lerp(v, to[i][k], T.keel)));
   };
   // the ring a keeled section is drawn with, in the order the plain ring runs
-  const ringOf = (slab, round) => {
+  const ringOf = (slab, round, alter = (lo) => lo) => {
     const u = round ? roundK : upper || roundK;
-    const lo = lowerOf(slab, round);
+    const lo = alter(lowerOf(slab, round));
     return [[1, 0], [u[0], u[1]], [0, 1], [-u[0], u[1]], [-1, 0],
       ...lo.map(([x, y]) => [-x, -y]), [0, -1], ...lo.slice().reverse().map(([x, y]) => [x, -y])];
   };
-  const station = ([z, top, bot, w, slab]) => ({
+  // THE HAUNCH (`torso.haunch`). A thigh hung under the trunk from its belly
+  // line shows its upper face as a pale plate with the trunk's dark underside
+  // over it and a step where it meets the rump. The thigh is the body's own
+  // surface down to the stifle, and only the gaskin leaves it: so over the
+  // hind legs a keeled section hangs its lower corners that much further
+  // down, below the keel between them, and the haunch is the trunk's. It
+  // comes in from nothing at the flank (the fold running down to the
+  // stifle) and is spent toward the buttock (HAUNCH_ROUND), where the round
+  // of the rump takes over. The legs are still solved against the section
+  // without it, so a haunch moves no joint.
+  const haunchOf = (lo, top, bot, hw) => {
+    if (!T.haunch || !hw) return lo;
+    const d = T.haunch * hw / ((top - bot) / 2);
+    return lo.map(([x, y], i) => [x, y + HAUNCH_DROP[i] * d]);
+  };
+  const station = ([z, top, bot, w, slab, hw]) => ({
     c: [(top + bot) / 2 * R, z], a: [(top - bot) / 2 * R, 0], w: w * R, k: corner(slab), u: upper,
-    p: KEEL ? ringOf(slab) : undefined,
+    p: KEEL ? ringOf(slab, false, (lo) => haunchOf(lo, top, bot, hw)) : undefined,
   });
   const stations = rows.map(station);
   const rearApex = [yEnd * R, zHip - over];
