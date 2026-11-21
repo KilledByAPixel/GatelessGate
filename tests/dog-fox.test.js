@@ -86,14 +86,16 @@ test('the neck ends inside the skull, at rest and with the head turned', () => {
     const a = make();
     const body = a.group.getObjectByName('body');
     const p = body.geometry.getAttribute('position');
+    // the loft's own vertices come first; a species may hang more after them
+    const { seg, rings } = body.userData.ring, n = rings * seg + 2;
     for (const turn of [0, 0.5, -0.5]) {
       a.head.rotation.y = turn;
       a.group.updateMatrixWorld(true);
       const skull = triangles(a.group, (o) => o.name === 'head');
       // the loft ends: its last ring, the rump's apex, then the apex that
       // closes the neck — the rump's is the one vertex here that is not ours
-      for (let i = p.count - 10; i < p.count; i++) {
-        if (i === p.count - 2) continue;
+      for (let i = n - 1 - seg - 1; i < n; i++) {
+        if (i === n - 2) continue;
         const v = new THREE.Vector3().fromBufferAttribute(p, i).applyMatrix4(body.matrixWorld);
         assert.ok(inside(skull, v),
           `${label}: the neck's end shows outside the skull at a turn of ${turn} (vertex ${i})`);
@@ -446,4 +448,51 @@ test('a dog and a fox are told apart by ears, tail and carriage', () => {
   };
   const d = shape(dog), f = shape(fox);
   assert.ok(f.run > 1.25 * d.run, `length over height: fox ${f.run.toFixed(2)}, dog ${d.run.toFixed(2)}`);
+});
+
+// THE FOX'S THROAT IS HAIR. Drawn as the neck's own depth, the ruff made a
+// thick neck that came down to a point at the chest. The neck is slim, and the
+// ruff is a curtain of its own in the body's mesh, after the loft's vertices:
+// standing out ahead of the front line in a few points, and narrower than the
+// neck it grows from.
+test("the fox's throat is a slim neck with a ruff of hair down its front", () => {
+  const a = makeFox();
+  a.group.updateMatrixWorld(true);
+  const body = a.group.getObjectByName('body');
+  const { seg, rings } = body.userData.ring, n = rings * seg + 2;
+  const P = body.geometry.getAttribute('position'), ix = body.geometry.index.array;
+  const at = (i) => new THREE.Vector3().fromBufferAttribute(P, i).applyMatrix4(body.matrixWorld);
+  const loft = [];
+  for (let i = 0; i < ix.length; i += 3) {
+    if (ix[i] >= n || ix[i + 1] >= n || ix[i + 2] >= n) continue;
+    loft.push([0, 1, 2].flatMap((k) => at(ix[i + k]).toArray()));
+  }
+  const H = new THREE.Box3().setFromObject(a.group).max.y;
+  const legZ = a.group.children.find((o) => o.name === 'leg' && o.position.z > 0).position.z;
+  const headZ = a.head.getWorldPosition(new THREE.Vector3()).z;
+  const neck = sectionY(loft, (legZ + headZ) / 2).depth / H;
+  assert.ok(neck < 0.33, `the neck is ${neck.toFixed(3)}x the fox's height deep halfway to the head`);
+  // the ruff: the loft's front line at a height, and how far each of the
+  // ruff's corners stands ahead of it
+  const front = (y) => {
+    let z = -Infinity;
+    for (const t of loft) {
+      for (let e = 0; e < 3; e++) {
+        const p = e * 3, q = ((e + 1) % 3) * 3;
+        if ((t[p + 1] - y) * (t[q + 1] - y) > 0 || t[p + 1] === t[q + 1]) continue;
+        z = Math.max(z, t[p + 2] + (t[q + 2] - t[p + 2]) * ((y - t[p + 1]) / (t[q + 1] - t[p + 1])));
+      }
+    }
+    return z;
+  };
+  assert.ok(P.count > n, 'the ruff rides in the body mesh');
+  let out = 0, wide = 0;
+  for (let i = n; i < P.count; i++) {
+    const v = at(i);
+    if (v.z - front(v.y) > 0.02 * H) out++;
+    wide = Math.max(wide, Math.abs(v.x));
+  }
+  assert.ok(out >= 6, `${out} of its corners stand out ahead of the front line`);
+  const neckW = Math.max(...loft.flatMap((t) => [0, 3, 6].filter((k) => Math.abs(t[k + 2] - (legZ + headZ) / 2) < 0.05 * H).map((k) => Math.abs(t[k]))));
+  assert.ok(wide < neckW, `the ruff is ${(wide / H).toFixed(3)} across, the neck ${(neckW / H).toFixed(3)}`);
 });

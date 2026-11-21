@@ -782,8 +782,7 @@ function column(root, lo, hi) {
 function toplineTurns(root) {
   const body = root.children.find((c) => c.name === 'body');
   const P = body.geometry.getAttribute('position');
-  const { seg: SEG, top: TOP } = body.userData.ring;   // quadruped.js, A PROFILE LOFT
-  const rings = (P.count - 2) / SEG;
+  const { seg: SEG, top: TOP, rings } = body.userData.ring;   // quadruped.js, A PROFILE LOFT
   const zFront = trunk(root).zFront;
   let sh = 0;
   while (sh < rings - 1 && P.getZ(sh * SEG + TOP) < zFront - 1e-6) sh++;

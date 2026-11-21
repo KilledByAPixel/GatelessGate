@@ -421,9 +421,8 @@ test('the mane is hair on the neck: proud of the crest, narrower than it, steppe
   const withers = withersOf(horse);
   const body = find(horse.group, 'body')[0];
   const p = body.geometry.getAttribute('position');
-  const { seg: SEG, top: TOP } = body.userData.ring;   // quadruped.js, A PROFILE LOFT
-  const rings = (p.count - 2) / SEG;
-  assert.ok(Number.isInteger(rings) && rings >= 6, 'the body is still a ring loft with two apexes');
+  const { seg: SEG, top: TOP, rings } = body.userData.ring;   // quadruped.js, A PROFILE LOFT
+  assert.ok(p.count === rings * SEG + 2 && rings >= 6, 'the body is still a ring loft with two apexes');
   // the neck's own crest, poll back to withers: [y, z, half-width]
   const crest = [1, 2, 3, 4].map((k) => {
     const o = (rings - k) * SEG;

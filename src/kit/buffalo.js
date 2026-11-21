@@ -1,6 +1,6 @@
 import * as THREE from '../../lib/three.module.js';
 import { WASH } from '../palette.js';
-import { makeQuadruped } from './quadruped.js';
+import { trianglesOf, under, makeQuadruped } from './quadruped.js';
 import { mergeSimple } from './scatter.js';
 
 // A water buffalo (case 38): the shared body plan, run heavy. What carries the
@@ -156,32 +156,6 @@ const FUR_GAP = 0.035;            // how far ahead of the front leg the curtain 
 const FUR_W = [0.11, 0.06];      // half-width at its foot, on the brisket and under the chin, x height
 const FUR_EDGE = 0.15;           // ...and how much of that is left along its lower edge
 const FUR_SINK = 0.03;           // how far its foot is buried in what it hangs from, x height
-
-// The underside of a set of triangles over one spot: the lowest point at
-// which the plumb line through (x, z) meets any of them.
-function under(tris, x, z) {
-  let low = Infinity;
-  for (const [a, b, c] of tris) {
-    const d = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z);
-    if (Math.abs(d) < 1e-12) continue;
-    const u = ((b.z - c.z) * (x - c.x) + (c.x - b.x) * (z - c.z)) / d;
-    const v = ((c.z - a.z) * (x - c.x) + (a.x - c.x) * (z - c.z)) / d;
-    if (u < 0 || v < 0 || u + v > 1) continue;
-    low = Math.min(low, u * a.y + v * b.y + (1 - u - v) * c.y);
-  }
-  return low;
-}
-
-// a mesh's triangles in its parent's frame
-function trianglesOf(mesh) {
-  mesh.updateMatrix();
-  const p = mesh.geometry.getAttribute('position'), idx = mesh.geometry.index;
-  const n = idx ? idx.count : p.count, out = [];
-  for (let i = 0; i < n; i += 3) {
-    out.push([0, 1, 2].map((k) => new THREE.Vector3().fromBufferAttribute(p, idx ? idx.getX(i + k) : i + k).applyMatrix4(mesh.matrix)));
-  }
-  return out;
-}
 
 // A closed tube along a path of [x, y, z, r]. Each ring stands square to the
 // path and is an ellipse: `r` across the path in the horizontal, `r * thick`

@@ -562,9 +562,11 @@ export function makeQuadruped({
 
   const body = new THREE.Mesh(profileLoft(stations, SEG, rearApex, frontApex), mat);
   body.name = 'body';
-  // the ring it is lofted from: how many vertices to a section, and which of
-  // them is the top point and which the bottom one
-  body.userData.ring = { seg: SEG, top: 2, bot: KEEL ? 2 + SEG / 2 : 6 };
+  // the ring it is lofted from: how many vertices to a section, which of them
+  // is the top point and which the bottom one, and how many sections there
+  // are — the loft's vertices come first, so a species may append its own
+  // after them and leave these counts true
+  body.userData.ring = { seg: SEG, top: 2, bot: KEEL ? 2 + SEG / 2 : 6, rings: stations.length };
   // the mesh stands on the body's axis with no rotation of its own: local y is
   // up and local z is forward, so a species may scale x and y to breathe
   body.position.set(0, bodyY, 0);
@@ -1147,9 +1149,52 @@ export function makeQuadruped({
       topAt: (z) => bodyY + sectionAt(z).top,   // the back line, rump to shoulder
       bellyAt: (z) => bodyY + sectionAt(z).bot, // and the underline
       neck: neckPlan,                           // { root, end: [y, z], rootDepth, endDepth } or null
-      ring: body.userData.ring,                 // { seg, top, bot }: see the body's own
+      ring: body.userData.ring,                 // { seg, top, bot, rings }: see the body's own
     },
   };
+}
+
+// A mesh's triangles in its parent's frame, each three Vector3s: for a
+// species that hangs something of its own off what the plan built.
+export function trianglesOf(mesh) {
+  mesh.updateMatrix();
+  const p = mesh.geometry.getAttribute('position'), idx = mesh.geometry.index;
+  const n = idx ? idx.count : p.count, out = [];
+  for (let i = 0; i < n; i += 3) {
+    out.push([0, 1, 2].map((k) => new THREE.Vector3().fromBufferAttribute(p, idx ? idx.getX(i + k) : i + k).applyMatrix4(mesh.matrix)));
+  }
+  return out;
+}
+
+// The underside of a set of such triangles over one spot: the lowest point at
+// which the plumb line through (x, z) meets any of them (Infinity if none).
+export function under(tris, x, z) {
+  let low = Infinity;
+  for (const [a, b, c] of tris) {
+    const d = (b.z - c.z) * (a.x - c.x) + (c.x - b.x) * (a.z - c.z);
+    if (Math.abs(d) < 1e-12) continue;
+    const u = ((b.z - c.z) * (x - c.x) + (c.x - b.x) * (z - c.z)) / d;
+    const v = ((c.z - a.z) * (x - c.x) + (a.x - c.x) * (z - c.z)) / d;
+    if (u < 0 || v < 0 || u + v > 1) continue;
+    low = Math.min(low, u * a.y + v * b.y + (1 - u - v) * c.y);
+  }
+  return low;
+}
+
+// ...and the front of them at one height: the furthest point forward at which
+// the line through (x, y) running fore and aft meets any of them (-Infinity
+// if none).
+export function ahead(tris, x, y) {
+  let front = -Infinity;
+  for (const [a, b, c] of tris) {
+    const d = (b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y);
+    if (Math.abs(d) < 1e-12) continue;
+    const u = ((b.y - c.y) * (x - c.x) + (c.x - b.x) * (y - c.y)) / d;
+    const v = ((c.y - a.y) * (x - c.x) + (a.x - c.x) * (y - c.y)) / d;
+    if (u < 0 || v < 0 || u + v > 1) continue;
+    front = Math.max(front, u * a.z + v * b.z + (1 - u - v) * c.z);
+  }
+  return front;
 }
 
 // AN EAR A SPECIES STATES ITSELF, as a closed shell in the frame of the skull

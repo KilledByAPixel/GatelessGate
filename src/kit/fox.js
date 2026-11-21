@@ -1,7 +1,7 @@
 import * as THREE from '../../lib/three.module.js';
 import { INK_LIT } from '../palette.js';
 import { hash1, noise1 } from '../util/noise.js';
-import { makeQuadruped, earShell } from './quadruped.js';
+import { makeQuadruped, earShell, trianglesOf, under, ahead } from './quadruped.js';
 import { skullGeometry } from './skull.js';
 
 // Hyakujo's fox (case 2): the dog's body plan run slim and low. Three things
@@ -18,8 +18,8 @@ import { skullGeometry } from './skull.js';
 //      The ears are most of the head's outline: taller than the skull is
 //      deep, and BROAD at the base from the side as well as the front. Tall
 //      and thin they were a hare's, or a pair of horns. The neck under it is
-//      a ruff: thick the whole way up, so the head sits on the chest's own
-//      mass rather than on a stalk.
+//      slim, with a ruff of hair down its front (THE RUFF), so the head sits
+//      over the chest's own mass rather than on a stalk or a column.
 //   3. THE BRUSH. A fox is mostly tail, and the brush is the biggest single
 //      shape on it. It leaves the rump level with the back and falls away
 //      behind in one arc, swelling through its middle to about the depth of
@@ -109,6 +109,30 @@ const EAR = {
   hinge: [0.07, 0.035, -0.01],
 };
 
+// THE RUFF: hair under the throat and down the front of the chest. Drawn as
+// the neck's own depth it made a thick neck that came down to a point at the
+// chest; so the neck is slim, and the ruff is a curtain of its own laid down
+// the front line from under the jaw to the chest ahead of the front legs,
+// narrower than the neck it grows from and narrowing again to its outer
+// edge, which is a few soft points — the buffalo's beard, smaller and
+// gentler. The front line there is steep, so it stands out forward of it and
+// falls a little, rather than hanging plumb, which on a steep throat goes
+// nowhere. It fills the corner between the throat and the breast, so the
+// front line runs from the chin down to the chest in one slope.
+//
+// Its outer edge, chest to jaw: [where along that run (by height), how far
+// the edge stands out ahead of the front line there (x height)]. The two ends
+// are drawn into the body.
+const RUFF = [
+  [0.0, -1], [0.1, 0.04], [0.2, 0.06], [0.3, 0.042], [0.41, 0.058], [0.53, 0.036], [0.67, 0.03], [0.83, 0.02], [1.0, -1],
+];
+const RUFF_LOW = 0.02;           // how far over the front leg's top it starts, x height
+const RUFF_HIGH = 0.04;          // how far under the head's hinge it ends, x height
+const RUFF_W = [0.045, 0.03];    // half-width at its foot, on the chest and under the jaw, x height
+const RUFF_EDGE = 0.35;          // ...and how much of that is left along its outer edge
+const RUFF_SINK = 0.012;         // how far its foot is buried behind the front line, x height
+const RUFF_FALL = 1.2;           // how far its points fall, x how far they stand out
+
 const STIR = 2.4;                        // seconds for one whole response
 
 // A deep fold at the hock: a fox stands crouched over its hind legs, and the
@@ -152,12 +176,15 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     // flank (`proud`), or it breaks out through the side of the haunch.
     legH: LEG_H, legR: 0.047, legTaper: 0.76, hipX: 0.08, hipZ: 0.31,
     legs: { knee: KNEE, shoulder: 3.6, thigh: 3.7, proud: 0, foot: 1.5, hindSet: 0.09, frontSet: 0.07, point: 0.5, flare: 0.9, drop: 0.45, elbow: 1.3, rake: 0.15 },
-    // A ruff, not a stalk: the throat starts low on the chest, the nape leaves
-    // the back early, and the taper spends little of that on the way up. Its
-    // end still has to fit inside the skull it enters, turned or not. `ease`
+    // A SLIM NECK, with the ruff hung on it as hair (see THE RUFF). The
+    // throat leaves the breast well up the chest (`root`) and the neck spends
+    // its depth early (`taper`): drawn as a deep neck from a low breast, the
+    // ruff was neck, thick all the way up and coming down to a point at the
+    // chest, with a short step where the chest met the front leg. Its end
+    // still has to fit inside the skull it enters, turned or not. `ease`
     // carries the root's top up the nape, so back, withers and nape are one
-    // line: left under the withers it is a dip just where the ruff begins.
-    neck: { r: 0.078, w: 0.9, root: 0.7, set: 0.05, taper: 1.0, arch: 0.02, ease: 0.4 },
+    // line: left under the withers it is a dip just where the neck begins.
+    neck: { r: 0.066, w: 0.9, root: 0.45, set: 0.05, taper: 1.3, arch: 0.02, ease: 0.4 },
     // The plan's ball only says where the head is carried — forward, and a
     // little above the back — and how far it is nosed down; its geometry is
     // replaced by the loft below. No snout: the muzzle is that loft's front.
@@ -203,6 +230,44 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     ear.geometry.dispose();
     ear.geometry = earShell(EAR, { unit: height, mirror, matrix: headMesh.matrix })
       .translate(-hinge.x, -hinge.y, -hinge.z);
+  }
+
+  // ---- the ruff, into the body's own mesh --------------------------------
+  // see THE RUFF above. It is laid against the throat as it stands, and the
+  // head turns above it: it hangs from the neck, which stays behind.
+  {
+    const body = group.children.find((c) => c.name === 'body');
+    const solid = trianglesOf(body);
+    const legTop = group.children.find((c) => c.name === 'leg' && c.position.z > 0).position.y;
+    const y0 = legTop + RUFF_LOW * height, y1 = headPivot.position.y - RUFF_HIGH * height;
+    const P = body.geometry.getAttribute('position');
+    const base = P.count, pos = Array.from(P.array), idx = Array.from(body.geometry.index.array);
+    const at = (x, y, z) => pos.push(x - body.position.x, y - body.position.y, z - body.position.z);
+    RUFF.forEach(([u, out], i) => {
+      const y = y0 + (y1 - y0) * u;
+      const w = (RUFF_W[0] + (RUFF_W[1] - RUFF_W[0]) * u) * height;
+      // sunk where its own edges meet the front line, which turns back toward
+      // its sides; a foot laid from the middle stands out of it at its corners
+      const side = ahead(solid, w, y);
+      const foot = (Number.isFinite(side) ? side : ahead(solid, 0, y)) - RUFF_SINK * height;
+      const front = ahead(solid, 0, y);
+      const edge = out < 0 ? foot : Math.max(foot, front + out * height);
+      const fall = out < 0 ? 0 : RUFF_FALL * out * height;
+      at(-w, y, foot); at(-w * RUFF_EDGE, y - fall, edge); at(w * RUFF_EDGE, y - fall, edge); at(w, y, foot);
+      if (i === 0) return;
+      const a = base + (i - 1) * 4, b = base + i * 4;
+      for (let j = 0; j < 4; j++) {
+        const j2 = (j + 1) % 4;
+        idx.push(a + j, b + j, a + j2, a + j2, b + j, b + j2);
+      }
+    });
+    const end = base + (RUFF.length - 1) * 4;
+    idx.push(base, base + 1, base + 2, base, base + 2, base + 3, end, end + 2, end + 1, end, end + 3, end + 2);
+    body.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
+    body.geometry.setIndex(idx);
+    body.geometry.computeVertexNormals();
+    body.geometry.computeBoundingBox();
+    body.geometry.computeBoundingSphere();
   }
 
   // ---- the brush, on its own hinge --------------------------------------
