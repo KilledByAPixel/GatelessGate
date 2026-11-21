@@ -44,10 +44,10 @@ import { hash1 } from '../util/noise.js';
 //     with a short paw out from under its front. The pair stand wider than
 //     the trunk, which is the base of the pear from the front, and they
 //     close the gap under the belly from the side.
-//   - THE FRONT LEGS ARE SHOULDERS ABOVE THE ELBOW (see A SEATED FRONT LEG):
-//     slim below it and plumb from the side, leaning in from the front to
-//     paws that stand together, each a block, and
-//     above it a wedge lying on the side of the chest that fades into it.
+//   - THE FRONT LEGS ARE ARMS (see A SEATED FRONT LEG): a column plumb on
+//     both edges from a block of a paw to the elbow, the paws together, and
+//     at the top opening both ways — forward into the breast, back and up
+//     into the shoulder — as a low relief on the chest that fades into it.
 //   - THE HEAD IS PLACED FOR THE POSE, NOT CARRIED OVER (see SIT_HEAD), and
 //     the pear's own last rings end inside it.
 //
@@ -186,49 +186,61 @@ const SIT_TILT = 0.98;      // radians the seated torso's frame pitches up off h
 const SIT_LEVEL = 1.0;      // how much of that the skull takes back out
 
 // A SEATED FRONT LEG, shoulder to ground: [frontY, frontZ, backY, backZ,
-// half-width, proud] in heights, in the animal's own frame — the pear's own
-// cut, so the two outlines can be read against each other. Below the elbow it
-// is a slim column to a wrist and a block of a paw reaching forward, standing
-// free of the belly. Above the elbow it is not a leg any more but the upper
-// arm and shoulder: the back line leaves the column and runs up and BACK
-// across the ribs, so the limb widens into a flat wedge lying on the side of
-// the chest. A column carried straight up into the chest is a stick pushed
-// into it, however deep it is buried, and a swelling at the top of a column
-// is a cap on a stick.
+// half-width, out, proud, front, fore] in heights, in the animal's own frame
+// — the pear's own cut, so the two outlines can be read against each other.
+// It is an ARM, not a thigh. Below the elbow it is a column to a wrist and a
+// block of a paw reaching forward: its front line and its back line both
+// near plumb, only a little deeper at the top than at the wrist. At the top
+// it opens BOTH ways into the trunk, like a column meeting a vault: the front
+// line sweeps forward and up into the breast, which stands out ahead of the
+// leg, and the back line runs plumb past the elbow and then turns back and up
+// into the shoulder. A leg whose back line alone runs up and back across the
+// ribs, with the front straight up into the chest, is a wedge leaning back —
+// a hind thigh stood at the front of the animal.
 //
-// Every ring starts as the free leg's: an ellipse about FORELEG_X. `proud`
-// then DRAPES its outer side on the trunk — the flank is read off the mesh
-// under each of the ring's outer vertices, and each is carried out to stand
-// that far off it, while the ring's two ends are tucked just under the skin.
-// So the wedge shows at the outline written here and stands off the body by
-// the same small amount all over. The chest is a prow, narrowing toward the
-// breast, and anything flat laid on it is buried at the back and stands off
-// at the front like a piece of armour. Where there is no flank behind a
-// vertex, or the free leg already stands outside it, the free leg wins: that
-// is the elbow coming out from under the chest. `proud` runs out to nothing
-// and then under, so the top ring is wholly inside the trunk and the wedge
-// fades into the flank with no top to show — which also needs the free
-// ellipse of the upper rings to be slight, or it is the one that surfaces.
+// Every ring starts as the free leg's, an ellipse about FORELEG_X, `out`
+// further from the midline (the paws stand together under the breast; the
+// columns lean out a little to reach the chest's sides). Three things then
+// fit it to the trunk, each read off the mesh at the ring's own vertices:
 //
-// A free ring may carry a seventh number: how far IN from FORELEG_X it
-// stands. The shoulders lie on the chest, as far apart as the chest is wide
-// there, and the paws stand together under the breast, nearly touching; the
-// forearm leans in from the one to the other. Moving the whole leg in to
-// bring the paws together drags the shoulder off the flank it is draped on,
-// and the drape comes back as a fin.
+//   - `proud` DRAPES the outer side: vertices standing inside the flank are
+//     carried out to stand that far off it, and the back end is tucked just
+//     under the skin. So the upper arm lies on the side of the chest as a low
+//     relief whose back edge is the elbow and shoulder line written here.
+//     Only ever carried OUT: where the free ring already stands outside the
+//     trunk it is the column, and pulling it in to the skin there folds it.
+//     `proud` runs out to nothing and then under, on rings slanted to rise
+//     toward the back, so the relief has no level top: the top of it falls
+//     forward, the shoulder line climbs back.
+//   - `front` TUCKS the front end in under the breast, toward the midline as
+//     the ring rises (never past FORELEG_MID), and draws the front-outer
+//     quarter onto the breast with it — that is the front line turning into
+//     the breast, and from in front the two arms closing toward each other
+//     under it. Left free, the front ends stand out of the breast's narrow
+//     prow as two posts that end in points; tucked by a flank sampled only
+//     at the ring's end, without the quarter following, they fold into
+//     shards.
+//   - `fore` moves that front-outer quarter forward along the ring, so the
+//     turn reaches the breast instead of stopping a hand's width behind it.
+//     It lies FORELEG_SINK lower than `proud`; at `proud` it is a ridge
+//     running up the breast as a needle.
 const FORELEG = [
-  [0.72, 0.06, 0.8, -0.08, 0.015, -0.05],
-  [0.62, 0.14, 0.7, -0.09, 0.04, -0.004],
-  [0.52, 0.155, 0.56, -0.035, 0.062, 0.016],
-  [0.4, 0.176, 0.42, 0.03, 0.062, 0.024],
-  [0.3, 0.176, 0.3, 0.058, 0.058, null, 0.006],
-  [0.09, 0.17, 0.09, 0.076, 0.048, null, 0.022],
-  [0.055, 0.212, 0.055, 0.082, 0.056, null, 0.022],
-  [0.0, 0.216, 0.0, 0.078, 0.058, null, 0.022],
+  [0.64, 0.21, 0.75, -0.12, 0.03, 0.03, -0.03, 1],
+  [0.58, 0.212, 0.71, -0.11, 0.045, 0.03, -0.002, 1, 0.95],
+  [0.53, 0.198, 0.62, -0.06, 0.05, 0.03, 0.008, 1, 0.92],
+  [0.485, 0.188, 0.5, -0.03, 0.054, 0.03, 0.01, 0.8, 0.88],
+  [0.425, 0.182, 0.425, -0.025, 0.056, 0.028, 0.008, 0.5, 0.8],
+  [0.32, 0.179, 0.32, 0.015, 0.054, 0.022, 0.008],
+  [0.2, 0.177, 0.2, 0.03, 0.05, 0.012, 0.008],
+  [0.09, 0.174, 0.09, 0.045, 0.046, 0],
+  [0.055, 0.212, 0.055, 0.04, 0.052, 0],
+  [0.0, 0.216, 0.0, 0.038, 0.054, 0],
 ];
-const SHOULDER_TUCK = 0.035;             // how far under the skin a draped ring's ends lie
-const FORELEG_TOP = [0.8, -0.01];        // [y, z] apex closing the loft inside the chest
-const FORELEG_X = 0.09;                  // the shoulders' plane; the paws stand in from it
+const SHOULDER_TUCK = 0.035;             // how far under the skin a draped ring's back end lies
+const FORELEG_TOP = [0.76, 0.04];        // [y, z] apex closing the loft inside the chest
+const FORELEG_X = 0.06;                  // the paws' centre plane
+const FORELEG_MID = 0.012;               // nearer the midline than this, a tucked front end does not go
+const FORELEG_SINK = 0.012;              // how much lower than `proud` the front corner lies as it turns in
 const FORELEG_JOIN = [0.55, 0.06];       // [y, z] of the mesh origin, inside the chest
 
 // THE HAUNCH is a boss on the flank: an egg lying on its side, half sunk in
@@ -254,10 +266,10 @@ const HAUNCH_RINGS = [[0.5, 0.88], [0.86, 0.52], [1, 0], [0.86, -0.52], [0.5, -0
 const HIND_PAW = [
   [-0.16, 0.1, 0.0, 0.05],
   [-0.06, 0.095, 0.0, 0.056],
-  [0.005, 0.08, 0.0, 0.052],
+  [0.0, 0.08, 0.0, 0.052],
 ];
 const HIND_PAW_HEEL = [0.05, -0.2];
-const HIND_PAW_TOE = [0.035, 0.032];
+const HIND_PAW_TOE = [0.035, 0.025];
 
 const TAIL_SEGS = 7;
 const TAIL_LEN = 0.95;
@@ -312,7 +324,8 @@ const TAIL_WAG_HZ = 1.35;   // and how fast it goes back and forth
 // standing across the animal: centre `c` and half-axis `a` are [y, z] pairs in
 // the side view and `w` the half-width in x, so a ring's two end vertices are
 // the two outline points it was written from. `xs` (optional) states each
-// vertex's x outright instead. Winding wants x cross a to point along the
+// vertex's x outright instead, and `sn` (optional) each vertex's place along
+// the half-axis, in place of the sine of its angle. Winding wants x cross a to point along the
 // direction of travel; `mirror` builds the other side's copy of a part that
 // is not its own mirror image. Both ends are fanned shut on an apex.
 function ringLoft(stations, seg, apex0, apex1, { mirror = false } = {}) {
@@ -321,7 +334,7 @@ function ringLoft(stations, seg, apex0, apex1, { mirror = false } = {}) {
   for (const s of stations) {
     for (let j = 0; j < seg; j++) {
       const t = (j / seg) * Math.PI * 2;
-      const sn = Math.sin(t);
+      const sn = s.sn ? s.sn[j] : Math.sin(t);
       pos.push(side * (s.xs ? s.xs[j] : Math.cos(t) * s.w), s.c[0] + sn * s.a[0], s.c[1] + sn * s.a[1]);
     }
   }
@@ -562,32 +575,32 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     const fx = FORELEG_X * h;
     const oy = FORELEG_JOIN[0] * h, oz = FORELEG_JOIN[1] * h;
     const SEG = 8, D = Math.SQRT1_2;
-    const rings = FORELEG.map(([fy, fz, by, bz, w, proud, inward = 0]) => {
+    const rings = FORELEG.map(([fy, fz, by, bz, w, out, proud, front = 0, fore = D]) => {
       const cy = (fy + by) / 2 * h, cz = (fz + bz) / 2 * h;
       const ay = (fy - by) / 2 * h, az = (fz - bz) / 2 * h;
-      const ring = { c: [cy - oy, cz - oz], a: [ay, az], w: w * h };
-      if (proud === null) {
-        if (inward) {
-          ring.xs = [];
-          for (let j = 0; j < SEG; j++) ring.xs.push(Math.cos((j / SEG) * Math.PI * 2) * ring.w - inward * h);
-        }
-        return ring;
-      }
-      // see `proud`. Vertex 0 is the outer one, the quarters stand either
-      // side of it and vertices 2 and 6 are the ring's fore and aft ends; x
-      // here is measured from the leg's own plane, as ringLoft wants it.
-      const drape = (k, off) => {
-        const at = flank(cy + k * ay, cz + k * az);
-        return Number.isFinite(at) ? at + off * h - fx : -Infinity;
-      };
-      ring.xs = [];
-      for (let j = 0; j < SEG; j++) ring.xs.push(Math.cos((j / SEG) * Math.PI * 2) * ring.w);
-      ring.xs[0] = Math.max(ring.xs[0], drape(0, proud));
-      ring.xs[1] = Math.max(ring.xs[1], drape(D, proud));
-      ring.xs[7] = Math.max(ring.xs[7], drape(-D, proud));
+      const ring = { c: [cy - oy, cz - oz], a: [ay, az], w: w * h, xs: [], sn: [0, fore, 1, D, 0, -D, -1, -D] };
+      for (let j = 0; j < SEG; j++) ring.xs.push(Math.cos((j / SEG) * Math.PI * 2) * ring.w + out * h);
+      if (proud === undefined) return ring;
+      // see `proud`, `front` and `fore`. Vertex 0 is the outer one, the
+      // quarters stand either side of it, 2 and 6 are the ring's fore and aft
+      // ends; x here is measured from the leg's own plane, as ringLoft wants
+      // it. The inner three stay the free ring's, inside the trunk, except
+      // that the inner-front quarter follows a tucked front end in, or the
+      // ring crosses itself.
       const under = Math.min(proud, 0) - SHOULDER_TUCK;
-      ring.xs[2] = Math.max(ring.xs[2], drape(1, under));
-      ring.xs[6] = Math.max(ring.xs[6], drape(-1, under));
+      for (const [j, k, off] of [[0, 0, proud], [1, fore, proud], [7, -D, proud], [6, -1, under]]) {
+        const at = flank(cy + k * ay, cz + k * az);
+        if (Number.isFinite(at)) ring.xs[j] = Math.max(ring.xs[j], at + off * h - fx);
+      }
+      const at = flank(cy + ay, cz + az), at1 = flank(cy + fore * ay, cz + fore * az);
+      if (front && Number.isFinite(at)) {
+        const tucked = Math.max(at + under * h, FORELEG_MID * h) - fx;
+        ring.xs[2] += (tucked - ring.xs[2]) * front;
+        ring.xs[3] = Math.min(ring.xs[3], (ring.xs[2] + ring.xs[4]) / 2);
+      }
+      if (front && Number.isFinite(at1)) {
+        ring.xs[1] += (Math.max(at1 + (proud - FORELEG_SINK) * h - fx, ring.xs[2]) - ring.xs[1]) * front;
+      }
       return ring;
     });
     const top = [FORELEG_TOP[0] * h - oy, FORELEG_TOP[1] * h - oz];

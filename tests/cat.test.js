@@ -345,7 +345,7 @@ test('the breast is fullest below the throat, and the front legs come down out o
   }
 });
 
-test('a seated front leg is a slim column below the elbow and a shoulder on the chest above it', () => {
+test('a seated front leg is an arm: a plumb column that opens both ways into the chest', () => {
   const g = sit().group;
   const body = triangles(g, (o) => o.name === 'body');
   const legs = named(g, 'leg').filter((l) => box(l).min.z > -0.2);
@@ -355,28 +355,50 @@ test('a seated front leg is a slim column below the elbow and a shoulder on the 
     const cut = (y) => sectionZ(tris, y);
     const shin = cut(0.2).depth;
 
-    // below the elbow: a column, plumb, that does not swell
+    // below the elbow: a column, plumb on BOTH edges, that does not swell
     for (let y = 0.12; y <= 0.3; y += 0.03) {
       assert.ok(cut(y).depth < 1.15 * shin, `the forearm swells to ${cut(y).depth.toFixed(3)} at ${y.toFixed(2)} over a shin of ${shin.toFixed(3)}`);
     }
     const lean = Math.abs(cut(0.3).max - cut(0.12).max);
-    assert.ok(lean < 0.02, `the column leans ${lean.toFixed(3)}`);
+    assert.ok(lean < 0.02, `the column's front line leans ${lean.toFixed(3)}`);
+    const backLean = Math.abs(cut(0.3).min - cut(0.12).min);
+    assert.ok(backLean < 0.03, `the column's back line leans ${backLean.toFixed(3)}`);
     // on a paw that is longer than the leg is thick, forward
     assert.ok(cut(0.03).depth > 1.12 * shin, `a paw ${cut(0.03).depth.toFixed(3)} long under a shin of ${shin.toFixed(3)}`);
     assert.ok(cut(0.03).max > cut(0.2).max + 0.02, 'reaching forward of it');
 
-    // Above the elbow it WIDENS, steadily, and all of it backward: the back
-    // line runs up and back across the ribs while the front line only ever
-    // leans in. A column carried on up into the chest is a stick pushed into
-    // it; a swelling on the front of one is a plate on the breast.
-    let last = cut(0.35).depth;
-    for (let y = 0.4; y <= 0.6; y += 0.05) {
-      assert.ok(cut(y).depth > last, `the upper arm stops widening at ${y.toFixed(2)}: ${cut(y).depth.toFixed(3)} after ${last.toFixed(3)}`);
-      assert.ok(cut(y).max < cut(0.3).max + 0.005, `its front line steps forward at ${y.toFixed(2)}`);
-      last = cut(y).depth;
+    // At the top it opens BOTH ways, like a column meeting a vault: the front
+    // line sweeps forward into the breast and the back line back into the
+    // shoulder. Only the back line running up and back, with the front
+    // straight up into the chest, is a wedge leaning back: a hind thigh.
+    assert.ok(cut(0.6).max > cut(0.3).max + 0.02, `the front line does not sweep forward: ${(cut(0.6).max - cut(0.3).max).toFixed(3)}`);
+    assert.ok(cut(0.6).min < cut(0.3).min - 0.05, `the back line does not sweep back: ${(cut(0.3).min - cut(0.6).min).toFixed(3)}`);
+    // the back line runs on near plumb past the elbow and THEN turns back
+    // into the shoulder, rather than leaving the column on one long diagonal
+    const early = cut(0.3).min - cut(0.5).min, late = cut(0.5).min - cut(0.7).min;
+    assert.ok(late > early, `the shoulder line turns back late: ${early.toFixed(3)} then ${late.toFixed(3)}`);
+    // the breast stands out ahead of the leg where the front line meets it
+    for (const y of [0.55, 0.6, 0.65]) {
+      const ahead = sectionZ(body, y).max - cut(y).max;
+      assert.ok(ahead > 0.015, `the breast stands only ${ahead.toFixed(3)} ahead of the leg at ${y}`);
     }
-    assert.ok(cut(0.6).depth > 1.6 * shin, `a shoulder ${cut(0.6).depth.toFixed(3)} across over a shin of ${shin.toFixed(3)}`);
-    assert.ok(cut(0.6).min < cut(0.3).min - 0.08, `reaching back over the ribs: ${(cut(0.3).min - cut(0.6).min).toFixed(3)}`);
+    // and from in front, the leg's foremost line turns in toward the midline
+    // as it rises into the breast: the arms close under it
+    const foremostX = (y) => {
+      let bz = -Infinity, bx = 0;
+      for (const t of tris) {
+        for (let e = 0; e < 3; e++) {
+          const a = e * 3, b = ((e + 1) % 3) * 3;
+          const ya = t[a + 1], yb = t[b + 1];
+          if ((ya - y) * (yb - y) > 0 || ya === yb) continue;
+          const k = (y - ya) / (yb - ya);
+          const z = t[a + 2] + (t[b + 2] - t[a + 2]) * k;
+          if (z > bz) { bz = z; bx = Math.abs(t[a] + (t[b] - t[a]) * k); }
+        }
+      }
+      return bx;
+    };
+    assert.ok(foremostX(0.55) < foremostX(0.3) - 0.04, `the front line stays out at ${foremostX(0.55).toFixed(3)} over a column at ${foremostX(0.3).toFixed(3)}`);
 
     // It lies ON the chest. Everything above the elbow is within a thin skin
     // of the trunk's surface — carried that little way toward the middle of
@@ -398,10 +420,10 @@ test('a seated front leg is a slim column below the elbow and a shoulder on the 
       v.x -= side * 0.025;
       assert.ok(inside(body, v), `the shoulder stands off the chest at (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`);
     }
-    assert.ok(on >= 16 && under >= 8, `there is a shoulder to judge: ${on} points on the chest, ${under} at its top`);
+    assert.ok(on >= 16 && under >= 4, `there is a shoulder to judge: ${on} points on the chest, ${under} at its top`);
     // and it does show: over the upper arm the limb's surface stands a
     // little outside the trunk's — a low relief, not a plate and not nothing
-    for (const [y, z] of [[0.5, 0.07], [0.54, 0.03]]) {
+    for (const [y, z] of [[0.4, 0.03], [0.5, 0.07], [0.54, 0.03], [0.6, -0.02]]) {
       const proud = reachAt(tris, y, z) - reachAt(body, y, z);
       assert.ok(proud > 0.004 && proud < 0.03, `the shoulder stands ${proud.toFixed(4)} off the flank at (${y}, ${z})`);
     }
