@@ -22,6 +22,7 @@ export const ROSTER = [
   { key: 'dog', section: 'creatures', build: (kit) => kit.makeDog({}) },
   { key: 'fox', section: 'creatures', build: (kit) => kit.makeFox({}) },
   { key: 'cat', section: 'creatures', build: (kit) => kit.makeCat({}) },
+  { key: 'cat-stand', section: 'creatures', build: (kit) => kit.makeCat({ pose: 'stand' }) },
   { key: 'horse', section: 'creatures', build: (kit) => kit.makeHorse({}) },
   { key: 'buffalo', section: 'creatures', build: (kit) => kit.makeBuffalo({}) },
   { key: 'koi', section: 'creatures', build: (kit) => kit.makeKoi({}) },

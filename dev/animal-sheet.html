@@ -25,8 +25,20 @@
     proportions, not a lens. Each animal is fitted to its own cell, so the
     sheet does NOT show relative size; press S to put them all on one scale.
 
-      V   side view / three-quarter / front / front three-quarter
+      V   side view / three-quarter / front / front three-quarter, and
+          each of the three from the OTHER side (sideR, 34R, front34R)
       M   lit / flat-ink silhouette
+
+    EVERY JUDGING SHOT IS TAKEN FROM BOTH SIDES. The animals are mirror
+    images of themselves (tests/symmetry.test.js), and four passes of judging
+    from the nose-left side alone missed that they were not. A view from the
+    -x side (a negative yaw) mirrors the light rig with it, so an animal that
+    is its own mirror image gives the exact mirror image of the +x view, and
+    whatever differs between the two is the model, never the lighting.
+
+    ?yaw=<deg>&pitch=<deg> states any view outright; ?zoom=<k> closes in on
+    ?focus=<fx,fy,fz> (fractions across the animal's box, 0..1, default the
+    middle) — for close-ups of a join. ?only=cat-stand shows the standing cat.
       S   fit each cell / one shared scale
       L   labels and cell borders on / off (off for a clean screenshot)
 
@@ -63,10 +75,16 @@
     // yaw from the animal's own front (+z), pitch above level, in degrees.
     // Front-on is where an ear's or a horn's join to the skull shows, and a
     // side view hides it entirely.
-    const VIEWS = { side: [90, 0], 34: [50, 14], front: [0, 0], front34: [22, 10] };
-    const ORDER = ['side', '34', 'front', 'front34'];
+    const VIEWS = {
+      side: [90, 0], 34: [50, 14], front: [0, 0], front34: [22, 10],
+      sideR: [-90, 0], '34R': [-50, 14], front34R: [-22, 10],
+    };
+    const ORDER = ['side', 'sideR', '34', '34R', 'front', 'front34', 'front34R'];
+    if (params.has('yaw')) VIEWS.custom = [Number(params.get('yaw')), Number(params.get('pitch') || 0)];
+    const zoom = Number(params.get('zoom') || 1);
+    const focus = (params.get('focus') || '0.5,0.5,0.5').split(',').map(Number);
     const state = {
-      view: VIEWS[params.get('view')] ? params.get('view') : 'side',
+      view: VIEWS.custom ? 'custom' : VIEWS[params.get('view')] ? params.get('view') : 'side',
       ink: params.get('mode') === 'silhouette',
       shared: params.has('shared'),
     };
@@ -85,7 +103,8 @@
 
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(PAPER);
-      scene.add(makeViewerLights(KIT));
+      const rig = makeViewerLights(KIT);
+      scene.add(rig);
       let obj = null, error = null;
       try {
         ({ obj } = instantiate(entry, KIT));
@@ -96,7 +115,7 @@
       }
       label.textContent = error ? `${entry.key} — ${error}` : entry.key;
       const box = obj ? new THREE.Box3().setFromObject(obj) : new THREE.Box3();
-      return { el, scene, obj, box, camera: new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 200) };
+      return { el, scene, rig, obj, box, camera: new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 200) };
     });
 
     const size = new THREE.Vector3(), centre = new THREE.Vector3(), dir = new THREE.Vector3();
@@ -129,7 +148,11 @@
       const MARGIN = 1.22;
       const fits = cells.map((cell) => {
         if (!cell.obj) return null;
+        // seen from the -x side, the lights are seen from there too
+        cell.rig.scale.x = yaw < 0 ? -1 : 1;
+        cell.rig.updateMatrixWorld(true);
         cell.box.getCenter(centre);
+        if (zoom !== 1) centre.set(...['x', 'y', 'z'].map((k, i) => cell.box.min[k] + (cell.box.max[k] - cell.box.min[k]) * focus[i]));
         cell.camera.position.copy(centre).addScaledVector(dir, 50);
         cell.camera.lookAt(centre);
         cell.camera.updateMatrixWorld(true);
@@ -138,7 +161,7 @@
         const r = cell.el.getBoundingClientRect();
         const { hx, hy } = extent(cell, right, up);
         // world units per pixel needed to hold this animal in this cell
-        return { r, per: Math.max(hx * MARGIN / (r.width / 2), hy * MARGIN / (r.height / 2)) };
+        return { r, per: Math.max(hx * MARGIN / (r.width / 2), hy * MARGIN / (r.height / 2)) / zoom };
       });
       const sharedPer = Math.max(...fits.filter(Boolean).map((f) => f.per));
 
