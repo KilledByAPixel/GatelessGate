@@ -176,20 +176,29 @@ test('the tail hangs from the croup', () => {
   assert.ok(tail.group.position.y < sectionY(bodyOf(group), tail.group.position.z).max,
     'and under the topline there, not perched on it');
 
-  // ONE HANGING MASS. A stub aimed well back with a strand plumb off its end
-  // is two sticks and a hinge, so: no joint bends far, and below the dock the
-  // strand is close to plumb.
+  // ONE MASS LEAVING IN AN ARC. The dock runs well back off the croup and the
+  // hank falls from it; one stub aimed that far back with the strand plumb
+  // off its end is two sticks and a hinge. So the turn from the dock's line
+  // to the hang is shared between two joints, neither of them sharp, and
+  // below the dock the strand is close to plumb.
   // the strand's own nodes, carried into the animal's frame
   group.updateMatrixWorld(true);
   const nodes = tail.nodes().map((n) => tail.group.localToWorld(new THREE.Vector3(...n)));
   const dirs = nodes.slice(1).map((n, i) => n.clone().sub(nodes[i]).normalize());
   const deg = THREE.MathUtils.radToDeg;
+  const offPlumb = (d) => deg(Math.acos(Math.min(1, Math.abs(d.y))));
+  assert.ok(offPlumb(dirs[0]) > 40 && offPlumb(dirs[0]) < 65 && dirs[0].z < 0,
+    `the dock leaves the croup running back: ${offPlumb(dirs[0]).toFixed(1)} deg off plumb`);
+  const kinks = [];
   for (let i = 1; i < dirs.length; i++) {
     const kink = deg(dirs[i].angleTo(dirs[i - 1]));
-    assert.ok(kink < 22, `joint ${i} bends ${kink.toFixed(1)} deg — a hinge`);
-    const lean = deg(Math.acos(Math.min(1, Math.abs(dirs[i].y))));
-    assert.ok(lean < 13, `below the dock the tail hangs: segment ${i} is ${lean.toFixed(1)} deg off plumb`);
+    kinks.push(kink);
+    assert.ok(kink < 32, `joint ${i} bends ${kink.toFixed(1)} deg — a hinge`);
+    if (i >= 2) {
+      assert.ok(offPlumb(dirs[i]) < 13, `below the dock the tail hangs: segment ${i} is ${offPlumb(dirs[i]).toFixed(1)} deg off plumb`);
+    }
   }
+  assert.ok(kinks[1] > 0.5 * kinks[0], `the turn is one joint's: ${kinks[0].toFixed(1)} then ${kinks[1].toFixed(1)} deg`);
   // it still falls just clear of the buttock rather than down inside the rump
   const box = new THREE.Box3().setFromObject(tail.group);
   const rump = new THREE.Box3().setFromObject(find(group, 'body')[0]);
@@ -216,10 +225,22 @@ test('the tail hangs from the croup', () => {
   const widest = widths.indexOf(Math.max(...widths));
   assert.ok(widest >= nodes.length / 2,
     `the hank is fullest at ring ${widest} of ${nodes.length}: in its lower half`);
-  assert.ok(widths[widest] > widths[0] * 1.6, 'far fuller there than at the dock');
+  // Far fuller there than at the dock — in the side plane, where the dock is
+  // slim. Across, the dock is a band lying on the rump, and the hank is only
+  // somewhat broader than that.
+  const deepAt = (ring) => {
+    let d = 0;
+    for (let j = 0; j < sides; j++) for (let k = 0; k < j; k++) {
+      d = Math.max(d, Math.hypot(P.getY(ring * sides + j) - P.getY(ring * sides + k), P.getZ(ring * sides + j) - P.getZ(ring * sides + k)));
+    }
+    return d;
+  };
+  assert.ok(deepAt(widest) > deepAt(0) * 1.6,
+    `far fuller there than at the dock: ${deepAt(widest).toFixed(3)} deep against ${deepAt(0).toFixed(3)}`);
+  assert.ok(widths[widest] > widths[0] * 1.1, 'and broader than the dock as well');
   // ...but the dock is not a rod: a root much narrower than the rump's own
   // facets reads as a stick pushed into the middle of one
-  assert.ok(widths[0] / withers > 0.09, `the dock is ${(widths[0] / withers).toFixed(3)}x withers across`);
+  assert.ok(widths[0] / withers > 0.12, `the dock is ${(widths[0] / withers).toFixed(3)}x withers across`);
   assert.ok(widths[nodes.length - 1] < 0.5 * widths[widest], 'and drawn in again to its end');
   // reaching below the hock but never near the ground, and long: a full hank
   // is most of the hind leg's own height, where a short one is a switch
@@ -245,6 +266,7 @@ test('the tail joins: its root is a full section buried in the rump, at rest and
     return out;
   };
   const span = (pts) => Math.max(...pts.map((p) => p.x)) - Math.min(...pts.map((p) => p.x));
+  const depthOf = (pts) => Math.max(...pts.flatMap((a) => pts.map((b) => Math.hypot(a.y - b.y, a.z - b.z))));
   const check = (when) => {
     const deep = ring(buried), dock = ring(0);
     // FULL GIRTH: what crosses the hide is the dock's whole section, not a
@@ -261,10 +283,17 @@ test('the tail joins: its root is a full section buried in the rump, at rest and
         `${when}: buried at y ${p.y.toFixed(3)} inside ${s.min.toFixed(3)}..${s.max.toFixed(3)}`);
     }
     // and it is a real run into the body, not a ring a hair behind the dock
+    // (against the dock's depth in the animal's side plane: its breadth is a
+    // band's, and says nothing about how far a run has to go to bury an end)
     const mid = (pts) => pts.reduce((m, p) => m.add(p), new THREE.Vector3()).multiplyScalar(1 / pts.length);
     const run = mid(deep).distanceTo(mid(dock));
-    assert.ok(run > 0.9 * span(dock), `${when}: the buried run is ${run.toFixed(3)} long`);
-    assert.ok(mid(deep).z > mid(dock).z + 0.5 * span(dock), `${when}: and it runs forward, into the rump`);
+    assert.ok(run > 0.9 * depthOf(dock), `${when}: the buried run is ${run.toFixed(3)} long`);
+    assert.ok(mid(deep).z > mid(dock).z + 0.5 * depthOf(dock), `${when}: and it runs forward, into the rump`);
+    // NOTHING STANDS PROUD AT THE CROUP: the dock's whole first section, upper
+    // side included, is under the hide. With its upper corners outside, the
+    // tail shows as a facet standing on the croup turn ahead of the place it
+    // comes out for good.
+    for (const p of dock) assert.ok(inside(body, p), `${when}: a corner of the dock's first section stands out of the rump at y ${p.y.toFixed(3)}`);
     return deep;
   };
   const rest = check('at rest');
@@ -281,6 +310,62 @@ test('the tail joins: its root is a full section buried in the rump, at rest and
     }
   }
   assert.ok(swung > 0.1, `the hank did swing: ${swung.toFixed(3)}`);
+});
+
+test('the tail flows out of the croup: it breaks the hide once, high on the rump, as a band with a ridge up its back', () => {
+  const horse = build();
+  const { group, tail, plan } = horse;
+  const body = bodyOf(group);
+  const skin = find(group, 'strand')[0];
+  const n = tail.nodes().length;
+  const P = skin.geometry.getAttribute('position');
+  const sides = (P.count - 2) / (n + 1);
+  const v = new THREE.Vector3();
+  const ring = (i) => {
+    const out = [];
+    for (let j = 0; j < sides; j++) out.push(v.fromBufferAttribute(P, i * sides + j).applyMatrix4(skin.matrixWorld).clone());
+    return out;
+  };
+  // THE UPPER SIDE, ring to ring: the corner of each section furthest up and
+  // back. It starts under the hide and, once out, never goes back in — a tail
+  // whose upper side dips into the rump again further down has left it twice.
+  const ridge = [];
+  for (let i = 0; i < 4; i++) ridge.push(ring(i).reduce((m, p) => (p.y - 0.3 * p.z > m.y - 0.3 * m.z ? p : m)));
+  let out = false, where = null;
+  for (let i = 0; i < ridge.length - 1; i++) {
+    for (let k = 0; k <= 20; k++) {
+      const p = ridge[i].clone().lerp(ridge[i + 1], k / 20);
+      const is = !inside(body, p);
+      if (is && !out) where = where ?? p;
+      assert.ok(is || !out, `the tail's upper side goes back into the rump at y ${p.y.toFixed(3)}`);
+      out = out || is;
+    }
+  }
+  assert.ok(where, 'the tail comes out of the rump');
+  // HIGH: within the upper part of the trunk's depth at the hip — out of the
+  // croup, not out of the back of the buttock
+  const hip = sectionY(body, plan.zHip);
+  const down = (hip.max - where.y) / hip.depth;
+  assert.ok(down > 0.1 && down < 0.4, `it leaves the hide ${down.toFixed(2)} of the trunk's depth below the croup`);
+  // ...and going OUTWARD: there the tail's line is shallower than the rump is
+  // falling away, which is what makes it the croup's line carried on
+  const s0 = sectionY(body, where.z + 0.02).max, s1 = sectionY(body, where.z - 0.02).max;
+  const rump = Math.atan2(s0 - s1, 0.04);
+  const dock = Math.atan2(ridge[0].y - ridge[1].y, ridge[0].z - ridge[1].z);
+  assert.ok(dock < rump, `the dock falls at ${THREE.MathUtils.radToDeg(dock).toFixed(0)} deg where the rump falls at ${THREE.MathUtils.radToDeg(rump).toFixed(0)}`);
+  // A BAND ACROSS THE RUMP, gathered into the hank below: the dock is broader
+  // than it is deep, and the strand is round again by its middle
+  const shape = (pts) => {
+    const xs = pts.map((p) => p.x);
+    const across = Math.max(...xs) - Math.min(...xs);
+    return across / Math.max(...pts.flatMap((a) => pts.map((b) => Math.hypot(a.y - b.y, a.z - b.z))));
+  };
+  assert.ok(shape(ring(0)) > 1.2, `the dock is ${shape(ring(0)).toFixed(2)}x as broad as deep`);
+  assert.ok(shape(ring(4)) < 1.05, `mid-hank the section is round: ${shape(ring(4)).toFixed(2)}`);
+  // A RIDGE UP ITS BACK: one corner of the first section stands on the
+  // centreline, above the rest
+  const r0 = ring(0), top = r0.reduce((m, p) => (p.y > m.y ? p : m));
+  assert.ok(Math.abs(top.x) < 1e-6, 'the dock has a flat face up its back, not a ridge');
 });
 
 // across the neck's own line, the body's extent between two stations along it

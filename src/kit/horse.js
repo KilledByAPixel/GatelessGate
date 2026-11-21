@@ -44,14 +44,15 @@ import { mergeSimple } from './scatter.js';
 //      back only a little — enough for the corner to show. Folded further, the
 //      whole hind leg becomes one diagonal propped out behind the rump and the
 //      animal stops carrying its own weight.
-//   5. THE TAIL IS A FULL HANK FROM THE TOP OF THE CROUP — rooted on the
-//      turn of the rump (the plan's own default), leaving it backward before
-//      it falls: slimmest at the dock, FULLEST IN ITS LOWER HALF, drawn in to
-//      a blunt point below the hocks, and hanging a little back of plumb,
+//   5. THE TAIL IS A FULL HANK FLOWING OUT OF THE CROUP — it comes out of
+//      the turn of the rump as the back line carried on, runs back in an arc
+//      and falls: slimmest at the dock, FULLEST IN ITS LOWER HALF, drawn in
+//      to a blunt point below the hocks, and hanging a little back of plumb,
 //      clear of the buttock. Widest just under the dock it is a club; and a
 //      dock far narrower than the rump's own facets, closed where it is
-//      pinned, is a rod pushed into the middle of one — so the dock has
-//      girth and its skin starts deep inside the rump (`rootSink`).
+//      pinned, is a rod pushed into the middle of one — so the dock is a
+//      band across the rump (`rootWide`) and its skin starts deep inside it
+//      (`rootSink`). See the tail's own options for how it leaves the hide.
 //
 // The rump itself turns over and down in one arc (`torso.round`): the croup
 // is the high point behind the back and the dock sits on the turn.
@@ -66,6 +67,10 @@ const HEAD_TILT = 0.9;           // rad the face hangs below level
 const KNEE = 0.17;               // rad, hind hock fold
 const POLL_LEAN = 0.15;          // rad the neck's last section leans back off upright
 const TAIL_LEAN = 0.16;          // rad the whole hank leans back off plumb
+// Where the dock is pinned, against the plan's own croup point: [down, forward]
+// x height — deep enough under the croup that the dock's whole first section,
+// upper side included, is inside the rump. See the tail's options.
+const DOCK_SET = [0.005, 0.039];
 // How far the neck's last ring, at the skull, is lifted along its upper half,
 // x height: enough to seat its top in the poll. No other neck ring is lifted —
 // see the mane block for why the crest is not the neck's own outline.
@@ -185,14 +190,24 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     // `thickness` is the dock and `swell` the hair, placed low on the strand
     // (`swellAt`) and spread over most of it (`swellSpan`): a slimmer root
     // that fattens is a hank hanging from a tailbone, where a root as thick
-    // as the hank is a club. The aim leans the dock back so the hank leaves
-    // the croup before it falls — only so far: a stub aimed well out and a
-    // strand hanging plumb from its end is a visible hinge. `rootSink` runs
-    // the skin on from the dock FORWARD AND DOWN into the rump: the tail
-    // leaves nearly along the rump's rear slope, so its own line carried back
-    // would come out through the croup, and a run aimed level stands its
-    // upper side out of that slope as a bright fleck over the dock.
-    tail: { kind: 'strand', segments: 7, length: 0.58, thickness: 0.05, swell: 1.37, swellAt: 0.66, swellSpan: 0.6, root: [0, -1, -0.38], rootSink: [0, -0.05, 0.1] },
+    // as the hank is a club.
+    //
+    // HOW IT LEAVES THE HIDE. The rump turns over and falls away ever more
+    // steeply, and a dock that leaves it more steeply than the rump is
+    // falling at that point has its upper side OUTSIDE the hide ahead of
+    // where it dives back in: a pale facet standing proud at the croup turn,
+    // with the tail seeming to start again below it. So the dock starts
+    // wholly under the croup (DOCK_SET) and its first segment is aimed well
+    // back (`root`), shallower than the slope it comes out through — its
+    // upper side then breaks the hide once, going outward, and reads as the
+    // croup's own line continued. One such stub with the strand plumb off
+    // its end is a visible hinge, so a second aimed segment (`rootBend`)
+    // takes half the turn and the hank falls from an arc. The section has a
+    // ridge up its back (`spin`), because the rump has one and a flat face
+    // comes out through a ridge corners first, as a notch seen from behind.
+    // `rootSink` runs the skin on from the dock FORWARD AND DOWN into the
+    // rump, where no view reaches its end.
+    tail: { kind: 'strand', segments: 7, length: 0.62, thickness: 0.05, swell: 1.5, swellAt: 0.66, swellSpan: 0.6, root: [0, -1, -1.04], rootBend: [0, -1, -0.34], rootSink: [0, -0.05, 0.1], rootWide: 1.5, spin: Math.PI / 6 },
   });
   group.name = 'horse';
 
@@ -202,7 +217,11 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
   // frame, so leaning the whole group back a little carries the hang clear of
   // the buttock, and the idle sway rides along. Only a little: leaned far, the
   // tail stops hanging and sticks out.
-  if (tail) tail.group.rotation.x = TAIL_LEAN;
+  if (tail) {
+    tail.group.rotation.x = TAIL_LEAN;
+    tail.group.position.y -= DOCK_SET[0] * height;
+    tail.group.position.z += DOCK_SET[1] * height;
+  }
 
   // ---- the topline: a poll that meets the skull, a croup that rounds -------
   // The plan's trunk and neck are sections stated by a top point and a bottom
