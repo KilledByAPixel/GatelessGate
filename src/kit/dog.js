@@ -169,12 +169,13 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // and the hind pair below the buttock. Neither can go further out than
     // there is trunk above it to bury the top of the leg in.
     //
-    // HOW THICK. The forearm is about a third of the chest's depth where it
-    // leaves the belly and tapers from there; nearer half, the front of the
-    // animal stood on two posts. `legR` is the whole leg's scale and
-    // `legTaper` the forearm's share of it, so the pair is slimmed with those
-    // and the masses that are stated as multiples of `legR` — shoulder, thigh,
-    // paw — are raised to stay the size they were.
+    // HOW THICK, AND WHERE. The lower leg is slim — under a fifth of the
+    // chest's depth — and the forearm is NOT that width carried up to the
+    // belly: one width from paw to chest is a post, however slim. `legR` is
+    // the whole leg's scale and `legTaper` the forearm's share of it, so the
+    // pair is slimmed with those and the masses that are stated as multiples
+    // of `legR` — shoulder, thigh, paw — are raised to stay the size they
+    // were.
     //
     // THE SHOULDER is the chest's own side, carried straight down to the leg
     // (`torso.slab`), and the leg widens into it above the forearm (`point`,
@@ -183,10 +184,11 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // one leans forward. The front pair stands well forward (`frontSet`) so
     // that fall has chest over it and the breast does not hang out ahead of
     // the leg as a second thing. The forearm is deep at the elbow (`elbow`)
-    // and spends it by the knee; deeper than this it is past a third of the
-    // chest's depth just under the belly, and the front of the dog is on posts
-    // again.
-    legs: { knee: 0.36, shoulder: 2.8, thigh: 3.4, foot: 1.45, frontSet: 0.06, hindSet: 0.1, point: 0.7, arm: 2.4, elbow: 1.6 },
+    // — about twice the lower leg, well over a third of the chest's depth —
+    // and has spent it by the knee. That taper is what makes it a limb grown
+    // out of the shoulder: held near the lower leg's own width up there, the
+    // front of the dog stood on two sticks pushed into its chest.
+    legs: { knee: 0.36, shoulder: 2.8, thigh: 3.4, foot: 1.45, frontSet: 0.06, hindSet: 0.1, point: 0.7, arm: 2.4, elbow: 2.1 },
     // the neck's end has to fit inside the skull it enters, turned or not.
     // The head is carried high on a neck that stands steeply, so the back has
     // a long way to turn to become the nape: `ease` and `easeUp` split that

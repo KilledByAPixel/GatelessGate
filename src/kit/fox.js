@@ -102,9 +102,11 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     // sides with a gap between them.
     torso: { chest: 1.35, loin: 0.62, withers: 1.0, back: 0.92, croup: 1.0, slab: 1, barrel: 0.7, girth: 0.16, shoulderW: 0.86, barrelW: 0.97, hipW: 0.86 },
     legBury: .16,
-    // FINE LIMBS. A fox's front leg is about a quarter of its chest's depth
-    // below the elbow and barely swells above it; a forearm half as deep as
-    // the chest is a dog's leg under a fox. `legR` scales the whole leg and
+    // FINE LIMBS. A fox's front leg is under a fifth of its chest's depth
+    // below the knee and widens to the elbow (`elbow`) by about half as much
+    // again — less than the dog's does, but one width from paw to chest is a
+    // stick, and a forearm half as deep as the chest is a dog's leg under a
+    // fox. `legR` scales the whole leg and
     // `legTaper` the forearm alone, so the shoulder, thigh and paw — stated
     // as multiples of `legR` — are raised to keep the masses they had. The
     // shoulder is the chest's own side come down to the leg (`torso.slab`),
@@ -112,7 +114,7 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     // either way is a dog's elbow, and the face it makes under the chest
     // shows from in front as a dark band across the top of a thin leg.
     legH: LEG_H, legR: 0.047, legTaper: 0.76, hipX: 0.08, hipZ: 0.31,
-    legs: { knee: KNEE, shoulder: 3.6, thigh: 3.7, foot: 1.5, hindSet: 0.09, point: 0.5, arm: 1.0 },
+    legs: { knee: KNEE, shoulder: 3.6, thigh: 3.7, foot: 1.5, hindSet: 0.09, point: 0.5, arm: 1.3, elbow: 1.85 },
     // A ruff, not a stalk: the throat starts low on the chest, the nape leaves
     // the back early, and the taper spends little of that on the way up. Its
     // end still has to fit inside the skull it enters, turned or not. `ease`
