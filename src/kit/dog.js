@@ -149,13 +149,19 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
   const { group, material, plan } = makeQuadruped({
     height, color, seed,
     bodyR: 0.2, bodyLen: 0.56, bodyDrop: 0.2,
+    // A BARREL, NOT A DIAMOND (`barrel`): at the right width but with the
+    // plan's round section he was widest along one line and fell away above
+    // and below it — a thin slab from the front, two flat planes meeting at a
+    // ridge from three-quarter. `girth` ends the shoulder at an edge behind
+    // the elbow, so it reads as a plane of its own against the ribs.
+    //
     // SEEN FROM THE FRONT HE IS BROAD: about a third as wide as he is tall
     // through the chest, with the front legs coming down from under the
     // shoulders well apart and daylight between them. At the plan's lean
     // widths he was a plank on edge with his legs pressed together. The stance
     // (hipX) is bounded by the hips: set wider than this the hind leg's top
     // ring stands out of the rump as a shelf.
-    torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92, round: 1, slab: 1, shoulderW: 1.0, barrelW: 1.08, hipW: 1.02 },
+    torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92, round: 1, slab: 1, barrel: 1, girth: 0.16, shoulderW: 1.0, barrelW: 1.08, hipW: 1.02 },
     legBury: 0.16,
     legH: 0.46, legR: 0.066, legTaper: 0.8, hipX: 0.11, hipZ: 0.30,
     // The legs stand under the two ends of the trunk rather than under its
@@ -176,8 +182,11 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // muscle behind it, so the rear line leans back further than the front
     // one leans forward. The front pair stands well forward (`frontSet`) so
     // that fall has chest over it and the breast does not hang out ahead of
-    // the leg as a second thing.
-    legs: { knee: 0.36, shoulder: 2.8, thigh: 3.4, foot: 1.45, frontSet: 0.06, hindSet: 0.1, point: 0.7, arm: 2.4 },
+    // the leg as a second thing. The forearm is deep at the elbow (`elbow`)
+    // and spends it by the knee; deeper than this it is past a third of the
+    // chest's depth just under the belly, and the front of the dog is on posts
+    // again.
+    legs: { knee: 0.36, shoulder: 2.8, thigh: 3.4, foot: 1.45, frontSet: 0.06, hindSet: 0.1, point: 0.7, arm: 2.4, elbow: 1.6 },
     // the neck's end has to fit inside the skull it enters, turned or not.
     // The head is carried high on a neck that stands steeply, so the back has
     // a long way to turn to become the nape: `ease` and `easeUp` split that
