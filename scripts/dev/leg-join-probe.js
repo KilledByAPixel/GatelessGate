@@ -2,6 +2,10 @@
 // Where a quadruped's legs leave its trunk (tests/helpers/leg-join.js, held
 // by tests/leg-join.test.js), every leg, both sides:
 //
+// THE CLIMB: how far the join line rises up the back of each leg over where
+// it lies on the outer side, x 1e3 height (the thigh standing bare up the
+// back of the haunch).
+//
 // THE TAB: how much of each leg's surface stands OUTSIDE the trunk while
 // facing up (a lit plate or tab under the flank: the thigh's top showing
 // below the haunch, the forearm's top showing as a notch at the elbow), and
@@ -15,7 +19,7 @@
 //
 //   node scripts/dev/leg-join-probe.js [dog fox horse buffalo]
 import { restAnimals } from '../../tests/helpers/mirror.js';
-import { legJoins, legExposure, DELTA } from '../../tests/helpers/leg-join.js';
+import { legJoins, legExposure, legClimb, DELTA } from '../../tests/helpers/leg-join.js';
 
 const only = process.argv.slice(2);
 const name = (j) => `${j.front ? 'front' : 'hind '} ${j.side}`;
@@ -27,6 +31,10 @@ for (const a of await restAnimals()) {
 == ${a.key}`);
   for (const e of legExposure(root)) {
     console.log(`  ${name(e)}  tab: exposed up-facing ${e.up.toFixed(2).padStart(6)}  (steepest ny ${e.upWorst.toFixed(2)})   down-facing ${e.down.toFixed(2).padStart(6)}`);
+  }
+  for (const e of legClimb(root)) {
+    const w = e.at ? `  at (${e.at.x.toFixed(3)}, ${e.at.y.toFixed(3)}, ${e.at.z.toFixed(3)})` : '';
+    console.log(`  ${name(e)}  climb: the join rises up the leg's back ${(e.climb * 1e3).toFixed(1).padStart(6)}e-3 h over its outer face${w}`);
   }
   console.log(`  lip, ${DELTA} h above the crossing (proud x 1e3 h, slope = proud / delta):`);
   for (const j of legJoins(root)) {

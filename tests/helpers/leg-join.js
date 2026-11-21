@@ -128,6 +128,41 @@ export function legJoins(root) {
 // counts as at the join, x height
 export const BAND = 0.04;
 
+// THE CLIMB: how far the line where the leg goes into the trunk rises up
+// the leg's BACK, over where it lies on the leg's outer face — x height.
+// Leaving the trunk along its hem, a leg's crossing runs round it at about
+// one height, rising only with the hem's own slope. The hind thigh's ring
+// was laid on the haunch's lower corner at its outer side but left high at
+// its back corner, under the buttock where the rump is already closing: the
+// leg's back-outer face then stood bare a long way up the back of the
+// haunch, a lit blade from the gaskin to the buttock with paper between it
+// and the tail — from low behind and beside, a wedge jutting out of the
+// belly into the thigh. `outer` is the lowest crossing on the outer face,
+// `back` the highest on the back and back-outer faces.
+export function legClimb(root) {
+  const h = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3()).y;
+  const ms = meshesOf(root);
+  const body = ms.find((m) => m.name === 'body');
+  const inside = insideOf(body.tris);
+  const legs = ms.filter((m) => m.name === 'leg');
+  const zMid = (Math.max(...legs.map((l) => l.centre.z)) + Math.min(...legs.map((l) => l.centre.z))) / 2;
+  return legs.map((leg) => {
+    const side = Math.sign(leg.centre.x), hx = Math.abs(leg.mesh.position.x);
+    let outer = Infinity, back = -Infinity, at = null;
+    for (const { p, n } of crossings(leg, inside, body.box.min.y)) {
+      const o = new THREE.Vector3(n.x, 0, n.z);
+      if (o.length() < 0.3) continue;
+      o.normalize();
+      if (o.x * side > 0.6) outer = Math.min(outer, p.y);
+      // (the outer half of the leg only: between the hind legs the keel
+      // stands higher than the haunch either side, and the crossing there
+      // rises with it by design)
+      if (o.z < -0.3 && o.x * side > -0.3 && p.x * side > hx && p.y > back) { back = p.y; at = p; }
+    }
+    return { side: side > 0 ? '+x' : '-x', front: leg.centre.z > zMid, climb: (back - outer) / h, at };
+  });
+}
+
 // Per leg mesh: { side, front, up, upWorst, down } — see THE TAB.
 export function legExposure(root, band = BAND) {
   const h = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3()).y;
