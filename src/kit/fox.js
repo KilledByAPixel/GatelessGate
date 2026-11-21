@@ -94,19 +94,25 @@ export function makeFox({ height = 0.45, color = INK_LIT, seed = 2 } = {}) {
     bodyR: BODY_R, bodyLen: BODY_LEN, bodyDrop: BODY_DROP,
     // deep at the chest and tucked at the flank, with the croup carried as
     // high as the withers: a back that falls to the rump is a dog standing
-    torso: { chest: 1.35, loin: 0.62, withers: 1.0, back: 0.92, croup: 1.0, shoulderW: 0.78, barrelW: 0.9, hipW: 0.82 },
+    torso: { chest: 1.35, loin: 0.62, withers: 1.0, back: 0.92, croup: 1.0, slab: 1, shoulderW: 0.78, barrelW: 0.9, hipW: 0.82 },
     legBury: .13,
     // FINE LIMBS. A fox's front leg is about a quarter of its chest's depth
     // below the elbow and barely swells above it; a forearm half as deep as
     // the chest is a dog's leg under a fox. `legR` scales the whole leg and
     // `legTaper` the forearm alone, so the shoulder, thigh and paw — stated
-    // as multiples of `legR` — are raised to keep the masses they had.
+    // as multiples of `legR` — are raised to keep the masses they had. The
+    // shoulder is the chest's own side come down to the leg (`torso.slab`),
+    // and the leg widens into it only a little (`point`, `arm`): a long lean
+    // either way is a dog's elbow, and the face it makes under the chest
+    // shows from in front as a dark band across the top of a thin leg.
     legH: LEG_H, legR: 0.047, legTaper: 0.76, hipX: 0.07, hipZ: 0.31,
-    legs: { knee: KNEE, shoulder: 3.6, thigh: 3.7, foot: 1.5, hindSet: 0.09 },
+    legs: { knee: KNEE, shoulder: 3.6, thigh: 3.7, foot: 1.5, hindSet: 0.09, point: 0.5, arm: 1.0 },
     // A ruff, not a stalk: the throat starts low on the chest, the nape leaves
     // the back early, and the taper spends little of that on the way up. Its
-    // end still has to fit inside the skull it enters, turned or not.
-    neck: { r: 0.078, w: 0.9, root: 0.7, set: 0.05, taper: 1.0, arch: 0.02 },
+    // end still has to fit inside the skull it enters, turned or not. `ease`
+    // carries the root's top up the nape, so back, withers and nape are one
+    // line: left under the withers it is a dip just where the ruff begins.
+    neck: { r: 0.078, w: 0.9, root: 0.7, set: 0.05, taper: 1.0, arch: 0.02, ease: 0.4 },
     // The plan's ball only says where the head is carried — forward, and a
     // little above the back — and how far it is nosed down; its geometry is
     // replaced by the loft below. No snout: the muzzle is that loft's front.
