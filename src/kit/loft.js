@@ -28,11 +28,12 @@ import * as THREE from '../../lib/three.module.js';
 // everywhere, which keeps the +x side exactly as it was and copies it to the
 // other. It only made the faults symmetric: the V point behind the foreleg's
 // join and the crease down the flank at the girth were on both sides instead
-// of one. What the outward fold costs: a part sunk into another (the seated
-// cat's arm into its chest) bulges its own faces outward too, so the line
-// where it meets the hide rises in the middle of each face, and the arm's
-// top reads from in front as a point rather than a square post. See
-// tests/symmetry.test.js for the hold.
+// of one. What the outward fold costs: a part sunk into another bulges its
+// own faces outward too, so the line where it meets the hide rises in the
+// middle of each face and can read as a point; a part sunk that way has to
+// sit only just under the skin, with its front set back under the body that
+// hides it (the seated cat's arm, in cat.js). See tests/symmetry.test.js for
+// the hold.
 //
 // A quad is [p0, p1, p2, p3], wound so that p0 -> p1 -> p2 faces out. Its
 // mirror image is stated [m(p1), m(p0), m(p3), m(p2)] — which is what a ring
