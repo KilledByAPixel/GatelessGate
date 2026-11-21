@@ -133,6 +133,10 @@ const FLARE_LEAD = 0.3;
 // How steeply a keeled chest's flare ring may be lifted corner by corner
 // across the leg, rise over run: see A KEELED CHEST IS NOT FLAT ACROSS EITHER.
 const LEAN_MAX = 1;
+// How far ahead of its middle a keeled trunk's thigh ring may reach at its
+// front corners, x its own half-breadth: see THE STIFLE IS THE FLANK'S OWN
+// FOLD. Further, the ring's front is a narrow prow, which is the blade.
+const THIGH_PROW = 1.5;
 
 // The shared body plan for every four-legged animal in the book. Everything
 // scales off `height` and faces +z; a species is this plan at its own
@@ -302,7 +306,7 @@ export function makeQuadruped({
           pos.push(Math.sign(cs) * s.k[0] * s.w, s.c[0] - s.k[1] * s.a[0], s.c[1] - s.k[1] * s.a[1]);
         } else if (s.u && sn > 0.5 && Math.abs(cs) > 0.5) {
           pos.push(Math.sign(cs) * s.u[0] * s.w, s.c[0] + s.u[1] * s.a[0], s.c[1] + s.u[1] * s.a[1]);
-        } else pos.push(cs * s.w, s.c[0] + sn * s.a[0] + (s.dy ? s.dy[j] : 0), s.c[1] + sn * s.a[1] + (s.dz ? s.dz[j] : 0));
+        } else pos.push(cs * s.w + (s.dx ? s.dx[j] : 0), s.c[0] + sn * s.a[0] + (s.dy ? s.dy[j] : 0), s.c[1] + sn * s.a[1] + (s.dz ? s.dz[j] : 0));
       }
     }
     const last = stations.length - 1;
@@ -636,12 +640,12 @@ export function makeQuadruped({
   // how far its front edge stands above its centre, as a fraction of rz. And
   // a sixth entry lifts each of its corners on its own, as world heights
   // above the ring's centre, for a ring laid along a hide that is not flat,
-  // and a seventh moves each fore and aft.
+  // and a seventh moves each fore and aft, and an eighth across.
   const limb = (pts, capH) => {
     const last = pts.length - 1;
-    const sts = pts.map(([y, z, rz, rx, level, lift, pull], i) => {
+    const sts = pts.map(([y, z, rz, rx, level, lift, pull, across], i) => {
       let dy = -1, dz = 0;
-      if (typeof level === 'number') return { c: [y, z], a: [level * rz, rz], w: rx, dy: lift, dz: pull };
+      if (typeof level === 'number') return { c: [y, z], a: [level * rz, rz], w: rx, dy: lift, dz: pull, dx: across };
       if (i > 0 && i < last && !level) {
         dy = pts[i + 1][0] - pts[i - 1][0]; dz = pts[i + 1][1] - pts[i - 1][1];
         const n = Math.hypot(dy, dz) || 1; dy /= n; dz /= n;
@@ -761,10 +765,45 @@ export function makeQuadruped({
       const thighBack = Math.min(0.6 * lr - zHock, Math.max(0.4 * rz, 0.88 * over - LG.hindSet * h));
       const thighFront = 0.5 * hb + 0.62 * rz;
       const zStifle = (thighFront - thighBack) / 2, rT = (thighFront + thighBack) / 2 / HEX;
+      const yT = -0.26 * run, rxT = Math.max(proudAt(top), 1.1 * lr);
+      const yG = -0.46 * run, zG = lerp(zStifle, zHock, 0.55);
+      // THE STIFLE IS THE FLANK'S OWN FOLD, on a keeled trunk. The thigh's
+      // ring stands square to the leg's path, which leans back from hip to
+      // hock, so its front edge hangs well below its middle and well ahead of
+      // it: a thigh much longer fore-and-aft than it is broad, it came out
+      // under the flank as a blade, its narrow front face a lit tab standing
+      // forward of the haunch either side, from below and from
+      // three-quarter. So the ring keeps its slant (restated here as the
+      // explicit tilt `limb` takes, which is the same ring), its prow is
+      // drawn back to THIGH_PROW of its breadth, and each front corner left
+      // out of the trunk climbs until it is just inside the flank: the thigh
+      // then leaves the body along the fold, and its front line runs from
+      // there on down to the gaskin with nothing standing out of it.
+      let thighRing = [yT, zStifle, rT, rxT];
+      if (KEEL) {
+        const pn = Math.hypot(yG, zG - ringZ) || 1;
+        const rzT = (-yG / pn) * rT, tilt = (zG - ringZ) / -yG;
+        const lift = [0, 0, 0, 0, 0, 0], pull = [0, 0, 0, 0, 0, 0];
+        for (const j of [1, 2]) {
+          const t = (j / 6) * Math.PI * 2, sn = Math.sin(t), cs = Math.cos(t);
+          pull[j] = -Math.max(0, sn * rzT - THIGH_PROW * rxT);
+          const at = () => inTrunk(hx + cs * rxT, top + yT + sn * tilt * rzT + lift[j], z + zStifle + sn * rzT + pull[j]);
+          const cap = 0.6 * yT - (yT + sn * tilt * rzT);
+          while (!at() && lift[j] < cap) lift[j] = Math.min(cap, lift[j] + 0.05 * lr);
+        }
+        // ...and its outer corner, where the thigh is broader than the
+        // haunch over it, is drawn in across until it is inside too: left
+        // out, it broke the side of the haunch as a lit diamond, or a row of
+        // prongs where the two surfaces crossed at a glance
+        const across = [0, 0, 0, 0, 0, 0];
+        const outer = () => inTrunk(hx + rxT + across[0], top + yT, z + zStifle);
+        for (let k = 0; k < 12 && !outer(); k++) across[0] -= 0.05 * rxT;
+        thighRing = [yT, zStifle, rzT, rxT, tilt, lift, pull, across];
+      }
       pts = [
         [0, ringZ, rz0, rx0],
-        [-0.26 * run, zStifle, rT, Math.max(proudAt(top), 1.1 * lr)],
-        [-0.46 * run, lerp(zStifle, zHock, 0.55), lerp(rT, lr, LG.gaskin), 1.15 * lr],
+        thighRing,
+        [yG, zG, lerp(rT, lr, LG.gaskin), 1.15 * lr],
         [-LG.hock * run, zHock, 1.0 * lr, 0.9 * lr],
         [-0.80 * run, zHock + 0.45 * LG.rake * hb, 1.08 * C, C],
         [-(run - 1.25 * fH), zPastern, 1.05 * C, 0.95 * C],
