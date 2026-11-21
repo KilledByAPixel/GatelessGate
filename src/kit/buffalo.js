@@ -54,7 +54,7 @@ import { mergeSimple } from './scatter.js';
 //      height; the legs are what is left under it, and they are limbs, far
 //      slimmer than the trunk is deep. Behind, the rump turns over and down
 //      to the buttock (`torso.round`) rather than ending in a corner, and the
-//      thin tail comes out of the back of that turn and hangs to a tuft.
+//      thin tail comes out of the top of that turn and hangs to a tuft.
 //
 // Skull, horns and ears are all placed in the HEAD'S OWN FRAME (+z out the
 // nose, +y out of the forehead), which the plan positions and tilts. Move or
@@ -239,30 +239,46 @@ function closed(pos, idx) {
 }
 
 // THE TAIL'S ROOT. The strand's first segment is a rigid stub (both its nodes
-// are pinned), and the rope hangs plumb from the stub's free end. Three things
+// are pinned), and the rope hangs plumb from the stub's free end. Four things
 // have to hold together:
 //
-//   - THE SKIN STARTS INSIDE THE TRUNK. Closed on the pinned node, just under
-//     the surface, the first ring was cut by the rump at a slant: its upper
-//     half stood out with the closing fan showing. So the skin begins on a
-//     ring of the root's own girth further in (`TAIL_SINK`, forward along the
-//     spine and a little down) and what crosses the hide is the tail's whole
-//     section.
-//   - THE STUB FALLS NEARLY AS STEEPLY AS THE ROPE. The bend at its free end
-//     is a single mitred ring; turned through much more than a third of a
-//     right angle its inside pinches to a dark sliver that reads as a second
-//     broken join. A stub aimed mostly DOWN leaves a soft bend. (It could not
-//     be while the skin closed on the pinned node: a steep stub runs along
-//     the rump rather than into it, and no depth of root covers the ring.)
+//   - IT LEAVES AT THE TURN OF THE CROUP, so its upper line carries the
+//     topline on over the rump and down. Rooted lower, on the rump's own
+//     face, the tail is a thing fixed to the back of him and the rump's
+//     outline runs on past it above.
+//   - THE STUB COMES OUT THROUGH THE HIDE AT A SLANT. It is the one part of
+//     the tail that cannot move, and what shows of it stands still while the
+//     rope swings from its end. Laid nearly as steep as the rump it stood
+//     off the rump over its whole length, a strut with daylight under it.
+//     Laid further off plumb than the rump falls, its root is inside, its
+//     side breaks the surface part-way along, and what shows is the last of
+//     it turning over into the rope.
+//   - THE SKIN STARTS FURTHER IN STILL, on a ring of the root's own girth
+//     (`TAIL_SINK`), so what crosses the hide is the tail's whole section and
+//     never its closed end. That buried run is laid nearly level. Carried
+//     straight back along the stub's own line it climbs toward the croup and
+//     breaks the surface at a grazing angle, over the ridge of the back, as
+//     two prongs with a notch between; aimed down into the rump it turns too
+//     sharply at the pinned node and the corner stands out as a peak.
 //   - THE FREE END CLEARS THE BUTTOCK, which is still going back below the
-//     root. So the stub is slid along its own line — the one through the
-//     plan's root — until that end stands just behind the rump's hindmost
-//     point; a rope hung from further in lies inside the buttock.
+//     root: it stands just behind the rump's hindmost point, or the rope
+//     hangs inside the buttock. The stub is placed from that end, not from
+//     its root.
 //
-// The aim is a direction; the sink and the clearance are x height.
-const TAIL_AIM = [0, -0.85, -0.53];
-const TAIL_SINK = [0, -0.04, 0.13];
+// The bend at the free end is a single mitred ring, which thins as the bend
+// sharpens, and that is what stops the stub being laid flatter still. At rest
+// this aim leaves it sound. Thrown up over its own root in a swish the rope
+// folds most of the way back on the stub and the ring closes to an edge for
+// those frames; that is the strand's to mend, not the root's.
+//
+// The aim is a direction; the sink and the clearance are x height; the set is
+// how far up from the rump's hindmost point toward the croup the free end
+// stands.
+const TAIL_AIM = [0, -0.71, -0.71];
+const TAIL_SINK = [0, 0.02, 0.12];
+const TAIL_SET = 0.45;
 const TAIL_CLEAR = 0.01;
+const TAIL_SETTLE = 40;          // steps run at build, past the strand's own warm-up
 const TAIL_SEGMENTS = 7;
 const TAIL_LENGTH = 0.66;
 
@@ -323,12 +339,14 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
   // ---- the tail's root ----------------------------------------------------------
   // see THE TAIL'S ROOT above
   {
-    const body = group.children.find((c) => c.name === 'body');
-    body.geometry.computeBoundingBox();
-    const zFree = body.position.z + body.geometry.boundingBox.min.z - TAIL_CLEAR * h;
+    const rump = trianglesOf(group.children.find((c) => c.name === 'body')).flat().reduce((a, p) => (p.z < a.z ? p : a));
+    const croup = plan.topAt(plan.zHip);
     const aim = new THREE.Vector3(...TAIL_AIM).normalize();
     const stub = TAIL_LENGTH * h / (TAIL_SEGMENTS - 1);
-    tail.group.position.addScaledVector(aim, (zFree - tail.group.position.z) / aim.z - stub);
+    tail.group.position.set(0, rump.y + (croup - rump.y) * TAIL_SET, rump.z - TAIL_CLEAR * h).addScaledVector(aim, -stub);
+    // the strand's own warm-up starts it laid out along the aim, and from an
+    // aim this far off plumb it is still swinging in when that ends
+    for (let i = 0; i < TAIL_SETTLE; i++) tail.update(1 / 60, i / 60);
   }
 
   // ---- ONE head: poll to nostril in a single loft ---------------------------

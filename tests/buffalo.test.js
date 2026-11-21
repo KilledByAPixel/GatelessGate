@@ -391,18 +391,25 @@ test('the tail enters the rump at full girth, its end buried', () => {
   }
 });
 
-// THE BEND IS SOFT. The rope hangs plumb from the end of a rigid stub, and the
-// corner between them is one mitred ring: turned through much more than a
-// third of a right angle, its inside pinches to a dark sliver that reads as a
-// broken join. So the stub itself falls steeply — but still leans back, or
-// the rope would hang inside the buttock.
-test('the tail leaves the rump steeply and falls in a soft bend', () => {
+// IT LEAVES AT THE TURN OF THE CROUP, AT A SLANT. Rooted down on the rump's
+// own face and laid nearly as steep as the rump, the tail is a strut fixed to
+// the back of him. So its root stands close under the croup and inside the
+// trunk, and the stub leans well back off plumb to come out through the hide —
+// but not so far that the one mitred ring at its free end, where the rope
+// turns to hang, is pinched thin.
+test('the tail leaves at the turn of the croup and comes out through the hide at a slant', () => {
   const b = makeBuffalo({ height: H });
+  b.group.updateMatrixWorld(true);
   const [root, free] = b.tail.nodes();
   const dy = free[1] - root[1], dz = free[2] - root[2];
   const offPlumb = Math.atan2(Math.hypot(dz, free[0] - root[0]), -dy) * 180 / Math.PI;
-  assert.ok(offPlumb < 38, `the stub stands ${offPlumb.toFixed(0)} degrees off plumb`);
-  assert.ok(dz < 0 && offPlumb > 15, 'and still leans back, away from the rump');
+  assert.ok(dz < 0 && offPlumb > 38, `the stub leans ${offPlumb.toFixed(0)} degrees back off plumb`);
+  assert.ok(offPlumb < 50, `and no further: ${offPlumb.toFixed(0)} degrees is a pinched bend where the rope turns down`);
+  const at = new THREE.Vector3(...root).applyMatrix4(b.tail.group.matrixWorld);
+  const croup = b.plan.topAt(b.plan.zHip);
+  assert.ok(croup - at.y < 0.17 * H && croup - at.y > 0.08 * H,
+    `the root stands ${((croup - at.y) / H).toFixed(3)} of his height under the croup`);
+  assert.ok(inside(triangles(b.group, (o) => o.name === 'body'), at), 'and inside the trunk');
 });
 
 // ...and it comes to rest hanging plumb behind the rump, not still swinging
@@ -412,10 +419,14 @@ test('the tail is at rest when the buffalo is built', () => {
   const b = makeBuffalo({ height: H });
   b.group.updateMatrixWorld(true);
   const nodes = b.tail.nodes();
-  const stubEnd = nodes[1], tip = nodes[nodes.length - 1];
-  assert.ok(Math.abs(tip[2] - stubEnd[2]) < 0.03 * H,
-    `the tip hangs ${((tip[2] - stubEnd[2]) / H).toFixed(3)} of his height off plumb, fore and aft`);
-  assert.ok(Math.abs(tip[0]) < 0.03 * H, 'and on the centreline');
+  const stubEnd = nodes[1];
+  // every node of the rope, not only the tip: a rope still swinging in from
+  // its construction is bowed in the middle with its tip nearly home
+  for (let i = 2; i < nodes.length; i++) {
+    assert.ok(Math.abs(nodes[i][2] - stubEnd[2]) < 0.014 * H,
+      `node ${i} hangs ${((nodes[i][2] - stubEnd[2]) / H).toFixed(3)} of his height off plumb, fore and aft`);
+    assert.ok(Math.abs(nodes[i][0]) < 0.014 * H, 'and on the centreline');
+  }
   const rumpEnd = Math.min(...triangles(b.group, (o) => o.name === 'body').flatMap((t) => [t[2], t[5], t[8]]));
   assert.ok(b.tail.group.position.z + stubEnd[2] < rumpEnd, 'the rope hangs from behind the rump, not from inside it');
 });
