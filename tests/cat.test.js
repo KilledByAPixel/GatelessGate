@@ -400,33 +400,29 @@ test('a seated front leg is an arm: a plumb column that opens both ways into the
     };
     assert.ok(foremostX(0.55) < foremostX(0.3) - 0.04, `the front line stays out at ${foremostX(0.55).toFixed(3)} over a column at ${foremostX(0.3).toFixed(3)}`);
 
-    // It lies ON the chest. Everything above the elbow is within a thin skin
-    // of the trunk's surface — carried that little way toward the middle of
-    // the animal, every vertex is inside the body — and the top of it is
-    // under the surface outright, so the shoulder has no top edge to show.
+    // Above the elbow the leg is INSIDE the chest, every vertex of it: the
+    // shoulder is the chest's own surface swelling over the arm, so there is
+    // no shell lying on the flank to show a top, an end face or a shadow
+    // line down its back. A relief laid on the chest read as a tab stuck on.
     leg.updateWorldMatrix(true, false);
     const p = leg.geometry.getAttribute('position');
     const v = new THREE.Vector3();
-    const side = Math.sign(leg.getWorldPosition(new THREE.Vector3()).x);
-    let on = 0, under = 0;
+    let above = 0;
     for (let i = 0; i < p.count; i++) {
       v.fromBufferAttribute(p, i).applyMatrix4(leg.matrixWorld);
-      if (v.y < 0.5) continue;
-      if (v.y > 0.7) {
-        under++;
-        assert.ok(inside(body, v), `the top of the shoulder stands out of the trunk at (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`);
-      }
-      on++;
-      v.x -= side * 0.025;
-      assert.ok(inside(body, v), `the shoulder stands off the chest at (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`);
+      if (v.y < 0.47) continue;
+      above++;
+      assert.ok(inside(body, v), `the arm stands out of the chest at (${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)})`);
     }
-    assert.ok(on >= 16 && under >= 4, `there is a shoulder to judge: ${on} points on the chest, ${under} at its top`);
-    // and it does show: over the upper arm the limb's surface stands a
-    // little outside the trunk's — a low relief, not a plate and not nothing
-    for (const [y, z] of [[0.4, 0.03], [0.5, 0.07], [0.54, 0.03], [0.6, -0.02]]) {
-      const proud = reachAt(tris, y, z) - reachAt(body, y, z);
-      assert.ok(proud > 0.004 && proud < 0.03, `the shoulder stands ${proud.toFixed(4)} off the flank at (${y}, ${z})`);
-    }
+    assert.ok(above >= 24, `there is an upper arm to judge: ${above} points`);
+  }
+  // and the chest DOES swell over it: over the upper arm the trunk stands
+  // well outside the column the arm comes up as
+  const arm = triangles(g, (o) => legs.includes(o));
+  const column = reachAt(arm, 0.3, 0.1);
+  for (const [y, z] of [[0.48, 0.12], [0.55, 0.13], [0.6, 0.12]]) {
+    const over = reachAt(body, y, z) - column;
+    assert.ok(over > 0.03, `the shoulder stands only ${over.toFixed(3)} outside the forearm at (${y}, ${z})`);
   }
   // close together under the breast: at the ground, the gap between the paws
   // is narrower than a paw

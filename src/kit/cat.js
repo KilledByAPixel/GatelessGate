@@ -45,9 +45,9 @@ import { hash1 } from '../util/noise.js';
 //     the trunk, which is the base of the pear from the front, and they
 //     close the gap under the belly from the side.
 //   - THE FRONT LEGS ARE ARMS (see A SEATED FRONT LEG): a column plumb on
-//     both edges from a block of a paw to the elbow, the paws together, and
-//     at the top opening both ways — forward into the breast, back and up
-//     into the shoulder — as a low relief on the chest that fades into it.
+//     both edges from a block of a paw to the elbow, the paws together,
+//     coming up from under a shoulder that is the chest's own swelling (see
+//     THE SHOULDER), not a piece laid on it.
 //   - THE HEAD IS PLACED FOR THE POSE, NOT CARRIED OVER (see SIT_HEAD), and
 //     the pear's own last rings end inside it.
 //
@@ -159,13 +159,22 @@ const STAND = {
 // breast: fullest a little below the throat and falling back from there, so
 // the front legs come down out of its line instead of standing ahead of it.
 // The last rows are the neck, as deep as the skull it ends in.
+//
+// THE SHOULDER is the pear's own surface. A row may carry two more numbers,
+// `swell` and `fore`: its two front-quarter vertices stand `swell` further out
+// and sit `fore` of the way along the half-axis toward the breast instead of
+// at the quarter. So over the upper arm the chest bulges out and forward, and
+// the leg comes up from under that bulge with no edge of its own. A shoulder
+// built as a shell lying on the chest — however low, however faded — showed
+// its top as a lit end face and its back edge as a dark line: a tab stuck on
+// the flank.
 const PEAR = [
   [0.05, -0.475, 0.02, -0.12, 0.185],
   [0.17, -0.515, 0.13, 0.03, 0.235],
   [0.32, -0.505, 0.28, 0.11, 0.24],
-  [0.46, -0.467, 0.42, 0.17, 0.23],
-  [0.6, -0.395, 0.53, 0.222, 0.21],
-  [0.715, -0.29, 0.64, 0.25, 0.19],
+  [0.46, -0.467, 0.42, 0.17, 0.23, 0.02, 0.85],
+  [0.6, -0.395, 0.53, 0.222, 0.21, 0.035, 0.85],
+  [0.715, -0.29, 0.64, 0.25, 0.19, 0.02, 0.8],
   [0.78, -0.15, 0.73, 0.24, 0.17],
   [0.9, -0.045, 0.81, 0.225, 0.142],
   [1.0, -0.002, 0.885, 0.215, 0.12],
@@ -191,27 +200,26 @@ const SIT_LEVEL = 1.0;      // how much of that the skull takes back out
 // It is an ARM, not a thigh. Below the elbow it is a column to a wrist and a
 // block of a paw reaching forward: its front line and its back line both
 // near plumb, only a little deeper at the top than at the wrist. At the top
-// it opens BOTH ways into the trunk, like a column meeting a vault: the front
-// line sweeps forward and up into the breast, which stands out ahead of the
-// leg, and the back line runs plumb past the elbow and then turns back and up
-// into the shoulder. A leg whose back line alone runs up and back across the
-// ribs, with the front straight up into the chest, is a wedge leaning back —
-// a hind thigh stood at the front of the animal.
+// it opens BOTH ways, like a column meeting a vault — forward and up under
+// the breast, back and up into the shoulder — and all of that opening is
+// INSIDE the chest: what shows is the chest's own swelling over it (see THE
+// SHOULDER) with the column coming out from under it at the elbow. A leg
+// whose back line alone runs up and back across the ribs, with the front
+// straight up into the chest, is a wedge leaning back — a hind thigh stood at
+// the front of the animal.
 //
 // Every ring starts as the free leg's, an ellipse about FORELEG_X, `out`
 // further from the midline (the paws stand together under the breast; the
 // columns lean out a little to reach the chest's sides). Three things then
 // fit it to the trunk, each read off the mesh at the ring's own vertices:
 //
-//   - `proud` DRAPES the outer side: vertices standing inside the flank are
-//     carried out to stand that far off it, and the back end is tucked just
-//     under the skin. So the upper arm lies on the side of the chest as a low
-//     relief whose back edge is the elbow and shoulder line written here.
-//     Only ever carried OUT: where the free ring already stands outside the
-//     trunk it is the column, and pulling it in to the skin there folds it.
-//     `proud` runs out to nothing and then under, on rings slanted to rise
-//     toward the back, so the relief has no level top: the top of it falls
-//     forward, the shoulder line climbs back.
+//   - `proud` places the outer side against the flank: vertices standing
+//     inside the flank are carried out to stand that far off it (negative:
+//     under it), and the back end is tucked under the skin. Only ever
+//     carried OUT: where the free ring already stands outside the trunk it
+//     is the column, and pulling it in to the skin there folds it. Every
+//     ring above the elbow is under the skin; laid on the chest at a
+//     positive `proud` the upper arm read as a separate tab.
 //   - `front` TUCKS the front end in under the breast, toward the midline as
 //     the ring rises (never past FORELEG_MID), and draws the front-outer
 //     quarter onto the breast with it — that is the front line turning into
@@ -225,18 +233,18 @@ const SIT_LEVEL = 1.0;      // how much of that the skull takes back out
 //     It lies FORELEG_SINK lower than `proud`; at `proud` it is a ridge
 //     running up the breast as a needle.
 const FORELEG = [
-  [0.64, 0.21, 0.75, -0.12, 0.03, 0.03, -0.03, 1],
-  [0.58, 0.212, 0.71, -0.11, 0.045, 0.03, -0.002, 1, 0.95],
-  [0.53, 0.198, 0.62, -0.06, 0.05, 0.03, 0.008, 1, 0.92],
-  [0.485, 0.188, 0.5, -0.03, 0.054, 0.03, 0.01, 0.8, 0.88],
-  [0.425, 0.182, 0.425, -0.025, 0.056, 0.028, 0.008, 0.5, 0.8],
-  [0.32, 0.179, 0.32, 0.015, 0.054, 0.022, 0.008],
+  [0.64, 0.21, 0.75, -0.12, 0.03, 0.03, -0.05, 1],
+  [0.58, 0.212, 0.71, -0.11, 0.045, 0.03, -0.04, 1, 0.95],
+  [0.53, 0.198, 0.62, -0.06, 0.05, 0.03, -0.03, 1, 0.92],
+  [0.485, 0.17, 0.5, -0.03, 0.054, 0.03, -0.02, 1, 0.88],
+  [0.425, 0.182, 0.425, -0.025, 0.056, 0.028, -0.01, 0.4, 0.8],
+  [0.32, 0.179, 0.32, 0.015, 0.054, 0.022, -0.004],
   [0.2, 0.177, 0.2, 0.03, 0.05, 0.012, 0.008],
   [0.09, 0.174, 0.09, 0.045, 0.046, 0],
   [0.055, 0.212, 0.055, 0.04, 0.052, 0],
   [0.0, 0.216, 0.0, 0.038, 0.054, 0],
 ];
-const SHOULDER_TUCK = 0.035;             // how far under the skin a draped ring's back end lies
+const SHOULDER_TUCK = 0.035;             // how far under the skin a placed ring's back end lies
 const FORELEG_TOP = [0.76, 0.04];        // [y, z] apex closing the loft inside the chest
 const FORELEG_X = 0.06;                  // the paws' centre plane
 const FORELEG_MID = 0.012;               // nearer the midline than this, a tucked front end does not go
@@ -520,9 +528,20 @@ export function makeCat({ height = 0.32, color = INK_LIT, seed = 14, pose = 'sit
     torso.updateMatrix();
     const toTorso = torso.matrix.clone().invert();
 
-    const stations = PEAR.map(([by, bz, fy, fz, w]) => ({
-      c: [(by + fy) / 2 * h, (bz + fz) / 2 * h], a: [(by - fy) / 2 * h, (bz - fz) / 2 * h], w: w * h,
-    }));
+    const stations = PEAR.map(([by, bz, fy, fz, w, swell = 0, fore = Math.SQRT1_2]) => {
+      const s = { c: [(by + fy) / 2 * h, (bz + fz) / 2 * h], a: [(by - fy) / 2 * h, (bz - fz) / 2 * h], w: w * h };
+      if (swell) {
+        // see THE SHOULDER: the two front quarters stand further out, and
+        // further forward
+        s.xs = [];
+        for (let j = 0; j < 8; j++) s.xs.push(Math.cos((j / 8) * Math.PI * 2) * s.w);
+        s.xs[5] -= swell * h;
+        s.xs[7] += swell * h;
+        const D = Math.SQRT1_2;
+        s.sn = [0, D, 1, D, 0, -fore, -1, -fore];
+      }
+      return s;
+    });
     const hy = SIT_HEAD[0] * h, hz = SIT_HEAD[1] * h;
     const pear = ringLoft(stations, 8,
       [PEAR_SEAT[0] * h, PEAR_SEAT[1] * h], [PEAR_CROWN[0] * h, PEAR_CROWN[1] * h]);
