@@ -64,6 +64,9 @@ const HAUNCH_DROP = [0.6, 1, 0.75];
 // against the section without any of it, as with the haunch; only the
 // column's flare is read off the chest that renders, so it starts below
 // where the chest now hangs.
+// The cover alone left that corner standing out over the leg's outer side,
+// a lip with a dark line under it, so the flare is then laid on the corner
+// itself (THE LEG'S OUTER SIDE RUNS INTO THE CHEST'S SIDE CORNER).
 const ARM_DROP = [0.3, 0.5, 0.4, 0];
 const ARM_AT = [[0.75, 0], [1, 1], [0.5, 1]];
 const ARM_COVER = 1.2;
@@ -158,6 +161,15 @@ const FLARE_LEAD = 0.3;
 // How steeply a keeled chest's flare ring may be lifted corner by corner
 // across the leg, rise over run: see A KEELED CHEST IS NOT FLAT ACROSS EITHER.
 const LEAN_MAX = 1;
+// Where a keeled trunk's leg ring corners are laid against the trunk's lower
+// corner line (see THE LEG'S OUTER SIDE RUNS INTO THE CHEST'S SIDE CORNER),
+// x the leg's own radius there: UP above the line, on the side over it, and
+// IN from that side. On the line exactly, the leg's faces and the trunk's
+// would coincide along it and fight; higher, the leg's face, which leans out
+// going up, passes further inside the corner, and the sliver of turned-under
+// faces it leaves showing widens with it.
+const CORNER_IN = 0.01;
+const CORNER_UP = 0.06;
 // How far ahead of its middle a keeled trunk's thigh ring may reach at its
 // front corners, x its own half-breadth: see THE STIFLE IS THE FLANK'S OWN
 // FOLD. Further, the ring's front is a narrow prow, which is the blade.
@@ -729,6 +741,98 @@ export function makeQuadruped({
     };
   })();
 
+  // A keeled trunk's lower corners on the +x side, side to keel (k = 0, 1,
+  // 2: the last three of each ring), each as the line through every
+  // section's own vertex, as the loft draws it: [x, y, z] in the animal's
+  // frame, the line bending at each. sideCorner reads one at a station z,
+  // [x, y], or null outside the run of sections.
+  const cornerLines = [0, 1, 2].map((k) => {
+    if (!KEEL) return [];
+    const p = body.geometry.getAttribute('position');
+    return stations.map((_, i) => [p.getX(i * SEG + SEG - 1 - k), p.getY(i * SEG + SEG - 1 - k) + bodyY, p.getZ(i * SEG + SEG - 1 - k)]);
+  });
+  const sideCorner = (zz, k = 0) => {
+    const line = cornerLines[k];
+    for (let i = 0; i + 1 < line.length; i++) {
+      const a = line[i], b = line[i + 1];
+      if (zz < Math.min(a[2], b[2]) || zz > Math.max(a[2], b[2]) || a[2] === b[2]) continue;
+      const t = (zz - a[2]) / (b[2] - a[2]);
+      return [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
+    }
+    return null;
+  };
+
+  // where the trunk's side stands across at a height and a station, off the
+  // trunk that renders, searched outward from `lo` (a point inside: over a
+  // haunch the keel between the legs is higher than the corners either side,
+  // and the midline there is outside)
+  const hideAt = (y, zz, lo) => {
+    let hi = 3 * R;
+    for (let k = 0; k < 16; k++) { const m = (lo + hi) / 2; if (inTrunk(m, y, zz)) lo = m; else hi = m; }
+    return lo;
+  };
+  // THE LEG'S OUTER SIDE RUNS INTO THE CHEST'S SIDE CORNER (see it beside
+  // the front leg). Lays a ring's outer corners `OUT` (in order fore and aft,
+  // as corner indices of a six-sided limb ring) on a lower corner line of a
+  // keeled trunk, each just inside it (CORNER_UP, CORNER_IN), by writing
+  // their `lift`, `pull` and `across` (world units, over the ring's own
+  // `xOf`/`yOf`/`zOf`, which leave out what is written). The line is the
+  // one standing nearest across to where the ring already is — on a slabbed
+  // chest the side corner, on the buffalo's barrelled one the next one under
+  // it, which a corner carried out to the side corner reached only as a
+  // wide funnel — for the whole ring (`line: 'leg'`, read at its middle
+  // corner) or corner by corner. `r` is the leg's radius there.
+  const onCorner = ({ OUT, zOf, xOf, yOf, lift, pull, across, r, line: per }) => {
+    const nearest = (j, zz) => {
+      let best = 0;
+      for (const k of [1, 2]) {
+        const at = sideCorner(zz, k), was = sideCorner(zz, best);
+        if (at && was && Math.abs(at[0] - xOf(j)) < Math.abs(was[0] - xOf(j))) best = k;
+      }
+      return best;
+    };
+    const mid = OUT[(OUT.length - 1) >> 1];
+    const whole = per === 'leg' ? nearest(mid, zOf(mid)) : null;
+    const lineOf = OUT.map((j) => (whole != null ? whole : nearest(j, zOf(j))));
+    // The corner line bends at every section, and the leg's top edge is
+    // straight from one ring corner to the next: across a bend it runs
+    // above the line (it is a chord of a line that dips to the shoulder
+    // and climbs to the breast) and its face below leaves a sliver of the
+    // turned-under faces showing. So each bend that falls within the leg's
+    // run takes a ring corner of its own — whichever assignment, in order,
+    // moves the corners least fore and aft.
+    const zs = OUT.map(zOf), tol = 0.05 * r;
+    const lo = zs[0], hi = zs[zs.length - 1];
+    const bends = [...new Set(lineOf)].flatMap((k) => cornerLines[k].map((q) => q[2]))
+      .filter((v) => v > lo + tol && v < hi - tol).sort((p, q) => p - q)
+      .filter((v, i, all) => !i || v > all[i - 1] + tol);
+    let best = null;
+    if (bends.length && bends.length <= OUT.length) {
+      for (let m = 0; m < 1 << OUT.length; m++) {
+        const pick = OUT.map((_, i) => i).filter((i) => m & (1 << i));
+        if (pick.length !== bends.length) continue;
+        const to = zs.slice();
+        pick.forEach((i, b) => { to[i] = bends[b]; });
+        if (to.some((v, i) => i && v < to[i - 1] + tol)) continue;
+        const cost = to.reduce((sum, v, i) => sum + Math.abs(v - zs[i]), 0);
+        if (!best || cost < best.cost) best = { cost, to };
+      }
+    }
+    if (best) OUT.forEach((j, i) => { pull[j] += best.to[i] - zs[i]; });
+    OUT.forEach((j, i) => {
+      const zj = zOf(j);
+      const cn = sideCorner(zj, lineOf[i]);
+      if (!cn) return;
+      const y = cn[1] + CORNER_UP * r;
+      let inner = cn[0] - 0.5 * r;
+      for (let k = 0; k < 8 && !inTrunk(inner, y, zj); k++) inner -= 0.25 * r;
+      let x = hideAt(y, zj, inner) - CORNER_IN * r;
+      for (let k = 0; k < 12 && !inTrunk(x, y, zj); k++) x -= CORNER_IN * r;
+      across[j] = x - xOf(j);
+      lift[j] = y - yOf(j);
+    });
+  };
+
   const legTop = {};
   for (const hind of [false, true]) {
     const z = hind ? zHip - LG.hindSet * h : zShoulder + LG.frontSet * h;
@@ -841,6 +945,21 @@ export function makeQuadruped({
         const across = [0, 0, 0, 0, 0, 0];
         const outer = () => inTrunk(hx + rxT + across[0], top + yT, z + zStifle);
         for (let k = 0; k < 12 && !outer(); k++) across[0] -= 0.05 * rxT;
+        // ...and then, as the front leg's flare is (onCorner), its outer and
+        // front corners are laid on the flank's lower corners, each on the
+        // nearer: the thigh's outer side then runs up into the haunch's
+        // rather than in under a strip of the flank's turned-under faces,
+        // which was a dark line over the front of the thigh, from the stifle
+        // up and back. Its back corner is left where it was: under the
+        // buttock it is already as good as on the line, and laid there too
+        // it showed a little of the thigh's top as a tab on the fox and the
+        // horse without closing the buffalo's lip any further.
+        onCorner({
+          OUT: [0, 1], r: lr, lift, pull, across,
+          zOf: (j) => z + zStifle + Math.sin((j / 6) * Math.PI * 2) * rzT + pull[j],
+          xOf: (j) => hx + Math.cos((j / 6) * Math.PI * 2) * rxT,
+          yOf: (j) => top + yT + Math.sin((j / 6) * Math.PI * 2) * tilt * rzT,
+        });
         thighRing = [yT, zStifle, rzT, rxT, tilt, lift, pull, across];
       }
       pts = [
@@ -992,6 +1111,34 @@ export function makeQuadruped({
           for (let k = 0; k < 12 && !at(); k++) pull[j] -= 0.05 * sn * rF;
         }
       }
+      // THE LEG'S OUTER SIDE RUNS INTO THE CHEST'S SIDE CORNER. Below the
+      // chest's lower side corner its faces turn under toward the keel, and
+      // a leg that went in through those faces — anywhere inside the corner,
+      // as THE ARM's cover deliberately left it — had a strip of them
+      // standing out over its outer side, their underside a thin dark line
+      // from the front of the leg down and back to the belly, with the leg's
+      // face stepping in under it (tests/leg-join.test.js). A leg standing
+      // outside the corner instead shows its own top as a lit tab, and one
+      // flush with the side crosses it at a glance along a ragged line —
+      // which is why drawing the chest in or hanging it lower only traded
+      // one fault for another. So the flare ring's three outer corners are
+      // laid ON the corner line itself (the loft's own edge, sideCorner),
+      // each just inside it: the leg's outer side leans out going up and
+      // meets the chest's side exactly where that side stops, along the line
+      // where the trunk was already turning, and the faces that turn under
+      // lie inside the leg. Ahead of and behind the leg they are the
+      // breast's and the girth's own underside, which is what they are.
+      // This overrides the lift found above for those three corners; the
+      // inner ones keep it. (onCorner, beside the legs, for the how.)
+      const across = lift && [0, 0, 0, 0, 0, 0];
+      if (lift) {
+        onCorner({
+          OUT: [5, 0, 1], r: rE, lift, pull, across, line: 'leg',
+          zOf: (j) => z + zc + Math.sin((j / 6) * Math.PI * 2) * rF + pull[j],
+          xOf: (j) => hx + Math.cos((j / 6) * Math.PI * 2) * rxF,
+          yOf: (j) => yF + Math.sin((j / 6) * Math.PI * 2) * slant * rF,
+        });
+      }
       // and the vault stands above the whole of it
       // (and under the sunk ring the leg hangs from, or the loft folds back on
       // itself there and shows a shelf)
@@ -1003,8 +1150,8 @@ export function makeQuadruped({
       pts = [
         [0, ringZ, rz0, rx0],
         [V.yP - top, V.zP, V.rzP, V.rxP, true],
-        [yF, zc, rF, rxF, slant, lift, pull],
-        [lerp(yF, -eY, 0.5), 0.5 * zc, lerp(rF, rE, 0.6), lerp(rxF, 0.78 * rE, 0.6), 0.5 * slant, lift && lift.map((v) => 0.5 * v), pull && pull.map((v) => 0.5 * v)],
+        [yF, zc, rF, rxF, slant, lift, pull, across],
+        [lerp(yF, -eY, 0.5), 0.5 * zc, lerp(rF, rE, 0.6), lerp(rxF, 0.78 * rE, 0.6), 0.5 * slant, lift && lift.map((v) => 0.5 * v), pull && pull.map((v) => 0.5 * v), across && across.map((v) => 0.5 * v)],
         [-eY, 0, rE, 0.78 * rE, true],
         [-lerp(eY, yK, 0.5), 0.05 * lr, lerp(rE, rK, 0.5), 0.8 * lerp(rE, rK, 0.5)],
         [-yK, 0.1 * lr, rK, 0.9 * rK],
