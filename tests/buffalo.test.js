@@ -350,7 +350,62 @@ test('the legs are limbs under the trunk, not posts', () => {
     assert.ok(cannon > 0.07 * chest.depth, `and ${(cannon / chest.depth).toFixed(3)} of it is a deer's`);
     assert.ok(wide(0.9) > 1.5 * cannon, 'the leg is thickest where it leaves the belly');
     assert.ok(wide(0.05) > 1.3 * cannon, 'and stands on a hoof wider than its cannon');
+    if (leg.position.z < 0) continue;
+    // A FRONT LEG GROWS OUT OF THE SHOULDER. Slim all the way up it is a post
+    // set under a box, however slim the cannon: the forearm is a heavy
+    // animal's, well over twice the cannon where it leaves the belly, and it
+    // spends that steadily on the way down to the knee.
+    assert.ok(wide(0.9) > 2.5 * cannon, `the forearm is ${(wide(0.9) / cannon).toFixed(2)}x the cannon at the elbow`);
+    assert.ok(wide(0.9) > wide(0.75) && wide(0.75) > wide(0.6) && wide(0.6) > 1.3 * cannon,
+      'and tapers from there to the knee, not all at once');
+    assert.ok(wide(0.9) < 0.3 * chest.depth, `but still a leg: ${(wide(0.9) / chest.depth).toFixed(3)} of the chest's depth`);
   }
+});
+
+// half the breadth of a set of triangles at one height on one station
+function halfWidthAt(tris, z, y) {
+  let w = 0;
+  for (const t of tris) {
+    const pts = [];
+    for (let e = 0; e < 3; e++) {
+      const a = e * 3, b = ((e + 1) % 3) * 3;
+      if ((t[a + 2] - z) * (t[b + 2] - z) > 0 || t[a + 2] === t[b + 2]) continue;
+      const k = (z - t[a + 2]) / (t[b + 2] - t[a + 2]);
+      pts.push([t[a] + (t[b] - t[a]) * k, t[a + 1] + (t[b + 1] - t[a + 1]) * k]);
+    }
+    if (pts.length < 2) continue;
+    const [p, q] = pts;
+    if ((p[1] - y) * (q[1] - y) > 0 || p[1] === q[1]) continue;
+    w = Math.max(w, Math.abs(p[0] + (q[0] - p[0]) * ((y - p[1]) / (q[1] - p[1]))));
+  }
+  return w;
+}
+
+// A BROAD ROUNDED MASS, WITH THE SHOULDER ITS OWN PLANE. From in front a
+// section that is widest along one line and falls straight away above and
+// below it is a diamond; his keeps most of its breadth well up toward the
+// back and well down toward the belly. And the shoulder ends: just behind the
+// elbow the trunk is drawn in a little before the ribs swell out again, which
+// is the edge that sets the shoulder off on his side.
+test('the trunk is a barrel, not a diamond, and the shoulder is set off by a girth behind it', () => {
+  const b = makeBuffalo({ height: H });
+  b.group.updateMatrixWorld(true);
+  const body = triangles(b.group, (o) => o.name === 'body');
+  const { zShoulder, zHip } = b.plan;
+  const mid = (z) => { const c = sectionY(body, z); return (c.max + c.min) / 2; };
+  for (const z of [zShoulder - 1e-3, 0.5 * zHip]) {
+    const c = sectionY(body, z), m = mid(z);
+    for (const end of [c.max, c.min]) {
+      const kept = halfWidthAt(body, z, m + 0.6 * (end - m)) / halfWidthAt(body, z, m);
+      assert.ok(kept > 0.8, `at z = ${(z / H).toFixed(2)} the section keeps ${kept.toFixed(2)} of its breadth ${end === c.max ? 'up' : 'down'}`);
+    }
+  }
+  const at = (z) => halfWidthAt(body, z, mid(z));
+  const zG = zShoulder - 0.16 * (zShoulder - zHip);
+  let waist = Infinity, zW = 0;
+  for (let z = zG - 0.04 * H; z <= zG + 0.04 * H; z += 0.005 * H) if (at(z) < waist) { waist = at(z); zW = z; }
+  assert.ok(waist < 0.985 * at(zShoulder - 1e-3), `behind the shoulder he is drawn in to ${(waist / at(zShoulder - 1e-3)).toFixed(3)} of its breadth`);
+  assert.ok(waist < 0.985 * at(0), `and swells again behind that: ${(waist / at(0)).toFixed(3)} of the ribs`);
 });
 
 // THE TAIL GOES INTO THE RUMP. Its skin starts on a ring laid down past the

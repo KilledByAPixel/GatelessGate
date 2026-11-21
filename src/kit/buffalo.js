@@ -287,9 +287,19 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
   const { group, tail, material, plan } = makeQuadruped({
     height, color, seed,
     bodyR: 0.38, bodyLen: 0.48, bodyDrop: 0.40,
+    // A BROAD ROUNDED MASS, not a diamond: from in front a section widest along
+    // one line and falling straight away above and below it has a ridge for a
+    // back and a keel for a belly, and three-quarter on it is two planes
+    // meeting at an edge. `barrel` carries its breadth up and down — short of
+    // full, which squares the shoulders off under the hump and makes a crate
+    // of him. `girth` draws the trunk in just behind the elbow, so the
+    // shoulder ends at an edge and stands on his side as a plane of its own
+    // running up into the hump; the shoulder is stated nearly as broad as
+    // the ribs for the same reason, since a shoulder much narrower than the
+    // barrel behind it has nothing to be drawn in from.
     torso: {
-      chest: 1.26, loin: 0.98, withers: 1.22, croup: 0.745, sag: BACK_SAG, round: 1, slab: 0.85,
-      shoulderW: 0.95, barrelW: 1.08, hipW: 0.92,
+      chest: 1.26, loin: 0.98, withers: 1.22, croup: 0.745, sag: BACK_SAG, round: 1, slab: 0.85, barrel: 0.6, girth: 0.16,
+      shoulderW: 1.02, barrelW: 1.08, hipW: 0.92,
     },
     legBury: 0.2,
     // LIMBS UNDER A MASS, NOT POSTS. Side-on, the cannon is a small fraction
@@ -311,7 +321,13 @@ export function makeBuffalo({ height = 1.4, color = WASH.deep, tailColor = color
     // is left short of full, and the leg's buried ring is carried out toward
     // the hide instead (`spread`), which is what keeps the chest from hanging
     // over the leg as a skirt.
-    legs: { knee: 0.2, shoulder: 1.7, thigh: 3.4, cannon: 0.72, foot: 1.3, hindSet: 0.08, point: 0.6, arm: 1.2, spread: 1 },
+    // THE FOREARM IS HEAVY AT THE ELBOW (`elbow`) and spends that on the way
+    // to the knee, and the widening above it reaches well back behind the
+    // elbow (`arm`): slim all the way up, the front leg is a post set under
+    // the chest however the chest is shaped, and the two have to grow
+    // together — a broader forearm under the same short widening is a leg
+    // that no longer flares into the body at all.
+    legs: { knee: 0.2, shoulder: 1.7, thigh: 3.4, cannon: 0.72, foot: 1.3, hindSet: 0.08, point: 0.6, arm: 1.9, spread: 1, elbow: 1.7 },
     // Short, deep and nearly as wide as the skull it enters. Its end ring is
     // centred on the head's own centre and must stay INSIDE the skull there,
     // so `r` is bounded by the skull's section at its origin — fatten the
