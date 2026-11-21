@@ -65,7 +65,7 @@ import { stitch, ringQuads } from './loft.js';
 const HEAD_UP = 0.45;            // head centre above the body's axis, x height
 const HEAD_FWD = 0.77;           // ...and ahead of the animal's middle
 const HEAD_TILT = 0.9;           // rad the face hangs below level
-const KNEE = 0.32;               // rad, hind hock fold
+const KNEE = 0.25;               // rad, hind hock fold
 const POLL_LEAN = 0.15;          // rad the neck's last section leans back off upright
 const TAIL_LEAN = 0.16;          // rad the whole hank leans back off plumb
 // Where the dock is pinned, against the plan's own croup point: [down, forward]
@@ -178,7 +178,8 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     // forearm's own breadth is stated at the elbow (below). The hock stands a
     // quarter of the height up (`hock`) over a cannon that is close to
     // plumb (`rake`); the fold behind it (`KNEE`) puts it under the
-    // buttock. Lower, it was a fetlock-high joint over a stub of cannon.
+    // buttock. Lower, it was a fetlock-high joint over a stub of cannon;
+    // folded further, the hock stood out behind the buttock.
     // `shoulder` and `proud` are both low because what they build shows on a
     // slim leg as a box cap standing on the forearm, in front of the chest;
     // stood further out, the thigh's cap also breaks the flank as a dark dart
