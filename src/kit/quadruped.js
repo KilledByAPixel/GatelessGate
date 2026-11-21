@@ -174,6 +174,12 @@ const CORNER_UP = 0.06;
 // front corners, x its own half-breadth: see THE STIFLE IS THE FLANK'S OWN
 // FOLD. Further, the ring's front is a narrow prow, which is the blade.
 const THIGH_PROW = 1.5;
+// How far over the gaskin ring's own back corners a keeled trunk's thigh
+// ring keeps its back corners when they sink to the haunch's hem, and the
+// step they sink by, x the leg's radius: see THE BACK OF THE THIGH LEAVES THE
+// HAUNCH AT ITS HEM. Lower, the face between the two rings turns up behind
+// the leg as a tab under the buttock, which the dog showed first.
+const BACK_RISE = 1.0, SINK_STEP = 0.05;
 
 // The shared body plan for every four-legged animal in the book. Everything
 // scales off `height` and faces +z; a species is this plan at its own
@@ -826,6 +832,10 @@ export function makeQuadruped({
       const y = cn[1] + CORNER_UP * r;
       let inner = cn[0] - 0.5 * r;
       for (let k = 0; k < 8 && !inTrunk(inner, y, zj); k++) inner -= 0.25 * r;
+      // (no trunk at all at that height there — the line's own end, where
+      // the rump closes — and the search outward would start outside it and
+      // could land the corner across the midline: it stays where it was)
+      if (!inTrunk(inner, y, zj)) return;
       let x = hideAt(y, zj, inner) - CORNER_IN * r;
       for (let k = 0; k < 12 && !inTrunk(x, y, zj); k++) x -= CORNER_IN * r;
       across[j] = x - xOf(j);
@@ -950,16 +960,52 @@ export function makeQuadruped({
         // nearer: the thigh's outer side then runs up into the haunch's
         // rather than in under a strip of the flank's turned-under faces,
         // which was a dark line over the front of the thigh, from the stifle
-        // up and back. Its back corner is left where it was: under the
-        // buttock it is already as good as on the line, and laid there too
-        // it showed a little of the thigh's top as a tab on the fox and the
-        // horse without closing the buffalo's lip any further.
+        // up and back.
+        //
+        // THE BACK OF THE THIGH LEAVES THE HAUNCH AT ITS HEM. Its back-outer
+        // corner goes on the nearer line too, and then both back corners
+        // sink, along the trunk's surface, as near the haunch's hem as they
+        // will go. Left where the ring's slant put it — high under the
+        // buttock, where the rump is already closing, and on every keeled
+        // animal out past its narrowing side — the corner stood the leg's
+        // back-outer face bare a long way up the back of the haunch: a lit
+        // blade from the gaskin to the buttock with paper between it and the
+        // tail, which from low behind and beside read as a wedge jutting out
+        // of the belly into the thigh (tests/leg-join.test.js, the climb).
+        // Only laid on the line, it often took the side corner over the hem
+        // and left a shorter blade; only drawn inside, it kept its height and
+        // the blade with it. Each corner stays BACK_RISE of the leg's radius
+        // over the gaskin ring's own corner below it, and never in across
+        // past it: sunk to that corner or past it, the face between the two
+        // turns up behind the leg and shows as a tab under the buttock (the
+        // tab test).
         onCorner({
-          OUT: [0, 1], r: lr, lift, pull, across,
+          OUT: [5, 0, 1], r: lr, lift, pull, across,
           zOf: (j) => z + zStifle + Math.sin((j / 6) * Math.PI * 2) * rzT + pull[j],
           xOf: (j) => hx + Math.cos((j / 6) * Math.PI * 2) * rxT,
           yOf: (j) => top + yT + Math.sin((j / 6) * Math.PI * 2) * tilt * rzT,
         });
+        // (the gaskin ring stands square to the path from this ring to the
+        // hock, as `limb` will build it, and its back corners are the floor)
+        const rG = lerp(rT, lr, LG.gaskin), rxG = 1.15 * lr;
+        const pdz = (zHock - zStifle) / (Math.hypot(-LG.hock * run - yT, zHock - zStifle) || 1);
+        for (const j of [4, 5]) {
+          const t = (j / 6) * Math.PI * 2, sn = Math.sin(t), cs = Math.cos(t);
+          const least = yG + sn * pdz * rG + BACK_RISE * lr - (yT + sn * tilt * rzT);
+          lift[j] = Math.max(lift[j], least);
+          const at = () => inTrunk(hx + cs * rxT + across[j], top + yT + sn * tilt * rzT + lift[j], z + zStifle + sn * rzT + pull[j]);
+          // inside first, drawn in across and then forward under the rump
+          for (let k = 0; k < 12 && !at(); k++) across[j] -= 0.05 * cs * rxT;
+          for (let k = 0; k < 12 && !at(); k++) pull[j] += 0.05 * rzT;
+          // then down toward the hem, drawn in across where the surface turns
+          const room = () => Math.sign(cs) * (cs * (rxT - 0.05 * rxT) + across[j]) >= Math.abs(cs) * rxG;
+          for (let k = 0; k < 40 && lift[j] - SINK_STEP * lr >= least; k++) {
+            lift[j] -= SINK_STEP * lr;
+            const was = across[j];
+            for (let m = 0; m < 6 && !at() && room(); m++) across[j] -= 0.05 * cs * rxT;
+            if (!at()) { lift[j] += SINK_STEP * lr; across[j] = was; break; }
+          }
+        }
         thighRing = [yT, zStifle, rzT, rxT, tilt, lift, pull, across];
       }
       pts = [

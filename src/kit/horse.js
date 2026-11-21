@@ -180,6 +180,11 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     // plumb (`rake`); the fold behind it (`KNEE`) puts it under the
     // buttock. Lower, it was a fetlock-high joint over a stub of cannon;
     // folded further, the hock stood out behind the buttock.
+    // The leg hangs barely behind the hip section (`hindSet`): hung a tenth
+    // of the height back, the whole hind leg stood under the very end of the
+    // trunk, the hock and the foot at the buttock and the stifle well back
+    // of where the reference's thigh leaves the belly, so it read as set too
+    // far back.
     // `shoulder` and `proud` are both low because what they build shows on a
     // slim leg as a box cap standing on the forearm, in front of the chest;
     // stood further out, the thigh's cap also breaks the flank as a dark dart
@@ -212,7 +217,7 @@ export function makeHorse({ height = 1.5, color = INK_LIT, seed = 45 } = {}) {
     // the shoulder section, the leg's outer face was flush with a chest
     // already narrowing to the breast, and its top showed as a lit tab with
     // a dark notch beside it.
-    legs: { knee: KNEE, shoulder: 2.2, thigh: 4.12, proud: 0.0, cannon: 0.72, foot: 1.2, gaskin: 0.95, frontSet: 0.075, hindSet: 0.1, point: 0.55, flare: 1.1, drop: 0.3, elbow: 1.15, wrist: 0.35, hock: 0.58, rake: 0.06 },
+    legs: { knee: KNEE, shoulder: 2.2, thigh: 4.12, proud: 0.0, cannon: 0.72, foot: 1.2, gaskin: 0.95, frontSet: 0.075, hindSet: 0.02, point: 0.55, flare: 1.1, drop: 0.3, elbow: 1.15, wrist: 0.35, hock: 0.58, rake: 0.06 },
     // `set` at nothing: the nape leaves the topline AT the withers, so the
     // withers are the corner where back turns into neck — but not the only
     // one. `ease` carries the root's top a way up the nape, so the line

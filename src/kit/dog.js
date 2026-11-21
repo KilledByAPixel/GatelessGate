@@ -201,7 +201,10 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // his height up (`hock`), over a cannon that is nearly upright (`rake`):
     // the hock is the point behind him, with the back of the leg dipping
     // forward above it to the buttock — not so far behind that it stands
-    // out past the buttock, which folded further it did.
+    // out past the buttock, which folded further it did. The leg hangs only
+    // a little behind the hip section (`hindSet`): a tenth of the height
+    // back, it stood under the very end of the trunk and read as set too far
+    // back.
     //
     // THE HAUNCH IS THE TRUNK'S (`torso.haunch`): the trunk hangs down over
     // each hind leg toward the stifle, so the thigh is the body's own surface
@@ -209,7 +212,7 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // the belly line showed its top as a pale plate under the trunk's dark
     // underside, with a step at the rump; and it is not stood out of the
     // flank (`proud`), or it breaks out through the side of the haunch.
-    legs: { knee: 0.4, shoulder: 3.6, thigh: 3.4, proud: 0, foot: 1.45, frontSet: 0.06, hindSet: 0.1, point: 0.7, flare: 0.8, drop: 0.3, elbow: 1.2, wrist: 0.45, hock: 0.6, rake: 0.12 },
+    legs: { knee: 0.4, shoulder: 3.6, thigh: 3.4, proud: 0, foot: 1.45, frontSet: 0.06, hindSet: 0.05, point: 0.7, flare: 0.8, drop: 0.3, elbow: 1.2, wrist: 0.45, hock: 0.6, rake: 0.12 },
     // the neck's end has to fit inside the skull it enters, turned or not.
     // The head is carried high on a neck that stands steeply, so the back has
     // a long way to turn to become the nape: `ease` and `easeUp` split that
