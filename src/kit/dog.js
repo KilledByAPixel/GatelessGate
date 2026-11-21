@@ -149,7 +149,7 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
   const { group, material, plan } = makeQuadruped({
     height, color, seed,
     bodyR: 0.2, bodyLen: 0.56, bodyDrop: 0.2,
-    torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92, round: 1 },
+    torso: { chest: 1.4, loin: 0.78, withers: 1.05, back: 0.93, croup: 0.92, round: 1, slab: 1 },
     legBury: 0.16,
     legH: 0.46, legR: 0.066, legTaper: 0.8, hipX: 0.085, hipZ: 0.30,
     // The legs stand under the two ends of the trunk rather than under its
@@ -163,9 +163,21 @@ export function makeDog({ height = 0.5, color = INK_LIT, seed = 1 } = {}) {
     // `legTaper` the forearm's share of it, so the pair is slimmed with those
     // and the masses that are stated as multiples of `legR` — shoulder, thigh,
     // paw — are raised to stay the size they were.
-    legs: { knee: 0.36, shoulder: 2.8, thigh: 3.4, foot: 1.45, frontSet: 0.035, hindSet: 0.1 },
-    // the neck's end has to fit inside the skull it enters, turned or not
-    neck: { r: 0.1, w: 0.85, root: 0.7, set: 0.05, taper: 1.0, arch: 0.02 },
+    //
+    // THE SHOULDER is the chest's own side, carried straight down to the leg
+    // (`torso.slab`), and the leg widens into it above the forearm (`point`,
+    // `arm`): a dog's elbow sits against a deep chest with a long fall of
+    // muscle behind it, so the rear line leans back further than the front
+    // one leans forward. The front pair stands well forward (`frontSet`) so
+    // that fall has chest over it and the breast does not hang out ahead of
+    // the leg as a second thing.
+    legs: { knee: 0.36, shoulder: 2.8, thigh: 3.4, foot: 1.45, frontSet: 0.06, hindSet: 0.1, point: 0.7, arm: 2.4 },
+    // the neck's end has to fit inside the skull it enters, turned or not.
+    // The head is carried high on a neck that stands steeply, so the back has
+    // a long way to turn to become the nape: `ease` and `easeUp` split that
+    // turn about evenly between the withers and the root of the neck. All of
+    // it at one point, under a root that dips first, was a notch.
+    neck: { r: 0.1, w: 0.85, root: 0.7, set: 0.05, taper: 1.0, arch: 0.02, ease: 0.5, easeUp: 0.45 },
     // The plan's ball is only a placeholder for where the head is carried and
     // how far it is nosed down; its geometry is replaced by the loft below.
     // No snout: the muzzle is the front half of that loft.
